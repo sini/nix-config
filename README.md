@@ -16,7 +16,7 @@
         <img src="https://img.shields.io/github/repo-size/sini/shinjitsu?color=ea999c&labelColor=303446&style=for-the-badge">
     </a>
     <a href="https://github.com/sini/shinjitsu/blob/main/.github/LICENCE">
-        <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&logoColor=ca9ee6&colorA=313244&colorB=cba6f7"/>
+        <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=GPL-3&logoColor=ca9ee6&colorA=313244&colorB=cba6f7"/>
     </a>
     <br>
     </div>
