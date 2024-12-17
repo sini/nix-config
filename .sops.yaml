@@ -1,0 +1,34 @@
+keys:
+  - "users": &users
+      - &sini C5662D66FAF83CCFD3AF22E2CAD1A96250A699B0 # gpg --list-keys --with-colons --with-fingerprint
+  # nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age'
+  - "hosts": &hosts
+      - &surge age1w6xd2w6uq382gnylmvry8q9enjh3pxyflcf3qfzrd75lhfrwvesqmseh0c
+      - &burst age198kc8r0w64gxcwl9ya3vtyv9s4nz8fpfvgpj502ywzaxykwak5tqag0l7s
+      - &pulse age1z29h6thmwe39uujf7nrf4shs9hqc5ku9uhajxeh4uxcuzjrtqq5ssak8kt
+      - &prometheus age1j5afzh8k5u5xm4qne53hssektt66v6m595d27hlm5l5rtxrgjanqd3hkee
+creation_rules:
+  #path should be relative to location of this file (.sops.yaml)
+  - path_regex: secrets/global/[^/]+\.yaml$
+    key_groups:
+      - pgp:
+          - *sini
+        age: *hosts
+  - path_regex: secrets/surge/[^/]+\.yaml$
+    key_groups:
+      - pgp:
+          - *sini
+        age:
+          - *surge
+  - path_regex: secrets/burst/[^/]+\.yaml$
+    key_groups:
+      - pgp:
+          - *sini
+        age:
+          - *burst
+  - path_regex: secrets/pulse/[^/]+\.yaml$
+    key_groups:
+      - pgp:
+          - *sini
+        age:
+          - *pulse
