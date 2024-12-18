@@ -11,7 +11,7 @@ let
 in
 mkShell {
   packages = with pkgs; [
-    act
+    deadnix
     hydra-check
     nix-inspect
     nix-bisect
@@ -22,16 +22,15 @@ mkShell {
     nix-prefetch-git
     nix-search-cli
     nix-tree
+    nix-update
     nixpkgs-hammering
     nixpkgs-lint
+    nixpkgs-review
     snowfall-flake.packages.${system}.flake
-
-    # Adds all the packages required for the pre-commit checks
-    inputs.self.checks.${system}.pre-commit-hooks.enabledPackages
+    statix
   ];
 
   shellHook = ''
-    ${inputs.self.checks.${system}.pre-commit-hooks.shellHook}
     echo 🔨 Welcome to ${namespace}
 
 

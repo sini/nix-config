@@ -49,18 +49,12 @@ of things compute.
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # macOS Support
-    # See: https://github.com/AlexNabokikh/nix-config/tree/master
-    # https://github.com/rounakdatta/dotfiles
-    # https://github.com/dustinlyons/nixos-config
-    # https://github.com/srid/nixos-unified
-    # https://github.com/clo4/nix-dotfiles
-    # https://github.com/tbreslein/.dotfiles
-    # https://github.com/khaneliman/khanelinix
-
-    nix-darwin = { 
-      url = "github:lnl7/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs";
+    # macOS Support (master)
+    nix-darwin = {
+      # url = "github:lnl7/nix-darwin";
+      url = "github:khaneliman/nix-darwin/spacer";
+      # url = "git+file:///Users/khaneliman/github/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # Homebrew
@@ -203,12 +197,18 @@ of things compute.
 
     # https://github.com/nix-community/lanzaboote
     # nixos-anywhere
+    
+    # Secure boot
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v0.4.1";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # sops-nix - does not currently support nix-darwin, only home-manager... perhaps thats enough?
-    # sops-nix = {
-    #   url = "github:Mic92/sops-nix";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
+    sops-nix = {
+      url = "github:Mic92/sops-nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Agenix
     # https://lgug2z.com/articles/providing-runtime-secrets-to-nixos-services/
@@ -248,7 +248,11 @@ of things compute.
     
 
     ## Themes
+    anyrun.url = "github:anyrun-org/anyrun";
+    anyrun-nixos-options.url = "github:n3oney/anyrun-nixos-options";
 
+    catppuccin-cursors.url = "github:catppuccin/cursors";
+    catppuccin.url = "github:catppuccin/nix";
     # Global catppuccin theme
     catppuccin.url = "github:catppuccin/nix";
 
@@ -258,13 +262,45 @@ of things compute.
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    git-hooks-nix.url = "github:cachix/git-hooks.nix";
+    treefmt-nix.url = "github:numtide/treefmt-nix";
+
+    waybar = {
+      url = "github:Alexays/Waybar";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    wezterm.url = "github:wez/wezterm?dir=nix";
+
+    yazi-plugins = {
+      url = "github:yazi-rs/plugins";
+      flake = false;
+    };
+
+    ##
+    # Hyprland Section
+    ##
+    hyprland = {
+      url = "git+https://github.com/hyprwm/Hyprland?submodules=1";
+      # url = "git+https://github.com/khaneliman/Hyprland?ref=windows&submodules=1";
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+      };
+    };
+    # Hyprland socket watcher
+    hypr-socket-watch = {
+      url = "github:khaneliman/hypr-socket-watch";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
   };
 
   outputs =
     inputs:
     let
-      lib = inputs.snowfall-lib.mkLib {
+      inherit (inputs) snowfall-lib;
+
+      lib = snowfall-lib.mkLib {
         # You must provide our flake inputs to Snowfall Lib.
         inherit inputs;
 
@@ -284,17 +320,73 @@ of things compute.
       };
     in
     lib.mkFlake {
-      inherit inputs;
-      src = ./.;
-
       channels-config = {
+        # allowBroken = true;
         allowUnfree = true;
+
+        # TODO: cleanup when available
+        permittedInsecurePackages = [
+          # NOTE: needed by emulationstation
+          "freeimage-unstable-2021-11-01"
+          # dev shells
+          "aspnetcore-runtime-6.0.36"
+          "aspnetcore-runtime-7.0.20"
+          "aspnetcore-runtime-wrapped-7.0.20"
+          "aspnetcore-runtime-wrapped-6.0.36"
+          "dotnet-combined"
+          "dotnet-core-combined"
+          "dotnet-runtime-6.0.36"
+          "dotnet-runtime-7.0.20"
+          "dotnet-runtime-wrapped-6.0.36"
+          "dotnet-runtime-wrapped-7.0.20"
+          "dotnet-sdk-6.0.428"
+          "dotnet-sdk-7.0.410"
+          "dotnet-sdk-wrapped-6.0.428"
+          "dotnet-sdk-wrapped-7.0.410"
+          "dotnet-wrapped-combined"
+        ];
       };
 
-      overlays = with inputs; [ ];
+      homes.modules = with inputs; [
+        anyrun.homeManagerModules.default
+        catppuccin.homeManagerModules.catppuccin
+        hypr-socket-watch.homeManagerModules.default
+        nix-index-database.hmModules.nix-index
+        # FIXME:
+        # nur.modules.homeManager.default
+        sops-nix.homeManagerModules.sops
+      ];
 
-      systems.modules.nixos = with inputs; [ ];
+      systems = {
+        modules = {
+          darwin = with inputs; [ sops-nix.darwinModules.sops ];
+          nixos = with inputs; [
+            disko.nixosModules.disko
+            lanzaboote.nixosModules.lanzaboote
+            sops-nix.nixosModules.sops
+          ];
+        };
+      };
 
-      templates = import ./templates { };
+      templates = {
+        angular.description = "Angular template";
+        c.description = "C flake template.";
+        container.description = "Container template";
+        cpp.description = "CPP flake template";
+        dotnetf.description = "Dotnet FSharp template";
+        flake-compat.description = "Flake-compat shell and default files.";
+        go.description = "Go template";
+        node.description = "Node template";
+        python.description = "Python template";
+        rust.description = "Rust template";
+        rust-web-server.description = "Rust web server template";
+        snowfall.description = "Snowfall-lib template";
+      };
+
+      deploy = lib.mkDeploy { inherit (inputs) self; };
+
+      outputs-builder = channels: {
+        formatter = inputs.treefmt-nix.lib.mkWrapper channels.nixpkgs ./treefmt.nix;
+      };
     };
 }

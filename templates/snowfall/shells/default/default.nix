@@ -11,8 +11,6 @@ let
 in
 mkShell {
   packages = with pkgs; [
-    act
-    hydra-check
     nix-inspect
     nix-bisect
     nix-diff
@@ -22,8 +20,6 @@ mkShell {
     nix-prefetch-git
     nix-search-cli
     nix-tree
-    nixpkgs-hammering
-    nixpkgs-lint
     snowfall-flake.packages.${system}.flake
 
     # Adds all the packages required for the pre-commit checks
