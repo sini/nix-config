@@ -19,13 +19,13 @@
 #          ▝▀▀▀    ▀▀▀▀▘       ▀▀▀▘
 #
 #
-# 
+#
 {
   description = ''
-  A NixOS flake based on snowfall-lib describing homelab kubernetes nodes, kubernetes 
-service deployments, mac laptop, desktop workstation, virtualized VFIO, and all manner
-of things compute.
-'';
+      A NixOS flake based on snowfall-lib describing homelab kubernetes nodes, kubernetes 
+    service deployments, mac laptop, desktop workstation, virtualized VFIO, and all manner
+    of things compute.
+  '';
 
   inputs = {
     # NixPkgs
@@ -72,10 +72,10 @@ of things compute.
       url = "github:Mic92/nix-index-database";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    
+
     # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
-    
+
     # Generate System Images
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
@@ -87,7 +87,7 @@ of things compute.
     # https://grahamc.com/blog/erase-your-darlings/
     impermanence.url = "github:nix-community/impermanence";
     persist-retro.url = "github:Geometer1729/persist-retro";
-    
+
     # Snowfall Lib
     # This config is based around this lib, and heavily inspired by the authors configs:
     # Plus Ultra: https://github.com/jakehamilton/config/tree/6158f53f916dc9522068aee3fdf7e14907045352
@@ -100,9 +100,9 @@ of things compute.
     # Snowfall Flake
     # Simplified Nix Flakes on the command line.
     snowfall-flake = {
-			url = "github:snowfallorg/flake";
-			inputs.nixpkgs.follows = "unstable";
-		};
+      url = "github:snowfallorg/flake";
+      inputs.nixpkgs.follows = "unstable";
+    };
 
     # Snowfall Drift
     # Drift processes packages that contain an update attribute. To add an update script, specify a script derivation in the package's passthru.
@@ -110,13 +110,13 @@ of things compute.
       url = "github:snowfallorg/drift";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    
+
     # Snowfall Thaw
     # Semantic Versioning for Nix Flakes.
-		snowfall-thaw = {
-			url = "github:snowfallorg/thaw";
-			inputs.nixpkgs.follows = "nixpkgs";
-		};
+    snowfall-thaw = {
+      url = "github:snowfallorg/thaw";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     # Comma
     # Comma runs software without installing it.
@@ -142,7 +142,6 @@ of things compute.
     nix-topology.url = "github:oddlama/nix-topology";
     nix-topology.inputs.nixpkgs.follows = "nixpkgs";
 
-
     # Arion is a tool for building and running applications that consist of multiple docker containers using NixOS modules.
     # https://docs.hercules-ci.com/arion/
     arion = {
@@ -150,7 +149,6 @@ of things compute.
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    
     # A Nix Flake to build NixOS and run it on one of several Type-2 Hypervisors on NixOS/Linux.
     microvm = {
       url = "github:astro/microvm.nix";
@@ -158,7 +156,7 @@ of things compute.
     };
 
     # With flux you can build servers as packages with a simple interface and deploy them with the included module.
-    # flux.url = "github:IogaMaster/flux";    
+    # flux.url = "github:IogaMaster/flux";
 
     # Run unpatched dynamically compiled binaries
     nix-ld = {
@@ -197,7 +195,7 @@ of things compute.
 
     # https://github.com/nix-community/lanzaboote
     # nixos-anywhere
-    
+
     # Secure boot
     lanzaboote = {
       url = "github:nix-community/lanzaboote/v0.4.1";
@@ -220,7 +218,6 @@ of things compute.
     #!include ${config.age.secrets.nix-access-tokens-github.path}
     #'';
 
-
     # Vault Integration
     # The NixOS Vault Service module is a NixOS module that allows easily integrating Vault with existing systemd services.
     vault-service = {
@@ -239,13 +236,12 @@ of things compute.
       url = "github:drduh/config";
       flake = false;
     };
-    
+
     # For nixd
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    
 
     ## Themes
     anyrun.url = "github:anyrun-org/anyrun";
@@ -346,6 +342,10 @@ of things compute.
           "dotnet-wrapped-combined"
         ];
       };
+
+      overlays = with inputs; [
+        nix-topology.overlays.default
+      ];
 
       homes.modules = with inputs; [
         anyrun.homeManagerModules.default
