@@ -11,5 +11,5 @@ _: {
   suites.common.enable = true;
   services.ssh.enable = true;
 
-  system.stateVersion = "22.11";
+  system.stateVersion = "24.11";
 }
