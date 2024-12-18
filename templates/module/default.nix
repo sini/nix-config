@@ -1,8 +1,8 @@
+# deadnix: skip
 {
   options,
   config,
   lib,
-  pkgs,
   ...
 }:
 with lib;

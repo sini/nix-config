@@ -1,4 +1,4 @@
 _:
-(final: prev: {
+(_final: prev: {
   package = prev.package.override { };
 })

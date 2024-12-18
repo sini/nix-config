@@ -1,7 +1,5 @@
 # deadnix: skip
 {
-  config,
-  pkgs,
   ...
 }:
 {
