@@ -307,11 +307,11 @@
 
         snowfall = {
           meta = {
-            name = "logos";
-            title = "logos";
+            name = "Pantheon";
+            title = "pantheon.nix";
           };
 
-          namespace = "logos";
+          namespace = "pantheon";
         };
       };
     in

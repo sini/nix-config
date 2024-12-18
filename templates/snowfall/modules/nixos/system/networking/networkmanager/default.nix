@@ -12,7 +12,7 @@ let
 in
 {
   config = mkIf cfg.enable {
-    logos.user.extraGroups = [ "networkmanager" ];
+    pantheon.user.extraGroups = [ "networkmanager" ];
 
     networking.networkmanager = {
       enable = true;

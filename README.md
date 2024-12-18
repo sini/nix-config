@@ -6,16 +6,16 @@
   <br>
   <br>
   <div>
-    <a href="https://github.com/sini/logos/issues">
-        <img src="https://img.shields.io/github/issues/sini/logos?color=fab387&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/pantheon.nix/issues">
+        <img src="https://img.shields.io/github/issues/sini/pantheon.nix?color=fab387&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/logos/stargazers">
-        <img src="https://img.shields.io/github/stars/sini/logos?color=ca9ee6&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/pantheon.nix/stargazers">
+        <img src="https://img.shields.io/github/stars/sini/pantheon.nix?color=ca9ee6&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/logos">
-        <img src="https://img.shields.io/github/repo-size/sini/logos?color=ea999c&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/pantheon.nix">
+        <img src="https://img.shields.io/github/repo-size/sini/pantheon.nix?color=ea999c&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/logos/blob/main/.github/LICENCE">
+    <a href="https://github.com/sini/pantheon.nix/blob/main/.github/LICENCE">
         <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=GPL-3&logoColor=ca9ee6&colorA=313244&colorB=cba6f7"/>
     </a>
     <br>

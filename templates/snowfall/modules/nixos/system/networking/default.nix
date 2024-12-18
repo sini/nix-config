@@ -111,7 +111,7 @@ in
       traceroute
     ];
 
-    logos.user.extraGroups = [
+    pantheon.user.extraGroups = [
       "network"
       "wireshark"
     ];

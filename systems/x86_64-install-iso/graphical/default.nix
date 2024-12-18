@@ -21,7 +21,7 @@ in
     file
   ];
 
-  logos = {
+  pantheon = {
     nix = enabled;
 
     apps = {
