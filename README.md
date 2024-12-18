@@ -45,3 +45,10 @@ I've stolen shamelessly from:
   - https://github.com/srid/nixos-unified
   - https://github.com/tbreslein/.dotfiles
   - https://github.com/khaneliman/khanelinix
+
+- https://github.com/AlexNabokikh/nix-config
+- https://github.com/Gerg-L/spicetify-nix
+- https://github.com/catppuccin/egui
+- https://github.com/justinlime/dotfiles
+- https://github.com/omerxx/dotfiles/tree/master
+- https://code.m3tam3re.com/m3tam3re/nixcfg/src/branch/video18
