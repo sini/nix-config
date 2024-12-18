@@ -1,7 +1,7 @@
 { lib, ... }:
 with lib;
 rec {
-## Create a NixOS module option.
+  ## Create a NixOS module option.
   ##
   ## ```nix
   ## lib.mkOpt nixpkgs.lib.types.str "My default" "Description of my option."
