@@ -16,18 +16,23 @@ in
 
   config = mkIf cfg.enable {
     services.xserver.videoDrivers = [ "nvidia" ];
-    hardware.nvidia.modesetting.enable = true;
-    hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
 
-    environment.variables = {
-      CUDA_CACHE_PATH = "$XDG_CACHE_HOME/nv";
+    hardware.nvidia = {
+      modesetting.enable = true;
+      package = config.boot.kernelPackages.nvidiaPackages.stable;
     };
-    environment.shellAliases = {
-      nvidia-settings = "nvidia-settings --config='$XDG_CONFIG_HOME'/nvidia/settings";
+
+    environment = {
+      variables = {
+        CUDA_CACHE_PATH = "$XDG_CACHE_HOME/nv";
+      };
+      shellAliases = {
+        nvidia-settings = "nvidia-settings --config='$XDG_CONFIG_HOME'/nvidia/settings";
+      };
+      sessionVariables.WLR_NO_HARDWARE_CURSORS = "1"; # Fix cursor rendering issue on wlr nvidia.
     };
 
     # Hyprland settings
     programs.hyprland.enableNvidiaPatches = true;
-    environment.sessionVariables.WLR_NO_HARDWARE_CURSORS = "1"; # Fix cursor rendering issue on wlr nvidia.
   };
 }
