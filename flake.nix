@@ -22,7 +22,7 @@
 #
 {
   description = ''
-      A NixOS flake based on snowfall-lib describing homelab kubernetes nodes, kubernetes 
+      A NixOS flake based on snowfall-lib describing homelab kubernetes nodes, kubernetes
     service deployments, mac laptop, desktop workstation, virtualized VFIO, and all manner
     of things compute.
   '';
@@ -307,11 +307,11 @@
 
         snowfall = {
           meta = {
-            name = "shinjitsu";
-            title = "shinjitsu";
+            name = "logos";
+            title = "logos";
           };
 
-          namespace = "shinjitsu";
+          namespace = "logos";
         };
       };
     in

@@ -1,7 +1,7 @@
 { mkShell, pkgs, ... }:
 mkShell {
   packages = with pkgs; [
-    pkgs.shinjitsu.avrogen
+    pkgs.logos.avrogen
     azure-cli
     bicep
     csharpier
@@ -17,12 +17,12 @@ mkShell {
     roslyn-ls
     vimPlugins.neotest-dotnet
     vscode-extensions.ms-dotnettools.csharp
-    pkgs.shinjitsu.upgrade-assistant
+    pkgs.logos.upgrade-assistant
   ];
 
   shellHook = ''
 
-    export NUGET_PLUGIN_PATHS=${pkgs.shinjitsu.artifacts-credprovider}/bin/netcore/CredentialProvider.Microsoft/CredentialProvider.Microsoft.dll
+    export NUGET_PLUGIN_PATHS=${pkgs.logos.artifacts-credprovider}/bin/netcore/CredentialProvider.Microsoft/CredentialProvider.Microsoft.dll
 
     echo 🔨 Dotnet DevShell
 

@@ -12,7 +12,7 @@ let
 in
 {
   config = mkIf cfg.enable {
-    shinjitsu.user.extraGroups = [ "networkmanager" ];
+    logos.user.extraGroups = [ "networkmanager" ];
 
     networking.networkmanager = {
       enable = true;

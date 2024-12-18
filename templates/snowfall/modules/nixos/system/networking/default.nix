@@ -111,7 +111,7 @@ in
       traceroute
     ];
 
-    shinjitsu.user.extraGroups = [
+    logos.user.extraGroups = [
       "network"
       "wireshark"
     ];

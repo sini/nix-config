@@ -33,19 +33,19 @@
 
         snowfall = {
           meta = {
-            name = "shinjitsusnow";
-            title = "shinjitsusnow";
+            name = "logossnow";
+            title = "logossnow";
           };
 
-          namespace = "shinjitsusnow";
+          namespace = "logossnow";
         };
       };
     in
     lib.mkFlake {
       alias = {
         packages = {
-          default = "shinjitsusnow";
-          nvim = "shinjitsusnow";
+          default = "logossnow";
+          nvim = "logossnow";
         };
       };
 
