@@ -14,4 +14,4 @@
 | [aegis](x86_64-iso/aegis/)                 | Air-gapped virtual machine/live-iso configuration for sensitive jobs - shield of Zeus                    |     ISO     |     x86_64-iso     |
 | [cronus](x86_64-linux/cronus/)             | 1tb NVME + 80tb NFS - 2x1gbe + 2.5gbe - TODO: https://github.com/adam-gaia/synology-nix-installer        |     NAS     |      Synology      |
 | [graphical](x86_64-install-iso/graphical/) | Graphical install ISO environment                                                                        |     ISO     | x86_64-install-iso |
-| [graphical](x86_64-install-iso/minimal/)   | Minimal install ISO environment                                                                          |     ISO     | x86_64-install-iso |
+| [minimal](x86_64-install-iso/minimal/)     | Minimal install ISO environment                                                                          |     ISO     | x86_64-install-iso |
