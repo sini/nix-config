@@ -28,11 +28,16 @@
 
 https://github.com/DeterminateSystems/nix-installer
 
+# Requirements
+Yubikey 5
+
 # Resources
 
 I've stolen shamelessly from:
 
 - [JakeHamilton/config](https://github.com/jakehamilton/config) - where it started
+- [Misterio77](https://github.com/Misterio77/nix-config/)
+- [JManch](https://github.com/JManch/nixos)
 - [IogaMaster/dotfiles](https://github.com/IogaMaster/dotfiles/) - another good snowfall-lib config
 - [khaneliman/khanelinix](https://github.com/khaneliman/khanelinix) - another really good config
 - [FelixKrats/dotfiles](https://github.com/FelixKratz/dotfiles) \*Sketchybar
