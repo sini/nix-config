@@ -29,6 +29,7 @@
 https://github.com/DeterminateSystems/nix-installer
 
 # Requirements
+
 Yubikey 5
 
 # Resources
@@ -38,6 +39,7 @@ I've stolen shamelessly from:
 - [JakeHamilton/config](https://github.com/jakehamilton/config) - where it started
 - [Misterio77](https://github.com/Misterio77/nix-config/)
 - [JManch](https://github.com/JManch/nixos)
+- [hmajid2301/nixicle](https://github.com/hmajid2301/nixicle/tree/main)
 - [IogaMaster/dotfiles](https://github.com/IogaMaster/dotfiles/) - another good snowfall-lib config
 - [khaneliman/khanelinix](https://github.com/khaneliman/khanelinix) - another really good config
 - [FelixKrats/dotfiles](https://github.com/FelixKratz/dotfiles) \*Sketchybar
@@ -45,6 +47,7 @@ I've stolen shamelessly from:
 - [Fufexan/dotfiles](https://github.com/fufexan/dotfiles)
 - [NotAShelf/nyx](https://github.com/NotAShelf/nyx)
 - [clo4/nix-dotfiles](https://github.com/clo4/nix-dotfiles)
+- https://www.youtube.com/watch?v=uP9jDrRvAwM https://github.com/notashelf/nvf
 - Mac Configs:
 
   - https://github.com/rounakdatta/dotfiles

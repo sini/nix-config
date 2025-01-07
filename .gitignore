@@ -22,6 +22,7 @@ options.json
 
 # Direnv
 .direnv
+.env
 
 # Ags
 modules/nixos/desktop/addons/ags/bar/src/types
