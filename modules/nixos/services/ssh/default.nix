@@ -2,10 +2,11 @@
   options,
   config,
   lib,
+  namespace,
   ...
 }:
 with lib;
-with lib.custom;
+with lib.${namespace};
 let
   cfg = config.services.ssh;
 in
@@ -18,7 +19,7 @@ in
     services.openssh = {
       enable = true;
       ports = [ 22 ];
-      PermitRootLogin = "prohibit-password";
+      settings.PermitRootLogin = "prohibit-password";
     };
 
     users.users =
@@ -35,7 +36,7 @@ in
       };
 
     home.file.".ssh/config".text = ''
-      identityfile ~/.ssh/key 
+      identityfile ~/.ssh/key
     '';
   };
 }

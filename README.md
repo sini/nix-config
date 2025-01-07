@@ -36,6 +36,7 @@ Yubikey 5
 
 I've stolen shamelessly from:
 
+- https://snowfall.org/guides/lib/quickstart/
 - [JakeHamilton/config](https://github.com/jakehamilton/config) - where it started
 - [Misterio77](https://github.com/Misterio77/nix-config/)
 - [JManch](https://github.com/JManch/nixos)
@@ -63,3 +64,4 @@ I've stolen shamelessly from:
 - https://github.com/omerxx/dotfiles/tree/master
 - https://code.m3tam3re.com/m3tam3re/nixcfg/src/branch/video18
 - https://github.com/arvigeus/nixos-config/tree/master
+- https://mt-caret.github.io/blog/posts/2020-06-29-optin-state.html

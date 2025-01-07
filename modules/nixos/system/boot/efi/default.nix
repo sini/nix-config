@@ -2,10 +2,11 @@
   options,
   config,
   lib,
+  namespace,
   ...
 }:
 with lib;
-with lib.custom;
+with lib.${namespace};
 let
   cfg = config.system.boot.efi;
 in

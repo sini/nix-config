@@ -1,12 +1,13 @@
 {
   options,
   config,
-  lib,
   pkgs,
+  lib,
+  namespace,
   ...
 }:
 with lib;
-with lib.custom;
+with lib.${namespace};
 let
   cfg = config.system.shell;
 in

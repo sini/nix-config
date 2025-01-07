@@ -1,12 +1,13 @@
 {
   options,
   config,
-  lib,
   pkgs,
+  lib,
+  namespace,
   ...
 }:
 with lib;
-with lib.custom;
+with lib.${namespace};
 let
   cfg = config.suites.common;
 in
@@ -21,27 +22,15 @@ in
       security.doas.enable = true;
     };
 
-    hardware.audio.enable = true;
     hardware.networking.enable = true;
 
-    # hardware.bluetooth.enable = true;
-    # hardware.bluetooth.settings = {
-    #   General = {
-    #     FastConnectable = true;
-    #     JustWorksRepairing = "always";
-    #     Privacy = "device";
-    #   };
-    #   Policy = {
-    #     AutoEnable = true;
-    #   };
-    # };
 
     services.ssh.enable = true;
     programs.dconf.enable = true;
 
     environment.systemPackages = [
-      pkgs.bluetuith
-      pkgs.custom.sys
+      # pkgs.bluetuith
+      pkgs.${namespace}.sys
     ];
 
     system = {

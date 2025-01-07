@@ -54,7 +54,7 @@
       # url = "github:lnl7/nix-darwin";
       url = "github:khaneliman/nix-darwin/spacer";
       # url = "git+file:///Users/khaneliman/github/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.nixpkgs.follows = "unstable";
     };
 
     # Homebrew
@@ -248,7 +248,6 @@
     anyrun-nixos-options.url = "github:n3oney/anyrun-nixos-options";
 
     catppuccin-cursors.url = "github:catppuccin/cursors";
-    catppuccin.url = "github:catppuccin/nix";
     # Global catppuccin theme
     catppuccin.url = "github:catppuccin/nix";
 
