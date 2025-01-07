@@ -308,10 +308,10 @@
         snowfall = {
           meta = {
             name = "Pantheon";
-            title = "pantheon.nix";
+            title = "construct.nix";
           };
 
-          namespace = "pantheon";
+          namespace = "construct";
         };
       };
     in

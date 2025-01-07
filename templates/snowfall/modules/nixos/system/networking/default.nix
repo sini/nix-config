@@ -111,7 +111,7 @@ in
       traceroute
     ];
 
-    pantheon.user.extraGroups = [
+    construct.user.extraGroups = [
       "network"
       "wireshark"
     ];

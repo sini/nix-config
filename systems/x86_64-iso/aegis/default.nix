@@ -60,7 +60,7 @@ in
     };
   };
 
-  pantheon = {
+  construct = {
     nix = enabled;
 
     desktop = {

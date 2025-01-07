@@ -16,7 +16,7 @@ in
     file
   ];
 
-  pantheon = {
+  construct = {
     nix = enabled;
 
     cli-apps = {

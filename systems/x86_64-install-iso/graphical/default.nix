@@ -21,7 +21,7 @@ in
     file
   ];
 
-  pantheon = {
+  construct = {
     nix = enabled;
 
     apps = {
