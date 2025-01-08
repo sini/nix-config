@@ -66,9 +66,15 @@ in
 
     users.users.${cfg.name} = {
       isNormalUser = true;
-      inherit (cfg) name initialPassword;
+      # inherit (cfg) name initialPassword;
+      initialHashedPassword = "$y$j9T$RpfkDk8AusZr9NS09tJ9e.$kbc4SL9Cu45o1YYPlyV1jiVTZZ/126ue5Nff2Rfgpw8";
+
       home = "/home/${cfg.name}";
       group = "users";
+
+      openssh.authorizedKeys.keys = [
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAOa9kFogEBODAU4YVs4hxfVx3b5ryBzct4HoAHgwPio jason.bowman@pm.me"
+      ];
 
       extraGroups = [
         "wheel"
