@@ -1,3 +1,4 @@
+{ pkgs, ... }:
 {
   projectRootFile = "flake.nix";
 
@@ -25,8 +26,12 @@
     isort.enable = true;
     jsonfmt.enable = true;
     mdformat.enable = true;
-    nixfmt.enable = true;
+    nixfmt = {
+      enable = true;
+      package = pkgs.nixfmt-rfc-style;
+    };
     nufmt.enable = true;
+    prettier.enable = true;
     ruff-check.enable = true;
     ruff-format.enable = true;
     rustfmt.enable = true;
@@ -69,6 +74,28 @@
       "*.conf"
     ];
 
-    formatter.ruff-format.options = [ "--isolated" ];
+    formatter = {
+      deadnix = {
+        priority = 1;
+      };
+
+      statix = {
+        priority = 2;
+      };
+
+      nixfmt = {
+        priority = 3;
+      };
+
+      prettier = {
+        options = [
+          "--tab-width"
+          "4"
+        ];
+        includes = [ "*.{css,html,js,json,jsx,md,mdx,scss,ts,yaml}" ];
+      };
+
+      ruff-format.options = [ "--isolated" ];
+    };
   };
 }

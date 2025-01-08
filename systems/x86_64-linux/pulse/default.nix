@@ -1,11 +1,12 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 {
   imports = [
     ./disks.nix
     # ./hardware-configuration.nix
   ];
 
-  config.facter.reportPath = ./facter.json;
+  facter.reportPath = ./facter.json;
+
   # Enable Bootloader
   system.boot.efi.enable = true;
 
@@ -28,6 +29,8 @@
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
+    wget
+    vim
   ];
 
   suites.common.enable = true; # Enables the basics, like audio, networking, ssh, etc.
