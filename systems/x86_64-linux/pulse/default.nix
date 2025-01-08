@@ -1,10 +1,11 @@
-{ pkgs, ... }:
+{ pkgs, config, ... }:
 {
   imports = [
     ./disks.nix
-    ./hardware-configuration.nix
+    # ./hardware-configuration.nix
   ];
 
+  config.facter.reportPath = ./facter.json;
   # Enable Bootloader
   system.boot.efi.enable = true;
 

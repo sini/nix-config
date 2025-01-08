@@ -202,6 +202,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    # Facter - an alternative to nixos-generate-config
+    nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
+
     # sops-nix - does not currently support nix-darwin, only home-manager... perhaps thats enough?
     sops-nix = {
       url = "github:Mic92/sops-nix";
@@ -360,6 +363,7 @@
         modules = {
           darwin = with inputs; [ sops-nix.darwinModules.sops ];
           nixos = with inputs; [
+            nixos-facter-modules.nixosModules.facter
             disko.nixosModules.disko
             lanzaboote.nixosModules.lanzaboote
             sops-nix.nixosModules.sops

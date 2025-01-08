@@ -9,9 +9,7 @@
     };
     clang-format.enable = true;
     cmake-format.enable = true;
-    deadnix = {
-      enable = true;
-    };
+    deadnix.enable = true;
     deno = {
       enable = true;
       # Using biome for these

@@ -9,8 +9,8 @@
     ./boot.nix
     ./disks.nix
     ./hardware.nix
-    ./network.nix
-    ./specializations.nix
+    # ./network.nix
+    # ./specializations.nix
   ];
 
   # Enable Bootloader
