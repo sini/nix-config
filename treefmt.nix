@@ -21,7 +21,6 @@
         "*.jsonc"
       ];
     };
-    # fantomas.enable = true;
     fish_indent.enable = true;
     gofmt.enable = true;
     isort.enable = true;
@@ -56,12 +55,15 @@
       "*.png"
       "*.gif"
       "*.ico"
+      "*.jpg"
+      "*.webp"
       "*Makefile"
       "*makefile"
       "*.xml"
       "*.zsh"
       "*.rasi"
       "*.kdl"
+      "*.conf"
     ];
 
     formatter.ruff-format.options = [ "--isolated" ];
