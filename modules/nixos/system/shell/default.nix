@@ -16,7 +16,7 @@ in
     shell = mkOpt (enum [
       "nushell"
       "fish"
-    ]) "nushell" "What shell to use";
+    ]) "fish" "What shell to use";
   };
 
   config = {

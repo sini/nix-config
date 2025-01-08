@@ -23,8 +23,6 @@ _: {
     initrd = {
       systemd.enable = true;
       verbose = false;
-      luks.devices."luks-defb6e58-f883-4c98-b933-5d62f344bb9b".device =
-        "/dev/disk/by-uuid/defb6e58-f883-4c98-b933-5d62f344bb9b";
     };
 
     consoleLogLevel = 0;

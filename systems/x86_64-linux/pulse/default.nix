@@ -1,11 +1,9 @@
 { pkgs, ... }:
 {
-  imports = [
-    ./disks.nix
-    # ./hardware-configuration.nix
-  ];
-
   facter.reportPath = ./facter.json;
+
+  hardware.disk.single.enable = true;
+  hardware.disk.single.swap_size = 65536; # 64GB
 
   # Enable Bootloader
   system.boot.efi.enable = true;

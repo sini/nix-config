@@ -7,21 +7,22 @@
 {
   imports = [
     ./boot.nix
-    ./disks.nix
-    ./hardware.nix
+    # ./hardware.nix
     # ./network.nix
     # ./specializations.nix
   ];
 
+  facter.reportPath = ./facter.json;
+
+  hardware.disk.single.enable = true;
+  hardware.disk.single.swap_size = 65536; # 64GB
+
   # Enable Bootloader
   system.boot.efi.enable = true;
-  # system.boot.bios.enable = true;
 
-  # system.battery.enable = true; # Only for laptops, they will still work without it, just improves battery life
-
-  environment.systemPackages = with pkgs; [
-    # Any particular packages only for this host
-  ];
+  # environment.systemPackages = with pkgs; [
+  #   # Any particular packages only for this host
+  # ];
 
   suites.common.enable = true; # Enables the basics, like audio, networking, ssh, etc.
 
