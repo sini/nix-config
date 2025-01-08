@@ -37,12 +37,15 @@ Yubikey 5
 I've stolen shamelessly from:
 
 - https://snowfall.org/guides/lib/quickstart/
-- [JakeHamilton/config](https://github.com/jakehamilton/config) - where it started
+- [JakeHamilton/config](https://github.com/jakehamilton/config) - where it
+  started
 - [Misterio77](https://github.com/Misterio77/nix-config/)
 - [JManch](https://github.com/JManch/nixos)
 - [hmajid2301/nixicle](https://github.com/hmajid2301/nixicle/tree/main)
-- [IogaMaster/dotfiles](https://github.com/IogaMaster/dotfiles/) - another good snowfall-lib config
-- [khaneliman/khanelinix](https://github.com/khaneliman/khanelinix) - another really good config
+- [IogaMaster/dotfiles](https://github.com/IogaMaster/dotfiles/) - another good
+  snowfall-lib config
+- [khaneliman/khanelinix](https://github.com/khaneliman/khanelinix) - another
+  really good config
 - [FelixKrats/dotfiles](https://github.com/FelixKratz/dotfiles) \*Sketchybar
   design and implementation
 - [Fufexan/dotfiles](https://github.com/fufexan/dotfiles)

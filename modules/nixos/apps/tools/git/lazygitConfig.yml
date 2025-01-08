@@ -1,6 +1,5 @@
 gui:
   nerdFontsVersion: "3"
-
 customCommands:
   - key: "C"
     command: "git cz c"

@@ -21,7 +21,7 @@
         "*.jsonc"
       ];
     };
-    fantomas.enable = true;
+    # fantomas.enable = true;
     fish_indent.enable = true;
     gofmt.enable = true;
     isort.enable = true;

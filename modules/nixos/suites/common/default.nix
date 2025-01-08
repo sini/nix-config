@@ -24,7 +24,6 @@ in
 
     hardware.networking.enable = true;
 
-
     services.ssh.enable = true;
     programs.dconf.enable = true;
 

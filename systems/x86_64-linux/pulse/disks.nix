@@ -1,7 +1,4 @@
-{
-  config,
-  ...
-}:
+_:
 let
   disks = [
     "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8"
@@ -49,10 +46,20 @@ in
                   "--perf-no_write_workqueue"
                 ];
                 # https://0pointer.net/blog/unlocking-luks2-volumes-with-tpm2-fido2-pkcs11-security-hardware-on-systemd-248.html
-                settings = {crypttabExtraOpts = ["tpm2-device=auto" "fido2-device=auto" "token-timeout=10"];};
+                settings = {
+                  crypttabExtraOpts = [
+                    "tpm2-device=auto"
+                    "fido2-device=auto"
+                    "token-timeout=10"
+                  ];
+                };
                 content = {
                   type = "btrfs";
-                  extraArgs = ["-L" "nixos" "-f"];
+                  extraArgs = [
+                    "-L"
+                    "nixos"
+                    "-f"
+                  ];
                   subvolumes = {
                     "@" = {
                       mountpoint = "/";
