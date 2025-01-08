@@ -37,21 +37,33 @@ Yubikey 5
 I've stolen shamelessly from:
 
 - https://snowfall.org/guides/lib/quickstart/
+
 - [JakeHamilton/config](https://github.com/jakehamilton/config) - where it
   started
+
 - [Misterio77](https://github.com/Misterio77/nix-config/)
+
 - [JManch](https://github.com/JManch/nixos)
+
 - [hmajid2301/nixicle](https://github.com/hmajid2301/nixicle/tree/main)
+
 - [IogaMaster/dotfiles](https://github.com/IogaMaster/dotfiles/) - another good
   snowfall-lib config
+
 - [khaneliman/khanelinix](https://github.com/khaneliman/khanelinix) - another
   really good config
+
 - [FelixKrats/dotfiles](https://github.com/FelixKratz/dotfiles) \*Sketchybar
   design and implementation
+
 - [Fufexan/dotfiles](https://github.com/fufexan/dotfiles)
+
 - [NotAShelf/nyx](https://github.com/NotAShelf/nyx)
+
 - [clo4/nix-dotfiles](https://github.com/clo4/nix-dotfiles)
+
 - https://www.youtube.com/watch?v=uP9jDrRvAwM https://github.com/notashelf/nvf
+
 - Mac Configs:
 
   - https://github.com/rounakdatta/dotfiles
@@ -61,10 +73,17 @@ I've stolen shamelessly from:
   - https://github.com/khaneliman/khanelinix
 
 - https://github.com/AlexNabokikh/nix-config
+
 - https://github.com/Gerg-L/spicetify-nix
+
 - https://github.com/catppuccin/egui
+
 - https://github.com/justinlime/dotfiles
+
 - https://github.com/omerxx/dotfiles/tree/master
+
 - https://code.m3tam3re.com/m3tam3re/nixcfg/src/branch/video18
+
 - https://github.com/arvigeus/nixos-config/tree/master
+
 - https://mt-caret.github.io/blog/posts/2020-06-29-optin-state.html

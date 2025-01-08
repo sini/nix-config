@@ -8,6 +8,7 @@
       settings.formatter.formatWithErrors = true;
     };
     clang-format.enable = true;
+    cmake-format.enable = true;
     deadnix = {
       enable = true;
     };
@@ -24,6 +25,8 @@
     fish_indent.enable = true;
     gofmt.enable = true;
     isort.enable = true;
+    jsonfmt.enable = true;
+    mdformat.enable = true;
     nixfmt.enable = true;
     nufmt.enable = true;
     ruff-check.enable = true;
@@ -58,7 +61,9 @@
       "*.jpg"
       "*.webp"
       "*Makefile"
+      "*Makefile.in"
       "*makefile"
+      "*configure.ac"
       "*.xml"
       "*.zsh"
       "*.rasi"
