@@ -30,6 +30,8 @@ in
     environment.systemPackages = [
       # pkgs.bluetuith
       pkgs.${namespace}.sys
+      pkgs.doas
+      pkgs.doas-sudo-shim
     ];
 
     system = {

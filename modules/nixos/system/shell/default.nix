@@ -29,7 +29,6 @@ in
       starship
     ];
 
-
     users.defaultUserShell = pkgs.${cfg.shell};
     users.users.root.shell = pkgs.bashInteractive;
 
