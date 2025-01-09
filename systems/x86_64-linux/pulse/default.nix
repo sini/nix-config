@@ -1,5 +1,9 @@
 { pkgs, ... }:
 {
+  imports = [
+    ./boot.nix
+  ];
+
   facter.reportPath = ./facter.json;
 
   hardware.disk.single.enable = true;
