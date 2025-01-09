@@ -16,7 +16,8 @@ in
     shell = mkOpt (enum [
       "nushell"
       "fish"
-    ]) "fish" "What shell to use";
+      "zsh"
+    ]) "nushell" "What shell to use";
   };
 
   config = {
@@ -27,6 +28,7 @@ in
       zoxide
       starship
     ];
+
 
     users.defaultUserShell = pkgs.${cfg.shell};
     users.users.root.shell = pkgs.bashInteractive;
