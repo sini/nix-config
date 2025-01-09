@@ -9,26 +9,6 @@
   hardware.disk.single.enable = true;
   hardware.disk.single.swap_size = 65536; # 64GB
 
-  # Enable Bootloader
-  system.boot.efi.enable = true;
-
-  # boot.kernelParams = [ "ip=dhcp" ];
-  # boot.initrd = {
-  #   availableKernelModules = [ "r8169" ];
-  #   systemd.users.root.shell = "/bin/cryptsetup-askpass";
-  #   network = {
-  #     enable = true;
-  #     ssh = {
-  #       enable = true;
-  #       port = 22;
-  #       authorizedKeys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAOa9kFogEBODAU4YVs4hxfVx3b5ryBzct4HoAHgwPio" ];
-  #       hostKeys = [ "/etc/ssh/ssh_host_rsa_key" "/etc/ssh/ssh_host_ed25519_key" ];
-  #     };
-  #   };
-  # };
-
-  # system.battery.enable = true; # Only for laptops, they will still work without it, just improves battery life
-
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
     wget
