@@ -6,8 +6,13 @@
 
   facter.reportPath = ./facter.json;
 
-  hardware.disk.single.enable = true;
-  hardware.disk.single.swap_size = 65536; # 64GB
+  hardware.disk.single = {
+    enable = true;
+
+    # This host has two disks, specify the device ID of root
+    device_id = "nvme-Force_MP600_1925823000012856500E";
+    swap_size = 65536; # 64GB
+  };
 
   # Enable Bootloader
   system.boot.efi.enable = true;
@@ -26,8 +31,6 @@
   #     };
   #   };
   # };
-
-  # system.battery.enable = true; # Only for laptops, they will still work without it, just improves battery life
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host

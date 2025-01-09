@@ -7,9 +7,6 @@
 {
   imports = [
     ./boot.nix
-    # ./hardware.nix
-    # ./network.nix
-    # ./specializations.nix
   ];
 
   facter.reportPath = ./facter.json;
@@ -20,16 +17,13 @@
   # Enable Bootloader
   system.boot.efi.enable = true;
 
-  # environment.systemPackages = with pkgs; [
-  #   # Any particular packages only for this host
-  # ];
+  environment.systemPackages = with pkgs; [
+    # Any particular packages only for this host
+    wget
+    vim
+  ];
 
   suites.common.enable = true; # Enables the basics, like audio, networking, ssh, etc.
-
-  nix.settings = {
-    cores = 8;
-    max-jobs = 8;
-  };
 
   services = {
     rpcbind.enable = true; # needed for NFS
