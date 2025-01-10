@@ -8,8 +8,6 @@
 
   hardware.disk.single = {
     enable = true;
-    # This host has two disks, specify the device ID of root
-    device_id = "nvme-Force_MP600_1925823000012856500E";
     swap_size = 65536; # 64GB
   };
 
