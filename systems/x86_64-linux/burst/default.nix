@@ -1,4 +1,5 @@
 {
+  pkgs,
   ...
 }:
 # let
@@ -6,7 +7,7 @@
 # in
 {
   imports = [
-    ./boot.nix
+    ../shared/boot.nix
   ];
 
   facter.reportPath = ./facter.json;

@@ -1,8 +1,15 @@
-_: {
+{ config, lib, ... }:
+{
+  # Install boot keys
+  environment.etc = {
+    "secrets/initrd".source = ./boot-keys;
+  };
+
   boot = {
     loader = {
       systemd-boot = {
         enable = true;
+        configurationLimit = 10;
         consoleMode = "0"; # increase font size
       };
 
@@ -11,21 +18,28 @@ _: {
 
     initrd = {
       availableKernelModules = [ "r8169" ];
-      systemd.enable = true;
-      systemd.users.root.shell = "/bin/cryptsetup-askpass";
       network = {
         enable = true;
         ssh = {
           enable = true;
           port = 22;
-          authorizedKeys = [
-            "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAOa9kFogEBODAU4YVs4hxfVx3b5ryBzct4HoAHgwPio"
-          ];
+          shell = "/bin/cryptsetup-askpass";
+          authorizedKeys =
+            with lib;
+            concatLists (
+              mapAttrsToList (
+                _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
+              ) config.users.users
+            );
           hostKeys = [
-            "/etc/ssh/ssh_host_rsa_key"
             "/etc/ssh/ssh_host_ed25519_key"
+            "/etc/ssh/ssh_host_rsa_key"
           ];
         };
+      };
+      secrets = {
+        "/etc/ssh/ssh_host_ed25519_key" = lib.mkDefault ./boot-keys/ssh_host_ed25519_key;
+        "/etc/ssh/ssh_host_rsa_key" = lib.mkDefault ./boot-keys/ssh_host_rsa_key;
       };
       verbose = false;
     };
