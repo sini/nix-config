@@ -5,9 +5,11 @@
   ];
 
   facter.reportPath = ./facter.json;
+  boot.supportedFilesystems = [ "ntfs" ];
 
-  hardware.disk.single = {
+  hardware.disk.raid = {
     enable = true;
+    btrfs_profile = "single";
     swap_size = 65536; # 64GB
   };
 
