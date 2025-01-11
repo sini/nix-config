@@ -1,4 +1,5 @@
-# Luks2 encrypted disk with btrfs subvolumes, depends on facter report
+# Luks2 encrypted disk with disk-spanning btrfs subvolumes
+# Note: Swap is not supported on multi-disk btrfs systems
 {
   options,
   lib,
@@ -76,11 +77,6 @@ in
       type = types.str;
       default = "";
       description = "(Optional) Disk device ID to use for root.";
-    };
-    swap_size = mkOption {
-      type = types.int;
-      default = 0;
-      description = "Size of swap in MiB, 0 disables swap.";
     };
     data_disks = mkOption {
       type = types.listOf types.str;
@@ -179,12 +175,6 @@ in
                               "@log" = {
                                 mountpoint = "/var/log";
                                 mountOptions = defaultBtrfsOpts;
-                              };
-                            }
-                            // lib.optionalAttrs (cfg.swap_size > 0) {
-                              "@swap" = {
-                                mountpoint = "/swap";
-                                swap.swapfile.size = "${builtins.toString cfg.swap_size}M";
                               };
                             };
                         };

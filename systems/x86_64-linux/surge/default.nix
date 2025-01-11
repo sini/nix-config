@@ -10,7 +10,6 @@
   hardware.disk.raid = {
     enable = true;
     btrfs_profile = "single";
-    swap_size = 65536; # 64GB
   };
 
   environment.systemPackages = with pkgs; [
