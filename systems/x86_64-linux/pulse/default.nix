@@ -7,7 +7,6 @@
   facter.reportPath = ./facter.json;
 
   hardware.disk.single.enable = true;
-  hardware.disk.single.swap_size = 65536; # 64GB
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
