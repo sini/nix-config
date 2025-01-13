@@ -154,29 +154,28 @@ in
                             ++ builtins.map (idx: "/dev/mapper/crypt${toString idx}") (
                               lib.lists.range 1 (builtins.length ordered_disks)
                             );
-                          subvolumes =
-                            {
-                              "@" = {
-                                mountpoint = "/";
-                                mountOptions = defaultBtrfsOpts;
-                              };
-                              "@home" = {
-                                mountpoint = "/home";
-                                mountOptions = defaultBtrfsOpts;
-                              };
-                              "@nix" = {
-                                mountpoint = "/nix";
-                                mountOptions = defaultBtrfsOpts;
-                              };
-                              "@persist" = {
-                                mountpoint = "/persist";
-                                mountOptions = defaultBtrfsOpts;
-                              };
-                              "@log" = {
-                                mountpoint = "/var/log";
-                                mountOptions = defaultBtrfsOpts;
-                              };
+                          subvolumes = {
+                            "@" = {
+                              mountpoint = "/";
+                              mountOptions = defaultBtrfsOpts;
                             };
+                            "@home" = {
+                              mountpoint = "/home";
+                              mountOptions = defaultBtrfsOpts;
+                            };
+                            "@nix" = {
+                              mountpoint = "/nix";
+                              mountOptions = defaultBtrfsOpts;
+                            };
+                            "@persist" = {
+                              mountpoint = "/persist";
+                              mountOptions = defaultBtrfsOpts;
+                            };
+                            "@log" = {
+                              mountpoint = "/var/log";
+                              mountOptions = defaultBtrfsOpts;
+                            };
+                          };
                         };
                       };
                   };
