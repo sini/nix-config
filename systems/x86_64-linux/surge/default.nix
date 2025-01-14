@@ -20,6 +20,7 @@
     # Any particular packages only for this host
     wget
     vim
+    git
   ];
 
   services = {
