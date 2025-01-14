@@ -53,7 +53,6 @@
       "*.git-blame-ignore-revs"
       "*.gitignore"
       "*.gitattributes"
-      "*.luacheckrc"
       "*CODEOWNERS"
       "*LICENSE"
       "*flake.lock"
@@ -63,15 +62,10 @@
       "*.ico"
       "*.jpg"
       "*.webp"
-      "*Makefile"
-      "*Makefile.in"
-      "*makefile"
-      "*configure.ac"
-      "*.xml"
-      "*.zsh"
-      "*.rasi"
-      "*.kdl"
       "*.conf"
+      "*.age"
+      "*.pub"
+      "*.org"
     ];
 
     formatter = {

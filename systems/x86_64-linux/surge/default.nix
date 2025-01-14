@@ -5,7 +5,11 @@
   ];
 
   facter.reportPath = ./facter.json;
-  boot.supportedFilesystems = [ "ntfs" ];
+
+  topology.self = {
+    hardware.info = "surge";
+    services.k8s.name = "k8s";
+  };
 
   hardware.disk.raid = {
     enable = true;
