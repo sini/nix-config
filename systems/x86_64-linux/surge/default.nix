@@ -1,4 +1,4 @@
-{ pkgs, config, ... }:
+{ pkgs, ... }:
 {
   imports = [
     ../shared/boot.nix
@@ -16,18 +16,15 @@
     btrfs_profile = "single";
   };
 
-  config.hardware.networking.enable = true;
+  hardware.networking.enable = true;
 
-  config.services.ssh.enable = true;
-  config.programs.dconf.enable = true;
+  services.ssh.enable = true;
+  programs.dconf.enable = true;
 
-  config.system.nix.enable = true;
-  config.time.timeZone = "America/Los_Angeles";
-  config.i18n.defaultLocale = "en_US.UTF-8";
+  system.nix.enable = true;
+  time.timeZone = "America/Los_Angeles";
+  i18n.defaultLocale = "en_US.UTF-8";
 
-  configconsole = {
-    keyMap = mkForce "us";
-  };
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
