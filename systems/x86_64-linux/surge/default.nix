@@ -63,7 +63,10 @@
     };
   };
 
-  networking.nameservers = [ "1.1.1.1" "8.8.8.8" ];
+  networking.nameservers = [
+    "1.1.1.1"
+    "8.8.8.8"
+  ];
   networking.firewall.enable = false;
 
   services.ssh.enable = true;
@@ -72,7 +75,6 @@
   system.nix.enable = true;
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";
-
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
