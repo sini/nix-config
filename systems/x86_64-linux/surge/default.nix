@@ -1,28 +1,32 @@
-{ pkgs, ... }:
 {
-  imports = [
-    ../shared/boot.nix
-  ];
+  lib,
+  config,
+  pkgs,
+  ...
+}:
+{
 
-  # sops.secrets."network/eno1/mac" = {
-  #   sopsFile = "${inputs.self}/secrets/${config.networking.hostName}/secrets.yaml";
-  # };
+  networking.hostName = "surge";
+
+  sops.secrets."network/eno1/mac" = {
+    sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";
+  };
 
   facter.reportPath = ./facter.json;
 
-  topology.self = {
-    hardware.info = "surge";
-    services.k8s.name = "k8s";
-  };
+  # topology.self = {
+  #   hardware.info = "surge";
+  #   services.k8s.name = "k8s";
+  # };
 
   hardware.disk.raid = {
     enable = true;
     btrfs_profile = "single";
   };
 
-  system.security.doas.enable = true;
+  # system.security.doas.enable = true;
 
-  hardware.networking.enable = false;
+  # hardware.networking.enable = false;
 
   systemd.network = {
     enable = true;
@@ -66,10 +70,10 @@
 
   networking.firewall.enable = false;
 
-  services.ssh.enable = true;
+  # services.ssh.enable = true;
   programs.dconf.enable = true;
 
-  system.nix.enable = true;
+  #system.nix.enable = true;
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";
 
