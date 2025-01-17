@@ -1,12 +1,17 @@
-{ pkgs, ... }:
+{
+  inputs,
+  config,
+  pkgs,
+  ...
+}:
 {
   imports = [
     ../shared/boot.nix
   ];
 
-  # sops.secrets."network/eno1/mac" = {
-  #   sopsFile = "${inputs.self}/secrets/${config.networking.hostName}/secrets.yaml";
-  # };
+  sops.secrets."network/eno1/mac" = {
+    sopsFile = "${inputs.self}/secrets/${config.networking.hostName}/secrets.yaml";
+  };
 
   facter.reportPath = ./facter.json;
 
