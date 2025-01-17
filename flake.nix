@@ -27,87 +27,110 @@
     of things compute.
   '';
 
-  outputs =
-    inputs:
-    let
-      inherit (inputs) snowfall-lib;
+  outputs = inputs:
+    inputs.flake-parts.lib.mkFlake {inherit inputs;} {
+      # Systems for which attributes of perSystem will be built. As
+      # a rule of thumb, only systems provided by available hosts
+      # should go in this list. More systems will increase evaluation
+      # duration.
+      systems = import inputs.systems;
 
-      lib = snowfall-lib.mkLib {
-        # You must provide our flake inputs to Snowfall Lib.
-        inherit inputs;
-
-        # The `src` must be the root of the flake. See configuration
-        # in the next section for information on how you can move your
-        # Nix files to a separate directory.
-        src = ./.;
-
-        snowfall = {
-          meta = {
-            name = "construct.nix";
-            title = "construct.nix";
-          };
-
-          namespace = "construct";
-        };
-      };
-    in
-    lib.mkFlake {
-      channels-config = {
-        allowUnfree = true;
-      };
-
-      overlays = with inputs; [
-        nix-topology.overlays.default
+      imports = [
+        ./nix # Parts of the flake that are used to construct the final flake.
+        ./hosts # Entrypoint for host configurations of my systems.
       ];
+    };
 
-      homes.modules = with inputs; [
-        catppuccin.homeManagerModules.catppuccin
-        # nix-index-database.hmModules.nix-index
-        # # FIXME:
-        # nur.modules.homeManager.default
-        sops-nix.homeManagerModules.sops
-      ];
+  # outputs =
+    # inputs:
+    # let
+    #   inherit (inputs) snowfall-lib;
 
-      systems = {
-        modules = {
-          darwin = with inputs; [ sops-nix.darwinModules.sops ];
-          nixos = with inputs; [
-            nixos-facter-modules.nixosModules.facter
-            disko.nixosModules.disko
-            lanzaboote.nixosModules.lanzaboote
-            # impermanence.nixosModules.impermanence
-            nix-topology.nixosModules.default
-            # authentik-nix.nixosModules.default
-            # stylix.nixosModules.stylix
-            sops-nix.nixosModules.sops
-          ];
-        };
-      };
+    #   lib = snowfall-lib.mkLib {
+    #     # You must provide our flake inputs to Snowfall Lib.
+    #     inherit inputs;
 
-      deploy = lib.mkDeploy { inherit (inputs) self; };
+    #     # The `src` must be the root of the flake. See configuration
+    #     # in the next section for information on how you can move your
+    #     # Nix files to a separate directory.
+    #     src = ./.;
 
-      # nix build .#topology.config.output >
-      topology =
-        with inputs;
-        let
-          host = self.nixosConfigurations.${builtins.head (builtins.attrNames self.nixosConfigurations)};
-        in
-        import nix-topology {
-          inherit (host) pkgs; # Only this package set must include nix-topology.overlays.default
-          modules = [
-            (import ./topology {
-              inherit (host) config;
-            })
-            { inherit (self) nixosConfigurations; }
-          ];
-        };
+    #     snowfall = {
+    #       meta = {
+    #         name = "construct.nix";
+    #         title = "construct.nix";
+    #       };
 
-      outputs-builder = channels: {
-        formatter = inputs.treefmt-nix.lib.mkWrapper channels.nixpkgs ./treefmt.nix;
-      };
+    #       namespace = "construct";
+    #     };
+    #   };
+    # in
+    # lib.mkFlake {
+    #   channels-config = {
+    #     allowUnfree = true;
+    #   };
+
+    #   overlays = with inputs; [
+    #     nix-topology.overlays.default
+    #   ];
+
+    #   homes.modules = with inputs; [
+    #     catppuccin.homeManagerModules.catppuccin
+    #     # nix-index-database.hmModules.nix-index
+    #     # # FIXME:
+    #     # nur.modules.homeManager.default
+    #     sops-nix.homeManagerModules.sops
+    #   ];
+
+    #   systems = {
+    #     modules = {
+    #       darwin = with inputs; [ sops-nix.darwinModules.sops ];
+    #       nixos = with inputs; [
+    #         nixos-facter-modules.nixosModules.facter
+    #         disko.nixosModules.disko
+    #         lanzaboote.nixosModules.lanzaboote
+    #         # impermanence.nixosModules.impermanence
+    #         nix-topology.nixosModules.default
+    #         # authentik-nix.nixosModules.default
+    #         # stylix.nixosModules.stylix
+    #         sops-nix.nixosModules.sops
+    #       ];
+    #     };
+    #   };
+
+    #   deploy = lib.mkDeploy { inherit (inputs) self; };
+
+    #   # nix build .#topology.config.output >
+    #   topology =
+    #     with inputs;
+    #     let
+    #       host = self.nixosConfigurations.${builtins.head (builtins.attrNames self.nixosConfigurations)};
+    #     in
+    #     import nix-topology {
+    #       inherit (host) pkgs; # Only this package set must include nix-topology.overlays.default
+    #       modules = [
+    #         (import ./topology {
+    #           inherit (host) config;
+    #         })
+    #         { inherit (self) nixosConfigurations; }
+    #       ];
+    #     };
+
+    #   outputs-builder = channels: {
+    #     formatter = inputs.treefmt-nix.lib.mkWrapper channels.nixpkgs ./treefmt.nix;
+    #   };
     };
 
   inputs = {
+    # global, so they can be `.follow`ed
+    systems.url = "github:nix-systems/default-linux";
+
+    # Powered by
+    flake-parts = {
+      url = "github:hercules-ci/flake-parts";
+      inputs.nixpkgs-lib.follows = "nixpkgs";
+    };
+
     # NixPkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
 
@@ -161,17 +184,17 @@
     # This config is based around this lib, and heavily inspired by the authors configs:
     # Plus Ultra: https://github.com/jakehamilton/config/tree/6158f53f916dc9522068aee3fdf7e14907045352
     # IogaMaster's flake: https://github.com/IogaMaster/dotfiles/tree/bd37e91d1c68a141701407f1dca903b03a6bd1a1
-    snowfall-lib = {
-      url = "github:snowfallorg/lib";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # snowfall-lib = {
+    #   url = "github:snowfallorg/lib";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
-    # Snowfall Flake
-    # Simplified Nix Flakes on the command line.
-    snowfall-flake = {
-      url = "github:snowfallorg/flake";
-      inputs.nixpkgs.follows = "unstable";
-    };
+    # # Snowfall Flake
+    # # Simplified Nix Flakes on the command line.
+    # snowfall-flake = {
+    #   url = "github:snowfallorg/flake";
+    #   inputs.nixpkgs.follows = "unstable";
+    # };
 
     # System Deployment
     deploy-rs = {

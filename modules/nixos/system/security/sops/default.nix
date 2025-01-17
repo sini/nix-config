@@ -1,10 +1,8 @@
+{ inputs, ... }:
 {
-  lib,
-  inputs,
-  ...
-}:
-{
-  imports = with inputs; [ sops-nix.nixosModules.sops ];
+  imports = [
+    inputs.sops-nix.nixosModules.sops
+  ];
 
   sops = {
     defaultSopsFile = "${inputs.self}/secrets/global/secrets.yaml";
