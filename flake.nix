@@ -27,8 +27,9 @@
     of things compute.
   '';
 
-  outputs = inputs:
-    inputs.flake-parts.lib.mkFlake {inherit inputs;} {
+  outputs =
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
       # Systems for which attributes of perSystem will be built. As
       # a rule of thumb, only systems provided by available hosts
       # should go in this list. More systems will increase evaluation
@@ -41,87 +42,16 @@
       ];
     };
 
-  # outputs =
-    # inputs:
-    # let
-    #   inherit (inputs) snowfall-lib;
-
-    #   lib = snowfall-lib.mkLib {
-    #     # You must provide our flake inputs to Snowfall Lib.
-    #     inherit inputs;
-
-    #     # The `src` must be the root of the flake. See configuration
-    #     # in the next section for information on how you can move your
-    #     # Nix files to a separate directory.
-    #     src = ./.;
-
-    #     snowfall = {
-    #       meta = {
-    #         name = "construct.nix";
-    #         title = "construct.nix";
-    #       };
-
-    #       namespace = "construct";
-    #     };
-    #   };
-    # in
-    # lib.mkFlake {
-    #   channels-config = {
-    #     allowUnfree = true;
-    #   };
-
-    #   overlays = with inputs; [
-    #     nix-topology.overlays.default
-    #   ];
-
-    #   homes.modules = with inputs; [
-    #     catppuccin.homeManagerModules.catppuccin
-    #     # nix-index-database.hmModules.nix-index
-    #     # # FIXME:
-    #     # nur.modules.homeManager.default
-    #     sops-nix.homeManagerModules.sops
-    #   ];
-
-    #   systems = {
-    #     modules = {
-    #       darwin = with inputs; [ sops-nix.darwinModules.sops ];
-    #       nixos = with inputs; [
-    #         nixos-facter-modules.nixosModules.facter
-    #         disko.nixosModules.disko
-    #         lanzaboote.nixosModules.lanzaboote
-    #         # impermanence.nixosModules.impermanence
-    #         nix-topology.nixosModules.default
-    #         # authentik-nix.nixosModules.default
-    #         # stylix.nixosModules.stylix
-    #         sops-nix.nixosModules.sops
-    #       ];
-    #     };
-    #   };
-
-    #   deploy = lib.mkDeploy { inherit (inputs) self; };
-
-    #   # nix build .#topology.config.output >
-    #   topology =
-    #     with inputs;
-    #     let
-    #       host = self.nixosConfigurations.${builtins.head (builtins.attrNames self.nixosConfigurations)};
-    #     in
-    #     import nix-topology {
-    #       inherit (host) pkgs; # Only this package set must include nix-topology.overlays.default
-    #       modules = [
-    #         (import ./topology {
-    #           inherit (host) config;
-    #         })
-    #         { inherit (self) nixosConfigurations; }
-    #       ];
-    #     };
-
-    #   outputs-builder = channels: {
-    #     formatter = inputs.treefmt-nix.lib.mkWrapper channels.nixpkgs ./treefmt.nix;
-    #   };
+  inputs = {
+    devshell = {
+      url = "github:numtide/devshell";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pre-commit-hooks = {
+      url = "github:cachix/pre-commit-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
 
-  inputs = {
     # global, so they can be `.follow`ed
     systems.url = "github:nix-systems/default-linux";
 

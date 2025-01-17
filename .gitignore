@@ -26,3 +26,6 @@ options.json
 
 # Ags
 modules/nixos/desktop/addons/ags/bar/src/types
+
+# Ignore pre-commit config                                                                                    •
+.pre-commit-config.yaml

@@ -9,7 +9,8 @@ with lib;
 with lib.${namespace};
 let
   cfg = config.system.security.doas;
-in {
+in
+{
   options.system.security.doas = {
     enable = mkBoolOpt true "Whether or not to replace sudo with doas.";
   };
@@ -29,7 +30,7 @@ in {
       wheelNeedsPassword = false;
       extraRules = [
         {
-          users = [config.user.name];
+          users = [ config.user.name ];
           noPass = true;
           keepEnv = true;
         }
