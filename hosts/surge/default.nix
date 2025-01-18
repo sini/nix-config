@@ -5,12 +5,6 @@
   ...
 }:
 {
-  imports = [
-    (lib.custom.relativeToRoot "modules/nixos/system/security/sops")
-    (lib.custom.relativeToRoot "modules/nixos/hardware/boot/initrd")
-    (lib.custom.relativeToRoot "modules/nixos/hardware/disk/raid")
-    (lib.custom.relativeToRoot "modules/nixos/user")
-  ];
 
   networking.hostName = "surge";
 
