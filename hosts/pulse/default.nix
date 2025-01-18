@@ -1,7 +1,10 @@
 { pkgs, ... }:
 {
   imports = [
-    ../shared/boot.nix
+    (lib.custom.relativeToRoot "modules/nixos/system/security/sops")
+    (lib.custom.relativeToRoot "modules/nixos/hardware/boot/initrd")
+    (lib.custom.relativeToRoot "modules/nixos/hardware/disk/single")
+    (lib.custom.relativeToRoot "modules/nixos/user")
   ];
 
   facter.reportPath = ./facter.json;

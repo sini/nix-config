@@ -26,8 +26,6 @@
         ssh = {
           enable = true;
           port = 22;
-          #shell = "/bin/cryptsetup-askpass";
-          #shell = "/bin/systemd-tty-ask-password-agent";
           authorizedKeys =
             with lib;
             concatLists (
