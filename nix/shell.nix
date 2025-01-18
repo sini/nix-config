@@ -1,35 +1,3 @@
-# {
-#   perSystem =
-#     {
-#       inputs',
-#       config,
-#       pkgs,
-#       ...
-#     }:
-#     {
-#       pre-commit.settings.hooks.treefmt.enable = true;
-#       devShells.default = pkgs.mkShell {
-#         name = "makoto";
-#         meta.description = "The default development shell for my NixOS configuration";
-
-#         shellHook = config.pre-commit.installationScript;
-
-#         # Receive packages from treefmt's configured devShell.
-#         inputsFrom = [ config.treefmt.build.devShell ];
-#         packages = [
-#           # Packages provided by flake inputs
-#           inputs'.sops-nix.packages.default # agenix CLI for secrets management
-#           inputs'.deploy-rs.packages.default # deploy-rs CLI for easy deployments
-
-#           # Packages provided by flake-parts modules
-#           config.treefmt.build.wrapper # Quick formatting tree-wide with `treefmt`
-
-#           # Packages from nixpkgs, for Nix, Flakes or local tools.
-#           pkgs.git # flakes require Git to be installed, since this repo is version controlled
-#         ];
-#       };
-#     };
-# }
 { inputs, ... }:
 {
   imports = [

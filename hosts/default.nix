@@ -18,6 +18,7 @@
         lib = inputs.nixpkgs.lib.extend (
           _self: _super: { custom = import ../lib { inherit (inputs.nixpkgs) lib; }; }
         );
+        namespace = "custom";
 
       };
       modules = [
