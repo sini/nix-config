@@ -9,9 +9,7 @@
       lib = inputs.nixpkgs.lib.extend (
         _self: _super: { custom = import ../lib { inherit (inputs.nixpkgs) lib; }; }
       );
-      system_modules = lib.custom.mkModuleTree {
-        path = lib.custom.relativeToRoot "modules";
-      };
+      system_modules = lib.custom.listModuleDefaultsRec (lib.custom.relativeToRoot "modules");
     in
     {
       surge = inputs.nixpkgs.lib.nixosSystem {
@@ -26,7 +24,6 @@
           # see: https://github.com/nix-community/home-manager/pull/3454
           inherit lib;
           namespace = "custom";
-
         };
         modules = [
           inputs.nixos-facter-modules.nixosModules.facter
