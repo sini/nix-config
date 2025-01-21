@@ -6,10 +6,9 @@
 {
   flake.nixosConfigurations =
     let
-      lib = inputs.nixpkgs.lib.extend (
-        _self: _super: { custom = import ../lib { inherit (inputs.nixpkgs) lib; }; }
-      );
-      system_modules = lib.custom.listModuleDefaultsRec (lib.custom.relativeToRoot "modules");
+      namespace = "custom";
+      lib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self namespace);
+      system_modules = lib.${namespace}.listModuleDefaultsRec (lib.${namespace}.relativeToRoot "modules");
     in
     {
       surge = inputs.nixpkgs.lib.nixosSystem {
