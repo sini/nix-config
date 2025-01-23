@@ -22,9 +22,8 @@
 #
 {
   description = ''
-      A NixOS flake based on snowfall-lib describing homelab kubernetes nodes, kubernetes
-    service deployments, mac laptop, desktop workstation, virtualized VFIO, and all manner
-    of things compute.
+    A NixOS flake describing homelab kubernetes nodes, kubernetes service deployments, 
+    mac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.
   '';
 
   outputs =
@@ -37,8 +36,8 @@
       systems = import inputs.systems;
 
       imports = [
-        ./nix # Parts of the flake that are used to construct the final flake.
-        ./hosts # Entrypoint for host configurations of my systems.
+        ./parts/devshell.nix # Configuration for nix develop shell.
+        ./parts/systems.nix # Entrypoint for systems configurations.
       ];
     };
 
@@ -47,6 +46,7 @@
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     pre-commit-hooks = {
       url = "github:cachix/pre-commit-hooks.nix";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -68,7 +68,7 @@
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
     # Flatpak
-    nix-flatpak.url = "github:gmodena/nix-flatpak";
+    # nix-flatpak.url = "github:gmodena/nix-flatpak";
 
     # Home Manager
     home-manager = {
@@ -87,13 +87,13 @@
     # Homebrew
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 
-    # WSL
-    # https://github.com/LGUG2Z/nixos-wsl-starter
-    # https://github.com/khaneliman/khanelinix
-    nixos-wsl = {
-      url = "github:nix-community/NixOS-WSL";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # # WSL
+    # # https://github.com/LGUG2Z/nixos-wsl-starter
+    # # https://github.com/khaneliman/khanelinix
+    # nixos-wsl = {
+    #   url = "github:nix-community/NixOS-WSL";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
@@ -104,33 +104,17 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Nix Impermenance
-    # See: https://nixos.wiki/wiki/Impermanence
-    # https://grahamc.com/blog/erase-your-darlings/
-    impermanence.url = "github:nix-community/impermanence";
-    persist-retro.url = "github:Geometer1729/persist-retro";
-
-    # Snowfall Lib
-    # This config is based around this lib, and heavily inspired by the authors configs:
-    # Plus Ultra: https://github.com/jakehamilton/config/tree/6158f53f916dc9522068aee3fdf7e14907045352
-    # IogaMaster's flake: https://github.com/IogaMaster/dotfiles/tree/bd37e91d1c68a141701407f1dca903b03a6bd1a1
-    # snowfall-lib = {
-    #   url = "github:snowfallorg/lib";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
-
-    # # Snowfall Flake
-    # # Simplified Nix Flakes on the command line.
-    # snowfall-flake = {
-    #   url = "github:snowfallorg/flake";
-    #   inputs.nixpkgs.follows = "unstable";
-    # };
+    # # Nix Impermenance
+    # # See: https://nixos.wiki/wiki/Impermanence
+    # # https://grahamc.com/blog/erase-your-darlings/
+    # impermanence.url = "github:nix-community/impermanence";
+    # persist-retro.url = "github:Geometer1729/persist-retro";
 
     # System Deployment
-    deploy-rs = {
-      url = "github:serokell/deploy-rs";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # deploy-rs = {
+    #   url = "github:serokell/deploy-rs";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # disko - Declarative disk partitioning
     disko = {
@@ -146,23 +130,23 @@
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
 
     # Run unpatched dynamically compiled binaries
-    nix-ld = {
-      url = "github:Mic92/nix-ld";
-      inputs.nixpkgs.follows = "unstable";
-    };
+    # nix-ld = {
+    #   url = "github:Mic92/nix-ld";
+    #   inputs.nixpkgs.follows = "unstable";
+    # };
 
     # Neovim
     # TODO: Do my own neovim...
-    neovim = {
-      url = "github:jakehamilton/neovim";
-      inputs.nixpkgs.follows = "unstable";
-    };
+    # neovim = {
+    #   url = "github:jakehamilton/neovim";
+    #   inputs.nixpkgs.follows = "unstable";
+    # };
 
     # Secure boot
-    lanzaboote = {
-      url = "github:nix-community/lanzaboote/v0.4.1";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # lanzaboote = {
+    #   url = "github:nix-community/lanzaboote/v0.4.1";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # Facter - an alternative to nixos-generate-config
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
@@ -185,26 +169,26 @@
 
     # Vault Integration
     # The NixOS Vault Service module is a NixOS module that allows easily integrating Vault with existing systemd services.
-    vault-service = {
-      url = "github:DeterminateSystems/nixos-vault-service";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # vault-service = {
+    #   url = "github:DeterminateSystems/nixos-vault-service";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # Yubikey Guide
-    yubikey-guide = {
-      url = "github:drduh/YubiKey-Guide";
-      flake = false;
-    };
+    # yubikey-guide = {
+    #   url = "github:drduh/YubiKey-Guide";
+    #   flake = false;
+    # };
 
     # GPG default configuration
-    gpg-base-conf = {
-      url = "github:drduh/config";
-      flake = false;
-    };
+    # gpg-base-conf = {
+    #   url = "github:drduh/config";
+    #   flake = false;
+    # };
 
     # Global catppuccin theme
-    catppuccin-cursors.url = "github:catppuccin/cursors";
-    catppuccin.url = "github:catppuccin/nix";
+    # catppuccin-cursors.url = "github:catppuccin/cursors";
+    # catppuccin.url = "github:catppuccin/nix";
 
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     treefmt-nix.url = "github:numtide/treefmt-nix";

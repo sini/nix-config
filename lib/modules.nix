@@ -1,11 +1,14 @@
 { lib, ... }:
 let
   inherit (builtins)
+    attrNames
+    elem
     filter
     map
+    readDir
     toString
-    elem
     ;
+  inherit (lib.attrsets) filterAttrs;
   inherit (lib.filesystem) listFilesRecursive;
   inherit (lib.strings) hasSuffix;
 
@@ -34,18 +37,22 @@ let
 
   scanPaths =
     path:
-    builtins.map (f: (path + "/${f}")) (
-      builtins.attrNames (
-        lib.attrsets.filterAttrs (
+    map (f: (path + "/${f}")) (
+      attrNames (
+        filterAttrs (
           path: _type:
           (_type == "directory") # include directories
           || (
             (path != "default.nix") # ignore default.nix
-            && (lib.strings.hasSuffix ".nix" path) # include .nix files
+            && (hasSuffix ".nix" path) # include .nix files
           )
-        ) (builtins.readDir path)
+        ) (readDir path)
       )
     );
+
+  systemsWithConfigs = attrNames (
+    filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot "systems"))
+  );
 in
 {
   inherit
@@ -53,5 +60,6 @@ in
     scanPaths
     listModuleDefaultsRec
     mkModuleTree
+    systemsWithConfigs
     ;
 }

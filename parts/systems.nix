@@ -29,7 +29,7 @@
           inputs.disko.nixosModules.disko
           inputs.sops-nix.nixosModules.sops
 
-          ./surge
+          ../systems/x86_64-linux/surge
         ] ++ system_modules;
       };
     };
