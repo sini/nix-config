@@ -50,8 +50,19 @@ let
       )
     );
 
-  systemsWithConfigs = attrNames (
-    filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot "systems"))
+  listDirectories =
+    path: attrNames (filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot path)));
+
+  listHosts = arch: listDirectories ("systems/" + arch);
+
+  filterSystemType = type: filter (hasSuffix "-${type}") (listDirectories "systems");
+
+  linuxSystemsWithConfigs = map (arch: { "${arch}" = listDirectories "systems/${arch}"; }) (
+    filterSystemType "linux"
+  );
+
+  darwinSystemsWithConfigs = map (arch: { "${arch}" = listDirectories "systems/${arch}"; }) (
+    filterSystemType "darwin"
   );
 in
 {
@@ -60,6 +71,9 @@ in
     scanPaths
     listModuleDefaultsRec
     mkModuleTree
-    systemsWithConfigs
+    listHosts
+    listDirectories
+    linuxSystemsWithConfigs
+    darwinSystemsWithConfigs
     ;
 }
