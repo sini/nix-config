@@ -26,11 +26,8 @@
 
   # system.security.doas.enable = true;
 
-<<<<<<< HEAD
-=======
   # hardware.networking.enable = false;
 
->>>>>>> 4f24581 (stash)
   systemd.network = {
     enable = true;
     netdevs = {
