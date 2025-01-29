@@ -15,7 +15,6 @@
       devshells.default = {
         packages = [
           pkgs.nix # Always use the nix version from this flake's nixpkgs version, so that nix-plugins (below) doesn't fail because of different nix versions.
-          # pkgs.agenix-rekey
           config.agenix-rekey.package
           pkgs.age-plugin-yubikey
         ];
@@ -64,7 +63,6 @@
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
-        agenix-rekey.nixosConfigurations = inputs.self.nixosConfigurations; # (not technically needed, as it is already the default)
       };
     };
 }
