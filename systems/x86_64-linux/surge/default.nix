@@ -1,26 +1,36 @@
-{ pkgs, ... }:
 {
-  imports = [
-    ../shared/boot.nix
-  ];
+  lib,
+  config,
+  pkgs,
+  ...
+}:
+{
+
+  networking.hostName = "surge";
+
+  sops.secrets."network/eno1/mac" = {
+    sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";
+  };
 
   facter.reportPath = ./facter.json;
 
-  topology.self = {
-    hardware.info = "surge";
-    services.k8s.name = "k8s";
-  };
+  # topology.self = {
+  #   hardware.info = "surge";
+  #   services.k8s.name = "k8s";
+  # };
 
   hardware.disk.raid = {
     enable = true;
     btrfs_profile = "single";
   };
 
-  hardware.networking.enable = false;
-  #networking.eno1.ipv4.addresses = [ "10.10.10.6" ];
-  #networking.enp2s0.ipv4.addresses = [ "10.10.10.5" ];
+  # system.security.doas.enable = true;
 
-  # Networking
+<<<<<<< HEAD
+=======
+  # hardware.networking.enable = false;
+
+>>>>>>> 4f24581 (stash)
   systemd.network = {
     enable = true;
     netdevs = {
@@ -30,8 +40,6 @@
           Name = "bond0";
         };
         bondConfig = {
-          # Mode = "balance-rr";
-          # Mode = "balance-alb";
           Mode = "balance-xor";
           TransmitHashPolicy = "layer3+4";
         };
@@ -40,47 +48,43 @@
     # Configure Bonds to utilize both 2.5Gbps ports
     networks = {
       "30-eno1" = {
-        matchConfig.Name = "eno1";
+        matchConfig.PermanentMACAddress = "84:47:09:40:d5:f5";
         networkConfig.Bond = "bond0";
       };
 
       "30-enp2s0" = {
-        matchConfig.Name = "enp2s0";
+        matchConfig.PermanentMACAddress = "84:47:09:40:d5:f4";
         networkConfig.Bond = "bond0";
       };
 
       "40-bond0" = {
         matchConfig.Name = "bond0";
+        networkConfig = {
+          DHCP = "ipv4";
+          LinkLocalAddressing = "no";
+        };
         linkConfig = {
           RequiredForOnline = "routable";
+          MACAddress = "84:47:09:40:d5:f4";
         };
-        address = [ "10.10.10.5/16" ];
-        gateway = [ "10.10.0.1" ];
-        routes = [
-          { Gateway = "10.10.0.1"; }
-        ];
       };
     };
   };
 
-  networking.nameservers = [ "1.1.1.1" "8.8.8.8" ];
   networking.firewall.enable = false;
 
-  services.ssh.enable = true;
+  # services.ssh.enable = true;
   programs.dconf.enable = true;
 
-  system.nix.enable = true;
+  #system.nix.enable = true;
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";
-
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
     wget
     vim
     git
-    doas
-    doas-sudo-shim
   ];
 
   services = {

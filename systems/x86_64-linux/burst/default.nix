@@ -1,9 +1,5 @@
 { pkgs, ... }:
 {
-  imports = [
-    ../shared/boot.nix
-  ];
-
   facter.reportPath = ./facter.json;
 
   topology.self = {
@@ -19,6 +15,8 @@
   programs.dconf.enable = true;
 
   system.nix.enable = true;
+  system.security.doas.enable = true;
+
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";
 

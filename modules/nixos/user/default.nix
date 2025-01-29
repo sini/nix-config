@@ -50,19 +50,19 @@ in
       propagatedIcon
     ];
 
-    environment.sessionVariables.FLAKE = "/home/${cfg.name}/repos/construct.nix";
+    # environment.sessionVariables.FLAKE = "/home/${cfg.name}/repos/construct.nix";
 
-    home = {
-      file = {
-        "Documents/.keep".text = "";
-        "Downloads/.keep".text = "";
-        "Music/.keep".text = "";
-        "Pictures/.keep".text = "";
-        "dev/.keep".text = "";
-        ".face".source = cfg.icon;
-        "Pictures/${cfg.icon.fileName or (builtins.baseNameOf cfg.icon)}".source = cfg.icon;
-      };
-    };
+    # home = {
+    #   file = {
+    #     "Documents/.keep".text = "";
+    #     "Downloads/.keep".text = "";
+    #     "Music/.keep".text = "";
+    #     "Pictures/.keep".text = "";
+    #     "dev/.keep".text = "";
+    #     ".face".source = cfg.icon;
+    #     "Pictures/${cfg.icon.fileName or (builtins.baseNameOf cfg.icon)}".source = cfg.icon;
+    #   };
+    # };
 
     users.users.${cfg.name} = {
       isNormalUser = true;

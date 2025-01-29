@@ -1,6 +1,6 @@
 {
-  options,
   config,
+  pkgs,
   lib,
   namespace,
   ...
@@ -12,16 +12,22 @@ let
 in
 {
   options.system.security.doas = {
-    enable = mkBoolOpt false "Whether or not to replace sudo with doas.";
+    enable = mkBoolOpt true "Whether or not to replace sudo with doas.";
   };
 
   config = mkIf cfg.enable {
+    environment.systemPackages = with pkgs; [
+      doas
+      doas-sudo-shim
+    ];
+
     # Disable sudo
     security.sudo.enable = false;
 
     # Enable and configure `doas`.
     security.doas = {
       enable = true;
+      wheelNeedsPassword = false;
       extraRules = [
         {
           users = [ config.user.name ];
@@ -31,9 +37,5 @@ in
       ];
     };
 
-    # Add an alias to the shell for backward-compat and convenience.
-    environment.shellAliases = {
-      sudo = "doas";
-    };
   };
 }

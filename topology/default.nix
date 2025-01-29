@@ -1,5 +1,4 @@
-{ ... }:
-{
+_: {
   networks.home = {
     name = "home";
     cidrv4 = "10.10.0.0/16";

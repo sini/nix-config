@@ -3,11 +3,10 @@
   config,
   pkgs,
   lib,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
   cfg = config.system.nix;
 in
@@ -21,7 +20,7 @@ in
   config = mkIf cfg.enable {
     environment.systemPackages = with pkgs; [
       nil
-      nixfmt
+      nixfmt-rfc-style
       nix-index
       nix-prefetch-git
     ];
@@ -65,10 +64,6 @@ in
           options = "--delete-older-than 7d";
         };
 
-        # flake-utils-plus
-        generateRegistryFromInputs = true;
-        generateNixPathFromInputs = true;
-        linkInputs = true;
       };
   };
 }
