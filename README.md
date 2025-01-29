@@ -1,21 +1,21 @@
 <h1 align="center"> <img src="./.github/assets/flake.webp" width="250px"/></h1>
-<h2 align="center">My NixOS flake template made with <a href="https://github.com/snowfallorg/lib">snowfall</a>.</h2>
+<h2 align="center">Nexus.nix -- my personal multi-host flake configuration</h2>
 
 <h1 align="center">
 <a href='#'><img src="https://raw.githubusercontent.com/catppuccin/catppuccin/main/assets/palette/macchiato.png" width="600px"/></a>
   <br>
   <br>
   <div>
-    <a href="https://github.com/sini/construct.nix/issues">
-        <img src="https://img.shields.io/github/issues/sini/construct.nix?color=fab387&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/nexus.nix/issues">
+        <img src="https://img.shields.io/github/issues/sini/nexus.nix?color=fab387&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/construct.nix/stargazers">
-        <img src="https://img.shields.io/github/stars/sini/construct.nix?color=ca9ee6&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/nexus.nix/stargazers">
+        <img src="https://img.shields.io/github/stars/sini/nexus.nix?color=ca9ee6&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/construct.nix">
-        <img src="https://img.shields.io/github/repo-size/sini/construct.nix?color=ea999c&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/nexus.nix">
+        <img src="https://img.shields.io/github/repo-size/sini/nexus.nix?color=ea999c&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/construct.nix/blob/main/.github/LICENCE">
+    <a href="https://github.com/sini/nexus.nix/blob/main/.github/LICENCE">
         <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=GPL-3&logoColor=ca9ee6&colorA=313244&colorB=cba6f7"/>
     </a>
     <br>
@@ -36,7 +36,15 @@ Yubikey 5
 
 I've stolen shamelessly from:
 
-- https://snowfall.org/guides/lib/quickstart/
+- [NotAShelf/nyx](https://github.com/NotAShelf/nyx)
+
+- https://github.com/EmergentMind/nix-config/tree/dev
+
+- https://github.com/oddlama/nix-config/tree/main
+
+- https://git.kun.is/pim/nixos-configs/src/branch/master
+
+-
 
 - [JakeHamilton/config](https://github.com/jakehamilton/config) - where it
   started
@@ -87,3 +95,9 @@ I've stolen shamelessly from:
 - https://github.com/arvigeus/nixos-config/tree/master
 
 - https://mt-caret.github.io/blog/posts/2020-06-29-optin-state.html
+
+- https://unmovedcentre.com/posts/secrets-management/
+
+- https://www.youtube.com/watch?v=2yplBzPCghA
+
+- https://github.com/badele/nix-homelab/tree/main

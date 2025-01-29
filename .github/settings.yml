@@ -2,13 +2,13 @@ repository:
   # See https://developer.github.com/v3/repos/#edit for all available settings.
 
   # The name of the repository. Changing this will rename the repository
-  name: construct.nix
+  name: nexus.nix
   # A short description of the repository that will show up on GitHub
   description: NixOS Configuration
   # A URL with more information about the repository
   homepage: ""
   # A comma-separated list of topics to set on the repository
-  topics: "neovim,nixos,unstable,nixos-configuration,snowfall,flake,flakes,nixos-config,nixos-dotfiles,hyprland"
+  topics: "neovim,nixos,unstable,nixos-configuration,flake,flakes,nixos-config,nixos-dotfiles,hyprland"
   # Either `true` to make the repository private, or `false` to make it public.
   private: false
   # Either `true` to enable issues for this repository, `false` to disable them.
