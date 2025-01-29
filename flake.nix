@@ -37,6 +37,7 @@
 
       imports = [
         ./parts/devshell.nix # Configuration for nix develop shell.
+        ./parts/fmt.nix # Configuration for nix develop shell.
         ./parts/systems.nix # Entrypoint for systems configurations.
       ];
     };
@@ -160,6 +161,12 @@
     # Agenix
     # https://lgug2z.com/articles/providing-runtime-secrets-to-nixos-services/
     # https://github.com/oddlama/agenix-rekey
+    agenix.url = "github:ryantm/agenix";
+    agenix-rekey.url = "github:oddlama/agenix-rekey";
+    # Make sure to override the nixpkgs version to follow your flake,
+    # otherwise derivation paths can mismatch (when using storageMode = "derivation"),
+    # resulting in the rekeyed secrets not being found!
+    agenix-rekey.inputs.nixpkgs.follows = "nixpkgs";
 
     #  age.secrets.nix-access-tokens-github.file =
     #"${self}/secrets/root.nix-access-tokens-github.age";
