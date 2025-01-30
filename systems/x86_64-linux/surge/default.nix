@@ -1,6 +1,4 @@
 {
-  lib,
-  config,
   pkgs,
   ...
 }:
@@ -8,9 +6,9 @@
 
   networking.hostName = "surge";
 
-  sops.secrets."network/eno1/mac" = {
-    sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";
-  };
+  # sops.secrets."network/eno1/mac" = {
+  #   sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";
+  # };
 
   facter.reportPath = ./facter.json;
 

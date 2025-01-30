@@ -27,7 +27,7 @@ in
       modules = [
         inputs.nixos-facter-modules.nixosModules.facter
         inputs.disko.nixosModules.disko
-        inputs.sops-nix.nixosModules.sops
+        # inputs.sops-nix.nixosModules.sops
 
         ../systems/x86_64-linux/surge
       ] ++ system_modules;

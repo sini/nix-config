@@ -1,8 +1,8 @@
 { config, lib, ... }:
 {
-  sops.secrets."initrd_ssh_key" = {
-    sopsFile = "${config.sops.defaultSopsFile}";
-  };
+  # sops.secrets."initrd_ssh_key" = {
+  # sopsFile = "${config.sops.defaultSopsFile}";
+  # };
 
   boot = {
     loader = {
@@ -38,9 +38,9 @@
           ];
         };
       };
-      secrets = {
-        "/etc/secrets/initrd/ssh_host_ed25519_key" = lib.mkForce config.sops.secrets."initrd_ssh_key".path;
-      };
+      # secrets = {
+      #   "/etc/secrets/initrd/ssh_host_ed25519_key" = lib.mkForce config.sops.secrets."initrd_ssh_key".path;
+      # };
       verbose = false;
     };
 

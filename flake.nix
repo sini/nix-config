@@ -153,10 +153,10 @@
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
 
     # sops-nix - does not currently support nix-darwin, only home-manager... perhaps thats enough?
-    sops-nix = {
-      url = "github:Mic92/sops-nix";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # sops-nix = {
+    #   url = "github:Mic92/sops-nix";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # Agenix
     # https://lgug2z.com/articles/providing-runtime-secrets-to-nixos-services/
