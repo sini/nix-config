@@ -36,6 +36,7 @@
       systems = import inputs.systems;
 
       imports = [
+        ./parts/agenix-rekey.nix # Configuration for agenix-rekey + devshell
         ./parts/devshell.nix # Configuration for nix develop shell.
         ./parts/fmt.nix # Configuration for nix develop shell.
         ./parts/systems.nix # Entrypoint for systems configurations.

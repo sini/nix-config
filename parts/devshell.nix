@@ -2,7 +2,6 @@
 {
   imports = [
     inputs.devshell.flakeModule
-    inputs.agenix-rekey.flakeModule
   ];
 
   perSystem =
@@ -15,9 +14,8 @@
       devshells.default = {
         packages = [
           pkgs.nix # Always use the nix version from this flake's nixpkgs version, so that nix-plugins (below) doesn't fail because of different nix versions.
-          pkgs.nixos-rebuild
-          config.agenix-rekey.package
-          pkgs.age-plugin-yubikey
+          pkgs.nixos-rebuild # Ensure nixos-rebuild is available for darwin systems
+          pkgs.nix-output-monitor
         ];
 
         commands = [
