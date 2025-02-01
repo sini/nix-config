@@ -1,3 +1,4 @@
+# Based on https://github.com/oddlama/nix-config/blob/7e32b6d4d9b922892bcbf991902dd88a0c4a8fe7/nix/devshell.nix
 { inputs, ... }:
 {
   imports = [
@@ -62,6 +63,18 @@
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
+
+        env = [
+          {
+            # Additionally configure nix-plugins with our extra builtins file.
+            # We need this for our repo secrets.
+            name = "NIX_CONFIG";
+            value = ''
+              plugin-files = ${pkgs.nix-plugins}/lib/nix/plugins
+              extra-builtins-file = ${./..}/nix/extra-builtins.nix
+            '';
+          }
+        ];
       };
     };
 }

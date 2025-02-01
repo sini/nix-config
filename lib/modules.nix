@@ -35,6 +35,9 @@ let
 
   relativeToRoot = lib.path.append ../.;
 
+  listDirectories =
+    path: attrNames (filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot path)));
+
   scanPaths =
     path:
     map (f: (path + "/${f}")) (
@@ -50,30 +53,13 @@ let
       )
     );
 
-  listDirectories =
-    path: attrNames (filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot path)));
-
-  listHosts = arch: listDirectories ("systems/" + arch);
-
-  filterSystemType = type: filter (hasSuffix "-${type}") (listDirectories "systems");
-
-  linuxSystemsWithConfigs = map (arch: { "${arch}" = listDirectories "systems/${arch}"; }) (
-    filterSystemType "linux"
-  );
-
-  darwinSystemsWithConfigs = map (arch: { "${arch}" = listDirectories "systems/${arch}"; }) (
-    filterSystemType "darwin"
-  );
 in
 {
   inherit
     relativeToRoot
     scanPaths
     listModuleDefaultsRec
-    mkModuleTree
-    listHosts
     listDirectories
-    linuxSystemsWithConfigs
-    darwinSystemsWithConfigs
+    mkModuleTree
     ;
 }

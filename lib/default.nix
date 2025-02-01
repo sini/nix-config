@@ -10,9 +10,13 @@ let
     (import ./attrs.nix { inherit lib; })
     (import ./modules.nix { inherit lib; })
     (import ./options.nix { inherit lib; })
+    (import ./hosts.nix {
+      inherit lib;
+      inherit namespace;
+    })
   ];
 in
-{
+rec {
   inherit namespace;
   ${namespace} = mergeAttrsList libs;
 }
