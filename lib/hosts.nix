@@ -21,8 +21,8 @@ let
   isHostDarwin = { arch, ... }: hasSuffix "darwin" arch;
 
   darwinHosts = filter isHostDarwin listHostsWithArch;
-  linuxHosts = filter (host: !isHostDarwin host) listHostsWithArch;
 
+  linuxHosts = filter (host: !isHostDarwin host) listHostsWithArch;
 in
 rec {
   inherit

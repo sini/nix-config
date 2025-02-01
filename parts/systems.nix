@@ -10,27 +10,30 @@ let
 in
 # systems = lib.custom.systemsWithConfigs;
 {
-  flake.nixosConfigurations = {
-    surge = inputs.nixpkgs.lib.nixosSystem {
-      specialArgs = {
-        inherit
-          inputs
-          outputs
-          ;
+  flake = {
+    nixosConfigurations = {
+      surge = inputs.nixpkgs.lib.nixosSystem {
+        specialArgs = {
+          inherit
+            inputs
+            outputs
+            ;
 
-        # ========== Extend lib with lib.custom ==========
-        # NOTE: This approach allows lib.custom to propagate into hm
-        # see: https://github.com/nix-community/home-manager/pull/3454
-        inherit lib;
-        namespace = "custom";
+          # ========== Extend lib with lib.custom ==========
+          # NOTE: This approach allows lib.custom to propagate into hm
+          # see: https://github.com/nix-community/home-manager/pull/3454
+          inherit lib;
+          namespace = "custom";
+        };
+        modules = [
+          inputs.nixos-facter-modules.nixosModules.facter
+          inputs.disko.nixosModules.disko
+          # inputs.sops-nix.nixosModules.sops
+
+          ../systems/x86_64-linux/surge
+        ] ++ system_modules;
       };
-      modules = [
-        inputs.nixos-facter-modules.nixosModules.facter
-        inputs.disko.nixosModules.disko
-        # inputs.sops-nix.nixosModules.sops
-
-        ../systems/x86_64-linux/surge
-      ] ++ system_modules;
     };
+    darwinConfigurations = { };
   };
 }
