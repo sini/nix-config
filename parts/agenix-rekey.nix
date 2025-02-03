@@ -14,7 +14,7 @@
     # decrypt all repository-wide secrets.
     secretsConfig = {
       masterIdentities = [ ../secrets/pub/master.pub ];
-      #extraEncryptionPubkeys = [ ../secrets/backup.pub ];
+      extraEncryptionPubkeys = [ ]; # TODO: Backup key
     };
   };
 
