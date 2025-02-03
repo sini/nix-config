@@ -12,6 +12,8 @@
     in
     lib.optionalAttrs (lib.pathExists local) { inherit local; };
 
+  age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+
   # Setup secret rekeying parameters
   age.rekey = {
     inherit (inputs.self.secretsConfig)
