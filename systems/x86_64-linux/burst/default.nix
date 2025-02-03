@@ -2,10 +2,10 @@
 {
   facter.reportPath = ./facter.json;
 
-  topology.self = {
-    hardware.info = "burst";
-    services.k8s.name = "k8s";
-  };
+  # topology.self = {
+  #   hardware.info = "burst";
+  #   services.k8s.name = "k8s";
+  # };
 
   hardware.disk.single.enable = true;
 

@@ -15,35 +15,37 @@
       system_modules = extendedLib.${namespace}.listModuleDefaultsRec (
         extendedLib.${namespace}.relativeToRoot "modules"
       );
+      inherit (extendedLib.${namespace}) linuxHosts;
     in
     {
-      nixosConfigurations = {
-        surge = inputs.nixpkgs.lib.nixosSystem {
-          specialArgs = {
-            inherit
-              inputs
-              ;
-            lib = extendedLib;
-            namespace = "custom";
+      nixosConfigurations = lib.attrsets.mergeAttrsList (
+        builtins.map (_elem: {
+          "${_elem.hostname}" = inputs.nixpkgs.lib.nixosSystem {
+            specialArgs = {
+              inherit
+                inputs
+                ;
+              lib = extendedLib;
+              namespace = "custom";
+            };
+            modules = [
+              {
+                nixpkgs.config.allowUnfree = true;
+                node.name = _elem.hostname;
+                # node.arch = "x86_64-linux";
+                node.rootPath = _elem.path;
+                node.secretsDir = _elem.path + "/secrets";
+              }
+              inputs.nixos-facter-modules.nixosModules.facter
+              inputs.disko.nixosModules.disko
+              inputs.agenix.nixosModules.default
+              inputs.agenix-rekey.nixosModules.default
+              # inputs.sops-nix.nixosModules.sops
+              _elem.path
+            ] ++ system_modules;
           };
-          modules = [
-            {
-              nixpkgs.config.allowUnfree = true;
-              node.name = "surge";
-              # node.arch = "x86_64-linux";
-              node.rootPath = ../systems/x86_64-linux/surge;
-              node.secretsDir = ../systems/x86_64-linux/surge/secrets;
-            }
-            inputs.nixos-facter-modules.nixosModules.facter
-            inputs.disko.nixosModules.disko
-            inputs.agenix.nixosModules.default
-            inputs.agenix-rekey.nixosModules.default
-            # inputs.sops-nix.nixosModules.sops
-
-            ../systems/x86_64-linux/surge
-          ] ++ system_modules;
-        };
-      };
+        }) linuxHosts
+      );
       darwinConfigurations = { };
 
       # All nixosSystem instanciations are collected here, so that we can refer
