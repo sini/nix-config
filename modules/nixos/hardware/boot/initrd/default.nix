@@ -38,7 +38,6 @@
             );
           hostKeys = [
             config.age.secrets.initrd_host_ed25519_key.path
-
           ];
         };
       };
