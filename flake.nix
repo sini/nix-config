@@ -22,7 +22,7 @@
 #
 {
   description = ''
-    A NixOS flake describing homelab kubernetes nodes, kubernetes service deployments, 
+    A NixOS flake describing homelab kubernetes nodes, kubernetes service deployments,
     mac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.
   '';
 
@@ -162,12 +162,16 @@
     # Agenix
     # https://lgug2z.com/articles/providing-runtime-secrets-to-nixos-services/
     # https://github.com/oddlama/agenix-rekey
-    agenix.url = "github:ryantm/agenix";
-    agenix-rekey.url = "github:oddlama/agenix-rekey";
-    # Make sure to override the nixpkgs version to follow your flake,
-    # otherwise derivation paths can mismatch (when using storageMode = "derivation"),
-    # resulting in the rekeyed secrets not being found!
-    agenix-rekey.inputs.nixpkgs.follows = "nixpkgs";
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.home-manager.follows = "home-manager";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    agenix-rekey = {
+      url = "github:oddlama/agenix-rekey";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
     #  age.secrets.nix-access-tokens-github.file =
     #"${self}/secrets/root.nix-access-tokens-github.age";
