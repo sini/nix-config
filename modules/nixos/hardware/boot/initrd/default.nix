@@ -34,7 +34,7 @@
               ) config.users.users
             );
           hostKeys = [
-            "/etc/secrets/initrd/ssh_host_ed25519_key"
+            "/etc/ssh/ssh_host_ed25519_key"
           ];
         };
       };
