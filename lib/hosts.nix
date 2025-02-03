@@ -6,7 +6,7 @@ let
     ;
   inherit (lib.strings) hasSuffix;
   inherit (lib.lists) flatten;
-  inherit (lib.${namespace}) listDirectories;
+  inherit (lib.${namespace}) relativeToRoot listDirectories;
 
   listHostsWithArch = flatten (
     map (
@@ -14,6 +14,7 @@ let
       map (hostname: {
         "arch" = arch;
         "hostname" = hostname;
+        "path" = relativeToRoot "systems/${arch}/${hostname}";
       }) (listDirectories "systems/${arch}")
     ) (listDirectories "systems")
   );
