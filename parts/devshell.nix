@@ -17,7 +17,6 @@
           pkgs.nix # Always use the nix version from this flake's nixpkgs version, so that nix-plugins (below) doesn't fail because of different nix versions.
           pkgs.nixos-rebuild # Ensure nixos-rebuild is available for darwin systems
           pkgs.nix-output-monitor
-          pkgs.colmena
         ];
 
         commands = [
@@ -25,10 +24,10 @@
             package = config.treefmt.build.wrapper;
             help = "Format all files";
           }
-          # {
-          #   package = pkgs.deploy;
-          #   help = "Build and deploy this nix config to nodes";
-          # }
+          {
+            package = pkgs.colmena;
+            help = "Build and deploy this nix config to nodes";
+          }
           {
             package = pkgs.nix-tree;
             help = "Interactively browse dependency graphs of Nix derivations";

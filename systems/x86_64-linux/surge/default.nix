@@ -5,7 +5,6 @@
 {
   node.deployment = {
     tags = [ "server" ];
-    targetUser = "sini";
     targetHost = "10.10.10.5";
     buildOnTarget = true;
   };
