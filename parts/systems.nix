@@ -12,9 +12,21 @@
         ;
       namespace = "custom";
       extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self namespace);
-      system_modules = extendedLib.${namespace}.listModuleDefaultsRec (
-        extendedLib.${namespace}.relativeToRoot "modules"
+
+      shared_modules = extendedLib.${namespace}.listModuleDefaultsRec (
+        extendedLib.${namespace}.relativeToRoot "modules/shared"
       );
+
+      nixos_modules = extendedLib.${namespace}.listModuleDefaultsRec (
+        extendedLib.${namespace}.relativeToRoot "modules/nixos"
+      );
+
+      # darwin_modules = extendedLib.${namespace}.listModuleDefaultsRec (
+      #   extendedLib.${namespace}.relativeToRoot "modules/darwin"
+      # );
+
+      linux_modules = shared_modules ++ nixos_modules;
+
       inherit (extendedLib.${namespace}) linuxHosts;
     in
     {
@@ -42,7 +54,7 @@
               inputs.agenix-rekey.nixosModules.default
               # inputs.sops-nix.nixosModules.sops
               _elem.path
-            ] ++ system_modules;
+            ] ++ linux_modules;
           };
         }) linuxHosts
       );
