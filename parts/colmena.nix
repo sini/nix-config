@@ -23,8 +23,6 @@
               nodeNixpkgs = builtins.mapAttrs (_: v: v.pkgs) self.nixosConfigurations;
               nodeSpecialArgs = builtins.mapAttrs (_: v: v._module.specialArgs) self.nixosConfigurations;
             };
-
-            defaults.deployment.targetUser = "sini";
           }
         // builtins.mapAttrs (_name: value: {
           imports = value._module.args.modules ++ [

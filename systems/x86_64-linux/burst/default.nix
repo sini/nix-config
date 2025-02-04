@@ -5,7 +5,6 @@
   node.deployment = {
     tags = [ "server" ];
     targetHost = "10.10.10.4";
-    targetUser = "sini";
     # allowLocalDeployment = true;
     buildOnTarget = true;
   };
