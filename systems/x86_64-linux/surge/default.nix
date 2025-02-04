@@ -3,8 +3,12 @@
   ...
 }:
 {
-
-  networking.hostName = "surge";
+  node.deployment = {
+    tags = [ "server" ];
+    targetUser = "sini";
+    targetHost = "10.10.10.5";
+    buildOnTarget = true;
+  };
 
   # sops.secrets."network/eno1/mac" = {
   #   sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";

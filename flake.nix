@@ -37,6 +37,7 @@
 
       imports = [
         ./parts/agenix-rekey.nix # Configuration for agenix-rekey + devshell
+        ./parts/colmena.nix
         ./parts/devshell.nix # Configuration for nix develop shell.
         ./parts/fmt.nix # Configuration for nix develop shell.
         ./parts/systems.nix # Entrypoint for systems configurations.
@@ -44,6 +45,8 @@
     };
 
   inputs = {
+    colmena.url = "github:zhaofengli/colmena";
+
     devshell = {
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
