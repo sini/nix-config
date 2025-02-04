@@ -1,6 +1,12 @@
 { pkgs, ... }:
 {
+  node.deployment = {
+    tags = [ "server" ];
+    targetHost = "10.10.10.3";
+    targetUser = "sini";
 
+    buildOnTarget = true;
+  };
   facter.reportPath = ./facter.json;
 
   # topology.self = {
