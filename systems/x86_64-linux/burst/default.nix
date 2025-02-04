@@ -5,8 +5,6 @@
   node.deployment = {
     tags = [ "server" ];
     targetHost = "10.10.10.4";
-    # allowLocalDeployment = true;
-    buildOnTarget = true;
   };
 
   # topology.self = {

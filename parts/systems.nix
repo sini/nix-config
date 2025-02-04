@@ -31,7 +31,7 @@
             modules = [
               {
                 nixpkgs.config.allowUnfree = true;
-                node.name = _elem.hostname;
+                node.hostname = _elem.hostname;
                 # node.arch = "x86_64-linux";
                 node.rootPath = _elem.path;
                 node.secretsDir = _elem.path + "/secrets";

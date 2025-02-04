@@ -3,7 +3,6 @@
   node.deployment = {
     tags = [ "server" ];
     targetHost = "10.10.10.3";
-    buildOnTarget = true;
   };
   facter.reportPath = ./facter.json;
 
