@@ -23,8 +23,8 @@
 
     hostPubkey = config.node.rootPath + "/ssh_host_ed25519_key.pub";
     storageMode = "local";
-    generatedSecretsDir = inputs.self.outPath + "/secrets/generated/${config.node.name}";
-    localStorageDir = inputs.self.outPath + "/secrets/rekeyed/${config.node.name}";
+    generatedSecretsDir = inputs.self.outPath + "/secrets/generated/${config.node.hostname}";
+    localStorageDir = inputs.self.outPath + "/secrets/rekeyed/${config.node.hostname}";
   };
 
   # Just before switching, remove the agenix directory if it exists.

@@ -1,4 +1,9 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   inherit (lib)
     mkOption
@@ -8,8 +13,8 @@ in
 {
   options.node = {
 
-    name = mkOption {
-      description = "A unique name for this node (host) in the repository. Defines the default hostname, but this can be overwritten.";
+    hostname = mkOption {
+      description = "The canonical hostname of the machine.";
       type = types.str;
     };
 
@@ -118,9 +123,13 @@ in
     system = lib.mkOption {
       type = lib.types.str;
       description = ''
-        The system for colmena nodes
+        The architecture of the machine.
+
+        By default, this is is an alias for {option}`pkgs.stdenv.system` and
+        {option}`nixpkgs.hostPlatform` in a top-level configuration.
       '';
-      default = "x86_64-linux";
+      default = pkgs.stdenv.system;
+      readOnly = true;
     };
 
     sshConn = lib.mkOption {
@@ -135,6 +144,6 @@ in
   };
 
   config = {
-    networking.hostName = config.node.name;
+    networking.hostName = config.node.hostname;
   };
 }
