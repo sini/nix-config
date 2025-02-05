@@ -37,16 +37,14 @@ in
     rootPath = mkOption {
       description = "The root path for this node in the repository.";
       type = types.path;
-      default = lib.${namespace}.relativeToRoot "systems/${config.node.system}/${config.node.hostname}";
+      default = relativeToRoot "systems/${config.node.system}/${config.node.hostname}";
       readOnly = true;
     };
 
     secretsDir = mkOption {
       description = "Path to the secrets directory for this node.";
       type = types.path;
-      default =
-        lib.${namespace}.relativeToRoot
-          "systems/${config.node.system}/${config.node.hostname}/secrets";
+      default = relativeToRoot "systems/${config.node.system}/${config.node.hostname}/secrets";
       readOnly = true;
     };
 
