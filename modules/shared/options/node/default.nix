@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  namespace,
   pkgs,
   ...
 }:
@@ -16,16 +17,36 @@ in
     hostname = mkOption {
       description = "The canonical hostname of the machine.";
       type = types.str;
+      default = networking.hostName;
+      readOnly = true;
+    };
+
+    system = lib.mkOption {
+      type = lib.types.str;
+      description = ''
+        The architecture of the machine.
+
+        By default, this is is an alias for {option}`pkgs.stdenv.system` and
+        {option}`nixpkgs.hostPlatform` in a top-level configuration.
+      '';
+      default = pkgs.stdenv.system;
+      readOnly = true;
     };
 
     rootPath = mkOption {
       description = "The root path for this node in the repository.";
       type = types.path;
+      default = lib.${namespace}.relativeToRoot "systems/${config.node.system}/${config.node.hostname}";
+      readOnly = true;
     };
 
     secretsDir = mkOption {
       description = "Path to the secrets directory for this node.";
       type = types.path;
+      default =
+        lib.${namespace}.relativeToRoot
+          "systems/${config.node.system}/${config.node.hostname}/secrets";
+      readOnly = true;
     };
 
     # Lifted from https://github.com/zhaofengli/colmena/blob/main/src/nix/hive/options.nix
@@ -120,18 +141,6 @@ in
 
     };
 
-    system = lib.mkOption {
-      type = lib.types.str;
-      description = ''
-        The architecture of the machine.
-
-        By default, this is is an alias for {option}`pkgs.stdenv.system` and
-        {option}`nixpkgs.hostPlatform` in a top-level configuration.
-      '';
-      default = pkgs.stdenv.system;
-      readOnly = true;
-    };
-
     sshConn = lib.mkOption {
       type = lib.types.attrsOf lib.types.str;
       description = ''
@@ -141,9 +150,5 @@ in
       readOnly = true;
     };
 
-  };
-
-  config = {
-    networking.hostName = config.node.hostname;
   };
 }
