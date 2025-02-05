@@ -10,6 +10,7 @@ let
     mkOption
     types
     ;
+  inherit (lib.${namespace}) relativeToRoot;
 in
 {
   options.node = {
@@ -17,7 +18,7 @@ in
     hostname = mkOption {
       description = "The canonical hostname of the machine.";
       type = types.str;
-      default = networking.hostName;
+      default = config.networking.hostName;
       readOnly = true;
     };
 
