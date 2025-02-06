@@ -6,16 +6,16 @@
   <br>
   <br>
   <div>
-    <a href="https://github.com/sini/nexus.nix/issues">
-        <img src="https://img.shields.io/github/issues/sini/nexus.nix?color=fab387&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/nix-config/issues">
+        <img src="https://img.shields.io/github/issues/sini/nix-config?color=fab387&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/nexus.nix/stargazers">
-        <img src="https://img.shields.io/github/stars/sini/nexus.nix?color=ca9ee6&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/nix-config/stargazers">
+        <img src="https://img.shields.io/github/stars/sini/nix-config?color=ca9ee6&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/nexus.nix">
-        <img src="https://img.shields.io/github/repo-size/sini/nexus.nix?color=ea999c&labelColor=303446&style=for-the-badge">
+    <a href="https://github.com/sini/nix-config">
+        <img src="https://img.shields.io/github/repo-size/sini/nix-config?color=ea999c&labelColor=303446&style=for-the-badge">
     </a>
-    <a href="https://github.com/sini/nexus.nix/blob/main/.github/LICENCE">
+    <a href="https://github.com/sini/nix-config/blob/main/.github/LICENCE">
         <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=GPL-3&logoColor=ca9ee6&colorA=313244&colorB=cba6f7"/>
     </a>
     <br>
