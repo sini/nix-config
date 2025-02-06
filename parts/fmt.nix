@@ -2,6 +2,7 @@
 {
   imports = [
     inputs.pre-commit-hooks.flakeModule
+    inputs.git-hooks-nix.flakeModule
     inputs.treefmt-nix.flakeModule
   ];
 
@@ -12,7 +13,14 @@
       ...
     }:
     {
-      pre-commit.settings.hooks.treefmt.enable = true;
+      pre-commit = {
+        check.enable = true;
+
+        settings.hooks = {
+          treefmt.enable = true;
+          statix.enable = true;
+        };
+      };
 
       # Provide a formatter package for `nix fmt`. Setting this
       # to `config.treefmt.build.wrapper` will use the treefmt
@@ -54,6 +62,7 @@
 
             statix = {
               priority = 2;
+              includes = [ "*.nix" ];
             };
 
             nixfmt = {
