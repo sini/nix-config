@@ -17,6 +17,7 @@
           pkgs.nix # Always use the nix version from this flake's nixpkgs version, so that nix-plugins (below) doesn't fail because of different nix versions.
           pkgs.nixos-rebuild # Ensure nixos-rebuild is available for darwin systems
           pkgs.nix-output-monitor
+          pkgs.coreutils-full # For darwin support
         ];
 
         commands = [
