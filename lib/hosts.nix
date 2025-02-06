@@ -8,26 +8,26 @@ let
   inherit (lib.lists) flatten;
   inherit (lib.${namespace}) relativeToRoot listDirectories;
 
-  listHostsWithArch = flatten (
+  listHostsWithSystem = flatten (
     map (
-      arch:
+      system:
       map (hostname: {
-        "arch" = arch;
+        "system" = system;
         "hostname" = hostname;
-        "path" = relativeToRoot "systems/${arch}/${hostname}";
-      }) (listDirectories "systems/${arch}")
+        "path" = relativeToRoot "systems/${system}/${hostname}";
+      }) (listDirectories "systems/${system}")
     ) (listDirectories "systems")
   );
 
-  isHostDarwin = { arch, ... }: hasSuffix "darwin" arch;
+  isHostDarwin = { system, ... }: hasSuffix "darwin" system;
 
-  darwinHosts = filter isHostDarwin listHostsWithArch;
+  darwinHosts = filter isHostDarwin listHostsWithSystem;
 
-  linuxHosts = filter (host: !isHostDarwin host) listHostsWithArch;
+  linuxHosts = filter (host: !isHostDarwin host) listHostsWithSystem;
 in
 rec {
   inherit
-    listHostsWithArch
+    listHostsWithSystem
     isHostDarwin
     darwinHosts
     linuxHosts
