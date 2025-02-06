@@ -68,6 +68,7 @@ let
           extraModules
           ++ nixos_modules
           ++ [
+            pkgsets.nixpkgs.nixosModules.notDetected
             homeManager.darwinModules.home-manager
             {
               networking.hostName = hostname;
@@ -110,7 +111,6 @@ let
           extraModules
           ++ darwin_modules
           ++ [
-            pkgsets.nixpkgs.nixosModules.notDetected
             homeManager.nixosModules.home-manager
             {
               networking.hostName = hostname;
