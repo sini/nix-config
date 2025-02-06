@@ -14,6 +14,7 @@
         ./parts/colmena.nix # Configuration for colmena remote deployment
         ./parts/devshell.nix # Configuration for nix develop shell.
         ./parts/fmt.nix # Configuration for treefmt.
+        ./parts/pkgs.nix # Setup pkg overlays for various systems
         ./parts/systems.nix # Entrypoint for systems configurations.
       ];
     };
@@ -45,7 +46,7 @@
 
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
 
-    # Config is powered by
+    # Config is powered by this
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs";
@@ -57,10 +58,26 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
+    home-manager-darwin = {
+      url = "github:nix-community/home-manager/release-24.11";
+      inputs.nixpkgs.follows = "nixpkgs-darwin";
+    };
+
     # macOS Support (master)
     nix-darwin = {
       url = "github:khaneliman/nix-darwin/spacer";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.nixpkgs.follows = "nixpkgs-darwin";
+    };
+
+    nixos-anywhere = {
+      url = "github:numtide/nixos-anywhere";
+      inputs = {
+        disko.follows = "disko";
+        flake-parts.follows = "flake-parts";
+        nixos-stable.follows = "nixpkgs";
+        nixpkgs.follows = "nixpkgs";
+        treefmt-nix.follows = "treefmt-nix";
+      };
     };
 
     # Facter - an alternative to nixos-generate-config
@@ -90,6 +107,12 @@
 
     # Nixpkgs:
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+
+    # NixPkgs - Darwin
+    # NOTE: `darwin` indicates that this channel passes CI on macOS builders;
+    # this should increase the binary cache hit rate, but may result in it
+    # lagging behind the equivalent NixOS/Linux package set.
+    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-24.11-darwin";
 
     # NixPkgs Unstable
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
