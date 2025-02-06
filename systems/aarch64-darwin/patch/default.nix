@@ -2,6 +2,6 @@ _: {
   networking.hostName = "patch";
 
   # ======================== DO NOT CHANGE THIS ========================
-  system.stateVersion = "24.11";
+  system.stateVersion = "5";
   # ======================== DO NOT CHANGE THIS ========================
 }
