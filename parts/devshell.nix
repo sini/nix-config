@@ -20,7 +20,7 @@
             pkgs.nixos-rebuild # Ensure nixos-rebuild is available for darwin systems
             pkgs.nix-output-monitor
           ]
-          ++ lib.optionals buildPlatform.isDarwin [
+          ++ lib.optionals pkgs.buildPlatform.isDarwin [
             pkgs.coreutils-full # Include GNU coreutils for darwin systems
           ];
 
