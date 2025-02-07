@@ -69,7 +69,7 @@ in
           If set to null, only local deployment will be supported.
         '';
         type = types.nullOr types.str;
-        default = config.node.name;
+        default = config.node.hostname;
       };
       targetPort = lib.mkOption {
         description = ''
