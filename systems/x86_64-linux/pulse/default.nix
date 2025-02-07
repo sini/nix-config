@@ -1,9 +1,7 @@
 { pkgs, ... }:
 {
-  node.deployment = {
-    tags = [ "server" ];
-    targetHost = "10.10.10.3";
-  };
+  node.tags = [ "server" ];
+
   facter.reportPath = ./facter.json;
 
   # topology.self = {

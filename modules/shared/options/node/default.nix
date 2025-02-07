@@ -11,6 +11,7 @@ let
     types
     ;
   inherit (lib.${namespace}) relativeToRoot;
+  cfg = config.node;
 in
 {
   options.node = {
@@ -46,6 +47,16 @@ in
       type = types.path;
       default = relativeToRoot "systems/${config.node.system}/${config.node.hostname}/secrets";
       readOnly = true;
+    };
+
+    tags = lib.mkOption {
+      description = ''
+        A list of tags for the node.
+
+        Can be used to select a group of nodes for deployment.
+      '';
+      type = types.listOf types.str;
+      default = [ ];
     };
 
     # Lifted from https://github.com/zhaofengli/colmena/blob/main/src/nix/hive/options.nix
@@ -122,7 +133,8 @@ in
           Can be used to select a group of nodes for deployment.
         '';
         type = types.listOf types.str;
-        default = [ ];
+        default = cfg.tags;
+        readOnly = true;
       };
       privilegeEscalationCommand = lib.mkOption {
         description = ''
