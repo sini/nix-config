@@ -57,6 +57,14 @@ let
   ##
   #@ Type -> Any -> String
   mkPackageOpt' = mkOpt types.package;
+
+  enabled = {
+    enable = true;
+  };
+
+  disabled = {
+    enable = false;
+  };
 in
 {
   inherit
@@ -66,5 +74,7 @@ in
     mkBoolOpt'
     mkPackageOpt
     mkPackageOpt'
+    enabled
+    disabled
     ;
 }
