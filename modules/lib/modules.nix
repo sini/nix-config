@@ -33,7 +33,7 @@ let
       )
     );
 
-  relativeToRoot = lib.path.append ../.;
+  relativeToRoot = lib.path.append ../../.;
 
   listDirectories =
     path: attrNames (filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot path)));

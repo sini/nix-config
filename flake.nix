@@ -10,12 +10,12 @@
       systems = import inputs.systems;
 
       imports = [
-        ./parts/agenix-rekey.nix # Configuration for agenix-rekey + devshell
-        ./parts/colmena.nix # Configuration for colmena remote deployment
-        ./parts/devshell.nix # Configuration for nix develop shell.
-        ./parts/fmt.nix # Configuration for treefmt.
-        ./parts/pkgs.nix # Setup pkg overlays for various systems
-        ./parts/systems.nix # Entrypoint for systems configurations.
+        ./modules/flake/agenix-rekey.nix # Configuration for agenix-rekey + devshell
+        ./modules/flake/colmena.nix # Configuration for colmena remote deployment
+        ./modules/flake/devshell.nix # Configuration for nix develop shell.
+        ./modules/flake/fmt.nix # Configuration for treefmt.
+        ./modules/flake/pkgs.nix # Setup pkg overlays for various systems
+        ./modules/flake/systems.nix # Entrypoint for systems configurations.
       ];
     };
 
