@@ -43,6 +43,13 @@ in
     extraOptions = mkOpt attrs { } "Extra options passed to <option>users.users.<name></option>.";
   };
 
+  imports = [
+    (lib.mkAliasOptionModule
+      [ "${namespace}" "home-manager" "config" ]
+      [ "home-manager" "users" cfg.name ]
+    )
+  ];
+
   config = mkIf (cfg.name != null) {
     # home-manager.useGlobalPkgs = lib.mkDefault true;
     # # NOTE: For some reason if this enabled on macOS it totally breaks

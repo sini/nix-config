@@ -18,7 +18,7 @@
   home-manager = {
     useUserPackages = true;
     useGlobalPkgs = true;
-    users.sini = ../../../home/home.nix;
+    users.sini = ../../../modules/home/home.nix;
     sharedModules = [ ];
     extraSpecialArgs = {
       inherit inputs;
