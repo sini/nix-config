@@ -35,6 +35,22 @@ in
       readOnly = true;
     };
 
+    mainUser = mkOption {
+      type = enum config.modules.system.users;
+      default = elemAt config.modules.system.users 0;
+      description = ''
+        The username of the main user for your system.
+
+        In case of a multiple systems, this will be the user with priority in ordered lists and enabled options.
+      '';
+    };
+
+    users = mkOption {
+      type = listOf str;
+      default = [ "sini" ];
+      description = "A list of home-manager users on the system.";
+    };
+
     rootPath = mkOption {
       description = "The root path for this node in the repository.";
       type = types.path;
@@ -71,6 +87,7 @@ in
         type = types.nullOr types.str;
         default = config.node.hostname;
       };
+
       targetPort = lib.mkOption {
         description = ''
           The target SSH port for deployment.
@@ -81,6 +98,7 @@ in
         type = types.nullOr types.ints.unsigned;
         default = null;
       };
+
       targetUser = lib.mkOption {
         description = ''
           The user to use to log into the remote node. If set to null, the
@@ -89,6 +107,7 @@ in
         type = types.nullOr types.str;
         default = "root";
       };
+
       allowLocalDeployment = lib.mkOption {
         description = ''
           Allow the configuration to be applied locally on the host running
@@ -106,6 +125,7 @@ in
         type = types.bool;
         default = false;
       };
+
       buildOnTarget = lib.mkOption {
         description = ''
           Whether to build the system profiles on the target node itself.
@@ -126,6 +146,7 @@ in
         type = types.bool;
         default = false;
       };
+
       tags = lib.mkOption {
         description = ''
           A list of tags for the node.
@@ -136,6 +157,7 @@ in
         default = cfg.tags;
         readOnly = true;
       };
+
       privilegeEscalationCommand = lib.mkOption {
         description = ''
           Command to use to elevate privileges when activating the new profiles on SSH hosts.
@@ -161,5 +183,17 @@ in
       readOnly = true;
     };
 
+  };
+
+  config = {
+    warnings = mkMerge [
+      (optionals (config.node.users == [ ]) [
+        ''
+          You have not added any users to be supported by your system. You may end up with an unbootable system!
+
+          Consider setting {option}`config.node.users` in your configuration
+        ''
+      ])
+    ];
   };
 }

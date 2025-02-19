@@ -14,6 +14,11 @@ let
       inherit lib;
       inherit namespace;
     })
+    (import ./home-users.nix {
+      inherit lib;
+      inherit namespace;
+    })
+
   ];
 in
 rec {
