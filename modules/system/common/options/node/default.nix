@@ -6,10 +6,21 @@
   ...
 }:
 let
+  inherit (builtins) elemAt;
   inherit (lib)
+    mkMerge
     mkOption
     types
     ;
+  inherit (lib.lists) optionals;
+  inherit (lib.types)
+    enum
+    listOf
+    str
+    nullOr
+    bool
+    ;
+
   inherit (lib.${namespace}) relativeToRoot;
   cfg = config.node;
 in
@@ -36,8 +47,8 @@ in
     };
 
     mainUser = mkOption {
-      type = enum config.modules.system.users;
-      default = elemAt config.modules.system.users 0;
+      type = enum config.node.users;
+      default = elemAt config.node.users 0;
       description = ''
         The username of the main user for your system.
 

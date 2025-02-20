@@ -29,7 +29,7 @@ in
       let
         users = [
           "root"
-          config.user.name
+          config.node.mainUser
         ];
       in
       {
