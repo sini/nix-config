@@ -31,10 +31,10 @@ with lib.${namespace};
       programs = mkAliasDefinitions options.home.programs;
     };
 
-    home-manager = {
-      useUserPackages = true;
+    # home-manager = {
+    #   useUserPackages = true;
 
-      users.${config.user.name} = mkAliasDefinitions options.home.extraOptions;
-    };
+    #   users.${config.user.name} = mkAliasDefinitions options.home.extraOptions;
+    # };
   };
 }

@@ -30,7 +30,7 @@ in
       wheelNeedsPassword = false;
       extraRules = [
         {
-          users = [ config.user.name ];
+          users = [ config.node.mainUser ];
           noPass = true;
           keepEnv = true;
         }
