@@ -4,7 +4,10 @@
 }:
 {
 
-  node.tags = [ "server" ];
+  node = {
+    deployment.targetHost = "10.10.10.5";
+    tags = [ "server" ];
+  };
 
   # sops.secrets."network/eno1/mac" = {
   #   sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";

@@ -1,6 +1,9 @@
 { pkgs, ... }:
 {
-  node.tags = [ "server" ];
+  node = {
+    deployment.targetHost = "10.10.10.3";
+    tags = [ "server" ];
+  };
 
   facter.reportPath = ./facter.json;
 

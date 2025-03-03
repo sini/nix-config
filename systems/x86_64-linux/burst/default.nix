@@ -2,8 +2,10 @@
 {
   facter.reportPath = ./facter.json;
 
-  node.tags = [ "server" ];
+  node = {
 
+    tags = [ "server" ];
+  };
   # topology.self = {
   #   hardware.info = "burst";
   #   services.k8s.name = "k8s";
