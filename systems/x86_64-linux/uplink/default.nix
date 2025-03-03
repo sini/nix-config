@@ -2,7 +2,10 @@
 {
   facter.reportPath = ./facter.json;
 
-  node.tags = [ "server" ];
+  node = {
+    deployment.targetHost = "10.10.10.1";
+    tags = [ "server" ];
+  };
 
   # topology.self = {
   #   hardware.info = "burst";
