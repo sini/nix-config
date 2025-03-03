@@ -105,9 +105,9 @@
 
     zellij.enable = true;
 
-    nushell = {
-      enable = true;
-    };
+    # nushell = {
+    #   enable = true;
+    # };
 
     fzf = {
       enable = true;
@@ -197,9 +197,9 @@
       '';
     };
   };
-  programs.fish.shellInit = ''
-    set -gx GPG_TTY (tty)
-    set -e SSH_AUTH_SOCK
-    set -gx SSH_AUTH_SOCK (${config.programs.gpg.package}/bin/gpgconf --list-dirs agent-ssh-socket)
-  '';
+  # programs.fish.shellInit = ''
+  #   set -gx GPG_TTY (tty)
+  #   set -e SSH_AUTH_SOCK
+  #   set -gx SSH_AUTH_SOCK (${config.programs.gpg.package}/bin/gpgconf --list-dirs agent-ssh-socket)
+  # '';
 }
