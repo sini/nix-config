@@ -7,6 +7,9 @@
     tags = [ "server" ];
   };
 
+  # Enable remote vscode...
+  programs.nix-ld.enable = true;
+
   # topology.self = {
   #   hardware.info = "burst";
   #   services.k8s.name = "k8s";
