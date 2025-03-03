@@ -21,6 +21,8 @@ in
   };
 
   config = {
+    environment.enableAllTerminfo = true;
+
     programs.zsh = {
       enable = true;
       enableCompletion = true;
