@@ -7,12 +7,12 @@
 {
   networking.hostName = "patch";
 
-  environment.shells = [ pkgs.fish ];
+  # environment.shells = [ pkgs.fish ];
 
   users.users.sini = {
     description = "Jason Bowman";
     home = "/Users/sini";
-    shell = pkgs.fish;
+    # shell = pkgs.fish;
   };
 
   home-manager = {
@@ -176,32 +176,32 @@
   # This needs to be set to get the default system-level fish configuration, such
   # as completions for Nix and related tools. This is also required because on macOS
   # the $PATH doesn't include all the entries it should by default.
-  programs.fish = {
-    enable = true;
-    useBabelfish = true;
-    loginShellInit =
-      let
-        # We should probably use `config.environment.profiles`, as described in
-        # https://github.com/LnL7/nix-darwin/issues/122#issuecomment-1659465635
-        # but this takes into account the new XDG paths used when the nix
-        # configuration has `use-xdg-base-directories` enabled. See:
-        # https://github.com/LnL7/nix-darwin/issues/947 for more information.
-        profiles = [
-          "/etc/profiles/per-user/$USER" # Home manager packages
-          "$HOME/.nix-profile"
-          "(set -q XDG_STATE_HOME; and echo $XDG_STATE_HOME; or echo $HOME/.local/state)/nix/profile"
-          "/run/current-system/sw"
-          "/nix/var/nix/profiles/default"
-        ];
+  # programs.fish = {
+  #   enable = true;
+  #   useBabelfish = true;
+  #   loginShellInit =
+  #     let
+  #       # We should probably use `config.environment.profiles`, as described in
+  #       # https://github.com/LnL7/nix-darwin/issues/122#issuecomment-1659465635
+  #       # but this takes into account the new XDG paths used when the nix
+  #       # configuration has `use-xdg-base-directories` enabled. See:
+  #       # https://github.com/LnL7/nix-darwin/issues/947 for more information.
+  #       profiles = [
+  #         "/etc/profiles/per-user/$USER" # Home manager packages
+  #         "$HOME/.nix-profile"
+  #         "(set -q XDG_STATE_HOME; and echo $XDG_STATE_HOME; or echo $HOME/.local/state)/nix/profile"
+  #         "/run/current-system/sw"
+  #         "/nix/var/nix/profiles/default"
+  #       ];
 
-        makeBinSearchPath = lib.concatMapStringsSep " " (path: "${path}/bin");
-      in
-      ''
-        # Fix path that was re-ordered by Apple's path_helper
-        fish_add_path --move --prepend --path ${makeBinSearchPath profiles}
-        set fish_user_paths $fish_user_paths
-      '';
-  };
+  #       makeBinSearchPath = lib.concatMapStringsSep " " (path: "${path}/bin");
+  #     in
+  #     ''
+  #       # Fix path that was re-ordered by Apple's path_helper
+  #       fish_add_path --move --prepend --path ${makeBinSearchPath profiles}
+  #       set fish_user_paths $fish_user_paths
+  #     '';
+  # };
   # ======================== DO NOT CHANGE THIS ========================
   system.stateVersion = 5;
   # ======================== DO NOT CHANGE THIS ========================
