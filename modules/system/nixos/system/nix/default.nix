@@ -29,7 +29,7 @@ in
       let
         users = [
           "root"
-          config.node.mainUser
+          "@wheel"
         ];
       in
       {
@@ -43,14 +43,15 @@ in
             log-lines = 50;
             sandbox = "relaxed";
             auto-optimise-store = true;
-            trusted-users = users ++ cfg.extraUsers;
+            trusted-users = users;
             allowed-users = users;
             substituters = [
               "https://cache.nixos.org/"
-              "https://cache.saumon.network/proxmox-nixos"
+              "https://nix-community.cachix.org"
             ];
             trusted-public-keys = [
-              "proxmox-nixos:nveXDuVVhFDRFx8Dn19f1WDEaNRJjPrF2CPD2D+m1ys="
+              "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+              "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
             ];
           }
           // (lib.optionalAttrs config.apps.tools.direnv.enable {
@@ -63,7 +64,6 @@ in
           dates = "weekly";
           options = "--delete-older-than 7d";
         };
-
       };
   };
 }
