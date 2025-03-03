@@ -14,7 +14,10 @@
     device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
   };
 
-  hardware.networking.enable = true;
+  hardware.networking = {
+    enable = true;
+    interface = "enp4s0";
+  };
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
