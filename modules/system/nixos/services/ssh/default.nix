@@ -31,9 +31,9 @@ in
 
       extraConfig = ''
         AllowTcpForwarding yes
-        X11Forwarding no
-        AllowAgentForwarding no
-        AllowStreamLocalForwarding no
+        X11Forwarding yes
+        AllowAgentForwarding yes
+        AllowStreamLocalForwarding yes
         AuthenticationMethods publickey
       '';
     };
