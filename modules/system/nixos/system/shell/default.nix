@@ -21,6 +21,12 @@ in
   };
 
   config = {
+    programs.zsh = {
+      enable = true;
+      autosuggestion.enable = true;
+      enableCompletion = true;
+    };
+
     environment.systemPackages = with pkgs; [
       eza
       bat
