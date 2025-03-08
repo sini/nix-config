@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 with lib;
@@ -47,16 +46,16 @@ in
     # The correct initrd host-key will be installed with the next update after the host is booted
     # for the first time, and the secrets were rekeyed for the the new host identity.
 
-    system.activationScripts.agenixEnsureInitrdHostkey = {
-      text = ''
-        [[ -e ${config.age.secrets.initrd_host_ed25519_key.path} ]] \
-          || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${config.age.secrets.initrd_host_ed25519_key.path}
-      '';
-      deps = [
-        "agenixInstall"
-        "users"
-      ];
-    };
-    system.activationScripts.agenixChown.deps = [ "agenixEnsureInitrdHostkey" ];
+    # system.activationScripts.agenixEnsureInitrdHostkey = {
+    #   text = ''
+    #     [[ -e ${config.age.secrets.initrd_host_ed25519_key.path} ]] \
+    #       || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${config.age.secrets.initrd_host_ed25519_key.path}
+    #   '';
+    #   deps = [
+    #     "agenixInstall"
+    #     "users"
+    #   ];
+    # };
+    # system.activationScripts.agenixChown.deps = [ "agenixEnsureInitrdHostkey" ];
   };
 }
