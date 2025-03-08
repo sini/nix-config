@@ -3,7 +3,7 @@
   ...
 }:
 let
-  mediaIds = config.users.deterministicIds;
+  mediaIds = config.users.deterministicIds.media;
 in
 {
   config = {
