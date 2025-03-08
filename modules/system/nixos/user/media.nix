@@ -2,19 +2,15 @@
   config,
   ...
 }:
-let
-  mediaIds = config.users.deterministicIds.media;
-in
+
 {
   config = {
     users = {
       groups.media = {
-        inherit (mediaIds) gid;
         name = "media";
       };
 
       users.media = {
-        inherit (mediaIds) uid;
         group = "media";
         linger = true; # Required for the services start automatically without login
         isNormalUser = true;
