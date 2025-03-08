@@ -4,12 +4,8 @@
   lib,
   ...
 }:
-with lib;
-let
-  isProvisioned = !config.node.provisioning;
-in
 {
-  config = mkIf isProvisioned {
+  config = {
     # Define local repo secrets
     repo.secretFiles =
       let
