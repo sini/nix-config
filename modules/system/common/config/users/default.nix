@@ -9,7 +9,7 @@
     in
     {
       sini = uidGid 1000;
-      podman = {
+      media = {
         uid = 1027;
         gid = 65536;
       };
