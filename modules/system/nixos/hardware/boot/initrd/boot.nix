@@ -2,11 +2,9 @@
   config,
   lib,
   pkgs,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
 let
   isProvisioned = !config.node.provisioning;
 in
@@ -15,21 +13,9 @@ in
     age.secrets.initrd_host_ed25519_key.generator.script = "ssh-ed25519";
 
     boot = {
-      loader = {
-        systemd-boot = {
-          enable = true;
-          configurationLimit = 10;
-          consoleMode = "0"; # increase font size
-        };
-
-        efi.canTouchEfiVariables = true;
-      };
-
       initrd = {
         availableKernelModules = [ "r8169" ];
-        systemd = {
-          users.root.shell = "/bin/systemd-tty-ask-password-agent";
-        };
+        systemd.users.root.shell = "/bin/systemd-tty-ask-password-agent";
         network = {
           enable = true;
           ssh = {
@@ -48,6 +34,10 @@ in
           };
         };
       };
+
+      kernelParams = [
+        "ip=dhcp"
+      ];
     };
 
     # Make sure that there is always a valid initrd hostkey available that can be installed into
