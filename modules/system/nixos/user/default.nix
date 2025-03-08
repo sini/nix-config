@@ -38,7 +38,7 @@ in
           "networkmanager"
           "input"
           "tty"
-          "docker"
+          "podman"
         ];
       };
     };

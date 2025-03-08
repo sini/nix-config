@@ -47,6 +47,7 @@
   ];
 
   services = {
+    fstrim.enable = true;
     data-share.enable = true;
     rpcbind.enable = true; # needed for NFS
   };
