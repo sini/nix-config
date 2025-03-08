@@ -87,7 +87,7 @@
     # nix-flatpak.url = "github:gmodena/nix-flatpak";
 
     # Homebrew
-    # nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
