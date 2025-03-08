@@ -1,3 +1,7 @@
+{ config, ... }:
+let
+  inherit (config.node) mainUser;
+in
 {
   users.deterministicIds =
     let
@@ -7,11 +11,11 @@
       };
     in
     {
-      sini = uidGid 1000;
+      ${mainUser} = uidGid 1000;
       media = {
         uid = 1027;
         gid = 65536;
-      };
+      }; # Maps to Synology NAS user/group for docker user
       systemd-oom = uidGid 999;
       systemd-coredump = uidGid 998;
       sshd = uidGid 997;
