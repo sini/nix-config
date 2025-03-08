@@ -2,23 +2,24 @@
   config,
   ...
 }:
-
+let
+  mediaIds = config.users.deterministicIds;
+in
 {
   config = {
     users = {
       groups.media = {
+        inherit (mediaIds) gid;
         name = "media";
-        inherit (users.deterministicIds.media) gid;
       };
 
       users.media = {
-        inherit (users.deterministicIds.media) uid;
+        inherit (mediaIds) uid;
         group = "media";
         linger = true; # Required for the services start automatically without login
         isNormalUser = true;
         description = "Media user for rootless podman";
         extraGroups = [ "podman" ];
-        shell = pkgs.bash;
       };
     };
 

@@ -1,5 +1,4 @@
 {
-
   users.deterministicIds =
     let
       uidGid = id: {
@@ -20,5 +19,4 @@
       polkituser = uidGid 995;
       microvm = uidGid 994;
     };
-
 }
