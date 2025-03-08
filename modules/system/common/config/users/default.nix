@@ -18,5 +18,6 @@
       nscd = uidGid 996;
       polkituser = uidGid 995;
       microvm = uidGid 994;
+      podman = uidGid 993;
     };
 }
