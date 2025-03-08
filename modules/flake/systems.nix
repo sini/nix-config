@@ -13,7 +13,7 @@ let
   extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self namespace);
 
   common_modules =
-    extendedLib.${namespace}.listModuleDefaultsRec (
+    extendedLib.${namespace}.listModulesRec (
       extendedLib.${namespace}.relativeToRoot "modules/system/common"
     )
     ++ [
@@ -23,7 +23,7 @@ let
 
   nixos_modules =
     common_modules
-    ++ extendedLib.${namespace}.listModuleDefaultsRec (
+    ++ extendedLib.${namespace}.listModulesRec (
       extendedLib.${namespace}.relativeToRoot "modules/system/nixos"
     )
     ++ [
@@ -33,7 +33,7 @@ let
 
   darwin_modules =
     common_modules
-    ++ extendedLib.${namespace}.listModuleDefaultsRec (
+    ++ extendedLib.${namespace}.listModulesRec (
       extendedLib.${namespace}.relativeToRoot "modules/system/darwin"
     );
 
@@ -73,8 +73,8 @@ let
             {
               networking.hostName = hostname;
             }
-            path
-          ];
+          ]
+          ++ extendedLib.${namespace}.listModulesRec path;
       }
     );
 
@@ -115,8 +115,8 @@ let
             {
               networking.hostName = hostname;
             }
-            path
-          ];
+          ]
+          ++ extendedLib.${namespace}.listModulesRec path;
       }
     );
 

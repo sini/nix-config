@@ -13,8 +13,7 @@ let
   inherit (lib.strings) hasSuffix;
 
   # List all module default.nix files rescursively
-  listModuleDefaultsRec =
-    path: filter (hasSuffix "default.nix") (map toString (listFilesRecursive path));
+  listModulesRec = path: filter (hasSuffix ".nix") (map toString (listFilesRecursive path));
 
   # `mkModuleTree` is used to recursively import all Nix file in a given directory, assuming the
   # given directory to be the module root, where rest of the modules are to be imported. This
@@ -59,7 +58,7 @@ in
   inherit
     relativeToRoot
     scanPaths
-    listModuleDefaultsRec
+    listModulesRec
     listDirectories
     mkModuleTree
     ;
