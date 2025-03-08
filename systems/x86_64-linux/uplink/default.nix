@@ -4,6 +4,7 @@
 
   node = {
     deployment.targetHost = "10.10.10.1";
+    provisioning = true;
     tags = [ "server" ];
   };
 
