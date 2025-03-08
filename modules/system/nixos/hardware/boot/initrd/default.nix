@@ -22,7 +22,6 @@ _: {
       "mitigations=off"
       "quiet"
       "udev.log_level=3"
-      "ip=dhcp"
     ];
 
     plymouth.enable = true; # Display loading screen
