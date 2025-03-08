@@ -7,6 +7,8 @@
 {
   networking.hostName = "patch";
 
+  age.secrets.placeholder_secret.generator.script = "passphrase";
+
   # environment.shells = [ pkgs.fish ];
 
   users.users.sini = {
