@@ -3,14 +3,8 @@
   lib,
   ...
 }:
-with lib;
-let
-  isProvisioned = !config.node.provisioning;
-in
 {
-  config = mkIf isProvisioned {
-    age.secrets.initrd_host_ed25519_key.generator.script = "ssh-ed25519";
-
+  config = {
     boot = {
       initrd = {
         availableKernelModules = [ "r8169" ];

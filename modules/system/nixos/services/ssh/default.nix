@@ -2,6 +2,7 @@
   options,
   config,
   lib,
+  pkgs,
   namespace,
   ...
 }:
@@ -16,9 +17,7 @@ in
   };
 
   config = mkMerge [
-    mkIf
-    cfg.enable
-    {
+    (mkIf cfg.enable {
       services.openssh = {
         enable = true;
         ports = [ 22 ];
@@ -49,8 +48,10 @@ in
             _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
           ) config.users.users
         );
-    }
+    })
     {
+      age.secrets.initrd_host_ed25519_key.generator.script = "ssh-ed25519";
+
       # Make sure that there is always a valid initrd hostkey available that can be installed into
       # the initrd. When bootstrapping a system (or re-installing), agenix cannot succeed in decrypting
       # whatever is given, since the correct hostkey doesn't even exist yet. We still require
