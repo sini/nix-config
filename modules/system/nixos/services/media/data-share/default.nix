@@ -8,7 +8,7 @@
 with lib;
 with lib.${namespace};
 let
-  cfg = config.services.media.data-share;
+  cfg = config.services.data-share;
 in
 {
   options.services.data-share = with types; {
