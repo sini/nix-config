@@ -69,12 +69,6 @@ in
       readOnly = true;
     };
 
-    provisioning = lib.mkOption {
-      description = "Set if the host is in provisinoning status, disable secrets.";
-      type = types.bool;
-      default = false;
-    };
-
     secretsDir = mkOption {
       description = "Path to the secrets directory for this node.";
       type = types.path;
