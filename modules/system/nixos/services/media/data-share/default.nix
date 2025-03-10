@@ -8,7 +8,7 @@
 with lib;
 with lib.${namespace};
 let
-  cfg = config.services.data-share;
+  cfg = config.services.media.data-share;
 in
 {
   options.services.data-share = with types; {
@@ -30,6 +30,7 @@ in
         "x-systemd.idle-timeout=300"
         "noatime"
         "nfsvers=4.1"
+        "remoteaddrs=10.10.10.10-10.10.10.12"
       ];
     };
     #fileSystems."/mnt/NAS" = { device = "srv-prod-nas.home.address:/mnt/Main Storage/USER_NAME/USER_NAME"; fsType = "nfs"; };
