@@ -23,70 +23,36 @@ in
 
     services.rpcbind.enable = true; # needed for NFS
 
-    fileSystems."/mnt/data" = {
-      device = "10.10.10.10:/volume2/data";
-      fsType = "nfs4";
-      options = [
-        "_netdev"
-        "nfsvers=4.1"
-        "noauto"
-        "noatime"
-        "x-systemd.automount"
-        "x-systemd.idle-timeout=600"
-      ];
-    };
+    fileSystems =
+      let
+        commonOptions = [
+          "_netdev"
+          "nfsvers=4.1"
+          "noauto"
+          "noatime"
+          "x-systemd.automount"
+          "x-systemd.idle-timeout=600"
+        ];
+      in
+      {
+        "/mnt/data" = {
+          device = "10.10.10.10:/volume2/data";
+          fsType = "nfs4";
+          options = commonOptions;
+        };
 
-    # systemd.mounts =
-    #   let
-    #     commonMountOptions = {
-    #       type = "nfs";
-    #       mountConfig = {
-    #         Options = "noatime,nfsvers=4.1,remoteaddrs=10.10.10.10-10.10.10.12";
-    #       };
-    #     };
-    #   in
+        "/volume1/NVME" = {
+          device = "10.10.10.10:/volume1/NVME";
+          fsType = "nfs4";
+          options = commonOptions;
+        };
 
-    #   [
-    #     (
-    #       commonMountOptions
-    #       // {
-    #         what = "10.10.10.10:/volume2/data";
-    #         where = "/mnt/data";
-    #       }
-    #     )
-
-    #     (
-    #       commonMountOptions
-    #       // {
-    #         what = "10.10.10.10:/volume1/NVME";
-    #         where = "/mnt/NVME";
-    #       }
-    #     )
-
-    #     (
-    #       commonMountOptions
-    #       // {
-    #         what = "10.10.10.10:/volume1/docker";
-    #         where = "/mnt/docker";
-    #       }
-    #     )
-    #   ];
-
-    # systemd.automounts =
-    #   let
-    #     commonAutoMountOptions = {
-    #       wantedBy = [ "multi-user.target" ];
-    #       automountConfig = {
-    #         TimeoutIdleSec = "600";
-    #       };
-    #     };
-    #   in
-
-    #   [
-    #     (commonAutoMountOptions // { where = "/mnt/data"; })
-    #     (commonAutoMountOptions // { where = "/mnt/NVME"; })
-    #     (commonAutoMountOptions // { where = "/mnt/docker"; })
-    #   ];
+        "/volume1/docker" = {
+          device = "10.10.10.10:/volume1/docker";
+          fsType = "nfs4";
+          options = commonOptions;
+        };
+      };
 
   };
 }
