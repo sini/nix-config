@@ -41,13 +41,13 @@ in
           options = commonOptions;
         };
 
-        "/volume1/NVME" = {
+        "/mnt/NVME" = {
           device = "10.10.10.10:/volume1/NVME";
           fsType = "nfs4";
           options = commonOptions;
         };
 
-        "/volume1/docker" = {
+        "/mnt/docker" = {
           device = "10.10.10.10:/volume1/docker";
           fsType = "nfs4";
           options = commonOptions;
