@@ -7,7 +7,10 @@
   config = {
     boot = {
       initrd = {
-        availableKernelModules = [ "r8169" ];
+        availableKernelModules = [
+          "r8169"
+          "mlx4_core"
+        ];
         systemd.users.root.shell = "/bin/systemd-tty-ask-password-agent";
         network = {
           enable = true;
