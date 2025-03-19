@@ -21,6 +21,7 @@ in
       podman-compose
       podman-tui # Terminal mgmt UI for Podman
       passt # For Pasta rootless networking
+      gomanagedocker
     ];
 
     virtualisation = {
