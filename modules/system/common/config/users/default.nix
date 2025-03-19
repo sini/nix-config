@@ -11,10 +11,37 @@ in
       };
     in
     {
-      ${mainUser} = uidGid 1000;
+      ${mainUser} = {
+        uid = 1000;
+        gid = 1000;
+        subUidRanges = [
+          {
+            startUid = 100000;
+            count = 65536;
+          }
+        ];
+        subGidRanges = [
+          {
+            startGid = 100000;
+            count = 65536;
+          }
+        ];
+      };
       media = {
         uid = 1027;
         gid = 65536;
+        subUidRanges = [
+          {
+            startUid = 165536;
+            count = 65536;
+          }
+        ];
+        subGidRanges = [
+          {
+            startGid = 165536;
+            count = 65536;
+          }
+        ];
       }; # Maps to Synology NAS user/group for docker user
       systemd-oom = uidGid 999;
       systemd-coredump = uidGid 998;
