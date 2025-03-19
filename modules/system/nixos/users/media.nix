@@ -15,7 +15,10 @@
         linger = true; # Required for the services start automatically without login
         isNormalUser = true;
         description = "Media user for rootless podman";
-        extraGroups = [ "podman" ];
+        extraGroups = [
+          "video"
+          "podman"
+        ];
       };
     };
 
