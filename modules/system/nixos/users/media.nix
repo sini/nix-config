@@ -14,7 +14,6 @@
         group = "media";
         linger = true; # Required for the services start automatically without login
         isNormalUser = true;
-        autoSubUidGidRange = false;
         description = "Media user for rootless podman";
         extraGroups = [ "podman" ];
       };

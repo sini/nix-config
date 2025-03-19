@@ -15,13 +15,13 @@ in
       mutableUsers = false;
 
       groups.${cfg}.gid = config.users.users.${cfg}.uid;
+
       users.${cfg} = {
         isNormalUser = true;
         # inherit (cfg) name initialPassword;
         initialHashedPassword = "$y$j9T$RpfkDk8AusZr9NS09tJ9e.$kbc4SL9Cu45o1YYPlyV1jiVTZZ/126ue5Nff2Rfgpw8";
 
         home = "/home/${cfg}";
-        autoSubUidGidRange = false;
 
         group = cfg;
 
