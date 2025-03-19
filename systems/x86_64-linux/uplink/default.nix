@@ -71,8 +71,6 @@
       rpcbind.enable = true; # needed for NFS
     };
 
-    boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
-
     # ======================== DO NOT CHANGE THIS ========================
     system.stateVersion = "24.11";
     # ======================== DO NOT CHANGE THIS ========================
