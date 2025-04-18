@@ -5,7 +5,14 @@
   ...
 }:
 {
-  imports = [ inputs.nixos-hardware.nixosModules.common-gpu-intel ];
+  imports = [
+    inputs.nixos-hardware.nixosModules.common-cpu-amd-pstate
+    #inputs.nixos-hardware.nixosModules.common-cpu-amd-zenpower
+    inputs.nixos-hardware.nixosModules.common-pc-ssd
+    #inputs.nixos-hardware.nixosModules.common-gpu-amd
+    inputs.nixos-hardware.nixosModules.common-gpu-intel
+  ];
+  # inherit (nixos-hardware.nixosModules)
 
   config = {
     facter.reportPath = ./facter.json;
