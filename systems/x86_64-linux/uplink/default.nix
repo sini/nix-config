@@ -7,7 +7,7 @@
 {
   imports = [
     inputs.nixos-hardware.nixosModules.common-cpu-amd-pstate
-    #inputs.nixos-hardware.nixosModules.common-cpu-amd-zenpower
+    inputs.nixos-hardware.nixosModules.common-cpu-amd-zenpower
     inputs.nixos-hardware.nixosModules.common-pc-ssd
     #inputs.nixos-hardware.nixosModules.common-gpu-amd
     inputs.nixos-hardware.nixosModules.common-gpu-intel
@@ -76,6 +76,10 @@
       fstrim.enable = true;
       media.data-share.enable = true;
       rpcbind.enable = true; # needed for NFS
+    };
+
+    nixpkgs.config = {
+      allowBroken = false; # false breaks zfs kernel - but we don't care about zfs
     };
 
     # ======================== DO NOT CHANGE THIS ========================
