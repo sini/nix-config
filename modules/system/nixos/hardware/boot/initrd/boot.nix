@@ -31,9 +31,6 @@
         };
       };
 
-      kernelParams = [
-        "ip=dhcp"
-      ];
     };
   };
 }
