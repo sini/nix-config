@@ -126,5 +126,19 @@
     systems.url = "github:nix-systems/default";
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
+
+    # ucodenix delivers microcode updates for AMD CPUs on NixOS
+    ucodenix = {
+      url = "github:e-tho/ucodenix";
+      inputs.cpu-microcodes.follows = "ucodenix-cpu-microcodes";
+    };
+
+    # We pin to December 28th, 2024 since our older hardware hasn't recieved BIOS updates
+    # addressing CVE-2024-56161. :(
+    ucodenix-cpu-microcodes = {
+      url = "github:platomav/CPUMicrocodes/ec5200961ecdf78cf00e55d73902683e835edefd";
+      flake = false;
+    };
+
   };
 }
