@@ -2,6 +2,7 @@
   config,
   pkgs,
   lib,
+  inputs,
   ...
 }:
 let
@@ -9,10 +10,10 @@ let
   cpuType = (builtins.head config.facter.report.hardware.cpu).vendor_name;
 in
 {
+  imports = [ inputs.ucodenix.nixosModules.default ];
   config = mkIf (cpuType == "AuthenticAMD") {
     environment.systemPackages = [ pkgs.amdctl ];
 
-    hardware.cpu.amd.updateMicrocode = true;
     boot = {
       kernelModules = [
         "kvm-amd"
@@ -20,8 +21,16 @@ in
         # "zenpower" # zenpower is for reading cpu info, i.e voltage
         "msr" # x86 CPU MSR access device
       ];
-      kernelParams = [ "amd_iommu=on" ];
+      kernelParams = [
+        "microcode.amd_sha_check=off"
+        "amd_iommu=on"
+      ];
       #extraModulePackages = [ config.boot.kernelPackages.zenpower ];
+    };
+
+    services.ucodenix = {
+      enable = true;
+      cpuModelId = config.facter.reportPath;
     };
   };
 }
