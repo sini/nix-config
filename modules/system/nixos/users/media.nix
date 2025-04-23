@@ -36,17 +36,20 @@
     systemd.services.podman-autostart = {
       enable = true;
       after = [
-        "podman.service"
-        "systemd-networkd.service"
+        "network.target"
       ];
-      wantedBy = [ "multi-user.target" ];
-      description = "Automatically start containers with --restart=always tag";
+      wantedBy = [ "default.target" ];
+      description = "Automatically start arr-compose containers for user media";
       restartIfChanged = false;
+      path = [ "/home/media/compose" ];
       serviceConfig = {
-        Type = "idle";
         User = "media";
         ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
-        ExecStart = ''/run/current-system/sw/bin/podman start --all --filter restart-policy=always'';
+        ExecStart = ''/home/media/compose/start.sh'';
+        ExecStop = ''/home/media/compose/stop.sh'';
+        TimeoutStopSec = 60;
+        Type = "idle";
+        Restart = "no";
       };
     };
   };
