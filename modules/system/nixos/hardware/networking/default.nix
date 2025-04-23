@@ -21,13 +21,17 @@ in
   };
 
   config = mkIf cfg.enable {
-    networking.useDHCP = false;
+    networking.useDHCP = true;
+
     systemd.network = {
       enable = true;
       wait-online.enable = false;
-      networks."10-lan" = {
-        matchConfig.Name = cfg.interface;
-        networkConfig.DHCP = "yes";
+      networks = {
+        "${cfg.interface}" = {
+          enable = true;
+          matchConfig.Name = cfg.interface;
+          networkConfig.DHCP = "yes";
+        };
       };
     };
 

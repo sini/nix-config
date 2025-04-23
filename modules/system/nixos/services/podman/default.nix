@@ -60,19 +60,5 @@ in
 
     # Allow non-root containers to access lower port numbers
     boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
-
-    # Automatically start containers for user 'media' on boot
-    systemd.services.podman-autostart = {
-      enable = true;
-      after = [ "podman.service" ];
-      wantedBy = [ "multi-user.target" ];
-      description = "Automatically start containers with --restart=always tag";
-      serviceConfig = {
-        Type = "idle";
-        User = "media";
-        ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
-        ExecStart = ''/run/current-system/sw/bin/podman start --all --filter restart-policy=always'';
-      };
-    };
   };
 }
