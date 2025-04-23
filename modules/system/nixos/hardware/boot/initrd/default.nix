@@ -9,9 +9,9 @@
     boot = {
       initrd = {
         availableKernelModules = [
-          "r8169"
+          "r8169" # Host: surge, burst, pulse
           "mlx4_core"
-          "mlx4_en"
+          "mlx4_en" # Hosts: uplink, cortex
         ];
 
         systemd = {
@@ -23,6 +23,8 @@
 
           network = {
             enable = true;
+            inherit (config.systemd.network) links;
+            inherit (config.systemd.network) netdevs;
             inherit (config.systemd.network) networks;
           };
 
