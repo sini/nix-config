@@ -1,4 +1,5 @@
 _: {
+  networking.useDHCP = true;
   systemd.network = {
     enable = true;
     netdevs = {
