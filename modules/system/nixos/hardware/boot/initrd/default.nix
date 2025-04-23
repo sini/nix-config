@@ -12,6 +12,12 @@
           "r8169" # Host: surge, burst, pulse
           "mlx4_core"
           "mlx4_en" # Hosts: uplink, cortex
+          "bonding"
+          "tun"
+          "tap"
+          "bridge"
+          "stp"
+          "llc"
         ];
 
         systemd = {
