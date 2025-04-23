@@ -22,7 +22,7 @@
       tags = [ "server" ];
     };
 
-    boot.kernelParams = [ "ip=10.10.10.1::10.10.0.1:255.255.0.0:uplink:enp4s0:on" ];
+    # boot.kernelParams = [ "ip=10.10.10.1::10.10.0.1:255.255.0.0:uplink:enp4s0:on" ];
 
     # Enable remote vscode...
     programs.nix-ld.enable = true;

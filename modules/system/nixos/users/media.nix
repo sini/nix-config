@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   ...
 }:
 
@@ -30,5 +31,23 @@
 
     # Allow media user to use Home Manager
     nix.settings.allowed-users = [ "media" ];
+
+    # Automatically start containers for user 'media' on boot
+    systemd.services.podman-autostart = {
+      enable = true;
+      after = [
+        "podman.service"
+        "systemd-networkd.service"
+      ];
+      wantedBy = [ "multi-user.target" ];
+      description = "Automatically start containers with --restart=always tag";
+      restartIfChanged = false;
+      serviceConfig = {
+        Type = "idle";
+        User = "media";
+        ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
+        ExecStart = ''/run/current-system/sw/bin/podman start --all --filter restart-policy=always'';
+      };
+    };
   };
 }
