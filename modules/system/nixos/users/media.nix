@@ -45,8 +45,8 @@
       serviceConfig = {
         User = "media";
         ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
-        ExecStart = ''/home/media/compose/start.sh'';
-        ExecStop = ''/home/media/compose/stop.sh'';
+        ExecStart = "${pkgs.bash}/bin/bash -c '/home/media/compose/start.sh'";
+        ExecStop = "${pkgs.bash}/bin/bash -c '/home/media/compose/stop.sh";
         TimeoutStopSec = 60;
         Type = "idle";
         Restart = "no";
