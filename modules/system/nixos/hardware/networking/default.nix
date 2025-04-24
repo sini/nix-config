@@ -21,7 +21,11 @@ in
   };
 
   config = mkIf cfg.enable {
-    networking.useDHCP = true;
+    networking = {
+      dhcpcd.enable = false;
+      useDHCP = true;
+      useNetworkd = true;
+    };
 
     systemd.network = {
       enable = true;
@@ -37,6 +41,5 @@ in
 
     #TODO: Remove this once we have a better way to expose ports...
     networking.firewall.enable = false;
-
   };
 }

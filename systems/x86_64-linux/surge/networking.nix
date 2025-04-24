@@ -1,5 +1,9 @@
 _: {
-  networking.useDHCP = true;
+  networking = {
+    dhcpcd.enable = false;
+    useDHCP = true;
+    useNetworkd = true;
+  };
   systemd.network = {
     enable = true;
     netdevs = {
@@ -17,16 +21,19 @@ _: {
     # Configure Bonds to utilize both 2.5Gbps ports
     networks = {
       "30-eno1" = {
+        enable = true;
         matchConfig.PermanentMACAddress = "84:47:09:40:d5:f5";
         networkConfig.Bond = "bond0";
       };
 
       "30-enp2s0" = {
+        enable = true;
         matchConfig.PermanentMACAddress = "84:47:09:40:d5:f4";
         networkConfig.Bond = "bond0";
       };
 
       "40-bond0" = {
+        enable = true;
         matchConfig.Name = "bond0";
         networkConfig = {
           DHCP = true;
