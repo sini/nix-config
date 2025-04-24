@@ -1,7 +1,6 @@
 {
   lib,
   config,
-  pkgs,
   ...
 }:
 {
@@ -12,32 +11,14 @@
           "r8169" # Host: surge, burst, pulse
           "mlx4_core"
           "mlx4_en" # Hosts: uplink, cortex
-          "bonding"
-          "tun"
-          "tap"
           "bridge"
-          "stp"
-          "llc"
+          "bonding"
+          "8021q"
         ];
 
         systemd = {
           enable = true;
-
-          initrdBin = with pkgs; [
-            cryptsetup
-          ];
-
-          network = {
-            enable = true;
-            inherit (config.systemd.network) links;
-            inherit (config.systemd.network) netdevs;
-            inherit (config.systemd.network) networks;
-          };
-
-          targets.network-pre = {
-            requires = [ "sys-subsystem-net-devices-${config.hardware.networking.interface}.device" ];
-            after = [ "sys-subsystem-net-devices-${config.hardware.networking.interface}.device" ];
-          };
+          inherit (config.systemd) network;
 
           users.root.shell = "/bin/systemd-tty-ask-password-agent";
         };
