@@ -37,19 +37,19 @@
       enable = true;
       after = [
         "network.target"
+        "podman.service"
       ];
-      wantedBy = [ "default.target" ];
+      wantedBy = [ "multi-user.target" ];
       description = "Automatically start arr-compose containers for user media";
-      restartIfChanged = false;
+      restartIfChanged = true;
       path = [ "/home/media/compose" ];
       serviceConfig = {
         User = "media";
         ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
-        ExecStart = ''${pkgs.bash}/bin/bash -c "/home/media/compose/start.sh"'';
-        ExecStop = ''${pkgs.bash}/bin/bash -c "/home/media/compose/stop.sh"'';
+        ExecStart = ''/run/current-system/sw/bin/podman-compose --env-file /home/media/compose/.env -f /home/media/compose/compose.yaml up --pull -d --remove-orphans'';
+        ExecStop = ''/run/current-system/sw/bin/podman-compose -f /home/media/compose/compose.yaml  down -v --remove-orphans'';
         TimeoutStopSec = 60;
         Type = "idle";
-        Restart = "no";
       };
     };
   };
