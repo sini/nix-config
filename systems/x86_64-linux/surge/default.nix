@@ -10,7 +10,7 @@
     tags = [
       "server"
       "kubernetes"
-      # "kubernetes-master"
+      "kubernetes-master"
     ];
   };
 
