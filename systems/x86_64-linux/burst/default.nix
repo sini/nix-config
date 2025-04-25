@@ -41,7 +41,7 @@
   services = {
     podman.enable = true;
     fstrim.enable = true;
-    "${namespace}" = {
+    ${namespace} = {
       media.data-share.enable = true;
     };
     rpcbind.enable = true; # needed for NFS

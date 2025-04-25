@@ -5,7 +5,7 @@
   ...
 }:
 {
-  options.${namespace}.services.k3s = {
+  options.services.${namespace}.k3s = {
     enable = lib.mkOption {
       default = builtins.elem "kubernetes" config.deployment.tags;
       type = lib.types.bool;
@@ -40,5 +40,5 @@
     };
   };
 
-  config = lib.mkIf config.${namespace}.services.k3s.enable { };
+  config = lib.mkIf config.services.${namespace}.k3s.enable { };
 }

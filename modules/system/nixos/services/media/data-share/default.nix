@@ -8,10 +8,10 @@
 with lib;
 with lib.${namespace};
 let
-  cfg = config.${namespace}.services.media.data-share;
+  cfg = config.services.${namespace}.media.data-share;
 in
 {
-  options.${namespace}.services.media.data-share = with types; {
+  options.services.${namespace}.media.data-share = with types; {
     enable = mkBoolOpt false "Enable NFS data share mount";
   };
 
