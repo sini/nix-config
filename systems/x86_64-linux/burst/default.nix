@@ -4,7 +4,10 @@
 
   node = {
     deployment.targetHost = "10.10.10.4";
-    tags = [ "server" ];
+    tags = [
+      "server"
+      "kubernetes"
+    ];
   };
   # topology.self = {
   #   hardware.info = "burst";

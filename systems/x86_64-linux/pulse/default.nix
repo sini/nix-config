@@ -2,7 +2,10 @@
 {
   node = {
     deployment.targetHost = "10.10.10.3";
-    tags = [ "server" ];
+    tags = [
+      "server"
+      "kubernetes"
+    ];
   };
 
   facter.reportPath = ./facter.json;

@@ -6,7 +6,11 @@
 
   node = {
     deployment.targetHost = "10.10.10.5";
-    tags = [ "server" ];
+    tags = [
+      "server"
+      "kubernetes"
+      # "kubernetes-master"
+    ];
   };
 
   # sops.secrets."network/eno1/mac" = {
