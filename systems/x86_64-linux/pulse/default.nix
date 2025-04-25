@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, namespace, ... }:
 {
   node = {
     deployment.targetHost = "10.10.10.3";
@@ -42,7 +42,9 @@
   services = {
     podman.enable = true;
     fstrim.enable = true;
-    media.data-share.enable = true;
+    "${namespace}" = {
+      media.data-share.enable = true;
+    };
     rpcbind.enable = true; # needed for NFS
   };
 

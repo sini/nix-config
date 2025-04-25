@@ -1,4 +1,4 @@
-{ pkgs, ... }:
+{ pkgs, namespace, ... }:
 {
   facter.reportPath = ./facter.json;
 
@@ -41,7 +41,9 @@
   services = {
     podman.enable = true;
     fstrim.enable = true;
-    media.data-share.enable = true;
+    "${namespace}" = {
+      media.data-share.enable = true;
+    };
     rpcbind.enable = true; # needed for NFS
   };
 

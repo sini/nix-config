@@ -31,7 +31,7 @@
     };
 
     serverAddr = lib.mkOption {
-      default = lib.custom.getKubernetesMasterTargetHost;
+      default = lib.${namespace}.getKubernetesMasterTargetHost;
       type = with lib.types; nullOr str;
       description = ''
         Address of the server whose cluster this server should join.
