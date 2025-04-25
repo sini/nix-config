@@ -32,8 +32,8 @@ let
       )
     );
 
-  # This is under modules/lib, so two directories up should be root.
-  relativeToRoot = lib.path.append ../../.;
+  # This is under modules/lib, so one directory up should be root.
+  relativeToRoot = lib.path.append ../.;
 
   listDirectories =
     path: attrNames (filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot path)));
