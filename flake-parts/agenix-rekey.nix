@@ -15,15 +15,15 @@
     secretsConfig = {
       masterIdentities = [
         {
-          identity = ../../secrets/pub/master.pub;
+          identity = ../secrets/pub/master.pub;
           pubkey = "age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0";
         }
         {
-          identity = ../../secrets/pub/master-clone1.pub;
+          identity = ../secrets/pub/master-clone1.pub;
           pubkey = "age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0";
         }
         {
-          identity = ../../secrets/pub/master-clone2.pub;
+          identity = ../secrets/pub/master-clone2.pub;
           pubkey = "age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0";
         }
       ];
