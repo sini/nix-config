@@ -40,18 +40,6 @@ in
           fsType = "nfs4";
           options = commonOptions;
         };
-
-        "/mnt/NVME" = {
-          device = "10.10.10.10:/volume1/NVME";
-          fsType = "nfs4";
-          options = commonOptions;
-        };
-
-        "/mnt/docker" = {
-          device = "10.10.10.10:/volume1/docker";
-          fsType = "nfs4";
-          options = commonOptions;
-        };
       };
 
   };

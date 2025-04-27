@@ -9,8 +9,8 @@
     deployment.targetHost = "10.10.10.5";
     tags = [
       "server"
-      "kubernetes"
-      "kubernetes-master"
+      # "kubernetes"
+      # "kubernetes-master"
     ];
   };
 

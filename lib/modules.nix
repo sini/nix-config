@@ -32,7 +32,7 @@ let
       )
     );
 
-  # This is under modules/lib, so one directory up should be root.
+  # This is under modules/lib, so two directories up should be root.
   relativeToRoot = lib.path.append ../.;
 
   listDirectories =
