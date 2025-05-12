@@ -52,8 +52,6 @@ in
       LIBVA_DRIVER_NAME = "iHD";
     };
 
-    boot.kernelPackages = pkgs.linuxPackages_latest;
-
     environment.systemPackages = with pkgs; [
       pciutils
       libva-utils

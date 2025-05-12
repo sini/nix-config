@@ -73,7 +73,8 @@
               namespace = "custom";
             };
             modules =
-              extraModules
+              extendedLib.${namespace}.listModulesRec path
+              ++ extraModules
               ++ nixos_modules
               ++ [
                 pkgsets.nixpkgs.nixosModules.notDetected
@@ -81,8 +82,7 @@
                 {
                   networking.hostName = hostname;
                 }
-              ]
-              ++ extendedLib.${namespace}.listModulesRec path;
+              ];
           }
         );
 

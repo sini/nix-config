@@ -8,7 +8,7 @@
 {
   imports = [
     inputs.nixos-hardware.nixosModules.common-cpu-amd-pstate
-    #inputs.nixos-hardware.nixosModules.common-cpu-amd-zenpower
+    inputs.nixos-hardware.nixosModules.common-cpu-amd-zenpower
     inputs.nixos-hardware.nixosModules.common-pc-ssd
     #inputs.nixos-hardware.nixosModules.common-gpu-amd
     inputs.nixos-hardware.nixosModules.common-gpu-intel
@@ -61,6 +61,9 @@
       security.doas.enable = true;
     };
 
+    # Use cachyOS kernel, server variant: https://wiki.cachyos.org/features/kernel/
+    boot.kernelPackages = inputs.chaotic.legacyPackages.x86_64-linux.linuxPackages_cachyos-server;
+
     time.timeZone = "America/Los_Angeles";
     i18n.defaultLocale = "en_US.UTF-8";
 
@@ -81,6 +84,7 @@
         media.data-share.enable = true;
       };
       rpcbind.enable = true; # needed for NFS
+      scx.enable = true;
     };
 
     # ======================== DO NOT CHANGE THIS ========================
