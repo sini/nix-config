@@ -32,6 +32,10 @@
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
+          # inputs.chaotic.nixosModules.default # For unstable
+          inputs.chaotic.nixosModules.nyx-cache
+          inputs.chaotic.nixosModules.nyx-overlay
+          inputs.chaotic.nixosModules.nyx-registry
         ];
 
       darwin_modules =
