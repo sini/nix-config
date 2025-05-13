@@ -34,7 +34,7 @@
 
     # Automatically start containers for user 'media' on boot
     systemd.services.podman-autostart = {
-      enable = true;
+      enable = false; # TODO: re-enable
       after = [
         "network.target"
         "podman.service"
