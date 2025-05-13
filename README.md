@@ -101,3 +101,27 @@ I've stolen shamelessly from:
 - https://www.youtube.com/watch?v=2yplBzPCghA
 
 - https://github.com/badele/nix-homelab/tree/main
+
+- https://github.com/VTimofeenko/monorepo-machine-config/tree/master
+
+- https://github.com/mightyiam/infra/tree/main
+
+- https://pim.kun.is/nix-jekyll-derivation/
+
+- https://github.com/oddlama/nix-config/tree/main
+
+- https://github.com/niki-on-github/nixos-k3s/tree/main#
+
+- https://github.com/wimpysworld/nix-config/tree/main#
+
+- https://github.com/fufexan/dotfiles?tab=readme-ov-file#
+
+- https://github.com/JManch/nixos/tree/main
+
+- https://github.com/baitinq/nixos-config?tab=readme-ov-file
+
+- https://github.com/akirak/homelab
+
+- https://github.com/eh8/chenglab/tree/main
+
+- https://git.eisfunke.com/config/nixos/-/tree/main

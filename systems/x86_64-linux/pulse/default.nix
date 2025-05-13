@@ -1,4 +1,9 @@
-{ pkgs, namespace, ... }:
+{
+  pkgs,
+  inputs,
+  namespace,
+  ...
+}:
 {
   node = {
     deployment.targetHost = "10.10.10.3";
