@@ -45,7 +45,7 @@ in
         pkgs = mkPkgsFor system pkgsets.nixpkgs;
 
         # Import the unstable Nix package set with the common config.
-        unstable = mkPkgsFor system pkgsets.nixpkgs-unstable;
+        unstable = mkPkgsFor system inputs.nixpkgs-unstable;
 
         # Select the home-manager input based on the system being managed.
         homeManager =
