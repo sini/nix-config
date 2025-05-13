@@ -22,7 +22,7 @@ in
         "msr" # x86 CPU MSR access device
       ];
       kernelParams = [
-        "microcode.amd_sha_check=off"
+        # "microcode.amd_sha_check=off"
         "amd_iommu=on"
       ];
       extraModulePackages = [ config.boot.kernelPackages.zenpower ];
