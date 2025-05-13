@@ -1,4 +1,9 @@
-{ pkgs, namespace, ... }:
+{
+  pkgs,
+  inputs,
+  namespace,
+  ...
+}:
 {
   facter.reportPath = ./facter.json;
 
