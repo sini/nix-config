@@ -84,7 +84,7 @@
         media.data-share.enable = true;
       };
       rpcbind.enable = true; # needed for NFS
-      scx.enable = true;
+      #scx.enable = true;
     };
 
     # ======================== DO NOT CHANGE THIS ========================
