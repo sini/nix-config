@@ -111,6 +111,23 @@
         "type": "github"
       }
     },
+    "cpu-microcodes": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1746370478,
+        "narHash": "sha256-3mpvHkDiQcpXrAS1lNJe2oYbKLTQnCbAkSmIWNF5l98=",
+        "owner": "platomav",
+        "repo": "CPUMicrocodes",
+        "rev": "71092548b863438bf630ba54290002694da05655",
+        "type": "github"
+      },
+      "original": {
+        "owner": "platomav",
+        "repo": "CPUMicrocodes",
+        "rev": "71092548b863438bf630ba54290002694da05655",
+        "type": "github"
+      }
+    },
     "darwin": {
       "inputs": {
         "nixpkgs": [
@@ -1105,8 +1122,7 @@
         "pre-commit-hooks": "pre-commit-hooks_3",
         "systems": "systems_3",
         "treefmt-nix": "treefmt-nix_2",
-        "ucodenix": "ucodenix",
-        "ucodenix-cpu-microcodes": "ucodenix-cpu-microcodes"
+        "ucodenix": "ucodenix"
       }
     },
     "rust-analyzer-src": {
@@ -1228,9 +1244,7 @@
     },
     "ucodenix": {
       "inputs": {
-        "cpu-microcodes": [
-          "ucodenix-cpu-microcodes"
-        ]
+        "cpu-microcodes": "cpu-microcodes"
       },
       "locked": {
         "lastModified": 1746447632,
@@ -1243,23 +1257,6 @@
       "original": {
         "owner": "e-tho",
         "repo": "ucodenix",
-        "type": "github"
-      }
-    },
-    "ucodenix-cpu-microcodes": {
-      "flake": false,
-      "locked": {
-        "lastModified": 1735409317,
-        "narHash": "sha256-08yRkyEKk94ax8KfqRFsffXH8J6DCOCE7vKLvHORWZM=",
-        "owner": "platomav",
-        "repo": "CPUMicrocodes",
-        "rev": "ec5200961ecdf78cf00e55d73902683e835edefd",
-        "type": "github"
-      },
-      "original": {
-        "owner": "platomav",
-        "repo": "CPUMicrocodes",
-        "rev": "ec5200961ecdf78cf00e55d73902683e835edefd",
         "type": "github"
       }
     }
