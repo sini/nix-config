@@ -62,7 +62,9 @@
     };
 
     # Use cachyOS kernel, server variant: https://wiki.cachyos.org/features/kernel/
-    boot.kernelPackages = inputs.chaotic.legacyPackages.x86_64-linux.linuxPackages_cachyos-server;
+    #boot.kernelPackages = inputs.chaotic.legacyPackages.x86_64-linux.linuxPackages_cachyos-server;
+
+    boot.kernelPackages = pkgs.linuxPackages_latest;
 
     time.timeZone = "America/Los_Angeles";
     i18n.defaultLocale = "en_US.UTF-8";
