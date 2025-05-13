@@ -17,20 +17,11 @@
 
   boot.kernelPackages = unstable.linuxPackages_latest;
 
-  # sops.secrets."network/eno1/mac" = {
-  #   sopsFile = lib.custom.relativeToRoot "secrets/${config.networking.hostName}/secrets.yaml";
-  # };
-
   facter.reportPath = ./facter.json;
 
-  # topology.self = {
-  #   hardware.info = "surge";
-  #   services.k8s.name = "k8s";
-  # };
-
-  hardware.disk.raid = {
+  hardware.disk.single = {
     enable = true;
-    btrfs_profile = "single";
+    device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
   };
 
   services.ssh.enable = true;
