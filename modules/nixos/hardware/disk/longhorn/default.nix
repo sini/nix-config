@@ -55,7 +55,7 @@ in
         default = "";
         description = "Longhorn Data Drive (e.g., 2TB NVMe) /dev/disk/by-id/ name.";
       };
-      encrypt = mkBoolOpt true "Encrypt the Longhorn drive with LUKS.";
+      encrypt = mkBoolOpt false "Encrypt the Longhorn drive with LUKS.";
       # Keyfile for Longhorn LUKS, assumed to be on the encrypted OS drive.
       # Ensure this file is created and populated securely (e.g., via agenix, sops-nix, or manual setup).
       luksKeyFile = mkOption {
@@ -69,7 +69,7 @@ in
           "xfs"
           "btrfs"
         ];
-        default = "ext4"; # ext4 or xfs are commonly recommended for Longhorn data
+        default = "xfs"; # ext4 or xfs are commonly recommended for Longhorn data
         description = "Filesystem for Longhorn data drive.";
       };
       mountPoint = mkOption {
@@ -105,8 +105,7 @@ in
                   ];
                 };
               };
-              LUKS_OS = {
-                label = "LUKS_OS";
+              NIXOS = {
                 size = "100%"; # This will take the remaining space after ESP
                 content = {
                   type = "luks";
@@ -127,7 +126,11 @@ in
                   };
                   content = {
                     type = "btrfs";
-                    extraArgs = [ "-f" ]; # Pass -f to mkfs.btrfs
+                    extraArgs = [
+                      "-L"
+                      "nixos"
+                      "-f"
+                    ];
                     subvolumes =
                       {
                         "@root" = {
@@ -180,7 +183,6 @@ in
             type = "gpt";
             partitions = {
               LONGHORN_DATA = {
-                label = "LONGHORN_DATA"; # GPT Partition Label
                 size = "100%"; # Take the whole disk
                 content =
                   if cfg.longhorn_drive.encrypt then
