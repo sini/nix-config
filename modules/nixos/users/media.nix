@@ -1,6 +1,5 @@
 {
   config,
-  pkgs,
   ...
 }:
 
@@ -33,28 +32,28 @@
     nix.settings.allowed-users = [ "media" ];
 
     # Automatically start containers for user 'media' on boot
-    systemd.services.podman-autostart = {
-      enable = false; # TODO: re-enable
-      after = [
-        "network.target"
-        "podman.service"
-      ];
-      wants = [
-        "network.target"
-        "podman.service"
-      ];
-      wantedBy = [ "multi-user.target" ];
-      description = "Automatically start arr-compose containers for user media";
-      restartIfChanged = false;
-      serviceConfig = {
-        User = "media";
-        ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
-        ExecStart = ''/run/current-system/sw/bin/podman-compose --env-file /home/media/compose/.env -f /home/media/compose/compose.yaml --podman-path /run/current-system/sw/bin/podman up --pull -d --remove-orphans'';
-        ExecStop = ''/run/current-system/sw/bin/podman-compose -f /home/media/compose/compose.yaml --podman-path /run/current-system/sw/bin/podman down -v --remove-orphans'';
-        TimeoutStopSec = 60;
-        Type = "oneshot";
-        RemainAfterExit = "yes";
-      };
-    };
+    # systemd.services.podman-autostart = {
+    #   enable = false; # TODO: re-enable
+    #   after = [
+    #     "network.target"
+    #     "podman.service"
+    #   ];
+    #   wants = [
+    #     "network.target"
+    #     "podman.service"
+    #   ];
+    #   wantedBy = [ "multi-user.target" ];
+    #   description = "Automatically start arr-compose containers for user media";
+    #   restartIfChanged = false;
+    #   serviceConfig = {
+    #     User = "media";
+    #     ExecStartPre = ''${pkgs.coreutils}/bin/sleep 1'';
+    #     ExecStart = ''/run/current-system/sw/bin/podman-compose --env-file /home/media/compose/.env -f /home/media/compose/compose.yaml --podman-path /run/current-system/sw/bin/podman up --pull -d --remove-orphans'';
+    #     ExecStop = ''/run/current-system/sw/bin/podman-compose -f /home/media/compose/compose.yaml --podman-path /run/current-system/sw/bin/podman down -v --remove-orphans'';
+    #     TimeoutStopSec = 60;
+    #     Type = "oneshot";
+    #     RemainAfterExit = "yes";
+    #   };
+    # };
   };
 }
