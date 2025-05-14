@@ -30,6 +30,8 @@
     };
   };
 
+  networking.firewall.enable = false;
+
   services.ssh.enable = true;
   programs.dconf.enable = true;
 
