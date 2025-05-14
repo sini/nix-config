@@ -84,7 +84,7 @@ in
     disko.devices = {
       disk = {
         # --- OS Drive Configuration (e.g., 1TB NVMe) ---
-        osDrive = {
+        os = {
           device = "/dev/disk/by-id/" + cfg.os_drive.device_id;
           type = "disk";
           content = {
@@ -105,7 +105,7 @@ in
                   ];
                 };
               };
-              NIXOS = {
+              nixos = {
                 size = "100%"; # This will take the remaining space after ESP
                 content = {
                   type = "luks";
@@ -176,13 +176,13 @@ in
         };
 
         # --- Longhorn Data Drive Configuration (e.g., 2TB NVMe) ---
-        longhornDrive = {
+        data = {
           device = "/dev/disk/by-id/" + cfg.longhorn_drive.device_id;
           type = "disk";
           content = {
             type = "gpt";
             partitions = {
-              LONGHORN_DATA = {
+              longhorn = {
                 size = "100%"; # Take the whole disk
                 content =
                   if cfg.longhorn_drive.encrypt then
