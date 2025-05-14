@@ -106,7 +106,7 @@ in
                     ];
                     subvolumes =
                       {
-                        "@" = {
+                        "@root" = {
                           mountpoint = "/";
                           mountOptions = defaultBtrfsOpts;
                         };
