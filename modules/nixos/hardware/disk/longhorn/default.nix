@@ -105,7 +105,7 @@ in
                   ];
                 };
               };
-              luks_os = {
+              LUKS_OS = {
                 label = "LUKS_OS";
                 size = "100%"; # This will take the remaining space after ESP
                 content = {
@@ -179,9 +179,9 @@ in
           content = {
             type = "gpt";
             partitions = {
-              longhorn_data_storage = {
-                # label = "LONGHORN_DATA"; # GPT Partition Label
-                # size = "100%"; # Take the whole disk
+              LONGHORN_DATA = {
+                label = "LONGHORN_DATA"; # GPT Partition Label
+                size = "100%"; # Take the whole disk
                 content =
                   if cfg.longhorn_drive.encrypt then
                     {
