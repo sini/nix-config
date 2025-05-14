@@ -106,6 +106,7 @@ in
                 };
               };
               nixos = {
+                label = "nixos"; # GPT Partition Label
                 size = "100%"; # This will take the remaining space after ESP
                 content = {
                   type = "luks";
@@ -183,6 +184,7 @@ in
             type = "gpt";
             partitions = {
               longhorn = {
+                label = "longhorn"; # GPT Partition Label
                 size = "100%"; # Take the whole disk
                 content =
                   if cfg.longhorn_drive.encrypt then
