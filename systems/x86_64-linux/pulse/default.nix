@@ -17,14 +17,20 @@
 
   facter.reportPath = ./facter.json;
 
-  # topology.self = {
-  #   hardware.info = "pulse";
-  #   services.k8s.name = "k8s";
-  # };
+  hardware = {
+    disk.longhorn = {
+      enable = true;
+      os_drive = {
+        device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
+        swap_size = 8192;
+      };
+      longhorn_drive = {
+        device_id = "nvme-Force_MP600_192482300001285610CF";
+      };
+    };
 
-  hardware.disk.single.enable = true;
-
-  hardware.networking.enable = true;
+    networking.enable = true;
+  };
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
