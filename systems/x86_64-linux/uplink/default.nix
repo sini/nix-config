@@ -44,7 +44,7 @@
 
       disk.single = {
         enable = true;
-        device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
+        device_id = "nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
       };
 
       networking = {
