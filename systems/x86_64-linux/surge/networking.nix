@@ -13,9 +13,9 @@ _: {
           Name = "bond0";
         };
         bondConfig = {
-          Mode = "balance-alb";
-          # Mode = "balance-xor";
-          # TransmitHashPolicy = "layer3+4";
+          # Mode = "balance-alb";
+          Mode = "balance-xor";
+          TransmitHashPolicy = "layer3+4";
         };
       };
     };
