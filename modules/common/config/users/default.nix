@@ -50,5 +50,7 @@ in
       polkituser = uidGid 995;
       microvm = uidGid 994;
       podman = uidGid 993;
+      avahi = uidGid 992;
+
     };
 }
