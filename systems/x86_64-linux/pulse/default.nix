@@ -13,6 +13,8 @@
     ];
   };
 
+  networking.domain = "json64.dev";
+
   boot.kernelPackages = unstable.linuxPackages_latest;
 
   facter.reportPath = ./facter.json;
@@ -53,7 +55,7 @@
   ];
 
   services = {
-    podman.enable = true;
+    # podman.enable = true;
     fstrim.enable = true;
     ${namespace} = {
       media.data-share.enable = true;
