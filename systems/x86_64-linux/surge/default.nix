@@ -20,15 +20,10 @@
 
   facter.reportPath = ./facter.json;
 
-  hardware.disk.longhorn = {
+  hardware.disk.single = {
     enable = true;
-    os_drive = {
-      device_id = "nvme-NVMe_CA6-8D1024_00230650035M";
-      swap_size = 8192; # Default to 8GB swap, adjust as needed
-    };
-    longhorn_drive = {
-      device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
-    };
+    device_id = "nvme-NVMe_CA6-8D1024_0023065001TG";
+    swap_size = 8192;
   };
 
   networking.firewall.enable = false;
