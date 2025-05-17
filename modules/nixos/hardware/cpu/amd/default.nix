@@ -24,6 +24,7 @@ in
       kernelParams = [
         "microcode.amd_sha_check=off"
         "amd_iommu=on"
+        "amd_pstate=guided" # power management
       ];
       extraModulePackages = [ config.boot.kernelPackages.zenpower ];
     };
