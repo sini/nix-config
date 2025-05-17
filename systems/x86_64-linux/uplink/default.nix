@@ -79,6 +79,11 @@
       doas-sudo-shim
     ];
 
+    powerManagement = {
+      enable = true;
+      cpuFreqGovernor = "ondemand";
+    };
+
     services = {
       podman.enable = true;
       fstrim.enable = true;
