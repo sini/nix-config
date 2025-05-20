@@ -5,31 +5,32 @@
   ...
 }:
 {
+  facter.reportPath = ./facter.json;
+
   node = {
-    deployment.targetHost = "10.10.10.3";
+    deployment.targetHost = "10.10.10.4";
     tags = [
       "server"
       # "kubernetes"
     ];
   };
-
   networking.domain = "json64.dev";
 
   boot.kernelPackages = unstable.linuxPackages_latest;
-
-  facter.reportPath = ./facter.json;
 
   hardware = {
     disk.longhorn = {
       enable = true;
       os_drive = {
-        device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
+        device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
         swap_size = 8192;
       };
       longhorn_drive = {
-        device_id = "nvme-Force_MP600_192482300001285610CF";
+        device_id = "nvme-Force_MP600_1925823000012856500E";
       };
     };
+
+    gpu.amd.enable = true;
 
     networking.enable = true;
   };
