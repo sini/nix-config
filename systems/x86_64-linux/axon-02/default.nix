@@ -5,28 +5,36 @@
   ...
 }:
 {
-
   node = {
-    deployment.targetHost = "10.10.10.5";
+    deployment.targetHost = "10.10.10.3";
     tags = [
       "server"
-      "kubernetes"
-      "kubernetes-master"
+      # "kubernetes"
     ];
   };
+
   networking.domain = "json64.dev";
 
   boot.kernelPackages = unstable.linuxPackages_latest;
 
   facter.reportPath = ./facter.json;
 
-  hardware.disk.single = {
-    enable = true;
-    device_id = "nvme-NVMe_CA6-8D1024_0023065001TG";
-    swap_size = 8192;
-  };
+  hardware = {
+    disk.longhorn = {
+      enable = true;
+      os_drive = {
+        device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
+        swap_size = 8192;
+      };
+      longhorn_drive = {
+        device_id = "nvme-Force_MP600_192482300001285610CF";
+      };
+    };
 
-  networking.firewall.enable = false;
+    gpu.amd.enable = true;
+
+    networking.enable = true;
+  };
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
@@ -44,6 +52,8 @@
     wget
     vim
     git
+    doas
+    doas-sudo-shim
   ];
 
   services = {
