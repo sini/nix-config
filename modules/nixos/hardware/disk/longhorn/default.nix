@@ -244,13 +244,5 @@ in
     # For the Longhorn data mount, it's usually not needed for early boot (initrd stage).
     # Disko will create the fileSystems entry. If you need to override options:
     # fileSystems.${cfg.longhorn_drive.mountPoint}.neededForBoot = false;
-
-    # age.secrets = {
-    #   "foo" = {
-    #     rekeyFile = lib.${namespace}.relativeToRoot "secrets/foo.age";
-    #     owner = "media";
-    #     group = "media";
-    #   };
-    # };
   };
 }
