@@ -2,11 +2,10 @@
   config,
   pkgs,
   lib,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
   cfg = config.system.security.doas;
 in

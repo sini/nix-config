@@ -57,18 +57,18 @@
 
     # Home Manager
     home-manager = {
-      url = "github:nix-community/home-manager/release-24.11";
+      url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
     home-manager-darwin = {
-      url = "github:nix-community/home-manager/release-24.11";
+      url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
 
     # macOS Support (master)
     nix-darwin = {
-      url = "github:LnL7/nix-darwin/nix-darwin-24.11";
+      url = "github:LnL7/nix-darwin/nix-darwin-25.05";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
 
@@ -92,6 +92,21 @@
     # Homebrew
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 
+    homebrew-bundle = {
+      url = "github:homebrew/homebrew-bundle";
+      flake = false;
+    };
+
+    homebrew-core = {
+      url = "github:homebrew/homebrew-core";
+      flake = false;
+    };
+
+    homebrew-cask = {
+      url = "github:homebrew/homebrew-cask";
+      flake = false;
+    };
+
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
 
@@ -109,13 +124,13 @@
     nixos-hardware.url = "github:nixos/nixos-hardware";
 
     # Nixpkgs:
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
 
     # NixPkgs - Darwin
     # NOTE: `darwin` indicates that this channel passes CI on macOS builders;
     # this should increase the binary cache hit rate, but may result in it
     # lagging behind the equivalent NixOS/Linux package set.
-    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-24.11-darwin";
+    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
 
     # NixPkgs Unstable
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";

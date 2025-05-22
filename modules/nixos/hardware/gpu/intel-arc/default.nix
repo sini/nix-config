@@ -4,11 +4,10 @@
   config,
   pkgs,
   lib,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
   cfg = config.hardware.gpu.intel-arc;
 in

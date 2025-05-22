@@ -3,6 +3,7 @@ _: {
     dhcpcd.enable = false;
     useDHCP = true;
     useNetworkd = true;
+    networkmanager.enable = false;
   };
   systemd.network = {
     enable = true;

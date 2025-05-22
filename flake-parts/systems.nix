@@ -16,11 +16,10 @@
       inherit (lib)
         mapAttrs
         ;
-      namespace = "custom";
-      extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self namespace);
+      extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self);
 
       common_modules =
-        extendedLib.${namespace}.listModulesRec (extendedLib.${namespace}.relativeToRoot "modules/common")
+        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/common")
         ++ [
           inputs.agenix.nixosModules.default
           inputs.agenix-rekey.nixosModules.default
@@ -28,7 +27,7 @@
 
       nixos_modules =
         common_modules
-        ++ extendedLib.${namespace}.listModulesRec (extendedLib.${namespace}.relativeToRoot "modules/nixos")
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/nixos")
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
@@ -40,9 +39,7 @@
 
       darwin_modules =
         common_modules
-        ++ extendedLib.${namespace}.listModulesRec (
-          extendedLib.${namespace}.relativeToRoot "modules/darwin"
-        );
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/darwin");
 
       mkNixOSConfigWith =
         {
@@ -54,8 +51,6 @@
         withSystem system (
           {
             pkgsets,
-            pkgs,
-            unstable,
             homeManager,
             ...
           }:
@@ -64,16 +59,12 @@
             specialArgs = {
               inherit
                 inputs
-                pkgsets
-                pkgs
-                unstable
                 ;
               inherit (config) nodes;
               lib = extendedLib;
-              namespace = "custom";
             };
             modules =
-              extendedLib.${namespace}.listModulesRec path
+              extendedLib.custom.listModulesRec path
               ++ extraModules
               ++ nixos_modules
               ++ [
@@ -97,22 +88,18 @@
           {
             pkgsets,
             pkgs,
-            unstable,
             homeManager,
             ...
           }:
           inputs.nix-darwin.lib.darwinSystem rec {
-            inherit system;
+            inherit system pkgs;
             specialArgs = {
               inherit
                 pkgsets
-                pkgs
-                unstable
                 ;
               lib = extendedLib;
               inherit (config) nodes;
 
-              namespace = "custom";
               inputs = inputs // {
                 inherit (pkgsets) nixpkgs;
               };
@@ -126,11 +113,11 @@
                   networking.hostName = hostname;
                 }
               ]
-              ++ extendedLib.${namespace}.listModulesRec path;
+              ++ extendedLib.custom.listModulesRec path;
           }
         );
 
-      inherit (extendedLib.${namespace}) linuxHosts darwinHosts;
+      inherit (extendedLib.custom) linuxHosts darwinHosts;
     in
     {
       nixosConfigurations = lib.attrsets.mergeAttrsList (

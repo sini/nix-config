@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  namespace,
   pkgs,
   ...
 }:
@@ -21,7 +20,7 @@ let
     bool
     ;
 
-  inherit (lib.${namespace}) relativeToRoot;
+  inherit (lib.custom) relativeToRoot;
   cfg = config.node;
 in
 {

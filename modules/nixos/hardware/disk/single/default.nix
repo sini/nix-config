@@ -4,11 +4,10 @@
   lib,
   inputs,
   config,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
   cfg = config.hardware.disk.single;
 

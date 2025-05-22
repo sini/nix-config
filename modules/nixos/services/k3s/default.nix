@@ -2,14 +2,13 @@
   lib,
   pkgs,
   config,
-  namespace,
   ...
 }:
 let
-  cfg = config.services.${namespace}.k3s;
+  cfg = config.services.custom.k3s;
 in
 {
-  options.services.${namespace}.k3s = {
+  options.services.custom.k3s = {
     enable = lib.mkOption {
       default = builtins.elem "kubernetes" config.node.deployment.tags;
       type = lib.types.bool;
@@ -37,10 +36,7 @@ in
 
     serverAddr = lib.mkOption {
       default =
-        if config.services.${namespace}.clusterInit then
-          null
-        else
-          lib.${namespace}.getKubernetesMasterTargetHost;
+        if config.services.custom.clusterInit then null else lib.custom.getKubernetesMasterTargetHost;
       type = with lib.types; nullOr str;
       description = ''
         Address of the server whose cluster this server should join.
@@ -53,7 +49,7 @@ in
 
     # age.secrets = {
     #   "foo" = {
-    #     rekeyFile = lib.${namespace}.relativeToRoot "secrets/foo.age";
+    #     rekeyFile = lib.custom.relativeToRoot "secrets/foo.age";
     #     owner = "media";
     #     group = "media";
     #   };

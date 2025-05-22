@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ config, inputs, ... }:
 {
   imports = [
     inputs.nix-homebrew.darwinModules.nix-homebrew
@@ -10,12 +10,7 @@
     enable = true;
     enableRosetta = false;
 
-    # TODO(clo4): make another user to own the homebrew prefix
-    # because things get annoying when you add another user to
-    # the machine that also wants to use brew.
-    # This isn't a problem *yet*, but it's not a matter of 'if'
-    # it will be, just when.
-    user = "sini";
+    user = "sini"; # TODO: Make this dynamic
 
     # All taps must be declared below.
     mutableTaps = false;
@@ -28,21 +23,44 @@
 
   homebrew = {
     enable = true;
-
+    global = {
+      autoUpdate = true;
+    };
+    onActivation = {
+      autoUpdate = false;
+      upgrade = false;
+      cleanup = "zap";
+    };
     brews = [
-      # Using the java managed by homebrew for compatibility with Mincecraft launchers
-      "java"
+      "trash"
     ];
 
-    # Applications are installed through Homebrew because there's a wider selection available
-    # on macOS and the applications tend to be more up-to-date.
-    # The other reason is that applications installed via Nix tend to break in the dock because
-    # of the way the volume mounts - it's been a while but from what I remember the icons weren't
-    # working correctly, or maybe it's that opening them on startup was having problems?
+    taps = builtins.attrNames config.nix-homebrew.taps;
+
     casks = [
       # NOTE: Homerow isn't available as a cask yet
-
-      #"1password"
+      "1password-cli"
+      "1password"
+      "alacritty"
+      "betterdisplay"
+      "caffeine"
+      "discord"
+      "dropbox"
+      "exifcleaner"
+      "firefox"
+      "google-chrome"
+      "handbrake"
+      "linearmouse"
+      "obsidian"
+      "rar"
+      "raycast"
+      "screen-studio"
+      "spotify"
+      "steam"
+      "the-unarchiver"
+      "visual-studio-code"
+      "vlc"
+      "whatsapp"
 
       # Media tools
       "audio-hijack"
@@ -51,7 +69,6 @@
       "coreutils"
 
       # Loosely, productivity
-      "raycast"
       "appcleaner"
       "shottr"
       "keka"
@@ -78,5 +95,9 @@
       "wezterm"
       "zed"
     ];
+
+    masApps = {
+      "1Password for Safari" = 1569813296;
+    };
   };
 }
