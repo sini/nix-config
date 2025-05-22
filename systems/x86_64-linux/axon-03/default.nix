@@ -1,7 +1,5 @@
 {
   pkgs,
-  unstable,
-  namespace,
   ...
 }:
 {
@@ -16,7 +14,7 @@
   };
   networking.domain = "json64.dev";
 
-  boot.kernelPackages = unstable.linuxPackages_latest;
+  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   hardware = {
     disk.longhorn = {
@@ -58,13 +56,11 @@
   services = {
     # podman.enable = true;
     fstrim.enable = true;
-    ${namespace} = {
-      media.data-share.enable = true;
-    };
+    custom.media.data-share.enable = true;
     rpcbind.enable = true; # needed for NFS
   };
 
   # ======================== DO NOT CHANGE THIS ========================
-  system.stateVersion = "24.11";
+  system.stateVersion = "25.05";
   # ======================== DO NOT CHANGE THIS ========================
 }

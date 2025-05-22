@@ -1,4 +1,4 @@
-{ lib, namespace, ... }:
+{ lib, ... }:
 let
   inherit (builtins)
     filter
@@ -6,7 +6,7 @@ let
     ;
   inherit (lib.strings) hasSuffix;
   inherit (lib.lists) flatten;
-  inherit (lib.${namespace}) relativeToRoot listDirectories;
+  inherit (lib.custom) relativeToRoot listDirectories;
 
   listHostsWithSystem = flatten (
     map (

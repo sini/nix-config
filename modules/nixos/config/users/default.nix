@@ -51,6 +51,10 @@ in
       microvm = uidGid 994;
       podman = uidGid 993;
       avahi = uidGid 992;
+      colord = uidGid 991;
+      geoclue = uidGid 990;
+      gnome-remote-desktop = uidGid 989;
+      rtkit = uidGid 988;
 
     };
 }

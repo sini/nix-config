@@ -2,8 +2,6 @@
   inputs,
   config,
   pkgs,
-  unstable,
-  namespace,
   ...
 }:
 {
@@ -11,7 +9,6 @@
     inputs.nixos-hardware.nixosModules.common-cpu-amd-pstate
     inputs.nixos-hardware.nixosModules.common-cpu-amd-zenpower
     inputs.nixos-hardware.nixosModules.common-pc-ssd
-    #inputs.nixos-hardware.nixosModules.common-gpu-amd
     inputs.nixos-hardware.nixosModules.common-gpu-intel
   ];
   # inherit (nixos-hardware.nixosModules)
@@ -63,8 +60,7 @@
     # Use cachyOS kernel, server variant: https://wiki.cachyos.org/features/kernel/
     # boot.kernelPackages = inputs.chaotic.legacyPackages.x86_64-linux.linuxPackages_cachyos;
 
-    # CachyOS Kernel is softlocking... use latest unstable branch kernel instead
-    boot.kernelPackages = unstable.linuxPackages_latest;
+    boot.kernelPackages = pkgs.linuxPackages_latest;
 
     time.timeZone = "America/Los_Angeles";
     i18n.defaultLocale = "en_US.UTF-8";
@@ -87,15 +83,13 @@
     services = {
       podman.enable = true;
       fstrim.enable = true;
-      ${namespace} = {
-        media.data-share.enable = true;
-      };
+      custom.media.data-share.enable = true;
       rpcbind.enable = true; # needed for NFS
       #scx.enable = true;
     };
 
     # ======================== DO NOT CHANGE THIS ========================
-    system.stateVersion = "24.11";
+    system.stateVersion = "25.05";
     # ======================== DO NOT CHANGE THIS ========================
   };
 }

@@ -2,16 +2,15 @@
   options,
   config,
   lib,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
-  cfg = config.services.${namespace}.media.data-share;
+  cfg = config.services.custom.media.data-share;
 in
 {
-  options.services.${namespace}.media.data-share = with types; {
+  options.services.custom.media.data-share = with types; {
     enable = mkBoolOpt false "Enable NFS data share mount";
   };
 

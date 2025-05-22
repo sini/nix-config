@@ -3,11 +3,10 @@
   options,
   config,
   lib,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 {
   imports = with inputs; [
     home-manager.nixosModules.home-manager

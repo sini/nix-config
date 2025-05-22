@@ -1,7 +1,7 @@
-{ lib, namespace, ... }:
+{ lib, ... }:
 let
   inherit (builtins) elem;
-  inherit (lib.${namespace}) listDirectories;
+  inherit (lib.custom) listDirectories;
 
   # Example usage:
   # Suppose listDirectories "hosts" returns [ "sini" "sini@patch" "shuo" ]

@@ -2,11 +2,10 @@
   options,
   config,
   lib,
-  namespace,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
   cfg = config.system.locale;
 in

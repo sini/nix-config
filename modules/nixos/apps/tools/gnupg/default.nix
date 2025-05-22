@@ -2,12 +2,11 @@
   options,
   config,
   lib,
-  namespace,
   pkgs,
   ...
 }:
 with lib;
-with lib.${namespace};
+with lib.custom;
 let
   cfg = config.apps.tools.gnupg;
 in
