@@ -25,6 +25,9 @@ in
       nix-prefetch-git
     ];
 
+    # Allow unfree packages globally
+    nixpkgs.config.allowUnfree = true;
+
     nix =
       let
         users = [
