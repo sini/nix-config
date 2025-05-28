@@ -3,9 +3,14 @@
   ...
 }:
 {
+  systemd = {
+    services.NetworkManager-wait-online.enable = false;
+    network.wait-online.enable = false;
+  };
   networking = {
-    useDHCP = false;
+    useDHCP = true;
     networkmanager.enable = true;
+    firewall.enable = false;
   };
 
   networking.domain = "json64.dev";
@@ -23,8 +28,6 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   facter.reportPath = ./facter.json;
-
-  networking.firewall.enable = false;
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
