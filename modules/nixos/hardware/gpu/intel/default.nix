@@ -9,10 +9,10 @@
 with lib;
 with lib.custom;
 let
-  cfg = config.hardware.gpu.intel-arc;
+  cfg = config.hardware.gpu.intel;
 in
 {
-  options.hardware.gpu.intel-arc = with types; {
+  options.hardware.gpu.intel = with types; {
     enable = mkBoolOpt false "Enable Intel ARC support";
     device_id = mkOption {
       type = types.str;
