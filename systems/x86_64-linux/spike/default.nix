@@ -8,7 +8,7 @@
     network.wait-online.enable = false;
   };
   networking = {
-    useDHCP = true;
+    # useDHCP = true;
     networkmanager.enable = true;
     firewall.enable = false;
   };
