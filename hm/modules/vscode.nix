@@ -113,7 +113,7 @@ in
           vscode-marketplace.vadimcn.vscode-lldb
         ];
       mutableExtensionsDir = true;
-      package = pkgs.unstable.vscode;
+      package = unstable.vscode;
     };
   };
   # services.vscode-server.enable = true;
