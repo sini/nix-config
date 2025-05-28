@@ -108,7 +108,6 @@ in
           vscode-marketplace.yzhang.markdown-all-in-one
         ]
         ++ lib.optionals isLinux [
-          vscode-extensions.ms-vscode.cpptools-extension-pack
           vscode-marketplace.ms-vsliveshare.vsliveshare
           vscode-marketplace.vadimcn.vscode-lldb
         ];
