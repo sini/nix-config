@@ -55,6 +55,7 @@ in
       geoclue = uidGid 990;
       gnome-remote-desktop = uidGid 989;
       rtkit = uidGid 988;
+      nm-iodine = uidGid 987;
 
     };
 }
