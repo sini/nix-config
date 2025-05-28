@@ -105,7 +105,6 @@ in
         ]
         ++ lib.optionals isLinux [
           vscode-marketplace.ms-vsliveshare.vsliveshare
-          vscode-marketplace.vadimcn.vscode-lldb
         ];
       mutableExtensionsDir = true;
       package = unstable.vscode;
