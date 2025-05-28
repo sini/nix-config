@@ -23,6 +23,7 @@
             pkgs.nix-output-monitor
             pkgs.nil
             pkgs.nixd
+            pkgs.nix-plugins
           ]
           ++ lib.optionals pkgs.buildPlatform.isDarwin [
             pkgs.coreutils-full # Include GNU coreutils for darwin systems
