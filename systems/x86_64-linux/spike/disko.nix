@@ -39,6 +39,7 @@
                 content = null; # Placeholder for Windows boot partition
               };
               windows = {
+                label = "windows";
                 name = "Windows";
                 start = "4083cyl";
                 end = "4044133cyl";
@@ -56,7 +57,7 @@
                 };
               };
               windowsRecovery = {
-                name = "Windows";
+                name = "recovery";
                 start = "4044133cyl";
                 end = "4046719cyl";
                 type = "0700";
