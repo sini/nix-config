@@ -47,10 +47,10 @@
           hash = "sha256-PQIFF8kz+baqmZWiSr+wc4EleZ/KD8Y+lxW2NT35/bg=";
         };
       }
-      {
-        name = "zsh-histdb-skim";
-        src = "${pkgs.zsh-histdb-skim}/share/zsh-histdb-skim";
-      }
+      # {
+      #   name = "zsh-histdb-skim";
+      #   src = "${pkgs.zsh-histdb-skim}/share/zsh-histdb-skim";
+      # }
     ];
 
     sessionVariables = {
