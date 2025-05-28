@@ -1,4 +1,9 @@
-{ pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 {
   home.packages = with pkgs; [
     sqlite-interactive # For zsh-histdb
@@ -74,7 +79,8 @@
 
         # Use gpg-agent as ssh-agent.
         gpg-connect-agent /bye
-        export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+        export SSH_AUTH_SOCK=$(${config.programs.gpg.package}/bin/gpgconf --list-dirs agent-ssh-socket)
+        export GPG_TTY=$(tty)
       '')
       (lib.readFile ./zshrc)
     ];
