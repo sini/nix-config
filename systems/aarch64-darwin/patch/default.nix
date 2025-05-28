@@ -6,6 +6,10 @@
 }:
 {
   # environment.shells = [ pkgs.fish ];
+  age.secrets.randomPassword = {
+    rekeyFile = ./secrets/randomPassword.age;
+    generator.script = "passphrase";
+  };
 
   users.users.sini = {
     description = "Jason Bowman";
