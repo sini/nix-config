@@ -1,0 +1,281 @@
+autoload -U add-zle-hook-widget
+
+# autosuggests otherwise breaks these widgets.
+# See https://github.com/zsh-users/zsh-autosuggestions/issues/619
+ZSH_AUTOSUGGEST_CLEAR_WIDGETS+=(history-beginning-search-backward-end history-beginning-search-forward-end)
+
+# --------------------------------------------------------------------------------
+# FZF widgets
+
+function __fzf() {
+	if [[ -n "$TMUX_PANE" && ( "${FZF_TMUX:-0}" != 0 || -n "$FZF_TMUX_OPTS" ) ]]; then
+		fzf-tmux -d"${FZF_TMUX_HEIGHT:-40%}" -- "$@"
+	else
+		fzf "$@"
+	fi
+}
+
+function __fzf_select() {
+	setopt localoptions pipefail no_aliases 2>/dev/null
+	local item
+	FZF_DEFAULT_OPTS="--height ${FZF_TMUX_HEIGHT:-40%} --reverse --bind=ctrl-z:ignore,tab:down,btab:up,change:top,ctrl-space:toggle $FZF_DEFAULT_OPTS" __fzf "$@" | while read item; do
+		echo -n "${(q)item} "
+	done
+	local ret=$?
+	echo
+	return $ret
+}
+
+function __fzf_find_files() {
+	local include_hidden=${1:-0}
+	local types=${2:-fdl}
+	shift 2
+	local type_selectors=()
+	local i
+	for (( i=0; i<${#types}; i++ )); do
+		[[ "$i" -gt 0 ]] && type_selectors+=('-o')
+		type_selectors+=('-type' "${types:$i:1}")
+	done
+	local hide_hidden_files=()
+	if [[ $include_hidden == "0" ]]; then
+		hide_hidden_files=('-path' '*/\.*' '-o')
+	fi
+	setopt localoptions pipefail no_aliases 2>/dev/null
+	command find -L . -mindepth 1 \
+			\( "${hide_hidden_files[@]}" -fstype 'sysfs' -o -fstype 'devfs' -o -fstype 'devtmpfs' -o -fstype 'proc' \) -prune \
+			-o \( "${type_selectors[@]}" \) -print \
+		| __fzf_select "$@"
+}
+
+function __fzf_find_files_widget_helper() {
+	LBUFFER="${LBUFFER}$(__fzf_find_files "$@")"
+	local ret=$?
+	zle reset-prompt
+	return $ret
+}
+
+function fzf-select-file-or-dir()        { __fzf_find_files_widget_helper 0 fdl -m; }; zle -N fzf-select-file-or-dir
+function fzf-select-file-or-dir-hidden() { __fzf_find_files_widget_helper 1 fdl -m; }; zle -N fzf-select-file-or-dir-hidden
+function fzf-select-dir()                { __fzf_find_files_widget_helper 0 d -m; };   zle -N fzf-select-dir
+function fzf-select-dir-hidden()         { __fzf_find_files_widget_helper 1 d -m; };   zle -N fzf-select-dir-hidden
+function fzf-cd() {
+	local dir="$(__fzf_find_files 0 d +m)"
+	if [[ -z "$dir" ]]; then
+		zle redisplay
+		return 0
+	fi
+	zle push-line # Clear buffer. Auto-restored on next prompt.
+	BUFFER="cd -- $dir"
+	zle accept-line
+	local ret=$?
+	unset dir # ensure this doesn't end up appearing in prompt expansion
+	zle reset-prompt
+	return $ret
+}
+zle -N fzf-cd
+
+# --------------------------------------------------------------------------------
+# Keybinds
+
+# Reset all keybinds and use "emacs" keybinds
+bindkey -d
+bindkey -e
+
+function nop() {
+    true
+}; zle -N nop
+
+function bindkeys() {
+	[[ "$#" -eq 2 ]] || return
+	local keys="$1"
+	local key
+	for key in ${(P)keys}; do
+		bindkey "$key" "$2"
+	done
+}
+
+function setup_keybinds() {
+    local keys_Home=(           "${terminfo[khome]}" '\eOH' '\e[H')
+    local keys_End=(            "${terminfo[kend]}"  '\eOF' '\e[F')
+    local keys_Insert=(         "${terminfo[kich1]}" '\e[2~')
+
+    local keys_Tab=(            "${terminfo[ht]}"    '\t')
+    local keys_ShiftTab=(       "${terminfo[kcbt]}"  '\eOZ' '\e[Z')
+
+    local keys_Backspace=(      "${terminfo[kbs]}"   '^?')
+    local keys_CtrlBackspace=(  "${terminfo[cub1]}"  '^H')
+    local keys_AltBackspace=(   '\e^?')
+
+    local keys_Delete=(         "${terminfo[kdch1]}" '\e[3~')
+    local keys_ShiftDelete=(    "${terminfo[kDC]}"   '\e[3;2~')
+    local keys_CtrlDelete=(     '\e[3;5~')
+    local keys_AltDelete=(      '\e[3;3~')
+
+    local keys_Up=(             "${terminfo[kcuu1]}" '\eOA' '\e[A')
+    local keys_ShiftUp=(        "${terminfo[kri]}"   '\e[1;2A')
+    local keys_CtrlUp=(         '\e[1;5A')
+    local keys_AltUp=(          '\e[1;3A')
+
+    local keys_Down=(           "${terminfo[kcud1]}" '\eOB' '\e[B')
+    local keys_ShiftDown=(      "${terminfo[kind]}"  '\e[1;2B')
+    local keys_CtrlDown=(       '\e[1;5B')
+    local keys_AltDown=(        '\e[1;3B')
+
+    local keys_Right=(          "${terminfo[kcuf1]}" '\eOC' '\e[C')
+    local keys_ShiftRight=(     "${terminfo[kRIT]}"  '\e[1;2C')
+    local keys_CtrlRight=(      '\e[1;5C')
+    local keys_AltRight=(       '\e[1;3C')
+
+    local keys_Left=(           "${terminfo[kcub1]}" '\eOD' '\e[D')
+    local keys_ShiftLeft=(      "${terminfo[kLFT]}"  '\e[1;2D')
+    local keys_CtrlLeft=(       '\e[1;5D')
+    local keys_AltLeft=(        '\e[1;3D')
+
+    local keys_PageUp=(         "${terminfo[kpp]}"   '\e[5~')
+    local keys_ShiftPageUp=(    "${terminfo[kPRV]}"  '\e[5;2~')
+
+    local keys_PageDown=(       "${terminfo[knp]}"   '\e[6~')
+    local keys_ShiftPageDown=(  "${terminfo[kNXT]}"  '\e[6;2~')
+
+    bindkeys keys_Home            beginning-of-line
+    bindkeys keys_End             end-of-line
+    bindkeys keys_Insert          nop
+
+    bindkeys keys_Tab             fzf-tab-complete
+    bindkeys keys_ShiftTab        nop
+
+    bindkeys keys_Backspace       backward-delete-char
+    bindkeys keys_AltBackspace    backward-kill-word
+    bindkeys keys_CtrlBackspace   backward-kill-line
+
+    bindkeys keys_Delete          delete-char
+    bindkeys keys_ShiftDelete     delete-word
+    bindkeys keys_CtrlDelete      kill-line
+    bindkeys keys_AltDelete       delete-word
+
+    bindkeys keys_Up              history-beginning-search-backward-end
+    bindkeys keys_ShiftUp         up-line
+    bindkeys keys_CtrlUp          nop
+    bindkeys keys_AltUp           nop
+
+    bindkeys keys_Down            history-beginning-search-forward-end
+    bindkeys keys_ShiftDown       down-line
+    bindkeys keys_CtrlDown        nop
+    bindkeys keys_AltDown         nop
+
+    bindkeys keys_Right           forward-char
+    bindkeys keys_ShiftRight      forward-word
+    bindkeys keys_CtrlRight       nop
+    bindkeys keys_AltRight        nop
+
+    bindkeys keys_Left            backward-char
+    bindkeys keys_ShiftLeft       backward-word
+    bindkeys keys_CtrlLeft        nop
+    bindkeys keys_AltLeft         nop
+
+    bindkeys keys_PageUp          nop
+    bindkeys keys_ShiftPageUp     nop
+
+    bindkeys keys_PageDown        nop
+    bindkeys keys_ShiftPageDown   nop
+
+    # fzf file and directory related expansions and functions
+    bindkey '\ef' fzf-select-file-or-dir
+    bindkey '\eF' fzf-select-file-or-dir-hidden
+    bindkey '\ed' fzf-select-dir
+    bindkey '\eD' fzf-select-dir-hidden
+    bindkey '\ec' fzf-cd
+
+	# fuzzy history search
+	bindkey '^R' histdb-skim-widget
+	# autosuggest Ctrl+space = accept
+	bindkey '^ ' autosuggest-accept
+}
+setup_keybinds
+unfunction setup_keybinds
+unfunction bindkeys
+
+
+# --------------------------------------------------------------------------------
+# Completion
+
+# disable sort when completing `git checkout`
+zstyle ':completion:*:git-checkout:*' sort false
+# set descriptions format to enable group support
+zstyle ':completion:*:descriptions' format '[%d]'
+# set list-colors to enable filename colorizing
+zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
+# force zsh to show completion menu, so common prefixes are not expanded first
+zstyle ':completion:*' menu yes
+# preview directory's content when completing cd
+zstyle ':fzf-tab:complete:cd:*' fzf-preview 'ls -lAhF --group-directories-first --show-control-chars --quoting-style=escape --color=always $realpath'
+zstyle ':fzf-tab:complete:cd:*' popup-pad 20 0
+# Don't insert tabs when there is no completion (e.g. beginning of line)
+zstyle ':completion:*' insert-tab false
+# start menu completion also if it could find unambiguous initial string
+zstyle ':completion:*' insert-unambiguous false
+
+# List directory completions first
+zstyle ':completion:*' list-dirs-first true
+# Offer the original completion when using expanding / approximate completions
+zstyle ':completion:*' original true
+# Treat multiple slashes as a single / like UNIX does (instead of as /*/)
+zstyle ':completion:*' squeeze-slashes true
+# provide verbose completion information
+zstyle ':completion:*' verbose true
+
+# provide .. as a completion
+zstyle ':completion:*' special-dirs ..
+# match uppercase from lowercase
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'
+
+
+# --------------------------------------------------------------------------------
+# ZSH Options
+
+# Ignore certain commands in history
+HISTORY_IGNORE_REGEX='^(.|. |..|.. |rm .*|rmd .*|git fixup.*|git unstash|git stash.*|git checkout -f.*)$'
+function zshaddhistory() {
+	emulate -L zsh
+	[[ ! $1 =~ "$HISTORY_IGNORE_REGEX" ]]
+}
+
+# Emit an error when a glob has no match
+setopt nomatch
+# Don't use extended globbing
+setopt noextendedglob
+# * shouldn't match dotfiles. ever.
+setopt noglobdots
+# Whenever a command completion is attempted, make sure the entire
+# command path is hashed first.
+setopt hash_list_all
+
+# Change directory by typing the directory name
+setopt auto_cd
+# Automatically pushd on cd to have a directory stack
+setopt auto_pushd
+# Don't push the same dir twice
+setopt pushd_ignore_dups
+# Display PID when suspending processes as well
+setopt long_list_jobs
+# Don't send SIGHUP to background processes when the shell exits
+setopt nohup
+# Report the status of background jobs immediately
+setopt notify
+# Allow comments in interactive shells
+setopt interactive_comments
+# Don't beep
+setopt nobeep
+
+# Don't try to correct inputs
+setopt nocorrect
+# Allow in-word completion
+setopt complete_in_word
+# Don't autocorrect commands
+setopt no_correct_all
+# List choices on ambiguous completions
+setopt auto_list
+# Use menu completion if requested explicitly
+setopt auto_menu
+# Move cursor to end of word if there was only one match
+setopt always_to_end
