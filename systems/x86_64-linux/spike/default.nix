@@ -26,6 +26,9 @@
   };
 
   hardware = {
+    #yubikey
+    gpgSmartcards.enable = true;
+
     gpu.intel = {
       enable = true;
       device_id = "a788";
