@@ -5,6 +5,7 @@
 {
   # TODO: Convert back to a kubernetes node, for now we'll test desktop/home manager configuration before adding to the config
   networking.domain = "json64.dev";
+  systemd.network.wait-online.anyInterface = true;
 
   node = {
     deployment.targetHost = "10.10.9.23";
