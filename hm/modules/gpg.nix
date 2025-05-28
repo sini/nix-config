@@ -45,18 +45,16 @@ in
       enableSshSupport = true;
 
       # https://github.com/drduh/config/blob/master/gpg-agent.conf
-      defaultCacheTtl = 60;
-      defaultCacheTtlSsh = 60;
+      #defaultCacheTtl = 60;
+      #defaultCacheTtlSsh = 60;
+      #maxCacheTtl = 120;
 
-      maxCacheTtl = 120;
       # If system is darwin, use pinentry-mac
-      pinentryPackage =
-        lib.mkIf pkgs.stdenv.hostPlatform.isDarwin
-          pkgs.pinentry-mac or pkgs.pinentry-gtk2;
+      pinentryPackage = pkgs.pinentry-gtk2;
 
       extraConfig = ''
-        allow-emacs-pinentry
-        allow-loopback-pinentry
+        # allow-emacs-pinentry
+        # allow-loopback-pinentry
         ttyname $GPG_TTY
       '';
     };
