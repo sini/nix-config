@@ -32,7 +32,7 @@
     hardware = {
       intelgpu.driver = "xe";
 
-      gpu.intel-arc = {
+      gpu.intel = {
         enable = true;
         device_id = "22182";
       };
