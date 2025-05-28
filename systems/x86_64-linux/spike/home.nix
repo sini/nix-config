@@ -1,5 +1,7 @@
 {
   inputs,
+  pkgs,
+  unstable,
   ...
 }:
 {
@@ -14,7 +16,7 @@
       verbose = true;
 
       extraSpecialArgs = {
-        inherit inputs;
+        inherit inputs pkgs unstable;
       };
     };
   };

@@ -51,6 +51,7 @@
         withSystem system (
           {
             pkgsets,
+            unstable,
             homeManager,
             ...
           }:
@@ -59,6 +60,7 @@
             specialArgs = {
               inherit
                 inputs
+                unstable
                 ;
               inherit (config) nodes;
               lib = extendedLib;
@@ -88,6 +90,7 @@
           {
             pkgsets,
             pkgs,
+            unstable,
             homeManager,
             ...
           }:
@@ -96,6 +99,7 @@
             specialArgs = {
               inherit
                 pkgsets
+                unstable
                 ;
               lib = extendedLib;
               inherit (config) nodes;
