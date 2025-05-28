@@ -50,7 +50,7 @@ in
       #maxCacheTtl = 120;
 
       # If system is darwin, use pinentry-mac
-      pinentryPackage = pkgs.pinentry-gnome3;
+      pinentry.package = pkgs.pinentry-gnome3;
 
       extraConfig = ''
         ttyname $GPG_TTY
