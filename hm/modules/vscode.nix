@@ -35,7 +35,7 @@ in
     vscode = {
       enable = true;
       profiles.default.extensions =
-        with pkgs;
+        with pkgs.nix-vscode-extensions;
         [
           vscode-marketplace.aaron-bond.better-comments
           vscode-marketplace.alefragnani.project-manager
