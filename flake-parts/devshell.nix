@@ -79,8 +79,8 @@
             # We need this for our repo secrets.
             name = "NIX_CONFIG";
             value = ''
-              plugin-files = ${pkgs.nix-plugins}/lib/nix/plugins
-              extra-builtins-file = ${./..}/nix/extra-builtins.nix
+              # plugin-files = ${pkgs.nix-plugins}/lib/nix/plugins
+              # extra-builtins-file = ${./..}/nix/extra-builtins.nix
             '';
           }
         ];
