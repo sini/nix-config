@@ -1,15 +1,10 @@
 {
-  inputs,
   config,
   pkgs,
   lib,
   ...
 }:
 {
-
-  nixpkgs.overlays = [
-    inputs.nix-vscode-extensions.overlays.default
-  ];
   boot = {
     initrd.availableKernelModules = [
       "xhci_pci"
