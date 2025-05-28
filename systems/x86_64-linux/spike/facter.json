@@ -1580,86 +1580,6 @@
     "disk": [
       {
         "index": 68,
-        "attached_to": 49,
-        "class_list": ["disk", "block_device", "nvme"],
-        "bus_type": {
-          "hex": "0096",
-          "name": "NVME",
-          "value": 150
-        },
-        "slot": {
-          "bus": 0,
-          "number": 0
-        },
-        "base_class": {
-          "hex": "0106",
-          "name": "Mass Storage Device",
-          "value": 262
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Disk",
-          "value": 0
-        },
-        "vendor": {
-          "hex": "144d",
-          "value": 5197
-        },
-        "sub_vendor": {
-          "hex": "144d",
-          "value": 5197
-        },
-        "device": {
-          "hex": "a80c",
-          "name": "Samsung SSD 990 PRO 2TB",
-          "value": 43020
-        },
-        "sub_device": {
-          "hex": "a801",
-          "value": 43009
-        },
-        "serial": "S73WNJ0W310392E",
-        "model": "Samsung SSD 990 PRO 2TB",
-        "sysfs_id": "/class/block/nvme0n1",
-        "sysfs_bus_id": "nvme0",
-        "sysfs_device_link": "/devices/pci0000:00/0000:00:1d.0/0000:6e:00.0/nvme/nvme0",
-        "unix_device_name": "/dev/nvme0n1",
-        "unix_device_number": {
-          "type": 98,
-          "major": 259,
-          "minor": 0,
-          "range": 0
-        },
-        "unix_device_names": [
-          "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310392E",
-          "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310392E_1",
-          "/dev/disk/by-id/nvme-eui.0025384331424995",
-          "/dev/disk/by-path/pci-0000:6e:00.0-nvme-1",
-          "/dev/nvme0n1"
-        ],
-        "resources": [
-          {
-            "type": "disk_geo",
-            "cylinders": 1907729,
-            "heads": 64,
-            "sectors": 32,
-            "size": "0x0",
-            "geo_type": "logical"
-          },
-          {
-            "type": "size",
-            "unit": "sectors",
-            "value_1": 3907029168,
-            "value_2": 512
-          }
-        ],
-        "driver": "nvme",
-        "driver_module": "nvme",
-        "drivers": ["nvme"],
-        "driver_modules": ["nvme"]
-      },
-      {
-        "index": 69,
         "attached_to": 57,
         "class_list": ["disk", "block_device", "nvme"],
         "bus_type": {
@@ -1669,7 +1589,7 @@
         },
         "slot": {
           "bus": 0,
-          "number": 1
+          "number": 0
         },
         "base_class": {
           "hex": "0106",
@@ -1700,10 +1620,10 @@
         },
         "serial": "2431E8BD13D9",
         "model": "CT4000P3PSSD8",
-        "sysfs_id": "/class/block/nvme1n1",
-        "sysfs_bus_id": "nvme1",
-        "sysfs_device_link": "/devices/pci0000:00/0000:00:1b.0/0000:6c:00.0/nvme/nvme1",
-        "unix_device_name": "/dev/nvme1n1",
+        "sysfs_id": "/class/block/nvme0n1",
+        "sysfs_bus_id": "nvme0",
+        "sysfs_device_link": "/devices/pci0000:00/0000:00:1b.0/0000:6c:00.0/nvme/nvme0",
+        "unix_device_name": "/dev/nvme0n1",
         "unix_device_number": {
           "type": 98,
           "major": 259,
@@ -1715,7 +1635,7 @@
           "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9_1",
           "/dev/disk/by-id/nvme-eui.6479a79650000080",
           "/dev/disk/by-path/pci-0000:6c:00.0-nvme-1",
-          "/dev/nvme1n1"
+          "/dev/nvme0n1"
         ],
         "resources": [
           {
@@ -1730,6 +1650,86 @@
             "type": "size",
             "unit": "sectors",
             "value_1": 7814037168,
+            "value_2": 512
+          }
+        ],
+        "driver": "nvme",
+        "driver_module": "nvme",
+        "drivers": ["nvme"],
+        "driver_modules": ["nvme"]
+      },
+      {
+        "index": 69,
+        "attached_to": 49,
+        "class_list": ["disk", "block_device", "nvme"],
+        "bus_type": {
+          "hex": "0096",
+          "name": "NVME",
+          "value": 150
+        },
+        "slot": {
+          "bus": 0,
+          "number": 1
+        },
+        "base_class": {
+          "hex": "0106",
+          "name": "Mass Storage Device",
+          "value": 262
+        },
+        "sub_class": {
+          "hex": "0000",
+          "name": "Disk",
+          "value": 0
+        },
+        "vendor": {
+          "hex": "144d",
+          "value": 5197
+        },
+        "sub_vendor": {
+          "hex": "144d",
+          "value": 5197
+        },
+        "device": {
+          "hex": "a80c",
+          "name": "Samsung SSD 990 PRO 2TB",
+          "value": 43020
+        },
+        "sub_device": {
+          "hex": "a801",
+          "value": 43009
+        },
+        "serial": "S73WNJ0W310392E",
+        "model": "Samsung SSD 990 PRO 2TB",
+        "sysfs_id": "/class/block/nvme1n1",
+        "sysfs_bus_id": "nvme1",
+        "sysfs_device_link": "/devices/pci0000:00/0000:00:1d.0/0000:6e:00.0/nvme/nvme1",
+        "unix_device_name": "/dev/nvme1n1",
+        "unix_device_number": {
+          "type": 98,
+          "major": 259,
+          "minor": 0,
+          "range": 0
+        },
+        "unix_device_names": [
+          "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310392E",
+          "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310392E_1",
+          "/dev/disk/by-id/nvme-eui.0025384331424995",
+          "/dev/disk/by-path/pci-0000:6e:00.0-nvme-1",
+          "/dev/nvme1n1"
+        ],
+        "resources": [
+          {
+            "type": "disk_geo",
+            "cylinders": 1907729,
+            "heads": 64,
+            "sectors": 32,
+            "size": "0x0",
+            "geo_type": "logical"
+          },
+          {
+            "type": "size",
+            "unit": "sectors",
+            "value_1": 3907029168,
             "value_2": 512
           }
         ],
@@ -2633,7 +2633,7 @@
           {
             "type": "mem",
             "base": 0,
-            "range": 33274781696,
+            "range": 33274798080,
             "enabled": true,
             "access": "read_write",
             "prefetch": "unknown"
@@ -2969,7 +2969,7 @@
         "module_alias": "usb:v25A7pFA7Cd1332dc00dsc00dp00ic03isc01ip02in00"
       },
       {
-        "index": 91,
+        "index": 92,
         "attached_to": 0,
         "bus_type": {
           "hex": "0081",
@@ -3252,25 +3252,6 @@
     ],
     "network_interface": [
       {
-        "index": 88,
-        "attached_to": 0,
-        "class_list": ["network_interface"],
-        "base_class": {
-          "hex": "0107",
-          "name": "Network Interface",
-          "value": 263
-        },
-        "sub_class": {
-          "hex": "0000",
-          "name": "Loopback",
-          "value": 0
-        },
-        "model": "Loopback network interface",
-        "sysfs_id": "/class/net/lo",
-        "unix_device_name": "lo",
-        "unix_device_names": ["lo"]
-      },
-      {
         "index": 89,
         "attached_to": 45,
         "class_list": ["network_interface"],
@@ -3306,6 +3287,25 @@
       },
       {
         "index": 90,
+        "attached_to": 0,
+        "class_list": ["network_interface"],
+        "base_class": {
+          "hex": "0107",
+          "name": "Network Interface",
+          "value": 263
+        },
+        "sub_class": {
+          "hex": "0000",
+          "name": "Loopback",
+          "value": 0
+        },
+        "model": "Loopback network interface",
+        "sysfs_id": "/class/net/lo",
+        "unix_device_name": "lo",
+        "unix_device_names": ["lo"]
+      },
+      {
+        "index": 91,
         "attached_to": 79,
         "class_list": ["network_interface"],
         "base_class": {
@@ -4654,7 +4654,7 @@
         "resources": [
           {
             "type": "irq",
-            "base": 129,
+            "base": 145,
             "triggered": 0,
             "enabled": true
           },
@@ -4672,7 +4672,7 @@
           "command": 1030,
           "header_type": 0,
           "secondary_bus": 0,
-          "irq": 129,
+          "irq": 145,
           "prog_if": 48
         },
         "driver": "xhci_hcd",
