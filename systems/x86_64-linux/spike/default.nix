@@ -16,10 +16,22 @@
       "sd_mod"
       "rtsx_pci_sdmmc"
     ];
-    kernelModules = [ "kvm-intel" ];
+    kernelModules = [
+      "kvm-intel"
+      "iwlmvm"
+      "iwlwifi"
+      "mmc_core"
+      "mt76"
+      "mt7921e"
+    ];
   };
 
-  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  hardware = {
+    cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+    bluetooth.enable = false;
+    enableAllFirmware = true;
+    enableRedistributableFirmware = true;
+  };
 
   systemd = {
     services.NetworkManager-wait-online.enable = false;
