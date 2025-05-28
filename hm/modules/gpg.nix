@@ -1,7 +1,6 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 let
@@ -50,11 +49,9 @@ in
       #maxCacheTtl = 120;
 
       # If system is darwin, use pinentry-mac
-      pinentryPackage = pkgs.pinentry-gtk2;
+      pinentryFlavor = "curses";
 
       extraConfig = ''
-        # allow-emacs-pinentry
-        # allow-loopback-pinentry
         ttyname $GPG_TTY
       '';
     };
