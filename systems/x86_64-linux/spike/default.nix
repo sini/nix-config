@@ -1,14 +1,33 @@
 {
+  config,
   pkgs,
+  lib,
   ...
 }:
 {
+
+  boot = {
+    initrd.availableKernelModules = [
+      "xhci_pci"
+      "thunderbolt"
+      "nvme"
+      "usbhid"
+      "usb_storage"
+      "sd_mod"
+      "rtsx_pci_sdmmc"
+    ];
+    kernelModules = [ "kvm-intel" ];
+  };
+
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+
   systemd = {
     services.NetworkManager-wait-online.enable = false;
     network.wait-online.enable = false;
   };
+
   networking = {
-    # useDHCP = true;
+    useDHCP = true;
     networkmanager.enable = true;
     firewall.enable = false;
   };
