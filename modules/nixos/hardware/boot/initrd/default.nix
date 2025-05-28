@@ -23,7 +23,7 @@
           users.root.shell = "/bin/systemd-tty-ask-password-agent";
         };
 
-        network = {
+        network = lib.mkIf config.systemd.network.enable {
           enable = true;
           ssh = {
             enable = true;
