@@ -35,6 +35,11 @@
           inputs.chaotic.nixosModules.nyx-cache
           inputs.chaotic.nixosModules.nyx-overlay
           inputs.chaotic.nixosModules.nyx-registry
+          {
+            nixpkgs.overlays = [
+              ../overlays/default.nix
+            ];
+          }
         ];
 
       darwin_modules =
