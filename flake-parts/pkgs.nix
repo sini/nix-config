@@ -35,7 +35,7 @@ in
   ];
 
   perSystem =
-    { system, ... }:
+    { pkgs, system, ... }:
     {
 
       _module.args = rec {
@@ -60,5 +60,6 @@ in
           else
             inputs.home-manager;
       };
+      inherit pkgs;
     };
 }
