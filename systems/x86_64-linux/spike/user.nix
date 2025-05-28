@@ -7,7 +7,7 @@
 
   home-manager.users.sini = {
     imports = [
-      ../../hm/core.nix
+      ../../../../hm/core.nix
     ];
 
     programs.nixos-rebuild-and-notify.enable = true;
