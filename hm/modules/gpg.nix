@@ -8,7 +8,7 @@ let
   cfg = config.programs.gpg;
 in
 {
-  gpg = lib.mkIf cfg.enable {
+  programs.gpg = lib.mkIf cfg.enable {
 
     # https://support.yubico.com/hc/en-us/articles/4819584884124-Resolving-GPG-s-CCID-conflicts
     scdaemonSettings = {
