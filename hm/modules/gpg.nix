@@ -1,6 +1,7 @@
 {
   config,
   lib,
+  pkgs,
   ...
 }:
 let
@@ -49,7 +50,7 @@ in
       #maxCacheTtl = 120;
 
       # If system is darwin, use pinentry-mac
-      pinentryFlavor = "curses";
+      pinentryPackage = pkgs.pinentry-gnome3;
 
       extraConfig = ''
         ttyname $GPG_TTY
