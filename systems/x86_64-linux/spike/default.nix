@@ -27,6 +27,10 @@
   };
 
   hardware = {
+    gpu.intel = {
+      enable = true;
+      device_id = "a788";
+    };
     cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     bluetooth.enable = false;
     enableAllFirmware = true;
