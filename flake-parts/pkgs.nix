@@ -8,6 +8,11 @@ let
       inherit system;
       config = {
         allowUnfree = true;
+        overlays = builtins.attrValues (
+          import ../overlays/default.nix {
+            inherit inputs;
+          }
+        );
       };
     };
 in
@@ -32,6 +37,7 @@ in
   perSystem =
     { system, ... }:
     {
+
       _module.args = rec {
         # Provide un-imported package set paths for reference in other modules.
         pkgsets = {

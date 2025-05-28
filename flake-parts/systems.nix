@@ -35,13 +35,6 @@
           inputs.chaotic.nixosModules.nyx-cache
           inputs.chaotic.nixosModules.nyx-overlay
           inputs.chaotic.nixosModules.nyx-registry
-          {
-            nixpkgs.overlays = builtins.attrValues (
-              import ../overlays/default.nix {
-                inherit inputs;
-              }
-            );
-          }
         ];
 
       darwin_modules =
