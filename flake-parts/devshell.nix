@@ -23,7 +23,6 @@
             pkgs.nix-output-monitor
             pkgs.nil
             pkgs.nixd
-            pkgs.nix-plugins
           ]
           ++ lib.optionals pkgs.buildPlatform.isDarwin [
             pkgs.coreutils-full # Include GNU coreutils for darwin systems
@@ -74,17 +73,17 @@
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 
-        env = [
-          {
-            # Additionally configure nix-plugins with our extra builtins file.
-            # We need this for our repo secrets.
-            name = "NIX_CONFIG";
-            value = ''
-              plugin-files = ${pkgs.nix-plugins}/lib/nix/plugins
-              extra-builtins-file = ${./..}/nix/extra-builtins.nix
-            '';
-          }
-        ];
+        # env = [
+        #   {
+        #     # Additionally configure nix-plugins with our extra builtins file.
+        #     # We need this for our repo secrets.
+        #     name = "NIX_CONFIG";
+        #     value = ''
+        #       plugin-files = ${pkgs.nix-plugins}/lib/nix/plugins
+        #       extra-builtins-file = ${./..}/nix/extra-builtins.nix
+        #     '';
+        #   }
+        # ];
       };
     };
 }
