@@ -50,7 +50,11 @@
           consoleMode = "0"; # increase font size
         };
 
-        efi.canTouchEfiVariables = true;
+        efi = {
+          canTouchEfiVariables = true;
+          efiSysMountPoint = "/boot";
+        };
+
       };
 
       tmp.useTmpfs = true;
