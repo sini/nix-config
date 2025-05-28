@@ -37,7 +37,11 @@
           inputs.chaotic.nixosModules.nyx-registry
           {
             nixpkgs.overlays = [
-              ../overlays/default.nix
+              (builtins.attrValues (
+                import ../overlays/default.nix {
+                  inherit inputs;
+                }
+              ))
             ];
           }
         ];
