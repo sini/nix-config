@@ -22,6 +22,10 @@ with lib.custom;
   };
 
   config = {
+    nixpkgs.overlays = [
+      inputs.nix-vscode-extensions.overlays.default
+    ];
+
     home.extraOptions = {
       home.stateVersion = config.system.stateVersion;
       home.file = mkAliasDefinitions options.home.file;

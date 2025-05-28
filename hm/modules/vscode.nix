@@ -1,5 +1,4 @@
 {
-  inputs,
   lib,
   pkgs,
   unstable,
@@ -9,10 +8,6 @@ let
   inherit (pkgs.stdenv) isLinux;
 in
 {
-  nixpkgs.overlays = [
-    inputs.nix-vscode-extensions.overlays.default
-  ];
-
   # Packages that are used by some of the extensions below
   home.packages = with pkgs; [
     bash-language-server
