@@ -5,14 +5,10 @@
 }:
 let
   inherit (lib.modules) mkIf;
-  cpuType = (builtins.head config.facter.report.hardware.cpu).vendor_name;
+  cpuType = (builtins.head nixosConfigurations.spike.config.facter.report.hardware.cpu).vendor_name;
 in
 {
-  config = mkIf (cpuType == "Intel") {
+  config = mkIf (cpuType == "GenuineIntel") {
     hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-    services.ucodenix = {
-      enable = true;
-      cpuModelId = config.facter.reportPath;
-    };
   };
 }
