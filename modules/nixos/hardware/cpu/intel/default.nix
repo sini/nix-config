@@ -5,7 +5,7 @@
 }:
 let
   inherit (lib.modules) mkIf;
-  cpuType = (builtins.head nixosConfigurations.spike.config.facter.report.hardware.cpu).vendor_name;
+  cpuType = (builtins.head config.facter.report.hardware.cpu).vendor_name;
 in
 {
   config = mkIf (cpuType == "GenuineIntel") {
