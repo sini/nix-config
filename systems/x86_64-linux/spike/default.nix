@@ -5,6 +5,9 @@
   ...
 }:
 {
+
+  boot.kernelPackages = pkgs.linuxPackages_latest;
+
   boot = {
     initrd.availableKernelModules = [
       "xhci_pci"
@@ -67,8 +70,6 @@
       # "kubernetes-master"
     ];
   };
-
-  boot.kernelPackages = pkgs.linuxPackages_latest;
 
   facter.reportPath = ./facter.json;
 

@@ -57,7 +57,7 @@ in
       ];
     };
 
-    services.xserver.videoDrivers = [ "nvidia" ];
+    services.xserver.videoDrivers = [ "nvidia" ] ++ lib.optional cfg.withIntegratedGPU "modesetting";
 
     hardware.nvidia = {
       prime = mkIf cfg.withIntegratedGPU {
