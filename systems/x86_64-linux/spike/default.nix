@@ -54,7 +54,7 @@
   systemd.network.wait-online.anyInterface = true;
 
   node = {
-    deployment.targetHost = "10.10.9.36";
+    deployment.targetHost = "10.10.10.20";
     tags = [
       "laptop"
       # "kubernetes"
