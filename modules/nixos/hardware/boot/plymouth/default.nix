@@ -14,11 +14,16 @@ in
   };
 
   config = mkIf cfg.enable {
-    #catppuccin.tty.enable = true;
-    catppuccin.plymouth.enable = true;
-    catppuccin.plymouth.flavor = "mocha";
+    # catppuccin.enable = true;
+    # catppuccin.flavor = "mocha";
     boot = {
-      plymouth.enable = true;
+      plymouth = {
+        enable = true;
+        # catppuccin = {
+        #   enable = true;
+        #   flavor = "mocha";
+        # };
+      };
     };
   };
 }
