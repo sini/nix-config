@@ -2,7 +2,6 @@
   config,
   pkgs,
   lib,
-  inputs,
   ...
 }:
 let
@@ -10,7 +9,6 @@ let
   cpuType = (builtins.head config.facter.report.hardware.cpu).vendor_name;
 in
 {
-  imports = [ inputs.ucodenix.nixosModules.default ];
   config = mkIf (cpuType == "AuthenticAMD") {
     environment.systemPackages = [ pkgs.amdctl ];
 
