@@ -37,7 +37,6 @@ in
 
     hardware.nvidia = {
       prime = mkIf cfg.withIntegratedGPU {
-        enable = true;
         offload.enable = true;
         intelBusId = cfg.intelBusID;
         nvidiaBusId = cfg.nvidiaBusID;
