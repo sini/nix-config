@@ -31,7 +31,7 @@
 
       # Custom generator for ssh-ed25519 since upstream doesn't seem to work
       # Reported issue here: https://github.com/oddlama/agenix-rekey/issues/104
-      generators.ssh-ed25519-fix =
+      generators.ssh-ed25519-tmpdir =
         {
           lib,
           name,
@@ -47,6 +47,40 @@
               -f "$tmpdir/key"
             cat "$tmpdir/key" >&3
           ) 3>&1 >/dev/null 2>&1
+        '';
+
+      generators.ssh-ed25519-python =
+        {
+          pkgs,
+          ...
+        }:
+        let
+          # Python script to generate a key in memory and print to stdout
+          keygenScript = pkgs.writeText "ssh-ed25519-keygen.py" ''
+            import sys
+            from cryptography.hazmat.primitives import serialization as crypto_serialization
+            from cryptography.hazmat.primitives.asymmetric import ed25519
+
+            private_key = ed25519.Ed25519PrivateKey.generate()
+
+            # Correctly serialize the key to the OpenSSH format,
+            # wrapped in PEM encoding.
+            ssh_private_key = private_key.private_bytes(
+                encoding=crypto_serialization.Encoding.PEM,
+                format=crypto_serialization.PrivateFormat.OpenSSH,
+                encryption_algorithm=crypto_serialization.NoEncryption()
+            )
+
+            # Write the key directly to standard output
+            sys.stdout.buffer.write(ssh_private_key)
+          '';
+
+          # A minimal Python environment with the required library
+          pythonWithCrypto = pkgs.python3.withPackages (ps: [ ps.cryptography ]);
+        in
+        # The final shell command to be executed by agenix
+        ''
+          ${pythonWithCrypto}/bin/python ${keygenScript}
         '';
     };
 

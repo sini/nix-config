@@ -56,6 +56,7 @@ in
       gnome-remote-desktop = uidGid 989;
       rtkit = uidGid 988;
       nm-iodine = uidGid 987;
+      openrazer = uidGid 986;
 
     };
 }
