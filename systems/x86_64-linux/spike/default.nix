@@ -90,6 +90,7 @@
     wget
     vim
     git
+    gitkraken
   ];
 
   services = {
