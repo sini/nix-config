@@ -6,7 +6,8 @@
 }:
 {
 
-  boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  # boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  boot.kernelPackages = pkgs.linuxPackages_6_15;
 
   boot = {
     initrd.availableKernelModules = [

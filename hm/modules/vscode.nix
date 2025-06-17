@@ -1,7 +1,6 @@
 {
   lib,
   pkgs,
-  unstable,
   ...
 }:
 let
@@ -107,7 +106,7 @@ in
           vscode-marketplace.ms-vsliveshare.vsliveshare
         ];
       mutableExtensionsDir = true;
-      package = unstable.vscode;
+      package = pkgs.unstable.vscode;
     };
   };
   # services.vscode-server.enable = true;

@@ -2,7 +2,6 @@
   config,
   inputs,
   pkgs,
-  unstable,
   ...
 }:
 {
@@ -17,7 +16,7 @@
       verbose = true;
 
       extraSpecialArgs = {
-        inherit inputs pkgs unstable;
+        inherit inputs pkgs;
         nixConfig = config;
       };
     };
