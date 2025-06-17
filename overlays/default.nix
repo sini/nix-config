@@ -31,7 +31,7 @@
           {
             x86_64-linux = prev.fetchzip {
               url = "https://api.gitkraken.dev/releases/production/linux/x64/${version}/gitkraken-amd64.tar.gz";
-              hash = "sha256-VKJjwWAhN53h9KU06OviIEL5SiIDwPtb7cKJSR4L9YA=";
+              hash = "sha256-yCAxNYwjnmK0lSkH9x8Q4KoQgAWwWmCS8O81tcsqWhs=";
             };
 
             x86_64-darwin = prev.fetchzip {
