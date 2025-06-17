@@ -133,7 +133,7 @@ in
           accessible over SSH (only local deployment will be possible).
         '';
         type = types.bool;
-        default = false;
+        default = true;
       };
 
       buildOnTarget = lib.mkOption {
