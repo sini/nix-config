@@ -52,17 +52,14 @@
         }:
         withSystem system (
           {
-            pkgsets,
-            unstable,
-            homeManager,
+            pkgs,
             ...
           }:
-          pkgsets.nixpkgs.lib.nixosSystem rec {
-            inherit system;
+          inputs.nixpkgs.lib.nixosSystem rec {
+            inherit system pkgs;
             specialArgs = {
               inherit
                 inputs
-                unstable
                 ;
               inherit (config) nodes;
               lib = extendedLib;
@@ -72,8 +69,8 @@
               ++ extraModules
               ++ nixos_modules
               ++ [
-                pkgsets.nixpkgs.nixosModules.notDetected
-                homeManager.nixosModules.home-manager
+                inputs.nixpkgs.nixosModules.notDetected
+                inputs.home-manager.nixosModules.home-manager
                 {
                   networking.hostName = hostname;
                 }
@@ -90,31 +87,27 @@
         }:
         withSystem system (
           {
-            pkgsets,
             pkgs,
-            unstable,
-            homeManager,
             ...
           }:
           inputs.nix-darwin.lib.darwinSystem rec {
             inherit system pkgs;
             specialArgs = {
               inherit
-                pkgsets
-                unstable
+                pkgs
                 ;
               lib = extendedLib;
               inherit (config) nodes;
 
               inputs = inputs // {
-                inherit (pkgsets) nixpkgs;
+                inherit (pkgs) nixpkgs;
               };
             };
             modules =
               extraModules
               ++ darwin_modules
               ++ [
-                homeManager.darwinModules.home-manager
+                inputs.home-manager-darwin.darwinModules.home-manager
                 {
                   networking.hostName = hostname;
                 }
