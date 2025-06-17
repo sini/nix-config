@@ -1,4 +1,5 @@
 {
+  config,
   inputs,
   pkgs,
   unstable,
@@ -17,6 +18,7 @@
 
       extraSpecialArgs = {
         inherit inputs pkgs unstable;
+        nixConfig = config;
       };
     };
   };

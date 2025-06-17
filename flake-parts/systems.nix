@@ -23,6 +23,7 @@
         ++ [
           inputs.agenix.nixosModules.default
           inputs.agenix-rekey.nixosModules.default
+
         ];
 
       nixos_modules =
@@ -35,6 +36,7 @@
           inputs.chaotic.nixosModules.nyx-cache
           inputs.chaotic.nixosModules.nyx-overlay
           inputs.chaotic.nixosModules.nyx-registry
+          inputs.catppuccin.nixosModules.catppuccin
         ];
 
       darwin_modules =

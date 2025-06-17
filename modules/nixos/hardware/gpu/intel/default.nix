@@ -55,6 +55,7 @@ in
       pciutils
       libva-utils
       intel-gpu-tools
+      nvtopPackages.full
     ];
   };
 }

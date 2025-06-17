@@ -74,6 +74,7 @@ in
       powerManagement.finegrained = true;
       open = true;
       nvidiaSettings = false;
+      nvidiaPersistenced = true;
       package = nvidiaPackage;
       dynamicBoost.enable = cfg.enable && cfg.withIntegratedGPU;
     };
@@ -135,7 +136,8 @@ in
 
     environment = {
       systemPackages = with pkgs; [
-        nvtopPackages.nvidia
+        pciutils
+        nvtopPackages.full
         libva-utils
         gwe
         vulkan-tools
