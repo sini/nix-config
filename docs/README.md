@@ -125,3 +125,48 @@ I've stolen shamelessly from:
 - https://github.com/eh8/chenglab/tree/main
 
 - https://git.eisfunke.com/config/nixos/-/tree/main
+
+## Project Overview and Key Technologies
+
+This repository contains a comprehensive NixOS and Home Manager configuration managed as a Nix Flake. It's designed to configure multiple hosts (NixOS and macOS) in a declarative and reproducible way.
+
+### File Hierarchy Highlights
+
+The repository is structured to promote modularity and clarity:
+
+*   **`/flake.nix`**: The main entry point for the Nix flake, defining inputs and outputs.
+*   **`/flake-parts/`**: Contains modular components of the flake, making the configuration easier to manage. Notably:
+    *   `agenix-rekey.nix`: Configures `agenix` for secret management (see below).
+    *   `colmena.nix`: Configures `Colmena` for deploying configurations to multiple hosts (see below).
+*   **`/hm/`**: Holds Home Manager configurations, allowing for user-specific package management and dotfile configuration across different hosts.
+*   **`/lib/`**: A collection of custom helper functions and Nix libraries used throughout the configuration.
+*   **`/modules/`**: Defines NixOS and Home Manager modules. These are broken down into:
+    *   `common/`: Settings applicable to all systems.
+    *   `darwin/`: Configurations specific to macOS hosts.
+    *   `nixos/`: Configurations specific to NixOS hosts.
+    *   `home/`: Modules specifically for Home Manager.
+*   **`/overlays/`**: Provides custom Nix package overlays, allowing for modifications or additions to the standard Nixpkgs set.
+*   **`/secrets/`**: Manages encrypted secrets using `agenix`. This directory includes public keys, instructions for key generation (often with YubiKeys), and the encrypted secret files themselves, organized per host.
+*   **`/systems/`**: This is where individual host configurations are defined. Each host (e.g., a server or a laptop) has its own subdirectory, typically organized by architecture (`x86_64-linux`, `aarch64-darwin`) and then by hostname. Each host's configuration specifies its modules, system settings, and potentially hardware-specific details.
+*   **`/topology/default.nix`**: Defines the network layout and relationships between the managed hosts, primarily for use by Colmena.
+
+### Core Technologies
+
+Several key tools are at the heart of this setup:
+
+*   **Agenix**:
+    *   **Role**: Securely manages secrets (API keys, passwords, private keys, etc.) within the Nix configuration.
+    *   **Implementation**: Secrets are encrypted using `age` (often with keys stored on YubiKeys for enhanced security) and stored directly in the repository. The `agenix-rekey` tool is configured in `flake-parts/agenix-rekey.nix` to facilitate the rotation and management of these encryption keys.
+    *   **Usage**: During a Nix build or deployment, `agenix` decrypts the necessary secrets for the target host, making them available to services or user configurations. The actual encrypted files are typically found in `secrets/generated/` or `secrets/rekeyed/`.
+
+*   **Colmena**:
+    *   **Role**: Deploys NixOS configurations to multiple hosts simultaneously. It allows you to manage a fleet of machines from a single flake.
+    *   **Implementation**: Configured in `flake-parts/colmena.nix`, Colmena takes the host definitions from the `/systems/` directory and applies their configurations remotely. It uses SSH to connect to the target machines.
+    *   **Usage**: Commands like `colmena apply` or `colmena apply-local` are used to push out new configurations or updates to the defined nodes. The `/topology/default.nix` file can provide Colmena with information about the network structure.
+
+*   **NixOS Anywhere & Disko**:
+    *   **Role**: While Colmena *deploys* to existing NixOS systems, `nixos-anywhere` is a tool often used for the *initial installation* of NixOS on bare-metal machines or VMs, especially remotely. `Disko` is a tool for declarative disk partitioning within NixOS.
+    *   **Presence**: There isn't a direct, explicit configuration file for `nixos-anywhere` in the flake's core structure, suggesting it might be used more as an ad-hoc command-line tool for provisioning new systems.
+    *   **Connection**: The presence of `disko.nix` files (e.g., `systems/x86_64-linux/spike/disko.nix`) indicates that declarative disk partitioning is used for some hosts. `nixos-anywhere` can leverage `disko` configurations to prepare disks during the installation process. This setup allows for a fully reproducible installation from scratch.
+
+This overview should help in navigating the repository and understanding its operational principles.
