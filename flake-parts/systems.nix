@@ -73,6 +73,8 @@
                 inputs.home-manager.nixosModules.home-manager
                 {
                   networking.hostName = hostname;
+                  facter.reportPath = path + ./facter.json;
+
                 }
               ];
           }

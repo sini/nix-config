@@ -15,8 +15,6 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  facter.reportPath = ./facter.json;
-
   hardware = {
     disk.longhorn = {
       enable = true;

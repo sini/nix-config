@@ -16,8 +16,6 @@
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  facter.reportPath = ./facter.json;
-
   hardware = {
     gpu.amd.enable = true;
 
