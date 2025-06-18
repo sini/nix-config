@@ -6,7 +6,6 @@
   ...
 }:
 with lib;
-with lib.custom;
 let
   #nvidiaPackage = config.boot.kernelPackages.nvidiaPackages.beta;
   # TODO: use the latest beta version

@@ -4,7 +4,6 @@
   ...
 }:
 with lib;
-with lib.custom;
 let
   cfg = config.hardware.boot.plymouth;
 in

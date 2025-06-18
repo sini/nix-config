@@ -14,6 +14,7 @@
         ./flake-parts/colmena.nix # Configuration for colmena remote deployment
         ./flake-parts/devshell.nix # Configuration for nix develop shell.
         ./flake-parts/fmt.nix # Configuration for treefmt.
+        ./flake-parts/lib.nix # Common library functions and utilities.
         ./flake-parts/pkgs.nix # Setup pkg overlays for various systems
         ./flake-parts/systems.nix # Entrypoint for systems configurations.
       ];

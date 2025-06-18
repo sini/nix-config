@@ -5,7 +5,6 @@
   ...
 }:
 with lib;
-with lib.custom;
 let
   cfg = config.hardware.bluetooth;
 in
