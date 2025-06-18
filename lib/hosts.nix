@@ -1,12 +1,13 @@
 { lib, ... }:
 let
+  inherit (lib) relativeToRoot listDirectories;
   inherit (builtins)
     filter
     map
     ;
+
   inherit (lib.strings) hasSuffix;
   inherit (lib.lists) flatten;
-  inherit (lib.custom) relativeToRoot listDirectories;
 
   listHostsWithSystem = flatten (
     map (
