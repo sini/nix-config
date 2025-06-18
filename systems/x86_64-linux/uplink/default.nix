@@ -14,8 +14,6 @@
   # inherit (nixos-hardware.nixosModules)
 
   config = {
-    facter.reportPath = ./facter.json;
-
     node = {
       deployment.targetHost = "10.10.10.1";
       tags = [ "server" ];

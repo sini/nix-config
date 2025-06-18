@@ -3,8 +3,6 @@
   ...
 }:
 {
-  facter.reportPath = ./facter.json;
-
   node = {
     deployment.targetHost = "10.10.10.4";
     tags = [

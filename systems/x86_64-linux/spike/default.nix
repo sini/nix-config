@@ -44,7 +44,7 @@
       };
     };
     cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
-    bluetooth.enable = false;
+    bluetooth.enable = true;
     enableAllFirmware = true;
     enableRedistributableFirmware = true;
   };
@@ -71,8 +71,6 @@
       # "kubernetes-master"
     ];
   };
-
-  facter.reportPath = ./facter.json;
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
