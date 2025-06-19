@@ -26,7 +26,7 @@
 
 # Installing
 
-https://github.com/DeterminateSystems/nix-installer
+Migrate to this pattern https://github.com/mightyiam/dendritic
 
 # Requirements
 
