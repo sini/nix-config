@@ -16,7 +16,7 @@
       inherit (lib)
         mapAttrs
         ;
-      extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self);
+      extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
 
       common_modules =
         extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/common")
