@@ -34,7 +34,7 @@
           inputs.chaotic.nixosModules.nyx-registry
           inputs.catppuccin.nixosModules.catppuccin
         ]
-        ++ [ config.flake.modules.nixos.core ];
+        ++ [ inputs.self.modules.nixos.core ];
 
       darwin_modules =
         common_modules
