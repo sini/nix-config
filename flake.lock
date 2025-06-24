@@ -671,6 +671,21 @@
         "type": "github"
       }
     },
+    "import-tree": {
+      "locked": {
+        "lastModified": 1750744366,
+        "narHash": "sha256-7q+6/iVm+iXLzDOGylUmE1ydp6j4yvp8A9qu/7nlGCs=",
+        "owner": "vic",
+        "repo": "import-tree",
+        "rev": "5e5d465eed6546269e811195d8291eb44f0b7d7f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vic",
+        "repo": "import-tree",
+        "type": "github"
+      }
+    },
     "jovian": {
       "inputs": {
         "nix-github-actions": "nix-github-actions",
@@ -1202,6 +1217,7 @@
         "homebrew-bundle": "homebrew-bundle",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "import-tree": "import-tree",
         "nix-darwin": "nix-darwin",
         "nix-homebrew": "nix-homebrew",
         "nix-index-database": "nix-index-database",

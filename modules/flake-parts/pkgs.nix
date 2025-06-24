@@ -25,7 +25,7 @@
         config.allowUnfree = true;
         overlays =
           builtins.attrValues (
-            import ../overlays/default.nix {
+            import ../../overlays/default.nix {
               inherit inputs;
             }
           )

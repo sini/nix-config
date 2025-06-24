@@ -19,7 +19,7 @@
       extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self);
 
       common_modules =
-        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/common")
+        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/common")
         ++ [
           inputs.agenix.nixosModules.default
           inputs.agenix-rekey.nixosModules.default
@@ -28,7 +28,7 @@
 
       nixos_modules =
         common_modules
-        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/nixos")
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/nixos")
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
@@ -41,7 +41,7 @@
 
       darwin_modules =
         common_modules
-        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/darwin");
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/darwin");
 
       mkNixOSConfigWith =
         {
