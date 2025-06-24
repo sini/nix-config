@@ -24,9 +24,9 @@
           ;
 
         hostPubkey = config.node.rootPath + "/ssh_host_ed25519_key.pub";
-        storageMode = "derivation";
-        generatedSecretsDir = ../../../.. + "/secrets/generated/${config.node.hostname}";
-        localStorageDir = ../../../.. + "/secrets/rekeyed/${config.node.hostname}";
+        storageMode = "local";
+        generatedSecretsDir = inputs.self.outPath + "/secrets/generated/${config.node.hostname}";
+        localStorageDir = inputs.self.outPath + "/secrets/rekeyed/${config.node.hostname}";
       };
 
       # Custom generator for ssh-ed25519 since upstream doesn't seem to work
