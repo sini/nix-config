@@ -7,6 +7,7 @@
   ...
 }:
 with lib;
+with lib.custom;
 let
   cfg = config.hardware.disk.single;
 

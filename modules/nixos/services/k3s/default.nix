@@ -35,7 +35,8 @@ in
     };
 
     serverAddr = lib.mkOption {
-      default = if config.services.custom.clusterInit then null else lib.getKubernetesMasterTargetHost;
+      default =
+        if config.services.custom.clusterInit then null else lib.custom.getKubernetesMasterTargetHost;
       type = with lib.types; nullOr str;
       description = ''
         Address of the server whose cluster this server should join.
@@ -48,7 +49,7 @@ in
 
     # age.secrets = {
     #   "foo" = {
-    #     rekeyFile = lib.relativeToRoot "secrets/foo.age";
+    #     rekeyFile = lib.custom.relativeToRoot "secrets/foo.age";
     #     owner = "media";
     #     group = "media";
     #   };

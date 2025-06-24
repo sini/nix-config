@@ -6,6 +6,7 @@
   ...
 }:
 with lib;
+with lib.custom;
 let
   cfg = config.services.ssh;
 in

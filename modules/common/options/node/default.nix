@@ -10,7 +10,6 @@ let
     mkMerge
     mkOption
     types
-    relativeToRoot
     ;
   inherit (lib.lists) optionals;
   inherit (lib.types)
@@ -20,6 +19,8 @@ let
     nullOr
     bool
     ;
+
+  inherit (lib.custom) relativeToRoot;
   cfg = config.node;
 in
 {

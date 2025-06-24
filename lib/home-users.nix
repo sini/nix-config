@@ -1,7 +1,7 @@
 { lib, ... }:
 let
   inherit (builtins) elem;
-  inherit (lib) listDirectories;
+  inherit (lib.custom) listDirectories;
 
   # Example usage:
   # Suppose listDirectories "hosts" returns [ "sini" "sini@patch" "shuo" ]
