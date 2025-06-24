@@ -57,6 +57,7 @@ in
       rtkit = uidGid 988;
       nm-iodine = uidGid 987;
       openrazer = uidGid 986;
+      resolvconf = uidGid 985;
 
     };
 }
