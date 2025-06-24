@@ -4,20 +4,7 @@
     mac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.
   '';
 
-  outputs =
-    inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = import inputs.systems;
-
-      imports = [
-        ./flake-parts/agenix-rekey.nix # Configuration for agenix-rekey + devshell
-        ./flake-parts/colmena.nix # Configuration for colmena remote deployment
-        ./flake-parts/devshell.nix # Configuration for nix develop shell.
-        ./flake-parts/fmt.nix # Configuration for treefmt.
-        ./flake-parts/pkgs.nix # Setup pkg overlays for various systems
-        ./flake-parts/systems.nix # Entrypoint for systems configurations.
-      ];
-    };
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 
   inputs = {
     agenix = {
@@ -67,6 +54,8 @@
       url = "github:nix-community/home-manager/release-25.05";
       inputs.nixpkgs.follows = "nixpkgs-darwin";
     };
+
+    import-tree.url = "github:vic/import-tree";
 
     # macOS Support (master)
     nix-darwin = {
