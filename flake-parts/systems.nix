@@ -2,32 +2,33 @@
   self,
   inputs,
   withSystem,
+
   ...
 }:
-let
-  inherit (self) lib; # override flake-parts' lib with your extended lib
-in
 {
   flake =
     {
       config,
+      lib,
       ...
     }:
     let
       inherit (lib)
         mapAttrs
         ;
-      inherit (lib) listModulesRec linuxHosts darwinHosts;
+      extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../lib _self);
 
-      common_modules = listModulesRec ../modules/common ++ [
-        inputs.agenix.nixosModules.default
-        inputs.agenix-rekey.nixosModules.default
+      common_modules =
+        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/common")
+        ++ [
+          inputs.agenix.nixosModules.default
+          inputs.agenix-rekey.nixosModules.default
 
-      ];
+        ];
 
       nixos_modules =
         common_modules
-        ++ listModulesRec ../modules/nixos
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/nixos")
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
@@ -38,7 +39,9 @@ in
           inputs.catppuccin.nixosModules.catppuccin
         ];
 
-      darwin_modules = common_modules ++ listModulesRec ../modules/darwin;
+      darwin_modules =
+        common_modules
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "modules/darwin");
 
       mkNixOSConfigWith =
         {
@@ -57,12 +60,12 @@ in
             specialArgs = {
               inherit
                 inputs
-                lib
                 ;
               inherit (config) nodes;
+              lib = extendedLib;
             };
             modules =
-              listModulesRec path
+              extendedLib.custom.listModulesRec path
               ++ extraModules
               ++ nixos_modules
               ++ [
@@ -94,8 +97,8 @@ in
             specialArgs = {
               inherit
                 pkgs
-                lib
                 ;
+              lib = extendedLib;
               inherit (config) nodes;
 
               inputs = inputs // {
@@ -111,10 +114,11 @@ in
                   networking.hostName = hostname;
                 }
               ]
-              ++ listModulesRec path;
+              ++ extendedLib.custom.listModulesRec path;
           }
         );
 
+      inherit (extendedLib.custom) linuxHosts darwinHosts;
     in
     {
       nixosConfigurations = lib.attrsets.mergeAttrsList (

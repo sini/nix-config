@@ -5,6 +5,7 @@
   ...
 }:
 with lib;
+with lib.custom;
 let
   cfg = config.services.custom.media.data-share;
 in
