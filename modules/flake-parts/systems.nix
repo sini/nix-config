@@ -37,7 +37,8 @@
           inputs.chaotic.nixosModules.nyx-overlay
           inputs.chaotic.nixosModules.nyx-registry
           inputs.catppuccin.nixosModules.catppuccin
-        ];
+        ]
+        ++ (with config.flake.modules.nixos; [ agenix ]);
 
       darwin_modules =
         common_modules
