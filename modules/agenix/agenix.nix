@@ -12,8 +12,8 @@
         inherit (inputs.self.secretsConfig) masterIdentities;
         storageMode = "local";
         hostPubkey = config.node.rootPath + "/ssh_host_ed25519_key.pub";
-        generatedSecretsDir = ../../../secrets/generated/${config.node.hostname};
-        localStorageDir = ../../../secrets/rekeyed/${config.node.hostname};
+        generatedSecretsDir = ../../secrets/generated/${config.node.hostname};
+        localStorageDir = ../../secrets/rekeyed/${config.node.hostname};
       };
 
       # Custom generator for ssh-ed25519 since upstream doesn't seem to work
