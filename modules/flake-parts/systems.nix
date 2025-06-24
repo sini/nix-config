@@ -18,13 +18,9 @@
         ;
       extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
 
-      common_modules =
-        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/common")
-        ++ [
-          inputs.agenix.nixosModules.default
-          inputs.agenix-rekey.nixosModules.default
-
-        ];
+      common_modules = extendedLib.custom.listModulesRec (
+        extendedLib.custom.relativeToRoot "legacy-modules/common"
+      );
 
       nixos_modules =
         common_modules
@@ -38,7 +34,7 @@
           inputs.chaotic.nixosModules.nyx-registry
           inputs.catppuccin.nixosModules.catppuccin
         ]
-        ++ (with config.flake.modules.nixos; [ agenix ]);
+        ++ [ config.flake.modules.nixos.core ];
 
       darwin_modules =
         common_modules
