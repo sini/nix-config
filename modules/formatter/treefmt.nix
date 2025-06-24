@@ -1,7 +1,6 @@
 { inputs, ... }:
 {
   imports = [
-
     inputs.treefmt-nix.flakeModule
   ];
 
@@ -26,9 +25,7 @@
             "*.editorconfig"
             "*.envrc"
             "*.gitconfig"
-            "*.git-blame-ignore-revs"
             "*.gitignore"
-            "*.gitattributes"
             "*CODEOWNERS"
             "*LICENSE"
             "*flake.lock"
