@@ -82,7 +82,7 @@
         export SSH_AUTH_SOCK=$(${config.programs.gpg.package}/bin/gpgconf --list-dirs agent-ssh-socket)
         export GPG_TTY=$(tty)
       '')
-      (lib.readFile ./zshrc.sh)
+      (lib.readFile ./zshrc.zsh)
     ];
     shellAliases = {
       ".." = "cd ..";
