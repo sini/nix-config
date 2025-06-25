@@ -24,6 +24,13 @@
     |> (s: s + "\n");
 
   perSystem = psArgs: {
+    # make-shells.default.packages = [ psArgs.config.files.writer.drv ];
     devshells.default.packages = [ psArgs.config.files.writer.drv ];
+    devshells.default.commands = [
+      {
+        package = psArgs.config.files.writer.drv;
+        help = "Generate files";
+      }
+    ];
   };
 }
