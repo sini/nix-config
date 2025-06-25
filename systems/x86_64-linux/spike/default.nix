@@ -89,6 +89,7 @@
     vim
     git
     gitkraken
+    krita
   ];
 
   services = {
