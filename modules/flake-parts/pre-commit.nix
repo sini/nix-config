@@ -12,7 +12,7 @@
   perSystem =
     { config, ... }:
     {
-      devshell.startup.pre-commit.text = config.pre-commit.installationScript;
+      devshells.default.devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 
       pre-commit = {
         check.enable = true;
