@@ -1,33 +1,4 @@
-# Folder view configuration files
-.DS_Store
-Desktop.ini
-
-# Thumbnail cache files
-._*
-Thumbs.db
-
-**~
-
-# Files that might appear on external disks
-.Spotlight-V100
-.Trashes
-
-# Running `nixos-rebuild build` or `nix build` generates a result directory.
-result
-
-# Running `nixos-rebuild build-vm` and starting the VM adds a file for
-# the virtual storage drive.
-*.qcow2
-
-# A useful artifact when working with configuration documentation
-options.json
-
-# Direnv
+/result
+/result.*
 .direnv
-.env
-
-# Ags
-modules/nixos/desktop/addons/ags/bar/src/types
-
-# Ignore pre-commit config                                                                                    •
-.pre-commit-config.yaml
+/.pre-commit-config.yaml
