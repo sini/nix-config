@@ -3,18 +3,18 @@
   text.readme = {
     order = [
       "logo"
-      "ci-badge"
+      # "ci-badge"
       "intro"
       "dendritic"
-      "nixos-configurations"
+      #"nixos-configurations"
       "automatic-import"
       "files"
-      "named-modules-as-needed"
-      "ipfi"
-      "unfree-packages"
-      "all-check-store-paths"
-      "github-actions"
-      "flake-inputs-dedupe-prefix"
+      #"named-modules-as-needed"
+      #"ipfi"
+      #"unfree-packages"
+      #"all-check-store-paths"
+      #"github-actions"
+      #"flake-inputs-dedupe-prefix"
       "disallow-warnings"
     ];
 

@@ -3,7 +3,7 @@ let
   inherit (config.flake.meta.accounts) github;
   forge = "github";
   owner = github.username;
-  name = "infra";
+  name = "nix-config";
   defaultBranch = "main";
   flakeUri = "git+https://${github.domain}/${owner}/${name}?submodules=1&shallow=1";
 in
