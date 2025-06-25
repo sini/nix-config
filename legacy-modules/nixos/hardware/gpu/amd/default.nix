@@ -46,7 +46,7 @@ in
       };
 
     };
-    nixpkgs.config.rocmSupport = true;
+    # nixpkgs.config.rocmSupport = true;
 
     # environment.variables = {
     #   AMD_VULKAN_ICD = "RADV"; # Force RADV when amdvlk is enabled
