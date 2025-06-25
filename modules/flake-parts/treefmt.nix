@@ -41,6 +41,7 @@
             "*.pub"
             "*.asc"
             "*.org"
+            "*.zsh"
           ];
           formatter = {
             prettier = {
@@ -64,10 +65,7 @@
           };
           nufmt.enable = true;
           prettier.enable = true;
-          shfmt = {
-            enable = true;
-            indent_size = 4;
-          };
+          shfmt.enable = true;
           taplo.enable = true;
         };
       };
