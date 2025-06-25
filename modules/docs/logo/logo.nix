@@ -3,7 +3,7 @@
     # markdown
     ''
       <div align="center">
-        <img src="https://raw.githubusercontent.com/sini/nix-config/main/modules/docs/logo.png" width="120px" />
+        <img src="https://raw.githubusercontent.com/sini/nix-config/main/modules/docs/logo/logo.png" width="120px" />
       </div>
 
       <br />
