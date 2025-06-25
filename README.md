@@ -1,7 +1,8 @@
 <div align="center">
-    <img src="https://raw.githubusercontent.com/sini/nix-config/main/.github/assets/logo.png" width="120px" />
+  <img src="https://raw.githubusercontent.com/sini/nix-config/main/modules/docs/logo.png" width="120px" />
 </div>
 
+<br />
 <br>
 
 # sini/nix-config
@@ -21,12 +22,47 @@
         <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&colorA=0b0b0b&colorB=c14d26&logo=unlicense&logoColor=c14d26"/>
     </a>
 </div>
+
 <br>
+# sini/nix-config
 
-**Placeholder synopsis** lorem ipsum
+Jason Bowman's [Nix](https://nix.dev)-powered "IT infrastructure" repository
 
-**Features:**
+> [!NOTE]
+> I hope you find this helpful.
+> If you have any questions or suggestions for me, feel free to use the discussions feature or contact me.
 
-- Multi-system
-- Dendritic pattern
-- yada yada
+## Origin of the dendritic pattern
+
+This repository follows [the dendritic pattern](https://github.com/mightyiam/dendritic)
+and happens to be the place in which it was discovered by its author.
+
+## Automatic import
+
+Nix files (they're all flake-parts modules) are automatically imported.
+Nix files prefixed with an underscore are ignored.
+No literal path imports are used.
+This means files can be moved around and nested in directories freely.
+
+> [!NOTE]
+> This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
+
+## Generated files
+
+The following files in this repository are generated and checked
+using [the _files_ flake-parts module](https://github.com/mightyiam/files):
+
+- `README.md`
+- `.gitignore`
+- `LICENSE`
+
+## Trying to disallow warnings
+
+This at the top level of the `flake.nix` file:
+
+```nix
+nixConfig.abort-on-warn = true;
+```
+
+> [!NOTE]
+> It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
