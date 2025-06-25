@@ -5,14 +5,22 @@
     inputs.git-hooks-nix.flakeModule
   ];
 
-  perSystem = _: {
-    pre-commit = {
-      check.enable = true;
+  text.gitignore = ''
+    /.pre-commit-config.yaml
+  '';
 
-      settings.hooks = {
-        treefmt.enable = true;
+  perSystem =
+    { config, ... }:
+    {
+      devshell.startup.pre-commit.text = config.pre-commit.installationScript;
+
+      pre-commit = {
+        check.enable = true;
+
+        settings.hooks = {
+          treefmt.enable = true;
+        };
       };
-    };
 
-  };
+    };
 }
