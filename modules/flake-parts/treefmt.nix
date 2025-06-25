@@ -21,6 +21,7 @@
         enableDefaultExcludes = true;
 
         settings = {
+          on-unmatched = "fatal";
           global.excludes = [
             "*.editorconfig"
             "*.envrc"
@@ -41,21 +42,7 @@
             "*.asc"
             "*.org"
           ];
-
           formatter = {
-            deadnix = {
-              priority = 1;
-            };
-
-            statix = {
-              priority = 2;
-              includes = [ "*.nix" ];
-            };
-
-            nixfmt = {
-              priority = 3;
-            };
-
             prettier = {
               options = [
                 "--tab-width"
@@ -68,7 +55,6 @@
 
         programs = {
           actionlint.enable = true;
-          deadnix.enable = true;
           fish_indent.enable = true;
           isort.enable = true;
           mdformat.enable = true;
@@ -82,7 +68,6 @@
             enable = true;
             indent_size = 4;
           };
-          statix.enable = true;
           taplo.enable = true;
         };
       };

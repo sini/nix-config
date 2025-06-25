@@ -82,6 +82,8 @@
 
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
 
+    files.url = "github:mightyiam/files";
+
     # Config is powered by this
     flake-parts = {
       url = "github:hercules-ci/flake-parts";

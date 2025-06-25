@@ -90,6 +90,7 @@
     git
     gitkraken
     krita
+    pavucontrol
   ];
 
   services = {
