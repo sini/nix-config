@@ -18,8 +18,13 @@
         ;
       extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
 
+      common_modules = extendedLib.custom.listModulesRec (
+        extendedLib.custom.relativeToRoot "legacy-modules/common"
+      );
+
       nixos_modules =
-        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/nixos")
+        common_modules
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/nixos")
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
@@ -30,6 +35,10 @@
           inputs.catppuccin.nixosModules.catppuccin
         ]
         ++ [ inputs.self.modules.nixos.core ];
+
+      darwin_modules =
+        common_modules
+        ++ extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/darwin");
 
       mkNixOSConfigWith =
         {
@@ -68,7 +77,45 @@
           }
         );
 
-      inherit (extendedLib.custom) linuxHosts;
+      mkDarwinConfigWith =
+        {
+          hostname,
+          system,
+          path,
+          extraModules ? [ ],
+        }:
+        withSystem system (
+          {
+            pkgs,
+            ...
+          }:
+          inputs.nix-darwin.lib.darwinSystem rec {
+            inherit system pkgs;
+            specialArgs = {
+              inherit
+                pkgs
+                ;
+              lib = extendedLib;
+              inherit (config) nodes;
+
+              inputs = inputs // {
+                inherit (pkgs) nixpkgs;
+              };
+            };
+            modules =
+              extraModules
+              ++ darwin_modules
+              ++ [
+                inputs.home-manager-darwin.darwinModules.home-manager
+                {
+                  networking.hostName = hostname;
+                }
+              ]
+              ++ extendedLib.custom.listModulesRec path;
+          }
+        );
+
+      inherit (extendedLib.custom) linuxHosts darwinHosts;
     in
     {
       nixosConfigurations = lib.attrsets.mergeAttrsList (
@@ -77,9 +124,15 @@
         }) linuxHosts
       );
 
+      darwinConfigurations = lib.attrsets.mergeAttrsList (
+        builtins.map (_elem: {
+          "${_elem.hostname}" = mkDarwinConfigWith { inherit (_elem) hostname system path; };
+        }) darwinHosts
+      );
+
       # All nixosSystem instanciations are collected here, so that we can refer
       # to any system via nodes.<name>
-      nodes = self.outputs.nixosConfigurations;
+      nodes = self.outputs.nixosConfigurations // self.outputs.darwinConfigurations;
 
       # Add a shorthand to easily target toplevel derivations
       "@" = mapAttrs (_: v: v.config.system.build.toplevel) self.outputs.nodes;
