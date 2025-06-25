@@ -7,7 +7,6 @@ let
   inherit (lib.attrsets) mergeAttrsList;
 
   libs = [
-    (import ./attrs.nix { inherit lib; })
     (import ./modules.nix { inherit lib; })
     (import ./options.nix { inherit lib; })
     (import ./hosts.nix { inherit lib; })
