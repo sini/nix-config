@@ -4,7 +4,51 @@
     mac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.
   '';
 
-  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
+  nixConfig = {
+    abort-on-warn = true;
+    extra-experimental-features = [ "pipe-operators" ];
+    allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
+  };
+
+  outputs =
+    inputs:
+    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+
+      text.readme.parts = {
+        disallow-warnings =
+          # markdown
+          ''
+            ## Trying to disallow warnings
+
+            This at the top level of the `flake.nix` file:
+
+            ```nix
+            nixConfig.abort-on-warn = true;
+            ```
+
+            > [!NOTE]
+            > It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
+          '';
+
+        automatic-import =
+          # markdown
+          ''
+            ## Automatic import
+
+            Nix files (they're all flake-parts modules) are automatically imported.
+            Nix files prefixed with an underscore are ignored.
+            No literal path imports are used.
+            This means files can be moved around and nested in directories freely.
+
+            > [!NOTE]
+            > This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
+
+          '';
+      };
+      imports = [ (inputs.import-tree ./modules) ];
+
+      _module.args.rootPath = ./.;
+    };
 
   inputs = {
     agenix = {
