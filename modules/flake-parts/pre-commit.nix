@@ -11,7 +11,6 @@
 
       settings.hooks = {
         treefmt.enable = true;
-        statix.enable = true;
       };
     };
 
