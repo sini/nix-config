@@ -71,8 +71,6 @@
           }
         ];
 
-        devshell.startup.pre-commit.text = config.pre-commit.installationScript;
-
         # env = [
         #   {
         #     # Additionally configure nix-plugins with our extra builtins file.
