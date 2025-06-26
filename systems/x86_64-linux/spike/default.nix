@@ -30,7 +30,6 @@
   };
 
   hardware = {
-    #yubikey
     gpgSmartcards.enable = true;
 
     gpu = {

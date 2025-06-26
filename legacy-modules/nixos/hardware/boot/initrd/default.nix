@@ -66,8 +66,6 @@
         #"udev.log_level=3"
       ];
 
-      #plymouth.enable = true; # Display loading screen
-
       #consoleLogLevel = 0;
     };
   };
