@@ -1,5 +1,4 @@
 {
-  options,
   config,
   lib,
   ...
@@ -20,7 +19,10 @@ in
       nix-direnv.enable = true;
       enableNushellIntegration = true;
     };
-
+    nix.settings = {
+      keep-outputs = true;
+      keep-derivations = true;
+    };
     environment.sessionVariables.DIRENV_LOG_FORMAT = ""; # Blank so direnv will shut up
   };
 }
