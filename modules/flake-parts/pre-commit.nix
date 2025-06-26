@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ lib, inputs, ... }:
 {
   imports = [
     inputs.pre-commit-hooks.flakeModule
@@ -10,7 +10,7 @@
   '';
 
   perSystem =
-    { config, ... }:
+    { self', config, ... }:
     {
       devshells.default.devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 
@@ -19,6 +19,10 @@
 
         settings.hooks = {
           treefmt.enable = true;
+          nix-fmt = {
+            enable = true;
+            entry = lib.getExe self'.formatter;
+          };
         };
       };
 
