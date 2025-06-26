@@ -12,6 +12,6 @@ let
     (import ./hosts.nix { inherit lib; })
   ];
 in
-rec {
+{
   custom = mergeAttrsList libs;
 }

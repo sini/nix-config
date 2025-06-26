@@ -1,9 +1,4 @@
-{
-  config,
-  ...
-}:
-
-{
+_: {
   config = {
     users = {
       groups.media = {

@@ -43,7 +43,7 @@
             pkgs,
             ...
           }:
-          inputs.nixpkgs.lib.nixosSystem rec {
+          inputs.nixpkgs.lib.nixosSystem {
             inherit system pkgs;
             specialArgs = {
               inherit

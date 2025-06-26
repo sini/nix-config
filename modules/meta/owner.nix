@@ -1,5 +1,4 @@
-{ config, ... }:
-{
+_: {
   flake = {
     meta.owner = {
       email = "jason@json64.dev";
