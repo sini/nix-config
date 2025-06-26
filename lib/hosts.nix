@@ -15,6 +15,10 @@ let
         "system" = system;
         "hostname" = hostname;
         "path" = relativeToRoot "systems/${system}/${hostname}";
+        "modules" = [
+          "core"
+          "workstation"
+        ];
       }) (listDirectories "systems/${system}")
     ) (listDirectories "systems")
   );

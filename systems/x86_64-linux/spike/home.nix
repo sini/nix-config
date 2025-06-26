@@ -5,9 +5,9 @@
   ...
 }:
 {
-  imports = with inputs; [
-    home-manager.nixosModules.home-manager
-  ];
+  # imports = with inputs; [
+  #   home-manager.nixosModules.home-manager
+  # ];
 
   config = {
     home-manager = {

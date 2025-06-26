@@ -8,9 +8,9 @@
 with lib;
 with lib.custom;
 {
-  imports = with inputs; [
-    home-manager.nixosModules.home-manager
-  ];
+  # imports = with inputs; [
+  #   home-manager.nixosModules.home-manager
+  # ];
 
   options.home = with types; {
     file = mkOpt attrs { } "A set of files to be managed by home-manager's <option>home.file</option>.";
