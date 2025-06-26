@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 {
   flake = {
     meta.owner = {
