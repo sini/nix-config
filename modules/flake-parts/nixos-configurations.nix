@@ -2,24 +2,19 @@
   self,
   inputs,
   withSystem,
-
   ...
 }:
 {
   flake =
     {
       config,
-      lib,
       ...
     }:
     let
-      inherit (lib)
-        mapAttrs
-        ;
-      extendedLib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
-
+      lib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
+      unstableLib = inputs.nixpkgs-unstable.lib.extend (_self: _super: import ../../lib _self);
       nixos_modules =
-        extendedLib.custom.listModulesRec (extendedLib.custom.relativeToRoot "legacy-modules/nixos")
+        lib.custom.listModulesRec (lib.custom.relativeToRoot "legacy-modules/nixos")
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
@@ -30,58 +25,52 @@
           inputs.catppuccin.nixosModules.catppuccin
         ]
         ++ [ inputs.self.modules.nixos.core ];
-
-      mkNixOSConfigWith =
-        {
-          hostname,
-          system,
-          path,
-          extraModules ? [ ],
-        }:
-        withSystem system (
+    in
+    {
+      nixosConfigurations = lib.mapAttrs (
+        hostname: options:
+        withSystem options.system (
           {
             pkgs,
+            pkgs-stable,
+            system,
             ...
           }:
-          inputs.nixpkgs.lib.nixosSystem {
-            inherit system pkgs;
+          let
+            nixpkgs' = if options.unstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
+            homeManager' = if options.unstable then inputs.home-manager-unstable else inputs.home-manager;
+            extendedLibrary = if options.unstable then unstableLib else lib;
+            pkgs' = if options.unstable then pkgs else pkgs-stable;
+          in
+          nixpkgs'.lib.nixosSystem {
+            inherit system;
+            pkgs = pkgs';
+
             specialArgs = {
-              inherit
-                inputs
-                ;
+              inherit inputs;
               inherit (config) nodes;
-              lib = extendedLib;
+              nodeOptions = options;
+              lib = extendedLibrary;
             };
+
             modules =
-              extendedLib.custom.listModulesRec path
-              ++ extraModules
+              extendedLibrary.custom.listModulesRec options.root_path
               ++ nixos_modules
               ++ [
-                inputs.nixpkgs.nixosModules.notDetected
-                inputs.home-manager.nixosModules.home-manager
+                nixpkgs'.nixosModules.notDetected
+                homeManager'.nixosModules.home-manager
+                (config.flake.modules.nixos."host_${hostname}" or { })
                 {
                   networking.hostName = hostname;
-                  # Set the factor report to the provided path's facter.json file
-                  facter.reportPath = path + "/facter.json";
+                  facter.reportPath = options.facts;
                 }
               ];
           }
-        );
-
-      inherit (extendedLib.custom) linuxHosts;
-    in
-    {
-      nixosConfigurations = lib.attrsets.mergeAttrsList (
-        builtins.map (_elem: {
-          "${_elem.hostname}" = mkNixOSConfigWith { inherit (_elem) hostname system path; };
-        }) linuxHosts
-      );
+        )
+      ) config.hosts;
 
       # All nixosSystem instanciations are collected here, so that we can refer
       # to any system via nodes.<name>
       nodes = self.outputs.nixosConfigurations;
-
-      # Add a shorthand to easily target toplevel derivations
-      "@" = mapAttrs (_: v: v.config.system.build.toplevel) self.outputs.nodes;
     };
 }

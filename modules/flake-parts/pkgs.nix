@@ -20,7 +20,20 @@
   perSystem =
     { pkgs, system, ... }:
     {
-      _module.args.pkgs = import inputs.nixpkgs {
+      _module.args.pkgs = import inputs.nixpkgs-unstable {
+        inherit system;
+        config.allowUnfree = true;
+        overlays =
+          builtins.attrValues (
+            import ../../overlays/default.nix {
+              inherit inputs;
+            }
+          )
+          ++ [
+            inputs.nix-topology.overlays.default
+          ];
+      };
+      _module.args.pkgs-stable = import inputs.nixpkgs {
         inherit system;
         config.allowUnfree = true;
         overlays =
