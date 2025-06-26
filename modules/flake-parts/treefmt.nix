@@ -63,6 +63,7 @@
             enable = true;
             package = pkgs.nixfmt-rfc-style;
           };
+          nixf-diagnose.enable = true;
           nufmt.enable = true;
           prettier.enable = true;
           shfmt.enable = true;
