@@ -4,7 +4,6 @@
     order = [
       "logo"
       "header"
-      "intro"
       "dendritic"
       #"nixos-configurations"
       "automatic-import"
@@ -42,11 +41,7 @@
         </div>
 
         <br>
-      '';
 
-    parts.intro =
-      # markdown
-      ''
         # ${config.flake.meta.repo.owner}/${config.flake.meta.repo.name}
 
         ${config.flake.meta.owner.name}'s [Nix](https://nix.dev)-powered "IT infrastructure" repository
