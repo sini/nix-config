@@ -42,7 +42,7 @@ let
     in
     if firstMasterNode != null then firstMasterNode.config.node.deployment.targetHost or null else null;
 in
-rec {
+{
   inherit
     listHostsWithSystem
     isHostDarwin

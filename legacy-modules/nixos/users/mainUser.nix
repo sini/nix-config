@@ -1,10 +1,7 @@
 {
   config,
-  lib,
   ...
 }:
-with lib;
-with lib.custom;
 let
   cfg = config.node.mainUser;
 in

@@ -1,6 +1,5 @@
 # NixOS module for configuring OS drive (encrypted Btrfs) and a dedicated Longhorn data drive.
 {
-  options,
   lib,
   inputs,
   config,

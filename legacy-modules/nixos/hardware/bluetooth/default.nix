@@ -9,7 +9,7 @@ with lib.custom;
 let
   cfg = config.hardware.bluetooth;
 in
-rec {
+{
   # options.hardware.bluetooth = with types; {
   #   autoConnect = lib.mkOption {
   #     type = lib.types.bool;

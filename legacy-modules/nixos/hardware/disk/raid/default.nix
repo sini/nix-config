@@ -1,7 +1,6 @@
 # Luks2 encrypted disk with disk-spanning btrfs subvolumes
 # Note: Swap is not supported on multi-disk btrfs systems
 {
-  options,
   lib,
   inputs,
   config,

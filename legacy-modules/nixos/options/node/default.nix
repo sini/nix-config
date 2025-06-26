@@ -16,8 +16,6 @@ let
     enum
     listOf
     str
-    nullOr
-    bool
     ;
 
   inherit (lib.custom) relativeToRoot;
