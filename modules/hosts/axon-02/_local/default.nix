@@ -4,7 +4,6 @@
 }:
 {
   node = {
-    deployment.targetHost = "10.10.10.3";
     tags = [
       "server"
       # "kubernetes"
@@ -36,7 +35,6 @@
   programs.dconf.enable = true;
 
   system = {
-    nix.enable = true;
     security.doas.enable = true;
   };
 

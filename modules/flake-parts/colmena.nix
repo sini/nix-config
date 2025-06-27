@@ -7,28 +7,39 @@
   flake =
     {
       lib,
+      config,
       ...
     }:
     {
       colmena =
-        lib.recursiveUpdate
-          (builtins.mapAttrs (_k: v: { imports = v._module.args.modules; }) self.nixosConfigurations)
+        {
+          meta = {
+            nixpkgs = import inputs.nixpkgs-unstable {
+              system = "x86_64-linux";
+              overlays = [ ];
+            };
+            nodeNixpkgs = builtins.mapAttrs (_: v: v.pkgs) self.nixosConfigurations;
+            nodeSpecialArgs = builtins.mapAttrs (_: v: v._module.specialArgs) self.nixosConfigurations;
+          };
+        }
+        // (lib.mapAttrs (
+          hostname: nixosConfig:
+          # For each NixOS configuration, we find its original options from the flake.
+          let
+            hostOptions = config.flake.hosts.${hostname};
+          in
           {
-            meta = {
-              nixpkgs = import inputs.nixpkgs {
-                system = "x86_64-linux";
-                overlays = [ ];
-              };
-              nodeNixpkgs = builtins.mapAttrs (_: v: v.pkgs) self.nixosConfigurations;
-              nodeSpecialArgs = builtins.mapAttrs (_: v: v._module.specialArgs) self.nixosConfigurations;
+            imports = nixosConfig._module.args.modules;
+            deployment = {
+              targetHost = hostOptions.deployment.targetHost;
+              tags = hostOptions.tags;
+              allowLocalDeployment = true;
+              privilegeEscalationCommand = [
+                "doas"
+                "--"
+              ];
             };
           }
-        // builtins.mapAttrs (_name: value: {
-          imports = value._module.args.modules ++ [
-            {
-              inherit (value.config.node) deployment;
-            }
-          ];
-        }) self.nixosConfigurations;
+        ) self.nixosConfigurations);
     };
 }

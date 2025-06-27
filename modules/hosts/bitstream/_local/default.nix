@@ -10,7 +10,6 @@
 
   # TODO: Convert back to a kubernetes node, for now we'll test desktop/home manager configuration before adding to the config
   node = {
-    deployment.targetHost = "10.10.10.5";
     tags = [
       "server"
       # "kubernetes"
@@ -37,7 +36,6 @@
   programs.dconf.enable = true;
 
   system = {
-    nix.enable = true;
     security.doas.enable = true;
   };
 

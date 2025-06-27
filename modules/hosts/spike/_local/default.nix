@@ -69,7 +69,6 @@
   systemd.network.wait-online.anyInterface = true;
 
   node = {
-    deployment.targetHost = "10.10.10.20";
     tags = [
       "laptop"
       # "kubernetes"
@@ -81,7 +80,6 @@
   programs.dconf.enable = true;
 
   system = {
-    nix.enable = true;
     security.doas.enable = true;
   };
 

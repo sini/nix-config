@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, rootPath, ... }:
 {
   imports = [
     (
@@ -25,20 +25,7 @@
         config.allowUnfree = true;
         overlays =
           builtins.attrValues (
-            import ../../overlays/default.nix {
-              inherit inputs;
-            }
-          )
-          ++ [
-            inputs.nix-topology.overlays.default
-          ];
-      };
-      _module.args.pkgs-stable = import inputs.nixpkgs {
-        inherit system;
-        config.allowUnfree = true;
-        overlays =
-          builtins.attrValues (
-            import ../../overlays/default.nix {
+            import (rootPath + "/overlays/default.nix") {
               inherit inputs;
             }
           )

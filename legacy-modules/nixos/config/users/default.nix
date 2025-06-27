@@ -58,6 +58,7 @@ in
       nm-iodine = uidGid 987;
       openrazer = uidGid 986;
       resolvconf = uidGid 985;
+      fwupd-refresh = uidGid 984;
 
     };
 }
