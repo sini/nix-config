@@ -26,7 +26,7 @@
           hostname: nixosConfig:
           # For each NixOS configuration, we find its original options from the flake.
           let
-            hostOptions = config.flake.hosts.${hostname};
+            hostOptions = config.hosts.${hostname};
           in
           {
             imports = nixosConfig._module.args.modules;
