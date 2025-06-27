@@ -6,6 +6,7 @@
       "header"
       "dendritic"
       #"nixos-configurations"
+      "users"
       "automatic-import"
       "files"
       #"named-modules-as-needed"
