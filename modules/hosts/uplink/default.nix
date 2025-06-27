@@ -1,4 +1,4 @@
-_: {
+{
   flake.hosts.uplink = {
     deployment.targetHost = "10.10.10.1";
     tags = [

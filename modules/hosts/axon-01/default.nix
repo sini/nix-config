@@ -1,4 +1,4 @@
-_: {
+{
   flake.hosts.axon-01 = {
     deployment.targetHost = "10.10.10.2";
     tags = [

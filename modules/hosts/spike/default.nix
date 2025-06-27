@@ -1,4 +1,4 @@
-_: {
+{
   flake.hosts.spike = {
     unstable = true;
     deployment.targetHost = "10.10.10.20";
