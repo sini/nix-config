@@ -41,7 +41,6 @@
       };
     };
 
-    services.ssh.enable = true;
     programs.dconf.enable = true;
 
     system = {

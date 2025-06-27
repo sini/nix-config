@@ -68,7 +68,6 @@
   networking.domain = "json64.dev";
   systemd.network.wait-online.anyInterface = true;
 
-  services.ssh.enable = true;
   programs.dconf.enable = true;
 
   time.timeZone = "America/Los_Angeles";

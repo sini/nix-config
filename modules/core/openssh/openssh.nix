@@ -1,21 +1,12 @@
 {
-  config,
-  lib,
-  pkgs,
-  ...
-}:
-with lib;
-with lib.custom;
-let
-  cfg = config.services.ssh;
-in
-{
-  options.services.ssh = with types; {
-    enable = mkBoolOpt false "Enable ssh";
-  };
-
-  config = mkMerge [
-    (mkIf cfg.enable {
+  flake.modules.nixos.openssh =
+    {
+      lib,
+      config,
+      pkgs,
+      ...
+    }:
+    {
       services.openssh = {
         enable = true;
         ports = [ 22 ];
@@ -38,7 +29,7 @@ in
         '';
       };
 
-      # Let all users with the wheel group have their keys in the authorized_keys for root
+      # Let all users with the "wheel" group have their keys in the authorized_keys for root.
       users.users.root.openssh.authorizedKeys.keys =
         with lib;
         concatLists (
@@ -46,8 +37,7 @@ in
             _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
           ) config.users.users
         );
-    })
-    {
+
       age.secrets.initrd_host_ed25519_key.generator.script = "ssh-ed25519-tmpdir";
 
       # Make sure that there is always a valid initrd hostkey available that can be installed into
@@ -56,7 +46,6 @@ in
       # a valid hostkey to be available so that the initrd can be generated successfully.
       # The correct initrd host-key will be installed with the next update after the host is booted
       # for the first time, and the secrets were rekeyed for the the new host identity.
-
       system.activationScripts.agenixEnsureInitrdHostkey = {
         text = ''
           [[ -e ${config.age.secrets.initrd_host_ed25519_key.path} ]] \
@@ -68,6 +57,5 @@ in
         ];
       };
       system.activationScripts.agenixChown.deps = [ "agenixEnsureInitrdHostkey" ];
-    }
-  ];
+    };
 }

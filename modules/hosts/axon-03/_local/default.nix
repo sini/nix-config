@@ -24,7 +24,6 @@
     networking.enable = true;
   };
 
-  services.ssh.enable = true;
   programs.dconf.enable = true;
 
   time.timeZone = "America/Los_Angeles";
