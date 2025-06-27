@@ -4,7 +4,6 @@ _: {
     deployment.targetHost = "10.10.10.20";
     deployment.remoteBuild = true;
     tags = [
-      "core"
       "workstation"
       "laptop"
     ];

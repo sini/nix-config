@@ -53,12 +53,6 @@ in
               default = [ ];
               description = "List of additional modules to include for the host.";
             };
-
-            root_path = mkOption {
-              type = types.path;
-              default = null;
-              description = "Root directory for the host configuration.";
-            };
           };
         };
       in
