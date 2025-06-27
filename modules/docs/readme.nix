@@ -38,7 +38,7 @@
         </div>
         <br>
 
-        ${config.flake.meta.owner.name}'s [NixOS](https://nix.dev) homelab and workstation configuration repository.
+        ${config.flake.meta.user.username}'s [NixOS](https://nix.dev) homelab and workstation configuration repository.
 
         > [!NOTE]
         > If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.
