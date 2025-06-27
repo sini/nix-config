@@ -1,0 +1,13 @@
+_: {
+  flake.hosts.uplink = {
+    deployment.targetHost = "10.10.10.1";
+    tags = [
+      "server"
+    ];
+    additional_modules = [
+      ./_local
+    ];
+    public_key = ./ssh_host_ed25519_key.pub;
+    facts = ./facter.json;
+  };
+}
