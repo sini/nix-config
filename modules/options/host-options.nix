@@ -6,6 +6,29 @@ let
   inherit (lib) types mkOption;
 in
 {
+  config.text.readme.parts.host-options =
+    # markdown
+    ''
+      ## Host Options
+
+      This repository defines a set of hosts in the `flake.hosts` attribute set.
+      Each host is defined as a submodule with its own configuration options.
+      The host configurations can be used to deploy NixOS configurations to remote
+      machines using Colmena or for local development. These options are defined for
+      every host and include:
+
+      - `system`: The system architecture of the host (e.g., `x86_64-linux`).
+      - `unstable`: Whether to use unstable packages for the host.
+      - `deployment.targetHost`: The target host for deployment.
+      - `tags`: A list of tags for the host, which can be used to target
+        specific hosts during deployment.
+      - `public_key`: The path or value of the public SSH key for the host used for encryption.
+      - `facts`: The path to the Facter JSON file for the host, which is used to provide
+        additional information about the host and for automated hardware configuration.
+      - `additional_modules`: A list of additional modules to include for the host.
+
+    '';
+
   options.flake.hosts =
     let
       hostType = types.submodule {

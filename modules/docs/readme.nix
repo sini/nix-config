@@ -4,6 +4,8 @@
     order = [
       "logo"
       "header"
+      "hosts"
+      "host-options"
       "colmena"
       "users"
       "automatic-import"
