@@ -1,4 +1,4 @@
-_: {
+{
   flake.hosts.bitstream = {
     deployment.targetHost = "10.10.10.5";
     tags = [
