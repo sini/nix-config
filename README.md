@@ -24,6 +24,7 @@
 </div>
 
 <br>
+
 # sini/nix-config
 
 Jason Bowman's [Nix](https://nix.dev)-powered "IT infrastructure" repository
@@ -52,9 +53,9 @@ This means files can be moved around and nested in directories freely.
 The following files in this repository are generated and checked
 using [the _files_ flake-parts module](https://github.com/mightyiam/files):
 
-- `README.md`
 - `.gitignore`
 - `LICENSE`
+- `README.md`
 
 ## Trying to disallow warnings
 
