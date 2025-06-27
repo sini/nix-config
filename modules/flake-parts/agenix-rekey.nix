@@ -19,13 +19,24 @@
   };
 
   perSystem =
-    { inputs', pkgs, ... }:
+    {
+      config,
+      inputs',
+      pkgs,
+      ...
+    }:
     {
       devshells.default = {
         packages = [
           pkgs.age
           pkgs.age-plugin-yubikey
           inputs'.agenix-rekey.packages.default
+        ];
+        commands = [
+          {
+            inherit (config.agenix-rekey) package;
+            help = "Edit, generate and rekey secrets";
+          }
         ];
         env = [
           {

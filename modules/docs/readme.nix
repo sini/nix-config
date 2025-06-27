@@ -17,7 +17,7 @@
       ''
         <br>
 
-        # sini/nix-config
+        # ${config.flake.meta.repo.owner}/${config.flake.meta.repo.name}
 
         <br>
         <div align="center">
@@ -34,14 +34,13 @@
                 <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&colorA=0b0b0b&colorB=c14d26&logo=unlicense&logoColor=c14d26"/>
             </a>
         </div>
-
         <br>
 
-        # ${config.flake.meta.repo.owner}/${config.flake.meta.repo.name}
-
         ${config.flake.meta.owner.name}'s [NixOS](https://nix.dev) homelab and workstation configuration repository.
+
         > [!NOTE]
         > If you have any questions or suggestions, feel free to contact me via e-mail jason <at> json64 <dot> dev.
+
       '';
   };
 

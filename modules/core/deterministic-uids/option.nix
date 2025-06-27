@@ -15,6 +15,7 @@
       the corresponding IDs defined here, or show an error if the definition is missing.
 
       The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
+
     '';
   flake.modules.nixos.deterministic-uids =
     {
