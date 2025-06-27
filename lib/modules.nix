@@ -32,12 +32,6 @@ let
       )
     );
 
-  # This is under modules/lib, so two directories up should be root.
-  relativeToRoot = lib.path.append ../.;
-
-  listDirectories =
-    path: attrNames (filterAttrs (_: _type: _type == "directory") (readDir (relativeToRoot path)));
-
   scanPaths =
     path:
     map (f: (path + "/${f}")) (
@@ -56,10 +50,8 @@ let
 in
 {
   inherit
-    relativeToRoot
     scanPaths
     listModulesRec
-    listDirectories
     mkModuleTree
     ;
 }

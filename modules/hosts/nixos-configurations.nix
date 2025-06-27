@@ -64,6 +64,7 @@
                   networking.hostName = hostname;
                   facter.reportPath = options.facts;
                   age.rekey.hostPubkey = options.public_key;
+                  node.deployment.targetHost = options.deployment.targetHost;
                 }
               ];
           }

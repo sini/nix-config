@@ -18,7 +18,6 @@ let
     str
     ;
 
-  inherit (lib.custom) relativeToRoot;
   cfg = config.node;
 in
 {
@@ -57,20 +56,6 @@ in
       type = listOf str;
       default = [ "sini" ];
       description = "A list of home-manager users on the system.";
-    };
-
-    rootPath = mkOption {
-      description = "The root path for this node in the repository.";
-      type = types.path;
-      default = relativeToRoot "systems/${config.node.system}/${config.node.hostname}";
-      readOnly = true;
-    };
-
-    secretsDir = mkOption {
-      description = "Path to the secrets directory for this node.";
-      type = types.path;
-      default = relativeToRoot "systems/${config.node.system}/${config.node.hostname}/secrets";
-      readOnly = true;
     };
 
     tags = lib.mkOption {
@@ -180,15 +165,6 @@ in
         ];
       };
 
-    };
-
-    sshConn = lib.mkOption {
-      type = lib.types.attrsOf lib.types.str;
-      description = ''
-        The SSH connection string for colmena nodes
-      '';
-      default = builtins.mapAttrs (_: v: "${v.targetUser}@${v.targetHost}") config.node.deployment;
-      readOnly = true;
     };
 
   };
