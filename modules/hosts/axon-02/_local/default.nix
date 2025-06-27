@@ -3,13 +3,6 @@
   ...
 }:
 {
-  node = {
-    tags = [
-      "server"
-      # "kubernetes"
-    ];
-  };
-
   networking.domain = "json64.dev";
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -33,10 +26,6 @@
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
-
-  system = {
-    security.doas.enable = true;
-  };
 
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";

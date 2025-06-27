@@ -8,14 +8,6 @@
     ./networking.nix
   ];
 
-  # TODO: Convert back to a kubernetes node, for now we'll test desktop/home manager configuration before adding to the config
-  node = {
-    tags = [
-      "server"
-      # "kubernetes"
-      # "kubernetes-master"
-    ];
-  };
   networking.domain = "json64.dev";
 
   boot.kernelPackages = pkgs.linuxPackages_latest;
@@ -34,10 +26,6 @@
 
   services.ssh.enable = true;
   programs.dconf.enable = true;
-
-  system = {
-    security.doas.enable = true;
-  };
 
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";

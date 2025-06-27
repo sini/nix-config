@@ -68,20 +68,8 @@
   networking.domain = "json64.dev";
   systemd.network.wait-online.anyInterface = true;
 
-  node = {
-    tags = [
-      "laptop"
-      # "kubernetes"
-      # "kubernetes-master"
-    ];
-  };
-
   services.ssh.enable = true;
   programs.dconf.enable = true;
-
-  system = {
-    security.doas.enable = true;
-  };
 
   time.timeZone = "America/Los_Angeles";
   i18n.defaultLocale = "en_US.UTF-8";

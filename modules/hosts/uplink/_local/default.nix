@@ -13,9 +13,6 @@
   # inherit (nixos-hardware.nixosModules)
 
   config = {
-    node = {
-      tags = [ "server" ];
-    };
 
     # Enable remote vscode...
     programs.nix-ld.enable = true;
@@ -49,7 +46,6 @@
 
     system = {
       locale.enable = true;
-      security.doas.enable = true;
     };
 
     # Use cachyOS kernel, server variant: https://wiki.cachyos.org/features/kernel/

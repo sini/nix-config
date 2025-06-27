@@ -1,6 +1,6 @@
 { config, ... }:
 let
-  mainUser = config.flake.meta.owner.username;
+  user = config.flake.meta.user.username;
 in
 {
   flake.modules.nixos.deterministic-uids = {
@@ -12,7 +12,7 @@ in
         };
       in
       {
-        ${mainUser} = {
+        ${user} = {
           uid = 1000;
           gid = 1000;
           subUidRanges = [

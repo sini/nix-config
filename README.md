@@ -24,7 +24,7 @@
 </div>
 <br>
 
-Jason Bowman's [NixOS](https://nix.dev) homelab and workstation configuration repository.
+sini's [NixOS](https://nix.dev) homelab and workstation configuration repository.
 
 > [!NOTE]
 > If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.

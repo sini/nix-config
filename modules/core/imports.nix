@@ -8,7 +8,12 @@
     fwupd
     nix
     nixpkgs
-    #apps shell
+
+    # apps/shell
     shell
+    doas
+
+    # users
+    users
   ];
 }
