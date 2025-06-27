@@ -9,7 +9,6 @@ let
   libs = [
     (import ./modules.nix { inherit lib; })
     (import ./options.nix { inherit lib; })
-    (import ./hosts.nix { inherit lib; })
   ];
 in
 {
