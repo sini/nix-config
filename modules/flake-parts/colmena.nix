@@ -4,7 +4,7 @@
   ...
 }:
 {
-  text.readme.parts.deployment =
+  text.readme.parts.colmena =
     # markdown
     ''
       ## Remote deployment via Colmena
