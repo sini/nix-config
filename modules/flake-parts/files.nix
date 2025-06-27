@@ -31,5 +31,9 @@
         help = "Generate files";
       }
     ];
+    apps.write-files = {
+      type = "app";
+      program = "${psArgs.config.files.writer.drv}/bin/write-files";
+    };
   };
 }

@@ -22,10 +22,7 @@
         <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&colorA=0b0b0b&colorB=c14d26&logo=unlicense&logoColor=c14d26"/>
     </a>
 </div>
-
 <br>
-
-# sini/nix-config
 
 Jason Bowman's [NixOS](https://nix.dev) homelab and workstation configuration repository.
 
