@@ -18,6 +18,7 @@ in
 
             unstable = lib.mkOption {
               type = types.bool;
+              default = false;
             };
 
             deployment = {
