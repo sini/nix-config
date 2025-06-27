@@ -8,12 +8,12 @@
     # markdown
     ''
       ## Remote deployment via Colmena
+
       This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
       Colmena supports both local and remote deployment, and hosts can be targeted by tags as well as their name.
       Remote connection properties are defined in the `flake.hosts.<hostname>.deployment` attribute set, and implementation
       can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
       [./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
-
       ```bash
       # Deploy to all hosts
       colmena apply
@@ -27,7 +27,6 @@
       # Apply changes to the current host (useful for local development)
       colmena apply-local --sudo
       ```
-
     '';
   flake =
     {
