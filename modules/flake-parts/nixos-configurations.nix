@@ -54,8 +54,8 @@
             };
 
             modules =
-              extendedLibrary.custom.listModulesRec options.root_path
-              ++ nixos_modules
+              nixos_modules
+              ++ options.additional_modules
               ++ [
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
@@ -63,6 +63,7 @@
                 {
                   networking.hostName = hostname;
                   facter.reportPath = options.facts;
+                  age.rekey.hostPubkey = options.public_key;
                 }
               ];
           }
