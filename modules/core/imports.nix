@@ -8,6 +8,7 @@
     fwupd
     nix
     nixpkgs
+    openssh
 
     # apps/shell
     shell
