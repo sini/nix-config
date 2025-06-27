@@ -5,6 +5,12 @@
   ...
 }:
 {
+  imports = [
+    ./disko.nix
+    ./home.nix
+    ./razer.nix
+    ./user.nix
+  ];
 
   # boot.kernelPackages = pkgs.linuxPackages_cachyos;
   boot.kernelPackages = pkgs.linuxPackages_6_15;

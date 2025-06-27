@@ -7,7 +7,7 @@
 
   home-manager.users.sini = {
     imports = [
-      ../../../hm/core.nix
+      ../../../../hm/core.nix
     ];
     home.stateVersion = lib.mkDefault config.system.stateVersion;
   };

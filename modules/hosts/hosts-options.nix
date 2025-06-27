@@ -48,6 +48,12 @@ in
               description = "Path to the Facter JSON file for the host.";
             };
 
+            additional_modules = mkOption {
+              type = types.listOf types.path;
+              default = [ ];
+              description = "List of additional modules to include for the host.";
+            };
+
             root_path = mkOption {
               type = types.path;
               default = null;
