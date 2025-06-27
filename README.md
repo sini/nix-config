@@ -27,7 +27,7 @@
 Jason Bowman's [NixOS](https://nix.dev) homelab and workstation configuration repository.
 
 > [!NOTE]
-> If you have any questions or suggestions, feel free to contact me via e-mail jason <at> json64 <dot> dev.
+> If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.
 
 ## Remote deployment via Colmena
 
@@ -62,6 +62,8 @@ The configuration is defined in the `users.deterministicIds` option, where you c
 specify the expected UID and GID values for each user and group. If a user or
 group is used on the system without specifying a UID/GID, this module will assign
 the corresponding IDs defined here, or show an error if the definition is missing.
+
+This pattern is based on oddlama's NixOS configuration, which can be found linked below.
 
 The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
 
