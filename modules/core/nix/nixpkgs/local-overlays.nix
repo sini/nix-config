@@ -1,6 +1,6 @@
 { inputs, rootPath, ... }:
 {
-  flake.modules.nixos.nix = {
+  flake.modules.nixos.nixpkgs = {
     nixpkgs.overlays =
       [ ]
       ++ builtins.attrValues (
