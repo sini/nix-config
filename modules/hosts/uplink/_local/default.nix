@@ -14,7 +14,6 @@
 
   config = {
     node = {
-      deployment.targetHost = "10.10.10.1";
       tags = [ "server" ];
     };
 
