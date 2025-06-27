@@ -38,6 +38,20 @@ Jason Bowman's [Nix](https://nix.dev)-powered "IT infrastructure" repository
 This repository follows [the dendritic pattern](https://github.com/mightyiam/dendritic)
 and happens to be the place in which it was discovered by its author.
 
+## Deterministic UIDs and GIDs
+
+Since this configuration is used across multiple systems, it is important to
+ensure that user and group IDs are consistent across all systems for services
+like NFS. This module provides a way to define deterministic UIDs and GIDs
+for users and groups, ensuring that they are assigned the same IDs on all systems.
+
+The configuration is defined in the `users.deterministicIds` option, where you can
+specify the expected UID and GID values for each user and group. If a user or
+group is used on the system without specifying a UID/GID, this module will assign
+the corresponding IDs defined here, or show an error if the definition is missing.
+
+The definition file is located at: (./modules/core/deterministic-uids/users.nix)[./modules/core/deterministic-uids/users.nix]
+
 ## Automatic import
 
 Nix files (they're all flake-parts modules) are automatically imported.
