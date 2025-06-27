@@ -6,6 +6,7 @@
     facter
     fwupd
     nix
+    nixpkgs
     #apps shell
     shell
   ];
