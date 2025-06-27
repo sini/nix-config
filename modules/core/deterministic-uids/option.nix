@@ -14,6 +14,8 @@
       group is used on the system without specifying a UID/GID, this module will assign
       the corresponding IDs defined here, or show an error if the definition is missing.
 
+      This pattern is based on oddlama's NixOS configuration, which can be found linked below.
+
       The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
 
     '';
