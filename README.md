@@ -27,16 +27,32 @@
 
 # sini/nix-config
 
-Jason Bowman's [Nix](https://nix.dev)-powered "IT infrastructure" repository
+Jason Bowman's [NixOS](https://nix.dev) homelab and workstation configuration repository.
 
 > [!NOTE]
-> I hope you find this helpful.
-> If you have any questions or suggestions for me, feel free to use the discussions feature or contact me.
+> If you have any questions or suggestions, feel free to contact me via e-mail jason <at> json64 <dot> dev.
 
-## Origin of the dendritic pattern
+## Remote deployment via Colmena
 
-This repository follows [the dendritic pattern](https://github.com/mightyiam/dendritic)
-and happens to be the place in which it was discovered by its author.
+This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
+Colmena supports both local and remote deployment, and hosts can be targeted by tags as well as their name.
+Remote connection properties are defined in the `flake.hosts.<hostname>.deployment` attribute set, and implementation
+can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
+[./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
+
+```bash
+# Deploy to all hosts
+colmena apply
+
+# Deploy to a specific host
+colmena apply --on <hostname>
+
+# Deploy to all hosts with the "server" tag
+colmena apply --on @server
+
+# Apply changes to the current host (useful for local development)
+colmena apply-local --sudo
+```
 
 ## Deterministic UIDs and GIDs
 
@@ -81,3 +97,26 @@ nixConfig.abort-on-warn = true;
 
 > [!NOTE]
 > It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
+
+## Notable Links
+
+### Other dendritic users:
+
+- [GaetanLepage/nix-config](https://github.com/GaetanLepage/nix-config/)
+- [mightyiam/infra](https://github.com/mightyiam/infra)
+- [vic/vix](https://github.com/vic/vix)
+- [drupol/infra](https://github.com/drupol/infra/tree/master)
+
+### Other inspirational nix configs:
+
+- [oddlama/nix-config](https://github.com/oddlama/nix-config/)
+- [JManch/nixos](https://github.com/JManch/nixos)
+- [akirak/homelab](https://github.com/akirak/nix-config/)
+- [pim/nix-config](https://git.kun.is/pim/nixos-configs) & [pim's kubernetes configs](https://git.kun.is/home/kubernetes-deployments)
+
+### Notable References:
+
+- [Dendritic Configuration Pattern](https://github.com/mightyiam/dendritic)
+- [colmena](https://github.com/zhaofengli/colmena)
+- [agenix](https://github.com/ryantm/agenix) & [agenix-rekey](https://github.com/oddlama/agenix-rekey)
+- [flake-parts](https://flake.parts/)
