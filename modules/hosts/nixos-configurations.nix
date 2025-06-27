@@ -14,7 +14,7 @@
       lib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
       unstableLib = inputs.nixpkgs-unstable.lib.extend (_self: _super: import ../../lib _self);
       nixos_modules =
-        lib.custom.listModulesRec (lib.custom.relativeToRoot "legacy-modules/nixos")
+        lib.custom.listModulesRec ../../legacy-modules/nixos
         ++ [
           inputs.nixos-facter-modules.nixosModules.facter
           inputs.disko.nixosModules.disko
