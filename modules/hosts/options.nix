@@ -27,8 +27,6 @@ in
                 default = "";
                 description = "The target host for deployment.";
               };
-
-              remoteBuild = lib.mkEnableOption "";
             };
 
             tags = mkOption {
