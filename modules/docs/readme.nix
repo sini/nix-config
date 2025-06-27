@@ -4,18 +4,12 @@
     order = [
       "logo"
       "header"
-      "dendritic"
-      #"nixos-configurations"
+      "colmena"
       "users"
       "automatic-import"
       "files"
-      #"named-modules-as-needed"
-      #"ipfi"
-      #"unfree-packages"
-      #"all-check-store-paths"
-      #"github-actions"
-      #"flake-inputs-dedupe-prefix"
       "disallow-warnings"
+      "links"
     ];
 
     parts.header =
@@ -45,11 +39,9 @@
 
         # ${config.flake.meta.repo.owner}/${config.flake.meta.repo.name}
 
-        ${config.flake.meta.owner.name}'s [Nix](https://nix.dev)-powered "IT infrastructure" repository
-
+        ${config.flake.meta.owner.name}'s [NixOS](https://nix.dev) homelab and workstation configuration repository.
         > [!NOTE]
-        > I hope you find this helpful.
-        > If you have any questions or suggestions for me, feel free to use the discussions feature or contact me.
+        > If you have any questions or suggestions, feel free to contact me via e-mail jason <at> json64 <dot> dev.
 
       '';
   };

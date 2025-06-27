@@ -50,7 +50,7 @@ specify the expected UID and GID values for each user and group. If a user or
 group is used on the system without specifying a UID/GID, this module will assign
 the corresponding IDs defined here, or show an error if the definition is missing.
 
-The definition file is located at: (./modules/core/deterministic-uids/users.nix)[./modules/core/deterministic-uids/users.nix]
+The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
 
 ## Automatic import
 
