@@ -49,7 +49,6 @@
 
     system = {
       locale.enable = true;
-      nix.enable = true;
       security.doas.enable = true;
     };
 
