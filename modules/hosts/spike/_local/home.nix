@@ -12,11 +12,12 @@
   config = {
     home-manager = {
       useGlobalPkgs = true;
-      useUserPackages = true;
+      # useUserPackages = true;
       verbose = true;
 
       extraSpecialArgs = {
-        inherit inputs pkgs;
+        inherit inputs;
+        systemPkgs = pkgs;
         nixConfig = config;
       };
     };

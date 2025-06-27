@@ -16,55 +16,52 @@
       nixos_modules =
         lib.custom.listModulesRec ../../legacy-modules/nixos
         ++ [
-          inputs.nixos-facter-modules.nixosModules.facter
-          inputs.disko.nixosModules.disko
-          # inputs.chaotic.nixosModules.default # For unstable
-          inputs.chaotic.nixosModules.nyx-cache
-          inputs.chaotic.nixosModules.nyx-overlay
-          inputs.chaotic.nixosModules.nyx-registry
+
           inputs.catppuccin.nixosModules.catppuccin
         ]
         ++ [ inputs.self.modules.nixos.core ];
     in
     {
       nixosConfigurations = lib.mapAttrs (
-        hostname: options:
-        withSystem options.system (
-          {
-            pkgs,
-            pkgs-stable,
-            system,
-            ...
-          }:
+        hostname: hostOptions:
+        withSystem hostOptions.system (
+          { system, ... }:
           let
-            nixpkgs' = if options.unstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
-            homeManager' = if options.unstable then inputs.home-manager-unstable else inputs.home-manager;
-            extendedLibrary = if options.unstable then unstableLib else lib;
-            pkgs' = if options.unstable then pkgs else pkgs-stable;
+            nixpkgs' = if hostOptions.unstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
+            homeManager' = if hostOptions.unstable then inputs.home-manager-unstable else inputs.home-manager;
+            extendedLibrary = if hostOptions.unstable then unstableLib else lib;
+            chaotic_imports =
+              if hostOptions.unstable then
+                [ inputs.chaotic.nixosModules.default ]
+              else
+                [
+                  inputs.chaotic.nixosModules.nyx-cache
+                  inputs.chaotic.nixosModules.nyx-overlay
+                  inputs.chaotic.nixosModules.nyx-registry
+                ];
           in
           nixpkgs'.lib.nixosSystem {
             inherit system;
-            pkgs = pkgs';
 
             specialArgs = {
               inherit inputs;
               inherit (config) nodes;
-              nodeOptions = options;
+              nodeOptions = hostOptions;
               lib = extendedLibrary;
             };
 
             modules =
               nixos_modules
-              ++ options.additional_modules
+              ++ chaotic_imports
+              ++ hostOptions.additional_modules
               ++ [
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
-                (config.flake.modules.nixos."host_${hostname}" or { })
+                (config.flake.modules.nixos.hosts."${hostname}" or { })
                 {
                   networking.hostName = hostname;
-                  facter.reportPath = options.facts;
-                  age.rekey.hostPubkey = options.public_key;
-                  node.deployment.targetHost = options.deployment.targetHost;
+                  facter.reportPath = hostOptions.facts;
+                  age.rekey.hostPubkey = hostOptions.public_key;
                 }
               ];
           }

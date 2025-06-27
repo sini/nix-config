@@ -2,12 +2,13 @@
 {
   inputs,
   self,
+  rootPath,
   ...
 }:
 {
-  # imports = [
-  #   inputs.agenix-rekey.flakeModule
-  # ];
+  imports = [
+    inputs.agenix-rekey.flakeModule
+  ];
 
   flake.agenix-rekey = inputs.agenix-rekey.configure {
     userFlake = self;
@@ -16,9 +17,9 @@
 
   flake.secretsConfig = {
     masterIdentities = [
-      ../../secrets/pub/master.pub
-      ../../secrets/pub/master-clone1.pub
-      ../../secrets/pub/master-clone2.pub
+      (rootPath + "/secrets/pub/master.pub")
+      (rootPath + "/secrets/pub/master-clone1.pub")
+      (rootPath + "/secrets/pub/master-clone2.pub")
     ];
     extraEncryptionPubkeys = [ ];
   };
@@ -26,7 +27,6 @@
   perSystem =
     { inputs', pkgs, ... }:
     {
-      # agenix-rekey.nixosConfigurations = self.nodes;
       devshells.default = {
         packages = [
           pkgs.age
