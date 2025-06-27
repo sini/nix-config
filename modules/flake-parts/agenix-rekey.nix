@@ -1,7 +1,6 @@
 # Based on: https://github.com/oddlama/nix-config/blob/7ccd7856eed93d2ba5b011d6211ff7c4f03a75f0/nix/agenix-rekey.nix
 {
   inputs,
-  self,
   rootPath,
   ...
 }:
@@ -9,11 +8,6 @@
   imports = [
     inputs.agenix-rekey.flakeModule
   ];
-
-  flake.agenix-rekey = inputs.agenix-rekey.configure {
-    userFlake = self;
-    inherit (self) nixosConfigurations;
-  };
 
   flake.secretsConfig = {
     masterIdentities = [
