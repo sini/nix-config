@@ -9,6 +9,8 @@
     nix
     nixpkgs
     openssh
+    locale
+    time
 
     # apps/shell
     shell
