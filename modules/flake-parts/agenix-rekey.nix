@@ -11,9 +11,9 @@
 
   flake.secretsConfig = {
     masterIdentities = [
-      (rootPath + "/secrets/pub/master.pub")
-      (rootPath + "/secrets/pub/master-clone1.pub")
-      (rootPath + "/secrets/pub/master-clone2.pub")
+      (rootPath + "/.secrets/pub/master.pub")
+      (rootPath + "/.secrets/pub/master-clone1.pub")
+      (rootPath + "/.secrets/pub/master-clone2.pub")
     ];
     extraEncryptionPubkeys = [ ];
   };
