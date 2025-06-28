@@ -13,15 +13,10 @@ in
 
         users.${user.username} = {
           isNormalUser = true;
-
           initialHashedPassword = "$y$j9T$RpfkDk8AusZr9NS09tJ9e.$kbc4SL9Cu45o1YYPlyV1jiVTZZ/126ue5Nff2Rfgpw8";
-
           home = "/home/${user.username}";
-
           group = user.username;
-
           openssh.authorizedKeys.keys = user.ssh_keys;
-
           extraGroups = [
             "wheel"
             "audio"
@@ -33,7 +28,6 @@ in
             "podman"
             "media"
           ];
-
           linger = true; # Required for the services start automatically without login
         };
       };

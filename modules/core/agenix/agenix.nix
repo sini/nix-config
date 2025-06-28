@@ -11,8 +11,8 @@
       age.rekey = {
         inherit (inputs.self.secretsConfig) masterIdentities;
         storageMode = "local";
-        generatedSecretsDir = rootPath + "/secrets/generated/${config.networking.hostName}";
-        localStorageDir = rootPath + "/secrets/rekeyed/${config.networking.hostName}";
+        generatedSecretsDir = rootPath + "/.secrets/generated/${config.networking.hostName}";
+        localStorageDir = rootPath + "/.secrets/rekeyed/${config.networking.hostName}";
       };
 
       # Custom generator for ssh-ed25519 since upstream doesn't seem to work
