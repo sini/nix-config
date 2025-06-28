@@ -29,6 +29,13 @@ sini's [NixOS](https://nix.dev) homelab and workstation configuration repository
 > [!NOTE]
 > If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.
 
+<a href="https://github.com/sini/nix-config/actions/workflows/check.yml?query=branch%3Amain">
+<img
+  alt="CI status"
+  src="https://img.shields.io/github/actions/workflow/status/sini/nix-config/check.yml?style=for-the-badge&branch=main&label=Check"
+>
+</a>
+
 ## Hosts
 
 | Name                                  | Description                                                                                           |    Type     |      Arch      |
@@ -117,6 +124,24 @@ using [the _files_ flake-parts module](https://github.com/mightyiam/files):
 - `.gitignore`
 - `LICENSE`
 - `README.md`
+- `.github/workflows/check.yml`
+
+## Running checks on GitHub Actions
+
+Running this repository's flake checks on GitHub Actions is merely a bonus
+and possibly more of a liability.
+
+Workflow files are generated using
+[the _files_ flake-parts module](https://github.com/mightyiam/files).
+
+For better visibility, a job is spawned for each flake check.
+This is done dynamically.
+
+To prevent runners from running out of space,
+The action [Nothing but Nix](https://github.com/marketplace/actions/nothing-but-nix)
+is used.
+
+See [`modules/meta/ci.nix`](modules/meta/ci.nix).
 
 ## Trying to disallow warnings
 
