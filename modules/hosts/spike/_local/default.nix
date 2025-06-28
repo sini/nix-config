@@ -70,9 +70,6 @@
 
   programs.dconf.enable = true;
 
-  time.timeZone = "America/Los_Angeles";
-  i18n.defaultLocale = "en_US.UTF-8";
-
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
     wget
