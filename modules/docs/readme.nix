@@ -4,12 +4,14 @@
     order = [
       "logo"
       "header"
+      "ci-badge"
       "hosts"
       "host-options"
       "colmena"
       "users"
       "automatic-import"
       "files"
+      "github-actions"
       "disallow-warnings"
       "links"
     ];
