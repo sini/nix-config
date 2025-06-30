@@ -20,8 +20,7 @@ in
       - `system`: The system architecture of the host (e.g., `x86_64-linux`).
       - `unstable`: Whether to use unstable packages for the host.
       - `deployment.targetHost`: The target host for deployment.
-      - `roles`: A list of tags for the host, which can be used to target
-        specific hosts during deployment.
+      - `roles`: A list of roles for the host, which can also be used to target deployment.
       - `public_key`: The path or value of the public SSH key for the host used for encryption.
       - `facts`: The path to the Facter JSON file for the host, which is used to provide
         additional information about the host and for automated hardware configuration.
