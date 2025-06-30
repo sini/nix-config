@@ -50,7 +50,11 @@
             default = "";
             description = "Longhorn Data Drive /dev/disk/by-id/ name (e.g., nvme-...). THIS IS REQUIRED.";
           };
-          encrypt = mkBoolOpt false "Encrypt the Longhorn drive with LUKS.";
+          encrypt = mkOption {
+            type = types.bool;
+            default = false;
+            description = "Encrypt the Longhorn drive with LUKS.";
+          };
           luksKeyFile = mkOption {
             type = types.nullOr types.path;
             default = null;
