@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.base.imports = with config.flake.modules.nixos; [
+  flake.modules.nixos.role_base.imports = with config.flake.modules.nixos; [
     agenix
     deterministic-uids
     disko
