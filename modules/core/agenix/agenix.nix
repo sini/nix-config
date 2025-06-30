@@ -1,6 +1,6 @@
 { inputs, rootPath, ... }:
 {
-  flake.modules.nixos.agenix =
+  flake.modules.nixos.core.agenix =
     { config, ... }:
     {
       imports = [
