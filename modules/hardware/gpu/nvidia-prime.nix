@@ -9,23 +9,20 @@
     {
       config =
         let
+          formatPciId =
+            id: "PCI:" + (lib.strings.replaceStrings [ "." ] [ ":" ] (lib.strings.removePrefix "0000:" id));
+
           nvidiaCard = lib.lists.findFirst (
             card: card.vendor.name == "nVidia Corporation"
           ) null config.facter.report.hardware.graphics_card;
-          nvidiaBusID =
-            if nvidiaCard != null then
-              ("PCI:" + (lib.strings.removePrefix "0000:" nvidiaCard.sysfs_bus_id))
-            else
-              "PCI:1:0:0";
+
+          nvidiaBusID = if nvidiaCard != null then formatPciId nvidiaCard.sysfs_bus_id else "PCI:1:0:0";
 
           intelCard = lib.lists.findFirst (
             card: card.vendor.name == "Intel Corporation"
           ) null config.facter.report.hardware.graphics_card;
-          intelBusID =
-            if intelCard != null then
-              ("PCI:" + (lib.strings.removePrefix "0000:" intelCard.sysfs_bus_id))
-            else
-              "PCI:0:2:0";
+
+          intelBusID = if intelCard != null then formatPciId intelCard.sysfs_bus_id else "PCI:0:2:0";
         in
         {
 
