@@ -6,15 +6,15 @@
     disko
     facter
     fwupd
+    locale
     nix
     nixpkgs
     openssh
-    locale
+    sudo
     time
 
     # apps/shell
     shell
-    doas
 
     # users
     users
