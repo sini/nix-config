@@ -13,13 +13,7 @@
     let
       lib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
       unstableLib = inputs.nixpkgs-unstable.lib.extend (_self: _super: import ../../lib _self);
-      nixos_modules =
-        lib.custom.listModulesRec ../../legacy-modules/nixos
-        ++ [
-
-          inputs.catppuccin.nixosModules.catppuccin
-        ]
-        ++ [ inputs.self.modules.nixos.base ];
+      nixos_modules = lib.custom.listModulesRec ../../legacy-modules/nixos;
     in
     {
       nixosConfigurations = lib.mapAttrs (
@@ -52,12 +46,13 @@
 
             modules =
               nixos_modules
+              ++ [ config.modules.nixos.base ]
               ++ chaotic_imports
-              ++ hostOptions.additional_modules or [ ]
+              ++ (hostOptions.extra_modules)
               ++ [
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
-                (config.flake.modules.nixos.hosts."${hostname}" or { })
+                (inputs.self.modules.nixos."host_${hostname}")
                 {
                   networking.hostName = hostname;
                   facter.reportPath = hostOptions.facts;

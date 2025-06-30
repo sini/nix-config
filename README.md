@@ -66,7 +66,7 @@ every host and include:
 - `public_key`: The path or value of the public SSH key for the host used for encryption.
 - `facts`: The path to the Facter JSON file for the host, which is used to provide
   additional information about the host and for automated hardware configuration.
-- `additional_modules`: A list of additional modules to include for the host.
+- `extra_modules`: A list of additional modules to include for the host.
 
 ## Remote deployment via Colmena
 
