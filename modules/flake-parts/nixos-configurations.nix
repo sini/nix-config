@@ -56,7 +56,7 @@
               ++ [
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
-                (inputs.self.modules.nixos."${hostname}" or { })
+                (inputs.self.modules.nixos."host_${hostname}" or { })
                 {
                   networking.hostName = hostname;
                   facter.reportPath = hostOptions.facts;
