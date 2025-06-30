@@ -9,6 +9,7 @@
       ./_local
       cpu-amd
       gpu-intel
+      podman
     ];
     public_key = ./ssh_host_ed25519_key.pub;
     facts = ./facter.json;

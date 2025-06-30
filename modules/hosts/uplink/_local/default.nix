@@ -54,12 +54,6 @@
       cpuFreqGovernor = "ondemand";
     };
 
-    services = {
-      podman.enable = true;
-      fstrim.enable = true;
-      #scx.enable = true;
-    };
-
     # ======================== DO NOT CHANGE THIS ========================
     system.stateVersion = "25.05";
     # ======================== DO NOT CHANGE THIS ========================
