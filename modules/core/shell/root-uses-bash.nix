@@ -1,9 +1,9 @@
 {
-  flake.modules =
-    { pkgs, ... }:
-    {
-      nixos.shell = {
+  flake.modules = {
+    nixos.shell =
+      { pkgs, ... }:
+      {
         users.users.root.shell = pkgs.bashInteractive;
       };
-    };
+  };
 }
