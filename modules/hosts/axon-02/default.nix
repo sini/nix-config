@@ -5,7 +5,7 @@
     tags = [
       "server"
     ];
-    additional_modules = with config.flake.modules.nixos; [
+    extra_modules = with config.flake.modules.nixos; [
       media-data-share
       ./_local
     ];

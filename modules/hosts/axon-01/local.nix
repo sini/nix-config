@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.hosts.axon-01 =
+  flake.modules.nixos.axon-01 =
     {
       pkgs,
       ...

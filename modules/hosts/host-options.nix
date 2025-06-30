@@ -25,7 +25,7 @@ in
       - `public_key`: The path or value of the public SSH key for the host used for encryption.
       - `facts`: The path to the Facter JSON file for the host, which is used to provide
         additional information about the host and for automated hardware configuration.
-      - `additional_modules`: A list of additional modules to include for the host.
+      - `extra_modules`: A list of additional modules to include for the host.
 
     '';
 
@@ -69,8 +69,8 @@ in
             description = "Path to the Facter JSON file for the host.";
           };
 
-          additional_modules = mkOption {
-            type = types.listOf types.path;
+          extra_modules = mkOption {
+            type = types.listOf types.deferredModule;
             default = [ ];
             description = "List of additional modules to include for the host.";
           };

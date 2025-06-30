@@ -5,7 +5,7 @@
     tags = [
       "server"
     ];
-    additional_modules = with config.flake.modules.nixos; [
+    extra_modules = with config.flake.modules.nixos; [
       media-data-share
     ];
     public_key = ./ssh_host_ed25519_key.pub;
