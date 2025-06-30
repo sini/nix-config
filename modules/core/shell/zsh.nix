@@ -1,8 +1,8 @@
 {
-  flake.modules =
-    { pkgs, ... }:
-    {
-      nixos.shell = {
+  flake.modules = {
+    nixos.shell =
+      { pkgs, ... }:
+      {
         programs.zsh = {
           enable = true;
           enableCompletion = true;
@@ -13,5 +13,5 @@
         # Stick to bash for root shell
         users.users.root.shell = pkgs.bashInteractive;
       };
-    };
+  };
 }
