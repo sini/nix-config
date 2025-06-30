@@ -2,7 +2,7 @@
 {
   flake.hosts.uplink = {
     deployment.targetHost = "10.10.10.1";
-    tags = [
+    roles = [
       "server"
     ];
     extra_modules = with config.flake.modules.nixos; [

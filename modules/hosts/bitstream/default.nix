@@ -2,7 +2,7 @@
 {
   flake.hosts.bitstream = {
     deployment.targetHost = "10.10.10.5";
-    tags = [
+    roles = [
       "server"
     ];
     extra_modules = with config.flake.modules.nixos; [

@@ -2,7 +2,7 @@
 {
   flake.hosts.axon-02 = {
     deployment.targetHost = "10.10.10.3";
-    tags = [
+    roles = [
       "server"
     ];
     extra_modules = with config.flake.modules.nixos; [

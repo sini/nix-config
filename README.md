@@ -61,8 +61,7 @@ every host and include:
 - `system`: The system architecture of the host (e.g., `x86_64-linux`).
 - `unstable`: Whether to use unstable packages for the host.
 - `deployment.targetHost`: The target host for deployment.
-- `tags`: A list of tags for the host, which can be used to target
-  specific hosts during deployment.
+- `roles`: A list of roles for the host, which can also be used to target deployment.
 - `public_key`: The path or value of the public SSH key for the host used for encryption.
 - `facts`: The path to the Facter JSON file for the host, which is used to provide
   additional information about the host and for automated hardware configuration.
@@ -71,7 +70,7 @@ every host and include:
 ## Remote deployment via Colmena
 
 This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
-Colmena supports both local and remote deployment, and hosts can be targeted by tags as well as their name.
+Colmena supports both local and remote deployment, and hosts can be targeted by roles as well as their name.
 Remote connection properties are defined in the `flake.hosts.<hostname>.deployment` attribute set, and implementation
 can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
 [./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
