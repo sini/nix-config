@@ -19,7 +19,7 @@
 
           inputs.catppuccin.nixosModules.catppuccin
         ]
-        ++ [ inputs.self.modules.nixos.core ];
+        ++ [ inputs.self.modules.nixos.base ];
     in
     {
       nixosConfigurations = lib.mapAttrs (
