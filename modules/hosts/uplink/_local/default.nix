@@ -24,7 +24,6 @@
       intelgpu.driver = "xe";
 
       disk.single = {
-        enable = true;
         device_id = "nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
       };
 
