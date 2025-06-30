@@ -9,7 +9,6 @@
 
   hardware = {
     disk.longhorn = {
-      enable = true;
       os_drive = {
         device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
         swap_size = 8192;
