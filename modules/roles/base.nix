@@ -10,6 +10,7 @@
     nix
     nixpkgs
     openssh
+    ssd
     sudo
     systemd-boot
     time
