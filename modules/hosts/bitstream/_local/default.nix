@@ -14,7 +14,6 @@
 
   hardware = {
     disk.single = {
-      enable = true;
       device_id = "nvme-NVMe_CA6-8D1024_0023065001TG";
       swap_size = 8192;
     };
