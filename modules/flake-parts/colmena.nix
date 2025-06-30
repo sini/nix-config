@@ -58,7 +58,7 @@
             imports = nixosConfig._module.args.modules;
             deployment = {
               targetHost = hostOptions.deployment.targetHost;
-              tags = hostOptions.tags;
+              tags = hostOptions.roles;
               allowLocalDeployment = true;
               privilegeEscalationCommand = [
                 "doas"

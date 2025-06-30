@@ -38,15 +38,17 @@
             inherit system;
 
             specialArgs = {
-              inherit inputs;
+              inherit inputs hostOptions;
               inherit (config) nodes;
-              nodeOptions = hostOptions;
               lib = extendedLibrary;
             };
 
             modules =
               nixos_modules
               ++ [ config.modules.nixos.base ]
+              ++ (lib.optionals (hostOptions ? roles) (
+                builtins.map (role: inputs.self.modules.nixos.${role}) hostOptions.roles
+              ))
               ++ chaotic_imports
               ++ (hostOptions.extra_modules)
               ++ [
