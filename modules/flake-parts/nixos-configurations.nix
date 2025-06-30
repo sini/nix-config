@@ -47,14 +47,16 @@
               nixos_modules
               ++ [ config.modules.nixos.base ]
               ++ (lib.optionals (hostOptions ? roles) (
-                builtins.map (role: inputs.self.modules.nixos.${role}) hostOptions.roles
+                builtins.map (role: inputs.self.modules.nixos.${role}) (
+                  lib.filter (role: lib.hasAttr role inputs.self.modules.nixos) hostOptions.roles
+                )
               ))
               ++ chaotic_imports
               ++ (hostOptions.extra_modules)
               ++ [
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
-                (inputs.self.modules.nixos."host_${hostname}")
+                (inputs.self.modules.nixos."${hostname}" or { })
                 {
                   networking.hostName = hostname;
                   facter.reportPath = hostOptions.facts;
