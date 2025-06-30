@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.modules.nixos.core.imports = with config.flake.modules.nixos; [
-    agenix
+    core.agenix
     deterministic-uids
     disko
     facter
