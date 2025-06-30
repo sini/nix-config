@@ -1,5 +1,4 @@
 {
-  config,
   pkgs,
   lib,
   ...
@@ -48,10 +47,7 @@
         withIntegratedGPU = true;
       };
     };
-    cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
     bluetooth.enable = true;
-    enableAllFirmware = true;
-    enableRedistributableFirmware = true;
   };
 
   systemd = {
