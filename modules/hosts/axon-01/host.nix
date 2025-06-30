@@ -6,6 +6,7 @@
       "server"
     ];
     extra_modules = with config.flake.modules.nixos; [
+      disk-longhorn
       cpu-amd
       gpu-amd
     ];
