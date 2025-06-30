@@ -53,8 +53,8 @@
             modules =
               nixos_modules
               ++ chaotic_imports
-              ++ hostOptions.additional_modules
               ++ [
+                { imports = hostOptions.additional_modules or [ ]; }
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
                 (config.flake.modules.nixos.hosts."${hostname}" or { })
