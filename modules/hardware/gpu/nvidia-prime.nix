@@ -7,6 +7,11 @@
       ...
     }:
     {
+      imports = [
+        ./intel.nix
+        ./nvidia.nix
+      ];
+
       config =
         let
           formatPciId =
