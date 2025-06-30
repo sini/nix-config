@@ -83,8 +83,6 @@
   services = {
     # podman.enable = true;
     fstrim.enable = true;
-    custom.media.data-share.enable = true;
-    rpcbind.enable = true; # needed for NFS
     # yubikey...
     pcscd.enable = true;
     # X server stuff

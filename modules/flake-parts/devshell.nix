@@ -17,18 +17,22 @@
         packages =
           [
             pkgs.git
-            pkgs.nodePackages.prettier
             pkgs.nix # Always use the nix version from this flake's nixpkgs version, so that nix-plugins (below) doesn't fail because of different nix versions.
             pkgs.nixos-rebuild # Ensure nixos-rebuild is available for darwin systems
             pkgs.nix-output-monitor
             pkgs.nil
             pkgs.nixd
+            pkgs.nodePackages.prettier
           ]
           ++ lib.optionals pkgs.buildPlatform.isDarwin [
             pkgs.coreutils-full # Include GNU coreutils for darwin systems
           ];
 
         commands = [
+          {
+            package = pkgs.nh;
+            help = "Nix helper for nixpkgs development";
+          }
           {
             package = config.treefmt.build.wrapper;
             help = "Format all files";

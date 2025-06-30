@@ -1,10 +1,12 @@
+{ config, ... }:
 {
   flake.hosts.uplink = {
     deployment.targetHost = "10.10.10.1";
     tags = [
       "server"
     ];
-    additional_modules = [
+    additional_modules = with config.flake.modules.nixos; [
+      media-data-share
       ./_local
     ];
     public_key = ./ssh_host_ed25519_key.pub;
