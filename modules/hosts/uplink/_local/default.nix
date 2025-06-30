@@ -43,10 +43,6 @@
 
     programs.dconf.enable = true;
 
-    system = {
-      locale.enable = true;
-    };
-
     # Use cachyOS kernel, server variant: https://wiki.cachyos.org/features/kernel/
     # boot.kernelPackages = inputs.chaotic.legacyPackages.x86_64-linux.linuxPackages_cachyos;
 
