@@ -39,7 +39,6 @@
   services = {
     # podman.enable = true;
     fstrim.enable = true;
-    custom.media.data-share.enable = true;
   };
 
   # ======================== DO NOT CHANGE THIS ========================
