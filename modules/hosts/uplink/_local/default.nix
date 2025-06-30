@@ -15,8 +15,6 @@
   config = {
 
     # Enable remote vscode...
-    programs.nix-ld.enable = true;
-
     # topology.self = {
     #   hardware.info = "burst";
     #   services.k8s.name = "k8s";
@@ -24,11 +22,6 @@
 
     hardware = {
       intelgpu.driver = "xe";
-
-      gpu.intel = {
-        enable = true;
-        device_id = "22182";
-      };
 
       disk.single = {
         enable = true;
@@ -54,8 +47,6 @@
       btop
       vim
       git
-      doas
-      doas-sudo-shim
     ];
 
     powerManagement = {

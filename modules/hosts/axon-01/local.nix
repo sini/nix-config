@@ -22,8 +22,6 @@
           };
         };
 
-        gpu.amd.enable = true;
-
         networking.enable = true;
       };
 
@@ -34,8 +32,6 @@
         wget
         vim
         git
-        doas
-        doas-sudo-shim
       ];
 
       services = {

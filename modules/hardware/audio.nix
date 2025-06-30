@@ -1,19 +1,5 @@
 {
-  config,
-  lib,
-  ...
-}:
-with lib;
-with lib.custom;
-let
-  cfg = config.hardware.audio;
-in
-{
-  options.hardware.audio = with types; {
-    enable = mkBoolOpt false "Enable pipewire";
-  };
-
-  config = mkIf cfg.enable {
+  flake.modules.nixos.audio = {
     security.rtkit.enable = true;
     services.pipewire = {
       enable = true;

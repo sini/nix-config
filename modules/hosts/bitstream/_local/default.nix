@@ -13,8 +13,6 @@
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   hardware = {
-    gpu.amd.enable = true;
-
     disk.single = {
       enable = true;
       device_id = "nvme-NVMe_CA6-8D1024_0023065001TG";

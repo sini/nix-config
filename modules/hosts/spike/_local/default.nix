@@ -36,18 +36,6 @@
 
   hardware = {
     gpgSmartcards.enable = true;
-
-    gpu = {
-      intel = {
-        enable = true;
-        device_id = "a788";
-      };
-      nvidia = {
-        enable = true;
-        withIntegratedGPU = true;
-      };
-    };
-    bluetooth.enable = true;
   };
 
   systemd = {
