@@ -8,6 +8,7 @@
       lib,
       ...
     }:
+    with lib;
     let
       defaultBtrfsOpts = [
         "defaults"
