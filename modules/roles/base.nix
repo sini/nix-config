@@ -5,12 +5,13 @@
     deterministic-uids
     disko
     facter
-    fwupd
+    firmware
     locale
     nix
     nixpkgs
     openssh
     sudo
+    systemd-boot
     time
 
     # apps/shell
