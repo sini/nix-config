@@ -7,6 +7,7 @@
       lib,
       ...
     }:
+    with lib;
 
     let
       disk-device =
