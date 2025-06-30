@@ -46,22 +46,8 @@
           # `:`, which is part of the pci path.
           services.udev.packages =
             let
-              pciPath =
-                xorgBusId:
-                let
-                  components = lib.drop 1 (lib.splitString ":" xorgBusId);
-                  toHex = i: lib.toLower (lib.toHexString (lib.toInt i));
-
-                  domain = "0000"; # Apparently the domain is practically always set to 0000
-                  bus = lib.fixedWidthString 2 "0" (toHex (builtins.elemAt components 0));
-                  device = lib.fixedWidthString 2 "0" (toHex (builtins.elemAt components 1));
-                  function = builtins.elemAt components 2; # The function is supposedly a decimal number
-                in
-                "dri/by-path/pci-${domain}:${bus}:${device}.${function}-card";
-
-              pCfg = config.hardware.nvidia.prime;
-              igpuPath = pciPath pCfg.intelBusId;
-              dgpuPath = pciPath pCfg.nvidiaBusId;
+              igpuPath = intelCard.sysfs_bus_id;
+              dgpuPath = nvidiaCard.sysfs_bus_id;
             in
             [
               (pkgs.writeTextDir "lib/udev/rules.d/61-gpu-offload.rules" ''
