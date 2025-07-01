@@ -1,15 +1,12 @@
 {
-  lib,
   pkgs,
   ...
 }:
 {
-  imports = import ./modules.nix { inherit lib; };
-
-  programs = {
-    bat.enable = true;
-    eza.enable = true;
-  };
+  imports = [
+    ./modules/vscode.nix
+    ./modules/zsh.nix
+  ];
 
   home.packages = with pkgs; [
     # Utilities
