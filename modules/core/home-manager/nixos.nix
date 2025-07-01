@@ -1,11 +1,13 @@
 {
   config,
-  inputs,
   ...
 }:
 {
   flake.modules.nixos.home-manager = {
-    imports = [ inputs.home-manager.nixosModules.home-manager ];
+    # home-manager is defined in nixos-configurations for all machines
+    # which lets us switch the version used for stable, unstable, and
+    # darwin hosts.
+    # imports = [ inputs.home-manager.nixosModules.home-manager ];
 
     home-manager = {
       useGlobalPkgs = true;
