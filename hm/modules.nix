@@ -1,4 +1,4 @@
-{ lib, inputs }:
+{ lib }:
 let
   dir = ./modules;
 
@@ -10,6 +10,6 @@ lib.pipe (builtins.readDir dir) [
   builtins.attrNames
   (builtins.map (filename: dir + "/${filename}"))
 ]
-++ [
-  inputs.catppuccin.homeModules.catppuccin
-]
+# ++ [
+#   inputs.catppuccin.homeModules.catppuccin
+# ]
