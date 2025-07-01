@@ -19,7 +19,7 @@
         };
       };
 
-      config = {
+      config = lib.mkIf cfg.enable {
         networking = {
           dhcpcd.enable = false;
           useDHCP = true;
