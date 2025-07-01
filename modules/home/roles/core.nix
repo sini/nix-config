@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.homeManager.core = args: {
+  flake.modules.homeManager.core = {
     home = {
       # TODO: Fix this to support nix-darwin
       username = config.flake.meta.user.username;
