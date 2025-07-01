@@ -1,4 +1,7 @@
 _: {
+  # Disable the default networking configuration
+  hardware.networking.enable = false;
+
   networking = {
     dhcpcd.enable = false;
     useDHCP = true;
