@@ -60,10 +60,6 @@
               targetHost = hostOptions.deployment.targetHost;
               tags = hostOptions.roles;
               allowLocalDeployment = true;
-              privilegeEscalationCommand = [
-                "doas"
-                "--"
-              ];
             };
           }
         ) self.nixosConfigurations);
