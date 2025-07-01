@@ -2,22 +2,20 @@
   flake.modules.homeManager.file-tools =
     { pkgs, ... }:
     {
-      home = {
-        packages = with pkgs; [
-          atool
-          du-dust
-          fd
-          file
-          jq
-          ripgrep
-          ripgrep-all
-          unzip
-          tokei
-        ];
+      home.packages = with pkgs; [
+        atool
+        du-dust
+        fd
+        file
+        jq
+        ripgrep
+        ripgrep-all
+        unzip
+        tokei
+      ];
 
-        programs = {
-          bat.enable = true;
-        };
+      programs = {
+        bat.enable = true;
       };
     };
 }
