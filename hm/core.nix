@@ -1,5 +1,4 @@
 {
-  inputs,
   lib,
   pkgs,
   config,
@@ -9,7 +8,7 @@ let
   enableDirenv = config.programs.direnv.enable;
 in
 {
-  imports = import ./modules.nix { inherit inputs lib; };
+  imports = import ./modules.nix { inherit lib; };
 
   programs = {
     bat.enable = true;
