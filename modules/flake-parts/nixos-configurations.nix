@@ -11,9 +11,8 @@
       ...
     }:
     let
-      lib = inputs.nixpkgs.lib.extend (_self: _super: import ../../lib _self);
-      unstableLib = inputs.nixpkgs-unstable.lib.extend (_self: _super: import ../../lib _self);
-      nixos_modules = lib.custom.listModulesRec ../../legacy-modules/nixos;
+      lib = inputs.nixpkgs.lib;
+      unstableLib = inputs.nixpkgs-unstable.lib;
     in
     {
       nixosConfigurations = lib.mapAttrs (
@@ -44,8 +43,7 @@
             };
 
             modules =
-              nixos_modules
-              ++ [ config.modules.nixos.role_base ]
+              [ config.modules.nixos.role_base ]
               ++ (lib.optionals (hostOptions ? roles) (
                 builtins.map (role: inputs.self.modules.nixos."role_${role}") (
                   lib.filter (role: lib.hasAttr "role_${role}" inputs.self.modules.nixos) hostOptions.roles

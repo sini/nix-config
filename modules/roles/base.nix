@@ -2,11 +2,13 @@
 {
   flake.modules.nixos.role_base.imports = with config.flake.modules.nixos; [
     agenix
+    avahi
     deterministic-uids
     disko
     facter
     firmware
     locale
+    networking
     nix
     nixpkgs
     openssh
