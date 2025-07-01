@@ -35,6 +35,7 @@
 
   hardware = {
     gpgSmartcards.enable = true;
+    networking.enable = false;
   };
 
   systemd = {
