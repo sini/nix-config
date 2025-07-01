@@ -7,6 +7,7 @@
     disko
     facter
     firmware
+    home-manager
     locale
     networking
     nix
