@@ -1,7 +1,7 @@
 { lib, ... }:
 {
   flake.modules.homeManager.yazi =
-    { pkgs, ... }:
+    { config, pkgs, ... }:
     {
       programs = {
         yazi = {
@@ -28,7 +28,7 @@
               ];
               zsh-dir = [
                 {
-                  run = ''${lib.getExe' pkgs.zsh} -c "cd $0 && exec ${lib.getExe' pkgs.zsh}"'';
+                  run = ''${lib.getExe config.programs.zsh.package} -c "cd $0 && exec ${lib.getExe config.programs.zsh.package}"'';
                   block = true;
                   desc = "Open directory in zsh";
                 }
