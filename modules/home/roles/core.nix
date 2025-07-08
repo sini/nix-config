@@ -8,4 +8,12 @@
     };
     programs.home-manager.enable = true;
   };
+
+  flake.modules.nixos.home-core = {
+    home-manager.users.${config.flake.meta.user.username}.imports =
+      with config.flake.modules.homeManager; [
+        core
+        zsh
+      ];
+  };
 }

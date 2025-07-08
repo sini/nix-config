@@ -8,6 +8,7 @@
     facter
     firmware
     home-manager
+    home-core
     locale
     networking
     nix
