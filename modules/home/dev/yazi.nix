@@ -11,12 +11,12 @@
             mgr.show_hidden = true;
             open.rules = [
               {
-                mime = "*";
-                use = "open";
-              }
-              {
                 mime = "inode/directory";
                 use = "zsh-dir";
+              }
+              {
+                mime = "*";
+                use = "open";
               }
             ];
             opener = {
