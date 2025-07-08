@@ -17,6 +17,13 @@
       programs = {
         bat.enable = true;
         fzf.enable = true;
+        zoxide = {
+          enable = true;
+          options = [
+            "--cmd"
+            "j"
+          ];
+        };
       };
     };
 }
