@@ -14,13 +14,26 @@
                 mime = "*";
                 use = "open";
               }
-            ];
-            opener.open = [
               {
-                run = ''${lib.getExe' pkgs.xdg-utils "xdg-open"} "$@"'';
-                desc = "Open";
+                mime = "inode/directory";
+                use = "zsh-dir";
               }
             ];
+            opener = {
+              open = [
+                {
+                  run = ''${lib.getExe' pkgs.xdg-utils "xdg-open"} "$@"'';
+                  desc = "Open";
+                }
+              ];
+              zsh-dir = [
+                {
+                  run = ''${lib.getExe' pkgs.zsh} -c "cd $0 && exec ${lib.getExe' pkgs.zsh}"'';
+                  block = true;
+                  desc = "Open directory in zsh";
+                }
+              ];
+            };
           };
         };
       };
