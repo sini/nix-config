@@ -91,7 +91,7 @@
         stylix = {
           enable = true;
           autoEnable = true;
-          # base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+
           base16Scheme = {
             # You can use a file path to a JSON or YAML file
             # path = ./path/to/your/scheme.yaml;
@@ -118,23 +118,14 @@
 
           image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
-          # iconTheme = {
-          #   enable = true;
-          #   package =
-          #     (pkgs.catppuccin-papirus-folders.override {
-          #       flavor = "mocha";
-          #       accent = "lavender";
-          #     }).overrideAttrs
-          #       (old: {
-          #         postPatch =
-          #           (old.postPatch or "")
-          #           + ''
-          #             substituteInPlace papirus-folders.sh \
-          #               --replace "substituteStream" "substituteStream || true"
-          #           '';
-          #       });
-          #   dark = "Papirus-Dark";
-          # };
+          iconTheme = {
+            enable = true;
+            package = pkgs.catppuccin-papirus-folders.override {
+              flavor = "mocha";
+              accent = "lavender";
+            };
+            dark = "Papirus-Dark";
+          };
 
           targets = {
             firefox = {
