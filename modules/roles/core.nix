@@ -4,6 +4,7 @@
     imports = with config.flake.modules.nixos; [
       agenix
       avahi
+      deploy-rs
       deterministic-uids
       disko
       facter
