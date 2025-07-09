@@ -9,6 +9,7 @@
         file-tools
         git
         gpg
+        ssh
         yazi
       ];
   };
