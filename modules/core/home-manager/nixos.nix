@@ -13,6 +13,7 @@
 
       home-manager = {
         useGlobalPkgs = true;
+        useUserPackages = true;
 
         extraSpecialArgs = {
           inherit inputs hostConfig;
@@ -23,12 +24,16 @@
           (
             { osConfig, ... }:
             {
-              # TODO: Fix this to support nix-darwin
-              home.stateVersion = osConfig.system.stateVersion;
+              # TODO: Fix this to support nix-darwin which uses a different stateVersion and homeDirectory
+              home = {
+                stateVersion = osConfig.system.stateVersion;
+                username = config.flake.meta.user.username;
+                homeDirectory = "/home/${config.flake.meta.user.username}";
+              };
+              # Home Manager manages itself
+              programs.home-manager.enable = true;
             }
           )
-          # config.flake.modules.homeManager.core
-          # config.flake.modules.homeManager.gui
         ];
       };
     };

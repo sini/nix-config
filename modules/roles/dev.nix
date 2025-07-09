@@ -1,6 +1,11 @@
 { config, ... }:
 {
-  flake.modules.nixos.home-dev = {
+  flake.modules.nixos.role_dev = {
+    imports = with config.flake.modules.nixos; [
+      direnv
+      vscode
+    ];
+
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
         bat
@@ -12,8 +17,6 @@
         ssh
         yazi
 
-        # gui...
-        alacritty
       ];
   };
 }

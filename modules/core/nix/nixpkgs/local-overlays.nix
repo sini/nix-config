@@ -21,7 +21,7 @@
         )
       ]
       ++ builtins.attrValues (
-        import (rootPath + "/overlays/default.nix") {
+        import (rootPath + "/pkgs/overlays.nix") {
           inherit inputs;
         }
       );

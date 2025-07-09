@@ -33,7 +33,7 @@
         };
         overlays =
           builtins.attrValues (
-            import (rootPath + "/overlays/default.nix") {
+            import (rootPath + "/pkgs/overlays.nix") {
               inherit inputs;
             }
           )
@@ -41,7 +41,7 @@
             inputs.nix-topology.overlays.default
           ];
       };
-      pkgsDirectory = ../../pkgs/by-name;
+      pkgsDirectory = rootPath + "/pkgs/by-name";
       inherit pkgs;
     };
 
