@@ -86,76 +86,109 @@
       };
 
       config = {
-        programs.git = {
-          enable = true;
-          signing.format = lib.mkForce "openpgp";
-          delta.enable = true;
+        programs = {
+          git = {
+            enable = true;
+            signing.format = lib.mkForce "openpgp";
+            delta.enable = true;
 
-          extraConfig = {
-            pull.rebase = true;
-            commit.gpgsign = true;
-            init.defaultBranch = "main";
-            push.autoSetupRemote = true;
+            extraConfig = {
+              pull.rebase = true;
+              commit.gpgsign = true;
+              init.defaultBranch = "main";
+              push.autoSetupRemote = true;
 
-            merge.conflictstyle = "diff3";
+              merge.conflictstyle = "diff3";
 
-            "url \"git@github.com:\"".pushInsteadOf = "https://github.com/";
-            "url \"git@git.sr.ht:\"".pushInsteadOf = "https://git.sr.ht/";
+              "url \"git@github.com:\"".pushInsteadOf = "https://github.com/";
+              "url \"git@git.sr.ht:\"".pushInsteadOf = "https://git.sr.ht/";
 
-            core.autocrlf = "input";
+              core.autocrlf = "input";
 
-            # Only on WSL
-            # core.fileMode = false;
+              # Only on WSL
+              # core.fileMode = false;
 
-            # Increase the size of post buffers to prevent hung ups of git-push.
-            # https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning#6849424
-            http.postBuffer = "524288000";
+              # Increase the size of post buffers to prevent hung ups of git-push.
+              # https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning#6849424
+              http.postBuffer = "524288000";
+            };
+
+            ignores = [
+              ".direnv"
+              "result"
+              "result-*"
+              "#*"
+              ".git-bak*"
+              "*~"
+              "*.swp"
+              "result"
+              ".DS_Store"
+              "/.helix"
+              ".flake"
+              ".pkgs"
+
+              # Non-standard
+              ".aider*"
+              "!.aider.conf.yml"
+              "!.aiderignore"
+            ];
+
+            includes = lib.pipe ([ cfg.defaultIdentity ] ++ cfg.extraIdentities) [
+              (builtins.filter (v: v != null))
+              (builtins.map (
+                {
+                  email,
+                  fullName,
+                  githubUser,
+                  signingKey,
+                  conditions,
+                }:
+                let
+                  configFile = makeGitConfig {
+                    inherit githubUser signingKey;
+                    userName = fullName;
+                    userEmail = email;
+                  };
+                in
+                builtins.map (condition: {
+                  path = configFile;
+                  inherit condition;
+                }) conditions
+              ))
+              lib.flatten
+            ];
+          };
+          gh = {
+            enable = true;
+
+            settings = {
+              git_protocol = "ssh";
+            };
           };
 
-          ignores = [
-            ".direnv"
-            "result"
-            "result-*"
-            "#*"
-            ".git-bak*"
-            "*~"
-            "*.swp"
-            "result"
-            ".DS_Store"
-            "/.helix"
-            ".flake"
-            ".pkgs"
+          #
 
-            # Non-standard
-            ".aider*"
-            "!.aider.conf.yml"
-            "!.aiderignore"
-          ];
-
-          includes = lib.pipe ([ cfg.defaultIdentity ] ++ cfg.extraIdentities) [
-            (builtins.filter (v: v != null))
-            (builtins.map (
-              {
-                email,
-                fullName,
-                githubUser,
-                signingKey,
-                conditions,
-              }:
-              let
-                configFile = makeGitConfig {
-                  inherit githubUser signingKey;
-                  userName = fullName;
-                  userEmail = email;
+          lazygit = {
+            enable = true;
+            settings = {
+              gui = {
+                theme = {
+                  activeBorderColor = [
+                    "blue"
+                    "bold"
+                  ];
+                  selectedLineBgColor = [ "white" ];
                 };
-              in
-              builtins.map (condition: {
-                path = configFile;
-                inherit condition;
-              }) conditions
-            ))
-            lib.flatten
-          ];
+              };
+              git = {
+                # Improves performance
+                # https://github.com/jesseduffield/lazygit/issues/2875#issuecomment-1665376437
+                log.order = "default";
+
+                fetchAll = false;
+              };
+            };
+          };
         };
       };
     };

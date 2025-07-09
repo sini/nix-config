@@ -9,7 +9,7 @@
     firmware
     home-manager
     home-core
-    locale
+    i18n
     networking
     nix
     nixpkgs
