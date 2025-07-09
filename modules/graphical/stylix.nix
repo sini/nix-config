@@ -10,7 +10,7 @@
         config = {
           stylix = {
             enable = true;
-            autoEnable = true;
+            # autoEnable = true;
             # base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
             homeManagerIntegration.autoImport = false;
             homeManagerIntegration.followSystem = false;
@@ -41,7 +41,7 @@
 
             image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
-            targets.nixos-icons.enable = false;
+            # targets.nixos-icons.enable = false;
 
             cursor = {
               name = "Bibata-Modern-Classic";
@@ -131,6 +131,7 @@
 
           targets = {
             nixos-icons.enable = false;
+            gnome.enable = false;
             firefox = {
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
