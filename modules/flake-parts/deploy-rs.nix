@@ -21,14 +21,12 @@ in
       # }) config.hosts;
 
       deploy.nodes = lib.mapAttrs (hostname: options: {
-        inherit hostname;
+        hostname = options.deployment.targetHost;
         profiles.system = {
           user = "root";
           path = deploy-rs.lib.${options.system}.activate.nixos self.nixosConfigurations.${hostname};
         };
-      }
-      # // options.deploy
-      ) config.hosts;
+      }) config.hosts;
     };
 
   perSystem =
