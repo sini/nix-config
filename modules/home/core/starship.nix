@@ -3,6 +3,7 @@
     enable = true;
     enableBashIntegration = true;
     enableZshIntegration = true;
+    enableFishIntegration = true;
     settings = {
       add_newline = false;
       ## https://starship.rs/config/#prompt

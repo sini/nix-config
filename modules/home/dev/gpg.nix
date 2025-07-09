@@ -43,11 +43,6 @@
           enable = true;
           enableSshSupport = true;
 
-          # https://github.com/drduh/config/blob/master/gpg-agent.conf
-          #defaultCacheTtl = 60;
-          #defaultCacheTtlSsh = 60;
-          #maxCacheTtl = 120;
-
           # TODO: If system is darwin, use pinentry-mac
           pinentry.package = pkgs.pinentry-gnome3;
 
@@ -56,10 +51,5 @@
           '';
         };
       };
-
-      programs.bash.initExtra = ''
-        gpg-connect-agent /bye
-        export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-      '';
     };
 }

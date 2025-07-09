@@ -4,7 +4,7 @@
     { pkgs, ... }:
     let
       l = lib.concatStringsSep " " [
-        "${pkgs.eza}/bin/eza"
+        "${lib.getExe pkgs.eza}"
         "--group"
         "--icons"
         "--git"

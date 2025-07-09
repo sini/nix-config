@@ -20,12 +20,13 @@
 
       programs.zsh = {
         enable = true;
+        dotDir = ".config/zsh";
         autosuggestion.enable = true;
         enableCompletion = true;
-        dotDir = ".config/zsh";
+        autocd = true;
         history = {
           path = "\${XDG_DATA_HOME-$HOME/.local/share}/zsh/history";
-          save = 1000500;
+          ignoreSpace = true;
           size = 1000000;
         };
 
@@ -53,10 +54,10 @@
               hash = "sha256-PQIFF8kz+baqmZWiSr+wc4EleZ/KD8Y+lxW2NT35/bg=";
             };
           }
-          # {
-          #   name = "zsh-histdb-skim";
-          #   src = "${pkgs.zsh-histdb-skim}/share/zsh-histdb-skim";
-          # }
+          {
+            name = "zsh-histdb-skim";
+            src = "${pkgs.zsh-histdb-skim}/share/zsh-histdb-skim";
+          }
         ];
 
         sessionVariables = {
@@ -112,6 +113,7 @@
           "status" = "systemctl --user --full status";
           "restart" = "systemctl --user restart";
           "ssh-ignore" = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
+          "fixstore" = "sudo nix-store --verify --check-contents --repair";
         };
       };
     };

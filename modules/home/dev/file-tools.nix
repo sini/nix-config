@@ -5,6 +5,14 @@
       home.packages = with pkgs; [
         atool
         du-dust
+        dua
+        dysk
+        procs
+        mprocs
+        ncdu
+        tlrc
+        wget # not a file util....
+        dig # not a file util....
         fd
         file
         jq
@@ -15,8 +23,11 @@
       ];
 
       programs = {
-        bat.enable = true;
+        bottom.enable = true;
+        fd.enable = true;
         fzf.enable = true;
+        jq.enable = true;
+        ripgrep.enable = true;
         zoxide = {
           enable = true;
           options = [
