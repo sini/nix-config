@@ -39,7 +39,7 @@
               base0F = "#f5bde6"; # pink
             };
 
-            image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
+            #image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
             cursor = {
               name = "Bibata-Modern-Classic";
@@ -116,7 +116,7 @@
             base0F = "#f5bde6"; # pink
           };
 
-          image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
+          #image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
           iconTheme = {
             enable = true;
