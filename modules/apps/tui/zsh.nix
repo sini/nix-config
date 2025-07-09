@@ -101,7 +101,6 @@
                 zle -N history-beginning-search-forward-end  history-search-end
               fi
             '')
-            #(lib.readFile ./zshrc.zsh)
           ];
 
           shellAliases = {
