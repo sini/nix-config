@@ -7,7 +7,6 @@
       "ci-badge"
       "hosts"
       "host-options"
-      "colmena"
       "users"
       "automatic-import"
       "files"
