@@ -28,7 +28,9 @@
     {
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
-        config.allowUnfree = true;
+        config = {
+          allowUnfreePredicate = _pkg: true;
+        };
         overlays =
           builtins.attrValues (
             import (rootPath + "/overlays/default.nix") {
