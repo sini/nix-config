@@ -68,8 +68,6 @@
     # Nix flake for "too much bleeding-edge" and unreleased packages (e.g., mesa_git, linux_cachyos, firefox_nightly, sway_git, gamescope_git). And experimental modules (e.g., HDR, duckdns).
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
-    colmena.url = "github:zhaofengli/colmena";
-
     deploy-rs.url = "github:serokell/deploy-rs";
 
     devshell = {

@@ -38,10 +38,6 @@
             help = "Format all files";
           }
           {
-            package = pkgs.colmena;
-            help = "Build and deploy this nix config to nodes";
-          }
-          {
             package = pkgs.deploy-rs;
             help = "Deploy this nix config to nodes";
           }
