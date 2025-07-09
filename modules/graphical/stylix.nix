@@ -41,6 +41,8 @@
 
             image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
+            targets.nixos-icons.enable = false;
+
             cursor = {
               name = "Bibata-Modern-Classic";
               package = pkgs.bibata-cursors;
@@ -128,6 +130,7 @@
           };
 
           targets = {
+            nixos-icons.enable = false;
             firefox = {
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
