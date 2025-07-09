@@ -70,6 +70,8 @@
 
     colmena.url = "github:zhaofengli/colmena";
 
+    deploy-rs.url = "github:serokell/deploy-rs";
+
     devshell = {
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs";
