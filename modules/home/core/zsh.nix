@@ -1,7 +1,6 @@
 {
   flake.modules.homeManager.zsh =
     {
-      config,
       pkgs,
       lib,
       ...
@@ -90,11 +89,6 @@
               zle -N history-beginning-search-backward-end history-search-end
               zle -N history-beginning-search-forward-end  history-search-end
             fi
-
-            # Use gpg-agent as ssh-agent.
-            gpg-connect-agent /bye
-            export SSH_AUTH_SOCK=$(${config.programs.gpg.package}/bin/gpgconf --list-dirs agent-ssh-socket)
-            export GPG_TTY=$(tty)
           '')
           #(lib.readFile ./zshrc.zsh)
         ];
