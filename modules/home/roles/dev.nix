@@ -11,6 +11,9 @@
         gpg
         ssh
         yazi
+
+        # gui...
+        alacritty
       ];
   };
 }
