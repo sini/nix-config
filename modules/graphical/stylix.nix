@@ -5,18 +5,41 @@
       { pkgs, ... }:
       {
         imports = [
-          inputs.catppuccin.nixosModules.catppuccin
           inputs.stylix.nixosModules.stylix
         ];
         config = {
           stylix = {
             enable = true;
             autoEnable = true;
-            base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+            # base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
             homeManagerIntegration.autoImport = false;
             homeManagerIntegration.followSystem = false;
 
-            # image = pkgs.nixicle.wallpapers.windows-error;
+            base16Scheme = {
+              # You can use a file path to a JSON or YAML file
+              # path = ./path/to/your/scheme.yaml;
+
+              # Or define colors inline (based on Catppuccin Macchiato from your waybar config)
+              # scheme = "Catppuccin Macchiato";
+              base00 = "#24273a"; # base
+              base01 = "#1e2030"; # mantle
+              base02 = "#363a4f"; # surface0
+              base03 = "#494d64"; # surface1
+              base04 = "#5b6078"; # surface2
+              base05 = "#cad3f5"; # text
+              base06 = "#f4dbd6"; # rosewater
+              base07 = "#b7bdf8"; # lavender
+              base08 = "#ed8796"; # red
+              base09 = "#f5a97f"; # peach
+              base0A = "#eed49f"; # yellow
+              base0B = "#a6da95"; # green
+              base0C = "#8bd5ca"; # teal
+              base0D = "#8aadf4"; # blue
+              base0E = "#c6a0f6"; # mauve
+              base0F = "#f5bde6"; # pink
+            };
+
+            image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
             cursor = {
               name = "Bibata-Modern-Classic";
@@ -57,7 +80,6 @@
             with config.flake.modules.homeManager; [
               stylix
               inputs.stylix.homeModules.stylix
-              inputs.catppuccin.homeModules.catppuccin
             ];
 
         };
@@ -66,22 +88,53 @@
     homeManager.stylix =
       { pkgs, ... }:
       {
-        catppuccin.flavor = "mocha";
-        catppuccin.enable = true;
-
         stylix = {
           enable = true;
           autoEnable = true;
-          base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+          # base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+          base16Scheme = {
+            # You can use a file path to a JSON or YAML file
+            # path = ./path/to/your/scheme.yaml;
 
-          iconTheme = {
-            enable = true;
-            package = pkgs.catppuccin-papirus-folders.override {
-              flavor = "mocha";
-              accent = "lavender";
-            };
-            dark = "Papirus-Dark";
+            # Or define colors inline (based on Catppuccin Macchiato from your waybar config)
+            # scheme = "Catppuccin Macchiato";
+            base00 = "#24273a"; # base
+            base01 = "#1e2030"; # mantle
+            base02 = "#363a4f"; # surface0
+            base03 = "#494d64"; # surface1
+            base04 = "#5b6078"; # surface2
+            base05 = "#cad3f5"; # text
+            base06 = "#f4dbd6"; # rosewater
+            base07 = "#b7bdf8"; # lavender
+            base08 = "#ed8796"; # red
+            base09 = "#f5a97f"; # peach
+            base0A = "#eed49f"; # yellow
+            base0B = "#a6da95"; # green
+            base0C = "#8bd5ca"; # teal
+            base0D = "#8aadf4"; # blue
+            base0E = "#c6a0f6"; # mauve
+            base0F = "#f5bde6"; # pink
           };
+
+          image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
+
+          # iconTheme = {
+          #   enable = true;
+          #   package =
+          #     (pkgs.catppuccin-papirus-folders.override {
+          #       flavor = "mocha";
+          #       accent = "lavender";
+          #     }).overrideAttrs
+          #       (old: {
+          #         postPatch =
+          #           (old.postPatch or "")
+          #           + ''
+          #             substituteInPlace papirus-folders.sh \
+          #               --replace "substituteStream" "substituteStream || true"
+          #           '';
+          #       });
+          #   dark = "Papirus-Dark";
+          # };
 
           targets = {
             firefox = {
@@ -89,8 +142,6 @@
               profileNames = [ "default" ];
             };
           };
-
-          image = pkgs.nixicle.wallpapers.nixppuccin;
 
           cursor = {
             name = "Bibata-Modern-Classic";

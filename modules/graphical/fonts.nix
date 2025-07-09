@@ -18,7 +18,6 @@
             nerd-fonts.ubuntu-mono
 
             dejavu_fonts
-            segoe-ui-ttf
             jetbrains-mono
 
             dina-font
