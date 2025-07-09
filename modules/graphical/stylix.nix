@@ -4,7 +4,10 @@
     nixos.stylix =
       { pkgs, ... }:
       {
-        imports = [ inputs.stylix.nixosModules.stylix ];
+        imports = [
+          inputs.catppuccin.nixosModules.catppuccin
+          inputs.stylix.nixosModules.stylix
+        ];
         config = {
           stylix = {
             enable = true;
@@ -65,6 +68,7 @@
       {
         catppuccin.flavor = "mocha";
         catppuccin.enable = true;
+
         stylix = {
           enable = true;
           autoEnable = true;
