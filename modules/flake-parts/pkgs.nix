@@ -1,6 +1,12 @@
-{ inputs, rootPath, ... }:
+{
+  inputs,
+  withSystem,
+  rootPath,
+  ...
+}:
 {
   imports = [
+    inputs.pkgs-by-name-for-flake-parts.flakeModule
     (
       {
         lib,
@@ -33,6 +39,19 @@
             inputs.nix-topology.overlays.default
           ];
       };
+      pkgsDirectory = ../../pkgs/by-name;
       inherit pkgs;
     };
+
+  flake = {
+    overlays.default =
+      _final: prev:
+      withSystem prev.stdenv.hostPlatform.system (
+        { config, ... }:
+        {
+          local = config.packages;
+        }
+      );
+  };
+
 }
