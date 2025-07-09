@@ -43,7 +43,7 @@
             };
 
             modules =
-              [ config.modules.nixos.role_base ]
+              [ config.modules.nixos.role_core ]
               ++ (lib.optionals (hostOptions ? roles) (
                 builtins.map (role: inputs.self.modules.nixos."role_${role}") (
                   lib.filter (role: lib.hasAttr "role_${role}" inputs.self.modules.nixos) hostOptions.roles
