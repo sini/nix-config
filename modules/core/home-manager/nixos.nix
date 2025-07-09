@@ -13,6 +13,7 @@
 
       home-manager = {
         useGlobalPkgs = true;
+
         extraSpecialArgs = {
           inherit inputs hostConfig;
           hasGlobalPkgs = true;
