@@ -4,6 +4,7 @@
     imports = with config.flake.modules.nixos; [
       role_dev
       fonts
+      stylix
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =

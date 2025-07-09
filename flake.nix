@@ -193,6 +193,9 @@
     # global, so they can be `.follow`ed
     systems.url = "github:nix-systems/default";
 
+    # styling
+    stylix.url = "github:danth/stylix";
+
     treefmt-nix.url = "github:numtide/treefmt-nix";
 
     # ucodenix delivers microcode updates for AMD CPUs on NixOS
