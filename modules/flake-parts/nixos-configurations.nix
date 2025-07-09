@@ -73,23 +73,23 @@
 
       nodes = nixosConfigurations;
 
-      colmena = {
-        meta =
-          {
+      colmena =
+        nixpkgsLib.mapAttrs (hostname: v: {
+          imports = v.modules;
+          deployment = {
+            targetHost = config.hosts.${hostname}.deployment.targetHost;
+            tags = config.hosts.${hostname}.roles;
+            allowLocalDeployment = true;
+          };
+        }) hostDefs
+        // {
+          meta = {
             nixpkgs = import inputs.nixpkgs-unstable {
               system = "x86_64-linux";
             };
             nodeNixpkgs = builtins.mapAttrs (_: v: v.systemConfig.pkgs) hostDefs;
             nodeSpecialArgs = builtins.mapAttrs (_: v: v.specialArgs) hostDefs;
-          }
-          // (nixpkgsLib.mapAttrs (hostname: v: {
-            imports = v.modules;
-            deployment = {
-              targetHost = config.hosts.${hostname}.deployment.targetHost;
-              tags = config.hosts.${hostname}.roles;
-              allowLocalDeployment = true;
-            };
-          }) hostDefs);
-      };
+          };
+        };
     };
 }
