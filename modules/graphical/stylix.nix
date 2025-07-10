@@ -7,11 +7,11 @@
         imports = [
           inputs.stylix.nixosModules.stylix
         ];
+
         config = {
           stylix = {
             enable = true;
-            # autoEnable = true;
-            # base16Scheme = "${pkgs.base16-schemes}/share/themes/catppuccin-mocha.yaml";
+            autoEnable = true;
             homeManagerIntegration.autoImport = false;
             homeManagerIntegration.followSystem = false;
 
@@ -41,8 +41,6 @@
 
             image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
-            # targets.nixos-icons.enable = false;
-
             cursor = {
               name = "Bibata-Modern-Classic";
               package = pkgs.bibata-cursors;
@@ -51,7 +49,7 @@
 
             fonts = {
               sizes = {
-                terminal = 14;
+                terminal = 12;
                 applications = 12;
                 popups = 12;
               };
@@ -130,8 +128,6 @@
           };
 
           targets = {
-            nixos-icons.enable = false;
-            gnome.enable = false;
             firefox = {
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
@@ -146,7 +142,7 @@
 
           fonts = {
             sizes = {
-              terminal = 14;
+              terminal = 12;
               applications = 12;
               popups = 12;
             };
