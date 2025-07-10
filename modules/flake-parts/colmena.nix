@@ -9,7 +9,6 @@
     {
       lib,
       config,
-      colmena,
       ...
     }:
     {
@@ -40,6 +39,6 @@
           }
         ) self.nixosConfigurations);
 
-      colmenaHive = colmena.lib.makeHive self.outputs.colmena;
+      colmenaHive = inputs.colmena.lib.makeHive self.outputs.colmena;
     };
 }
