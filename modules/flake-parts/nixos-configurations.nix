@@ -56,7 +56,6 @@
                 homeManager'.nixosModules.home-manager
                 (inputs.self.modules.nixos."host_${hostname}" or { })
                 {
-                  nixpkgs.system = system;
                   networking.hostName = hostname;
                   facter.reportPath = hostOptions.facts;
                   age.rekey.hostPubkey = hostOptions.public_key;
