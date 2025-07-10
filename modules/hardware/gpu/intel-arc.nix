@@ -28,6 +28,8 @@
         libva-utils
         intel-gpu-tools
         nvtopPackages.full
+        mesa-demos
+        vulkan-tools
       ];
     };
 }

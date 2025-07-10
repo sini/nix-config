@@ -56,6 +56,7 @@
       environment.systemPackages = with pkgs; [
         # Audio related packages
         alsa-utils
+        pavucontrol
         pulseaudioFull
         qpwgraph # More extensive patchbay for Pipewire
       ];

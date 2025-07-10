@@ -4,6 +4,7 @@
     imports = with config.flake.modules.nixos; [
       direnv
       vscode
+      gpg
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
