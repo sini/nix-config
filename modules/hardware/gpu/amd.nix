@@ -43,12 +43,15 @@
       # };
 
       environment.systemPackages = with pkgs; [
+        lact # GUI for overclocking, undervolting, setting fan curves, etc.
         pciutils
         rocmPackages.rocminfo
         clinfo
         nvtopPackages.amd
         amdgpu_top
         vulkan-tools
+        libva-utils
+        mesa-demos
       ];
 
     };

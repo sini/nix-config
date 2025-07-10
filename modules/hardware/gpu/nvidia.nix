@@ -80,11 +80,13 @@
 
       environment = {
         systemPackages = with pkgs; [
+          lact # GUI for overclocking, undervolting, setting fan curves, etc.
           pciutils
           nvtopPackages.full
           libva-utils
           gwe
           vulkan-tools
+          mesa-demos
           zenith-nvidia
           nvitop
           vulkanPackages_latest.vulkan-loader
