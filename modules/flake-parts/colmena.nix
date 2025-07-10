@@ -13,7 +13,8 @@
     }:
     let
       stableHosts = lib.filterAttrs (_: h: !(h.unstable or false)) config.hosts;
-      # unstableHosts = lib.filterAttrs (_: h: h.unstable or false) config.hosts;
+      unstableHosts = lib.filterAttrs (_: h: h.unstable or false) config.hosts;
+
       mkColmenaHive =
         { hosts, nixpkgs }:
         lib.mapAttrs (
@@ -46,10 +47,10 @@
         nixpkgs = inputs.nixpkgs;
       };
 
-      # colmenaUnstable = mkColmenaHive {
-      #   hosts = unstableHosts;
-      #   nixpkgs = inputs.nixpkgs-unstable;
-      # };
+      colmenaUnstable = mkColmenaHive {
+        hosts = unstableHosts;
+        nixpkgs = inputs.nixpkgs-unstable;
+      };
 
       # colmena =
       #   lib.mapAttrs (
@@ -77,6 +78,7 @@
       #   };
 
       colmenaHive = inputs.colmena.lib.makeHive self.outputs.colmena;
+      colmenaHiveUnstable = inputs.colmena.lib.makeHive self.outputs.colmenaUnstable;
     };
 
   perSystem =
