@@ -38,17 +38,16 @@ in
     {
       checks = deploy-rs.lib.${system}.deployChecks self.deploy;
 
-      devshells.default = {
-        packages = [
-          inputs'.deploy-rs.packages.default
-        ];
+      devshells.default.packages = [
+        inputs'.deploy-rs.packages.default
+      ];
 
-        commands = [
-          {
-            package = inputs'.deploy-rs.packages.default;
-            help = "Deploy this nix config to nodes";
-          }
-        ];
-      };
+      devshells.default.commands = [
+        {
+          package = inputs'.deploy-rs.packages.default;
+          help = "Deploy this nix config to nodes";
+        }
+      ];
+
     };
 }

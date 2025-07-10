@@ -46,12 +46,12 @@
     { inputs', ... }:
     {
       devshells.default.packages = [
-        inputs'.colmena.packages.default
+        inputs'.colmena.packages.colmena
       ];
 
       devshells.default.commands = [
         {
-          package = inputs'.colmena.packages.default;
+          package = inputs'.colmena.packages.colmena;
           help = "Build and deploy this nix config to nodes";
         }
       ];
