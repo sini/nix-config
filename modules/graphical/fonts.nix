@@ -44,11 +44,9 @@
               </fontconfig>
             '';
             defaultFonts = {
-              monospace = [
-                "Aporetic Sans Mono"
-              ];
-              sansSerif = [ "Aporetic Sans Mono" ];
-              serif = [ "Aporetic Sans Mono" ];
+              monospace = [ "DejaVuSansM Nerd Font Mono" ];
+              sansSerif = [ "Noto Sans" ];
+              serif = [ "Source Serif" ];
             };
           };
         };

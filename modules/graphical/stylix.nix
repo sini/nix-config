@@ -159,7 +159,7 @@
 
             monospace = {
               package = pkgs.nerd-fonts.dejavu-sans-mono;
-              name = "DejaVu Sans Mono";
+              name = "DejaVuSansM Nerd Font Mono";
             };
 
             emoji = {
