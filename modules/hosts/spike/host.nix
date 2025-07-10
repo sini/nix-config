@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.hosts.spike = {
-    unstable = true;
+    unstable = false;
     deployment.targetHost = "10.10.10.20";
     roles = [
       "workstation"
