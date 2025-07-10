@@ -13,7 +13,6 @@
 
       home-manager = {
         useGlobalPkgs = true;
-        useUserPackages = true;
 
         extraSpecialArgs = {
           inherit inputs hostConfig;
@@ -31,7 +30,7 @@
                 homeDirectory = "/home/${config.flake.meta.user.username}";
               };
               # Home Manager manages itself
-              # programs.home-manager.enable = true;
+              programs.home-manager.enable = true;
             }
           )
         ];
