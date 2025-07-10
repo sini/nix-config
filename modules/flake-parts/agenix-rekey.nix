@@ -21,7 +21,7 @@
   perSystem =
     {
       config,
-      inputs',
+      # inputs',
       pkgs,
       ...
     }:
@@ -30,7 +30,7 @@
         packages = [
           pkgs.age
           pkgs.age-plugin-yubikey
-          inputs'.agenix-rekey.packages.default
+          # inputs'.agenix-rekey.packages.default
         ];
         commands = [
           {
