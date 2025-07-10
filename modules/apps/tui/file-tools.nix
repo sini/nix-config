@@ -25,11 +25,20 @@
       programs = {
         bottom.enable = true;
         fd.enable = true;
-        fzf.enable = true;
+        fzf = {
+          enable = true;
+          enableBashIntegration = true;
+          enableFishIntegration = true;
+          enableZshIntegration = true;
+        };
         jq.enable = true;
         ripgrep.enable = true;
         zoxide = {
           enable = true;
+          enableBashIntegration = true;
+          enableFishIntegration = true;
+          enableNushellIntegration = true;
+          enableZshIntegration = true;
           options = [
             "--cmd"
             "j"
