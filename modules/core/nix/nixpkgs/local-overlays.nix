@@ -6,9 +6,9 @@
 }:
 {
   flake.modules.nixos.nixpkgs =
-    { hostConfig, ... }:
+    { hostOptions, ... }:
     {
-      nixpkgs.nixpkgs = if hostConfig.unstable then inputs.nixpkgs else inputs.nixpkgs-unstable;
+      nixpkgs.nixpkgs = if hostOptions.unstable then inputs.nixpkgs else inputs.nixpkgs-unstable;
       nixpkgs.overlays =
         [
           # This brings our custom packages from the 'pkgs' directory under `pkgs.local`
