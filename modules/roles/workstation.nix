@@ -12,6 +12,8 @@
       fonts
       stylix
       workstation
+      # X server
+      xwayland
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
@@ -19,6 +21,7 @@
         alacritty
         fonts
         workstation
+        firefox
       ];
   };
 }
