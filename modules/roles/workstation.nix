@@ -5,12 +5,14 @@
       role_dev
       fonts
       stylix
+      workstation
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
         alacritty
         fonts
+        workstation
       ];
   };
 }
