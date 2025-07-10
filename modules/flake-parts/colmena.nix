@@ -31,7 +31,6 @@
           in
           {
             imports = nixosConfig._module.args.modules;
-            specialArgs = nixosConfig._module.specialArgs;
             deployment = {
               targetHost = hostOptions.deployment.targetHost;
               tags = hostOptions.roles;
