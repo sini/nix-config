@@ -15,10 +15,10 @@
       colmena =
         {
           meta = {
-            # nixpkgs = import inputs.nixpkgs-unstable {
-            #   system = "x86_64-linux";
-            #   # overlays = [ ];
-            # };
+            nixpkgs = import inputs.nixpkgs-unstable {
+              system = "x86_64-linux";
+              # overlays = [ ];
+            };
             nodeNixpkgs = builtins.mapAttrs (_: v: v.pkgs) self.nixosConfigurations;
             nodeSpecialArgs = builtins.mapAttrs (_: v: v._module.specialArgs) self.nixosConfigurations;
           };
