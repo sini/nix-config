@@ -37,10 +37,10 @@
             package = config.treefmt.build.wrapper;
             help = "Format all files";
           }
-          # {
-          #   package = pkgs.deploy-rs;
-          #   help = "Deploy this nix config to nodes";
-          # }
+          {
+            package = pkgs.colmena;
+            help = "Build and deploy this nix config to nodes";
+          }
           {
             package = pkgs.nix-tree;
             help = "Interactively browse dependency graphs of Nix derivations";

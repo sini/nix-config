@@ -68,17 +68,19 @@
     # Nix flake for "too much bleeding-edge" and unreleased packages (e.g., mesa_git, linux_cachyos, firefox_nightly, sway_git, gamescope_git). And experimental modules (e.g., HDR, duckdns).
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
+    colmena.url = "github:zhaofengli/colmena";
+
     deploy-rs.url = "github:serokell/deploy-rs";
 
     devshell = {
       url = "github:numtide/devshell";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # disko - Declarative disk partitioning
     disko = {
       url = "github:nix-community/disko";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
@@ -88,7 +90,7 @@
     # Config is powered by this
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
-      inputs.nixpkgs-lib.follows = "nixpkgs";
+      inputs.nixpkgs-lib.follows = "nixpkgs-unstable";
     };
 
     # Home Manager
@@ -121,7 +123,7 @@
         disko.follows = "disko";
         flake-parts.follows = "flake-parts";
         nixos-stable.follows = "nixpkgs";
-        nixpkgs.follows = "nixpkgs";
+        nixpkgs.follows = "nixpkgs-unstable";
         treefmt-nix.follows = "treefmt-nix";
       };
     };
@@ -151,14 +153,14 @@
     };
 
     nix-index-database.url = "github:nix-community/nix-index-database";
-    nix-index-database.inputs.nixpkgs.follows = "nixpkgs";
+    nix-index-database.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
-    nix-vscode-extensions.inputs.nixpkgs.follows = "nixpkgs";
+    nix-vscode-extensions.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     # automatically generate infrastructure and network diagrams as SVGs directly from your NixOS configurations
     nix-topology.url = "github:oddlama/nix-topology";
-    nix-topology.inputs.nixpkgs.follows = "nixpkgs";
+    nix-topology.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     # Generate System Images
     nixos-generators = {
@@ -187,14 +189,19 @@
 
     pre-commit-hooks = {
       url = "github:cachix/pre-commit-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # global, so they can be `.follow`ed
     systems.url = "github:nix-systems/default";
 
     # styling
-    stylix.url = "github:danth/stylix";
+    stylix = {
+      url = "github:danth/stylix";
+      inputs = {
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
 
@@ -212,6 +219,6 @@
     # };
 
     vscode-server.url = "github:nix-community/nixos-vscode-server";
-    vscode-server.inputs.nixpkgs.follows = "nixpkgs";
+    vscode-server.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 }
