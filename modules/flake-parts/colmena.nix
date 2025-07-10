@@ -15,7 +15,7 @@
       colmena =
         {
           meta = {
-            nixpkgs = <nixpkgs-unstable>;
+            nixpkgs = <nixpkgs>;
             # import inputs.nixpkgs-unstable {
             #   system = "x86_64-linux";
             #   # overlays = [ ];
