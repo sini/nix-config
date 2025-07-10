@@ -1,6 +1,7 @@
 {
   # TODO: Move to a yubikey module
   flake.modules.nixos.gpg = {
+    services.pcscd.enable = true;
     hardware.gpgSmartcards.enable = true;
   };
 

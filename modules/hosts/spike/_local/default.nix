@@ -60,10 +60,6 @@
   ];
 
   services = {
-    # podman.enable = true;
-    fstrim.enable = true;
-    # yubikey...
-    pcscd.enable = true;
     # X server stuff
     desktopManager = {
       gnome.enable = true;
@@ -84,11 +80,6 @@
       };
     };
 
-  };
-
-  programs = {
-    firefox.enable = true;
-    xwayland.enable = true;
   };
 
   # ======================== DO NOT CHANGE THIS ========================
