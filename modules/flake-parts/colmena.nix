@@ -40,18 +40,20 @@
         ) self.nixosConfigurations);
 
       colmenaHive = inputs.colmena.lib.makeHive self.outputs.colmena;
+    };
 
-      devshells.default = {
-        packages = [
-          inputs.colmena.packages.default
-        ];
+  perSystem =
+    { inputs', ... }:
+    {
+      devshells.default.packages = [
+        inputs'.colmena.packages.default
+      ];
 
-        commands = [
-          {
-            package = inputs.colmena.packages.default;
-            help = "Build and deploy this nix config to nodes";
-          }
-        ];
-      };
+      devshells.default.commands = [
+        {
+          package = inputs'.colmena.packages.default;
+          help = "Build and deploy this nix config to nodes";
+        }
+      ];
     };
 }
