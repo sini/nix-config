@@ -31,7 +31,7 @@
                 homeDirectory = "/home/${config.flake.meta.user.username}";
               };
               # Home Manager manages itself
-              programs.home-manager.enable = true;
+              # programs.home-manager.enable = true;
             }
           )
         ];
