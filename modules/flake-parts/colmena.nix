@@ -13,17 +13,7 @@
     }:
     {
       colmena =
-        {
-          meta = {
-            nixpkgs = import inputs.nixpkgs {
-              system = "x86_64-linux";
-              overlays = [ ];
-            };
-            # nodeNixpkgs = builtins.mapAttrs (_: v: v.pkgs) self.nixosConfigurations;
-            nodeSpecialArgs = builtins.mapAttrs (_: v: v._module.specialArgs) self.nixosConfigurations;
-          };
-        }
-        // (lib.mapAttrs (
+        lib.mapAttrs (
           hostname: nixosConfig:
           # For each NixOS configuration, we find its original options from the flake.
           let
@@ -37,7 +27,14 @@
               allowLocalDeployment = true;
             };
           }
-        ) self.nixosConfigurations);
+        ) self.nixosConfigurations
+        // {
+          meta = {
+            nixpkgs = import inputs.nixpkgs { system = "x86_64-linux"; };
+            # nodeNixpkgs = builtins.mapAttrs (_: v: v.pkgs) self.nixosConfigurations;
+            nodeSpecialArgs = builtins.mapAttrs (_: v: v._module.specialArgs) self.nixosConfigurations;
+          };
+        };
 
       colmenaHive = inputs.colmena.lib.makeHive self.outputs.colmena;
     };
