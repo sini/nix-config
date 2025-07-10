@@ -90,7 +90,7 @@
       # ✅ Final merged Hive
       colmenaHive =
         let
-          mergedNodes = hiveStable.nodes // hiveUnstable.nodes;
+          mergedNodes = mergeMap hiveStable.nodes hiveUnstable.nodes;
           mergedDeploymentConfig = mergeMap hiveStable.deploymentConfig hiveUnstable.deploymentConfig;
           deploymentConfigSelected = names: lib.filterAttrs (name: _: elem name names) mergedDeploymentConfig;
           evalSelected = names: lib.filterAttrs (name: _: elem name names) toplevel;
