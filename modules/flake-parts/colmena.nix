@@ -9,14 +9,13 @@
     {
       lib,
       config,
-      pkgs,
       ...
     }:
     {
       colmena =
         {
           meta = {
-            nixpkgs = pkgs;
+            nixpkgs = <nixpkgs-unstable>;
             # import inputs.nixpkgs-unstable {
             #   system = "x86_64-linux";
             #   # overlays = [ ];
