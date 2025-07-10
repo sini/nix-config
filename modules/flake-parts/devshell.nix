@@ -38,10 +38,6 @@
             help = "Format all files";
           }
           {
-            package = pkgs.colmena;
-            help = "Build and deploy this nix config to nodes";
-          }
-          {
             package = pkgs.nix-tree;
             help = "Interactively browse dependency graphs of Nix derivations";
           }
