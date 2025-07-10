@@ -2,9 +2,14 @@
   flake.modules.nixos.bluetooth =
     { pkgs, ... }:
     {
+      # environment.persistence."/persist/system" = lib.mkIf isImpermanent {
+      #   directories = [
+      #     "/var/lib/bluetooth"
+      #   ];
+      # };
+
       hardware.bluetooth = {
         enable = true;
-
         package = pkgs.bluez-experimental;
         powerOnBoot = true;
         disabledPlugins = [ "sap" ];
@@ -17,11 +22,6 @@
             JustWorksRepairing = "always";
             MultiProfile = "multiple";
             Enable = "Source,Sink,Media,Socket";
-
-            # # Enable device auto-reconnection
-            # AutoEnable = cfg.autoConnect;
-            # ReconnectAttempts = if cfg.autoConnect then 7 else 0;
-            # ReconnectIntervals = "1,2,4,8,16,32,64";
           };
         };
       };
