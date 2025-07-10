@@ -1,4 +1,9 @@
 {
+  # TODO: Move to a yubikey module
+  flake.modules.nixos.gpg = {
+    hardware.gpgSmartcards.enable = true;
+  };
+
   flake.modules.homeManager.gpg =
     {
       pkgs,
