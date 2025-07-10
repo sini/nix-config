@@ -1,6 +1,9 @@
 {
   flake.modules = {
-    nixos.workstation = { };
+    nixos.workstation = {
+      # Audio section...
+
+    };
     homeManager.workstation = { };
   };
 }
