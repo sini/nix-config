@@ -29,6 +29,7 @@
                 username = config.flake.meta.user.username;
                 homeDirectory = "/home/${config.flake.meta.user.username}";
               };
+              systemd.user.startServices = "sd-switch";
               # Home Manager manages itself
               programs.home-manager.enable = true;
             }
