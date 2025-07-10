@@ -41,7 +41,7 @@
           enableZshIntegration = true;
           options = [
             "--cmd"
-            "j"
+            "cd"
           ];
         };
       };
