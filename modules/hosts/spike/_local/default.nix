@@ -5,7 +5,6 @@
 {
   imports = [
     ./disko.nix
-    ./razer.nix
   ];
 
   boot.kernelPackages = pkgs.linuxPackages_cachyos;
