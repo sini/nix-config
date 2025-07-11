@@ -1,23 +1,18 @@
-{ lib, ... }:
 {
-  flake.modules.homeManager.eza =
-    { pkgs, ... }:
-    let
-      l = lib.concatStringsSep " " [
-        "${lib.getExe pkgs.eza}"
-        "--group"
-        "--icons"
-        "--git"
+  flake.modules.homeManager.eza = {
+    programs.eza = {
+      enable = true;
+      enableBashIntegration = true;
+      enableFishIntegration = true;
+      enableZshIntegration = true;
+      enableNushellIntegration = true;
+      icons = "auto";
+      git = true;
+      extraOptions = [
+        "--group-directories-first"
         "--header"
         "--all"
       ];
-    in
-    {
-      programs.eza.enable = true;
-      home.shellAliases = {
-        inherit l;
-        ll = "${l} --long";
-        lt = "${l} --tree";
-      };
     };
+  };
 }
