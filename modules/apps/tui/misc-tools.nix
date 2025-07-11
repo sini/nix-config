@@ -25,6 +25,7 @@
 
       programs = {
         bottom.enable = true;
+        htop.enable = true;
         fd = {
           enable = true;
           hidden = true;

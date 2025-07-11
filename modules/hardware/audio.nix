@@ -33,23 +33,13 @@
             ];
           };
 
-          # Disable unused sinks and sources
-          # "disable-unused-nodes" = {
-          #   "monitor.alsa.rules" = [
-          #     {
-          #       matches = [
-          #         {
-          #           "device.nick" = "HDA NVidia";
-          #         }
-          #       ];
-          #       actions = {
-          #         update-props = {
-          #           "device.disabled" = true;
-          #         };
-          #       };
-          #     }
-          #   ];
-          # };
+          extraConfig.pipewire."92-low-latency" = {
+            "context.properties" = {
+              "default.clock.quantum" = 512;
+              "default.clock.min-quantum" = 512;
+              "default.clock.max-quantum" = 2048;
+            };
+          };
         };
       };
       programs.noisetorch.enable = true;

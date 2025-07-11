@@ -170,6 +170,7 @@
 
           lazygit = {
             enable = true;
+            # https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md
             settings = {
               gui = {
                 theme = {
@@ -178,16 +179,25 @@
                     "bold"
                   ];
                   selectedLineBgColor = [ "white" ];
+                  nerdFontsVersion = "3";
                 };
               };
+
               git = {
                 # Improves performance
+                overrideGpg = true;
+
                 # https://github.com/jesseduffield/lazygit/issues/2875#issuecomment-1665376437
                 log.order = "default";
-
+                parseEmoji = true;
+                commit.signOff = true;
                 fetchAll = false;
               };
             };
+          };
+
+          home.shellAliases = {
+            lg = "lazygit";
           };
         };
       };
