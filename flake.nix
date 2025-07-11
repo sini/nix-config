@@ -140,6 +140,8 @@
     # Homebrew
     nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 
+    nur.url = "github:nix-community/nur";
+
     homebrew-bundle = {
       url = "github:homebrew/homebrew-bundle";
       flake = false;

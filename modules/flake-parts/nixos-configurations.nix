@@ -52,6 +52,8 @@
               ++ chaotic_imports
               ++ (hostOptions.extra_modules)
               ++ [
+                inputs.nur.modules.nixos.default
+                #inputs.impermanence.nixosModules.impermanence
                 nixpkgs'.nixosModules.notDetected
                 homeManager'.nixosModules.home-manager
                 (inputs.self.modules.nixos."host_${hostname}" or { })
