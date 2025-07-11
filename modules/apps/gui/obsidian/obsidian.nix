@@ -25,6 +25,7 @@
             nativeMenus = false;
             showInlineTitle = false;
           };
+
           corePlugins = [
             "audio-recorder"
             "backlink"
@@ -56,20 +57,7 @@
             "zk-prefixer"
           ];
 
-          # communityPlugins = [
-          #   {
-          #     pkg = pkgs.nur.obsidian-tasks;
-          #     enable = true;
-          #   }
-          #   {
-          #     pkg = pkgs.nur.obsidian-minimal-settings;
-          #     enable = true;
-          #   }
-          #   {
-          #     pkg = pkgs.nur.obsidian-dataview;
-          #     enable = true;
-          #   }
-          # ];
+          communityPlugins = [ ];
 
           hotkeys = {
             "editor:delete-paragraph" = [ ];
