@@ -66,7 +66,7 @@
               let
                 nixosConfig = self.nixosConfigurations.${hostname};
               in
-              nixosConfig._module.args.pkgs
+              nixosConfig.pkgs
             ) hosts;
             nodeSpecialArgs = builtins.mapAttrs (
               hostname: _: self.nixosConfigurations.${hostname}._module.specialArgs
