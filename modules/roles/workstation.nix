@@ -22,6 +22,8 @@
         fonts
         workstation
         firefox
+        obs-studio
+        zathura # PDF viewer
       ];
   };
 }
