@@ -43,6 +43,7 @@
             "*.asc"
             "*.org"
             "*.zsh"
+            "*.kdl"
           ];
           formatter = {
             prettier = {

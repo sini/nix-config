@@ -17,6 +17,7 @@
         gpg
         ssh
         yazi
+        zellij
       ];
   };
 }

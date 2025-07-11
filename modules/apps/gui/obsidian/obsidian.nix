@@ -14,10 +14,11 @@
         defaultSettings = {
           app = {
             vimMode = true;
-            spellcheck = false;
+            spellcheck = true;
             showLineNumber = true;
             propertiesInDocument = "hidden";
           };
+
           appearance = {
             cssTheme = "Catppuccin";
             theme = "obsidian";
@@ -57,7 +58,8 @@
             "zk-prefixer"
           ];
 
-          communityPlugins = [ ];
+          # TODO: Enable community plugins if needed
+          # communityPlugins = [ "obsidian-livesync" ];
 
           hotkeys = {
             "editor:delete-paragraph" = [ ];
