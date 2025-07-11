@@ -4,7 +4,7 @@
     {
       home.packages = with pkgs; [
         atool
-        bottom
+        bottom # btm
         du-dust
         dua
         dysk
