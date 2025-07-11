@@ -12,12 +12,11 @@
         bat
         direnv
         eza
-        file-tools
+        misc-tools
         git
         gpg
         ssh
         yazi
-
       ];
   };
 }

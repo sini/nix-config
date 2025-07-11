@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.file-tools =
+  flake.modules.homeManager.misc-tools =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [
