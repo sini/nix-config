@@ -5,6 +5,8 @@
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = _final: prev: {
+    zjstatus = inputs.zjstatus.packages.${prev.system}.default;
+
     gitkraken = prev.gitkraken.overrideAttrs (_old: rec {
       version = "11.2.0";
 
