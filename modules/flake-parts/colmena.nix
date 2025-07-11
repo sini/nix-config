@@ -61,7 +61,7 @@
         // {
           meta = {
             nixpkgs = import nixpkgs { system = "x86_64-linux"; };
-            nodePkgs = lib.mapAttrs (
+            nodeNixpkgs = lib.mapAttrs (
               hostname: hostOptions:
               let
                 nixosConfig = self.nixosConfigurations.${hostname};
