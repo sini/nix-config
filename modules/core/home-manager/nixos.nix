@@ -4,7 +4,12 @@
 }:
 {
   flake.modules.nixos.home-manager =
-    { inputs, hostConfig, ... }:
+    {
+      inputs,
+      hostConfig,
+      pkgs,
+      ...
+    }:
     {
       # home-manager is defined in nixos-configurations for all machines
       # which lets us switch the version used for stable, unstable, and
@@ -16,7 +21,7 @@
         useUserPackages = true;
 
         extraSpecialArgs = {
-          inherit inputs hostConfig;
+          inherit inputs hostConfig pkgs;
           hasGlobalPkgs = true;
         };
 
