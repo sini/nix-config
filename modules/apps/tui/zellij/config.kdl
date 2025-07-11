@@ -1,7 +1,7 @@
 theme "catppuccin-mocha"
 pane_frames false
 simplified_ui true
-default_shell "fish"
+default_shell "zsh"
 copy_on_select true
 show_startup_tips false
 scrollback_editor "nixCats"
