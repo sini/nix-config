@@ -26,7 +26,7 @@
               # TODO: Fix this to support nix-darwin which uses a different stateVersion and homeDirectory
               home = {
                 stateVersion = osConfig.system.stateVersion;
-                username = config.flake.meta.user.username;
+                username = "${config.flake.meta.user.username}";
                 homeDirectory = "/home/${config.flake.meta.user.username}";
               };
               systemd.user.startServices = "sd-switch";
