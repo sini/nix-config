@@ -67,6 +67,32 @@ every host and include:
   additional information about the host and for automated hardware configuration.
 - `extra_modules`: A list of additional modules to include for the host.
 
+## Remote deployment via Colmena
+
+This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
+Colmena supports both local and remote deployment, and hosts can be targeted by roles as well as their name.
+Remote connection properties are defined in the `flake.hosts.<hostname>.deployment` attribute set, and implementation
+can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
+[./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
+
+> [!NOTE]
+> I've made some pretty ugly hacks to make Colmena work with this repository to support multiple nixpkg versions
+> for different hosts, and to support both stable and unstable packages.
+
+```bash
+# Deploy to all hosts
+colmena apply
+
+# Deploy to a specific host
+colmena apply --on <hostname>
+
+# Deploy to all hosts with the "server" tag
+colmena apply --on @server
+
+# Apply changes to the current host (useful for local development)
+colmena apply-local --sudo
+```
+
 ## Deterministic UIDs and GIDs
 
 Since this configuration is used across multiple systems, it is important to
