@@ -56,20 +56,20 @@
             "zk-prefixer"
           ];
 
-          communityPlugins = [
-            {
-              pkg = pkgs.nur.obsidian-tasks;
-              enable = true;
-            }
-            {
-              pkg = pkgs.nur.obsidian-minimal-settings;
-              enable = true;
-            }
-            {
-              pkg = pkgs.nur.obsidian-dataview;
-              enable = true;
-            }
-          ];
+          # communityPlugins = [
+          #   {
+          #     pkg = pkgs.nur.obsidian-tasks;
+          #     enable = true;
+          #   }
+          #   {
+          #     pkg = pkgs.nur.obsidian-minimal-settings;
+          #     enable = true;
+          #   }
+          #   {
+          #     pkg = pkgs.nur.obsidian-dataview;
+          #     enable = true;
+          #   }
+          # ];
 
           hotkeys = {
             "editor:delete-paragraph" = [ ];
