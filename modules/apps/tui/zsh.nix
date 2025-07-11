@@ -1,13 +1,15 @@
 {
   flake.modules = {
-    nixos.zsh = {
-      # programs.zsh = {
-      # enable = true;
-      # enableCompletion = true;
-      # };
+    nixos.zsh =
+      { pkgs, ... }:
+      {
+        programs.zsh = {
+          enable = true;
+          enableCompletion = true;
+        };
 
-      # users.defaultUserShell = pkgs.zsh;
-    };
+        users.defaultUserShell = pkgs.zsh;
+      };
 
     homeManager.zsh =
       {
