@@ -7,6 +7,15 @@
         yazi = {
           enable = true;
           enableZshIntegration = true;
+          plugins = lib.genAttrs [
+            "toggle-pane"
+            "chmod"
+            "full-border"
+            "no-status"
+            "starship"
+            "ouch"
+            "relative-motions"
+          ] (name: pkgs.yaziPlugins.${name});
           settings = {
             mgr.show_hidden = true;
             open.rules = [

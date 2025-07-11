@@ -25,7 +25,17 @@
 
       programs = {
         bottom.enable = true;
-        fd.enable = true;
+        fd = {
+          enable = true;
+          hidden = true;
+          ignores = [
+            ".Trash"
+            ".git"
+            "**/node_modules"
+            "**/target"
+          ];
+          extraOptions = [ "--no-ignore-vcs" ];
+        };
         fzf = {
           enable = true;
           enableBashIntegration = true;
