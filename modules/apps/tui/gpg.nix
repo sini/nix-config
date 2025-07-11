@@ -49,6 +49,11 @@
           enable = true;
           enableSshSupport = true;
 
+          enableBashIntegration = true;
+          enableZshIntegration = true;
+          enableFishIntegration = true;
+          enableNushellIntegration = true;
+
           # TODO: If system is darwin, use pinentry-mac
           pinentry.package = pkgs.pinentry-gnome3;
 
