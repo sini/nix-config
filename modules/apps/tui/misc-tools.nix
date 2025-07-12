@@ -22,6 +22,8 @@
         unzip
         tokei
       ];
+      # Enable easyeffects audio processing
+      services.easyeffects.enable = true;
 
       programs = {
         bottom.enable = true;

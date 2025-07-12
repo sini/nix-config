@@ -43,9 +43,11 @@
         };
       };
       programs.noisetorch.enable = true;
+
       environment.systemPackages = with pkgs; [
         # Audio related packages
         alsa-utils
+        easyeffects
         pavucontrol
         pulseaudioFull
         qpwgraph # More extensive patchbay for Pipewire

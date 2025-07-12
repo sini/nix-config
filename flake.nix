@@ -188,6 +188,8 @@
     # NixPkgs Unstable
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
 
+    nvf.url = "github:notashelf/nvf";
+
     make-shell.url = "github:nicknovitski/make-shell";
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
