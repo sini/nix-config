@@ -13,6 +13,7 @@
         direnv
         eza
         misc-tools
+        nvf
         git
         gpg
         ssh
