@@ -21,6 +21,7 @@
         alacritty
         fonts
         workstation
+        media
         firefox
         obs-studio
         obsidian # note-taking app
