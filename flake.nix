@@ -13,7 +13,6 @@
   outputs =
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-
       text.readme.parts = {
         disallow-warnings =
           # markdown
