@@ -7,6 +7,7 @@
       bluetooth
       # Additional roles
       role_dev
+      role_media
 
       # Styles
       fonts
@@ -19,9 +20,9 @@
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
         alacritty
+        kitty
         fonts
         workstation
-        media
         firefox
         obs-studio
         obsidian # note-taking app

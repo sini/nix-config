@@ -46,7 +46,18 @@
           enableZshIntegration = true;
         };
         jq.enable = true;
-        ripgrep.enable = true;
+        ripgrep = {
+          enable = true;
+          arguments = [
+            # "--color=always" # conflict with telescope.nvim
+            "--smart-case"
+            "--no-line-number"
+            "--hidden"
+            "--glob=!.git/*"
+            "--max-columns=150"
+            "--max-columns-preview"
+          ];
+        };
         zoxide = {
           enable = true;
           enableBashIntegration = true;
