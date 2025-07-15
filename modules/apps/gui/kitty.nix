@@ -12,7 +12,6 @@
         };
 
         settings = {
-          # Font
 
           # gotta go fast!
           repaint_delay = 8; # 150 FPS
@@ -27,9 +26,6 @@
           enable_audio_bell = "no";
           copy_on_select = "yes";
           cursor_trail = 3;
-
-          # Fix issues related to SSH (may break kitty functionality):
-          term = "xterm-256color";
 
           scrollback_lines = "20000";
         };
