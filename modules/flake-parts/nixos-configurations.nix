@@ -15,6 +15,7 @@
       unstableLib = inputs.nixpkgs-unstable.lib;
     in
     {
+      # This is set due to a regression in agenix-rekey that checks for homeConfigurations when its called from home-manager
       homeConfigurations = { };
       nixosConfigurations = lib.mapAttrs (
         hostname: hostOptions:
