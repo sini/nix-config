@@ -15,6 +15,7 @@
       unstableLib = inputs.nixpkgs-unstable.lib;
     in
     {
+      homeConfigurations = { };
       nixosConfigurations = lib.mapAttrs (
         hostname: hostOptions:
         withSystem hostOptions.system (

@@ -1,4 +1,12 @@
-{ inputs, rootPath, ... }:
+{
+  config,
+  inputs,
+  rootPath,
+  ...
+}:
+let
+  username = config.flake.meta.user.username;
+in
 {
   flake.modules.nixos.agenix =
     { config, lib, ... }:
@@ -46,5 +54,10 @@
         removeAgenixLink.text = "[[ ! -L /run/agenix ]] && [[ -d /run/agenix ]] && rm -rf /run/agenix";
         agenixNewGeneration.deps = [ "removeAgenixLink" ];
       };
+
+      # Home Manager imports
+      home-manager.users.${username}.imports = [
+        inputs.agenix.homeManagerModules.default
+      ];
     };
 }
