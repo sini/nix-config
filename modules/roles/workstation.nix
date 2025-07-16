@@ -21,7 +21,6 @@
         alacritty
         kitty
         fonts
-        workstation
         firefox
         obs-studio
         obsidian # note-taking app
