@@ -11,6 +11,9 @@
       cpu-amd
       gpu-amd
     ];
+    tags = {
+      "kubernetes-cluster" = "dev";
+    };
     public_key = ./ssh_host_ed25519_key.pub;
     facts = ./facter.json;
   };
