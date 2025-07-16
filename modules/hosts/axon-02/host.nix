@@ -4,9 +4,9 @@
     deployment.targetHost = "10.10.10.3";
     roles = [
       "server"
+      "kubernetes"
     ];
     extra_modules = with config.flake.modules.nixos; [
-      ./_local
       disk-longhorn
       cpu-amd
       gpu-amd

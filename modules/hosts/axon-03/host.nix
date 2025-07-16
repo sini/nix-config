@@ -4,6 +4,7 @@
     deployment.targetHost = "10.10.10.4";
     roles = [
       "server"
+      "kubernetes"
     ];
     extra_modules = with config.flake.modules.nixos; [
       ./_local
