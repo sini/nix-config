@@ -7,7 +7,6 @@
       "kubernetes"
     ];
     extra_modules = with config.flake.modules.nixos; [
-      ./_local
       disk-longhorn
       cpu-amd
       gpu-amd

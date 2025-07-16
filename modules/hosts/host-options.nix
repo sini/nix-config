@@ -25,7 +25,8 @@ in
       - `facts`: The path to the Facter JSON file for the host, which is used to provide
         additional information about the host and for automated hardware configuration.
       - `extra_modules`: A list of additional modules to include for the host.
-
+      - `tags`: An attribute set of string key-value pairs to annotate hosts with metadata.
+        For example: `{ "kubernetes-cluster" = "prod"; }`
     '';
 
   options.flake.hosts =
@@ -72,6 +73,15 @@ in
             type = types.listOf types.deferredModule;
             default = [ ];
             description = "List of additional modules to include for the host.";
+          };
+
+          tags = mkOption {
+            type = types.attrsOf types.str;
+            default = { };
+            description = ''
+              An attribute set of string key-value pairs to tag the host with metadata.
+              Example: `{ "kubernetes-cluster" = "prod"; }`
+            '';
           };
         };
       };
