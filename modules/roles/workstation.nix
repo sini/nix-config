@@ -12,7 +12,6 @@
       # Styles
       fonts
       stylix
-      workstation
       # X server
       xwayland
     ];
