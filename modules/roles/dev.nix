@@ -22,6 +22,7 @@
 
         # Admin tools
         kube-tools
+        k9s
       ];
   };
 }

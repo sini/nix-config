@@ -27,9 +27,9 @@
         pinniped # Tool to securely log in to your Kubernetes clusters
         kubeclarity # Kubernetes runtime scanner
 
-        kubepub # Check cluster for objects using deprecated API versions
+        #kubepub # Check cluster for objects using deprecated API versions
         kubesec # Security risk analysis tool for Kubernetes resources
-        kubevpn # Create VPN & connect to Kubernetes cluster network, access resources, & more
+        #kubevpn # Create VPN & connect to Kubernetes cluster network, access resources, & more
         kubexit # Command supervisor for coordinated Kubernetes pod container termination.
         stern # Multi pod and container log tailing for Kubernetes
         kubernetes-polaris # Validate and remediate Kubernetes resources to ensure configuration best practices are followed
@@ -40,7 +40,7 @@
         clusterctl # Kubernetes cluster API tool
         cmctl # A CLI tool for managing cert-manager service on Kubernetes clusters
         cri-tools # CLI and validation tools for Kubelet Container Runtime Interface (CRI)
-        ctlpl # CLI for declaratively setting up local Kubernetes clusters
+        #ctlpl # CLI for declaratively setting up local Kubernetes clusters
         karmor # A client tool to help manage KubeArmor
         kubernetes-controller-tools # Tools to use with the Kubernetes controller-runtime libraries
         kubernix
@@ -95,14 +95,8 @@
         kubectl-klock # A kubectl plugin to render watch output in a more readable fashion
         kubernetes-helm
         kubernetes-helmPlugins.helm-cm-push
-        package
-        manager
-        for
-        kubernetes
         kubernetes-helmPlugins.helm-diff
         kubernetes-helmPlugins.helm-s3
-        kubernetes-helmPlugins.helm-git # The Helm downloader plugin that provides GIT protocol support
-        kubernetes-helm
         kubernetes-helmPlugins.helm-git # The Helm downloader plugin that provides GIT protocol support
         kubernetes-helmPlugins.helm-secrets # A Helm plugin that helps manage secrets
         terrascan # Detect compliance and security violations across Infrastructure
@@ -135,8 +129,7 @@
         kubevirt # Client tool to use advanced features such as console access
         kustomize-sops # A Flexible Kustomize Plugin for SOPS Encrypted Resource
         kyverno # Kubernetes Native Policy Management
-        lens # The Kubernetes IDE
-        openlens # The Kubernetes IDE
+        #openlens # The Kubernetes IDE
         pgo-client # A CLI client for Crunchy PostgreSQL Kubernetes Operator
         popeye # A Kubernetes cluster resource sanitizer
         pv-migrate # CLI tool to easily migrate Kubernetes persistent volumes
@@ -148,7 +141,7 @@
 
         ktunnel # A cli that exposes your local resources to kubernetes
         kube-capacity # A simple CLI that provides an overview of the resource requests, limits, and utilization in a Kubernetes cluster
-        kube-hunter # Tool to search issues in Kubernetes clusters
+        #kube-hunter # Tool to search issues in Kubernetes clusters
         kube-linter # A static analysis tool that checks Kubernetes YAML files and Helm charts
         kube-prompt # An interactive kubernetes client featuring auto-complete
         kube-router # All-in-one router, firewall and service proxy for Kubernetes
