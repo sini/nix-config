@@ -11,6 +11,7 @@
           enableZshIntegration = config.programs.zsh.enable;
         };
 
+        # https://sw.kovidgoyal.net/kitty/conf/
         settings = {
 
           # gotta go fast!
