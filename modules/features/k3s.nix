@@ -38,7 +38,6 @@ in
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
       role = if isMaster then "server" else "agent";
       clusterInit = isMaster;
-      serverAddr = if isMaster then null else kubernetesMasterMap.${kubernetesCluster};
     in
     {
       age.secrets.kubernetes-cluster-token = {
@@ -416,10 +415,13 @@ in
             serverFlags = builtins.concatStringsSep " " serverFlagList;
           in
           {
-            inherit role clusterInit serverAddr;
+            inherit role clusterInit;
             enable = true;
             tokenFile = config.age.secrets.kubernetes-cluster-token.path;
             extraFlags = lib.mkIf (role == "server") (lib.mkForce serverFlags);
+          }
+          // lib.optionalAttrs (!isMaster) {
+            serverAddr = kubernetesMasterMap.${kubernetesCluster};
           };
 
         # Required for Longhorn
