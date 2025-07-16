@@ -4,6 +4,8 @@
     deployment.targetHost = "10.10.10.2";
     roles = [
       "server"
+      "kubernetes"
+      "kubernetes-master"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-longhorn
