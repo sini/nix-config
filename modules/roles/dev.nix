@@ -19,6 +19,9 @@
         ssh
         yazi
         zellij
+
+        # Admin tools
+        kube-tools
       ];
   };
 }
