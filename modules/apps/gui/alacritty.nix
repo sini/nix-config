@@ -5,7 +5,8 @@
       settings = {
         general.live_config_reload = true;
         window = {
-          decorations = "none";
+          # TODO: for tiling WM's : none
+          decorations = "full";
           dynamic_title = true;
           title = "Terminal";
         };
