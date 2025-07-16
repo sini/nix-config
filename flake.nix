@@ -228,5 +228,16 @@
     vscode-server.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     zjstatus.url = "github:dj95/zjstatus";
+
+    # Firefox extensions
+    shimmer = {
+      url = "github:nuclearcodecat/shimmer";
+      flake = false;
+    };
+
+    betterfox = {
+      url = "github:yokoffing/Betterfox";
+      flake = false;
+    };
   };
 }

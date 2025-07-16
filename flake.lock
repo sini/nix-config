@@ -116,6 +116,22 @@
         "type": "github"
       }
     },
+    "betterfox": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1750480196,
+        "narHash": "sha256-Kkk3mqfQCXf/J+SoAKki46e4OoD6ZPHTlXT+yezj6gU=",
+        "owner": "yokoffing",
+        "repo": "Betterfox",
+        "rev": "e66de491acd5e87f53abc3dfe9622f7ce5e2a101",
+        "type": "github"
+      },
+      "original": {
+        "owner": "yokoffing",
+        "repo": "Betterfox",
+        "type": "github"
+      }
+    },
     "brew-src": {
       "flake": false,
       "locked": {
@@ -1689,6 +1705,7 @@
       "inputs": {
         "agenix": "agenix",
         "agenix-rekey": "agenix-rekey",
+        "betterfox": "betterfox",
         "catppuccin": "catppuccin",
         "chaotic": "chaotic",
         "colmena": "colmena",
@@ -1722,6 +1739,7 @@
         "nvf": "nvf",
         "pkgs-by-name-for-flake-parts": "pkgs-by-name-for-flake-parts",
         "pre-commit-hooks": "pre-commit-hooks_3",
+        "shimmer": "shimmer",
         "stylix": "stylix",
         "systems": "systems_7",
         "treefmt-nix": "treefmt-nix_2",
@@ -1769,6 +1787,22 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "shimmer": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1746806711,
+        "narHash": "sha256-oT0XYnvj2CvNdLnFdiAKY5XY7WUwXQCbq9MFUL7L3MA=",
+        "owner": "nuclearcodecat",
+        "repo": "shimmer",
+        "rev": "d83e056f9e04e2335ced81d114ef52a5c2d3385e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nuclearcodecat",
+        "repo": "shimmer",
         "type": "github"
       }
     },

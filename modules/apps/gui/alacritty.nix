@@ -2,6 +2,7 @@
   flake.modules.homeManager.alacritty = {
     programs.alacritty = {
       enable = true;
+      # https://alacritty.org/config-alacritty.html
       settings = {
         general.live_config_reload = true;
         window = {
