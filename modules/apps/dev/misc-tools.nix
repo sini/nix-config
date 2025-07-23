@@ -11,7 +11,6 @@
         procs
         mprocs
         ncdu
-        tlrc
         wget # not a file util....
         dig # not a file util....
         fd

@@ -2,6 +2,7 @@
   flake.modules.nixos.utils =
     { pkgs, ... }:
     {
+
       programs.dconf.enable = true;
 
       environment.systemPackages = with pkgs; [
@@ -13,7 +14,6 @@
         killall
         lsof
         pciutils
-        tldr
         unzip
         wget
       ];
