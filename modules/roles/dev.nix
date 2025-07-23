@@ -2,6 +2,7 @@
 {
   flake.modules.nixos.role_dev = {
     imports = with config.flake.modules.nixos; [
+      adb
       direnv
       vscode
       gpg

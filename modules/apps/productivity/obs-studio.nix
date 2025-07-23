@@ -9,6 +9,7 @@
           obs-pipewire-audio-capture
           obs-vkcapture
           obs-tuna
+          obs-vaapi
           input-overlay
           droidcam-obs
         ];

@@ -5,9 +5,6 @@
       { config, lib, ... }:
       {
         boot = {
-          # TODO: add plymouth theming, enable only on workstation/laptop
-          plymouth.enable = true;
-
           initrd = {
             availableKernelModules = [
               "r8169" # Host: surge, burst, pulse

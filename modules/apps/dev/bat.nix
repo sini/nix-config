@@ -5,13 +5,14 @@
     {
       programs.bat = {
         enable = true;
-        # config = {
-        #   pager = "less -FR";
-        # };
+        config.style = "plain";
         extraPackages = with pkgs.bat-extras; [
-          batman
+          prettybat
+          batwatch
           batpipe
+          batman
           batgrep
+          batdiff
         ];
       };
       home.shellAliases = {
