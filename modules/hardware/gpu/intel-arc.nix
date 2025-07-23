@@ -10,6 +10,7 @@
           vpl-gpu-rt
           intel-compute-runtime
           intel-vaapi-driver
+          libvdpau-va-gl
         ];
       };
 

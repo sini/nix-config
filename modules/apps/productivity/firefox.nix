@@ -58,8 +58,8 @@
               "media.ffmpeg.vaapi.enabled" = true;
               "media.ffvpx.enabled" = false;
               "media.rdd-ffmpeg.enabled" = true;
-              "media.rdd-vpx.enabled" = false;
-              "media.rdd-process.enabled" = false;
+              "media.rdd-vpx.enabled" = true;
+              "media.rdd-process.enabled" = true;
 
               "shimmer.remove-winctr-buttons" = true;
               "toolkit.legacyUserProfileCustomizations.stylesheets" = true;
