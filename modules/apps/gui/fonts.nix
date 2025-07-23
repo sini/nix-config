@@ -14,6 +14,8 @@
             noto-fonts-emoji
             noto-fonts-extra
 
+            nerd-fonts.fira-code
+            nerd-fonts.meslo-lg
             nerd-fonts.dejavu-sans-mono
             nerd-fonts.ubuntu-mono
 
@@ -23,6 +25,9 @@
             dina-font
             aporetic
             monaspace
+
+            openmoji-color
+            twemoji-color-font
           ];
 
           fontconfig = {
