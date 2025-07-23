@@ -2,7 +2,7 @@
 {
   flake.hosts.spike = {
     unstable = true;
-    deployment.targetHost = "10.10.10.20";
+    ipv4 = "10.10.10.20";
     roles = [
       "workstation"
       "laptop"

@@ -60,12 +60,14 @@ every host and include:
 
 - `system`: The system architecture of the host (e.g., `x86_64-linux`).
 - `unstable`: Whether to use unstable packages for the host.
-- `deployment.targetHost`: The target host for deployment.
+- `ipv4`: The static IP address of this host in it's home vlan.
 - `roles`: A list of roles for the host, which can also be used to target deployment.
 - `public_key`: The path or value of the public SSH key for the host used for encryption.
 - `facts`: The path to the Facter JSON file for the host, which is used to provide
   additional information about the host and for automated hardware configuration.
 - `extra_modules`: A list of additional modules to include for the host.
+- `tags`: An attribute set of string key-value pairs to annotate hosts with metadata.
+  For example: `{ "kubernetes-cluster" = "prod"; }`
 
 ## Remote deployment via Colmena
 

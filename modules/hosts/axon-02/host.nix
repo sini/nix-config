@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.hosts.axon-02 = {
-    deployment.targetHost = "10.10.10.3";
+    ipv4 = "10.10.10.3";
     roles = [
       "server"
       "kubernetes"

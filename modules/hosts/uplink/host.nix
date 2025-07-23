@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.hosts.uplink = {
-    deployment.targetHost = "10.10.10.1";
+    ipv4 = "10.10.10.1";
     roles = [
       "server"
     ];
