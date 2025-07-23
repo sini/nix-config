@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.hosts.bitstream = {
-    deployment.targetHost = "10.10.10.5";
+    ipv4 = "10.10.10.5";
     roles = [
       "server"
     ];
