@@ -69,6 +69,9 @@
           };
         };
       };
+      # Color variables
+      accent = "#${config.lib.stylix.colors.base0D}";
+      muted = "#${config.lib.stylix.colors.base03}";
     in
     {
       options.programs.git = {
@@ -175,12 +178,16 @@
               gui = {
                 theme = {
                   activeBorderColor = [
-                    "blue"
+                    accent
                     "bold"
                   ];
-                  selectedLineBgColor = [ "white" ];
-                  nerdFontsVersion = "3";
+                  inactiveBorderColor = [ muted ];
                 };
+                # showListFooter = false;
+                # showRandomTip = false;
+                # showCommandLog = false;
+                # showBottomLine = false;
+                nerdFontsVersion = "3";
               };
 
               git = {
