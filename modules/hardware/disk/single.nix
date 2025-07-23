@@ -109,35 +109,34 @@
                           "nixos"
                           "-f"
                         ];
-                        subvolumes =
-                          {
-                            "@root" = {
-                              mountpoint = "/";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@home" = {
-                              mountpoint = "/home";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@nix" = {
-                              mountpoint = "/nix";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@persist" = {
-                              mountpoint = "/persist";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@log" = {
-                              mountpoint = "/var/log";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                          }
-                          // lib.optionalAttrs (config.hardware.disk.single.swap_size > 0) {
-                            "@swap" = {
-                              mountpoint = "/swap";
-                              swap.swapfile.size = "${builtins.toString config.hardware.disk.single.swap_size}M";
-                            };
+                        subvolumes = {
+                          "@root" = {
+                            mountpoint = "/";
+                            mountOptions = defaultBtrfsOpts;
                           };
+                          "@home" = {
+                            mountpoint = "/home";
+                            mountOptions = defaultBtrfsOpts;
+                          };
+                          "@nix" = {
+                            mountpoint = "/nix";
+                            mountOptions = defaultBtrfsOpts;
+                          };
+                          "@persist" = {
+                            mountpoint = "/persist";
+                            mountOptions = defaultBtrfsOpts;
+                          };
+                          "@log" = {
+                            mountpoint = "/var/log";
+                            mountOptions = defaultBtrfsOpts;
+                          };
+                        }
+                        // lib.optionalAttrs (config.hardware.disk.single.swap_size > 0) {
+                          "@swap" = {
+                            mountpoint = "/swap";
+                            swap.swapfile.size = "${builtins.toString config.hardware.disk.single.swap_size}M";
+                          };
+                        };
                       };
                     };
                   };
