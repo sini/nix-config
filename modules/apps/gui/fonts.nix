@@ -14,9 +14,10 @@
             noto-fonts-emoji
             noto-fonts-extra
 
+            nerd-fonts.dejavu-sans-mono
             nerd-fonts.fira-code
             nerd-fonts.meslo-lg
-            nerd-fonts.dejavu-sans-mono
+            nerd-fonts.symbols-only
             nerd-fonts.ubuntu-mono
 
             dejavu_fonts
