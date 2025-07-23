@@ -61,6 +61,7 @@ in
         openrazer = uidGid 986;
         resolvconf = uidGid 985;
         fwupd-refresh = uidGid 984;
+        adbusers = uidGid 983;
       };
   };
 }
