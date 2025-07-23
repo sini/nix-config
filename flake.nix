@@ -166,6 +166,8 @@
     nix-topology.url = "github:oddlama/nix-topology";
     nix-topology.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
+    nixcord.url = "github:kaylorben/nixcord";
+
     # Generate System Images
     nixos-generators = {
       url = "github:nix-community/nixos-generators";
