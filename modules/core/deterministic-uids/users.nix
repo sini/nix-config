@@ -62,6 +62,7 @@ in
         resolvconf = uidGid 985;
         fwupd-refresh = uidGid 984;
         adbusers = uidGid 983;
+        msr = uidGid 982;
       };
   };
 }
