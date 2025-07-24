@@ -104,7 +104,8 @@
       };
 
       # Smooth-criminal bleeding-edge Mesa3D
-      chaotic.mesa-git = {
+      # WARNING: It will break NVIDIA's libgbm, don't use with NVIDIA Optimus setups.
+      chaotic.mesa-git = lib.mkIf (!config.hardware.nvidia.prime.offload.enable) {
         enable = true;
         fallbackSpecialisation = false;
       };
