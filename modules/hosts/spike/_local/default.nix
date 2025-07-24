@@ -47,8 +47,6 @@
   networking.domain = "json64.dev";
   systemd.network.wait-online.anyInterface = true;
 
-  programs.dconf.enable = true;
-
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
     wget
@@ -57,6 +55,7 @@
     gitkraken
     krita
     pavucontrol
+    brightnessctl
   ];
 
   services = {

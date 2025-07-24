@@ -1,4 +1,47 @@
 { inputs, config, ... }:
+let
+  base16Scheme = {
+    # You can use a file path to a JSON or YAML file
+    # path = ./path/to/your/scheme.yaml;
+
+    # Or define colors inline (based on Catppuccin Macchiato from your waybar config)
+    # scheme = "Catppuccin Macchiato";
+    # base00 = "#24273a"; # base
+    # base01 = "#1e2030"; # mantle
+    # base02 = "#363a4f"; # surface0
+    # base03 = "#494d64"; # surface1
+    # base04 = "#5b6078"; # surface2
+    # base05 = "#cad3f5"; # text
+    # base06 = "#f4dbd6"; # rosewater
+    # base07 = "#b7bdf8"; # lavender
+    # base08 = "#ed8796"; # red
+    # base09 = "#f5a97f"; # peach
+    # base0A = "#eed49f"; # yellow
+    # base0B = "#a6da95"; # green
+    # base0C = "#8bd5ca"; # teal
+    # base0D = "#8aadf4"; # blue
+    # base0E = "#c6a0f6"; # mauve
+    # base0F = "#f5bde6"; # pink
+
+    # scheme = "Catppuccin Mocha";
+    base00 = "#1e1e2e"; # base
+    base01 = "#181825"; # mantle
+    base02 = "#313244"; # surface0
+    base03 = "#45475a"; # surface1
+    base04 = "#585b70"; # surface2
+    base05 = "#cdd6f4"; # text
+    base06 = "#f5e0dc"; # rosewater
+    base07 = "#b4befe"; # lavender
+    base08 = "#f38ba8"; # red
+    base09 = "#fab387"; # peach
+    base0A = "#f9e2af"; # yellow
+    base0B = "#a6e3a1"; # green
+    base0C = "#94e2d5"; # teal
+    base0D = "#89b4fa"; # blue
+    base0E = "#cba6f7"; # mauve
+    base0F = "#f2cdcd"; # flamingo
+  };
+in
 {
   flake.modules = {
     nixos.stylix =
@@ -10,41 +53,19 @@
 
         config = {
           stylix = {
+            inherit base16Scheme;
+
             enable = true;
             autoEnable = true;
             homeManagerIntegration.autoImport = false;
             homeManagerIntegration.followSystem = false;
 
-            base16Scheme = {
-              # You can use a file path to a JSON or YAML file
-              # path = ./path/to/your/scheme.yaml;
-
-              # Or define colors inline (based on Catppuccin Macchiato from your waybar config)
-              # scheme = "Catppuccin Macchiato";
-              base00 = "#24273a"; # base
-              base01 = "#1e2030"; # mantle
-              base02 = "#363a4f"; # surface0
-              base03 = "#494d64"; # surface1
-              base04 = "#5b6078"; # surface2
-              base05 = "#cad3f5"; # text
-              base06 = "#f4dbd6"; # rosewater
-              base07 = "#b7bdf8"; # lavender
-              base08 = "#ed8796"; # red
-              base09 = "#f5a97f"; # peach
-              base0A = "#eed49f"; # yellow
-              base0B = "#a6da95"; # green
-              base0C = "#8bd5ca"; # teal
-              base0D = "#8aadf4"; # blue
-              base0E = "#c6a0f6"; # mauve
-              base0F = "#f5bde6"; # pink
-            };
-
             image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
             cursor = {
-              name = "Bibata-Modern-Classic";
-              package = pkgs.bibata-cursors;
-              size = 24;
+              name = "catppuccin-mocha-peach-cursors";
+              size = 32;
+              package = pkgs.catppuccin-cursors.mochaPeach;
             };
 
             fonts = {
@@ -89,50 +110,10 @@
       { pkgs, ... }:
       {
         stylix = {
+          inherit base16Scheme;
+
           enable = true;
           autoEnable = true;
-
-          base16Scheme = {
-            # You can use a file path to a JSON or YAML file
-            # path = ./path/to/your/scheme.yaml;
-
-            # Or define colors inline (based on Catppuccin Macchiato from your waybar config)
-            # scheme = "Catppuccin Macchiato";
-            # base00 = "#24273a"; # base
-            # base01 = "#1e2030"; # mantle
-            # base02 = "#363a4f"; # surface0
-            # base03 = "#494d64"; # surface1
-            # base04 = "#5b6078"; # surface2
-            # base05 = "#cad3f5"; # text
-            # base06 = "#f4dbd6"; # rosewater
-            # base07 = "#b7bdf8"; # lavender
-            # base08 = "#ed8796"; # red
-            # base09 = "#f5a97f"; # peach
-            # base0A = "#eed49f"; # yellow
-            # base0B = "#a6da95"; # green
-            # base0C = "#8bd5ca"; # teal
-            # base0D = "#8aadf4"; # blue
-            # base0E = "#c6a0f6"; # mauve
-            # base0F = "#f5bde6"; # pink
-
-            # scheme = "Catppuccin Mocha";
-            base00 = "#1e1e2e"; # base
-            base01 = "#181825"; # mantle
-            base02 = "#313244"; # surface0
-            base03 = "#45475a"; # surface1
-            base04 = "#585b70"; # surface2
-            base05 = "#cdd6f4"; # text
-            base06 = "#f5e0dc"; # rosewater
-            base07 = "#b4befe"; # lavender
-            base08 = "#f38ba8"; # red
-            base09 = "#fab387"; # peach
-            base0A = "#f9e2af"; # yellow
-            base0B = "#a6e3a1"; # green
-            base0C = "#94e2d5"; # teal
-            base0D = "#89b4fa"; # blue
-            base0E = "#cba6f7"; # mauve
-            base0F = "#f2cdcd"; # flamingo
-          };
 
           image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
@@ -153,9 +134,9 @@
           };
 
           cursor = {
-            name = "Bibata-Modern-Classic";
-            package = pkgs.bibata-cursors;
-            size = 24;
+            name = "catppuccin-mocha-peach-cursors";
+            size = 32;
+            package = pkgs.catppuccin-cursors.mochaPeach;
           };
 
           fonts = {

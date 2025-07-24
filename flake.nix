@@ -166,7 +166,11 @@
     nix-topology.url = "github:oddlama/nix-topology";
     nix-topology.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
+    # Discord extension for NixOS
     nixcord.url = "github:kaylorben/nixcord";
+
+    # NixOS modules for gaming
+    nix-gaming.url = "github:fufexan/nix-gaming";
 
     # Generate System Images
     nixos-generators = {
