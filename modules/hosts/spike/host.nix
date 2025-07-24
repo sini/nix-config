@@ -6,6 +6,7 @@
     roles = [
       "workstation"
       "laptop"
+      "gaming"
     ];
     extra_modules = with config.flake.modules.nixos; [
       ./_local
