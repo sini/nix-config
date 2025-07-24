@@ -21,15 +21,18 @@
       environment.sessionVariables = {
         VDPAU_DRIVER = "va_gl";
         LIBVA_DRIVER_NAME = "iHD";
+        LIBVA_DRIVERS_PATH = "${pkgs.intel-media-driver}/lib/dri";
       };
 
       environment.systemPackages = with pkgs; [
         pciutils
-        libva-utils
         intel-gpu-tools
         nvtopPackages.full
         mesa-demos
+        vulkan-loader
+        vulkan-validation-layers
         vulkan-tools
+        libva-utils
       ];
     };
 }
