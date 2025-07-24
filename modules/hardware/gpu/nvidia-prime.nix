@@ -28,6 +28,13 @@
 
           services.xserver.videoDrivers = [ "modesetting" ];
 
+          environment.systemPackages = with pkgs; [
+            vulkanPackages_latest.vulkan-loader
+            vulkanPackages_latest.vulkan-validation-layers
+            vulkanPackages_latest.vulkan-tools
+            libva-utils
+          ];
+
           hardware.nvidia = {
             prime = {
               offload = {

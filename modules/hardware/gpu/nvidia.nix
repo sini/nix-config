@@ -9,15 +9,14 @@
     with lib;
     with lib.custom;
     let
-      #nvidiaPackage = config.boot.kernelPackages.nvidiaPackages.beta;
       # TODO: use the latest beta version
       nvidiaPackage = config.boot.kernelPackages.nvidiaPackages.mkDriver {
-        version = "575.57.08";
-        sha256_64bit = "sha256-KqcB2sGAp7IKbleMzNkB3tjUTlfWBYDwj50o3R//xvI=";
-        sha256_aarch64 = "sha256-VJ5z5PdAL2YnXuZltuOirl179XKWt0O4JNcT8gUgO98=";
-        openSha256 = "sha256-DOJw73sjhQoy+5R0GHGnUddE6xaXb/z/Ihq3BKBf+lg=";
-        settingsSha256 = "sha256-AIeeDXFEo9VEKCgXnY3QvrW5iWZeIVg4LBCeRtMs5Io=";
-        persistencedSha256 = "sha256-Len7Va4HYp5r3wMpAhL4VsPu5S0JOshPFywbO7vYnGo=";
+        version = "575.64.05";
+        sha256_64bit = "sha256-hfK1D5EiYcGRegss9+H5dDr/0Aj9wPIJ9NVWP3dNUC0=";
+        sha256_aarch64 = "sha256-GRE9VEEosbY7TL4HPFoyo0Ac5jgBHsZg9sBKJ4BLhsA=";
+        openSha256 = "sha256-mcbMVEyRxNyRrohgwWNylu45vIqF+flKHnmt47R//KU=";
+        settingsSha256 = "sha256-o2zUnYFUQjHOcCrB0w/4L6xI1hVUXLAWgG2Y26BowBE=";
+        persistencedSha256 = "sha256-2g5z7Pu8u2EiAh5givP5Q1Y4zk4Cbb06W37rf768NFU=";
 
         patches = [ gpl_symbols_linux_615_patch ];
       };
@@ -33,6 +32,7 @@
       hardware.graphics = {
         enable = true;
         extraPackages = with pkgs; [
+          vaapiVdpau
           libvdpau
           libvdpau-va-gl
           nvidia-vaapi-driver
@@ -62,6 +62,12 @@
           "nvidia_drm"
           "nvidia_uvm"
         ];
+
+        kernelParams = [
+          "nvidia-drm.modeset=1"
+          "nvidia-drm.fbdev=1"
+        ];
+
         extraModprobeConfig =
           "options nvidia "
           + lib.concatStringsSep " " [
