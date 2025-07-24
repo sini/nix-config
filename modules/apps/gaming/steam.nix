@@ -17,13 +17,6 @@
           ''
         );
 
-      # GPUOffloadApp =
-      #   pkg: desktopName:
-      #   if config.hardware.nvidia.prime.offload.enable then
-      #     patchDesktop pkg desktopName "^Exec=" "Exec=nvidia-offload "
-      #   else
-      #     pkg;
-
       steamPkg = pkgs.steam.override {
         extraEnv = {
           MANGOHUD = true;
@@ -76,7 +69,6 @@
           dedicatedServer.openFirewall = true;
           localNetworkGameTransfers.openFirewall = true;
           protontricks.enable = true;
-          # package = GPUOffloadApp steamPkg "steam";
           package = steamPkg;
           extraPackages = [ pkgs.latencyflex-vulkan ];
           extraCompatPackages = with pkgs; [
@@ -110,6 +102,7 @@
           enableRenice = true;
         };
       };
+
       # Smooth-criminal bleeding-edge Mesa3D
       chaotic.mesa-git = {
         enable = true;
