@@ -11,6 +11,7 @@
         spicetify
         mpv
         youtube-music-desktop
+        yt-dlp
       ];
   };
 }

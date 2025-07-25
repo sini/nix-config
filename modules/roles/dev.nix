@@ -18,6 +18,7 @@
         git
         gpg
         ssh
+        wireshark
         yazi
         zellij
 
