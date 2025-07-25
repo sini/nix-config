@@ -73,7 +73,7 @@
           extraPackages = [ pkgs.latencyflex-vulkan ];
           extraCompatPackages = with pkgs; [
             luxtorpeda
-            proton-ge-bin
+            # proton-ge-bin
             proton-ge-custom # From chaotic
             steamtinkerlaunch
             proton-cachyos # From chaotic
