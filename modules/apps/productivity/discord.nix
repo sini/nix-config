@@ -1,8 +1,12 @@
 {
   flake.modules.homeManager.discord =
-    { inputs, ... }:
+    { inputs, pkgs, ... }:
     {
       imports = [ inputs.nixcord.homeModules.nixcord ];
+      home.packages = with pkgs; [
+        signal-desktop
+        whatsapp-for-linux
+      ];
       programs.nixcord = {
         enable = true;
         discord.enable = false;
