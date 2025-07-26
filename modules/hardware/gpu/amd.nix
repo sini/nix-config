@@ -2,6 +2,9 @@
   flake.modules.nixos.gpu-amd =
     { pkgs, ... }:
     {
+      # Allow for overclocking
+      boot.kernelParams = [ "amdgpu.ppfeaturemask=0xffffffff" ];
+
       boot.initrd.kernelModules = [ "amdgpu" ];
       services.xserver.videoDrivers = [ "amdgpu" ];
 

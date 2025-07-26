@@ -89,12 +89,23 @@
       };
 
       config = {
+        home.packages = with pkgs; [
+          lazyjj
+        ];
+
         programs = {
           git = {
             enable = true;
             signing.format = lib.mkForce "openpgp";
-            delta.enable = true;
-
+            delta = {
+              enable = true;
+              options = {
+                light = false;
+                line-numbers = true;
+                navigate = true;
+                side-by-side = true;
+              };
+            };
             extraConfig = {
               pull.rebase = true;
               commit.gpgsign = true;
@@ -161,6 +172,7 @@
               lib.flatten
             ];
           };
+
           gh = {
             enable = true;
 
@@ -169,7 +181,9 @@
             };
           };
 
-          #
+          jujutsu = {
+            enable = true;
+          };
 
           lazygit = {
             enable = true;

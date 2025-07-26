@@ -47,12 +47,18 @@
       services = {
         gpg-agent = {
           enable = true;
+          enableExtraSocket = true;
           enableSshSupport = true;
 
           enableBashIntegration = true;
           enableZshIntegration = true;
           enableFishIntegration = true;
           enableNushellIntegration = true;
+
+          defaultCacheTtl = 43200; # 12h
+          defaultCacheTtlSsh = 43200;
+          maxCacheTtl = 86400; # 24h
+          maxCacheTtlSsh = 86400;
 
           # TODO: If system is darwin, use pinentry-mac
           pinentry.package = pkgs.pinentry-gnome3;

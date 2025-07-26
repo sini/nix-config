@@ -45,6 +45,19 @@
           enableZshIntegration = true;
         };
         jq.enable = true;
+        lazysql.enable = true;
+        navi = {
+          enable = true;
+          enableBashIntegration = true;
+          enableZshIntegration = true;
+        };
+        nix-index = {
+          enable = true;
+          enableBashIntegration = true;
+          enableFishIntegration = true;
+          enableZshIntegration = true;
+        };
+        #rclone.enable = true; # rclone is a cloud storage manager
         ripgrep = {
           enable = true;
           arguments = [
@@ -61,6 +74,25 @@
         tealdeer = {
           enable = true;
           settings.updates.auto_update = true;
+        };
+        television = {
+          enable = true;
+          enableBashIntegration = true;
+          enableZshIntegration = true;
+          settings = {
+            tick_rate = 50;
+            ui = {
+              use_nerd_font_icons = true;
+              ui_scale = 120;
+              show_preview_panel = true;
+            };
+            keybindings = {
+              quit = [
+                "esc"
+                "ctrl-c"
+              ];
+            };
+          };
         };
         zoxide = {
           enable = true;
