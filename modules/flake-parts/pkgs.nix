@@ -23,25 +23,27 @@
     )
   ];
 
-  perSystem = {
-    # _module.args.pkgs = import inputs.nixpkgs-unstable {
-    #   inherit system;
-    #   config = {
-    #     allowUnfreePredicate = _pkg: true;
-    #   };
-    #   overlays =
-    #     builtins.attrValues (
-    #       import (rootPath + "/pkgs/overlays.nix") {
-    #         inherit inputs;
-    #       }
-    #     )
-    #     ++ [
-    #       inputs.nix-topology.overlays.default
-    #     ];
-    # };
-    pkgsDirectory = rootPath + "/pkgs/by-name";
-    # inherit pkgs;
-  };
+  perSystem =
+    { system, ... }:
+    {
+      _module.args.pkgs = import inputs.nixpkgs-unstable {
+        inherit system;
+        config = {
+          allowUnfreePredicate = _pkg: true;
+        };
+        overlays =
+          builtins.attrValues (
+            import (rootPath + "/pkgs/overlays.nix") {
+              inherit inputs;
+            }
+          )
+          ++ [
+            inputs.nix-topology.overlays.default
+          ];
+      };
+      pkgsDirectory = rootPath + "/pkgs/by-name";
+      # inherit pkgs;
+    };
 
   flake = {
     overlays.default =
