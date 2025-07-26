@@ -5,6 +5,7 @@
       # Hardware modules
       audio
       bluetooth
+      coolercontrol
       # Additional roles
       role_dev
       role_media
