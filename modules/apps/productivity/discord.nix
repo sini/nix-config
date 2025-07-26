@@ -5,7 +5,10 @@
       imports = [ inputs.nixcord.homeModules.nixcord ];
       home.packages = with pkgs; [
         signal-desktop
-        whatsapp-for-linux
+        # Whatsapp
+        wasistlos
+        whatsie
+        zapzap
       ];
       programs.nixcord = {
         enable = true;
