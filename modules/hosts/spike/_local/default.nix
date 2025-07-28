@@ -63,21 +63,6 @@
     desktopManager = {
       gnome.enable = true;
     };
-    displayManager = {
-      gdm = {
-        enable = true;
-        autoSuspend = false;
-        wayland = true;
-      };
-    };
-    xserver = {
-      enable = true;
-
-      xkb = {
-        layout = "us";
-        variant = "";
-      };
-    };
 
   };
 

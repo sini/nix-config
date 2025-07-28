@@ -16,6 +16,8 @@
 
       virtualization
       xwayland
+
+      hyprland
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
@@ -28,6 +30,9 @@
         obs-studio
         obsidian # note-taking app
         zathura # PDF viewer
+
+        #
+        hyprland
       ];
   };
 }

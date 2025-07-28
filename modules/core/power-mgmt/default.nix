@@ -12,6 +12,24 @@
         cpuFreqGovernor = "powersave";
         #cpuFreqGovernor = "schedutil"; # power, performance, ondemand
       };
+      # services.auto-cpufreq = {
+      #   enable = true;
+      #   settings = {
+
+      #     battery = {
+      #       governor = "powersave";
+      #       energy_performance_preference = lib.mkDefault "power";
+      #       turbo = "never";
+      #     };
+
+      #     charger = {
+      #       governor = "performance";
+      #       energy_performance_preference = lib.mkDefault "performance";
+      #       turbo = "auto";
+      #     };
+
+      #   };
+      # };
 
       #services.power-profiles-daemon.enable = false; # Disable GNOMEs power management
 

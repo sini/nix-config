@@ -64,6 +64,7 @@ in
         adbusers = uidGid 983;
         msr = uidGid 982;
         gamemode = uidGid 981;
+        greeter = uidGid 980;
       };
   };
 }
