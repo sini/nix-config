@@ -13,7 +13,8 @@
       # Styles
       fonts
       stylix
-      # X server
+
+      virtualization
       xwayland
     ];
 

@@ -37,7 +37,7 @@
               "intl.accept_languages" = "en-US,en";
               "browser.startup.page" = 3; # Resume previous session on startup
               "browser.aboutConfig.showWarning" = false; # I sometimes know what I'm doing
-              "browser.ctrlTab.sortByRecentlyUsed" = false; # (default) Who wants that?
+              "browser.ctrlTab.sortByRecentlyUsed" = true;
               "browser.download.useDownloadDir" = false; # Ask where to save stuff
               "privacy.clearOnShutdown.history" = false; # We want to save history on exit
 
