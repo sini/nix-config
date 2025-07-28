@@ -15,6 +15,7 @@
       gpu-nvidia
       gpu-nvidia-prime
       razer
+      # TODO: Move to workstation...
     ];
     public_key = ./ssh_host_ed25519_key.pub;
     facts = ./facter.json;
