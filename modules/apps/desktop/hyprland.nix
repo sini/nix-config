@@ -48,7 +48,7 @@
         ];
       };
 
-      #programs.uwsm.enable = true;
+      programs.uwsm.enable = true;
       #services.hypridle.enable = true;
       #programs.hyprlock.enable = true;
 

@@ -12,8 +12,8 @@
       ./_local
       cpu-intel
       gpu-intel
-      #gpu-nvidia
-      #gpu-nvidia-prime
+      gpu-nvidia
+      gpu-nvidia-prime
       razer
       # TODO: Move to workstation...
     ];
