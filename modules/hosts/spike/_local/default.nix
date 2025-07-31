@@ -58,21 +58,6 @@
     brightnessctl
   ];
 
-  services = {
-    # X server stuff
-    displayManager = {
-      gdm = {
-        enable = true;
-        autoSuspend = false;
-        wayland = true;
-      };
-    };
-    desktopManager = {
-      gnome.enable = true;
-    };
-
-  };
-
   # ======================== DO NOT CHANGE THIS ========================
   system.stateVersion = "25.05";
   # ======================== DO NOT CHANGE THIS ========================
