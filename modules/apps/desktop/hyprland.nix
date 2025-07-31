@@ -63,8 +63,13 @@
       services = {
         dbus = {
           implementation = "broker";
-          packages = with pkgs; [ gcr ];
+          packages = with pkgs; [
+            gcr
+            gnome-settings-daemon
+          ];
         };
+        gnome.gnome-keyring.enable = true;
+
         devmon.enable = true;
         gvfs.enable = true;
         udisks2.enable = true;
