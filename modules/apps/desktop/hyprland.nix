@@ -49,8 +49,8 @@
       };
 
       programs.uwsm.enable = true;
-      services.hypridle.enable = true;
-      programs.hyprlock.enable = true;
+      #services.hypridle.enable = true;
+      #programs.hyprlock.enable = true;
 
       # programs.gnupg.agent.pinentryPackage = pkgs.writeShellApplication {
       #   name = "pinentry-rofi";
