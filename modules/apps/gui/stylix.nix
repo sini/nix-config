@@ -127,7 +127,8 @@ in
           };
 
           targets = {
-            hyprpaper.enable = false;
+            # TODO:  Hyprpaper is segfaulting for some reason, look into this
+            hyprland.hyprpaper.enable = false;
             firefox = {
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
