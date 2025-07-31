@@ -60,6 +60,13 @@
 
   services = {
     # X server stuff
+    displayManager = {
+      gdm = {
+        enable = true;
+        autoSuspend = false;
+        wayland = true;
+      };
+    };
     desktopManager = {
       gnome.enable = true;
     };

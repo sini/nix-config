@@ -18,10 +18,11 @@
       virtualization
 
       # Desktop GUI
-      greetd
       xserver
       xwayland
-      hyprland
+      # TODO: Broken for now....
+      #greetd
+      #hyprland
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
@@ -37,7 +38,9 @@
 
         #
 
-        hyprland
+        # TODO:  Broken for now....
+
+        #hyprland
       ];
   };
 }
