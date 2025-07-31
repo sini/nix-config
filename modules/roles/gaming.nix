@@ -2,6 +2,7 @@
 {
   flake.modules.nixos.role_gaming = {
     imports = with config.flake.modules.nixos; [
+      gamepad
       nix-ld
       steam
       sunshine
