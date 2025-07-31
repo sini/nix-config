@@ -65,6 +65,7 @@ in
         msr = uidGid 982;
         gamemode = uidGid 981;
         greeter = uidGid 980;
+        uinput = uidGid 979;
       };
   };
 }

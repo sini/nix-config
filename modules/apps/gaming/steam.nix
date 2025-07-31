@@ -53,7 +53,6 @@
 
       hardware = {
         steam-hardware.enable = true;
-        xone.enable = true; # support for the xbox controller USB dongle
         graphics.enable32Bit = true; # 32-bit support for games
       };
 

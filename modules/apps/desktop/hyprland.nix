@@ -2,8 +2,6 @@
   flake.modules.nixos.hyprland =
     {
       inputs,
-      config,
-      lib,
       pkgs,
       ...
     }:
@@ -29,17 +27,37 @@
         portalPackage =
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 
+        systemd.setPath.enable = true;
         withUWSM = true; # recommended for most users
         xwayland.enable = true; # Xwayland can be disabled.
       };
 
-      # Screensharing
-      # xdg.portal = {
-      #   enable = true;
-      #   extraPortals = with pkgs; [
-      #     xdg-desktop-portal-gtk
-      #     inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
-      #   ];
+      xdg.portal = {
+        enable = true;
+        xdgOpenUsePortal = true;
+        config = {
+          common.default = [ "gtk" ];
+          hyprland.default = [
+            "gtk"
+            "hyprland"
+          ];
+        };
+        extraPortals = with pkgs; [
+          xdg-desktop-portal-gtk
+          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
+        ];
+      };
+
+      programs.uwsm.enable = true;
+      services.hypridle.enable = true;
+      programs.hyprlock.enable = true;
+
+      # programs.gnupg.agent.pinentryPackage = pkgs.writeShellApplication {
+      #   name = "pinentry-rofi";
+      #   runtimeInputs = with pkgs; [ rofi-wayland ];
+      #   text = ''
+      #     exec ${pinentry-rofi}/bin/pinentry-rofi "$@"
+      #   '';
       # };
 
       services = {
@@ -48,38 +66,8 @@
           packages = with pkgs; [ gcr ];
         };
         devmon.enable = true;
-
         gvfs.enable = true;
         udisks2.enable = true;
-
-        greetd = {
-          enable = true;
-          settings = {
-            default_session = {
-              command = lib.concatStringsSep " " [
-                "${pkgs.greetd.tuigreet}/bin/tuigreet"
-                "--cmd '${lib.getExe config.programs.uwsm.package} start hyprland'"
-                "--asterisks"
-                "--remember"
-                "--remember-user-session"
-                ''
-                  --greeting "Hey you. You're finally awake."
-
-                ''
-              ];
-              user = "greeter";
-            };
-          };
-        };
-
-        xserver = {
-          enable = true;
-          xkb = {
-            layout = "us";
-            variant = "";
-          };
-        };
-
       };
     };
 }

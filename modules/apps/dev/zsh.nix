@@ -13,6 +13,7 @@
 
     homeManager.zsh =
       {
+        config,
         pkgs,
         lib,
         ...
@@ -31,7 +32,7 @@
 
         programs.zsh = {
           enable = true;
-          dotDir = ".config/zsh";
+          dotDir = config.xdg.configHome;
           autosuggestion.enable = true;
           enableCompletion = true;
           completionInit = "autoload -U compinit && compinit -i";

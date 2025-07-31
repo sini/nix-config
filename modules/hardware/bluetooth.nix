@@ -16,11 +16,14 @@
         settings = {
           Policy.AutoEnable = true;
           General = {
+            Privacy = "device";
             FastConnectable = true;
             Experimental = true;
             KernelExperimental = true;
             JustWorksRepairing = "always";
             MultiProfile = "multiple";
+            Class = "0x000100"; # Computer class
+            # Class = 0x100100 # (Object-Transfer Service & Computer Type)
             Enable = "Source,Sink,Media,Socket";
           };
         };

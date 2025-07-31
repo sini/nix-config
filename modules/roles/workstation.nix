@@ -6,6 +6,7 @@
       audio
       bluetooth
       coolercontrol
+
       # Additional roles
       role_dev
       role_media
@@ -15,8 +16,11 @@
       stylix
 
       virtualization
-      xwayland
 
+      # Desktop GUI
+      regreet
+      xserver
+      xwayland
       hyprland
     ];
 
@@ -32,6 +36,7 @@
         zathura # PDF viewer
 
         #
+
         hyprland
       ];
   };
