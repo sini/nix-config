@@ -127,6 +127,7 @@ in
           };
 
           targets = {
+            hyprpaper.enable = false;
             firefox = {
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
