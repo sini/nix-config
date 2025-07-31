@@ -20,6 +20,7 @@
       # Desktop GUI
       xserver
       xwayland
+      gnome
       # TODO: Broken for now....
       #greetd
       #hyprland
@@ -29,6 +30,7 @@
       with config.flake.modules.homeManager; [
         alacritty
         discord
+        gnome
         kitty
         fonts
         firefox
@@ -36,10 +38,7 @@
         obsidian # note-taking app
         zathura # PDF viewer
 
-        #
-
         # TODO:  Broken for now....
-
         #hyprland
       ];
   };
