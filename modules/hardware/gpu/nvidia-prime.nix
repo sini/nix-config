@@ -51,17 +51,12 @@
           #
           # This is necessary because wlroots splits the DRM_DEVICES on
           # `:`, which is part of the pci path.
-          services.udev.packages =
-            let
-              igpuPath = intelCard.sysfs_bus_id;
-              dgpuPath = nvidiaCard.sysfs_bus_id;
-            in
-            [
-              (pkgs.writeTextDir "lib/udev/rules.d/61-gpu-offload.rules" ''
-                SYMLINK=="${igpuPath}", SYMLINK+="dri/igpu1"
-                SYMLINK=="${dgpuPath}", SYMLINK+="dri/dgpu1"
-              '')
-            ];
+          services.udev.packages = [
+            (pkgs.writeTextDir "lib/udev/rules.d/61-gpu-offload.rules" ''
+              SYMLINK=="dri/by-path/pci-${intelCard.sysfs_bus_id}-card", SYMLINK+="dri/igpu1"
+              SYMLINK=="dri/by-path/pci-${nvidiaCard.sysfs_bus_id}-card", SYMLINK+="dri/dgpu1"
+            '')
+          ];
         };
     };
 
