@@ -100,8 +100,6 @@
           show-icon-only-when-active = true;
         };
 
-        "org/gnome/desktop/interface".color-scheme = "prefer-dark";
-
         "org/gnome/settings-daemon/plugins/color" = {
           night-light-enabled = true;
           night-light-schedule-automatic = true;
