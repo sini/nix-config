@@ -18,7 +18,7 @@
       virtualization
 
       # Desktop GUI
-      regreet
+      greetd
       xserver
       xwayland
       hyprland
