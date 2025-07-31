@@ -27,7 +27,7 @@
         portalPackage =
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
 
-        systemd.setPath.enable = true;
+        #systemd.setPath.enable = true;
         withUWSM = true; # recommended for most users
         xwayland.enable = true; # Xwayland can be disabled.
       };
@@ -48,7 +48,7 @@
         ];
       };
 
-      programs.uwsm.enable = true;
+      #programs.uwsm.enable = true;
       #services.hypridle.enable = true;
       #programs.hyprlock.enable = true;
 
