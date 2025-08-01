@@ -24,7 +24,7 @@
         GSK_RENDERER = "cairo";
       };
 
-      # TODO: Temporary workaround/test...
+      # TODO: Mesa broke on actual unstable, pin to hyprland's upstream and wait for it to be fixed
       hardware.graphics = {
         package = pkgs-unstable.mesa;
 
@@ -36,30 +36,9 @@
       programs.hyprland = {
         enable = true;
         package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-        # make sure to also set the portal package, so that they are in sync
-        portalPackage =
-          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland;
-
-        #systemd.setPath.enable = true;
         withUWSM = true; # recommended for most users
         xwayland.enable = true; # Xwayland can be disabled.
       };
-
-      xdg.portal = {
-        enable = true;
-        wlr.enable = true;
-        xdgOpenUsePortal = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-gtk
-          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
-          xdg-desktop-portal-wlr
-        ];
-      };
-
-      environment.etc."xdg/portal/gtk.portal".text = ''
-        [preferred]
-        default=gtk
-      '';
 
       programs.uwsm.enable = true;
       #services.hypridle.enable = true;
@@ -81,6 +60,7 @@
             gnome-settings-daemon
           ];
         };
+
         gnome.gnome-keyring.enable = true;
 
         devmon.enable = true;
