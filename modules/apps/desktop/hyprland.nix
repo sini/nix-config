@@ -5,6 +5,9 @@
       pkgs,
       ...
     }:
+    let
+      pkgs-unstable = inputs.hyprland.inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
+    in
     {
       # Enable cachix
       nix.settings = {
@@ -18,6 +21,15 @@
         NIXOS_OZONE_WL = "1"; # wayland for electron apps
         # NOTE: https://github.com/NixOS/nixpkgs/issues/353990
         GSK_RENDERER = "cairo";
+      };
+
+      # TODO: Temporary workaround/test...
+      hardware.graphics = {
+        package = pkgs-unstable.mesa;
+
+        # if you also want 32-bit support (e.g for Steam)
+        enable32Bit = true;
+        package32 = pkgs-unstable.pkgsi686Linux.mesa;
       };
 
       programs.hyprland = {
