@@ -62,6 +62,8 @@ in
 
             image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
+            polarity = "dark";
+
             cursor = {
               name = "catppuccin-mocha-peach-cursors";
               size = 32;
@@ -116,6 +118,8 @@ in
           autoEnable = true;
 
           image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
+
+          polarity = "dark";
 
           iconTheme = {
             enable = true;
