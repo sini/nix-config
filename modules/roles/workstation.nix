@@ -23,7 +23,7 @@
       gnome
       # TODO: Broken for now....
       #greetd
-      #hyprland
+      hyprland
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
