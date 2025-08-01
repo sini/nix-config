@@ -44,8 +44,10 @@
 
       wayland.windowManager.hyprland = {
         enable = true;
-        systemd.enable = true;
-        systemd.enableXdgAutostart = true;
+        # Disabled because it conflicts with uwsm
+        # https://wiki.hypr.land/Useful-Utilities/Systemd-start/
+        systemd.enable = false;
+
         xwayland.enable = true;
 
         settings = {

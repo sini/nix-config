@@ -88,7 +88,7 @@
           "SUPER, P, pseudo" # dwindle layout
           "SUPER, S, togglesplit" # dwindle layout
           "SUPER SHIFT, L, exec, ${loginctl}  lock-session"
-          "SUPER SHIFT, C, exit"
+          "SUPER SHIFT, C, exec, ${uwsm} stop"
 
           # group
           "SUPER, G, togglegroup"
