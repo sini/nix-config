@@ -6,8 +6,6 @@
 }:
 {
 
-  sops.secrets."personal/weather-api" = { };
-
   wayland.windowManager.hyprland.settings.bind =
     let
       systemctl = "${pkgs.systemd}/bin/systemctl";
@@ -78,11 +76,11 @@
       menus = {
         clock = {
           time.military = true;
-          weather = {
-            key = config.sops.secrets."personal/weather-api".path;
-            location = "Budva";
-            unit = "metric";
-          };
+          # weather = {
+          #   key = config.sops.secrets."personal/weather-api".path;
+          #   location = "Budva";
+          #   unit = "metric";
+          # };
         };
         dashboard.directories = {
           left = {
