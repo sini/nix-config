@@ -1,31 +1,34 @@
 {
   flake.modules.homeManager.hyprland = {
     wayland.windowManager.hyprland.settings = {
-
-      device = [
-        {
-          name = "etd2303:00-04f3:3083-touchpad";
-          sensitivity = "-0.15";
-        }
-      ];
-
       input = {
-        accel_profile = "adaptive";
+        follow_mouse = 1;
+        accel_profile = "flat";
+
         kb_layout = "us";
-        kb_options = "grp:win_space_toggle";
         numlock_by_default = true;
+
+        touchpad = {
+          disable_while_typing = true;
+          natural_scroll = "no";
+          tap-to-click = true;
+        };
+
+        sensitivity = 0; # -1.0 - 1.0, 0 means no modification.
+        scroll_factor = 1.0;
+        emulate_discrete_scroll = 1;
+        # repeat_delay = 500; # Mimic the responsiveness of mac setup
+        # repeat_rate = 50; # Mimic the responsiveness of mac setup
         repeat_delay = 275;
         repeat_rate = 35;
-        sensitivity = -0.8;
-
-        touchpad.natural_scroll = 1;
       };
 
       gestures = {
-        workspace_swipe = 1;
+        workspace_swipe = true;
         workspace_swipe_create_new = false;
+        workspace_swipe_fingers = 3;
+        workspace_swipe_invert = false;
       };
-
     };
   };
 }
