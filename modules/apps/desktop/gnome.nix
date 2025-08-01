@@ -5,14 +5,24 @@
       ...
     }:
     {
-      environment.systemPackages = with pkgs; [
-        gnome-tweaks
-        dconf-editor
-        gnomeExtensions.pop-shell
-        gnomeExtensions.appindicator
-        gnomeExtensions.pip-on-top
-        gnomeExtensions.gamemode-shell-extension
-      ];
+      environment = {
+        systemPackages = with pkgs; [
+          gnome-tweaks
+          dconf-editor
+          gnomeExtensions.pop-shell
+          gnomeExtensions.appindicator
+          gnomeExtensions.pip-on-top
+          gnomeExtensions.gamemode-shell-extension
+        ];
+        gnome.excludePackages = with pkgs; [
+          epiphany
+          geary
+          gnome-font-viewer
+          gnome-maps
+          gnome-system-monitor
+          gnome-tour
+        ];
+      };
 
       services = {
         # TODO: Move display manager to regreet or something
@@ -24,9 +34,7 @@
           };
         };
 
-        desktopManager = {
-          gnome.enable = true;
-        };
+        desktopManager.gnome.enable = true;
 
         udev.packages = with pkgs; [ gnome-settings-daemon ];
 
