@@ -39,7 +39,7 @@
         zathura # PDF viewer
 
         # TODO:  Broken for now....
-        #hyprland
+        hyprland
       ];
   };
 }
