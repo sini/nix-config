@@ -26,7 +26,20 @@
         xwayland.enable = true;
 
         settings = {
+          exec-once = [
+            "uwsm finalize"
+          ];
+          ecosystem = {
+            enforce_permissions = true;
+            no_donation_nag = true;
+          };
+          misc = {
+            vrr = 1;
+            disable_hyprland_logo = true;
+          };
+          monitor = [ ",highres,auto,1" ];
           xwayland.force_zero_scaling = true;
+
         };
       };
 
