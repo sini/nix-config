@@ -56,17 +56,9 @@
       programs.hyprpanel = {
         enable = true;
         systemd.enable = true;
-
-        # Configure and theme almost all options from the GUI.
-        # See 'https://hyprpanel.com/configuration/settings.html'.
-        # Default: <same as gui>
         settings = {
-
-          # Configure bar layouts for monitors.
-          # See 'https://hyprpanel.com/configuration/panel.html'.
-          # Default: null
-          layout = {
-            bar.layouts = {
+          bar = {
+            layouts = {
               "0" = {
                 left = [
                   "dashboard"
@@ -95,6 +87,15 @@
               };
             };
           };
+          launcher.autoDetectIcon = true;
+          bluetooth = {
+            label = true;
+            rightClick = "${pkgs.blueman}/bin/blueman-manager";
+          };
+          network = {
+            rightClick = "${pkgs.networkmanagerapplet}/bin/nm-connection-editor";
+            showWifiInfo = true;
+          };
           notifications.show_total = false;
           windowtitle.custom_title = true;
           workspaces = {
@@ -105,21 +106,60 @@
             workspaceMask = false;
           };
 
-          bar.launcher.autoDetectIcon = true;
-          bar.workspaces.show_icons = true;
-
-          menus.clock = {
-            time = {
-              military = true;
-              hideSeconds = true;
+          menus = {
+            clock = {
+              time = {
+                military = true;
+                hideSeconds = true;
+              };
+              weather.unit = "metric";
             };
-            weather.unit = "metric";
+            dashboard = {
+              stats.enable_gpu = true;
+              directories = {
+                enabled = true;
+                left = {
+                  directory1 = {
+                    command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Downloads";
+                    label = "󰉍 Downloads";
+                  };
+                  directory2 = {
+                    command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Videos";
+                    label = "󰉏 Videos";
+                  };
+                  directory3 = {
+                    command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/repos";
+                    label = "󰚝 Projects";
+                  };
+                };
+                right = {
+                  directory1 = {
+                    command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Documents";
+                    label = "󱧶 Documents";
+                  };
+                  directory2 = {
+                    command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Pictures";
+                    label = "󰉏 Pictures";
+                  };
+                  directory3 = {
+                    command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}";
+                    label = "󱂵 Home";
+                  };
+                };
+              };
+            };
+            power = {
+              lowBatteryNotification = true;
+              lowBatteryNotificationText = "Battery is running low - $POWER_LEVEL %";
+              lowBatteryThreshold = 15;
+            };
           };
 
-          menus.dashboard.directories.enabled = false;
-          menus.dashboard.stats.enable_gpu = true;
-
           theme = {
+            font = {
+              name = "DejaVuSansM Nerd Font Mono";
+              size = "12px";
+            };
             # NOTE: https://github.com/Jas-SinghFSU/HyprPanel/issues/1023#issuecomment-3000694765
             # name = "catppuccin_macchiato";
             bar = {
@@ -147,46 +187,6 @@
             };
           };
 
-          theme.font = {
-            name = "DejaVuSansM Nerd Font Mono";
-            size = "12px";
-          };
-
-          dashboard.directories = {
-            left = {
-              directory1 = {
-                command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Downloads";
-                label = "󰉍 Downloads";
-              };
-              directory2 = {
-                command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Videos";
-                label = "󰉏 Videos";
-              };
-              directory3 = {
-                command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/repos";
-                label = "󰚝 Projects";
-              };
-            };
-            right = {
-              directory1 = {
-                command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Documents";
-                label = "󱧶 Documents";
-              };
-              directory2 = {
-                command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}/Pictures";
-                label = "󰉏 Pictures";
-              };
-              directory3 = {
-                command = "${pkgs.kitty}/bin/kitty -e ${pkgs.yazi}/bin/yazi ${config.home.homeDirectory}";
-                label = "󱂵 Home";
-              };
-            };
-          };
-          power = {
-            lowBatteryNotification = true;
-            lowBatteryNotificationText = "Battery is running low - $POWER_LEVEL %";
-            lowBatteryThreshold = 20;
-          };
         };
       };
 
