@@ -47,19 +47,19 @@
 
       xdg.portal = {
         enable = true;
+        wlr.enable = true;
         xdgOpenUsePortal = true;
-        config = {
-          common.default = [ "gtk" ];
-          hyprland.default = [
-            "gtk"
-            "hyprland"
-          ];
-        };
         extraPortals = with pkgs; [
           xdg-desktop-portal-gtk
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
+          xdg-desktop-portal-wlr
         ];
       };
+
+      environment.etc."xdg/portal/gtk.portal".text = ''
+        [preferred]
+        default=gtk
+      '';
 
       programs.uwsm.enable = true;
       #services.hypridle.enable = true;

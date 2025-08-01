@@ -23,9 +23,12 @@
             wayland = true;
           };
         };
+
         desktopManager = {
           gnome.enable = true;
         };
+
+        udev.packages = with pkgs; [ gnome-settings-daemon ];
 
       };
 
