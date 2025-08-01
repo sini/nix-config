@@ -91,21 +91,29 @@
           "SUPER SHIFT, C, exec, ${uwsm} stop"
 
           # group
-          "SUPER, G, togglegroup"
-          "ALT, tab, changegroupactive"
-          "SUPER, tab, changegroupactive"
+          # "SUPER, G, togglegroup"
+          # "ALT, tab, changegroupactive"
+          # "SUPER, tab, changegroupactive"
 
           # move focus
           "SUPER, h, movefocus, l"
           "SUPER, j, movefocus, d"
           "SUPER, k, movefocus, u"
           "SUPER, l, movefocus, r"
+          "SUPER, left, movefocus, l"
+          "SUPER, down, movefocus, d"
+          "SUPER, up, movefocus, u"
+          "SUPER, right, movefocus, r"
 
           # move windows
           "SUPER CTRL, h, movewindow, l"
           "SUPER CTRL, j, movewindow, d"
           "SUPER CTRL, k, movewindow, u"
           "SUPER CTRL, l, movewindow, r"
+          "SUPER CTRL, left, movewindow, l"
+          "SUPER CTRL, down, movewindow, d"
+          "SUPER CTRL, up, movewindow, u"
+          "SUPER CTRL, right, movewindow, r"
 
           # workspaces
           "SUPER, page_up, workspace, m-1"
@@ -120,10 +128,14 @@
           "SUPER CTRL, page_down, movetoworkspace, +1"
           "SUPER SHIFT, page_up, movetoworkspacesilent, -1"
           "SUPER SHIFT, page_down, movetoworkspacesilent, +1"
-          "SUPER CTRL, bracketleft, movetoworkspace, -1"
-          "SUPER CTRL, bracketright, movetoworkspace, +1"
-          "SUPER SHIFT, bracketleft, movetoworkspacesilent, -1"
-          "SUPER SHIFT, bracketright, movetoworkspacesilent, +1"
+          # "SUPER CTRL, bracketleft, movetoworkspace, -1"
+          # "SUPER CTRL, bracketright, movetoworkspace, +1"
+          # "SUPER SHIFT, bracketleft, movetoworkspacesilent, -1"
+          # "SUPER SHIFT, bracketright, movetoworkspacesilent, +1"
+          "SUPER SHIFT, bracketleft,  movecurrentworkspacetomonitor, -1"
+          "SUPER SHIFT, bracketleft, focusmonitor, -1"
+          "SUPER SHIFT, bracketright,  movecurrentworkspacetomonitor, +1"
+          "SUPER SHIFT, bracketright, focusmonitor, +1"
 
           # 1..10 workspaces
         ]
