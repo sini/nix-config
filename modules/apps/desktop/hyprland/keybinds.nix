@@ -82,6 +82,12 @@
         ];
 
         bind = [
+          #
+          "ALT, Tab, cyclenext, next"
+          "SUPER, Tab, focusmonitor, +1"
+          "ALT SHIFT, Tab, cyclenext, prev"
+          "SUPER SHIFT, Tab, focusmonitor, -1"
+          "CTRL ALT, TAB, overview:toggle, toggle, all"
           # apps
           "${PRIMARY}, Return, exec, ${term}"
           "${PRIMARY} ${SECONDARY}, Return, exec, ${term} -e ${editor}"
