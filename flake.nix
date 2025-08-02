@@ -163,6 +163,11 @@
       inputs.hyprland.follows = "hyprland"; # Prevents version mismatch.
     };
 
+    hyprland-split-monitor-workspaces = {
+      url = "github:Duckonaut/split-monitor-workspaces";
+      inputs.hyprland.follows = "hyprland"; # <- make sure this line is present for the plugin to work as intended
+    };
+
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs-unstable";
 

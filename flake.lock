@@ -1335,6 +1335,27 @@
         "type": "github"
       }
     },
+    "hyprland-split-monitor-workspaces": {
+      "inputs": {
+        "hyprland": [
+          "hyprland"
+        ],
+        "nix-filter": "nix-filter"
+      },
+      "locked": {
+        "lastModified": 1753640179,
+        "narHash": "sha256-YUVgvLabR6zA4eVK7rxMCLYORm9whKBhCtiCWDwTE5U=",
+        "owner": "Duckonaut",
+        "repo": "split-monitor-workspaces",
+        "rev": "a19762220d0851fe7eccde37db3a254f0b0640cb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Duckonaut",
+        "repo": "split-monitor-workspaces",
+        "type": "github"
+      }
+    },
     "hyprlang": {
       "inputs": {
         "hyprutils": [
@@ -1502,6 +1523,21 @@
         "owner": "LnL7",
         "ref": "nix-darwin-25.05",
         "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
+    "nix-filter": {
+      "locked": {
+        "lastModified": 1693833173,
+        "narHash": "sha256-hlMABKrGbEiJD5dwUSfnw1CQ3bG7KKwDV+Nx3bEZd7U=",
+        "owner": "numtide",
+        "repo": "nix-filter",
+        "rev": "ac030bd9ba98e318e1f4c4328d60766ade8ebe8b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "nix-filter",
         "type": "github"
       }
     },
@@ -2284,6 +2320,7 @@
         "homebrew-core": "homebrew-core",
         "hyprland": "hyprland",
         "hyprland-plugins": "hyprland-plugins",
+        "hyprland-split-monitor-workspaces": "hyprland-split-monitor-workspaces",
         "import-tree": "import-tree",
         "make-shell": "make-shell",
         "nix-darwin": "nix-darwin",

@@ -47,16 +47,16 @@
               "notifications"
             ];
           };
-          "1" = {
-            left = [ ];
-            middle = [ ];
-            right = [ ];
-          };
-          "2" = {
-            left = [ ];
-            middle = [ ];
-            right = [ ];
-          };
+          # "1" = {
+          #   left = [ ];
+          #   middle = [ ];
+          #   right = [ ];
+          # };
+          # "2" = {
+          #   left = [ ];
+          #   middle = [ ];
+          #   right = [ ];
+          # };
         };
         network = {
           rightClick = "${pkgs.networkmanagerapplet}/bin/nm-connection-editor";
