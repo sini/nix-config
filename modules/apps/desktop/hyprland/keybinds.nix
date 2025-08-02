@@ -19,11 +19,18 @@
       swappy = "${pkgs.swappy}/bin/swappy";
       wl-paste = "${pkgs.wl-clipboard}/bin/wl-paste";
       wpctl = "${pkgs.wireplumber}/bin/wpctl";
-
+      PRIMARY = "SUPER";
+      SECONDARY = "SHIFT";
+      TERTIARY = "CTRL";
     in
     {
       wayland.windowManager.hyprland.settings = {
         plugin = {
+          split-monitor-workspaces = {
+            count = 10;
+            keep_focused = 0;
+            enable_notifications = 0;
+          };
           hyprexo = {
             columns = 3;
             gap_size = 5;
@@ -42,7 +49,7 @@
 
         # mouse
         bindm = [
-          "SUPER, mouse:272, movewindow" # move floating windows with SUPER+LMK
+          "${PRIMARY}, mouse:272, movewindow" # move floating windows with ${PRIMARY}+LMK
         ];
 
         # lock
@@ -54,18 +61,18 @@
           ", XF86AudioPause, exec, ${playerctl} play-pause"
           ", XF86AudioPrev, exec, ${playerctl} previous"
           ", XF86AudioNext, exec, ${playerctl} next"
-          "CTRL SHIFT, N, exec, ${playerctl} next"
-          "CTRL SHIFT, P, exec, ${playerctl} previous"
-          "CTRL SHIFT, SPACE, exec, ${playerctl} play-pause"
+          "${TERTIARY} ${SECONDARY}, N, exec, ${playerctl} next"
+          "${TERTIARY} ${SECONDARY}, P, exec, ${playerctl} previous"
+          "${TERTIARY} ${SECONDARY}, SPACE, exec, ${playerctl} play-pause"
         ];
 
         # repeat
         binde = [
           # resize windows
-          "SUPER SHIFT, left, resizeactive,-50 0"
-          "SUPER SHIFT, right, resizeactive,50 0"
-          "SUPER SHIFT, up, resizeactive,0 -50"
-          "SUPER SHIFT, down, resizeactive,0 50"
+          "${PRIMARY} ${SECONDARY}, left, resizeactive,-50 0"
+          "${PRIMARY} ${SECONDARY}, right, resizeactive,50 0"
+          "${PRIMARY} ${SECONDARY}, up, resizeactive,0 -50"
+          "${PRIMARY} ${SECONDARY}, down, resizeactive,0 50"
         ];
 
         # lock + repeat
@@ -76,20 +83,20 @@
 
         bind = [
           # apps
-          "SUPER, Return, exec, ${term}"
-          "SUPER SHIFT, Return, exec, ${term} -e ${editor}"
-          "SUPER, E, exec, ${term} -e yazi"
-          "SUPER SHIFT, H, exec, ${term} -e btop"
-          "SUPER SHIFT, N, exec, ${term} -e nvtop"
-          "SUPER SHIFT, S, exec, ${term} -o term=xterm-kitty --class spotify_player -e spotify_player"
-          "SUPER SHIFT, B, exec, ${prefix} firefox --new-window"
+          "${PRIMARY}, Return, exec, ${term}"
+          "${PRIMARY} ${SECONDARY}, Return, exec, ${term} -e ${editor}"
+          "${PRIMARY}, E, exec, ${term} -e yazi"
+          "${PRIMARY} ${SECONDARY}, H, exec, ${term} -e btop"
+          "${PRIMARY} ${SECONDARY}, N, exec, ${term} -e nvtop"
+          "${PRIMARY} ${SECONDARY}, S, exec, ${term} -o term=xterm-kitty --class spotify_player -e spotify_player"
+          "${PRIMARY} ${SECONDARY}, B, exec, ${prefix} firefox --new-window"
 
           # Make screenshots!
           ", Print, exec, ${hyprshot} -m region --clipboard-only --freeze"
           "ALT, Print, exec, ${hyprshot} -m window --clipboard-only --freeze"
-          "SHIFT, Print, exec, ${hyprshot} -m output --clipboard-only --freeze"
+          "${SECONDARY}, Print, exec, ${hyprshot} -m output --clipboard-only --freeze"
           ", xf86Cut, exec, ${hyprshot} -m region --raw --freeze | ${swappy} -f -" # region -> edit
-          "SUPER, Print, exec, ${wl-paste} | ${swappy} -f -" # clipboard -> edit
+          "${PRIMARY}, Print, exec, ${wl-paste} | ${swappy} -f -" # clipboard -> edit
 
           # Record screen!
           # wf-recorder
@@ -98,62 +105,60 @@
           # wf-recorder -f "name.mp4"
 
           # main
-          "SUPER, Q, killactive" # or closewindow?
-          "SUPER, F, fullscreen"
-          "SUPER SHIFT, F, togglefloating"
-          "SUPER, P, pseudo" # dwindle layout
-          "SUPER, S, togglesplit" # dwindle layout
-          "SUPER SHIFT, L, exec, ${loginctl}  lock-session"
-          "SUPER SHIFT, C, exec, ${uwsm} stop"
+          "${PRIMARY}, Q, killactive" # or closewindow?
+          "${PRIMARY}, F, fullscreen"
+          "${PRIMARY} ${SECONDARY}, F, togglefloating"
+          "${PRIMARY}, P, pseudo" # dwindle layout
+          "${PRIMARY}, S, togglesplit" # dwindle layout
+          "${PRIMARY} ${SECONDARY}, L, exec, ${loginctl}  lock-session"
+          "${PRIMARY} ${SECONDARY}, C, exec, ${uwsm} stop"
 
           # group
-          # "SUPER, G, togglegroup"
+          # "${PRIMARY}, G, togglegroup"
           # "ALT, tab, changegroupactive"
-          # "SUPER, tab, changegroupactive"
+          # "${PRIMARY}, tab, changegroupactive"
 
           # move focus
-          "SUPER, h, movefocus, l"
-          "SUPER, j, movefocus, d"
-          "SUPER, k, movefocus, u"
-          "SUPER, l, movefocus, r"
-          "SUPER, left, movefocus, l"
-          "SUPER, down, movefocus, d"
-          "SUPER, up, movefocus, u"
-          "SUPER, right, movefocus, r"
+          "${PRIMARY}, h, movefocus, l"
+          "${PRIMARY}, j, movefocus, d"
+          "${PRIMARY}, k, movefocus, u"
+          "${PRIMARY}, l, movefocus, r"
+          "${PRIMARY}, left, movefocus, l"
+          "${PRIMARY}, down, movefocus, d"
+          "${PRIMARY}, up, movefocus, u"
+          "${PRIMARY}, right, movefocus, r"
 
           # move windows
-          "SUPER CTRL, h, movewindow, l"
-          "SUPER CTRL, j, movewindow, d"
-          "SUPER CTRL, k, movewindow, u"
-          "SUPER CTRL, l, movewindow, r"
-          "SUPER CTRL, left, movewindow, l"
-          "SUPER CTRL, down, movewindow, d"
-          "SUPER CTRL, up, movewindow, u"
-          "SUPER CTRL, right, movewindow, r"
+          "${PRIMARY} ${TERTIARY}, h, movewindow, l"
+          "${PRIMARY} ${TERTIARY}, j, movewindow, d"
+          "${PRIMARY} ${TERTIARY}, k, movewindow, u"
+          "${PRIMARY} ${TERTIARY}, l, movewindow, r"
+          "${PRIMARY} ${TERTIARY}, left, movewindow, l"
+          "${PRIMARY} ${TERTIARY}, down, movewindow, d"
+          "${PRIMARY} ${TERTIARY}, up, movewindow, u"
+          "${PRIMARY} ${TERTIARY}, right, movewindow, r"
 
           # workspaces
-          "SUPER, page_up, split-workspace, m-1"
-          "SUPER, page_down, split-workspace, m+1"
-          "SUPER, bracketleft, split-workspace, -1"
-          "SUPER, bracketright, split-workspace, +1"
-          "SUPER, mouse_up, split-workspace, m+1"
-          "SUPER, mouse_down, split-workspace, m-1"
-          "SUPER SHIFT, U, movetoworkspace, special"
-          "SUPER, U, togglespecialworkspace,"
-          "SUPER CTRL, page_up, split-movetoworkspace, -1"
-          "SUPER CTRL, page_down, split-movetoworkspace, +1"
-          "SUPER SHIFT, page_up, split-movetoworkspacesilent, -1"
-          "SUPER SHIFT, page_down, split-movetoworkspacesilent, +1"
-          # "SUPER CTRL, bracketleft, movetoworkspace, -1"
-          # "SUPER CTRL, bracketright, movetoworkspace, +1"
-          # "SUPER SHIFT, bracketleft, movetoworkspacesilent, -1"
-          # "SUPER SHIFT, bracketright, movetoworkspacesilent, +1"
-          "SUPER SHIFT, bracketleft,  movecurrentworkspacetomonitor, -1"
-          "SUPER SHIFT, bracketleft, focusmonitor, -1"
-          "SUPER SHIFT, bracketright,  movecurrentworkspacetomonitor, +1"
-          "SUPER SHIFT, bracketright, focusmonitor, +1"
+          "${PRIMARY}, page_up, split-workspace, m-1"
+          "${PRIMARY}, page_down, split-workspace, m+1"
+          "${PRIMARY}, bracketleft, split-workspace, -1"
+          "${PRIMARY}, bracketright, split-workspace, +1"
+          "${PRIMARY}, mouse_up, split-workspace, m+1"
+          "${PRIMARY}, mouse_down, split-workspace, m-1"
+          "${PRIMARY} ${SECONDARY}, U, movetoworkspace, special"
+          "${PRIMARY}, U, togglespecialworkspace,"
+          "${PRIMARY} ${TERTIARY}, page_up, split-movetoworkspace, -1"
+          "${PRIMARY} ${TERTIARY}, page_down, split-movetoworkspace, +1"
+          "${PRIMARY} ${SECONDARY}, page_up, split-movetoworkspacesilent, -1"
+          "${PRIMARY} ${SECONDARY}, page_down, split-movetoworkspacesilent, +1"
 
-          "SUPER, grave, hyprexpo:expo, toggle"
+          # Move active window to other monitor with mainMod + TERTIARY + arrow keys
+          "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
+          "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
+
+          "${PRIMARY}, grave, hyprexpo:expo, toggle"
+
+          "${PRIMARY}, z, easymotion, action:hyprctl dispatch focuswindow address:{}"
           # 1..10 workspaces
         ]
         ++ (builtins.concatLists (
@@ -167,9 +172,9 @@
                 builtins.toString (x + 1 - (c * 10));
             in
             [
-              "SUPER, ${ws}, split-workspace, ${toString (x + 1)}"
-              "SUPER CTRL, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
-              "SUPER SHIFT, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
+              "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
+              "${PRIMARY} ${TERTIARY}, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
+              "${PRIMARY} ${SECONDARY}, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
             ]
           ) 10
         ));

@@ -165,7 +165,22 @@
 
     hyprland-split-monitor-workspaces = {
       url = "github:Duckonaut/split-monitor-workspaces";
-      inputs.hyprland.follows = "hyprland"; # <- make sure this line is present for the plugin to work as intended
+      inputs.hyprland.follows = "hyprland";
+    };
+
+    hyprland-overview = {
+      inputs.hyprland.follows = "hyprland";
+      url = "github:KZDKM/Hyprspace";
+    };
+
+    hyprsplit = {
+      url = "github:shezdy/hyprsplit";
+      inputs.hyprland.follows = "hyprland";
+    };
+
+    hyprland-easymotion = {
+      inputs.hyprland.follows = "hyprland";
+      url = "github:zakk4223/hyprland-easymotion";
     };
 
     nix-index-database.url = "github:nix-community/nix-index-database";

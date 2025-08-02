@@ -6,6 +6,12 @@
       pkgs,
       ...
     }:
+    let
+      overview = inputs.hyprland-overview.packages.${pkgs.system}.Hyprspace;
+      hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
+      split-monitor-workspaces =
+        inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces;
+    in
     {
 
       imports = [
@@ -41,7 +47,9 @@
             # hyprwinwrap
           ]
           ++ [
-            inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces
+            overview
+            hyprsplit
+            split-monitor-workspaces
           ];
 
         settings = {
@@ -49,7 +57,7 @@
             "uwsm finalize"
           ];
           ecosystem = {
-            enforce_permissions = true;
+            #enforce_permissions = true;
             no_donation_nag = true;
           };
           misc = {
