@@ -87,16 +87,16 @@
                   "notifications"
                 ];
               };
-              "1" = {
-                left = [ ];
-                middle = [ ];
-                right = [ ];
-              };
-              "2" = {
-                left = [ ];
-                middle = [ ];
-                right = [ ];
-              };
+              # "1" = {
+              #   left = [ ];
+              #   middle = [ ];
+              #   right = [ ];
+              # };
+              # "2" = {
+              #   left = [ ];
+              #   middle = [ ];
+              #   right = [ ];
+              # };
             };
           };
           launcher.autoDetectIcon = true;
