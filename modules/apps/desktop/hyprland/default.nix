@@ -32,6 +32,18 @@
 
         xwayland.enable = true;
 
+        plugins =
+          with inputs.hyprland-plugins.packages.${pkgs.system};
+          [
+            # hyprbars
+            hyprexpo
+            # hyprtrails
+            # hyprwinwrap
+          ]
+          ++ [
+            inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces
+          ];
+
         settings = {
           exec-once = [
             "uwsm finalize"

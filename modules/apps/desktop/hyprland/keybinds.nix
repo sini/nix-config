@@ -23,6 +23,22 @@
     in
     {
       wayland.windowManager.hyprland.settings = {
+        plugin = {
+          hyprexo = {
+            columns = 3;
+            gap_size = 5;
+            bg_col = "rgb(000000)";
+            workspace_method = [
+              "center"
+              "current"
+            ]; # [center/first] [workspace] e.g. first 1 or center m+1
+
+            enable_gesture = true; # laptop touchpad
+            gesture_fingers = 3; # 3 or 4
+            gesture_distance = 300; # how far is the "max"
+            gesture_positive = true; # positive = swipe down. Negative = swipe up.
+          };
+        };
 
         # mouse
         bindm = [
@@ -116,18 +132,18 @@
           "SUPER CTRL, right, movewindow, r"
 
           # workspaces
-          "SUPER, page_up, workspace, m-1"
-          "SUPER, page_down, workspace, m+1"
-          "SUPER, bracketleft, workspace, -1"
-          "SUPER, bracketright, workspace, +1"
-          "SUPER, mouse_up, workspace, m+1"
-          "SUPER, mouse_down, workspace, m-1"
+          "SUPER, page_up, split-workspace, m-1"
+          "SUPER, page_down, split-workspace, m+1"
+          "SUPER, bracketleft, split-workspace, -1"
+          "SUPER, bracketright, split-workspace, +1"
+          "SUPER, mouse_up, split-workspace, m+1"
+          "SUPER, mouse_down, split-workspace, m-1"
           "SUPER SHIFT, U, movetoworkspace, special"
           "SUPER, U, togglespecialworkspace,"
-          "SUPER CTRL, page_up, movetoworkspace, -1"
-          "SUPER CTRL, page_down, movetoworkspace, +1"
-          "SUPER SHIFT, page_up, movetoworkspacesilent, -1"
-          "SUPER SHIFT, page_down, movetoworkspacesilent, +1"
+          "SUPER CTRL, page_up, split-movetoworkspace, -1"
+          "SUPER CTRL, page_down, split-movetoworkspace, +1"
+          "SUPER SHIFT, page_up, split-movetoworkspacesilent, -1"
+          "SUPER SHIFT, page_down, split-movetoworkspacesilent, +1"
           # "SUPER CTRL, bracketleft, movetoworkspace, -1"
           # "SUPER CTRL, bracketright, movetoworkspace, +1"
           # "SUPER SHIFT, bracketleft, movetoworkspacesilent, -1"
@@ -137,6 +153,7 @@
           "SUPER SHIFT, bracketright,  movecurrentworkspacetomonitor, +1"
           "SUPER SHIFT, bracketright, focusmonitor, +1"
 
+          "SUPER, grave, hyprexpo:expo, toggle"
           # 1..10 workspaces
         ]
         ++ (builtins.concatLists (
@@ -150,9 +167,9 @@
                 builtins.toString (x + 1 - (c * 10));
             in
             [
-              "SUPER, ${ws}, workspace, ${toString (x + 1)}"
-              "SUPER CTRL, ${ws}, movetoworkspace, ${toString (x + 1)}"
-              "SUPER SHIFT, ${ws}, movetoworkspacesilent, ${toString (x + 1)}"
+              "SUPER, ${ws}, split-workspace, ${toString (x + 1)}"
+              "SUPER CTRL, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
+              "SUPER SHIFT, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
             ]
           ) 10
         ));

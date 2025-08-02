@@ -21,6 +21,7 @@
           obs-vkcapture
           input-overlay
           droidcam-obs
+          wlrobs
         ];
       };
     };
