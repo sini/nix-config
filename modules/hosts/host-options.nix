@@ -56,9 +56,9 @@ in
           };
 
           public_key = mkOption {
-            type = types.path;
+            type = types.either types.path types.str;
             default = null;
-            description = "Path to the public SSH key for the host.";
+            description = "Path to or string value of the public SSH key for the host.";
           };
 
           facts = mkOption {

@@ -17,7 +17,7 @@
         hardware.networking.interface = "enp6s0";
       }
     ];
-    public_key = "./ssh_host_ed25519_key.pub";
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDFFLWZzC91VBRxi3KwvRm7pI2vaAItIf9Nnd3Eifkmc root@cortex";
     facts = ./facter.json;
   };
 
