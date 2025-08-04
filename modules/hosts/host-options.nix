@@ -27,6 +27,7 @@ in
       - `extra_modules`: A list of additional modules to include for the host.
       - `tags`: An attribute set of string key-value pairs to annotate hosts with metadata.
         For example: `{ "kubernetes-cluster" = "prod"; }`
+
     '';
 
   options.flake.hosts =
