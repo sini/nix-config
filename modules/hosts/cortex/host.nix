@@ -35,7 +35,11 @@
         network.wait-online.enable = false;
       };
 
-      networking.domain = "json64.dev";
+      networking = {
+        domain = "json64.dev";
+        networkmanager.enable = false;
+        firewall.enable = false;
+      };
 
       environment.systemPackages = with pkgs; [
         # Any particular packages only for this host
