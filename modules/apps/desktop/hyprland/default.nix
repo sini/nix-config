@@ -75,9 +75,26 @@
       # programs.waybar = {
       #   enable = true;
       # }
+
+      systemd.user.services.hyprpanel = {
+        Unit = {
+          Description = "Hyprpanel";
+          PartOf = [ "hyprland-session.target" ];
+          After = [ "hyprland-session.target" ];
+        };
+        Install = {
+          WantedBy = [ "hyprland-session.target" ];
+        };
+        Service = {
+          ExecStart = "${pkgs.hyprpanel}/bin/hyprpanel";
+          Restart = "always";
+          Type = "simple";
+        };
+      };
+
       programs.hyprpanel = {
         enable = true;
-        systemd.enable = true;
+        systemd.enable = false; # Manually configure systemd unit...
         settings = {
           bar = {
             layouts = {
