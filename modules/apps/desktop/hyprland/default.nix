@@ -29,6 +29,9 @@
         snapshot
       ];
 
+      xdg.configFile."uwsm/env".source =
+        "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
+
       programs.wofi.enable = true;
 
       wayland.windowManager.hyprland = {
