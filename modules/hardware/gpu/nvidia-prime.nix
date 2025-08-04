@@ -29,8 +29,8 @@
           services.xserver.videoDrivers = [ "modesetting" ];
 
           hardware.nvidia = {
+            powerManagement.finegrained = true;
             prime = {
-              powerManagement.finegrained = true;
               offload = {
                 enable = true;
                 enableOffloadCmd = true;
