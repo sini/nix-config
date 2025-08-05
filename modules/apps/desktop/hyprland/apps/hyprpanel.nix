@@ -90,7 +90,7 @@
               weather.unit = "metric";
             };
             dashboard = {
-              stats.enable_gpu = true;
+              # stats.enable_gpu = true;
               directories = {
                 enabled = true;
                 left = {
