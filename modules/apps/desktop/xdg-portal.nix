@@ -25,17 +25,27 @@
         mime-types
       ];
 
+      # xdg.portal = {
+      #   enable = true;
+      #   xdgOpenUsePortal = true;
+      #   config = {
+      #     common.default = [ "gtk" ];
+      #   };
+      #   extraPortals = with pkgs; [
+      #     xdg-desktop-portal-gtk
+      #   ];
+      # };
       xdg.portal = {
         enable = true;
-        xdgOpenUsePortal = true;
-        extraPortals = with pkgs; [
-          xdg-desktop-portal-gtk
-          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
-
+        wlr.enable = true;
+        extraPortals = [
+          pkgs.xdg-desktop-portal-gtk
+          pkgs.xdg-desktop-portal
         ];
-        configPackages = with pkgs; [
-          xdg-desktop-portal-gtk
+        configPackages = [
+          pkgs.xdg-desktop-portal-gtk
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
+          pkgs.xdg-desktop-portal
         ];
       };
 

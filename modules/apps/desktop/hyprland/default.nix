@@ -29,8 +29,8 @@
         snapshot
       ];
 
-      xdg.configFile."uwsm/env".source =
-        "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
+      # xdg.configFile."uwsm/env".source =
+      #   "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
       programs.wofi.enable = true;
 
@@ -97,7 +97,7 @@
 
       programs.hyprpanel = {
         enable = true;
-        systemd.enable = false; # Manually configure systemd unit...
+        systemd.enable = true; # Manually configure systemd unit...
         settings = {
           bar = {
             layouts = {

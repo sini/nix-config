@@ -71,6 +71,10 @@
         #   picture-uri-dark = wallpaper-uri;
         # };
 
+        "org/gnome/desktop/ally/applications" = {
+          "screen-reader-enabled" = false;
+        };
+
         "org/gnome/mutter" = {
           center-new-windows = true;
           dynamic-workspaces = true;
