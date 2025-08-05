@@ -49,7 +49,6 @@
         alsa-utils
         easyeffects
         pavucontrol
-        pulseaudioFull
         qpwgraph # More extensive patchbay for Pipewire
       ];
     };
