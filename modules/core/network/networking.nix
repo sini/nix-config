@@ -4,42 +4,61 @@
     with lib;
     let
       cfg = config.hardware.networking;
+
+      networkdInterfaces =
+        cfg.interfaces
+        |> map (ifName: {
+          name = ifName;
+          value = {
+            enable = true;
+            matchConfig.Name = ifName;
+            networkConfig.DHCP = "yes";
+          };
+        })
+        |> listToAttrs;
+
+      unmanagedInterfaces = cfg.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
+
     in
     {
       options.hardware.networking = with types; {
-        enable = mkOption {
-          type = types.bool;
-          default = true;
-          description = "Enable networking support";
+        interfaces = mkOption {
+          type = listOf str;
+          default = [ "enp1s0" ];
+          description = ''
+            List of interfaces to configure using systemd-networkd.
+          '';
         };
-        interface = mkOption {
-          type = types.str;
-          default = "enp1s0";
-          description = "The interface to configure";
+
+        unmanagedInterfaces = mkOption {
+          type = listOf str;
+          default = cfg.interfaces;
+          defaultText = "hardware.networking.interfaces";
+          description = ''
+            List of interfaces to mark as unmanaged by NetworkManager.
+            Defaults to the same value as `interfaces`.
+          '';
         };
       };
 
-      config = lib.mkIf cfg.enable {
+      config = {
         networking = {
+          useDHCP = false;
           dhcpcd.enable = false;
-          useDHCP = true;
-          useNetworkd = true;
+          firewall.enable = false;
+          networkmanager = {
+            enable = true;
+            unmanaged = unmanagedInterfaces;
+          };
         };
+
+        systemd.services.NetworkManager-wait-online.enable = false;
 
         systemd.network = {
           enable = true;
           wait-online.enable = false;
-          networks = {
-            "${cfg.interface}" = {
-              enable = true;
-              matchConfig.Name = cfg.interface;
-              networkConfig.DHCP = "yes";
-            };
-          };
+          networks = networkdInterfaces;
         };
-
-        #TODO: Remove this once we have a better way to expose ports...
-        networking.firewall.enable = false;
       };
     };
 }

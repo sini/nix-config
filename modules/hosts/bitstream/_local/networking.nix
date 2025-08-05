@@ -1,15 +1,12 @@
-_: {
-  # Disable the default networking configuration
-  hardware.networking.enable = false;
+{
+  hardware.networking.interfaces = [ ];
+  hardware.networking.unmanagedInterfaces = [
+    "eno1"
+    "enp2s0"
+    "bond0"
+  ];
 
-  networking = {
-    dhcpcd.enable = false;
-    useDHCP = true;
-    useNetworkd = true;
-    networkmanager.enable = false;
-  };
   systemd.network = {
-    enable = true;
     netdevs = {
       "10-bond0" = {
         netdevConfig = {

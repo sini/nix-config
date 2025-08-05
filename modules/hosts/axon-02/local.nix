@@ -19,8 +19,6 @@
             device_id = "nvme-Force_MP600_192482300001285610CF";
           };
         };
-
-        networking.enable = true;
       };
 
       # ======================== DO NOT CHANGE THIS ========================
