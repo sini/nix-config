@@ -62,6 +62,7 @@
               (inputs.self.modules.nixos."host_${hostname}" or { })
               {
                 networking.hostName = hostname;
+                networking.domain = "json64.dev";
                 facter.reportPath = hostOptions.facts;
                 age.rekey.hostPubkey = hostOptions.public_key;
               }

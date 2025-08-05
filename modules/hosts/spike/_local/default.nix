@@ -30,7 +30,6 @@
     ];
   };
 
-  networking.domain = "json64.dev";
   #systemd.network.wait-online.anyInterface = true;
 
   environment.systemPackages = with pkgs; [
