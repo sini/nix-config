@@ -1,40 +1,59 @@
 {
-  flake.modules.homeManager.hyprland = {
-    wayland.windowManager.hyprland.settings = {
-
-      # workspace =
-      #   let
-      #     monitors = [
-      #       # order matters
-      #       "desc:Dell Inc. DELL P2422H 8WRR0V3"
-      #       "desc:BOE 0x0747"
-      #       "desc:^(Dell Inc. DELL P2422H 6FZG7N3|Lenovo Group Limited M14t V309WMZ3)$"
-      #     ];
-      #   in
-      #   [
-      #     "1, monitor:${builtins.elemAt monitors 0}, default:yes"
-      #     "2, monitor:${builtins.elemAt monitors 0}"
-      #     "3, monitor:${builtins.elemAt monitors 0}"
-      #     "4, monitor:${builtins.elemAt monitors 0}"
-      #     "5, monitor:${builtins.elemAt monitors 1}, default:yes"
-      #     "6, monitor:${builtins.elemAt monitors 1}"
-      #     "7, monitor:${builtins.elemAt monitors 1}"
-      #     "8, monitor:${builtins.elemAt monitors 1}"
-      #     "9, monitor:${builtins.elemAt monitors 1}"
-      #     "10, monitor:${builtins.elemAt monitors 2}, default:yes"
-      #     "11, monitor:${builtins.elemAt monitors 2}"
-      #     "12, monitor:${builtins.elemAt monitors 2}"
-      #     "13, monitor:${builtins.elemAt monitors 2}"
-      #     "14, monitor:${builtins.elemAt monitors 2}"
-      #   ];
-
-      # binds = {
-      #   # NOTE: no effect
-      #   workspace_back_and_forth = false;
-      #   allow_workspace_cycles = false;
-      #   movefocus_cycles_fullscreen = false;
-      # };
-
+  flake.modules.homeManager.hyprland =
+    let
+      editor = [ "nvim.desktop" ];
+      browser = [ "firefox.desktop" ];
+      #fileBrowser = [ "yazi.desktop" ];
+      imageViewer = [ "org.gnome.Loupe.desktop" ]; # TODO: change to sxiv/feh
+      # https://www.youtube.com/watch?v=GYW9i_u5PYs
+      pdfViewer = [ "org.pwmt.zathura.desktop" ];
+      associations = {
+        "text/x-dbus-service" = editor;
+        "image/jpeg" = imageViewer;
+        "image/png" = imageViewer;
+        "image/gif" = imageViewer;
+        "image/webp" = imageViewer;
+        "image/tiff" = imageViewer;
+        "image/x-tga" = imageViewer;
+        "image/vnd-ms.dds" = imageViewer;
+        "image/x-dds" = imageViewer;
+        "image/bmp" = imageViewer;
+        "image/vnd.microsoft.icon" = imageViewer;
+        "image/vnd.radiance" = imageViewer;
+        "image/x-exr" = imageViewer;
+        "image/x-portable-bitmap" = imageViewer;
+        "image/x-portable-graymap" = imageViewer;
+        "image/x-portable-pixmap" = imageViewer;
+        "image/x-portable-anymap" = imageViewer;
+        "image/x-qoi" = imageViewer;
+        "image/svg+xml" = imageViewer;
+        "image/svg+xml-compressed" = imageViewer;
+        "image/avif" = imageViewer;
+        "image/heic" = imageViewer;
+        "image/jxl" = imageViewer;
+        "application/pdf" = pdfViewer;
+        "x-scheme-handler/http" = browser;
+        "x-scheme-handler/https" = browser;
+        "x-scheme-handler/chrome" = browser;
+        "text/html" = browser;
+        "application/x-extension-htm" = browser;
+        "application/x-extension-html" = browser;
+        "application/x-extension-shtml" = browser;
+        "application/xhtml+xml" = browser;
+        "application/x-extension-xhtml" = browser;
+        "application/x-extension-xht" = browser;
+        # TODO: fix
+        # "inode/directory" = fileBrowser;
+      };
+    in
+    {
+      xdg = {
+        configFile."mimeapps.list".force = true;
+        mimeApps = {
+          enable = true;
+          defaultApplications = associations;
+          associations.added = associations;
+        };
+      };
     };
-  };
 }
