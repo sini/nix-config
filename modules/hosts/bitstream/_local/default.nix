@@ -8,8 +8,6 @@
     ./networking.nix
   ];
 
-  networking.domain = "json64.dev";
-
   boot.kernelPackages = pkgs.linuxPackages_latest;
 
   hardware = {

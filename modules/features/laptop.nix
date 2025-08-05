@@ -1,7 +1,10 @@
 {
   flake.modules.nixos.laptop =
-    { lib, ... }:
+    { pkgs, lib, ... }:
     {
+      environment.systemPackages = with pkgs; [
+        brightnessctl
+      ];
       services = {
         # tlp.enable = true;
         logind = {
@@ -18,6 +21,7 @@
           '';
         };
       };
+
       powerManagement.cpuFreqGovernor = lib.mkDefault "shedutil";
 
       services.power-profiles-daemon.enable = false; # Disable GNOMEs power management
