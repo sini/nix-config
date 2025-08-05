@@ -30,22 +30,8 @@
     ];
   };
 
-  hardware = {
-    networking.enable = false;
-  };
-
-  systemd = {
-    services.NetworkManager-wait-online.enable = false;
-    network.wait-online.enable = false;
-  };
-
-  networking = {
-    networkmanager.enable = true;
-    firewall.enable = false;
-  };
-
   networking.domain = "json64.dev";
-  systemd.network.wait-online.anyInterface = true;
+  #systemd.network.wait-online.anyInterface = true;
 
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host

@@ -19,10 +19,6 @@
     };
   };
 
-  networking.firewall.enable = false;
-
-  programs.dconf.enable = true;
-
   environment.systemPackages = with pkgs; [
     # Any particular packages only for this host
     wget

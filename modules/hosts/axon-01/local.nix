@@ -20,8 +20,6 @@
             device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
           };
         };
-
-        networking.enable = true;
       };
 
       # ======================== DO NOT CHANGE THIS ========================
