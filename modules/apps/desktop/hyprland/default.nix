@@ -1,6 +1,7 @@
 {
   flake.modules.homeManager.hyprland =
     {
+      lib,
       inputs,
       config,
       pkgs,
@@ -79,21 +80,14 @@
       #   enable = true;
       # }
 
-      # systemd.user.services.hyprpanel = {
-      #   Unit = {
-      #     Description = "Hyprpanel";
-      #     PartOf = [ "hyprland-session.target" ];
-      #     After = [ "hyprland-session.target" ];
-      #   };
-      #   Install = {
-      #     WantedBy = [ "hyprland-session.target" ];
-      #   };
-      #   Service = {
-      #     ExecStart = "${pkgs.hyprpanel}/bin/hyprpanel";
-      #     Restart = "always";
-      #     Type = "simple";
-      #   };
-      # };
+      # Override systemd unit settings for hyprpanel to only run with Hyprland (and not Gnome)
+      systemd.user.services.hyprpanel = {
+        Unit = {
+          PartOf = "wayland-wm@Hyprland.service";
+          After = lib.mkDefault "wayland-wm@Hyprland.service";
+          Requires = "wayland-wm@Hyprland.service";
+        };
+      };
 
       programs.hyprpanel = {
         enable = true;
