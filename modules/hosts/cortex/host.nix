@@ -52,6 +52,16 @@
         brightnessctl
       ];
 
+      home-manager.users.${config.flake.meta.user.username}.imports = [
+        {
+          wayland.windowManager.hyprland.settings.monitor = [
+            "DP-3, 2560x2880@59.98, 0x0, 1, vrr, 0, bitdepth, 10"
+            "DP-1, 3840x2160@119.88, 2560x0, 1, vrr, 1, bitdepth, 10"
+            "DP-2, 2560x1440@165.00, 6400x0, 1, vrr, 1, transform, 3"
+          ];
+        }
+      ];
+
       # ======================== DO NOT CHANGE THIS ========================
       system.stateVersion = "25.05";
       # ======================== DO NOT CHANGE THIS ========================
