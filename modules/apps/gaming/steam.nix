@@ -85,10 +85,10 @@
           capSysNice = true;
           #capSysNice = false; # 'true' breaks gamescope for Steam https://github.com/NixOS/nixpkgs/issues/292620#issuecomment-2143529075
           args = [
-            #   # "-W ${toString hostConfig.primaryDisplay.width}"
-            #   # "-H ${toString hostConfig.primaryDisplay.height}"
-            #   # "-r ${toString hostConfig.primaryDisplay.refreshRate}"
-            #   # "-O ${hostConfig.primaryDisplay.name}"
+            #   # "-W ${toString hostOptions.primaryDisplay.width}"
+            #   # "-H ${toString hostOptions.primaryDisplay.height}"
+            #   # "-r ${toString hostOptions.primaryDisplay.refreshRate}"
+            #   # "-O ${hostOptions.primaryDisplay.name}"
             #   "-f"
             "--adaptive-sync"
             "--mangoapp"

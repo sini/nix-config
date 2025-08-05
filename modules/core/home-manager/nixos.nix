@@ -6,7 +6,7 @@
   flake.modules.nixos.home-manager =
     {
       inputs,
-      hostConfig,
+      hostOptions,
       pkgs,
       ...
     }:
@@ -22,7 +22,7 @@
         backupFileExtension = ".hm-backup";
 
         extraSpecialArgs = {
-          inherit inputs hostConfig pkgs;
+          inherit inputs hostOptions pkgs;
           hasGlobalPkgs = true;
         };
 

@@ -2,13 +2,13 @@
   flake.modules.homeManager.hyprland =
     {
       config,
-      osConfig,
       lib,
+      hostOptions,
       pkgs,
       ...
     }:
     let
-      has_battery = builtins.elem "laptop" osConfig._module.args.hostConfig.roles;
+      has_battery = builtins.elem "laptop" hostOptions.roles;
     in
     {
 
