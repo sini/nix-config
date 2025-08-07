@@ -29,6 +29,7 @@
       boot.kernelPackages = pkgs.linuxPackages_latest;
 
       hardware = {
+        networking.interfaces = [ "enp2s0" ];
         disk.longhorn = {
           os_drive = {
             device_id = "nvme-NVMe_CA6-8D1024_00230650035M";
