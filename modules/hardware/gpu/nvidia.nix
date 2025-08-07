@@ -95,7 +95,8 @@
           zenith-nvidia
           nvitop
           vulkanPackages_latest.vulkan-loader
-          vulkanPackages_latest.vulkan-validation-layers
+          unstable.vulkan-validation-layers # From unstable
+          #vulkanPackages_latest.vulkan-validation-layers
           vulkanPackages_latest.vulkan-tools
         ];
 
