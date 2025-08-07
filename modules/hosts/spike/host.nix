@@ -16,7 +16,7 @@
       gpu-nvidia-prime
       razer
     ];
-    public_key = ./ssh_host_ed25519_key.pub;
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO0xBpnsFa3YGevrl2vrSVL31nFtlgYb/7b+hmST3Vsz root@spike";
     facts = ./facter.json;
   };
 }

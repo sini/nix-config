@@ -8,7 +8,6 @@
   ];
 
   boot.kernelPackages = pkgs.linuxPackages_cachyos;
-  # boot.kernelPackages = pkgs.linuxPackages_6_15;
 
   boot = {
     initrd.availableKernelModules = [
@@ -33,17 +32,9 @@
   #systemd.network.wait-online.anyInterface = true;
 
   environment.systemPackages = with pkgs; [
-    # Any particular packages only for this host
-    wget
-    vim
-    git
     gitkraken
     krita
-    pavucontrol
-    brightnessctl
   ];
 
-  # ======================== DO NOT CHANGE THIS ========================
   system.stateVersion = "25.05";
-  # ======================== DO NOT CHANGE THIS ========================
 }
