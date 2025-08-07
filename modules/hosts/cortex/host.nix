@@ -24,10 +24,27 @@
   flake.modules.nixos.host_cortex =
     {
       pkgs,
+      lib,
       ...
     }:
     {
       boot.kernelPackages = pkgs.linuxPackages_cachyos;
+
+      powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
+      # use TCP BBR has significantly increased throughput and reduced latency for connections
+      boot.kernel.sysctl = {
+        "net.core.default_qdisc" = "fq";
+        "net.ipv4.tcp_congestion_control" = "bbr";
+      };
+      services.scx.enable = true;
+      services.scx.package = lib.mkDefault pkgs.scx.full;
+      services.scx.scheduler = "scx_bpfland"; # Default is scx_rustland
+      # Enable: CPU Frequency Control, (experimental) kthread prioritization, Per-CPU Task Prioritization
+      services.scx.extraArgs = [
+        "-f"
+        "-k"
+        "-p"
+      ];
 
       environment.systemPackages = with pkgs; [
         gitkraken

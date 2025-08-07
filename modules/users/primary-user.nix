@@ -27,6 +27,7 @@ in
             "tty"
             "podman"
             "media"
+            "gamemode"
           ];
           linger = true; # Required for the services start automatically without login
         };
