@@ -29,7 +29,7 @@
             libvdpau-va-gl
             vulkanPackages_latest.vulkan-loader
             vulkanPackages_latest.vulkan-validation-layers
-            vulkanPackages_latest.vulkan-extension-layer
+            #vulkanPackages_latest.vulkan-extension-layer
             rocmPackages.clr.icd
           ];
         };
@@ -55,7 +55,7 @@
         vulkanPackages_latest.vulkan-tools
         vulkanPackages_latest.vulkan-loader
         vulkanPackages_latest.vulkan-validation-layers
-        vulkanPackages_latest.vulkan-extension-layer
+        #vulkanPackages_latest.vulkan-extension-layer
         libva-utils
         mesa-demos
       ];
