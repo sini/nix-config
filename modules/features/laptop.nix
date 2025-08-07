@@ -5,8 +5,20 @@
       environment.systemPackages = with pkgs; [
         brightnessctl
       ];
+
+      powerManagement = {
+        # powertop = {
+        #   enable = true;
+        #   postStart = [
+        #     # disable USB auto suspend for Razer Deathadder and Pulsar x2 mice
+        #     "${lib.getExe' config.systemd.package "udevadm"} trigger -c bind -s usb -a idVendor=25a7 -a idProduct=fa7c"
+        #     "${lib.getExe' config.systemd.package "udevadm"} trigger -c bind -s usb -a idVendor=1532 -a idProduct=00b2"
+        #   ];
+        # };
+        cpuFreqGovernor = lib.mkDefault "schedutil";
+      };
+
       services = {
-        # tlp.enable = true;
         logind = {
           lidSwitch = "ignore";
           lidSwitchDocked = "ignore";
@@ -20,55 +32,39 @@
             HibernateKeyIgnoreInhibited=yes
           '';
         };
-      };
 
-      powerManagement.cpuFreqGovernor = lib.mkDefault "shedutil";
+        power-profiles-daemon.enable = false; # Disable GNOMEs power management
 
-      services.power-profiles-daemon.enable = false; # Disable GNOMEs power management
-
-      # Enable TLP for power management, should be okay for all systems
-      services.tlp = {
-        enable = true;
-        settings = {
-          CPU_BOOST_ON_AC = 1;
-          CPU_BOOST_ON_BAT = 1;
-          CPU_HWP_DYN_BOOST_ON_AC = 1;
-          CPU_HWP_DYN_BOOST_ON_BAT = 1;
-
-          CPU_SCALING_GOVERNOR_ON_AC = "performance";
-          CPU_SCALING_GOVERNOR_ON_BAT = "powersave";
-
-          CPU_ENERGY_PERF_POLICY_ON_BAT = "balance_power";
-          CPU_ENERGY_PERF_POLICY_ON_AC = "performance";
-
-          PLATFORM_PROFILE_ON_AC = "performance";
-          PLATFORM_PROFILE_ON_BAT = "balanced";
-
-          CPU_MIN_PERF_ON_AC = 0;
-          CPU_MAX_PERF_ON_AC = 100;
-          CPU_MIN_PERF_ON_BAT = 0;
-          CPU_MAX_PERF_ON_BAT = 20;
-
-          USB_AUTOSUSPEND = 0;
+        system76-scheduler = {
+          enable = true;
+          useStockConfig = true;
+          # https://search.nixos.org/options?channel=unstable&show=services.system76-scheduler
+          settings.processScheduler.foregroundBoost.enable = true;
+          settings.cfsProfiles.enable = true;
         };
+
+        # auto-cpufreq = {
+        #   enable = true;
+        #   settings = {
+        #     battery = {
+        #       governor = "powersave";
+        #       turbo = "never";
+        #     };
+        #     charger = {
+        #       governor = "powersave";
+        #       turbo = "auto";
+        #     };
+        #   };
+        # };
+
+        # Only required on intel...
+        thermald.enable = true;
+
+        # udev.extraRules = ''
+        #   # disable USB auto suspend for Razer Deathadder and Pulsar x2 mice
+        #   ACTION=="bind", SUBSYSTEM=="usb", ATTR{idVendor}=="25a7", ATTR{idProduct}=="fa7c", TEST=="power/control", ATTR{power/control}="on"
+        #   ACTION=="bind", SUBSYSTEM=="usb", ATTR{idVendor}=="1532", ATTR{idProduct}=="00b2", TEST=="power/control", ATTR{power/control}="on"
+        # '';
       };
-      # services.auto-cpufreq = {
-      #   enable = true;
-      #   settings = {
-
-      #     battery = {
-      #       governor = "powersave";
-      #       energy_performance_preference = lib.mkDefault "power";
-      #       turbo = "never";
-      #     };
-
-      #     charger = {
-      #       governor = "performance";
-      #       energy_performance_preference = lib.mkDefault "performance";
-      #       turbo = "auto";
-      #     };
-
-      #   };
-      # };
     };
 }
