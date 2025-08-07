@@ -32,6 +32,7 @@
 
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
       # use TCP BBR has significantly increased throughput and reduced latency for connections
+      boot.kernelModules = [ "ntsync" ];
       boot.kernel.sysctl = {
         "net.core.default_qdisc" = "fq";
         "net.ipv4.tcp_congestion_control" = "bbr";

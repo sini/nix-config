@@ -27,9 +27,9 @@
             vaapiVdpau
             libva
             libvdpau-va-gl
-            vulkan-loader
-            vulkan-validation-layers
-            vulkan-extension-layer
+            vulkanPackages_latest.vulkan-loader
+            vulkanPackages_latest.vulkan-validation-layers
+            vulkanPackages_latest.vulkan-extension-layer
             rocmPackages.clr.icd
           ];
         };
@@ -52,7 +52,10 @@
         clinfo
         nvtopPackages.amd
         amdgpu_top
-        vulkan-tools
+        vulkanPackages_latest.vulkan-tools
+        vulkanPackages_latest.vulkan-loader
+        vulkanPackages_latest.vulkan-validation-layers
+        vulkanPackages_latest.vulkan-extension-layer
         libva-utils
         mesa-demos
       ];
