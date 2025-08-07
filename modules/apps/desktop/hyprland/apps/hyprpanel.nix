@@ -13,17 +13,18 @@
     {
 
       # Override systemd unit settings for hyprpanel to only run with Hyprland (and not Gnome)
-      systemd.user.services.hyprpanel = {
-        Unit = {
-          PartOf = [ "wayland-wm@Hyprland.service" ];
-          After = [ "wayland-wm@Hyprland.service" ];
-          Requires = [ "wayland-wm@Hyprland.service" ];
-        };
-      };
+      # systemd.user.services.hyprpanel = {
+      #   Unit = {
+      #     ConditionEnvironment = [ "DESKTOP_SESSION=hyprland-uwsm"];
+      #     PartOf = [ "wayland-wm@Hyprland.service" ];
+      #     After = [ "wayland-wm@Hyprland.service" ];
+      #     Requires = [ "wayland-wm@Hyprland.service" ];
+      #   };
+      # };
 
       programs.hyprpanel = {
         enable = true;
-        systemd.enable = true;
+        systemd.enable = false;
         settings = {
           bar = {
             layouts = {

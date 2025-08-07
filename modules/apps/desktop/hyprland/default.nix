@@ -35,6 +35,10 @@
 
       wayland.windowManager.hyprland = {
         enable = true;
+        # Managed by system configuration
+        package = null;
+        portalPackage = null;
+
         # Disabled because it conflicts with uwsm
         # https://wiki.hypr.land/Useful-Utilities/Systemd-start/
         systemd.enable = false;
