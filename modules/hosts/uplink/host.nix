@@ -6,13 +6,26 @@
       "server"
     ];
     extra_modules = with config.flake.modules.nixos; [
-      ./_local
       cpu-amd
       gpu-intel
       disk-single
       podman
     ];
-    public_key = ./ssh_host_ed25519_key.pub;
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA9Q/KHuuigi5EU8I36EQQzw4QCXj3dEh0bzz/uZ1y+p root@uplink";
     facts = ./facter.json;
   };
+
+  flake.modules.nixos.host_uplink =
+    {
+      pkgs,
+      ...
+    }:
+    {
+      hardware = {
+        disk.single.device_id = "nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
+        networking.interfaces = [ "enp4s0" ];
+      };
+      boot.kernelPackages = pkgs.linuxPackages_latest;
+      system.stateVersion = "25.05";
+    };
 }

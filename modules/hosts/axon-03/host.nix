@@ -14,7 +14,30 @@
     tags = {
       "kubernetes-cluster" = "dev";
     };
-    public_key = ./ssh_host_ed25519_key.pub;
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOAXXsNWa09hW/wuDBcpMkln9LsZCM0A2vQYiUh+pEsC root@axon-03";
     facts = ./facter.json;
   };
+
+  flake.modules.nixos.host_axon-03 =
+    {
+      pkgs,
+      ...
+    }:
+    {
+      boot.kernelPackages = pkgs.linuxPackages_latest;
+
+      hardware = {
+        disk.longhorn = {
+          os_drive = {
+            device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
+            swap_size = 8192;
+          };
+          longhorn_drive = {
+            device_id = "nvme-Force_MP600_1925823000012856500E";
+          };
+        };
+      };
+
+      system.stateVersion = "25.05";
+    };
 }
