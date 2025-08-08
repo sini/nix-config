@@ -50,7 +50,7 @@
         pciutils
         rocmPackages.rocminfo
         clinfo
-        nvtopPackages.amd
+        nvtopPackages.full
         amdgpu_top
         vulkanPackages_latest.vulkan-tools
         vulkanPackages_latest.vulkan-loader
