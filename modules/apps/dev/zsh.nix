@@ -16,6 +16,7 @@
         config,
         pkgs,
         lib,
+        hostOptions,
         ...
       }:
       {
@@ -32,13 +33,21 @@
 
         programs.zsh = {
           enable = true;
-          dotDir = config.xdg.configHome;
+          dotDir = # TODO: Remove this on next release update
+            if hostOptions.unstable then
+              "${config.xdg.configHome}/zsh" # full path for unstable
+            else
+              ".config/zsh"; # relative path for stable
           autosuggestion.enable = true;
           enableCompletion = true;
           completionInit = "autoload -U compinit && compinit -i";
           autocd = true;
           history = {
-            path = "\${XDG_DATA_HOME-$HOME/.local/share}/zsh/history";
+            path = # TODO: Remove this on next release update
+              if hostOptions.unstable then
+                "\${XDG_DATA_HOME-$HOME/.local/share}/zsh/history" # full path for unstable
+              else
+                ".local/share/zsh/history"; # relative path for stable
             ignoreSpace = true;
             size = 1000000;
           };
