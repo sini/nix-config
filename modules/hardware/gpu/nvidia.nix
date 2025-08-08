@@ -7,7 +7,6 @@
       ...
     }:
     with lib;
-    with lib.custom;
     let
       # TODO: use the latest beta version
       nvidiaPackage = config.boot.kernelPackages.nvidiaPackages.mkDriver {
@@ -49,7 +48,7 @@
         modesetting.enable = true;
         powerManagement.enable = true;
         open = true;
-        nvidiaSettings = true;
+        nvidiaSettings = false;
         nvidiaPersistenced = true;
         package = nvidiaPackage;
       };
@@ -135,6 +134,10 @@
           CUDA_PATH = "${pkgs.cudatoolkit}";
         };
       };
+
+      # AMD overclocking/undervolting daemon
+      systemd.packages = with pkgs; [ lact ];
+      systemd.services.lactd.wantedBy = [ "multi-user.target" ];
     };
 
 }
