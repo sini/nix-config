@@ -61,7 +61,7 @@
         mesa-demos
       ];
 
-      # AMD overclocking/undervolting daemon
+      # GPU overclocking/undervolting daemon
       systemd.packages = with pkgs; [ lact ];
       systemd.services.lactd.wantedBy = [ "multi-user.target" ];
 
