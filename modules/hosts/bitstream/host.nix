@@ -52,6 +52,7 @@
             };
           };
         };
+
         # Configure Bonds to utilize both 2.5Gbps ports
         networks = {
           "30-eno1" = {
