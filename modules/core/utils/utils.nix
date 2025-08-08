@@ -1,21 +1,23 @@
 {
   flake.modules.nixos.utils =
-    { pkgs, ... }:
+    { config, pkgs, ... }:
     {
       programs.dconf.enable = true;
 
-      environment.systemPackages = with pkgs; [
-        btop
-        coreutils
-        curl
-        fd
-        file
-        findutils
-        killall
-        lsof
-        pciutils
-        unzip
-        wget
-      ];
+      environment.systemPackages =
+        with pkgs;
+        [
+          coreutils
+          curl
+          fd
+          file
+          findutils
+          killall
+          lsof
+          pciutils
+          unzip
+          wget
+        ]
+        ++ (if config.hardware.nvidia.modesetting.enable then [ pkgs.btop-cuda ] else [ pkgs.btop ]);
     };
 }

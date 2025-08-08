@@ -83,6 +83,21 @@
           ];
       };
 
+      nix.settings = {
+        substituters = [
+          "https://cuda-maintainers.cachix.org"
+        ];
+        trusted-public-keys = [
+          "cuda-maintainers.cachix.org-1:0dq3bujKpuEPMCX6U4WylrUDZ9JyUG0VpVZa7CNfq5E="
+        ];
+      };
+
+      nixpkgs.config = {
+        nvidia.acceptLicense = true;
+        cudaSupport = true;
+        cudnnSupport = true;
+      };
+
       environment = {
         systemPackages = with pkgs; [
           lact # GUI for overclocking, undervolting, setting fan curves, etc.
@@ -94,10 +109,18 @@
           mesa-demos
           zenith-nvidia
           nvitop
+          btop-cuda
           vulkanPackages_latest.vulkan-loader
           unstable.vulkan-validation-layers # From unstable
           #vulkanPackages_latest.vulkan-validation-layers
           vulkanPackages_latest.vulkan-tools
+          cudaPackages.cudatoolkit
+          cudaPackages.cudnn
+          cudaPackages.cutensor
+          cudaPackages.cuda_cudart
+          cudaPackages.cuda_nvrtc
+          cudaPackages.cuda_nvcc
+          cudaPackages.cuda_nvtx
         ];
 
         variables = {
@@ -108,6 +131,7 @@
           __GLX_VENDOR_LIBRARY_NAME = "nvidia";
           # Hardware cursors are currently broken on wlroots
           WLR_NO_HARDWARE_CURSORS = "1";
+          CUDA_PATH = "${pkgs.cudatoolkit}";
         };
       };
     };
