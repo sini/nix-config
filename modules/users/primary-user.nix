@@ -28,6 +28,7 @@ in
             "podman"
             "media"
             "gamemode"
+            "render"
           ];
           linger = true; # Required for the services start automatically without login
         };
