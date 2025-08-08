@@ -49,7 +49,7 @@
         modesetting.enable = true;
         powerManagement.enable = true;
         open = true;
-        nvidiaSettings = false;
+        nvidiaSettings = true;
         nvidiaPersistenced = true;
         package = nvidiaPackage;
       };
@@ -121,6 +121,7 @@
           cudaPackages.cuda_nvrtc
           cudaPackages.cuda_nvcc
           cudaPackages.cuda_nvtx
+          cudaPackages.cuda_nvml_dev
         ];
 
         variables = {
