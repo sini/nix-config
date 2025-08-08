@@ -17,6 +17,7 @@
           pciutils
           unzip
           wget
+          psmisc
         ]
         ++ (if config.hardware.nvidia.modesetting.enable then [ pkgs.btop-cuda ] else [ pkgs.btop ]);
     };
