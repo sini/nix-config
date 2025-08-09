@@ -5,7 +5,7 @@
       gamepad
       nix-ld
       steam
-      sunshine
+      #sunshine
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =

@@ -43,13 +43,13 @@
         # NOTE: nixos manual says you can also use radeon_icd.json to force radv, here's the values for amdvlk for reference
         #VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/amd_icd64.json";
         #VK_DRIVER_FILES = "/run/opengl-driver/share/vulkan/icd.d/amd_icd64.json";
-        LIBVA_DRIVER_NAME = "radeonsi";
+        #LIBVA_DRIVER_NAME = "radeonsi";
 
         # Make gnome use the AMD driver....
-        __GLX_VENDOR_LIBRARY_NAME = "mesa";
-        __EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json";
-        LIBGL_DRIVERS_PATH = "${pkgs.mesa}/lib:${pkgs.mesa}/lib/dri";
-        WLR_DRM_DEVICES = "/dev/dri/card0";
+        #__GLX_VENDOR_LIBRARY_NAME = "mesa";
+        #__EGL_VENDOR_LIBRARY_FILENAMES = "${pkgs.mesa}/share/glvnd/egl_vendor.d/50_mesa.json";
+        #LIBGL_DRIVERS_PATH = "${pkgs.mesa}/lib:${pkgs.mesa}/lib/dri";
+        #WLR_DRM_DEVICES = "/dev/dri/card0";
       };
 
       environment.systemPackages = with pkgs; [
