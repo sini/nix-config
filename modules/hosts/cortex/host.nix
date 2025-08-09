@@ -29,10 +29,17 @@
     }:
     {
       boot.kernelPackages = pkgs.linuxPackages_cachyos;
-
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
       # use TCP BBR has significantly increased throughput and reduced latency for connections
-      boot.kernelModules = [ "ntsync" ];
+      boot.kernelModules = [
+        "ntsync"
+        "it87" # Fan options
+      ];
+      # Enable fan sensors...
+      boot.kernelParams = [ "acpi_enforce_resources=lax" ];
+      boot.extraModprobeConfig = ''
+        options it87 ignore_resource_conflict=1 force_id=0x8628
+      '';
       boot.kernel.sysctl = {
         "net.core.default_qdisc" = "fq";
         "net.ipv4.tcp_congestion_control" = "bbr";
@@ -48,6 +55,7 @@
       ];
 
       environment.systemPackages = with pkgs; [
+        lm_sensors
         gitkraken
         krita
       ];
