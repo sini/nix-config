@@ -33,7 +33,8 @@
           interfaces = [ "enp2s0" ];
           unmanagedInterfaces = [
             "enp2s0"
-            "tb-02"
+            "tb01"
+            "tb02"
           ];
         };
         disk.longhorn = {
@@ -47,32 +48,58 @@
         };
       };
 
-      boot.kernelModules = [
-        "thunderbolt"
-        "thunderbolt-net"
-      ];
+      boot = {
+        kernel.sysctl = {
+          "net.ipv4.ip_forward" = 1;
+          "net.ipv6.conf.all.forwarding" = 1;
+          # These need to be increased for k8s
+          # Although the default settings might not cause issues initially, you'll get strange behavior after a while
+          "fs.inotify.max_user_instances" = 1048576;
+          "fs.inotify.max_user_watches" = 1048576;
+        };
+        kernelModules = [
+          "thunderbolt"
+          "thunderbolt-net"
+        ];
+      };
 
       # To axon-02
       systemd.network = {
+        config.networkConfig = {
+          IPv4Forwarding = true;
+          IPv6Forwarding = true;
+        };
         links = {
-          "50-tbt-01" = {
+          "50-tb01" = {
             matchConfig = {
               Path = "pci-0000:c7:00.5";
               Driver = "thunderbolt-net";
             };
             linkConfig = {
               MACAddressPolicy = "none";
-              Name = "tbt01";
+              Name = "tb01";
             };
           };
-          "50-tbt-02" = {
+          "50-tb02" = {
             matchConfig = {
               Path = "pci-0000:c7:00.6";
               Driver = "thunderbolt-net";
             };
             linkConfig = {
               MACAddressPolicy = "none";
-              Name = "tbt02";
+              Name = "tb02";
+            };
+          };
+        };
+        networks = {
+          "21-thunderbolt" = {
+            matchConfig.Driver = "thunderbolt-net";
+            linkConfig = {
+              ActivationPolicy = "up";
+              MTUBytes = "1500";
+            };
+            networkConfig = {
+              LinkLocalAddressing = "no";
             };
           };
         };
