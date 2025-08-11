@@ -5,7 +5,10 @@
       # Allow for overclocking
       boot.kernelParams = [ "amdgpu.ppfeaturemask=0xffffffff" ];
 
-      boot.initrd.kernelModules = [ "amdgpu" ];
+      boot.kernelModules = [
+        "amdgpu"
+        "radeon"
+      ];
       services.xserver.videoDrivers = [ "amdgpu" ];
 
       hardware = {

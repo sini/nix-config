@@ -8,10 +8,12 @@
       environment.systemPackages = [ pkgs.amdctl ];
 
       boot = {
+        blacklistedKernelModules = [ "k10temp" ];
         kernelModules = [
           "kvm-amd"
           "amd-pstate" # load pstate module in case the device has a newer gpu
           "msr" # x86 CPU MSR access device
+          "zenpower"
         ];
         kernelParams = [
           "microcode.amd_sha_check=off"
@@ -19,6 +21,7 @@
           "iomem=relaxed"
           "amd_pstate=guided" # power management
         ];
+        extraModulePackages = [ config.boot.kernelPackages.zenpower ];
       };
 
       services.ucodenix.enable = true;

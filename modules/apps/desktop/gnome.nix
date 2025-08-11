@@ -35,7 +35,7 @@
         };
 
         desktopManager.gnome.enable = true;
-
+        power-profiles-daemon.enable = false; # Disable GNOMEs power management
         udev.packages = with pkgs; [ gnome-settings-daemon ];
 
       };
