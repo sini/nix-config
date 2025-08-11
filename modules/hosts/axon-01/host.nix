@@ -55,14 +55,24 @@
       # To axon-02
       systemd.network = {
         links = {
-          "50-tbt-02" = {
+          "50-tbt-01" = {
             matchConfig = {
               Path = "pci-0000:c7:00.5";
               Driver = "thunderbolt-net";
             };
             linkConfig = {
               MACAddressPolicy = "none";
-              Name = "tbt-02";
+              Name = "tbt01";
+            };
+          };
+          "50-tbt-02" = {
+            matchConfig = {
+              Path = "pci-0000:c7:00.6";
+              Driver = "thunderbolt-net";
+            };
+            linkConfig = {
+              MACAddressPolicy = "none";
+              Name = "tbt02";
             };
           };
         };
