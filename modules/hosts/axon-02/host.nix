@@ -39,6 +39,37 @@
         };
       };
 
+      # boot.kernelModules = [
+      #   "thunderbolt"
+      #   "thunderbolt-net"
+      # ];
+
+      # # To axon-01
+      # systemd.network.links."50-tbt-02" = {
+      #   matchConfig = {
+      #     Path = "pci-0000:c7:00.5";
+      #     Driver = "thunderbolt-net";
+      #   };
+      #   linkConfig = {
+      #     MACAddressPolicy = "none";
+      #     Name = "tbt-02";
+      #   };
+      # };
+      # systemd.network.networks.tbt-02 = {
+      #   matchConfig = {
+      #     Path = "pci-0000:c7:00.5";
+      #     Driver = "thunderbolt-net";
+      #   };
+      #   addresses = [
+      #     {
+      #       addressConfig = {
+      #         Address = "10.7.0.103/32";
+      #         Peer = "10.7.0.101/32";
+      #       };
+      #     }
+      #   ];
+      # };
+
       system.stateVersion = "25.05";
     };
 }
