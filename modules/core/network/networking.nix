@@ -30,6 +30,8 @@
           '';
         };
 
+        enable_networkManager = mkEnableOption "Enable NetworkManager for managing network interfaces";
+
         unmanagedInterfaces = mkOption {
           type = listOf str;
           default = cfg.interfaces;
@@ -45,9 +47,8 @@
         networking = {
           useDHCP = false;
           dhcpcd.enable = false;
-          firewall.enable = false;
+          firewall.enable = false; # TODO: enable firewall
           networkmanager = {
-            enable = true;
             unmanaged = unmanagedInterfaces;
           };
         };

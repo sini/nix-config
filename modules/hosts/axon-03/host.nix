@@ -31,6 +31,13 @@
         networking = {
           interfaces = [ "enp2s0" ];
           unmanagedInterfaces = [ "enp2s0" ];
+          thunderboltFabric = {
+            loopbackAddress = {
+              ipv4 = "172.16.255.3/32"; # TODO: move and extend range
+              ipv6 = "fdb4:5edb:1b00::3/128";
+            };
+            nsap = "49.0000.0000.0003.00";
+          };
         };
         disk.longhorn = {
           os_drive = {
