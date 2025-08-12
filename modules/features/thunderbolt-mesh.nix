@@ -30,6 +30,27 @@
           type = lib.types.str;
           example = "49.0000.0000.0001.00";
         };
+        bgp = {
+          enable = lib.mkEnableOption "BGP peering with the uplink machine";
+
+          asn = lib.mkOption {
+            type = lib.types.int;
+            default = 65001;
+            description = "Autonomous System Number for the internal network.";
+          };
+
+          uplinkPeerIp = lib.mkOption {
+            type = lib.types.str;
+            example = "10.10.10.1";
+            description = "The Ethernet IP address of the uplink machine.";
+          };
+
+          serviceVip = lib.mkOption {
+            type = lib.types.str;
+            example = "10.10.11.1/32";
+            description = "The virtual IP to advertise for cluster services.";
+          };
+        };
       };
 
       config = {
@@ -80,7 +101,21 @@
             fabric-tier 0
             lsp-gen-interval 1
             max-lsp-lifetime 600
-            lsp-refresh-interval 180'';
+            lsp-refresh-interval 180
+          ''
+          + lib.mkIf cfg.bgp.enable ''
+            !
+            ! BGP Configuration for Uplink Peering
+            !
+            router bgp ${toString cfg.bgp.asn}
+              bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+              neighbor ${cfg.bgp.uplinkPeerIp} remote-as ${toString cfg.bgp.asn}
+              !
+              address-family ipv4 unicast
+                network ${cfg.bgp.serviceVip}
+              exit-address-family
+            !
+          '';
         };
 
         systemd = {
