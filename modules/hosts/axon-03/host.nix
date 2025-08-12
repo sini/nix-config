@@ -10,6 +10,7 @@
       disk-longhorn
       cpu-amd
       gpu-amd
+      thunderbolt-mesh
     ];
     tags = {
       "kubernetes-cluster" = "dev";
@@ -29,11 +30,7 @@
       hardware = {
         networking = {
           interfaces = [ "enp2s0" ];
-          unmanagedInterfaces = [
-            "enp2s0"
-            "tb01"
-            "tb02"
-          ];
+          unmanagedInterfaces = [ "enp2s0" ];
         };
         disk.longhorn = {
           os_drive = {
@@ -44,78 +41,6 @@
             device_id = "nvme-Force_MP600_1925823000012856500E";
           };
         };
-      };
-
-      boot = {
-        kernel.sysctl = {
-          "net.ipv4.ip_forward" = 1;
-          "net.ipv6.conf.all.forwarding" = 1;
-          # These need to be increased for k8s
-          # Although the default settings might not cause issues initially, you'll get strange behavior after a while
-          "fs.inotify.max_user_instances" = 1048576;
-          "fs.inotify.max_user_watches" = 1048576;
-        };
-        kernelModules = [
-          "thunderbolt"
-          "thunderbolt-net"
-        ];
-      };
-
-      systemd.network = {
-        config.networkConfig = {
-          IPv4Forwarding = true;
-          IPv6Forwarding = true;
-        };
-        links = {
-          "50-tb01" = {
-            matchConfig = {
-              Path = "pci-0000:c7:00.5";
-              Driver = "thunderbolt-net";
-            };
-            linkConfig = {
-              MACAddressPolicy = "none";
-              Name = "tb01";
-            };
-          };
-          "50-tb02" = {
-            matchConfig = {
-              Path = "pci-0000:c7:00.6";
-              Driver = "thunderbolt-net";
-            };
-            linkConfig = {
-              MACAddressPolicy = "none";
-              Name = "tb02";
-            };
-          };
-        };
-        networks = {
-          "21-thunderbolt" = {
-            matchConfig.Driver = "thunderbolt-net";
-            linkConfig = {
-              ActivationPolicy = "up";
-              MTUBytes = "1500";
-            };
-            networkConfig = {
-              LinkLocalAddressing = "no";
-            };
-          };
-        };
-        # networks = {
-        #   "tbt-02" = {
-        #     matchConfig = {
-        #       Path = "pci-0000:c7:00.5";
-        #       Driver = "thunderbolt-net";
-        #     };
-        #     addresses = [
-        #       {
-        #         addressConfig = {
-        #           Address = "10.7.0.101/32";
-        #           Peer = "10.7.0.103/32";
-        #         };
-        #       }
-        #     ];
-        #   };
-        # };
       };
 
       system.stateVersion = "25.05";
