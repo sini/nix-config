@@ -66,6 +66,8 @@ in
         gamemode = uidGid 981;
         greeter = uidGid 980;
         uinput = uidGid 979;
+        frr = uidGid 978;
+        frrvty = uidGid 977;
       };
   };
 }

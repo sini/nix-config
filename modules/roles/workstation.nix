@@ -25,7 +25,11 @@
       gnome
       #greetd # Doesn't work with gnome's session lock stuff... use if we don't need gnome
       hyprland
+
     ];
+
+    # Enable NetworkManager for managing network interfaces
+    networking.networkmanager.enable = true;
 
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
@@ -38,7 +42,6 @@
         obs-studio
         obsidian # note-taking app
         zathura # PDF viewer
-
         # TODO:  Broken for now....
         hyprland
       ];
