@@ -9,6 +9,7 @@
       disk-single
       cpu-amd
       gpu-amd
+      podman
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIKFdt1A2dHlqDpSTvw85Iu6JHlVM/ERYAeMT95vLaVc root@surge";
     facts = ./facter.json;
