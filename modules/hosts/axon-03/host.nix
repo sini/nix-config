@@ -38,6 +38,7 @@
             };
             nsap = "49.0000.0000.0003.00";
           };
+          bgp.enable = true;
         };
         disk.longhorn = {
           os_drive = {
