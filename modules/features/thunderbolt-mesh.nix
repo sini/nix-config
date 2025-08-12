@@ -1,3 +1,5 @@
+# Inspired by: https://github.com/Stinjul/nixfiles/blob/main/modules/nixos/thunderbolt-network.nix
+#
 {
   flake.modules.nixos.thunderbolt-mesh =
     {
@@ -8,8 +10,8 @@
     let
       cfg = config.hardware.networking.thunderboltFabric;
       interfaces = [
-        "tb1"
-        "tb2"
+        "enp199s0f5"
+        "enp199s0f6"
       ];
     in
     {
@@ -101,7 +103,7 @@
                   Driver = "thunderbolt-net";
                 };
                 linkConfig = {
-                  Name = "enp0s13f3";
+                  Name = "enp199s0f5";
                   Alias = "tb1";
                   AlternativeName = "tb1";
                 };
@@ -112,7 +114,7 @@
                   Driver = "thunderbolt-net";
                 };
                 linkConfig = {
-                  Name = "enp0s13f2";
+                  Name = "enp199s0f6";
                   Alias = "tb2";
                   AlternativeName = "tb2";
                 };
