@@ -37,8 +37,8 @@
               ipv6 = "fdb4:5edb:1b00::2/128";
             };
             nsap = "49.0000.0000.0002.00";
+            bgp.enable = true;
           };
-          bgp.enable = true;
         };
         disk.longhorn = {
           os_drive = {
