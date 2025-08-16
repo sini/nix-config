@@ -45,7 +45,6 @@
         wine
         winetricks
         wineWowPackages.waylandFull
-        inputs.nix-gaming.packages.${pkgs.system}.star-citizen
         (lib.mkIf config.hardware.nvidia.prime.offload.enable (
           patchDesktop steamPkg "steam" "^Exec=" "Exec=nvidia-offload "
         ))
