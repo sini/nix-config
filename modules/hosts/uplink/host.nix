@@ -23,7 +23,7 @@
     {
       hardware = {
         disk.single.device_id = "nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
-        networking.interfaces = [ "enp4s0" ];
+        networking.interfaces = [ "enp10s0" ];
       };
       boot.kernelPackages = pkgs.linuxPackages_latest;
       system.stateVersion = "25.05";
