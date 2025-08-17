@@ -103,7 +103,7 @@
             max-lsp-lifetime 600
             lsp-refresh-interval 180
           ''
-          + lib.mkIf cfg.bgp.enable ''
+          + lib.optionalString cfg.bgp.enable ''
             !
             ! BGP Configuration for Uplink Peering
             !
