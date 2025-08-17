@@ -41,13 +41,13 @@
 
           uplinkPeerIp = lib.mkOption {
             type = lib.types.str;
-            example = "10.10.10.1";
+            default = "10.10.10.1";
             description = "The Ethernet IP address of the uplink machine.";
           };
 
           serviceVip = lib.mkOption {
             type = lib.types.str;
-            example = "10.10.11.1/32";
+            default = "10.10.11.1/32";
             description = "The virtual IP to advertise for cluster services.";
           };
         };
