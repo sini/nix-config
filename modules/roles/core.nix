@@ -15,6 +15,7 @@
       nixpkgs
       openssh
       power-mgmt
+      shell
       ssd
       sudo
       systemd-boot

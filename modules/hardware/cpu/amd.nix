@@ -11,7 +11,6 @@
         blacklistedKernelModules = [ "k10temp" ];
         kernelModules = [
           "kvm-amd"
-          "amd-pstate" # load pstate module in case the device has a newer gpu
           "msr" # x86 CPU MSR access device
           "zenpower"
         ];
