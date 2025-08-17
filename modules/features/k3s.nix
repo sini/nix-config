@@ -418,6 +418,7 @@ in
             inherit role clusterInit;
             enable = true;
             tokenFile = config.age.secrets.kubernetes-cluster-token.path;
+            gracefulNodeShutdown.enable = true;
             extraFlags = lib.mkIf (role == "server") (lib.mkForce serverFlags);
           }
           // lib.optionalAttrs (!isMaster) {
