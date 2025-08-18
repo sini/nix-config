@@ -75,24 +75,24 @@
           enable = true;
           settings.updates.auto_update = true;
         };
-        television = {
-          enable = true;
-          enableBashIntegration = true;
-          enableZshIntegration = true;
-          settings = {
-            ui = {
-              use_nerd_font_icons = true;
-              ui_scale = 120;
-              show_preview_panel = true;
-            };
-            keybindings = {
-              quit = [
-                "esc"
-                "ctrl-c"
-              ];
-            };
-          };
-        };
+        # television = {
+        #   enable = true;
+        #   enableBashIntegration = true;
+        #   enableZshIntegration = true;
+        #   settings = {
+        #     ui = {
+        #       use_nerd_font_icons = true;
+        #       ui_scale = 120;
+        #       show_preview_panel = true;
+        #     };
+        #     keybindings = {
+        #       quit = [
+        #         "esc"
+        #         "ctrl-c"
+        #       ];
+        #     };
+        #   };
+        # };
         zoxide = {
           enable = true;
           enableBashIntegration = true;
