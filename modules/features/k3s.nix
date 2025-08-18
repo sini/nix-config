@@ -405,11 +405,20 @@ in
             serverFlagList = [
               # "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
               # "--snapshotter=overlayfs"
+              "--disable local-storage"
+              "--disable metrics-server"
+              "--disable traefik"
+              "--disable servicelb"
+              "--flannel-backend=none"
+              "--disable-network-policy"
+              "--disable-helm-controller"
+              "--disable-kube-proxy"
+              "--etcd-expose-metrics"
               "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--tls-san=${config.networking.fqdn}"
               "--disable=servicelb"
-              "--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
-              "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
+              #"--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
+              #"--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
             ];
 
             serverFlags = builtins.concatStringsSep " " serverFlagList;
