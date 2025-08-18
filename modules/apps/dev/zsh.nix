@@ -132,6 +132,7 @@
             "ssh-ignore" =
               "${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
             "fixstore" = "sudo nix-store --verify --check-contents --repair";
+            "flake-update" = "nix flake update --option access-tokens \"github.com=$(gh auth token)\"";
           };
         };
       };
