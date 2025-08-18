@@ -5,9 +5,7 @@ let
   ) config.flake.hosts;
 in
 {
-  flake.modules.nixos.homelab =
-
-    {
-      networking.hosts = hosts;
-    };
+  flake.modules.nixos.homelab = {
+    networking.hosts = hosts;
+  };
 }
