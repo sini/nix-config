@@ -110,9 +110,6 @@
                 zle -N history-beginning-search-backward-end history-search-end
                 zle -N history-beginning-search-forward-end  history-search-end
               fi
-
-              # Set ssh alias if using kitty
-              [ "$TERM" = "xterm-kitty" ] && alias ssh="kitty +kitten ssh"
             '')
           ];
 
@@ -129,8 +126,8 @@
             "reload" = "systemctl --user daemon-reload";
             "status" = "systemctl --user --full status";
             "restart" = "systemctl --user restart";
-            "ssh-ignore" =
-              "${pkgs.openssh}/bin/ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
+            "ssh-kitty" = "kitty +kitten ssh";
+            "ssh-ignore" = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
             "fixstore" = "sudo nix-store --verify --check-contents --repair";
             "flake-update" = "nix flake update --option access-tokens \"github.com=$(gh auth token)\"";
           };
