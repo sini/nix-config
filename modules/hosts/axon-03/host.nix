@@ -4,7 +4,7 @@
     ipv4 = "10.10.10.4";
     roles = [
       "server"
-      #"kubernetes"
+      "kubernetes"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-longhorn
