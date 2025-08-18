@@ -9,6 +9,7 @@
       facter
       firmware
       home-manager
+      homelab
       i18n
       networking
       nix
