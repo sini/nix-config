@@ -405,6 +405,7 @@ in
             serverFlagList = [
               # "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
               # "--snapshotter=overlayfs"
+              "--write-kubeconfig-mode \"0644\""
               "--disable local-storage"
               "--disable metrics-server"
               "--disable traefik"

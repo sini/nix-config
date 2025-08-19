@@ -4,6 +4,8 @@
     { pkgs, ... }:
     {
       home.packages = with pkgs; [
+        lens
+
         # --- Containers ---
         fetchit # A tool to manage the life cycle and configuration of Podman containers
         #podman-desktop # A graphical tool for developing on containers and Kubernetes
