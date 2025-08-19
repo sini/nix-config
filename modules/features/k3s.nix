@@ -46,11 +46,36 @@ in
 
       environment.systemPackages = with pkgs; [
         k3s
+        k9s
+        kubectl
+        istioctl
+        kubernetes-helm
+        cilium-cli
+        fluxcd
+        clusterctl # for kubernetes cluster-api
+
+        skopeo # copy/sync images between registries and local storage
+        go-containerregistry # provides `crane` & `gcrane`, it's similar to skopeo
+        dive # explore docker layers
+
         openiscsi # Required for Longhorn
         nfs-utils # Required for Longhorn
       ];
 
+      # Kernel modules required by cilium
+      boot.kernelModules = [
+        "ip6_tables"
+        "ip6table_mangle"
+        "ip6table_raw"
+        "ip6table_filter"
+      ];
+
       networking = {
+        enableIPv6 = true;
+        nat = {
+          enable = true;
+          enableIPv6 = true;
+        };
         nftables.enable = lib.mkForce false;
         firewall.enable = lib.mkForce false;
       };
@@ -417,11 +442,9 @@ in
               "--etcd-expose-metrics"
               "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--tls-san=${config.networking.fqdn}"
-              "--disable=servicelb"
               #"--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
               #"--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
             ];
-
             serverFlags = builtins.concatStringsSep " " serverFlagList;
           in
           {
@@ -441,6 +464,18 @@ in
           name = "iqn.2016-04.com.open-iscsi:${config.networking.fqdn}";
         };
       };
+
+      # create symlinks to link k3s's cni directory to the one used by almost all CNI plugins
+      # such as multus, calico, etc.
+      # https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html#Type
+      systemd.tmpfiles.rules = [
+        # https://docs.k3s.io/networking/multus-ipams
+        "L+ /opt/cni/bin - - - - /var/lib/rancher/k3s/data/cni/"
+        # If you have disabled flannel, you will have to create the directory via a tmpfiles rule
+        "d /var/lib/rancher/k3s/agent/etc/cni/net.d 0751 root root - -"
+        # Link the CNI config directory
+        "L+ /etc/cni/net.d - - - - /var/lib/rancher/k3s/agent/etc/cni/net.d"
+      ];
 
       # HACK: Symlink binaries to /usr/local/bin such that Longhorn can find them
       # when they use nsenter.
