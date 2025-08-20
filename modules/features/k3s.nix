@@ -162,8 +162,10 @@ in
               "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
               "--snapshotter=overlayfs"
               "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
-              "--node-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
-              "--node-external-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
+              # "--node-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
+              # "--node-external-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
+              "--node-ip=${hostOptions.ipv4}"
+              "--node-external-ip=${hostOptions.ipv4}"
               "--write-kubeconfig-mode \"0644\""
               "--disable local-storage"
               "--disable metrics-server"
@@ -175,8 +177,10 @@ in
               "--disable-kube-proxy"
               "--etcd-expose-metrics"
               "--tls-san=${config.networking.fqdn}"
-              "--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
-              "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
+              # "--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
+              # "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
+              "--cluster-cidr=10.42.0.0/16"
+              "--service-cidr=10.43.0.0/16"
             ];
             serverFlags = builtins.concatStringsSep " " serverFlagList;
           in
