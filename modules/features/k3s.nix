@@ -97,6 +97,20 @@ in
       # TODO Explore: networking.firewall.trustedInterfaces
       # };
 
+      # virtualisation.containerd = {
+      #   enable = true;
+      #   settings.plugins = {
+      #     "io.containerd.grpc.v1.cri".cni = {
+      #       bin_dir = "/var/lib/rancher/k3s/data/current/bin";
+      #       conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d";
+      #     };
+      #     # Optionally, configure containerd to use the k3s pause image
+      #     "io.containerd.grpc.v1.cri" = {
+      #       sandbox_image = "docker.io/rancher/mirrored-pause:3.6";
+      #     };
+      #   };
+      # };
+
       virtualisation.containerd = {
         enable = true;
         settings = {
@@ -123,7 +137,7 @@ in
             serverFlagList = [
               # "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
               # "--snapshotter=overlayfs"
-              # "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+              "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--node-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
               "--node-external-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
               "--write-kubeconfig-mode \"0644\""
@@ -165,7 +179,7 @@ in
       # https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html#Type
       systemd.tmpfiles.rules = [
         # https://docs.k3s.io/networking/multus-ipams
-        "L+ /opt/cni/bin - - - - /var/lib/rancher/k3s/data/cni/"
+        "L+ /opt/cni/bin - - - - /var/lib/rancher/k3s/data/current/bin"
         # If you have disabled flannel, you will have to create the directory via a tmpfiles rule
         "d /var/lib/rancher/k3s/agent/etc/cni/net.d 0751 root root - -"
         # Link the CNI config directory
