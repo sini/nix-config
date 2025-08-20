@@ -1,6 +1,7 @@
 { config, ... }:
 {
   flake.hosts.axon-01 = {
+    unstable = true;
     ipv4 = "10.10.10.2";
     roles = [
       "server"
