@@ -27,6 +27,7 @@ in
 {
   flake.modules.nixos.kubernetes =
     {
+      inputs,
       lib,
       pkgs,
       config,
@@ -40,6 +41,8 @@ in
       clusterInit = isMaster;
     in
     {
+      imports = [ inputs.nix-snapshotter.nixosModules.default ];
+      nixpkgs.overlays = [ inputs.nix-snapshotter.overlays.default ];
       age.secrets.kubernetes-cluster-token = {
         rekeyFile = rootPath + "/.secrets/k3s/${kubernetesCluster}/k3s-token.age";
       };
@@ -53,6 +56,7 @@ in
         cilium-cli
         fluxcd
         clusterctl # for kubernetes cluster-api
+        nerdctl # containerd CLI, similar to docker CLI
 
         skopeo # copy/sync images between registries and local storage
         go-containerregistry # provides `crane` & `gcrane`, it's similar to skopeo
@@ -97,55 +101,20 @@ in
       # TODO Explore: networking.firewall.trustedInterfaces
       # };
 
-      # virtualisation.containerd = {
-      #   enable = true;
-      #   settings.plugins = {
-      #     "io.containerd.grpc.v1.cri".cni = {
-      #       bin_dir = "/var/lib/rancher/k3s/data/current/bin";
-      #       conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d";
-      #     };
-      #     # Optionally, configure containerd to use the k3s pause image
-      #     "io.containerd.grpc.v1.cri" = {
-      #       sandbox_image = "docker.io/rancher/mirrored-pause:3.6";
-      #     };
-      #   };
-      # };
-
       virtualisation.containerd = {
         enable = true;
-        settings = {
-          plugins =
-            let
-              fullCNIPlugins = pkgs.buildEnv {
-                name = "full-cni";
-                paths = [
-                  pkgs.cni-plugins
-                  # ] ++ lib.lists.optionals (cfg.services.flannel == true) [
-                  # pkgs.cni-plugin-flannel
-                ];
-              };
-              cniConfig = {
-                bin_dir = "${fullCNIPlugins}/bin";
-                conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
-              };
-            in
-            {
-              "io.containerd.cri.v1.runtime".cni = cniConfig;
-              "io.containerd.grpc.v1.cri" = {
-                cni = cniConfig;
-                containerd.runtimes.runc.options.SystemdCgroup = true;
-              };
-            };
-        };
+        nixSnapshotterIntegration = true;
+        k3sIntegration = true;
       };
 
       services = {
+        nix-snapshotter.enable = true;
         k3s =
           let
             serverFlagList = [
               # "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
               # "--snapshotter=overlayfs"
-              "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+              # "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--node-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
               "--node-external-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
               "--write-kubeconfig-mode \"0644\""

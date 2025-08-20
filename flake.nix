@@ -186,6 +186,11 @@
     nix-index-database.url = "github:nix-community/nix-index-database";
     nix-index-database.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
+    nix-snapshotter = {
+      url = "github:pdtpartners/nix-snapshotter";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
     nix-vscode-extensions.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
