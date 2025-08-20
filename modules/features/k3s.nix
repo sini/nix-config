@@ -27,7 +27,6 @@ in
 {
   flake.modules.nixos.kubernetes =
     {
-      inputs,
       lib,
       pkgs,
       config,
@@ -41,7 +40,7 @@ in
       clusterInit = isMaster;
     in
     {
-      imports = [ inputs.nix-snapshotter.nixosModules.default ];
+      # imports = [ inputs.nix-snapshotter.nixosModules.default ];
       #nixpkgs.overlays = [ inputs.nix-snapshotter.overlays.default ];
       age.secrets.kubernetes-cluster-token = {
         rekeyFile = rootPath + "/.secrets/k3s/${kubernetesCluster}/k3s-token.age";
@@ -101,86 +100,89 @@ in
       # TODO Explore: networking.firewall.trustedInterfaces
       # };
 
-      virtualisation.containerd = {
-        enable = true;
-        #nixSnapshotterIntegration = true;
-        #k3sIntegration = true;
+      # virtualisation.containerd = {
+      #   enable = true;
+      #   #nixSnapshotterIntegration = true;
+      #   #k3sIntegration = true;
 
-        settings = {
-          version = 2;
+      #   settings = {
+      #     version = 2;
 
-          proxy_plugins.nix = {
-            type = "snapshot";
-            address = "/run/nix-snapshotter/nix-snapshotter.sock";
-          };
+      #     proxy_plugins.nix = {
+      #       type = "snapshot";
+      #       address = "/run/nix-snapshotter/nix-snapshotter.sock";
+      #     };
 
-          plugins =
-            let
-              k3s-cni-plugins = pkgs.buildEnv {
-                name = "k3s-cni-plugins";
-                paths = with pkgs; [
-                  cni-plugins
-                  cni-plugin-flannel
-                ];
-              };
-            in
-            {
-              "io.containerd.grpc.v1.cri" = {
-                stream_server_address = "127.0.0.1";
-                stream_server_port = "10010";
-                enable_selinux = false;
-                enable_unprivileged_ports = true;
-                enable_unprivileged_icmp = true;
-                disable_apparmor = true;
-                disable_cgroup = true;
-                restrict_oom_score_adj = true;
-                sandbox_image = "rancher/mirrored-pause:3.6";
-                containerd.snapshotter = "nix";
+      #     plugins =
+      #       let
+      #         k3s-cni-plugins = pkgs.buildEnv {
+      #           name = "k3s-cni-plugins";
+      #           paths = with pkgs; [
+      #             cni-plugins
+      #             cni-plugin-flannel
+      #           ];
+      #         };
+      #       in
+      #       {
+      #         "io.containerd.grpc.v1.cri" = {
+      #           stream_server_address = "127.0.0.1";
+      #           stream_server_port = "10010";
+      #           enable_selinux = false;
+      #           enable_unprivileged_ports = true;
+      #           enable_unprivileged_icmp = true;
+      #           disable_apparmor = true;
+      #           disable_cgroup = true;
+      #           restrict_oom_score_adj = true;
+      #           sandbox_image = "rancher/mirrored-pause:3.6";
+      #           containerd.snapshotter = "nix";
 
-                cni = {
-                  conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
-                  bin_dir = "${k3s-cni-plugins}/bin";
-                };
-              };
+      #           cni = {
+      #             conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
+      #             bin_dir = "${k3s-cni-plugins}/bin";
+      #           };
+      #         };
 
-              "io.containerd.transfer.v1.local".unpack_config = [
-                {
-                  platform = "linux/amd64";
-                  snapshotter = "nix";
-                }
-              ];
-            };
-        };
+      #         "io.containerd.transfer.v1.local".unpack_config = [
+      #           {
+      #             platform = "linux/amd64";
+      #             snapshotter = "nix";
+      #           }
+      #         ];
+      #       };
+      #   };
 
-      };
+      # };
 
       services = {
-        nix-snapshotter.enable = true;
+        # nix-snapshotter.enable = true;
         k3s =
           let
             serverFlagList = [
-              "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
-              "--snapshotter=overlayfs"
-              "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+              #"--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
+              #"--snapshotter=overlayfs"
+              #"--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               # "--node-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
               # "--node-external-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
-              "--node-ip=${hostOptions.ipv4}"
-              "--node-external-ip=${hostOptions.ipv4}"
-              "--write-kubeconfig-mode \"0644\""
-              "--disable local-storage"
-              "--disable metrics-server"
-              "--disable traefik"
-              "--disable servicelb"
-              "--flannel-backend=none"
-              "--disable-network-policy"
-              "--disable-helm-controller"
-              "--disable-kube-proxy"
-              "--etcd-expose-metrics"
-              "--tls-san=${config.networking.fqdn}"
               # "--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
               # "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
+              "--node-ip=${hostOptions.ipv4}"
+              "--node-external-ip=${hostOptions.ipv4}"
               "--cluster-cidr=10.42.0.0/16"
               "--service-cidr=10.43.0.0/16"
+
+              "--write-kubeconfig-mode \"0644\""
+              # "--etcd-expose-metrics"
+              # "--disable-helm-controller"
+
+              #"--disable local-storage"
+              #"--disable metrics-server"
+              #"--disable traefik"
+
+              #"--flannel-backend=none" # Cilium
+              #"--disable-network-policy" # Cilium
+              #"--disable-kube-proxy" # Cilium will handle this
+              "--disable servicelb" # Cilium
+              "--tls-san=${config.networking.fqdn}"
             ];
             serverFlags = builtins.concatStringsSep " " serverFlagList;
           in
