@@ -42,7 +42,7 @@ in
     in
     {
       imports = [ inputs.nix-snapshotter.nixosModules.default ];
-      nixpkgs.overlays = [ inputs.nix-snapshotter.overlays.default ];
+      #nixpkgs.overlays = [ inputs.nix-snapshotter.overlays.default ];
       age.secrets.kubernetes-cluster-token = {
         rekeyFile = rootPath + "/.secrets/k3s/${kubernetesCluster}/k3s-token.age";
       };
@@ -103,8 +103,55 @@ in
 
       virtualisation.containerd = {
         enable = true;
-        nixSnapshotterIntegration = true;
-        k3sIntegration = true;
+        #nixSnapshotterIntegration = true;
+        #k3sIntegration = true;
+
+        settings = {
+          version = 2;
+
+          proxy_plugins.nix = {
+            type = "snapshot";
+            address = "/run/nix-snapshotter/nix-snapshotter.sock";
+          };
+
+          plugins =
+            let
+              k3s-cni-plugins = pkgs.buildEnv {
+                name = "k3s-cni-plugins";
+                paths = with pkgs; [
+                  cni-plugins
+                  cni-plugin-flannel
+                ];
+              };
+            in
+            {
+              "io.containerd.grpc.v1.cri" = {
+                stream_server_address = "127.0.0.1";
+                stream_server_port = "10010";
+                enable_selinux = false;
+                enable_unprivileged_ports = true;
+                enable_unprivileged_icmp = true;
+                disable_apparmor = true;
+                disable_cgroup = true;
+                restrict_oom_score_adj = true;
+                sandbox_image = "rancher/mirrored-pause:3.6";
+                containerd.snapshotter = "nix";
+
+                cni = {
+                  conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
+                  bin_dir = "${k3s-cni-plugins}/bin";
+                };
+              };
+
+              "io.containerd.transfer.v1.local".unpack_config = [
+                {
+                  platform = "linux/amd64";
+                  snapshotter = "nix";
+                }
+              ];
+            };
+        };
+
       };
 
       services = {
@@ -112,9 +159,9 @@ in
         k3s =
           let
             serverFlagList = [
-              # "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
-              # "--snapshotter=overlayfs"
-              # "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+              "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
+              "--snapshotter=overlayfs"
+              "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--node-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
               "--node-external-ip=10.10.10.2,fe80::5a47:caff:fe79:e8e2"
               "--write-kubeconfig-mode \"0644\""
