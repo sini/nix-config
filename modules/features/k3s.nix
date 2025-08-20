@@ -116,9 +116,17 @@ in
         settings = {
           plugins =
             let
+              fullCNIPlugins = pkgs.buildEnv {
+                name = "full-cni";
+                paths = [
+                  pkgs.cni-plugins
+                  # ] ++ lib.lists.optionals (cfg.services.flannel == true) [
+                  # pkgs.cni-plugin-flannel
+                ];
+              };
               cniConfig = {
-                bin_dir = lib.mkForce "/opt/cni/bin";
-                conf_dir = "/etc/cni/net.d";
+                bin_dir = "${fullCNIPlugins}/bin";
+                conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
               };
             in
             {
@@ -177,14 +185,14 @@ in
       # create symlinks to link k3s's cni directory to the one used by almost all CNI plugins
       # such as multus, calico, etc.
       # https://www.freedesktop.org/software/systemd/man/latest/tmpfiles.d.html#Type
-      systemd.tmpfiles.rules = [
-        # https://docs.k3s.io/networking/multus-ipams
-        "L+ /opt/cni/bin - - - - /var/lib/rancher/k3s/data/current/bin"
-        # If you have disabled flannel, you will have to create the directory via a tmpfiles rule
-        "d /var/lib/rancher/k3s/agent/etc/cni/net.d 0751 root root - -"
-        # Link the CNI config directory
-        "L+ /etc/cni/net.d - - - - /var/lib/rancher/k3s/agent/etc/cni/net.d"
-      ];
+      # systemd.tmpfiles.rules = [
+      #   # https://docs.k3s.io/networking/multus-ipams
+      #   "L+ /opt/cni/bin - - - - /var/lib/rancher/k3s/data/current/bin"
+      #   # If you have disabled flannel, you will have to create the directory via a tmpfiles rule
+      #   "d /var/lib/rancher/k3s/agent/etc/cni/net.d 0751 root root - -"
+      #   # Link the CNI config directory
+      #   "L+ /etc/cni/net.d - - - - /var/lib/rancher/k3s/agent/etc/cni/net.d"
+      # ];
 
       # HACK: Symlink binaries to /usr/local/bin such that Longhorn can find them
       # when they use nsenter.
