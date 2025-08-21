@@ -68,6 +68,21 @@
             };
             help = "Build a host configuration";
           }
+          {
+            package = pkgs.writeShellApplication {
+              name = "reset-axon";
+              text = ''
+                set -euo pipefail
+                colmena exec --on axon-01,axon-02,axon-03 -- systemctl stop k3s containerd
+                colmena exec --on axon-01,axon-02,axon-03 -- rm -rf /etc/rancher/ /var/lib/rancher/ /var/lib/containerd/ /var/lib/kubelet/ /var/lib/cni/ /run/k3s/ /run/containerd/ /run/cni/
+                colmena apply --on axon-01
+                scp sini@axon-01:/etc/rancher/k3s/k3s.yaml /home/sini/.config/kube/config
+                sed -i 's/127.0.0.1/axon-01/' /home/sini/.config/kube/config
+                kubectl get nodes -o wide
+              '';
+            };
+            help = "Delete all k3s data and reset the cluster";
+          }
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
