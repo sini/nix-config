@@ -158,16 +158,18 @@ in
         nix-snapshotter.enable = true;
         k3s =
           let
-            serverFlagList = [
+            generalFlagList = [
               "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
               "--snapshotter=overlayfs"
               "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+              "--node-ip=${hostOptions.ipv4}"
+              "--node-external-ip=${hostOptions.ipv4}"
+            ];
+            serverFlagList = [
               # "--node-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
               # "--node-external-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
               # "--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
               # "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
-              "--node-ip=${hostOptions.ipv4}"
-              "--node-external-ip=${hostOptions.ipv4}"
               "--cluster-cidr=10.42.0.0/16"
               "--service-cidr=10.43.0.0/16"
 
@@ -185,17 +187,23 @@ in
               "--disable servicelb" # Cilium
               "--tls-san=${config.networking.fqdn}"
             ];
-            serverFlags = builtins.concatStringsSep " " serverFlagList;
+            generalFlags = builtins.concatStringsSep " " generalFlagList;
+            serverFlags = builtins.concatStringsSep " " (generalFlagList ++ serverFlagList);
           in
           {
-            inherit role clusterInit;
+            inherit clusterInit;
+            role = "server";
             enable = true;
             tokenFile = config.age.secrets.kubernetes-cluster-token.path;
-            gracefulNodeShutdown.enable = true;
-            extraFlags = lib.mkIf (role == "server") (lib.mkForce serverFlags);
+            #gracefulNodeShutdown.enable = true;
+            extraFlags = lib.mkForce (if (role == "server") then serverFlags else generalFlags);
           }
           // lib.optionalAttrs (!isMaster) {
-            serverAddr = kubernetesMasterMap.${kubernetesCluster};
+            serverAddr =
+              let
+                address = kubernetesMasterMap.${kubernetesCluster};
+              in
+              "https://${address}:6443";
           };
 
         # Required for Longhorn
