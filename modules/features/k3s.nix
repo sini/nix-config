@@ -172,16 +172,16 @@ in
               "--service-cidr=10.43.0.0/16"
 
               "--write-kubeconfig-mode \"0644\""
-              # "--etcd-expose-metrics"
-              # "--disable-helm-controller"
+              "--etcd-expose-metrics"
+              "--disable-helm-controller"
 
-              #"--disable local-storage"
-              #"--disable metrics-server"
-              #"--disable traefik"
+              "--disable=local-storage"
+              "--disable=metrics-server"
+              "--disable=traefik"
 
-              #"--flannel-backend=none" # Cilium
-              #"--disable-network-policy" # Cilium
-              #"--disable-kube-proxy" # Cilium will handle this
+              "--flannel-backend=none" # Cilium
+              "--disable-network-policy" # Cilium
+              "--disable-kube-proxy" # Cilium will handle this
               "--disable servicelb" # Cilium
               "--tls-san=${config.networking.fqdn}"
             ];
