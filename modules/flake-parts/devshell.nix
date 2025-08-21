@@ -75,7 +75,7 @@
                 set -euo pipefail
                 colmena exec --on axon-01,axon-02,axon-03 -- systemctl stop k3s containerd
                 colmena exec --on axon-01,axon-02,axon-03 -- k3s-killall.sh
-                colmena exec --on axon-01,axon-02,axon-03 -- rm -rf /etc/rancher/ /var/lib/rancher/ /var/lib/containerd/ /var/lib/kubelet/ /var/lib/cni/ /run/k3s/ /run/containerd/ /run/cni/
+                colmena exec --on axon-01,axon-02,axon-03 -- rm -rf /etc/rancher/ /var/lib/rancher/ /var/lib/containerd/ /var/lib/kubelet/ /var/lib/cni/ /run/k3s/ /run/containerd/ /run/cni/ /opt/cni/ /opt/containerd/
                 echo "Applying changes to axon-01..."
                 colmena apply --on axon-01
                 scp sini@axon-01:/etc/rancher/k3s/k3s.yaml /home/sini/.config/kube/config
