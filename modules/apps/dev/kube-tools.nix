@@ -5,6 +5,7 @@
     {
       home.packages = with pkgs; [
         lens
+        cilium-cli
 
         # --- Containers ---
         fetchit # A tool to manage the life cycle and configuration of Podman containers
