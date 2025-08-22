@@ -116,12 +116,16 @@ in
 
           plugins =
             let
-              k3s-cni-plugins = pkgs.buildEnv {
-                name = "k3s-cni-plugins";
-                paths = with pkgs; [
-                  cni-plugins
-                  cni-plugin-flannel
-                ];
+              # k3s-cni-plugins = pkgs.buildEnv {
+              #   name = "k3s-cni-plugins";
+              #   paths = with pkgs; [
+              #     cni-plugins
+              #     cni-plugin-flannel
+              #   ];
+              # };
+              cniConfig = {
+                bin_dir = lib.mkForce "/opt/cni/bin";
+                conf_dir = "/etc/cni/net.d";
               };
             in
             {
@@ -137,10 +141,12 @@ in
                 sandbox_image = "rancher/mirrored-pause:3.6";
                 containerd.snapshotter = "nix";
 
-                cni = {
-                  conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
-                  bin_dir = "${k3s-cni-plugins}/bin";
-                };
+                cni = cniConfig;
+
+                # cni = {
+                #   conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
+                #   bin_dir = "${k3s-cni-plugins}/bin";
+                # };
               };
 
               "io.containerd.transfer.v1.local".unpack_config = [
@@ -154,6 +160,15 @@ in
 
       };
 
+      system.activationScripts.cniCopy = {
+        text = # bash
+          ''
+            mkdir -p /opt/cni/bin/
+            cp -r ${pkgs.cni-plugins}/bin/. /opt/cni/bin/.
+          '';
+      };
+
+      systemd.services.k3s.requires = [ "containerd.service" ];
       services = {
         nix-snapshotter.enable = true;
         k3s =
@@ -174,17 +189,20 @@ in
               "--service-cidr=10.43.0.0/16"
 
               "--write-kubeconfig-mode \"0644\""
-              # "--etcd-expose-metrics"
-              # "--disable-helm-controller"
+              "--etcd-expose-metrics"
+              "--disable-helm-controller"
 
-              #"--disable local-storage"
-              #"--disable metrics-server"
-              #"--disable traefik"
+              "--disable local-storage"
+              "--disable metrics-server"
+              "--disable traefik"
 
-              #"--flannel-backend=none" # Cilium
-              #"--disable-network-policy" # Cilium
-              #"--disable-kube-proxy" # Cilium will handle this
+              "--disable flannel"
               "--disable servicelb" # Cilium
+              "--flannel-backend=none" # Cilium
+              "--disable-network-policy" # Cilium
+              "--disable-kube-proxy" # Cilium will handle this
+              "--disable-cloud-controller"
+
               "--tls-san=${config.networking.fqdn}"
             ];
             generalFlags = builtins.concatStringsSep " " generalFlagList;
