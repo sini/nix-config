@@ -28,6 +28,8 @@
     {
       boot.kernelPackages = pkgs.linuxPackages_latest;
 
+      k3s.ipv4 = "172.16.255.2";
+
       hardware = {
         networking = {
           interfaces = [ "enp2s0" ];
@@ -38,7 +40,7 @@
               ipv6 = "fdb4:5edb:1b00::2/128";
             };
             nsap = "49.0000.0000.0002.00";
-            bgp.enable = true;
+            bgp.enable = false;
           };
         };
         disk.longhorn = {

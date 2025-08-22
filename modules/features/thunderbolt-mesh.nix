@@ -77,40 +77,46 @@
             ip forwarding
             ipv6 forwarding
             !
+
             interface lo
-            ip address ${cfg.loopbackAddress.ipv4}
-            ip router openfabric 1
-            ipv6 address ${cfg.loopbackAddress.ipv6}
-            ipv6 router openfabric 1
-            openfabric passive
+              ip address ${cfg.loopbackAddress.ipv4}
+              ip router openfabric 1
+              ipv6 address ${cfg.loopbackAddress.ipv6}
+              ipv6 router openfabric 1
+              openfabric passive
             !
+
+            !!! Advertise the node's pod CIDR via cilium_host, but don't form adjacencies
+            !! interface cilium_host
+            !!   ip router openfabric 1
+            !!   openfabric passive
+            !!!
+
             ${lib.concatMapStringsSep "\n" (interface: ''
               interface ${interface}
-              ip router openfabric 1
-              ipv6 router openfabric 1
-              openfabric csnp-interval 2
-              openfabric hello-interval 1
-              openfabric hello-multiplier 2
+                ip router openfabric 1
+                ipv6 router openfabric 1
+                openfabric csnp-interval 2
+                openfabric hello-interval 1
+                openfabric hello-multiplier 2
               !'') interfaces}
+
             router openfabric 1
-            net ${cfg.nsap}
-            fabric-tier 0
-            lsp-gen-interval 1
-            max-lsp-lifetime 600
-            lsp-refresh-interval 180
+              net ${cfg.nsap}
+              fabric-tier 0
+              lsp-gen-interval 1
+              max-lsp-lifetime 600
+              lsp-refresh-interval 180
           ''
           + lib.optionalString cfg.bgp.enable ''
             !
-            ! BGP Configuration for Uplink Peering
-            !
+            ! (optional) BGP peering for upstream VIPs stays as you had it
             router bgp ${toString cfg.bgp.asn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               neighbor ${cfg.bgp.uplinkPeerIp} remote-as ${toString cfg.bgp.asn}
-              !
               address-family ipv4 unicast
                 network ${cfg.bgp.serviceVip}
               exit-address-family
-            !
           '';
         };
 
