@@ -169,8 +169,8 @@
     };
 
     hyprland-overview = {
-      inputs.hyprland.follows = "hyprland";
       url = "github:KZDKM/Hyprspace";
+      inputs.hyprland.follows = "hyprland";
     };
 
     hyprsplit = {
@@ -179,8 +179,13 @@
     };
 
     hyprland-easymotion = {
-      inputs.hyprland.follows = "hyprland";
       url = "github:zakk4223/hyprland-easymotion";
+      inputs.hyprland.follows = "hyprland";
+    };
+
+    kubenix = {
+      url = "github:pizzapim/kubenix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     nix-index-database.url = "github:nix-community/nix-index-database";
