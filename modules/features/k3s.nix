@@ -37,7 +37,7 @@ in
     let
       kubernetesCluster = hostOptions.kubernetes-cluster or "dev";
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
-      role = if isMaster then "server" else "agent";
+      role = "server"; # if isMaster then "server" else "agent";
       clusterInit = isMaster;
     in
     {
