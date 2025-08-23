@@ -1,7 +1,6 @@
 { config, ... }:
 {
   flake.hosts.spike = {
-    unstable = true;
     ipv4 = "10.10.10.20";
     roles = [
       "workstation"
