@@ -54,12 +54,12 @@
     agenix = {
       url = "github:ryantm/agenix";
       inputs.home-manager.follows = "home-manager";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     agenix-rekey = {
       url = "github:oddlama/agenix-rekey";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     catppuccin.url = "github:catppuccin/nix";
@@ -249,9 +249,7 @@
 
     stylix = {
       url = "github:danth/stylix";
-      inputs = {
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
