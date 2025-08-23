@@ -129,6 +129,9 @@ in
                 # "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
                 #"--cluster-cidr=10.42.0.0/16"
                 #"--service-cidr=10.43.0.0/16"
+                "--bind-address=0.0.0.0"
+                "--cluster-cidr=172.20.0.0/16"
+                "--service-cidr=172.21.0.0/16"
 
                 "--write-kubeconfig-mode \"0644\""
                 "--etcd-expose-metrics"
@@ -138,7 +141,6 @@ in
                 "--disable metrics-server"
                 "--disable traefik"
 
-                "--disable flannel"
                 "--disable servicelb" # Cilium
                 "--flannel-backend=none" # Cilium
                 "--disable-network-policy" # Cilium
@@ -146,6 +148,15 @@ in
                 "--disable-cloud-controller"
 
                 "--tls-san=${config.networking.fqdn}"
+                "--tls-san=${config.networking.hostName}"
+                #"--tls-san=${cfg.ipv4}"
+                "--tls-san=10.10.10.2"
+                "--tls-san=10.10.10.3"
+                "--tls-san=10.10.10.4"
+                "--tls-san=172.16.255.1"
+                "--tls-san=172.16.255.2"
+                "--tls-san=172.16.255.3"
+
               ];
               generalFlags = builtins.concatStringsSep " " generalFlagList;
               serverFlags = builtins.concatStringsSep " " (generalFlagList ++ serverFlagList);
