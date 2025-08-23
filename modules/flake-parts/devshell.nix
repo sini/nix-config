@@ -98,7 +98,7 @@
                 echo "Applying changes to axon-01..."
                 colmena apply --on axon-01
                 scp sini@axon-01:/etc/rancher/k3s/k3s.yaml "''${HOME}/.config/kube/config"
-                sed -i 's/127.0.0.1/axon-01/' "''${HOME}/.config/kube/config"
+                sed -i 's/0.0.0.0/axon-01/' "''${HOME}/.config/kube/config"
                 kubectl get nodes -o wide
                 echo "Bringing up additional nodes..."
                 colmena apply --on axon-02,axon-03
