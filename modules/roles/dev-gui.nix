@@ -1,27 +1,18 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_dev = {
+  flake.modules.nixos.role_dev-gui = {
     imports = with config.flake.modules.nixos; [
-      adb
-      direnv
-      #gpg
+      gpg
+      vscode
     ];
 
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
-        bat
-        direnv
-        eza
-        misc-tools
-        nvf
-        git
-        #gpg
-        ssh
-        yazi
-        #zellij
-
         # Admin tools
-        k9s
+        gpg
+        wireshark
+        kube-tools
+        zellij
       ];
   };
 }

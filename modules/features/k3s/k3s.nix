@@ -118,16 +118,17 @@ in
                 "--snapshotter=overlayfs"
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
                 "--node-ip=${cfg.ipv4}"
-                # "--advertise-address=${cfg.ipv4}"
                 "--node-external-ip=${cfg.ipv4}"
+                # "--advertise-address=${cfg.ipv4}"
+                "--node-label=node.longhorn.io/create-default-disk=true"
               ];
               serverFlagList = [
                 # "--node-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
                 # "--node-external-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
                 # "--cluster-cidr=10.42.0.0/16,2001:cafe:42::/56"
                 # "--service-cidr=10.43.0.0/16,2001:cafe:43::/112"
-                "--cluster-cidr=10.42.0.0/16"
-                "--service-cidr=10.43.0.0/16"
+                #"--cluster-cidr=10.42.0.0/16"
+                #"--service-cidr=10.43.0.0/16"
 
                 "--write-kubeconfig-mode \"0644\""
                 "--etcd-expose-metrics"

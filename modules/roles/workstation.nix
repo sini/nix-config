@@ -9,11 +9,12 @@
 
       # Additional roles
       role_dev
+      role_dev-gui
       role_media
 
       # Styles
-      fonts
       stylix
+      fonts
 
       virtualization
 

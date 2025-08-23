@@ -69,9 +69,6 @@
           };
         };
       };
-      # Color variables
-      accent = "#${config.lib.stylix.colors.base0D}";
-      muted = "#${config.lib.stylix.colors.base03}";
     in
     {
       options.programs.git = {
@@ -190,13 +187,6 @@
             # https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md
             settings = {
               gui = {
-                theme = {
-                  activeBorderColor = [
-                    accent
-                    "bold"
-                  ];
-                  inactiveBorderColor = [ muted ];
-                };
                 # showListFooter = false;
                 # showRandomTip = false;
                 # showCommandLog = false;

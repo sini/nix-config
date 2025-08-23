@@ -4,5 +4,6 @@
     media-data-share
     network-boot
     server-network
+    role_dev
   ];
 }
