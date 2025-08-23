@@ -1,0 +1,64 @@
+# ==========================================================================
+# Core Cilium Agent & Operator Configuration
+# ==========================================================================
+cluster:
+  name: dev
+  id: 1
+# kubeProxyReplacement is the main switch to enable Cilium's eBPF-based
+# service handling, eliminating the need for kube-proxy. 'strict' is the
+# recommended mode.
+kubeProxyReplacement: true
+
+# For k3s, Cilium needs to know how to reach the Kubernetes API server.
+# Replace this with the LAN IP of your main k3s server node (e.g., 10.10.10.2).
+k8sServiceHost: 172.16.255.1
+k8sServicePort: 6443
+
+# ==========================================================================
+# Network & IP Address Management (IPAM)
+# ==========================================================================
+
+# Use the "cluster-pool" IPAM mode, which is the most common and flexible.
+# Cilium will manage pod IP allocations from the CIDR block you define below.
+ipam:
+  mode: cluster-pool
+  operator:
+    # This MUST match the --cluster-cidr you configured for k3s.
+    # This is the modern replacement for the old 'ipv4NativeRoutingCIDR' flag.
+    clusterPoolIPv4PodCIDRList: ["172.20.0.0/16"]
+
+# explicitly set the tunneling protocol. VXLAN is a robust default that works
+# over any L2/L3 network, including your OpenFabric mesh.
+routingMode: tunnel
+tunnelProtocol: vxlan
+
+# CRITICAL for your setup: This tells Cilium to use your high-speed
+# Thunderbolt interfaces for all inter-node tunnel traffic.
+devices: "lo,enp+"
+
+# ==========================================================================
+# Hubble - Observability
+# Recommended to be enabled from the start for debugging.
+# ==========================================================================
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+  ui:
+    enabled: true
+
+# ==========================================================================
+# Optional: Operator & Resource Tuning
+# The defaults are fine, but keeping these can be useful.
+# ==========================================================================
+
+# Run the operator in HA mode. For a 3-node cluster, 2 is a good number.
+operator:
+  replicas: 1
+
+# Automatically roll out agent pods when the Cilium config changes.
+rollOutCiliumPods: true
+
+# Enable debug logging during initial setup. You can set this to false later.
+debug:
+  enabled: true
