@@ -1,6 +1,11 @@
 {
   flake.modules.homeManager.misc-tools =
-    { pkgs, ... }:
+    {
+      lib,
+      pkgs,
+      hostOptions,
+      ...
+    }:
     {
       home.packages = with pkgs; [
         atool
@@ -21,8 +26,6 @@
         unzip
         tokei
       ];
-      # Enable easyeffects audio processing
-      services.easyeffects.enable = true;
 
       programs = {
         bottom.enable = true;
@@ -45,7 +48,6 @@
           enableZshIntegration = true;
         };
         jq.enable = true;
-        lazysql.enable = true;
         navi = {
           enable = true;
           enableBashIntegration = true;
@@ -104,6 +106,9 @@
             "cd"
           ];
         };
+      }
+      // lib.optionalAttrs (hostOptions.unstable) {
+        lazysql.enable = true;
       };
     };
 }

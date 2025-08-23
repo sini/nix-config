@@ -35,6 +35,7 @@
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
         alacritty
+        audio
         discord
         gnome
         kitty
