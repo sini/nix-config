@@ -41,7 +41,7 @@ in
 
           unstable = lib.mkOption {
             type = types.bool;
-            default = false;
+            default = true;
           };
 
           ipv4 = mkOption {

@@ -1,7 +1,6 @@
 { config, ... }:
 {
   flake.hosts.cortex = {
-    unstable = true;
     ipv4 = "10.10.10.9";
     roles = [
       "workstation"

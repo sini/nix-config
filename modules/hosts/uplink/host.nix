@@ -1,6 +1,7 @@
 { config, ... }:
 {
   flake.hosts.uplink = {
+    unstable = false;
     ipv4 = "10.10.10.1";
     roles = [
       "server"
