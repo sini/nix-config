@@ -16,6 +16,7 @@
       devshells.default = {
         packages = [
           pkgs.git
+          pkgs.gh
           pkgs.nix # Always use the nix version from this flake's nixpkgs version, so that nix-plugins (below) doesn't fail because of different nix versions.
           pkgs.nixos-rebuild # Ensure nixos-rebuild is available for darwin systems
           pkgs.nix-output-monitor
@@ -66,6 +67,22 @@
               '';
             };
             help = "Build a host configuration";
+          }
+          {
+            package = pkgs.writeShellApplication {
+              name = "flake-update";
+              text = ''
+                # Check GitHub CLI auth status
+                if ! gh auth status &>/dev/null; then
+                  echo "GitHub CLI not authenticated. Logging in..."
+                  gh auth login
+                fi
+
+                # Run flake update with the GitHub token
+                nix flake update --option access-tokens "github.com=$(gh auth token)"
+              '';
+            };
+            help = "Update flake inputs with GitHub access token";
           }
           {
             package = pkgs.writeShellApplication {
