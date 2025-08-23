@@ -1,12 +1,11 @@
 { config, ... }:
 {
   flake.hosts.axon-01 = {
-    unstable = true;
     ipv4 = "10.10.10.2";
     roles = [
       "server"
-      #      "kubernetes"
-      #      "kubernetes-master"
+      "kubernetes"
+      "kubernetes-master"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-longhorn
@@ -30,7 +29,7 @@
     {
       boot.kernelPackages = pkgs.linuxPackages_latest;
 
-      #k3s.ipv4 = "172.16.255.1";
+      k3s.ipv4 = "172.16.255.1";
 
       hardware = {
         networking = {
