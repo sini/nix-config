@@ -94,7 +94,6 @@
 
         services.frr = {
           bgpd.enable = true;
-          fabricd.enable = true;
           config = ''
             ip forwarding
             ipv6 forwarding
@@ -105,35 +104,7 @@
             route-map FROM_CILIUM permit 10
              match ip address prefix-list CILIUM_POD_CIDRS
             !
-            ! Interface Configuration (Unchanged)
-            interface lo
-              ip address ${cfg.loopbackAddress.ipv4}
-              ip router openfabric 1
-              ipv6 address ${cfg.loopbackAddress.ipv6}
-              ipv6 router openfabric 1
-              openfabric passive
-            !
-            ${lib.concatMapStringsSep "\n" (interface: ''
-              interface ${interface}
-                ip router openfabric 1
-                ipv6 router openfabric 1
-                openfabric csnp-interval 2
-                openfabric hello-interval 1
-                openfabric hello-multiplier 2
-              !'') interfaces}
-            !
-            ! OpenFabric Router (Phase 1: Still handles host routes)
-            router openfabric 1
-              net ${cfg.nsap}
-              fabric-tier 0
-              lsp-gen-interval 1
-              max-lsp-lifetime 600
-              lsp-refresh-interval 180
-              !
-              ! MAGIC: Learn BGP routes from Cilium and advertise them via OpenFabric
-              redistribute bgp ipv4 route-map FROM_CILIUM
-            !
-            ! BGP Router (Phase 1: Learns Pod CIDRs from Cilium, peers with other nodes)
+            ! BGP Router (Now handles EVERYTHING)
             router bgp ${toString cfg.bgp.localAsn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               !
@@ -148,13 +119,20 @@
               !
               ! Address Family Configuration
               address-family ipv4 unicast
+                !
+                ! THIS IS NEW: Advertise this host's own loopback IP to other nodes
+                network ${cfg.loopbackAddress.ipv4}
+                !
                 ! Activate the Cilium neighbor and apply the filter
                 neighbor 127.0.0.1 activate
                 neighbor 127.0.0.1 route-map FROM_CILIUM in
                 !
                 ! Activate the cluster node neighbors
-                ${lib.concatMapStringsSep "\n" (peer: "neighbor ${peer.ip} activate") cfg.bgp.peers}
+                ${lib.concatMapStringsSep "\n" (peer: ''
+                  neighbor ${peer.ip} activate
+                '') cfg.bgp.peers}
               exit-address-family
+            !
           '';
         };
 
