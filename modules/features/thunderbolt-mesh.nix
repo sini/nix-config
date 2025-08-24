@@ -118,6 +118,7 @@
               !
               ! Peer with the local Cilium agent
               neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
+              neighbor 127.0.0.1 ebgp-multihop 2
               !
               ! Peer with the other cluster nodes
               ${lib.concatMapStringsSep "\n" (peer: ''
