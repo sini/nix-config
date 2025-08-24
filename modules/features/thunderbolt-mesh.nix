@@ -183,6 +183,10 @@
             };
 
             networks = {
+              "00-loopback" = {
+                matchConfig.Name = "lo";
+                address = [ cfg.loopbackAddress.ipv4 ];
+              };
               "21-thunderbolt-1" = {
                 matchConfig.Name = "enp199s0f5";
                 address = [ cfg.interfaceIps.enp199s0f5 ];
