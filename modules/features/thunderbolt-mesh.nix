@@ -110,6 +110,7 @@
             !
             route-map FROM_CILIUM permit 10
             match ip address prefix-list CILIUM_POD_CIDRS
+            set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
             ! BGP Router (Now handles EVERYTHING)
             router bgp ${toString cfg.bgp.localAsn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
