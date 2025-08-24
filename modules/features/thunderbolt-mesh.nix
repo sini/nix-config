@@ -105,17 +105,14 @@
           config = ''
             ip forwarding
             ipv6 forwarding
-            !
             ! BGP route filtering for Cilium Pod CIDRs
-            ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr}
+            ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr} le 32
             !
             route-map FROM_CILIUM permit 10
             match ip address prefix-list CILIUM_POD_CIDRS
-            !
             ! BGP Router (Now handles EVERYTHING)
             router bgp ${toString cfg.bgp.localAsn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
-              !
               ! Peer with the local Cilium agent
               neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
               neighbor 127.0.0.1 ebgp-multihop 2
@@ -123,7 +120,6 @@
               ! Peer with the other cluster nodes
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
-                ! update-source lo has been REMOVED
               '') cfg.bgp.peers}
               !
               ! Address Family Configuration
@@ -139,6 +135,7 @@
                 ! Activate the cluster node neighbors
                 ${lib.concatMapStringsSep "\n" (peer: ''
                   neighbor ${peer.ip} activate
+                  neighbor ${peer.ip} next-hop-self
                 '') cfg.bgp.peers}
               exit-address-family
             !
