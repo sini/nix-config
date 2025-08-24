@@ -1,0 +1,39 @@
+# Resource 1: A reusable peer configuration with default settings.
+# This part is correct and was created successfully.
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: frr-peer-defaults
+spec:
+  # Accepting defaults for timers is fine for this setup.
+  {}
+---
+# Resource 2: The main cluster configuration with the corrected peerAddress.
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: frr-cluster-config
+spec:
+  # An empty nodeSelector applies this configuration to ALL nodes in the cluster.
+  nodeSelector: {}
+  bgpInstances:
+    - name: "local-frr-instance"
+      localASN: 65002 # Cilium's ASN
+      #localPort: 179      # Tell Cilium to listen for connections from FRR
+      peers:
+        - name: "frr-on-localhost"
+          peerASN: 65001 # FRR's ASN
+          peerAddress: "127.0.0.1" # CORRECTED: Removed the /32 mask
+          # Reference the peer configuration we created above
+          peerConfigRef:
+            name: "frr-peer-defaults"
+---
+# Resource 3: The advertisement configuration.
+# This part is correct and was applied successfully.
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: pod-cidr-advertisement
+spec:
+  advertisements:
+    - advertisementType: PodCIDR
