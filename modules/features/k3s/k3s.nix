@@ -121,6 +121,8 @@ in
                 "--node-external-ip=${cfg.ipv4}"
                 # "--advertise-address=${cfg.ipv4}"
                 "--node-label=node.longhorn.io/create-default-disk=true"
+                # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
+                "--resolv-conf=/run/systemd/resolve/resolv.conf"
               ];
               serverFlagList = [
                 # "--node-ip=${hostOptions.ipv4},fe80::5a47:caff:fe79:e8e2"
