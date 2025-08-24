@@ -26,10 +26,18 @@
             example = "fdb4:5edb:1b00::1/128";
           };
         };
-        nsap = lib.mkOption {
-          type = lib.types.str;
-          example = "49.0000.0000.0001.00";
+
+        interfaceIps = {
+          enp199s0f5 = lib.mkOption {
+            type = lib.types.str;
+            example = "169.254.12.1/31";
+          };
+          enp199s0f6 = lib.mkOption {
+            type = lib.types.str;
+            example = "169.254.13.1/31";
+          };
         };
+
         bgp = {
           # This is the ASN for THIS node's FRR instance.
           localAsn = lib.mkOption {
@@ -102,7 +110,7 @@
             ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr}
             !
             route-map FROM_CILIUM permit 10
-             match ip address prefix-list CILIUM_POD_CIDRS
+            match ip address prefix-list CILIUM_POD_CIDRS
             !
             ! BGP Router (Now handles EVERYTHING)
             router bgp ${toString cfg.bgp.localAsn}
@@ -114,13 +122,13 @@
               ! Peer with the other cluster nodes
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
-                neighbor ${peer.ip} update-source lo
+                ! update-source lo has been REMOVED
               '') cfg.bgp.peers}
               !
               ! Address Family Configuration
               address-family ipv4 unicast
                 !
-                ! THIS IS NEW: Advertise this host's own loopback IP to other nodes
+                ! Advertise this host's own loopback IP to other nodes
                 network ${cfg.loopbackAddress.ipv4}
                 !
                 ! Activate the Cilium neighbor and apply the filter
@@ -175,15 +183,23 @@
             };
 
             networks = {
-              "21-thunderbolt" = {
-                matchConfig.Driver = "thunderbolt-net";
+              "21-thunderbolt-1" = {
+                matchConfig.Name = "enp199s0f5";
+                address = [ cfg.interfaceIps.enp199s0f5 ];
                 linkConfig = {
                   ActivationPolicy = "up";
-                  MTUBytes = "1500";
+                  MTUBytes = "9000"; # Recommended for performance
                 };
-                networkConfig = {
-                  LinkLocalAddressing = "no";
+                networkConfig.LinkLocalAddressing = "no";
+              };
+              "21-thunderbolt-2" = {
+                matchConfig.Name = "enp199s0f6";
+                address = [ cfg.interfaceIps.enp199s0f6 ];
+                linkConfig = {
+                  ActivationPolicy = "up";
+                  MTUBytes = "9000"; # Recommended for performance
                 };
+                networkConfig.LinkLocalAddressing = "no";
               };
             };
           };

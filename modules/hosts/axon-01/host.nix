@@ -40,14 +40,21 @@
               ipv4 = "172.16.255.1/32"; # TODO: extend range
               ipv6 = "fdb4:5edb:1b00::1/128";
             };
-            nsap = "49.0000.0000.0001.00";
+            interfaceIps = {
+              # This interface connects to node2.enp199s0f6
+              enp199s0f5 = "169.254.12.0/31";
+              # This interface connects to node3.enp199s0f5
+              enp199s0f6 = "169.254.31.1/31";
+            };
             bgp.peers = [
+              # Peer with Node 2 over the 1-2 Link
               {
-                ip = "172.16.255.2";
+                ip = "169.254.12.1";
                 asn = 65001;
               }
+              # Peer with Node 3 over the 3-1 Link
               {
-                ip = "172.16.255.3";
+                ip = "169.254.31.0";
                 asn = 65001;
               }
             ];
