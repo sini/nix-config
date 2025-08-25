@@ -110,6 +110,7 @@
             !
             router bgp ${toString cfg.bgp.localAsn}
               no bgp ebgp-requires-policy
+              bgp allow-martian-nexthop
               bgp bestpath as-path multipath-relax
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               !
