@@ -103,6 +103,9 @@
           bgpd.enable = true;
           config = ''
             ip forwarding
+            interface lo
+              address ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}/32
+            exit
             ! BGP route filtering for Cilium Pod CIDRs
             ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr} le 32
             !
@@ -114,7 +117,7 @@
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               ! Peer with the local Cilium agent
               neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
-              neighbor 127.0.0.1 ebgp-multihop 2
+              neighbor 127.0.0.1 ebgp-multihop 4
               !
               ! Peer with the other cluster nodes
               ${lib.concatMapStringsSep "\n" (peer: ''
