@@ -1,42 +1,60 @@
-# Resource 1: A reusable peer configuration with default settings.
-# This part is correct and was created successfully.
 apiVersion: cilium.io/v2
 kind: CiliumBGPPeerConfig
 metadata:
   name: frr-peer-defaults
 spec:
-  timers:
-    holdTimeSeconds: 9
-    keepAliveTimeSeconds: 3
-  ebgpMultihop: 4
-  gracefulRestart:
-    enabled: true
-    restartTimeSeconds: 15
-  families:
-    - afi: ipv4
-      safi: unicast
----
-# Resource 2: The main cluster configuration with the corrected peerAddress.
-apiVersion: cilium.io/v2
-kind: CiliumBGPClusterConfig
-metadata:
-  name: frr-cluster-config
-spec:
-  # An empty nodeSelector applies this configuration to ALL nodes in the cluster.
-  nodeSelector: {}
   bgpInstances:
-    - name: "local-frr-instance"
-      localASN: 65002 # Cilium's ASN
-\      peers:
-  - name: "frr-on-localhost"
-    peerASN: 65001 # FRR's ASN
-    peerAddress: "127.0.0.1" # CORRECTED: Removed the /32 mask
-    # Reference the peer configuration we created above
-    peerConfigRef:
-      name: "frr-peer-defaults"
+    - name: "frr-peering-instance"
+      localASN: 65010 # Cilium's ASN
 ---
-# Resource 3: The advertisement configuration.
-# This part is correct and was applied successfully.
+# 2. Override for axon-01
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-01-override
+spec:
+  nodeSelector:
+    matchLabels:
+      "kubernetes.io/hostname": "axon-01"
+  bgpInstances:
+    - name: "frr-peering-instance" # Must match the name from ClusterConfig
+      peers:
+        - name: "frr-on-axon-01"
+          peerASN: 65001 # Your iBGP ASN
+          peerAddress: "172.16.255.1" # Connect to the host's loopback
+---
+# 3. Override for axon-02
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-02-override
+spec:
+  nodeSelector:
+    matchLabels:
+      "kubernetes.io/hostname": "axon-02"
+  bgpInstances:
+    - name: "frr-peering-instance"
+      peers:
+        - name: "frr-on-axon-02"
+          peerASN: 65001 # Your iBGP ASN
+          peerAddress: "172.16.255.2" # Connect to the host's loopback
+---
+# 4. Override for axon-03
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-03-override
+spec:
+  nodeSelector:
+    matchLabels:
+      "kubernetes.io/hostname": "axon-03"
+  bgpInstances:
+    - name: "frr-peering-instance"
+      peers:
+        - name: "frr-on-axon-03"
+          peerASN: 65001 # Your iBGP ASN
+          peerAddress: "172.16.255.3" # Connect to the host's loopback
+---
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
