@@ -4,9 +4,17 @@ kind: CiliumBGPPeerConfig
 metadata:
   name: frr-peer-config
 spec:
+  #ebgpMultihop: 4
   families:
     - afi: ipv4
       safi: unicast
+      advertisements:
+        matchLabels:
+          advertise: "bgp"
+  timers:
+    connectRetryTimeSeconds: 5
+    holdTimeSeconds: 9
+    keepAliveTimeSeconds: 3
 ---
 # Resource 2: The main cluster configuration.
 # Defines a single BGP instance that peers with the local FRR daemon.
@@ -32,6 +40,36 @@ apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
   name: pod-cidr-advertisement
+  labels:
+    advertise: bgp
 spec:
   advertisements:
     - advertisementType: PodCIDR
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-advertisements
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - ClusterIP
+          - ExternalIP
+          - LoadBalancerIP
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: pod-ip-pool-advert
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "CiliumPodIPPool"
+      selector:
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: ["never-used-value"] }

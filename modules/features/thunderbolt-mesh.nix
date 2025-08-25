@@ -99,58 +99,64 @@
         services.frr = {
           bgpd.enable = true;
           config = ''
+            ip forward
             !
             ! Static routes to bootstrap iBGP peering over loopbacks.
-            ! These are generated automatically from your 'peers' data.
             ${lib.concatMapStringsSep "\n" (peer: ''
               ip route ${peer.ip}/32 ${peer.gateway}
             '') cfg.bgp.peers}
             !
             ! Main BGP configuration
             !
+
+            ip prefix-list POD-CIDR seq 10 permit ${cfg.bgp.podCidr} le 32
+            ip prefix-list LOOPBACK-ONLY seq 10 permit ${cfg.loopbackAddress.ipv4}
+            !
+            route-map FROM-CILIUM-IN permit 10
+              match ip address prefix-list POD-CIDR
+              set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+            !
+            route-map TO-CILIUM-OUT permit 10
+              match ip address prefix-list LOOPBACK-ONLY
             router bgp ${toString cfg.bgp.localAsn}
-              no bgp ebgp-requires-policy
-              bgp allow-martian-nexthop
-              bgp bestpath as-path multipath-relax
-              bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               !
-              neighbor CILIUM peer-group
-              neighbor CILIUM remote-as ${toString cfg.bgp.ciliumAsn}
-              ! bgp listen range 192.168.2.0/24 peer-group CILIUM
-              ! bgp listen range 10.5.0.0/16 peer-group CILIUM
-              bgp listen range 172.20.0.0/16 peer-group CILIUM
-              ! bgp listen range 2001:db8:1::/64 peer-group CILIUM
-              ! == Peer with the local Cilium agent (eBGP) ==
+              ! == Global BGP Settings ==
+              bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+              no bgp ebgp-requires-policy
+              !bgp bestpath as-path multipath-relax
+              maximum-paths 1
+              bgp allow-martian-nexthop
+              !
+              ! == Peer Definitions ==
+              ! Peer with the local Cilium agent (eBGP)
               neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
-              ! == Peer with other cluster nodes (iBGP) using their stable loopbacks ==
+              !neighbor 127.0.0.1 update-source lo
+              neighbor 127.0.0.1 route-map FROM-CILIUM-IN in
+              neighbor 127.0.0.1 route-map TO-CILIUM-OUT out
+              neighbor 127.0.0.1 soft-reconfiguration inbound
+              !
+              ! Peer with other cluster nodes (iBGP) using their stable loopbacks
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
                 neighbor ${peer.ip} update-source lo
-                neighbor ${peer.ip} soft-reconfiguration inbound
               '') cfg.bgp.peers}
               !
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
-                ! Advertise this node's own loopback to its iBGP peers
                 network ${cfg.loopbackAddress.ipv4}
-                redistribute connected
-                redistribute static
                 !
-                ! Activate the Cilium neighbor
-                neighbor CILIUM activate
+                ! == Peer Activation ==
+                ! Activate the Cilium neighbor.
                 neighbor 127.0.0.1 activate
+                !neighbor 127.0.0.1 next-hop-self
                 !
                 ! Activate the iBGP peers and set next-hop-self.
                 ! 'next-hop-self' is CRITICAL for routes from Cilium to work.
                 ${lib.concatMapStringsSep "\n" (peer: ''
                   neighbor ${peer.ip} activate
-                  neighbor ${peer.ip} route-map ALLOW-ALL in
-                  neighbor ${peer.ip} route-map ALLOW-ALL out
                   neighbor ${peer.ip} next-hop-self
                 '') cfg.bgp.peers}
               exit-address-family
-              !
-              route-map ALLOW-ALL permit 10
             !
           '';
 
@@ -204,7 +210,7 @@
                 address = [ cfg.interfaceIps.enp199s0f5 ];
                 linkConfig = {
                   ActivationPolicy = "up";
-                  MTUBytes = "9000"; # Recommended for performance
+                  MTUBytes = "1500"; # Recommended for performance
                 };
                 networkConfig.LinkLocalAddressing = "no";
               };
@@ -213,7 +219,7 @@
                 address = [ cfg.interfaceIps.enp199s0f6 ];
                 linkConfig = {
                   ActivationPolicy = "up";
-                  MTUBytes = "9000"; # Recommended for performance
+                  MTUBytes = "1500"; # Recommended for performance
                 };
                 networkConfig.LinkLocalAddressing = "no";
               };
