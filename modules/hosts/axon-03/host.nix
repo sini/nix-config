@@ -47,11 +47,13 @@
             bgp.peers = [
               # Peer with Node 1 over the 3-1 Link
               {
-                ip = "169.254.31.1";
+                ip = "172.16.255.1";
+                gateway = "169.254.31.1";
               }
               # Peer with Node 2 over the 2-3 Link
               {
-                ip = "169.254.23.0";
+                ip = "172.16.255.2";
+                gateway = "169.254.23.0";
               }
             ];
           };

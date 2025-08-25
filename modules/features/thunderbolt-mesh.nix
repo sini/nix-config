@@ -39,12 +39,6 @@
         };
 
         bgp = {
-          # This is the ASN for THIS node's FRR instance.
-          localAsn = lib.mkOption {
-            type = lib.types.int;
-            default = 65001;
-            description = "Autonomous System Number for the internal FRR network.";
-          };
 
           # Define the cluster nodes to peer with.
           peers = lib.mkOption {
@@ -52,6 +46,7 @@
               lib.types.submodule {
                 options = {
                   ip = lib.mkOption { type = lib.types.str; };
+                  gateway = lib.mkOption { type = lib.types.str; };
                 };
               }
             );
@@ -63,6 +58,13 @@
               ]
             '';
             description = "List of BGP peers (other nodes in the cluster).";
+          };
+
+          # This is the ASN for THIS node's FRR instance.
+          localAsn = lib.mkOption {
+            type = lib.types.int;
+            default = 65001;
+            description = "Autonomous System Number for the internal FRR network.";
           };
 
           # Define the ASN for the Cilium agent.
@@ -102,24 +104,22 @@
         services.frr = {
           bgpd.enable = true;
           config = ''
-            ip forwarding
             !
-            ! Define a prefix list to only accept pod CIDRs from Cilium.
-            ip prefix-list CILIUM-POD-CIDR seq 10 permit ${cfg.bgp.podCidr} le 32
-            !
-            ! Define a route-map to apply the filter.
-            route-map CILIUM-IN permit 10
-              match ip address prefix-list CILIUM-POD-CIDR
+            ! Static routes to bootstrap iBGP peering over loopbacks.
+            ! These are generated automatically from your 'peers' data.
+            ${lib.concatMapStringsSep "\n" (peer: ''
+              ip route ${peer.ip}/32 ${peer.gateway}
+            '') cfg.bgp.peers}
             !
             ! Main BGP configuration
+            !
             router bgp ${toString cfg.bgp.localAsn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               !
-              ! Peer with the local Cilium agent (eBGP)
-              ! The ASN here must match Cilium's 'localASN'
+              ! == Peer with the local Cilium agent (eBGP) ==
               neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
               !
-              ! Peer with the other iBGP cluster nodes using their stable loopback IPs
+              ! == Peer with other cluster nodes (iBGP) using their stable loopbacks ==
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
                 neighbor ${peer.ip} update-source lo
@@ -130,12 +130,11 @@
                 ! Advertise this node's own loopback to its iBGP peers
                 network ${cfg.loopbackAddress.ipv4}
                 !
-                ! Activate the Cilium neighbor and apply the cleaning route-map
+                ! Activate the Cilium neighbor
                 neighbor 127.0.0.1 activate
-                neighbor 127.0.0.1 route-map CILIUM-IN in
                 !
-                ! Activate the iBGP peers and set next-hop-self
-                ! 'next-hop-self' is critical for iBGP to work correctly with routes learned from eBGP.
+                ! Activate the iBGP peers and set next-hop-self.
+                ! 'next-hop-self' is CRITICAL for routes from Cilium to work.
                 ${lib.concatMapStringsSep "\n" (peer: ''
                   neighbor ${peer.ip} activate
                   neighbor ${peer.ip} next-hop-self
