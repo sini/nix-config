@@ -103,47 +103,87 @@
           bgpd.enable = true;
           config = ''
             ip forwarding
-            interface lo
-              address ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}/32
-            exit
-            ! BGP route filtering for Cilium Pod CIDRs
-            ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr} le 32
             !
-            route-map FROM_CILIUM permit 10
-            match ip address prefix-list CILIUM_POD_CIDRS
-            set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
-            ! BGP Router (Now handles EVERYTHING)
+            ! BGP Router
             router bgp ${toString cfg.bgp.localAsn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
-              ! Peer with the local Cilium agent
-              neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
-              neighbor 127.0.0.1 ebgp-multihop 4
               !
-              ! Peer with the other cluster nodes
+              ! Define a peer-group for all Cilium agents
+              neighbor CILIUM peer-group
+              neighbor CILIUM remote-as ${toString cfg.bgp.ciliumAsn}
+              neighbor CILIUM ebgp-multihop 10
+              !
+              ! Listen for connections from ANY Cilium agent on the fabric
+              ! 172.16.255.0/24 is a good range that covers loopbacks
+              bgp listen range 172.16.255.0/24 peer-group CILIUM
+              !
+              ! Peer with the other iBGP cluster nodes using their stable loopback IPs
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
                 neighbor ${peer.ip} update-source lo
               '') cfg.bgp.peers}
               !
-              ! Address Family Configuration
               address-family ipv4 unicast
-                !
-                ! Advertise this host's own loopback IP to other nodes
+                ! Advertise this host's own loopback IP
                 network ${cfg.loopbackAddress.ipv4}
                 !
-                ! Activate the Cilium neighbor and apply the filter
-                neighbor 127.0.0.1 activate
-                neighbor 127.0.0.1 route-map FROM_CILIUM in
-                !
-                ! Activate the cluster node neighbors
+                ! Activate the cluster node neighbors and set next-hop-self
                 ${lib.concatMapStringsSep "\n" (peer: ''
                   neighbor ${peer.ip} activate
                   neighbor ${peer.ip} next-hop-self
                 '') cfg.bgp.peers}
-                maximum-paths 8
+                !
+                ! For the CILIUM peer-group, we don't activate them individually,
+                ! the listen range handles it. We just need a route-map.
+                ! We can remove the old route-map for simplicity now, as the listen
+                ! range provides a strong filter.
+                !
               exit-address-family
             !
           '';
+          # config = ''
+          #   ip forwarding
+          #   interface lo
+          #     address ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}/32
+          #   exit
+          #   ! BGP route filtering for Cilium Pod CIDRs
+          #   ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr} le 32
+          #   !
+          #   route-map FROM_CILIUM permit 10
+          #   match ip address prefix-list CILIUM_POD_CIDRS
+          #   set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+          #   ! BGP Router (Now handles EVERYTHING)
+          #   router bgp ${toString cfg.bgp.localAsn}
+          #     bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+          #     ! Peer with the local Cilium agent
+          #     neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
+          #     neighbor 127.0.0.1 ebgp-multihop 4
+          #     !
+          #     ! Peer with the other cluster nodes
+          #     ${lib.concatMapStringsSep "\n" (peer: ''
+          #       neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
+          #       neighbor ${peer.ip} update-source lo
+          #     '') cfg.bgp.peers}
+          #     !
+          #     ! Address Family Configuration
+          #     address-family ipv4 unicast
+          #       !
+          #       ! Advertise this host's own loopback IP to other nodes
+          #       network ${cfg.loopbackAddress.ipv4}
+          #       !
+          #       ! Activate the Cilium neighbor and apply the filter
+          #       neighbor 127.0.0.1 activate
+          #       neighbor 127.0.0.1 route-map FROM_CILIUM in
+          #       !
+          #       ! Activate the cluster node neighbors
+          #       ${lib.concatMapStringsSep "\n" (peer: ''
+          #         neighbor ${peer.ip} activate
+          #         neighbor ${peer.ip} next-hop-self
+          #       '') cfg.bgp.peers}
+          #       maximum-paths 8
+          #     exit-address-family
+          #   !
+          # '';
         };
 
         systemd = {
