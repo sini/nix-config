@@ -52,15 +52,14 @@
               lib.types.submodule {
                 options = {
                   ip = lib.mkOption { type = lib.types.str; };
-                  asn = lib.mkOption { type = lib.types.int; };
                 };
               }
             );
             default = [ ];
             example = ''
               [
-                { ip = "172.16.255.2"; asn = 65001; }
-                { ip = "172.16.255.3"; asn = 65001; }
+                { ip = "172.16.255.2"; }
+                { ip = "172.16.255.3"; }
               ]
             '';
             description = "List of BGP peers (other nodes in the cluster).";
@@ -104,7 +103,6 @@
           bgpd.enable = true;
           config = ''
             ip forwarding
-            ipv6 forwarding
             ! BGP route filtering for Cilium Pod CIDRs
             ip prefix-list CILIUM_POD_CIDRS permit ${cfg.bgp.podCidr} le 32
             !
@@ -120,7 +118,8 @@
               !
               ! Peer with the other cluster nodes
               ${lib.concatMapStringsSep "\n" (peer: ''
-                neighbor ${peer.ip} remote-as ${toString peer.asn}
+                neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
+                neighbor ${peer.ip} update-source lo
               '') cfg.bgp.peers}
               !
               ! Address Family Configuration
@@ -138,6 +137,7 @@
                   neighbor ${peer.ip} activate
                   neighbor ${peer.ip} next-hop-self
                 '') cfg.bgp.peers}
+                maximum-paths 8
               exit-address-family
             !
           '';

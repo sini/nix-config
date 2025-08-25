@@ -48,12 +48,10 @@
               # Peer with Node 3 over the 2-3 Link
               {
                 ip = "169.254.23.1";
-                asn = 65001;
               }
               # Peer with Node 1 over the 1-2 Link
               {
                 ip = "169.254.12.0";
-                asn = 65001;
               }
             ];
           };
