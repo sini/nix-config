@@ -4,7 +4,7 @@
     ipv4 = "10.10.10.4";
     roles = [
       "server"
-      #"kubernetes"
+      "kubernetes"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-longhorn
@@ -27,7 +27,7 @@
     {
       boot.kernelPackages = pkgs.linuxPackages_latest;
 
-      #k3s.ipv4 = "172.16.255.3";
+      k3s.ipv4 = "172.16.255.3";
 
       hardware = {
         networking = {
