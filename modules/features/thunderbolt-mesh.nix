@@ -120,7 +120,7 @@
               bgp listen range 172.20.0.0/16 peer-group CILIUM
               ! bgp listen range 2001:db8:1::/64 peer-group CILIUM
               ! == Peer with the local Cilium agent (eBGP) ==
-              neighbor 127.0.0.1 peer-group CILIUM
+              neighbor 127.0.0.1 remote-as ${toString cfg.bgp.ciliumAsn}
               ! == Peer with other cluster nodes (iBGP) using their stable loopbacks ==
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
@@ -137,6 +137,7 @@
                 !
                 ! Activate the Cilium neighbor
                 neighbor CILIUM activate
+                neighbor 127.0.0.1 activate
                 !
                 ! Activate the iBGP peers and set next-hop-self.
                 ! 'next-hop-self' is CRITICAL for routes from Cilium to work.
