@@ -9,6 +9,22 @@ cluster:
 # service handling, eliminating the need for kube-proxy.
 kubeProxyReplacement: true
 
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+      - CAP_NET_BIND_SERVICE
+
 # For k3s, Cilium needs to know how to reach the Kubernetes API server.
 # Replace this with the LAN IP of your main k3s server node (e.g., 10.10.10.2).
 k8sServiceHost: 172.16.255.1
@@ -39,7 +55,7 @@ egressMasqueradeInterfaces: "enp2s0"
 bgpControlPlane:
   enabled: true
 
-devices: "lo,enp199s0f5,enp199s0f6,enp2s0"
+devices: "lo"
 directRoutingDevice: "lo"
 
 # ==========================================================================
