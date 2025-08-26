@@ -4,7 +4,7 @@ kind: CiliumBGPPeerConfig
 metadata:
   name: frr-peer-config
 spec:
-  #ebgpMultihop: 4
+  ebgpMultihop: 4
   families:
     - afi: ipv4
       safi: unicast
