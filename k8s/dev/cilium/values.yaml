@@ -32,16 +32,14 @@ ipv4NativeRoutingCIDR: 172.20.0.0/16
 # Required combo for native + cluster-pool IPAM
 enableIPv4: true
 enableIPv4Masquerade: true # keep true unless your LAN/router routes 10.42/16
-# enableIpMasqAgent: false
+enableIpMasqAgent: false
 egressMasqueradeInterfaces: "enp2s0"
 
 # This enables Cilium's BGP speaker to talk to FRR.
 bgpControlPlane:
   enabled: true
 
-# CRITICAL for your setup: This tells Cilium to use your high-speed
-# Thunderbolt interfaces for all inter-node tunnel traffic.
-devices: "lo"
+devices: "lo,enp199s0f5,enp199s0f6,enp2s0"
 directRoutingDevice: "lo"
 
 # ==========================================================================
