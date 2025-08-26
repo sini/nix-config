@@ -120,8 +120,8 @@
               match interface lo
             !
             route-map CILIUM-INGRESS permit 10
-              !match ip address prefix-list FROM-CILIUM
-              set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+              match ip address prefix-list FROM-CILIUM
+              !set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
             !
             ! Only advertise our loopback to Cilium.
             route-map CILIUM-EGRESS permit 10
@@ -152,15 +152,15 @@
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
-                redistribute connected
-                !route-map import-connected
-                redistribute local
-                redistribute static
+                redistribute connected route-map import-connected
+                !redistribute local
+                !redistribute static
                 !
                 ! Activate the Cilium neighbor with our clean route-maps
                 neighbor cilium activate
                 neighbor cilium route-map CILIUM-INGRESS in
                 neighbor cilium route-map CILIUM-EGRESS out
+                neighbor cilium next-hop-self
                 !
                 ! Activate the iBGP peers and set next-hop-self for re-advertising routes.
                 ${lib.concatMapStringsSep "\n" (peer: ''
