@@ -153,6 +153,8 @@
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
                 redistribute connected route-map import-connected
+                redistribute local
+                redistribute static
                 !
                 ! Activate the Cilium neighbor with our clean route-maps
                 neighbor cilium activate
