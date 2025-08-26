@@ -60,7 +60,7 @@ bgpControlPlane:
 
 # CRITICAL for your setup: This tells Cilium to use your high-speed
 # Thunderbolt interfaces for all inter-node tunnel traffic.
-devices: "lo,enp+"
+devices: "lo"
 directRoutingDevice: "lo"
 
 # ==========================================================================
