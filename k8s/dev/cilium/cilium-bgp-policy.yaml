@@ -16,22 +16,58 @@ spec:
     holdTimeSeconds: 9
     keepAliveTimeSeconds: 3
 ---
-# Resource 2: The main cluster configuration.
-# Defines a single BGP instance that peers with the local FRR daemon.
 apiVersion: cilium.io/v2
 kind: CiliumBGPClusterConfig
 metadata:
-  name: frr-cluster-config
+  name: cilium-bgp-axon-01
 spec:
-  # Apply to all nodes
-  nodeSelector: {}
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-01
   bgpInstances:
     - name: "local-frr-instance"
       localASN: 65002
       peers:
         - name: "frr-on-localhost"
           peerASN: 65001 # The single iBGP ASN for all FRR nodes
-          peerAddress: "127.0.0.1" # Connect to the local FRR daemon
+          peerAddress: "172.16.255.1" # Connect to the local FRR daemon
+          peerConfigRef:
+            name: "frr-peer-config" # Reference the config above
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp-axon-02
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-02
+  bgpInstances:
+    - name: "local-frr-instance"
+      localASN: 65002
+      peers:
+        - name: "frr-on-localhost"
+          peerASN: 65001 # The single iBGP ASN for all FRR nodes
+          peerAddress: "172.16.255.2" # Connect to the local FRR daemon
+          peerConfigRef:
+            name: "frr-peer-config" # Reference the config above
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp-axon-03
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-03
+  bgpInstances:
+    - name: "local-frr-instance"
+      localASN: 65002
+      peers:
+        - name: "frr-on-localhost"
+          peerASN: 65001 # The single iBGP ASN for all FRR nodes
+          peerAddress: "172.16.255.3" # Connect to the local FRR daemon
           peerConfigRef:
             name: "frr-peer-config" # Reference the config above
 ---
@@ -60,6 +96,9 @@ spec:
           - ClusterIP
           - ExternalIP
           - LoadBalancerIP
+      selector:
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
 ---
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
