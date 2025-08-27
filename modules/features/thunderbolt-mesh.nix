@@ -108,46 +108,51 @@
             '') cfg.bgp.peers}
             !
             !
+            ! == Prefix Lists and Route Map to FIX Ingress Routes from Cilium ==
+            ! This prefix-list permits both Pod CIDRs and Service CIDRs.
+            ip prefix-list CILIUM-ROUTES seq 10 permit 172.16.0.0/12 ge 16 le 32
+            !
+            ! This is the CRITICAL FIX. This route-map matches the routes from Cilium
+            ! and overwrites their next-hop with this node's own stable loopback IP.
+            route-map CILIUM-INGRESS-FIX permit 10
+              match ip address prefix-list CILIUM-ROUTES
+              set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+            !
+            !
             ! Main BGP configuration
             !
             router bgp ${toString cfg.bgp.localAsn}
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               no bgp ebgp-requires-policy
-              ! This enables Equal-Cost Multi-Path for up to 3 iBGP routes (e.g. default route)
-              !maximum-paths ibgp 3
-              !maximum-paths 4
               bgp bestpath as-path multipath-relax
+              bgp allow-martian-nexthop
               !
               ! == Peer Definitions ==
               neighbor cilium peer-group
               neighbor cilium remote-as ${toString cfg.bgp.ciliumAsn}
-              neighbor cilium local-as ${toString cfg.bgp.localAsn}
-              neighbor cilium update-source lo
               neighbor cilium soft-reconfiguration inbound
+              neighbor cilium update-source lo
+              neighbor cilium ebgp-multihop 4
               bgp listen range ${cfg.loopbackAddress.ipv4} peer-group cilium
               !
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
                 neighbor ${peer.ip} update-source lo
+                neighbor ${peer.ip} soft-reconfiguration inbound
+                neighbor ${peer.ip} ebgp-multihop 4
               '') cfg.bgp.peers}
               !
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
                 redistribute connected
-                ! route-map import-connected
-                !
-                ! Activate the Cilium neighbor with our clean route-maps
                 neighbor cilium activate
-                !neighbor cilium route-reflector-client
-                !neighbor cilium next-hop-self
-                !
-                ! Activate the iBGP peers and set next-hop-self for re-advertising routes.
-                ${lib.concatMapStringsSep "\n" (peer: ''
-                  neighbor ${peer.ip} activate
-                  neighbor ${peer.ip} route-reflector-client
-                  neighbor ${peer.ip} next-hop-self
-                '') cfg.bgp.peers}
+                neighbor cilium next-hop-self
+                neighbor cilium route-map CILIUM-INGRESS-FIX in
+              ${lib.concatMapStringsSep "\n" (peer: ''
+                neighbor ${peer.ip} activate
+                neighbor ${peer.ip} next-hop-self
+              '') cfg.bgp.peers}
               exit-address-family
             !
           '';
