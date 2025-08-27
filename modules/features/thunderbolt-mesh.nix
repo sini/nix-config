@@ -45,6 +45,7 @@
             type = lib.types.listOf (
               lib.types.submodule {
                 options = {
+                  asn = lib.mkOption { type = lib.types.int; };
                   ip = lib.mkOption { type = lib.types.str; };
                   gateway = lib.mkOption { type = lib.types.str; };
                 };
@@ -70,7 +71,7 @@
           # Define the ASN for the Cilium agent.
           ciliumAsn = lib.mkOption {
             type = lib.types.int;
-            default = 65002;
+            default = 65010;
             description = "ASN for the Cilium agent BGP instance.";
           };
 
@@ -126,7 +127,7 @@
               bgp listen range ${cfg.loopbackAddress.ipv4} peer-group cilium
               !
               ${lib.concatMapStringsSep "\n" (peer: ''
-                neighbor ${peer.ip} remote-as ${toString cfg.bgp.localAsn}
+                neighbor ${peer.ip} remote-as ${toString peer.asn}
                 neighbor ${peer.ip} update-source lo
               '') cfg.bgp.peers}
               !
@@ -135,13 +136,11 @@
                 network ${cfg.loopbackAddress.ipv4}
                 redistribute connected
                 ! route-map import-connected
-                redistribute local
-                redistribute static
                 !
                 ! Activate the Cilium neighbor with our clean route-maps
                 neighbor cilium activate
-                neighbor cilium route-reflector-client
-                neighbor cilium next-hop-self
+                !neighbor cilium route-reflector-client
+                !neighbor cilium next-hop-self
                 !
                 ! Activate the iBGP peers and set next-hop-self for re-advertising routes.
                 ${lib.concatMapStringsSep "\n" (peer: ''
