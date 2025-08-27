@@ -26,7 +26,7 @@ spec:
       kubernetes.io/hostname: axon-01
   bgpInstances:
     - name: "local-frr-instance"
-      localASN: 65002
+      localASN: 65010
       peers:
         - name: "frr-on-localhost"
           peerASN: 65001 # The single iBGP ASN for all FRR nodes
@@ -45,10 +45,10 @@ spec:
       kubernetes.io/hostname: axon-02
   bgpInstances:
     - name: "local-frr-instance"
-      localASN: 65002
+      localASN: 65010
       peers:
         - name: "frr-on-localhost"
-          peerASN: 65001 # The single iBGP ASN for all FRR nodes
+          peerASN: 65002 # The single iBGP ASN for all FRR nodes
           peerAddress: "172.16.255.2" # Connect to the local FRR daemon
           peerConfigRef:
             name: "frr-peer-config" # Reference the config above
@@ -63,10 +63,10 @@ spec:
       kubernetes.io/hostname: axon-03
   bgpInstances:
     - name: "local-frr-instance"
-      localASN: 65002
+      localASN: 65010
       peers:
         - name: "frr-on-localhost"
-          peerASN: 65001 # The single iBGP ASN for all FRR nodes
+          peerASN: 65003 # The single iBGP ASN for all FRR nodes
           peerAddress: "172.16.255.3" # Connect to the local FRR daemon
           peerConfigRef:
             name: "frr-peer-config" # Reference the config above

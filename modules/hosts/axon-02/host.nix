@@ -44,18 +44,23 @@
               # This interface connects to node1.enp199s0f5
               enp199s0f6 = "169.254.12.1/31";
             };
-            bgp.peers = [
-              # Peer with Node 3 over the 2-3 Link
-              {
-                ip = "172.16.255.3";
-                gateway = "169.254.23.1";
-              }
-              # Peer with Node 1 over the 1-2 Link
-              {
-                ip = "172.16.255.1";
-                gateway = "169.254.12.0";
-              }
-            ];
+            bgp = {
+              localAsn = 65002;
+              peers = [
+                # Peer with Node 3 over the 2-3 Link
+                {
+                  asn = 65003;
+                  ip = "172.16.255.3";
+                  gateway = "169.254.23.1";
+                }
+                # Peer with Node 1 over the 1-2 Link
+                {
+                  asn = 65001;
+                  ip = "172.16.255.1";
+                  gateway = "169.254.12.0";
+                }
+              ];
+            };
           };
         };
         disk.longhorn = {
