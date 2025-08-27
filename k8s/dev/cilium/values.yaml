@@ -8,6 +8,11 @@ cluster:
 # kubeProxyReplacement is the main switch to enable Cilium's eBPF-based
 # service handling, eliminating the need for kube-proxy.
 kubeProxyReplacement: true
+localRedirectPolicies:
+  enabled: true
+bpf:
+  #masquerade: true
+  hostLegacyRouting: true
 
 # For k3s, Cilium needs to know how to reach the Kubernetes API server.
 # Replace this with the LAN IP of your main k3s server node (e.g., 10.10.10.2).
