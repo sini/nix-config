@@ -132,7 +132,7 @@
               !
               ! == Peer Definitions ==
               neighbor cilium peer-group
-              neighbor cilium remote-as ${toString cfg.bgp.ciliumAsn}
+              neighbor cilium remote-as ${toString cfg.bgp.localAsn}
               neighbor cilium soft-reconfiguration inbound
               neighbor cilium update-source dummy0
               neighbor cilium ebgp-multihop 4

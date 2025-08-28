@@ -11,6 +11,7 @@ spec:
       advertisements:
         matchLabels:
           advertise: "bgp"
+
   timers:
     connectRetryTimeSeconds: 5
     holdTimeSeconds: 9
@@ -26,7 +27,7 @@ spec:
       kubernetes.io/hostname: axon-01
   bgpInstances:
     - name: "local-frr-instance"
-      localASN: 65010
+      localASN: 65001
       peers:
         - name: "frr-on-localhost"
           peerASN: 65001 # The single iBGP ASN for all FRR nodes
@@ -45,7 +46,7 @@ spec:
       kubernetes.io/hostname: axon-02
   bgpInstances:
     - name: "local-frr-instance"
-      localASN: 65010
+      localASN: 65002
       peers:
         - name: "frr-on-localhost"
           peerASN: 65002 # The single iBGP ASN for all FRR nodes
@@ -63,7 +64,7 @@ spec:
       kubernetes.io/hostname: axon-03
   bgpInstances:
     - name: "local-frr-instance"
-      localASN: 65010
+      localASN: 65003
       peers:
         - name: "frr-on-localhost"
           peerASN: 65003 # The single iBGP ASN for all FRR nodes
@@ -112,8 +113,8 @@ spec:
           - ExternalIP
           - LoadBalancerIP
       selector:
-        matchLabels:
-          ip-pool: routed
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
 ---
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
