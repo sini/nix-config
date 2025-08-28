@@ -28,7 +28,8 @@ socketLB:
   hostNamespaceOnly: true
 localRedirectPolicies:
   enabled: true
-
+l2NeighDiscovery:
+  enabled: true
 # -----------------------------------------------------------------------------
 # Datapath & BPF knobs
 # -----------------------------------------------------------------------------
