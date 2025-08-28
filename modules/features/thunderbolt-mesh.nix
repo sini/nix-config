@@ -5,6 +5,7 @@
     {
       lib,
       config,
+      hostOptions,
       ...
     }:
     let
@@ -46,7 +47,6 @@
               lib.types.submodule {
                 options = {
                   asn = lib.mkOption { type = lib.types.int; };
-                  localip = lib.mkOption { type = lib.types.str; };
                   ip = lib.mkOption { type = lib.types.str; };
                   gateway = lib.mkOption { type = lib.types.str; };
                 };
@@ -107,7 +107,6 @@
             ! Static routes to bootstrap iBGP peering over loopbacks.
             ${lib.concatMapStringsSep "\n" (peer: ''
               ip route ${peer.ip}/32 ${peer.gateway}
-              ip route ${peer.localip}/32 ${peer.gateway}
             '') cfg.bgp.peers}
             !
             !
@@ -150,6 +149,7 @@
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
+                network ${hostOptions.ipv4}/32
                 network 10.10.0.0/16
                 neighbor cilium activate
                 neighbor cilium next-hop-self
