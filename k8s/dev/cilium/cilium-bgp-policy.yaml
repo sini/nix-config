@@ -113,6 +113,36 @@ spec:
         matchExpressions:
           - { key: somekey, operator: NotIn, values: ["never-used-value"] }
 ---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: lb-pool-routed
+spec:
+  blocks:
+    - cidr: "10.5.0.0/16"
+---
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: main-pool
+  namespace: metallb-system
+spec:
+  avoidBuggyIPs: true
+  addresses:
+    - 10.10.100.0-10.10.100.255
+  serviceAllocation:
+    serviceSelectors:
+      - matchLabels:
+          ip-pool: main-pool
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: main-advertisement
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - main-pool
 # apiVersion: v1
 # kind: ConfigMap
 # metadata:

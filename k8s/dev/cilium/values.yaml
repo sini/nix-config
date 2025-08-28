@@ -51,8 +51,8 @@ ipam:
 
 # Native (no tunnel) routing. Ensure this matches your Pod CIDR.
 routingMode: native
+enable-endpoint-routes: true
 ipv4NativeRoutingCIDR: 172.20.0.0/16
-
 # -----------------------------------------------------------------------------
 # CNI chaining
 # -----------------------------------------------------------------------------
