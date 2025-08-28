@@ -86,9 +86,9 @@
               vscode-marketplace.marp-team.marp-vscode
               vscode-marketplace.mechatroner.rainbow-csv
               vscode-marketplace.mkhl.direnv
-              vscode-marketplace.ms-python.debugpy
-              vscode-marketplace.ms-python.python
-              vscode-marketplace.ms-python.vscode-pylance
+              #vscode-marketplace.ms-python.debugpy
+              #vscode-marketplace.ms-python.python
+              #vscode-marketplace.ms-python.vscode-pylance
               vscode-marketplace.ms-vscode.cmake-tools
               vscode-marketplace.ms-vscode.hexeditor
               vscode-marketplace.ms-vscode-remote.remote-ssh
