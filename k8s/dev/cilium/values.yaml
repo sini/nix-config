@@ -95,6 +95,14 @@ nodePort:
 bgpControlPlane:
   enabled: true
 
+# Enable handling of Kubernetes ExternalIPs services
+externalIPs:
+  enabled: true
+
+# Configure the LoadBalancer mode. 'snat' is the most robust choice for on-prem.
+loadBalancer:
+  mode: snat
+
 # -----------------------------------------------------------------------------
 # Hubble (observability)
 # -----------------------------------------------------------------------------
