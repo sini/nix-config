@@ -46,6 +46,8 @@
             };
             bgp = {
               localAsn = 65003;
+              ciliumAsn = 65013;
+
               peers = [
                 # Peer with Node 1 over the 3-1 Link
                 {
