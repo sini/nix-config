@@ -92,6 +92,7 @@
             "pcie=pcie_bus_perf"
           ];
           kernelModules = [
+            "dummy"
             "thunderbolt"
             "thunderbolt-net"
           ];
@@ -131,13 +132,13 @@
               neighbor cilium peer-group
               neighbor cilium remote-as ${toString cfg.bgp.ciliumAsn}
               neighbor cilium soft-reconfiguration inbound
-              neighbor cilium update-source lo
+              neighbor cilium update-source dummy0
               neighbor cilium ebgp-multihop 4
               bgp listen range ${cfg.loopbackAddress.ipv4} peer-group cilium
               !
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
-                neighbor ${peer.ip} update-source lo
+                neighbor ${peer.ip} update-source dummy0
                 neighbor ${peer.ip} soft-reconfiguration inbound
                 neighbor ${peer.ip} ebgp-multihop 4
               '') cfg.bgp.peers}
@@ -174,6 +175,15 @@
               IPv6Forwarding = true;
             };
 
+            netdevs = {
+              dummy0 = {
+                netdevConfig = {
+                  Kind = "dummy";
+                  Name = "dummy0";
+                };
+              };
+            };
+
             links = {
               "20-thunderbolt-port-1" = {
                 matchConfig = {
@@ -200,9 +210,12 @@
             };
 
             networks = {
-              "00-loopback" = {
-                matchConfig.Name = "lo";
-                address = [ cfg.loopbackAddress.ipv4 ];
+              "00-dummy" = {
+                matchConfig.Name = "dummy0";
+                address = [
+                  cfg.loopbackAddress.ipv4
+                  cfg.loopbackAddress.ipv6
+                ];
               };
               "21-thunderbolt-1" = {
                 matchConfig.Name = "enp199s0f5";
