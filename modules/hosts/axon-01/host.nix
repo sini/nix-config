@@ -33,6 +33,9 @@
 
       hardware = {
         networking = {
+          interfaces = [ "enp2s0" ];
+          unmanagedInterfaces = [ "enp2s0" ];
+
           thunderboltFabric = {
             loopbackAddress = {
               ipv4 = "172.16.255.1/32"; # TODO: extend range
