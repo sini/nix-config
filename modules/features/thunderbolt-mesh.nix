@@ -154,7 +154,7 @@
                 !neighbor cilium route-map CILIUM-INGRESS-FIX in
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} activate
-                !neighbor ${peer.ip} next-hop-self
+                neighbor ${peer.ip} next-hop-self
               '') cfg.bgp.peers}
               exit-address-family
             !
