@@ -7,7 +7,6 @@
         signal-desktop
         # Whatsapp
         wasistlos
-        whatsie
         zapzap
       ];
       programs.nixcord = {
