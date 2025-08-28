@@ -129,7 +129,7 @@ spec:
         matchExpressions:
           - { key: somekey, operator: NotIn, values: ["never-used-value"] }
 ---
-apiVersion: cilium.io/v2alpha1
+apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:
   name: lb-pool-routed
@@ -140,6 +140,32 @@ spec:
     matchLabels:
       ip-pool: routed
 ---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-01
+spec:
+  bgpInstances:
+    - name: "local-frr-instance"
+      routerID: "172.16.255.11"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-02
+spec:
+  bgpInstances:
+    - name: "local-frr-instance"
+      routerID: "172.16.255.12"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-03
+spec:
+  bgpInstances:
+    - name: "local-frr-instance"
+      routerID: "172.16.255.13"
 # apiVersion: v1
 # kind: ConfigMap
 # metadata:

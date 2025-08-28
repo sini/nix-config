@@ -140,7 +140,7 @@
               !
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
-                !neighbor ${peer.ip} update-source dummy0
+                neighbor ${peer.ip} update-source dummy0
                 neighbor ${peer.ip} soft-reconfiguration inbound
                 neighbor ${peer.ip} ebgp-multihop 4
               '') cfg.bgp.peers}
@@ -150,7 +150,7 @@
                 network ${cfg.loopbackAddress.ipv4}
                 network 10.10.0.0/16
                 neighbor cilium activate
-                !neighbor cilium next-hop-self
+                neighbor cilium next-hop-self
                 neighbor cilium route-map CILIUM-INGRESS-FIX in
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} activate
