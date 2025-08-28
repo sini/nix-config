@@ -19,20 +19,6 @@
       };
 
       services = {
-        logind = {
-          lidSwitch = "ignore";
-          lidSwitchDocked = "ignore";
-          lidSwitchExternalPower = "ignore";
-          extraConfig = ''
-            HandlePowerKey=suspend
-            HandleSuspendKey=suspend
-            HandleHibernateKey=suspend
-            PowerKeyIgnoreInhibited=yes
-            SuspendKeyIgnoreInhibited=yes
-            HibernateKeyIgnoreInhibited=yes
-          '';
-        };
-
         power-profiles-daemon.enable = false; # Disable GNOMEs power management
 
         system76-scheduler = {
