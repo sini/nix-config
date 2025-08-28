@@ -149,9 +149,6 @@
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
                 network 10.10.0.0/16
-                ! redistribute connected
-                ! redistribute local
-                ! redistribute static
                 neighbor cilium activate
                 neighbor cilium next-hop-self
                 neighbor cilium route-map CILIUM-INGRESS-FIX in
