@@ -46,6 +46,7 @@
               lib.types.submodule {
                 options = {
                   asn = lib.mkOption { type = lib.types.int; };
+                  localip = lib.mkOption { type = lib.types.str; };
                   ip = lib.mkOption { type = lib.types.str; };
                   gateway = lib.mkOption { type = lib.types.str; };
                 };
@@ -106,6 +107,7 @@
             ! Static routes to bootstrap iBGP peering over loopbacks.
             ${lib.concatMapStringsSep "\n" (peer: ''
               ip route ${peer.ip}/32 ${peer.gateway}
+              ip route ${peer.localip}/32 ${peer.gateway}
             '') cfg.bgp.peers}
             !
             !

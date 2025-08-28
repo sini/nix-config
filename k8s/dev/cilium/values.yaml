@@ -1,5 +1,11 @@
 # =============================================================================
-# Cilium Helm Values — Dev cluster
+# Cilium Helm Values — Dev cluster (Corrected Configuration)
+#
+# This configuration implements the final architecture:
+# 1. BGP fabric (FRR + Cilium BGP CRDs) provides the underlay routing.
+# 2. Cilium runs in a VXLAN overlay (tunnel mode) on top of the BGP fabric.
+# 3. Cilium manages both `dummy0` (for tunnel traffic) and `enp2s0` (for
+#    external service ingress) without conflict.
 # =============================================================================
 
 # -----------------------------------------------------------------------------
@@ -9,19 +15,17 @@ cluster:
   name: dev
   id: 1
 
-# For k3s or out-of-tree API servers, point Cilium at the control-plane address.
-# Use the stable loopback you routed via FRR.
+# Correct - points to the stable loopback routed by the BGP fabric.
 k8sServiceHost: 172.16.255.1
 k8sServicePort: 6443
 
 # -----------------------------------------------------------------------------
 # Service handling / kube-proxy replacement
 # -----------------------------------------------------------------------------
-# Enable eBPF-based kube-proxy replacement. Leave ON if you want Cilium to handle
-# Services/NodePort/ExternalIPs. If you only expose via Ingress/gateway, this is fine too.
+# Correct - eBPF-based kube-proxy replacement is a core feature.
 kubeProxyReplacement: true
-
-# Local Redirect Policies allow node-local backends for certain Services.
+socketLB:
+  hostNamespaceOnly: true
 localRedirectPolicies:
   enabled: true
 
@@ -29,15 +33,8 @@ localRedirectPolicies:
 # Datapath & BPF knobs
 # -----------------------------------------------------------------------------
 bpf:
-  # NAT engine:
-  # - FALSE uses iptables NAT if enableIPv4Masquerade=true below.
-  masquerade: false
-  # Advanced/experimental datapath selector. Usually omit to use defaults (veth).
-  # Keep as-is if you’re intentionally testing netkit.
-  datapathMode: netkit
-  # Allow ExternalTrafficPolicy=Cluster on ClusterIP (generally harmless).
+  masquerade: true
   lbExternalClusterIP: true
-  # Keep legacy host routing semantics; useful while iterating with FRR/lo-next-hop.
   hostLegacyRouting: true
 
 # -----------------------------------------------------------------------------
@@ -46,61 +43,66 @@ bpf:
 ipam:
   mode: cluster-pool
   operator:
-    # MUST match your cluster CIDR (k3s --cluster-cidr or kube-controller-manager --cluster-cidr).
     clusterPoolIPv4PodCIDRList: ["172.20.0.0/16"]
 
-# Native (no tunnel) routing. Ensure this matches your Pod CIDR.
-routingMode: native
-enable-endpoint-routes: true
-ipv4NativeRoutingCIDR: 172.20.0.0/16
+# -----------------------------------------------------------------------------
+# Routing Mode (CRITICAL CHANGE)
+#
+# This is the primary fix. We are switching from 'native' mode to 'tunnel'
+# mode. This resolves the architectural conflict by wrapping pod-to-pod
+# traffic in a VXLAN overlay, which can then travel across your proven,
+# high-speed BGP host network without issue.
+# -----------------------------------------------------------------------------
+routingMode: tunnel # <-- CHANGED from 'native'
+tunnelProtocol: vxlan # <-- ADDED to specify the overlay protocol
+# The following two keys are for native routing mode and must be removed.
+# enable-endpoint-routes: true # <-- REMOVED
+# ipv4NativeRoutingCIDR: 172.20.0.0/16 # <-- REMOVED
+
 # -----------------------------------------------------------------------------
 # CNI chaining
 # -----------------------------------------------------------------------------
-# Keep portmap for HostPort compatibility if you use it.
 cni:
   chainingMode: portmap
 
 # -----------------------------------------------------------------------------
 # Masquerading (SNAT) behavior
 # -----------------------------------------------------------------------------
-# Historical iptables-based masquerade flag (works even if bpf.masquerade=false).
-# If you flip bpf.masquerade=true, Cilium uses BPF NAT and this remains harmless.
+# This section remains correct for handling traffic from pods to the outside world.
 enableIPv4Masquerade: true
-# Restrict where iptables masquerade applies (only relevant when using iptables NAT).
-# If you *only* egress via a specific uplink, set it here. Remove if not needed.
-egressMasqueradeInterfaces: "enp2s0"
+#egressMasqueradeInterfaces: "enp2s0"
 enableIpMasqAgent: false
 enableIPv4: true
-
-# Don’t SNAT traffic to RFC1918 ranges (typical for on-prem).
 nonMasqueradeCIDRs: "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
 masqLinkLocal: false
 
 # -----------------------------------------------------------------------------
-# Device exposure to Cilium (keep underlay clean)
+# Device exposure to Cilium (CRITICAL CHANGE)
+#
+# With tunneling enabled, it is now safe to manage both devices.
+# - 'dummy0': Will be used as the device for sending/receiving VXLAN traffic
+#            over your BGP fabric.
+# - 'enp2s0': Will be used for the BPF program that handles ingress for your
+#           ExternalIP services.
 # -----------------------------------------------------------------------------
-# Expose ONLY loopback, so Cilium doesn’t attach programs to your Thunderbolt NICs.
-# If/when you add a WireGuard egress gateway, extend to ["lo","wg0"].
 devices:
   - "dummy0"
   - "enp2s0"
+  - "enp199s0f5"
+  - "enp199s0f6"
 
-# If you use NodePort with direct routing from an external NIC, point this at that NIC.
-# With devices=["lo"] and no external NodePort need, leaving loopback here is safe.
-nodePort:
-  directRoutingDevice: "dummy0"
+# This key is primarily for native routing mode and can be removed for simplicity.
+# nodePort:
+#    directRoutingDevice: "dummy0" # <-- REMOVED
 
 # -----------------------------------------------------------------------------
 # BGP control-plane (for FRR peering)
 # -----------------------------------------------------------------------------
+# This is all correct. BGP will provide the underlay routing for the VXLAN overlay.
 bgpControlPlane:
   enabled: true
-
-# Enable handling of Kubernetes ExternalIPs services
 externalIPs:
   enabled: true
-
-# Configure the LoadBalancer mode. 'snat' is the most robust choice for on-prem.
 loadBalancer:
   mode: snat
 
@@ -118,10 +120,7 @@ hubble:
 # Operator & rollout
 # -----------------------------------------------------------------------------
 operator:
-  # For a 3-node lab, 2 replicas gives basic HA.
   replicas: 2
-
-# Restart Cilium DaemonSet automatically on config changes.
 rollOutCiliumPods: true
 
 # -----------------------------------------------------------------------------
