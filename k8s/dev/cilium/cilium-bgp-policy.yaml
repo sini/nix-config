@@ -94,11 +94,26 @@ spec:
       service:
         addresses:
           - ClusterIP
-          - ExternalIP
-          - LoadBalancerIP
       selector:
         matchExpressions:
           - { key: somekey, operator: NotIn, values: ["never-used-value"] }
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-service-advertisements
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - ExternalIP
+          - LoadBalancerIP
+      selector:
+        matchLabels:
+          ip-pool: routed
 ---
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
@@ -120,6 +135,9 @@ metadata:
 spec:
   blocks:
     - cidr: "10.11.0.0/16"
+  serviceSelector:
+    matchLabels:
+      ip-pool: routed
 ---
 # apiVersion: v1
 # kind: ConfigMap

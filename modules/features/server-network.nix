@@ -15,7 +15,7 @@
       "net.netfilter.nf_conntrack_max" = 131072;
       "net.nf_conntrack_max" = 131072;
       "net.ipv4.ip_forward" = 1;
-      "net.ipv4.conf.all.proxy_arp" = false; # Was true, default is false and may conflict with BGP
+      "net.ipv4.conf.all.proxy_arp" = false; # Was true, default is false and we don't want to poison our external network
       # These need to be increased for k8s
       # Although the default settings might not cause issues initially, you'll get strange behavior after a while
       "fs.inotify.max_user_instances" = 1048576;
