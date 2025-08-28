@@ -83,7 +83,6 @@ masqLinkLocal: false
 # If/when you add a WireGuard egress gateway, extend to ["lo","wg0"].
 devices:
   - "dummy0"
-  - "enp2s0"
 
 # If you use NodePort with direct routing from an external NIC, point this at that NIC.
 # With devices=["lo"] and no external NodePort need, leaving loopback here is safe.
