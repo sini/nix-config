@@ -33,8 +33,6 @@
 
       hardware = {
         networking = {
-          interfaces = [ "enp2s0" ];
-          unmanagedInterfaces = [ "enp2s0" ];
           thunderboltFabric = {
             loopbackAddress = {
               ipv4 = "172.16.255.1/32"; # TODO: extend range
@@ -52,12 +50,14 @@
                 # Peer with Node 2 over the 1-2 Link
                 {
                   asn = 65002;
+                  localip = "10.10.10.3";
                   ip = "172.16.255.2";
                   gateway = "169.254.12.1";
                 }
                 # Peer with Node 3 over the 3-1 Link
                 {
                   asn = 65003;
+                  localip = "10.10.10.4";
                   ip = "172.16.255.3";
                   gateway = "169.254.31.0";
                 }
