@@ -82,12 +82,13 @@ masqLinkLocal: false
 # Expose ONLY loopback, so Cilium doesn’t attach programs to your Thunderbolt NICs.
 # If/when you add a WireGuard egress gateway, extend to ["lo","wg0"].
 devices:
-  - "lo"
+  - "dummy0"
+  - "enp2s0"
 
 # If you use NodePort with direct routing from an external NIC, point this at that NIC.
 # With devices=["lo"] and no external NodePort need, leaving loopback here is safe.
 nodePort:
-  directRoutingDevice: "lo"
+  directRoutingDevice: "dummy0"
 
 # -----------------------------------------------------------------------------
 # BGP control-plane (for FRR peering)
