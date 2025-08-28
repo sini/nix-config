@@ -50,14 +50,12 @@
                 # Peer with Node 1 over the 3-1 Link
                 {
                   asn = 65001;
-                  localip = "10.10.10.2";
                   ip = "172.16.255.1";
                   gateway = "169.254.31.1";
                 }
                 # Peer with Node 2 over the 2-3 Link
                 {
                   asn = 65002;
-                  localip = "10.10.10.3";
                   ip = "172.16.255.2";
                   gateway = "169.254.23.0";
                 }
