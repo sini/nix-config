@@ -168,10 +168,10 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    hyprsplit = {
-      url = "github:shezdy/hyprsplit";
-      inputs.hyprland.follows = "hyprland";
-    };
+    # hyprsplit = {
+    #   url = "github:shezdy/hyprsplit";
+    #   inputs.hyprland.follows = "hyprland";
+    # };
 
     hyprland-easymotion = {
       url = "github:zakk4223/hyprland-easymotion";
