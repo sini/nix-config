@@ -2,26 +2,6 @@
   rootPath,
   ...
 }:
-let
-  # hosts = config.flake.hosts;
-  # kubernetesMasterMap = builtins.listToAttrs (
-  #   map
-  #     (
-  #       { name, value }:
-  #       {
-  #         name = value.tags."kubernetes-cluster";
-  #         value = name;
-  #       }
-  #     )
-  #     (
-  #       lib.filter (
-  #         host:
-  #         builtins.elem "kubernetes-master" (host.value.roles or [ ])
-  #         && host.value.tags ? "kubernetes-cluster"
-  #       ) (lib.attrsToList hosts)
-  #     )
-  # );
-in
 {
   flake.modules.nixos.kubernetes =
     {
