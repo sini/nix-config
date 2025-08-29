@@ -9,8 +9,8 @@ stdenv.mkDerivation rec {
   src = fetchFromGitHub {
     owner = "MichaelAquilina";
     repo = "${pname}";
-    rev = "${version}";
-    sha256 = "sha256-8r5RsyldJIzlWr9+G8lrkHvJ8KxTVO859M//wDnYOUY=";
+    rev = "3e9bce0072240b1009e5ab380365453c3b243c62"; # 0.11.1
+    hash = "sha256-1+HD4rerEu0uu4hWtMORBeAJJgIgXv65McnqOpaSIV8=";
   };
 
   strictDeps = true;
