@@ -6,13 +6,12 @@
       pkgs,
       ...
     }:
-    # let
-    #   overview = inputs.hyprland-overview.packages.${pkgs.system}.Hyprspace;
-    #   easymotion = inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion;
-    #   hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
-    #   split-monitor-workspaces =
-    #     inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces;
-    # in
+    let
+      easymotion = inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion;
+      hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
+      split-monitor-workspaces =
+        inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces;
+    in
     {
 
       imports = [
@@ -49,20 +48,19 @@
 
         xwayland.enable = true;
 
-        # plugins =
-        #   with inputs.hyprland-plugins.packages.${pkgs.system};
-        #   [
-        #     # hyprbars
-        #     #hyprexpo
-        #     # hyprtrails
-        #     # hyprwinwrap
-        #   ]
-        #   ++ [
-        #     easymotion
-        #     overview
-        #     hyprsplit
-        #     split-monitor-workspaces
-        #   ];
+        plugins =
+          with inputs.hyprland-plugins.packages.${pkgs.system};
+          [
+            # hyprbars
+            hyprexpo
+            # hyprtrails
+            # hyprwinwrap
+          ]
+          ++ [
+            easymotion
+            hyprsplit
+            split-monitor-workspaces
+          ];
 
         settings = {
           exec-once = [
