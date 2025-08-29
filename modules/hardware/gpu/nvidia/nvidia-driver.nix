@@ -49,7 +49,7 @@
         powerManagement.enable = true;
         open = true;
         nvidiaSettings = false;
-        nvidiaPersistenced = true;
+        # nvidiaPersistenced = true; TODO: NixOS/nixpkgs#437066
         package = nvidiaPackage;
       };
     };
