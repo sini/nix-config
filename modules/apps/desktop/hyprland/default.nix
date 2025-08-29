@@ -3,7 +3,6 @@
     {
       inputs,
       config,
-      osConfig,
       pkgs,
       ...
     }:
@@ -40,8 +39,8 @@
       wayland.windowManager.hyprland = {
         enable = true;
         # Managed by system configuration
-        package = osConfig.programs.hyprland.package;
-        portalPackage = osConfig.programs.hyprland.portalPackage;
+        package = null;
+        portalPackage = null;
 
         # Disabled because it conflicts with uwsm
         # https://wiki.hypr.land/Useful-Utilities/Systemd-start/
@@ -49,19 +48,18 @@
 
         xwayland.enable = true;
 
-        plugins =
-          with inputs.hyprland-plugins.packages.${pkgs.system};
-          [
-            # hyprbars
-            hyprexpo
-            # hyprtrails
-            # hyprwinwrap
-          ]
-          ++ [
-            easymotion
-            #hyprsplit
-            split-monitor-workspaces
-          ];
+        plugins = [
+          easymotion
+          #hyprsplit
+          split-monitor-workspaces
+        ];
+        # ++ with inputs.hyprland-plugins.packages.${pkgs.system};
+        #   [
+        #     # hyprbars
+        #     #hyprexpo
+        #     # hyprtrails
+        #     # hyprwinwrap
+        #   ];
 
         settings = {
           exec-once = [
