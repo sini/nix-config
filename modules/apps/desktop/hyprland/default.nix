@@ -3,6 +3,7 @@
     {
       inputs,
       config,
+      osConfig,
       pkgs,
       ...
     }:
@@ -39,8 +40,8 @@
       wayland.windowManager.hyprland = {
         enable = true;
         # Managed by system configuration
-        package = null;
-        portalPackage = null;
+        package = osConfig.programs.hyprland.package;
+        portalPackage = osConfig.programs.hyprland.portalPackage;
 
         # Disabled because it conflicts with uwsm
         # https://wiki.hypr.land/Useful-Utilities/Systemd-start/
