@@ -8,7 +8,7 @@
     }:
     let
       easymotion = inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion;
-      hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
+      #hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
       split-monitor-workspaces =
         inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces;
     in
@@ -58,7 +58,7 @@
           ]
           ++ [
             easymotion
-            hyprsplit
+            #hyprsplit
             split-monitor-workspaces
           ];
 
