@@ -6,7 +6,10 @@ let
   sshKnownHosts = lib.attrsets.mapAttrs' (
     hostname: hostConfig:
     (lib.attrsets.nameValuePair hostname {
-      hostNames = [ hostname ];
+      hostNames = [
+        hostname
+        "${hostname}.json64.dev"
+      ];
       publicKey = hostConfig.public_key;
     })
   ) config.flake.hosts;
