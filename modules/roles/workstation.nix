@@ -21,10 +21,10 @@
       # Desktop GUI
       xserver
       xwayland
-      gdm
+      #gdm
       xdg-portal
       gnome
-      #greetd # Doesn't work with gnome's session lock stuff... use if we don't need gnome
+      greetd # Doesn't work with gnome's session lock stuff... use if we don't need gnome
       hyprland
 
     ];
