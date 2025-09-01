@@ -52,17 +52,7 @@ in
         ];
 
         config = {
-          gtk = {
-            enable = true;
-            gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
-            gtk4.extraConfig.gtk-application-prefer-dark-theme = true;
-          };
-
-          dconf.settings = {
-            "org/gnome/desktop/interface" = {
-              color-scheme = "prefer-dark";
-            };
-          };
+          programs.dconf.enable = true;
 
           stylix = {
             inherit base16Scheme;
@@ -123,6 +113,16 @@ in
     homeManager.stylix =
       { pkgs, ... }:
       {
+        gtk = {
+          enable = true;
+          gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
+          gtk4.extraConfig.gtk-application-prefer-dark-theme = true;
+        };
+        dconf.settings = {
+          "org/gnome/desktop/interface" = {
+            color-scheme = "prefer-dark";
+          };
+        };
         stylix = {
           inherit base16Scheme;
 

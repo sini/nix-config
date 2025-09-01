@@ -91,6 +91,7 @@
           # apps
           "${PRIMARY}, Return, exec, ${term}"
           "${PRIMARY} ${SECONDARY}, Return, exec, ${term} -e ${editor}"
+          "${PRIMARY}, Space, exec, ${pkgs.rofi-wayland}/bin/rofi -show-icons -show drun"
           "${PRIMARY}, E, exec, ${term} -e yazi"
           "${PRIMARY} ${SECONDARY}, H, exec, ${term} -e btop"
           "${PRIMARY} ${SECONDARY}, N, exec, ${term} -e nvtop"
