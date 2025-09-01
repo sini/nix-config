@@ -25,19 +25,9 @@
       };
 
       services = {
-        # TODO: Move display manager to regreet or something
-        displayManager = {
-          gdm = {
-            enable = true;
-            autoSuspend = false;
-            wayland = true;
-          };
-        };
-
         desktopManager.gnome.enable = true;
         power-profiles-daemon.enable = false; # Disable GNOMEs power management
         udev.packages = with pkgs; [ gnome-settings-daemon ];
-
       };
 
       programs.nautilus-open-any-terminal = {
