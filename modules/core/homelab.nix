@@ -9,6 +9,7 @@ let
       hostNames = [
         hostname
         "${hostname}.json64.dev"
+        hostConfig.ipv4
       ];
       publicKey = hostConfig.public_key;
     })
