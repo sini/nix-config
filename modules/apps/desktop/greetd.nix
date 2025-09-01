@@ -14,7 +14,7 @@
             default_session = {
               command = lib.concatStringsSep " " [
                 "${pkgs.greetd.tuigreet}/bin/tuigreet"
-                "--cmd '${lib.getExe config.programs.uwsm.package} start hyprland'"
+                "--cmd '${lib.getExe config.programs.uwsm.package} start Hyprland'"
                 "--asterisks"
                 "--remember"
                 "--remember-user-session"

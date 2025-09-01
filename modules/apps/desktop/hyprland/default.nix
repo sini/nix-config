@@ -31,7 +31,26 @@
       # xdg.configFile."uwsm/env".source =
       #   "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
-      programs.wofi.enable = true;
+      programs = {
+        hyprlock.enable = true;
+        wofi.enable = true;
+        rofi = {
+          enable = true;
+          package = pkgs.rofi-wayland;
+        };
+      };
+
+      services = {
+        clipman.enable = true;
+        hypridle.enable = true;
+        hyprpaper = {
+          enable = true;
+          settings = {
+            ipc = "on";
+            splash = false;
+          };
+        };
+      };
 
       xdg.configFile."uwsm/env".source =
         "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
