@@ -15,7 +15,7 @@
     tags = {
       "kubernetes-cluster" = "dev";
     };
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDanYqvi+/2Pp57Vw19DHVfQ0VSMXHBdnHLntW+Lr/8h root@axon-02";
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDanYqvi+/2Pp57Vw19DHVfQ0VSMXHBdnHLntW+Lr/8h";
     facts = ./facter.json;
   };
 
