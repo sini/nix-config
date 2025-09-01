@@ -16,7 +16,7 @@
         hardware.networking.interfaces = [ "enp6s0" ];
       }
     ];
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDFFLWZzC91VBRxi3KwvRm7pI2vaAItIf9Nnd3Eifkmc root@cortex";
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDFFLWZzC91VBRxi3KwvRm7pI2vaAItIf9Nnd3Eifkmc";
     facts = ./facter.json;
   };
 

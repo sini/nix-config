@@ -17,7 +17,7 @@
       "kubernetes-cluster" = "dev";
       "kubernetes-master" = "true";
     };
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINE2Tsb0nKZ1oFYaCENTO58S3/rz3PMISS6llUVkQi7+ root@axon-01";
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINE2Tsb0nKZ1oFYaCENTO58S3/rz3PMISS6llUVkQi7+";
     facts = ./facter.json;
   };
 
