@@ -87,7 +87,7 @@
           "SUPER, Tab, focusmonitor, +1"
           "ALT SHIFT, Tab, cyclenext, prev"
           "SUPER SHIFT, Tab, focusmonitor, -1"
-          "CTRL ALT, TAB, overview:toggle, toggle, all"
+          #"CTRL ALT, TAB, overview:toggle, toggle, all"
           # apps
           "${PRIMARY}, Return, exec, ${term}"
           "${PRIMARY} ${SECONDARY}, Return, exec, ${term} -e ${editor}"
@@ -162,7 +162,7 @@
           "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
           "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
 
-          "${PRIMARY}, grave, hyprexpo:expo, toggle"
+          #"${PRIMARY}, grave, hyprexpo:expo, toggle"
 
           "${PRIMARY}, z, easymotion, action:hyprctl dispatch focuswindow address:{}"
           # 1..10 workspaces

@@ -23,12 +23,12 @@
         repeat_rate = 35;
       };
 
-      gestures = {
-        workspace_swipe = true;
-        workspace_swipe_create_new = false;
-        workspace_swipe_fingers = 3;
-        workspace_swipe_invert = false;
-      };
+      # gestures = {
+      #   workspace_swipe = true;
+      #   workspace_swipe_create_new = false;
+      #   workspace_swipe_fingers = 3;
+      #   workspace_swipe_invert = false;
+      # };
     };
   };
 }
