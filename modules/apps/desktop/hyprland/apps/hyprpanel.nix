@@ -24,7 +24,7 @@
 
       programs.hyprpanel = {
         enable = true;
-        systemd.enable = false;
+        systemd.enable = true;
         settings = {
           bar = {
             layouts = {
