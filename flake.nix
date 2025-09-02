@@ -5,7 +5,7 @@
   '';
 
   nixConfig = {
-    #abort-on-warn = true;
+    abort-on-warn = true;
     extra-experimental-features = [ "pipe-operators" ];
     allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
