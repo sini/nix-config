@@ -13,7 +13,7 @@
           settings = {
             default_session = {
               command = lib.concatStringsSep " " [
-                "${pkgs.greetd.tuigreet}/bin/tuigreet"
+                "${pkgs.tuigreet}/bin/tuigreet"
                 "--cmd '${lib.getExe config.programs.uwsm.package} start Hyprland'"
                 "--asterisks"
                 "--remember"
