@@ -62,7 +62,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    catppuccin.url = "github:catppuccin/nix";
+    # catppuccin.url = "github:catppuccin/nix";
 
     # Nix flake for "too much bleeding-edge" and unreleased packages (e.g., mesa_git, linux_cachyos, firefox_nightly, sway_git, gamescope_git). And experimental modules (e.g., HDR, duckdns).
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
@@ -106,18 +106,18 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    home-manager-darwin = {
-      url = "github:nix-community/home-manager/release-25.05";
-      inputs.nixpkgs.follows = "nixpkgs-darwin";
-    };
+    # home-manager-darwin = {
+    #   url = "github:nix-community/home-manager/release-25.05";
+    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
+    # };
 
     import-tree.url = "github:vic/import-tree";
 
     # macOS Support (master)
-    nix-darwin = {
-      url = "github:LnL7/nix-darwin/nix-darwin-25.05";
-      inputs.nixpkgs.follows = "nixpkgs-darwin";
-    };
+    # nix-darwin = {
+    #   url = "github:LnL7/nix-darwin/nix-darwin-25.05";
+    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
+    # };
 
     nixos-anywhere = {
       url = "github:numtide/nixos-anywhere";
@@ -137,24 +137,24 @@
     # nix-flatpak.url = "github:gmodena/nix-flatpak";
 
     # Homebrew
-    nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+    #nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 
     nur.url = "github:nix-community/nur";
 
-    homebrew-bundle = {
-      url = "github:homebrew/homebrew-bundle";
-      flake = false;
-    };
+    # homebrew-bundle = {
+    #   url = "github:homebrew/homebrew-bundle";
+    #   flake = false;
+    # };
 
-    homebrew-core = {
-      url = "github:homebrew/homebrew-core";
-      flake = false;
-    };
+    # homebrew-core = {
+    #   url = "github:homebrew/homebrew-core";
+    #   flake = false;
+    # };
 
-    homebrew-cask = {
-      url = "github:homebrew/homebrew-cask";
-      flake = false;
-    };
+    # homebrew-cask = {
+    #   url = "github:homebrew/homebrew-cask";
+    #   flake = false;
+    # };
 
     hyprland.url = "github:hyprwm/Hyprland";
 
@@ -220,7 +220,7 @@
     # NOTE: `darwin` indicates that this channel passes CI on macOS builders;
     # this should increase the binary cache hit rate, but may result in it
     # lagging behind the equivalent NixOS/Linux package set.
-    nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
+    # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
 
     # NixPkgs Unstable
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
