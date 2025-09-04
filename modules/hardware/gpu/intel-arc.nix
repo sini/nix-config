@@ -32,8 +32,7 @@
         nvtopPackages.full
         mesa-demos
         vulkanPackages_latest.vulkan-loader
-        unstable.vulkan-validation-layers # From unstable
-        #vulkanPackages_latest.vulkan-validation-layers
+        vulkanPackages_latest.vulkan-validation-layers
         vulkanPackages_latest.vulkan-tools
         libva-utils
       ];
