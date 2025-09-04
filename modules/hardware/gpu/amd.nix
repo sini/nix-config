@@ -64,9 +64,8 @@
         amdgpu_top
         vulkanPackages_latest.vulkan-tools
         vulkanPackages_latest.vulkan-loader
-        unstable.vulkan-validation-layers # From unstable
-        #vulkanPackages_latest.vulkan-validation-layers
-        #vulkanPackages_latest.vulkan-extension-layer
+        vulkanPackages_latest.vulkan-validation-layers
+        vulkanPackages_latest.vulkan-extension-layer
         libva-utils
         mesa-demos
       ];

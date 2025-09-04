@@ -42,8 +42,8 @@
           nvitop
           btop-cuda
           vulkanPackages_latest.vulkan-loader
-          unstable.vulkan-validation-layers # From unstable
-          #vulkanPackages_latest.vulkan-validation-layers
+          vulkanPackages_latest.vulkan-validation-layers # From unstable
+          vulkanPackages_latest.vulkan-validation-layers
           vulkanPackages_latest.vulkan-tools
           cudaPackages.cudatoolkit
           cudaPackages.cudnn
