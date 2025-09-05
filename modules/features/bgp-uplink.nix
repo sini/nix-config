@@ -27,7 +27,7 @@
           neighbor 10.10.10.4 remote-as 65003
           !
           address-family ipv4 unicast
-            ! Activate all neighbors
+            default-originate
             neighbor 10.10.10.2 activate
             neighbor 10.10.10.3 activate
             neighbor 10.10.10.4 activate

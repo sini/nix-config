@@ -5,7 +5,6 @@
     {
       lib,
       config,
-      hostOptions,
       ...
     }:
     let
@@ -115,12 +114,15 @@
             ip prefix-list CILIUM-ROUTES seq 10 permit 172.16.0.0/12 ge 16 le 32
             ip prefix-list CILIUM-ROUTES seq 20 permit 192.168.0.0/16 ge 16 le 32
             ip prefix-list CILIUM-ROUTES seq 30 permit 10.0.0.0/8 le 32
+            ip prefix-list DEFAULT-ONLY seq 10 permit 0.0.0.0/0
             !
             ! This is the CRITICAL FIX. This route-map matches the routes from Cilium
             ! and overwrites their next-hop with this node's own stable loopback IP.
             route-map CILIUM-INGRESS-FIX permit 10
               match ip address prefix-list CILIUM-ROUTES
               set ip next-hop ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
+            route-map FROM-UPLINK-IN permit 10
+              match ip address prefix-list DEFAULT-ONLY
             !
             !
             ! Main BGP configuration
@@ -140,17 +142,18 @@
               bgp listen range ${cfg.loopbackAddress.ipv4} peer-group cilium
               !
               neighbor 10.10.10.1 remote-as 65000
+              neighbor 10.10.10.1 route-map FROM-UPLINK-IN in
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
                 neighbor ${peer.ip} update-source dummy0
                 neighbor ${peer.ip} soft-reconfiguration inbound
                 neighbor ${peer.ip} ebgp-multihop 4
+                neighbor ${peer.ip} allowas-in 1
               '') cfg.bgp.peers}
               !
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
-                network ${hostOptions.ipv4}/32
                 neighbor 10.10.10.1 activate
                 neighbor cilium activate
                 neighbor cilium next-hop-self
