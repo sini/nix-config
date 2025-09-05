@@ -18,7 +18,7 @@
           bgp router-id 10.10.10.1
           no bgp ebgp-requires-policy
           bgp bestpath as-path multipath-relax
-          !maximum-paths 8
+          maximum-paths 8
           !
           ! Define the three axon nodes as iBGP neighbors.
           ! They are in the same AS (65001).
