@@ -139,6 +139,7 @@
               neighbor cilium ebgp-multihop 4
               bgp listen range ${cfg.loopbackAddress.ipv4} peer-group cilium
               !
+              neighbor 10.10.10.1 remote-as 65000
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
                 neighbor ${peer.ip} update-source dummy0
@@ -150,9 +151,7 @@
               address-family ipv4 unicast
                 network ${cfg.loopbackAddress.ipv4}
                 network ${hostOptions.ipv4}/32
-                network 10.10.0.0/16
                 neighbor 10.10.10.1 activate
-                neighbor 10.10.10.1 next-hop-self
                 neighbor cilium activate
                 neighbor cilium next-hop-self
               ${lib.concatMapStringsSep "\n" (peer: ''
