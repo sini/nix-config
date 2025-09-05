@@ -131,6 +131,7 @@
               bgp router-id ${lib.removeSuffix "/32" cfg.loopbackAddress.ipv4}
               no bgp ebgp-requires-policy
               bgp bestpath as-path multipath-relax
+              maximum-paths 8
               bgp allow-martian-nexthop
               !
               ! == Peer Definitions ==
