@@ -27,10 +27,12 @@
           neighbor 10.10.10.4 remote-as 65003
           !
           address-family ipv4 unicast
-            default-originate
             neighbor 10.10.10.2 activate
+            neighbor 10.10.10.2 default-originate
             neighbor 10.10.10.3 activate
+            neighbor 10.10.10.3 default-originate
             neighbor 10.10.10.4 activate
+            neighbor 10.10.10.4 default-originate
           exit-address-family
       '';
     };
