@@ -68,6 +68,9 @@ in
         uinput = uidGid 979;
         frr = uidGid 978;
         frrvty = uidGid 977;
+        acme = uidGid 976;
+        nginx = uidGid 975;
+        kanidm = uidGid 974;
       };
   };
 }
