@@ -12,7 +12,7 @@
         defaults = {
           email = "jason@json64.dev";
           dnsProvider = "cloudflare";
-          credentialsFile = config.age.secrets.cloudflare-api-key.path;
+          environmentFile = config.age.secrets.cloudflare-api-key.path;
         };
 
         certs.${config.networking.domain} = {
