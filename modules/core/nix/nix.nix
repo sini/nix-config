@@ -9,7 +9,11 @@
       in
       {
         settings = {
-          experimental-features = "nix-command flakes pipe-operators";
+          experimental-features = [
+            "nix-command"
+            "flakes"
+            "pipe-operators"
+          ];
 
           max-jobs = "auto";
 
