@@ -1,6 +1,16 @@
 #
 {
-  flake.modules.nixos.server-network = {
+  flake.modules.nixos.server = {
+    # Servers don't sleep
+    systemd.sleep.extraConfig = ''
+      AllowSuspend=no
+      AllowHibernation=no
+      AllowHybridSleep=no
+      AllowSuspendThenHibernate=no
+    '';
+    systemd.targets.hibernate.enable = false;
+    systemd.targets.hybrid-sleep.enable = false;
+
     boot.kernel.sysctl = {
       "net.core.rmem_default" = 1048576;
       "net.core.wmem_default" = 1048576;
