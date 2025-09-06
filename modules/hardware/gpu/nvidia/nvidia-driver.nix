@@ -25,9 +25,9 @@
         forceFullCompositionPipeline = true;
         modesetting.enable = true;
         powerManagement.enable = true;
-        open = true;
+        open = false;
         nvidiaSettings = false;
-        nvidiaPersistenced = false; # TODO: Followup on https://github.com/NixOS/nixpkgs/issues/437066
+        nvidiaPersistenced = true; # TODO: Followup on https://github.com/NixOS/nixpkgs/issues/437066
         package = config.boot.kernelPackages.nvidiaPackages.beta;
       };
     };
