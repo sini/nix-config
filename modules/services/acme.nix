@@ -12,6 +12,8 @@
         defaults = {
           email = "jason@json64.dev";
           dnsProvider = "cloudflare";
+          dnsResolver = "1.1.1.1:53";
+          dnsPropagationCheck = true;
           credentialFiles = {
             CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets.cloudflare-api-key.path;
           };
