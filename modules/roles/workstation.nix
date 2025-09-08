@@ -7,8 +7,6 @@
       bluetooth
       coolercontrol
 
-      performance
-
       # Additional roles
       role_dev
       role_dev-gui
