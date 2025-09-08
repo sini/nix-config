@@ -10,6 +10,8 @@
 
       services = {
         power-profiles-daemon.enable = false; # Disable GNOMEs power management
+        # https://wiki.cachyos.org/configuration/sched-ext/
+        # https://github.com/sched-ext/scx/tree/main/scheds/rust/scx_lavd
         scx = {
           enable = true;
           package = lib.mkDefault pkgs.scx.full;
