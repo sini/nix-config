@@ -8,13 +8,6 @@
       ...
     }:
     let
-      # Auto-detect node ID from hostname (axon-01 → 1, axon-02 → 2, etc.)
-      nodeId =
-        if lib.hasPrefix "axon-0" config.networking.hostName then
-          lib.strings.toInt (lib.strings.removePrefix "axon-0" config.networking.hostName)
-        else
-          null;
-
       interfaces = [
         "enp199s0f5"
         "enp199s0f6"
@@ -25,7 +18,7 @@
       # Node 2 <-> Node 3 (link 23)
       # Node 3 <-> Node 1 (link 31)
       topologyMap = {
-        "1" = {
+        "axon-01" = {
           loopback = {
             ipv4 = "172.16.255.1/32";
             ipv6 = "fdb4:5edb:1b00::1/128";
@@ -50,7 +43,7 @@
             }
           ];
         };
-        "2" = {
+        "axon-02" = {
           loopback = {
             ipv4 = "172.16.255.2/32";
             ipv6 = "fdb4:5edb:1b00::2/128";
@@ -75,7 +68,7 @@
             }
           ];
         };
-        "3" = {
+        "axon-03" = {
           loopback = {
             ipv4 = "172.16.255.3/32";
             ipv6 = "fdb4:5edb:1b00::3/128";
@@ -102,8 +95,10 @@
         };
       };
 
+      uplinkIp = "10.10.10.1";
+
       # Get the configuration for this node
-      nodeConfig = topologyMap.${toString nodeId} or null;
+      nodeConfig = topologyMap.${toString config.networking.hostName};
     in
     {
       # No options needed - configuration is auto-detected from hostname
@@ -167,8 +162,8 @@
               neighbor cilium ebgp-multihop 4
               bgp listen range ${nodeConfig.loopback.ipv4} peer-group cilium
               !
-              neighbor 10.10.10.1 remote-as 65000
-              neighbor 10.10.10.1 route-map FROM-UPLINK-IN in
+              neighbor ${uplinkIp} remote-as 65000
+              neighbor ${uplinkIp} route-map FROM-UPLINK-IN in
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
                 neighbor ${peer.ip} update-source dummy0
@@ -180,7 +175,7 @@
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
                 network ${nodeConfig.loopback.ipv4}
-                neighbor 10.10.10.1 activate
+                neighbor ${uplinkIp} activate
                 neighbor cilium activate
                 neighbor cilium next-hop-self
               ${lib.concatMapStringsSep "\n" (peer: ''
