@@ -1,5 +1,5 @@
 # Thunderbolt mesh networking for 3-node cluster
-# Automatically configures topology based on node number
+# Auto-detects node ID from hostname and configures topology
 {
   flake.modules.nixos.thunderbolt-mesh =
     {
@@ -8,7 +8,13 @@
       ...
     }:
     let
-      cfg = config.hardware.networking.thunderboltFabric;
+      # Auto-detect node ID from hostname (axon-01 → 1, axon-02 → 2, etc.)
+      nodeId =
+        if lib.hasPrefix "axon-0" config.networking.hostName then
+          lib.strings.toInt (lib.strings.removePrefix "axon-0" config.networking.hostName)
+        else
+          null;
+
       interfaces = [
         "enp199s0f5"
         "enp199s0f6"
@@ -96,96 +102,13 @@
         };
       };
 
-      # Get node config or fallback to manual configuration
-      nodeConfig = topologyMap.${toString cfg.nodeId} or null;
-
-      # If using topology, override individual options with calculated values
-      actualLoopback = if nodeConfig != null then nodeConfig.loopback else cfg.loopbackAddress;
-      actualInterfaceIps = if nodeConfig != null then nodeConfig.interfaceIps else cfg.interfaceIps;
-      actualLocalAsn = if nodeConfig != null then nodeConfig.localAsn else cfg.bgp.localAsn;
-      actualPeers = if nodeConfig != null then nodeConfig.peers else cfg.bgp.peers;
+      # Get the configuration for this node
+      nodeConfig = topologyMap.${toString nodeId} or null;
     in
     {
-      options.hardware.networking.thunderboltFabric = {
-        # Simple node ID option - set this to 1, 2, or 3 for automatic configuration
-        nodeId = lib.mkOption {
-          type = lib.types.nullOr (lib.types.ints.between 1 3);
-          default = null;
-          description = ''
-            Node ID in the 3-node mesh (1, 2, or 3).
-            When set, automatically configures all networking based on predefined topology.
-            Leave null to use manual configuration via other options.
-          '';
-        };
+      # No options needed - configuration is auto-detected from hostname
 
-        # Manual configuration options (used when nodeId is null)
-        loopbackAddress = {
-          ipv4 = lib.mkOption {
-            type = lib.types.str;
-            default = "";
-            example = "172.16.255.1/32";
-            description = "IPv4 loopback address (unused when nodeId is set)";
-          };
-          ipv6 = lib.mkOption {
-            type = lib.types.str;
-            default = "";
-            example = "fdb4:5edb:1b00::1/128";
-            description = "IPv6 loopback address (unused when nodeId is set)";
-          };
-        };
-
-        interfaceIps = {
-          enp199s0f5 = lib.mkOption {
-            type = lib.types.str;
-            default = "";
-            example = "169.254.12.1/31";
-            description = "IP address for first thunderbolt interface (unused when nodeId is set)";
-          };
-          enp199s0f6 = lib.mkOption {
-            type = lib.types.str;
-            default = "";
-            example = "169.254.13.1/31";
-            description = "IP address for second thunderbolt interface (unused when nodeId is set)";
-          };
-        };
-
-        bgp = {
-          peers = lib.mkOption {
-            type = lib.types.listOf (
-              lib.types.submodule {
-                options = {
-                  asn = lib.mkOption { type = lib.types.int; };
-                  lanip = lib.mkOption { type = lib.types.str; };
-                  ip = lib.mkOption { type = lib.types.str; };
-                  gateway = lib.mkOption { type = lib.types.str; };
-                };
-              }
-            );
-            default = [ ];
-            description = "List of BGP peers (unused when nodeId is set)";
-          };
-
-          localAsn = lib.mkOption {
-            type = lib.types.int;
-            default = 65001;
-            description = "Local AS number (unused when nodeId is set)";
-          };
-
-          ciliumAsn = lib.mkOption {
-            type = lib.types.int;
-            default = 65010;
-            description = "ASN for the Cilium agent BGP instance";
-          };
-
-          podCidr = lib.mkOption {
-            type = lib.types.str;
-            default = "172.20.0.0/16";
-            description = "The Kubernetes Pod CIDR block";
-          };
-        };
-      };
-
-      config = {
+      config = lib.mkIf (nodeConfig != null) {
         hardware.networking.unmanagedInterfaces = interfaces;
 
         boot = {
@@ -208,7 +131,7 @@
             ${lib.concatMapStringsSep "\n" (peer: ''
               ip route ${peer.ip}/32 ${peer.gateway}
               ip route ${peer.lanip}/32 ${peer.gateway}
-            '') actualPeers}
+            '') nodeConfig.peers}
             !
             !
             ! == Prefix Lists and Route Map to FIX Ingress Routes from Cilium ==
@@ -222,15 +145,15 @@
             ! and overwrites their next-hop with this node's own stable loopback IP.
             route-map CILIUM-INGRESS-FIX permit 10
               match ip address prefix-list CILIUM-ROUTES
-              set ip next-hop ${lib.removeSuffix "/32" actualLoopback.ipv4}
+              set ip next-hop ${lib.removeSuffix "/32" nodeConfig.loopback.ipv4}
             route-map FROM-UPLINK-IN permit 10
               match ip address prefix-list DEFAULT-ONLY
             !
             !
             ! Main BGP configuration
             !
-            router bgp ${toString actualLocalAsn}
-              bgp router-id ${lib.removeSuffix "/32" actualLoopback.ipv4}
+            router bgp ${toString nodeConfig.localAsn}
+              bgp router-id ${lib.removeSuffix "/32" nodeConfig.loopback.ipv4}
               no bgp ebgp-requires-policy
               bgp bestpath as-path multipath-relax
               maximum-paths 8
@@ -238,11 +161,11 @@
               !
               ! == Peer Definitions ==
               neighbor cilium peer-group
-              neighbor cilium remote-as ${toString actualLocalAsn}
+              neighbor cilium remote-as ${toString nodeConfig.localAsn}
               neighbor cilium soft-reconfiguration inbound
               neighbor cilium update-source dummy0
               neighbor cilium ebgp-multihop 4
-              bgp listen range ${actualLoopback.ipv4} peer-group cilium
+              bgp listen range ${nodeConfig.loopback.ipv4} peer-group cilium
               !
               neighbor 10.10.10.1 remote-as 65000
               neighbor 10.10.10.1 route-map FROM-UPLINK-IN in
@@ -252,18 +175,18 @@
                 neighbor ${peer.ip} soft-reconfiguration inbound
                 neighbor ${peer.ip} ebgp-multihop 4
                 neighbor ${peer.ip} allowas-in 1
-              '') actualPeers}
+              '') nodeConfig.peers}
               !
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
-                network ${actualLoopback.ipv4}
+                network ${nodeConfig.loopback.ipv4}
                 neighbor 10.10.10.1 activate
                 neighbor cilium activate
                 neighbor cilium next-hop-self
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} activate
                 neighbor ${peer.ip} next-hop-self
-              '') actualPeers}
+              '') nodeConfig.peers}
 
               exit-address-family
             !
@@ -322,13 +245,13 @@
               "00-dummy" = {
                 matchConfig.Name = "dummy0";
                 address = [
-                  actualLoopback.ipv4
-                  actualLoopback.ipv6
+                  nodeConfig.loopback.ipv4
+                  nodeConfig.loopback.ipv6
                 ];
               };
               "21-thunderbolt-1" = {
                 matchConfig.Name = "enp199s0f5";
-                address = [ actualInterfaceIps.enp199s0f5 ];
+                address = [ nodeConfig.interfaceIps.enp199s0f5 ];
                 linkConfig = {
                   ActivationPolicy = "up";
                   MTUBytes = "9000"; # Recommended for performance
@@ -337,7 +260,7 @@
               };
               "21-thunderbolt-2" = {
                 matchConfig.Name = "enp199s0f6";
-                address = [ actualInterfaceIps.enp199s0f6 ];
+                address = [ nodeConfig.interfaceIps.enp199s0f6 ];
                 linkConfig = {
                   ActivationPolicy = "up";
                   MTUBytes = "9000"; # Recommended for performance

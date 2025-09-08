@@ -36,8 +36,6 @@
           interfaces = [ "enp2s0" ];
           unmanagedInterfaces = [ "enp2s0" ];
 
-          # Simplified thunderbolt mesh configuration - just specify node ID
-          thunderboltFabric.nodeId = 1;
         };
         disk.longhorn = {
           os_drive = {
