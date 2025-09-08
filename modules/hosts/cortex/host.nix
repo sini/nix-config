@@ -27,7 +27,7 @@
       ...
     }:
     {
-      boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc;
+      boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
       # use TCP BBR has significantly increased throughput and reduced latency for connections
       boot.kernelModules = [

@@ -86,10 +86,6 @@
       };
 
       config = {
-        home.packages = with pkgs; [
-          lazyjj
-        ];
-
         programs = {
           git = {
             enable = true;
