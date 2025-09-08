@@ -27,7 +27,7 @@
       ...
     }:
     {
-      boot.kernelPackages = pkgs.linuxPackages_cachyos;
+      boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc;
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
       # use TCP BBR has significantly increased throughput and reduced latency for connections
       boot.kernelModules = [

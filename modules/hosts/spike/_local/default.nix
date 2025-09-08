@@ -7,7 +7,7 @@
     ./disko.nix
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
 
   boot = {
     initrd.availableKernelModules = [
