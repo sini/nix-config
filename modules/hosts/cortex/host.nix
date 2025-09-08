@@ -55,8 +55,6 @@
 
       environment.systemPackages = with pkgs; [
         lm_sensors
-        gitkraken
-        krita
       ];
 
       home-manager.users.${config.flake.meta.user.username}.imports = [
