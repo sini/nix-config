@@ -156,8 +156,8 @@
         timoni # A package manager for Kubernetes, powered by CUE and inspired by Helm
 
         # --- Non-K8s ---
-        shellz # Utility to manage your SSH, telnet, kubernetes, winrm, web or any custom shell
-        teleport # Certificate authority and access plane for SSH, Kubernetes, web applications, and databases
+        # shellz # Utility to manage your SSH, telnet, kubernetes, winrm, web or any custom shell
+        # teleport # Certificate authority and access plane for SSH, Kubernetes, web applications, and databases
       ];
     };
 }
