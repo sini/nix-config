@@ -33,37 +33,8 @@
         networking = {
           interfaces = [ "enp2s0" ];
           unmanagedInterfaces = [ "enp2s0" ];
-          thunderboltFabric = {
-            loopbackAddress = {
-              ipv4 = "172.16.255.3/32"; # TODO: move and extend range
-              ipv6 = "fdb4:5edb:1b00::3/128";
-            };
-            interfaceIps = {
-              # This interface connects to node1.enp199s0f6
-              enp199s0f5 = "169.254.31.0/31";
-              # This interface connects to node2.enp199s0f5
-              enp199s0f6 = "169.254.23.1/31";
-            };
-            bgp = {
-              localAsn = 65003;
-              peers = [
-                # Peer with Node 1 over the 3-1 Link
-                {
-                  asn = 65001;
-                  lanip = "10.10.10.2";
-                  ip = "172.16.255.1";
-                  gateway = "169.254.31.1";
-                }
-                # Peer with Node 2 over the 2-3 Link
-                {
-                  asn = 65002;
-                  lanip = "10.10.10.3";
-                  ip = "172.16.255.2";
-                  gateway = "169.254.23.0";
-                }
-              ];
-            };
-          };
+          # Simplified thunderbolt mesh configuration - just specify node ID
+          thunderboltFabric.nodeId = 3;
         };
         disk.longhorn = {
           os_drive = {
