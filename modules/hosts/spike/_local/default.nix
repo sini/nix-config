@@ -1,5 +1,5 @@
 {
-  pkgs,
+  #pkgs,
   ...
 }:
 {
@@ -7,7 +7,7 @@
     ./disko.nix
   ];
 
-  boot.kernelPackages = pkgs.linuxPackages_cachyos;
+  #boot.kernelPackages = pkgs.linuxPackages_cachyos;
 
   boot = {
     initrd.availableKernelModules = [
