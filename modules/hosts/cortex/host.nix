@@ -11,10 +11,6 @@
       gpu-amd
       gpu-nvidia
       disk-single
-      {
-        hardware.disk.single.device_id = "nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
-        hardware.networking.interfaces = [ "enp6s0" ];
-      }
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDFFLWZzC91VBRxi3KwvRm7pI2vaAItIf9Nnd3Eifkmc";
     facts = ./facter.json;
@@ -26,6 +22,9 @@
       ...
     }:
     {
+      hardware.disk.single.device_id = "nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
+      hardware.networking.interfaces = [ "enp6s0" ];
+
       boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
       # use TCP BBR has significantly increased throughput and reduced latency for connections
       boot.kernelModules = [
