@@ -108,7 +108,7 @@
     {
       # No options needed - configuration is auto-detected from hostname
 
-      config = lib.mkIf (nodeConfig != null) {
+      config = {
         hardware.networking.unmanagedInterfaces = interfaces;
 
         boot = {
