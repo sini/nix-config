@@ -29,12 +29,5 @@
     ];
   };
 
-  #systemd.network.wait-online.anyInterface = true;
-
-  environment.systemPackages = with pkgs; [
-    gitkraken
-    krita
-  ];
-
   system.stateVersion = "25.05";
 }
