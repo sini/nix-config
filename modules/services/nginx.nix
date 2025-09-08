@@ -9,12 +9,14 @@
         recommendedTlsSettings = true;
         recommendedGzipSettings = true;
 
-        virtualHosts._ = {
-          forceSSL = true;
-          useACMEHost = config.networking.domain;
-          default = true;
-          locations."/" = {
-            return = "404";
+        virtualHosts = {
+          _ = {
+            forceSSL = true;
+            useACMEHost = config.networking.domain;
+            default = true;
+            locations."/" = {
+              return = "404";
+            };
           };
         };
       };
