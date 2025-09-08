@@ -21,13 +21,13 @@
       services = {
         power-profiles-daemon.enable = false; # Disable GNOMEs power management
 
-        system76-scheduler = {
-          enable = true;
-          useStockConfig = true;
-          # https://search.nixos.org/options?channel=unstable&show=services.system76-scheduler
-          settings.processScheduler.foregroundBoost.enable = true;
-          settings.cfsProfiles.enable = true;
-        };
+        # system76-scheduler = {
+        #   enable = true;
+        #   useStockConfig = true;
+        #   # https://search.nixos.org/options?channel=unstable&show=services.system76-scheduler
+        #   settings.processScheduler.foregroundBoost.enable = true;
+        #   settings.cfsProfiles.enable = true;
+        # };
 
         # auto-cpufreq = {
         #   enable = true;
