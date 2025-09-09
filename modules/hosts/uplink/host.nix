@@ -13,8 +13,8 @@
       acme
       nginx
       kanidm
-      #prometheus
-      #grafana
+      prometheus
+      grafana
       #loki
       #promtail
       bgp-uplink

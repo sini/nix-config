@@ -21,8 +21,8 @@
             };
 
             security = {
-              admin_user = "admin";
-              secret_key = "$__file{${config.age.secrets.grafana-oidc-secret-grafana.path}}";
+              cookie_secure = true;
+              disable_gravatar = true;
             };
 
             database = {
@@ -50,7 +50,7 @@
               enabled = true;
               name = "KanIDM";
               client_id = "grafana";
-              client_secret = "$__file{${config.age.secrets.grafana-oidc-secret.path}}";
+              client_secret = "$__file{${config.age.secrets.grafana-oidc-secret-grafana.path}}";
               scopes = "openid profile email groups";
               auth_url = "https://idm.${config.networking.domain}/ui/oauth2";
               token_url = "https://idm.${config.networking.domain}/oauth2/token";
