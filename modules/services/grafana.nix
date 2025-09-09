@@ -18,13 +18,14 @@
               http_addr = "127.0.0.1";
               http_port = 3000;
               root_url = "https://grafana.${config.networking.domain}";
-              serve_from_sub_path = false;
               enforce_domain = false;
             };
 
             security = {
+              disable_initial_admin_creation = true;
               cookie_secure = true;
               disable_gravatar = true;
+              hide_version = true;
             };
 
             database = {
@@ -51,17 +52,18 @@
             "auth.generic_oauth" = {
               enabled = true;
               name = "KanIDM";
+              icon = "signin";
+              allow_sign_up = true;
+              auto_login = true;
               client_id = "grafana";
               client_secret = "$__file{${config.age.secrets.grafana-oidc-secret-grafana.path}}";
-              scopes = "openid profile email groups";
+              scopes = "openid email profile";
+              login_attribute_path = "preferred_username";
               auth_url = "https://idm.${config.networking.domain}/ui/oauth2";
               token_url = "https://idm.${config.networking.domain}/oauth2/token";
               api_url = "https://idm.${config.networking.domain}/oauth2/openid/grafana/userinfo";
-              allow_sign_up = true;
-              auto_login = false;
-              team_ids = "";
-              allowed_organizations = "";
-              role_attribute_path = "contains(groups[*], 'grafana_admin') && 'Admin' || contains(groups[*], 'grafana_editor') && 'Editor' || 'Viewer'";
+              use_pkce = true;
+              role_attribute_path = "contains(groups[*], 'server_admin') && 'GrafanaAdmin' || contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'editor') && 'Editor' || 'Viewer'";
               role_attribute_strict = false;
               allow_assign_grafana_admin = true;
               skip_org_role_sync = false;
@@ -82,47 +84,39 @@
                   httpMethod = "POST";
                 };
               }
-              {
-                name = "Loki";
-                type = "loki";
-                access = "proxy";
-                url = "http://127.0.0.1:3100";
-                jsonData = {
-                  maxLines = 1000;
-                };
-              }
+              # {
+              #   name = "Loki";
+              #   type = "loki";
+              #   access = "proxy";
+              #   url = "http://127.0.0.1:3100";
+              #   jsonData = {
+              #     maxLines = 1000;
+              #   };
+              # }
             ];
 
             dashboards.settings.providers = [
               {
                 name = "default";
-                orgId = 1;
-                folder = "";
-                type = "file";
-                disableDeletion = false;
-                updateIntervalSeconds = 10;
-                options.path = "/etc/grafana/dashboards";
+                options.path = pkgs.stdenv.mkDerivation {
+                  name = "grafana-dashboards";
+                  src = ./grafana-dashboards;
+                  installPhase = ''
+                    mkdir -p $out/
+                    install -D -m755 $src/*.json $out/
+                  '';
+                };
               }
             ];
           };
         };
 
-        nginx.virtualHosts = {
-          "grafana.${config.networking.domain}" = {
-            forceSSL = true;
-            useACMEHost = config.networking.domain;
-            locations."/" = {
-              proxyPass = "http://127.0.0.1:3000";
-              proxyWebsockets = true;
-              extraConfig = ''
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-                proxy_set_header X-Forwarded-Host $host;
-                proxy_redirect off;
-              '';
-            };
+        nginx.virtualHosts."grafana.${config.networking.domain}" = {
+          forceSSL = true;
+          useACMEHost = config.networking.domain;
+          locations."/" = {
+            proxyPass = "http://127.0.0.1:3000";
+            proxyWebsockets = true;
           };
         };
       };
