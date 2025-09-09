@@ -18,6 +18,8 @@
               http_addr = "127.0.0.1";
               http_port = 3000;
               root_url = "https://grafana.${config.networking.domain}";
+              serve_from_sub_path = false;
+              enforce_domain = false;
             };
 
             security = {
