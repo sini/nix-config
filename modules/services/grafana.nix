@@ -128,136 +128,134 @@
         "grafana/dashboards/node-exporter.json" = {
           source = pkgs.writeText "node-exporter-dashboard.json" (
             builtins.toJSON {
-              dashboard = {
-                id = null;
-                title = "Node Exporter Full";
-                tags = [
-                  "prometheus"
-                  "node-exporter"
-                ];
-                timezone = "browser";
-                panels = [
-                  {
-                    id = 1;
-                    title = "CPU Usage";
-                    type = "stat";
-                    targets = [
-                      {
-                        expr = "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)";
-                        refId = "A";
-                      }
-                    ];
-                    fieldConfig = {
-                      defaults = {
-                        unit = "percent";
-                        thresholds = {
-                          steps = [
-                            {
-                              color = "green";
-                              value = null;
-                            }
-                            {
-                              color = "yellow";
-                              value = 70;
-                            }
-                            {
-                              color = "red";
-                              value = 90;
-                            }
-                          ];
-                        };
+              id = null;
+              title = "Node Exporter Full";
+              tags = [
+                "prometheus"
+                "node-exporter"
+              ];
+              timezone = "browser";
+              panels = [
+                {
+                  id = 1;
+                  title = "CPU Usage";
+                  type = "stat";
+                  targets = [
+                    {
+                      expr = "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)";
+                      refId = "A";
+                    }
+                  ];
+                  fieldConfig = {
+                    defaults = {
+                      unit = "percent";
+                      thresholds = {
+                        steps = [
+                          {
+                            color = "green";
+                            value = null;
+                          }
+                          {
+                            color = "yellow";
+                            value = 70;
+                          }
+                          {
+                            color = "red";
+                            value = 90;
+                          }
+                        ];
                       };
                     };
-                    gridPos = {
-                      h = 8;
-                      w = 12;
-                      x = 0;
-                      y = 0;
-                    };
-                  }
-                  {
-                    id = 2;
-                    title = "Memory Usage";
-                    type = "stat";
-                    targets = [
-                      {
-                        expr = "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100";
-                        refId = "A";
-                      }
-                    ];
-                    fieldConfig = {
-                      defaults = {
-                        unit = "percent";
-                        thresholds = {
-                          steps = [
-                            {
-                              color = "green";
-                              value = null;
-                            }
-                            {
-                              color = "yellow";
-                              value = 70;
-                            }
-                            {
-                              color = "red";
-                              value = 90;
-                            }
-                          ];
-                        };
+                  };
+                  gridPos = {
+                    h = 8;
+                    w = 12;
+                    x = 0;
+                    y = 0;
+                  };
+                }
+                {
+                  id = 2;
+                  title = "Memory Usage";
+                  type = "stat";
+                  targets = [
+                    {
+                      expr = "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100";
+                      refId = "A";
+                    }
+                  ];
+                  fieldConfig = {
+                    defaults = {
+                      unit = "percent";
+                      thresholds = {
+                        steps = [
+                          {
+                            color = "green";
+                            value = null;
+                          }
+                          {
+                            color = "yellow";
+                            value = 70;
+                          }
+                          {
+                            color = "red";
+                            value = 90;
+                          }
+                        ];
                       };
                     };
-                    gridPos = {
-                      h = 8;
-                      w = 12;
-                      x = 12;
-                      y = 0;
-                    };
-                  }
-                  {
-                    id = 3;
-                    title = "Disk Usage";
-                    type = "stat";
-                    targets = [
-                      {
-                        expr = "(1 - (node_filesystem_avail_bytes{fstype!=\"tmpfs\"} / node_filesystem_size_bytes{fstype!=\"tmpfs\"})) * 100";
-                        refId = "A";
-                      }
-                    ];
-                    fieldConfig = {
-                      defaults = {
-                        unit = "percent";
-                        thresholds = {
-                          steps = [
-                            {
-                              color = "green";
-                              value = null;
-                            }
-                            {
-                              color = "yellow";
-                              value = 80;
-                            }
-                            {
-                              color = "red";
-                              value = 95;
-                            }
-                          ];
-                        };
+                  };
+                  gridPos = {
+                    h = 8;
+                    w = 12;
+                    x = 12;
+                    y = 0;
+                  };
+                }
+                {
+                  id = 3;
+                  title = "Disk Usage";
+                  type = "stat";
+                  targets = [
+                    {
+                      expr = "(1 - (node_filesystem_avail_bytes{fstype!=\"tmpfs\"} / node_filesystem_size_bytes{fstype!=\"tmpfs\"})) * 100";
+                      refId = "A";
+                    }
+                  ];
+                  fieldConfig = {
+                    defaults = {
+                      unit = "percent";
+                      thresholds = {
+                        steps = [
+                          {
+                            color = "green";
+                            value = null;
+                          }
+                          {
+                            color = "yellow";
+                            value = 80;
+                          }
+                          {
+                            color = "red";
+                            value = 95;
+                          }
+                        ];
                       };
                     };
-                    gridPos = {
-                      h = 8;
-                      w = 24;
-                      x = 0;
-                      y = 8;
-                    };
-                  }
-                ];
-                time = {
-                  from = "now-1h";
-                  to = "now";
-                };
-                refresh = "30s";
+                  };
+                  gridPos = {
+                    h = 8;
+                    w = 24;
+                    x = 0;
+                    y = 8;
+                  };
+                }
+              ];
+              time = {
+                from = "now-1h";
+                to = "now";
               };
+              refresh = "30s";
             }
           );
         };
