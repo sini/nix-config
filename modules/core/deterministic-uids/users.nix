@@ -71,6 +71,8 @@ in
         acme = uidGid 976;
         nginx = uidGid 975;
         kanidm = uidGid 974;
+        node-exporter = uidGid 973;
+        grafana = uidGid 972;
       };
   };
 }
