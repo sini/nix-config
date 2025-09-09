@@ -49,6 +49,8 @@
               };
               shuo.displayName = "Shuo";
               will.displayName = "Will";
+              taiche.displayName = "Chris";
+              jennism.displayName = "Jennifer";
             };
 
             # OAuth2 clients and groups for services
