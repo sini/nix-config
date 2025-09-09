@@ -47,60 +47,62 @@
                 displayName = "Jason";
                 mailAddresses = [ "jason@json64.dev" ];
               };
-              shuo.displayName = "Shuo";
-              will.displayName = "Will";
-              taiche.displayName = "Chris";
-              jennism.displayName = "Jennifer";
+              shuo = {
+                displayName = "Shuo";
+                mailAddresses = [ "shuo@json64.dev" ];
+              };
+              will = {
+                displayName = "Will";
+                mailAddresses = [ "will@json64.dev" ];
+              };
+              taiche = {
+                displayName = "Chris";
+                mailAddresses = [ "taiche@json64.dev" ];
+              };
+              jennism = {
+                displayName = "Jennifer";
+                mailAddresses = [ "jennism@json64.dev" ];
+              };
             };
 
             # OAuth2 clients and groups for services
             groups = {
-              "grafana_admin" = {
+              "grafana.access" = {
                 members = [
                   "json"
                   "shuo"
                   "will"
                 ];
               };
-              "grafana_editor" = {
-                members = [ ];
+              "grafana.editors" = { };
+              "grafana.admins" = { };
+              "grafana.server-admins" = {
+                members = [
+                  "json"
+                  "shuo"
+                  "will"
+                ];
               };
-
             };
 
             systems.oauth2 = {
               grafana = {
                 displayName = "Grafana Dashboard";
-                originLanding = "https://grafana.${config.networking.domain}";
+                originLanding = "https://grafana.${config.networking.domain}/login/generic_oauth";
                 originUrl = "https://grafana.${config.networking.domain}";
                 basicSecretFile = config.age.secrets.grafana-oidc-secret.path;
-                scopeMaps = {
-                  "grafana_admin" = [
-                    "openid"
-                    "profile"
-                    "email"
-                    "groups"
-                  ];
-                  "grafana_editor" = [
-                    "openid"
-                    "profile"
-                    "email"
-                    "groups"
-                  ];
-                };
-                supplementaryScopeMaps = {
-                  "grafana_admin" = [
-                    "openid"
-                    "profile"
-                    "email"
-                    "groups"
-                  ];
-                  "grafana_editor" = [
-                    "openid"
-                    "profile"
-                    "email"
-                    "groups"
-                  ];
+                scopeMaps."grafana.access" = [
+                  "openid"
+                  "email"
+                  "profile"
+                ];
+                claimMaps.groups = {
+                  joinType = "array";
+                  valuesByGroup = {
+                    "grafana.editors" = [ "editor" ];
+                    "grafana.admins" = [ "admin" ];
+                    "grafana.server-admins" = [ "server_admin" ];
+                  };
                 };
                 allowInsecureClientDisablePkce = false;
                 preferShortUsername = true;
@@ -109,27 +111,24 @@
           };
         };
 
-        nginx.virtualHosts = {
-          "idm.${config.networking.domain}" = {
-            #enableACME = true;
-            forceSSL = true;
-            useACMEHost = config.networking.domain;
-            locations."/" = {
-              proxyPass = "https://127.0.0.1:8443";
-              proxyWebsockets = true;
-              extraConfig = ''
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
+        nginx.virtualHosts."idm.${config.networking.domain}" = {
+          forceSSL = true;
+          useACMEHost = config.networking.domain;
+          locations."/" = {
+            proxyPass = "https://127.0.0.1:8443";
+            proxyWebsockets = true;
+            extraConfig = ''
+              proxy_set_header Host $host;
+              proxy_set_header X-Real-IP $remote_addr;
+              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+              proxy_set_header X-Forwarded-Proto $scheme;
 
-                proxy_ssl_server_name on;
-                proxy_ssl_name $host;
-                proxy_ssl_verify_depth 2;
-                proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-                proxy_ssl_session_reuse off;
-              '';
-            };
+              proxy_ssl_server_name on;
+              proxy_ssl_name $host;
+              proxy_ssl_verify_depth 2;
+              proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+              proxy_ssl_session_reuse off;
+            '';
           };
         };
       };
