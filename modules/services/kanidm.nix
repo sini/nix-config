@@ -9,6 +9,12 @@
         group = "kanidm";
       };
 
+      age.secrets.grafana-oidc-secret = {
+        rekeyFile = rootPath + "/.secrets/services/grafana-oidc-secret.age";
+        owner = "kanidm";
+        group = "kanidm";
+      };
+
       services = {
         kanidm = {
           enableServer = true;
@@ -17,7 +23,7 @@
 
           serverSettings = {
             domain = config.networking.domain;
-            origin = "https://auth.${config.networking.domain}";
+            origin = "https://idm.${config.networking.domain}";
             bindaddress = "127.0.0.1:8443";
             ldapbindaddress = "127.0.0.1:3636";
             trust_x_forward_for = true;
@@ -28,18 +34,82 @@
           };
 
           clientSettings = {
-            uri = "https://auth.${config.networking.domain}";
+            uri = "https://idm.${config.networking.domain}";
           };
 
           provision = {
             enable = true;
             adminPasswordFile = config.age.secrets.kanidm-admin-password.path;
             idmAdminPasswordFile = config.age.secrets.kanidm-admin-password.path;
+
+            persons = {
+              json = {
+                displayName = "Jason";
+                mailAddresses = [ "jason@json64.dev" ];
+              };
+              shuo.displayName = "Shuo";
+              will.displayName = "Will";
+            };
+
+            # OAuth2 clients and groups for services
+            groups = {
+              "grafana_admin" = {
+                members = [
+                  "json"
+                  "shuo"
+                  "will"
+                ];
+              };
+              "grafana_editor" = {
+                members = [ ];
+              };
+
+            };
+
+            systems.oauth2 = {
+              grafana = {
+                displayName = "Grafana Dashboard";
+                originLanding = "https://grafana.${config.networking.domain}";
+                originUrl = "https://grafana.${config.networking.domain}";
+                basicSecretFile = config.age.secrets.grafana-oidc-secret.path;
+                scopeMaps = {
+                  "grafana_admin" = [
+                    "openid"
+                    "profile"
+                    "email"
+                    "groups"
+                  ];
+                  "grafana_editor" = [
+                    "openid"
+                    "profile"
+                    "email"
+                    "groups"
+                  ];
+                };
+                supplementaryScopeMaps = {
+                  "grafana_admin" = [
+                    "openid"
+                    "profile"
+                    "email"
+                    "groups"
+                  ];
+                  "grafana_editor" = [
+                    "openid"
+                    "profile"
+                    "email"
+                    "groups"
+                  ];
+                };
+                allowInsecureClientDisablePkce = false;
+                preferShortUsername = true;
+              };
+            };
           };
         };
 
         nginx.virtualHosts = {
-          "auth.${config.networking.domain}" = {
+          "idm.${config.networking.domain}" = {
+            #enableACME = true;
             forceSSL = true;
             useACMEHost = config.networking.domain;
             locations."/" = {
@@ -50,7 +120,12 @@
                 proxy_set_header X-Real-IP $remote_addr;
                 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                 proxy_set_header X-Forwarded-Proto $scheme;
-                proxy_ssl_verify off;
+
+                proxy_ssl_server_name on;
+                proxy_ssl_name $host;
+                proxy_ssl_verify_depth 2;
+                proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+                proxy_ssl_session_reuse off;
               '';
             };
           };
@@ -60,7 +135,7 @@
       # Open firewall for LDAP
       networking.firewall.allowedTCPPorts = [ 3636 ];
 
-      # Ensure kanidm user can read the password file and certificates
+      # Ensure kanidm user can read the secret files and certificates
       systemd.services.kanidm.serviceConfig = {
         SupplementaryGroups = [ "keys" ];
       };
