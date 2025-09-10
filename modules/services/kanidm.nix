@@ -63,6 +63,10 @@
                 displayName = "Jennifer";
                 mailAddresses = [ "jennism@json64.dev" ];
               };
+              hugs = {
+                displayName = "Shawn";
+                mailAddresses = [ "hugs@json64.dev" ];
+              };
             };
 
             # OAuth2 clients and groups for services
