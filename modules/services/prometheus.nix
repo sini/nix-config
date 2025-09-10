@@ -1,4 +1,61 @@
-# { rootPath, ... }:
+{
+  config,
+  lib,
+  getAutoExporters,
+  ...
+}:
+let
+  # Generate scrape configs from all exporters on server hosts
+  generateScrapeConfigs = lib.flatten (
+    lib.mapAttrsToList
+      (
+        hostname: hostConfig:
+        let
+          # Merge manual and auto-discovered exporters
+          allExporters = (hostConfig.exporters or { }) // (getAutoExporters hostConfig);
+        in
+        lib.mapAttrsToList (exporterName: exporterConfig: {
+          job_name = "${exporterName}";
+          static_configs = [
+            {
+              targets = [ "${hostConfig.ipv4}:${toString exporterConfig.port}" ];
+              labels = {
+                hostname = hostname;
+                exporter = exporterName;
+                roles = builtins.concatStringsSep "," hostConfig.roles;
+              };
+            }
+          ];
+          metrics_path = exporterConfig.path;
+          scrape_interval = exporterConfig.interval;
+        }) allExporters
+      )
+      (
+        lib.attrsets.filterAttrs (
+          hostname: hostConfig: builtins.elem "server" hostConfig.roles
+        ) config.flake.hosts
+      )
+  );
+
+  # Group scrape configs by job name and merge targets
+  groupedScrapeConfigs =
+    let
+      grouped = lib.groupBy (sc: sc.job_name) generateScrapeConfigs;
+    in
+    lib.mapAttrsToList (
+      job_name: configs:
+      let
+        firstConfig = builtins.head configs;
+        allTargets = lib.flatten (map (c: c.static_configs) configs);
+      in
+      {
+        inherit job_name;
+        static_configs = allTargets;
+        metrics_path = firstConfig.metrics_path;
+        scrape_interval = firstConfig.scrape_interval;
+      }
+    ) grouped;
+in
 {
   flake.modules.nixos.prometheus =
     { config, ... }:
@@ -21,14 +78,10 @@
               static_configs = [
                 {
                   targets = [ "127.0.0.1:9090" ];
-                }
-              ];
-            }
-            {
-              job_name = "node-exporter";
-              static_configs = [
-                {
-                  targets = [ "127.0.0.1:9100" ];
+                  labels = {
+                    hostname = config.networking.hostName;
+                    exporter = "prometheus";
+                  };
                 }
               ];
             }
@@ -37,10 +90,15 @@
               static_configs = [
                 {
                   targets = [ "127.0.0.1:9113" ];
+                  labels = {
+                    hostname = config.networking.hostName;
+                    exporter = "nginx";
+                  };
                 }
               ];
             }
-          ];
+          ]
+          ++ groupedScrapeConfigs;
 
           rules = [
             ''
@@ -78,24 +136,6 @@
         };
 
         prometheus.exporters = {
-          node = {
-            enable = true;
-            port = 9100;
-            listenAddress = "127.0.0.1";
-            enabledCollectors = [
-              "processes"
-              "interrupts"
-              "ksmd"
-              "logind"
-              "meminfo_numa"
-              "mountstats"
-              "network_route"
-              "systemd"
-              "tcpstat"
-              "wifi"
-            ];
-          };
-
           nginx = {
             enable = true;
             port = 9113;
@@ -123,8 +163,5 @@
 
       # Enable nginx status for nginx exporter
       services.nginx.statusPage = true;
-
-      # Open firewall for node exporter (so other hosts can scrape)
-      networking.firewall.allowedTCPPorts = [ 9100 ];
     };
 }
