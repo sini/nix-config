@@ -73,6 +73,8 @@ in
         kanidm = uidGid 974;
         node-exporter = uidGid 973;
         grafana = uidGid 972;
+        loki = uidGid 971;
+        promtail = uidGid 970;
       };
   };
 }

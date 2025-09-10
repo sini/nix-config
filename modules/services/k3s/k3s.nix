@@ -119,7 +119,6 @@ in
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
                 "--node-ip=${cfg.ipv4}"
                 "--node-external-ip=${cfg.ipv4}"
-                # "--advertise-address=${cfg.ipv4}"
                 "--node-label=node.longhorn.io/create-default-disk=true"
                 # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
                 "--resolv-conf=/run/systemd/resolve/resolv.conf"
@@ -185,14 +184,6 @@ in
             name = "iqn.2016-04.com.open-iscsi:${config.networking.fqdn}";
           };
         };
-
-        # HACK: Symlink binaries to /usr/local/bin such that Longhorn can find them
-        # when they use nsenter.
-        # https://github.com/longhorn/longhorn/issues/2166#issuecomment-1740179416
-        # systemd.tmpfiles.rules = [
-        #   "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
-        # ];
-
       };
     };
 }
