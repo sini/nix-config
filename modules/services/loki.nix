@@ -8,9 +8,9 @@
           enable = true;
           configuration = {
             server = {
-              http_listen_address = "127.0.0.1";
+              http_listen_address = "0.0.0.0";
               http_listen_port = 3100;
-              grpc_listen_address = "127.0.0.1";
+              grpc_listen_address = "0.0.0.0";
               grpc_listen_port = 9095;
             };
 
@@ -31,7 +31,6 @@
               max_chunk_age = "1h";
               chunk_target_size = 1048576;
               chunk_retain_period = "30s";
-              max_transfer_retries = 0;
             };
 
             schema_config = {
@@ -54,7 +53,6 @@
                 active_index_directory = "/var/lib/loki/boltdb-shipper-active";
                 cache_location = "/var/lib/loki/boltdb-shipper-cache";
                 cache_ttl = "24h";
-                shared_store = "filesystem";
               };
               filesystem = {
                 directory = "/var/lib/loki/chunks";
@@ -65,11 +63,10 @@
               reject_old_samples = true;
               reject_old_samples_max_age = "168h";
               retention_period = "30d";
+              allow_structured_metadata = false;
             };
 
-            chunk_store_config = {
-              max_look_back_period = "0s";
-            };
+            # chunk_store_config is deprecated and removed
 
             table_manager = {
               retention_deletes_enabled = true;
@@ -78,11 +75,11 @@
 
             compactor = {
               working_directory = "/var/lib/loki/compactor";
-              shared_store = "filesystem";
               compaction_interval = "10m";
               retention_enabled = true;
               retention_delete_delay = "2h";
               retention_delete_worker_count = 150;
+              delete_request_store = "filesystem";
             };
           };
         };
@@ -104,6 +101,12 @@
           };
         };
       };
+
+      # Open firewall for Loki ingestion from other nodes
+      networking.firewall.allowedTCPPorts = [
+        3100
+        9095
+      ];
 
       # Ensure loki data directories exist with proper permissions
       systemd.tmpfiles.rules = [

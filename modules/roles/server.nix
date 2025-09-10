@@ -5,5 +5,6 @@
     network-boot
     server
     role_dev
+    promtail
   ];
 }
