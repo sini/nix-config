@@ -60,69 +60,13 @@ in
                 }
               ];
             }
-            {
-              job_name = "nginx-access";
-              static_configs = [
-                {
-                  targets = [ "localhost" ];
-                  labels = {
-                    job = "nginx-access";
-                    host = config.networking.hostName;
-                    __path__ = "/var/log/nginx/access.log";
-                  };
-                }
-              ];
-              pipeline_stages = [
-                {
-                  regex = {
-                    expression = "^(?P<remote_addr>[\\w\\.]+) - (?P<remote_user>\\S+) \\[(?P<time_local>[\\w:/]+\\s[+\\-]\\d{4})\\] \"(?P<method>\\S+) (?P<request>\\S+) (?P<protocol>\\S+)\" (?P<status>\\d{3}) (?P<body_bytes_sent>\\d+) \"(?P<http_referer>[^\"]*)\" \"(?P<http_user_agent>[^\"]*)\"";
-                  };
-                }
-                {
-                  labels = {
-                    method = "";
-                    status = "";
-                    remote_addr = "";
-                  };
-                }
-              ];
-            }
-            {
-              job_name = "nginx-error";
-              static_configs = [
-                {
-                  targets = [ "localhost" ];
-                  labels = {
-                    job = "nginx-error";
-                    host = config.networking.hostName;
-                    __path__ = "/var/log/nginx/error.log";
-                  };
-                }
-              ];
-            }
           ];
         };
       };
-
-      # Ensure promtail can read nginx logs
-      users.users.promtail.extraGroups = [ "nginx" ];
 
       # Create promtail positions directory
       systemd.tmpfiles.rules = [
         "d /var/lib/promtail 0755 promtail promtail -"
       ];
-
-      # Configure log rotation for nginx to ensure promtail can track rotated logs
-      services.logrotate.settings.nginx = {
-        files = "/var/log/nginx/*.log";
-        frequency = "daily";
-        rotate = 30;
-        compress = true;
-        delaycompress = true;
-        missingok = true;
-        notifempty = true;
-        create = "644 nginx nginx";
-        postrotate = "systemctl reload nginx";
-      };
     };
 }

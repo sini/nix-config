@@ -12,9 +12,17 @@
         proxyTimeout = "60s";
         clientMaxBodySize = "100m";
 
+        appendConfig = ''
+          # Log to journald instead of files  
+          error_log syslog:server=unix:/dev/log,facility=local1,tag=nginx;
+        '';
+
         appendHttpConfig = ''
           proxy_headers_hash_max_size 1024;
           proxy_headers_hash_bucket_size 128;
+
+          # Access logs to journald
+          access_log syslog:server=unix:/dev/log,facility=local0,tag=nginx-access;
         '';
 
         virtualHosts = {
