@@ -1,4 +1,18 @@
-# { rootPath, ... }:
+{
+  config,
+  lib,
+  ...
+}:
+let
+  # Find the first host with the metrics-ingester role
+  lokiHost = lib.head (
+    lib.mapAttrsToList (hostname: hostConfig: hostConfig.ipv4) (
+      lib.attrsets.filterAttrs (
+        hostname: hostConfig: builtins.elem "metrics-ingester" hostConfig.roles
+      ) config.flake.hosts
+    )
+  );
+in
 {
   flake.modules.nixos.promtail =
     { config, ... }:
@@ -17,7 +31,7 @@
 
           clients = [
             {
-              url = "http://10.10.10.1:3100/loki/api/v1/push";
+              url = "http://${lokiHost}:3100/loki/api/v1/push";
             }
           ];
 

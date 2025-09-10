@@ -4,6 +4,7 @@
     ipv4 = "10.10.10.1";
     roles = [
       "server"
+      "metrics-ingester"
     ];
     extra_modules = with config.flake.modules.nixos; [
       cpu-amd
@@ -15,8 +16,6 @@
       kanidm
       prometheus
       grafana
-      loki
-      promtail
       bgp-uplink
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA9Q/KHuuigi5EU8I36EQQzw4QCXj3dEh0bzz/uZ1y+p";
