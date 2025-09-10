@@ -22,8 +22,13 @@ let
               labels = {
                 hostname = hostname;
                 exporter = exporterName;
-                roles = builtins.concatStringsSep "," hostConfig.roles;
-              };
+              }
+              // (builtins.listToAttrs (
+                map (role: {
+                  name = role;
+                  value = "true";
+                }) hostConfig.roles
+              ));
             }
           ];
           metrics_path = exporterConfig.path;
@@ -81,6 +86,7 @@ in
                   labels = {
                     hostname = config.networking.hostName;
                     exporter = "prometheus";
+                    server = "true";
                   };
                 }
               ];
@@ -93,6 +99,7 @@ in
                   labels = {
                     hostname = config.networking.hostName;
                     exporter = "nginx";
+                    server = "true";
                   };
                 }
               ];
