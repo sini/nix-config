@@ -67,7 +67,12 @@ every host and include:
   additional information about the host and for automated hardware configuration.
 - `extra_modules`: A list of additional modules to include for the host.
 - `tags`: An attribute set of string key-value pairs to annotate hosts with metadata.
-  For example: `{ "kubernetes-cluster" = "prod"; }`
+  For example: `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
+  Special tags:
+  - `kubernetes-cluster`: Groups hosts into Kubernetes clusters
+  - `kubernetes-internal-ip`: Override IP for Kubernetes internal communication (defaults to host ipv4)
+- `exporters`: An attribute set defining Prometheus exporters exposed by this host.
+  For example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
 
 ## Remote deployment via Colmena
 
