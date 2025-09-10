@@ -14,7 +14,7 @@
 
         appendConfig = ''
           # Log to journald instead of files  
-          error_log syslog:server=unix:/dev/log,facility=local1,tag=nginx;
+          error_log syslog:server=unix:/dev/log,facility=local1,tag=nginx_error;
         '';
 
         appendHttpConfig = ''
@@ -22,7 +22,7 @@
           proxy_headers_hash_bucket_size 128;
 
           # Access logs to journald
-          access_log syslog:server=unix:/dev/log,facility=local0,tag=nginx-access;
+          access_log syslog:server=unix:/dev/log,facility=local0,tag=nginx_access;
         '';
 
         virtualHosts = {
