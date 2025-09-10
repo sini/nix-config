@@ -25,21 +25,9 @@ in
           }
         }
 
-        // Journal log source
-        loki.source.journal "systemd_journal" {
-          max_age        = "12h"
-          relabel_rules  = loki.relabel.journal_labels.rules
-          forward_to     = [loki.process.journal_pipeline.receiver]
-
-          labels = {
-            job  = "systemd-journal",
-            host = env("HOSTNAME"),
-          }
-        }
-
         // Relabel journal fields
         loki.relabel "journal_labels" {
-          forward_to = [loki.process.journal_pipeline.receiver]
+          forward_to = [loki.write.loki_endpoint.receiver]
           
           rule {
             source_labels = ["__journal__hostname"]
@@ -77,67 +65,16 @@ in
           }
         }
 
-        // Process journal logs with pipeline stages
-        loki.process "journal_pipeline" {
-          // Extract JSON fields from journal
-          stage.json {
-            expressions = {
-              transport         = "_TRANSPORT",
-              unit             = "_SYSTEMD_UNIT",
-              msg              = "MESSAGE",
-              coredump_cgroup  = "COREDUMP_CGROUP",
-              coredump_exe     = "COREDUMP_EXE",
-              coredump_cmdline = "COREDUMP_CMDLINE",
-              coredump_uid     = "COREDUMP_UID",
-              coredump_gid     = "COREDUMP_GID",
-            }
-          }
+        // Journal log source - direct forwarding
+        loki.source.journal "systemd_journal" {
+          max_age        = "12h"
+          relabel_rules  = loki.relabel.journal_labels.rules
+          forward_to     = [loki.write.loki_endpoint.receiver]
 
-          // Set unit label (defaulting to transport for kernel/audit logs)
-          stage.template {
-            source   = "unit"
-            template = "{{if .unit}}{{.unit}}{{else}}{{.transport}}{{end}}"
+          labels = {
+            job  = "systemd-journal",
+            host = env("HOSTNAME"),
           }
-
-          // Extract coredump unit name from cgroup path
-          stage.regex {
-            expression = "(?P<coredump_unit>[^/]+)$"
-            source     = "coredump_cgroup"
-          }
-
-          // Format coredump messages nicely
-          stage.template {
-            source   = "message"
-            template = "{{if .coredump_exe}}{{.coredump_exe}} core dumped (user: {{.coredump_uid}}/{{.coredump_gid}}, command: {{.coredump_cmdline}}){{else}}{{.msg}}{{end}}"
-          }
-
-          // Add coredump unit as label
-          stage.labels {
-            values = {
-              coredump_unit = "coredump_unit",
-            }
-          }
-
-          // Normalize session IDs to reduce label cardinality
-          stage.replace {
-            source      = "unit"
-            expression  = "^(session-\\d+.scope)$"
-            replace     = "session.scope"
-          }
-
-          // Set final unit label
-          stage.labels {
-            values = {
-              unit = "unit",
-            }
-          }
-
-          // Use the processed message as output
-          stage.output {
-            source = "message"
-          }
-
-          forward_to = [loki.write.loki_endpoint.receiver]
         }
       '';
 
