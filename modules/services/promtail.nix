@@ -21,8 +21,7 @@ in
         enable = true;
         configuration = {
           server = {
-            http_listen_address = "127.0.0.1";
-            http_listen_port = 9080;
+            disable = true; # No server needed for log collection agents
           };
 
           positions = {
