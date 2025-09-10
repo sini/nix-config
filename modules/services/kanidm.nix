@@ -86,6 +86,7 @@
                   "json"
                   "shuo"
                   "will"
+                  "hugs"
                 ];
               };
             };
