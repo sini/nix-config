@@ -3,5 +3,6 @@
     /result
     /result.*
     .direnv
+    .claude
   '';
 }
