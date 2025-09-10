@@ -27,6 +27,8 @@ in
       - `extra_modules`: A list of additional modules to include for the host.
       - `tags`: An attribute set of string key-value pairs to annotate hosts with metadata.
         For example: `{ "kubernetes-cluster" = "prod"; }`
+      - `exporters`: An attribute set defining Prometheus exporters exposed by this host.
+        For example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
 
     '';
 
@@ -80,6 +82,34 @@ in
             description = ''
               An attribute set of string key-value pairs to tag the host with metadata.
               Example: `{ "kubernetes-cluster" = "prod"; }`
+            '';
+          };
+
+          exporters = mkOption {
+            type = types.attrsOf (
+              types.submodule {
+                options = {
+                  port = mkOption {
+                    type = types.int;
+                    description = "Port number for the exporter";
+                  };
+                  path = mkOption {
+                    type = types.str;
+                    default = "/metrics";
+                    description = "HTTP path for metrics endpoint";
+                  };
+                  interval = mkOption {
+                    type = types.str;
+                    default = "30s";
+                    description = "Scrape interval";
+                  };
+                };
+              }
+            );
+            default = { };
+            description = ''
+              Prometheus exporters exposed by this host.
+              Example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
             '';
           };
         };
