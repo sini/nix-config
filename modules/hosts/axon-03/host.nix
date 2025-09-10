@@ -14,6 +14,7 @@
     ];
     tags = {
       "kubernetes-cluster" = "dev";
+      "kubernetes-internal-ip" = "172.16.255.3";
     };
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOAXXsNWa09hW/wuDBcpMkln9LsZCM0A2vQYiUh+pEsC";
     facts = ./facter.json;
@@ -26,8 +27,6 @@
     }:
     {
       boot.kernelPackages = pkgs.linuxPackages_latest;
-
-      k3s.ipv4 = "172.16.255.3";
 
       hardware = {
         networking = {
