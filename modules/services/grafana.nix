@@ -84,15 +84,15 @@
                   httpMethod = "POST";
                 };
               }
-              # {
-              #   name = "Loki";
-              #   type = "loki";
-              #   access = "proxy";
-              #   url = "http://127.0.0.1:3100";
-              #   jsonData = {
-              #     maxLines = 1000;
-              #   };
-              # }
+              {
+                name = "Loki";
+                type = "loki";
+                access = "proxy";
+                url = "http://127.0.0.1:3100";
+                jsonData = {
+                  maxLines = 1000;
+                };
+              }
             ];
 
             dashboards.settings.providers = [
