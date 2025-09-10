@@ -76,6 +76,7 @@
                   "json"
                   "shuo"
                   "will"
+                  "hugs"
                 ];
               };
               "grafana.editors" = { };
