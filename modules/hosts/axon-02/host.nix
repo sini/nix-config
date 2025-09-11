@@ -13,7 +13,7 @@
       thunderbolt-mesh
     ];
     tags = {
-      "kubernetes-cluster" = "dev";
+      "kubernetes-cluster" = "prod";
       "kubernetes-internal-ip" = "172.16.255.2";
     };
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDanYqvi+/2Pp57Vw19DHVfQ0VSMXHBdnHLntW+Lr/8h";

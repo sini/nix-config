@@ -14,7 +14,7 @@
       thunderbolt-mesh
     ];
     tags = {
-      "kubernetes-cluster" = "dev";
+      "kubernetes-cluster" = "prod";
       "kubernetes-master" = "true";
       "kubernetes-internal-ip" = "172.16.255.1";
     };

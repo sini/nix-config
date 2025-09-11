@@ -6,7 +6,7 @@
 
     resources = {
       # NGINX Ingress Controller
-      helms.ingress-nginx = {
+      helm.ingress-nginx = {
         chart = {
           name = "ingress-nginx";
           repo = "https://kubernetes.github.io/ingress-nginx";
@@ -34,7 +34,7 @@
       };
 
       # Cert-manager for TLS certificates
-      helms.cert-manager = {
+      helm.cert-manager = {
         chart = {
           name = "cert-manager";
           repo = "https://charts.jetstack.io";
@@ -53,32 +53,25 @@
         };
       };
 
-      # ClusterIssuer for Let's Encrypt
-      customResources.letsencrypt-prod = {
-        apiVersion = "cert-manager.io/v1";
-        kind = "ClusterIssuer";
-        metadata = {
-          name = "letsencrypt-prod";
-        };
-        spec = {
-          acme = {
-            server = "https://acme-v02.api.letsencrypt.org/directory";
-            email = "admin@local"; # TODO: Replace with real email
-            privateKeySecretRef = {
-              name = "letsencrypt-prod";
-            };
-            solvers = [
-              {
-                http01 = {
-                  ingress = {
-                    class = "nginx";
-                  };
-                };
-              }
-            ];
-          };
-        };
-      };
+      # TODO: ClusterIssuer for Let's Encrypt - figure out how to define CRDs
+      # clusterissuers.letsencrypt-prod.spec = {
+      #   acme = {
+      #     server = "https://acme-v02.api.letsencrypt.org/directory";
+      #     email = "admin@local"; # TODO: Replace with real email
+      #     privateKeySecretRef = {
+      #       name = "letsencrypt-prod";
+      #     };
+      #     solvers = [
+      #       {
+      #         http01 = {
+      #           ingress = {
+      #             class = "nginx";
+      #           };
+      #         };
+      #       }
+      #     ];
+      #   };
+      # };
     };
   };
 }

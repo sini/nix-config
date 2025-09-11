@@ -1,7 +1,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: dev-cluster
+  name: prod-cluster
   namespace: argocd
   finalizers:
     - resources-finalizer.argocd.argoproj.io
@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/your-org/nix-config # TODO: Replace with actual repo URL
     targetRevision: HEAD
-    path: k8s/nixidy/manifests/dev # Path where nixidy will output manifests
+    path: k8s/nixidy/manifests/prod # Path where nixidy will output manifests
   destination:
     server: https://kubernetes.default.svc
     namespace: default # ArgoCD will create namespaces as needed

@@ -23,6 +23,7 @@
           pkgs.nil
           pkgs.nixd
           pkgs.nodePackages.prettier
+          inputs.nixidy.packages.${pkgs.system}.default
         ]
         ++ lib.optionals pkgs.buildPlatform.isDarwin [
           pkgs.coreutils-full # Include GNU coreutils for darwin systems
@@ -111,20 +112,40 @@
             package = pkgs.writeShellApplication {
               name = "render-nixidy";
               text = ''
-                echo "Rendering nixidy manifests for dev cluster..."
-                cd k8s/nixidy
-                nix build .#dev.environmentPackage --out-link result
+                echo "Rendering nixidy manifests for prod cluster..."
+
+                # Build nixidy manifests using inline expression
+                nix build \
+                  --impure \
+                  --expr '
+                  let
+                    flake = builtins.getFlake (toString ./.);
+                    pkgs = import flake.inputs.nixpkgs-unstable { system = "${pkgs.system}"; };
+                    nixidyEnvs = flake.inputs.nixidy.lib.mkEnvs {
+                      inherit pkgs;
+                      envs = {
+                        prod = {
+                          modules = [
+                            ./k8s/nixidy/environments/prod
+                          ];
+                        };
+                      };
+                    };
+                  in
+                  nixidyEnvs.prod.environmentPackage
+                  ' \
+                  --out-link k8s/nixidy/result
 
                 # Create manifests directory
-                mkdir -p manifests/dev
+                mkdir -p k8s/nixidy/manifests/prod
 
                 # Copy rendered manifests
-                cp -r result/* manifests/dev/
+                cp -r k8s/nixidy/result/* k8s/nixidy/manifests/prod/
 
                 # Clean up symlink
-                rm result
+                rm k8s/nixidy/result
 
-                echo "Manifests rendered to k8s/nixidy/manifests/dev/"
+                echo "Manifests rendered to k8s/nixidy/manifests/prod/"
                 echo "Commit and push these manifests for ArgoCD to consume them."
               '';
             };
