@@ -1,19 +1,19 @@
 {
   rootPath,
   config,
-  environment,
   ...
 }:
 let
   # Get hosts from the flake config
   hosts = config.flake.hosts;
-  # Helper function to find master nodes in the same cluster
+  # Helper function to find master nodes in the same cluster and environment
   findClusterMaster =
-    kubernetesCluster: hosts: lib:
+    currentHostEnvironment: hosts: lib:
     let
       clusterHosts = lib.attrsets.filterAttrs (
         hostname: hostConfig:
-        hostConfig.tags ? "kubernetes-cluster" && hostConfig.tags."kubernetes-cluster" == kubernetesCluster
+        (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
+        && (hostConfig.environment == currentHostEnvironment)
       ) hosts;
 
       masterHosts = lib.attrsets.filterAttrs (
@@ -55,21 +55,22 @@ in
       pkgs,
       config,
       hostOptions,
+      environment,
       ...
     }:
     let
-      kubernetesCluster = hostOptions.kubernetes-cluster or "dev";
+      currentHostEnvironment = hostOptions.environment;
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
       clusterInit = isMaster;
       internalIP = hostOptions.tags.kubernetes-internal-ip or hostOptions.ipv4;
       externalIP = hostOptions.ipv4;
 
       # Find master node for agent connection (using hosts from outer scope)
-      masterIP = findClusterMaster kubernetesCluster hosts lib;
+      masterIP = findClusterMaster currentHostEnvironment hosts lib;
     in
     {
       age.secrets.kubernetes-cluster-token = {
-        rekeyFile = rootPath + "/.secrets/k3s/${kubernetesCluster}/k3s-token.age";
+        rekeyFile = rootPath + "/.secrets/k3s/${environment.name}/k3s-token.age";
       };
 
       environment.systemPackages = with pkgs; [

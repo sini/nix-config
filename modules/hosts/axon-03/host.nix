@@ -2,6 +2,7 @@
 {
   flake.hosts.axon-03 = {
     ipv4 = "10.10.10.4";
+    environment = "prod";
     roles = [
       "server"
       "kubernetes"
@@ -13,7 +14,6 @@
       thunderbolt-mesh
     ];
     tags = {
-      "kubernetes-cluster" = "prod";
       "kubernetes-internal-ip" = "172.16.255.3";
     };
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOAXXsNWa09hW/wuDBcpMkln9LsZCM0A2vQYiUh+pEsC";

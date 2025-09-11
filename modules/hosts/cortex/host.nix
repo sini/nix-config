@@ -2,6 +2,7 @@
 {
   flake.hosts.cortex = {
     ipv4 = "10.10.10.9";
+    environment = "prod";
     roles = [
       "workstation"
       "gaming"

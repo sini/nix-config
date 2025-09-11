@@ -2,8 +2,10 @@
 {
   flake.hosts.uplink = {
     ipv4 = "10.10.10.1";
+    environment = "prod";
     roles = [
       "server"
+      "gateway-proxy"
       "metrics-ingester"
     ];
     extra_modules = with config.flake.modules.nixos; [
@@ -16,7 +18,6 @@
       kanidm
       prometheus
       grafana
-      bgp-uplink
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA9Q/KHuuigi5EU8I36EQQzw4QCXj3dEh0bzz/uZ1y+p";
     facts = ./facter.json;

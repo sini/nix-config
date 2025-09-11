@@ -6,46 +6,51 @@
 }:
 let
   # Generate scrape configs from all exporters on server hosts
-  generateScrapeConfigs = lib.flatten (
-    lib.mapAttrsToList
-      (
-        hostname: hostConfig:
-        let
-          # Merge manual and auto-discovered exporters
-          allExporters = (hostConfig.exporters or { }) // (getAutoExporters hostConfig);
-        in
-        lib.mapAttrsToList (exporterName: exporterConfig: {
-          job_name = "${exporterName}";
-          static_configs = [
-            {
-              targets = [ "${hostConfig.ipv4}:${toString exporterConfig.port}" ];
-              labels = {
-                hostname = hostname;
-                exporter = exporterName;
+  generateScrapeConfigs =
+    currentHostEnvironment:
+    lib.flatten (
+      lib.mapAttrsToList
+        (
+          hostname: hostConfig:
+          let
+            # Merge manual and auto-discovered exporters
+            allExporters = (hostConfig.exporters or { }) // (getAutoExporters hostConfig);
+          in
+          lib.mapAttrsToList (exporterName: exporterConfig: {
+            job_name = "${exporterName}";
+            static_configs = [
+              {
+                targets = [ "${hostConfig.ipv4}:${toString exporterConfig.port}" ];
+                labels = {
+                  hostname = hostname;
+                  exporter = exporterName;
+                }
+                // (builtins.listToAttrs (
+                  map (role: {
+                    name = role;
+                    value = "true";
+                  }) hostConfig.roles
+                ));
               }
-              // (builtins.listToAttrs (
-                map (role: {
-                  name = role;
-                  value = "true";
-                }) hostConfig.roles
-              ));
-            }
-          ];
-          metrics_path = exporterConfig.path;
-          scrape_interval = exporterConfig.interval;
-        }) allExporters
-      )
-      (
-        lib.attrsets.filterAttrs (
-          hostname: hostConfig: builtins.elem "server" hostConfig.roles
-        ) config.flake.hosts
-      )
-  );
+            ];
+            metrics_path = exporterConfig.path;
+            scrape_interval = exporterConfig.interval;
+          }) allExporters
+        )
+        (
+          lib.attrsets.filterAttrs (
+            hostname: hostConfig:
+            builtins.elem "server" hostConfig.roles
+            && (hostConfig.environment or "homelab") == currentHostEnvironment
+          ) config.flake.hosts
+        )
+    );
 
   # Group scrape configs by job name and merge targets
   groupedScrapeConfigs =
+    currentHostEnvironment:
     let
-      grouped = lib.groupBy (sc: sc.job_name) generateScrapeConfigs;
+      grouped = lib.groupBy (sc: sc.job_name) (generateScrapeConfigs currentHostEnvironment);
     in
     lib.mapAttrsToList (
       job_name: configs:
@@ -63,7 +68,10 @@ let
 in
 {
   flake.modules.nixos.prometheus =
-    { config, ... }:
+    { config, hostOptions, ... }:
+    let
+      currentHostEnvironment = hostOptions.environment or "homelab";
+    in
     {
       services = {
         prometheus = {
@@ -105,7 +113,7 @@ in
               ];
             }
           ]
-          ++ groupedScrapeConfigs;
+          ++ (groupedScrapeConfigs currentHostEnvironment);
 
           rules = [
             ''
