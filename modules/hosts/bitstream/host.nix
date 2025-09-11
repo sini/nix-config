@@ -2,6 +2,7 @@
 {
   flake.hosts.bitstream = {
     ipv4 = "10.10.10.5";
+    environment = "dev";
     roles = [
       "server"
     ];

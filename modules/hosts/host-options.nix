@@ -92,6 +92,12 @@ in
             '';
           };
 
+          environment = mkOption {
+            type = types.str;
+            default = "prod";
+            description = "Environment name that this host belongs to (references flake.environments)";
+          };
+
           exporters = mkOption {
             type = types.attrsOf (
               types.submodule {

@@ -1,19 +1,24 @@
 { config, lib, ... }:
 let
-  # TODO: Replace hardcoded FQDN with a scoped variable
   hosts = lib.attrsets.mapAttrs' (
     hostname: hostConfig:
+    let
+      targetEnv = config.flake.environments.${hostConfig.environment or "homelab"};
+    in
     (lib.attrsets.nameValuePair hostConfig.ipv4 [
       hostname
-      "${hostname}.json64.dev"
+      "${hostname}.${targetEnv.domain}"
     ])
   ) config.flake.hosts;
   sshKnownHosts = lib.attrsets.mapAttrs' (
     hostname: hostConfig:
+    let
+      targetEnv = config.flake.environments.${hostConfig.environment or "homelab"};
+    in
     (lib.attrsets.nameValuePair hostname {
       hostNames = [
         hostname
-        "${hostname}.json64.dev"
+        "${hostname}.${targetEnv.domain}"
         hostConfig.ipv4
       ];
       publicKey = hostConfig.public_key;

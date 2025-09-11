@@ -34,7 +34,7 @@
         );
 
       defaultIdentity = {
-        email = "jason@json64.dev";
+        email = "jason@json64.dev"; # Should reference config.flake.meta.user.email
         fullName = "Jason Bowman";
         githubUser = "sini";
         signingKey = "0xA3CDE710F034AB0B";

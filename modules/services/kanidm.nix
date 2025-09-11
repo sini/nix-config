@@ -1,7 +1,12 @@
 { rootPath, ... }:
 {
   flake.modules.nixos.kanidm =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      environment,
+      ...
+    }:
     {
       age.secrets.kanidm-admin-password = {
         rekeyFile = rootPath + "/.secrets/services/kanidm-admin-password.age";
@@ -45,27 +50,27 @@
             persons = {
               json = {
                 displayName = "Jason";
-                mailAddresses = [ "jason@json64.dev" ];
+                mailAddresses = [ "jason@${environment.email.domain}" ];
               };
               shuo = {
                 displayName = "Shuo";
-                mailAddresses = [ "shuo@json64.dev" ];
+                mailAddresses = [ "shuo@${environment.email.domain}" ];
               };
               will = {
                 displayName = "Will";
-                mailAddresses = [ "will@json64.dev" ];
+                mailAddresses = [ "will@${environment.email.domain}" ];
               };
               taiche = {
                 displayName = "Chris";
-                mailAddresses = [ "taiche@json64.dev" ];
+                mailAddresses = [ "taiche@${environment.email.domain}" ];
               };
               jennism = {
                 displayName = "Jennifer";
-                mailAddresses = [ "jennism@json64.dev" ];
+                mailAddresses = [ "jennism@${environment.email.domain}" ];
               };
               hugs = {
                 displayName = "Shawn";
-                mailAddresses = [ "hugs@json64.dev" ];
+                mailAddresses = [ "hugs@${environment.email.domain}" ];
               };
             };
 

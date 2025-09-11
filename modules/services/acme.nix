@@ -1,7 +1,7 @@
 { rootPath, ... }:
 {
   flake.modules.nixos.acme =
-    { config, ... }:
+    { config, environment, ... }:
     {
       age.secrets.cloudflare-api-key = {
         rekeyFile = rootPath + "/.secrets/services/cloudflare-api-key.age";
@@ -10,9 +10,9 @@
       security.acme = {
         acceptTerms = true;
         defaults = {
-          email = "jason@json64.dev";
-          dnsProvider = "cloudflare";
-          dnsResolver = "1.1.1.1:53";
+          email = environment.email.adminEmail;
+          dnsProvider = environment.acme.dnsProvider;
+          dnsResolver = environment.acme.dnsResolver;
           dnsPropagationCheck = true;
           credentialFiles = {
             CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets.cloudflare-api-key.path;
