@@ -53,7 +53,7 @@
             imports = nixosConfig._module.args.modules;
             deployment = {
               targetHost = hostOptions.ipv4;
-              tags = hostOptions.roles;
+              tags = [ hostOptions.environment ] ++ hostOptions.roles;
               allowLocalDeployment = true;
             };
           }
