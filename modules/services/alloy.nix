@@ -3,20 +3,21 @@
   lib,
   ...
 }:
-let
-  # Find the first host with the metrics-ingester role
-  lokiHost = lib.head (
-    lib.mapAttrsToList (hostname: hostConfig: hostConfig.ipv4) (
-      lib.attrsets.filterAttrs (
-        hostname: hostConfig: builtins.elem "metrics-ingester" hostConfig.roles
-      ) config.flake.hosts
-    )
-  );
-in
 {
   flake.modules.nixos.alloy =
-    { pkgs, ... }:
+    { pkgs, hostOptions, ... }:
     let
+      currentHostEnvironment = hostOptions.environment or "homelab";
+      # Find the first host with the metrics-ingester role in the same environment
+      lokiHost = lib.head (
+        lib.mapAttrsToList (hostname: hostConfig: hostConfig.ipv4) (
+          lib.attrsets.filterAttrs (
+            hostname: hostConfig:
+            builtins.elem "metrics-ingester" hostConfig.roles
+            && (hostConfig.environment or "homelab") == currentHostEnvironment
+          ) config.flake.hosts
+        )
+      );
       alloyConfigText = ''
         // Loki write endpoint
         loki.write "loki_endpoint" {

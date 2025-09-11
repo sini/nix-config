@@ -1,11 +1,32 @@
 # Thunderbolt mesh networking for 3-node cluster
 # Auto-detects node ID from hostname and configures topology
 {
+  config,
+  lib,
+  ...
+}:
+let
+  # Find the gateway-proxy host in the same environment
+  findGatewayProxy =
+    currentHostEnvironment:
+    let
+      gatewayProxyHosts = lib.mapAttrsToList (hostname: hostConfig: hostConfig.ipv4) (
+        lib.attrsets.filterAttrs (
+          hostname: hostConfig:
+          builtins.elem "gateway-proxy" hostConfig.roles
+          && (hostConfig.environment or "homelab") == currentHostEnvironment
+        ) config.flake.hosts
+      );
+    in
+    if gatewayProxyHosts != [ ] then lib.head gatewayProxyHosts else null;
+in
+{
   flake.modules.nixos.thunderbolt-mesh =
     {
       lib,
       config,
       environment,
+      hostOptions,
       ...
     }:
     let
@@ -96,7 +117,8 @@
         };
       };
 
-      uplinkIp = "10.10.10.1";
+      # Find the gateway-proxy host in the same environment
+      uplinkIp = findGatewayProxy hostOptions.environment;
 
       # Get the configuration for this node
       nodeConfig = topologyMap.${toString config.networking.hostName};
@@ -163,8 +185,10 @@
               neighbor cilium ebgp-multihop 4
               bgp listen range ${nodeConfig.loopback.ipv4} peer-group cilium
               !
-              neighbor ${uplinkIp} remote-as 65000
-              neighbor ${uplinkIp} route-map FROM-UPLINK-IN in
+              ${lib.optionalString (uplinkIp != null) ''
+                neighbor ${uplinkIp} remote-as 65000
+                neighbor ${uplinkIp} route-map FROM-UPLINK-IN in
+              ''}
               ${lib.concatMapStringsSep "\n" (peer: ''
                 neighbor ${peer.ip} remote-as ${toString peer.asn}
                 neighbor ${peer.ip} update-source dummy0
@@ -176,7 +200,7 @@
               ! Address Family configuration for IPv4
               address-family ipv4 unicast
                 network ${nodeConfig.loopback.ipv4}
-                neighbor ${uplinkIp} activate
+                ${lib.optionalString (uplinkIp != null) "neighbor ${uplinkIp} activate"}
                 neighbor cilium activate
                 neighbor cilium next-hop-self
               ${lib.concatMapStringsSep "\n" (peer: ''

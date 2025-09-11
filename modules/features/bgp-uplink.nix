@@ -14,15 +14,22 @@ let
     ) "neighbor ${neighbor.address} default-originate"}
   '';
 
-  # Helper to get hosts with a specific tag or role
+  # Helper to get hosts with a specific tag or role in the same environment
   getHostsByTag =
-    tag: value:
+    tag: value: currentHostEnvironment:
     lib.filterAttrs (
-      name: host: (host.tags or { }) ? ${tag} && host.tags.${tag} == value
+      name: host:
+      (host.tags or { }) ? ${tag}
+      && host.tags.${tag} == value
+      && (host.environment or "homelab") == currentHostEnvironment
     ) config.flake.hosts;
 
   getHostsByRole =
-    role: lib.filterAttrs (name: host: lib.elem role (host.roles or [ ])) config.flake.hosts;
+    role: currentHostEnvironment:
+    lib.filterAttrs (
+      name: host:
+      lib.elem role (host.roles or [ ]) && (host.environment or "homelab") == currentHostEnvironment
+    ) config.flake.hosts;
 in
 {
   flake.modules.nixos.bgp-uplink =
@@ -34,6 +41,7 @@ in
     }:
     let
       cfg = config.services.bgp-uplink;
+      currentHostEnvironment = hostOptions.environment or "homelab";
 
       # Auto-generate neighbors from hosts with specific tags/roles
       autoNeighbors =
@@ -42,9 +50,9 @@ in
             # Find hosts matching the target pattern
             targetHosts =
               if cfg.neighborSelector.tag != null then
-                getHostsByTag cfg.neighborSelector.tag cfg.neighborSelector.value
+                getHostsByTag cfg.neighborSelector.tag cfg.neighborSelector.value currentHostEnvironment
               else if cfg.neighborSelector.role != null then
-                getHostsByRole cfg.neighborSelector.role
+                getHostsByRole cfg.neighborSelector.role currentHostEnvironment
               else
                 { };
 

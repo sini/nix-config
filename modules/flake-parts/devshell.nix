@@ -108,49 +108,6 @@
             };
             help = "Delete all k3s data and reset the cluster";
           }
-          {
-            package = pkgs.writeShellApplication {
-              name = "render-nixidy";
-              text = ''
-                echo "Rendering nixidy manifests for prod cluster..."
-
-                # Build nixidy manifests using inline expression
-                nix build \
-                  --impure \
-                  --expr '
-                  let
-                    flake = builtins.getFlake (toString ./.);
-                    pkgs = import flake.inputs.nixpkgs-unstable { system = "${pkgs.system}"; };
-                    nixidyEnvs = flake.inputs.nixidy.lib.mkEnvs {
-                      inherit pkgs;
-                      envs = {
-                        prod = {
-                          modules = [
-                            ./k8s/nixidy/environments/prod
-                          ];
-                        };
-                      };
-                    };
-                  in
-                  nixidyEnvs.prod.environmentPackage
-                  ' \
-                  --out-link k8s/nixidy/result
-
-                # Create manifests directory
-                mkdir -p k8s/nixidy/manifests/prod
-
-                # Copy rendered manifests
-                cp -r k8s/nixidy/result/* k8s/nixidy/manifests/prod/
-
-                # Clean up symlink
-                rm k8s/nixidy/result
-
-                echo "Manifests rendered to k8s/nixidy/manifests/prod/"
-                echo "Commit and push these manifests for ArgoCD to consume them."
-              '';
-            };
-            help = "Render nixidy Kubernetes manifests";
-          }
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
