@@ -27,26 +27,6 @@ let
       masterHost.tags.kubernetes-internal-ip or masterHost.ipv4
     else
       null;
-
-  # Original commented logic for reference:
-  # hosts = config.flake.hosts;
-  # kubernetesMasterMap = builtins.listToAttrs (
-  #   map
-  #     (
-  #       { name, value }:
-  #       {
-  #         name = value.tags."kubernetes-cluster";
-  #         value = name;
-  #       }
-  #     )
-  #     (
-  #       lib.filter (
-  #         host:
-  #         builtins.elem "kubernetes-master" (host.value.roles or [ ])
-  #         && host.value.tags ? "kubernetes-cluster"
-  #       ) (lib.attrsToList hosts)
-  #     )
-  # );
 in
 {
   flake.modules.nixos.kubernetes =
@@ -123,7 +103,7 @@ in
               "--snapshotter=overlayfs"
               "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--node-ip=${internalIP}"
-              "--node-external-ip=${externalIP}"
+              "--node-external-ip=${internalIP}"
               "--node-label=node.longhorn.io/create-default-disk=true"
               # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
               "--resolv-conf=/run/systemd/resolve/resolv.conf"
