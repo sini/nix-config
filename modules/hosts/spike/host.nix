@@ -2,7 +2,7 @@
 {
   flake.hosts.spike = {
     ipv4 = "10.10.10.20";
-    environment = "prod";
+    environment = "dev";
     roles = [
       "workstation"
       "laptop"
