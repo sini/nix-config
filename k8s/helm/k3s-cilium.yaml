@@ -1,0 +1,74 @@
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: cilium
+  namespace: kube-system
+spec:
+  chart: cilium
+  repo: https://helm.cilium.io
+  version: "@version@"
+  targetNamespace: kube-system
+  valuesContent: |-
+    cluster:
+      name: @clusterName@
+      id: 1
+
+    k8sServiceHost: @masterIP@
+    k8sServicePort: 6443
+
+    kubeProxyReplacement: true
+    socketLB:
+      hostNamespaceOnly: true
+    localRedirectPolicies:
+      enabled: true
+    l2NeighDiscovery:
+      enabled: true
+
+    bpf:
+      masquerade: true
+      lbExternalClusterIP: true
+      hostLegacyRouting: true
+
+    ipam:
+      mode: cluster-pool
+      operator:
+        clusterPoolIPv4PodCIDRList: ["172.20.0.0/16"]
+
+    routingMode: tunnel
+    tunnelProtocol: vxlan
+
+    cni:
+      chainingMode: portmap
+
+    enableIPv4Masquerade: true
+    enableIpMasqAgent: false
+    enableIPv4: true
+    nonMasqueradeCIDRs: "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
+    masqLinkLocal: false
+
+    devices:
+      - "dummy0"
+      - "enp2s0"
+      - "enp199s0f5"
+      - "enp199s0f6"
+
+    bgpControlPlane:
+      enabled: true
+    externalIPs:
+      enabled: true
+    loadBalancer:
+      mode: snat
+
+    hubble:
+      enabled: true
+      relay:
+        enabled: true
+      ui:
+        enabled: true
+
+    operator:
+      replicas: 2
+    rollOutCiliumPods: true
+
+    debug:
+      enabled: true

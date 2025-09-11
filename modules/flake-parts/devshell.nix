@@ -107,6 +107,29 @@
             };
             help = "Delete all k3s data and reset the cluster";
           }
+          {
+            package = pkgs.writeShellApplication {
+              name = "render-nixidy";
+              text = ''
+                echo "Rendering nixidy manifests for dev cluster..."
+                cd k8s/nixidy
+                nix build .#dev.environmentPackage --out-link result
+
+                # Create manifests directory
+                mkdir -p manifests/dev
+
+                # Copy rendered manifests
+                cp -r result/* manifests/dev/
+
+                # Clean up symlink
+                rm result
+
+                echo "Manifests rendered to k8s/nixidy/manifests/dev/"
+                echo "Commit and push these manifests for ArgoCD to consume them."
+              '';
+            };
+            help = "Render nixidy Kubernetes manifests";
+          }
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;

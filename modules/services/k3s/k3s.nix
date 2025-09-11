@@ -59,7 +59,8 @@ in
     let
       kubernetesCluster = hostOptions.kubernetes-cluster or "dev";
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
-      role = if isMaster then "server" else "agent";
+      # All kubernetes nodes run as server for HA etcd
+      role = if (builtins.elem "kubernetes" hostOptions.roles) then "server" else "agent";
       clusterInit = isMaster;
       internalIP = hostOptions.tags.kubernetes-internal-ip or hostOptions.ipv4;
       externalIP = hostOptions.ipv4;
@@ -79,7 +80,7 @@ in
         istioctl
         kubernetes-helm
         cilium-cli
-        fluxcd
+
         clusterctl # for kubernetes cluster-api
         nerdctl # containerd CLI, similar to docker CLI
 
@@ -114,6 +115,7 @@ in
 
       services = {
         nix-snapshotter.enable = true;
+
         k3s =
           let
             generalFlagList = [
@@ -169,6 +171,86 @@ in
           }
           // lib.optionalAttrs (!isMaster && masterIP != null) {
             serverAddr = "https://${masterIP}:6443";
+          }
+          // lib.optionalAttrs isMaster {
+            # Bootstrap cluster components using template-based manifests
+            manifests =
+              let
+                # Template substitution helper
+                substitute =
+                  template: vars:
+                  builtins.replaceStrings (builtins.attrNames vars) (builtins.attrValues vars) template;
+              in
+              {
+                # Cilium CNI via HelmChart CRD
+                cilium = {
+                  source = pkgs.writeTextFile {
+                    name = "k3s-cilium.yaml";
+                    text = substitute (builtins.readFile (rootPath + "/k8s/helm/k3s-cilium.yaml")) {
+                      "@version@" = "1.18.0";
+                      "@clusterName@" = kubernetesCluster;
+                      "@masterIP@" = masterIP;
+                    };
+                  };
+                };
+
+                # ArgoCD via HelmChart CRD
+                argocd = {
+                  source = pkgs.writeTextFile {
+                    name = "k3s-argocd.yaml";
+                    text = substitute (builtins.readFile (rootPath + "/k8s/helm/k3s-argocd.yaml")) {
+                      "@version@" = "7.7.11";
+                      "@clusterName@" = kubernetesCluster;
+                    };
+                  };
+                };
+
+                # ArgoCD Application for nixidy GitOps
+                argocd-apps = {
+                  content = {
+                    apiVersion = "argoproj.io/v1alpha1";
+                    kind = "Application";
+                    metadata = {
+                      name = "dev-cluster";
+                      namespace = "argocd";
+                      finalizers = [
+                        "resources-finalizer.argocd.argoproj.io"
+                      ];
+                    };
+                    spec = {
+                      project = "default";
+                      source = {
+                        repoURL = "https://github.com/sini/nix-config";
+                        targetRevision = "HEAD";
+                        path = "k8s/nixidy/manifests/dev";
+                      };
+                      destination = {
+                        server = "https://kubernetes.default.svc";
+                      };
+                      syncPolicy = {
+                        automated = {
+                          prune = true;
+                          selfHeal = true;
+                          allowEmpty = false;
+                        };
+                        syncOptions = [
+                          "CreateNamespace=true"
+                          "PrunePropagationPolicy=foreground"
+                          "PruneLast=true"
+                        ];
+                        retry = {
+                          limit = 5;
+                          backoff = {
+                            duration = "5s";
+                            factor = 2;
+                            maxDuration = "3m";
+                          };
+                        };
+                      };
+                    };
+                  };
+                };
+              };
           };
 
         # Required for Longhorn
