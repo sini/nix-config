@@ -57,10 +57,8 @@ in
       ...
     }:
     let
-      kubernetesCluster = hostOptions.kubernetes-cluster or "prod";
+      kubernetesCluster = hostOptions.kubernetes-cluster or "dev";
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
-      # All kubernetes nodes run as server for HA etcd
-      role = if (builtins.elem "kubernetes" hostOptions.roles) then "server" else "agent";
       clusterInit = isMaster;
       internalIP = hostOptions.tags.kubernetes-internal-ip or hostOptions.ipv4;
       externalIP = hostOptions.ipv4;
@@ -158,99 +156,99 @@ in
               "--tls-san=172.16.255.3"
 
             ];
-            generalFlags = builtins.concatStringsSep " " generalFlagList;
+            #agentFlags = builtins.concatStringsSep " " generalFlagList;
             serverFlags = builtins.concatStringsSep " " (generalFlagList ++ serverFlagList);
           in
           {
             inherit clusterInit;
-            inherit role;
             enable = true;
+            role = "server";
             tokenFile = config.age.secrets.kubernetes-cluster-token.path;
-            #gracefulNodeShutdown.enable = true;
-            extraFlags = lib.mkForce (if (role == "server") then serverFlags else generalFlags);
+            gracefulNodeShutdown.enable = true;
+            extraFlags = lib.mkForce serverFlags;
           }
           // lib.optionalAttrs (!isMaster && masterIP != null) {
             serverAddr = "https://${masterIP}:6443";
-          }
-          // lib.optionalAttrs isMaster {
-            # Bootstrap cluster components using template-based manifests
-            manifests =
-              let
-                # Template substitution helper
-                substitute =
-                  template: vars:
-                  builtins.replaceStrings (builtins.attrNames vars) (builtins.attrValues vars) template;
-              in
-              {
-                # Cilium CNI via HelmChart CRD
-                cilium = {
-                  source = pkgs.writeTextFile {
-                    name = "k3s-cilium.yaml";
-                    text = substitute (builtins.readFile (rootPath + "/k8s/helm/k3s-cilium.yaml")) {
-                      "@version@" = "1.18.0";
-                      "@clusterName@" = kubernetesCluster;
-                      "@masterIP@" = masterIP;
-                    };
-                  };
-                };
+            # }
+            # // lib.optionalAttrs isMaster {
+            #   # Bootstrap cluster components using template-based manifests
+            #   manifests =
+            #     let
+            #       # Template substitution helper
+            #       substitute =
+            #         template: vars:
+            #         builtins.replaceStrings (builtins.attrNames vars) (builtins.attrValues vars) template;
+            #     in
+            #     {
+            #       # Cilium CNI via HelmChart CRD
+            #       cilium = {
+            #         source = pkgs.writeTextFile {
+            #           name = "k3s-cilium.yaml";
+            #           text = substitute (builtins.readFile (rootPath + "/k8s/helm/k3s-cilium.yaml")) {
+            #             "@version@" = "1.18.0";
+            #             "@clusterName@" = kubernetesCluster;
+            #             "@masterIP@" = masterIP;
+            #           };
+            #         };
+            #       };
 
-                # ArgoCD via HelmChart CRD
-                argocd = {
-                  source = pkgs.writeTextFile {
-                    name = "k3s-argocd.yaml";
-                    text = substitute (builtins.readFile (rootPath + "/k8s/helm/k3s-argocd.yaml")) {
-                      "@version@" = "7.7.11";
-                      "@clusterName@" = kubernetesCluster;
-                    };
-                  };
-                };
+            #       # ArgoCD via HelmChart CRD
+            #       argocd = {
+            #         source = pkgs.writeTextFile {
+            #           name = "k3s-argocd.yaml";
+            #           text = substitute (builtins.readFile (rootPath + "/k8s/helm/k3s-argocd.yaml")) {
+            #             "@version@" = "7.7.11";
+            #             "@clusterName@" = kubernetesCluster;
+            #           };
+            #         };
+            #       };
 
-                # ArgoCD Application for nixidy GitOps
-                argocd-apps = {
-                  content = {
-                    apiVersion = "argoproj.io/v1alpha1";
-                    kind = "Application";
-                    metadata = {
-                      name = "prod-cluster";
-                      namespace = "argocd";
-                      finalizers = [
-                        "resources-finalizer.argocd.argoproj.io"
-                      ];
-                    };
-                    spec = {
-                      project = "default";
-                      source = {
-                        repoURL = "https://github.com/sini/nix-config";
-                        targetRevision = "HEAD";
-                        path = "k8s/nixidy/manifests/prod";
-                      };
-                      destination = {
-                        server = "https://kubernetes.default.svc";
-                      };
-                      syncPolicy = {
-                        automated = {
-                          prune = true;
-                          selfHeal = true;
-                          allowEmpty = false;
-                        };
-                        syncOptions = [
-                          "CreateNamespace=true"
-                          "PrunePropagationPolicy=foreground"
-                          "PruneLast=true"
-                        ];
-                        retry = {
-                          limit = 5;
-                          backoff = {
-                            duration = "5s";
-                            factor = 2;
-                            maxDuration = "3m";
-                          };
-                        };
-                      };
-                    };
-                  };
-                };
-              };
+            #       # ArgoCD Application for nixidy GitOps
+            #       argocd-apps = {
+            #         content = {
+            #           apiVersion = "argoproj.io/v1alpha1";
+            #           kind = "Application";
+            #           metadata = {
+            #             name = "prod-cluster";
+            #             namespace = "argocd";
+            #             finalizers = [
+            #               "resources-finalizer.argocd.argoproj.io"
+            #             ];
+            #           };
+            #           spec = {
+            #             project = "default";
+            #             source = {
+            #               repoURL = "https://github.com/sini/nix-config";
+            #               targetRevision = "HEAD";
+            #               path = "k8s/nixidy/manifests/prod";
+            #             };
+            #             destination = {
+            #               server = "https://kubernetes.default.svc";
+            #             };
+            #             syncPolicy = {
+            #               automated = {
+            #                 prune = true;
+            #                 selfHeal = true;
+            #                 allowEmpty = false;
+            #               };
+            #               syncOptions = [
+            #                 "CreateNamespace=true"
+            #                 "PrunePropagationPolicy=foreground"
+            #                 "PruneLast=true"
+            #               ];
+            #               retry = {
+            #                 limit = 5;
+            #                 backoff = {
+            #                   duration = "5s";
+            #                   factor = 2;
+            #                   maxDuration = "3m";
+            #                 };
+            #               };
+            #             };
+            #           };
+            #         };
+            #       };
+            #     };
           };
 
         # Required for Longhorn
