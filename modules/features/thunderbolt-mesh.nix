@@ -5,6 +5,7 @@
     {
       lib,
       config,
+      environment,
       ...
     }:
     let
@@ -131,8 +132,8 @@
             !
             ! == Prefix Lists and Route Map to FIX Ingress Routes from Cilium ==
             ! This prefix-list permits both Pod CIDRs and Service CIDRs.
-            ip prefix-list CILIUM-ROUTES seq 10 permit 172.16.0.0/12 ge 16 le 32
-            ip prefix-list CILIUM-ROUTES seq 20 permit 192.168.0.0/16 ge 16 le 32
+            ip prefix-list CILIUM-ROUTES seq 10 permit ${environment.kubernetes.clusterCidr} ge 16 le 32
+            ip prefix-list CILIUM-ROUTES seq 20 permit ${environment.kubernetes.serviceCidr} ge 16 le 32
             ip prefix-list CILIUM-ROUTES seq 30 permit 10.0.0.0/8 le 32
             ip prefix-list DEFAULT-ONLY seq 10 permit 0.0.0.0/0
             !

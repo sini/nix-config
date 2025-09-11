@@ -1,5 +1,7 @@
 {
-  flake.modules.nixos.time = {
-    time.timeZone = "America/Los_Angeles";
-  };
+  flake.modules.nixos.time =
+    { environment, ... }:
+    {
+      time.timeZone = environment.timezone or "UTC";
+    };
 }

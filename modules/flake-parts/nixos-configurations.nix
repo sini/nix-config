@@ -25,6 +25,7 @@
             nixpkgs' = if hostOptions.unstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
             homeManager' = if hostOptions.unstable then inputs.home-manager-unstable else inputs.home-manager;
             extendedLibrary = if hostOptions.unstable then unstableLib else lib;
+            environment = config.environments.${hostOptions.environment or "homelab"};
             chaotic_imports =
               if hostOptions.unstable then
                 [ inputs.chaotic.nixosModules.default ]
@@ -39,7 +40,7 @@
             inherit system;
 
             specialArgs = {
-              inherit inputs hostOptions;
+              inherit inputs hostOptions environment;
               inherit (config) nodes;
               lib = extendedLibrary;
             };
@@ -62,7 +63,7 @@
               (inputs.self.modules.nixos."host_${hostname}" or { })
               {
                 networking.hostName = hostname;
-                networking.domain = "json64.dev";
+                networking.domain = environment.domain;
                 facter.reportPath = hostOptions.facts;
                 age.rekey.hostPubkey = hostOptions.public_key;
               }
