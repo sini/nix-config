@@ -141,6 +141,12 @@
 
     nur.url = "github:nix-community/nur";
 
+    # Kubernetes GitOps with nix and Argo CD
+    nixidy = {
+      url = "github:arnarg/nixidy";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     # homebrew-bundle = {
     #   url = "github:homebrew/homebrew-bundle";
     #   flake = false;

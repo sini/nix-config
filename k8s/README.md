@@ -12,7 +12,7 @@ This directory contains the Kubernetes configuration for the homelab cluster usi
 
 ### Application Layer (nixidy + ArgoCD)
 
-- **nixidy**: Generates Kubernetes manifests from Nix expressions
+- **nixidy**: Generates Kubernetes manifests from Nix expressions (integrated into main flake)
 - **ArgoCD Applications**: Consume nixidy-generated manifests for GitOps workflow
 - Applications: monitoring, ingress, storage, and custom workloads
 
@@ -22,17 +22,18 @@ This directory contains the Kubernetes configuration for the homelab cluster usi
 k8s/
 ├── README.md                    # This file
 ├── nixidy/                      # nixidy configuration
-│   ├── flake.nix               # Main nixidy flake
-│   ├── environments/dev/       # Dev cluster configuration
+│   ├── environments/prod/      # Production cluster configuration
 │   │   ├── default.nix         # Environment configuration
-│   │   ├── monitoring.nix      # Prometheus, Grafana stack
-│   │   ├── ingress.nix         # NGINX ingress, cert-manager
-│   │   ├── storage.nix         # Longhorn distributed storage
+│   │   ├── test.nix            # Simple test application
+│   │   ├── monitoring.nix      # Prometheus, Grafana stack (disabled)
+│   │   ├── ingress.nix         # NGINX ingress, cert-manager (disabled)
+│   │   ├── storage.nix         # Longhorn distributed storage (disabled)
 │   │   └── dashboards/         # Grafana dashboards
 │   ├── argocd-apps/           # ArgoCD Application definitions
-│   └── manifests/dev/         # Generated manifests (auto-rendered)
-└── dev/                       # Legacy manual configs (reference)
-    └── cilium/                # Original Cilium configuration
+│   └── manifests/prod/        # Generated manifests (auto-rendered)
+├── dev/                       # Legacy manual configs (reference)
+│   └── cilium/                # Original Cilium configuration
+└── helm/                      # Helm-related configurations
 ```
 
 ## Usage
@@ -40,7 +41,7 @@ k8s/
 ### Prerequisites
 
 1. **k3s Cluster**: Bootstrap layer must be deployed first via NixOS configuration
-1. **Development Environment**: Use the main flake's development shell
+1. **Development Environment**: Use the main flake's development shell (nixidy CLI included)
 
 ```bash
 # Enter development environment
@@ -48,6 +49,9 @@ nix develop
 
 # Or with direnv
 direnv allow
+
+# Verify nixidy is available
+nixidy --help
 ```
 
 ### Rendering Manifests
@@ -60,13 +64,15 @@ render-nixidy
 
 This will:
 
-1. Build the nixidy environment package
-1. Copy rendered manifests to `k8s/nixidy/manifests/dev/`
+1. Build the nixidy environment package from the main flake
+1. Copy rendered manifests to `k8s/nixidy/manifests/prod/`
 1. Display instructions for Git workflow
+
+**Note**: The render command uses an inline expression to build nixidy environments from the main flake, ensuring consistency with the overall repository configuration.
 
 ### Deploying Changes
 
-1. **Modify nixidy configuration** in `k8s/nixidy/environments/dev/`
+1. **Modify nixidy configuration** in `k8s/nixidy/environments/prod/`
 1. **Render manifests**: `render-nixidy`
 1. **Commit and push changes**:
    ```bash
@@ -104,20 +110,20 @@ This will:
 
 ### Application Stack
 
-**Monitoring** (`environments/dev/monitoring.nix`):
+**Monitoring** (`environments/prod/monitoring.nix`):
 
 - Prometheus operator and stack
 - Grafana with persistent storage
 - Alertmanager for notifications
 - Custom dashboards via ConfigMaps
 
-**Ingress** (`environments/dev/ingress.nix`):
+**Ingress** (`environments/prod/ingress.nix`):
 
 - NGINX ingress controller with Cilium LoadBalancer
 - cert-manager for automatic TLS certificates
 - Let's Encrypt ClusterIssuer configuration
 
-**Storage** (`environments/dev/storage.nix`):
+**Storage** (`environments/prod/storage.nix`):
 
 - Longhorn distributed storage system
 - Default storage class with 2 replicas
@@ -127,7 +133,7 @@ This will:
 
 ### Adding New Applications
 
-1. Create a new file in `environments/dev/` (e.g., `my-app.nix`)
+1. Create a new file in `environments/prod/` (e.g., `my-app.nix`)
 1. Define the application using nixidy syntax:
    ```nix
    {
@@ -140,42 +146,51 @@ This will:
      };
    }
    ```
-1. Import the file in `environments/dev/default.nix`
+1. Import the file in `environments/prod/default.nix`
 1. Render and deploy as described above
 
 ### Helm Charts
 
-Use the `helms` resource type for Helm chart deployments:
+Use the `helm` resource type for Helm chart deployments:
 
 ```nix
-helms.my-chart = {
-  chart = {
-    name = "chart-name";
-    repo = "https://charts.example.com";
-    version = "1.0.0";
-  };
-  values = {
-    # Helm values here
+# Note: Helm charts currently disabled in environment configs
+# Working example structure:
+resources = {
+  helm.my-chart = {
+    chart = {
+      name = "chart-name";
+      repo = "https://charts.example.com";
+      version = "1.0.0";
+    };
+    values = {
+      # Helm values here
+    };
   };
 };
 ```
 
-### Custom Resources
+### Standard Kubernetes Resources
 
-Define raw Kubernetes resources using `customResources`:
+Define standard Kubernetes resources by type:
 
 ```nix
-customResources.my-resource = {
-  apiVersion = "v1";
-  kind = "ConfigMap";
-  metadata = {
-    name = "my-config";
+resources = {
+  configMaps.my-config.data = {
+    "test.txt" = "Hello from nixidy!";
   };
-  data = {
-    key = "value";
+
+  deployments.my-app.spec = {
+    # Deployment specification
+  };
+
+  services.my-service.spec = {
+    # Service specification
   };
 };
 ```
+
+**Note**: Custom Resource Definitions (CRDs) and custom resources require investigation of proper nixidy syntax.
 
 ## Troubleshooting
 
@@ -195,14 +210,20 @@ customResources.my-resource = {
 1. Check nixidy configuration syntax:
 
    ```bash
-   cd k8s/nixidy
+   # Check the main flake (nixidy is integrated)
    nix flake check
    ```
 
-1. Build individual components:
+1. Test render command:
 
    ```bash
-   nix build .#dev.environmentPackage
+   render-nixidy
+   ```
+
+1. Build nixidy environment manually:
+
+   ```bash
+   nix build --impure --expr 'let flake = builtins.getFlake (toString ./.); pkgs = import flake.inputs.nixpkgs-unstable { system = "x86_64-linux"; }; nixidyEnvs = flake.inputs.nixidy.lib.mkEnvs { inherit pkgs; envs = { prod = { modules = [ ./k8s/nixidy/environments/prod ]; }; }; }; in nixidyEnvs.prod.environmentPackage'
    ```
 
 ### k3s Bootstrap Issues
@@ -218,10 +239,26 @@ customResources.my-resource = {
 
 ## Migration Notes
 
+### nixidy Integration (Current)
+
+nixidy has been integrated into the main flake for consistency:
+
+- **nixidy CLI**: Available in development shell via main flake
+- **Environment configuration**: Defined in `k8s/nixidy/environments/prod/`
+- **Manifest rendering**: Uses main flake's nixidy integration
+- **Target settings**: Configured per-environment in `default.nix`
+
+### Previous Approach
+
 This configuration replaces the previous `modules/services/k3s/bootstrap.nix` approach with:
 
 - Native k3s `autoDeployCharts` for Helm deployments
 - Native k3s `manifests` for raw YAML resources
 - nixidy for application-layer GitOps workflow
+
+### Legacy References
+
+- `k8s/dev/`: Original manual configurations (deprecated, kept for reference)
+- Complex applications (monitoring, ingress, storage) are currently disabled pending nixidy syntax investigation
 
 The original manual configurations in `k8s/dev/` are preserved for reference but should be considered deprecated.

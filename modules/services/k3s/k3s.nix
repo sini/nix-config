@@ -57,7 +57,7 @@ in
       ...
     }:
     let
-      kubernetesCluster = hostOptions.kubernetes-cluster or "dev";
+      kubernetesCluster = hostOptions.kubernetes-cluster or "prod";
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
       # All kubernetes nodes run as server for HA etcd
       role = if (builtins.elem "kubernetes" hostOptions.roles) then "server" else "agent";
@@ -211,7 +211,7 @@ in
                     apiVersion = "argoproj.io/v1alpha1";
                     kind = "Application";
                     metadata = {
-                      name = "dev-cluster";
+                      name = "prod-cluster";
                       namespace = "argocd";
                       finalizers = [
                         "resources-finalizer.argocd.argoproj.io"
@@ -222,7 +222,7 @@ in
                       source = {
                         repoURL = "https://github.com/sini/nix-config";
                         targetRevision = "HEAD";
-                        path = "k8s/nixidy/manifests/dev";
+                        path = "k8s/nixidy/manifests/prod";
                       };
                       destination = {
                         server = "https://kubernetes.default.svc";
