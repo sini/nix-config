@@ -56,9 +56,9 @@ in
 
           prefixLists = {
             CILIUM-ROUTES = [
-              "permit ${environment.kubernetes.clusterCidr} ge 16 le 32"
-              "permit ${environment.kubernetes.serviceCidr} ge 16 le 32"
-              "permit 10.0.0.0/8 le 32"
+              "permit ${environment.kubernetes.clusterCidr} le 32"
+              "permit ${environment.kubernetes.serviceCidr} le 32"
+              "permit ${environment.kubernetes.loadBalancerRange} le 32"
             ];
             DEFAULT-ONLY = [
               "permit 0.0.0.0/0"
