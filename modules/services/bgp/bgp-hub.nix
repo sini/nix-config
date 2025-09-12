@@ -21,18 +21,17 @@ let
       name: host:
       (host.tags or { }) ? ${tag}
       && host.tags.${tag} == value
-      && (host.environment or "homelab") == currentHostEnvironment
+      && host.environment == currentHostEnvironment
     ) config.flake.hosts;
 
   getHostsByRole =
     role: currentHostEnvironment:
     lib.filterAttrs (
-      name: host:
-      lib.elem role (host.roles or [ ]) && (host.environment or "homelab") == currentHostEnvironment
+      name: host: lib.elem role (host.roles or [ ]) && host.environment == currentHostEnvironment
     ) config.flake.hosts;
 in
 {
-  flake.modules.nixos.bgp-uplink =
+  flake.modules.nixos.bgp-hub =
     {
       config,
       lib,
@@ -41,11 +40,12 @@ in
     }:
     let
       cfg = config.services.bgp-uplink;
-      currentHostEnvironment = hostOptions.environment or "homelab";
+      currentHostEnvironment = hostOptions.environment;
 
       # Auto-generate neighbors from hosts with specific tags/roles
+      shouldAutoDiscover = cfg.autoDiscoverNeighbors || (cfg.neighbors == [ ]);
       autoNeighbors =
-        if cfg.autoDiscoverNeighbors then
+        if shouldAutoDiscover then
           let
             # Find hosts matching the target pattern
             targetHosts =
@@ -56,14 +56,21 @@ in
               else
                 { };
 
-            # Convert to neighbor entries
-            hostNeighbors = lib.mapAttrsToList (name: host: {
-              address = host.ipv4;
-              asNumber = cfg.neighborAsNumberBase + (cfg.neighborAsNumberOffset name);
+            # Get sorted hostnames for consistent AS number assignment
+            sortedHostnames = lib.sort (a: b: a < b) (lib.attrNames targetHosts);
+
+            # Create neighbors using their bgp-asn tags or fallback to index-based AS numbers
+            sortedNeighbors = lib.imap0 (index: hostname: {
+              address = targetHosts.${hostname}.ipv4;
+              asNumber =
+                if (targetHosts.${hostname}.tags or { }) ? "bgp-asn" then
+                  lib.toInt targetHosts.${hostname}.tags."bgp-asn"
+                else
+                  cfg.neighborAsNumberBase + index;
               defaultOriginate = cfg.defaultOriginateToNeighbors;
-            }) targetHosts;
+            }) sortedHostnames;
           in
-          hostNeighbors
+          sortedNeighbors
         else
           [ ];
 
@@ -72,11 +79,9 @@ in
     in
     {
       options.services.bgp-uplink = {
-        enable = lib.mkEnableOption "BGP uplink configuration";
-
         localAsNumber = lib.mkOption {
           type = lib.types.int;
-          default = 65000;
+          default = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65000;
           description = "Local BGP AS number";
         };
 
@@ -125,7 +130,7 @@ in
               };
               role = lib.mkOption {
                 type = lib.types.nullOr lib.types.str;
-                default = null;
+                default = "bgp-spoke";
                 description = "Role to filter hosts";
               };
             };
@@ -142,15 +147,8 @@ in
 
         neighborAsNumberOffset = lib.mkOption {
           type = lib.types.functionTo lib.types.int;
-          default =
-            hostname:
-            let
-              # Extract number from hostname if it ends with digits
-              match = builtins.match ".*-([0-9]+)" hostname;
-              num = if match != null then lib.toInt (builtins.head match) else 0;
-            in
-            num - 1;
-          description = "Function to calculate AS number offset from hostname";
+          default = hostname: 0; # Default fallback, actual logic moved to auto-discovery
+          description = "Function to calculate AS number offset from hostname based on sorted position";
         };
 
         defaultOriginateToNeighbors = lib.mkOption {
@@ -166,7 +164,7 @@ in
         };
       };
 
-      config = lib.mkIf cfg.enable {
+      config = {
         boot = {
           kernel.sysctl = {
             "net.ipv4.ip_forward" = lib.mkDefault 1;

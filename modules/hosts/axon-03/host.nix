@@ -6,6 +6,7 @@
     roles = [
       "server"
       "kubernetes"
+      "bgp-spoke"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-longhorn
@@ -15,6 +16,11 @@
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.3";
+      "bgp-asn" = "65003";
+      "thunderbolt-loopback-ipv4" = "172.16.255.3/32";
+      "thunderbolt-loopback-ipv6" = "fdb4:5edb:1b00::3/128";
+      "thunderbolt-interface-1" = "169.254.31.0/31";
+      "thunderbolt-interface-2" = "169.254.23.1/31";
     };
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOAXXsNWa09hW/wuDBcpMkln9LsZCM0A2vQYiUh+pEsC";
     facts = ./facter.json;
