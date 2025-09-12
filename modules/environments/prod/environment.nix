@@ -73,5 +73,12 @@
       environment = "prod";
       owner = "json64";
     };
+
+    monitoring = {
+      scanEnvironments = [
+        "prod"
+        "dev"
+      ];
+    };
   };
 }
