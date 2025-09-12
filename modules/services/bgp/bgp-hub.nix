@@ -4,16 +4,6 @@
   ...
 }:
 let
-  generateNeighborConfig = neighbor: ''
-    neighbor ${neighbor.address} remote-as ${toString neighbor.asNumber}
-  '';
-
-  generateAddressFamilyConfig = neighbor: ''
-    neighbor ${neighbor.address} activate
-    ${lib.optionalString (neighbor.defaultOriginate or false
-    ) "neighbor ${neighbor.address} default-originate"}
-  '';
-
   # Helper to get hosts with a specific tag or role in the same environment
   getHostsByTag =
     tag: value: currentHostEnvironment:
@@ -61,28 +51,65 @@ in
 
             # Create neighbors using their bgp-asn tags or fallback to index-based AS numbers
             sortedNeighbors = lib.imap0 (index: hostname: {
-              address = targetHosts.${hostname}.ipv4;
-              asNumber =
+              ip = targetHosts.${hostname}.ipv4;
+              asn =
                 if (targetHosts.${hostname}.tags or { }) ? "bgp-asn" then
                   lib.toInt targetHosts.${hostname}.tags."bgp-asn"
                 else
                   cfg.neighborAsNumberBase + index;
-              defaultOriginate = cfg.defaultOriginateToNeighbors;
             }) sortedHostnames;
           in
           sortedNeighbors
         else
           [ ];
 
+      # Convert manual neighbors to BGP module format
+      manualNeighbors = map (neighbor: {
+        ip = neighbor.address;
+        asn = neighbor.asNumber;
+      }) cfg.neighbors;
+
       # Combine manual and auto-discovered neighbors
-      allNeighbors = cfg.neighbors ++ autoNeighbors;
+      allNeighbors = manualNeighbors ++ autoNeighbors;
+
+      # Create address family configuration for all neighbors
+      addressFamilyNeighbors = lib.listToAttrs (
+        map (
+          neighbor:
+          let
+            shouldOriginate =
+              if cfg.neighbors != [ ] then
+                # For manual neighbors, check their defaultOriginate setting
+                let
+                  matchingManual = lib.findFirst (n: n.address == neighbor.ip) null cfg.neighbors;
+                in
+                if matchingManual != null then matchingManual.defaultOriginate else cfg.defaultOriginateToNeighbors
+              else
+                # For auto-discovered neighbors, use the global setting
+                cfg.defaultOriginateToNeighbors;
+          in
+          {
+            name = neighbor.ip;
+            value = {
+              activate = true;
+              nextHopSelf = false;
+              defaultOriginate = shouldOriginate;
+            };
+          }
+        ) allNeighbors
+      );
+
+      localAsn =
+        if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else cfg.localAsNumber;
     in
     {
+      imports = [ ./_module/bgp.nix ];
+
       options.services.bgp-hub = {
         localAsNumber = lib.mkOption {
           type = lib.types.int;
-          default = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65000;
-          description = "Local BGP AS number";
+          default = 65000;
+          description = "Local BGP AS number (fallback if no bgp-asn tag)";
         };
 
         neighbors = lib.mkOption {
@@ -147,7 +174,7 @@ in
 
         neighborAsNumberOffset = lib.mkOption {
           type = lib.types.functionTo lib.types.int;
-          default = hostname: 0; # Default fallback, actual logic moved to auto-discovery
+          default = hostname: 0;
           description = "Function to calculate AS number offset from hostname based on sorted position";
         };
 
@@ -164,31 +191,22 @@ in
         };
       };
 
-      config = {
-        boot = {
-          kernel.sysctl = {
-            "net.ipv4.ip_forward" = lib.mkDefault 1;
-            "net.ipv6.conf.all.forwarding" = lib.mkDefault 1;
-          };
+      config = lib.mkIf (builtins.elem "bgp-hub" (hostOptions.roles or [ ])) {
+        boot.kernel.sysctl = {
+          "net.ipv4.ip_forward" = lib.mkDefault 1;
+          "net.ipv6.conf.all.forwarding" = lib.mkDefault 1;
         };
 
-        services.frr = {
-          bgpd.enable = true;
-          config = ''
-            ip forwarding
-            !
-            router bgp ${toString cfg.localAsNumber}
-              bgp router-id ${hostOptions.ipv4}
-              no bgp ebgp-requires-policy
-              bgp bestpath as-path multipath-relax
-              maximum-paths ${toString cfg.maximumPaths}
-              !
-              ${lib.concatMapStringsSep "\n  " generateNeighborConfig allNeighbors}
-              !
-              address-family ipv4 unicast
-                ${lib.concatMapStringsSep "\n    " generateAddressFamilyConfig allNeighbors}
-              exit-address-family
-          '';
+        services.bgp = {
+          localAsn = localAsn;
+          routerId = hostOptions.ipv4;
+          maximumPaths = cfg.maximumPaths;
+
+          neighbors = allNeighbors;
+
+          addressFamilies.ipv4-unicast = {
+            neighbors = addressFamilyNeighbors;
+          };
         };
       };
     };

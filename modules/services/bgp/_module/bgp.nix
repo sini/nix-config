@@ -138,6 +138,11 @@ in
                       default = false;
                       description = "Set next-hop-self for neighbor";
                     };
+                    defaultOriginate = lib.mkOption {
+                      type = lib.types.bool;
+                      default = false;
+                      description = "Send default route to this neighbor";
+                    };
                   };
                 }
               );
@@ -169,6 +174,12 @@ in
       );
       default = { };
       description = "BGP address family configurations";
+    };
+
+    maximumPaths = lib.mkOption {
+      type = lib.types.int;
+      default = 8;
+      description = "Maximum number of BGP paths";
     };
 
     extraConfig = lib.mkOption {
@@ -210,75 +221,80 @@ in
         bgp router-id ${cfg.routerId}
         no bgp ebgp-requires-policy
         bgp bestpath as-path multipath-relax
-        maximum-paths 8
+        maximum-paths ${toString cfg.maximumPaths}
         bgp allow-martian-nexthop
         !
         ${lib.optionalString (cfg.peerGroups != { }) ''
           ! Peer group definitions
-          ${lib.concatStringsSep "\n" (
-            lib.mapAttrsToList (name: group: ''
-              neighbor ${name} peer-group
-              neighbor ${name} remote-as ${toString group.remoteAs}
-              ${lib.optionalString group.softReconfiguration "neighbor ${name} soft-reconfiguration inbound"}
-              ${lib.optionalString (
-                group.updateSource != null
-              ) "neighbor ${name} update-source ${group.updateSource}"}
-              ${lib.optionalString (
-                group.ebgpMultihop != null
-              ) "neighbor ${name} ebgp-multihop ${toString group.ebgpMultihop}"}
-              ${lib.optionalString (
-                group.listenRange != null
-              ) "bgp listen range ${group.listenRange} peer-group ${name}"}
-            '') cfg.peerGroups
-          )}
-          !
+            ${lib.concatStringsSep "\n  " (
+              lib.mapAttrsToList (name: group: ''
+                ! GROUP ${name}
+                  neighbor ${name} peer-group
+                  neighbor ${name} remote-as ${toString group.remoteAs}
+                  ${lib.optionalString group.softReconfiguration "neighbor ${name} soft-reconfiguration inbound"}
+                  ${lib.optionalString (
+                    group.updateSource != null
+                  ) "neighbor ${name} update-source ${group.updateSource}"}
+                  ${lib.optionalString (
+                    group.ebgpMultihop != null
+                  ) "neighbor ${name} ebgp-multihop ${toString group.ebgpMultihop}"}
+                  ${lib.optionalString (
+                    group.listenRange != null
+                  ) "bgp listen range ${group.listenRange} peer-group ${name}"}
+              '') cfg.peerGroups
+            )}
         ''}
         ${lib.optionalString (cfg.neighbors != [ ]) ''
           ! Neighbor definitions
-          ${lib.concatMapStringsSep "\n" (neighbor: ''
-            neighbor ${neighbor.ip} remote-as ${toString neighbor.asn}
-            ${lib.optionalString neighbor.softReconfiguration "neighbor ${neighbor.ip} soft-reconfiguration inbound"}
-            ${lib.optionalString (
-              neighbor.updateSource != null
-            ) "neighbor ${neighbor.ip} update-source ${neighbor.updateSource}"}
-            ${lib.optionalString (
-              neighbor.ebgpMultihop != null
-            ) "neighbor ${neighbor.ip} ebgp-multihop ${toString neighbor.ebgpMultihop}"}
-            ${lib.optionalString (
-              neighbor.routeMapIn != null
-            ) "neighbor ${neighbor.ip} route-map ${neighbor.routeMapIn} in"}
-            ${lib.optionalString (
-              neighbor.allowasIn != null
-            ) "neighbor ${neighbor.ip} allowas-in ${toString neighbor.allowasIn}"}
-          '') cfg.neighbors}
-          !
+            ${lib.concatMapStringsSep "\n  " (
+              neighbor:
+              "neighbor ${neighbor.ip} remote-as ${toString neighbor.asn}"
+              + lib.optionalString neighbor.softReconfiguration "\n  neighbor ${neighbor.ip} soft-reconfiguration inbound"
+              + lib.optionalString (
+                neighbor.updateSource != null
+              ) "\n  neighbor ${neighbor.ip} update-source ${neighbor.updateSource}"
+              + lib.optionalString (
+                neighbor.ebgpMultihop != null
+              ) "\n  neighbor ${neighbor.ip} ebgp-multihop ${toString neighbor.ebgpMultihop}"
+              + lib.optionalString (
+                neighbor.routeMapIn != null
+              ) "\n  neighbor ${neighbor.ip} route-map ${neighbor.routeMapIn} in"
+              + lib.optionalString (
+                neighbor.allowasIn != null
+              ) "\n  neighbor ${neighbor.ip} allowas-in ${toString neighbor.allowasIn}"
+            ) cfg.neighbors}
+            !
         ''}
-        ${lib.optionalString (cfg.addressFamilies != { }) ''
-          ${lib.concatStringsSep "\n" (
-            lib.mapAttrsToList (family: familyConfig: ''
-              ! Address Family ${family}
-              address-family ${family}
-                ${lib.concatStringsSep "\n" (map (net: "network ${net}") familyConfig.networks)}
-                ${lib.concatStringsSep "\n" (
-                  lib.mapAttrsToList (
-                    ip: neighConfig:
-                    lib.optionalString neighConfig.activate "neighbor ${ip} activate"
-                    + lib.optionalString neighConfig.nextHopSelf "\n  neighbor ${ip} next-hop-self"
-                  ) familyConfig.neighbors
-                )}
-                ${lib.concatStringsSep "\n" (
-                  lib.mapAttrsToList (
-                    name: groupConfig:
-                    lib.optionalString groupConfig.activate "neighbor ${name} activate"
-                    + lib.optionalString groupConfig.nextHopSelf "\n  neighbor ${name} next-hop-self"
-                  ) familyConfig.peerGroups
-                )}
-              exit-address-family
-            '') cfg.addressFamilies
-          )}
-        ''}
-        ${cfg.extraConfig}
-      !
+        ${
+          lib.optionalString (cfg.addressFamilies != { }) ''
+            ${lib.concatStringsSep "\n" (
+              lib.mapAttrsToList (family: familyConfig: ''
+                ! Address Family ${family}
+                  address-family ${family}
+                    ${lib.concatStringsSep "\n    " (map (net: "network ${net}") familyConfig.networks)}
+                    ${lib.concatStringsSep "\n    " (
+                      lib.filter (s: s != "") (
+                        lib.flatten (
+                          lib.mapAttrsToList (ip: neighConfig: [
+                            (lib.optionalString neighConfig.activate "neighbor ${ip} activate")
+                            (lib.optionalString neighConfig.nextHopSelf "neighbor ${ip} next-hop-self")
+                            (lib.optionalString neighConfig.defaultOriginate "neighbor ${ip} default-originate")
+                          ]) familyConfig.neighbors
+                        )
+                      )
+                    )}
+                    ${lib.concatStringsSep "\n" (
+                      lib.mapAttrsToList (
+                        name: groupConfig:
+                        lib.optionalString groupConfig.activate "neighbor ${name} activate"
+                        + lib.optionalString groupConfig.nextHopSelf "\n    neighbor ${name} next-hop-self"
+                      ) familyConfig.peerGroups
+                    )}
+                  exit-address-family
+              '') cfg.addressFamilies
+            )}
+          ''
+        }${cfg.extraConfig}
     '';
   };
 }
