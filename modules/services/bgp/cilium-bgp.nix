@@ -23,22 +23,18 @@ in
   flake.modules.nixos.cilium-bgp =
     {
       lib,
-      config,
       environment,
       hostOptions,
       ...
     }:
     let
       # Get the thunderbolt mesh configuration if it exists
-      hasMeshConfig = config.services ? thunderbolt-mesh;
+      hasMeshConfig = hostOptions.tags ? "thunderbolt-loopback-ipv4";
 
       # For nodes with thunderbolt mesh, get the loopback IP
       # For other nodes, use the main IP
       nodeLoopbackIp =
-        if hasMeshConfig && (hostOptions.tags ? "kubernetes-internal-ip") then
-          hostOptions.tags."kubernetes-internal-ip"
-        else
-          hostOptions.ipv4;
+        if hasMeshConfig then hostOptions.tags."thunderbolt-loopback-ipv4" else hostOptions.ipv4;
 
       # Get local ASN from host tags or use default
       localAsn =
@@ -53,10 +49,10 @@ in
     {
       imports = [ ./_module/bgp.nix ];
 
-      config = lib.mkIf (builtins.elem "kubernetes" (hostOptions.roles or [ ])) {
+      config = {
         services.bgp = {
           localAsn = localAsn;
-          routerId = nodeLoopbackIp;
+          routerId = lib.mkIf (!hasMeshConfig) nodeLoopbackIp;
 
           prefixLists = {
             CILIUM-ROUTES = [
