@@ -39,7 +39,7 @@ in
       ...
     }:
     let
-      cfg = config.services.bgp-uplink;
+      cfg = config.services.bgp-hub;
       currentHostEnvironment = hostOptions.environment;
 
       # Auto-generate neighbors from hosts with specific tags/roles
@@ -78,7 +78,7 @@ in
       allNeighbors = cfg.neighbors ++ autoNeighbors;
     in
     {
-      options.services.bgp-uplink = {
+      options.services.bgp-hub = {
         localAsNumber = lib.mkOption {
           type = lib.types.int;
           default = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65000;

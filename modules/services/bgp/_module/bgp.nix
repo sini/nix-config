@@ -8,8 +8,6 @@ let
 in
 {
   options.services.bgp = {
-    enable = lib.mkEnableOption "BGP routing with FRR";
-
     localAsn = lib.mkOption {
       type = lib.types.int;
       description = "Local AS number for BGP";
@@ -180,7 +178,7 @@ in
     };
   };
 
-  config = lib.mkIf cfg.enable {
+  config = {
     services.frr.bgpd.enable = true;
     services.frr.config = lib.mkAfter ''
       ip forwarding

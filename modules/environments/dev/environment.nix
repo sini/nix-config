@@ -15,40 +15,29 @@
         description = "Management network for infrastructure hosts";
       };
       kubernetes = {
-        cidr = "172.20.0.0/16";
+        cidr = "172.16.0.0/16";
         purpose = "kubernetes-pods";
         description = "Kubernetes pod network";
       };
       services = {
-        cidr = "172.21.0.0/16";
+        cidr = "172.17.0.0/16";
         purpose = "kubernetes-services";
         description = "Kubernetes service network";
       };
-      mesh = {
-        cidr = "172.16.255.0/24";
-        purpose = "kubernetes-internal";
-        description = "Internal mesh network for Kubernetes nodes";
-      };
       loadbalancer = {
-        cidr = "10.0.100.0/24";
+        cidr = "10.12.0.0/16";
         purpose = "loadbalancer";
         description = "LoadBalancer service IP range";
       };
     };
 
     kubernetes = {
-      clusterCidr = "172.20.0.0/16";
-      serviceCidr = "172.21.0.0/16";
-      internalMeshCidr = "172.16.255.0/24";
+      clusterCidr = "172.16.0.0/16";
+      serviceCidr = "172.17.0.0/16";
       tlsSanIps = [
-        "10.10.10.2" # axon-01 external
-        "10.10.10.3" # axon-02 external
-        "10.10.10.4" # axon-03 external
-        "172.16.255.1" # axon-01 internal
-        "172.16.255.2" # axon-02 internal
-        "172.16.255.3" # axon-03 internal
+        "10.10.10.5" # axon-01 external
       ];
-      loadBalancerRange = "10.0.100.0/24";
+      loadBalancerRange = "10.12.0.0/16";
     };
 
     email = {

@@ -30,7 +30,7 @@
         description = "Internal mesh network for Kubernetes nodes";
       };
       loadbalancer = {
-        cidr = "10.0.100.0/24";
+        cidr = "10.11.0.0/16";
         purpose = "loadbalancer";
         description = "LoadBalancer service IP range";
       };
@@ -48,7 +48,7 @@
         "172.16.255.2" # axon-02 internal
         "172.16.255.3" # axon-03 internal
       ];
-      loadBalancerRange = "10.0.100.0/24";
+      loadBalancerRange = "10.11.0.0/16";
     };
 
     email = {
