@@ -7,7 +7,7 @@
 let
   # Generate scrape configs from all exporters on server hosts
   generateScrapeConfigs =
-    currentHostEnvironment:
+    targetEnvironments:
     lib.flatten (
       lib.mapAttrsToList
         (
@@ -24,6 +24,7 @@ let
                 labels = {
                   hostname = hostname;
                   exporter = exporterName;
+                  source_environment = hostConfig.environment or "homelab";
                 }
                 // (builtins.listToAttrs (
                   map (role: {
@@ -41,16 +42,16 @@ let
           lib.attrsets.filterAttrs (
             hostname: hostConfig:
             builtins.elem "server" hostConfig.roles
-            && (hostConfig.environment or "homelab") == currentHostEnvironment
+            && builtins.elem (hostConfig.environment or "homelab") targetEnvironments
           ) config.flake.hosts
         )
     );
 
   # Group scrape configs by job name and merge targets
   groupedScrapeConfigs =
-    currentHostEnvironment:
+    targetEnvironments:
     let
-      grouped = lib.groupBy (sc: sc.job_name) (generateScrapeConfigs currentHostEnvironment);
+      grouped = lib.groupBy (sc: sc.job_name) (generateScrapeConfigs targetEnvironments);
     in
     lib.mapAttrsToList (
       job_name: configs:
@@ -68,9 +69,18 @@ let
 in
 {
   flake.modules.nixos.prometheus =
-    { config, hostOptions, ... }:
+    {
+      config,
+      hostOptions,
+      environment,
+      ...
+    }:
     let
       currentHostEnvironment = hostOptions.environment or "homelab";
+
+      # Determine which environments to scan for metrics
+      # Include current environment plus any additional ones from monitoring config
+      targetEnvironments = [ currentHostEnvironment ] ++ (environment.monitoring.scanEnvironments or [ ]);
     in
     {
       services = {
@@ -113,7 +123,7 @@ in
               ];
             }
           ]
-          ++ (groupedScrapeConfigs currentHostEnvironment);
+          ++ (groupedScrapeConfigs targetEnvironments);
 
           rules = [
             ''

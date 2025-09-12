@@ -62,5 +62,11 @@
       environment = "dev";
       owner = "json64";
     };
+
+    delegation = {
+      metricsTo = "prod";
+      authTo = "prod";
+      logsTo = "prod";
+    };
   };
 }

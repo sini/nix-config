@@ -55,6 +55,9 @@ in
 
       config = lib.mkIf (builtins.elem "kubernetes" (hostOptions.roles or [ ])) {
         services.bgp = {
+          localAsn = localAsn;
+          routerId = nodeLoopbackIp;
+
           prefixLists = {
             CILIUM-ROUTES = [
               "permit ${environment.kubernetes.clusterCidr} ge 16 le 32"

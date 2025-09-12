@@ -204,6 +204,46 @@ in
             default = { };
             description = "Environment-wide tags for metadata and organization";
           };
+
+          delegation = mkOption {
+            type = types.submodule {
+              options = {
+                metricsTo = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "Environment to delegate metrics reporting to (e.g., 'prod')";
+                };
+
+                authTo = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "Environment to delegate authentication to (e.g., 'prod')";
+                };
+
+                logsTo = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "Environment to delegate log shipping to (e.g., 'prod')";
+                };
+              };
+            };
+            default = { };
+            description = "Cross-environment delegation configuration";
+          };
+
+          monitoring = mkOption {
+            type = types.submodule {
+              options = {
+                scanEnvironments = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                  description = "Additional environments to scan for metrics (e.g., ['dev'] for prod scanning dev)";
+                };
+              };
+            };
+            default = { };
+            description = "Monitoring configuration including cross-environment scanning";
+          };
         };
       };
     in
