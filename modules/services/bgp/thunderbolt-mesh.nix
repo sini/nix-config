@@ -245,7 +245,6 @@ in
         };
 
         services.bgp = {
-          enable = true;
           localAsn = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65001;
           routerId = lib.removeSuffix "/32" nodeConfig.loopback.ipv4;
 
