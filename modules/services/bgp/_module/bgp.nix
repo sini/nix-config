@@ -226,23 +226,30 @@ in
         !
         ${lib.optionalString (cfg.peerGroups != { }) ''
           ! Peer group definitions
-            ${lib.concatStringsSep "\n  " (
-              lib.mapAttrsToList (name: group: ''
-                ! GROUP ${name}
-                  neighbor ${name} peer-group
-                  neighbor ${name} remote-as ${toString group.remoteAs}
-                  ${lib.optionalString group.softReconfiguration "neighbor ${name} soft-reconfiguration inbound"}
-                  ${lib.optionalString (
-                    group.updateSource != null
-                  ) "neighbor ${name} update-source ${group.updateSource}"}
-                  ${lib.optionalString (
-                    group.ebgpMultihop != null
-                  ) "neighbor ${name} ebgp-multihop ${toString group.ebgpMultihop}"}
-                  ${lib.optionalString (
-                    group.listenRange != null
-                  ) "bgp listen range ${group.listenRange} peer-group ${name}"}
-              '') cfg.peerGroups
-            )}
+          ${lib.concatStringsSep "\n  " (
+            lib.mapAttrsToList (name: group: ''
+              ! GROUP ${name}
+              neighbor ${name} peer-group
+              neighbor ${name} remote-as ${toString group.remoteAs}
+              ${lib.optionalString group.softReconfiguration "neighbor ${name} soft-reconfiguration inbound"}
+              ${lib.optionalString (
+                group.updateSource != null
+              ) "neighbor ${name} update-source ${group.updateSource}"}
+              ${lib.optionalString (
+                group.ebgpMultihop != null
+              ) "neighbor ${name} ebgp-multihop ${toString group.ebgpMultihop}"}
+            '') cfg.peerGroups
+          )}
+          ${lib.concatStringsSep "\n  " (
+            lib.filter (s: s != "") (
+              lib.mapAttrsToList (
+                name: group:
+                lib.optionalString (
+                  group.listenRange != null
+                ) "bgp listen range ${group.listenRange} peer-group ${name}"
+              ) cfg.peerGroups
+            )
+          )}
         ''}
         ${lib.optionalString (cfg.neighbors != [ ]) ''
           ! Neighbor definitions
