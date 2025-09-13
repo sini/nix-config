@@ -3,7 +3,7 @@
 # -----------------------------------------------------------------------------
 cluster:
   name: dev
-  id: 1
+  id: 2
 
 k8sServiceHost: 10.10.10.5
 k8sServicePort: 6443
@@ -39,7 +39,7 @@ ipam:
 # Routing Mode (CRITICAL CHANGE)
 # -----------------------------------------------------------------------------
 routingMode: tunnel
-tunnelProtocol: geneve
+tunnelProtocol: vxlan
 
 # -----------------------------------------------------------------------------
 # CNI chaining
