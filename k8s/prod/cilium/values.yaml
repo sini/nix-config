@@ -37,6 +37,7 @@ bpf:
   masquerade: true
   lbExternalClusterIP: true
   hostLegacyRouting: true
+  vlanBypass: [0]
 
 # -----------------------------------------------------------------------------
 # IPAM & Pod CIDRs
@@ -47,7 +48,7 @@ ipam:
     clusterPoolIPv4PodCIDRList: ["172.20.0.0/16"]
 
 routingMode: tunnel
-tunnelProtocol: geneve
+tunnelProtocol: vxlan
 
 # -----------------------------------------------------------------------------
 # CNI chaining
@@ -77,9 +78,9 @@ masqLinkLocal: false
 # -----------------------------------------------------------------------------
 devices:
   - "dummy0"
-  - "enp2s0"
-  - "enp199s0f5"
-  - "enp199s0f6"
+  # - "enp2s0"
+  # - "enp199s0f5"
+  # - "enp199s0f6"
 
 # This key is primarily for native routing mode and can be removed for simplicity.
 # nodePort:
