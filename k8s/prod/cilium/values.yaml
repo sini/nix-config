@@ -1,13 +1,3 @@
-# =============================================================================
-# Cilium Helm Values — Production cluster (Optimized Configuration)
-#
-# This configuration implements the final architecture:
-# 1. BGP fabric (FRR + Cilium BGP CRDs) provides the underlay routing.
-# 2. Cilium runs in a VXLAN overlay (tunnel mode) on top of the BGP fabric.
-# 3. Cilium manages both `dummy0` (for tunnel traffic) and `enp2s0` (for
-#    external service ingress) without conflict.
-# =============================================================================
-
 # -----------------------------------------------------------------------------
 # Cluster identity & K8s API access
 # -----------------------------------------------------------------------------
@@ -24,10 +14,9 @@ k8sServicePort: 6443
 # -----------------------------------------------------------------------------
 # Correct - eBPF-based kube-proxy replacement is a core feature.
 kubeProxyReplacement: true
-socketLB:
-  hostNamespaceOnly: true
 localRedirectPolicies:
   enabled: true
+
 l2NeighDiscovery:
   enabled: false
 # -----------------------------------------------------------------------------
@@ -39,6 +28,10 @@ bpf:
   hostLegacyRouting: true
   vlanBypass: [0]
 
+# TODO: Egress gateway...
+# egressGateway:
+#   enabled: true
+
 # -----------------------------------------------------------------------------
 # IPAM & Pod CIDRs
 # -----------------------------------------------------------------------------
@@ -47,54 +40,40 @@ ipam:
   operator:
     clusterPoolIPv4PodCIDRList: ["172.20.0.0/16"]
 
+# -----------------------------------------------------------------------------
+# Routing Mode
+# -----------------------------------------------------------------------------
 routingMode: tunnel
-tunnelProtocol: vxlan
+tunnelProtocol: geneve
 
-# -----------------------------------------------------------------------------
-# CNI chaining
-# -----------------------------------------------------------------------------
-cni:
-  chainingMode: portmap
+loadBalancer:
+  mode: dsr
+  dsrDispatch: geneve
 
 # -----------------------------------------------------------------------------
 # Masquerading (SNAT) behavior
 # -----------------------------------------------------------------------------
-# This section remains correct for handling traffic from pods to the outside world.
-enableIPv4Masquerade: true
-#egressMasqueradeInterfaces: "enp2s0"
-enableIpMasqAgent: false
+# Masquerading configuration for tunnel mode
 enableIPv4: true
+enableIpMasqAgent: true
+enableIPv4Masquerade: true
+enableMasqueradeToRouteSource: true
 nonMasqueradeCIDRs: "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
-masqLinkLocal: false
-
-# -----------------------------------------------------------------------------
-# Device exposure to Cilium (CRITICAL CHANGE)
-#
-# With tunneling enabled, it is now safe to manage both devices.
-# - 'dummy0': Will be used as the device for sending/receiving VXLAN traffic
-#            over your BGP fabric.
-# - 'enp2s0': Will be used for the BPF program that handles ingress for your
-#           ExternalIP services.
-# -----------------------------------------------------------------------------
-devices:
-  - "dummy0"
-  - "enp2s0"
-  - "enp199s0f5"
-  - "enp199s0f6"
-
-nodePort:
-  directRoutingDevice: "dummy0"
+masqLinkLocal: true
 
 # -----------------------------------------------------------------------------
 # BGP control-plane (for FRR peering)
 # -----------------------------------------------------------------------------
-# This is all correct. BGP will provide the underlay routing for the VXLAN overlay.
 bgpControlPlane:
   enabled: true
+
 externalIPs:
   enabled: true
-loadBalancer:
-  mode: snat
+
+nodePort:
+  enabled: true
+  bindProtection: false
+  directRoutingDevice: "bond0"
 
 # -----------------------------------------------------------------------------
 # Hubble (observability)
@@ -111,6 +90,7 @@ hubble:
 # -----------------------------------------------------------------------------
 operator:
   replicas: 2
+
 rollOutCiliumPods: true
 
 # -----------------------------------------------------------------------------

@@ -1,113 +1,130 @@
-# Resource 1: A reusable peer configuration with only the required address family.
+# =============================================================================
+# Cilium BGP Configuration for Development Cluster (Single Node)
+#
+# This configuration sets up BGP for a single-node dev cluster (bitstream).
+# Since there's no thunderbolt mesh, Cilium peers directly with local FRR.
+# =============================================================================
+
+---
+# Shared peer configuration
 apiVersion: cilium.io/v2
 kind: CiliumBGPPeerConfig
 metadata:
-  name: frr-peer-config
+  name: local-frr-peer
+  namespace: kube-system
 spec:
+  # Peer with local FRR daemon
   ebgpMultihop: 4
+  timers:
+    connectRetryTimeSeconds: 5
+    holdTimeSeconds: 30
+    keepAliveTimeSeconds: 10
+
   families:
     - afi: ipv4
       safi: unicast
       advertisements:
         matchLabels:
-          advertise: "bgp"
+          advertise: "cilium-routes"
 
-  timers:
-    connectRetryTimeSeconds: 5
-    holdTimeSeconds: 9
-    keepAliveTimeSeconds: 3
 ---
+# Bitstream BGP Configuration
 apiVersion: cilium.io/v2
 kind: CiliumBGPClusterConfig
 metadata:
   name: cilium-bgp-bitstream
+  namespace: kube-system
 spec:
   nodeSelector:
     matchLabels:
       kubernetes.io/hostname: bitstream
   bgpInstances:
-    - name: "local-frr-instance"
-      localASN: 65001
+    - name: "local-frr-peering"
+      localASN: 65001 # Default ASN for single node
       peers:
-        - name: "frr-on-localhost"
-          peerASN: 65001 # The single iBGP ASN for all FRR nodes
-          peerAddress: "10.10.10.5" # Connect to the local FRR daemon
+        - name: "local-frr-daemon"
+          peerASN: 65001 # iBGP with local FRR
+          peerAddress: "10.10.10.5" # Node's main IP address
           peerConfigRef:
-            name: "frr-peer-config" # Reference the config above
+            name: "local-frr-peer"
+
 ---
-# Resource 3: The advertisement configuration (tells Cilium what to send).
+# Advertisement Policy: Pod CIDR
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
   name: pod-cidr-advertisement
+  namespace: kube-system
   labels:
-    advertise: bgp
+    advertise: cilium-routes
 spec:
   advertisements:
     - advertisementType: PodCIDR
+
 ---
+# Advertisement Policy: Service ClusterIPs
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
-  name: bgp-advertisements
+  name: service-cluster-ips
+  namespace: kube-system
   labels:
-    advertise: bgp
+    advertise: cilium-routes
 spec:
   advertisements:
-    - advertisementType: "Service"
+    - advertisementType: Service
       service:
         addresses:
           - ClusterIP
+      # Advertise all ClusterIP services
       selector:
         matchExpressions:
-          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
+          - key: service.kubernetes.io/headless
+            operator: DoesNotExist
+
 ---
+# Advertisement Policy: LoadBalancer IPs
 apiVersion: cilium.io/v2
 kind: CiliumBGPAdvertisement
 metadata:
-  name: bgp-service-advertisements
+  name: loadbalancer-ips
+  namespace: kube-system
   labels:
-    advertise: bgp
+    advertise: cilium-routes
 spec:
   advertisements:
-    - advertisementType: "Service"
+    - advertisementType: Service
       service:
         addresses:
-          - ExternalIP
           - LoadBalancerIP
+          - ExternalIP
+      # Advertise all LoadBalancer services
       selector:
         matchExpressions:
-          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
+          - key: service.kubernetes.io/headless
+            operator: DoesNotExist
+
 ---
-apiVersion: cilium.io/v2
-kind: CiliumBGPAdvertisement
-metadata:
-  name: pod-ip-pool-advert
-  labels:
-    advertise: bgp
-spec:
-  advertisements:
-    - advertisementType: "CiliumPodIPPool"
-      selector:
-        matchExpressions:
-          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
----
+# LoadBalancer IP Pool (matches dev environment configuration)
 apiVersion: cilium.io/v2
 kind: CiliumLoadBalancerIPPool
 metadata:
-  name: lb-pool-routed
+  name: main-lb-pool
+  namespace: kube-system
 spec:
   blocks:
-    - cidr: "10.12.0.0/16"
+    - cidr: "10.12.0.0/16" # Matches dev environment loadBalancerRange
   serviceSelector:
-    matchLabels:
-      ip-pool: routed
+    matchLabels: {} # Apply to all LoadBalancer services by default
+
 ---
+# Node-specific router ID override (offset +10 to avoid FRR conflicts)
 apiVersion: cilium.io/v2
 kind: CiliumBGPNodeConfigOverride
 metadata:
-  name: bitstream
+  name: bitstream # Must match the node name
+  namespace: kube-system
 spec:
   bgpInstances:
-    - name: "local-frr-instance"
-      routerID: "10.10.10.5"
+    - name: "local-frr-peering"
+      routerID: "10.10.10.15" # FRR uses .5, Cilium uses .15

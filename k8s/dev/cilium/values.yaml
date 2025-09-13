@@ -12,20 +12,23 @@ k8sServicePort: 6443
 # Service handling / kube-proxy replacement
 # -----------------------------------------------------------------------------
 kubeProxyReplacement: true
-socketLB:
-  hostNamespaceOnly: true
 localRedirectPolicies:
   enabled: true
+
 l2NeighDiscovery:
   enabled: false
 # -----------------------------------------------------------------------------
 # Datapath & BPF knobs
 # -----------------------------------------------------------------------------
 bpf:
-  vlanBypass: [0]
   masquerade: true
   lbExternalClusterIP: true
   hostLegacyRouting: true
+  vlanBypass: [0]
+
+# TODO: Egress gateway...
+# egressGateway:
+#   enabled: true
 
 # -----------------------------------------------------------------------------
 # IPAM & Pod CIDRs
@@ -36,32 +39,25 @@ ipam:
     clusterPoolIPv4PodCIDRList: ["172.16.0.0/16"]
 
 # -----------------------------------------------------------------------------
-# Routing Mode (CRITICAL CHANGE)
+# Routing Mode
 # -----------------------------------------------------------------------------
 routingMode: tunnel
-tunnelProtocol: vxlan
+tunnelProtocol: geneve
 
-# -----------------------------------------------------------------------------
-# CNI chaining
-# -----------------------------------------------------------------------------
-cni:
-  chainingMode: portmap
+loadBalancer:
+  mode: dsr
+  dsrDispatch: geneve
 
 # -----------------------------------------------------------------------------
 # Masquerading (SNAT) behavior
 # -----------------------------------------------------------------------------
-# This section remains correct for handling traffic from pods to the outside world.
-enableIPv4Masquerade: true
-#egressMasqueradeInterfaces: "enp2s0"
-enableIpMasqAgent: false
+# Masquerading configuration for tunnel mode
 enableIPv4: true
+enableIpMasqAgent: true
+enableIPv4Masquerade: true
+enableMasqueradeToRouteSource: true
 nonMasqueradeCIDRs: "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}"
-masqLinkLocal: false
-
-devices:
-  - "bond0"
-  - "eno1"
-  - "enp2s0"
+masqLinkLocal: true
 
 # -----------------------------------------------------------------------------
 # BGP control-plane (for FRR peering)
@@ -69,11 +65,14 @@ devices:
 # This is all correct. BGP will provide the underlay routing for the VXLAN overlay.
 bgpControlPlane:
   enabled: true
+
 externalIPs:
   enabled: true
-loadBalancer:
-  mode: snat
 
+nodePort:
+  enabled: true
+  bindProtection: false
+  directRoutingDevice: "bond0"
 # -----------------------------------------------------------------------------
 # Hubble (observability)
 # -----------------------------------------------------------------------------
@@ -89,10 +88,11 @@ hubble:
 # -----------------------------------------------------------------------------
 operator:
   replicas: 1
+
 rollOutCiliumPods: true
 
 # -----------------------------------------------------------------------------
 # Logging
 # -----------------------------------------------------------------------------
 debug:
-  enabled: true
+  enabled: false
