@@ -34,7 +34,10 @@ in
       # For nodes with thunderbolt mesh, get the loopback IP
       # For other nodes, use the main IP
       nodeLoopbackIp =
-        if hasMeshConfig then hostOptions.tags."thunderbolt-loopback-ipv4" else hostOptions.ipv4;
+        if hasMeshConfig then
+          lib.removeSuffix "/32" hostOptions.tags."thunderbolt-loopback-ipv4"
+        else
+          hostOptions.ipv4;
 
       # Get local ASN from host tags or use default
       localAsn =
