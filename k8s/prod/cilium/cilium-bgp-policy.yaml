@@ -45,7 +45,7 @@ spec:
     matchLabels:
       kubernetes.io/hostname: axon-01
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       localASN: 65001 # Matches host BGP ASN
       peers:
         - name: "local-frr-daemon"
@@ -66,7 +66,7 @@ spec:
     matchLabels:
       kubernetes.io/hostname: axon-02
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       localASN: 65002 # Matches host BGP ASN
       peers:
         - name: "local-frr-daemon"
@@ -87,7 +87,7 @@ spec:
     matchLabels:
       kubernetes.io/hostname: axon-03
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       localASN: 65003 # Matches host BGP ASN
       peers:
         - name: "local-frr-daemon"
@@ -175,7 +175,7 @@ metadata:
   namespace: kube-system
 spec:
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       routerID: "172.16.255.11" # FRR uses .1, Cilium uses .11
 
 ---
@@ -186,7 +186,7 @@ metadata:
   namespace: kube-system
 spec:
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       routerID: "172.16.255.12" # FRR uses .2, Cilium uses .12
 
 ---
@@ -197,5 +197,5 @@ metadata:
   namespace: kube-system
 spec:
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       routerID: "172.16.255.13" # FRR uses .3, Cilium uses .13

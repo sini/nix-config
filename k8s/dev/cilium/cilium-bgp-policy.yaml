@@ -39,7 +39,7 @@ spec:
     matchLabels:
       kubernetes.io/hostname: bitstream
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       localASN: 65001 # Default ASN for single node
       peers:
         - name: "local-frr-daemon"
@@ -126,5 +126,5 @@ metadata:
   namespace: kube-system
 spec:
   bgpInstances:
-    - name: "local-frr-peering"
+    - name: "local-frr-instance"
       routerID: "10.10.10.15" # FRR uses .5, Cilium uses .15

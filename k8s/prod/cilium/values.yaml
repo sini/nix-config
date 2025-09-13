@@ -72,7 +72,6 @@ externalIPs:
 
 nodePort:
   enabled: true
-  bindProtection: false
   directRoutingDevice: "bond0"
 
 # -----------------------------------------------------------------------------
