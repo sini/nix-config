@@ -238,17 +238,10 @@ in
               ${lib.optionalString (
                 group.ebgpMultihop != null
               ) "neighbor ${name} ebgp-multihop ${toString group.ebgpMultihop}"}
+              ${lib.optionalString (
+                group.listenRange != null
+              ) "bgp listen range ${group.listenRange} peer-group ${name}"}
             '') cfg.peerGroups
-          )}
-          ${lib.concatStringsSep "\n  " (
-            lib.filter (s: s != "") (
-              lib.mapAttrsToList (
-                name: group:
-                lib.optionalString (
-                  group.listenRange != null
-                ) "bgp listen range ${group.listenRange} peer-group ${name}"
-              ) cfg.peerGroups
-            )
           )}
         ''}
         ${lib.optionalString (cfg.neighbors != [ ]) ''
@@ -277,7 +270,7 @@ in
             ${lib.concatStringsSep "\n" (
               lib.mapAttrsToList (family: familyConfig: ''
                 ! Address Family ${family}
-                  address-family ${family}
+                  address-family ${lib.replaceStrings [ "-" ] [ " " ] family}
                     ${lib.concatStringsSep "\n    " (map (net: "network ${net}") familyConfig.networks)}
                     ${lib.concatStringsSep "\n    " (
                       lib.filter (s: s != "") (
