@@ -1,5 +1,5 @@
 # =============================================================================
-# Cilium Helm Values — Dev cluster (Corrected Configuration)
+# Cilium Helm Values — Production cluster (Optimized Configuration)
 #
 # This configuration implements the final architecture:
 # 1. BGP fabric (FRR + Cilium BGP CRDs) provides the underlay routing.
@@ -78,13 +78,12 @@ masqLinkLocal: false
 # -----------------------------------------------------------------------------
 devices:
   - "dummy0"
-  # - "enp2s0"
-  # - "enp199s0f5"
-  # - "enp199s0f6"
+  - "enp2s0"
+  - "enp199s0f5"
+  - "enp199s0f6"
 
-# This key is primarily for native routing mode and can be removed for simplicity.
-# nodePort:
-#    directRoutingDevice: "dummy0" # <-- REMOVED
+nodePort:
+  directRoutingDevice: "dummy0"
 
 # -----------------------------------------------------------------------------
 # BGP control-plane (for FRR peering)
@@ -118,4 +117,4 @@ rollOutCiliumPods: true
 # Logging
 # -----------------------------------------------------------------------------
 debug:
-  enabled: true
+  enabled: false
