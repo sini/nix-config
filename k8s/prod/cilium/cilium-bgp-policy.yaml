@@ -1,0 +1,239 @@
+# Resource 1: A reusable peer configuration with only the required address family.
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: frr-peer-config
+spec:
+  ebgpMultihop: 4
+  families:
+    - afi: ipv4
+      safi: unicast
+      advertisements:
+        matchLabels:
+          advertise: "bgp"
+
+  timers:
+    connectRetryTimeSeconds: 5
+    holdTimeSeconds: 9
+    keepAliveTimeSeconds: 3
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp-axon-01
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-01
+  bgpInstances:
+    - name: "local-frr-instance"
+      localASN: 65001
+      peers:
+        - name: "frr-on-localhost"
+          peerASN: 65001 # The single iBGP ASN for all FRR nodes
+          peerAddress: "172.16.255.1" # Connect to the local FRR daemon
+          peerConfigRef:
+            name: "frr-peer-config" # Reference the config above
+
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp-axon-02
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-02
+  bgpInstances:
+    - name: "local-frr-instance"
+      localASN: 65002
+      peers:
+        - name: "frr-on-localhost"
+          peerASN: 65002 # The single iBGP ASN for all FRR nodes
+          peerAddress: "172.16.255.2" # Connect to the local FRR daemon
+          peerConfigRef:
+            name: "frr-peer-config" # Reference the config above
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp-axon-03
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-03
+  bgpInstances:
+    - name: "local-frr-instance"
+      localASN: 65003
+      peers:
+        - name: "frr-on-localhost"
+          peerASN: 65003 # The single iBGP ASN for all FRR nodes
+          peerAddress: "172.16.255.3" # Connect to the local FRR daemon
+          peerConfigRef:
+            name: "frr-peer-config" # Reference the config above
+---
+# Resource 3: The advertisement configuration (tells Cilium what to send).
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: pod-cidr-advertisement
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: PodCIDR
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-advertisements
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - ClusterIP
+      selector:
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-service-advertisements
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - ExternalIP
+          - LoadBalancerIP
+      selector:
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: pod-ip-pool-advert
+  labels:
+    advertise: bgp
+spec:
+  advertisements:
+    - advertisementType: "CiliumPodIPPool"
+      selector:
+        matchExpressions:
+          - { key: somekey, operator: NotIn, values: ["never-used-value"] }
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: lb-pool-routed
+spec:
+  blocks:
+    - cidr: "10.11.0.0/16"
+  serviceSelector:
+    matchLabels:
+      ip-pool: routed
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-01
+spec:
+  bgpInstances:
+    - name: "local-frr-instance"
+      routerID: "172.16.255.11"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-02
+spec:
+  bgpInstances:
+    - name: "local-frr-instance"
+      routerID: "172.16.255.12"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-03
+spec:
+  bgpInstances:
+    - name: "local-frr-instance"
+      routerID: "172.16.255.13"
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: ip-masq-agent
+# data:
+#   config: |
+#     nonMasqueradeCIDRs:
+#     - 10.0.0.0/8
+#     - 172.16.0.0/12
+#     - 192.168.0.0/16
+#     masqLinkLocal: false
+#     egress-masquerade-interfaces: "enp2s0"
+# ---
+# apiVersion: cilium.io/v2
+# kind: CiliumEgressGatewayPolicy
+# metadata:
+#   name: torrent-over-wg
+# spec:
+#   selectors:
+#     - podSelector:
+#         matchLabels:
+#           app: torrent
+#   destinationCIDRs:
+#     - "0.0.0.0/0"            # send Internet egress via VPN
+#   excludedCIDRs:              # keep private/LAN off the VPN
+#     - "10.0.0.0/8"
+#     - "172.16.0.0/12"
+#     - "192.168.0.0/16"
+#   egressGateway:
+#     nodeSelector:
+#       matchLabels:
+#         vpn-gateway: "true"   # label on any node(s) you choose
+#     interface: wg0            # use the WireGuard interface on that node
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: hello-http
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: hello-http
+#   template:
+#     metadata:
+#       labels:
+#         app: hello-http
+#         egress: vpn    # <-- remove if you don't want VPN egress
+#     spec:
+#       containers:
+#         - name: http-echo
+#           image: hashicorp/http-echo:0.2.3
+#           args:
+#             - "-text=hello"
+#             - "-listen=:5678"
+#           ports:
+#             - name: http
+#               containerPort: 5678
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: hello-http
+# spec:
+#   selector:
+#     app: hello-http
+#   ports:
+#     - name: http
+#       port: 80
+#       targetPort: 5678
+#   type: ClusterIP
