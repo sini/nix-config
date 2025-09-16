@@ -20,6 +20,8 @@
       nginx
       kanidm
       grafana
+      # minio
+      # vault
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIA9Q/KHuuigi5EU8I36EQQzw4QCXj3dEh0bzz/uZ1y+p";
     facts = ./facter.json;
