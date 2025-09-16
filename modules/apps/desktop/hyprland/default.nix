@@ -36,7 +36,6 @@
         wofi.enable = true;
         rofi = {
           enable = true;
-          package = pkgs.rofi-wayland;
         };
       };
 
