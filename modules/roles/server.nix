@@ -4,7 +4,6 @@
     media-data-share
     network-boot
     server
-    role_dev
     alloy
   ];
 }
