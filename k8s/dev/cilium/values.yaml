@@ -71,7 +71,7 @@ externalIPs:
 
 nodePort:
   enabled: true
-  directRoutingDevice: "bond0"
+  directRoutingDevice: "en2ps0"
 # -----------------------------------------------------------------------------
 # Hubble (observability)
 # -----------------------------------------------------------------------------
