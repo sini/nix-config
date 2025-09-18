@@ -1,34 +1,36 @@
 { config, lib, ... }:
 let
-  hosts = lib.attrsets.mapAttrs' (
-    hostname: hostConfig:
-    let
-      targetEnv = config.flake.environments.${hostConfig.environment or "homelab"};
-      # Convert ipv4 to list if it's a string, otherwise use as-is
-      ipList = if builtins.isString hostConfig.ipv4 then [ hostConfig.ipv4 ] else hostConfig.ipv4;
-    in
-    (lib.attrsets.nameValuePair (builtins.head ipList) [
-      hostname
-      "${hostname}.${targetEnv.domain}"
-    ])
-  ) config.flake.hosts;
-
-  sshKnownHosts = lib.attrsets.mapAttrs' (
-    hostname: hostConfig:
-    let
-      targetEnv = config.flake.environments.${hostConfig.environment or "homelab"};
-      # Convert ipv4 to list if it's a string, otherwise use as-is
-      ipList = if builtins.isString hostConfig.ipv4 then [ hostConfig.ipv4 ] else hostConfig.ipv4;
-    in
-    (lib.attrsets.nameValuePair hostname {
-      hostNames = [
+  hosts =
+    config.flake.hosts
+    |> lib.attrsets.mapAttrs' (
+      hostname: hostConfig:
+      let
+        targetEnv = config.flake.environments.${hostConfig.environment};
+        ipList = hostConfig.ipv4;
+      in
+      lib.attrsets.nameValuePair (builtins.head ipList) [
         hostname
         "${hostname}.${targetEnv.domain}"
       ]
-      ++ ipList;
-      publicKey = hostConfig.public_key;
-    })
-  ) config.flake.hosts;
+    );
+
+  sshKnownHosts =
+    config.flake.hosts
+    |> lib.attrsets.mapAttrs' (
+      hostname: hostConfig:
+      let
+        targetEnv = config.flake.environments.${hostConfig.environment};
+        ipList = hostConfig.ipv4;
+      in
+      lib.attrsets.nameValuePair hostname {
+        hostNames = [
+          hostname
+          "${hostname}.${targetEnv.domain}"
+        ]
+        ++ ipList;
+        publicKey = hostConfig.public_key;
+      }
+    );
 in
 {
   flake.modules.nixos.hosts =

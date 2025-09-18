@@ -25,7 +25,7 @@
             nixpkgs' = if hostOptions.unstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
             homeManager' = if hostOptions.unstable then inputs.home-manager-unstable else inputs.home-manager;
             extendedLibrary = if hostOptions.unstable then unstableLib else lib;
-            environment = config.environments.${hostOptions.environment or "homelab"};
+            environment = config.environments.${hostOptions.environment};
             chaotic_imports =
               if hostOptions.unstable then
                 [ inputs.chaotic.nixosModules.default ]

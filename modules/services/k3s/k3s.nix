@@ -10,21 +10,22 @@ let
   findClusterMaster =
     currentHostEnvironment: hosts: lib:
     let
-      clusterHosts = lib.attrsets.filterAttrs (
-        hostname: hostConfig:
-        (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
-        && (hostConfig.environment == currentHostEnvironment)
-      ) hosts;
-
-      masterHosts = lib.attrsets.filterAttrs (
-        hostname: hostConfig: builtins.elem "kubernetes-master" (hostConfig.roles or [ ])
-      ) clusterHosts;
+      masterHosts =
+        hosts
+        |> lib.attrsets.filterAttrs (
+          hostname: hostConfig:
+          (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
+          && (hostConfig.environment == currentHostEnvironment)
+        )
+        |> lib.attrsets.filterAttrs (
+          hostname: hostConfig: builtins.elem "kubernetes-master" (hostConfig.roles or [ ])
+        );
     in
     if lib.length (lib.attrNames masterHosts) > 0 then
       let
         masterHost = lib.head (lib.attrValues masterHosts);
       in
-      masterHost.tags.kubernetes-internal-ip or masterHost.ipv4
+      masterHost.tags.kubernetes-internal-ip or (builtins.head masterHost.ipv4)
     else
       null;
 in
@@ -42,8 +43,8 @@ in
       currentHostEnvironment = hostOptions.environment;
       isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
       clusterInit = isMaster;
-      internalIP = hostOptions.tags.kubernetes-internal-ip or hostOptions.ipv4;
-      externalIP = hostOptions.ipv4;
+      internalIP = hostOptions.tags.kubernetes-internal-ip or (builtins.head hostOptions.ipv4);
+      externalIP = builtins.head hostOptions.ipv4;
 
       # Find master node for agent connection (using hosts from outer scope)
       masterIP = findClusterMaster currentHostEnvironment hosts lib;

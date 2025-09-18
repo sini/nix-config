@@ -10,7 +10,7 @@ let
   findBgpHub =
     currentHostEnvironment:
     let
-      bgpHubHosts = lib.mapAttrsToList (hostname: hostConfig: hostConfig.ipv4) (
+      bgpHubHosts = lib.mapAttrsToList (hostname: hostConfig: builtins.head hostConfig.ipv4) (
         lib.attrsets.filterAttrs (
           hostname: hostConfig:
           builtins.elem "bgp-hub" hostConfig.roles && hostConfig.environment == currentHostEnvironment
@@ -37,7 +37,7 @@ in
         if hasMeshConfig then
           lib.removeSuffix "/32" hostOptions.tags."thunderbolt-loopback-ipv4"
         else
-          hostOptions.ipv4;
+          builtins.head hostOptions.ipv4;
 
       # Get local ASN from host tags or use default
       localAsn =

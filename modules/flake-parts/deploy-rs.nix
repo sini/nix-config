@@ -21,7 +21,7 @@ in
       # }) config.hosts;
 
       deploy.nodes = lib.mapAttrs (hostname: options: {
-        hostname = options.ipv4;
+        hostname = builtins.head options.ipv4;
         profiles.system = {
           user = "root";
           path = deploy-rs.lib.${options.system}.activate.nixos self.nixosConfigurations.${hostname};

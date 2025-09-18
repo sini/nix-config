@@ -19,7 +19,7 @@ in
 
       - `system`: The system architecture of the host (e.g., `x86_64-linux`).
       - `unstable`: Whether to use unstable packages for the host.
-      - `ipv4`: The static IP address of this host in it's home vlan.
+      - `ipv4`: The static IP addresses of this host in it's home vlan.
       - `roles`: A list of roles for the host, which can also be used to target deployment.
       - `public_key`: The path or value of the public SSH key for the host used for encryption.
       - `facts`: The path to the Facter JSON file for the host, which is used to provide
@@ -55,9 +55,9 @@ in
           };
 
           ipv4 = mkOption {
-            type = types.str;
-            default = "";
-            description = "The static IP address of this host in it's home vlan.";
+            type = types.listOf types.str;
+            default = [ ];
+            description = "The static IP addresses of this host in it's home vlan.";
           };
 
           roles = mkOption {

@@ -207,7 +207,7 @@ in
           in
           {
             asn = lib.toInt (peerHost.tags."bgp-asn");
-            lanip = peerHost.ipv4;
+            lanip = builtins.head peerHost.ipv4;
             ip = peerLoopbackIp;
             gateway = gateway;
           }
