@@ -8,44 +8,40 @@ let
   # Generate scrape configs from all exporters on server hosts
   generateScrapeConfigs =
     targetEnvironments:
-    lib.flatten (
-      lib.mapAttrsToList
-        (
-          hostname: hostConfig:
-          let
-            # Merge manual and auto-discovered exporters
-            allExporters = (hostConfig.exporters or { }) // (getAutoExporters hostConfig);
-          in
-          lib.mapAttrsToList (exporterName: exporterConfig: {
-            job_name = "${exporterName}";
-            static_configs = [
-              {
-                targets = [ "${hostConfig.ipv4}:${toString exporterConfig.port}" ];
-                labels = {
-                  hostname = hostname;
-                  exporter = exporterName;
-                  source_environment = hostConfig.environment or "homelab";
-                }
-                // (builtins.listToAttrs (
-                  map (role: {
-                    name = role;
-                    value = "true";
-                  }) hostConfig.roles
-                ));
-              }
-            ];
-            metrics_path = exporterConfig.path;
-            scrape_interval = exporterConfig.interval;
-          }) allExporters
-        )
-        (
-          lib.attrsets.filterAttrs (
-            hostname: hostConfig:
-            builtins.elem "server" hostConfig.roles
-            && builtins.elem (hostConfig.environment or "homelab") targetEnvironments
-          ) config.flake.hosts
-        )
-    );
+    config.flake.hosts
+    |> lib.attrsets.filterAttrs (
+      hostname: hostConfig:
+      builtins.elem "server" hostConfig.roles && builtins.elem hostConfig.environment targetEnvironments
+    )
+    |> lib.mapAttrsToList (
+      hostname: hostConfig:
+      let
+        # Merge manual and auto-discovered exporters
+        allExporters = (hostConfig.exporters or { }) // (getAutoExporters hostConfig);
+      in
+      lib.mapAttrsToList (exporterName: exporterConfig: {
+        job_name = "${exporterName}";
+        static_configs = [
+          {
+            targets = [ "${builtins.head hostConfig.ipv4}:${toString exporterConfig.port}" ];
+            labels = {
+              hostname = hostname;
+              exporter = exporterName;
+              source_environment = hostConfig.environment;
+            }
+            // (builtins.listToAttrs (
+              map (role: {
+                name = role;
+                value = "true";
+              }) hostConfig.roles
+            ));
+          }
+        ];
+        metrics_path = exporterConfig.path;
+        scrape_interval = exporterConfig.interval;
+      }) allExporters
+    )
+    |> lib.flatten;
 
   # Group scrape configs by job name and merge targets
   groupedScrapeConfigs =
@@ -76,7 +72,7 @@ in
       ...
     }:
     let
-      currentHostEnvironment = hostOptions.environment or "homelab";
+      currentHostEnvironment = hostOptions.environment;
 
       # Determine which environments to scan for metrics
       # Include current environment plus any additional ones from monitoring config

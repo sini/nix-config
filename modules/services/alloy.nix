@@ -12,7 +12,7 @@
       ...
     }:
     let
-      currentHostEnvironment = hostOptions.environment or "homelab";
+      currentHostEnvironment = hostOptions.environment;
 
       # Determine target environment for log shipping (check for delegation)
       targetEnvironment =
@@ -22,11 +22,10 @@
           currentHostEnvironment;
 
       # Find the first host with the metrics-ingester role in target environment
-      lokiHosts = lib.mapAttrsToList (hostname: hostConfig: hostConfig.ipv4) (
+      lokiHosts = lib.mapAttrsToList (hostname: hostConfig: builtins.head hostConfig.ipv4) (
         lib.attrsets.filterAttrs (
           hostname: hostConfig:
-          builtins.elem "metrics-ingester" hostConfig.roles
-          && (hostConfig.environment or "homelab") == targetEnvironment
+          builtins.elem "metrics-ingester" hostConfig.roles && hostConfig.environment == targetEnvironment
         ) config.flake.hosts
       );
 

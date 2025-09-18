@@ -51,7 +51,7 @@ in
 
             # Create neighbors using their bgp-asn tags or fallback to index-based AS numbers
             sortedNeighbors = lib.imap0 (index: hostname: {
-              ip = targetHosts.${hostname}.ipv4;
+              ip = builtins.head targetHosts.${hostname}.ipv4;
               asn =
                 if (targetHosts.${hostname}.tags or { }) ? "bgp-asn" then
                   lib.toInt targetHosts.${hostname}.tags."bgp-asn"
@@ -199,7 +199,7 @@ in
 
         services.bgp = {
           localAsn = localAsn;
-          routerId = hostOptions.ipv4;
+          routerId = builtins.head hostOptions.ipv4;
           maximumPaths = cfg.maximumPaths;
 
           neighbors = allNeighbors;

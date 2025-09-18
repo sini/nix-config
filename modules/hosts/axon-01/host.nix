@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.hosts.axon-01 = {
-    ipv4 = "10.10.10.2";
+    ipv4 = [ "10.10.10.2" ];
     environment = "prod";
     roles = [
       "server"

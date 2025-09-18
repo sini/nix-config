@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.hosts.uplink = {
-    ipv4 = "10.10.10.1";
+    ipv4 = [ "10.10.10.1" ];
     environment = "prod";
     roles = [
       "server"
