@@ -8,6 +8,7 @@
       "kubernetes"
       "kubernetes-master"
       "bgp-spoke"
+      "vault"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-longhorn

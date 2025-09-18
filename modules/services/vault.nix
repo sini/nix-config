@@ -1,54 +1,67 @@
 {
   flake.modules.nixos.vault =
-    { config, ... }:
     {
-      services = {
-        vault = {
-          enable = true;
-          address = "127.0.0.1:8200";
-          storageBackend = "file";
-          storageConfig = ''
-            path = "/var/lib/vault/data"
-          '';
-          extraConfig = ''
-            ui = true
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
+    let
+      raftPeers = builtins.filter (peer: peer != config.networking.hostName) [
+        "axon-01"
+        "axon-02"
+        "axon-03"
+      ];
+      vaultServiceHostname = "vault.${config.networking.domain}";
+      acmeCertPath = "/var/lib/acme/${vaultServiceHostname}";
 
-            listener "tcp" {
-              address = "127.0.0.1:8200"
-              tls_disable = true
-            }
+      mkRaftPeer = hostname: ''
+        retry_join {
+          leader_tls_servername = "${vaultServiceHostname}"
+          leader_api_addr = "https://${vaultServiceHostname}:8200"
+          leader_ca_cert_file = "${acmeCertPath}/fullchain.pem"
+          leader_client_cert_file = "${acmeCertPath}/fullchain.pem"
+          leader_client_key_file = "${acmeCertPath}/key.pem"
+        }
+      '';
+    in
+    {
+      environment.systemPackages = with pkgs; [
+        vault
+        openssl
+      ];
+      environment.sessionVariables = {
+        # Allow the vault CLI to hit the local vault instance, not the active VIP
+        VAULT_ADDR = "https://${config.networking.fqdn}:8200";
+      };
 
-            api_addr = "https://vault.${config.networking.domain}"
-            cluster_addr = "https://vault.${config.networking.domain}:8201"
+      services.vault = {
+        enable = true;
+        tlsCertFile = "${acmeCertPath}/fullchain.pem";
+        tlsKeyFile = "${acmeCertPath}/key.pem";
+        # Use the binary version of vault which contains the vendored
+        # dependencies. This is required for the vault UI to work.
+        package = pkgs.vault-bin;
+        address = "[::]:8200";
+        storageBackend = "raft";
+        storageConfig = ''
+          node_id = "${config.networking.hostName}"
+        ''
+        + lib.concatStringsSep "\n" (map mkRaftPeer raftPeers);
+        extraConfig = ''
+          ui = true
 
-            log_level = "Info"
-            log_format = "json"
+          api_addr = "https://${vaultServiceHostname}"
+          cluster_addr = "https://${config.networking.fqdn}:8201"
 
-            seal "transit" {
-              address = "https://vault.${config.networking.domain}"
-              disable_renewal = "false"
-              key_name = "autounseal"
-              mount_path = "transit/"
-              tls_skip_verify = "false"
-            }
-          '';
-        };
+          # Swap is encrypted, so this is okay
+          disable_mlock = false
 
-        nginx.virtualHosts."vault.${config.networking.domain}" = {
-          forceSSL = true;
-          useACMEHost = config.networking.domain;
-          locations."/" = {
-            proxyPass = "http://127.0.0.1:8200";
-            proxyWebsockets = true;
-            extraConfig = ''
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-              proxy_set_header X-Forwarded-Port $server_port;
-            '';
-          };
-        };
+          log_level = "Debug"
+          log_format = "json"
+
+          # tls_client_ca_file = "/etc/ssl/certs/vault-ca.pem"
+        '';
       };
 
       # Open firewall for Vault API
@@ -57,13 +70,11 @@
         8201
       ];
 
-      # Ensure Vault data directory exists with proper permissions
-      systemd.tmpfiles.rules = [
-        "d /var/lib/vault 0700 vault vault -"
-        "d /var/lib/vault/data 0700 vault vault -"
-      ];
-
       # Add vault user to keys group for secret access
-      users.users.vault.extraGroups = [ "keys" ];
+      security.acme.certs.${vaultServiceHostname} = {
+        group = "vault";
+      };
+
+      users.users.vault.extraGroups = [ "acme" ];
     };
 }
