@@ -108,6 +108,23 @@
             };
             help = "Delete all k3s data and reset the cluster";
           }
+          {
+            package = pkgs.writeShellApplication {
+              name = "list-infra";
+              text = ''
+                echo "=== Flake Environments ==="
+                nix eval --json .#environments --apply 'envs: builtins.mapAttrs (name: env: { inherit (env) domain name; }) envs' | \
+                  ${pkgs.jq}/bin/jq -r 'to_entries[] | "\(.key) - domain:\(.value.domain)"' | sort
+
+                echo ""
+                echo "=== Flake Hosts ==="
+                nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system roles environment ipv4; }) hosts' | \
+                  ${pkgs.jq}/bin/jq -r 'to_entries[] | "\(.key) (\(.value.system)) - env:\(.value.environment) roles:\(.value.roles | join(",")) ip:\(.value.ipv4 | join(","))"' | \
+                  sort
+              '';
+            };
+            help = "List all flake environments and hosts with details";
+          }
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;

@@ -1,7 +1,14 @@
 { config, ... }:
 {
   flake.hosts.bitstream = {
-    ipv4 = [ "10.10.10.5" ];
+    ipv4 = [
+      "10.10.10.5"
+      "10.10.10.6"
+    ];
+    ipv6 = [
+      "2001:5a8:608c:4a00::5/64"
+      "2001:5a8:608c:4a00::6/64"
+    ];
     environment = "dev";
     roles = [
       "server"
@@ -9,6 +16,7 @@
       "kubernetes-master"
       "workstation"
       "gaming"
+      # "vault"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-single

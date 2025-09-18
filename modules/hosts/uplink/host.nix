@@ -2,6 +2,7 @@
 {
   flake.hosts.uplink = {
     ipv4 = [ "10.10.10.1" ];
+    ipv6 = [ "2001:5a8:608c:4a00::1/64" ];
     environment = "prod";
     roles = [
       "server"

@@ -1,9 +1,18 @@
 {
   flake.modules.nixos.networking =
-    { config, lib, ... }:
+    {
+      config,
+      lib,
+      ...
+    }:
     with lib;
     let
       cfg = config.hardware.networking;
+
+      # Get the current hostname to lookup host configuration
+      hostname = config.networking.hostName;
+      hostConfig = config.flake.hosts.${hostname} or { };
+      hostIPv6 = hostConfig.ipv6 or [ ];
 
       networkdInterfaces =
         cfg.interfaces
@@ -12,7 +21,25 @@
           value = {
             enable = true;
             matchConfig.Name = ifName;
-            networkConfig.DHCP = "yes";
+            networkConfig = {
+              DHCP = "ipv4";
+              IPv6AcceptRA = true;
+              IPv6SendRA = false;
+            };
+            dhcpV6Config = {
+              UseDelegatedPrefix = true;
+              PrefixDelegationHint = "::/64";
+            };
+            ipv6AcceptRAConfig = {
+              UseDNS = true;
+              DHCPv6Client = "always";
+            };
+            address = hostIPv6;
+            extraConfig = ''
+              [DHCPv6]
+              UseDelegatedPrefix=true
+              PrefixDelegationHint=::/64
+            '';
           };
         })
         |> listToAttrs;

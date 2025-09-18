@@ -153,6 +153,9 @@
       };
 
       # Grant kanidm access to certificates
-      users.users.kanidm.extraGroups = [ config.security.acme.defaults.group ];
+      users.users.kanidm.extraGroups = [
+        config.security.acme.defaults.group
+        config.services.nginx.group
+      ];
     };
 }
