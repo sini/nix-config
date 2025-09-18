@@ -75,6 +75,7 @@ in
         grafana = uidGid 972;
         loki = uidGid 971;
         promtail = uidGid 970;
+        vault = uidGid 969;
       };
   };
 }

@@ -1,7 +1,7 @@
 {
   flake.environments.dev = {
     name = "dev";
-    domain = "sinistar.io";
+    domain = "dev.json64.dev";
     gatewayIp = "10.10.0.1";
     dnsServers = [
       "1.1.1.1"

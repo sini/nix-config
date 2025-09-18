@@ -19,8 +19,8 @@
           };
         };
 
-        certs.${config.networking.domain} = {
-          extraDomainNames = [ "*.${config.networking.domain}" ];
+        certs.${config.networking.fqdn} = {
+          extraDomainNames = [ "*.${config.networking.fqdn}" ];
         };
       };
     };

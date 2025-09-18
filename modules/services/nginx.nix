@@ -2,6 +2,11 @@
   flake.modules.nixos.nginx =
     { config, ... }:
     {
+      security.acme.certs.${config.networking.domain} = {
+        extraDomainNames = [ "*.${config.networking.domain}" ];
+        group = config.services.nginx.group;
+      };
+
       services.nginx = {
         enable = true;
         recommendedOptimisation = true;
@@ -13,7 +18,7 @@
         clientMaxBodySize = "100m";
 
         appendConfig = ''
-          # Log to journald instead of files  
+          # Log to journald instead of files
           error_log syslog:server=unix:/dev/log,facility=local1,tag=nginx_error;
         '';
 
