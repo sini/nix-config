@@ -48,6 +48,10 @@
       "net.nf_conntrack_max" = 131072;
       "net.ipv4.ip_forward" = 1;
       "net.ipv4.conf.all.proxy_arp" = false; # Was true, default is false and we don't want to poison our external network
+      # Bridge settings for optimal switching performance
+      "net.bridge.bridge-nf-call-iptables" = 0;
+      "net.bridge.bridge-nf-call-ip6tables" = 0;
+      "net.bridge.bridge-nf-call-arptables" = 0;
       # These need to be increased for k8s
       # Although the default settings might not cause issues initially, you'll get strange behavior after a while
       "fs.inotify.max_user_instances" = 1048576;
