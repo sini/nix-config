@@ -2,7 +2,7 @@
 {
   flake.hosts.uplink = {
     ipv4 = [ "10.10.10.1" ];
-    ipv6 = [ "2001:5a8:608c:4a00::1/64" ];
+    ipv6 = [ "fd64:0:1::1/64" ];
     environment = "prod";
     roles = [
       "server"
@@ -31,6 +31,7 @@
   flake.modules.nixos.host_uplink =
     {
       pkgs,
+      environment,
       ...
     }:
     {
@@ -46,6 +47,14 @@
         };
       };
 
+      boot.kernelModules = [ "br_netfilter" ];
+      boot.kernel.sysctl = {
+        # Bridge settings - disable netfilter calls for transparent bridging
+        # This allows bridge traffic to bypass iptables while host traffic is still filtered
+        "net.bridge.bridge-nf-call-iptables" = 0;
+        "net.bridge.bridge-nf-call-ip6tables" = 0;
+        "net.bridge.bridge-nf-call-arptables" = 0;
+      };
       systemd.network = {
         netdevs = {
           "10-br0" = {
@@ -75,26 +84,32 @@
             enable = true;
             matchConfig.Name = "br0";
             networkConfig = {
+              DHCP = "ipv6"; # Enable DHCPv6 for prefix delegation
               IPv6AcceptRA = true;
               IPv6SendRA = false;
             };
             dhcpV6Config = {
               UseDelegatedPrefix = true;
-              PrefixDelegationHint = "::/64";
+              PrefixDelegationHint = "::/60"; # Request /60 for multiple subnets
+              WithoutRA = "solicit"; # Request delegation even without RA
             };
             ipv6AcceptRAConfig = {
               UseDNS = true;
               DHCPv6Client = "always";
             };
             address = [
-              "10.10.10.1/24"
-              "2001:5a8:608c:4a00::1/64"
+              "10.10.10.1/16"
+              "fd64:0:1::1/64"
             ];
+            routes = [
+              { Gateway = environment.gatewayIp; }
+            ];
+            dns = environment.dnsServers;
             linkConfig.RequiredForOnline = "routable";
             extraConfig = ''
               [DHCPv6]
               UseDelegatedPrefix=true
-              PrefixDelegationHint=::/64
+              PrefixDelegationHint=::/60
             '';
           };
         };

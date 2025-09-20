@@ -19,7 +19,8 @@ in
       - `domain`: Base domain for the environment (e.g., "json64.dev").
       - `gatewayIp`: Gateway IP address for the environment's primary network.
       - `dnsServers`: List of DNS server IPs for the environment.
-      - `networks`: Network definitions including subnets and purposes.
+      - `networks`: Network definitions including IPv4/IPv6 subnets and purposes.
+      - `ipv6`: IPv6 ULA prefix configuration for NPTv6 translation.
       - `kubernetes`: Kubernetes-specific network configuration.
       - `email`: Default email settings for the environment.
       - `acme`: ACME certificate authority settings.
@@ -33,6 +34,12 @@ in
           cidr = mkOption {
             type = types.str;
             description = "Network CIDR (e.g., 10.0.0.0/24)";
+          };
+
+          ipv6_cidr = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "IPv6 network CIDR (e.g., fd64:0:1::/64)";
           };
 
           purpose = mkOption {
@@ -243,6 +250,44 @@ in
             };
             default = { };
             description = "Monitoring configuration including cross-environment scanning";
+          };
+
+          ipv6 = mkOption {
+            type = types.submodule {
+              options = {
+                ula_prefix = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "ULA prefix for the environment (e.g., fd64::/48)";
+                };
+
+                management_prefix = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "IPv6 prefix for management network (e.g., fd64:0:1::/64)";
+                };
+
+                kubernetes_prefix = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "IPv6 prefix for Kubernetes pods (e.g., fd64:0:2::/64)";
+                };
+
+                services_prefix = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "IPv6 prefix for Kubernetes services (e.g., fd64:0:3::/64)";
+                };
+
+                external_prefix = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  description = "External ISP prefix for NPTv6 translation (e.g., 2001:db8::/64)";
+                };
+              };
+            };
+            default = { };
+            description = "IPv6 ULA and prefix configuration for NPTv6 translation";
           };
         };
       };
