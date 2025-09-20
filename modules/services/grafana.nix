@@ -63,6 +63,7 @@
               token_url = "https://idm.${config.networking.domain}/oauth2/token";
               api_url = "https://idm.${config.networking.domain}/oauth2/openid/grafana/userinfo";
               use_pkce = true;
+              use_refresh_token = true;
               role_attribute_path = "contains(groups[*], 'server_admin') && 'GrafanaAdmin' || contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'editor') && 'Editor' || 'Viewer'";
               role_attribute_strict = false;
               allow_assign_grafana_admin = true;
