@@ -11,16 +11,19 @@
     networks = {
       management = {
         cidr = "10.10.10.0/24";
+        ipv6_cidr = "fd64:1:1::/64";
         purpose = "management";
         description = "Management network for infrastructure hosts";
       };
       kubernetes = {
         cidr = "172.16.0.0/16";
+        ipv6_cidr = "fd64:1:2::/64";
         purpose = "kubernetes-pods";
         description = "Kubernetes pod network";
       };
       services = {
         cidr = "172.17.0.0/16";
+        ipv6_cidr = "fd64:1:3::/64";
         purpose = "kubernetes-services";
         description = "Kubernetes service network";
       };
@@ -29,6 +32,14 @@
         purpose = "loadbalancer";
         description = "LoadBalancer service IP range";
       };
+    };
+
+    # IPv6 ULA configuration for dev environment
+    ipv6 = {
+      ula_prefix = "fd64:1::/48";
+      management_prefix = "fd64:1:1::/64";
+      kubernetes_prefix = "fd64:1:2::/64";
+      services_prefix = "fd64:1:3::/64";
     };
 
     kubernetes = {

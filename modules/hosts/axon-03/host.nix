@@ -2,7 +2,7 @@
 {
   flake.hosts.axon-03 = {
     ipv4 = [ "10.10.10.4" ];
-    ipv6 = [ "2001:5a8:608c:4a00::4/64" ];
+    ipv6 = [ "fd64:0:1::4/64" ];
     environment = "prod";
     roles = [
       "server"
