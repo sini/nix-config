@@ -4,6 +4,24 @@
       { config, lib, ... }:
       {
         users = {
+          deterministicIds.media = {
+            # Maps to Synology NAS user/group for docker user
+            uid = 1027;
+            gid = 65536;
+            subUidRanges = [
+              {
+                startUid = 165536;
+                count = 65536;
+              }
+            ];
+            subGidRanges = [
+              {
+                startGid = 165536;
+                count = 65536;
+              }
+            ];
+          };
+
           groups.media = {
             name = "media";
           };

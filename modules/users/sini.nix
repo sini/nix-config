@@ -4,7 +4,22 @@
       { config, ... }:
       {
         users = {
-          mutableUsers = false;
+          deterministicIds.sini = {
+            uid = 1000;
+            gid = 1000;
+            subUidRanges = [
+              {
+                startUid = 100000;
+                count = 65536;
+              }
+            ];
+            subGidRanges = [
+              {
+                startGid = 100000;
+                count = 65536;
+              }
+            ];
+          };
 
           groups.sini.gid = config.users.users.sini.uid;
 
