@@ -6,28 +6,59 @@
 }:
 {
   flake =
-    {
-      config,
-      ...
-    }:
+    { config, ... }:
     let
       lib = inputs.nixpkgs.lib;
-      unstableLib = inputs.nixpkgs-unstable.lib;
-    in
-    {
-      # This is set due to a regression in agenix-rekey that checks for homeConfigurations when its called from home-manager
-      homeConfigurations = { };
-      nixosConfigurations = lib.mapAttrs (
+
+      # Helper function to gather and deduplicate modules from core and host-specific roles.
+      # This avoids repeating the same logic for both nixos and home-manager modules.
+      getModulesForRoles =
+        { roleType, hostRoles }:
+        let
+          # e.g., "nixosModules" or "homeManagerModules"
+          moduleAttrName = "${roleType}Modules";
+          # e.g., config.modules.nixos or config.modules.homeManager
+          modulePath = config.modules.${roleType};
+
+          # 1. Start with the core modules required for all systems.
+          coreModules = config.role.core.${moduleAttrName};
+
+          # 2. Get modules from additional roles defined on the host.
+          additionalModules = lib.optionals (hostRoles != null) (
+            lib.flatten (
+              builtins.map (roleName: config.role.${roleName}.${moduleAttrName}) (
+                # Ensure the role actually exists before trying to access it.
+                lib.filter (roleName: lib.hasAttr roleName config.role) hostRoles
+              )
+            )
+          );
+
+          # 3. Combine core and additional module names.
+          allModuleNames = coreModules ++ additionalModules;
+
+        in
+        # 4. Remove duplicate names and map them to their actual module files.
+        builtins.map (moduleName: modulePath.${moduleName}) (lib.unique allModuleNames);
+
+      # A dedicated function to build a single NixOS host configuration.
+      # This encapsulates all the logic for one machine.
+      mkHost =
         hostname: hostOptions:
         withSystem hostOptions.system (
           { system, ... }:
           let
-            nixpkgs' = if hostOptions.unstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
-            homeManager' = if hostOptions.unstable then inputs.home-manager-unstable else inputs.home-manager;
-            extendedLibrary = if hostOptions.unstable then unstableLib else lib;
+            # Determine whether to use stable or unstable packages based on the host's options.
+            useUnstable = hostOptions.unstable or false;
+            pkgs' = if useUnstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
+            lib' = pkgs'.lib;
+            home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
+
+            # Select the correct environment configuration (e.g., prod, dev).
             environment = config.environments.${hostOptions.environment};
-            chaotic_imports =
-              if hostOptions.unstable then
+
+            # Select the correct chaotic-nyx modules based on channel.
+            chaoticImports =
+              if useUnstable then
                 [ inputs.chaotic.nixosModules.default ]
               else
                 [
@@ -35,76 +66,61 @@
                   inputs.chaotic.nixosModules.nyx-overlay
                   inputs.chaotic.nixosModules.nyx-registry
                 ];
+
           in
-          nixpkgs'.lib.nixosSystem {
+          lib'.nixosSystem {
             inherit system;
 
             specialArgs = {
               inherit inputs hostOptions environment;
               inherit (config) nodes;
               users = config.user;
-              lib = extendedLibrary;
+              lib = lib'; # Pass the correct lib (stable or unstable) to modules.
             };
 
             modules =
-              let
-                # Collect all nixos module names from core and additional roles
-                allNixosModuleNames =
-                  config.role.core.nixosModules
-                  ++ (lib.optionals (hostOptions ? roles) (
-                    lib.flatten (
-                      builtins.map (roleName: config.role.${roleName}.nixosModules) (
-                        lib.filter (role: lib.hasAttr role config.role) hostOptions.roles
-                      )
-                    )
-                  ));
-                # Remove duplicates and convert to actual modules
-                uniqueNixosModules = builtins.map (moduleName: config.modules.nixos.${moduleName}) (
-                  lib.unique allNixosModuleNames
-                );
-              in
-              uniqueNixosModules
-              ++ chaotic_imports
-              ++ (hostOptions.extra_modules)
+              # Import modules defined by the host's roles.
+              (getModulesForRoles {
+                roleType = "nixos";
+                hostRoles = hostOptions.roles;
+              })
+              # Add modules from external flakes and sources.
+              ++ chaoticImports
               ++ [
                 inputs.nur.modules.nixos.default
-                #inputs.impermanence.nixosModules.impermanence
-                nixpkgs'.nixosModules.notDetected
-                homeManager'.nixosModules.home-manager
-                hostOptions.nixosConfiguration
+                # inputs.impermanence.nixosModules.impermanence # Uncomment to use
+                pkgs'.nixosModules.notDetected
+                home-manager'.nixosModules.home-manager
+              ]
+              # Add any extra modules defined directly on the host.
+              ++ hostOptions.extra_modules
+              # Add the host's primary configuration file.
+              ++ [ hostOptions.nixosConfiguration ]
+              # Finally, apply machine-specific settings and configure Home Manager.
+              ++ [
                 {
                   networking.hostName = hostname;
                   networking.domain = environment.domain;
                   facter.reportPath = hostOptions.facts;
                   age.rekey.hostPubkey = hostOptions.public_key;
 
-                  # Home Manager configuration
-                  home-manager.users.${config.meta.user.username}.imports =
-                    let
-                      # Collect all home manager module names from core and additional roles
-                      allHomeModuleNames =
-                        config.role.core.homeModules
-                        ++ (lib.optionals (hostOptions ? roles) (
-                          lib.flatten (
-                            builtins.map (roleName: config.role.${roleName}.homeModules) (
-                              lib.filter (role: lib.hasAttr role config.role) hostOptions.roles
-                            )
-                          )
-                        ));
-                      # Remove duplicates and convert to actual modules
-                      uniqueHomeModules = builtins.map (moduleName: config.modules.homeManager.${moduleName}) (
-                        lib.unique allHomeModuleNames
-                      );
-                    in
-                    uniqueHomeModules;
+                  home-manager.users.${config.meta.user.username}.imports = getModulesForRoles {
+                    roleType = "home";
+                    hostRoles = hostOptions.roles;
+                  };
                 }
               ];
           }
-        )
-      ) config.hosts;
+        );
+    in
+    {
+      # This is set due to a regression in agenix-rekey that checks for homeConfigurations.
+      homeConfigurations = { };
 
-      # All nixosSystem instanciations are collected here, so that we can refer
-      # to any system via nodes.<name>
+      # Build all NixOS configurations by applying the mkHost function to each host.
+      nixosConfigurations = lib.mapAttrs mkHost config.hosts;
+
+      # Allow systems to refer to each other via nodes.<name>
       nodes = self.outputs.nixosConfigurations;
     };
 }
