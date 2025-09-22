@@ -16,5 +16,6 @@
     in
     {
       imports = userConfigs;
+      users.mutableUsers = false;
     };
 }
