@@ -1,17 +1,15 @@
-{ config, ... }:
 {
   flake.role.media = {
-    imports = with config.flake.modules.nixos; [
-      spotify-player
+    nixosModules = [
+      "spotify-player"
     ];
 
-    home-manager.users.${config.flake.meta.user.username}.imports =
-      with config.flake.modules.homeManager; [
-        spotify-player
-        spicetify
-        mpv
-        youtube-music-desktop
-        yt-dlp
-      ];
+    homeModules = [
+      "spotify-player"
+      "spicetify"
+      "mpv"
+      "youtube-music-desktop"
+      "yt-dlp"
+    ];
   };
 }

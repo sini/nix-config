@@ -1,28 +1,26 @@
-{ config, ... }:
 {
   flake.role.dev = {
-    imports = with config.flake.modules.nixos; [
-      adb
-      direnv
-      #gpg
+    nixosModules = [
+      "adb"
+      "direnv"
+      #"gpg"
     ];
 
-    home-manager.users.${config.flake.meta.user.username}.imports =
-      with config.flake.modules.homeManager; [
-        bat
-        claude
-        direnv
-        eza
-        misc-tools
-        nvf
-        git
-        #gpg
-        ssh
-        yazi
-        #zellij
+    homeModules = [
+      "bat"
+      "claude"
+      "direnv"
+      "eza"
+      "misc-tools"
+      "nvf"
+      "git"
+      #"gpg"
+      "ssh"
+      "yazi"
+      #"zellij"
 
-        # Admin tools
-        k9s
-      ];
+      # Admin tools
+      "k9s"
+    ];
   };
 }
