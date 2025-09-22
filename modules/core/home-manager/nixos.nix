@@ -1,3 +1,4 @@
+{ config, ... }:
 {
   flake.modules.nixos.home-manager =
     {
@@ -6,7 +7,6 @@
       users,
       lib,
       pkgs,
-      config,
       ...
     }:
     {
@@ -33,18 +33,18 @@
               let
                 # e.g., "nixosModules" or "homeManagerModules"
                 moduleAttrName = "${roleType}Modules";
-                # e.g., config.modules.nixos or config.modules.homeManager
-                modulePath = config.modules.${roleType};
+                # e.g., config.flake.modules.nixos or config.flake.modules.homeManager
+                modulePath = config.flake.modules.${roleType};
 
                 # 1. Start with the core modules required for all systems.
-                coreModules = config.role.core.${moduleAttrName};
+                coreModules = config.flake.role.core.${moduleAttrName};
 
                 # 2. Get modules from additional roles defined on the host.
                 additionalModules = lib.optionals (hostRoles != null) (
                   lib.flatten (
-                    builtins.map (roleName: config.role.${roleName}.${moduleAttrName}) (
+                    builtins.map (roleName: config.flake.role.${roleName}.${moduleAttrName}) (
                       # Ensure the role actually exists before trying to access it.
-                      lib.filter (roleName: lib.hasAttr roleName config.role) hostRoles
+                      lib.filter (roleName: lib.hasAttr roleName config.flake.role) hostRoles
                     )
                   )
                 );
@@ -64,14 +64,10 @@
           in
           [
             (
-              { osConfig, config, ... }:
+              { osConfig, ... }:
               {
                 # TODO: Fix this to support nix-darwin which uses a different stateVersion and homeDirectory
-                home = {
-                  stateVersion = osConfig.system.stateVersion;
-                  username = config.home.username;
-                  homeDirectory = "/home/${config.home.username}";
-                };
+                home.stateVersion = osConfig.system.stateVersion;
                 systemd.user.startServices = "sd-switch";
                 # Home Manager manages itself
                 programs.home-manager.enable = true;
@@ -92,7 +88,10 @@
                 userHomeModules = users.${userName}.homeModules or [ ];
               in
               {
-                home.username = userName;
+                home = {
+                  username = userName;
+                  homeDirectory = "/home/${userName}";
+                };
                 imports = userHomeModules;
               }
             );
