@@ -105,7 +105,7 @@
                   age.rekey.hostPubkey = hostOptions.public_key;
 
                   home-manager.users.${config.meta.user.username}.imports = getModulesForRoles {
-                    roleType = "home";
+                    roleType = "homeManager";
                     hostRoles = hostOptions.roles;
                   };
                 }

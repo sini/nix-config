@@ -1,8 +1,8 @@
 {
-  flake.user.media =
-    { config, lib, ... }:
-    {
-      userConfig = {
+  flake.user.media = {
+    userConfig =
+      { config, lib, ... }:
+      {
         users = {
           groups.media = {
             name = "media";
@@ -32,6 +32,6 @@
         # Allow media user to use Home Manager
         nix.settings.allowed-users = [ "media" ];
       };
-      homeModules = [ ];
-    };
+    homeModules = [ ];
+  };
 }

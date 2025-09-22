@@ -3,7 +3,5 @@
     nixosModules = [
       "laptop"
     ];
-
-    homeModules = [ ];
   };
 }

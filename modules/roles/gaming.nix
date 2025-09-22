@@ -7,7 +7,7 @@
       #"sunshine"
     ];
 
-    homeModules = [
+    homeManagerModules = [
       "mangohud"
     ];
   };

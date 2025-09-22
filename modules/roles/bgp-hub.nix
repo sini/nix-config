@@ -3,7 +3,5 @@
     nixosModules = [
       "bgp-hub"
     ];
-
-    homeModules = [ ];
   };
 }

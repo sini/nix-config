@@ -7,7 +7,5 @@
       "server"
       "alloy"
     ];
-
-    homeModules = [ ];
   };
 }
