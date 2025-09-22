@@ -8,8 +8,6 @@
 
 - https://scvalex.net/posts/55/ https://gitlab.com/scvalex/generating-secrets-flake
 
--
-
 - Setup kanidm ssh login
 
 - move kanidm to axon cluster, add redundancy
