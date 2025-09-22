@@ -121,6 +121,12 @@ in
             description = "Environment name that this host belongs to (references flake.environments)";
           };
 
+          users = mkOption {
+            type = types.listOf types.str;
+            default = [ ];
+            description = "List of user names to enable for this specific host (merged with environment users)";
+          };
+
           exporters = mkOption {
             type = types.attrsOf (
               types.submodule {

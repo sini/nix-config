@@ -74,6 +74,11 @@
       owner = "json64";
     };
 
+    users = [
+      "sini"
+      "media"
+    ];
+
     delegation = {
       metricsTo = "prod";
       authTo = "prod";

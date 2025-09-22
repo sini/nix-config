@@ -252,6 +252,12 @@ in
             description = "Monitoring configuration including cross-environment scanning";
           };
 
+          users = mkOption {
+            type = types.listOf types.str;
+            default = [ ];
+            description = "List of user names to enable for all hosts in this environment";
+          };
+
           ipv6 = mkOption {
             type = types.submodule {
               options = {

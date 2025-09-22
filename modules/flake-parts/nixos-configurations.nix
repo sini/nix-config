@@ -74,7 +74,19 @@
             specialArgs = {
               inherit inputs hostOptions environment;
               inherit (config) nodes;
-              users = config.user;
+              users =
+                let
+                  # Get users from environment and host configuration
+                  environmentUsers = environment.users or [ ];
+                  hostUsers = hostOptions.users or [ ];
+
+                  # Merge and deduplicate user lists
+                  enabledUserNames = lib'.unique (environmentUsers ++ hostUsers);
+
+                  # Filter config.user to only include enabled users
+                  enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.user;
+                in
+                enabledUsers;
               lib = lib'; # Pass the correct lib (stable or unstable) to modules.
             };
 
@@ -104,10 +116,6 @@
                   facter.reportPath = hostOptions.facts;
                   age.rekey.hostPubkey = hostOptions.public_key;
 
-                  home-manager.users.${config.meta.user.username}.imports = getModulesForRoles {
-                    roleType = "homeManager";
-                    hostRoles = hostOptions.roles;
-                  };
                 }
               ];
           }

@@ -8,6 +8,7 @@
     homeManagerModules = [
       "gitkraken"
       "gpg"
+      "vscode"
       "wireshark"
       "kube-tools"
       "zellij"

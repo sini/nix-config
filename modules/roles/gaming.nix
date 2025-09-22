@@ -4,11 +4,12 @@
       "gamepad"
       "nix-ld"
       "steam"
-      #"sunshine"
+      "sunshine"
     ];
 
     homeManagerModules = [
       "mangohud"
+      "sunshine"
     ];
   };
 }

@@ -1,4 +1,4 @@
-{ inputs, config, ... }:
+{ inputs, ... }:
 let
   base16Scheme = {
     # You can use a file path to a JSON or YAML file
@@ -101,11 +101,10 @@ in
             };
           };
 
-          home-manager.users.${config.flake.meta.user.username}.imports =
-            with config.flake.modules.homeManager; [
-              stylix
-              inputs.stylix.homeModules.stylix
-            ];
+          # Make stylix home-manager modules available to all users
+          home-manager.sharedModules = [
+            inputs.stylix.homeModules.stylix
+          ];
 
         };
       };

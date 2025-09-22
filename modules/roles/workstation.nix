@@ -32,6 +32,7 @@
       "firefox"
       "obs-studio"
       "obsidian" # note-taking app
+      "stylix"
       "zathura" # PDF viewer
       # TODO:  Broken for now....
       "hyprland"
