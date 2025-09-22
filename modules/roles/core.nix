@@ -1,35 +1,33 @@
-{ config, ... }:
 {
   flake.role.core = {
-    imports = with config.flake.modules.nixos; [
-      agenix
-      avahi
-      deterministic-uids
-      disko
-      facter
-      firmware
-      home-manager
-      hosts
-      i18n
-      networking
-      nix
-      nixpkgs
-      openssh
-      power-mgmt
-      shell
-      ssd
-      sudo
-      systemd-boot
-      time
-      users
-      utils
-      zsh
+    nixosModules = [
+      "agenix"
+      "avahi"
+      "deterministic-uids"
+      "disko"
+      "facter"
+      "firmware"
+      "home-manager"
+      "hosts"
+      "i18n"
+      "networking"
+      "nix"
+      "nixpkgs"
+      "openssh"
+      "power-mgmt"
+      "shell"
+      "ssd"
+      "sudo"
+      "systemd-boot"
+      "time"
+      "users"
+      "utils"
+      "zsh"
     ];
 
-    home-manager.users.${config.flake.meta.user.username}.imports =
-      with config.flake.modules.homeManager; [
-        starship
-        zsh
-      ];
+    homeModules = [
+      "starship"
+      "zsh"
+    ];
   };
 }

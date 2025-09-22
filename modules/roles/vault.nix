@@ -1,6 +1,9 @@
-{ config, ... }:
 {
-  flake.role.vault.imports = with config.flake.modules.nixos; [
-    vault
-  ];
+  flake.role.vault = {
+    nixosModules = [
+      "vault"
+    ];
+
+    homeModules = [ ];
+  };
 }

@@ -1,16 +1,14 @@
-{ config, ... }:
 {
   flake.role.gaming = {
-    imports = with config.flake.modules.nixos; [
-      gamepad
-      nix-ld
-      steam
-      #sunshine
+    nixosModules = [
+      "gamepad"
+      "nix-ld"
+      "steam"
+      #"sunshine"
     ];
 
-    home-manager.users.${config.flake.meta.user.username}.imports =
-      with config.flake.modules.homeManager; [
-        mangohud
-      ];
+    homeModules = [
+      "mangohud"
+    ];
   };
 }

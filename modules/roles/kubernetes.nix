@@ -1,9 +1,10 @@
-{ config, ... }:
 {
   flake.role.kubernetes = {
-    imports = with config.flake.modules.nixos; [
-      kubernetes
-      cilium-bgp
+    nixosModules = [
+      "kubernetes"
+      "cilium-bgp"
     ];
+
+    homeModules = [ ];
   };
 }

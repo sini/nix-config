@@ -1,7 +1,10 @@
-{ config, ... }:
 {
-  flake.role.metrics-ingester.imports = with config.flake.modules.nixos; [
-    loki
-    prometheus
-  ];
+  flake.role.metrics-ingester = {
+    nixosModules = [
+      "loki"
+      "prometheus"
+    ];
+
+    homeModules = [ ];
+  };
 }
