@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_dev-gui = {
+  flake.role.dev-gui = {
     imports = with config.flake.modules.nixos; [
       gpg
       vscode

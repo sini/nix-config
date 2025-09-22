@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_media = {
+  flake.role.media = {
     imports = with config.flake.modules.nixos; [
       spotify-player
     ];

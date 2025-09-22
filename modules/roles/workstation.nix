@@ -1,16 +1,11 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_workstation = {
+  flake.role.workstation = {
     imports = with config.flake.modules.nixos; [
       # Hardware modules
       audio
       bluetooth
       coolercontrol
-
-      # Additional roles
-      role_dev
-      role_dev-gui
-      role_media
 
       # Styles
       stylix
@@ -28,9 +23,6 @@
       hyprland
 
     ];
-
-    # Enable NetworkManager for managing network interfaces
-    networking.networkmanager.enable = true;
 
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [

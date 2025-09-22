@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_core = {
+  flake.role.core = {
     imports = with config.flake.modules.nixos; [
       agenix
       avahi

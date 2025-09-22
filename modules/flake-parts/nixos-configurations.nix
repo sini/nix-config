@@ -46,11 +46,11 @@
             };
 
             modules = [
-              config.modules.nixos.role_core
+              config.role.core
             ]
             ++ (lib.optionals (hostOptions ? roles) (
-              builtins.map (role: inputs.self.modules.nixos."role_${role}") (
-                lib.filter (role: lib.hasAttr "role_${role}" inputs.self.modules.nixos) hostOptions.roles
+              builtins.map (role: config.role.${role}) (
+                lib.filter (role: lib.hasAttr role config.role) hostOptions.roles
               )
             ))
             ++ chaotic_imports
@@ -60,7 +60,7 @@
               #inputs.impermanence.nixosModules.impermanence
               nixpkgs'.nixosModules.notDetected
               homeManager'.nixosModules.home-manager
-              (inputs.self.modules.nixos."host_${hostname}" or { })
+              hostOptions.nixosConfiguration
               {
                 networking.hostName = hostname;
                 networking.domain = environment.domain;

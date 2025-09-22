@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_server.imports = with config.flake.modules.nixos; [
+  flake.role.server.imports = with config.flake.modules.nixos; [
     acme
     media-data-share
     network-boot

@@ -77,21 +77,31 @@
         nixpkgs = inputs.nixpkgs-unstable;
       };
 
-      hiveStable = inputs.colmena.lib.makeHive colmena;
-      hiveUnstable = inputs.colmena.lib.makeHive colmenaUnstable;
+      hiveStable = if stableHosts == { } then null else inputs.colmena.lib.makeHive colmena;
+      hiveUnstable = if unstableHosts == { } then null else inputs.colmena.lib.makeHive colmenaUnstable;
 
       mergeMap =
         a: b:
-        if (builtins.isAttrs a && builtins.isAttrs b) then
+        if a == null && b == null then
+          { }
+        else if a == null then
+          b
+        else if b == null then
+          a
+        else if (builtins.isAttrs a && builtins.isAttrs b) then
           a // b
         else
-          throw "mergeMap: expected two attrsets";
+          throw "mergeMap: expected two attrsets or nulls";
 
       # ✅ Final merged Hive
       colmenaHive =
         let
-          mergedNodes = mergeMap hiveStable.nodes hiveUnstable.nodes;
-          mergedDeploymentConfig = mergeMap hiveStable.deploymentConfig hiveUnstable.deploymentConfig;
+          mergedNodes = mergeMap (if hiveStable != null then hiveStable.nodes else null) (
+            if hiveUnstable != null then hiveUnstable.nodes else null
+          );
+          mergedDeploymentConfig = mergeMap (
+            if hiveStable != null then hiveStable.deploymentConfig else null
+          ) (if hiveUnstable != null then hiveUnstable.deploymentConfig else null);
           deploymentConfigSelected = names: lib.filterAttrs (name: _: elem name names) mergedDeploymentConfig;
           evalSelected = names: lib.filterAttrs (name: _: elem name names) toplevel;
           evalSelectedDrvPaths = names: lib.mapAttrs (_: v: v.drvPath) (evalSelected names);
@@ -103,17 +113,27 @@
               pkgs = import inputs.nixpkgs { system = "x86_64-linux"; };
               nodes = mergedNodes;
             };
-          toplevel = mergeMap hiveStable.toplevel hiveUnstable.toplevel;
-          passthrough = lib.filterAttrs (
-            name: _: lib.hasAttr name hiveStable && lib.isFunction hiveStable.${name}
-          ) hiveStable;
+          toplevel = mergeMap (if hiveStable != null then hiveStable.toplevel else null) (
+            if hiveUnstable != null then hiveUnstable.toplevel else null
+          );
+          passthrough =
+            if hiveStable != null then
+              lib.filterAttrs (
+                name: _: lib.hasAttr name hiveStable && lib.isFunction hiveStable.${name}
+              ) hiveStable
+            else if hiveUnstable != null then
+              lib.filterAttrs (
+                name: _: lib.hasAttr name hiveUnstable && lib.isFunction hiveUnstable.${name}
+              ) hiveUnstable
+            else
+              { };
 
         in
         passthrough
         // {
           __schema = "v0.5";
           nodes = mergedNodes;
-          metaConfig = hiveStable.metaConfig;
+          metaConfig = if hiveStable != null then hiveStable.metaConfig else hiveUnstable.metaConfig;
           deploymentConfig = mergedDeploymentConfig;
           inherit
             evalSelected

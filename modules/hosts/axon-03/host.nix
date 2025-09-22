@@ -26,32 +26,31 @@
     };
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOAXXsNWa09hW/wuDBcpMkln9LsZCM0A2vQYiUh+pEsC";
     facts = ./facter.json;
-  };
+    nixosConfiguration =
+      {
+        pkgs,
+        ...
+      }:
+      {
+        boot.kernelPackages = pkgs.linuxPackages_latest;
 
-  flake.modules.nixos.host_axon-03 =
-    {
-      pkgs,
-      ...
-    }:
-    {
-      boot.kernelPackages = pkgs.linuxPackages_latest;
+        hardware = {
+          networking = {
+            interfaces = [ "enp2s0" ];
+            unmanagedInterfaces = [ "enp2s0" ];
+          };
+          disk.longhorn = {
+            os_drive = {
+              device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
+              swap_size = 8192;
+            };
+            longhorn_drive = {
+              device_id = "nvme-Force_MP600_1925823000012856500E";
+            };
+          };
+        };
 
-      hardware = {
-        networking = {
-          interfaces = [ "enp2s0" ];
-          unmanagedInterfaces = [ "enp2s0" ];
-        };
-        disk.longhorn = {
-          os_drive = {
-            device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
-            swap_size = 8192;
-          };
-          longhorn_drive = {
-            device_id = "nvme-Force_MP600_1925823000012856500E";
-          };
-        };
+        system.stateVersion = "25.05";
       };
-
-      system.stateVersion = "25.05";
-    };
+  };
 }

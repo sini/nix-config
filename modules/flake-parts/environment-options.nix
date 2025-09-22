@@ -297,6 +297,4 @@ in
       default = { };
       description = "Environment configurations";
     };
-
-  config.flake.modules.nixos.environments = { };
 }

@@ -8,6 +8,9 @@
       "workstation"
       "laptop"
       "gaming"
+      "dev"
+      "dev-gui"
+      "media"
     ];
     extra_modules = with config.flake.modules.nixos; [
       ./_local
@@ -19,5 +22,9 @@
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO0xBpnsFa3YGevrl2vrSVL31nFtlgYb/7b+hmST3Vsz";
     facts = ./facter.json;
+    nixosConfiguration = {
+      # Enable NetworkManager for managing network interfaces
+      networking.networkmanager.enable = true;
+    };
   };
 }
