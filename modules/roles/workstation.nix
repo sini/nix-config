@@ -22,7 +22,7 @@
       "hyprland"
     ];
 
-    homeModules = [
+    homeManagerModules = [
       "alacritty"
       "audio"
       "discord"

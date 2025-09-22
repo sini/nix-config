@@ -4,7 +4,7 @@
       "spotify-player"
     ];
 
-    homeModules = [
+    homeManagerModules = [
       "spotify-player"
       "spicetify"
       "mpv"

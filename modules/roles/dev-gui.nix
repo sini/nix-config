@@ -5,7 +5,7 @@
       "vscode"
     ];
 
-    homeModules = [
+    homeManagerModules = [
       "gitkraken"
       "gpg"
       "wireshark"

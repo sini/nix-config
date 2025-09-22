@@ -6,7 +6,7 @@
       #"gpg"
     ];
 
-    homeModules = [
+    homeManagerModules = [
       "bat"
       "claude"
       "direnv"

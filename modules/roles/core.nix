@@ -25,7 +25,7 @@
       "zsh"
     ];
 
-    homeModules = [
+    homeManagerModules = [
       "starship"
       "zsh"
     ];

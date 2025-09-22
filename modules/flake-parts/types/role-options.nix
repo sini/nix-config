@@ -9,7 +9,7 @@
             default = [ ];
             description = "List of NixOS module names to include for this role";
           };
-          homeModules = lib.mkOption {
+          homeManagerModules = lib.mkOption {
             type = lib.types.listOf lib.types.str;
             default = [ ];
             description = "List of Home Manager module names to include for this role";

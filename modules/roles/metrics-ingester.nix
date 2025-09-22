@@ -4,7 +4,5 @@
       "loki"
       "prometheus"
     ];
-
-    homeModules = [ ];
   };
 }
