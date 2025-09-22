@@ -119,6 +119,9 @@
     #   inputs.nixpkgs.follows = "nixpkgs-darwin";
     # };
 
+    # GitKraken configuration
+    nixkraken.url = "github:nicolas-goudry/nixkraken";
+
     nixos-anywhere = {
       url = "github:numtide/nixos-anywhere";
       inputs = {
