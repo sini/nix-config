@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_vault.imports = with config.flake.modules.nixos; [
+  flake.role.vault.imports = with config.flake.modules.nixos; [
     vault
   ];
 }

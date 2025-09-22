@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_gaming = {
+  flake.role.gaming = {
     imports = with config.flake.modules.nixos; [
       gamepad
       nix-ld

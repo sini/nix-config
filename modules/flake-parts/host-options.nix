@@ -74,15 +74,21 @@ in
           };
 
           public_key = mkOption {
-            type = types.either types.path types.str;
+            type = types.nullOr (types.either types.path types.str);
             default = null;
             description = "Path to or string value of the public SSH key for the host.";
           };
 
           facts = mkOption {
-            type = types.path;
+            type = types.nullOr types.path;
             default = null;
             description = "Path to the Facter JSON file for the host.";
+          };
+
+          nixosConfiguration = mkOption {
+            type = types.deferredModule;
+            default = { };
+            description = "Host-specific NixOS module configuration.";
           };
 
           extra_modules = mkOption {
@@ -147,7 +153,6 @@ in
     in
     mkOption {
       type = types.attrsOf hostType;
+      default = { };
     };
-
-  config.flake.modules.nixos.hosts = { };
 }

@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.role_dev = {
+  flake.role.dev = {
     imports = with config.flake.modules.nixos; [
       adb
       direnv
