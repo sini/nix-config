@@ -51,7 +51,8 @@
           lm_sensors
         ];
 
-        home-manager.users.${config.flake.meta.user.username}.imports = [
+        # Host-specific home-manager configuration
+        home-manager.sharedModules = [
           {
             wayland.windowManager.hyprland.settings.monitor = [
               "DP-3, 2560x2880@59.98, 0x0, 1, vrr, 0, bitdepth, 10"

@@ -1,10 +1,6 @@
-{ config, ... }:
-let
-  username = config.flake.meta.user.username;
-in
 {
   flake.modules.nixos.wireshark =
-    { pkgs, ... }:
+    { pkgs, users, ... }:
     {
       programs = {
         wireshark = {
@@ -13,13 +9,15 @@ in
         };
       };
 
-      users.users.${username}.extraGroups = [
-        "wireshark"
-      ];
-
-      home-manager.users.${username}.imports = with config.flake.modules.homeManager; [
-        wireshark
-      ];
+      # Add all enabled users to the wireshark group
+      users.users = builtins.listToAttrs (
+        builtins.map (userName: {
+          name = userName;
+          value = {
+            extraGroups = [ "wireshark" ];
+          };
+        }) (builtins.attrNames users)
+      );
     };
 
   flake.modules.homeManager.wireshark =

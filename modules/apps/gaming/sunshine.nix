@@ -64,9 +64,6 @@ in
         };
       };
 
-      home-manager.users.${username}.imports = with config.flake.modules.homeManager; [
-        sunshine
-      ];
     };
 
   flake.modules.homeManager.sunshine =

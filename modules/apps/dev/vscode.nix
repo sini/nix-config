@@ -1,4 +1,3 @@
-{ config, ... }:
 {
   flake.modules.nixos.vscode =
     { inputs, ... }:
@@ -6,10 +5,6 @@
       nixpkgs.overlays = [
         inputs.nix-vscode-extensions.overlays.default
       ];
-      home-manager.users.${config.flake.meta.user.username}.imports =
-        with config.flake.modules.homeManager; [
-          vscode
-        ];
     };
 
   flake.modules.homeManager.vscode =

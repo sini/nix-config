@@ -87,6 +87,11 @@
       owner = "json64";
     };
 
+    users = [
+      "sini"
+      "media"
+    ];
+
     monitoring = {
       scanEnvironments = [
         "prod"

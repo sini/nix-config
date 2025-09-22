@@ -1,7 +1,3 @@
-{ config, ... }:
-let
-  user = config.flake.meta.user.username;
-in
 {
   flake.modules.nixos.deterministic-uids = {
     users.deterministicIds =
@@ -12,39 +8,6 @@ in
         };
       in
       {
-        ${user} = {
-          uid = 1000;
-          gid = 1000;
-          subUidRanges = [
-            {
-              startUid = 100000;
-              count = 65536;
-            }
-          ];
-          subGidRanges = [
-            {
-              startGid = 100000;
-              count = 65536;
-            }
-          ];
-        };
-        media = {
-          # Maps to Synology NAS user/group for docker user
-          uid = 1027;
-          gid = 65536;
-          subUidRanges = [
-            {
-              startUid = 165536;
-              count = 65536;
-            }
-          ];
-          subGidRanges = [
-            {
-              startGid = 165536;
-              count = 65536;
-            }
-          ];
-        };
         systemd-oom = uidGid 999;
         systemd-coredump = uidGid 998;
         sshd = uidGid 997;
