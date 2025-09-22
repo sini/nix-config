@@ -76,6 +76,8 @@
 
     users = [
       "sini"
+      "shuo"
+      "will"
       "media"
     ];
 

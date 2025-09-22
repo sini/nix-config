@@ -1,19 +1,36 @@
+{ rootPath, ... }:
 {
   flake.user.will = {
     userConfig =
       { config, ... }:
       {
+        age.secrets.user-will-password = {
+          rekeyFile = rootPath + "/.secrets/user-passwords/will.age";
+        };
+
         users = {
           deterministicIds.will = {
             uid = 1002;
             gid = 1002;
+            subUidRanges = [
+              {
+                startUid = 296608;
+                count = 65536;
+              }
+            ];
+            subGidRanges = [
+              {
+                startGid = 296608;
+                count = 65536;
+              }
+            ];
           };
 
           groups.will.gid = config.users.users.will.uid;
 
           users.will = {
             isNormalUser = true;
-            initialHashedPassword = "$y$j9T$RpfkDk8AusZr9NS09tJ9e.$kbc4SL9Cu45o1YYPlyV1jiVTZZ/126ue5Nff2Rfgpw8";
+            hashedPasswordFile = config.age.secrets.user-will-password.path;
             home = "/home/will";
             group = "will";
             openssh.authorizedKeys.keys = [
