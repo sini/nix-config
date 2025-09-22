@@ -42,6 +42,7 @@
             specialArgs = {
               inherit inputs hostOptions environment;
               inherit (config) nodes;
+              users = config.user;
               lib = extendedLibrary;
             };
 
