@@ -8,7 +8,7 @@
 
     home-manager.users.${config.flake.meta.user.username}.imports =
       with config.flake.modules.homeManager; [
-        # Admin tools
+        gitkraken
         gpg
         wireshark
         kube-tools
