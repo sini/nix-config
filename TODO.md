@@ -51,3 +51,7 @@
 - libvirt / quemu / kvm / windows virtualization...
 
 - setup unifi cloud gateway, add terraform integration
+
+- audio resources: https://github.com/polygon/audio.nix/tree/master
+
+- sinden: https://www.sindenwiki.org/wiki/2_player https://sindenlightgun.com/drivers/
