@@ -1,3 +1,5 @@
+- setup impermenance
+
 - Add laptop power management via systemd, agnostic to gnome, hyprland, etc...
 
 - allow laptop to close
@@ -29,8 +31,6 @@
 - Restore nvidia persistenced ; NixOS/nixpkgs#437066
 
 - Migrate from btrfs to ZFS
-
-- setup impermenance
 
 - setup snapshot backup
 
