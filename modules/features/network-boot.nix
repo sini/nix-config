@@ -91,7 +91,45 @@
               initrdWpaConfig = pkgs.writeText "initrd-wpa_supplicant.conf" generatedConfig;
             in
             {
-              # Wireless unlock support
+              # Use the main wpa_supplicant service logic in initrd
+              services.wpa_supplicant = {
+                wantedBy = [ "initrd.target" ];
+                path = config.systemd.services.wpa_supplicant.path;
+                script = ''
+                  if [ -f /etc/wpa_supplicant.conf ]; then
+                    echo >&2 "<3>/etc/wpa_supplicant.conf present but ignored. Generated ${initrdWpaConfig} is used instead."
+                  fi
+
+                  # ensure wpa_supplicant.conf exists, or the daemon will fail to start
+
+                  iface_args="-s -u -Dnl80211,wext -c ${initrdWpaConfig}"
+
+                  # detect interfaces automatically
+
+                  # check if there are no wireless interfaces
+                  if ! find -H /sys/class/net/* -name wireless | grep -q .; then
+                    # if so, wait until one appears
+                    echo "Waiting for wireless interfaces"
+                    grep -q '^ACTION=add' < <(stdbuf -oL -- udevadm monitor -s net/wlan -pu)
+                    # Note: the above line has been carefully written:
+                    # 1. The process substitution avoids udevadm hanging (after grep has quit)
+                    #    until it tries to write to the pipe again. Not even pipefail works here.
+                    # 2. stdbuf is needed because udevadm output is buffered by default and grep
+                    #    may hang until more udev events enter the pipe.
+                  fi
+
+                  # add any interface found to the daemon arguments
+                  for name in $(find -H /sys/class/net/* -name wireless | cut -d/ -f 5); do
+                    echo "Adding interface $name"
+                    args+="''${args:+ -N} -i$name $iface_args"
+                  done
+
+                  # finally start daemon
+                  exec wpa_supplicant $args
+                '';
+              };
+
+              # Ensure wpa_supplicant and dependencies are available in initrd
               packages = [ pkgs.wpa_supplicant ];
               initrdBin = [
                 pkgs.wpa_supplicant
@@ -102,33 +140,15 @@
 
               # Dependencies aren't tracked properly:
               # https://github.com/NixOS/nixpkgs/issues/309316
-              storePaths =
-                config.boot.initrd.systemd.services.wpa_supplicant.path
-                ++ config.systemd.services.wpa_supplicant.path
-                ++ [
-                  pkgs.wpa_supplicant
-                  initrdWpaConfig
-                ];
-
-              services.wpa_supplicant = {
-                wantedBy = [ "initrd.target" ];
-                path = config.systemd.services.wpa_supplicant.path;
-
-                # Use the original script approach: extract the config file path and replace it
-                # This preserves interface detection and other logic from the original service
-                script =
-                  let
-                    # Extract the config file path that would be used by the regular systemd service
-                    # This works without IFD since we're doing string replacement, not file reading
-                    originalScript = config.systemd.services.wpa_supplicant.script;
-                    # Find any wpa_supplicant.conf file references and replace with our initrd config
-                    scriptWithNewConfig =
-                      builtins.replaceStrings [ "wpa_supplicant.conf" ] [ "${initrdWpaConfig}" ]
-                        originalScript;
-                  in
-                  # Remove startup args that aren't appropriate for initrd
-                  builtins.replaceStrings [ "-s -u " ] [ "" ] scriptWithNewConfig;
-              };
+              storePaths = [
+                pkgs.wpa_supplicant
+                pkgs.coreutils
+                pkgs.findutils
+                pkgs.gnugrep
+                pkgs.gnused
+                pkgs.systemd
+                initrdWpaConfig
+              ];
             }
           );
 
