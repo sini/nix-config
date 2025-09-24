@@ -15,7 +15,7 @@
 
           systemd = {
             inherit (config.systemd) network;
-            users.root.shell = "/bin/systemd-tty-ask-password-agent";
+            # users.root.shell = "/bin/systemd-tty-ask-password-agent";
           };
 
           network = {
@@ -33,6 +33,8 @@
               hostKeys = [
                 config.age.secrets.initrd_host_ed25519_key.path
               ];
+
+              extraConfig = "ForceCommand systemd-tty-ask-password-agent --watch";
             };
           };
         };
