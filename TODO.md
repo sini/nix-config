@@ -1,8 +1,8 @@
+- setup zfs
+
 - setup impermenance
 
-- Add laptop power management via systemd, agnostic to gnome, hyprland, etc...
-
-- allow laptop to close
+- Migrate from btrfs to ZFS
 
 - Add yubikey unlock/lock
 
@@ -30,8 +30,6 @@
 
 - Restore nvidia persistenced ; NixOS/nixpkgs#437066
 
-- Migrate from btrfs to ZFS
-
 - setup snapshot backup
 
 - reference: https://yomaq.github.io/posts/zfs-encryption-backups-and-convenience/
@@ -55,3 +53,5 @@
 - audio resources: https://github.com/polygon/audio.nix/tree/master
 
 - sinden: https://www.sindenwiki.org/wiki/2_player https://sindenlightgun.com/drivers/
+
+- vault secrets - https://github.com/serokell/vault-secrets

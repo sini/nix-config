@@ -23,6 +23,7 @@
           # background_opacity = "0.8";
           # TODO: For tiling WM's
           # hide_window_decorations = "yes";
+          #hide_window_decorations = if pkgs.stdenv.isDarwin then "titlebar-only" else "yes";
           confirm_os_window_close = "2";
 
           enable_audio_bell = "no";
