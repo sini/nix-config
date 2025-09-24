@@ -49,8 +49,8 @@
             targets.initrd.wants = [ "wpa_supplicant@wlp1s0.service" ];
             services."wpa_supplicant@".unitConfig.DefaultDependencies = false;
           };
-          secrets."/etc/wpa_supplicant/wpa_supplicant-wlp1s0.conf" =
-            /root/.wpa_supplicant/wpa_supplicant-wlp1s0.conf;
+          #          secrets."/etc/wpa_supplicant/wpa_supplicant-wlp1s0.conf" =
+          #            /root/.wpa_supplicant/wpa_supplicant-wlp1s0.conf;
         };
 
         systemd.network = {
