@@ -17,7 +17,6 @@
       cpu-intel
       gpu-intel
       podman
-      performance
     ];
     public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFWHgNoj7RnyW213YGiB8aQR3RK7HQvUmGHsqM0ZMsC4";
     facts = ./facter.json;
@@ -25,8 +24,12 @@
       {
         config,
         pkgs,
+        lib,
         ...
       }:
+      let
+        wiface = "wlp1s0";
+      in
       {
         age.secrets.wpa-supplicant = {
           rekeyFile = rootPath + "/.secrets/user/wpa_supplicant-arcade.age";
@@ -37,29 +40,56 @@
           path = "/root/.wpa_supplicant/wpa_supplicant-wlp1s0.conf";
           symlink = false;
         };
+
+        system.activationScripts.agenixEnsureWpaSupplicantConfig = {
+          text = ''
+            [[ -e ${config.age.secrets.wpa-supplicant-config.path} ]] \
+              || touch ${config.age.secrets.wpa-supplicant-config.path}
+          '';
+          deps = [
+            "agenixInstall"
+            "users"
+          ];
+        };
+        system.activationScripts.agenixChown.deps = [ "agenixEnsureWpaSupplicantConfig" ];
+
         boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+
         boot.initrd = {
           availableKernelModules = [
             "ccm"
             "ctr"
             "iwlmvm"
             "iwlwifi"
+            "cfg80211"
+            "mwifiex"
+            "mwifiex_pcie"
           ];
           systemd = {
             packages = [ pkgs.wpa_supplicant ];
-            initrdBin = [ pkgs.wpa_supplicant ];
-            targets.initrd.wants = [ "wpa_supplicant@wlp1s0.service" ];
+            initrdBin = [
+              pkgs.wpa_supplicant
+              pkgs.coreutils
+              pkgs.systemd
+              pkgs.iproute2
+            ];
+
+            targets.initrd.wants = [ "wpa_supplicant@${wiface}.service" ];
             services."wpa_supplicant@".unitConfig.DefaultDependencies = false;
+
+            network.wait-online.enable = lib.mkForce true;
+            emergencyAccess = true;
+
           };
-          secrets."/etc/wpa_supplicant/wpa_supplicant-wlp1s0.conf" =
-            /root/.wpa_supplicant/wpa_supplicant-wlp1s0.conf;
+          secrets."/etc/wpa_supplicant/wpa_supplicant-${wiface}.conf" =
+            "/root/.wpa_supplicant/wpa_supplicant-${wiface}.conf";
         };
 
         systemd.network = {
           networks."10-wlan" = {
             enable = true;
             matchConfig.Name = "wlp1s0";
-            DHCP = "yes";
+            networkConfig.DHCP = "yes";
           };
         };
 
