@@ -18,7 +18,7 @@
       gpu-intel
       podman
     ];
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFWHgNoj7RnyW213YGiB8aQR3RK7HQvUmGHsqM0ZMsC4";
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDX3YKqqpk/DNKzwXvGVP1z3S0gjSIHZBa/BU7lacNin";
     facts = ./facter.json;
     nixosConfiguration =
       {

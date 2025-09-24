@@ -91,45 +91,21 @@
               initrdWpaConfig = pkgs.writeText "initrd-wpa_supplicant.conf" generatedConfig;
             in
             {
-              # Use the main wpa_supplicant service logic in initrd
+              targets.initrd.wants = [ "wpa_supplicant.service" ];
+              # Simple wpa_supplicant service for initrd
               services.wpa_supplicant = {
-                wantedBy = [ "initrd.target" ];
+                unitConfig.DefaultDependencies = false;
                 path = config.systemd.services.wpa_supplicant.path;
                 script = ''
-                  if [ -f /etc/wpa_supplicant.conf ]; then
-                    echo >&2 "<3>/etc/wpa_supplicant.conf present but ignored. Generated ${initrdWpaConfig} is used instead."
-                  fi
-
-                  # ensure wpa_supplicant.conf exists, or the daemon will fail to start
-
-                  iface_args="-s -u -Dnl80211,wext -c ${initrdWpaConfig}"
-
-                  # detect interfaces automatically
-
-                  # check if there are no wireless interfaces
-                  if ! find -H /sys/class/net/* -name wireless | grep -q .; then
-                    # if so, wait until one appears
-                    echo "Waiting for wireless interfaces"
-                    grep -q '^ACTION=add' < <(stdbuf -oL -- udevadm monitor -s net/wlan -pu)
-                    # Note: the above line has been carefully written:
-                    # 1. The process substitution avoids udevadm hanging (after grep has quit)
-                    #    until it tries to write to the pipe again. Not even pipefail works here.
-                    # 2. stdbuf is needed because udevadm output is buffered by default and grep
-                    #    may hang until more udev events enter the pipe.
-                  fi
-
-                  # add any interface found to the daemon arguments
-                  for name in $(find -H /sys/class/net/* -name wireless | cut -d/ -f 5); do
-                    echo "Adding interface $name"
-                    args+="''${args:+ -N} -i$name $iface_args"
+                  # Find wireless interfaces and start wpa_supplicant
+                  for name in $(find -H /sys/class/net/* -name wireless 2>/dev/null | cut -d/ -f 5); do
+                    echo "Starting wpa_supplicant on interface $name"
+                    exec wpa_supplicant -s -u -Dnl80211,wext -i$name -c ${initrdWpaConfig}
                   done
-
-                  # finally start daemon
-                  exec wpa_supplicant $args
+                  echo "No wireless interfaces found"
+                  exit 1
                 '';
               };
-
-              # Ensure wpa_supplicant and dependencies are available in initrd
               packages = [ pkgs.wpa_supplicant ];
               initrdBin = [
                 pkgs.wpa_supplicant
@@ -137,16 +113,7 @@
                 pkgs.systemd
                 pkgs.iproute2
               ];
-
-              # Dependencies aren't tracked properly:
-              # https://github.com/NixOS/nixpkgs/issues/309316
-              storePaths = [
-                pkgs.wpa_supplicant
-                pkgs.coreutils
-                pkgs.findutils
-                pkgs.gnugrep
-                pkgs.gnused
-                pkgs.systemd
+              storePaths = config.boot.initrd.systemd.services.wpa_supplicant.path ++ [
                 initrdWpaConfig
               ];
             }
