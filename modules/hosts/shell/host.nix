@@ -18,7 +18,7 @@
       podman
       performance
     ];
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKm4x6WUgpQHRtnA6yhY/ECpsRG7CwY0aBvi4PFA9q1G";
+    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEzXeBwtKLEBtkCwn9VT8hbEw1Ll8/5YRNONaKYhCAFp";
     facts = ./facter.json;
     nixosConfiguration =
       {
