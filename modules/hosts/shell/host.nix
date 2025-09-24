@@ -10,6 +10,7 @@
     environment = "dev";
     roles = [
       "server"
+      "laptop"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-single
