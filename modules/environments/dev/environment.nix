@@ -2,7 +2,7 @@
   flake.environments.dev = {
     name = "dev";
     domain = "dev.json64.dev";
-    gatewayIp = "10.10.0.1";
+    gatewayIp = "10.9.0.1";
     dnsServers = [
       "1.1.1.1"
       "8.8.8.8"
@@ -10,7 +10,7 @@
 
     networks = {
       management = {
-        cidr = "10.10.10.0/24";
+        cidr = "10.9.0.0/16";
         ipv6_cidr = "fd64:1:1::/64";
         purpose = "management";
         description = "Management network for infrastructure hosts";
@@ -46,7 +46,7 @@
       clusterCidr = "172.16.0.0/16";
       serviceCidr = "172.17.0.0/16";
       tlsSanIps = [
-        "10.10.10.5" # axon-01 external
+        "10.9.1.1" # axon-01 external
       ];
       loadBalancerRange = "10.12.0.0/16";
     };
