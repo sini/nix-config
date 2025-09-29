@@ -99,6 +99,10 @@
         #     };
         #   };
         # };
+        networking.firewall.allowedTCPPorts = [
+          12365
+          53
+        ];
 
         system.stateVersion = "25.05";
       };
