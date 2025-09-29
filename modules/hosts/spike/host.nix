@@ -1,8 +1,8 @@
 { config, ... }:
 {
   flake.hosts.spike = {
-    ipv4 = [ "10.10.10.20" ];
-    ipv6 = [ "2001:5a8:608c:4a00::20/64" ];
+    ipv4 = [ "10.9.3.1" ];
+    ipv6 = [ "2001:5a8:608c:4a00::31/64" ];
     environment = "dev";
     roles = [
       "workstation"
