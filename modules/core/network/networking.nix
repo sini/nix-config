@@ -74,7 +74,13 @@
         networking = {
           useDHCP = false;
           dhcpcd.enable = false;
-          firewall.enable = false; # TODO: enable firewall
+
+          firewall = {
+            enable = true;
+            allowPing = true;
+            logRefusedConnections = false;
+          };
+
           networkmanager = {
             unmanaged = unmanagedInterfaces;
           };
