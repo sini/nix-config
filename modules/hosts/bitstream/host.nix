@@ -12,13 +12,13 @@
     environment = "dev";
     roles = [
       "server"
-      "kubernetes"
-      "kubernetes-master"
-      "workstation"
-      "gaming"
-      "dev"
-      "dev-gui"
-      "media"
+      #      "kubernetes"
+      #      "kubernetes-master"
+      #      "workstation"
+      #      "gaming"
+      #      "dev"
+      #      "dev-gui"
+      #      "media"
       # "vault"
     ];
     extra_modules = with config.flake.modules.nixos; [
