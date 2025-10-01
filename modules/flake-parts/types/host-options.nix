@@ -1,10 +1,12 @@
 {
+  self,
   rootPath,
   lib,
   ...
 }:
 let
   inherit (lib) types mkOption;
+  inherit (self.lib.modules) mkDeferredModuleOpt mkAspectListOpt;
 in
 {
   config.text.readme.parts.host-options =
@@ -53,9 +55,14 @@ in
               readOnly = true;
               description = "Hostname";
             };
+
             system = mkOption {
-              type = types.str;
+              type = types.enum [
+                "aarch64-linux"
+                "x86_64-linux"
+              ];
               default = "x86_64-linux";
+              description = "System string for the host";
             };
 
             unstable = lib.mkOption {
@@ -129,10 +136,40 @@ in
               description = "Environment name that this host belongs to (references flake.environments)";
             };
 
+            baseline = mkOption {
+              type = types.submodule {
+                options = {
+                  home = mkDeferredModuleOpt "Host-specific home-manager configuration, applied to all users for host.";
+                };
+              };
+              description = "Baseline configurations for repeatable configuration types on this host";
+              default = { };
+            };
+
             users = mkOption {
               type = types.listOf types.str;
               default = [ ];
               description = "List of user names to enable for this specific host (merged with environment users)";
+            };
+
+            usersWithAspects = mkOption {
+              type = types.lazyAttrsOf (
+                types.submodule {
+                  options = {
+                    aspects = mkAspectListOpt ''
+                      List of aspects specific to the user and host.
+
+                      While a feature may specify NixOS modules in addition to home
+                      modules, only home modules will affect configuration.  For this
+                      reason, users should be encouraged to avoid pointlessly specifying
+                      their own NixOS modules.
+                    '';
+                    configuration = mkDeferredModuleOpt "User-specific home configuration on this host";
+                  };
+                }
+              );
+              default = { };
+              description = "Users on this host";
             };
 
             exporters = mkOption {

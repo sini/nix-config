@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.user.will = {
+  flake.users.will = {
     userConfig =
       { config, ... }:
       {
