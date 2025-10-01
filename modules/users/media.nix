@@ -1,5 +1,5 @@
 {
-  flake.user.media = {
+  flake.users.media = {
     userConfig =
       { config, lib, ... }:
       {

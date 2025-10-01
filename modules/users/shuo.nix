@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.user.shuo = {
+  flake.users.shuo = {
     userConfig =
       { config, ... }:
       {

@@ -33,7 +33,8 @@ let
       flakeSpecialArgs // { inherit perSystem; }
     );
 
-  collectTypedModules = type: lib.foldr (v: acc: acc ++ (v.${type}.imports or [ ])) [ ];
+  collectTypedModules =
+    type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
   collectNixosModules = collectTypedModules "nixos";
   collectHomeModules = collectTypedModules "home";
   collectNameMatches =

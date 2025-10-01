@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.user.sini = {
+  flake.users.sini = {
     userConfig =
       { config, ... }:
       {
