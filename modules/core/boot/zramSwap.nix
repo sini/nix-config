@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.systemd-boot = {
+  flake.aspects.systemd-boot.nixos = {
     zramSwap.enable = true;
   };
 }

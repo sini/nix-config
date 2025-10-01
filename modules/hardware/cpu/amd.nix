@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.modules.nixos.cpu-amd =
+  flake.aspects.cpu-amd.nixos =
     { config, pkgs, ... }:
     {
       imports = [ inputs.ucodenix.nixosModules.default ];

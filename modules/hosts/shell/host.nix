@@ -12,11 +12,11 @@
       "server"
       "laptop"
     ];
-    extra_modules = with config.flake.modules.nixos; [
-      disk-single
-      cpu-intel
-      gpu-intel
-      podman
+    extra_modules = with config.flake.aspects; [
+      disk-single.nixos
+      cpu-intel.nixos
+      gpu-intel.nixos
+      podman.nixos
     ];
     facts = ./facter.json;
     nixosConfiguration =

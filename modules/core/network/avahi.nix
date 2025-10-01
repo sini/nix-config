@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.avahi =
+  flake.aspects.avahi.nixos =
     { config, ... }:
     let
       cfg = config.hardware.networking;

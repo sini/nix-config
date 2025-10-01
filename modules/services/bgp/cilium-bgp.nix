@@ -20,7 +20,7 @@ let
     if bgpHubHosts != [ ] then lib.head bgpHubHosts else null;
 in
 {
-  flake.modules.nixos.cilium-bgp =
+  flake.aspects.cilium-bgp.nixos =
     {
       lib,
       environment,

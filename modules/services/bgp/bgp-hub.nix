@@ -21,7 +21,7 @@ let
     ) config.flake.hosts;
 in
 {
-  flake.modules.nixos.bgp-hub =
+  flake.aspects.bgp-hub.nixos =
     {
       config,
       lib,

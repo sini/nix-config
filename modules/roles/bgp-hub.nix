@@ -1,6 +1,6 @@
 {
   flake.role.bgp-hub = {
-    nixosModules = [
+    aspects = [
       "bgp-hub"
     ];
   };

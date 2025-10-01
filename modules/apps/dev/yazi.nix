@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.modules.homeManager.yazi =
+  flake.aspects.yazi.home =
     { config, pkgs, ... }:
     {
       programs = {

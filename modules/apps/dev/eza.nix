@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.eza = {
+  flake.aspects.eza.home = {
     programs.eza = {
       enable = true;
       enableBashIntegration = true;

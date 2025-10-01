@@ -1,20 +1,15 @@
 {
   flake.role.dev = {
-    nixosModules = [
+    aspects = [
       "adb"
       "direnv"
       #"gpg"
-    ];
-
-    homeManagerModules = [
       "bat"
       "claude"
-      "direnv"
       "eza"
       "misc-tools"
       "nvf"
       "git"
-      #"gpg"
       "ssh"
       "yazi"
       #"zellij"

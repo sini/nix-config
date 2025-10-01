@@ -1,6 +1,6 @@
 {
-  flake.modules = {
-    nixos.direnv = {
+  flake.aspects.direnv = {
+    nixos = {
       # Prevent garbage collection from altering nix-shells managed by nix-direnv
       # https://github.com/nix-community/nix-direnv#installation
       nix.settings = {
@@ -9,7 +9,7 @@
       };
     };
 
-    homeManager.direnv =
+    home =
       { config, ... }:
       {
         programs = {

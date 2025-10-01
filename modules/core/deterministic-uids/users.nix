@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.deterministic-uids = {
+  flake.aspects.deterministic-uids.nixos = {
     users.deterministicIds =
       let
         uidGid = id: {
@@ -39,6 +39,7 @@
         loki = uidGid 971;
         promtail = uidGid 970;
         vault = uidGid 969;
+        wireshark = uidGid 968;
       };
   };
 }

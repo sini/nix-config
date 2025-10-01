@@ -1,6 +1,6 @@
 {
   flake.role.metrics-ingester = {
-    nixosModules = [
+    aspects = [
       "loki"
       "prometheus"
     ];

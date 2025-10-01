@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.modules.homeManager.bat =
+  flake.aspects.bat.home =
     { pkgs, ... }:
     {
       programs.bat = {

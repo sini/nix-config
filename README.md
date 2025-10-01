@@ -60,7 +60,8 @@ every host and include:
 
 - `system`: The system architecture of the host (e.g., `x86_64-linux`).
 - `unstable`: Whether to use unstable packages for the host.
-- `ipv4`: The static IP address of this host in it's home vlan.
+- `ipv4`: The static IP addresses of this host in it's home vlan.
+- `ipv6`: The static IPv6 addresses of this host.
 - `roles`: A list of roles for the host, which can also be used to target deployment.
 - `public_key`: The path or value of the public SSH key for the host used for encryption.
 - `facts`: The path to the Facter JSON file for the host, which is used to provide
@@ -71,6 +72,11 @@ every host and include:
   Special tags:
   - `kubernetes-cluster`: Groups hosts into Kubernetes clusters
   - `kubernetes-internal-ip`: Override IP for Kubernetes internal communication (defaults to host ipv4)
+  - `bgp-asn`: BGP AS number for this host (used by bgp-hub and thunderbolt-mesh modules)
+  - `thunderbolt-loopback-ipv4`: Loopback IPv4 address for thunderbolt mesh BGP peering (e.g., "172.16.255.1/32")
+  - `thunderbolt-loopback-ipv6`: Loopback IPv6 address for thunderbolt mesh BGP peering (e.g., "fdb4:5edb:1b00::1/128")
+  - `thunderbolt-interface-1`: IPv4 address for first thunderbolt interface (e.g., "169.254.12.0/31")
+  - `thunderbolt-interface-2`: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
 - `exporters`: An attribute set defining Prometheus exporters exposed by this host.
   For example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
 

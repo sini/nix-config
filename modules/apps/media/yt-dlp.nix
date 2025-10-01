@@ -1,6 +1,6 @@
 {
 
-  flake.modules.homeManager.yt-dlp =
+  flake.aspects.yt-dlp.home =
     { inputs, pkgs, ... }:
     {
       home.packages = with pkgs; [ media-downloader ];

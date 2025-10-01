@@ -21,12 +21,12 @@
       #      "media"
       # "vault"
     ];
-    extra_modules = with config.flake.modules.nixos; [
-      disk-single
-      cpu-amd
-      gpu-amd
-      podman
-      performance
+    extra_modules = with config.flake.aspects; [
+      disk-single.nixos
+      cpu-amd.nixos
+      gpu-amd.nixos
+      podman.nixos
+      performance.nixos
     ];
     facts = ./facter.json;
     nixosConfiguration =

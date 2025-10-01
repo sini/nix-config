@@ -11,12 +11,12 @@
       "dev-gui"
       "media"
     ];
-    extra_modules = with config.flake.modules.nixos; [
-      cpu-amd
-      gpu-amd
-      gpu-nvidia
-      disk-single
-      performance
+    extra_modules = with config.flake.aspects; [
+      cpu-amd.nixos
+      gpu-amd.nixos
+      gpu-nvidia.nixos
+      disk-single.nixos
+      performance.nixos
     ];
     facts = ./facter.json;
     nixosConfiguration =

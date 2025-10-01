@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.modules.nixos.gpu-nvidia =
+  flake.aspects.gpu-nvidia.nixos =
     {
       pkgs,
       ...

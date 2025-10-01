@@ -3,7 +3,7 @@ let
   user = config.flake.meta.user.username;
 in
 {
-  flake.modules.nixos.sudo = {
+  flake.aspects.sudo.nixos = {
 
     # Enable sudo-rs instead of c-based sudo.
     security.sudo.enable = false;

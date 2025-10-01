@@ -1,6 +1,6 @@
 {
-  flake.modules = {
-    nixos.fonts =
+  flake.aspects.fonts = {
+    nixos =
       { pkgs, ... }:
       {
         fonts = {
@@ -58,7 +58,7 @@
         };
       };
 
-    homeManager.fonts = {
+    home = {
       fonts.fontconfig.enable = true;
     };
   };

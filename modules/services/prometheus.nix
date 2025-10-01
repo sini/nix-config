@@ -64,7 +64,7 @@ let
     ) grouped;
 in
 {
-  flake.modules.nixos.prometheus =
+  flake.aspects.prometheus.nixos =
     {
       config,
       hostOptions,

@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.modules.nixos.wireless =
+  flake.aspects.wireless.nixos =
     {
       config,
       ...

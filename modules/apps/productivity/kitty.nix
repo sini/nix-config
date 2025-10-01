@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.kitty =
+  flake.aspects.kitty.home =
     { config, ... }:
     {
       programs.kitty = {

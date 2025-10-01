@@ -16,13 +16,13 @@
       "media"
     ];
     extra_modules =
-      with config.flake.modules.nixos;
+      with config.flake.aspects;
       [
-        disk-single
-        cpu-intel
-        gpu-intel
-        podman
-        wireless
+        disk-single.nixos
+        cpu-intel.nixos
+        gpu-intel.nixos
+        podman.nixos
+        wireless.nixos
       ]
       ++ [
         inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel

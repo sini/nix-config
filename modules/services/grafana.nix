@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.modules.nixos.grafana =
+  flake.aspects.grafana.nixos =
     { config, pkgs, ... }:
     {
       age.secrets.grafana-oidc-secret-grafana = {

@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.mangohud =
+  flake.aspects.mangohud.home =
     { pkgs, ... }:
 
     {

@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.bluetooth =
+  flake.aspects.bluetooth.nixos =
     { pkgs, ... }:
     {
       # environment.persistence."/persist/system" = lib.mkIf isImpermanent {

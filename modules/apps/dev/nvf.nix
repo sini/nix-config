@@ -3,7 +3,7 @@
   ...
 }:
 {
-  flake.modules.homeManager.nvf =
+  flake.aspects.nvf.home =
     { pkgs, ... }:
     {
       imports = [ inputs.nvf.homeManagerModules.default ];
