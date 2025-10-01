@@ -18,7 +18,6 @@
       disk-single
       performance
     ];
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDFFLWZzC91VBRxi3KwvRm7pI2vaAItIf9Nnd3Eifkmc";
     facts = ./facter.json;
     nixosConfiguration =
       {

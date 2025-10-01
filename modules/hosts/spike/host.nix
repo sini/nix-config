@@ -20,7 +20,6 @@
       gpu-nvidia-prime
       razer
     ];
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIO0xBpnsFa3YGevrl2vrSVL31nFtlgYb/7b+hmST3Vsz";
     facts = ./facter.json;
     nixosConfiguration = {
       # Enable NetworkManager for managing network interfaces

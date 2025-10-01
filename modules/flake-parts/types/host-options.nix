@@ -1,4 +1,5 @@
 {
+  rootPath,
   lib,
   ...
 }:
@@ -43,119 +44,127 @@ in
 
   options.flake.hosts =
     let
-      hostType = types.submodule {
-        options = {
-          system = mkOption {
-            type = types.str;
-            default = "x86_64-linux";
-          };
+      hostType = types.submodule (
+        { name, ... }:
+        {
+          options = {
+            hostname = mkOption {
+              default = name;
+              readOnly = true;
+              description = "Hostname";
+            };
+            system = mkOption {
+              type = types.str;
+              default = "x86_64-linux";
+            };
 
-          unstable = lib.mkOption {
-            type = types.bool;
-            default = true;
-          };
+            unstable = lib.mkOption {
+              type = types.bool;
+              default = true;
+            };
 
-          ipv4 = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "The static IP addresses of this host in it's home vlan.";
-          };
+            ipv4 = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "The static IP addresses of this host in it's home vlan.";
+            };
 
-          ipv6 = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "The static IPv6 addresses of this host.";
-          };
+            ipv6 = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "The static IPv6 addresses of this host.";
+            };
 
-          roles = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "List of roles for the host.";
-          };
+            roles = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "List of roles for the host.";
+            };
 
-          public_key = mkOption {
-            type = types.nullOr (types.either types.path types.str);
-            default = null;
-            description = "Path to or string value of the public SSH key for the host.";
-          };
+            public_key = mkOption {
+              type = types.nullOr (types.either types.path types.str);
+              default = rootPath + "/.secrets/host-keys/${name}/ssh_host_ed25519_key.pub";
+              description = "Path to or string value of the public SSH key for the host.";
+            };
 
-          facts = mkOption {
-            type = types.nullOr types.path;
-            default = null;
-            description = "Path to the Facter JSON file for the host.";
-          };
+            facts = mkOption {
+              type = types.nullOr types.path;
+              default = null;
+              description = "Path to the Facter JSON file for the host.";
+            };
 
-          nixosConfiguration = mkOption {
-            type = types.deferredModule;
-            default = { };
-            description = "Host-specific NixOS module configuration.";
-          };
+            nixosConfiguration = mkOption {
+              type = types.deferredModule;
+              default = { };
+              description = "Host-specific NixOS module configuration.";
+            };
 
-          extra_modules = mkOption {
-            type = types.listOf types.deferredModule;
-            default = [ ];
-            description = "List of additional modules to include for the host.";
-          };
+            extra_modules = mkOption {
+              type = types.listOf types.deferredModule;
+              default = [ ];
+              description = "List of additional modules to include for the host.";
+            };
 
-          tags = mkOption {
-            type = types.attrsOf types.str;
-            default = { };
-            description = ''
-              An attribute set of string key-value pairs to tag the host with metadata.
-              Example: `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
+            tags = mkOption {
+              type = types.attrsOf types.str;
+              default = { };
+              description = ''
+                An attribute set of string key-value pairs to tag the host with metadata.
+                Example: `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
 
-              Special tags:
-              - kubernetes-cluster: Groups hosts into Kubernetes clusters
-              - kubernetes-internal-ip: Override IP for Kubernetes internal communication (defaults to host ipv4)
-              - bgp-asn: BGP AS number for this host (used by bgp-hub and thunderbolt-mesh modules)
-              - thunderbolt-loopback-ipv4: Loopback IPv4 address for thunderbolt mesh BGP peering (e.g., "172.16.255.1/32")
-              - thunderbolt-loopback-ipv6: Loopback IPv6 address for thunderbolt mesh BGP peering (e.g., "fdb4:5edb:1b00::1/128")
-              - thunderbolt-interface-1: IPv4 address for first thunderbolt interface (e.g., "169.254.12.0/31")
-              - thunderbolt-interface-2: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
-            '';
-          };
+                Special tags:
+                - kubernetes-cluster: Groups hosts into Kubernetes clusters
+                - kubernetes-internal-ip: Override IP for Kubernetes internal communication (defaults to host ipv4)
+                - bgp-asn: BGP AS number for this host (used by bgp-hub and thunderbolt-mesh modules)
+                - thunderbolt-loopback-ipv4: Loopback IPv4 address for thunderbolt mesh BGP peering (e.g., "172.16.255.1/32")
+                - thunderbolt-loopback-ipv6: Loopback IPv6 address for thunderbolt mesh BGP peering (e.g., "fdb4:5edb:1b00::1/128")
+                - thunderbolt-interface-1: IPv4 address for first thunderbolt interface (e.g., "169.254.12.0/31")
+                - thunderbolt-interface-2: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
+              '';
+            };
 
-          environment = mkOption {
-            type = types.str;
-            default = "prod";
-            description = "Environment name that this host belongs to (references flake.environments)";
-          };
+            environment = mkOption {
+              type = types.str;
+              default = "prod";
+              description = "Environment name that this host belongs to (references flake.environments)";
+            };
 
-          users = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "List of user names to enable for this specific host (merged with environment users)";
-          };
+            users = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "List of user names to enable for this specific host (merged with environment users)";
+            };
 
-          exporters = mkOption {
-            type = types.attrsOf (
-              types.submodule {
-                options = {
-                  port = mkOption {
-                    type = types.int;
-                    description = "Port number for the exporter";
+            exporters = mkOption {
+              type = types.attrsOf (
+                types.submodule {
+                  options = {
+                    port = mkOption {
+                      type = types.int;
+                      description = "Port number for the exporter";
+                    };
+                    path = mkOption {
+                      type = types.str;
+                      default = "/metrics";
+                      description = "HTTP path for metrics endpoint";
+                    };
+                    interval = mkOption {
+                      type = types.str;
+                      default = "30s";
+                      description = "Scrape interval";
+                    };
                   };
-                  path = mkOption {
-                    type = types.str;
-                    default = "/metrics";
-                    description = "HTTP path for metrics endpoint";
-                  };
-                  interval = mkOption {
-                    type = types.str;
-                    default = "30s";
-                    description = "Scrape interval";
-                  };
-                };
-              }
-            );
-            default = { };
-            description = ''
-              Prometheus exporters exposed by this host.
-              Example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
-            '';
+                }
+              );
+              default = { };
+              description = ''
+                Prometheus exporters exposed by this host.
+                Example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
+              '';
+            };
           };
-        };
-      };
+        }
+      );
     in
     mkOption {
       type = types.attrsOf hostType;
