@@ -30,7 +30,6 @@
         packages = [
           pkgs.age
           pkgs.age-plugin-yubikey
-          # inputs'.agenix-rekey.packages.default
         ];
         commands = [
           {
