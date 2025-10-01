@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.regreet = {
+  flake.aspects.regreet.nixos = {
     services.greetd.enable = true;
 
     users.extraUsers.greeter = {

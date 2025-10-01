@@ -1,6 +1,6 @@
 {
   flake.role.server = {
-    nixosModules = [
+    aspects = [
       "acme"
       "media-data-share"
       "network-boot"

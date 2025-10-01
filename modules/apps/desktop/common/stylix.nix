@@ -43,8 +43,8 @@ let
   };
 in
 {
-  flake.modules = {
-    nixos.stylix =
+  flake.aspects.stylix = {
+    nixos =
       { pkgs, ... }:
       {
         imports = [
@@ -109,7 +109,7 @@ in
         };
       };
 
-    homeManager.stylix =
+    home =
       { pkgs, ... }:
       {
         gtk = {

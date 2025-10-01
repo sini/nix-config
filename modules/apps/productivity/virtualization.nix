@@ -3,7 +3,7 @@ let
   username = config.flake.meta.user.username;
 in
 {
-  flake.modules.nixos.virtualization =
+  flake.aspects.virtualization.nixos =
     { pkgs, ... }:
     {
       # Add user to libvirtd group

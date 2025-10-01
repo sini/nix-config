@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.hyprland =
+  flake.aspects.hyprland.home =
     {
       inputs,
       config,

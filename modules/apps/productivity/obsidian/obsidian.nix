@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.obsidian =
+  flake.aspects.obsidian.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [ obsidian ];

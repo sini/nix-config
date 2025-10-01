@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.hyprland = {
+  flake.aspects.hyprland.home = {
     wayland.windowManager.hyprland.settings = {
       input = {
         follow_mouse = 1;

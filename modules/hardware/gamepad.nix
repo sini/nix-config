@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.gamepad =
+  flake.aspects.gamepad.nixos =
     {
       config,
       pkgs,

@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.nginx =
+  flake.aspects.nginx.nixos =
     { config, ... }:
     {
       security.acme.certs.${config.networking.domain} = {

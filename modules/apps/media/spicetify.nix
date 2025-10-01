@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.spicetify =
+  flake.aspects.spicetify.home =
     { pkgs, inputs, ... }:
     let
       spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.system};

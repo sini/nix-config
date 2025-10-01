@@ -1,6 +1,6 @@
 {
   flake.role.core = {
-    nixosModules = [
+    aspects = [
       "agenix"
       "avahi"
       "deterministic-uids"
@@ -23,11 +23,7 @@
       "users"
       "utils"
       "zsh"
-    ];
-
-    homeManagerModules = [
       "starship"
-      "zsh"
     ];
   };
 }

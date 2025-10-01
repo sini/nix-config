@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.modules.nixos.kanidm =
+  flake.aspects.kanidm.nixos =
     {
       config,
       pkgs,

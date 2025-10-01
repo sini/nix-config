@@ -1,6 +1,6 @@
 {
   flake.role.laptop = {
-    nixosModules = [
+    aspects = [
       "laptop"
       "wireless"
     ];

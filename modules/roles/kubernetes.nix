@@ -1,6 +1,6 @@
 {
   flake.role.kubernetes = {
-    nixosModules = [
+    aspects = [
       "kubernetes"
       "cilium-bgp"
     ];

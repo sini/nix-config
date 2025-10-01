@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.mpv =
+  flake.aspects.mpv.home =
     { pkgs, ... }:
     {
       programs.mpv = {

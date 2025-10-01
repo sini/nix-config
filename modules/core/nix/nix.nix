@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.nix = {
+  flake.aspects.nix.nixos = {
     nix =
       let
         users = [

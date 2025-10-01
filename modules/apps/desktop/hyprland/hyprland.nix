@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.hyprland =
+  flake.aspects.hyprland.nixos =
     {
       inputs,
       pkgs,

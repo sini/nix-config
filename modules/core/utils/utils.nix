@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.utils =
+  flake.aspects.utils.nixos =
     { config, pkgs, ... }:
     {
       environment.systemPackages =

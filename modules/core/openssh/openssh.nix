@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.openssh =
+  flake.aspects.openssh.nixos =
     {
       lib,
       config,

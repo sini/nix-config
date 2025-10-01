@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.discord =
+  flake.aspects.discord.home =
     { inputs, pkgs, ... }:
     {
       imports = [ inputs.nixcord.homeModules.nixcord ];

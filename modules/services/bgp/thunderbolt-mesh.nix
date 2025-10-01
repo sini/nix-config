@@ -118,7 +118,7 @@ let
     ) config.flake.hosts;
 in
 {
-  flake.modules.nixos.thunderbolt-mesh =
+  flake.aspects.thunderbolt-mesh.nixos =
     {
       lib,
       config,

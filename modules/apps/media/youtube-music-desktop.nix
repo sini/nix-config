@@ -1,6 +1,6 @@
 {
 
-  flake.modules.homeManager.youtube-music-desktop =
+  flake.aspects.youtube-music-desktop.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

@@ -1,10 +1,6 @@
 {
   flake.role.media = {
-    nixosModules = [
-      "spotify-player"
-    ];
-
-    homeManagerModules = [
+    aspects = [
       "spotify-player"
       "spicetify"
       "mpv"

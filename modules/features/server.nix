@@ -1,6 +1,6 @@
 #
 {
-  flake.modules.nixos.server = {
+  flake.aspects.server.nixos = {
     # Enable Prometheus node exporter for monitoring
     services.prometheus.exporters.node = {
       enable = true;

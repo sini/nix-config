@@ -1,15 +1,11 @@
 {
   flake.role.gaming = {
-    nixosModules = [
+    aspects = [
       "gamepad"
       "nix-ld"
       "steam"
       "sunshine"
-    ];
-
-    homeManagerModules = [
       "mangohud"
-      "sunshine"
     ];
   };
 }

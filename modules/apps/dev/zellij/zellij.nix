@@ -1,5 +1,5 @@
 {
-  flake.modules.homeManager.zellij =
+  flake.aspects.zellij.home =
     { config, pkgs, ... }:
     let
       inherit (config.lib.stylix) colors;

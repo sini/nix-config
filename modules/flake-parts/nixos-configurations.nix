@@ -10,35 +10,34 @@
     let
       lib = inputs.nixpkgs.lib;
 
-      # Helper function to gather and deduplicate modules from core and host-specific roles.
-      # This avoids repeating the same logic for both nixos and home-manager modules.
-      getModulesForRoles =
-        { roleType, hostRoles }:
+      inherit (self.lib.modules)
+        collectNixosModules
+        collectHomeModules
+        collectRequires
+        ;
+
+      # Helper function to gather aspects from core and host-specific roles
+      getAspectsForRoles =
+        hostRoles:
         let
-          # e.g., "nixosModules" or "homeManagerModules"
-          moduleAttrName = "${roleType}Modules";
-          # e.g., config.modules.nixos or config.modules.homeManager
-          modulePath = config.modules.${roleType};
+          # 1. Start with the core aspects required for all systems.
+          coreAspects = config.role.core.aspects;
 
-          # 1. Start with the core modules required for all systems.
-          coreModules = config.role.core.${moduleAttrName};
-
-          # 2. Get modules from additional roles defined on the host.
-          additionalModules = lib.optionals (hostRoles != null) (
+          # 2. Get aspects from additional roles defined on the host.
+          additionalAspects = lib.optionals (hostRoles != null) (
             lib.flatten (
-              builtins.map (roleName: config.role.${roleName}.${moduleAttrName}) (
+              builtins.map (roleName: config.role.${roleName}.aspects) (
                 # Ensure the role actually exists before trying to access it.
                 lib.filter (roleName: lib.hasAttr roleName config.role) hostRoles
               )
             )
           );
 
-          # 3. Combine core and additional module names.
-          allModuleNames = coreModules ++ additionalModules;
+          # 3. Combine core and additional aspect names and deduplicate.
+          allAspectNames = lib.unique (coreAspects ++ additionalAspects);
 
         in
-        # 4. Remove duplicate names and map them to their actual module files.
-        builtins.map (moduleName: modulePath.${moduleName}) (lib.unique allModuleNames);
+        allAspectNames;
 
       # A dedicated function to build a single NixOS host configuration.
       # This encapsulates all the logic for one machine.
@@ -56,6 +55,15 @@
             # Select the correct environment configuration (e.g., prod, dev).
             environment = config.environments.${hostOptions.environment};
 
+            # Get aspects from roles and resolve dependencies
+            hostAspectNames = getAspectsForRoles hostOptions.roles;
+            hostAspects = builtins.map (name: config.aspects.${name}) hostAspectNames;
+            hostAspectDeps = collectRequires config.aspects hostAspects;
+            allHostAspects = hostAspects ++ hostAspectDeps;
+
+            # Collect NixOS modules from aspects
+            nixosModules = (collectNixosModules allHostAspects);
+
             # Select the correct chaotic-nyx modules based on channel.
             chaoticImports =
               if useUnstable then
@@ -66,6 +74,22 @@
                   inputs.chaotic.nixosModules.nyx-overlay
                   inputs.chaotic.nixosModules.nyx-registry
                 ];
+
+            # Home Manager configuration for users
+            makeHome =
+              username: userSpec:
+              let
+                # Collect home modules from host aspects
+                homeModules = collectHomeModules allHostAspects;
+
+                # Map user's homeModules to actual modules
+                userHomeModules = builtins.map (
+                  moduleName: config.modules.homeManager.${moduleName}
+                ) userSpec.homeModules;
+              in
+              {
+                imports = homeModules ++ userHomeModules;
+              };
 
           in
           lib'.nixosSystem {
@@ -83,19 +107,16 @@
                   # Merge and deduplicate user lists
                   enabledUserNames = lib'.unique (environmentUsers ++ hostUsers);
 
-                  # Filter config.user to only include enabled users
-                  enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.user;
+                  # Filter config.users to only include enabled users
+                  enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
                 in
                 enabledUsers;
               lib = lib'; # Pass the correct lib (stable or unstable) to modules.
             };
 
             modules =
-              # Import modules defined by the host's roles.
-              (getModulesForRoles {
-                roleType = "nixos";
-                hostRoles = hostOptions.roles;
-              })
+              # Import modules from aspects
+              nixosModules
               # Add modules from external flakes and sources.
               ++ chaoticImports
               ++ [
@@ -115,6 +136,18 @@
                   networking.domain = environment.domain;
                   facter.reportPath = hostOptions.facts;
                   age.rekey.hostPubkey = hostOptions.public_key;
+
+                  # Configure Home Manager with aspect-based modules
+                  home-manager.users = lib'.mapAttrs makeHome (
+                    let
+                      # Get users from environment and host configuration
+                      environmentUsers = environment.users or [ ];
+                      hostUsers = hostOptions.users or [ ];
+                      enabledUserNames = lib'.unique (environmentUsers ++ hostUsers);
+                      enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
+                    in
+                    enabledUsers
+                  );
                 }
               ];
           }

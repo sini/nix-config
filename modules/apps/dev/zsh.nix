@@ -1,6 +1,6 @@
 {
-  flake.modules = {
-    nixos.zsh =
+  flake.aspects.zsh = {
+    nixos =
       { pkgs, ... }:
       {
         programs.zsh = {
@@ -11,7 +11,7 @@
         users.defaultUserShell = pkgs.zsh;
       };
 
-    homeManager.zsh =
+    home =
       {
         config,
         pkgs,

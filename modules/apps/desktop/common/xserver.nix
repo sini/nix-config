@@ -1,5 +1,5 @@
 {
-  flake.modules.nixos.xserver = {
+  flake.aspects.xserver.nixos = {
     services = {
       libinput.enable = true;
       xserver = {
