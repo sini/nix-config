@@ -12,8 +12,8 @@
     environment = "dev";
     roles = [
       "server"
-      #      "kubernetes"
-      #      "kubernetes-master"
+      "kubernetes"
+      "kubernetes-master"
       #      "workstation"
       #      "gaming"
       #      "dev"
