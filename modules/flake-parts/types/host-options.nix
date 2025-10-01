@@ -82,7 +82,7 @@ in
             };
 
             public_key = mkOption {
-              type = types.nullOr (types.either types.path types.str);
+              type = types.path;
               default = rootPath + "/.secrets/host-keys/${name}/ssh_host_ed25519_key.pub";
               description = "Path to or string value of the public SSH key for the host.";
             };
