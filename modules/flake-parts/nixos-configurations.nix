@@ -43,7 +43,7 @@
       # A dedicated function to build a single NixOS host configuration.
       # This encapsulates all the logic for one machine.
       mkHost =
-        hostname: hostOptions:
+        _: hostOptions:
         withSystem hostOptions.system (
           { system, ... }:
           let
@@ -111,11 +111,10 @@
               # Finally, apply machine-specific settings and configure Home Manager.
               ++ [
                 {
-                  networking.hostName = hostname;
+                  networking.hostName = hostOptions.hostname;
                   networking.domain = environment.domain;
                   facter.reportPath = hostOptions.facts;
                   age.rekey.hostPubkey = hostOptions.public_key;
-
                 }
               ];
           }

@@ -25,7 +25,6 @@
       "thunderbolt-interface-1" = "169.254.12.0/31";
       "thunderbolt-interface-2" = "169.254.31.1/31";
     };
-    public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAINE2Tsb0nKZ1oFYaCENTO58S3/rz3PMISS6llUVkQi7+";
     facts = ./facter.json;
     nixosConfiguration =
       {
