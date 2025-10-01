@@ -11,6 +11,10 @@
     roles = [
       "server"
       "laptop"
+      "workstation"
+      "dev"
+      "dev-gui"
+      "media"
     ];
     extra_modules = with config.flake.modules.nixos; [
       disk-single
