@@ -56,7 +56,7 @@
           "8250_dw"
         ];
 
-        # hardware.microsoft-surface.kernelVersion = "stable";
+        hardware.microsoft-surface.kernelVersion = "stable";
 
         environment.systemPackages = with pkgs; [
           #for camera
