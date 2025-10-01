@@ -19,14 +19,6 @@
             propertiesInDocument = "hidden";
           };
 
-          appearance = {
-            cssTheme = "Catppuccin";
-            theme = "obsidian";
-            showRibbon = false;
-            nativeMenus = false;
-            showInlineTitle = false;
-          };
-
           corePlugins = [
             "audio-recorder"
             "backlink"
@@ -64,13 +56,6 @@
           hotkeys = {
             "editor:delete-paragraph" = [ ];
           };
-
-          cssSnippets = [
-            {
-              name = "stop-blinking-cursor";
-              source = ./_snippets/stop-blinking-cursor.css;
-            }
-          ];
         };
       };
     };
