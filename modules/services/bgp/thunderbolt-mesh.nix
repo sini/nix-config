@@ -118,242 +118,243 @@ let
     ) config.flake.hosts;
 in
 {
-  flake.aspects.thunderbolt-mesh.nixos =
-    {
-      lib,
-      config,
-      hostOptions,
-      ...
-    }:
-    let
-      interfaces = [
-        "enp199s0f5"
-        "enp199s0f6"
-      ];
+  flake.aspects.thunderbolt-mesh = {
+    requires = [ "bgp-core" ];
+    nixos =
+      {
+        lib,
+        config,
+        hostOptions,
+        ...
+      }:
+      let
+        interfaces = [
+          "enp199s0f5"
+          "enp199s0f6"
+        ];
 
-      # Auto-discover peer configuration from host settings
-      thunderboltPeers = getThunderboltPeers hostOptions.environment config.networking.hostName;
+        # Auto-discover peer configuration from host settings
+        thunderboltPeers = getThunderboltPeers hostOptions.environment config.networking.hostName;
 
-      # Derive gateway IPs from peer interface assignments
-      # This logic determines which interface connects to which peer by checking /31 network pairs
-      getGatewayForPeer =
-        peerHostname: peerLoopbackIp:
-        let
-          peerHost = thunderboltPeers.${peerHostname};
-
-          # Get our own interface IPs
-          ourInterface1 = hostOptions.tags."thunderbolt-interface-1";
-          ourInterface2 = hostOptions.tags."thunderbolt-interface-2";
-
-          # Get peer's interface IPs
-          peerInterface1 = peerHost.tags."thunderbolt-interface-1";
-          peerInterface2 = peerHost.tags."thunderbolt-interface-2";
-
-          # Check if two IPs are in the same /31 network
-          sameNetwork =
-            ip1: ip2:
-            let
-              parts1 = lib.splitString "/" ip1;
-              parts2 = lib.splitString "/" ip2;
-              baseIp1 = lib.head parts1;
-              baseIp2 = lib.head parts2;
-              # For /31 networks, the base addresses should differ by exactly 1 in the last octet
-              ipParts1 = lib.splitString "." baseIp1;
-              ipParts2 = lib.splitString "." baseIp2;
-              prefix1 = lib.concatStringsSep "." (lib.init ipParts1);
-              prefix2 = lib.concatStringsSep "." (lib.init ipParts2);
-              lastOctet1 = lib.toInt (lib.last ipParts1);
-              lastOctet2 = lib.toInt (lib.last ipParts2);
-            in
-            prefix1 == prefix2
-            &&
-              (
-                let
-                  diff = lastOctet1 - lastOctet2;
-                in
-                if diff < 0 then -diff else diff
-              ) == 1;
-
-          # Extract the gateway IP from peer's interface that connects to us
-          extractGateway =
-            interfaceIp:
-            let
-              parts = lib.splitString "/" interfaceIp;
-              baseIp = lib.head parts;
-            in
-            baseIp;
-        in
-        # Find which peer interface is in the same /31 network as one of our interfaces
-        # Return null if no direct connection exists
-        if sameNetwork ourInterface1 peerInterface1 then
-          extractGateway peerInterface1
-        else if sameNetwork ourInterface1 peerInterface2 then
-          extractGateway peerInterface2
-        else if sameNetwork ourInterface2 peerInterface1 then
-          extractGateway peerInterface1
-        else if sameNetwork ourInterface2 peerInterface2 then
-          extractGateway peerInterface2
-        else
-          null; # No direct connection to this peer
-
-      # Generate peer configurations from discovered hosts, only for directly connected peers
-      peerConfigs = lib.filter (peer: peer.gateway != null) (
-        map (
-          peerHostname:
+        # Derive gateway IPs from peer interface assignments
+        # This logic determines which interface connects to which peer by checking /31 network pairs
+        getGatewayForPeer =
+          peerHostname: peerLoopbackIp:
           let
             peerHost = thunderboltPeers.${peerHostname};
-            peerLoopbackIp = lib.removeSuffix "/32" (peerHost.tags."thunderbolt-loopback-ipv4");
-            gateway = getGatewayForPeer peerHostname peerLoopbackIp;
+
+            # Get our own interface IPs
+            ourInterface1 = hostOptions.tags."thunderbolt-interface-1";
+            ourInterface2 = hostOptions.tags."thunderbolt-interface-2";
+
+            # Get peer's interface IPs
+            peerInterface1 = peerHost.tags."thunderbolt-interface-1";
+            peerInterface2 = peerHost.tags."thunderbolt-interface-2";
+
+            # Check if two IPs are in the same /31 network
+            sameNetwork =
+              ip1: ip2:
+              let
+                parts1 = lib.splitString "/" ip1;
+                parts2 = lib.splitString "/" ip2;
+                baseIp1 = lib.head parts1;
+                baseIp2 = lib.head parts2;
+                # For /31 networks, the base addresses should differ by exactly 1 in the last octet
+                ipParts1 = lib.splitString "." baseIp1;
+                ipParts2 = lib.splitString "." baseIp2;
+                prefix1 = lib.concatStringsSep "." (lib.init ipParts1);
+                prefix2 = lib.concatStringsSep "." (lib.init ipParts2);
+                lastOctet1 = lib.toInt (lib.last ipParts1);
+                lastOctet2 = lib.toInt (lib.last ipParts2);
+              in
+              prefix1 == prefix2
+              &&
+                (
+                  let
+                    diff = lastOctet1 - lastOctet2;
+                  in
+                  if diff < 0 then -diff else diff
+                ) == 1;
+
+            # Extract the gateway IP from peer's interface that connects to us
+            extractGateway =
+              interfaceIp:
+              let
+                parts = lib.splitString "/" interfaceIp;
+                baseIp = lib.head parts;
+              in
+              baseIp;
           in
-          {
-            asn = lib.toInt (peerHost.tags."bgp-asn");
-            lanip = builtins.head peerHost.ipv4;
-            ip = peerLoopbackIp;
-            gateway = gateway;
-          }
-        ) (lib.attrNames thunderboltPeers)
-      );
+          # Find which peer interface is in the same /31 network as one of our interfaces
+          # Return null if no direct connection exists
+          if sameNetwork ourInterface1 peerInterface1 then
+            extractGateway peerInterface1
+          else if sameNetwork ourInterface1 peerInterface2 then
+            extractGateway peerInterface2
+          else if sameNetwork ourInterface2 peerInterface1 then
+            extractGateway peerInterface1
+          else if sameNetwork ourInterface2 peerInterface2 then
+            extractGateway peerInterface2
+          else
+            null; # No direct connection to this peer
 
-      # Current node configuration from tags
-      nodeConfig = {
-        loopback = {
-          ipv4 = hostOptions.tags."thunderbolt-loopback-ipv4";
-          ipv6 = hostOptions.tags."thunderbolt-loopback-ipv6";
+        # Generate peer configurations from discovered hosts, only for directly connected peers
+        peerConfigs = lib.filter (peer: peer.gateway != null) (
+          map (
+            peerHostname:
+            let
+              peerHost = thunderboltPeers.${peerHostname};
+              peerLoopbackIp = lib.removeSuffix "/32" (peerHost.tags."thunderbolt-loopback-ipv4");
+              gateway = getGatewayForPeer peerHostname peerLoopbackIp;
+            in
+            {
+              asn = lib.toInt (peerHost.tags."bgp-asn");
+              lanip = builtins.head peerHost.ipv4;
+              ip = peerLoopbackIp;
+              gateway = gateway;
+            }
+          ) (lib.attrNames thunderboltPeers)
+        );
+
+        # Current node configuration from tags
+        nodeConfig = {
+          loopback = {
+            ipv4 = hostOptions.tags."thunderbolt-loopback-ipv4";
+            ipv6 = hostOptions.tags."thunderbolt-loopback-ipv6";
+          };
+          interfaceIps = {
+            enp199s0f5 = hostOptions.tags."thunderbolt-interface-1";
+            enp199s0f6 = hostOptions.tags."thunderbolt-interface-2";
+          };
+          peers = peerConfigs;
         };
-        interfaceIps = {
-          enp199s0f5 = hostOptions.tags."thunderbolt-interface-1";
-          enp199s0f6 = hostOptions.tags."thunderbolt-interface-2";
-        };
-        peers = peerConfigs;
-      };
-    in
-    {
-      imports = [ ./_module/bgp.nix ];
+      in
+      {
+        config = {
+          hardware.networking.unmanagedInterfaces = interfaces;
 
-      config = {
-        hardware.networking.unmanagedInterfaces = interfaces;
+          boot = {
+            kernelParams = [
+              "pcie=pcie_bus_perf"
+            ];
+            kernelModules = [
+              "dummy"
+              "thunderbolt"
+              "thunderbolt-net"
+            ];
+          };
 
-        boot = {
-          kernelParams = [
-            "pcie=pcie_bus_perf"
-          ];
-          kernelModules = [
-            "dummy"
-            "thunderbolt"
-            "thunderbolt-net"
-          ];
-        };
+          services.bgp = {
+            localAsn = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65001;
+            routerId = lib.removeSuffix "/32" nodeConfig.loopback.ipv4;
 
-        services.bgp = {
-          localAsn = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65001;
-          routerId = lib.removeSuffix "/32" nodeConfig.loopback.ipv4;
-
-          staticRoutes = lib.flatten (
-            map (peer: [
-              "ip route ${peer.ip}/32 ${peer.gateway}"
-              "ip route ${peer.lanip}/32 ${peer.gateway}"
-            ]) nodeConfig.peers
-          );
-
-          neighbors = map (peer: {
-            ip = peer.ip;
-            asn = peer.asn;
-            updateSource = "dummy0";
-            ebgpMultihop = 4;
-            softReconfiguration = true;
-            allowasIn = 1;
-          }) nodeConfig.peers;
-
-          addressFamilies.ipv4-unicast = {
-            networks = [ nodeConfig.loopback.ipv4 ];
-            neighbors = lib.listToAttrs (
-              map (
-                peer:
-                lib.nameValuePair peer.ip {
-                  activate = true;
-                  nextHopSelf = true;
-                }
-              ) nodeConfig.peers
+            staticRoutes = lib.flatten (
+              map (peer: [
+                "ip route ${peer.ip}/32 ${peer.gateway}"
+                "ip route ${peer.lanip}/32 ${peer.gateway}"
+              ]) nodeConfig.peers
             );
-          };
-        };
 
-        systemd = {
-          services = {
-            frr = {
-              requires = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
-              after = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
+            neighbors = map (peer: {
+              ip = peer.ip;
+              asn = peer.asn;
+              updateSource = "dummy0";
+              ebgpMultihop = 4;
+              softReconfiguration = true;
+              allowasIn = 1;
+            }) nodeConfig.peers;
+
+            addressFamilies.ipv4-unicast = {
+              networks = [ nodeConfig.loopback.ipv4 ];
+              neighbors = lib.listToAttrs (
+                map (
+                  peer:
+                  lib.nameValuePair peer.ip {
+                    activate = true;
+                    nextHopSelf = true;
+                  }
+                ) nodeConfig.peers
+              );
             };
           };
-          network = {
-            config.networkConfig = {
-              IPv4Forwarding = true;
-              IPv6Forwarding = true;
-            };
 
-            netdevs = {
-              dummy0 = {
-                netdevConfig = {
-                  Kind = "dummy";
-                  Name = "dummy0";
-                };
+          systemd = {
+            services = {
+              frr = {
+                requires = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
+                after = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
               };
             };
+            network = {
+              config.networkConfig = {
+                IPv4Forwarding = true;
+                IPv6Forwarding = true;
+              };
 
-            links = {
-              "20-thunderbolt-port-1" = {
-                matchConfig = {
-                  Path = "pci-0000:c7:00.5";
-                  Driver = "thunderbolt-net";
-                };
-                linkConfig = {
-                  Name = "enp199s0f5";
-                  Alias = "tb1";
-                  AlternativeName = "tb1";
+              netdevs = {
+                dummy0 = {
+                  netdevConfig = {
+                    Kind = "dummy";
+                    Name = "dummy0";
+                  };
                 };
               };
-              "20-thunderbolt-port-2" = {
-                matchConfig = {
-                  Path = "pci-0000:c7:00.6";
-                  Driver = "thunderbolt-net";
-                };
-                linkConfig = {
-                  Name = "enp199s0f6";
-                  Alias = "tb2";
-                  AlternativeName = "tb2";
-                };
-              };
-            };
 
-            networks = {
-              "00-dummy" = {
-                matchConfig.Name = "dummy0";
-                address = [
-                  nodeConfig.loopback.ipv4
-                  nodeConfig.loopback.ipv6
-                ];
-              };
-              "21-thunderbolt-1" = {
-                matchConfig.Name = "enp199s0f5";
-                address = [ nodeConfig.interfaceIps.enp199s0f5 ];
-                linkConfig = {
-                  ActivationPolicy = "up";
-                  MTUBytes = "9000"; # Recommended for performance
+              links = {
+                "20-thunderbolt-port-1" = {
+                  matchConfig = {
+                    Path = "pci-0000:c7:00.5";
+                    Driver = "thunderbolt-net";
+                  };
+                  linkConfig = {
+                    Name = "enp199s0f5";
+                    Alias = "tb1";
+                    AlternativeName = "tb1";
+                  };
                 };
-                networkConfig.LinkLocalAddressing = "no";
-              };
-              "21-thunderbolt-2" = {
-                matchConfig.Name = "enp199s0f6";
-                address = [ nodeConfig.interfaceIps.enp199s0f6 ];
-                linkConfig = {
-                  ActivationPolicy = "up";
-                  MTUBytes = "9000"; # Recommended for performance
+                "20-thunderbolt-port-2" = {
+                  matchConfig = {
+                    Path = "pci-0000:c7:00.6";
+                    Driver = "thunderbolt-net";
+                  };
+                  linkConfig = {
+                    Name = "enp199s0f6";
+                    Alias = "tb2";
+                    AlternativeName = "tb2";
+                  };
                 };
-                networkConfig.LinkLocalAddressing = "no";
+              };
+
+              networks = {
+                "00-dummy" = {
+                  matchConfig.Name = "dummy0";
+                  address = [
+                    nodeConfig.loopback.ipv4
+                    nodeConfig.loopback.ipv6
+                  ];
+                };
+                "21-thunderbolt-1" = {
+                  matchConfig.Name = "enp199s0f5";
+                  address = [ nodeConfig.interfaceIps.enp199s0f5 ];
+                  linkConfig = {
+                    ActivationPolicy = "up";
+                    MTUBytes = "9000"; # Recommended for performance
+                  };
+                  networkConfig.LinkLocalAddressing = "no";
+                };
+                "21-thunderbolt-2" = {
+                  matchConfig.Name = "enp199s0f6";
+                  address = [ nodeConfig.interfaceIps.enp199s0f6 ];
+                  linkConfig = {
+                    ActivationPolicy = "up";
+                    MTUBytes = "9000"; # Recommended for performance
+                  };
+                  networkConfig.LinkLocalAddressing = "no";
+                };
               };
             };
           };
         };
       };
-    };
+  };
 }
