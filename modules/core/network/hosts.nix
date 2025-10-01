@@ -28,7 +28,7 @@ let
           "${hostname}.${targetEnv.domain}"
         ]
         ++ ipList;
-        publicKey = hostConfig.public_key;
+        publicKeyFile = hostConfig.public_key;
       }
     );
 in
