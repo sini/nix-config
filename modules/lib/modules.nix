@@ -1,9 +1,5 @@
 {
   lib,
-  self,
-  inputs,
-  config,
-  withSystem,
   ...
 }:
 let
@@ -15,23 +11,6 @@ let
     tail
     map
     ;
-
-  flakeSpecialArgs = {
-    inherit self inputs config;
-  };
-
-  flakeSpecialArgs' =
-    system:
-    withSystem system (
-      ctx@{ inputs', ... }:
-      let
-        perSystem = {
-          inherit (ctx.config) legacyPackages packages;
-          inherit inputs';
-        };
-      in
-      flakeSpecialArgs // { inherit perSystem; }
-    );
 
   collectTypedModules =
     type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
@@ -137,8 +116,6 @@ in
       collectNixosModules
       collectRequires
       collectTypedModules
-      flakeSpecialArgs
-      flakeSpecialArgs'
       mkFeatureListOpt
       mkFeatureNameOpt
       mkDeferredModuleOpt
