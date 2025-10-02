@@ -1,6 +1,6 @@
 {
 
-  flake.aspects.k9s.home =
+  flake.features.k9s.home =
     { pkgs, config, ... }:
     {
       home.packages = with pkgs; [

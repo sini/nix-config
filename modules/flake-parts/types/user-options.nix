@@ -6,9 +6,9 @@
 let
   inherit (lib) mkOption types;
   inherit (self.lib.modules)
-    aspectSubmoduleGenericOptions
-    mkAspectListOpt
-    mkAspectNameOpt
+    featureSubmoduleGenericOptions
+    mkFeatureListOpt
+    mkFeatureNameOpt
     ;
 in
 {
@@ -33,41 +33,41 @@ in
               default = [ ];
               description = "List of Home Manager module names to include for this user";
             };
-            aspects = mkOption {
+            features = mkOption {
               type = types.lazyAttrsOf (
                 types.submodule (
                   { name, ... }:
                   {
-                    options = (builtins.removeAttrs aspectSubmoduleGenericOptions [ "nixos" ]) // {
-                      name = mkAspectNameOpt name;
+                    options = (builtins.removeAttrs featureSubmoduleGenericOptions [ "nixos" ]) // {
+                      name = mkFeatureNameOpt name;
                     };
                   }
                 )
               );
               default = { };
               description = ''
-                User-specific aspect definitions.
+                User-specific feature definitions.
 
-                Note that due to these aspects' nature as user-specific, they
+                Note that due to these features' nature as user-specific, they
                 may not define NixOS modules, which would affect the entire system.
               '';
             };
             baseline = mkOption {
               type = types.submodule {
                 options = {
-                  aspects = mkAspectListOpt ''
-                    List of baseline aspects shared by all of this user's configurations.
+                  features = mkFeatureListOpt ''
+                    List of baseline features shared by all of this user's configurations.
 
-                    Note that the "core" aspect
-                    (`users.<username>.aspects.core`) will *always* be
+                    Note that the "core" feature
+                    (`users.<username>.features.core`) will *always* be
                     included in all of the user's configurations.  This
-                    follows the same behavior as the "core" aspect in
+                    follows the same behavior as the "core" feature in
                     the system scope, which is included in all system
                     configurations.
                   '';
                 };
               };
-              description = "Baseline aspects and configurations shared by all of this user's configurations";
+              description = "Baseline features and configurations shared by all of this user's configurations";
               default = { };
             };
           };

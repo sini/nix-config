@@ -1,5 +1,5 @@
 {
-  flake.aspects.laptop.nixos =
+  flake.features.laptop.nixos =
     { pkgs, lib, ... }:
     {
       environment.systemPackages = with pkgs; [

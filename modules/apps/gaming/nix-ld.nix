@@ -1,5 +1,5 @@
 {
-  flake.aspects.nix-ld.nixos =
+  flake.features.nix-ld.nixos =
     { pkgs, ... }:
     {
       programs.nix-ld = {

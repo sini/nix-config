@@ -1,5 +1,5 @@
 {
-  flake.aspects.gnome = {
+  flake.features.gnome = {
     nixos =
       {
         pkgs,

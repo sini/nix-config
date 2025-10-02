@@ -1,5 +1,5 @@
 {
-  flake.aspects.systemd-boot.nixos = {
+  flake.features.systemd-boot.nixos = {
     systemd.tmpfiles.rules = [
       # cleanup systemd coredumps once a week
       "d /var/lib/systemd/coredump 0755 root root 7d"

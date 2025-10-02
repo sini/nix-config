@@ -38,7 +38,7 @@ Uses agenix and agenix-rekey for secret management. Secrets are stored encrypted
 
 ```bash
 # Build a specific host configuration (without deploying)
-build <hostname>  # e.g., build cortex
+nix-flake-build <hostname>  # e.g., nix-flake-build cortex
 
 # Run flake checks
 nix flake check
@@ -47,7 +47,7 @@ nix flake check
 treefmt
 
 # Update flake inputs with GitHub authentication
-flake-update
+nix-flake-update
 ```
 
 ### Deployment Commands

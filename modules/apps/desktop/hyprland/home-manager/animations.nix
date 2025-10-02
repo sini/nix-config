@@ -1,5 +1,5 @@
 {
-  flake.aspects.hyprland.home = {
+  flake.features.hyprland.home = {
     wayland.windowManager.hyprland.settings.animations = {
 
       enabled = "yes";

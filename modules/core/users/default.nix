@@ -1,5 +1,5 @@
 {
-  flake.aspects.users.nixos =
+  flake.features.users.nixos =
     {
       users,
       ...

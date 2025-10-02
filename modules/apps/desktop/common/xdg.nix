@@ -1,5 +1,5 @@
 {
-  flake.aspects.xdg.home =
+  flake.features.xdg.home =
     {
       pkgs,
       ...

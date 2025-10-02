@@ -1,5 +1,5 @@
 {
-  flake.aspects.performance.nixos =
+  flake.features.performance.nixos =
     { pkgs, lib, ... }:
     {
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";

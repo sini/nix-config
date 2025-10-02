@@ -4,7 +4,7 @@
   ...
 }:
 {
-  flake.aspects.agenix.nixos =
+  flake.features.agenix.nixos =
     { config, lib, ... }:
     {
       imports = [

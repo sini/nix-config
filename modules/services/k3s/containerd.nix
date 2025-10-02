@@ -1,5 +1,5 @@
 {
-  flake.aspects.kubernetes.nixos =
+  flake.features.kubernetes.nixos =
     {
       inputs,
       lib,

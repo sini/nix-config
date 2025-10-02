@@ -16,28 +16,28 @@
         collectRequires
         ;
 
-      # Helper function to gather aspects from core and host-specific roles
-      getAspectsForRoles =
+      # Helper function to gather features from core and host-specific roles
+      getFeaturesForRoles =
         hostRoles:
         let
-          # 1. Start with the core aspects required for all systems.
-          coreAspects = config.role.core.aspects;
+          # 1. Start with the core features required for all systems.
+          coreFeatures = config.role.core.features;
 
-          # 2. Get aspects from additional roles defined on the host.
-          additionalAspects = lib.optionals (hostRoles != null) (
+          # 2. Get features from additional roles defined on the host.
+          additionalFeatures = lib.optionals (hostRoles != null) (
             lib.flatten (
-              builtins.map (roleName: config.role.${roleName}.aspects) (
+              builtins.map (roleName: config.role.${roleName}.features) (
                 # Ensure the role actually exists before trying to access it.
                 lib.filter (roleName: lib.hasAttr roleName config.role) hostRoles
               )
             )
           );
 
-          # 3. Combine core and additional aspect names and deduplicate.
-          allAspectNames = lib.unique (coreAspects ++ additionalAspects);
+          # 3. Combine core and additional feature names and deduplicate.
+          allFeatureNames = lib.unique (coreFeatures ++ additionalFeatures);
 
         in
-        allAspectNames;
+        allFeatureNames;
 
       # A dedicated function to build a single NixOS host configuration.
       # This encapsulates all the logic for one machine.
@@ -55,14 +55,20 @@
             # Select the correct environment configuration (e.g., prod, dev).
             environment = config.environments.${hostOptions.environment};
 
-            # Get aspects from roles and resolve dependencies
-            hostAspectNames = getAspectsForRoles hostOptions.roles;
-            hostAspects = builtins.map (name: config.aspects.${name}) hostAspectNames;
-            hostAspectDeps = collectRequires config.aspects hostAspects;
-            allHostAspects = hostAspects ++ hostAspectDeps;
+            # Get features from roles and direct host features
+            roleFeatureNames = getFeaturesForRoles hostOptions.roles;
+            roleFeatures = builtins.map (name: config.features.${name}) roleFeatureNames;
 
-            # Collect NixOS modules from aspects
-            nixosModules = (collectNixosModules allHostAspects);
+            # Get direct host features and combine with role features
+            directHostFeatures = hostOptions.features or [ ];
+            combinedFeatures = roleFeatures ++ directHostFeatures;
+
+            # Resolve dependencies for all features
+            hostFeatureDeps = collectRequires config.features combinedFeatures;
+            allHostFeatures = combinedFeatures ++ hostFeatureDeps;
+
+            # Collect NixOS modules from features
+            nixosModules = (collectNixosModules allHostFeatures);
 
             # Select the correct chaotic-nyx modules based on channel.
             chaoticImports =
@@ -79,8 +85,8 @@
             makeHome =
               username: userSpec:
               let
-                # Collect home modules from host aspects
-                homeModules = collectHomeModules allHostAspects;
+                # Collect home modules from host features
+                homeModules = collectHomeModules allHostFeatures;
 
                 # Map user's homeModules to actual modules
                 userHomeModules = builtins.map (
@@ -115,7 +121,7 @@
             };
 
             modules =
-              # Import modules from aspects
+              # Import modules from features
               nixosModules
               # Add modules from external flakes and sources.
               ++ chaoticImports
@@ -137,7 +143,7 @@
                   facter.reportPath = hostOptions.facts;
                   age.rekey.hostPubkey = hostOptions.public_key;
 
-                  # Configure Home Manager with aspect-based modules
+                  # Configure Home Manager with feature-based modules
                   home-manager.users = lib'.mapAttrs makeHome (
                     let
                       # Get users from environment and host configuration

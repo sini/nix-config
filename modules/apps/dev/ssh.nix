@@ -1,5 +1,5 @@
 {
-  flake.aspects.ssh.home = {
+  flake.features.ssh.home = {
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;

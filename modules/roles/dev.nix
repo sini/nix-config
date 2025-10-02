@@ -1,6 +1,6 @@
 {
   flake.role.dev = {
-    aspects = [
+    features = [
       "adb"
       "direnv"
       #"gpg"

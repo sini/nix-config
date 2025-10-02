@@ -12,13 +12,15 @@
       "dev-gui"
       "media"
     ];
-    extra_modules = with config.flake.aspects; [
+    features = with config.flake.features; [
+      cpu-intel
+      gpu-intel
+      gpu-nvidia
+      gpu-nvidia-prime
+      razer
+    ];
+    extra_modules = [
       ./_local
-      cpu-intel.nixos
-      gpu-intel.nixos
-      gpu-nvidia.nixos
-      gpu-nvidia-prime.nixos
-      razer.nixos
     ];
     facts = ./facter.json;
     nixosConfiguration = {

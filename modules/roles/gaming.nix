@@ -1,6 +1,6 @@
 {
   flake.role.gaming = {
-    aspects = [
+    features = [
       "gamepad"
       "nix-ld"
       "steam"

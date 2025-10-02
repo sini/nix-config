@@ -33,7 +33,7 @@ let
     );
 in
 {
-  flake.aspects.hosts.nixos =
+  flake.features.hosts.nixos =
     { config, lib, ... }:
     {
       networking.hosts = lib.attrsets.filterAttrs (

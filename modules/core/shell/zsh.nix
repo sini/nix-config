@@ -1,5 +1,5 @@
 {
-  flake.aspects.shell = {
+  flake.features.shell = {
     nixos =
       { pkgs, ... }:
       {

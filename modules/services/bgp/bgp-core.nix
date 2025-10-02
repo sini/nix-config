@@ -1,5 +1,5 @@
 {
-  flake.aspects.bgp-core.nixos =
+  flake.features.bgp-core.nixos =
     {
       lib,
       config,

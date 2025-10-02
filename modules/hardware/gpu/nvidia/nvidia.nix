@@ -1,5 +1,5 @@
 {
-  flake.aspects.gpu-nvidia = {
+  flake.features.gpu-nvidia = {
     requires = [
       "gpu-nvidia-driver"
       "gpu-nvidia-kernel"

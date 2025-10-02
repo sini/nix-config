@@ -6,7 +6,7 @@
 }:
 let
   inherit (lib) types mkOption;
-  inherit (self.lib.modules) mkDeferredModuleOpt mkAspectListOpt;
+  inherit (self.lib.modules) mkDeferredModuleOpt mkFeatureListOpt;
 in
 {
   config.text.readme.parts.host-options =
@@ -88,6 +88,8 @@ in
               description = "List of roles for the host.";
             };
 
+            features = mkFeatureListOpt "List of features for the host";
+
             public_key = mkOption {
               type = types.path;
               default = rootPath + "/.secrets/host-keys/${name}/ssh_host_ed25519_key.pub";
@@ -152,12 +154,12 @@ in
               description = "List of user names to enable for this specific host (merged with environment users)";
             };
 
-            usersWithAspects = mkOption {
+            usersWithFeatures = mkOption {
               type = types.lazyAttrsOf (
                 types.submodule {
                   options = {
-                    aspects = mkAspectListOpt ''
-                      List of aspects specific to the user and host.
+                    features = mkFeatureListOpt ''
+                      List of features specific to the user and host.
 
                       While a feature may specify NixOS modules in addition to home
                       modules, only home modules will affect configuration.  For this

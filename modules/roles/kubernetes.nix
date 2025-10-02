@@ -1,6 +1,6 @@
 {
   flake.role.kubernetes = {
-    aspects = [
+    features = [
       "kubernetes"
       "cilium-bgp"
     ];

@@ -20,7 +20,7 @@ let
     if bgpHubHosts != [ ] then lib.head bgpHubHosts else null;
 in
 {
-  flake.aspects.cilium-bgp = {
+  flake.features.cilium-bgp = {
     requires = [ "bgp-core" ];
     nixos =
       {

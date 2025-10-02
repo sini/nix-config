@@ -1,5 +1,5 @@
 {
-  flake.aspects.gdm.nixos = {
+  flake.features.gdm.nixos = {
     services = {
       displayManager = {
         gdm = {

@@ -1,5 +1,5 @@
 {
-  flake.aspects.podman.nixos =
+  flake.features.podman.nixos =
     { lib, pkgs, ... }:
     {
       environment.systemPackages = with pkgs; [

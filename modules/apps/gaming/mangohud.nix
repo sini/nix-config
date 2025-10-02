@@ -1,5 +1,5 @@
 {
-  flake.aspects.mangohud.home =
+  flake.features.mangohud.home =
     { pkgs, ... }:
 
     {

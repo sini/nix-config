@@ -1,5 +1,5 @@
 {
-  flake.aspects.impermenance.nixos =
+  flake.features.impermenance.nixos =
     { lib, config, ... }:
     {
       environment.persistence = {

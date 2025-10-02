@@ -15,18 +15,16 @@
       "dev-gui"
       "media"
     ];
-    extra_modules =
-      with config.flake.aspects;
-      [
-        disk-single.nixos
-        cpu-intel.nixos
-        gpu-intel.nixos
-        podman.nixos
-        wireless.nixos
-      ]
-      ++ [
-        inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel
-      ];
+    features = with config.flake.features; [
+      disk-single
+      cpu-intel
+      gpu-intel
+      podman
+      wireless
+    ];
+    extra_modules = [
+      inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel
+    ];
     facts = ./facter.json;
     nixosConfiguration =
       {

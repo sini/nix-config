@@ -1,6 +1,6 @@
 # { rootPath, ... }:
 {
-  flake.aspects.loki.nixos =
+  flake.features.loki.nixos =
     { config, ... }:
     {
       services = {

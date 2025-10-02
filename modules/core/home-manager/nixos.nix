@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.aspects.home-manager.nixos =
+  flake.features.home-manager.nixos =
     {
       inputs,
       hostOptions,

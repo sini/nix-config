@@ -4,15 +4,15 @@
     type = lib.types.attrsOf (
       lib.types.submodule {
         options = {
-          aspects = lib.mkOption {
+          features = lib.mkOption {
             type = lib.types.listOf lib.types.str;
             default = [ ];
-            description = "List of aspect names to include for this role";
+            description = "List of feature names to include for this role";
           };
         };
       }
     );
     default = { };
-    description = "NixOS role configurations with aspect-based module lists";
+    description = "NixOS role configurations with feature-based module lists";
   };
 }

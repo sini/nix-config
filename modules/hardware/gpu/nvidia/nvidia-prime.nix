@@ -1,5 +1,5 @@
 {
-  flake.aspects.gpu-nvidia-prime.nixos =
+  flake.features.gpu-nvidia-prime.nixos =
     {
       config,
       lib,

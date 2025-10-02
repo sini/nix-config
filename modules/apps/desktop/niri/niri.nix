@@ -1,3 +1,3 @@
 {
-  flake.aspects.niri.nixos = { };
+  flake.features.niri.nixos = { };
 }
