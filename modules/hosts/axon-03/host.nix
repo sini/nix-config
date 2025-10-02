@@ -10,11 +10,11 @@
       "bgp-spoke"
       "vault"
     ];
-    extra_modules = with config.flake.aspects; [
-      disk-longhorn.nixos
-      cpu-amd.nixos
-      gpu-amd.nixos
-      thunderbolt-mesh.nixos
+    features = with config.flake.features; [
+      disk-longhorn
+      cpu-amd
+      gpu-amd
+      thunderbolt-mesh
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.3";

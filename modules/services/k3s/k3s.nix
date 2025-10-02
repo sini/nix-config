@@ -30,7 +30,7 @@ let
       null;
 in
 {
-  flake.aspects.kubernetes.nixos =
+  flake.features.kubernetes.nixos =
     {
       lib,
       pkgs,

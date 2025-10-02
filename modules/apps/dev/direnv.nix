@@ -1,5 +1,5 @@
 {
-  flake.aspects.direnv = {
+  flake.features.direnv = {
     nixos = {
       # Prevent garbage collection from altering nix-shells managed by nix-direnv
       # https://github.com/nix-community/nix-direnv#installation

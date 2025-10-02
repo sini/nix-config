@@ -3,7 +3,7 @@ let
   username = config.flake.meta.user.username;
 in
 {
-  flake.aspects.sunshine = {
+  flake.features.sunshine = {
     nixos =
       { pkgs, ... }:
       {

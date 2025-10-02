@@ -43,7 +43,7 @@ let
   };
 in
 {
-  flake.aspects.stylix = {
+  flake.features.stylix = {
     nixos =
       { pkgs, ... }:
       {

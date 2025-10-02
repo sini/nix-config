@@ -1,5 +1,5 @@
 {
-  flake.aspects.systemd-boot.nixos = {
+  flake.features.systemd-boot.nixos = {
     boot = {
       # TODO: add plymouth theming, enable only on workstation/laptop
       plymouth.enable = true;

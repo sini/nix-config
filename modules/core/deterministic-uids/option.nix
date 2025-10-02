@@ -19,7 +19,7 @@
       The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
 
     '';
-  flake.aspects.deterministic-uids.nixos =
+  flake.features.deterministic-uids.nixos =
     {
       lib,
       config,

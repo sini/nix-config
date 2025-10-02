@@ -1,5 +1,5 @@
 {
-  flake.aspects.obs-studio.home =
+  flake.features.obs-studio.home =
     { pkgs, ... }:
     {
       home = {

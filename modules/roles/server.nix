@@ -1,6 +1,6 @@
 {
   flake.role.server = {
-    aspects = [
+    features = [
       "acme"
       "media-data-share"
       "network-boot"

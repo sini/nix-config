@@ -1,6 +1,6 @@
 {
   flake.role.core = {
-    aspects = [
+    features = [
       "agenix"
       "avahi"
       "deterministic-uids"

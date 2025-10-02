@@ -1,6 +1,6 @@
 {
 
-  flake.aspects.kube-tools.home =
+  flake.features.kube-tools.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

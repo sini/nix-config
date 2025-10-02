@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.aspects.acme.nixos =
+  flake.features.acme.nixos =
     { config, environment, ... }:
     {
       age.secrets.cloudflare-api-key = {

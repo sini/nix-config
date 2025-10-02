@@ -1,6 +1,6 @@
 {
   flake.role.media = {
-    aspects = [
+    features = [
       "spotify-player"
       "spicetify"
       "mpv"

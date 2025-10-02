@@ -1,5 +1,5 @@
 {
-  flake.aspects.network-boot.nixos =
+  flake.features.network-boot.nixos =
     { config, lib, ... }:
     {
       boot = {

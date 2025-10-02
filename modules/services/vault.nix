@@ -3,7 +3,7 @@ let
   flakeHosts = config.flake.hosts;
 in
 {
-  flake.aspects.vault.nixos =
+  flake.features.vault.nixos =
     {
       config,
       lib,

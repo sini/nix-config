@@ -118,7 +118,7 @@ let
     ) config.flake.hosts;
 in
 {
-  flake.aspects.thunderbolt-mesh = {
+  flake.features.thunderbolt-mesh = {
     requires = [ "bgp-core" ];
     nixos =
       {

@@ -1,6 +1,6 @@
 {
   flake.role.bgp-hub = {
-    aspects = [
+    features = [
       "bgp-hub"
     ];
   };

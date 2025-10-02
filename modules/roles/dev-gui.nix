@@ -1,6 +1,6 @@
 {
   flake.role.dev-gui = {
-    aspects = [
+    features = [
       "gpg"
       "vscode"
       "gitkraken"

@@ -1,6 +1,6 @@
 {
   flake.role.metrics-ingester = {
-    aspects = [
+    features = [
       "loki"
       "prometheus"
     ];

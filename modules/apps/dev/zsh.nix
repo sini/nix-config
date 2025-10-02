@@ -1,5 +1,5 @@
 {
-  flake.aspects.zsh = {
+  flake.features.zsh = {
     nixos =
       { pkgs, ... }:
       {

@@ -1,5 +1,5 @@
 {
-  flake.aspects.gpu-nvidia-kernel.nixos =
+  flake.features.gpu-nvidia-kernel.nixos =
     {
       lib,
       ...

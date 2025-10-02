@@ -1,6 +1,6 @@
 {
   flake.role.laptop = {
-    aspects = [
+    features = [
       "laptop"
       "wireless"
     ];

@@ -12,17 +12,17 @@
     tags = {
       "bgp-asn" = "65000";
     };
-    extra_modules = with config.flake.aspects; [
-      cpu-amd.nixos
-      gpu-intel.nixos
-      disk-single.nixos
-      podman.nixos
-      acme.nixos
-      nginx.nixos
-      kanidm.nixos
-      grafana.nixos
-      # minio.nixos
-      # vault.nixos
+    features = with config.flake.features; [
+      cpu-amd
+      gpu-intel
+      disk-single
+      podman
+      acme
+      nginx
+      kanidm
+      grafana
+      # minio
+      # vault
     ];
     facts = ./facter.json;
     nixosConfiguration =

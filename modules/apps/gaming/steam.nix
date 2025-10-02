@@ -1,5 +1,5 @@
 {
-  flake.aspects.steam.nixos =
+  flake.features.steam.nixos =
     {
       lib,
       inputs,

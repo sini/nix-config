@@ -1,5 +1,5 @@
 {
-  flake.aspects.audio.nixos =
+  flake.features.audio.nixos =
     { pkgs, ... }:
     {
       # home-manager.users.sini.home.persistence."/persist/home/sini" = lib.mkIf config.home-manager.extraSpecialArgs.isImpermanent {

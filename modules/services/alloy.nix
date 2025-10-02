@@ -4,7 +4,7 @@
   ...
 }:
 {
-  flake.aspects.alloy.nixos =
+  flake.features.alloy.nixos =
     {
       pkgs,
       hostOptions,

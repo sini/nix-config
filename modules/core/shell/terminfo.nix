@@ -1,5 +1,5 @@
 {
-  flake.aspects.shell.nixos = {
+  flake.features.shell.nixos = {
     environment.enableAllTerminfo = true;
   };
 }

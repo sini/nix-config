@@ -2,7 +2,7 @@
 { inputs, ... }:
 
 {
-  flake.aspects.disk-longhorn.nixos =
+  flake.features.disk-longhorn.nixos =
     {
       config,
       lib,

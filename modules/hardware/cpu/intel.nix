@@ -1,5 +1,5 @@
 {
-  flake.aspects.cpu-intel.nixos = {
+  flake.features.cpu-intel.nixos = {
     hardware.cpu.intel.updateMicrocode = true;
     boot.kernelModules = [ "kvm-intel" ];
     services.thermald.enable = true; # Enable thermald, the temperature management daemon. (only necessary if on Intel CPUs)

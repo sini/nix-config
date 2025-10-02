@@ -1,5 +1,5 @@
 {
-  flake.aspects.wireshark = {
+  flake.features.wireshark = {
     nixos =
       { pkgs, users, ... }:
       {

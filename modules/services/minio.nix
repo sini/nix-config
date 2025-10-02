@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.aspects.minio.nixos =
+  flake.features.minio.nixos =
     { config, ... }:
     {
       age.secrets.minio-root-credentials = {

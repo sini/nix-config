@@ -1,5 +1,5 @@
 {
-  flake.aspects.hyprland.home =
+  flake.features.hyprland.home =
     let
       editor = [ "nvim.desktop" ];
       browser = [ "firefox.desktop" ];

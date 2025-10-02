@@ -1,5 +1,5 @@
 {
-  flake.aspects.claude.home = {
+  flake.features.claude.home = {
     programs.claude-code = {
       enable = true;
     };

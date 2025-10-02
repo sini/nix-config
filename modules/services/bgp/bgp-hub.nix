@@ -21,7 +21,7 @@ let
     ) config.flake.hosts;
 in
 {
-  flake.aspects.bgp-hub = {
+  flake.features.bgp-hub = {
     requires = [ "bgp-core" ];
     nixos =
       {

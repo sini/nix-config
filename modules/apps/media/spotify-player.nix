@@ -1,6 +1,6 @@
 { config, rootPath, ... }:
 {
-  flake.aspects.spotify-player = {
+  flake.features.spotify-player = {
     nixos = {
       age.secrets.spotify-player-credentials = {
         rekeyFile = rootPath + "/.secrets/user/spotify-player-credentials.age";

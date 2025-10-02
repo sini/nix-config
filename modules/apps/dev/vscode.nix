@@ -1,5 +1,5 @@
 {
-  flake.aspects.vscode = {
+  flake.features.vscode = {
     nixos =
       { inputs, ... }:
       {

@@ -1,5 +1,5 @@
 {
-  flake.aspects.fonts = {
+  flake.features.fonts = {
     nixos =
       { pkgs, ... }:
       {

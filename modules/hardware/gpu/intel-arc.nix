@@ -1,5 +1,5 @@
 {
-  flake.aspects.gpu-intel.nixos =
+  flake.features.gpu-intel.nixos =
     { pkgs, ... }:
     {
       services.xserver.videoDrivers = [ "modesetting" ];

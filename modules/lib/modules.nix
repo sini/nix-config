@@ -40,7 +40,7 @@ let
   collectNameMatches =
     own: others: own |> (map (v: others.${v.name} or null)) |> filter (v: v != null);
   collectRequires =
-    aspects: roots:
+    features: roots:
     let
       rootNames = lib.catAttrs "name" roots;
       op =
@@ -56,7 +56,7 @@ let
             op visited rest
           else
             let
-              deps = map (name: aspects.${name}) (cur.requires or [ ]);
+              deps = map (name: features.${name}) (cur.requires or [ ]);
             in
             op (op visited deps ++ [ cur ]) rest;
     in
@@ -70,18 +70,18 @@ let
       default = { };
     };
 
-  aspectSubmoduleGenericOptions = {
-    # TODO: accept actual aspect shape
+  featureSubmoduleGenericOptions = {
+    # TODO: accept actual feature shape
     requires = mkOption {
       type = types.listOf types.str;
       default = [ ];
-      description = "List of names of aspects required by this aspect";
+      description = "List of names of features required by this feature";
     };
-    nixos = mkDeferredModuleOpt "A NixOS module for this aspect";
-    home = mkDeferredModuleOpt "A Home-Manager module for this aspect";
+    nixos = mkDeferredModuleOpt "A NixOS module for this feature";
+    home = mkDeferredModuleOpt "A Home-Manager module for this feature";
   };
 
-  mkAspectNameOpt =
+  mkFeatureNameOpt =
     name:
     mkOption {
       type = types.str;
@@ -90,27 +90,27 @@ let
       internal = true;
     };
 
-  mkAspectListOpt =
+  mkFeatureListOpt =
     description:
     mkOption {
       type = types.listOf (
         types.submodule {
-          options = aspectSubmoduleGenericOptions // {
-            # This differs from the `options.aspects.*.name` option
+          options = featureSubmoduleGenericOptions // {
+            # This differs from the `options.features.*.name` option
             # declaration in that it avoids setting a default value
             # inherited from the submodule's `name` argument.  We avoid
             # using `name` in this list context because `name` will not
             # reflect the original value as inherited from the attrset
-            # where the aspect was originally defined -- the latter
+            # where the feature was originally defined -- the latter
             # `name` is what we want, not the anonymous `name` from the
             # list context.
             #
             # How does this not result in an error, you ask?  Because,
-            # given project conventions, we *always* create an aspect
+            # given project conventions, we *always* create a feature
             # list from existing attributes where the desired name has
             # already been defined.  `name` is sneakily set to the
             # original value because of this.  If, for some reason, you
-            # were to manually define an aspect inside of an option
+            # were to manually define a feature inside of an option
             # declared with this function (don't!), you would indeed run
             # into an error, and you would need to set `name` manually.
             #
@@ -119,7 +119,7 @@ let
               type = types.str;
               readOnly = true;
               internal = true;
-              description = "Name of the aspect";
+              description = "Name of the feature";
             };
           };
         }
@@ -131,7 +131,7 @@ in
 {
   flake.lib.modules = {
     inherit
-      aspectSubmoduleGenericOptions
+      featureSubmoduleGenericOptions
       collectHomeModules
       collectNameMatches
       collectNixosModules
@@ -139,8 +139,8 @@ in
       collectTypedModules
       flakeSpecialArgs
       flakeSpecialArgs'
-      mkAspectListOpt
-      mkAspectNameOpt
+      mkFeatureListOpt
+      mkFeatureNameOpt
       mkDeferredModuleOpt
       ;
   };

@@ -1,5 +1,5 @@
 {
-  flake.aspects.i18n.nixos = {
+  flake.features.i18n.nixos = {
     # Select internationalisation properties.
     i18n.defaultLocale = "en_US.UTF-8";
 

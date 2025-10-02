@@ -56,12 +56,12 @@
           }
           {
             package = config.packages.nix-flake-build;
-            name = "build";
+            name = "nix-flake-build";
             help = "Build a host configuration";
           }
           {
             package = config.packages.nix-flake-update;
-            name = "flake-update";
+            name = "nix-flake-update";
             help = "Update flake inputs with GitHub access token";
           }
           {

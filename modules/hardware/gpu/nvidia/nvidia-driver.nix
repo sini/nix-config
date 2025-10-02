@@ -1,5 +1,5 @@
 {
-  flake.aspects.gpu-nvidia-driver.nixos =
+  flake.features.gpu-nvidia-driver.nixos =
     {
       config,
       pkgs,

@@ -1,5 +1,5 @@
 {
-  flake.aspects.xdg-portal.nixos =
+  flake.features.xdg-portal.nixos =
     {
       pkgs,
       ...

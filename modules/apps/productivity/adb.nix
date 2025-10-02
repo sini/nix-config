@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.aspects.adb.nixos =
+  flake.features.adb.nixos =
     { pkgs, ... }:
     {
       users.users.${config.flake.meta.user.username}.extraGroups = [

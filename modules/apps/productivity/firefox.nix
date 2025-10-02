@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.aspects.firefox.home =
+  flake.features.firefox.home =
     { pkgs, ... }:
     {
       programs.firefox = {

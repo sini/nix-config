@@ -1,5 +1,5 @@
 {
-  flake.aspects.zathura.home = {
+  flake.features.zathura.home = {
     programs.zathura = {
       enable = true;
       # custom settings

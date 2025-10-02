@@ -1,6 +1,6 @@
 {
   flake.role.workstation = {
-    aspects = [
+    features = [
       # Hardware modules
       "audio"
       "bluetooth"

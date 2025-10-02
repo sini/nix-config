@@ -1,5 +1,5 @@
 {
-  flake.aspects.power-mgmt.nixos = {
+  flake.features.power-mgmt.nixos = {
     powerManagement = {
       enable = true;
       cpuFreqGovernor = "ondemand";

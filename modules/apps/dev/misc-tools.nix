@@ -1,5 +1,5 @@
 {
-  flake.aspects.misc-tools.home =
+  flake.features.misc-tools.home =
     {
       lib,
       pkgs,

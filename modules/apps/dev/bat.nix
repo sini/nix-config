@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.aspects.bat.home =
+  flake.features.bat.home =
     { pkgs, ... }:
     {
       programs.bat = {
