@@ -7,7 +7,7 @@
     let
       # Users are already filtered in specialArgs, so we just collect all user configurations
       enabledUsers = builtins.attrNames users;
-      userConfigs = builtins.map (userName: users.${userName}.userConfig) enabledUsers;
+      userConfigs = builtins.map (userName: users.${userName}.configuration) enabledUsers;
     in
     {
       imports = userConfigs;

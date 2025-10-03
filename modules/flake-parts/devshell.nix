@@ -79,6 +79,21 @@
             name = "update-host-keys";
             help = "Collect and encrypt SSH host keys from all configured hosts";
           }
+          {
+            package = config.packages.generate-host-keys;
+            name = "generate-host-keys";
+            help = "Generate and encrypt SSH host keys for a new host";
+          }
+          {
+            package = config.packages.nixos-install-anywhere;
+            name = "nixos-install-anywhere";
+            help = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
+          }
+          {
+            package = config.packages.generate-user-keys;
+            name = "generate-user-keys";
+            help = "Generate and encrypt ed25519 SSH keys for users";
+          }
         ];
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 

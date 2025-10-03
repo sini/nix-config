@@ -3,6 +3,7 @@
   flake.features.wireless.nixos =
     {
       config,
+      environment,
       ...
     }:
     {
@@ -14,7 +15,7 @@
       # };
 
       age.secrets.wpa-supplicant = {
-        rekeyFile = rootPath + "/.secrets/user/wpa_supplicant-arcade.age";
+        rekeyFile = rootPath + "/.secrets/env/${environment.name}/wpa_supplicant-arcade.age";
       };
 
       # Ensure a file exists so that we can write the initrd, even if it's not valid

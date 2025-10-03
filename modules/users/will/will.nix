@@ -1,11 +1,14 @@
 { rootPath, ... }:
 {
   flake.users.will = {
-    userConfig =
+    configuration =
       { config, ... }:
+      let
+        username = "will";
+      in
       {
-        age.secrets.user-will-password = {
-          rekeyFile = rootPath + "/.secrets/user-passwords/will.age";
+        age.secrets."user-${username}-password" = {
+          rekeyFile = rootPath + "/.secrets/users/${username}/hashed-password.age";
         };
 
         users = {
@@ -30,7 +33,7 @@
 
           users.will = {
             isNormalUser = true;
-            hashedPasswordFile = config.age.secrets.user-will-password.path;
+            hashedPasswordFile = config.age.secrets."user-${username}-password".path;
             home = "/home/will";
             group = "will";
             openssh.authorizedKeys.keys = [

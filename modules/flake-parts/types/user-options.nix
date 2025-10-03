@@ -22,7 +22,7 @@ in
               readOnly = true;
               description = "Username";
             };
-            userConfig = mkOption {
+            configuration = mkOption {
               type = types.deferredModule;
               default = { };
               description = "NixOS configuration for this user";

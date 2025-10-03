@@ -1,7 +1,7 @@
 {
   flake.roles.media = {
     features = [
-      "spotify-player"
+      # "spotify-player"
       "spicetify"
       "mpv"
       "youtube-music-desktop"
