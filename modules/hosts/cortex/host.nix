@@ -21,7 +21,6 @@
     users = {
       "sini" = {
         "features" = [
-          "bat"
           "spotify-player"
         ];
       };
