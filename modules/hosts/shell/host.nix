@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 {
   flake.hosts.shell = {
     ipv4 = [
@@ -12,11 +12,11 @@
       "server"
       "laptop"
     ];
-    features = with config.flake.features; [
-      disk-single
-      cpu-intel
-      gpu-intel
-      podman
+    features = [
+      "disk-single"
+      "cpu-intel"
+      "gpu-intel"
+      "podman"
     ];
     facts = ./facter.json;
     nixosConfiguration =

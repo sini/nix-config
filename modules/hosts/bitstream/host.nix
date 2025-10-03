@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 {
   flake.hosts.bitstream = {
     ipv4 = [
@@ -21,12 +21,12 @@
       #      "media"
       # "vault"
     ];
-    features = with config.flake.features; [
-      disk-single
-      cpu-amd
-      gpu-amd
-      podman
-      performance
+    features = [
+      "disk-single"
+      "cpu-amd"
+      "gpu-amd"
+      "podman"
+      "performance"
     ];
     facts = ./facter.json;
     nixosConfiguration =

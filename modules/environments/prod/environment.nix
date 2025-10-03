@@ -87,12 +87,12 @@
       owner = "json64";
     };
 
-    users = [
-      "sini"
-      "shuo"
-      "will"
-      "media"
-    ];
+    users = {
+      sini = { };
+      shuo = { };
+      will = { };
+      media = { };
+    };
 
     monitoring = {
       scanEnvironments = [

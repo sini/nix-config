@@ -50,6 +50,5 @@
         # Allow media user to use Home Manager
         nix.settings.allowed-users = [ "media" ];
       };
-    homeModules = [ ];
   };
 }

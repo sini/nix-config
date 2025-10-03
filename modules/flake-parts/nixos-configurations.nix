@@ -39,6 +39,29 @@
         in
         allFeatureNames;
 
+      # Helper function to gather modules from features (both from roles and direct host features)
+      getModulesForFeatures =
+        {
+          hostRoles,
+          hostFeatures ? [ ],
+        }:
+        let
+          # 1. Get feature names from roles
+          roleFeatureNames = getFeaturesForRoles hostRoles;
+
+          # 2. Combine with direct host feature names and deduplicate
+          allFeatureNames = lib.unique (roleFeatureNames ++ hostFeatures);
+
+          # 3. Map feature names to actual feature modules
+          allFeatures = builtins.map (name: config.features.${name}) allFeatureNames;
+
+          # 4. Resolve dependencies for all features
+          featureDeps = collectRequires config.features allFeatures;
+          allFeaturesWithDeps = allFeatures ++ featureDeps;
+
+        in
+        allFeaturesWithDeps;
+
       # A dedicated function to build a single NixOS host configuration.
       # This encapsulates all the logic for one machine.
       mkHost =
@@ -55,17 +78,11 @@
             # Select the correct environment configuration (e.g., prod, dev).
             environment = config.environments.${hostOptions.environment};
 
-            # Get features from roles and direct host features
-            roleFeatureNames = getFeaturesForRoles hostOptions.roles;
-            roleFeatures = builtins.map (name: config.features.${name}) roleFeatureNames;
-
-            # Get direct host features and combine with role features
-            directHostFeatures = hostOptions.features or [ ];
-            combinedFeatures = roleFeatures ++ directHostFeatures;
-
-            # Resolve dependencies for all features
-            hostFeatureDeps = collectRequires config.features combinedFeatures;
-            allHostFeatures = combinedFeatures ++ hostFeatureDeps;
+            # Get all feature modules (from roles + direct host features + dependencies)
+            allHostFeatures = getModulesForFeatures {
+              hostRoles = hostOptions.roles;
+              hostFeatures = hostOptions.features or [ ];
+            };
 
             # Collect NixOS modules from features
             nixosModules = (collectNixosModules allHostFeatures);
@@ -86,15 +103,40 @@
               username: userSpec:
               let
                 # Collect home modules from host features
-                homeModules = collectHomeModules allHostFeatures;
+                hostHomeModules = collectHomeModules allHostFeatures;
 
-                # Map user's homeModules to actual modules
-                userHomeModules = builtins.map (
-                  moduleName: config.modules.homeManager.${moduleName}
-                ) userSpec.homeModules;
+                # Get user-specific features and modules
+                userFeatures =
+                  let
+                    # Get user from environment and host users
+                    envUser = environment.users.${username} or { };
+                    hostUser = hostOptions.users.${username} or { };
+
+                    # Combine features from environment and host
+                    envFeatureNames = envUser.features or [ ];
+                    hostFeatureNames = hostUser.features or [ ];
+                    allUserFeatureNames = lib.unique (envFeatureNames ++ hostFeatureNames);
+
+                    # Map to actual feature modules
+                    userFeatureModules = builtins.map (name: config.features.${name}) allUserFeatureNames;
+
+                    # Resolve dependencies
+                    userFeatureDeps = collectRequires config.features userFeatureModules;
+                    allUserFeatures = userFeatureModules ++ userFeatureDeps;
+                  in
+                  allUserFeatures;
+
+                # Collect user-specific home modules
+                userHomeModules = collectHomeModules userFeatures;
+
+                # Get user-specific configuration
+                userConfigs = [
+                  (environment.users.${username}.configuration or { })
+                  (hostOptions.users.${username}.configuration or { })
+                ];
               in
               {
-                imports = homeModules ++ userHomeModules;
+                imports = hostHomeModules ++ userHomeModules ++ userConfigs;
               };
 
           in
@@ -106,12 +148,12 @@
               inherit (config) nodes;
               users =
                 let
-                  # Get users from environment and host configuration
-                  environmentUsers = environment.users or [ ];
-                  hostUsers = hostOptions.users or [ ];
+                  # Get user names from environment and host configuration
+                  environmentUserNames = builtins.attrNames (environment.users or { });
+                  hostUserNames = builtins.attrNames (hostOptions.users or { });
 
                   # Merge and deduplicate user lists
-                  enabledUserNames = lib'.unique (environmentUsers ++ hostUsers);
+                  enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
 
                   # Filter config.users to only include enabled users
                   enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
@@ -146,10 +188,10 @@
                   # Configure Home Manager with feature-based modules
                   home-manager.users = lib'.mapAttrs makeHome (
                     let
-                      # Get users from environment and host configuration
-                      environmentUsers = environment.users or [ ];
-                      hostUsers = hostOptions.users or [ ];
-                      enabledUserNames = lib'.unique (environmentUsers ++ hostUsers);
+                      # Get user names from environment and host configuration
+                      environmentUserNames = builtins.attrNames (environment.users or { });
+                      hostUserNames = builtins.attrNames (hostOptions.users or { });
+                      enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
                       enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
                     in
                     enabledUsers

@@ -106,6 +106,32 @@ let
       default = [ ];
     };
 
+  mkUsersWithFeaturesOpt =
+    description:
+    mkOption {
+      type = types.lazyAttrsOf (
+        types.submodule {
+          options = {
+            features = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = ''
+                List of features specific to the user.
+
+                While a feature may specify NixOS modules in addition to home
+                modules, only home modules will affect configuration.  For this
+                reason, users should be encouraged to avoid pointlessly specifying
+                their own NixOS modules.
+              '';
+            };
+            configuration = mkDeferredModuleOpt "User-specific home configuration";
+          };
+        }
+      );
+      default = { };
+      inherit description;
+    };
+
 in
 {
   flake.lib.modules = {
@@ -119,6 +145,7 @@ in
       mkFeatureListOpt
       mkFeatureNameOpt
       mkDeferredModuleOpt
+      mkUsersWithFeaturesOpt
       ;
   };
 }

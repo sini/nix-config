@@ -6,7 +6,7 @@
 }:
 let
   inherit (lib) types mkOption;
-  inherit (self.lib.modules) mkDeferredModuleOpt mkFeatureListOpt;
+  inherit (self.lib.modules) mkDeferredModuleOpt mkUsersWithFeaturesOpt;
 in
 {
   config.text.readme.parts.host-options =
@@ -88,7 +88,11 @@ in
               description = "List of roles for the host.";
             };
 
-            features = mkFeatureListOpt "List of features for the host";
+            features = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "List of features for the host";
+            };
 
             public_key = mkOption {
               type = types.path;
@@ -148,31 +152,7 @@ in
               default = { };
             };
 
-            users = mkOption {
-              type = types.listOf types.str;
-              default = [ ];
-              description = "List of user names to enable for this specific host (merged with environment users)";
-            };
-
-            usersWithFeatures = mkOption {
-              type = types.lazyAttrsOf (
-                types.submodule {
-                  options = {
-                    features = mkFeatureListOpt ''
-                      List of features specific to the user and host.
-
-                      While a feature may specify NixOS modules in addition to home
-                      modules, only home modules will affect configuration.  For this
-                      reason, users should be encouraged to avoid pointlessly specifying
-                      their own NixOS modules.
-                    '';
-                    configuration = mkDeferredModuleOpt "User-specific home configuration on this host";
-                  };
-                }
-              );
-              default = { };
-              description = "Users on this host";
-            };
+            users = mkUsersWithFeaturesOpt "Users on this host with their features and configuration";
 
             exporters = mkOption {
               type = types.attrsOf (

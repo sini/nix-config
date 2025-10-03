@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 {
   flake.hosts.cortex = {
     ipv4 = [ "10.10.10.9" ];
@@ -11,13 +11,18 @@
       "dev-gui"
       "media"
     ];
-    features = with config.flake.features; [
-      cpu-amd
-      gpu-amd
-      gpu-nvidia
-      disk-single
-      performance
+    features = [
+      "cpu-amd"
+      "gpu-amd"
+      "gpu-nvidia"
+      "disk-single"
+      "performance"
     ];
+    users = {
+      "sini" = {
+        "features" = [ "bat" ];
+      };
+    };
     facts = ./facter.json;
     nixosConfiguration =
       {
