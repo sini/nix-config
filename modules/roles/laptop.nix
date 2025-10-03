@@ -1,5 +1,5 @@
 {
-  flake.role.laptop = {
+  flake.roles.laptop = {
     features = [
       "laptop"
       "wireless"

@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  options.flake.role = lib.mkOption {
+  options.flake.roles = lib.mkOption {
     type = lib.types.attrsOf (
       lib.types.submodule {
         options = {

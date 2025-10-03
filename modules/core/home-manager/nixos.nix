@@ -4,8 +4,6 @@
     {
       inputs,
       hostOptions,
-      users,
-      lib,
       pkgs,
       ...
     }:
@@ -38,27 +36,9 @@
           )
         ];
 
-        users =
-          let
-            # Users are already filtered in specialArgs, so we generate configs for all of them
-            enabledUsers = builtins.attrNames users;
-
-            # Create home-manager user configurations for each enabled user
-            userConfigs = lib.genAttrs enabledUsers (
-              userName:
-              let
-                userHomeModules = users.${userName}.homeModules or [ ];
-              in
-              {
-                home = {
-                  username = userName;
-                  homeDirectory = "/home/${userName}";
-                };
-                imports = userHomeModules;
-              }
-            );
-          in
-          userConfigs;
+        # User configurations are handled in nixos-configurations.nix
+        # via the makeHome function which is feature-aware and handles
+        # host features, user features, and user configurations properly.
       };
     };
 }

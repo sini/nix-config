@@ -1,5 +1,5 @@
 {
-  flake.role.core = {
+  flake.roles.core = {
     features = [
       "agenix"
       "avahi"

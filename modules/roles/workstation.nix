@@ -1,5 +1,5 @@
 {
-  flake.role.workstation = {
+  flake.roles.workstation = {
     features = [
       # Hardware modules
       "audio"
