@@ -1,11 +1,14 @@
 { rootPath, ... }:
 {
   flake.users.shuo = {
-    userConfig =
+    configuration =
       { config, ... }:
+      let
+        username = "shuo";
+      in
       {
-        age.secrets.user-shuo-password = {
-          rekeyFile = rootPath + "/.secrets/user-passwords/shuo.age";
+        age.secrets."user-${username}-password" = {
+          rekeyFile = rootPath + "/.secrets/users/${username}/hashed-password.age";
         };
         users = {
           deterministicIds.shuo = {
@@ -29,7 +32,7 @@
 
           users.shuo = {
             isNormalUser = true;
-            hashedPasswordFile = config.age.secrets.user-shuo-password.path;
+            hashedPasswordFile = config.age.secrets."user-${username}-password".path;
             home = "/home/shuo";
             group = "shuo";
             openssh.authorizedKeys.keys = [ ];

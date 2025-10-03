@@ -1,11 +1,14 @@
 { rootPath, ... }:
 {
   flake.users.sini = {
-    userConfig =
+    configuration =
       { config, ... }:
+      let
+        username = "sini";
+      in
       {
-        age.secrets.user-sini-password = {
-          rekeyFile = rootPath + "/.secrets/user-passwords/sini.age";
+        age.secrets."user-${username}-password" = {
+          rekeyFile = rootPath + "/.secrets/users/${username}/hashed-password.age";
         };
 
         users = {
@@ -30,7 +33,7 @@
 
           users.sini = {
             isNormalUser = true;
-            hashedPasswordFile = config.age.secrets.user-sini-password.path;
+            hashedPasswordFile = config.age.secrets."user-${username}-password".path;
             home = "/home/sini";
             group = "sini";
             openssh.authorizedKeys.keys = [

@@ -20,7 +20,10 @@
     ];
     users = {
       "sini" = {
-        "features" = [ "bat" ];
+        "features" = [
+          "bat"
+          "spotify-player"
+        ];
       };
     };
     facts = ./facter.json;

@@ -1,5 +1,6 @@
 # Based on: https://github.com/oddlama/nix-config/blob/7ccd7856eed93d2ba5b011d6211ff7c4f03a75f0/nix/agenix-rekey.nix
 {
+  self,
   inputs,
   rootPath,
   ...
@@ -26,6 +27,11 @@
       ...
     }:
     {
+      agenix-rekey = {
+        nixosConfigurations = self.nodes;
+        collectHomeManagerConfigurations = true;
+      };
+
       devshells.default = {
         packages = [
           pkgs.age
