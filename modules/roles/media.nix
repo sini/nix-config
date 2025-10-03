@@ -1,5 +1,5 @@
 {
-  flake.role.media = {
+  flake.roles.media = {
     features = [
       "spotify-player"
       "spicetify"

@@ -1,5 +1,5 @@
 {
-  flake.role.gaming = {
+  flake.roles.gaming = {
     features = [
       "gamepad"
       "nix-ld"

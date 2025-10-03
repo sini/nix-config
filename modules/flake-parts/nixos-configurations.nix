@@ -21,14 +21,14 @@
         hostRoles:
         let
           # 1. Start with the core features required for all systems.
-          coreFeatures = config.role.core.features;
+          coreFeatures = config.roles.core.features;
 
           # 2. Get features from additional roles defined on the host.
           additionalFeatures = lib.optionals (hostRoles != null) (
             lib.flatten (
-              builtins.map (roleName: config.role.${roleName}.features) (
+              builtins.map (roleName: config.roles.${roleName}.features) (
                 # Ensure the role actually exists before trying to access it.
-                lib.filter (roleName: lib.hasAttr roleName config.role) hostRoles
+                lib.filter (roleName: lib.hasAttr roleName config.roles) hostRoles
               )
             )
           );

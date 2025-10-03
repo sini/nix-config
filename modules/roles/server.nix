@@ -1,5 +1,5 @@
 {
-  flake.role.server = {
+  flake.roles.server = {
     features = [
       "acme"
       "media-data-share"

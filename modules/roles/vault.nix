@@ -1,5 +1,5 @@
 {
-  flake.role.vault = {
+  flake.roles.vault = {
     features = [
       "vault"
     ];
