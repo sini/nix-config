@@ -119,6 +119,8 @@
     #   inputs.nixpkgs.follows = "nixpkgs-darwin";
     # };
 
+    nix-ai-tools.url = "github:numtide/nix-ai-tools";
+
     # GitKraken configuration
     nixkraken.url = "github:nicolas-goudry/nixkraken";
 
