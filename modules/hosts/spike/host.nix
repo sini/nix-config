@@ -22,6 +22,13 @@
     extra_modules = [
       ./_local
     ];
+    users = {
+      "sini" = {
+        "features" = [
+          "spotify-player"
+        ];
+      };
+    };
     facts = ./facter.json;
     nixosConfiguration = {
       # Enable NetworkManager for managing network interfaces

@@ -4,7 +4,7 @@
       "adb"
       "direnv"
       #"gpg"
-      #"bat"
+      "bat"
       "claude"
       "eza"
       "misc-tools"
