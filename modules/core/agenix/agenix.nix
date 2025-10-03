@@ -83,13 +83,14 @@
       {
         config,
         osConfig,
+        hostOptions,
         lib,
         ...
       }:
       {
-        age.identityPaths = lib.mkIf (
+        age.identityPaths = lib.optionals (
           osConfig.age.secrets ? "user-${config.home.username}-id_agenix"
-        ) osConfig.age.secrets."user-${config.home.username}-id_agenix".path;
+        ) [ osConfig.age.secrets."user-${config.home.username}-id_agenix".path ];
 
         age.rekey = {
           inherit (inputs.self.secretsConfig) masterIdentities;
@@ -102,9 +103,11 @@
           localStorageDir =
             rootPath + "/.secrets/rekeyed/${config.home.username}/${osConfig.networking.hostName}";
 
-          hostPubkey = lib.mkIf (osConfig.age.secrets ? "user-${config.home.username}-id_agenix") (
-            rootPath + "/.secrets/users/${config.home.username}/id_agenix.pub"
-          );
+          hostPubkey =
+            if (osConfig.age.secrets ? "user-${config.home.username}-id_agenix") then
+              (rootPath + "/.secrets/users/${config.home.username}/id_agenix.pub")
+            else
+              hostOptions.public_key;
         };
       };
   };
