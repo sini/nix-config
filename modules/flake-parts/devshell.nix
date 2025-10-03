@@ -94,6 +94,11 @@
             name = "generate-user-keys";
             help = "Generate and encrypt ed25519 SSH keys for users";
           }
+          {
+            package = config.packages.generate-vault-certs;
+            name = "generate-vault-certs";
+            help = "Generate certificates for Vault raft cluster";
+          }
         ];
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 
