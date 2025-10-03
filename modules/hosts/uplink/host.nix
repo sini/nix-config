@@ -25,6 +25,11 @@
       # "vault"
     ];
     facts = ./facter.json;
+    users = {
+      "sini" = {
+        "features" = [ "bat" ];
+      };
+    };
     nixosConfiguration =
       {
         pkgs,
