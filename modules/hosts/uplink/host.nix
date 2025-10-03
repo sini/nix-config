@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 {
   flake.hosts.uplink = {
     ipv4 = [ "10.10.10.1" ];
@@ -12,17 +12,17 @@
     tags = {
       "bgp-asn" = "65000";
     };
-    features = with config.flake.features; [
-      cpu-amd
-      gpu-intel
-      disk-single
-      podman
-      acme
-      nginx
-      kanidm
-      grafana
-      # minio
-      # vault
+    features = [
+      "cpu-amd"
+      "gpu-intel"
+      "disk-single"
+      "podman"
+      "acme"
+      "nginx"
+      "kanidm"
+      "grafana"
+      # "minio"
+      # "vault"
     ];
     facts = ./facter.json;
     nixosConfiguration =

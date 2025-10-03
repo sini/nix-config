@@ -1,9 +1,11 @@
 {
   lib,
+  self,
   ...
 }:
 let
   inherit (lib) types mkOption;
+  inherit (self.lib.modules) mkUsersWithFeaturesOpt;
 in
 {
   config.text.readme.parts.environment-options =
@@ -252,11 +254,7 @@ in
             description = "Monitoring configuration including cross-environment scanning";
           };
 
-          users = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "List of user names to enable for all hosts in this environment";
-          };
+          users = mkUsersWithFeaturesOpt "Users in this environment with their features and configuration";
 
           ipv6 = mkOption {
             type = types.submodule {

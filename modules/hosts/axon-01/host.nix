@@ -1,4 +1,4 @@
-{ config, ... }:
+{ ... }:
 {
   flake.hosts.axon-01 = {
     ipv4 = [ "10.10.10.2" ];
@@ -11,11 +11,11 @@
       "bgp-spoke"
       "vault"
     ];
-    features = with config.flake.features; [
-      disk-longhorn
-      cpu-amd
-      gpu-amd
-      thunderbolt-mesh
+    features = [
+      "disk-longhorn"
+      "cpu-amd"
+      "gpu-amd"
+      "thunderbolt-mesh"
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.1";

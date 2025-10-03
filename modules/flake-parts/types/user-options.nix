@@ -7,7 +7,6 @@ let
   inherit (lib) mkOption types;
   inherit (self.lib.modules)
     featureSubmoduleGenericOptions
-    mkFeatureListOpt
     mkFeatureNameOpt
     ;
 in
@@ -27,11 +26,6 @@ in
               type = types.deferredModule;
               default = { };
               description = "NixOS configuration for this user";
-            };
-            homeModules = mkOption {
-              type = types.listOf types.str;
-              default = [ ];
-              description = "List of Home Manager module names to include for this user";
             };
             features = mkOption {
               type = types.lazyAttrsOf (
@@ -55,16 +49,20 @@ in
             baseline = mkOption {
               type = types.submodule {
                 options = {
-                  features = mkFeatureListOpt ''
-                    List of baseline features shared by all of this user's configurations.
+                  features = mkOption {
+                    type = types.listOf types.str;
+                    default = [ ];
+                    description = ''
+                      List of baseline features shared by all of this user's configurations.
 
-                    Note that the "core" feature
-                    (`users.<username>.features.core`) will *always* be
-                    included in all of the user's configurations.  This
-                    follows the same behavior as the "core" feature in
-                    the system scope, which is included in all system
-                    configurations.
-                  '';
+                      Note that the "core" feature
+                      (`users.<username>.features.core`) will *always* be
+                      included in all of the user's configurations.  This
+                      follows the same behavior as the "core" feature in
+                      the system scope, which is included in all system
+                      configurations.
+                    '';
+                  };
                 };
               };
               description = "Baseline features and configurations shared by all of this user's configurations";

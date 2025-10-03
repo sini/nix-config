@@ -74,12 +74,12 @@
       owner = "json64";
     };
 
-    users = [
-      "sini"
-      "shuo"
-      "will"
-      "media"
-    ];
+    users = {
+      sini = { };
+      shuo = { };
+      will = { };
+      media = { };
+    };
 
     delegation = {
       metricsTo = "prod";

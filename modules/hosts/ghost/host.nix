@@ -1,4 +1,4 @@
-{ inputs, config, ... }:
+{ inputs, ... }:
 {
   flake.hosts.ghost = {
     ipv4 = [
@@ -15,12 +15,12 @@
       "dev-gui"
       "media"
     ];
-    features = with config.flake.features; [
-      disk-single
-      cpu-intel
-      gpu-intel
-      podman
-      wireless
+    features = [
+      "disk-single"
+      "cpu-intel"
+      "gpu-intel"
+      "podman"
+      "wireless"
     ];
     extra_modules = [
       inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel
