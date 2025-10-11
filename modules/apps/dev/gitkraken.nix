@@ -51,6 +51,7 @@
         };
 
         gpg = {
+          package = pkgs.gnupg;
           signCommits = true;
           signTags = true;
           signingKey = config.programs.git.defaultIdentity.signingKey;
