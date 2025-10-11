@@ -39,7 +39,7 @@
         hardware = {
           disk.single.device_id = "nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
           networking = {
-            interfaces = [ "enp10s0" ];
+            interfaces = [ "enp4s0" ];
             unmanagedInterfaces = [
               # "enp10s0"
               # "enp10s0d1"
