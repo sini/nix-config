@@ -140,7 +140,6 @@
             # name = "catppuccin_macchiato";
             bar = {
               buttons = {
-                dashboard.icon = "#99c1f1";
                 modules.kbLayout.enableBorder = false;
                 workspaces.enableBorder = false;
               };
