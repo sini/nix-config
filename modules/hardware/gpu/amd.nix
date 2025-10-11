@@ -14,12 +14,6 @@
       hardware = {
         amdgpu = {
           opencl.enable = true;
-          amdvlk.enable = false;
-          # Note: we disable amdvlk for now, as open drivers are preferred -- left for reference
-          # amdvlk = {
-          #   enable = true;
-          #   support32Bit = true;
-          # };
           initrd.enable = true;
         };
 
