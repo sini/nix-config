@@ -1,14 +1,8 @@
 {
   flake.features.discord.home =
-    { inputs, pkgs, ... }:
+    { inputs, ... }:
     {
       imports = [ inputs.nixcord.homeModules.nixcord ];
-      home.packages = with pkgs; [
-        signal-desktop
-        # Whatsapp
-        wasistlos
-        zapzap
-      ];
       programs.nixcord = {
         enable = true;
         discord.enable = false;
