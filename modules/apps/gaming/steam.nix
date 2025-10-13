@@ -41,7 +41,7 @@
       };
 
       environment.systemPackages = with pkgs; [
-        lutris
+        lutris # TODO: Re-enable...
         wine
         winetricks
         wineWowPackages.waylandFull
