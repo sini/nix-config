@@ -4,10 +4,14 @@
       lib,
       inputs,
       pkgs,
-      config,
+      activeFeatures,
       ...
     }:
     let
+      # Check if both gpu-nvidia-prime and laptop features are active
+      hasNvidiaPrimeOnLaptop =
+        lib.elem "gpu-nvidia-prime" activeFeatures && lib.elem "laptop" activeFeatures;
+
       patchDesktop =
         pkg: appName: from: to:
         lib.hiPrio (
@@ -40,15 +44,17 @@
         trusted-public-keys = [ "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4=" ];
       };
 
-      environment.systemPackages = with pkgs; [
-        lutris # TODO: Re-enable...
-        wine
-        winetricks
-        wineWowPackages.waylandFull
-        (lib.mkIf config.hardware.nvidia.prime.offload.enable (
+      environment.systemPackages =
+        with pkgs;
+        [
+          lutris # TODO: Re-enable...
+          wine
+          winetricks
+          wineWowPackages.waylandFull
+        ]
+        ++ lib.optional hasNvidiaPrimeOnLaptop (
           patchDesktop steamPkg "steam" "^Exec=" "Exec=nvidia-offload "
-        ))
-      ];
+        );
 
       hardware = {
         steam-hardware.enable = true;
@@ -103,7 +109,7 @@
 
       # Smooth-criminal bleeding-edge Mesa3D
       # WARNING: It will break NVIDIA's libgbm, don't use with NVIDIA Optimus setups.
-      # chaotic.mesa-git = lib.mkIf (!config.hardware.nvidia.prime.offload.enable) {
+      # chaotic.mesa-git = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
       #   enable = true;
       #   fallbackSpecialisation = false;
       # };
