@@ -5,6 +5,7 @@
       "audio"
       "bluetooth"
       "coolercontrol"
+      "ddcutil"
 
       # Styles
       "stylix"

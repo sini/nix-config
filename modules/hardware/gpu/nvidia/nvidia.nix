@@ -12,8 +12,6 @@
       }:
       {
 
-        services.xserver.videoDrivers = [ "nvidia" ];
-
         nix.settings = {
           substituters = [
             "https://cuda-maintainers.cachix.org"
