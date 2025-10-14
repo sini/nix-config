@@ -40,6 +40,7 @@
         promtail = uidGid 970;
         vault = uidGid 969;
         wireshark = uidGid 968;
+        i2c = uidGid 967;
       };
   };
 }

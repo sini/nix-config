@@ -11,6 +11,7 @@
           ++ (lutris.args.multiPkgs pkgs)
           ++ [
             alsa-lib
+            clang.cc.lib
             dbus
             glibc
             gtk3
@@ -23,7 +24,9 @@
             libva
             mesa
             networkmanager
+            openssl
             pkg-config
+            stdenv.cc.cc
             xorg.libX11
             xorg.libXext
             udev

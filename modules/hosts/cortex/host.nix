@@ -14,7 +14,7 @@
     features = [
       "cpu-amd"
       "gpu-amd"
-      "gpu-nvidia"
+      "gpu-nvidia-vfio"
       "disk-single"
       "performance"
     ];
@@ -37,7 +37,7 @@
         hardware.disk.single.device_id = "nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
         hardware.networking.interfaces = [ "enp8s0" ];
 
-        boot.kernelPackages = pkgs.linuxPackages_cachyos; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+        boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
 
         # use TCP BBR has significantly increased throughput and reduced latency for connections
         boot.kernelModules = [
@@ -45,10 +45,25 @@
           "it87" # Fan options
         ];
         # Enable fan sensors...
-        boot.kernelParams = [ "acpi_enforce_resources=lax" ];
+        boot.kernelParams = [
+          # ACPI & Power Management
+          "acpi_osi=Linux" # Set ACPI OS interface to Linux
+          "acpi=force" # Force ACPI
+          "acpi_enforce_resources=lax"
+          "resume_offset=0" # Set resume offset to 0
+
+          # Performance & Security
+          "mitigations=off" # Disable CPU vulnerabilities mitigations (security trade-off)
+          "nowatchdog" # Disable watchdog timer
+          "nmi_watchdog=0" # Disable NMI watchdog
+          "split_lock_detect=off" # Disable split lock detection
+          "pcie_aspm=off" # Disable PCIe Active State Power Management
+        ];
+
         boot.extraModprobeConfig = ''
           options it87 ignore_resource_conflict=1 force_id=0x8628
         '';
+
         boot.kernel.sysctl = {
           "net.core.default_qdisc" = "fq";
           "net.ipv4.tcp_congestion_control" = "bbr";

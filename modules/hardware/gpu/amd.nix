@@ -3,7 +3,12 @@
     { pkgs, ... }:
     {
       # Allow for overclocking
-      boot.kernelParams = [ "amdgpu.ppfeaturemask=0xffffffff" ];
+      boot.kernelParams = [
+        "amdgpu.dc=1"
+        "amdgpu.powerplay=1"
+        "amdgpu.ppfeaturemask=0xffffffff"
+        "radeon.modeset=0"
+      ];
 
       boot.kernelModules = [
         "amdgpu"
