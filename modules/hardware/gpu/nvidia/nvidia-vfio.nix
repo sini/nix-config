@@ -28,6 +28,7 @@
         {
           services.udev.extraRules = ''
             SUBSYSTEM=="vfio", OWNER="root", GROUP="kvm"
+            SUBSYSTEM=="kvmfr", OWNER="root", GROUP="kvm", MODE="0660"
           '';
 
           boot = {
@@ -59,6 +60,7 @@
               "nvidia-gpu"
               "nouveau"
             ];
+
             # 256 is for 4k HDR
             extraModprobeConfig = ''
               options vfio-pci ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"

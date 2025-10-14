@@ -58,7 +58,6 @@
           "acpi_osi=Linux" # Set ACPI OS interface to Linux
           "acpi=force" # Force ACPI
           "acpi_enforce_resources=lax"
-          "resume_offset=0" # Set resume offset to 0
 
           # Performance & Security
           "mitigations=off" # Disable CPU vulnerabilities mitigations (security trade-off)
