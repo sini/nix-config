@@ -37,7 +37,8 @@
         hardware.disk.single.device_id = "nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
         hardware.networking.interfaces = [ "enp8s0" ];
 
-        boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+        boot.kernelPackages = pkgs.linuxPackages_cachyos; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+
         # use TCP BBR has significantly increased throughput and reduced latency for connections
         boot.kernelModules = [
           "ntsync"
