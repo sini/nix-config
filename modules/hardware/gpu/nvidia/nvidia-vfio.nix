@@ -59,10 +59,10 @@
               "nvidia-gpu"
               "nouveau"
             ];
-
+            # 256 is for 4k HDR
             extraModprobeConfig = ''
               options vfio-pci ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"
-              options kvmfr static_size_mb=64
+              options kvmfr static_size_mb=256
               blacklist nouveau
               options nouveau modeset=0
             '';
