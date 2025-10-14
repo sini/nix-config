@@ -1,14 +1,9 @@
-{ config, ... }:
-let
-  username = config.flake.meta.user.username;
-in
 {
   flake.features.virtualization.nixos =
     { pkgs, ... }:
     {
-      # Add user to libvirtd group
-      users.users.${username}.extraGroups = [ "libvirtd" ];
 
+      boot.kernelModules = [ "vhost-net" ];
       # Install necessary packages
       environment.systemPackages = with pkgs; [
         libguestfs
@@ -19,6 +14,14 @@ in
         virt-viewer
         win-virtio
         win-spice
+
+        virtiofsd
+        looking-glass-client # For KVM
+        qemu # Virtualizer
+        OVMF # UEFI Firmware
+        gvfs # Shared Directory
+        swtpm # TPM
+        virglrenderer # Virtual OpenGL
       ];
 
       # Manage the virtualisation services

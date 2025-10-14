@@ -26,6 +26,10 @@
               "10de:1aef";
         in
         {
+          services.udev.extraRules = ''
+            SUBSYSTEM=="vfio", OWNER="root", GROUP="kvm"
+          '';
+
           boot = {
             kernelParams = [
               "vfio-pci.ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"

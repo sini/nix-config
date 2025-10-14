@@ -52,6 +52,8 @@
               "media"
               "gamemode"
               "render"
+              "libvirtd"
+              "kvm"
             ];
             linger = true; # Required for the services start automatically without login
           };

@@ -84,6 +84,9 @@
               hostFeatures = hostOptions.features or [ ];
             };
 
+            # Get active feature names (including transitive dependencies)
+            activeFeatures = lib.unique (builtins.map (f: f.name) allHostFeatures);
+
             # Collect NixOS modules from features
             nixosModules = (collectNixosModules allHostFeatures);
 
@@ -144,7 +147,12 @@
             inherit system;
 
             specialArgs = {
-              inherit inputs hostOptions environment;
+              inherit
+                inputs
+                hostOptions
+                environment
+                activeFeatures
+                ;
               inherit (config) nodes;
               users =
                 let
