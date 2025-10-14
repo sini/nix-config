@@ -48,6 +48,12 @@
         ];
         # Enable fan sensors...
         boot.kernelParams = [
+          # Memory Management
+          "default_hugepagesz=2M" # Set default huge page size to 2MB
+          "hugepagesz=2M" # Configure huge page size as 2MB
+          "transparent_hugepage=never" # Disable transparent huge pages
+          "mem_sleep_default=deep" # Set default sleep mode to deep sleep
+
           # ACPI & Power Management
           "acpi_osi=Linux" # Set ACPI OS interface to Linux
           "acpi=force" # Force ACPI
