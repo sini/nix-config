@@ -16,6 +16,8 @@
       # Desktop GUI
       "xserver"
       "xwayland"
+      "ananicy"
+
       "gdm"
       "gnome"
       "xdg-portal"
