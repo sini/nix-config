@@ -38,10 +38,10 @@
         networking.networkmanager.enable = true;
         hardware.disk.single.device_id = "nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
         hardware.networking.interfaces = [ "enp8s0" ];
-        hardware.networking.unmanagedInterfaces = [
-          "enp8s0"
-          "br0"
-        ];
+        # hardware.networking.unmanagedInterfaces = [
+        #   "enp8s0"
+        #   "br0"
+        # ];
 
         boot.kernelPackages = pkgs.linuxPackages_cachyos; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
 
@@ -80,22 +80,22 @@
           "net.ipv4.tcp_congestion_control" = "bbr";
         };
 
-        networking = {
-          interfaces.br0 = {
-            useDHCP = true;
-          };
-          bridges.br0 = {
-            interfaces = [ "enp8s0" ];
-            rstp = true;
-          };
-          firewall = {
-            allowedUDPPorts = [
-              53
-              67
-            ];
-            checkReversePath = false;
-          };
-        };
+        # networking = {
+        #   interfaces.br0 = {
+        #     useDHCP = true;
+        #   };
+        #   bridges.br0 = {
+        #     interfaces = [ "enp8s0" ];
+        #     rstp = true;
+        #   };
+        #   firewall = {
+        #     allowedUDPPorts = [
+        #       53
+        #       67
+        #     ];
+        #     checkReversePath = false;
+        #   };
+        # };
 
         environment.systemPackages = with pkgs; [
           lm_sensors
