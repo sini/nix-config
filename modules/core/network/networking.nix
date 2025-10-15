@@ -2,6 +2,8 @@
   flake.features.networking.nixos =
     {
       config,
+      hostOptions,
+      environment,
       lib,
       ...
     }:
@@ -121,6 +123,10 @@
         ];
 
         networking = {
+          hostName = hostOptions.hostname;
+          domain = environment.domain;
+          hostId = with builtins; substring 0 8 (hashString "md5" config.networking.hostName);
+
           useDHCP = false;
           dhcpcd.enable = false;
 
