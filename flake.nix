@@ -62,8 +62,6 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # catppuccin.url = "github:catppuccin/nix";
-
     # Nix flake for "too much bleeding-edge" and unreleased packages (e.g., mesa_git, linux_cachyos, firefox_nightly, sway_git, gamescope_git). And experimental modules (e.g., HDR, duckdns).
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
@@ -179,11 +177,6 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    # hyprsplit = {
-    #   url = "github:shezdy/hyprsplit";
-    #   inputs.hyprland.follows = "hyprland";
-    # };
-
     hyprland-easymotion = {
       url = "github:zakk4223/hyprland-easymotion";
       inputs.hyprland.follows = "hyprland";
@@ -238,8 +231,6 @@
     nixpkgs-unstable.url = "github:sini/nixpkgs/antlr-fix";
 
     nvf.url = "github:notashelf/nvf";
-
-    make-shell.url = "github:nicknovitski/make-shell";
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
 
