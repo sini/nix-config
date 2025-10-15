@@ -13,6 +13,7 @@
           killall
           lsof
           pciutils
+          usbutils
           unzip
           wget
           psmisc
