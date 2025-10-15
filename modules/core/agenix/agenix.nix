@@ -6,7 +6,12 @@
 {
   flake.features.agenix = {
     nixos =
-      { config, lib, ... }:
+      {
+        config,
+        hostOptions,
+        lib,
+        ...
+      }:
       {
         imports = [
           inputs.agenix.nixosModules.default
@@ -16,6 +21,7 @@
         age.rekey = {
           inherit (inputs.self.secretsConfig) masterIdentities;
           storageMode = "local";
+          hostPubkey = hostOptions.public_key;
           generatedSecretsDir = rootPath + "/.secrets/generated/${config.networking.hostName}";
           localStorageDir = rootPath + "/.secrets/rekeyed/${config.networking.hostName}";
         };

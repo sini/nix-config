@@ -188,11 +188,6 @@
               # Finally, apply machine-specific settings and configure Home Manager.
               ++ [
                 {
-                  networking.hostName = hostOptions.hostname;
-                  networking.domain = environment.domain;
-                  facter.reportPath = hostOptions.facts;
-                  age.rekey.hostPubkey = hostOptions.public_key;
-
                   # Configure Home Manager with feature-based modules
                   home-manager.users = lib'.mapAttrs makeHome (
                     let
