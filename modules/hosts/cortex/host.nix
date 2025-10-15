@@ -43,8 +43,9 @@
         #   "br0"
         # ];
 
-        boot.kernelPackages = pkgs.linuxPackages_cachyos; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
-
+        # boot.kernelPackages = pkgs.linuxPackages_cachyos;
+        boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
+        chaotic.hdr.enable = true;
         # use TCP BBR has significantly increased throughput and reduced latency for connections
         boot.kernelModules = [
           "ntsync"
