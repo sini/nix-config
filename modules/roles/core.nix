@@ -15,6 +15,7 @@
       "nixpkgs"
       "openssh"
       "power-mgmt"
+      "security"
       "shell"
       "ssd"
       "sudo"

@@ -41,6 +41,7 @@
         vault = uidGid 969;
         wireshark = uidGid 968;
         i2c = uidGid 967;
+        tss = uidGid 966;
       };
   };
 }

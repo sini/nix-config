@@ -1,6 +1,11 @@
 {
   flake.features.podman.nixos =
-    { lib, pkgs, ... }:
+    {
+      config,
+      lib,
+      pkgs,
+      ...
+    }:
     {
       environment.systemPackages = with pkgs; [
         dive # look into docker image layers
@@ -23,7 +28,11 @@
             dates = "weekly";
           };
 
-          defaultNetwork.settings.dns_enabled = true;
+          defaultNetwork.settings = {
+            dns_enabled = true;
+            driver = "bridge";
+            name = builtins.head config.hardware.networking.bridges;
+          };
           dockerCompat = true;
           dockerSocket.enable = true;
         };
@@ -37,6 +46,12 @@
           }; # storage
         };
       };
+
+      networking.networkmanager.unmanaged = [
+        "interface-name:veth*"
+        "interface-name:podman*"
+        "interface-name:cni*"
+      ];
 
       # Add 'newuidmap' and 'sh' to the PATH for users' Systemd units.
       # Required for Rootless podman.
