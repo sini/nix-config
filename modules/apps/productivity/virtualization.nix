@@ -18,11 +18,6 @@ in
         "net.bridge.bridge-nf-call-arptables" = 0;
         "net.bridge.bridge-nf-call-ip6tables" = 0;
 
-        # Virtual memory
-        "vm.swappiness" = 10;
-        "vm.dirty_ratio" = 15;
-        "vm.dirty_background_ratio" = 5;
-
         # Huge pages
         "vm.nr_hugepages" = 1024;
       };
