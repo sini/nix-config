@@ -31,6 +31,9 @@
             SUBSYSTEM=="kvmfr", OWNER="root", GROUP="kvm", MODE="0660"
           '';
 
+          # We don't start powerd by default since we've bound the GPU to vfio
+          systemd.services.nvidia-powerd.enable = false;
+
           boot = {
             kernelParams = [
               "vfio-pci.ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"
