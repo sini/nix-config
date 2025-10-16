@@ -5,6 +5,7 @@
     {
       config,
       lib,
+      pkgs,
       ...
     }:
     with lib;
@@ -110,8 +111,9 @@
             };
 
             postCreateHook = ''
-              if ! zfs list -t snap zroot/local/root@blank; then
-                  zfs snapshot zroot/local/root@blank
+              zfs set keylocation="prompt" $name;
+              if ! zfs list -t snap zroot/local/root@empty; then
+                  zfs snapshot zroot/local/root@empty
               fi
             '';
 
@@ -125,8 +127,8 @@
                 type = "zfs_fs";
                 options.mountpoint = "legacy";
                 postCreateHook = ''
-                  zfs snapshot zroot/local/root@empty
-                  zfs snapshot zroot/local/root@lastboot
+                  zfs snapshot zroot/local/root@empty;
+                  zfs snapshot zroot/local/root@lastboot;
                 '';
               };
               "local/nix" = {
@@ -147,7 +149,7 @@
                 mountpoint = "/home";
                 options."com.sun:auto-snapshot" = "true";
                 postCreateHook = ''
-                  zfs snapshot zroot/local/home@empty
+                  zfs snapshot zroot/local/home@empty;
                   zfs snapshot zroot/local/home@lastboot
                 '';
               };
@@ -169,11 +171,11 @@
           };
         };
 
-        boot = {
-          initrd.postDeviceCommands = lib.mkAfter ''
-            zfs rollback -r zroot/local/root@empty
-          '';
-        };
+        # boot = {
+        #   initrd.postDeviceCommands = lib.mkAfter ''
+        #     zfs rollback -r zroot/local/root@empty
+        #   '';
+        # };
         # Discover directories that will be removed on next boot
         environment.systemPackages = [
           (pkgs.writeScriptBin "zfsdiff" ''

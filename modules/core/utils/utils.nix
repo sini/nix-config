@@ -24,11 +24,11 @@
         ++ (if config.hardware.nvidia.modesetting.enable then [ pkgs.btop-cuda ] else [ pkgs.btop ]);
 
       # Log diff when system update is applied
-      system.activationScripts.diff = {
-        supportsDryActivation = true;
-        text = ''
-          ${pkgs.nvd}/bin/nvd --nix-bin-dir=${pkgs.nix}/bin diff /run/current-system "$systemConfig"
-        '';
-      };
+      # system.activationScripts.diff = {
+      #   supportsDryActivation = true;
+      #   text = ''
+      #     ${pkgs.nvd}/bin/nvd --nix-bin-dir=${pkgs.nix}/bin diff /run/current-system "$systemConfig"
+      #   '';
+      # };
     };
 }
