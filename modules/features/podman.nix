@@ -33,6 +33,7 @@
             driver = "bridge";
             name = builtins.head config.hardware.networking.bridges;
           };
+
           dockerCompat = true;
           dockerSocket.enable = true;
         };

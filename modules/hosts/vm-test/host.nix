@@ -27,14 +27,14 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.linuxPackages_latest;
+        boot.kernelPackages = pkgs.linuxPackages_cachyos-server;
 
         hardware = {
           networking = {
             interfaces = [ "enp1s0" ];
             unmanagedInterfaces = [ "enp1s0" ];
           };
-          disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_DVD-ROM_QM00001";
+          disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
         };
 
         system.stateVersion = "25.05";

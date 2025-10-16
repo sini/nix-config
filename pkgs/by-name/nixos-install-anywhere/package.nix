@@ -1,6 +1,7 @@
 {
   writeShellApplication,
   age,
+  age-plugin-yubikey,
   openssh,
   jq,
   nix,
@@ -11,6 +12,7 @@ writeShellApplication {
   name = "nixos-install-anywhere";
   runtimeInputs = [
     age
+    age-plugin-yubikey
     openssh
     jq
     nix
@@ -101,22 +103,28 @@ writeShellApplication {
         echo "$password"
     }
 
-    install_ssh_host_keys() {
+    prepare_ssh_host_keys() {
         local hostname="$1"
-        local target_ip="$2"
         local host_dir="$KEYS_DIR/$hostname"
 
-        log "Installing SSH host keys for $hostname on $target_ip"
+        log "Preparing SSH host keys for $hostname"
 
         # Check if host keys exist
         if [[ ! -d "$host_dir" ]]; then
             error "No SSH host keys found for $hostname. Run 'generate-host-keys $hostname' first."
         fi
 
-        # Create temporary directory for decrypted keys
-        local temp_dir
+        # Create temporary directory with /etc/ssh structure for --extra-files
         temp_dir=$(mktemp -d)
         trap 'rm -rf "$temp_dir"' EXIT
+
+        install -d -m755 "$temp_dir/etc/ssh"
+
+        # Get YubiKey identity once
+        log "  Getting YubiKey identity..."
+        local yubikey_identity_file="$temp_dir/yubikey_identity"
+        age-plugin-yubikey -i > "$yubikey_identity_file"
+        log "  ✓ YubiKey identity obtained"
 
         # Decrypt and prepare host keys
         local key_count=0
@@ -127,22 +135,28 @@ writeShellApplication {
 
             local key_file
             key_file=$(basename "$age_file" .age)
-            local temp_key="$temp_dir/$key_file"
+            local temp_key="$temp_dir/etc/ssh/$key_file"
 
-            # Decrypt the key
-            if age -d -i <(age-plugin-yubikey -i) "$age_file" > "$temp_key" 2>/dev/null; then
+            # Decrypt the key using the cached identity
+            set +e  # Temporarily disable exit on error
+            age -d -i "$yubikey_identity_file" "$age_file" > "$temp_key"
+            local decrypt_result=$?
+            set -e  # Re-enable exit on error
+
+            if [[ $decrypt_result -eq 0 ]]; then
                 chmod 600 "$temp_key"
                 log "  ✓ Decrypted: $key_file"
-                ((key_count++))
+                key_count=$((key_count + 1))
             else
-                log "  ✗ Failed to decrypt: $key_file"
+                log "  ✗ Failed to decrypt: $key_file (exit code: $decrypt_result)"
             fi
         done
 
         # Copy public keys as well
         for pub_file in "$host_dir"/ssh_host_*_key.pub; do
             if [[ -f "$pub_file" ]]; then
-                cp "$pub_file" "$temp_dir/"
+                cp "$pub_file" "$temp_dir/etc/ssh/"
+                chmod 644 "$temp_dir/etc/ssh/$(basename "$pub_file")"
                 log "  ✓ Prepared: $(basename "$pub_file")"
             fi
         done
@@ -151,20 +165,7 @@ writeShellApplication {
             error "Failed to decrypt any SSH host keys"
         fi
 
-        # Upload keys to target host
-        log "Uploading SSH host keys to target host"
-        if scp -o ConnectTimeout=30 -o BatchMode=yes "$temp_dir"/ssh_host_* "root@$target_ip:/etc/ssh/" 2>/dev/null; then
-            log "  ✓ SSH host keys uploaded successfully"
-        else
-            error "Failed to upload SSH host keys to target host"
-        fi
-
-        # Set correct permissions on target
-        if ssh -o ConnectTimeout=30 -o BatchMode=yes "root@$target_ip" "chmod 600 /etc/ssh/ssh_host_*_key; chmod 644 /etc/ssh/ssh_host_*_key.pub; systemctl reload sshd" 2>/dev/null; then
-            log "  ✓ SSH host key permissions set and sshd reloaded"
-        else
-            log "  ⚠ Warning: Could not set permissions or reload sshd on target"
-        fi
+        log "  ✓ SSH host keys prepared ($key_count keys)"
     }
 
     run_nixos_anywhere() {
@@ -176,18 +177,26 @@ writeShellApplication {
 
         log "Running nixos-anywhere for $hostname on $target_ip"
 
+        # Store disk encryption password in temp directory for disko
+        install -d -m755 "$temp_dir/tmp"
+        echo -n "$disk_password" > "$temp_dir/tmp/secret.key"
+        chmod 600 "$temp_dir/tmp/secret.key"
+        log "  ✓ Disk encryption key written to /tmp/secret.key"
+
         # Prepare nixos-anywhere arguments
         local nix_anywhere_args=(
             "--flake" ".#$hostname"
             "--target-host" "root@$target_ip"
             "--disko-mode" "$disko_mode"
+            "--extra-files" "$temp_dir"
+            "--disk-encryption-keys" "/tmp/secret.key" "$temp_dir/tmp/secret.key"
         )
 
         if [[ "$no_reboot" == "true" ]]; then
             nix_anywhere_args+=("--no-reboot")
         fi
 
-        # Set disk encryption password as environment variable
+        # Set disk encryption password as environment variable (for compatibility)
         export DISK_ENCRYPTION_PASSWORD="$disk_password"
 
         log "Executing: nixos-anywhere ''${nix_anywhere_args[*]}"
@@ -205,7 +214,7 @@ writeShellApplication {
         local hostname=""
         local target_ip=""
         local disk_password=""
-        local disko_mode="format"
+        local disko_mode="disko"
         local no_reboot="false"
 
         # Parse arguments
@@ -247,10 +256,10 @@ writeShellApplication {
 
         # Validate disko mode
         case "$disko_mode" in
-            format|mount|destroy)
+            format|mount|disko)
                 ;;
             *)
-                error "Invalid disko mode: $disko_mode. Must be format, mount, or destroy."
+                error "Invalid disko mode: $disko_mode. Must be format, mount, or disko."
                 ;;
         esac
 
@@ -262,8 +271,8 @@ writeShellApplication {
         # Get disk encryption password
         disk_password=$(get_disk_encryption_password "$disk_password")
 
-        # Install SSH host keys first
-        install_ssh_host_keys "$hostname" "$target_ip"
+        # Prepare SSH host keys for installation
+        prepare_ssh_host_keys "$hostname"
 
         # Run nixos-anywhere
         run_nixos_anywhere "$hostname" "$target_ip" "$disk_password" "$disko_mode" "$no_reboot"
