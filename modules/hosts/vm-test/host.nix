@@ -1,7 +1,7 @@
 { ... }:
 {
   flake.hosts.vm-test = {
-    ipv4 = [ "10.10.210.149" ];
+    ipv4 = [ "10.10.44.135" ];
     ipv6 = [ "fd64:0:3::2/64" ];
     environment = "prod";
     roles = [
@@ -28,7 +28,15 @@
       }:
       {
         boot.kernelPackages = pkgs.linuxPackages_cachyos-server;
-
+        boot.initrd.availableKernelModules = [
+          "ahci"
+          "xhci_pci"
+          "virtio_pci"
+          "virtio_scsi"
+          "sd_mod"
+          "sr_mod"
+          "virtio_net"
+        ];
         hardware = {
           networking = {
             interfaces = [ "enp1s0" ];
