@@ -6,16 +6,19 @@
     environment = "prod";
     roles = [
       "server"
-      "kubernetes"
-      "kubernetes-master"
-      "bgp-spoke"
-      "vault"
+      # "kubernetes"
+      # "kubernetes-master"
+      # "bgp-spoke"
+      # "vault"
     ];
     features = [
       "disk-longhorn"
+      # "zfs-disk-single"
+      # "zfs"
+      # "impermenance"
       "cpu-amd"
       "gpu-amd"
-      "thunderbolt-mesh"
+      # "thunderbolt-mesh"
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.1";
@@ -40,6 +43,7 @@
             unmanagedInterfaces = [ "enp2s0" ];
 
           };
+          # disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
           disk.longhorn = {
             os_drive = {
               device_id = "nvme-NVMe_CA6-8D1024_00230650035M";

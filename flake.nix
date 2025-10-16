@@ -182,6 +182,8 @@
       inputs.hyprland.follows = "hyprland";
     };
 
+    impermanence.url = "github:nix-community/impermanence";
+
     kubenix = {
       url = "github:pizzapim/kubenix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

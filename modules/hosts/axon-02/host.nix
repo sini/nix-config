@@ -6,15 +6,15 @@
     environment = "prod";
     roles = [
       "server"
-      "kubernetes"
-      "bgp-spoke"
-      "vault"
+      # "kubernetes"
+      # "bgp-spoke"
+      # "vault"
     ];
     features = [
       "disk-longhorn"
       "cpu-amd"
       "gpu-amd"
-      "thunderbolt-mesh"
+      # "thunderbolt-mesh"
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.2";

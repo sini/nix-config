@@ -2,7 +2,17 @@
   flake.features.zfs.nixos =
     { pkgs, ... }:
     {
-      boot.zfs.package = pkgs.zfs_cachyos;
+      boot.supportedFilesystems = {
+        zfs = true;
+        ntfs = true;
+      };
+
+      boot.zfs = {
+        package = pkgs.zfs_cachyos;
+        devNodes = "/dev/disk/by-id/";
+        forceImportAll = true;
+        requestEncryptionCredentials = true;
+      };
 
       boot.kernelParams = [
         # ZFS-related params
@@ -17,18 +27,6 @@
       # Enable auto-scrub
       services.zfs.autoScrub.enable = true;
       services.zfs.autoScrub.interval = "weekly";
-
-      # Enable auto-trim
-      services.zfs.trim.enable = true;
-      services.zfs.trim.interval = "daily";
-
-      # Enable auto-snapshot
-      services.zfs.autoSnapshot = {
-        enable = true;
-        monthly = 0;
-        weekly = 0;
-        daily = 2;
-      };
 
       # # Enable ZED's pushbullet compat
       # services.zfs.zed.settings = {
