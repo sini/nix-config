@@ -114,11 +114,11 @@ writeShellApplication {
             error "No SSH host keys found for $hostname. Run 'generate-host-keys $hostname' first."
         fi
 
-        # Create temporary directory with /etc/ssh structure for --extra-files
+        # Create temporary directory with /persist/etc/ssh structure for --extra-files
         temp_dir=$(mktemp -d)
         trap 'rm -rf "$temp_dir"' EXIT
 
-        install -d -m755 "$temp_dir/etc/ssh"
+        install -d -m755 "$temp_dir/persist/etc/ssh"
 
         # Get YubiKey identity once
         log "  Getting YubiKey identity..."
@@ -135,7 +135,7 @@ writeShellApplication {
 
             local key_file
             key_file=$(basename "$age_file" .age)
-            local temp_key="$temp_dir/etc/ssh/$key_file"
+            local temp_key="$temp_dir/persist/etc/ssh/$key_file"
 
             # Decrypt the key using the cached identity
             set +e  # Temporarily disable exit on error
@@ -155,8 +155,8 @@ writeShellApplication {
         # Copy public keys as well
         for pub_file in "$host_dir"/ssh_host_*_key.pub; do
             if [[ -f "$pub_file" ]]; then
-                cp "$pub_file" "$temp_dir/etc/ssh/"
-                chmod 644 "$temp_dir/etc/ssh/$(basename "$pub_file")"
+                cp "$pub_file" "$temp_dir/persist/etc/ssh/"
+                chmod 644 "$temp_dir/persist/etc/ssh/$(basename "$pub_file")"
                 log "  ✓ Prepared: $(basename "$pub_file")"
             fi
         done

@@ -1,10 +1,26 @@
 { rootPath, ... }:
 {
   flake.features.acme.nixos =
-    { config, environment, ... }:
+    {
+      config,
+      environment,
+      activeFeatures,
+      lib,
+      ...
+    }:
+    let
+      impermanenceEnabled = lib.elem "impermenance" activeFeatures;
+    in
     {
       age.secrets.cloudflare-api-key = {
         rekeyFile = rootPath + "/.secrets/services/cloudflare-api-key.age";
+      };
+
+      environment.persistence."/persist".directories = lib.optional impermanenceEnabled {
+        directory = "/var/lib/acme";
+        user = "acme";
+        group = "acme";
+        mode = "0755";
       };
 
       security.acme = {

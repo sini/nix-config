@@ -10,6 +10,7 @@
       "home-manager"
       "hosts"
       "i18n"
+      "impermenance"
       "networking"
       "nix"
       "nixpkgs"
