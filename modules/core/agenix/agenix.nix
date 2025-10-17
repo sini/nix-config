@@ -14,7 +14,7 @@
         ...
       }:
       let
-        impermanenceEnabled = lib.elem "impermanance" activeFeatures;
+        impermanenceEnabled = lib.elem "impermanence" activeFeatures;
       in
       {
         imports = [

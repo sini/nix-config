@@ -7,7 +7,6 @@
       {
         config,
         lib,
-        pkgs,
         ...
       }:
       with lib;
@@ -159,14 +158,6 @@
               };
             };
           };
-
-          # Discover directories that will be removed on next boot
-          environment.systemPackages = [
-            (pkgs.writeScriptBin "zfsdiff" ''
-              sudo zfs diff zroot/local/root@empty -F | ${pkgs.ripgrep}/bin/rg -e "\+\s+/\s+" | cut -f3- | ${pkgs.skim}/bin/sk;
-              sudo zfs diff zroot/local/home@empty -F | ${pkgs.ripgrep}/bin/rg -e "\+\s+/\s+" | cut -f3- | ${pkgs.skim}/bin/sk
-            '')
-          ];
 
           fileSystems = {
             "/" = {

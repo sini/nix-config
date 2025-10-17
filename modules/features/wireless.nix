@@ -18,6 +18,10 @@
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/wpa_supplicant-arcade.age";
       };
 
+      environment.persistence."/cache".directories = [
+        "/var/lib/iwd"
+      ];
+
       # Ensure a file exists so that we can write the initrd, even if it's not valid
       system.activationScripts.agenixEnsureInitrdWpaSupplicantConfig = {
         text = ''

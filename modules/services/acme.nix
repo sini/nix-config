@@ -9,7 +9,7 @@
       ...
     }:
     let
-      impermanenceEnabled = lib.elem "impermenance" activeFeatures;
+      impermanenceEnabled = lib.elem "impermanence" activeFeatures;
     in
     {
       age.secrets.cloudflare-api-key = {

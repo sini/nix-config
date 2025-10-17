@@ -30,20 +30,6 @@
       imports = [ inputs.disko.nixosModules.default ];
 
       options.hardware.disk.longhorn = with lib.types; {
-
-        os_drive = {
-          device_id = mkOption {
-            type = types.str;
-            default = "";
-            description = "OS Drive /dev/disk/by-id/ name (e.g., ata-...). THIS IS REQUIRED.";
-          };
-          swap_size = mkOption {
-            type = types.int;
-            default = 8192;
-            description = "Size of swap in MiB for the OS drive, 0 disables swap.";
-          };
-        };
-
         longhorn_drive = {
           device_id = mkOption {
             type = types.str;
@@ -110,89 +96,6 @@
 
           disko.devices = {
             disk = {
-              os = lib.mkIf (lhCfg.os_drive.device_id != "") {
-                device = "/dev/disk/by-id/" + lhCfg.os_drive.device_id;
-                type = "disk";
-                content = {
-                  type = "gpt";
-                  partitions = {
-                    ESP = {
-                      label = "BOOT";
-                      name = "ESP";
-                      size = "1G";
-                      type = "EF00";
-                      content = {
-                        type = "filesystem";
-                        format = "vfat";
-                        mountpoint = "/boot";
-                        mountOptions = [
-                          "defaults"
-                          "umask=0077"
-                        ];
-                      };
-                    };
-                    nixos = {
-                      label = "nixos";
-                      size = "100%";
-                      content = {
-                        type = "luks";
-                        name = "cryptroot_os";
-                        extraOpenArgs = [
-                          "--allow-discards"
-                          "--perf-no_read_workqueue"
-                          "--perf-no_write_workqueue"
-                        ];
-                        settings = {
-                          crypttabExtraOpts = [
-                            "tpm2-device=auto"
-                            "fido2-device=auto"
-                            "token-timeout=10"
-                          ];
-                        };
-                        content = {
-                          type = "btrfs";
-                          extraArgs = [
-                            "-L"
-                            "nixos_os"
-                            "-f"
-                          ];
-                          subvolumes = {
-                            "@root" = {
-                              mountpoint = "/";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@home" = {
-                              mountpoint = "/home";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@nix" = {
-                              mountpoint = "/nix";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@persist" = {
-                              mountpoint = "/persist";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                            "@log" = {
-                              mountpoint = "/var/log";
-                              mountOptions = defaultBtrfsOpts;
-                            };
-                          }
-                          // lib.optionalAttrs (lhCfg.os_drive.swap_size > 0) {
-                            "@swap" = {
-                              mountpoint = "/swap";
-                              swap.swapfile = {
-                                size = "${toString lhCfg.os_drive.swap_size}M";
-                              };
-                            };
-                          };
-                        };
-                      };
-                    };
-                  };
-                };
-              };
-
               data = lib.mkIf (lhCfg.longhorn_drive.device_id != "") {
                 device = "/dev/disk/by-id/" + lhCfg.longhorn_drive.device_id;
                 type = "disk";
@@ -243,9 +146,6 @@
               };
             };
           };
-
-          fileSystems."/persist".neededForBoot = true;
-          fileSystems."/var/log".neededForBoot = true;
         };
     };
 }

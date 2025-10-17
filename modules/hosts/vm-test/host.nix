@@ -13,9 +13,8 @@
     ];
     features = [
       # "disk-longhorn"
-      "zfs-disk-single"
-      "zfs"
-      "impermenance"
+      # "zfs-disk-single"
+      "disk-single"
       # "cpu-amd"
       # "gpu-amd"
       # "thunderbolt-mesh"
@@ -27,6 +26,8 @@
         ...
       }:
       {
+        services.getty.autologinUser = "sini";
+        users.users.root.password = "root";
         boot.kernelPackages = pkgs.linuxPackages_cachyos-server;
         boot.initrd.availableKernelModules = [
           "ahci"
@@ -42,7 +43,8 @@
             interfaces = [ "enp1s0" ];
             unmanagedInterfaces = [ "enp1s0" ];
           };
-          disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
+          disk.single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
+          # disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
         };
 
         system.stateVersion = "25.05";

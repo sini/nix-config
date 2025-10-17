@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.features.impermenance.nixos =
+  flake.features.impermanence.nixos =
     {
       lib,
       config,
@@ -12,18 +12,21 @@
     with builtins;
     let
       zfsEnabled = lib.elem "zfs" activeFeatures;
+      btrfsEnabled = lib.elem "btrfs" activeFeatures;
     in
     {
       # imports = [  ];
 
       environment.persistence = {
-        "/persist" = {
+        "/cache" = {
           hideMounts = true;
           directories = [
-            "/var/lib/systemd"
             "/var/lib/nixos"
-            "/var/log"
           ];
+        };
+        "/persist" = {
+          hideMounts = true;
+          directories = [ ];
           files = [
             "/etc/machine-id"
             "/etc/adjtime"
@@ -117,34 +120,81 @@
       fileSystems."/persist".neededForBoot = true;
       fileSystems."/cache".neededForBoot = true;
 
-      # This
-      boot.initrd.systemd.services = lib.mkIf zfsEnabled {
-        rollback = {
-          description = "Rollback ZFS datasets to a pristine state";
-          wantedBy = [ "initrd.target" ];
-          after = [ "zfs-import-zroot.service" ];
-          before = [ "sysroot.mount" ];
-          path = with pkgs; [ zfs_cachyos ];
-          unitConfig.DefaultDependencies = "no";
-          serviceConfig.Type = "oneshot";
-          script = ''
-            zfs rollback -r zroot/local/root@empty && echo "rollback complete"
-          '';
+      boot.initrd.systemd.services =
+        lib.optionalAttrs zfsEnabled {
+          rollback-zfs-root = {
+            description = "Rollback ZFS datasets to a pristine state";
+            wantedBy = [ "initrd.target" ];
+            after = [ "zfs-import-zroot.service" ];
+            before = [ "sysroot.mount" ];
+            path = with pkgs; [ zfs_cachyos ];
+            unitConfig.DefaultDependencies = "no";
+            serviceConfig.Type = "oneshot";
+            script = ''
+              zfs rollback -r zroot/local/root@empty && echo "rollback complete"
+            '';
+          };
+          # Rollback '/home'
+          # rollback-home = {
+          #   description = "Rollback home directory to a pristine state";
+          #   wantedBy = [ "initrd.target" ];
+          #   after = [ "zfs-import-zroot.service" ];
+          #   before = [ "sysroot.mount" ];
+          #   path = with pkgs; [ zfs_cachyos ];
+          #   unitConfig.DefaultDependencies = "no";
+          #   serviceConfig.Type = "oneshot";
+          #   script = ''
+          #     zfs rollback -r zroot/local/home@empty && echo "rollback complete"
+          #   '';
+          # };
+        }
+        // lib.optionalAttrs btrfsEnabled {
+          rollback-btrfs-root = {
+            description = "Rollback BTRFS root subvolume to a pristine state";
+            wantedBy = [ "initrd.target" ];
+            # make sure it's done after encryption
+            # i.e. LUKS/TPM process
+            after = [ "systemd-cryptsetup@cryptroot.service" ];
+            # mount the root fs before clearing
+            before = [ "sysroot.mount" ];
+            unitConfig.DefaultDependencies = "no";
+            serviceConfig.Type = "oneshot";
+            script = ''
+              mkdir -p /mnt
+
+              # We first mount the btrfs root to /mnt
+              # so we can manipulate btrfs subvolumes.
+              mount -o subvol=/ /dev/mapper/cryptroot /mnt
+              btrfs subvolume list -o /mnt/root
+
+              # While we're tempted to just delete /root and create
+              # a new snapshot from /root-blank, /root is already
+              # populated at this point with a number of subvolumes,
+              # which makes `btrfs subvolume delete` fail.
+              # So, we remove them first.
+              #
+              # /root contains subvolumes:
+              # - /root/var/lib/portables
+              # - /root/var/lib/machines
+
+              btrfs subvolume list -o /mnt/root |
+              cut -f9 -d' ' |
+              while read subvolume; do
+                echo "deleting /$subvolume subvolume..."
+                btrfs subvolume delete "/mnt/$subvolume"
+              done &&
+              echo "deleting /root subvolume..." &&
+              btrfs subvolume delete /mnt/root
+
+              echo "restoring blank /root subvolume..."
+              btrfs subvolume snapshot /mnt/root-blank /mnt/root
+
+              # Once we're done rolling back to a blank snapshot,
+              # we can unmount /mnt and continue on the boot process.
+              umount /mnt
+            '';
+          };
         };
-        # Rollback '/home'
-        # rollback-home = {
-        #   description = "Rollback home directory to a pristine state";
-        #   wantedBy = [ "initrd.target" ];
-        #   after = [ "zfs-import-zroot.service" ];
-        #   before = [ "sysroot.mount" ];
-        #   path = with pkgs; [ zfs_cachyos ];
-        #   unitConfig.DefaultDependencies = "no";
-        #   serviceConfig.Type = "oneshot";
-        #   script = ''
-        #     zfs rollback -r zroot/local/home@empty && echo "rollback complete"
-        #   '';
-        # };
-      };
 
       # Take snapshots before shutdown for recovery, then rollback to empty
       systemd = {
@@ -193,8 +243,6 @@
         );
 
         shutdownRamfs.storePaths = [ "${config.boot.zfs.package}/bin/zfs" ];
-
-        suppressedSystemUnits = [ "systemd-machine-id-commit.service" ];
       };
 
       # Needed for home-manager's impermanence allowOther option to work
