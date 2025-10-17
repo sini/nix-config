@@ -16,9 +16,9 @@
       cfg = config.impermanence;
     in
     {
-      # imports = [
-      #   inputs.impermanence.nixosModules.impermanence
-      # ];
+      imports = [
+        inputs.impermanence.nixosModules.impermanence
+      ];
 
       options.impermanence = with lib.types; {
         enable = lib.mkOption {
@@ -94,34 +94,34 @@
 
         # For each user that has a home-manager config, merge the locally defined
         # persistence options that we defined above.
-        imports =
-          let
-            mkUserFiles = map (
-              x: { parentDirectory.mode = "700"; } // (if isAttrs x then x else { file = x; })
-            );
-            mkUserDirs = map (x: { mode = "700"; } // (if isAttrs x then x else { directory = x; }));
-          in
-          [
-            inputs.impermanence.nixosModules.impermanence
-            {
-              environment.persistence = mkMerge (
-                flip map (attrNames config.home-manager.users) (
-                  user:
-                  let
-                    hmUserCfg = config.home-manager.users.${user};
-                  in
-                  flip mapAttrs hmUserCfg.home.persistence (
-                    _: sourceCfg: {
-                      users.${user} = {
-                        files = mkUserFiles sourceCfg.files;
-                        directories = mkUserDirs sourceCfg.directories;
-                      };
-                    }
-                  )
-                )
-              );
-            }
-          ];
+        # imports =
+        #   let
+        #     mkUserFiles = map (
+        #       x: { parentDirectory.mode = "700"; } // (if isAttrs x then x else { file = x; })
+        #     );
+        #     mkUserDirs = map (x: { mode = "700"; } // (if isAttrs x then x else { directory = x; }));
+        #   in
+        #   [
+        #     inputs.impermanence.nixosModules.impermanence
+        #     {
+        #       environment.persistence = mkMerge (
+        #         flip map (attrNames config.home-manager.users) (
+        #           user:
+        #           let
+        #             hmUserCfg = config.home-manager.users.${user};
+        #           in
+        #           flip mapAttrs hmUserCfg.home.persistence (
+        #             _: sourceCfg: {
+        #               users.${user} = {
+        #                 files = mkUserFiles sourceCfg.files;
+        #                 directories = mkUserDirs sourceCfg.directories;
+        #               };
+        #             }
+        #           )
+        #         )
+        #       );
+        #     }
+        #   ];
 
         # Add ZFS persistent datasets if ZFS is enabled
         disko.devices = lib.mkIf zfsEnabled {
