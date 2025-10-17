@@ -77,9 +77,6 @@
           };
         })
         |> listToAttrs;
-
-      unmanagedInterfaces = cfg.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
-
     in
     {
       options.hardware.networking = with types; {
@@ -102,7 +99,7 @@
           '';
         };
 
-        enable_networkManager = mkEnableOption "Enable NetworkManager for managing network interfaces";
+        enableNetworkManager = mkEnableOption "Enable NetworkManager for managing network interfaces";
 
         unmanagedInterfaces = mkOption {
           type = listOf str;
@@ -135,13 +132,7 @@
             allowPing = true;
             logRefusedConnections = false;
           };
-
-          networkmanager = {
-            unmanaged = unmanagedInterfaces;
-          };
         };
-
-        systemd.services.NetworkManager-wait-online.enable = false;
 
         systemd.network = {
           enable = true;

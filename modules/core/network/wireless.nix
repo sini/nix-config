@@ -18,7 +18,7 @@
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/wpa_supplicant-arcade.age";
       };
 
-      environment.persistence."/cache".directories = [
+      environment.persistence."/volatile".directories = [
         "/var/lib/iwd"
       ];
 

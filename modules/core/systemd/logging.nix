@@ -5,15 +5,11 @@
       "d /var/lib/systemd/coredump 0755 root root 7d"
     ];
 
-    environment.persistence = {
-      "/cache" = {
-        hideMounts = true;
-        directories = [
-          "/var/lib/systemd/"
-          "/var/log"
-        ];
-      };
-    };
+    environment.persistence."/volatile".directories = [
+      "/var/lib/systemd/coretdump"
+      "/var/lib/systemd/timers"
+      "/var/log"
+    ];
 
     # Limit logging to 90 days or 2gb
     services.journald.extraConfig = ''
