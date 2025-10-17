@@ -47,6 +47,11 @@
           # disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
         };
 
+        impermanence = {
+          enable = true;
+          wipeRootOnBoot = true;
+          wipeHomeOnBoot = true;
+        };
         system.stateVersion = "25.05";
       };
   };

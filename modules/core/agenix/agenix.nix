@@ -9,13 +9,9 @@
       {
         config,
         hostOptions,
-        activeFeatures,
         lib,
         ...
       }:
-      let
-        impermanenceEnabled = lib.elem "impermanence" activeFeatures;
-      in
       {
         imports = [
           inputs.agenix.nixosModules.default
@@ -25,7 +21,7 @@
         # Agenix decrypts before impermanence creates mounts so we have to get key
         # from persist
         age.identityPaths = [
-          "${lib.optionalString impermanenceEnabled "/persist"}/etc/ssh/ssh_host_ed25519_key"
+          "${lib.optionalString config.impermanence.enable "/persist"}/etc/ssh/ssh_host_ed25519_key"
         ];
 
         age.rekey = {
