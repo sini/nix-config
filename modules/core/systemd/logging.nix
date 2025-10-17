@@ -1,9 +1,20 @@
 {
-  flake.features.systemd-boot.nixos = {
+  flake.features.systemd.nixos = {
     systemd.tmpfiles.rules = [
       # cleanup systemd coredumps once a week
       "d /var/lib/systemd/coredump 0755 root root 7d"
     ];
+
+    environment.persistence = {
+      "/cache" = {
+        hideMounts = true;
+        directories = [
+          "/var/lib/systemd/"
+          "/var/log"
+        ];
+      };
+    };
+
     # Limit logging to 90 days or 2gb
     services.journald.extraConfig = ''
       MaxRetentionSec=3month

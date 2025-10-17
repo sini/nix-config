@@ -11,6 +11,7 @@
       # "vault"
     ];
     features = [
+      "disk-single"
       "disk-longhorn"
       "cpu-amd"
       "gpu-amd"
@@ -38,11 +39,11 @@
             interfaces = [ "enp2s0" ];
             unmanagedInterfaces = [ "enp2s0" ];
           };
+          disk.single = {
+            device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
+            swap_size = 8192;
+          };
           disk.longhorn = {
-            os_drive = {
-              device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
-              swap_size = 8192;
-            };
             longhorn_drive = {
               device_id = "nvme-Force_MP600_1925823000012856500E";
             };
