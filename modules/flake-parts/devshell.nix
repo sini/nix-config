@@ -99,6 +99,11 @@
             name = "generate-vault-certs";
             help = "Generate certificates for Vault raft cluster";
           }
+          {
+            package = config.packages.impermanence-copy;
+            name = "impermanence-copy";
+            help = "Copy existing data to impermanence persistent storage for a host";
+          }
         ];
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 

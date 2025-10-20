@@ -115,6 +115,11 @@
           }
         ];
 
+        impermanence = {
+          enable = true;
+          # wipeRootOnBoot = true;
+          # wipeHomeOnBoot = true;
+        };
         system.stateVersion = "25.05";
       };
   };
