@@ -87,18 +87,18 @@
 
       config = {
         programs = {
+          delta = {
+            enable = true;
+            options = {
+              light = false;
+              line-numbers = true;
+              navigate = true;
+              side-by-side = true;
+            };
+          };
           git = {
             enable = true;
             signing.format = lib.mkForce "openpgp";
-            delta = {
-              enable = true;
-              options = {
-                light = false;
-                line-numbers = true;
-                navigate = true;
-                side-by-side = true;
-              };
-            };
             settings = {
               pull.rebase = true;
               commit.gpgsign = true;
