@@ -130,17 +130,26 @@ writeShellApplication {
       # Show status
       printf "  [%s] %-50s -> [%s] %s\n" "$src_status" "$src" "$dest_status" "$dest"
 
-      # Show copy commands in dry-run mode
-      if [[ "$DRY_RUN" == "true" && "$src_exists" == "true" && "$dest_exists" == "false" ]]; then
-        cmd "  mkdir -p $dest_dir"
-        if [[ "$item_type" == "directory" ]]; then
+      # Copy or show copy commands based on mode
+      if [[ "$src_exists" == "true" && "$dest_exists" == "false" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+          cmd "  mkdir -p $dest_dir"
           cmd "  cp -a $src $dest"
+          cmd "  chown $user:$group $dest"
+          cmd "  chmod $mode $dest"
+          echo ""
         else
-          cmd "  cp -a $src $dest"
+          info "  Copying: $src -> $dest"
+          mkdir -p "$dest_dir" || { error "Failed to create directory: $dest_dir"; return 1; }
+          cp -a "$src" "$dest" || { error "Failed to copy: $src"; return 1; }
+          chown "$user:$group" "$dest" || { error "Failed to set ownership: $dest"; return 1; }
+          chmod "$mode" "$dest" || { error "Failed to set permissions: $dest"; return 1; }
+          success "  Copied: $src"
         fi
-        cmd "  chown $user:$group $dest"
-        cmd "  chmod $mode $dest"
-        echo ""
+      elif [[ "$src_exists" == "false" ]]; then
+        warn "  Source does not exist: $src"
+      elif [[ "$dest_exists" == "true" ]]; then
+        info "  Already exists in persist: $dest (skipping)"
       fi
     }
 
@@ -172,13 +181,26 @@ writeShellApplication {
       # Show status
       printf "  [%s] %-50s -> [%s] %s\n" "$src_status" "$src_full" "$dest_status" "$dest"
 
-      # Show copy commands in dry-run mode
-      if [[ "$DRY_RUN" == "true" && "$src_exists" == "true" && "$dest_exists" == "false" ]]; then
-        cmd "  mkdir -p $dest_dir"
-        cmd "  cp -a $src_full $dest"
-        cmd "  chown $user:$group $dest"
-        cmd "  chmod $mode $dest"
-        echo ""
+      # Copy or show copy commands based on mode
+      if [[ "$src_exists" == "true" && "$dest_exists" == "false" ]]; then
+        if [[ "$DRY_RUN" == "true" ]]; then
+          cmd "  mkdir -p $dest_dir"
+          cmd "  cp -a $src_full $dest"
+          cmd "  chown $user:$group $dest"
+          cmd "  chmod $mode $dest"
+          echo ""
+        else
+          info "  Copying: $src_full -> $dest"
+          mkdir -p "$dest_dir" || { error "Failed to create directory: $dest_dir"; return 1; }
+          cp -a "$src_full" "$dest" || { error "Failed to copy: $src_full"; return 1; }
+          chown "$user:$group" "$dest" || { error "Failed to set ownership: $dest"; return 1; }
+          chmod "$mode" "$dest" || { error "Failed to set permissions: $dest"; return 1; }
+          success "  Copied: $src_full"
+        fi
+      elif [[ "$src_exists" == "false" ]]; then
+        warn "  Source does not exist: $src_full"
+      elif [[ "$dest_exists" == "true" ]]; then
+        info "  Already exists in persist: $dest (skipping)"
       fi
     }
 
@@ -382,14 +404,15 @@ writeShellApplication {
       done
     fi
 
+    echo ""
     if [[ "$DRY_RUN" == "true" ]]; then
       success "Dry-run complete!"
       info "Legend: [✓] = exists, [❌] = does not exist"
-      info "Run without --dry-run to execute copy operations"
+      info "Run with --no-dry-run to execute copy operations"
     else
-      success "Configuration listing complete!"
+      success "Copy operations complete!"
       info "Legend: [✓] = exists, [❌] = does not exist"
-      info "Use --dry-run to see copy commands that would be executed"
+      info "Files already in persist were skipped to avoid overwriting existing data"
     fi
   '';
 }
