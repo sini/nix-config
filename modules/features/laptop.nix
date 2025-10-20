@@ -54,5 +54,7 @@
         # Only required on intel... our only x86 laptop is intel sooo...
         thermald.enable = true;
       };
+
+      environment.persistence."/volatile".directories = [ "/var/lib/power-profiles-daemon" ];
     };
 }

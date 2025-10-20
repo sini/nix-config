@@ -36,6 +36,7 @@
           terminal = "kitty";
         };
 
+        environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
       };
 
     home =

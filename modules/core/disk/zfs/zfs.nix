@@ -26,10 +26,19 @@
       services.zfs.autoScrub.interval = "weekly";
 
       environment.systemPackages = [
-        (pkgs.writeScriptBin "zfs-diff" ''
-          sudo zfs diff zroot/local/root@empty -F | ${pkgs.ripgrep}/bin/rg -e "\+\s+/\s+" | cut -f3- | ${pkgs.skim}/bin/sk;
-          sudo zfs diff zroot/local/home@empty -F | ${pkgs.ripgrep}/bin/rg -e "\+\s+/\s+" | cut -f3- | ${pkgs.skim}/bin/sk
+        (pkgs.writeScriptBin "zfs-root-diff" ''
+          sudo zfs diff -F zroot/local/root@empty | awk '$2 != "@" && $2 != "/"' | cut -f3- | \
+            grep -v -f <(sudo find /persist/ -type f | sed 's|/persist||') | \
+            grep -v -f <(sudo find /volatile/ -type f | sed 's|/volatile||') | \
+            ${pkgs.skim}/bin/sk;
         '')
+        (pkgs.writeScriptBin "zfs-home-diff" ''
+          sudo zfs diff -F zroot/local/home@empty | awk '$2 != "@" && $2 != "/"' | cut -f3- | \
+            grep -v -f <(sudo find /persist/ -type f | sed 's|/persist||') | \
+            grep -v -f <(sudo find /volatile/ -type f | sed 's|/volatile||') | \
+            ${pkgs.skim}/bin/sk;
+        '')
+
       ];
       # # Enable ZED's pushbullet compat
       # services.zfs.zed.settings = {

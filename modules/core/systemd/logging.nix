@@ -14,6 +14,11 @@
         "d /var/lib/systemd/coredump 0755 root root 7d"
       ];
 
+      environment.persistence."/volatile".files = [
+        "/var/lib/logrotate.status"
+        "/var/lib/lastlog/lastlog2.db"
+      ];
+
       environment.persistence."/volatile".directories = [
         "/var/lib/systemd/coredump"
         "/var/lib/systemd/timers"
