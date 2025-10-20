@@ -18,6 +18,14 @@
   # - Better security (temporary files are truly temporary)
   # - Easier recovery (rollback to last boot snapshot)
 
+  # Notes: We provide BTRFS and ZFS implementations. ZFS is preferred due to its
+  # superior snapshot and rollback capabilities. BTRFS implementation is more
+  # complex due to subvolume management.
+  #
+  # All of our systems are migrating to ZFS, so I provide BTRFS for example only
+  # and legacy support. New systems should use ZFS so we can easily manage and backup
+  # snapshots. BTRFS doesn't support snapshot on shutdown.
+
   flake.features.impermanence = {
     nixos =
       {
