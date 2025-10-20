@@ -288,6 +288,7 @@
             directories = [
               config.xdg.userDirs.downloads or "Downloads"
               ".local/share/direnv"
+              ".cache"
             ];
             files = [ ];
             allowOther = true;
