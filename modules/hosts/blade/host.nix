@@ -32,7 +32,8 @@
     nixosConfiguration =
       { pkgs, ... }:
       {
-        boot.kernelPackages = pkgs.linuxPackages_cachyos;
+        boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "GENERIC_V4"; };
+
         hardware.disk.single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
 
         impermanence = {
@@ -40,6 +41,7 @@
           wipeRootOnBoot = true;
           wipeHomeOnBoot = true;
         };
+
         system.stateVersion = "25.05";
       };
   };

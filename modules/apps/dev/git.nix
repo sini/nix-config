@@ -104,14 +104,9 @@
               commit.gpgsign = true;
               init.defaultBranch = "main";
               push.autoSetupRemote = true;
-
               merge.conflictstyle = "diff3";
-
               "url \"git@github.com:\"".pushInsteadOf = "https://github.com/";
-              "url \"git@git.sr.ht:\"".pushInsteadOf = "https://git.sr.ht/";
-
               core.autocrlf = "input";
-
               # Only on WSL
               # core.fileMode = false;
 
