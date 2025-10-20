@@ -229,8 +229,8 @@
     # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
 
     # NixPkgs Unstable
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-unstable.url = "github:sini/nixpkgs/antlr-fix";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    # nixpkgs-unstable.url = "github:sini/nixpkgs/antlr-fix";
 
     nvf.url = "github:notashelf/nvf";
 
