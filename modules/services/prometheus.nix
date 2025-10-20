@@ -164,6 +164,10 @@ in
           };
         };
 
+        environment.persistence."/persist".directories = [
+          "/var/lib/prometheus2/"
+        ];
+
         nginx.virtualHosts = {
           "prometheus.${config.networking.domain}" = {
             forceSSL = true;
@@ -184,5 +188,9 @@ in
 
       # Enable nginx status for nginx exporter
       services.nginx.statusPage = true;
+
+      environment.persistence."/persist".directories = [
+        "/var/lib/prometheus2/"
+      ];
     };
 }
