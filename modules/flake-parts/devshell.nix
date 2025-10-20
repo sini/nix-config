@@ -85,8 +85,8 @@
             help = "Generate and encrypt SSH host keys for a new host";
           }
           {
-            package = config.packages.nixos-install-anywhere;
-            name = "nixos-install-anywhere";
+            package = config.packages.nix-flake-install;
+            name = "nix-flake-install";
             help = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
           }
           {
