@@ -164,30 +164,28 @@ in
           };
         };
 
-        environment.persistence."/persist".directories = [
-          "/var/lib/prometheus2/"
-        ];
+        nginx = {
+          # Enable nginx status for nginx exporter
+          statusPage = true;
 
-        nginx.virtualHosts = {
-          "prometheus.${config.networking.domain}" = {
-            forceSSL = true;
-            useACMEHost = config.networking.domain;
-            locations."/" = {
-              proxyPass = "http://127.0.0.1:9090";
-              proxyWebsockets = true;
-              extraConfig = ''
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
-              '';
+          virtualHosts = {
+            "prometheus.${config.networking.domain}" = {
+              forceSSL = true;
+              useACMEHost = config.networking.domain;
+              locations."/" = {
+                proxyPass = "http://127.0.0.1:9090";
+                proxyWebsockets = true;
+                extraConfig = ''
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                '';
+              };
             };
           };
         };
       };
-
-      # Enable nginx status for nginx exporter
-      services.nginx.statusPage = true;
 
       environment.persistence."/persist".directories = [
         "/var/lib/prometheus2/"
