@@ -286,7 +286,7 @@
             enable = osConfig.impermanence.enable;
             persistentStoragePath = "/volatile/${relHome}";
             directories = [
-              "Downloads"
+              config.xdg.userDirs.downloads or "Downloads"
               ".local/share/direnv"
             ];
             files = [ ];

@@ -12,6 +12,7 @@
       with lib;
 
       let
+        cfg = config.hardware.disk.zfs-disk-single;
         disk-device =
           let
             # Filter out USB storage devices as invalid candidates
@@ -64,7 +65,7 @@
           disko.devices = {
             disk.disk0 = {
               type = "disk";
-              device = config.hardware.disk.zfs-disk-single.device_id;
+              device = cfg.device_id;
               content = {
                 type = "gpt";
                 partitions = {

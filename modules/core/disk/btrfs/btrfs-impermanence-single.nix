@@ -1,7 +1,7 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
 { inputs, ... }:
 {
-  flake.features.disk-single = {
+  flake.features.btrfs-impermanence-single = {
     requires = [ "btrfs" ];
     nixos =
       {
@@ -12,12 +12,10 @@
       with lib;
 
       let
+        cfg = config.hardware.disk.btrfs-impermanence-single;
         disk-device =
-          if config.hardware.disk.single.device_id != "" then
-            if lib.hasPrefix "/dev/" config.hardware.disk.single.device_id then
-              config.hardware.disk.single.device_id
-            else
-              "/dev/disk/by-id/" + config.hardware.disk.single.device_id
+          if cfg.device_id != "" then
+            if lib.hasPrefix "/dev/" cfg.device_id then cfg.device_id else "/dev/disk/by-id/" + cfg.device_id
           else
             let
               # Filter out USB storage devices as invalid candidates
@@ -49,7 +47,7 @@
       {
         imports = [ inputs.disko.nixosModules.default ];
 
-        options.hardware.disk.single = with lib.types; {
+        options.hardware.disk.btrfs-impermanence-single = with lib.types; {
           device_id = mkOption {
             type = types.str;
             default = "";
@@ -143,10 +141,10 @@
                               mountOptions = defaultBtrfsOpts;
                             };
                           }
-                          // lib.optionalAttrs (config.hardware.disk.single.swap_size > 0) {
+                          // lib.optionalAttrs (cfg.swap_size > 0) {
                             "@swap" = {
                               mountpoint = "/swap";
-                              swap.swapfile.size = "${builtins.toString config.hardware.disk.single.swap_size}M";
+                              swap.swapfile.size = "${builtins.toString cfg.swap_size}M";
                             };
                           };
                         };
