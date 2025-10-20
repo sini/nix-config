@@ -31,6 +31,7 @@ writeShellApplication {
     # Parse arguments
     DRY_RUN=true  # Default to dry-run during development
     HOSTNAME=""
+    FLAKE_REF="."  # Default to current directory
 
     while [[ "$#" -gt 0 ]]; do
       case "$1" in
@@ -41,6 +42,10 @@ writeShellApplication {
         --no-dry-run)
           DRY_RUN=false
           shift
+          ;;
+        --flake)
+          FLAKE_REF="$2"
+          shift 2
           ;;
         *)
           if [[ -z "$HOSTNAME" ]]; then
@@ -55,7 +60,7 @@ writeShellApplication {
     done
 
     if [[ -z "$HOSTNAME" ]]; then
-      error "usage: impermanence-copy [--dry-run] <HOSTNAME>"
+      error "usage: impermanence-copy [--dry-run] [--flake FLAKE_REF] <HOSTNAME>"
       exit 1
     fi
 
@@ -64,18 +69,20 @@ writeShellApplication {
       echo ""
     fi
 
+    info "Using flake: $FLAKE_REF"
     info "Checking if impermanence is enabled for $HOSTNAME..."
-    IMPERMANENCE_ENABLED=$(nix eval --json ".#nixosConfigurations.$HOSTNAME.config.impermanence.enable" 2>/dev/null || echo "false")
+    IMPERMANENCE_ENABLED=$(nix eval --json "$FLAKE_REF#nixosConfigurations.$HOSTNAME.config.impermanence.enable" 2>/dev/null || echo "false")
 
     if [[ "$IMPERMANENCE_ENABLED" != "true" ]]; then
       error "Impermanence is not enabled for $HOSTNAME"
+      error "Evaluated: $FLAKE_REF#nixosConfigurations.$HOSTNAME.config.impermanence.enable = $IMPERMANENCE_ENABLED"
       exit 1
     fi
 
     info "Extracting persistence configuration for $HOSTNAME..."
 
     # Get all persistence volume names
-    PERSISTENCE_VOLUMES=$(nix eval --json ".#nixosConfigurations.$HOSTNAME.config.environment.persistence" --apply 'builtins.attrNames' 2>/dev/null || echo "[]")
+    PERSISTENCE_VOLUMES=$(nix eval --json "$FLAKE_REF#nixosConfigurations.$HOSTNAME.config.environment.persistence" --apply 'builtins.attrNames' 2>/dev/null || echo "[]")
 
     if [[ "$PERSISTENCE_VOLUMES" == "[]" ]]; then
       warn "No persistence volumes configured for $HOSTNAME"
@@ -182,7 +189,7 @@ writeShellApplication {
       info "Processing system volume: $volume_name"
 
       # Get configuration for this volume
-      VOLUME_CONFIG=$(nix eval --json ".#nixosConfigurations.$HOSTNAME.config.environment.persistence.\"$volume_name\"" 2>/dev/null || echo "{}")
+      VOLUME_CONFIG=$(nix eval --json "$FLAKE_REF#nixosConfigurations.$HOSTNAME.config.environment.persistence.\"$volume_name\"" 2>/dev/null || echo "{}")
 
       # Extract the actual storage path (where files will be persisted)
       STORAGE_PATH=$(echo "$VOLUME_CONFIG" | jq -r '.persistentStoragePath // empty')
@@ -229,7 +236,7 @@ writeShellApplication {
     echo ""
 
     # Get list of home-manager users
-    HM_USERS=$(nix eval --json ".#nixosConfigurations.$HOSTNAME.config.home-manager.users" --apply 'builtins.attrNames' 2>/dev/null || echo "[]")
+    HM_USERS=$(nix eval --json "$FLAKE_REF#nixosConfigurations.$HOSTNAME.config.home-manager.users" --apply 'builtins.attrNames' 2>/dev/null || echo "[]")
 
     if [[ "$HM_USERS" == "[]" ]]; then
       info "No home-manager users configured"
@@ -238,14 +245,14 @@ writeShellApplication {
         info "Processing user: $username"
 
         # Get user's home directory
-        USER_HOME=$(nix eval --raw ".#nixosConfigurations.$HOSTNAME.config.home-manager.users.$username.home.homeDirectory" 2>/dev/null || echo "")
+        USER_HOME=$(nix eval --raw "$FLAKE_REF#nixosConfigurations.$HOSTNAME.config.home-manager.users.$username.home.homeDirectory" 2>/dev/null || echo "")
         if [[ -z "$USER_HOME" ]]; then
           warn "Could not determine home directory for user $username, skipping"
           continue
         fi
 
         # Get user's persistence configuration
-        USER_PERSISTENCE=$(nix eval --json ".#nixosConfigurations.$HOSTNAME.config.home-manager.users.$username.home.persistence" 2>/dev/null || echo "{}")
+        USER_PERSISTENCE=$(nix eval --json "$FLAKE_REF#nixosConfigurations.$HOSTNAME.config.home-manager.users.$username.home.persistence" 2>/dev/null || echo "{}")
 
         # Get list of user persistence volumes
         USER_VOLUMES=$(echo "$USER_PERSISTENCE" | jq -r 'keys[]' 2>/dev/null || echo "")
