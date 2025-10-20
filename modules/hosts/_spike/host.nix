@@ -17,6 +17,7 @@
       "gpu-intel"
       "gpu-nvidia"
       "gpu-nvidia-prime"
+      "network-manager"
       "razer"
     ];
     extra_modules = [
@@ -30,9 +31,5 @@
       };
     };
     facts = ./facter.json;
-    nixosConfiguration = {
-      # Enable NetworkManager for managing network interfaces
-      networking.networkmanager.enable = true;
-    };
   };
 }
