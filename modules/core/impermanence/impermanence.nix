@@ -414,13 +414,13 @@
             persistentStoragePath = "${persistRoot}/${relHome}";
             directories = [
               # XDG user directories - standard user folders
-              config.xdg.userDirs.desktop or "Desktop"
-              config.xdg.userDirs.documents or "Documents"
-              config.xdg.userDirs.music or "Music"
-              config.xdg.userDirs.pictures or "Pictures"
-              config.xdg.userDirs.publicShare or "Pictures"
-              config.xdg.userDirs.templates or "Templates"
-              config.xdg.userDirs.videos or "Videos"
+              "Desktop"
+              "Documents"
+              "Music"
+              "Pictures"
+              "Public"
+              "Templates"
+              "Videos"
 
               # Security/Authentication
               ".gnupg" # GPG keys and configuration
@@ -440,7 +440,7 @@
             persistentStoragePath = "${volatileRoot}/${relHome}";
             directories = [
               # Regenerable data
-              config.xdg.userDirs.downloads or "Downloads" # Downloads folder
+              "Downloads" # Downloads folder
               ".local/share/direnv" # Direnv cache (can be rebuilt)
               ".cache" # Application caches (can be regenerated)
             ];
