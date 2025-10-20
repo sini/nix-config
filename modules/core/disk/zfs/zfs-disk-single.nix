@@ -156,6 +156,20 @@
                     zfs snapshot zroot/local/home@lastboot
                   '';
                 };
+                "local/persist" = {
+                  type = "zfs_fs";
+                  options.mountpoint = "legacy";
+                  mountpoint = "/persist";
+                  options."com.sun:auto-snapshot" = "true";
+                  postCreateHook = "zfs snapshot zroot/local/persist@empty";
+                };
+                "local/volatile" = {
+                  type = "zfs_fs";
+                  options.mountpoint = "legacy";
+                  mountpoint = "/volatile";
+                  options."com.sun:auto-snapshot" = "true";
+                  postCreateHook = "zfs snapshot zroot/local/volatile@empty";
+                };
               };
             };
           };
@@ -173,6 +187,16 @@
             };
             "/home" = {
               device = "zroot/local/home";
+              fsType = "zfs";
+              neededForBoot = true;
+            };
+            "/persist" = {
+              device = "zroot/local/persist";
+              fsType = "zfs";
+              neededForBoot = true;
+            };
+            "/volatile" = {
+              device = "zroot/local/volatile";
               fsType = "zfs";
               neededForBoot = true;
             };

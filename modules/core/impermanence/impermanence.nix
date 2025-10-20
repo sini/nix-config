@@ -134,47 +134,6 @@
             };
           };
 
-          # ZFS Dataset Configuration
-          # =========================
-          # When using ZFS, create dedicated datasets for persistent storage.
-          # These datasets are separate from the root dataset, allowing root
-          # to be rolled back independently while preserving these directories.
-          disko.devices = lib.mkIf zfsEnabled {
-            zpool.zroot.datasets = {
-              "local/persist" = {
-                type = "zfs_fs";
-                options.mountpoint = "legacy"; # Manual mount control via NixOS
-                mountpoint = "/persist";
-                options."com.sun:auto-snapshot" = "true"; # Enable automatic snapshots
-                # Create initial empty snapshot for rollback reference
-                postCreateHook = "zfs snapshot zroot/local/persist@empty";
-              };
-              "local/volatile" = {
-                type = "zfs_fs";
-                options.mountpoint = "legacy";
-                mountpoint = "/volatile";
-                options."com.sun:auto-snapshot" = "true";
-                postCreateHook = "zfs snapshot zroot/local/volatile@empty";
-              };
-            };
-          };
-
-          # Early Boot Mounting
-          # ===================
-          # Mark persistence directories as needed during early boot (initrd stage).
-          # This ensures they're available before systemd starts, allowing:
-          # - impermanence bind mounts to work correctly
-          # - Services to access persistent state immediately
-          # - No race conditions with service startup
-          fileSystems =
-            lib.mkIf cfg.enable {
-              "/persist".neededForBoot = true;
-            }
-            // lib.optionalAttrs (cfg.enable && !legacyFs) {
-              # TODO: Remove this line once we kill legacyFs support
-              "/volatile".neededForBoot = true;
-            };
-
           # Boot Rollback Services
           # ======================
           # These systemd services run during early boot (initrd stage) to reset
