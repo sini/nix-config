@@ -9,7 +9,7 @@
   nixos-anywhere,
 }:
 writeShellApplication {
-  name = "nixos-install-anywhere";
+  name = "nix-flake-install";
   runtimeInputs = [
     age
     age-plugin-yubikey
