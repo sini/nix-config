@@ -44,7 +44,10 @@
         # ];
 
         boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
-        chaotic.hdr.enable = true;
+        chaotic.hdr = {
+          enable = true;
+          specialisation.enable = false;
+        };
         # use TCP BBR has significantly increased throughput and reduced latency for connections
         boot.kernelModules = [
           "ntsync"
