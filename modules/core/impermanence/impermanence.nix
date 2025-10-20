@@ -33,6 +33,7 @@
         # Check which filesystem is in use to enable appropriate rollback mechanisms
         zfsEnabled = lib.elem "zfs" activeFeatures;
         btrfsEnabled = lib.elem "btrfs" activeFeatures;
+        legacyFs = lib.elem "disk-single" activeFeatures;
         cfg = config.impermanence;
       in
       {
@@ -83,6 +84,9 @@
             # Typically used for caches, temporary state, and system-generated data.
             "/volatile" = {
               enable = cfg.enable;
+              # TODO: Remove once we kill legacyFs support
+              # Mount in persist/volatile if using legacy disk config
+              persistentStoragePath = if legacyFs then "/persist/volatile" else "/volatile";
               hideMounts = true;
               directories = [
                 "/var/lib/nixos" # NixOS state (user/group IDs, etc.)
@@ -150,10 +154,14 @@
           # - impermanence bind mounts to work correctly
           # - Services to access persistent state immediately
           # - No race conditions with service startup
-          fileSystems = lib.mkIf cfg.enable {
-            "/persist".neededForBoot = true;
-            "/volatile".neededForBoot = true;
-          };
+          fileSystems =
+            lib.mkIf cfg.enable {
+              "/persist".neededForBoot = true;
+            }
+            // lib.optionalAttrs (cfg.enable && !legacyFs) {
+              # TODO: Remove this line once we kill legacyFs support
+              "/volatile".neededForBoot = true;
+            };
 
           # Boot Rollback Services
           # ======================
@@ -295,14 +303,14 @@
                 mkHomePersist =
                   user:
                   lib.optionalAttrs user.createHome {
-                    "/persist/${user.home}" = {
+                    "${config.environment.persistence."/persist".persistentStoragePath}/${user.home}" = {
                       d = {
                         group = user.group;
                         user = user.name;
                         mode = user.homeMode;
                       };
                     };
-                    "/volatile/${user.home}" = {
+                    "${config.environment.persistence."/volatile".persistentStoragePath}/${user.home}" = {
                       d = {
                         group = user.group;
                         user = user.name;
@@ -377,6 +385,8 @@
       let
         # Get relative home path (e.g., "home/username" from "/home/username")
         relHome = lib.removePrefix "/" config.home.homeDirectory;
+        persistRoot = osConfig.environment.persistence."/persist".persistentStoragePath;
+        volatileRoot = osConfig.environment.persistence."/volatile".persistentStoragePath;
       in
       {
         imports = [
@@ -389,7 +399,7 @@
           # Files and directories here are backed up and considered important.
           "/persist" = {
             enable = osConfig.impermanence.enable;
-            persistentStoragePath = "/persist/${relHome}";
+            persistentStoragePath = "${persistRoot}/${relHome}";
             directories = [
               # XDG user directories - standard user folders
               config.xdg.userDirs.desktop or "Desktop"
@@ -415,7 +425,7 @@
           # Data that's useful to keep but can be regenerated or is not critical.
           "/volatile" = {
             enable = osConfig.impermanence.enable;
-            persistentStoragePath = "/volatile/${relHome}";
+            persistentStoragePath = "${volatileRoot}/${relHome}";
             directories = [
               # Regenerable data
               config.xdg.userDirs.downloads or "Downloads" # Downloads folder
