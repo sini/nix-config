@@ -99,7 +99,7 @@
                 side-by-side = true;
               };
             };
-            extraConfig = {
+            settings = {
               pull.rebase = true;
               commit.gpgsign = true;
               init.defaultBranch = "main";
