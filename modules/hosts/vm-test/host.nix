@@ -12,9 +12,9 @@
       # "vault"
     ];
     features = [
-      # "disk-longhorn"
+      "disk-single"
       # "zfs-disk-single"
-      "btrfs-impermanence-single"
+      # "btrfs-impermanence-single"
       # "cpu-amd"
       # "gpu-amd"
       # "thunderbolt-mesh"
@@ -43,15 +43,15 @@
             interfaces = [ "enp1s0" ];
             unmanagedInterfaces = [ "enp1s0" ];
           };
-          disk.btrfs-impermanence-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
+          disk.single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
+          # disk.btrfs-impermanence-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
           # disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
         };
-
-        impermanence = {
-          enable = true;
-          wipeRootOnBoot = true;
-          wipeHomeOnBoot = true;
-        };
+        # impermanence = {
+        #   enable = true;
+        #   wipeRootOnBoot = true;
+        #   wipeHomeOnBoot = true;
+        # };
         system.stateVersion = "25.05";
       };
   };

@@ -35,7 +35,7 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+        boot.kernelPackages = pkgs.linuxPackages_cachyos-server.cachyOverride { mArch = "GENERIC_V4"; };
 
         hardware = {
           disk.single = {

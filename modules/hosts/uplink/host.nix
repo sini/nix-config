@@ -36,6 +36,8 @@
         ...
       }:
       {
+        boot.kernelPackages = pkgs.linuxPackages_cachyos-server.cachyOverride { mArch = "GENERIC_V4"; };
+
         hardware = {
           disk.single.device_id = "nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
           networking = {
@@ -115,9 +117,7 @@
         #     };
         #   };
         # };
-        boot.kernelPackages = pkgs.linuxPackages_latest;
         system.stateVersion = "25.05";
-
       };
   };
 }
