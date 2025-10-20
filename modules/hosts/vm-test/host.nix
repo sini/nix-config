@@ -43,7 +43,7 @@
             interfaces = [ "enp1s0" ];
             unmanagedInterfaces = [ "enp1s0" ];
           };
-          disk.single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
+          disk.btrfs-impermanence-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
           # disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
         };
 
