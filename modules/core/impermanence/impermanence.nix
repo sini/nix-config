@@ -166,52 +166,33 @@
                   zfs rollback -r zroot/local/home@empty && echo "rollback complete"
                 '';
               };
-              # rollback-btrfs-home = lib.mkIf btrfsEnabled {
-              #   description = "Rollback BTRFS root subvolume to a pristine state";
-              #   wantedBy = [ "initrd.target" ];
-              #   # make sure it's done after encryption
-              #   # i.e. LUKS/TPM process
-              #   after = [ "systemd-cryptsetup@cryptroot.service" ];
-              #   # mount the root fs before clearing
-              #   before = [ "home.mount" ];
-              #   unitConfig.DefaultDependencies = "no";
-              #   serviceConfig.Type = "oneshot";
-              #   script = ''
-              #     mkdir -p /mnt
-              #     mount -o subvol=/home /dev/mapper/cryptroot /mnt
+              rollback-btrfs-home = lib.mkIf btrfsEnabled {
+                description = "Rollback BTRFS home subvolume to a pristine state";
+                wantedBy = [ "initrd.target" ];
+                after = [ "systemd-cryptsetup@cryptroot.service" ];
+                before = [ "home.mount" ];
+                unitConfig.DefaultDependencies = "no";
+                serviceConfig.Type = "oneshot";
+                script = ''
+                  mkdir -p /mnt
+                  mount -o subvol=/ /dev/mapper/cryptroot /mnt
 
-              #     # We first mount the btrfs root to /mnt
-              #     # so we can manipulate btrfs subvolumes.
-              #     mount -o subvol=/ /dev/mapper/cryptroot /mnt
-              #     btrfs subvolume list -o /mnt/root
+                  # Recursively delete all subvolumes within /mnt/home
+                  btrfs subvolume list -o /mnt/home |
+                  cut -f9 -d' ' |
+                  while read subvolume; do
+                    echo "deleting /$subvolume subvolume..."
+                    btrfs subvolume delete "/mnt/$subvolume"
+                  done &&
+                  echo "deleting /home subvolume..." &&
+                  btrfs subvolume delete /mnt/home
 
-              #     # While we're tempted to just delete /root and create
-              #     # a new snapshot from /root-blank, /root is already
-              #     # populated at this point with a number of subvolumes,
-              #     # which makes `btrfs subvolume delete` fail.
-              #     # So, we remove them first.
-              #     #
-              #     # /root contains subvolumes:
-              #     # - /root/var/lib/portables
-              #     # - /root/var/lib/machines
+                  echo "restoring blank /home subvolume..."
+                  btrfs subvolume snapshot /mnt/home-blank /mnt/home
 
-              #     btrfs subvolume list -o /mnt/root |
-              #     cut -f9 -d' ' |
-              #     while read subvolume; do
-              #       echo "deleting /$subvolume subvolume..."
-              #       btrfs subvolume delete "/mnt/$subvolume"
-              #     done &&
-              #     echo "deleting /root subvolume..." &&
-              #     btrfs subvolume delete /mnt/root
-
-              #     echo "restoring blank /root subvolume..."
-              #     btrfs subvolume snapshot /mnt/root-blank /mnt/root
-
-              #     # Once we're done rolling back to a blank snapshot,
-              #     # we can unmount /mnt and continue on the boot process.
-              #     umount /mnt
-              #   '';
-              # };
+                  umount /mnt
+                '';
+              };
             };
 
           systemd = {
@@ -287,10 +268,13 @@
             enable = osConfig.impermanence.enable;
             persistentStoragePath = "/persist/${relHome}";
             directories = [
-              "Music"
-              "Pictures"
-              "Documents"
-              "Videos"
+              config.xdg.userDirs.desktop or "Desktop"
+              config.xdg.userDirs.documents or "Documents"
+              config.xdg.userDirs.music or "Music"
+              config.xdg.userDirs.pictures or "Pictures"
+              config.xdg.userDirs.publicShare or "Pictures"
+              config.xdg.userDirs.templates or "Templates"
+              config.xdg.userDirs.videos or "Videos"
               ".gnupg"
               ".ssh"
               ".local/share/keyrings"
