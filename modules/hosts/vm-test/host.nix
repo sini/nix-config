@@ -14,7 +14,7 @@
     features = [
       # "disk-longhorn"
       # "zfs-disk-single"
-      "disk-single"
+      "btrfs-impermanence-single"
       # "cpu-amd"
       # "gpu-amd"
       # "thunderbolt-mesh"

@@ -41,7 +41,21 @@
           '';
         })
         (writeShellApplication {
-          name = "root-diff";
+          name = "btrfs-root-diff";
+          runtimeInputs = [
+            coreutils
+            gnused
+            btrfs-progs
+          ];
+          text = ''
+            sudo mkdir -p /mnt
+            sudo mount -o subvol=/ /dev/mapper/cryptroot /mnt
+            btrfs-diff
+            sudo umount /mnt
+          '';
+        })
+        (writeShellApplication {
+          name = "btrfs-home-diff";
           runtimeInputs = [
             coreutils
             gnused
