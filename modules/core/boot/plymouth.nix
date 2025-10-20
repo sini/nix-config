@@ -14,5 +14,6 @@
         "rd.systemd.show_status=auto"
       ];
     };
+    environment.persistence."/persist".directories = [ "/var/lib/plymouth" ];
   };
 }

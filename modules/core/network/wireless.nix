@@ -19,6 +19,7 @@
       };
 
       environment.persistence."/volatile".directories = [
+        "/etc/wpa_supplicant"
         "/var/lib/iwd"
       ];
 
