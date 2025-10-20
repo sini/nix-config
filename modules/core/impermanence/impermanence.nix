@@ -34,6 +34,10 @@
         zfsEnabled = lib.elem "zfs" activeFeatures;
         btrfsEnabled = lib.elem "btrfs" activeFeatures;
         legacyFs = lib.elem "disk-single" activeFeatures;
+        # Note: Legacy disk-single feature is used to detect legacy disk configuration modules.
+        # This disk configuration only supports BTRFS, and only provided a /persist subvolume and is being phased out.
+        # These disks also didn't take initial snapshots for rollback, so root/home rollback won't work with legacyFs either...
+        # We will re-image these hosts and remove this ASAP.
         cfg = config.impermanence;
       in
       {
