@@ -1,5 +1,23 @@
 { inputs, ... }:
 {
+  # Impermanence Module
+  # ===================
+  # This module implements an impermanent root filesystem pattern where the root
+  # and optionally home directories are reset to a clean state on every boot.
+  # State that needs to persist is explicitly declared and stored in separate
+  # persistent directories (/persist and /volatile).
+  #
+  # Architecture:
+  # - /persist: Long-term persistent data (configuration, SSH keys, user files)
+  # - /volatile: Semi-persistent data that can be deleted (cache, downloads)
+  # - /: Ephemeral root that gets wiped on boot, returning to a blank state
+  #
+  # This approach provides:
+  # - Declarative system state (only what's explicitly saved persists)
+  # - Clean boots without accumulated cruft
+  # - Better security (temporary files are truly temporary)
+  # - Easier recovery (rollback to last boot snapshot)
+
   flake.features.impermanence = {
     nixos =
       {
@@ -12,6 +30,7 @@
       with lib;
       with builtins;
       let
+        # Check which filesystem is in use to enable appropriate rollback mechanisms
         zfsEnabled = lib.elem "zfs" activeFeatures;
         btrfsEnabled = lib.elem "btrfs" activeFeatures;
         cfg = config.impermanence;
@@ -30,35 +49,67 @@
           wipeRootOnBoot = lib.mkOption {
             type = types.bool;
             default = false;
-            description = "Enable root rollback on boot.";
+            description = ''
+              Enable root rollback on boot. When enabled, the root filesystem
+              is reset to a blank snapshot on every boot, effectively wiping
+              all state not stored in /persist or /volatile.
+            '';
           };
           wipeHomeOnBoot = lib.mkOption {
             type = types.bool;
             default = false;
-            description = "Enable home rollback on boot.";
+            description = ''
+              Enable home rollback on boot. When enabled, /home is reset to a
+              blank snapshot on every boot. Use with caution - ensure all
+              important user data is declared in persistence directories.
+            '';
           };
         };
 
         config = {
+          # Persistence Configuration
+          # =========================
+          # Define what files and directories should persist across reboots.
+          # The impermanence module uses bind mounts to overlay persistent
+          # directories onto the ephemeral root filesystem.
+          #
+          # hideMounts = true: Hides the bind mounts from 'df' and 'mount' output
+          # to reduce clutter while maintaining functionality.
+
           environment.persistence = {
+            # /volatile: Semi-persistent storage
+            # ----------------------------------
+            # Data here persists across reboots but is considered "safe to delete".
+            # Typically used for caches, temporary state, and system-generated data.
             "/volatile" = {
               enable = cfg.enable;
               hideMounts = true;
               directories = [
-                "/var/lib/nixos"
-                "/var/tmp"
-                "/srv"
+                "/var/lib/nixos" # NixOS state (user/group IDs, etc.)
+                "/var/tmp" # Temporary files that should survive reboots
+                "/srv" # Service data directory
               ];
             };
+
+            # /persist: Long-term persistent storage
+            # --------------------------------------
+            # Critical system state and configuration that must survive reboots.
+            # Only essential files should be here to maintain system declarativeness.
             "/persist" = {
               enable = cfg.enable;
               hideMounts = true;
               directories = [ ];
               files = [
+                # System identity - needed for consistent machine identification
                 "/etc/machine-id"
+                # Hardware clock drift correction - maintains accurate time
                 "/etc/adjtime"
 
-                # SSH host keys needed for remote access and agenix
+                # SSH host keys - CRITICAL for remote access and agenix secret decryption
+                # Without these, the host would generate new keys on every boot:
+                # - Breaking SSH host verification (MITM warnings)
+                # - Breaking agenix (secrets encrypted for old host key)
+                # - Breaking remote management and deployment
                 "/etc/ssh/ssh_host_ed25519_key"
                 "/etc/ssh/ssh_host_ed25519_key.pub"
                 "/etc/ssh/ssh_host_rsa_key"
@@ -67,14 +118,19 @@
             };
           };
 
-          # Add ZFS persistent datasets if ZFS is enabled
+          # ZFS Dataset Configuration
+          # =========================
+          # When using ZFS, create dedicated datasets for persistent storage.
+          # These datasets are separate from the root dataset, allowing root
+          # to be rolled back independently while preserving these directories.
           disko.devices = lib.mkIf zfsEnabled {
             zpool.zroot.datasets = {
               "local/persist" = {
                 type = "zfs_fs";
-                options.mountpoint = "legacy";
+                options.mountpoint = "legacy"; # Manual mount control via NixOS
                 mountpoint = "/persist";
-                options."com.sun:auto-snapshot" = "true";
+                options."com.sun:auto-snapshot" = "true"; # Enable automatic snapshots
+                # Create initial empty snapshot for rollback reference
                 postCreateHook = "zfs snapshot zroot/local/persist@empty";
               };
               "local/volatile" = {
@@ -87,18 +143,40 @@
             };
           };
 
+          # Early Boot Mounting
+          # ===================
+          # Mark persistence directories as needed during early boot (initrd stage).
+          # This ensures they're available before systemd starts, allowing:
+          # - impermanence bind mounts to work correctly
+          # - Services to access persistent state immediately
+          # - No race conditions with service startup
           fileSystems = lib.mkIf cfg.enable {
             "/persist".neededForBoot = true;
             "/volatile".neededForBoot = true;
           };
 
+          # Boot Rollback Services
+          # ======================
+          # These systemd services run during early boot (initrd stage) to reset
+          # the root and/or home filesystems to a clean state. This is the core
+          # of the impermanence system.
+          #
+          # The services are carefully ordered to run:
+          # 1. After filesystem/encryption is available
+          # 2. Before the filesystem is mounted for normal use
+          # This ensures a clean slate before the system starts.
+
           boot.initrd.systemd.services =
             lib.optionalAttrs cfg.wipeRootOnBoot {
+              # ZFS Root Rollback
+              # -----------------
+              # Rollback to the @empty snapshot created during initial setup.
+              # The '-r' flag recursively rolls back any child datasets.
               rollback-zfs-root = lib.mkIf zfsEnabled {
                 description = "Rollback ZFS root dataset to a pristine state";
                 wantedBy = [ "initrd.target" ];
-                after = [ "zfs-import-zroot.service" ];
-                before = [ "sysroot.mount" ];
+                after = [ "zfs-import-zroot.service" ]; # Wait for ZFS pool import
+                before = [ "sysroot.mount" ]; # Must complete before root is mounted
                 path = with pkgs; [ zfs_cachyos ];
                 unitConfig.DefaultDependencies = "no";
                 serviceConfig.Type = "oneshot";
@@ -106,34 +184,34 @@
                   zfs rollback -r zroot/local/root@empty && echo "rollback complete"
                 '';
               };
+
+              # BTRFS Root Rollback
+              # -------------------
+              # BTRFS rollback is more complex than ZFS because:
+              # 1. We need to mount the BTRFS volume to access subvolumes
+              # 2. Nested subvolumes must be deleted before parent subvolume
+              # 3. We restore from a /root-blank snapshot to /root
               rollback-btrfs-root = lib.mkIf btrfsEnabled {
                 description = "Rollback BTRFS root subvolume to a pristine state";
                 wantedBy = [ "initrd.target" ];
-                # make sure it's done after encryption
-                # i.e. LUKS/TPM process
+                # Wait for LUKS decryption (via TPM or passphrase)
                 after = [ "systemd-cryptsetup@cryptroot.service" ];
-                # mount the root fs before clearing
+                # Must complete before root filesystem is mounted for use
                 before = [ "sysroot.mount" ];
                 unitConfig.DefaultDependencies = "no";
                 serviceConfig.Type = "oneshot";
                 script = ''
                   mkdir -p /mnt
 
-                  # We first mount the btrfs root to /mnt
-                  # so we can manipulate btrfs subvolumes.
+                  # Mount the BTRFS root volume (not a subvolume) to access all subvolumes
                   mount -o subvol=/ /dev/mapper/cryptroot /mnt
                   btrfs subvolume list -o /mnt/root
 
-                  # While we're tempted to just delete /root and create
-                  # a new snapshot from /root-blank, /root is already
-                  # populated at this point with a number of subvolumes,
-                  # which makes `btrfs subvolume delete` fail.
-                  # So, we remove them first.
-                  #
-                  # /root contains subvolumes:
-                  # - /root/var/lib/portables
-                  # - /root/var/lib/machines
-
+                  # BTRFS requires deleting nested subvolumes before parent subvolume.
+                  # Systemd automatically creates subvolumes for containers:
+                  # - /var/lib/portables (systemd-portabled)
+                  # - /var/lib/machines (systemd-nspawn containers)
+                  # These must be deleted first before we can delete /root.
                   btrfs subvolume list -o /mnt/root |
                   cut -f9 -d' ' |
                   while read subvolume; do
@@ -143,17 +221,22 @@
                   echo "deleting /root subvolume..." &&
                   btrfs subvolume delete /mnt/root
 
+                  # Restore from the blank snapshot created during initial setup
                   echo "restoring blank /root subvolume..."
                   btrfs subvolume snapshot /mnt/root-blank /mnt/root
 
-                  # Once we're done rolling back to a blank snapshot,
-                  # we can unmount /mnt and continue on the boot process.
+                  # Clean up: unmount and continue boot process
                   umount /mnt
                 '';
               };
             }
             // lib.optionalAttrs cfg.wipeHomeOnBoot {
-              # Rollback '/home'
+              # Home Directory Rollback
+              # -----------------------
+              # Similar to root rollback, but for /home. Use with caution!
+              # Ensure all important user data is declared in persistence.
+
+              # ZFS Home Rollback
               rollback-zfs-home = lib.mkIf zfsEnabled {
                 description = "Rollback ZFS home dataset to a pristine state";
                 wantedBy = [ "initrd.target" ];
@@ -166,6 +249,8 @@
                   zfs rollback -r zroot/local/home@empty && echo "rollback complete"
                 '';
               };
+
+              # BTRFS Home Rollback
               rollback-btrfs-home = lib.mkIf btrfsEnabled {
                 description = "Rollback BTRFS home subvolume to a pristine state";
                 wantedBy = [ "initrd.target" ];
@@ -177,7 +262,7 @@
                   mkdir -p /mnt
                   mount -o subvol=/ /dev/mapper/cryptroot /mnt
 
-                  # Recursively delete all subvolumes within /mnt/home
+                  # Recursively delete all nested subvolumes first
                   btrfs subvolume list -o /mnt/home |
                   cut -f9 -d' ' |
                   while read subvolume; do
@@ -187,6 +272,7 @@
                   echo "deleting /home subvolume..." &&
                   btrfs subvolume delete /mnt/home
 
+                  # Restore from blank snapshot
                   echo "restoring blank /home subvolume..."
                   btrfs subvolume snapshot /mnt/home-blank /mnt/home
 
@@ -196,6 +282,14 @@
             };
 
           systemd = {
+            # Automatic Home Directory Creation
+            # ==================================
+            # Ensure user home directories exist in both /persist and /volatile
+            # before they're needed. systemd-tmpfiles creates these directories
+            # with correct ownership and permissions during early boot.
+            #
+            # This prevents permission errors when impermanence tries to bind mount
+            # user directories that don't exist yet in the persistent storage.
             tmpfiles.settings."persistent-dirs" =
               let
                 mkHomePersist =
@@ -221,7 +315,16 @@
               lib.mkMerge (map mkHomePersist users);
           }
           // lib.optionalAttrs zfsEnabled {
-            # Take snapshots before shutdown for recovery, then rollback to empty
+            # ZFS Shutdown Hook
+            # =================
+            # Before shutdown, create recovery snapshots and rollback to empty state.
+            # This ensures:
+            # 1. A @lastboot snapshot exists for emergency recovery
+            # 2. The system state is already clean before reboot
+            # 3. ZFS pool is properly synced to disk
+            #
+            # Recovery process: If needed, you can restore the last boot state with:
+            #   zfs rollback zroot/local/root@lastboot
             shutdownRamfs.contents."/etc/systemd/system-shutdown/zpool".source = lib.mkForce (
               pkgs.writeShellScript "zpool-sync-shutdown" ''
                 # Remove existing lastboot snapshots if they exist
@@ -232,23 +335,38 @@
                 ${config.boot.zfs.package}/bin/zfs snapshot "zroot/local/root@lastboot"
                 ${config.boot.zfs.package}/bin/zfs snapshot "zroot/local/home@lastboot"
 
-                # Rollback to empty state
+                # Rollback to empty state (optimization: start next boot clean)
                 ${config.boot.zfs.package}/bin/zfs rollback -r "zroot/local/root@empty"
                 ${config.boot.zfs.package}/bin/zfs rollback -r "zroot/local/home@empty"
 
-                # Sync the pool before shutdown
+                # Sync the pool before shutdown to ensure data integrity
                 exec ${config.boot.zfs.package}/bin/zpool sync
               ''
             );
 
+            # Ensure zfs binary is available in the shutdown ramfs
             shutdownRamfs.storePaths = [ "${config.boot.zfs.package}/bin/zfs" ];
           };
 
-          # Needed for home-manager's impermanence allowOther option to work
+          # FUSE Configuration
+          # ==================
+          # Enable userAllowOther for FUSE filesystems. Required for home-manager's
+          # impermanence module to work correctly when using the allowOther option.
+          # This allows bind mounts created by unprivileged users (via home-manager)
+          # to be accessible by other users, including the user themselves in
+          # different contexts (e.g., systemd services running as that user).
           programs.fuse.userAllowOther = true;
         };
       };
 
+    # Home Manager Integration
+    # ========================
+    # Configure per-user persistence using home-manager's impermanence module.
+    # This manages user-level files and directories that should persist.
+    #
+    # The configuration is split between:
+    # - /persist: Important user data (documents, SSH keys, GPG keys)
+    # - /volatile: Temporary user data (downloads, caches)
     home =
       {
         config,
@@ -257,17 +375,23 @@
         ...
       }:
       let
+        # Get relative home path (e.g., "home/username" from "/home/username")
         relHome = lib.removePrefix "/" config.home.homeDirectory;
       in
       {
         imports = [
           inputs.impermanence.homeManagerModules.impermanence
         ];
+
         home.persistence = {
+          # /persist: Long-term user data
+          # -----------------------------
+          # Files and directories here are backed up and considered important.
           "/persist" = {
             enable = osConfig.impermanence.enable;
             persistentStoragePath = "/persist/${relHome}";
             directories = [
+              # XDG user directories - standard user folders
               config.xdg.userDirs.desktop or "Desktop"
               config.xdg.userDirs.documents or "Documents"
               config.xdg.userDirs.music or "Music"
@@ -275,20 +399,28 @@
               config.xdg.userDirs.publicShare or "Pictures"
               config.xdg.userDirs.templates or "Templates"
               config.xdg.userDirs.videos or "Videos"
-              ".gnupg"
-              ".ssh"
-              ".local/share/keyrings"
+
+              # Security/Authentication
+              ".gnupg" # GPG keys and configuration
+              ".ssh" # SSH keys and known hosts
+              ".local/share/keyrings" # Keyring/password storage
             ];
             files = [ ];
+            # Allow other users to access these mounts (needed for multi-user systems)
             allowOther = true;
           };
+
+          # /volatile: Temporary user data
+          # ------------------------------
+          # Data that's useful to keep but can be regenerated or is not critical.
           "/volatile" = {
             enable = osConfig.impermanence.enable;
             persistentStoragePath = "/volatile/${relHome}";
             directories = [
-              config.xdg.userDirs.downloads or "Downloads"
-              ".local/share/direnv"
-              ".cache"
+              # Regenerable data
+              config.xdg.userDirs.downloads or "Downloads" # Downloads folder
+              ".local/share/direnv" # Direnv cache (can be rebuilt)
+              ".cache" # Application caches (can be regenerated)
             ];
             files = [ ];
             allowOther = true;
