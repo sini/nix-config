@@ -118,6 +118,8 @@
               files = [
                 # System identity - needed for consistent machine identification
                 "/etc/machine-id"
+                # ZFS pool cache - speeds up ZFS pool import on boot
+                "/etc/zfs/zpool.cache"
                 # Hardware clock drift correction - maintains accurate time
                 "/etc/adjtime"
 

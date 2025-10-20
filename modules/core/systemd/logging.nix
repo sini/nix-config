@@ -22,6 +22,7 @@
       environment.persistence."/volatile".directories = [
         "/var/lib/systemd/coredump"
         "/var/lib/systemd/timers"
+        "/var/lib/systemd/catalog"
       ]
       ++
         # If using legacy disk-configuration, don't persist logs as they are on their own subvolume
