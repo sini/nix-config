@@ -81,10 +81,10 @@
       media = { };
     };
 
-    delegation = {
-      metricsTo = "prod";
-      authTo = "prod";
-      logsTo = "prod";
-    };
+    # delegation = {
+    #   metricsTo = "prod";
+    #   authTo = "prod";
+    #   logsTo = "prod";
+    # };
   };
 }

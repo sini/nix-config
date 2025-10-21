@@ -3,7 +3,7 @@
   flake.hosts.vm-test = {
     ipv4 = [ "10.10.44.135" ];
     ipv6 = [ "fd64:0:3::2/64" ];
-    environment = "prod";
+    environment = "dev";
     roles = [
       "server"
       # "kubernetes"
@@ -20,10 +20,10 @@
       # "thunderbolt-mesh"
       "acme"
       "nginx"
-      # "kanidm"
-      # "grafana"
-      # "loki"
-      # "prometheus"
+      "kanidm"
+      "grafana"
+      "loki"
+      "prometheus"
     ];
     facts = ./facter.json;
     nixosConfiguration =
