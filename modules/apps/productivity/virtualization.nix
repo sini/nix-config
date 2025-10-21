@@ -4,7 +4,7 @@ let
 in
 {
   flake.features.virtualization.nixos =
-    { config, pkgs, ... }:
+    { pkgs, ... }:
     {
 
       boot.kernelModules = [
@@ -40,6 +40,8 @@ in
         virt-viewer
         win-virtio
         win-spice
+        cloud-utils
+        bridge-utils
 
         virtiofsd
         looking-glass-client # For KVM
@@ -72,7 +74,7 @@ in
         # Firewall rules for virtualization
         firewall = {
           # Allow libvirt bridge traffic
-          trustedInterfaces = [ "virbr0" ] ++ config.hardware.networking.bridges;
+          trustedInterfaces = [ "virbr0" ];
 
           # Allow SPICE and VNC ports
           allowedTCPPorts = [
@@ -95,6 +97,32 @@ in
           ];
         };
       };
+
+      environment.etc."qemu/bridge.conf" = {
+        user = "root";
+        group = "qemu";
+        mode = "640";
+        text = "allow all";
+      };
+
+      security.wrappers = {
+        # TODO: remove this, keep the VM network config entirely within the system nixos config instead?
+        qemu-bridge-helper = {
+          source = "${pkgs.qemu_kvm}/libexec/qemu-bridge-helper";
+          capabilities = "cap_net_admin+ep";
+          owner = "root";
+          group = "root";
+        };
+      };
+
+      # Don't manage tap devices with systemd-networkd
+      systemd.network.networks."06-tap".extraConfig = ''
+        [Match]
+        Name = tap*
+
+        [Link]
+        Unmanaged = yes
+      '';
 
       systemd.services = {
         # Custom libvirt network setup
@@ -147,6 +175,7 @@ in
             "br0"
             "nm-bridge"
             "virbr0"
+            "virbr1"
           ];
           onBoot = "ignore";
           onShutdown = "shutdown";
