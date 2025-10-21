@@ -25,5 +25,10 @@ in
         }
       ];
     };
+
+    impermanence.ignorePaths = [
+      "/etc/sudoers"
+      "/etc/doas.conf"
+    ];
   };
 }

@@ -18,6 +18,12 @@
       # "cpu-amd"
       # "gpu-amd"
       # "thunderbolt-mesh"
+      "acme"
+      "nginx"
+      # "kanidm"
+      # "grafana"
+      # "loki"
+      # "prometheus"
     ];
     facts = ./facter.json;
     nixosConfiguration =

@@ -122,6 +122,10 @@
         ];
       };
 
+      impermanence.ignorePaths = [
+        "/var/lib/private/alloy/data-alloy/alloy_seed.json"
+      ];
+
       environment.persistence."/persist".directories = [
         {
           directory = "/var/lib/private/alloy";
