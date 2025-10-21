@@ -123,6 +123,18 @@
                 # Hardware clock drift correction - maintains accurate time
                 "/etc/adjtime"
 
+                # System configuration files
+                "/etc/sudoers"
+                "/etc/subgid"
+                "/etc/subuid"
+                "/etc/shadow"
+                "/etc/passwd"
+                "/etc/group"
+                "/etc/NIXOS"
+                "/etc/.updated"
+                "/etc/.clean"
+                "/var/.updated"
+
                 # SSH host keys - CRITICAL for remote access and agenix secret decryption
                 # Without these, the host would generate new keys on every boot:
                 # - Breaking SSH host verification (MITM warnings)
