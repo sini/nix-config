@@ -78,6 +78,7 @@
         configPath = "/etc/alloy/";
         extraFlags = [
           "--disable-reporting"
+          "--storage.path=/var/lib/alloy/data"
         ];
       };
 
@@ -94,6 +95,7 @@
           "systemd-journal" # allow to read the systemd journal for loki log forwarding
           "docker"
           "podman" # allow to read the docker socket
+          "nginx" # allow to read nginx logs for loki log forwarding
         ];
       };
 
@@ -108,6 +110,7 @@
             "systemd-journal"
             "docker"
             # "podman"
+            "nginx"
           ];
           # Add capabilities for process monitoring and network probing
           AmbientCapabilities = [
@@ -120,6 +123,8 @@
             "CAP_DAC_READ_SEARCH"
             "CAP_NET_RAW"
           ];
+          # WorkingDirectory = lib.mkForce "/var/lib/alloy";
+
         };
       };
 
