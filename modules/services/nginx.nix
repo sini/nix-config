@@ -40,6 +40,17 @@
             };
           };
         };
+
+        # Enable nginx status for nginx exporter
+        statusPage = true;
+      };
+
+      services.prometheus.exporters = {
+        nginx = {
+          enable = true;
+          port = 9113;
+          listenAddress = "127.0.0.1";
+        };
       };
 
       networking.firewall.allowedTCPPorts = [

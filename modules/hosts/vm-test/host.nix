@@ -10,6 +10,7 @@
       # "kubernetes-master"
       # "bgp-spoke"
       # "vault"
+      "metrics-ingester"
     ];
     features = [
       # "disk-single"
@@ -24,6 +25,7 @@
       "grafana"
       "loki"
       "prometheus"
+      "docker"
     ];
     facts = ./facter.json;
     nixosConfiguration =

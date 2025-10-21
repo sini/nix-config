@@ -1,28 +1,6 @@
 #
 {
   flake.features.server.nixos = {
-    # Enable Prometheus node exporter for monitoring
-    services.prometheus.exporters.node = {
-      enable = true;
-      port = 9100;
-      listenAddress = "0.0.0.0"; # Allow remote scraping
-      enabledCollectors = [
-        "processes"
-        "interrupts"
-        "ksmd"
-        "logind"
-        "meminfo_numa"
-        "mountstats"
-        "network_route"
-        "systemd"
-        "tcpstat"
-        "wifi"
-      ];
-    };
-
-    # Open firewall for node exporter
-    networking.firewall.allowedTCPPorts = [ 9100 ];
-
     # Servers don't sleep
     systemd.sleep.extraConfig = ''
       AllowSuspend=no

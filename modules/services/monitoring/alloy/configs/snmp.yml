@@ -1,0 +1,171 @@
+modules:
+  default:
+    walk:
+      # System information
+      - 1.3.6.1.2.1.1 # system
+      - 1.3.6.1.2.1.2 # interfaces
+      - 1.3.6.1.2.1.31 # interface extensions
+
+      # IP statistics
+      - 1.3.6.1.2.1.4 # ip
+      - 1.3.6.1.2.1.5 # icmp
+
+      # TCP/UDP statistics
+      - 1.3.6.1.2.1.6 # tcp
+      - 1.3.6.1.2.1.7 # udp
+
+      # SNMP statistics
+      - 1.3.6.1.2.1.11 # snmp
+
+      # Host resources (if supported)
+      - 1.3.6.1.2.1.25 # host resources
+
+      # Cisco specific (if using Cisco devices)
+      - 1.3.6.1.2.1.47 # entity physical
+      - 1.3.6.1.4.1.9.9.109 # cisco CPU
+      - 1.3.6.1.4.1.9.9.48 # cisco memory
+
+      # Ubiquiti specific MIBs
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.1 # ubntSystem
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.2 # ubntSystemModel
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.3 # ubntSystemVersion
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.4 # ubntSystemSerial
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.5 # ubntSystemName
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.6 # ubntSystemContact
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.7 # ubntSystemLocation
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.8 # ubntSystemUptime
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.9 # ubntSystemHostname
+      - 1.3.6.1.4.1.10002.1.1.1.1.1.1.10 # ubntSystemDomain
+
+      # Ubiquiti wireless MIBs (for UniFi APs)
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.1 # ubntWlStat
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.2 # ubntWlStatChannel
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.3 # ubntWlStatTxPower
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.4 # ubntWlStatNoiseFloor
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.5 # ubntWlStatSignal
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.6 # ubntWlStatRssi
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.7 # ubntWlStatCcq
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.8 # ubntWlStatTxRate
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.9 # ubntWlStatRxRate
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.10 # ubntWlStatTxPackets
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.11 # ubntWlStatRxPackets
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.12 # ubntWlStatTxBytes
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.13 # ubntWlStatRxBytes
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.14 # ubntWlStatTxErrors
+      - 1.3.6.1.4.1.10002.1.1.1.2.1.1.15 # ubntWlStatRxErrors
+
+      # Ubiquiti switch MIBs (for UniFi switches)
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.1 # ubntSwTable
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.2 # ubntSwPortTable
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.3 # ubntSwPortStatus
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.4 # ubntSwPortSpeed
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.5 # ubntSwPortDuplex
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.6 # ubntSwPortPause
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.7 # ubntSwPortAutoNeg
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.8 # ubntSwPortFlowControl
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.9 # ubntSwPortTxPause
+      - 1.3.6.1.4.1.10002.1.1.1.3.1.1.10 # ubntSwPortRxPause
+
+      # Common vendor MIBs
+      - 1.3.6.1.2.1.17 # bridge (for switches)
+      - 1.3.6.1.2.1.35 # application (for application monitoring)
+
+    version: 2c
+    auth:
+      community: public
+    retries: 3
+    timeout: 10s
+    max_repetitions: 10
+
+    # Metrics to collect
+    metrics:
+      - name: sysUpTime
+        oid: 1.3.6.1.2.1.1.3.0
+        type: gauge
+        help: "System uptime in timeticks"
+
+      - name: sysDescr
+        oid: 1.3.6.1.2.1.1.1.0
+        type: DisplayString
+        help: "System description"
+
+      - name: ifOperStatus
+        oid: 1.3.6.1.2.1.2.2.1.8
+        type: gauge
+        help: "Interface operational status"
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+
+      - name: ifInOctets
+        oid: 1.3.6.1.2.1.2.2.1.10
+        type: counter
+        help: "Incoming octets on interface"
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+
+      - name: ifOutOctets
+        oid: 1.3.6.1.2.1.2.2.1.16
+        type: counter
+        help: "Outgoing octets on interface"
+        indexes:
+          - labelname: ifIndex
+            type: gauge
+
+      # Ubiquiti specific metrics
+      - name: ubntSystemUptime
+        oid: 1.3.6.1.4.1.10002.1.1.1.1.1.1.8
+        type: gauge
+        help: "Ubiquiti system uptime"
+
+      - name: ubntSystemModel
+        oid: 1.3.6.1.4.1.10002.1.1.1.1.1.1.2
+        type: DisplayString
+        help: "Ubiquiti system model"
+
+      - name: ubntSystemVersion
+        oid: 1.3.6.1.4.1.10002.1.1.1.1.1.1.3
+        type: DisplayString
+        help: "Ubiquiti system version"
+
+      # Ubiquiti wireless metrics
+      - name: ubntWlStatChannel
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.2
+        type: gauge
+        help: "Wireless channel"
+
+      - name: ubntWlStatTxPower
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.3
+        type: gauge
+        help: "Transmit power in dBm"
+
+      - name: ubntWlStatNoiseFloor
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.4
+        type: gauge
+        help: "Noise floor in dBm"
+
+      - name: ubntWlStatSignal
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.5
+        type: gauge
+        help: "Signal strength in dBm"
+
+      - name: ubntWlStatRssi
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.6
+        type: gauge
+        help: "RSSI value"
+
+      - name: ubntWlStatCcq
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.7
+        type: gauge
+        help: "Client connection quality"
+
+      - name: ubntWlStatTxRate
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.8
+        type: gauge
+        help: "Transmit rate in Mbps"
+
+      - name: ubntWlStatRxRate
+        oid: 1.3.6.1.4.1.10002.1.1.1.2.1.1.9
+        type: gauge
+        help: "Receive rate in Mbps"

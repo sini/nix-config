@@ -18,7 +18,7 @@
 // Loki remote write for log aggregation with rate limiting
 loki.write "local" {
 	endpoint {
-		url = "${lokiEndpoint}"
+		url = "http://${reportingHost}:3100/loki/api/v1/push"
 
 		// Batch configuration to reduce request rate
 		batch_wait = "5s"
@@ -45,7 +45,7 @@ loki.write "local" {
 // Prometheus remote write for metrics with retry and timeout
 prometheus.remote_write "local" {
 	endpoint {
-		url = "${prometheusEndpoint}"
+		url = "http://${reportingHost}:9090/api/v1/write"
 	}
 	external_labels = {
 		"host"        = "${hostname}",
@@ -58,7 +58,42 @@ prometheus.remote_write "local" {
 // RELABELING RULES
 // =============================================================================
 
-${volumeFilterConfig}
+// Volume filter for journal logs to reduce ingestion rate
+loki.relabel "journal_volume_filter" {
+	forward_to = [
+    loki.relabel.journal.receiver,
+	]
+
+	// Drop debug and info level logs to reduce volume
+	rule {
+		source_labels = ["__journal_priority"]
+		regex         = "[5-7]" // 5=notice, 6=info, 7=debug
+		action        = "drop"
+	}
+
+	// Drop noisy services that generate too many logs
+	rule {
+		source_labels = ["__journal__systemd_unit"]
+		regex         = "(systemd-journal|systemd-logind|NetworkManager|chronyd|audit)\\.service"
+		action        = "drop"
+	}
+
+  // Also drop repetitive kernel messages (info/debug only)
+  rule {
+    source_labels = ["__journal__comm", "__journal_priority"]
+    regex         = "kernel;[6-7]"
+    separator     = ";"
+    action        = "drop"
+  }
+
+  // Drop Alloy process discovery permission errors
+  rule {
+    source_labels = ["__journal__systemd_unit", "__journal__message"]
+    regex         = "alloy\\.service;.*failed to get process info.*permission denied.*"
+    separator     = ";"
+    action        = "drop"
+  }
+}
 
 // Enhanced relabel rules for journal logs
 loki.relabel "journal" {
@@ -715,14 +750,14 @@ prometheus.relabel "snmp_metrics" {
 	// Extract device type from instance
 	rule {
 		source_labels = ["instance"]
-		regex         = "10\\.10\\.100\\.1"
+		regex         = "10\\.10\\.0\\.1"
 		target_label  = "device_type"
 		replacement   = "gateway"
 	}
 
 	rule {
 		source_labels = ["instance"]
-		regex         = "10\\.10\\.100\\.[2-5]"
+		regex         = "10\\.10\\.0\\.[2-5]"
 		target_label  = "device_type"
 		replacement   = "access_point"
 	}
@@ -859,7 +894,7 @@ prometheus.relabel "cadvisor_metrics" {
 // Journal source for reading systemd journal logs with enhanced relabeling
 loki.source.journal "read" {
 	forward_to = [
-		${journalForwardTo}
+		loki.relabel.journal_volume_filter.receiver,
 	]
 	labels = {
 		"job"       = "journal",
@@ -951,7 +986,6 @@ prometheus.exporter.unix "unix" {
 		"ipvs",
 		"infiniband",
 		"xfs",
-		"zfs",
 	]
 	enable_collectors = [
 		"cpu",
@@ -975,6 +1009,7 @@ prometheus.exporter.unix "unix" {
 		"time",
 		"uname",
 		"vmstat",
+		"zfs",
 	]
 
 	filesystem {
@@ -1093,38 +1128,38 @@ prometheus.exporter.blackbox "blackbox" {
 	config_file = "/etc/alloy/blackbox.yml"
 
 	target {
-		name    = "http_woody_prometheus"
-		address = "http://woody:9090"
+		name    = "http_${reportingHost}_prometheus"
+		address = "http://${reportingHost}:9090"
 		module  = "http_2xx"
 	}
 
 	target {
-		name    = "http_woody_grafana"
-		address = "http://woody:3001"
+		name    = "http_${reportingHost}_grafana"
+		address = "http://${reportingHost}:3100"
 		module  = "http_2xx"
 	}
 
 	target {
-		name    = "http_woody_alertmanager"
-		address = "http://woody:9093"
+		name    = "http_${reportingHost}_alertmanager"
+		address = "http://${reportingHost}:9093"
 		module  = "http_2xx"
 	}
 
 	target {
 		name    = "http_gateway"
-		address = "http://10.10.100.1"
+		address = "http://${gatewayIP}"
 		module  = "http_2xx"
 	}
 
 	target {
 		name    = "https_gateway"
-		address = "https://10.10.100.1"
+		address = "https://${gatewayIP}"
 		module  = "https_2xx"
 	}
 
 	target {
 		name    = "icmp_gateway"
-		address = "10.10.100.1"
+		address = "${gatewayIP}"
 		module  = "icmp"
 	}
 
@@ -1397,9 +1432,3 @@ loki.process "error_log_parser" {
 		source     = "__raw_log_message__"
 	}
 }
-
-// =============================================================================
-// Host-specific custom configurations
-// =============================================================================
-
-${customConfig}
