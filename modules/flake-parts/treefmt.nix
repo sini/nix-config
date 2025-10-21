@@ -44,6 +44,7 @@
             "*.org"
             "*.zsh"
             "*.kdl"
+            "*.txt"
           ];
           formatter = {
             prettier = {

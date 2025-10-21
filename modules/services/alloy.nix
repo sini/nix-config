@@ -44,7 +44,7 @@
             // Relabel journal fields
             loki.relabel "journal_labels" {
               forward_to = [loki.write.loki_endpoint.receiver]
-              
+
               rule {
                 source_labels = ["__journal__hostname"]
                 target_label  = "host"
@@ -101,7 +101,7 @@
             // No Loki endpoint available - logs disabled
             logging {
               level = "warn"
-              format = "logfmt" 
+              format = "logfmt"
             }
           '';
 
@@ -121,6 +121,15 @@
           "--disable-reporting"
         ];
       };
+
+      environment.persistence."/persist".directories = [
+        {
+          directory = "/var/lib/private/alloy";
+          user = "nobody";
+          group = "nogroup";
+          mode = "0750";
+        }
+      ];
 
       # Create alloy data directories
       systemd.tmpfiles.rules = [

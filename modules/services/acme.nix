@@ -4,24 +4,21 @@
     {
       config,
       environment,
-      activeFeatures,
-      lib,
       ...
     }:
-    let
-      impermanenceEnabled = lib.elem "impermanence" activeFeatures;
-    in
     {
       age.secrets.cloudflare-api-key = {
         rekeyFile = rootPath + "/.secrets/services/cloudflare-api-key.age";
       };
 
-      environment.persistence."/persist".directories = lib.optional impermanenceEnabled {
-        directory = "/var/lib/acme";
-        user = "acme";
-        group = "acme";
-        mode = "0755";
-      };
+      environment.persistence."/persist".directories = [
+        {
+          directory = "/var/lib/acme";
+          user = "acme";
+          group = "acme";
+          mode = "0755";
+        }
+      ];
 
       security.acme = {
         acceptTerms = true;
