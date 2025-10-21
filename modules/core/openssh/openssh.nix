@@ -29,6 +29,10 @@
         '';
       };
 
+      impermanence.ignorePaths = [
+        "/etc/ssh/authorized_keys.d/"
+      ];
+
       # Let all users with the "wheel" group have their keys in the authorized_keys for root.
       users.users.root.openssh.authorizedKeys.keys =
         with lib;

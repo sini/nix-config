@@ -77,9 +77,35 @@
               important user data is declared in persistence directories.
             '';
           };
+          ignorePaths = lib.mkOption {
+            type = types.listOf types.str;
+            default = [ ];
+            description = ''
+              A list of absolute paths that should be ignored by persistence tooling.
+              These paths are filtered out when using zfs-diff tools.
+            '';
+            example = [
+              "/etc/group"
+              "/etc/shadow"
+            ];
+          };
         };
 
         config = {
+          # Ignore paths for zfs-diff and other tooling
+          impermanence.ignorePaths = [
+            "/etc/NIXOS"
+            "/etc/.clean"
+            "/etc/.updated"
+            "/etc/.pwd.lock"
+            "/var/.updated"
+            "/etc/subgid"
+            "/etc/subuid"
+            "/etc/shadow"
+            "/etc/group"
+            "/etc/passwd"
+          ];
+
           # Persistence Configuration
           # =========================
           # Define what files and directories should persist across reboots.

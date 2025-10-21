@@ -14,6 +14,11 @@
         "d /var/lib/systemd/coredump 0755 root root 7d"
       ];
 
+      impermanence.ignorePaths = [
+        "/var/lib/systemd/linger/"
+        "/var/lib/systemd/random-seed"
+      ];
+
       environment.persistence."/volatile".files = [
         "/var/lib/logrotate.status"
         "/var/lib/lastlog/lastlog2.db"
