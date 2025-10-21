@@ -83,9 +83,11 @@ in
         prometheus = {
           enable = true;
           port = 9090;
-          listenAddress = "127.0.0.1";
+          listenAddress = "0.0.0.0";
 
           extraFlags = [
+            "--web.enable-remote-write-receiver"
+            "--enable-feature=remote-write-receiver"
             "--storage.tsdb.retention.time=30d"
             "--storage.tsdb.retention.size=10GB"
             "--web.enable-lifecycle"
@@ -156,18 +158,7 @@ in
           ];
         };
 
-        prometheus.exporters = {
-          nginx = {
-            enable = true;
-            port = 9113;
-            listenAddress = "127.0.0.1";
-          };
-        };
-
         nginx = {
-          # Enable nginx status for nginx exporter
-          statusPage = true;
-
           virtualHosts = {
             "prometheus.${config.networking.domain}" = {
               forceSSL = true;
