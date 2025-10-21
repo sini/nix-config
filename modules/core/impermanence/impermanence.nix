@@ -123,6 +123,7 @@
                 # Hardware clock drift correction - maintains accurate time
                 "/etc/adjtime"
 
+                "/root/.bash_history"
                 # SSH host keys - CRITICAL for remote access and agenix secret decryption
                 # Without these, the host would generate new keys on every boot:
                 # - Breaking SSH host verification (MITM warnings)
