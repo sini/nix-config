@@ -3,8 +3,8 @@
     { pkgs, ... }:
     {
       systemd.tmpfiles.rules = [
-        "f /persist/ignore_root_paths.txt 0644 root root -"
-        "f /persist/ignore_home_paths.txt 0644 root root -"
+        "f /persist/ignore_root_paths.txt 0664 root wheel -"
+        "f /persist/ignore_home_paths.txt 0664 root wheel -"
       ];
 
       environment.systemPackages = [
