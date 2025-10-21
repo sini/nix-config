@@ -45,6 +45,7 @@
             "*.zsh"
             "*.kdl"
             "*.txt"
+            "*.tmpl"
           ];
           formatter = {
             prettier = {

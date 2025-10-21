@@ -1,0 +1,1405 @@
+// =============================================================================
+// Grafana Alloy Configuration Template
+// Host: ${hostname}
+// =============================================================================
+// This is a unified configuration template for Grafana Alloy that provides:
+// - Comprehensive log collection from multiple sources
+// - System and container metrics collection
+// - Network probing and monitoring
+// - Process monitoring and analysis
+// - SNMP monitoring for network devices
+// - Security-focused log parsing and analysis
+// =============================================================================
+
+// =============================================================================
+// REMOTE WRITE CONFIGURATIONS
+// =============================================================================
+
+// Loki remote write for log aggregation with rate limiting
+loki.write "local" {
+	endpoint {
+		url = "${lokiEndpoint}"
+
+		// Batch configuration to reduce request rate
+		batch_wait = "5s"
+		batch_size = "1MB"
+
+		// Enable retry on rate limit errors
+		retry_on_http_429 = true
+	}
+
+	// Buffer configuration for log reliability
+	external_labels = {
+		"host"        = "${hostname}",
+		"component"   = "alloy",
+		"environment" = "${environment}",
+	}
+
+	// WAL configuration to handle bursts
+	wal {
+		enabled         = true
+		max_segment_age = "1h"
+	}
+}
+
+// Prometheus remote write for metrics with retry and timeout
+prometheus.remote_write "local" {
+	endpoint {
+		url = "${prometheusEndpoint}"
+	}
+	external_labels = {
+		"host"        = "${hostname}",
+		"component"   = "alloy",
+		"environment" = "${environment}",
+	}
+}
+
+// =============================================================================
+// RELABELING RULES
+// =============================================================================
+
+${volumeFilterConfig}
+
+// Enhanced relabel rules for journal logs
+loki.relabel "journal" {
+	forward_to = [
+		loki.relabel.journal_enhanced.receiver,
+	]
+
+	rule {
+		source_labels = ["__journal__systemd_unit"]
+		target_label  = "unit"
+	}
+
+	rule {
+		source_labels = ["__journal__boot_id"]
+		target_label  = "boot_id"
+	}
+
+	rule {
+		source_labels = ["__journal__transport"]
+		target_label  = "transport"
+	}
+
+	rule {
+		source_labels = ["__journal_priority_keyword"]
+		target_label  = "level"
+	}
+
+	rule {
+		source_labels = ["__journal__hostname"]
+		target_label  = "instance"
+	}
+
+	rule {
+		source_labels = ["__journal__machine_id"]
+		target_label  = "machine_id"
+	}
+
+	rule {
+		source_labels = ["__journal__user_id"]
+		target_label  = "user_id"
+	}
+
+	rule {
+		source_labels = ["__journal__user_name"]
+		target_label  = "user_name"
+	}
+
+	rule {
+		source_labels = ["__journal__session_id"]
+		target_label  = "session_id"
+	}
+
+	rule {
+		source_labels = ["__journal__slice"]
+		target_label  = "slice"
+	}
+
+	rule {
+		source_labels = ["__journal__invocation_id"]
+		target_label  = "invocation_id"
+	}
+
+	rule {
+		source_labels = ["__journal__message_id"]
+		target_label  = "message_id"
+	}
+
+	rule {
+		source_labels = ["__journal__cursor"]
+		target_label  = "cursor"
+	}
+
+	rule {
+		source_labels = ["__journal__realtime_timestamp"]
+		target_label  = "realtime_timestamp"
+	}
+
+	rule {
+		source_labels = ["__journal__monotonic_timestamp"]
+		target_label  = "monotonic_timestamp"
+	}
+}
+
+// Enhanced journal processing with service categorization
+loki.relabel "journal_enhanced" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "systemd"
+	}
+
+	// Categorize systemd units by service type
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(ssh|sshd).*"
+		target_label  = "service_category"
+		replacement   = "remote_access"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(docker|containerd).*"
+		target_label  = "service_category"
+		replacement   = "container_runtime"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(prometheus|grafana|alloy).*"
+		target_label  = "service_category"
+		replacement   = "monitoring"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(network|networking|NetworkManager).*"
+		target_label  = "service_category"
+		replacement   = "networking"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(firewall|ufw|iptables).*"
+		target_label  = "service_category"
+		replacement   = "security"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(database|postgres|mysql|redis).*"
+		target_label  = "service_category"
+		replacement   = "database"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(web|nginx|apache|httpd).*"
+		target_label  = "service_category"
+		replacement   = "web_server"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(cron|timer|systemd-timer).*"
+		target_label  = "service_category"
+		replacement   = "scheduled_task"
+	}
+
+	rule {
+		source_labels = ["unit"]
+		regex         = ".*(user|session|login).*"
+		target_label  = "service_category"
+		replacement   = "user_management"
+	}
+
+	// Add severity mapping
+	rule {
+		source_labels = ["level"]
+		regex         = "emerg|alert|crit"
+		target_label  = "severity"
+		replacement   = "critical"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "err|error"
+		target_label  = "severity"
+		replacement   = "error"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "warn|warning"
+		target_label  = "severity"
+		replacement   = "warning"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "notice|info"
+		target_label  = "severity"
+		replacement   = "info"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "debug"
+		target_label  = "severity"
+		replacement   = "debug"
+	}
+}
+
+// Enhanced relabel rules for file logs
+loki.relabel "file_logs" {
+	forward_to = [
+		loki.relabel.file_logs_enhanced.receiver,
+	]
+
+	rule {
+		source_labels = ["__path__"]
+		target_label  = "file_path"
+	}
+
+	rule {
+		source_labels = ["__filename__"]
+		target_label  = "filename"
+	}
+
+	rule {
+		source_labels = ["__path__"]
+		regex         = ".*/([^/]+)\\.log"
+		target_label  = "service"
+		replacement   = "$1"
+	}
+}
+
+// Enhanced file log processing
+loki.relabel "file_logs_enhanced" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "file_logs"
+	}
+
+	// Categorize logs by file path
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/auth\\.log.*"
+		target_label  = "log_category"
+		replacement   = "authentication"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/syslog.*"
+		target_label  = "log_category"
+		replacement   = "system"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/kern\\.log.*"
+		target_label  = "log_category"
+		replacement   = "kernel"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/daemon\\.log.*"
+		target_label  = "log_category"
+		replacement   = "daemon"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/postgresql/.*"
+		target_label  = "log_category"
+		replacement   = "database"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/lib/docker/containers/.*"
+		target_label  = "log_category"
+		replacement   = "container"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/audit/.*"
+		target_label  = "log_category"
+		replacement   = "audit"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/fail2ban\\.log.*"
+		target_label  = "log_category"
+		replacement   = "security"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/ufw\\.log.*"
+		target_label  = "log_category"
+		replacement   = "firewall"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/var/log/iptables\\.log.*"
+		target_label  = "log_category"
+		replacement   = "firewall"
+	}
+
+	// Extract container information from Docker logs
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/docker/containers/([^/]+)/.*"
+		target_label  = "container_id"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["file_path"]
+		regex         = ".*/docker/containers/[^/]+/([^/]+)\\.log"
+		target_label  = "container_name"
+		replacement   = "$1"
+	}
+}
+
+// Enhanced Docker container logs processing
+loki.relabel "docker_logs_enhanced" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "docker"
+	}
+
+	// Extract container metadata
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		target_label  = "container_name"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_image"]
+		target_label  = "container_image"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+		target_label  = "project"
+	}
+
+	// Categorize containers by image
+	rule {
+		source_labels = ["container_image"]
+		regex         = ".*(prometheus|grafana|alloy).*"
+		target_label  = "container_category"
+		replacement   = "monitoring"
+	}
+
+	rule {
+		source_labels = ["container_image"]
+		regex         = ".*(postgres|mysql|redis|mongo).*"
+		target_label  = "container_category"
+		replacement   = "database"
+	}
+
+	rule {
+		source_labels = ["container_image"]
+		regex         = ".*(nginx|apache|httpd).*"
+		target_label  = "container_category"
+		replacement   = "web_server"
+	}
+
+	rule {
+		source_labels = ["container_image"]
+		regex         = ".*(jenkins|gitlab|drone).*"
+		target_label  = "container_category"
+		replacement   = "ci_cd"
+	}
+
+	rule {
+		source_labels = ["container_image"]
+		regex         = ".*(wordpress|drupal|joomla).*"
+		target_label  = "container_category"
+		replacement   = "cms"
+	}
+}
+
+// Generic relabel rule to extract log levels from messages
+loki.relabel "log_level" {
+	forward_to = [
+		loki.write.local.receiver,
+	]
+
+	// Extract log levels from various formats
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*level=(debug|info|warn|error|fatal).*"
+		target_label  = "level"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*severity=(debug|info|warning|error|critical).*"
+		target_label  = "level"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*\\[(DEBUG|INFO|WARN|ERROR|FATAL)\\]:?.*"
+		target_label  = "level"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*(ERROR|WARN|INFO|DEBUG|FATAL).*"
+		target_label  = "level"
+		replacement   = "$1"
+	}
+
+	// Extract error codes and patterns
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*error_code=([0-9]+).*"
+		target_label  = "error_code"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*HTTP/([0-9.]+)\\s+([0-9]+).*"
+		target_label  = "http_status"
+		replacement   = "$2"
+	}
+
+	// Extract IP addresses for security analysis
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*from\\s+([0-9.]+).*"
+		target_label  = "source_ip"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*to\\s+([0-9.]+).*"
+		target_label  = "dest_ip"
+		replacement   = "$1"
+	}
+
+	// Extract user information
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*user=([^\\s]+).*"
+		target_label  = "user"
+		replacement   = "$1"
+	}
+
+	rule {
+		source_labels = ["__raw_log_message__"]
+		regex         = ".*username=([^\\s]+).*"
+		target_label  = "user"
+		replacement   = "$1"
+	}
+
+	// Add severity mapping for consistency
+	rule {
+		source_labels = ["level"]
+		regex         = "emerg|alert|crit|fatal"
+		target_label  = "severity"
+		replacement   = "critical"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "err|error"
+		target_label  = "severity"
+		replacement   = "error"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "warn|warning"
+		target_label  = "severity"
+		replacement   = "warning"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "notice|info"
+		target_label  = "severity"
+		replacement   = "info"
+	}
+
+	rule {
+		source_labels = ["level"]
+		regex         = "debug"
+		target_label  = "severity"
+		replacement   = "debug"
+	}
+}
+
+// =============================================================================
+// PROMETHEUS RELABELING RULES
+// =============================================================================
+
+// Relabel rules for Unix exporter metrics
+prometheus.relabel "unix_metrics" {
+	forward_to = [
+		prometheus.remote_write.local.receiver,
+	]
+
+	// Add host label to all metrics
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "system"
+	}
+
+	// Clean up interface names
+	rule {
+		source_labels = ["device"]
+		regex         = "^(lo|docker|veth|br-|virbr|cali).*"
+		action        = "drop"
+	}
+
+	// Add interface type labels
+	rule {
+		source_labels = ["device"]
+		regex         = "^(eth|en|wl|wlan).*"
+		target_label  = "interface_type"
+		replacement   = "physical"
+	}
+
+	rule {
+		source_labels = ["device"]
+		regex         = "^(br|bridge).*"
+		target_label  = "interface_type"
+		replacement   = "bridge"
+	}
+
+	rule {
+		source_labels = ["device"]
+		regex         = "^(tun|tap).*"
+		target_label  = "interface_type"
+		replacement   = "tunnel"
+	}
+
+	// Add filesystem type labels
+	rule {
+		source_labels = ["fstype"]
+		target_label  = "filesystem_type"
+	}
+
+	// Add mount point labels
+	rule {
+		source_labels = ["mountpoint"]
+		target_label  = "mount_point"
+	}
+}
+
+// Relabel rules for process metrics
+prometheus.relabel "process_metrics" {
+	forward_to = [
+		prometheus.remote_write.local.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "process"
+	}
+
+	// Clean up process names
+	rule {
+		source_labels = ["__meta_process_name"]
+		target_label  = "process_name"
+	}
+
+	// Add process group labels
+	rule {
+		source_labels = ["process_name"]
+		regex         = ".*(prometheus|grafana|alloy).*"
+		target_label  = "process_group"
+		replacement   = "monitoring"
+	}
+
+	rule {
+		source_labels = ["process_name"]
+		regex         = ".*(docker|containerd).*"
+		target_label  = "process_group"
+		replacement   = "container_runtime"
+	}
+
+	rule {
+		source_labels = ["process_name"]
+		regex         = ".*(systemd|init).*"
+		target_label  = "process_group"
+		replacement   = "system"
+	}
+}
+
+// Relabel rules for SNMP metrics
+prometheus.relabel "snmp_metrics" {
+	forward_to = [
+		prometheus.remote_write.local.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "network"
+	}
+
+	// Extract device type from instance
+	rule {
+		source_labels = ["instance"]
+		regex         = "10\\.10\\.100\\.1"
+		target_label  = "device_type"
+		replacement   = "gateway"
+	}
+
+	rule {
+		source_labels = ["instance"]
+		regex         = "10\\.10\\.100\\.[2-5]"
+		target_label  = "device_type"
+		replacement   = "access_point"
+	}
+
+	// Add vendor label
+	rule {
+		target_label = "vendor"
+		replacement  = "ubiquiti"
+	}
+
+	// Clean up interface names for Ubiquiti devices
+	rule {
+		source_labels = ["ifName"]
+		target_label  = "interface_name"
+	}
+
+	rule {
+		source_labels = ["ifDescr"]
+		target_label  = "interface_description"
+	}
+}
+
+// Relabel rules for Blackbox metrics
+prometheus.relabel "blackbox_metrics" {
+	forward_to = [
+		prometheus.remote_write.local.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "network_probe"
+	}
+
+	// Extract service type from target
+	rule {
+		source_labels = ["__param_target"]
+		regex         = ".*:9090.*"
+		target_label  = "service_type"
+		replacement   = "prometheus"
+	}
+
+	rule {
+		source_labels = ["__param_target"]
+		regex         = ".*:3000.*"
+		target_label  = "service_type"
+		replacement   = "grafana"
+	}
+
+	rule {
+		source_labels = ["__param_target"]
+		regex         = ".*:80.*"
+		target_label  = "service_type"
+		replacement   = "http"
+	}
+
+	rule {
+		source_labels = ["__param_target"]
+		regex         = ".*:443.*"
+		target_label  = "service_type"
+		replacement   = "https"
+	}
+
+	// Extract probe type
+	rule {
+		source_labels = ["__param_module"]
+		target_label  = "probe_type"
+	}
+
+	// Add target host label
+	rule {
+		source_labels = ["__param_target"]
+		regex         = ".*://([^:/]+).*"
+		target_label  = "target_host"
+		replacement   = "$1"
+	}
+}
+
+// Relabel rules for cAdvisor metrics
+prometheus.relabel "cadvisor_metrics" {
+	forward_to = [
+		prometheus.remote_write.local.receiver,
+	]
+
+	// Add host label
+	rule {
+		target_label = "host"
+		replacement  = "${hostname}"
+	}
+
+	// Add component label
+	rule {
+		target_label = "component"
+		replacement  = "container"
+	}
+
+	// Clean up container names
+	rule {
+		source_labels = ["name"]
+		regex         = ".*/([^/]+)$"
+		target_label  = "container_name"
+		replacement   = "$1"
+	}
+
+	// Add container type labels
+	rule {
+		source_labels = ["image"]
+		regex         = ".*"
+		target_label  = "container_image"
+	}
+
+	// Add pod labels if available
+	rule {
+		source_labels = ["pod"]
+		target_label  = "pod_name"
+	}
+
+	rule {
+		source_labels = ["namespace"]
+		target_label  = "namespace"
+	}
+}
+
+// =============================================================================
+// LOG SOURCES
+// =============================================================================
+
+// Journal source for reading systemd journal logs with enhanced relabeling
+loki.source.journal "read" {
+	forward_to = [
+		${journalForwardTo}
+	]
+	labels = {
+		"job"       = "journal",
+		"host"      = "${hostname}",
+		"component" = "alloy",
+		"source"    = "systemd-journal",
+	}
+}
+
+// File source for reading application logs with enhanced configuration
+loki.source.file "local_files" {
+	targets = [
+		{
+			__path__ = "/var/log/*.log",
+			job      = "varlogs",
+			host     = "${hostname}",
+		},
+		{
+			__path__ = "/var/log/nginx/*.log",
+			job      = "nginx",
+			host     = "${hostname}",
+		},
+		{
+			__path__ = "/var/log/postgresql/*.log",
+			job      = "postgresql",
+			host     = "${hostname}",
+		},
+		{
+			__path__ = "/var/log/applications/*.log",
+			job      = "applications",
+			host     = "${hostname}",
+		},
+	]
+	forward_to = [
+		loki.process.json_parser.receiver,
+		loki.process.auth_log_parser.receiver,
+		loki.process.firewall_log_parser.receiver,
+		loki.process.web_log_parser.receiver,
+		loki.process.database_log_parser.receiver,
+		loki.process.app_log_parser.receiver,
+		loki.process.error_log_parser.receiver,
+		loki.relabel.file_logs.receiver,
+	]
+}
+
+// Docker container logs source
+loki.source.docker "docker" {
+	host       = "unix:///var/run/docker.sock"
+	targets    = []
+	forward_to = [
+		loki.process.docker_json_parser.receiver,
+		loki.process.k8s_log_parser.receiver,
+		loki.relabel.docker_logs_enhanced.receiver,
+	]
+	labels = {
+		"job"       = "docker",
+		"host"      = "${hostname}",
+		"component" = "alloy",
+		"source"    = "docker",
+	}
+}
+
+// =============================================================================
+// METRICS COLLECTION
+// =============================================================================
+
+// Self-monitoring for Alloy health and performance
+prometheus.scrape "self" {
+	targets = [
+		{
+			"__address__" = "127.0.0.1:12345",
+			"job"         = "alloy_self",
+		},
+	]
+	forward_to = [
+		prometheus.remote_write.local.receiver,
+	]
+	scrape_interval  = "30s"
+	scrape_timeout   = "10s"
+	honor_labels     = true
+	honor_timestamps = true
+	metrics_path     = "/metrics"
+	scheme           = "http"
+}
+
+// Unix exporter for comprehensive system metrics
+prometheus.exporter.unix "unix" {
+	disable_collectors = [
+		"ipvs",
+		"infiniband",
+		"xfs",
+		"zfs",
+	]
+	enable_collectors = [
+		"cpu",
+		"diskstats",
+		"filefd",
+		"filesystem",
+		"hwmon",
+		"interrupts",
+		"ksmd",
+		"loadavg",
+		"logind",
+		"meminfo",
+		"mountstats",
+		"netdev",
+		"netstat",
+		"processes",
+		"sockstat",
+		"stat",
+		"systemd",
+		"textfile",
+		"time",
+		"uname",
+		"vmstat",
+	]
+
+	filesystem {
+		// Exclude mount points that aren't relevant for monitoring
+		mount_points_exclude = "^/(dev|proc|run/credentials/.+|sys|var/lib/docker/.+)($|/)"
+		// Exclude filesystem types that aren't relevant for monitoring
+		fs_types_exclude = "^(autofs|binfmt_misc|bpf|cgroup2?|configfs|debugfs|devpts|devtmpfs|tmpfs|fusectl|hugetlbfs|iso9660|mqueue|nsfs|overlay|proc|procfs|pstore|rpc_pipefs|securityfs|selinuxfs|squashfs|sysfs|tracefs)$"
+		// Timeout for filesystem operations
+		mount_timeout = "5s"
+	}
+
+	netclass {
+		// Ignore virtual and container network interfaces
+		ignored_devices = "^(veth.*|cali.*|[a-f0-9]{15})$"
+	}
+
+	netdev {
+		// Exclude virtual and container network interfaces from device metrics
+		device_exclude = "^(veth.*|cali.*|[a-f0-9]{15})$"
+	}
+}
+
+prometheus.scrape "unix" {
+	targets    = prometheus.exporter.unix.unix.targets
+	forward_to = [
+		prometheus.relabel.unix_metrics.receiver,
+	]
+	scrape_interval  = "15s"
+	scrape_timeout   = "10s"
+	honor_labels     = true
+	honor_timestamps = true
+	metrics_path     = "/metrics"
+	scheme           = "http"
+}
+
+// =============================================================================
+// DISCOVERY COMPONENTS
+// =============================================================================
+
+// Discover all processes
+discovery.process "all_processes" { }
+
+// Filter processes for monitoring
+discovery.relabel "filtered_processes" {
+	targets = discovery.process.all_processes.targets
+
+	rule {
+		action        = "keep"
+		regex         = "^(prometheus|grafana|node_exporter|systemd_exporter|cadvisor|process_exporter|alloy|docker|containerd|systemd|sshd|nginx|apache|postgres|mysql|redis)$"
+		source_labels = ["__meta_process_name"]
+	}
+}
+
+// Discover Docker containers for enhanced monitoring
+discovery.docker "docker_containers" {
+	host             = "unix:///var/run/docker.sock"
+	refresh_interval = "30s"
+}
+
+// Filter Docker containers for monitoring
+discovery.relabel "filtered_docker_containers" {
+	targets = discovery.docker.docker_containers.targets
+
+	rule {
+		action        = "keep"
+		regex         = ".*"
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_name"]
+		target_label  = "container_name"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_image"]
+		target_label  = "container_image"
+	}
+
+	rule {
+		source_labels = ["__meta_docker_container_label_com_docker_compose_service"]
+		target_label  = "service"
+	}
+}
+
+// Process exporter for detailed process monitoring
+prometheus.exporter.process "process" { }
+
+prometheus.scrape "process" {
+	targets    = discovery.relabel.filtered_processes.output
+	forward_to = [
+		prometheus.relabel.process_metrics.receiver,
+	]
+	scrape_interval  = "15s"
+	scrape_timeout   = "10s"
+	honor_labels     = true
+	honor_timestamps = true
+	metrics_path     = "/metrics"
+	scheme           = "http"
+}
+
+// cAdvisor exporter for container metrics
+prometheus.exporter.cadvisor "cadvisor" {
+	docker_host = "unix:///var/run/docker.sock"
+}
+
+prometheus.scrape "cadvisor" {
+	targets    = prometheus.exporter.cadvisor.cadvisor.targets
+	forward_to = [
+		prometheus.relabel.cadvisor_metrics.receiver,
+	]
+}
+
+// Blackbox exporter for network probing
+prometheus.exporter.blackbox "blackbox" {
+	config_file = "/etc/alloy/blackbox.yml"
+
+	target {
+		name    = "http_woody_prometheus"
+		address = "http://woody:9090"
+		module  = "http_2xx"
+	}
+
+	target {
+		name    = "http_woody_grafana"
+		address = "http://woody:3001"
+		module  = "http_2xx"
+	}
+
+	target {
+		name    = "http_woody_alertmanager"
+		address = "http://woody:9093"
+		module  = "http_2xx"
+	}
+
+	target {
+		name    = "http_gateway"
+		address = "http://10.10.100.1"
+		module  = "http_2xx"
+	}
+
+	target {
+		name    = "https_gateway"
+		address = "https://10.10.100.1"
+		module  = "https_2xx"
+	}
+
+	target {
+		name    = "icmp_gateway"
+		address = "10.10.100.1"
+		module  = "icmp"
+	}
+
+	target {
+		name    = "icmp_google_dns"
+		address = "8.8.8.8"
+		module  = "icmp"
+	}
+
+	target {
+		name    = "icmp_cloudflare_dns"
+		address = "1.1.1.1"
+		module  = "icmp"
+	}
+}
+
+prometheus.scrape "blackbox" {
+	targets    = prometheus.exporter.blackbox.blackbox.targets
+	forward_to = [
+		prometheus.relabel.blackbox_metrics.receiver,
+	]
+	scrape_interval = "60s"
+	scrape_timeout  = "10s"
+}
+
+// =============================================================================
+// LOKI PROCESSING COMPONENTS
+// =============================================================================
+
+// Process JSON logs to extract structured fields
+loki.process "json_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	stage.json {
+		expressions = {
+			"timestamp"     = "timestamp",
+			"level"         = "level",
+			"message"       = "message",
+			"service"       = "service",
+			"trace_id"      = "trace_id",
+			"span_id"       = "span_id",
+			"user_id"       = "user_id",
+			"request_id"    = "request_id",
+			"method"        = "method",
+			"path"          = "path",
+			"status_code"   = "status_code",
+			"response_time" = "response_time",
+			"bytes"         = "bytes",
+			"ip"            = "ip",
+			"user_agent"    = "user_agent",
+			"error"         = "error",
+			"error_code"    = "error_code",
+			"stack_trace"   = "stack_trace",
+		}
+	}
+}
+
+// Process Docker JSON logs
+loki.process "docker_json_parser" {
+	forward_to = [
+		loki.relabel.docker_logs_enhanced.receiver,
+	]
+
+	stage.json {
+		expressions = {
+			"log"    = "log",
+			"stream" = "stream",
+			"time"   = "time",
+			"attrs"  = "attrs",
+			"tag"    = "tag",
+		}
+	}
+
+	stage.regex {
+		expression = "^(?P<timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z)\\s+(?P<level>\\w+)\\s+(?P<message>.*)$"
+		source     = "log"
+	}
+}
+
+// Process systemd journal logs for better parsing
+loki.process "journal_parser" {
+	forward_to = [
+		loki.relabel.journal_enhanced.receiver,
+	]
+
+	// Extract timestamp from journal
+	stage.regex {
+		expression = "^(?P<timestamp>\\w+\\s+\\d{1,2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(?P<hostname>\\S+)\\s+(?P<service>[^\\[]+)\\[(?P<pid>\\d+)\\]:\\s+(?P<message>.*)$"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract priority levels
+	stage.regex {
+		expression = ".*\\[(?P<priority>EMERG|ALERT|CRIT|ERR|WARNING|NOTICE|INFO|DEBUG)\\].*"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract service names from journal
+	stage.regex {
+		expression = ".*(?P<service_name>[a-zA-Z0-9_-]+)\\.service.*"
+		source     = "unit"
+	}
+}
+
+// Process authentication logs for security analysis
+loki.process "auth_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Parse SSH login attempts
+	stage.regex {
+		expression = ".*sshd\\[\\d+\\]:\\s+(?P<event_type>Accepted|Failed|Invalid)\\s+(?P<auth_method>password|publickey|keyboard-interactive)\\s+for\\s+(?P<user>\\S+)\\s+from\\s+(?P<source_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+port\\s+(?P<source_port>\\d+).*"
+		source     = "__raw_log_message__"
+	}
+
+	// Parse sudo usage
+	stage.regex {
+		expression = ".*sudo:\\s+(?P<user>\\S+)\\s+:\\s+(?P<event_type>TTY|command|session)\\s+;\\s+(?P<details>.*)"
+		source     = "__raw_log_message__"
+	}
+
+	// Parse failed login attempts
+	stage.regex {
+		expression = ".*Failed\\s+password\\s+for\\s+(?P<user>\\S+)\\s+from\\s+(?P<source_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+port\\s+(?P<source_port>\\d+)\\s+(?P<protocol>ssh2).*"
+		source     = "__raw_log_message__"
+	}
+}
+
+// Process firewall logs
+loki.process "firewall_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Parse UFW logs
+	stage.regex {
+		expression = ".*\\[UFW\\s+(?P<action>ALLOW|BLOCK|LOG)\\]\\s+(?P<protocol>IN|OUT)\\s+(?P<source_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+(?P<dest_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+(?P<source_port>\\d+)\\s+(?P<dest_port>\\d+).*"
+		source     = "__raw_log_message__"
+	}
+
+	// Parse iptables logs
+	stage.regex {
+		expression = ".*SRC=(?P<source_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+DST=(?P<dest_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+.*PROTO=(?P<protocol>\\w+)\\s+SPT=(?P<source_port>\\d+)\\s+DPT=(?P<dest_port>\\d+).*"
+		source     = "__raw_log_message__"
+	}
+}
+
+// Process web server logs
+loki.process "web_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Parse common log format
+	stage.regex {
+		expression = "^(?P<source_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+-\\s+-\\s+\\[(?P<timestamp>\\d{2}/\\w{3}/\\d{4}:\\d{2}:\\d{2}:\\d{2}\\s+[+-]\\d{4})\\]\\s+\"(?P<method>\\w+)\\s+(?P<path>\\S+)\\s+HTTP/(?P<http_version>\\d\\.\\d)\"\\s+(?P<status_code>\\d+)\\s+(?P<bytes>\\d+)\\s+\"(?P<referer>[^\"]*)\"\\s+\"(?P<user_agent>[^\"]*)\"$"
+		source     = "__raw_log_message__"
+	}
+
+	// Parse combined log format
+	stage.regex {
+		expression = "^(?P<source_ip>\\d+\\.\\d+\\.\\d+\\.\\d+)\\s+-\\s+(?P<user>\\S+)\\s+\\[(?P<timestamp>\\d{2}/\\w{3}/\\d{4}:\\d{2}:\\d{2}:\\d{2}\\s+[+-]\\d{4})\\]\\s+\"(?P<method>\\w+)\\s+(?P<path>\\S+)\\s+HTTP/(?P<http_version>\\d\\.\\d)\"\\s+(?P<status_code>\\d+)\\s+(?P<bytes>\\d+)\\s+\"(?P<referer>[^\"]*)\"\\s+\"(?P<user_agent>[^\"]*)\"\\s+\"(?P<forwarded_for>[^\"]*)\"$"
+		source     = "__raw_log_message__"
+	}
+}
+
+// Process database logs
+loki.process "database_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Parse PostgreSQL logs
+	stage.regex {
+		expression = "^(?P<timestamp>\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\.\\d+\\s+\\w+)\\s+(?P<level>\\w+):\\s+(?P<message>.*)$"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract PostgreSQL specific fields
+	stage.regex {
+		expression = ".*duration:\\s+(?P<duration>\\d+\\.\\d+)\\s+ms\\s+statement:\\s+(?P<statement>.*)$"
+		source     = "__raw_log_message__"
+	}
+
+	// Parse MySQL logs
+	stage.regex {
+		expression = "^(?P<timestamp>\\d{4}-\\d{2}-\\d{2}\\s+\\d{2}:\\d{2}:\\d{2})\\s+(?P<level>\\w+)\\s+(?P<message>.*)$"
+		source     = "__raw_log_message__"
+	}
+}
+
+// Process application logs with structured data
+loki.process "app_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Extract structured log fields
+	stage.regex {
+		expression = ".*\\[(?P<timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z)\\]\\s+(?P<level>\\w+)\\s+\\[(?P<service>\\w+)\\]\\s+(?P<message>.*)$"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract request IDs
+	stage.regex {
+		expression = ".*request_id=(?P<request_id>[a-f0-9-]+).*"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract user sessions
+	stage.regex {
+		expression = ".*session_id=(?P<session_id>[a-f0-9-]+).*"
+		source     = "__raw_log_message__"
+	}
+}
+
+// Process Kubernetes logs
+loki.process "k8s_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Parse Kubernetes log format
+	stage.regex {
+		expression = "^(?P<timestamp>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}\\.\\d+Z)\\s+(?P<level>\\w+)\\s+(?P<message>.*)$"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract Kubernetes metadata
+	stage.regex {
+		expression = ".*pod=(?P<pod_name>[a-zA-Z0-9_-]+).*"
+		source     = "__raw_log_message__"
+	}
+
+	stage.regex {
+		expression = ".*namespace=(?P<namespace>[a-zA-Z0-9_-]+).*"
+		source     = "__raw_log_message__"
+	}
+
+	stage.regex {
+		expression = ".*container=(?P<container_name>[a-zA-Z0-9_-]+).*"
+		source     = "__raw_log_message__"
+	}
+}
+
+// Process error logs with stack traces
+loki.process "error_log_parser" {
+	forward_to = [
+		loki.relabel.log_level.receiver,
+	]
+
+	// Extract error types
+	stage.regex {
+		expression = ".*(?P<error_type>Exception|Error|Fatal|Panic):\\s+(?P<error_message>.*)$"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract stack trace information
+	stage.regex {
+		expression = ".*at\\s+(?P<function>\\S+)\\s+\\((?P<file>\\S+):(?P<line>\\d+)\\).*"
+		source     = "__raw_log_message__"
+	}
+
+	// Extract error codes
+	stage.regex {
+		expression = ".*error_code=(?P<error_code>\\d+).*"
+		source     = "__raw_log_message__"
+	}
+}
+
+// =============================================================================
+// Host-specific custom configurations
+// =============================================================================
+
+${customConfig}

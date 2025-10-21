@@ -31,6 +31,30 @@
 
       lokiHost = if lokiHosts != [ ] then lib.head lokiHosts else null;
 
+      # Generate the Alloy configuration from template
+      # alloyConfig = pkgs.writeText "config.alloy" (
+      #   builtins.replaceStrings
+      #     [
+      #       "\${hostname}"
+      #       "\${lokiEndpoint}"
+      #       "\${prometheusEndpoint}"
+      #       "\${environment}"
+      #       "\${volumeFilterConfig}"
+      #       "\${journalForwardTo}"
+      #       "\${customConfig}"
+      #     ]
+      #     [
+      #       cfg.hostname
+      #       cfg.lokiEndpoint
+      #       cfg.prometheusEndpoint
+      #       cfg.environment
+      #       cfg.volumeFilterConfig
+      #       cfg.journalForwardTo
+      #       cfg.customConfig
+      #     ]
+      #     (builtins.readFile ./configs/config.alloy.tmpl)
+      # );
+
       alloyConfigText =
         if lokiHost != null then
           ''
@@ -113,6 +137,21 @@
       };
     in
     {
+      # User and group
+      users.users.alloy = {
+        isSystemUser = true;
+        group = "alloy";
+        home = "/var/lib/alloy";
+        createHome = true;
+        description = "Grafana Alloy user";
+        extraGroups = [
+          "systemd-journal"
+          "podman"
+        ];
+      };
+
+      users.groups.alloy = { };
+
       services.alloy = lib.mkIf (lokiHost != null) {
         enable = true;
         configPath = alloyConfigPackage;
@@ -122,22 +161,99 @@
         ];
       };
 
+      networking.firewall.allowedTCPPorts = [ 12345 ];
+
+      systemd.services.alloy = {
+        serviceConfig = {
+          User = "alloy";
+          Group = "alloy";
+          DynamicUser = lib.mkForce false;
+        };
+      };
+
+      # # Create configuration files
+      # environment.etc = {
+      #   "alloy/config.alloy" = {
+      #     source = alloyConfig;
+      #     mode = "0640";
+      #     user = "alloy";
+      #     group = "alloy";
+      #   };
+      #   "alloy/blackbox.yml" = {
+      #     source = ./alloy/blackbox.yml;
+      #     mode = "0640";
+      #     user = "alloy";
+      #     group = "alloy";
+      #   };
+      #   "alloy/snmp.yml" = {
+      #     source = ./alloy/snmp.yml;
+      #     mode = "0640";
+      #     user = "alloy";
+      #     group = "alloy";
+      #   };
+      # };
+
+      # systemd.services.alloy = {
+      #   description = "Grafana Alloy";
+      #   wantedBy = [ "multi-user.target" ];
+      #   after = [ "network.target" ];
+
+      #   serviceConfig = {
+      #     Type = "simple";
+      #     User = "alloy";
+      #     Group = "alloy";
+      #     ExecStart = "${pkgs.grafana-alloy}/bin/alloy run /etc/alloy --disable-reporting";
+      #     Restart = "always";
+      #     RestartSec = "5s";
+      #     WorkingDirectory = "/var/lib/alloy";
+
+      #     # Security settings
+      #     NoNewPrivileges = true;
+      #     PrivateTmp = true;
+      #     ProtectSystem = "strict";
+      #     ProtectHome = true;
+      #     ReadWritePaths = [ "/var/lib/alloy" ];
+      #     ReadOnlyPaths = [ "/etc/alloy" "/var/log" "/run/log/journal" ];
+
+      #     # Capabilities
+      #     AmbientCapabilities = [
+      #       "CAP_SYS_PTRACE"
+      #       "CAP_DAC_READ_SEARCH"
+      #     ] ++ cfg.extraCapabilities;
+
+      #     # Resource limits
+      #     LimitNOFILE = "65535";
+      #     LimitNPROC = "4096";
+      #   };
+      # };
+
       impermanence.ignorePaths = [
         "/var/lib/private/alloy/data-alloy/alloy_seed.json"
       ];
 
       environment.persistence."/persist".directories = [
         {
-          directory = "/var/lib/private/alloy";
-          user = "nobody";
-          group = "nogroup";
-          mode = "0750";
+          directory = "/var/lib/alloy";
+          user = "alloy";
+          group = "alloy";
+          mode = "0755";
+        }
+        {
+          directory = "/etc/alloy";
+          user = "alloy";
+          group = "alloy";
+          mode = "0755";
         }
       ];
 
-      # Create alloy data directories
       systemd.tmpfiles.rules = [
-        "d /var/lib/alloy 0755 root root -"
+        "d /etc/alloy 0755 alloy alloy -"
+        "d /var/lib/alloy 0755 alloy alloy -"
+        "d /var/lib/alloy/data 0755 alloy alloy -"
       ];
+      # # Create alloy data directories
+      # systemd.tmpfiles.rules = [
+      #   "d /var/lib/alloy 0755 root root -"
+      # ];
     };
 }

@@ -92,20 +92,6 @@
         };
 
         config = {
-          # Ignore paths for zfs-diff and other tooling
-          impermanence.ignorePaths = [
-            "/etc/NIXOS"
-            "/etc/.clean"
-            "/etc/.updated"
-            "/etc/.pwd.lock"
-            "/var/.updated"
-            "/etc/subgid"
-            "/etc/subuid"
-            "/etc/shadow"
-            "/etc/group"
-            "/etc/passwd"
-          ];
-
           # Persistence Configuration
           # =========================
           # Define what files and directories should persist across reboots.
@@ -162,6 +148,21 @@
               ];
             };
           };
+
+          # Ignore paths for zfs-diff and other tooling
+          impermanence.ignorePaths = [
+            "/etc/NIXOS"
+            "/etc/.clean"
+            "/etc/.updated"
+            "/etc/.pwd.lock"
+            "/var/.updated"
+            "/etc/subgid"
+            "/etc/subuid"
+            "/etc/shadow"
+            "/etc/group"
+            "/etc/passwd"
+            "/root/.nix-channels"
+          ];
 
           # Boot Rollback Services
           # ======================
