@@ -27,9 +27,13 @@
           libnotify
         ];
 
-        # home.persistence."/persist".directories = [
-        #   ".local/share/zsh" # History
-        # ];
+        home.persistence."/volatile".files = [
+          ".config/zsh/.zcompdump" # zsh completion cache
+        ];
+
+        home.persistence."/persist".directories = [
+          ".local/share/zsh" # History
+        ];
 
         programs.zsh = {
           enable = true;
