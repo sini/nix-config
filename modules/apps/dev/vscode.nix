@@ -112,6 +112,14 @@
                 vscode-marketplace.xyc.vscode-mdx-preview
                 vscode-marketplace.yinfei.luahelper
                 vscode-marketplace.yzhang.markdown-all-in-one
+                # new extensions...
+                vscode-marketplace.bbenoist.nix
+                vscode-marketplace.jeff-hykin.better-nix-syntax
+                vscode-marketplace.ms-vscode.cpptools-extension-pack
+                vscode-marketplace.vscodevim.vim # Vim emulation
+                vscode-marketplace.mads-hartmann.bash-ide-vscode
+                vscode-marketplace.tamasfe.even-better-toml
+                vscode-marketplace.zainchen.json
               ]
               ++ lib.optionals isLinux [
                 vscode-marketplace.ms-vsliveshare.vsliveshare
