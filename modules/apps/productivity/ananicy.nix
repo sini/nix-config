@@ -7,7 +7,7 @@
         ananicy = {
           # Core service configuration
           enable = true;
-          rulesProvider = pkgs.ananicy-rules-cachyos;
+          rulesProvider = pkgs.ananicy-rules-cachyos_git;
           extraRules = [
             {
               "name" = "/run/libvirt/nix-emulators/qemu-system-x86_64";
