@@ -1,7 +1,7 @@
 { ... }:
 {
   flake.hosts.vm-test = {
-    ipv4 = [ "10.10.210.149" ];
+    ipv4 = [ "192.168.122.34" ];
     ipv6 = [ "fd64:0:3::2/64" ];
     environment = "dev";
     roles = [
