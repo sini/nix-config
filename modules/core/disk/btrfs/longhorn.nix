@@ -70,10 +70,6 @@
         {
           assertions = [
             {
-              assertion = lhCfg.os_drive.device_id != "";
-              message = "hardware.disk.longhorn.os_drive.device_id must be set.";
-            }
-            {
               assertion = lhCfg.longhorn_drive.device_id != "";
               message = "hardware.disk.longhorn.longhorn_drive.device_id must be set.";
             }
