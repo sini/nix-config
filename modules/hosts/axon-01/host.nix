@@ -8,14 +8,14 @@
       "server"
       # "kubernetes"
       # "kubernetes-master"
-      # "bgp-spoke"
-      # "vault"
+      "bgp-spoke"
+      "vault"
     ];
     features = [
       "zfs-disk-single"
       "cpu-amd"
       "gpu-amd"
-      # "thunderbolt-mesh"
+      "thunderbolt-mesh"
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.1";
