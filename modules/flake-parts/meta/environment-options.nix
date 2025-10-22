@@ -144,6 +144,11 @@ in
             description = "Gateway IP address for the environment";
           };
 
+          gatewayIpV6 = mkOption {
+            type = types.str;
+            description = "Gateway IPv6 address for the environment";
+          };
+
           dnsServers = mkOption {
             type = types.listOf types.str;
             default = [
