@@ -16,7 +16,7 @@
       # Desktop GUI
       "xserver"
       "xwayland"
-      "ananicy"
+      #"ananicy"
 
       "gdm"
       "gnome"
