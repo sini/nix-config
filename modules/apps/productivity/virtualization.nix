@@ -162,6 +162,9 @@ in
           spice-vdagentd.enable = true;
           spice-webdavd.enable = true;
         };
+
+        # TODO: Setup CPU pinning and scheduler hooks...
+        # https://github.com/stele95/AMD-Single-GPU-Passthrough/blob/main/README.md#cpu-pinning
         # Manage the virtualisation services
         virtualisation = {
           libvirtd = {

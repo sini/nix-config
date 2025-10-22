@@ -7,18 +7,15 @@
         irqbalance.enable = true;
         scx = {
           enable = true;
-          # package = pkgs.scx_git.rustscheds;
-          # scheduler = "scx_lavd"; # Default is scx_rustland
-          # # Enable: Autoimatic Power
-          # extraArgs = [
-          #   "--autopower"
-          # ];
           package = lib.mkDefault pkgs.scx_git.full;
-          scheduler = "scx_bpfland"; # Default is scx_rustland
+          scheduler = "scx_bpfland";
           # Enable: CPU Frequency Control, (experimental) kthread prioritization, Per-CPU Task Prioritization
           extraArgs = [
             "-m"
             "performance"
+            "-f"
+            "-k"
+            "-p"
           ];
         };
       };
