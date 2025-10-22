@@ -201,6 +201,15 @@ in
         '';
       };
 
+      environment.persistence."/persist".directories = [
+        {
+          directory = "/var/lib/vault";
+          user = "vault";
+          group = "vault";
+          mode = "0755";
+        }
+      ];
+
       # Open firewall for Vault API
       networking.firewall.allowedTCPPorts = [
         8200
