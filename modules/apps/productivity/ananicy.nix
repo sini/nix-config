@@ -8,6 +8,13 @@
           # Core service configuration
           enable = true;
           rulesProvider = pkgs.ananicy-rules-cachyos;
+          extraRules = [
+            {
+              "name" = "/run/libvirt/nix-emulators/qemu-system-x86_64";
+              # "cmdlines" = [ "guest=win11,debug-threads=on" ];
+              "type" = "LowLatency_RT";
+            }
+          ];
           settings = {
             # Core timing and logging settings
             ## Ananicy 2.X configuration
