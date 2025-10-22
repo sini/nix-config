@@ -3,16 +3,28 @@
     { pkgs, lib, ... }:
     {
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
-      services.scx = {
-        enable = true;
-        package = lib.mkDefault pkgs.scx.full;
-        scheduler = "scx_bpfland"; # Default is scx_rustland
-        # Enable: CPU Frequency Control, (experimental) kthread prioritization, Per-CPU Task Prioritization
-        extraArgs = [
-          "-f"
-          "-k"
-          "-p"
-        ];
+      # services.scx = {
+      #   enable = true;
+      #   package = lib.mkDefault pkgs.scx.full;
+      #   scheduler = "scx_bpfland"; # Default is scx_rustland
+      #   # Enable: CPU Frequency Control, (experimental) kthread prioritization, Per-CPU Task Prioritization
+      #   extraArgs = [
+      #     "-f"
+      #     "-k"
+      #     "-p"
+      #   ];
+      # };
+      services = {
+        irqbalance.enable = true;
+        scx = {
+          enable = true;
+          package = lib.mkDefault pkgs.scx.full;
+          scheduler = "scx_lavd"; # Default is scx_rustland
+          # Enable: Autoimatic Power
+          extraArgs = [
+            "--autopower"
+          ];
+        };
       };
 
       # Based on: https://github.com/CachyOS/CachyOS-Settings/blob/e96d1e1dd253ed09e4104b096df543e6ecad08be/usr/lib/sysctl.d/99-cachyos-settings.conf
