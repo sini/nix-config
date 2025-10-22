@@ -35,19 +35,13 @@
         boot.kernelPackages = pkgs.linuxPackages_cachyos-server.cachyOverride { mArch = "ZEN4"; };
 
         hardware = {
-          networking = {
-            interfaces = [ "enp2s0" ];
-            unmanagedInterfaces = [ "enp2s0" ];
-          };
-          disk.single = {
-            device_id = "nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
-            swap_size = 8192;
-          };
-          disk.longhorn = {
-            longhorn_drive = {
-              device_id = "nvme-Force_MP600_1925823000012856500E";
-            };
-          };
+          networking.interfaces = [ "enp2s0" ];
+          disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
+          # disk.longhorn = {
+          #   longhorn_drive = {
+          #     device_id = "nvme-Force_MP600_1925823000012856500E";
+          #   };
+          # };
         };
 
         system.stateVersion = "25.05";
