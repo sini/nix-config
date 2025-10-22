@@ -3,9 +3,17 @@
     name = "dev";
     domain = "dev.json64.dev";
     gatewayIp = "10.9.0.1";
+    gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
     dnsServers = [
+      # Cloudflare
       "1.1.1.1"
-      "8.8.8.8"
+      "2606:4700:4700::1111"
+      "1.0.0.1"
+      "2606:4700:4700::1001"
+
+      # Public Nat64 -- https://nat64.net
+      "2a01:4f8:c2c:123f::1"
+      "2a00:1098:2b::1"
     ];
 
     networks = {
