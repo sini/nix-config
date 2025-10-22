@@ -11,8 +11,7 @@
       # "vault"
     ];
     features = [
-      "disk-single"
-      "disk-longhorn"
+      "zfs-disk-single"
       "cpu-amd"
       "gpu-amd"
       # "thunderbolt-mesh"
