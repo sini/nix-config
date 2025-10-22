@@ -18,7 +18,7 @@
 
     networks = {
       management = {
-        cidr = "10.10.10.0/24";
+        cidr = "10.10.10.0/16";
         ipv6_cidr = "fd64:0:1::/64";
         purpose = "management";
         description = "Management network for infrastructure hosts";

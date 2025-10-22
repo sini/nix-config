@@ -1,7 +1,7 @@
 {
   flake.roles.gaming = {
     features = [
-      "ananicy"
+      # "ananicy"
       "gamepad"
       "nix-ld"
       "steam"

@@ -56,9 +56,8 @@
           value = {
             enable = true;
             matchConfig.Name = ifName;
-            networkConfig = {
-              Bridge = elemAt bridgeNames idx;
-            };
+            networkConfig.Bridge = elemAt bridgeNames idx;
+            linkConfig.RequiredForOnline = "enslaved";
           };
         }) cfg.interfaces
         |> listToAttrs;
@@ -72,6 +71,7 @@
             matchConfig.Name = brName;
             networkConfig = {
               Address = [ "${elemAt hostOptions.ipv4 idx}${managementSubnet}" ];
+              # DHCP = "ipv4";
               DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
               IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
               IPv6PrivacyExtensions = "yes";
@@ -86,7 +86,7 @@
             };
             routes = [
               {
-                Destination = "0.0.0.0/0";
+                # Destination = "0.0.0.0/0";
                 Gateway = environment.gatewayIp;
                 # Larger TCP window sizes, courtesy of
                 # https://wiki.archlinux.org/title/Systemd-networkd#Speeding_up_TCP_slow-start
