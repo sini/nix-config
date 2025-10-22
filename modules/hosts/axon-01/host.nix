@@ -8,7 +8,7 @@
       "server"
       # "kubernetes"
       # "kubernetes-master"
-      "bgp-spoke"
+      # "bgp-spoke"
       "vault"
     ];
     features = [
