@@ -124,6 +124,15 @@
               # via config. to achieve this we set options.mountpoint = "legacy" and
               # disable zfs-mount.service
               datasets = {
+                # "reserved" = {
+                #   type = "zfs_fs";
+                #   options = {
+                #     mountpoint = "none";
+                #     canmount = "off";
+                #     reservation = "5GiB";
+                #     "com.sun:auto-snapshot" = "false";
+                #   };
+                # };
                 "local/root" = {
                   mountpoint = "/";
                   type = "zfs_fs";
@@ -170,6 +179,13 @@
                   options."com.sun:auto-snapshot" = "true";
                   postCreateHook = "zfs snapshot zroot/local/volatile@empty";
                 };
+                # "local/containers" = {
+                #   type = "zfs_fs";
+                #   options = {
+                #     mountpoint = "none";
+                #     "com.sun:auto-snapshot" = "false";
+                #   };
+                # };
               };
             };
           };

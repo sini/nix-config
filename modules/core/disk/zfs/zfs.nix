@@ -35,6 +35,45 @@
         #   ZED_SLACK_WEBHOOK_URL = my.secrets.discord.webhook + "/slack";
         # };
 
+        #         # setup zfs event daemon for email notifications
+        # (mkIf config.custom.zfs.zed {
+        #   sops.secrets.zfs-zed.owner = user;
+
+        #   # setup email for zfs event daemon to use
+        #   programs.msmtp = {
+        #     enable = true;
+        #     setSendmail = true;
+        #     accounts = {
+        #       default = {
+        #         host = "smtp.gmail.com";
+        #         tls = true;
+        #         auth = true;
+        #         port = 587;
+        #         inherit user;
+        #         from = "email@gmail.com";
+        #         # app specific password needed for 2fa
+        #         passwordeval = "cat ${config.sops.secrets.zfs-zed.path}";
+        #       };
+        #     };
+        #   };
+
+        #   services.zfs.zed = {
+        #     enableMail = true;
+        #     settings = {
+        #       ZED_DEBUG_LOG = "/tmp/zed.debug.log";
+        #       ZED_EMAIL_ADDR = [ "email@gmail.com" ];
+        #       ZED_EMAIL_PROG = getExe pkgs.msmtp;
+        #       ZED_EMAIL_OPTS = "@ADDRESS@";
+
+        #       ZED_NOTIFY_INTERVAL_SECS = 3600;
+        #       ZED_NOTIFY_DATA = true;
+        #       ZED_NOTIFY_VERBOSE = true;
+
+        #       ZED_USE_ENCLOSURE_LEDS = false;
+        #       ZED_SCRUB_AFTER_RESILVER = true;
+        #     };
+        #   };
+
       };
   };
 }
