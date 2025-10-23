@@ -26,7 +26,6 @@
       "cpu-amd"
       "gpu-amd"
       "podman"
-      "performance"
     ];
     facts = ./facter.json;
     nixosConfiguration =
