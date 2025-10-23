@@ -170,12 +170,52 @@ writeShellApplication {
         log "  ✓ SSH host keys prepared ($key_count keys)"
     }
 
+    cleanup_ssh_agent() {
+        log "Cleaning up SSH agent temporary key"
+
+        if [[ "$SSH_AUTH_SOCK" =~ gpg-agent ]]; then
+            log "  Detected gpg-agent, removing key from agent"
+
+            # Remove keys from gpg-agent
+            gpg-connect-agent 'keyinfo --ssh-list --ssh-fpr' /bye |
+            awk '$1 == "S" { print $3 }' |
+            while IFS= read -r key; do
+                gpg-connect-agent "delete_key $key --force" /bye
+            done
+
+            # Also run ssh-add -D
+            ssh-add -D 2>/dev/null || true
+
+            # Remove last 3 lines from sshcontrol
+            local sshcontrol="$HOME/.gnupg/sshcontrol"
+            if [[ -f "$sshcontrol" ]]; then
+                local linecount
+                linecount=$(wc -l < "$sshcontrol")
+                if [[ $linecount -gt 3 ]]; then
+                    head -n $((linecount - 3)) "$sshcontrol" > "$sshcontrol.tmp"
+                    mv "$sshcontrol.tmp" "$sshcontrol"
+                    log "  ✓ Removed last 3 lines from ~/.gnupg/sshcontrol"
+                else
+                    # If file has 3 or fewer lines, just truncate it
+                    : > "$sshcontrol"
+                    log "  ✓ Cleared ~/.gnupg/sshcontrol"
+                fi
+            fi
+        else
+            log "  Detected regular ssh-agent, removing key"
+            ssh-add -D 2>/dev/null || true
+        fi
+
+        log "  ✓ SSH agent cleanup completed"
+    }
+
     run_nixos_anywhere() {
         local hostname="$1"
         local target_ip="$2"
         local disk_password="$3"
         local disko_mode="$4"
         local no_reboot="$5"
+        local identity_file="$6"
 
         log "Running nixos-anywhere for $hostname on $target_ip"
 
