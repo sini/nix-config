@@ -28,11 +28,15 @@
             dates = "weekly";
           };
 
-          defaultNetwork.settings = {
-            dns_enabled = true;
-            driver = "bridge";
-            name = builtins.head config.hardware.networking.bridges;
-          };
+          defaultNetwork.settings =
+            let
+              bridgeNames = lib.sort (a: b: a < b) (builtins.attrNames config.hardware.networking.bridges);
+            in
+            {
+              dns_enabled = true;
+              driver = "bridge";
+              name = builtins.head bridgeNames;
+            };
 
           dockerCompat = true;
           dockerSocket.enable = true;
