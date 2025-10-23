@@ -1,3 +1,48 @@
+# Networking Configuration Module
+#
+# This module manages network interfaces using systemd-networkd with support for
+# both automatic and manual bridge configurations.
+#
+# ## Usage Examples
+#
+# ### Default (autobridging enabled):
+# ```nix
+# hardware.networking.interfaces = [ "enp1s0" "enp2s0" ];
+# # Creates: br0 bridging enp1s0, br1 bridging enp2s0
+# ```
+#
+# ### Manual bridges with multiple interfaces:
+# ```nix
+# hardware.networking = {
+#   autobridging = false;
+#   interfaces = [ "enp4s0" ];  # Optional: standalone interfaces only
+#   bridges = {
+#     "br0" = [ "enp1s0" "enp2s0" ];  # Multiple interfaces in one bridge
+#     "br1" = [ "enp3s0" ];            # Single interface bridge
+#   };
+#   # enp4s0 will be configured as standalone
+# };
+# ```
+#
+# ### Bridges only (no standalone interfaces):
+# ```nix
+# hardware.networking = {
+#   autobridging = false;
+#   bridges = {
+#     "br0" = [ "enp1s0" "enp2s0" ];
+#     "br1" = [ "enp3s0" ];
+#   };
+#   # No need to list interfaces - they're automatically detected from bridges
+# };
+# ```
+#
+# ## Key Features
+# - Automatic 1:1 bridging per interface (default behavior)
+# - Manual bridge definitions with multiple interfaces
+# - Automatic interface detection from bridge definitions
+# - IPv6 support with DHCPv6 and SLAAC
+# - DNS over TLS and DNSSEC
+# - TCP congestion window optimization
 {
   flake.features.networking.nixos =
     {
@@ -12,99 +57,143 @@
       cfg = config.hardware.networking;
 
       # Extract subnet mask from management network CIDR (e.g., "10.9.0.0/16" -> "/16")
-      managementSubnet =
-        let
-          cidrParts = splitString "/" environment.networks.management.cidr;
-        in
-        "/${elemAt cidrParts 1}";
+      managementSubnet = "/${last (splitString "/" environment.networks.management.cidr)}";
 
-      # Generate bridge names: br0, br1, br2, etc.
-      bridgeNames = imap0 (idx: _: "br${toString idx}") cfg.interfaces;
+      # Helper to create name-value pairs for listToAttrs
+      mkNameValue = name: value: { inherit name value; };
+
+      # Common route configuration for TCP optimization
+      mkRoute =
+        gateway: extra:
+        {
+          Gateway = gateway;
+          InitialCongestionWindow = 50;
+          InitialAdvertisedReceiveWindow = 50;
+        }
+        // extra;
+
+      # Common network configuration (used for both bridges and standalone interfaces)
+      mkNetworkConfig = ipv4: {
+        networkConfig = {
+          Address = [ "${ipv4}${managementSubnet}" ];
+          DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
+          IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
+          IPv6PrivacyExtensions = "yes";
+          LinkLocalAddressing = "ipv6";
+          DNS = environment.dnsServers;
+          DNSOverTLS = true;
+          DNSSEC = "allow-downgrade";
+        };
+        dhcpV6Config = {
+          UseDelegatedPrefix = true; # Request a prefix for our LANs.
+          PrefixDelegationHint = "::/64";
+        };
+        routes = [
+          (mkRoute environment.gatewayIp { })
+          (mkRoute environment.gatewayIpV6 {
+            Destination = "::/0";
+            GatewayOnLink = true; # it's a gateway on local link.
+          })
+        ];
+        linkConfig.RequiredForOnline = "routable";
+      };
+
+      # Auto-generate bridge attrset when autobridging is enabled
+      autoBridges = listToAttrs (
+        imap0 (idx: ifName: mkNameValue "br${toString idx}" [ ifName ]) cfg.interfaces
+      );
+
+      # Use auto-generated or manual bridges
+      effectiveBridges = if cfg.autobridging then autoBridges else cfg.bridges;
+
+      # Convert bridge attrset to list with additional metadata
+      bridgeConfig = imap0 (idx: brName: {
+        name = brName;
+        interfaces = effectiveBridges.${brName};
+        ipv4 = elemAt hostOptions.ipv4 idx;
+      }) (attrNames effectiveBridges);
+
+      # List of all bridge names
+      bridgeNames = map (br: br.name) bridgeConfig;
+
+      # Set of all interfaces that are part of bridges
+      bridgedInterfaces = unique (concatMap (br: br.interfaces) bridgeConfig);
+
+      # All interfaces we know about (from cfg.interfaces and from bridges)
+      allInterfaces = unique (cfg.interfaces ++ bridgedInterfaces);
+
+      # Interfaces that should be configured as standalone (not bridged)
+      standaloneInterfaces = subtractLists bridgedInterfaces allInterfaces;
 
       # Create netdev configurations for bridges
-      bridgeNetdevs =
-        bridgeNames
-        |> map (brName: {
-          name = brName;
-          value = {
+      bridgeNetdevs = listToAttrs (
+        map (
+          br:
+          mkNameValue br.name {
             # https://wiki.archlinux.org/title/Systemd-networkd#Inherit_MAC_address_(optional)
             # Mac address should come from the bridged interface
             netdevConfig = {
-              Name = brName;
+              Name = br.name;
               Kind = "bridge";
               MACAddress = "none";
             };
-          };
-        })
-        |> listToAttrs;
+          }
+        ) bridgeConfig
+      );
 
-      bridgeLinks =
-        bridgeNames
-        |> map (brName: {
-          name = brName;
-          value = {
-            matchConfig.Name = brName;
+      bridgeLinks = listToAttrs (
+        map (
+          br:
+          mkNameValue br.name {
+            matchConfig.Name = br.name;
             linkConfig.MACAddressPolicy = "none";
-          };
-        })
-        |> listToAttrs;
+          }
+        ) bridgeConfig
+      );
 
       # Network configurations for physical interfaces (bind to bridges)
-      networkdInterfaces =
-        imap0 (idx: ifName: {
-          name = ifName;
-          value = {
-            enable = true;
-            matchConfig.Name = ifName;
-            networkConfig.Bridge = elemAt bridgeNames idx;
-            linkConfig.RequiredForOnline = "enslaved";
-          };
-        }) cfg.interfaces
-        |> listToAttrs;
+      bridgedInterfaceNetworks = listToAttrs (
+        concatMap (
+          br:
+          map (
+            ifName:
+            mkNameValue ifName {
+              enable = true;
+              matchConfig.Name = ifName;
+              networkConfig.Bridge = br.name;
+              linkConfig.RequiredForOnline = "enslaved";
+            }
+          ) br.interfaces
+        ) bridgeConfig
+      );
+
+      # Network configuration for standalone interfaces (not bridged)
+      standaloneInterfaceNetworks = listToAttrs (
+        imap0 (
+          idx: ifName:
+          mkNameValue ifName (
+            {
+              enable = true;
+              matchConfig.Name = ifName;
+            }
+            // (mkNetworkConfig (elemAt hostOptions.ipv4 (length bridgeConfig + idx)))
+          )
+        ) standaloneInterfaces
+      );
 
       # Network configurations for bridges (DHCP and IPv6)
-      bridgeNetworks =
-        imap0 (idx: brName: {
-          name = brName;
-          value = {
-            enable = true;
-            matchConfig.Name = brName;
-            networkConfig = {
-              Address = [ "${elemAt hostOptions.ipv4 idx}${managementSubnet}" ];
-              # DHCP = "ipv4";
-              DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
-              IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
-              IPv6PrivacyExtensions = "yes";
-              LinkLocalAddressing = "ipv6";
-              DNS = environment.dnsServers;
-              DNSOverTLS = true;
-              DNSSEC = "allow-downgrade";
-            };
-            dhcpV6Config = {
-              UseDelegatedPrefix = true; # Request a prefix for our LANs.
-              PrefixDelegationHint = "::/64";
-            };
-            routes = [
-              {
-                # Destination = "0.0.0.0/0";
-                Gateway = environment.gatewayIp;
-                # Larger TCP window sizes, courtesy of
-                # https://wiki.archlinux.org/title/Systemd-networkd#Speeding_up_TCP_slow-start
-                InitialCongestionWindow = 50;
-                InitialAdvertisedReceiveWindow = 50;
-              }
-              {
-                Destination = "::/0";
-                Gateway = environment.gatewayIpV6;
-                GatewayOnLink = true; # it's a gateway on local link.
-                InitialCongestionWindow = 50;
-                InitialAdvertisedReceiveWindow = 50;
-              }
-            ];
-            linkConfig.RequiredForOnline = "routable";
-          };
-        }) bridgeNames
-        |> listToAttrs;
+      bridgeNetworks = listToAttrs (
+        map (
+          br:
+          mkNameValue br.name (
+            {
+              enable = true;
+              matchConfig.Name = br.name;
+            }
+            // (mkNetworkConfig br.ipv4)
+          )
+        ) bridgeConfig
+      );
     in
     {
       options.hardware.networking = with types; {
@@ -113,17 +202,37 @@
           default = [ "enp1s0" ];
           description = ''
             List of interfaces to configure using systemd-networkd.
-            A bridge will be created for each interface (br0, br1, br2, etc.).
+
+            When autobridging is enabled, a bridge will be created for each interface (br0, br1, br2, etc.).
+
+            When autobridging is disabled:
+            - Interfaces listed in bridges are automatically included (no need to duplicate them here)
+            - Interfaces listed here but not in bridges will be configured as standalone networks
+            - You only need to list additional standalone interfaces that aren't part of any bridge
           '';
         };
 
+        autobridging = mkEnableOption "automatic 1:1 bridge creation for each interface" // {
+          default = true;
+        };
+
         bridges = mkOption {
-          type = listOf str;
-          readOnly = true;
-          default = bridgeNames;
+          type = attrsOf (listOf str);
+          default = { };
+          example = literalExpression ''
+            {
+              "br0" = [ "enp2s0" "enp3s0" ];
+              "br1" = [ "enp4s0" ];
+            }
+          '';
           description = ''
-            List of bridge interface names automatically generated for each interface.
-            This option is read-only and computed from the interfaces list.
+            Attribute set mapping bridge names to lists of interfaces.
+
+            When autobridging is enabled (default), this option is ignored and
+            automatic 1:1 mappings are created (br0 = [enp1s0], br1 = [enp2s0], etc.).
+
+            Set autobridging = false to use this option for manual bridge definitions
+            with multiple interfaces per bridge.
           '';
         };
 
@@ -131,11 +240,11 @@
 
         unmanagedInterfaces = mkOption {
           type = listOf str;
-          default = cfg.interfaces ++ cfg.bridges;
-          defaultText = "hardware.networking.interfaces";
+          default = allInterfaces ++ bridgeNames;
+          defaultText = "all interfaces (including those in bridges) ++ bridge names";
           description = ''
             List of interfaces to mark as unmanaged by NetworkManager.
-            Defaults to the same value as `interfaces`.
+            Defaults to all interfaces (from both interfaces and bridges options) and bridge devices.
           '';
         };
       };
@@ -167,7 +276,7 @@
           wait-online.enable = false;
           netdevs = bridgeNetdevs;
           links = bridgeLinks;
-          networks = networkdInterfaces // bridgeNetworks;
+          networks = bridgedInterfaceNetworks // standaloneInterfaceNetworks // bridgeNetworks;
         };
       };
     };
