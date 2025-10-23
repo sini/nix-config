@@ -84,47 +84,11 @@
 
       networking.firewall.allowedTCPPorts = [ 12345 ];
 
-      # User and group
-      users.users.alloy = {
-        isSystemUser = true;
-        group = "alloy";
-        home = "/var/lib/alloy";
-        createHome = true;
-        description = "Grafana Alloy user";
-        extraGroups = [
-          "systemd-journal" # allow to read the systemd journal for loki log forwarding
-          #"docker"
-          #"podman" # allow to read the docker socket
-          "nginx" # allow to read nginx logs for loki log forwarding
-        ];
-      };
-
-      users.groups.alloy = { };
-
       systemd.services.alloy = {
         serviceConfig = {
-          User = "alloy";
-          Group = "alloy";
+          User = "root";
+          Group = "root";
           DynamicUser = lib.mkForce false;
-          SupplementaryGroups = [
-            "systemd-journal"
-            # "docker"
-            # "podman"
-            "nginx"
-          ];
-          # Add capabilities for process monitoring and network probing
-          AmbientCapabilities = [
-            "CAP_SYS_PTRACE"
-            "CAP_DAC_READ_SEARCH"
-            "CAP_NET_RAW"
-          ];
-          CapabilityBoundingSet = [
-            "CAP_SYS_PTRACE"
-            "CAP_DAC_READ_SEARCH"
-            "CAP_NET_RAW"
-          ];
-          # WorkingDirectory = lib.mkForce "/var/lib/alloy";
-
         };
       };
 
@@ -135,22 +99,22 @@
       environment.persistence."/persist".directories = [
         {
           directory = "/var/lib/alloy";
-          user = "alloy";
-          group = "alloy";
+          user = "root";
+          group = "root";
           mode = "0755";
         }
         {
           directory = "/etc/alloy";
-          user = "alloy";
-          group = "alloy";
+          user = "root";
+          group = "root";
           mode = "0755";
         }
       ];
 
       systemd.tmpfiles.rules = [
-        "d /etc/alloy 0755 alloy alloy -"
-        "d /var/lib/alloy 0755 alloy alloy -"
-        "d /var/lib/alloy/data 0755 alloy alloy -"
+        "d /etc/alloy 0755 root root -"
+        "d /var/lib/alloy 0755 root root -"
+        "d /var/lib/alloy/data 0755 root root -"
       ];
     };
 }
