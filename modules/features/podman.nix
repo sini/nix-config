@@ -2,11 +2,20 @@
   flake.features.podman = {
     nixos =
       {
-        config,
         lib,
         pkgs,
+        config,
+        activeFeatures,
         ...
       }:
+      let
+        # Check which filesystem is in use to configure appropriate storage driver
+        zfsEnabled = lib.elem "zfs" activeFeatures;
+        btrfsEnabled = lib.elem "btrfs" activeFeatures;
+
+        # Get the correct persistent storage path for impermanence
+        volatileRoot = config.environment.persistence."/volatile".persistentStoragePath;
+      in
       {
         environment.systemPackages = with pkgs; [
           dive # look into docker image layers
@@ -14,6 +23,7 @@
           podman-tui # Terminal mgmt UI for Podman
           passt # For Pasta rootless networking
           gomanagedocker
+          fuse-overlayfs
         ];
 
         virtualisation = {
@@ -22,7 +32,8 @@
           podman = {
             enable = true;
 
-            extraPackages = [ pkgs.zfs_cachyos ];
+            # ZFS requires zfs package for volume management
+            extraPackages = lib.optional zfsEnabled pkgs.zfs_cachyos;
 
             # prune images and containers periodically
             autoPrune = {
@@ -31,27 +42,44 @@
               dates = "weekly";
             };
 
-            defaultNetwork.settings =
-              let
-                bridgeNames = lib.sort (a: b: a < b) (builtins.attrNames config.hardware.networking.bridges);
-              in
-              {
-                dns_enabled = true;
-                driver = "bridge";
-                name = builtins.head bridgeNames;
-              };
+            defaultNetwork.settings.dns_enabled = true;
 
             dockerCompat = true;
             dockerSocket.enable = true;
           };
 
           # https://carlosvaz.com/posts/rootless-podman-and-docker-compose-on-nixos/
-          containers.storage.settings.storage = {
-            driver = "overlay";
-            runroot = "/run/containers/storage";
-            graphroot = "/var/lib/containers/storage";
-            options.overlay.mountopt = "nodev,metacopy=on";
-          };
+          containers.storage.settings.storage = lib.mkMerge [
+            # Common settings for all filesystems
+            {
+              runroot = "/run/containers/storage";
+              graphroot = "/var/lib/containers/storage";
+            }
+
+            # Rootless storage path for impermanence setups
+            # .local/share/containers is persistent mount with fuse bindfs
+            # so we need to point to the underlying filesystem directly
+            (lib.mkIf config.impermanence.enable {
+              rootless_storage_path = "${volatileRoot}$HOME/.local/share/containers/storage";
+            })
+
+            # ZFS-specific configuration
+            (lib.mkIf zfsEnabled {
+              driver = "zfs";
+            })
+
+            # BTRFS-specific configuration
+            (lib.mkIf btrfsEnabled {
+              driver = "btrfs";
+            })
+
+            # Fallback to overlay driver if no specific filesystem is detected
+            (lib.mkIf (!zfsEnabled && !btrfsEnabled) {
+              driver = "overlay";
+              options.overlay.mountopt = "nodev,metacopy=on";
+              options.mount_program = lib.getExe pkgs.fuse-overlayfs;
+            })
+          ];
         };
 
         networking.networkmanager.unmanaged = [
@@ -69,7 +97,7 @@
         # Allow non-root containers to access lower port numbers
         boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
 
-        environment.persistence."/persist".directories = [
+        environment.persistence."/volatile".directories = [
           "/var/lib/cni"
           "/var/lib/containers"
         ];
@@ -78,7 +106,7 @@
     home =
       { ... }:
       {
-        home.persistence."/persist".directories = [
+        home.persistence."/volatile".directories = [
           ".local/share/containers"
         ];
       };
