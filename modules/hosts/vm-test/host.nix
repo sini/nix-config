@@ -1,7 +1,7 @@
 { ... }:
 {
   flake.hosts.vm-test = {
-    ipv4 = [ "192.168.122.34" ];
+    ipv4 = [ "10.10.210.149" ];
     ipv6 = [ "fd64:0:3::2/64" ];
     environment = "dev";
     roles = [
@@ -47,10 +47,7 @@
           "virtio_net"
         ];
         hardware = {
-          networking = {
-            interfaces = [ "enp1s0" ];
-            unmanagedInterfaces = [ "enp1s0" ];
-          };
+          networking.interfaces = [ "enp1s0" ];
           # disk.single.device_id = "ata-QEMU_HARDDISK_QM00003";
           # disk.btrfs-impermanence-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/ata-QEMU_HARDDISK_QM00003";
