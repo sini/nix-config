@@ -39,6 +39,13 @@
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
           networking.interfaces = [ "enp4s0" ];
         };
+
+        impermanence = {
+          enable = true;
+          wipeRootOnBoot = true;
+          wipeHomeOnBoot = true;
+        };
+
         system.stateVersion = "25.05";
       };
   };

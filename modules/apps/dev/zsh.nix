@@ -127,7 +127,8 @@
             "status" = "systemctl --user --full status";
             "restart" = "systemctl --user restart";
             "ssh-kitty" = "kitty +kitten ssh";
-            "ssh-ignore" = "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null";
+            "ssh-ignore" =
+              "ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null";
             "fixstore" = "sudo nix-store --verify --check-contents --repair";
             "flake-update" = "nix flake update --option access-tokens \"github.com=$(gh auth token)\"";
           };
