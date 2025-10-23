@@ -98,13 +98,8 @@
         linkConfig.RequiredForOnline = "routable";
       };
 
-      # Auto-generate bridge attrset when autobridging is enabled
-      autoBridges = listToAttrs (
-        imap0 (idx: ifName: mkNameValue "br${toString idx}" [ ifName ]) cfg.interfaces
-      );
-
-      # Use auto-generated or manual bridges
-      effectiveBridges = if cfg.autobridging then autoBridges else cfg.bridges;
+      # The effective bridges configuration (either from user or auto-generated)
+      effectiveBridges = cfg.bridges;
 
       # Convert bridge attrset to list with additional metadata
       bridgeConfig = imap0 (idx: brName: {
@@ -228,10 +223,10 @@
           description = ''
             Attribute set mapping bridge names to lists of interfaces.
 
-            When autobridging is enabled (default), this option is ignored and
-            automatic 1:1 mappings are created (br0 = [enp1s0], br1 = [enp2s0], etc.).
+            When autobridging is enabled (default), auto-generated 1:1 mappings are created
+            (br0 = [enp1s0], br1 = [enp2s0], etc.) but can be overridden by setting this option.
 
-            Set autobridging = false to use this option for manual bridge definitions
+            When autobridging is disabled, you must set this option to define bridges manually
             with multiple interfaces per bridge.
           '';
         };
@@ -250,6 +245,13 @@
       };
 
       config = {
+        # Auto-populate bridges when autobridging is enabled
+        hardware.networking.bridges = mkIf cfg.autobridging (
+          mkDefault (
+            listToAttrs (imap0 (idx: ifName: mkNameValue "br${toString idx}" [ ifName ]) cfg.interfaces)
+          )
+        );
+
         boot.kernelModules = [
           "tun" # TUN/TAP networking
           "bridge" # Network bridging
