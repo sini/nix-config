@@ -265,6 +265,11 @@ writeShellApplication {
         if nixos-anywhere "''${nix_anywhere_args[@]}"; then
             log "✓ nixos-anywhere completed successfully"
             log "Host $hostname has been installed on $target_ip"
+
+            # Cleanup SSH agent if needed
+            if [[ "$should_cleanup" == "true" ]]; then
+                cleanup_ssh_agent
+            fi
         else
             error "nixos-anywhere failed"
         fi
