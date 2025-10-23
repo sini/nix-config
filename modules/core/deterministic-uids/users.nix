@@ -43,6 +43,7 @@
         i2c = uidGid 967;
         tss = uidGid 966;
         alloy = uidGid 965;
+        docker = uidGid 964;
       };
   };
 }

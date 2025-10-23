@@ -93,8 +93,8 @@
         description = "Grafana Alloy user";
         extraGroups = [
           "systemd-journal" # allow to read the systemd journal for loki log forwarding
-          "docker"
-          "podman" # allow to read the docker socket
+          #"docker"
+          #"podman" # allow to read the docker socket
           "nginx" # allow to read nginx logs for loki log forwarding
         ];
       };
@@ -108,7 +108,7 @@
           DynamicUser = lib.mkForce false;
           SupplementaryGroups = [
             "systemd-journal"
-            "docker"
+            # "docker"
             # "podman"
             "nginx"
           ];
