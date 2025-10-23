@@ -234,6 +234,24 @@ writeShellApplication {
             "--disk-encryption-keys" "/tmp/secret.key" "$temp_dir/tmp/secret.key"
         )
 
+        # Handle SSH identity file
+        local should_cleanup=false
+        if [[ -n "$identity_file" ]]; then
+            # User explicitly provided an identity file
+            nix_anywhere_args+=("-i" "$identity_file")
+            log "  Using SSH identity file: $identity_file"
+        else
+            # Check for agenix identity file
+            local agenix_identity="/var/run/agenix/user-''${USER}-id_agenix"
+            if [[ -f "$agenix_identity" ]]; then
+                nix_anywhere_args+=("-i" "$agenix_identity")
+                log "  Using agenix SSH identity file: $agenix_identity"
+            else
+                log "  No identity file specified or found, using default SSH authentication"
+                should_cleanup=true
+            fi
+        fi
+
         if [[ "$no_reboot" == "true" ]]; then
             nix_anywhere_args+=("--no-reboot")
         fi
