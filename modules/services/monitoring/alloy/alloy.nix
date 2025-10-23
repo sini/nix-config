@@ -94,17 +94,12 @@
 
       impermanence.ignorePaths = [
         "/var/lib/private/alloy/data-alloy/alloy_seed.json"
+        "/etc/alloy/"
       ];
 
       environment.persistence."/persist".directories = [
         {
           directory = "/var/lib/alloy";
-          user = "root";
-          group = "root";
-          mode = "0755";
-        }
-        {
-          directory = "/etc/alloy";
           user = "root";
           group = "root";
           mode = "0755";
