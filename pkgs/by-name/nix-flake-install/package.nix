@@ -276,10 +276,15 @@ writeShellApplication {
         local disk_password=""
         local disko_mode="disko"
         local no_reboot="false"
+        local identity_file=""
 
         # Parse arguments
         while [[ $# -gt 0 ]]; do
             case $1 in
+                -i|--identity)
+                    identity_file="$2"
+                    shift 2
+                    ;;
                 --disko-mode)
                     disko_mode="$2"
                     shift 2
@@ -314,6 +319,11 @@ writeShellApplication {
             usage
         fi
 
+        # Validate identity file if provided
+        if [[ -n "$identity_file" && ! -f "$identity_file" ]]; then
+            error "SSH identity file not found: $identity_file"
+        fi
+
         # Validate disko mode
         case "$disko_mode" in
             format|mount|disko)
@@ -335,7 +345,7 @@ writeShellApplication {
         prepare_ssh_host_keys "$hostname"
 
         # Run nixos-anywhere
-        run_nixos_anywhere "$hostname" "$target_ip" "$disk_password" "$disko_mode" "$no_reboot"
+        run_nixos_anywhere "$hostname" "$target_ip" "$disk_password" "$disko_mode" "$no_reboot" "$identity_file"
 
         log "Installation completed successfully!"
     }
