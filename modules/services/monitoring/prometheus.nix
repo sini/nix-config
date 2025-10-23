@@ -178,6 +178,9 @@ in
         };
       };
 
+      networking.firewall.allowedTCPPorts = [
+        9090
+      ];
       environment.persistence."/persist".directories = [
         "/var/lib/prometheus2/"
       ];

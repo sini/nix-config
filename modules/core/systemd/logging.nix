@@ -20,7 +20,6 @@
       ];
 
       environment.persistence."/volatile".files = [
-        "/var/lib/logrotate.status"
         "/var/lib/lastlog/lastlog2.db"
         "/var/lib/systemd/timesync/clock"
       ];
