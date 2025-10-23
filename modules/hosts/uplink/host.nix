@@ -6,7 +6,7 @@
     environment = "prod";
     roles = [
       "server"
-      #"bgp-hub"
+      # "bgp-hub"
       "metrics-ingester"
     ];
     tags = {
@@ -16,13 +16,12 @@
       "cpu-amd"
       "gpu-intel"
       "zfs-disk-single"
-      #"disk-single"
       "podman"
       #"docker"
       "acme"
       "nginx"
-      #"kanidm"
-      #"grafana"
+      "kanidm"
+      "grafana"
       # "minio"
       # "vault"
     ];
