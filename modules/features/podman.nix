@@ -5,12 +5,8 @@
         config,
         lib,
         pkgs,
-        activeFeatures,
         ...
       }:
-      let
-        zfsEnabled = builtins.elem "zfs" activeFeatures;
-      in
       {
         environment.systemPackages = with pkgs; [
           dive # look into docker image layers
@@ -49,25 +45,13 @@
             dockerSocket.enable = true;
           };
 
+          # https://carlosvaz.com/posts/rootless-podman-and-docker-compose-on-nixos/
           containers.storage.settings.storage = {
+            driver = "overlay";
             runroot = "/run/containers/storage";
             graphroot = "/var/lib/containers/storage";
-          }
-          // (
-            if zfsEnabled then
-              {
-                driver = "zfs";
-                # options.zfs = {
-                #   fsname = "zroot/local/containers";
-                #   mountopt = "nodev";
-                # };
-              }
-            else
-              {
-                driver = "btrfs";
-                options.overlay.mountopt = "nodev,metacopy=on";
-              }
-          );
+            options.overlay.mountopt = "nodev,metacopy=on";
+          };
         };
 
         networking.networkmanager.unmanaged = [

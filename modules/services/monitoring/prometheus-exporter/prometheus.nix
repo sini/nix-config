@@ -95,6 +95,10 @@
         };
       };
 
+      networking.firewall.allowedTCPPorts = [
+        9100
+      ];
+
       # System monitoring packages
       environment.systemPackages = with pkgs; [
         # System monitoring tools
