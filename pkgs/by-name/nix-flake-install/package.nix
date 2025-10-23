@@ -44,6 +44,7 @@ writeShellApplication {
         echo "  disk-encryption-password    Optional disk encryption password (will prompt if not provided)"
         echo
         echo "Options:"
+        echo "  -i, --identity FILE        SSH identity file to use for authentication"
         echo "  --disko-mode MODE          Disko mode (format, mount, or destroy) [default: format]"
         echo "  --no-reboot                Don't reboot after installation"
         echo "  --help                     Show this help message"
@@ -52,6 +53,7 @@ writeShellApplication {
         echo "  $0 myhost 192.168.1.100"
         echo "  $0 myhost 192.168.1.100 mypassword"
         echo "  $0 myhost 192.168.1.100 --disko-mode mount"
+        echo "  $0 myhost 192.168.1.100 -i ~/.ssh/id_rsa"
         echo
         echo "The script will:"
         echo "  1. Decrypt and install SSH host keys on the target"
