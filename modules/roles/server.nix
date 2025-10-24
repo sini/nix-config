@@ -5,7 +5,7 @@
       "media-data-share"
       "network-boot"
       "server"
-      "alloy"
+      #"alloy"
     ];
   };
 }
