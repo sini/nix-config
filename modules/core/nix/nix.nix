@@ -52,6 +52,10 @@
             # Whether to warn about dirty Git/Mercurial trees.
             warn-dirty = false;
 
+            keep-outputs = true;
+
+            keep-derivations = true;
+
             ################
             # Substituters #
             ################
