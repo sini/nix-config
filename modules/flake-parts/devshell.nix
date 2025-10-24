@@ -80,6 +80,11 @@
             help = "Collect and encrypt SSH host keys from all configured hosts";
           }
           {
+            package = config.packages.update-tang-disk-keys;
+            name = "update-tang-disk-keys";
+            help = "Update disk encryption keys using Tang servers and TPM2";
+          }
+          {
             package = config.packages.generate-host-keys;
             name = "generate-host-keys";
             help = "Generate and encrypt SSH host keys for a new host";
