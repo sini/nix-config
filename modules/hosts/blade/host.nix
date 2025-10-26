@@ -17,7 +17,7 @@
       "gpu-intel"
       "gpu-nvidia"
       "gpu-nvidia-prime"
-      "disk-single"
+      "zfs-disk-single"
       "network-manager"
       "razer"
     ];
@@ -34,7 +34,7 @@
       {
         boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "GENERIC_V4"; };
 
-        hardware.disk.single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
+        disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
 
         impermanence = {
           enable = true;
