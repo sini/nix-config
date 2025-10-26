@@ -60,6 +60,7 @@ in
             ENABLE_SIGNUP_PASSWORD_CONFIRMATION = "True";
             ENABLE_SIGNUP = "False";
             ENABLE_LOGIN_FORM = "False";
+            DEFAULT_USER_ROLE = "user";
 
             ENABLE_OAUTH_SIGNUP = "True"; # Not the same as ENABLE_SIGNUP
             OAUTH_UPDATE_PICTURE_ON_LOGIN = "True";
@@ -69,7 +70,9 @@ in
             OAUTH_CLIENT_ID = "open-webui";
             OPENID_PROVIDER_URL = "https://idm.${config.networking.domain}/oauth2/openid/open-webui/.well-known/openid-configuration";
             OAUTH_CODE_CHALLENGE_METHOD = "S256";
-            OAUTH_PROVIDER_NAME = "kanidm";
+            OAUTH_PROVIDER_NAME = "idm";
+            OAUTH_ALLOWED_ROLES = "user";
+            OAUTH_ADMIN_ROLES = "admin";
             ENABLE_OAUTH_ROLE_MANAGEMENT = "True";
             ENABLE_OAUTH_GROUP_MANAGEMENT = "True";
 
