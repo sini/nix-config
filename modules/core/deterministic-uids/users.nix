@@ -44,6 +44,7 @@
         tss = uidGid 966;
         alloy = uidGid 965;
         docker = uidGid 964;
+        tang = uidGid 963;
       };
   };
 }
