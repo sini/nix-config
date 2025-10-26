@@ -5,6 +5,7 @@
       "media-data-share"
       "network-boot"
       "server"
+      "tang"
       #"alloy"
     ];
   };
