@@ -55,6 +55,9 @@
         thermald.enable = true;
       };
 
-      environment.persistence."/volatile".directories = [ "/var/lib/power-profiles-daemon" ];
+      environment.persistence."/volatile".directories = [
+        "/var/lib/upower"
+        "/var/lib/power-profiles-daemon"
+      ];
     };
 }
