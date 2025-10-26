@@ -7,6 +7,9 @@
         claude-code
         crush
       ];
+      home.persistence."/persist".directories = [
+        ".claude/"
+      ];
     }
   );
 }
