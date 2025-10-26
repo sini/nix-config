@@ -3,8 +3,8 @@
   flake.features.grafana.nixos =
     { config, pkgs, ... }:
     {
-      age.secrets.grafana-oidc-secret-grafana = {
-        rekeyFile = rootPath + "/.secrets/services/grafana-oidc-secret.age";
+      age.secrets.grafana-oidc-secret = {
+        rekeyFile = rootPath + "/.secrets/services/grafana-oidc-client-secret.age";
         owner = "grafana";
         group = "grafana";
       };
@@ -56,7 +56,7 @@
               allow_sign_up = true;
               auto_login = true;
               client_id = "grafana";
-              client_secret = "$__file{${config.age.secrets.grafana-oidc-secret-grafana.path}}";
+              client_secret = "$__file{${config.age.secrets.grafana-oidc-secret.path}}";
               scopes = "openid email profile";
               login_attribute_path = "preferred_username";
               auth_url = "https://idm.${config.networking.domain}/ui/oauth2";
