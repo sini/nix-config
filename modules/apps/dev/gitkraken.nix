@@ -60,6 +60,7 @@
 
       home.persistence."/persist".directories = [
         ".gitkraken/"
+        ".gk/"
         ".config/GitKraken/"
       ];
     };
