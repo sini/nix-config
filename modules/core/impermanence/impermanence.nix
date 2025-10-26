@@ -431,6 +431,7 @@
               # Regenerable data
               "Downloads" # Downloads folder
               ".local/share/direnv" # Direnv cache (can be rebuilt)
+              ".local/share/nix" # Nix settins and such
               ".cache" # Application caches (can be regenerated)
             ];
             files = [ ];
