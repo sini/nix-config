@@ -46,6 +46,7 @@
             "*.kdl"
             "*.txt"
             "*.tmpl"
+            "*.jwe"
           ];
           formatter = {
             prettier = {
