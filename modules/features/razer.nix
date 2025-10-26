@@ -10,11 +10,8 @@
           polychromatic
         ];
         hardware.openrazer.users = [ config.flake.meta.user.username ];
-        persistence."/persist".directories = [
-          ".config/openrazer/"
-          ".config/polychromatic/"
-        ];
       };
+
     home = {
       home.persistence."/persist".directories = [
         ".config/openrazer/"
