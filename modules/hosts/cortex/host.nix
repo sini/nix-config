@@ -10,6 +10,7 @@
       "dev"
       "dev-gui"
       "media"
+      "inference"
     ];
     features = [
       "cpu-amd"

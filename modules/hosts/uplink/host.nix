@@ -7,6 +7,7 @@
     roles = [
       "server"
       # "bgp-hub"
+      # "inference"
       "metrics-ingester"
     ];
     tags = {
@@ -22,6 +23,8 @@
       "nginx"
       "kanidm"
       "grafana"
+      "ollama"
+      "open-webui"
       # "minio"
       # "vault"
     ];
