@@ -45,6 +45,8 @@
         alloy = uidGid 965;
         docker = uidGid 964;
         tang = uidGid 963;
+        ollama = uidGid 962;
+        open-webui = uidGid 961;
       };
   };
 }
