@@ -11,7 +11,7 @@
           package = pkgs.zfs_cachyos;
           devNodes = "/dev/disk/by-id/";
           forceImportAll = true;
-          requestEncryptionCredentials = true;
+          requestEncryptionCredentials = [ "zroot" ];
         };
 
         boot.kernelParams = [
