@@ -106,6 +106,14 @@ in
             inputs.stylix.homeModules.stylix
           ];
 
+          environment.persistence."/persist".directories = [
+            {
+              directory = "/var/lib/colord";
+              user = "colord";
+              group = "colord";
+              mode = "0755";
+            }
+          ];
         };
       };
 
