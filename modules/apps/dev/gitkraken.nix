@@ -57,6 +57,11 @@
           signingKey = config.programs.git.defaultIdentity.signingKey;
         };
       };
+
+      home.persistence."/persist".directories = [
+        ".gitkraken/"
+        ".config/GitKraken/"
+      ];
     };
 
 }

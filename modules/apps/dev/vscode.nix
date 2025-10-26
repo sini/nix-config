@@ -19,20 +19,25 @@
       in
       {
         # Packages that are used by some of the extensions below
-        home.packages = with pkgs; [
-          bash-language-server
-          go
-          gopls
-          luaformatter
-          luajit
-          lua-language-server
-          nil
-          nixfmt-rfc-style
-          nodePackages.prettier
-          shellcheck
-          shfmt
-          stylua
-        ];
+        home = {
+          packages = with pkgs; [
+            bash-language-server
+            go
+            gopls
+            luaformatter
+            luajit
+            lua-language-server
+            nil
+            nixfmt-rfc-style
+            nodePackages.prettier
+            shellcheck
+            shfmt
+            stylua
+          ];
+          persistence."/persist".directories = [
+            ".config/VSCodium/"
+          ];
+        };
 
         programs = {
           # Forked from: https://github.com/wimpysworld/nix-config/blob/main/home-manager/_mixins/desktop/apps/development/default.nix
@@ -377,7 +382,6 @@
             };
           };
         };
-        # services.vscode-server.enable = true;
       };
   };
 }
