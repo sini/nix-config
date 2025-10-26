@@ -1,6 +1,6 @@
 { ... }:
 {
-  flake.hosts.spike = {
+  flake.hosts.blade = {
     ipv4 = [ "10.9.3.1" ];
     ipv6 = [ "2001:5a8:608c:4a00::31/64" ];
     environment = "dev";
@@ -34,7 +34,7 @@
       {
         boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "GENERIC_V4"; };
 
-        disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
+        hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
 
         impermanence = {
           enable = true;
