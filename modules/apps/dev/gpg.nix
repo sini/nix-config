@@ -68,6 +68,10 @@
             '';
           };
         };
+
+        home.persistence."/persist".directories = [
+          ".gnupg"
+        ];
       };
   };
 }

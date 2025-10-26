@@ -412,7 +412,6 @@
               "Videos"
 
               # Security/Authentication
-              ".gnupg" # GPG keys and configuration
               ".ssh" # SSH keys and known hosts
               ".local/share/keyrings" # Keyring/password storage
             ];
