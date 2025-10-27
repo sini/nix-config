@@ -3,7 +3,7 @@ let
   user = config.flake.meta.user.username;
 in
 {
-  flake.features.virtualization = {
+  flake.features.libvirt = {
 
     nixos =
       { pkgs, ... }:
