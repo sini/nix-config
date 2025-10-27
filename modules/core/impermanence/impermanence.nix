@@ -101,6 +101,21 @@
           # hideMounts = true: Hides the bind mounts from 'df' and 'mount' output
           # to reduce clutter while maintaining functionality.
 
+          system.activationScripts."var-lib-private-perms" = {
+            # Ensure the systemd private directory has the correct permissions set
+            #
+            # Impermanence will create the outer parent directory and set wrong permissions for it if any
+            # path within is persisted, thus we need to set it back to what systemd expects
+            deps = [
+              "persist-files"
+              "createPersistentStorageDirs"
+            ];
+            text = ''
+              mkdir -p /var/lib/private
+              chmod 0700 /var/lib/private
+            '';
+          };
+
           environment.persistence = {
             # /volatile: Semi-persistent storage
             # ----------------------------------

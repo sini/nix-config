@@ -12,9 +12,6 @@
       systemd.tmpfiles.rules = [
         # cleanup systemd coredumps once a week
         "d /var/lib/systemd/coredump 0755 root root 7d"
-        # Ensure private exists with correct permissions
-        "d /var/lib/private 0700 root root -"
-        "z /var/lib/private 0700 root root -"
       ];
 
       impermanence.ignorePaths = [
