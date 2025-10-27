@@ -127,7 +127,7 @@ writeShellApplication {
       --argjson tang_pins "$(build_tang_array)" \
       --argjson threshold "$TANG_THRESHOLD" \
       '{
-        "t": 1,
+        "t": 2,
         "pins": {
           "tpm2": {},
           "sss": {
