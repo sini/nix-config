@@ -11,7 +11,7 @@
       "stylix"
       "fonts"
 
-      "virtualization"
+      "libvirt"
 
       # Desktop GUI
       "xserver"

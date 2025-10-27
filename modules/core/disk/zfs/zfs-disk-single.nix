@@ -43,6 +43,9 @@
               "Multiple disks found. Please specify hardware.disk.zfs-disk-single.device_id. Found: "
               + builtins.toString disk-labels
             );
+
+        emptySnapshot =
+          name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";
       in
       {
         imports = [ inputs.disko.nixosModules.default ];
@@ -129,7 +132,7 @@
                   options = {
                     mountpoint = "none";
                     canmount = "off";
-                    reservation = "5GiB";
+                    reservation = "10G";
                     "com.sun:auto-snapshot" = "false";
                   };
                 };
@@ -152,7 +155,7 @@
                     compression = "zstd";
                     "com.sun:auto-snapshot" = "true";
                   };
-                  postCreateHook = "zfs snapshot zroot/local/nix@empty";
+                  postCreateHook = emptySnapshot "zroot/local/nix";
                 };
                 "local/home" = {
                   # TODO: Do we need home on a separate dataset if we're doing user impermenance?
@@ -170,14 +173,38 @@
                   options.mountpoint = "legacy";
                   mountpoint = "/persist";
                   options."com.sun:auto-snapshot" = "true";
-                  postCreateHook = "zfs snapshot zroot/local/persist@empty";
+                  postCreateHook = emptySnapshot "zroot/local/persist";
                 };
                 "local/volatile" = {
                   type = "zfs_fs";
                   options.mountpoint = "legacy";
                   mountpoint = "/volatile";
                   options."com.sun:auto-snapshot" = "true";
-                  postCreateHook = "zfs snapshot zroot/local/volatile@empty";
+                  postCreateHook = emptySnapshot "zroot/local/volatile";
+                };
+                "local/containers" = {
+                  type = "zfs_fs";
+                  mountpoint = "/cache/var/lib/containers";
+                  options = {
+                    mountpoint = "legacy";
+                    atime = "off";
+                    recordsize = "128K";
+                    "com.sun:auto-snapshot" = "true";
+                  };
+                  postCreateHook = emptySnapshot "zroot/local/containers";
+                };
+                "local/libvirt-images" = {
+                  type = "zfs_fs";
+                  mountpoint = "/persist/var/lib/libvirt/images";
+                  options = {
+                    mountpoint = "legacy";
+                    atime = "off";
+                    recordsize = "64K";
+                    compression = "lz4";
+                    "com.sun:auto-snapshot" = "true";
+                  };
+                  postCreateHook = emptySnapshot "zroot/local/libvirt-images";
+
                 };
               };
             };
@@ -204,8 +231,8 @@
               fsType = "zfs";
               neededForBoot = true;
             };
-            "/volatile" = {
-              device = "zroot/local/volatile";
+            "/cache" = {
+              device = "zroot/local/cache";
               fsType = "zfs";
               neededForBoot = true;
             };

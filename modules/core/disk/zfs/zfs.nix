@@ -5,6 +5,13 @@
     nixos =
       { pkgs, ... }:
       {
+
+        environment.systemPackages = with pkgs; [
+          lzop
+          mbuffer
+          pv
+        ];
+
         boot.supportedFilesystems.zfs = true;
 
         boot.zfs = {

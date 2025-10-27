@@ -14,7 +14,7 @@
         btrfsEnabled = lib.elem "btrfs" activeFeatures;
 
         # Get the correct persistent storage path for impermanence
-        volatileRoot = config.environment.persistence."/volatile".persistentStoragePath;
+        cacheRoot = config.environment.persistence."/volatile".persistentStoragePath;
       in
       {
         environment.systemPackages = with pkgs; [
@@ -60,12 +60,16 @@
             # .local/share/containers is persistent mount with fuse bindfs
             # so we need to point to the underlying filesystem directly
             (lib.mkIf config.impermanence.enable {
-              rootless_storage_path = "${volatileRoot}$HOME/.local/share/containers/storage";
+              rootless_storage_path = "${cacheRoot}$HOME/.local/share/containers/storage";
             })
 
             # ZFS-specific configuration
             (lib.mkIf zfsEnabled {
               driver = "zfs";
+              options.zfs = {
+                fsname = "zroot/containers";
+                mountopt = "nodev";
+              };
             })
 
             # BTRFS-specific configuration
@@ -81,12 +85,6 @@
             })
           ];
         };
-
-        networking.networkmanager.unmanaged = [
-          "interface-name:veth*"
-          "interface-name:podman*"
-          "interface-name:cni*"
-        ];
 
         # Add 'newuidmap' and 'sh' to the PATH for users' Systemd units.
         # Required for Rootless podman.
