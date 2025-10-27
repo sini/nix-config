@@ -9,7 +9,7 @@
       # "kubernetes"
       # "kubernetes-master"
       # "bgp-spoke"
-      "vault"
+      # "vault"
     ];
     features = [
       "zfs-disk-single"
