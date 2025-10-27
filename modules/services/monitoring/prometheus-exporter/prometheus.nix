@@ -41,7 +41,7 @@
               "wifi"
             ];
             extraFlags = [
-              "--collector.filesystem.mount-points-exclude='^/(persist/|volatile/)?(home|var/lib/private|sys|proc|dev|etc|root|run)($$|/)'"
+              "--collector.filesystem.mount-points-exclude='^/(persist/|cache/)?(home|var/lib/private|sys|proc|dev|etc|root|run)($$|/)'"
               "--collector.filesystem.ignored-fs-types=^(sys|proc|auto)fs$$"
             ];
           };

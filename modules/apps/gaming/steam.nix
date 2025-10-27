@@ -119,7 +119,7 @@
     home =
       { ... }:
       {
-        home.persistence."/volatile".directories = [
+        home.persistence."/cache".directories = [
           {
             directory = ".local/share/Steam";
             method = "symlink";

@@ -74,7 +74,7 @@
         };
       };
 
-      environment.persistence."/volatile".directories = [
+      environment.persistence."/cache".directories = [
         {
           directory = "/var/lib/private/ollama";
           user = "ollama";

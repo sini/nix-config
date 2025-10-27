@@ -136,8 +136,8 @@
                               mountpoint = "/persist";
                               mountOptions = defaultBtrfsOpts;
                             };
-                            "/volatile" = {
-                              mountpoint = "/volatile";
+                            "/cache" = {
+                              mountpoint = "/cache";
                               mountOptions = defaultBtrfsOpts;
                             };
                           }
@@ -158,7 +158,7 @@
           fileSystems."/nix".neededForBoot = true;
           fileSystems."/home".neededForBoot = true;
           fileSystems."/persist".neededForBoot = true;
-          fileSystems."/volatile".neededForBoot = true;
+          fileSystems."/cache".neededForBoot = true;
         };
       };
   };

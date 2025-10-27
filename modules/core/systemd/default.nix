@@ -19,12 +19,12 @@
         "/var/lib/systemd/random-seed"
       ];
 
-      environment.persistence."/volatile".files = [
+      environment.persistence."/cache".files = [
         "/var/lib/lastlog/lastlog2.db"
         "/var/lib/systemd/timesync/clock"
       ];
 
-      environment.persistence."/volatile".directories = [
+      environment.persistence."/cache".directories = [
         "/var/lib/systemd/coredump"
         "/var/lib/systemd/timers"
         "/var/lib/systemd/catalog"

@@ -175,12 +175,12 @@
                   options."com.sun:auto-snapshot" = "true";
                   postCreateHook = emptySnapshot "zroot/local/persist";
                 };
-                "local/volatile" = {
+                "local/cache" = {
                   type = "zfs_fs";
                   options.mountpoint = "legacy";
-                  mountpoint = "/volatile";
+                  mountpoint = "/cache";
                   options."com.sun:auto-snapshot" = "true";
-                  postCreateHook = emptySnapshot "zroot/local/volatile";
+                  postCreateHook = emptySnapshot "zroot/local/cache";
                 };
                 "local/containers" = {
                   type = "zfs_fs";
