@@ -86,7 +86,7 @@ writeShellApplication {
     # Get all hosts with role "server" and extract their first IP address
     mapfile -t TANG_SERVER_IPS < <(
       nix eval --json "$GIT_ROOT#hosts" \
-        --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) roles ipv4; }) hosts' | \
+        --apply "hosts: builtins.mapAttrs (name: host: { inherit (host) roles ipv4; }) (builtins.removeAttrs hosts [\"$HOSTNAME\"])" | \
       jq -r 'to_entries[] | select(.value.roles | contains(["server"])) | .value.ipv4[0]' | \
       sort
     )
@@ -143,6 +143,9 @@ writeShellApplication {
     echo "Encrypting passphrase for $HOSTNAME with Clevis..."
     echo "Output will be written to: $OUTPUT_FILE"
     echo ""
+    echo "CLEVIS_CONFIG="
+    echo "$CLEVIS_CONFIG"
+    echo
 
     # Get passphrase - either decrypt existing or prompt for new
     if [ "$REUSE_PASSPHRASE" = true ]; then
