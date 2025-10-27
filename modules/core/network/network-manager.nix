@@ -17,7 +17,7 @@
 
         systemd.services.NetworkManager-wait-online.enable = false;
 
-        environment.persistence."/volatile".directories = [
+        environment.persistence."/cache".directories = [
           "/etc/NetworkManager/system-connections"
           "/var/lib/NetworkManager"
         ];

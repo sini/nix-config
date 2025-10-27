@@ -43,6 +43,6 @@
       #   extraModules = with pkgs; [ pulseaudio-modules-bt ];
       # };
 
-      environment.persistence."/volatile".directories = [ "/var/lib/bluetooth" ];
+      environment.persistence."/cache".directories = [ "/var/lib/bluetooth" ];
     };
 }

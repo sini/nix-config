@@ -14,7 +14,7 @@
         btrfsEnabled = lib.elem "btrfs" activeFeatures;
 
         # Get the correct persistent storage path for impermanence
-        cacheRoot = config.environment.persistence."/volatile".persistentStoragePath;
+        cacheRoot = config.environment.persistence."/cache".persistentStoragePath;
       in
       {
         environment.systemPackages = with pkgs; [
@@ -95,7 +95,7 @@
         # Allow non-root containers to access lower port numbers
         boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
 
-        environment.persistence."/volatile".directories = [
+        environment.persistence."/cache".directories = [
           "/var/lib/cni"
           "/var/lib/containers"
         ];
@@ -104,7 +104,7 @@
     home =
       { ... }:
       {
-        home.persistence."/volatile".directories = [
+        home.persistence."/cache".directories = [
           ".local/share/containers"
         ];
       };

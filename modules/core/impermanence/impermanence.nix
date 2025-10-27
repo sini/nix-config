@@ -5,11 +5,11 @@
   # This module implements an impermanent root filesystem pattern where the root
   # and optionally home directories are reset to a clean state on every boot.
   # State that needs to persist is explicitly declared and stored in separate
-  # persistent directories (/persist and /volatile).
+  # persistent directories (/persist and /cache).
   #
   # Architecture:
   # - /persist: Long-term persistent data (configuration, SSH keys, user files)
-  # - /volatile: Semi-persistent data that can be deleted (cache, downloads)
+  # - /cache: Semi-persistent data that can be deleted (cache, downloads)
   # - /: Ephemeral root that gets wiped on boot, returning to a blank state
   #
   # This approach provides:
@@ -65,7 +65,7 @@
             description = ''
               Enable root rollback on boot. When enabled, the root filesystem
               is reset to a blank snapshot on every boot, effectively wiping
-              all state not stored in /persist or /volatile.
+              all state not stored in /persist or /cache.
             '';
           };
           wipeHomeOnBoot = lib.mkOption {
@@ -117,15 +117,15 @@
           };
 
           environment.persistence = {
-            # /volatile: Semi-persistent storage
+            # /cache: Semi-persistent storage
             # ----------------------------------
             # Data here persists across reboots but is considered "safe to delete".
             # Typically used for caches, temporary state, and system-generated data.
-            "/volatile" = {
+            "/cache" = {
               enable = cfg.enable;
               # TODO: Remove once we kill legacyFs support
-              # Mount in persist/volatile if using legacy disk config
-              persistentStoragePath = if legacyFs then "/persist/volatile" else "/volatile";
+              # Mount in persist/cache if using legacy disk config
+              persistentStoragePath = if legacyFs then "/persist/cache" else "/cache";
               hideMounts = true;
               directories = [
                 "/var/lib/nixos" # NixOS state (user/group IDs, etc.)
@@ -308,7 +308,7 @@
           systemd = {
             # Automatic Home Directory Creation
             # ==================================
-            # Ensure user home directories exist in both /persist and /volatile
+            # Ensure user home directories exist in both /persist and /cache
             # before they're needed. systemd-tmpfiles creates these directories
             # with correct ownership and permissions during early boot.
             #
@@ -326,7 +326,7 @@
                         mode = user.homeMode;
                       };
                     };
-                    "${config.environment.persistence."/volatile".persistentStoragePath}/${user.home}" = {
+                    "${config.environment.persistence."/cache".persistentStoragePath}/${user.home}" = {
                       d = {
                         group = user.group;
                         user = user.name;
@@ -390,7 +390,7 @@
     #
     # The configuration is split between:
     # - /persist: Important user data (documents, SSH keys, GPG keys)
-    # - /volatile: Temporary user data (downloads, caches)
+    # - /cache: Temporary user data (downloads, caches)
     home =
       {
         config,
@@ -402,7 +402,7 @@
         # Get relative home path (e.g., "home/username" from "/home/username")
         relHome = lib.removePrefix "/" config.home.homeDirectory;
         persistRoot = osConfig.environment.persistence."/persist".persistentStoragePath;
-        volatileRoot = osConfig.environment.persistence."/volatile".persistentStoragePath;
+        cacheRoot = osConfig.environment.persistence."/cache".persistentStoragePath;
       in
       {
         imports = [
@@ -435,12 +435,12 @@
             allowOther = true;
           };
 
-          # /volatile: Temporary user data
+          # /cache: Temporary user data
           # ------------------------------
           # Data that's useful to keep but can be regenerated or is not critical.
-          "/volatile" = {
+          "/cache" = {
             enable = osConfig.impermanence.enable;
-            persistentStoragePath = "${volatileRoot}/${relHome}";
+            persistentStoragePath = "${cacheRoot}/${relHome}";
             directories = [
               # Regenerable data
               "Downloads" # Downloads folder
