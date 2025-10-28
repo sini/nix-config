@@ -87,7 +87,7 @@ writeShellApplication {
     mapfile -t TANG_SERVER_IPS < <(
       nix eval --json "$GIT_ROOT#hosts" \
         --apply "hosts: builtins.mapAttrs (name: host: { inherit (host) roles ipv4; }) (builtins.removeAttrs hosts [\"$HOSTNAME\"])" | \
-      jq -r 'to_entries[] | select(.value.roles | contains(["server"])) | .value.ipv4[0]' | \
+      jq -r 'to_entries[] | select(.value.roles | contains(["unlock"])) | .value.ipv4[0]' | \
       sort
     )
 

@@ -6,6 +6,7 @@
     environment = "prod";
     roles = [
       "server"
+      "unlock"
       # "bgp-hub"
       # "inference"
       "metrics-ingester"
