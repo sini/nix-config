@@ -41,6 +41,7 @@
           autosuggestion.enable = true;
           enableCompletion = true;
           completionInit = "autoload -U compinit && compinit -i";
+          defaultKeymap = "emacs";
           autocd = true;
           history = {
             path = # TODO: Remove this on next release update
