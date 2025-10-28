@@ -21,7 +21,8 @@
           availableKernelModules = [
             "r8169" # Host: surge, burst, pulse
             "mlx4_core"
-            "mlx4_en" # Hosts: uplink, cortex
+            "mlx4_en" # Hosts: uplink
+            "atlantic" # Hosts: cortex
             "bridge"
             "bonding"
             "8021q"
