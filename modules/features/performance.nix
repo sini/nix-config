@@ -2,6 +2,10 @@
   flake.features.performance.nixos =
     { pkgs, lib, ... }:
     {
+      boot.kernelModules = [
+        "ntsync"
+      ];
+
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
       services = {
         irqbalance.enable = true;
@@ -68,6 +72,13 @@
 
         # TCP Enable ECN Negotiation for both outgoing and incoming connections
         "net.ipv4.tcp_ecn" = 1;
+
+        # use TCP BBR has significantly increased throughput and reduced latency for connections
+        "net.ipv4.tcp_congestion_control" = "bbr";
+
+        # TODO: Look into this option
+        # https://wiki.defect.ch/os/linux/kernel-tuning suggests its no longer required with bbr
+        # "net.core.default_qdisc" = "fq";
 
         # Increase netdev receive queue
         # May help prevent losing packets

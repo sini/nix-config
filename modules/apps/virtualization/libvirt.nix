@@ -30,6 +30,19 @@ in
           "hugepagesz=2M" # Configure huge page size as 2MB
           "transparent_hugepage=never" # Disable transparent huge pages
           "mem_sleep_default=deep" # Set default sleep mode to deep sleep
+
+          # TODO: Do these belong in this module?
+          # ACPI & Power Management
+          "acpi_osi=Linux" # Set ACPI OS interface to Linux
+          "acpi=force" # Force ACPI
+          "acpi_enforce_resources=lax"
+
+          # Performance & Security
+          "mitigations=off" # Disable CPU vulnerabilities mitigations (security trade-off)
+          "nowatchdog" # Disable watchdog timer
+          "nmi_watchdog=0" # Disable NMI watchdog
+          "split_lock_detect=off" # Disable split lock detection
+          "pcie_aspm=off" # Disable PCIe Active State Power Management
         ];
 
         # Install necessary packages
