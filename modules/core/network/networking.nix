@@ -273,6 +273,8 @@
           };
         };
 
+        systemd.services."systemd-networkd-persistent-storage".enable = false;
+
         systemd.network = {
           enable = true;
           wait-online.enable = false;
