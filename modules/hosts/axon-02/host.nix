@@ -6,6 +6,7 @@
     environment = "prod";
     roles = [
       "server"
+      "unlock"
       # "kubernetes"
       # "bgp-spoke"
       # "vault"

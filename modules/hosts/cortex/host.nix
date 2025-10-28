@@ -15,6 +15,7 @@
     features = [
       "cpu-amd"
       "gpu-amd"
+      "network-boot"
       # TODO: cuda and rocm don't play well together, create a new microvm for cuda
       #"gpu-nvidia"
       #"gpu-nvidia-prime"
