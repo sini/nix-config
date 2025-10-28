@@ -87,12 +87,12 @@
         options.impermanence = with lib.types; {
           enable = lib.mkOption {
             type = types.bool;
-            default = false;
+            default = true;
             description = "Enable impermanence features.";
           };
           wipeRootOnBoot = lib.mkOption {
             type = types.bool;
-            default = false;
+            default = true;
             description = ''
               Enable root rollback on boot. When enabled, the root filesystem
               is reset to a blank snapshot on every boot, effectively wiping
@@ -101,7 +101,7 @@
           };
           wipeHomeOnBoot = lib.mkOption {
             type = types.bool;
-            default = false;
+            default = true;
             description = ''
               Enable home rollback on boot. When enabled, /home is reset to a
               blank snapshot on every boot. Use with caution - ensure all
