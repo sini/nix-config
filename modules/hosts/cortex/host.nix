@@ -76,11 +76,11 @@
           }
         ];
 
-        # impermanence = {
-        #   enable = true;
-        #   wipeRootOnBoot = true;
-        #   wipeHomeOnBoot = true;
-        # };
+        impermanence = {
+          #   enable = true;
+          wipeRootOnBoot = false;
+          wipeHomeOnBoot = false;
+        };
 
         system.stateVersion = "25.05";
       };
