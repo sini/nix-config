@@ -51,7 +51,38 @@
       {
         imports = [
           inputs.impermanence.nixosModules.impermanence
-        ];
+        ]
+        ++ (
+          # Taken from: https://github.com/oddlama/nix-config/blob/804336241eed5d3a84efe8f375ae74c6625a62f0/config/impermanence.nix#L4
+          # For each user that has a home-manager config, merge the locally defined
+          # persistence options that we define below.
+          let
+            mkUserFiles = map (
+              x: { parentDirectory.mode = "700"; } // (if isAttrs x then x else { file = x; })
+            );
+            mkUserDirs = map (x: { mode = "700"; } // (if isAttrs x then x else { directory = x; }));
+          in
+          [
+            {
+              environment.persistence = mkMerge (
+                flip map (attrNames config.home-manager.users) (
+                  user:
+                  let
+                    hmUserCfg = config.home-manager.users.${user};
+                  in
+                  flip mapAttrs hmUserCfg.home.persistence (
+                    _: sourceCfg: {
+                      users.${user} = {
+                        files = mkUserFiles sourceCfg.files;
+                        directories = mkUserDirs sourceCfg.directories;
+                      };
+                    }
+                  )
+                )
+              );
+            }
+          ]
+        );
 
         options.impermanence = with lib.types; {
           enable = lib.mkOption {
@@ -92,6 +123,32 @@
         };
 
         config = {
+          home-manager.sharedModules = [
+            {
+              options.home.persistence = mkOption {
+                description = "Additional persistence config for the given source path";
+                default = { };
+                type = types.attrsOf (
+                  types.submodule {
+                    options = {
+                      files = mkOption {
+                        description = "Additional files to persist via NixOS impermanence.";
+                        type = types.listOf (types.either types.attrs types.str);
+                        default = [ ];
+                      };
+
+                      directories = mkOption {
+                        description = "Additional directories to persist via NixOS impermanence.";
+                        type = types.listOf (types.either types.attrs types.str);
+                        default = [ ];
+                      };
+                    };
+                  }
+                );
+              };
+            }
+          ];
+
           # Persistence Configuration
           # =========================
           # Define what files and directories should persist across reboots.
@@ -391,67 +448,42 @@
     # The configuration is split between:
     # - /persist: Important user data (documents, SSH keys, GPG keys)
     # - /cache: Temporary user data (downloads, caches)
-    home =
-      {
-        config,
-        osConfig,
-        lib,
-        ...
-      }:
-      let
-        # Get relative home path (e.g., "home/username" from "/home/username")
-        relHome = lib.removePrefix "/" config.home.homeDirectory;
-        persistRoot = osConfig.environment.persistence."/persist".persistentStoragePath;
-        cacheRoot = osConfig.environment.persistence."/cache".persistentStoragePath;
-      in
-      {
-        imports = [
-          inputs.impermanence.homeManagerModules.impermanence
-        ];
+    home = {
+      home.persistence = {
+        # /persist: Long-term user data
+        # -----------------------------
+        # Files and directories here are backed up and considered important.
+        "/persist" = {
+          directories = [
+            # XDG user directories - standard user folders
+            "Desktop"
+            "Documents"
+            "Music"
+            "Pictures"
+            "Public"
+            "Templates"
+            "Videos"
 
-        home.persistence = {
-          # /persist: Long-term user data
-          # -----------------------------
-          # Files and directories here are backed up and considered important.
-          "/persist" = {
-            enable = osConfig.impermanence.enable;
-            persistentStoragePath = "${persistRoot}/${relHome}";
-            directories = [
-              # XDG user directories - standard user folders
-              "Desktop"
-              "Documents"
-              "Music"
-              "Pictures"
-              "Public"
-              "Templates"
-              "Videos"
+            # Security/Authentication
+            ".ssh" # SSH keys and known hosts
+            ".local/share/keyrings" # Keyring/password storage
+          ];
 
-              # Security/Authentication
-              ".ssh" # SSH keys and known hosts
-              ".local/share/keyrings" # Keyring/password storage
-            ];
-            files = [ ];
-            # Allow other users to access these mounts (needed for multi-user systems)
-            allowOther = true;
-          };
+        };
 
-          # /cache: Temporary user data
-          # ------------------------------
-          # Data that's useful to keep but can be regenerated or is not critical.
-          "/cache" = {
-            enable = osConfig.impermanence.enable;
-            persistentStoragePath = "${cacheRoot}/${relHome}";
-            directories = [
-              # Regenerable data
-              "Downloads" # Downloads folder
-              ".local/share/direnv" # Direnv cache (can be rebuilt)
-              ".local/share/nix" # Nix settins and such
-              ".cache" # Application caches (can be regenerated)
-            ];
-            files = [ ];
-            allowOther = true;
-          };
+        # /cache: Temporary user data
+        # ------------------------------
+        # Data that's useful to keep but can be regenerated or is not critical.
+        "/cache" = {
+          directories = [
+            # Regenerable data
+            "Downloads" # Downloads folder
+            ".local/share/direnv" # Direnv cache (can be rebuilt)
+            ".local/share/nix" # Nix settins and such
+            ".cache" # Application caches (can be regenerated)
+          ];
         };
       };
+    };
   };
 }

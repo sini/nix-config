@@ -120,10 +120,7 @@
       { ... }:
       {
         home.persistence."/cache".directories = [
-          {
-            directory = ".local/share/Steam";
-            method = "symlink";
-          }
+          ".local/share/Steam"
         ];
       };
   };
