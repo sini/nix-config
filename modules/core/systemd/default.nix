@@ -28,6 +28,12 @@
         "/var/lib/systemd/coredump"
         "/var/lib/systemd/timers"
         "/var/lib/systemd/catalog"
+        {
+          directory = "/var/lib/systemd/network";
+          mode = "0755";
+          user = "systemd-network";
+          group = "systemd-network";
+        }
       ]
       ++
         # If using legacy disk-configuration, don't persist logs as they are on their own subvolume
