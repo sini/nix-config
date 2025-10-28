@@ -6,13 +6,65 @@ in
   flake.features.libvirt = {
 
     nixos =
-      { pkgs, ... }:
+      {
+        lib,
+        pkgs,
+        activeFeatures,
+        ...
+      }:
+      let
+        zfsEnabled = lib.elem "zfs" activeFeatures;
+
+        localZfsStorageXml = pkgs.writeText "zfs-local.xml" ''
+          <pool type="zfs">
+            <name>zfs-local</name>
+            <uuid>6872ee81-5f1e-4941-b6a9-d7286a31a930</uuid>
+            <capacity unit="bytes">0</capacity>
+            <allocation unit="bytes">0</allocation>
+            <available unit="bytes">0</available>
+            <source>
+              <name>zpool/local/libvirt-images</name>
+            </source>
+            <target>
+              <path>/dev/zvol/zpool/local/libvirt-images</path>
+            </target>
+          </pool>
+        '';
+
+        primaryNetwork = pkgs.writeText "default-network.xml" ''
+          <network>
+            <name>default</name>
+            <uuid>d5ee6d97-4d4b-4e05-87bb-69b682182cf4</uuid>
+            <forward mode='nat'>
+              <nat>
+                <port start='1024' end='65535'/>
+              </nat>
+            </forward>
+            <bridge name='virbr0' stp='on' delay='0'/>
+            <ip address='192.168.122.1' netmask='255.255.255.0'>
+              <dhcp>
+                <range start='192.168.122.2' end='192.168.122.254'/>
+              </dhcp>
+            </ip>
+          </network>
+        '';
+
+        primarybridgeNetwork = pkgs.writeText "default-bridge.xml" ''
+          <network>
+            <name>default-bridge</name>
+            <uuid>6dea79f2-1512-40c6-a2a3-ed0b15a9c72d</uuid>
+            <forward mode='bridge'/>
+            <bridge name='virbr1'/>
+          </network>
+        '';
+      in
       {
 
         boot.kernelModules = [
           "kvm"
           "vhost-net"
         ];
+
         # Sysctl parameters for virtualization
         boot.kernel.sysctl = {
           # Network performance
@@ -74,8 +126,13 @@ in
           "d /dev/hugepages 1770 root kvm -"
           "d /dev/shm 1777 root root -"
           "f /dev/shm/looking-glass 0660 ${user} kvm -"
-        ];
 
+          "L+ /persist/var/lib/libvirt/qemu/networks/default.xml - - - - ${primaryNetwork}"
+          "L+ /persist/var/lib/libvirt/qemu/networks/default-bridge.xml - - - - ${primarybridgeNetwork}"
+        ]
+        ++ lib.optionals zfsEnabled [
+          "L+ /persist/var/lib/libvirt/storage/zfs-local.xml - - - - ${localZfsStorageXml}"
+        ];
         fileSystems."/dev/hugepages" = {
           device = "hugetlbfs";
           fsType = "hugetlbfs";
@@ -113,63 +170,32 @@ in
           };
         };
 
-        environment.etc."qemu/bridge.conf" = {
-          user = "root";
-          group = "qemu";
-          mode = "640";
-          text = "allow all";
-        };
+        # systemd.services = {
+        #   # Custom libvirt network setup
+        #   libvirt-networks = {
+        #     description = "Setup libvirt networks";
+        #     after = [ "libvirtd.service" ];
+        #     wantedBy = [ "multi-user.target" ];
+        #     serviceConfig = {
+        #       Type = "oneshot";
+        #       RemainAfterExit = true;
+        #     };
+        #     script = ''
+        #       # Wait for libvirtd to be ready
+        #       sleep 5
 
-        # Don't manage tap devices with systemd-networkd
-        systemd.network.networks."06-tap".extraConfig = ''
-          [Match]
-          Name = tap*
+        #       # Define and start default network if it doesn't exist
+        #       if ! ${pkgs.libvirt}/bin/virsh net-list --all | grep -q "default"; then
+        #         ${pkgs.libvirt}/bin/virsh net-define ${primaryNetwork}
+        #       fi
 
-          [Link]
-          Unmanaged = yes
-        '';
+        #       # Auto-start default network
+        #       ${pkgs.libvirt}/bin/virsh net-autostart default 2>/dev/null || true
+        #       ${pkgs.libvirt}/bin/virsh net-start default 2>/dev/null || true
+        #     '';
+        #   };
+        # };
 
-        systemd.services = {
-          # Custom libvirt network setup
-          libvirt-networks = {
-            description = "Setup libvirt networks";
-            after = [ "libvirtd.service" ];
-            wantedBy = [ "multi-user.target" ];
-            serviceConfig = {
-              Type = "oneshot";
-              RemainAfterExit = true;
-            };
-            script = ''
-              # Wait for libvirtd to be ready
-              sleep 5
-
-              # Define and start default network if it doesn't exist
-              if ! ${pkgs.libvirt}/bin/virsh net-list --all | grep -q "default"; then
-                ${pkgs.libvirt}/bin/virsh net-define ${pkgs.writeText "default-network.xml" ''
-                  <network>
-                    <name>default</name>
-                    <uuid>d5ee6d97-4d4b-4e05-87bb-69b682182cf4</uuid>
-                    <forward mode='nat'>
-                      <nat>
-                        <port start='1024' end='65535'/>
-                      </nat>
-                    </forward>
-                    <bridge name='virbr0' stp='on' delay='0'/>
-                    <ip address='192.168.122.1' netmask='255.255.255.0'>
-                      <dhcp>
-                        <range start='192.168.122.2' end='192.168.122.254'/>
-                      </dhcp>
-                    </ip>
-                  </network>
-                ''}
-              fi
-
-              # Auto-start default network
-              ${pkgs.libvirt}/bin/virsh net-autostart default 2>/dev/null || true
-              ${pkgs.libvirt}/bin/virsh net-start default 2>/dev/null || true
-            '';
-          };
-        };
         services = {
           qemuGuest.enable = true;
           spice-vdagentd.enable = true;
@@ -184,7 +210,6 @@ in
             enable = true;
             allowedBridges = [
               "br0"
-              "nm-bridge"
               "virbr0"
               "virbr1"
             ];
