@@ -23,10 +23,10 @@ in
             <allocation unit="bytes">0</allocation>
             <available unit="bytes">0</available>
             <source>
-              <name>zpool/local/libvirt-images</name>
+              <name>zroot/local/libvirt-images</name>
             </source>
             <target>
-              <path>/dev/zvol/zpool/local/libvirt-images</path>
+              <path>/dev/zvol/zroot/local/libvirt-images</path>
             </target>
           </pool>
         '';
@@ -126,13 +126,8 @@ in
           "d /dev/hugepages 1770 root kvm -"
           "d /dev/shm 1777 root root -"
           "f /dev/shm/looking-glass 0660 ${user} kvm -"
-
-          "L+ /persist/var/lib/libvirt/qemu/networks/default.xml - - - - ${primaryNetwork}"
-          "L+ /persist/var/lib/libvirt/qemu/networks/default-bridge.xml - - - - ${primarybridgeNetwork}"
-        ]
-        ++ lib.optionals zfsEnabled [
-          "L+ /persist/var/lib/libvirt/storage/zfs-local.xml - - - - ${localZfsStorageXml}"
         ];
+
         fileSystems."/dev/hugepages" = {
           device = "hugetlbfs";
           fsType = "hugetlbfs";
@@ -170,31 +165,64 @@ in
           };
         };
 
-        # systemd.services = {
-        #   # Custom libvirt network setup
-        #   libvirt-networks = {
-        #     description = "Setup libvirt networks";
-        #     after = [ "libvirtd.service" ];
-        #     wantedBy = [ "multi-user.target" ];
-        #     serviceConfig = {
-        #       Type = "oneshot";
-        #       RemainAfterExit = true;
-        #     };
-        #     script = ''
-        #       # Wait for libvirtd to be ready
-        #       sleep 5
+        systemd.services = {
+          # Custom libvirt network setup
+          libvirt-networks = {
+            description = "Setup libvirt networks";
+            after = [ "libvirtd.service" ];
+            wantedBy = [ "multi-user.target" ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+            };
+            script = ''
+              # Wait for libvirtd to be ready
+              sleep 5
 
-        #       # Define and start default network if it doesn't exist
-        #       if ! ${pkgs.libvirt}/bin/virsh net-list --all | grep -q "default"; then
-        #         ${pkgs.libvirt}/bin/virsh net-define ${primaryNetwork}
-        #       fi
+              # Define and start default network if it doesn't exist
+              if ! ${pkgs.libvirt}/bin/virsh net-list --all | grep -q "default "; then
+                ${pkgs.libvirt}/bin/virsh net-define ${primaryNetwork}
+              fi
 
-        #       # Auto-start default network
-        #       ${pkgs.libvirt}/bin/virsh net-autostart default 2>/dev/null || true
-        #       ${pkgs.libvirt}/bin/virsh net-start default 2>/dev/null || true
-        #     '';
-        #   };
-        # };
+              # Define and start default network if it doesn't exist
+              if ! ${pkgs.libvirt}/bin/virsh net-list --all | grep -q "default-bridge"; then
+                ${pkgs.libvirt}/bin/virsh net-define ${primarybridgeNetwork}
+              fi
+
+              # Auto-start default network
+              ${pkgs.libvirt}/bin/virsh net-autostart default 2>/dev/null || true
+              ${pkgs.libvirt}/bin/virsh net-start default 2>/dev/null || true
+
+              # Auto-start default-bridge network
+              ${pkgs.libvirt}/bin/virsh net-autostart default-bridge 2>/dev/null || true
+              ${pkgs.libvirt}/bin/virsh net-start default-bridge 2>/dev/null || true
+            '';
+          };
+          # Storage pool setup
+          libvirt-storage-pools = lib.mkIf zfsEnabled {
+            description = "Setup libvirt storage pools";
+            after = [ "libvirtd.service" ];
+            wantedBy = [ "multi-user.target" ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+            };
+            script = ''
+              # Wait for libvirtd to be ready
+              sleep 5
+
+
+              # Define storage pool if it doesn't exist
+              if ! ${pkgs.libvirt}/bin/virsh pool-list --all | grep -q "zfs-local"; then
+                ${pkgs.libvirt}/bin/virsh pool-define ${localZfsStorageXml}
+              fi
+
+              # Build and start storage pool
+              ${pkgs.libvirt}/bin/virsh pool-autostart zfs-local 2>/dev/null || true
+              ${pkgs.libvirt}/bin/virsh pool-start zfs-local 2>/dev/null || true
+            '';
+          };
+        };
 
         services = {
           qemuGuest.enable = true;
