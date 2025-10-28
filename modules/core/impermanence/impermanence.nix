@@ -158,7 +158,7 @@
           # hideMounts = true: Hides the bind mounts from 'df' and 'mount' output
           # to reduce clutter while maintaining functionality.
 
-          system.activationScripts."var-lib-private-perms" = {
+          system.activationScripts."var-lib-private-perms" = lib.mkIf config.impermanence.enable {
             # Ensure the systemd private directory has the correct permissions set
             #
             # Impermanence will create the outer parent directory and set wrong permissions for it if any
