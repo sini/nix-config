@@ -1,5 +1,74 @@
+##################################################
+# NOTES:
+#
+#   For YubiKey first-time setup;
+#
+#     - Set the PINs for user and admin.
+#
+#       gpg --card-edit
+#       admin
+#       passwd
+#
+#     - Enable touch settings
+#
+#       ykman openpgp keys set-touch aut on
+#       ykman openpgp keys set-touch sig on
+#       ykman openpgp keys set-touch enc on
+#
+#     - Check the status
+#
+#       gpg --card-status
+#
+#   For importing from YubiKey;
+#
+#     - Import the keys
+#
+#       gpg --card-edit
+#       fetch
+#
+#   Or;
+#
+#     gpg --import ./secrets/pub/*.asc
+#
+#
+#   To Test GPG;
+#
+#     echo "This is a test message for YubiKey signing." | gpg --sign --armor --output test.sig
+#     gpg --verify test.sig
+#
+##################################################
+{ rootPath, lib, ... }:
+let
+  # Holds a concatenated list of all GPG public keys in the secrets/keys directory.
+  gpg-public-keys =
+    let
+      keysDir = rootPath + ".secrets/pub";
+      findAscFiles =
+        dir:
+        let
+          entries = builtins.readDir dir;
+          files = lib.mapAttrsToList (
+            name: type:
+            let
+              path = dir + "/${name}";
+            in
+            if type == "regular" && lib.hasSuffix ".asc" name then
+              [ path ]
+            else if type == "directory" then
+              findAscFiles path
+            else
+              [ ]
+          ) entries;
+        in
+        lib.flatten files;
+      # Get all .asc files and read their contents
+      ascFiles = findAscFiles keysDir;
+      readFiles = map (path: builtins.readFile path) ascFiles;
+    in
+    lib.concatStringsSep "\n\n" readFiles;
+in
 {
-  # TODO: Move to a yubikey module
+
   flake.features.gpg = {
     nixos = {
       services.pcscd.enable = true;
@@ -8,6 +77,7 @@
 
     home =
       {
+        config,
         pkgs,
         ...
       }:
@@ -15,8 +85,13 @@
         programs.gpg = {
           enable = true;
 
-          # https://support.yubico.com/hc/en-us/articles/4819584884124-Resolving-GPG-s-CCID-conflicts
+          publicKeys = [ { source = "${config.xdg.configFile.pubkeys.source}"; } ];
+
+          # PCSCD
+          # Smart Card Daemon settings.
+          # https://www.gnupg.org/documentation/manuals/gnupg/Scdaemon-Options.html
           scdaemonSettings = {
+            # Disable the Internal CCID driver and rely on PC/SCD instead.
             disable-ccid = true;
           };
 
@@ -69,6 +144,12 @@
           };
         };
 
+        xdg.configFile = {
+          "pubkeys" = {
+            target = "nixpkgs/files/pubkeys.txt";
+            text = gpg-public-keys;
+          };
+        };
         home.persistence."/persist".directories = [
           ".gnupg"
         ];
