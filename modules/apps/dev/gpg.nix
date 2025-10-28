@@ -37,36 +37,36 @@
 #     gpg --verify test.sig
 #
 ##################################################
-{ rootPath, lib, ... }:
-let
-  # Holds a concatenated list of all GPG public keys in the secrets/keys directory.
-  gpg-public-keys =
-    let
-      keysDir = rootPath + ".secrets/pub";
-      findAscFiles =
-        dir:
-        let
-          entries = builtins.readDir dir;
-          files = lib.mapAttrsToList (
-            name: type:
-            let
-              path = dir + "/${name}";
-            in
-            if type == "regular" && lib.hasSuffix ".asc" name then
-              [ path ]
-            else if type == "directory" then
-              findAscFiles path
-            else
-              [ ]
-          ) entries;
-        in
-        lib.flatten files;
-      # Get all .asc files and read their contents
-      ascFiles = findAscFiles keysDir;
-      readFiles = map (path: builtins.readFile path) ascFiles;
-    in
-    lib.concatStringsSep "\n\n" readFiles;
-in
+# { rootPath, lib, ... }:
+# let
+#   # Holds a concatenated list of all GPG public keys in the secrets/keys directory.
+#   gpg-public-keys =
+#     let
+#       keysDir = rootPath + ".secrets/pub";
+#       findAscFiles =
+#         dir:
+#         let
+#           entries = builtins.readDir dir;
+#           files = lib.mapAttrsToList (
+#             name: type:
+#             let
+#               path = dir + "/${name}";
+#             in
+#             if type == "regular" && lib.hasSuffix ".asc" name then
+#               [ path ]
+#             else if type == "directory" then
+#               findAscFiles path
+#             else
+#               [ ]
+#           ) entries;
+#         in
+#         lib.flatten files;
+#       # Get all .asc files and read their contents
+#       ascFiles = findAscFiles keysDir;
+#       readFiles = map (path: builtins.readFile path) ascFiles;
+#     in
+#     lib.concatStringsSep "\n\n" readFiles;
+# in
 {
 
   flake.features.gpg = {
@@ -77,7 +77,6 @@ in
 
     home =
       {
-        config,
         pkgs,
         ...
       }:
@@ -85,7 +84,7 @@ in
         programs.gpg = {
           enable = true;
 
-          publicKeys = [ { source = "${config.xdg.configFile.pubkeys.source}"; } ];
+          # publicKeys = [ { source = "${config.xdg.configFile.pubkeys.source}"; } ];
 
           # PCSCD
           # Smart Card Daemon settings.
@@ -144,12 +143,12 @@ in
           };
         };
 
-        xdg.configFile = {
-          "pubkeys" = {
-            target = "nixpkgs/files/pubkeys.txt";
-            text = gpg-public-keys;
-          };
-        };
+        # xdg.configFile = {
+        #   "pubkeys" = {
+        #     target = "nixpkgs/files/pubkeys.txt";
+        #     text = gpg-public-keys;
+        #   };
+        # };
         home.persistence."/persist".directories = [
           ".gnupg"
         ];
