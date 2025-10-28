@@ -1,3 +1,21 @@
+{ config, lib, ... }:
+let
+  # Generate SSH matchBlocks for each host with agent forwarding
+  hostMatchBlocks =
+    config.flake.hosts
+    |> lib.attrsets.mapAttrs' (
+      hostname: hostConfig:
+      let
+        targetEnv = config.flake.environments.${hostConfig.environment};
+        fqdn = "${hostname}.${targetEnv.domain}";
+      in
+      lib.attrsets.nameValuePair hostname {
+        hostname = "${fqdn}";
+        forwardAgent = true;
+      }
+    );
+
+in
 {
   flake.features.ssh.home = {
     programs.ssh = {
@@ -21,12 +39,8 @@
           hostname = "github.com";
           user = "git";
         };
-        "10.10.*" = {
-          # "allow to securely use local SSH agent to authenticate on the remote machine."
-          # "It has the same effect as adding cli option `ssh -A user@host`"
-          forwardAgent = true;
-        };
-      };
+      }
+      // hostMatchBlocks;
     };
   };
 }
