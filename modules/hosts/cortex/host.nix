@@ -80,7 +80,7 @@
 
         impermanence = {
           #   enable = true;
-          wipeRootOnBoot = false;
+          wipeRootOnBoot = true;
           wipeHomeOnBoot = false;
         };
 
