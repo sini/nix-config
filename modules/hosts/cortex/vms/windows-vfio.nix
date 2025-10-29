@@ -96,6 +96,7 @@ flakeConfig: {
                           let CPU_COUNT+=1
                         done
                         ${systemctl} stop scx.service
+                        ${systemctl} start irqbalance.service
 
                         # Prepare kernel memory for gaming VM hugepages
 
@@ -114,16 +115,15 @@ flakeConfig: {
                         # Disable split_lock mitigations
                         ${sysctl} kernel.split_lock_mitigate=0
 
+                        # Only schedule Linux stuff on the second CCD (AMD Ryzen 9950X3D)
+                        ${systemctl} set-property --runtime -- init.scope AllowedCPUs=8-15,24-31
+                        ${systemctl} set-property --runtime -- system.slice AllowedCPUs=8-15,24-31
+                        ${systemctl} set-property --runtime -- user.slice AllowedCPUs=8-15,24-31
+
                       elif [ "$event" = "started" ]; then
                         # Renice VM to -1
                         ${renice} -1 -g $vmpgid
 
-                        # Only schedule Linux stuff on the second CCD (AMD Ryzen 9950X3D)
-                        ${systemctl} set-property --runtime -- init.scope AllowedCPUs=8-15,24-31
-                        ${systemctl} set-property --runtime -- kubepods.scope AllowedCPUs=8-15,24-31
-                        ${systemctl} set-property --runtime -- kubernetes.scope AllowedCPUs=8-15,24-31
-                        ${systemctl} set-property --runtime -- system.slice AllowedCPUs=8-15,24-31
-                        ${systemctl} set-property --runtime -- user.slice AllowedCPUs=8-15,24-31
 
                       elif [ "$event" = "release" ]; then
                         # shutoff-reason is passed as fourth argument
@@ -132,14 +132,12 @@ flakeConfig: {
                         ${virsh} allocpages 2M 0
 
                         # Restore split_lock mitigations
-                        sysctl kernel.split_lock_mitigate=1
+                        ${sysctl} kernel.split_lock_mitigate=1
 
                         # Reset scheduling back to use the entire CPU
-                        ${systemctl} set-property --runtime -- init.scope AllowedCPUs=0-31
-                        # ${systemctl} set-property --runtime -- kubepods.scope AllowedCPUs=0-31
-                        # ${systemctl} set-property --runtime -- kubernetes.scope AllowedCPUs=0-31
-                        ${systemctl} set-property --runtime -- system.slice AllowedCPUs=0-31
-                        ${systemctl} set-property --runtime -- user.slice AllowedCPUs=0-31
+                        systemctl set-property --runtime -- init.scope AllowedCPUs=0-31
+                        systemctl  set-property --runtime -- system.slice AllowedCPUs=0-31
+                        systemctl  set-property --runtime -- user.slice AllowedCPUs=0-31
 
 
                         # Restore SCX scheduler
@@ -151,9 +149,11 @@ flakeConfig: {
                           let CPU_COUNT+=1
                         done
                         ${systemctl} start scx.service
+                        ${systemctl} start irqbalance.service
 
                         # Restore ollama cuda VM...
                         ${systemctl} start microvm@cuda.service
+
 
                       fi
                     '';
