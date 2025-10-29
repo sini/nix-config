@@ -395,7 +395,7 @@
               in
               lib.mkMerge (map mkHomePersist users);
           }
-          // lib.optionalAttrs zfsEnabled {
+          // lib.optionalAttrs (zfsEnabled && cfg.wipeRootOnBoot && cfg.wipeHomeOnBoot) {
             # ZFS Shutdown Hook
             # =================
             # Before shutdown, create recovery snapshots and rollback to empty state.
