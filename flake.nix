@@ -111,6 +111,11 @@
 
     import-tree.url = "github:vic/import-tree";
 
+    microvm = {
+      url = "github:astro/microvm.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     # macOS Support (master)
     # nix-darwin = {
     #   url = "github:LnL7/nix-darwin/nix-darwin-25.05";
