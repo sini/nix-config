@@ -14,6 +14,20 @@
         pkgs.jose
       ];
 
+      environment.persistence."/persist".directories = [
+        {
+          directory = "/var/lib/swtpm";
+          user = "tss";
+          group = "tss";
+          mode = "0750";
+        }
+        {
+          directory = "/var/lib/swtpm-localca";
+          user = "tss";
+          group = "tss";
+          mode = "0750";
+        }
+      ];
       impermanence.ignorePaths = [
         "/var/lib/tpm2-udev-trigger/hash.txt"
       ];
