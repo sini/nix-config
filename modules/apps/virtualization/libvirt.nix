@@ -73,8 +73,7 @@ in
           "mitigations=off" # Disable CPU vulnerabilities mitigations (security trade-off)
           "nowatchdog" # Disable watchdog timer
           "nmi_watchdog=0" # Disable NMI watchdog
-          "split_lock_detect=off" # Disable split lock detection
-          "pcie_aspm=off" # Disable PCIe Active State Power Management
+          # "pcie_aspm=off" # Disable PCIe Active State Power Management
         ];
 
         # Install necessary packages

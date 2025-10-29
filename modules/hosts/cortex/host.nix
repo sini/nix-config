@@ -25,6 +25,7 @@
       "network-manager"
       "microvm"
       "microvm-cuda"
+      "windows-vfio"
     ];
     users = {
       "sini" = {
