@@ -148,6 +148,7 @@
 
             specialArgs = {
               inherit
+                pkgs'
                 inputs
                 hostOptions
                 environment

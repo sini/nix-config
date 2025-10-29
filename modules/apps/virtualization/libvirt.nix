@@ -7,30 +7,10 @@ in
 
     nixos =
       {
-        lib,
         pkgs,
-        activeFeatures,
         ...
       }:
       let
-        zfsEnabled = lib.elem "zfs" activeFeatures;
-
-        localZfsStorageXml = pkgs.writeText "zfs-local.xml" ''
-          <pool type="zfs">
-            <name>zfs-local</name>
-            <uuid>6872ee81-5f1e-4941-b6a9-d7286a31a930</uuid>
-            <capacity unit="bytes">0</capacity>
-            <allocation unit="bytes">0</allocation>
-            <available unit="bytes">0</available>
-            <source>
-              <name>zroot/local/libvirt-images</name>
-            </source>
-            <target>
-              <path>/dev/zvol/zroot/local/libvirt-images</path>
-            </target>
-          </pool>
-        '';
-
         primaryNetwork = pkgs.writeText "default-network.xml" ''
           <network>
             <name>default</name>
@@ -196,30 +176,6 @@ in
               # Auto-start default-bridge network
               ${pkgs.libvirt}/bin/virsh net-autostart default-bridge 2>/dev/null || true
               ${pkgs.libvirt}/bin/virsh net-start default-bridge 2>/dev/null || true
-            '';
-          };
-          # Storage pool setup
-          libvirt-storage-pools = lib.mkIf zfsEnabled {
-            description = "Setup libvirt storage pools";
-            after = [ "libvirtd.service" ];
-            wantedBy = [ "multi-user.target" ];
-            serviceConfig = {
-              Type = "oneshot";
-              RemainAfterExit = true;
-            };
-            script = ''
-              # Wait for libvirtd to be ready
-              sleep 5
-
-
-              # Define storage pool if it doesn't exist
-              if ! ${pkgs.libvirt}/bin/virsh pool-list --all | grep -q "zfs-local"; then
-                ${pkgs.libvirt}/bin/virsh pool-define ${localZfsStorageXml}
-              fi
-
-              # Build and start storage pool
-              ${pkgs.libvirt}/bin/virsh pool-autostart zfs-local 2>/dev/null || true
-              ${pkgs.libvirt}/bin/virsh pool-start zfs-local 2>/dev/null || true
             '';
           };
         };

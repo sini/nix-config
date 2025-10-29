@@ -154,7 +154,15 @@
             ifName:
             mkNameValue ifName {
               enable = true;
-              matchConfig.Name = ifName;
+              # We attach microvm's to the primary bridge br0
+              matchConfig.Name =
+                if br.name == "br0" then
+                  [
+                    ifName
+                    "vm-*"
+                  ]
+                else
+                  ifName;
               networkConfig.Bridge = br.name;
               linkConfig.RequiredForOnline = "enslaved";
             }

@@ -23,6 +23,8 @@
       "zfs-disk-single"
       "performance"
       "network-manager"
+      "microvm"
+      "microvm-cuda"
     ];
     users = {
       "sini" = {
