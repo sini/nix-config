@@ -44,13 +44,13 @@
       #     fi
       #   '';
 
-      systemd.tmpfiles.rules =
-        let
-          machineId = (builtins.hashString "md5" "cortex-cuda");
-        in
-        [
-          "L+ /var/log/journal/${machineId} - - - - /var/lib/microvms/cortex-cuda/journal/${machineId}"
-        ];
+      # systemd.tmpfiles.rules =
+      #   let
+      #     machineId = (builtins.hashString "md5" "cortex-cuda");
+      #   in
+      #   [
+      #     "L+ /var/log/journal/${machineId} - - - - /var/lib/microvms/cortex-cuda/journal/${machineId}"
+      #   ];
 
       microvm.vms.cuda = {
         autostart = true;
@@ -99,15 +99,15 @@
                 tag = "ro-store";
                 proto = "virtiofs";
               }
-              {
-                # On the host
-                source = "/var/lib/microvms/cortex-cuda/journal";
-                # In the MicroVM
-                mountPoint = "/var/log/journal";
-                tag = "journal";
-                proto = "virtiofs";
-                socket = "journal.sock";
-              }
+              # {
+              #   # On the host
+              #   source = "/var/lib/microvms/cortex-cuda/journal";
+              #   # In the MicroVM
+              #   mountPoint = "/var/log/journal";
+              #   tag = "journal";
+              #   proto = "virtiofs";
+              #   socket = "journal.sock";
+              # }
             ];
 
             devices = [
