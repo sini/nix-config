@@ -52,7 +52,7 @@ in
             WEBUI_URL = "https://open-webui.${config.networking.domain}";
 
             OLLAMA_BASE_URLS = builtins.concatStringsSep ";" (
-              builtins.map (host: "http://${host}:11434") ollamaHosts
+              [ "http://10.10.10.8:11434" ] ++ (builtins.map (host: "http://${host}:11434") ollamaHosts)
             );
 
             SHOW_ADMIN_DETAILS = "False";
