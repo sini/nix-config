@@ -89,7 +89,7 @@ flakeConfig: {
               guest.enable = true;
               optimize.enable = true;
               vcpu = 32;
-              mem = 8192;
+              mem = 32768;
 
               interfaces = [
                 {
