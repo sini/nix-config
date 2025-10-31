@@ -1799,6 +1799,7 @@
       },
       "original": {
         "owner": "kaylorben",
+        "ref": "dev",
         "repo": "nixcord",
         "type": "github"
       }
@@ -2017,16 +2018,16 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1761672384,
-        "narHash": "sha256-o9KF3DJL7g7iYMZq9SWgfS1BFlNbsm6xplRjVlOCkXI=",
+        "lastModified": 1761942036,
+        "narHash": "sha256-/mfaOjN4ONG2qbqFqwRzDwnISXpplyozfK5v/LQ57SA=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "08dacfca559e1d7da38f3cf05f1f45ee9bfd213c",
+        "rev": "3d9d2b07d1779dd36bee7f2ae1510f5f8f112459",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "nixos-unstable",
+        "ref": "master",
         "repo": "nixpkgs",
         "type": "github"
       }

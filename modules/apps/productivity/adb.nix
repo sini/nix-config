@@ -11,8 +11,5 @@
       environment.systemPackages = [
         pkgs.android-file-transfer # => <https://github.com/whoozle/android-file-transfer-linux>
       ];
-      services.udev.packages = [
-        pkgs.android-udev-rules
-      ];
     };
 }

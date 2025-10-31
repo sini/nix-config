@@ -10,7 +10,7 @@
       home.packages = with pkgs; [
         atool
         bottom # btm
-        du-dust
+        dust
         dua
         dysk
         procs

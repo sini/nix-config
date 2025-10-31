@@ -216,7 +216,7 @@ flakeConfig: {
             hardware.graphics = {
               enable = true;
               extraPackages = with pkgs; [
-                vaapiVdpau
+                libva-vdpau-driver
                 libvdpau
                 libvdpau-va-gl
                 nvidia-vaapi-driver
@@ -251,14 +251,6 @@ flakeConfig: {
               # vulkanPackages_latest.vulkan-validation-layers # From unstable
               # vulkanPackages_latest.vulkan-validation-layers
               # vulkanPackages_latest.vulkan-tools
-              cudaPackages.cudatoolkit
-              cudaPackages.cudnn
-              cudaPackages.cutensor
-              cudaPackages.cuda_cudart
-              cudaPackages.cuda_nvrtc
-              cudaPackages.cuda_nvcc
-              cudaPackages.cuda_nvtx
-              cudaPackages.cuda_nvml_dev
             ];
 
             services = {

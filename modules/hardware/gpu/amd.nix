@@ -26,7 +26,7 @@
           enable = true;
           enable32Bit = true;
           extraPackages = with pkgs; [
-            vaapiVdpau
+            libva-vdpau-driver
             libva
             libvdpau-va-gl
             vulkanPackages_latest.vulkan-loader
@@ -59,7 +59,7 @@
         pciutils
         rocmPackages.rocminfo
         clinfo
-        nvtopPackages.full
+        nvtopPackages.amd
         amdgpu_top
         vulkanPackages_latest.vulkan-tools
         vulkanPackages_latest.vulkan-loader
