@@ -17,6 +17,8 @@
         kernelParams = [
           "microcode.amd_sha_check=off"
           "amd_iommu=on"
+          "iommu=pt"
+
           "iomem=relaxed"
           "amd_pstate=guided" # power management
         ];
