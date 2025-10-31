@@ -1,6 +1,5 @@
 {
   flake.features.audio = {
-
     nixos =
       { pkgs, lib, ... }:
       {
@@ -37,7 +36,6 @@
             };
           };
         };
-        hardware.pulseaudio.enable = false;
 
         programs.noisetorch.enable = true;
 
@@ -88,14 +86,16 @@
         ];
       };
 
-  };
-  home = {
-    home.persistence."/persist" = {
-      directories = [
-        ".local/state/wireplumber" # Wireplumber state
-        ".config/rncbc.org" # qpwgraph config file
-        ".config/pulse" # pulseaudio cookie
-      ];
-    };
+    home =
+      { ... }:
+      {
+        home.persistence."/persist" = {
+          directories = [
+            ".local/state/wireplumber" # Wireplumber state
+            ".config/rncbc.org" # qpwgraph config file
+            ".config/pulse" # pulseaudio cookie
+          ];
+        };
+      };
   };
 }
