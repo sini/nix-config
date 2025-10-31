@@ -37,7 +37,7 @@
           boot = {
             kernelParams = [
               "vfio-pci.ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"
-
+              "vfio_iommu_type1.allow_unsafe_interrupts=1"
               # KVM Settings
               "kvm.ignore_msrs=1" # Ignore unhandled Model Specific Registers
               "kvm.report_ignored_msrs=0" # Don't report ignored MSRs
@@ -68,6 +68,8 @@
             extraModprobeConfig = ''
               options vfio-pci ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"
               options kvmfr static_size_mb=256
+              options kvm_amd nested=1 avic=1 npt=1 sev=0
+              options vfio_iommu_type1 allow_unsafe_interrupts=1
               blacklist nouveau
               options nouveau modeset=0
             '';
