@@ -24,7 +24,7 @@
       #"regreet"
       #"hyprland"
       "alacritty"
-      "discord"
+      #"discord" # TODO: Restore...
       "kitty"
       "firefox"
       "obs-studio"

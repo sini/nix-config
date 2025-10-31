@@ -84,7 +84,7 @@ in
           spice-protocol
           virt-manager
           virt-viewer
-          win-virtio
+          virtio-win
           win-spice
           cloud-utils
           bridge-utils
@@ -256,7 +256,7 @@ in
         home.packages = with pkgs; [
           # Additional VM management tools
           spice-gtk # Better VM display performance
-          win-virtio # Windows guest drivers (for testing Windows)
+          virtio-win # Windows guest drivers (for testing Windows)
         ];
 
         dconf.settings = {

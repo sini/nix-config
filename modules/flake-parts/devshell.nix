@@ -23,9 +23,9 @@
           pkgs.nil
           pkgs.nixd
           pkgs.nodePackages.prettier
-          inputs.nixidy.packages.${pkgs.system}.default
+          inputs.nixidy.packages.${pkgs.stdenv.hostPlatform.system}.default
         ]
-        ++ lib.optionals pkgs.buildPlatform.isDarwin [
+        ++ lib.optionals pkgs.stdenv.buildPlatform.isDarwin [
           pkgs.coreutils-full # Include GNU coreutils for darwin systems
         ];
 

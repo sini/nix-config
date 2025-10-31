@@ -11,7 +11,7 @@
         irqbalance.enable = true;
         scx = {
           enable = true;
-          package = lib.mkDefault pkgs.scx_git.full;
+          package = lib.mkDefault pkgs.scx.full;
           scheduler = "scx_bpfland";
           # Enable: CPU Frequency Control, (experimental) kthread prioritization, Per-CPU Task Prioritization
           extraArgs = [

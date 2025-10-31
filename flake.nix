@@ -5,7 +5,8 @@
   '';
 
   nixConfig = {
-    abort-on-warn = true;
+    # TODO: restore once master has settled
+    abort-on-warn = false;
     extra-experimental-features = [ "pipe-operators" ];
     allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
@@ -210,7 +211,8 @@
     nix-topology.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     # Discord extension for NixOS
-    nixcord.url = "github:kaylorben/nixcord";
+    # TODO: move back to master once fixed
+    nixcord.url = "github:kaylorben/nixcord/dev";
 
     # NixOS modules for gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
@@ -234,8 +236,8 @@
     # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
 
     # NixPkgs Unstable
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    # nixpkgs-unstable.url = "github:sini/nixpkgs/antlr-fix";
+    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/master";
 
     nvf.url = "github:notashelf/nvf";
 
