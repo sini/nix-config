@@ -67,7 +67,7 @@ flakeConfig: {
             cudaSupport = true;
             cudnnSupport = true;
           };
-          system = pkgs.system;
+          system = pkgs.stdenv.hostPlatform.system;
         };
 
         # (Optional) A set of special arguments to be passed to the MicroVM's NixOS modules.
