@@ -5,8 +5,8 @@
   '';
 
   nixConfig = {
-    # TODO: restore once master has settled
-    abort-on-warn = true;
+    # TODO: Waiting on this one nur pkg to get updated... https://gitlab.com/rycee/nur-expressions/-/merge_requests/96
+    abort-on-warn = false;
     extra-experimental-features = [ "pipe-operators" ];
     allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
