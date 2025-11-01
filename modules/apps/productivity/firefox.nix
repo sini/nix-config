@@ -1,10 +1,15 @@
-{ inputs, ... }:
 {
   flake.features.firefox.home =
-    { pkgs, ... }:
+    { inputs, pkgs, ... }:
     {
       programs.firefox = {
         enable = true;
+
+        # nativeMessagingHosts = [
+        #   pkgs.ff2mpv
+        #   pkgs.tridactyl-native
+        # ];
+
         profiles = {
           default = {
             id = 0;
@@ -14,6 +19,8 @@
               bitwarden
               ublock-origin
               sponsorblock
+              darkreader
+              ghostery
               return-youtube-dislikes
               firefox-color
               duckduckgo-privacy-essentials
@@ -116,52 +123,68 @@
             search = {
               force = true;
               engines = {
-                "Brave" = {
+                "Nix Packages" = {
                   urls = [
-                    { template = "https://search.brave.com/search?q={searchTerms}"; }
                     {
-                      type = "application/x-suggestions+json";
-                      template = "https://search.brave.com/api/suggest?q={searchTerms}";
+                      template = "https://search.nixos.org/packages";
+                      params = [
+                        {
+                          name = "type";
+                          value = "packages";
+                        }
+                        {
+                          name = "channel";
+                          value = "unstable";
+                        }
+                        {
+                          name = "query";
+                          value = "{searchTerms}";
+                        }
+                      ];
                     }
                   ];
+                  icon = "''${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+                  definedAliases = [ "@np" ];
+                };
 
-                  icon = "https://cdn.search.brave.com/serp/v2/_app/immutable/assets/safari-pinned-tab.539899c7.svg";
-                  updateInterval = 24 * 60 * 60 * 1000;
-                  definedAliases = [ "!br" ];
-                };
-                "NixOS Packages" = {
+                "Nix Options" = {
                   urls = [
                     {
-                      template = "https://search.nixos.org/packages?channel=unstable&from=0&size=50&sort=relevance&type=packages&query={searchTerms}";
+                      template = "https://search.nixos.org/options";
+                      params = [
+                        {
+                          name = "type";
+                          value = "options";
+                        }
+                        {
+                          name = "channel";
+                          value = "unstable";
+                        }
+                        {
+                          name = "query";
+                          value = "{searchTerms}";
+                        }
+                      ];
                     }
                   ];
-                  icon = "https://nixos.org/favicon.png";
-                  updateInterval = 24 * 60 * 60 * 1000;
-                  definedAliases = [ "!ns" ];
+                  icon = "''${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
+                  definedAliases = [ "@no" ];
                 };
-                "NixOS Options" = {
-                  urls = [
-                    {
-                      template = "https://search.nixos.org/options?channel=unstable&from=0&size=50&sort=relevance&type=packages&query={searchTerms}";
-                    }
-                  ];
-                  icon = "https://nixos.org/favicon.png";
-                  updateInterval = 24 * 60 * 60 * 1000;
-                  definedAliases = [ "!no" ];
-                };
+
                 "HomeManager" = {
                   urls = [
                     { template = "https://home-manager-options.extranix.com/?query={searchTerms}&release=master"; }
                   ];
                   icon = "https://github.com/mipmip/home-manager-option-search/blob/main/images/favicon.png";
                   updateInterval = 24 * 60 * 60 * 1000;
-                  definedAliases = [ "!hs" ];
+                  definedAliases = [ "@hm" ];
                 };
+
                 "NixWiki" = {
                   urls = [ { template = "https://wiki.nixos.org/w/index.php?search={searchTerms}"; } ];
                   icon = "https://nixos.org/favicon.png";
                   updateInterval = 24 * 60 * 60 * 1000;
-                  definedAliases = [ "!nw" ];
+                  definedAliases = [ "@nw" ];
                 };
               };
               default = "Brave";
@@ -175,7 +198,9 @@
         "x-scheme-handler/http" = [ "firefox.desktop" ];
         "x-scheme-handler/https" = [ "firefox.desktop" ];
       };
-
+      home.persistence."/cache".directories = [
+        ".cache/mozilla"
+      ];
       home.persistence."/persist".directories = [
         ".mozilla/firefox"
       ];
