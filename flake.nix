@@ -66,7 +66,7 @@
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
     colmena = {
-      url = "github:sini/colmena";
+      url = "github:zhaofengli/colmena";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 

@@ -222,15 +222,15 @@
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1762031837,
+        "lastModified": 1762034856,
         "narHash": "sha256-QVey3iP3UEoiFVXgypyjTvCrsIlA4ecx6Acaz5C8/PQ=",
-        "owner": "sini",
+        "owner": "zhaofengli",
         "repo": "colmena",
-        "rev": "bcda96150473a11cedb9ca649c57072d462adb61",
+        "rev": "349b035a5027f23d88eeb3bc41085d7ee29f18ed",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
+        "owner": "zhaofengli",
         "repo": "colmena",
         "type": "github"
       }
