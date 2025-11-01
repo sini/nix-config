@@ -211,8 +211,7 @@
     nix-topology.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     # Discord extension for NixOS
-    # TODO: move back to master once fixed
-    nixcord.url = "github:kaylorben/nixcord/dev";
+    nixcord.url = "github:kaylorben/nixcord";
 
     # NixOS modules for gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
@@ -239,7 +238,7 @@
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/master";
 
-    nvf.url = "github:notashelf/nvf";
+    nvf.url = "github:notashelf/nvf/notashelf/push-kuokzlukwzxp";
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
 
