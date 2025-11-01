@@ -177,8 +177,6 @@
               # Add modules from external flakes and sources.
               ++ chaoticImports
               ++ [
-                inputs.nur.modules.nixos.default
-                # inputs.impermanence.nixosModules.impermanence # Uncomment to use
                 pkgs'.nixosModules.notDetected
                 home-manager'.nixosModules.home-manager
               ]

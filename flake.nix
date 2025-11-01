@@ -5,8 +5,7 @@
   '';
 
   nixConfig = {
-    # TODO: Waiting on this one nur pkg to get updated... https://gitlab.com/rycee/nur-expressions/-/merge_requests/96
-    abort-on-warn = false;
+    abort-on-warn = true;
     extra-experimental-features = [ "pipe-operators" ];
     allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
@@ -148,7 +147,13 @@
     # Homebrew
     #nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
 
-    nur.url = "github:nix-community/nur";
+    # nur.url = "github:nix-community/nur";
+
+    # TODO: wait on https://gitlab.com/rycee/nur-expressions/-/merge_requests/96
+    firefox-addons = {
+      url = "gitlab:alois31/nur-expressions/push-mptpluvtrnns?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
 
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {

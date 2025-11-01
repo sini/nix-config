@@ -10,13 +10,12 @@
             id = 0;
             isDefault = true;
 
-            extensions.packages = with pkgs.nur.repos.rycee.firefox-addons; [
+            extensions.packages = with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
               bitwarden
               ublock-origin
               sponsorblock
               return-youtube-dislikes
               firefox-color
-              tampermonkey
               duckduckgo-privacy-essentials
               mal-sync
               sidebery
