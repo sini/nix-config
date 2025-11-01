@@ -66,7 +66,7 @@
     chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
 
     colmena = {
-      url = "github:zhaofengli/colmena";
+      url = "github:sini/colmena";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
@@ -112,7 +112,7 @@
     import-tree.url = "github:vic/import-tree";
 
     microvm = {
-      url = "github:sini/microvm.nix";
+      url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
