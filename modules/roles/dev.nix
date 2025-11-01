@@ -8,7 +8,7 @@
       "claude"
       "eza"
       "misc-tools"
-      # "nvf"
+      "nvf"
       "git"
       "ssh"
       "yazi"
