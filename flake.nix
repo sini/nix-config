@@ -6,7 +6,7 @@
 
   nixConfig = {
     # TODO: restore once master has settled
-    abort-on-warn = false;
+    abort-on-warn = true;
     extra-experimental-features = [ "pipe-operators" ];
     allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
@@ -113,8 +113,8 @@
     import-tree.url = "github:vic/import-tree";
 
     microvm = {
-      url = "github:astro/microvm.nix";
-      inputs.nixpkgs.follows = "nixpkgs";
+      url = "github:sini/microvm.nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     # macOS Support (master)
@@ -126,7 +126,7 @@
     nix-ai-tools.url = "github:numtide/nix-ai-tools";
 
     # GitKraken configuration
-    nixkraken.url = "github:nicolas-goudry/nixkraken";
+    nixkraken.url = "github:sini/nixkraken";
 
     nixos-anywhere = {
       url = "github:numtide/nixos-anywhere";
@@ -238,6 +238,8 @@
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/master";
 
+    # TODO: https://github.com/NotAShelf/nvf/pull/1209
+    #
     nvf.url = "github:notashelf/nvf/notashelf/push-kuokzlukwzxp";
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
