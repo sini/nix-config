@@ -14,11 +14,11 @@
       "server"
       #      "kubernetes"
       #     "kubernetes-master"
-      #      "workstation"
+      "workstation"
       #      "gaming"
-      #      "dev"
-      #      "dev-gui"
-      #      "media"
+      "dev"
+      "dev-gui"
+      "media"
       # "vault"
     ];
     features = [
