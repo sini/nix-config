@@ -10,7 +10,6 @@
           alsa.support32Bit = true;
           wireplumber.enable = true;
           jack.enable = true;
-          systemWide = true;
           pulse.enable = true;
 
           wireplumber.extraConfig = {
@@ -37,7 +36,7 @@
           };
         };
 
-        programs.noisetorch.enable = true;
+        # programs.noisetorch.enable = true;
 
         environment.sessionVariables =
           let
