@@ -243,9 +243,7 @@
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/master";
 
-    # TODO: https://github.com/NotAShelf/nvf/pull/1209
-    #
-    nvf.url = "github:notashelf/nvf/notashelf/push-kuokzlukwzxp";
+    nvf.url = "github:notashelf/nvf";
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
 

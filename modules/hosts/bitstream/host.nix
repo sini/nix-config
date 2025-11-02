@@ -46,11 +46,6 @@
               "eno1"
               "enp2s0"
             ];
-            # unmanagedInterfaces = [
-            #   "eno1"
-            #   "enp2s0"
-            #   "bond0"
-            # ];
           };
         };
 

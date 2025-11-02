@@ -36,8 +36,10 @@
           };
         };
 
+        # TODO: restore once cuda is fixed
         # programs.noisetorch.enable = true;
 
+        # https://github.com/hlissner/dotfiles/blob/b51c0d90673a3f3779197ca53952bfe85718f708/modules/desktop/media/daw.nix
         environment.sessionVariables =
           let
             makePluginPath =
@@ -71,8 +73,6 @@
           openal
           pulseaudio
 
-          reaper
-
           yabridge
           yabridgectl
 
@@ -85,16 +85,14 @@
         ];
       };
 
-    home =
-      { ... }:
-      {
-        home.persistence."/persist" = {
-          directories = [
-            ".local/state/wireplumber" # Wireplumber state
-            ".config/rncbc.org" # qpwgraph config file
-            ".config/pulse" # pulseaudio cookie
-          ];
-        };
+    home = {
+      home.persistence."/persist" = {
+        directories = [
+          ".local/state/wireplumber" # Wireplumber state
+          ".config/rncbc.org" # qpwgraph config file
+          ".config/pulse" # pulseaudio cookie
+        ];
       };
+    };
   };
 }

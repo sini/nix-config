@@ -26,6 +26,7 @@
       "microvm"
       "microvm-cuda"
       "windows-vfio"
+      "gamedev"
     ];
     users = {
       "sini" = {
