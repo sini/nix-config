@@ -48,6 +48,7 @@
             "*.txt"
             "*.tmpl"
             "*.jwe"
+            "*.xml"
           ];
           formatter = {
             prettier = {
