@@ -40,6 +40,7 @@
               );
             extraGroups = [
               "video"
+              "render"
               "podman"
               "input"
               "tty"

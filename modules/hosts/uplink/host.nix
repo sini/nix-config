@@ -26,6 +26,7 @@
       "grafana"
       "ollama"
       "open-webui"
+      "jellyfin"
       # "minio"
       # "vault"
     ];
