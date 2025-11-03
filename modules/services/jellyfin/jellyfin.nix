@@ -136,15 +136,15 @@
               };
             };
 
-            users = {
-              Admin = {
-                mutable = false;
-                hashedPassword = "$PBKDF2-SHA512$iterations=210000$40ED1F46D80C99D30D668942213CC8AB$4118D9203F97D407B57E3D1B4C24B6DB844D3777736D80283FC1942BFF5E834AF4CE174B8F8FAB85ED0E2B5579066A0250BCECE434811EA451D30C07F9AD00A6";
-                permissions = {
-                  isAdministrator = true;
-                };
-              };
-            };
+            # users = {
+            #   Admin = {
+            #     mutable = false;
+            #     hashedPassword = "$PBKDF2-SHA512$iterations=210000$40ED1F46D80C99D30D668942213CC8AB$4118D9203F97D407B57E3D1B4C24B6DB844D3777736D80283FC1942BFF5E834AF4CE174B8F8FAB85ED0E2B5579066A0250BCECE434811EA451D30C07F9AD00A6";
+            #     permissions = {
+            #       isAdministrator = true;
+            #     };
+            #   };
+            # };
 
             branding = {
               loginDisclaimer = ''
