@@ -124,12 +124,12 @@
                 contentType = "music";
                 pathInfos = [ "${mediaRoot}/music" ];
               };
-              "Music Videos" = {
+              MusicVideos = {
                 enabled = true;
                 contentType = "musicvideos";
                 pathInfos = [ "${mediaRoot}/mv" ];
               };
-              "Concerts" = {
+              Concerts = {
                 enabled = true;
                 contentType = "musicvideos";
                 pathInfos = [ "${mediaRoot}/concerts" ];
