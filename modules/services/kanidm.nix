@@ -234,6 +234,16 @@
                     "groups"
                   ];
                 };
+                claimMaps.roles = {
+                  joinType = "array";
+                  valuesByGroup = {
+                    "media.admins" = [
+                      "admin"
+                      "user"
+                    ];
+                    "media.access" = [ "user" ];
+                  };
+                };
               };
             };
           };

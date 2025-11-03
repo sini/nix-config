@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PluginConfiguration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <SamlConfigs />
+  <OidConfigs>
+    <item>
+      <key>
+        <string>kanidm</string>
+      </key>
+      <value>
+        <PluginConfiguration>
+          <OidEndpoint>https://idm.json64.dev/oauth2/openid/jellyfin/.well-known/openid-configuration</OidEndpoint>
+          <OidClientId>jellyfin</OidClientId>
+          <OidSecret>REDACTED</OidSecret>
+          <Enabled>true</Enabled>
+          <EnableAuthorization>true</EnableAuthorization>
+          <EnableAllFolders>true</EnableAllFolders>
+          <EnabledFolders />
+          <AdminRoles>
+            <string>admin</string>
+          </AdminRoles>
+          <Roles>
+            <string>user</string>
+            <string>admin</string>
+          </Roles>
+          <EnableFolderRoles>false</EnableFolderRoles>
+          <EnableLiveTvRoles>false</EnableLiveTvRoles>
+          <EnableLiveTv>false</EnableLiveTv>
+          <EnableLiveTvManagement>false</EnableLiveTvManagement>
+          <LiveTvRoles />
+          <LiveTvManagementRoles />
+          <FolderRoleMappings />
+          <RoleClaim>roles</RoleClaim>
+          <OidScopes>
+            <string>openid</string>
+            <string>profile</string>
+            <string>groups</string>
+          </OidScopes>
+          <SchemeOverride>https</SchemeOverride>
+          <PortOverride xsi:nil="true" />
+          <NewPath>true</NewPath>
+          <CanonicalLinks>
+            <item>
+              <key>
+                <string>json</string>
+              </key>
+              <value>
+                <guid>d1a0ed0d-467a-4691-bf3f-dc8a9dcbfb9b</guid>
+              </value>
+            </item>
+          </CanonicalLinks>
+          <DisableHttps>false</DisableHttps>
+          <DisablePushedAuthorization>false</DisablePushedAuthorization>
+          <DoNotValidateEndpoints>false</DoNotValidateEndpoints>
+          <DoNotValidateIssuerName>false</DoNotValidateIssuerName>
+        </PluginConfiguration>
+      </value>
+    </item>
+  </OidConfigs>
+</PluginConfiguration>
