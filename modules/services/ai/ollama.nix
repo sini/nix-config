@@ -22,7 +22,9 @@
           host = "0.0.0.0";
           port = 11434;
 
-          # home = "/var/lib/ollama";
+          # We use impermanence and keep files in /cache
+          home = "/cache/var/lib/private/ollama";
+          models = "/cache/var/lib/private/ollama/models";
 
           package = lib.mkIf amdEnabled pkgs.ollama-rocm;
 
