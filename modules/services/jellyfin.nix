@@ -170,20 +170,22 @@
 
         # TODO: auto-configure SSO, see https://github.com/tecosaur/golgi/blob/568849ce1d6601e1a478b77ad71437aa177a2f5c/modules/streaming/jellyfin.nix#L14
 
-        services.nginx.virtualHosts = {
-          "jellyfin.${config.networking.domain}" = {
-            forceSSL = true;
-            useACMEHost = config.networking.domain;
-            locations."/" = {
-              proxyPass = "http://127.0.0.1:8096";
-              proxyWebsockets = true;
-              extraConfig = ''
-                client_max_body_size 20M;
-
-                # Disable buffering when the nginx proxy gets very resource heavy upon streaming
-                proxy_buffering off;
-              '';
-            };
+        services.nginx.virtualHosts."jellyfin.${config.networking.domain}" = {
+          forceSSL = true;
+          useACMEHost = config.networking.domain;
+          locations."/" = {
+            proxyPass = "http://127.0.0.1:8096";
+            extraConfig = ''
+              proxy_buffering off;
+              proxy_set_header X-Forwarded-Protocol $scheme;
+            '';
+          };
+          locations."/socket" = {
+            proxyPass = "http://127.0.0.1:8096";
+            proxyWebsockets = true;
+            extraConfig = ''
+              proxy_set_header X-Forwarded-Protocol $scheme;
+            '';
           };
         };
 
