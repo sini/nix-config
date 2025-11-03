@@ -160,6 +160,7 @@
 
           system.activationScripts."var-lib-private-perms" = lib.mkIf config.impermanence.enable {
             # Ensure the systemd private directory has the correct permissions set
+            # Also verify /var/lib
             #
             # Impermanence will create the outer parent directory and set wrong permissions for it if any
             # path within is persisted, thus we need to set it back to what systemd expects
@@ -169,6 +170,9 @@
             ];
             text = ''
               mkdir -p /var/lib/private
+              chown root:root /var/lib
+              chmod 0755 /var/lib
+              chown root:root /var/lib/private
               chmod 0700 /var/lib/private
             '';
           };
