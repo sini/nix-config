@@ -70,6 +70,11 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    declarative-jellyfin = {
+      url = "github:Sveske-Juice/declarative-jellyfin";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     deploy-rs.url = "github:serokell/deploy-rs";
 
     devshell = {
@@ -104,23 +109,12 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # home-manager-darwin = {
-    #   url = "github:nix-community/home-manager/release-25.05";
-    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
-    # };
-
     import-tree.url = "github:vic/import-tree";
 
     microvm = {
       url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    # macOS Support (master)
-    # nix-darwin = {
-    #   url = "github:LnL7/nix-darwin/nix-darwin-25.05";
-    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
-    # };
 
     nix-ai-tools.url = "github:numtide/nix-ai-tools";
 
@@ -144,37 +138,11 @@
     # Flatpak
     # nix-flatpak.url = "github:gmodena/nix-flatpak";
 
-    # Homebrew
-    #nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-
-    # nur.url = "github:nix-community/nur";
-
-    # TODO: wait on https://gitlab.com/rycee/nur-expressions/-/merge_requests/96
-    firefox-addons = {
-      url = "gitlab:alois31/nur-expressions/push-mptpluvtrnns?dir=pkgs/firefox-addons";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
       url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    # homebrew-bundle = {
-    #   url = "github:homebrew/homebrew-bundle";
-    #   flake = false;
-    # };
-
-    # homebrew-core = {
-    #   url = "github:homebrew/homebrew-core";
-    #   flake = false;
-    # };
-
-    # homebrew-cask = {
-    #   url = "github:homebrew/homebrew-cask";
-    #   flake = false;
-    # };
 
     hyprland.url = "github:hyprwm/Hyprland";
 
@@ -200,20 +168,26 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    nix-index-database.url = "github:nix-community/nix-index-database";
-    nix-index-database.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
 
     nix-snapshotter = {
       url = "github:pdtpartners/nix-snapshotter";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    nix-vscode-extensions.url = "github:nix-community/nix-vscode-extensions";
-    nix-vscode-extensions.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    nix-vscode-extensions = {
+      url = "github:nix-community/nix-vscode-extensions";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
 
     # automatically generate infrastructure and network diagrams as SVGs directly from your NixOS configurations
-    nix-topology.url = "github:oddlama/nix-topology";
-    nix-topology.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    nix-topology = {
+      url = "github:oddlama/nix-topology";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
 
     # Discord extension for NixOS
     nixcord.url = "github:kaylorben/nixcord";
@@ -222,22 +196,16 @@
     nix-gaming.url = "github:fufexan/nix-gaming";
 
     # Generate System Images
-    nixos-generators = {
-      url = "github:nix-community/nixos-generators";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # nixos-generators = {
+    #   url = "github:nix-community/nixos-generators";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
 
     # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
 
     # Nixpkgs:
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
-
-    # NixPkgs - Darwin
-    # NOTE: `darwin` indicates that this channel passes CI on macOS builders;
-    # this should increase the binary cache hit rate, but may result in it
-    # lagging behind the equivalent NixOS/Linux package set.
-    # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
 
     # NixPkgs Unstable
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -265,25 +233,24 @@
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
 
-    # ucodenix delivers microcode updates for AMD CPUs on NixOS
     ucodenix = {
       url = "github:e-tho/ucodenix";
-      # inputs.cpu-microcodes.follows = "ucodenix-cpu-microcodes";
     };
 
-    # We pin to December 28th, 2024 since our older hardware hasn't recieved BIOS updates
-    # addressing CVE-2024-56161. :(
-    # ucodenix-cpu-microcodes = {
-    #   url = "github:platomav/CPUMicrocodes/ec5200961ecdf78cf00e55d73902683e835edefd";
-    #   flake = false;
+    # vscode-server = {
+    #   url = "github:nix-community/nixos-vscode-server";
+    #   inputs.nixpkgs.follows = "nixpkgs-unstable";
     # };
-
-    vscode-server.url = "github:nix-community/nixos-vscode-server";
-    vscode-server.inputs.nixpkgs.follows = "nixpkgs-unstable";
 
     zjstatus.url = "github:dj95/zjstatus";
 
     # Firefox extensions
+
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     shimmer = {
       url = "github:nuclearcodecat/shimmer";
       flake = false;
@@ -293,5 +260,41 @@
       url = "github:yokoffing/Betterfox";
       flake = false;
     };
+
+    # TODO: nix-darwin support if I ever use my macbook again...
+    # NixPkgs - Darwin
+    # NOTE: `darwin` indicates that this channel passes CI on macOS builders;
+    # this should increase the binary cache hit rate, but may result in it
+    # lagging behind the equivalent NixOS/Linux package set.
+    # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
+
+    # home-manager-darwin = {
+    #   url = "github:nix-community/home-manager/release-25.05";
+    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
+    # };
+
+    # macOS Support (master)
+    # nix-darwin = {
+    #   url = "github:LnL7/nix-darwin/nix-darwin-25.05";
+    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
+    # };
+
+    # Homebrew
+    #nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
+
+    # homebrew-bundle = {
+    #   url = "github:homebrew/homebrew-bundle";
+    #   flake = false;
+    # };
+
+    # homebrew-core = {
+    #   url = "github:homebrew/homebrew-core";
+    #   flake = false;
+    # };
+
+    # homebrew-cask = {
+    #   url = "github:homebrew/homebrew-cask";
+    #   flake = false;
+    # };
   };
 }
