@@ -15,21 +15,13 @@
       in
       {
         environment.systemPackages = [
+          pkgs.local.zfs-diff
           (pkgs.writeScriptBin "zfs-root-diff" ''
-            sudo zfs diff -F zroot/local/root@empty | awk '$2 != "@" && $2 != "/"' | cut -f3- | \
-              grep -v -f <(sudo find /persist/ -type f | sed 's|/persist||') | \
-              grep -v -f <(sudo find /cache/ -type f | sed 's|/cache||') | \
-              grep -v -f <(awk '{print "^" $1}' ${ignoreFilesPkg}) | \
-              ${pkgs.skim}/bin/sk;
+            ${lib.getExe pkgs.local.zfs-diff} zroot/local/root ${ignoreFilesPkg}
           '')
           (pkgs.writeScriptBin "zfs-home-diff" ''
-            sudo zfs diff -F zroot/local/home@empty | awk '$2 != "@" && $2 != "/"' | cut -f3- | \
-              grep -v -f <(sudo find /persist/ -type f | sed 's|/persist||') | \
-              grep -v -f <(sudo find /cache/ -type f | sed 's|/cache||') | \
-              grep -v -f <(awk '{print "^" $1}' ${ignoreFilesPkg}) | \
-              ${pkgs.skim}/bin/sk;
+            ${lib.getExe pkgs.local.zfs-diff} zroot/local/home ${ignoreFilesPkg}
           '')
-
         ];
       };
   };
