@@ -61,6 +61,7 @@
         ++ builtins.map mkOidcSecrets [
           "grafana"
           "open-webui"
+          "jellyfin"
         ]
       );
 
@@ -120,35 +121,44 @@
 
             # OAuth2 clients and groups for services
             groups = {
-              "grafana.access" = {
-                members = [
-                  "json"
-                  "shuo"
-                  "will"
-                  "hugs"
-                ];
-              };
+              "grafana.access".members = [
+                "json"
+                "shuo"
+                "will"
+                "hugs"
+              ];
+
               "grafana.editors" = { };
               "grafana.admins" = { };
-              "grafana.server-admins" = {
-                members = [
-                  "json"
-                  "shuo"
-                  "will"
-                  "hugs"
-                ];
-              };
+              "grafana.server-admins".members = [
+                "json"
+                "shuo"
+                "will"
+                "hugs"
+              ];
 
-              "open-webui.access" = {
-                members = [
-                  "json"
-                  "shuo"
-                  "will"
-                  "hugs"
-                ];
-              };
+              "open-webui.access".members = [
+                "json"
+                "shuo"
+                "will"
+                "hugs"
+              ];
 
-              "open-webui.admins" = {
+              "open-webui.admins".members = [
+                "json"
+                "shuo"
+              ];
+
+              "media.access".members = [
+                "json"
+                "shuo"
+                "will"
+                "hugs"
+                "taiche"
+                "jennism"
+              ];
+
+              "media.admins" = {
                 members = [
                   "json"
                   "shuo"
@@ -203,6 +213,26 @@
                       "open-webui.access" = [ "user" ];
                     };
                   };
+                };
+              };
+
+              jellyfin = {
+                displayName = "Jellyfin";
+                originUrl = "https://jellyfin.${config.networking.domain}/sso/OID/redirect/kanidm";
+                originLanding = "https://jellyfin.${config.networking.domain}";
+                basicSecretFile = config.age.secrets.jellyfin-oidc-client-secret.path;
+                preferShortUsername = true;
+                scopeMaps = {
+                  "media.access" = [
+                    "openid"
+                    "profile"
+                    "groups"
+                  ];
+                  "media.admins" = [
+                    "openid"
+                    "profile"
+                    "groups"
+                  ];
                 };
               };
             };
