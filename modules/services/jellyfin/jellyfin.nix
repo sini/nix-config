@@ -8,9 +8,9 @@
         config,
         ...
       }:
-      let
-        mediaRoot = "/mnt/data/media";
-      in
+      # let
+      #   mediaRoot = "/mnt/data/media";
+      # in
       {
 
         imports = [
@@ -86,55 +86,55 @@
               ];
             };
 
-            libraries = {
-              Movies = {
-                enabled = true;
-                contentType = "movies";
-                pathInfos = [ "${mediaRoot}/movies" ];
-                typeOptions.Movies = {
-                  metadataFetchers = [
-                    "The Open Movie Database"
-                    "TheMovieDb"
-                  ];
-                  imageFetchers = [
-                    "The Open Movie Database"
-                    "TheMovieDb"
-                  ];
-                };
-              };
-              Shows = {
-                enabled = true;
-                contentType = "tvshows";
-                pathInfos = [ "${mediaRoot}/tv" ];
-                enableAutomaticSeriesGrouping = true;
-              };
-              Anime = {
-                enabled = true;
-                contentType = "tvshows";
-                pathInfos = [ "${mediaRoot}/anime" ];
-                enableAutomaticSeriesGrouping = true;
-              };
-              Books = {
-                enabled = true;
-                contentType = "books";
-                pathInfos = [ "${mediaRoot}/books" ];
-              };
-              Music = {
-                enabled = true;
-                contentType = "music";
-                pathInfos = [ "${mediaRoot}/music" ];
-              };
-              MusicVideos = {
-                enabled = true;
-                contentType = "musicvideos";
-                pathInfos = [ "${mediaRoot}/mv" ];
-              };
-              Concerts = {
-                enabled = true;
-                contentType = "musicvideos";
-                pathInfos = [ "${mediaRoot}/concerts" ];
-              };
-            };
+            # libraries = {
+            #   Movies = {
+            #     enabled = true;
+            #     contentType = "movies";
+            #     pathInfos = [ "${mediaRoot}/movies" ];
+            #     typeOptions.Movies = {
+            #       metadataFetchers = [
+            #         "The Open Movie Database"
+            #         "TheMovieDb"
+            #       ];
+            #       imageFetchers = [
+            #         "The Open Movie Database"
+            #         "TheMovieDb"
+            #       ];
+            #     };
+            #   };
+            #   Shows = {
+            #     enabled = true;
+            #     contentType = "tvshows";
+            #     pathInfos = [ "${mediaRoot}/tv" ];
+            #     enableAutomaticSeriesGrouping = true;
+            #   };
+            #   Anime = {
+            #     enabled = true;
+            #     contentType = "tvshows";
+            #     pathInfos = [ "${mediaRoot}/anime" ];
+            #     enableAutomaticSeriesGrouping = true;
+            #   };
+            #   Books = {
+            #     enabled = true;
+            #     contentType = "books";
+            #     pathInfos = [ "${mediaRoot}/books" ];
+            #   };
+            #   Music = {
+            #     enabled = true;
+            #     contentType = "music";
+            #     pathInfos = [ "${mediaRoot}/music" ];
+            #   };
+            #   MusicVideos = {
+            #     enabled = true;
+            #     contentType = "musicvideos";
+            #     pathInfos = [ "${mediaRoot}/mv" ];
+            #   };
+            #   Concerts = {
+            #     enabled = true;
+            #     contentType = "musicvideos";
+            #     pathInfos = [ "${mediaRoot}/concerts" ];
+            #   };
+            # };
 
             # users = {
             #   Admin = {
