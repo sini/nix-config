@@ -20,6 +20,7 @@
       "zfs-disk-single"
       "network-manager"
       "razer"
+      "gamedev"
     ];
     users = {
       "sini" = {
