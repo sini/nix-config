@@ -82,6 +82,13 @@ in
       ];
 
       networking = {
+        firewall.trustedInterfaces = [
+          "cni+"
+          "flannel.1"
+          "calico+"
+          "cilium+"
+          "lxc+"
+        ];
         enableIPv6 = true;
         nat = {
           enable = true;
@@ -234,5 +241,11 @@ in
           name = "iqn.2016-04.com.open-iscsi:${config.networking.fqdn}";
         };
       };
+
+      environment.persistence."/persist".directories = [
+        "/var/lib/rancher"
+        "/var/lib/kubelet"
+        "/etc/rancher"
+      ];
     };
 }
