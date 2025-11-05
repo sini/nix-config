@@ -32,7 +32,7 @@
               #   ];
               # };
               cniConfig = {
-                bin_dir = lib.mkForce "/opt/cni/bin";
+                bin_dir = lib.mkForce "${pkgs.cni-plugins}/bin/";
                 conf_dir = "/etc/cni/net.d";
               };
             in
@@ -50,11 +50,6 @@
                 containerd.snapshotter = "nix";
 
                 cni = cniConfig;
-
-                # cni = {
-                #   conf_dir = "/var/lib/rancher/k3s/agent/etc/cni/net.d/";
-                #   bin_dir = "${k3s-cni-plugins}/bin";
-                # };
               };
 
               "io.containerd.transfer.v1.local".unpack_config = [
@@ -68,17 +63,10 @@
 
       };
 
-      system.activationScripts.cniCopy = {
-        text = # bash
-          ''
-            mkdir -p /opt/cni/bin/
-            cp -r ${pkgs.cni-plugins}/bin/. /opt/cni/bin/.
-          '';
-      };
-
       environment.persistence."/persist".directories = [
         "/var/lib/cni"
         "/var/lib/containers"
+        "/var/lib/containerd"
       ];
     };
 
