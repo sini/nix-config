@@ -88,6 +88,10 @@ in
           "calico+"
           "cilium+"
           "lxc+"
+          "dummy+"
+          # These are our thunderbolt mesh interfaces, trust them
+          "enp199s0f5"
+          "enp199s0f6"
         ];
         enableIPv6 = true;
         nat = {
@@ -101,6 +105,17 @@ in
       # TODO: Enable proper firewall configuration
       # Required ports: 6443 (API), 2379/2380 (etcd), 8472 (CNI)
 
+      networking.firewall.allowedTCPPorts = lib.flatten [
+        6443 # Kubernetes API
+        10250 # Kubelet metrics
+        2379 # etcd
+        2380 # etcd
+      ];
+
+      networking.firewall.allowedUDPPorts = [
+        8472 # Cilium VXLAN
+        4789 # Cilium VXLAN fallback
+      ];
       services = {
         nix-snapshotter.enable = true;
 
