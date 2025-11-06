@@ -110,6 +110,8 @@ in
         10250 # Kubelet metrics
         2379 # etcd
         2380 # etcd
+        4240 # clilum healthcheck
+        4244 # hubble api
       ];
 
       networking.firewall.allowedUDPPorts = [

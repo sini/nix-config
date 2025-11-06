@@ -24,15 +24,16 @@
 
           plugins =
             let
-              # k3s-cni-plugins = pkgs.buildEnv {
-              #   name = "k3s-cni-plugins";
-              #   paths = with pkgs; [
-              #     cni-plugins
-              #     cni-plugin-flannel
-              #   ];
-              # };
+              k3s-cni-plugins = pkgs.buildEnv {
+                name = "k3s-cni-plugins";
+                paths = with pkgs; [
+                  cni-plugins
+                  cni-plugin-flannel
+                  pkgs.local.cni-plugin-cilium
+                ];
+              };
               cniConfig = {
-                bin_dir = lib.mkForce "${pkgs.cni-plugins}/bin/";
+                bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
                 conf_dir = "/etc/cni/net.d";
               };
             in
