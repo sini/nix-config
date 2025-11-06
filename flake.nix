@@ -7,7 +7,8 @@
   nixConfig = {
     abort-on-warn = true;
     extra-experimental-features = [ "pipe-operators" ];
-    allow-import-from-derivation = false; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
+    # Stylix and Nixidy require this...
+    allow-import-from-derivation = true; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
 
   outputs =
@@ -143,6 +144,8 @@
       url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    nixhelm.url = "github:farcaller/nixhelm";
 
     hyprland.url = "github:hyprwm/Hyprland";
 
