@@ -23,7 +23,6 @@
           pkgs.nil
           pkgs.nixd
           pkgs.nodePackages.prettier
-          inputs.nixidy.packages.${pkgs.stdenv.hostPlatform.system}.default
         ]
         ++ lib.optionals pkgs.stdenv.buildPlatform.isDarwin [
           pkgs.coreutils-full # Include GNU coreutils for darwin systems
@@ -110,6 +109,7 @@
             help = "Copy existing data to impermanence persistent storage for a host";
           }
         ];
+
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
 
       };

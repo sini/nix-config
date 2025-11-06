@@ -1,0 +1,9 @@
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: main-lb-pool
+spec:
+  blocks:
+    - cidr: 10.11.0.0/16
+  serviceSelector:
+    matchLabels: {}
