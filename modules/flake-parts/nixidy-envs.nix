@@ -53,6 +53,8 @@
           cilium = fromCRD {
             name = "cilium";
             # nix run nixpkgs#nix-prefetch-github -- cilium cilium --rev v1.18.3
+
+            # NOTE: Remember to keep pkgs/by-name/cni-plugin-cilium in sync
             src = pkgs.fetchFromGitHub {
               owner = "cilium";
               repo = "cilium";
