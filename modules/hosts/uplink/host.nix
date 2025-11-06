@@ -7,7 +7,7 @@
     roles = [
       "server"
       "unlock"
-      # "bgp-hub"
+      "bgp-hub"
       # "inference"
       "metrics-ingester"
     ];
