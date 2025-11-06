@@ -8,7 +8,7 @@
       "server"
       "unlock"
       "kubernetes"
-      # "bgp-spoke"
+      "bgp-spoke"
       # "vault"
     ];
     features = [
