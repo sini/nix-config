@@ -11,12 +11,12 @@ data:
   bpf-events-trace-enabled: "true"
   bpf-lb-acceleration: disabled
   bpf-lb-algorithm-annotation: "false"
-  bpf-lb-dsr-dispatch: geneve
   bpf-lb-external-clusterip: "true"
   bpf-lb-map-max: "65536"
-  bpf-lb-mode: dsr
+  bpf-lb-mode: snat
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
+  bpf-lb-sock-hostns-only: "true"
   bpf-lb-source-range-all-types: "false"
   bpf-map-dynamic-size-ratio: "0.0025"
   bpf-policy-map-max: "16384"
@@ -30,16 +30,16 @@ data:
   cluster-pool-ipv4-mask-size: "24"
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
+  cni-chaining-mode: portmap
   cni-exclusive: "true"
   cni-log-file: /var/run/cilium/cilium-cni.log
   custom-cni-conf: "false"
   datapath-mode: veth
-  debug: "false"
+  debug: "true"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
-  direct-routing-device: bond0
+  devices: dummy0 enp2s0 enp199s0f5 enp199s0f6
   direct-routing-skip-unreachable: "false"
-  dnsproxy-enable-transparent-mode: "true"
   dnsproxy-socket-linger-timeout: "10"
   egress-gateway-reconciliation-trigger-interval: 1s
   enable-auto-protect-node-port-range: "true"
@@ -151,7 +151,6 @@ data:
   tunnel-protocol: geneve
   tunnel-source-port-range: 0-0
   unmanaged-pod-watcher-interval: "15"
-  vlan-bpf-bypass: "0"
   vtep-cidr: ""
   vtep-endpoint: ""
   vtep-mac: ""

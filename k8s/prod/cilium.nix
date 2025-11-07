@@ -15,14 +15,13 @@
           id = 1;
         };
 
-        # Each node in a k3s cluster runs a local
-        # load balancer for the API server on port
-        # 6444.
-        k8sServiceHost = "localhost";
-        k8sServicePort = 6444;
+        # Points to the stable loopback routed by the BGP fabric
+        k8sServiceHost = "172.16.255.1";
+        k8sServicePort = 6443;
 
         # Service handling / kube-proxy replacement
         kubeProxyReplacement = true;
+        socketLB.hostNamespaceOnly = true;
         localRedirectPolicies.enabled = true;
         l2NeighDiscovery.enabled = false;
 
@@ -31,8 +30,10 @@
           masquerade = true;
           lbExternalClusterIP = true;
           hostLegacyRouting = true;
-          vlanBypass = [ 0 ];
         };
+
+        # CNI chaining
+        cni.chainingMode = "portmap";
 
         # IPAM & Pod CIDRs
         ipam = {
@@ -44,36 +45,36 @@
         routingMode = "tunnel";
         tunnelProtocol = "geneve";
 
-        loadBalancer = {
-          mode = "dsr";
-          dsrDispatch = "geneve";
-        };
-
         # Masquerading (SNAT) behavior
         enableIPv4 = true;
-        enableIpMasqAgent = true;
+        enableIpMasqAgent = false;
         enableIPv4Masquerade = true;
-        enableMasqueradeToRouteSource = true;
         nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
-        masqLinkLocal = true;
+        masqLinkLocal = false;
+
+        # Device exposure to Cilium
+        # With tunneling enabled, it is safe to manage both devices:
+        # - 'dummy0': Used for sending/receiving VXLAN traffic over BGP fabric
+        # - 'enp2s0': Used for BPF program handling ingress for ExternalIP services
+        devices = [
+          "dummy0"
+          "enp2s0"
+          "enp199s0f5"
+          "enp199s0f6"
+        ];
 
         # BGP control-plane (for FRR peering)
         bgpControlPlane.enabled = true;
 
         externalIPs.enabled = true;
 
-        nodePort = {
-          enabled = true;
-          directRoutingDevice = "bond0";
-        };
+        loadBalancer.mode = "snat";
 
         # Hubble (observability)
         hubble = {
+          enabled = true;
           relay.enabled = true;
           ui.enabled = true;
-          # This should be used so the rendered manifest
-          # doesn't contain TLS secrets.
-          tls.auto.method = "cronJob";
         };
 
         # Operator & rollout
@@ -81,7 +82,7 @@
         rollOutCiliumPods = true;
 
         # Logging
-        debug.enabled = false;
+        debug.enabled = true;
       };
     };
 

@@ -34,6 +34,7 @@ spec:
       containers:
         - args:
             - serve
+            - --debug
           command:
             - hubble-relay
           image: quay.io/cilium/hubble-relay:v1.18.3@sha256:e53e00c47fe4ffb9c086bad0c1c77f23cb968be4385881160683d9e15aa34dc3

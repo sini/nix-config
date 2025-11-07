@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: b48477845f42289e96ac0102481a610519ff717e2933dc30f3df2864cdb55346
+        cilium.io/cilium-configmap-checksum: 211fa146f2565aa71b68cae6cd6f92e4fdc55ba6d90d11f2addb03481d22811d
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -53,9 +53,9 @@ spec:
                   divisor: "1"
                   resource: limits.memory
             - name: KUBERNETES_SERVICE_HOST
-              value: localhost
+              value: 172.16.255.1
             - name: KUBERNETES_SERVICE_PORT
-              value: "6444"
+              value: "6443"
             - name: KUBE_CLIENT_BACKOFF_BASE
               value: "1"
             - name: KUBE_CLIENT_BACKOFF_DURATION
@@ -203,9 +203,9 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.namespace
             - name: KUBERNETES_SERVICE_HOST
-              value: localhost
+              value: 172.16.255.1
             - name: KUBERNETES_SERVICE_PORT
-              value: "6444"
+              value: "6443"
           image: quay.io/cilium/cilium:v1.18.3@sha256:5649db451c88d928ea585514746d50d91e6210801b300c897283ea319d68de15
           imagePullPolicy: IfNotPresent
           name: config
@@ -313,9 +313,9 @@ spec:
                   name: cilium-config
                   optional: true
             - name: KUBERNETES_SERVICE_HOST
-              value: localhost
+              value: 172.16.255.1
             - name: KUBERNETES_SERVICE_PORT
-              value: "6444"
+              value: "6443"
           image: quay.io/cilium/cilium:v1.18.3@sha256:5649db451c88d928ea585514746d50d91e6210801b300c897283ea319d68de15
           imagePullPolicy: IfNotPresent
           name: clean-cilium-state
