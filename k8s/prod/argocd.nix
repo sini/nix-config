@@ -8,6 +8,7 @@
 
       values = {
         configs = {
+          secret.argocdServerAdminPassword = "$2y$10$VQgJvznVuhDbYveIvUsr1uKh0CgmBKbWP.DhKH2L5fr6e6SLBgP2i";
           cm."resource.exclusions" = ''
             - apiGroups:
               - cilium.io
