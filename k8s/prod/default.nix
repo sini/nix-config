@@ -41,6 +41,8 @@
       rootPath = "./manifests/prod";
     };
 
+    bootstrapManifest.enable = true;
+
     extraFiles."README.md".text = ''
       # Rendered manifests
 

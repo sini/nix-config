@@ -129,6 +129,7 @@ in
               "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
               "--node-ip=${internalIP}"
               "--node-external-ip=${internalIP}"
+              "--node-name=${config.networking.hostName}"
               "--node-label=node.longhorn.io/create-default-disk=true"
               # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
               "--resolv-conf=/run/systemd/resolve/resolv.conf"
@@ -137,6 +138,7 @@ in
               "--bind-address=0.0.0.0"
               "--cluster-cidr=${environment.kubernetes.clusterCidr}"
               "--service-cidr=${environment.kubernetes.serviceCidr}"
+              "--cluster-domain k8s.${environment.domain}"
 
               "--write-kubeconfig-mode \"0644\""
               "--etcd-expose-metrics"
@@ -145,6 +147,7 @@ in
               "--disable local-storage"
               "--disable metrics-server"
               "--disable traefik"
+              # "--disable coredns"
 
               "--disable servicelb" # Cilium
               "--flannel-backend=none" # Cilium
