@@ -160,10 +160,10 @@ flakeConfig: {
               matchConfig.Type = "ether";
               networkConfig = {
                 Address = [
-                  "10.10.10.8/16"
+                  "10.9.2.2/16"
                   "fe80::ff:fe01:101/64"
                 ];
-                Gateway = "10.10.0.1";
+                Gateway = "10.9.0.1";
                 DNS = [
                   "1.1.1.1"
                   "8.8.8.8"
