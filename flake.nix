@@ -120,7 +120,7 @@
     nix-ai-tools.url = "github:numtide/nix-ai-tools";
 
     # GitKraken configuration
-    nixkraken.url = "github:sini/nixkraken";
+    nixkraken.url = "github:nicolas-goudry/nixkraken";
 
     nixos-anywhere = {
       url = "github:numtide/nixos-anywhere";
