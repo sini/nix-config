@@ -50,6 +50,7 @@
             "*.tmpl"
             "*.jwe"
             "*.xml"
+            "*.dds"
           ];
           formatter = {
             prettier = {
