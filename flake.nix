@@ -299,5 +299,12 @@
     #   url = "github:homebrew/homebrew-cask";
     #   flake = false;
     # };
+
+    # XR stuff...
+    buttplug-lite = {
+      url = "github:runtime-shady-backroom/buttplug-lite";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nixpkgs-xr.url = "github:nix-community/nixpkgs-xr";
   };
 }

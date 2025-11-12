@@ -22,6 +22,12 @@
             ''
           );
 
+        patchedBwrap = pkgs.bubblewrap.overrideAttrs (o: {
+          patches = (o.patches or [ ]) ++ [
+            ./bwrap.patch
+          ];
+        });
+
         steamPkg = pkgs.steam.override {
           extraEnv = {
             MANGOHUD = true;
@@ -35,6 +41,20 @@
           extraProfile = ''
             unset TZ
           '';
+          buildFHSEnv = (
+            args:
+            (
+              (pkgs.buildFHSEnv.override {
+                bubblewrap = patchedBwrap;
+              })
+              (
+                args
+                // {
+                  extraBwrapArgs = (args.extraBwrapArgs or [ ]) ++ [ "--cap-add ALL" ];
+                }
+              )
+            )
+          );
         };
       in
       {
