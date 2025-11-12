@@ -47,6 +47,7 @@
         tang = uidGid 963;
         ollama = uidGid 962;
         open-webui = uidGid 961;
+        gnome-initial-setup = uidGid 960;
       };
   };
 }
