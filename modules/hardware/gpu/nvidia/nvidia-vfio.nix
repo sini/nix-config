@@ -41,6 +41,7 @@
               # KVM Settings
               "kvm.ignore_msrs=1" # Ignore unhandled Model Specific Registers
               "kvm.report_ignored_msrs=0" # Don't report ignored MSRs
+              "pcie_acs_override=downstream,multifunction"
             ];
 
             initrd.kernelModules = [

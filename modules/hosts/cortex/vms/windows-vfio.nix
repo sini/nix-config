@@ -87,6 +87,10 @@ flakeConfig: {
                         # Stop the microvm-cuda service
                         ${systemctl} stop microvm@cuda.service
 
+                        # Unbind the USB controller that we pass through
+                        echo "0000:14:00.4" > /sys/bus/pci/drivers/xhci_hcd/unbind
+                        echo "1022 15b7" > /sys/bus/pci/drivers/vfio-pci/new_id
+
                         # Disable SCX and set the cpu governor
                         CPU_COUNT=0
                         for file in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
@@ -139,7 +143,6 @@ flakeConfig: {
                         systemctl  set-property --runtime -- system.slice AllowedCPUs=0-31
                         systemctl  set-property --runtime -- user.slice AllowedCPUs=0-31
 
-
                         # Restore SCX scheduler
                         CPU_COUNT=0
                         for file in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
@@ -150,6 +153,11 @@ flakeConfig: {
                         done
                         ${systemctl} start scx.service
                         ${systemctl} start irqbalance.service
+
+                        # Rebind USB controller...
+                        echo "0000:14:00.4" > /sys/bus/pci/drivers/vfio-pci/unbind
+                        echo "1022 15b7" > /sys/bus/pci/drivers/vfio-pci/remove_id
+                        echo "0000:14:00.4" > /sys/bus/pci/drivers/xhci_hcd/bind
 
                         # Restore ollama cuda VM...
                         ${systemctl} start microvm@cuda.service
