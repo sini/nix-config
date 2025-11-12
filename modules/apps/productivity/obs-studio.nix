@@ -20,7 +20,7 @@
           obs-vaapi
           obs-vkcapture
           input-overlay
-          droidcam-obs
+          #droidcam-obs
           wlrobs
         ];
       };
