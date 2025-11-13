@@ -21,10 +21,14 @@
           sameboy # GB/GBC
           mgba # GBA
           melonDS # DS
-          lime3ds # 3DS
+          azahar # 3DS
           dolphin-emu # Wii/GameCube
           cemu # Wii U
-          torzu_git # Switch
+
+          # TODO: Torzu lives on TOR now, need tor onion access to download the git repo.
+          #torzu_git # Switch
+          pkgs.local.citron
+          pkgs.local.eden
 
           # Remote play
           moonlight-qt # Client
@@ -32,7 +36,6 @@
           # VR tools
           sidequest
         ];
-
         # services.wivrn = {
         #   enable = true;
 
