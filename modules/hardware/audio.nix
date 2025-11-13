@@ -67,7 +67,9 @@
           # Audio related packages
           alsa-utils
           easyeffects
-          pavucontrol
+          #pavucontrol
+          pwvucontrol
+          coppwr
           qpwgraph # More extensive patchbay for Pipewire
 
           openal
