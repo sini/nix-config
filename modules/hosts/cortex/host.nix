@@ -673,9 +673,9 @@
         home-manager.sharedModules = [
           {
             wayland.windowManager.hyprland.settings.monitor = [
-              "DP-3, 2560x2880@59.98, 0x0, 1.25, vrr, 0, bitdepth, 10"
-              "DP-1, 3840x2160@119.88, 2048x0, 1, vrr, 1, bitdepth, 10"
-              "DP-2, 2560x1440@165.00, 5888x0, 1, vrr, 1, transform, 3"
+              "DP-2, 2560x1440@165.00, 0x0, 1, vrr, 1, transform, 1"
+              "DP-1, 3840x2160@119.88, 2560x0, 1, vrr, 1, bitdepth, 10"
+              "DP-3, 2560x2880@59.98, 6400x0, 1.25, vrr, 0, bitdepth, 10"
             ];
           }
         ];
