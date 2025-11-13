@@ -27,6 +27,7 @@
       "windows-vfio"
       "gamedev"
       "easyeffects"
+      "media-data-share"
     ];
     users = {
       "sini" = {
