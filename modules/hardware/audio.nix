@@ -182,6 +182,7 @@
 
           yabridge
           yabridgectl
+          beets
 
           vital
           odin2
