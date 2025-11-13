@@ -16,7 +16,6 @@
       "cpu-amd"
       "gpu-amd"
       "network-boot"
-      # TODO: cuda and rocm don't play well together, create a new microvm for cuda
       #"gpu-nvidia"
       #"gpu-nvidia-prime"
       "gpu-nvidia-vfio"
@@ -27,6 +26,7 @@
       "microvm-cuda"
       "windows-vfio"
       "gamedev"
+      "easyeffects"
     ];
     users = {
       "sini" = {
@@ -172,8 +172,10 @@
         boot.extraModprobeConfig = "options hid_apple fnmode=2 swap_opt_cmd=0";
 
         hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
+
         hardware.networking.interfaces = [ "enp8s0" ];
         # For Network Manager TODO: RENAME
+
         hardware.networking.unmanagedInterfaces = [
           "enp8s0"
           "br0"
