@@ -68,7 +68,6 @@
         environment.systemPackages =
           with pkgs;
           [
-            lutris # TODO: Re-enable...
             wine
             winetricks
             wineWowPackages.waylandFull
@@ -103,6 +102,25 @@
               steamtinkerlaunch
               proton-cachyos # From chaotic
             ];
+
+            gamescopeSession = {
+              enable = true;
+
+              env = {
+                DXVK_HDR = "1";
+              };
+
+              args = [
+                "--rt"
+                "--hdr-enabled"
+                "--hdr-itm-enabled"
+                "--hdr-debug-force-output"
+                "--xwayland-count 2"
+                "-W 3840"
+                "-H 2160"
+                "-r 120"
+              ];
+            };
           };
 
           gamescope = {
@@ -120,20 +138,46 @@
               "--mangoapp"
               "--rt"
               "--expose-wayland"
+              "--hdr-enabled"
+              "--hdr-itm-enabled"
+              "--hdr-debug-force-output"
+              "--xwayland-count 2"
+              "-W 3840"
+              "-H 2160"
+              "-r 120"
             ];
           };
+
           gamemode = {
             enable = true;
             enableRenice = true;
+            settings = {
+              general = {
+                softrealtime = "auto";
+                renice = 15;
+              };
+
+              gpu = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
+                apply_gpu_optimisations = "accept-responsibility";
+                gpu_device = 0;
+                amd_performance_level = "high";
+              };
+
+              custom = {
+                start = "${lib.getExe pkgs.libnotify} 'GameMode started'";
+                end = "${lib.getExe pkgs.libnotify} 'GameMode ended'";
+              };
+            };
+
           };
         };
 
         # Smooth-criminal bleeding-edge Mesa3D
         # WARNING: It will break NVIDIA's libgbm, don't use with NVIDIA Optimus setups.
-        # chaotic.mesa-git = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
-        #   enable = true;
-        #   fallbackSpecialisation = false;
-        # };
+        chaotic.mesa-git = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
+          enable = true;
+          fallbackSpecialisation = false;
+        };
       };
 
     home =
