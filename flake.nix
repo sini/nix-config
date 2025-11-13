@@ -5,7 +5,7 @@
   '';
 
   nixConfig = {
-    abort-on-warn = true;
+    abort-on-warn = false;
     extra-experimental-features = [ "pipe-operators" ];
     # Stylix and Nixidy require this...
     allow-import-from-derivation = true; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
@@ -305,6 +305,7 @@
       url = "github:runtime-shady-backroom/buttplug-lite";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
     nixpkgs-xr.url = "github:nix-community/nixpkgs-xr";
   };
 }
