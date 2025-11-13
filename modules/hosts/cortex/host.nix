@@ -28,6 +28,8 @@
       "gamedev"
       "easyeffects"
       "media-data-share"
+      "gaming"
+      "cad"
     ];
     users = {
       "sini" = {
