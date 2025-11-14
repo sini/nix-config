@@ -5,39 +5,6 @@
       {
         security.rtkit.enable = true;
 
-        # services.pipewire.wireplumber.extraConfig = {
-        #   "10-disable-camera.conf" = {
-        #     "wireplumber.profiles".main."monitor.libcamera" = "disabled";
-        #   };
-
-        #   "60-dac-priority" = {
-        #     "monitor.alsa.rules" = [
-        #       {
-        #         matches = [
-        #           {
-        #             "node.name" = "alsa_input.usb-Focusrite_Scarlett_2i2_USB_Y80HQQ415BC300-00.HiFi__Mic1__source";
-        #           }
-        #           {
-        #             "node.name" = "alsa_output.usb-Focusrite_Scarlett_2i2_USB_Y80HQQ415BC300-00.HiFi__Line1__sink";
-        #           }
-        #         ];
-        #         actions = {
-        #           update-props = {
-        #             # normal input priority is sequential starting at 2000
-        #             "priority.driver" = "3000";
-        #             "priority.session" = "3000";
-        #           };
-        #         };
-        #       }
-        #     ];
-        #   };
-        # };
-
-        # https://another.maple4ever.net/archives/2994/
-        boot.extraModprobeConfig = ''
-          options snd_usb_audio vid=0x1235 pid=0x8210 device_setup=1 quirk_flags=0x1
-        '';
-
         services.pipewire = {
           enable = true;
           alsa.enable = true;
@@ -102,40 +69,6 @@
                 "alsa.use-acp" = false;
               };
             };
-
-            # set higher pipewire quantum to fix issues with crackling sound
-            pipewire."92-quantum" = {
-              "context.properties" = {
-                "default.clock.rate" = 48000;
-                "default.clock.quantum" = 256;
-                "default.clock.min-quantum" = 256;
-                "default.clock.max-quantum" = 512;
-              };
-            };
-
-            # also set the quantum for pipewire-pulse, this is often used by games
-            pipewire-pulse."92-quantum" =
-              let
-                qr = "256/48000";
-              in
-              {
-                "context.properties" = [
-                  {
-                    name = "libpipewire-module-protocol-pulse";
-                    args = { };
-                  }
-                ];
-                "pulse.properties" = {
-                  "pulse.default.req" = qr;
-                  "pulse.min.req" = qr;
-                  "pulse.max.req" = qr;
-                  "pulse.min.quantum" = qr;
-                  "pulse.max.quantum" = qr;
-                };
-                "stream.properties" = {
-                  "node.latency" = qr;
-                };
-              };
           };
 
         };
@@ -170,7 +103,6 @@
         environment.systemPackages = with pkgs; [
           # Audio related packages
           alsa-utils
-          easyeffects
           playerctl
           #pavucontrol
           pwvucontrol
