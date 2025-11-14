@@ -42,6 +42,18 @@
 
       nixpkgs.config.rocmSupport = true;
 
+      # WARNING: It will break NVIDIA's libgbm, don't use with NVIDIA Optimus setups.
+      chaotic.mesa-git = {
+        enable = true;
+        fallbackSpecialisation = false;
+      };
+
+      # Enable HDR support
+      chaotic.hdr = {
+        enable = true;
+        specialisation.enable = false;
+      };
+
       # environment.variables = {
       #   AMD_VULKAN_ICD = "RADV"; # Force RADV when amdvlk is enabled
       #   # NOTE: nixos manual says you can also use radeon_icd.json to force radv, here's the values for amdvlk for reference
