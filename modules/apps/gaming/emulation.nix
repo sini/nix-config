@@ -19,7 +19,8 @@
           pkgs.game-devices-udev-rules
         ];
 
-        programs.ns-usbloader.enable = true;
+        # TODO: https://github.com/NixOS/nixpkgs/issues/461543
+        #programs.ns-usbloader.enable = true;
       };
 
     home =
