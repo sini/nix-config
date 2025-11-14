@@ -28,8 +28,8 @@
       "gamedev"
       "easyeffects"
       "media-data-share"
-      "gaming"
       "cad"
+      "podman"
     ];
     users = {
       "sini" = {
