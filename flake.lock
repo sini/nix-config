@@ -82,6 +82,26 @@
         "type": "github"
       }
     },
+    "ayugram-desktop": {
+      "inputs": {
+        "nixpkgs": "nixpkgs"
+      },
+      "locked": {
+        "lastModified": 1762710641,
+        "narHash": "sha256-i1xXEFOBVmxX3ChQJCGL+GeqfqKLlH9QDZRWKiFYJTE=",
+        "ref": "refs/heads/release",
+        "rev": "fa30f75525da0074d1cefaaaca40dcd8c6b4746e",
+        "revCount": 359,
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/ndfined-crp/ayugram-desktop/"
+      },
+      "original": {
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/ndfined-crp/ayugram-desktop/"
+      }
+    },
     "base16": {
       "inputs": {
         "fromYaml": "fromYaml"
