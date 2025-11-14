@@ -117,7 +117,8 @@ flakeConfig: {
                         }
 
                         # Disable split_lock mitigations
-                        ${sysctl} kernel.split_lock_mitigate=0
+                        # Commented out because we also like this optimization for gaming in linux
+                        # ${sysctl} kernel.split_lock_mitigate=0
 
                         # Only schedule Linux stuff on the second CCD (AMD Ryzen 9950X3D)
                         ${systemctl} set-property --runtime -- init.scope AllowedCPUs=8-15,24-31
@@ -136,7 +137,8 @@ flakeConfig: {
                         ${virsh} allocpages 2M 0
 
                         # Restore split_lock mitigations
-                        ${sysctl} kernel.split_lock_mitigate=1
+                        # Commented out because we also like this optimization for gaming in linux
+                        # ${sysctl} kernel.split_lock_mitigate=1
 
                         # Reset scheduling back to use the entire CPU
                         systemctl set-property --runtime -- init.scope AllowedCPUs=0-31

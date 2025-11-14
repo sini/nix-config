@@ -1,8 +1,21 @@
 {
   flake.features.emulation = {
     nixos =
-      { pkgs, ... }:
+      { lib, pkgs, ... }:
       {
+        # wine support
+        environment.systemPackages = [ pkgs.wine-ge ];
+
+        environment.sessionVariables.WINE_BIN = lib.getExe pkgs.wine-ge;
+
+        boot.binfmt.registrations."DOSWin" = {
+          wrapInterpreterInShell = false;
+          interpreter = lib.getExe pkgs.wine-ge;
+          recognitionType = "magic";
+          offset = 0;
+          magicOrExtension = "MZ";
+        };
+
         services.udev.packages = [
           pkgs.dolphin-emu
           pkgs.game-devices-udev-rules
