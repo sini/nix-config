@@ -24,12 +24,15 @@
       #"regreet"
       #"hyprland"
       "alacritty"
-      "discord"
       "kitty"
       "firefox"
       "obs-studio"
       "obsidian" # note-taking app
       "zathura" # PDF viewer
+
+      # Messaging
+      "discord"
+      "telegram"
     ];
   };
 }

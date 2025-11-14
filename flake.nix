@@ -315,5 +315,11 @@
       url = "github:different-name/steam-config-nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    ayugram-desktop = {
+      type = "git";
+      submodules = true;
+      url = "https://github.com/ndfined-crp/ayugram-desktop/";
+    };
   };
 }
