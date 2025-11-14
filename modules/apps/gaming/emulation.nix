@@ -1,19 +1,17 @@
 {
   flake.features.emulation = {
     nixos =
-      { lib, pkgs, ... }:
+      { inputs, pkgs, ... }:
       {
-        # wine support
-        environment.systemPackages = [ pkgs.wine-ge ];
+        imports = [
+          inputs.nix-gaming.nixosModules.wine
+        ];
 
-        environment.sessionVariables.WINE_BIN = lib.getExe pkgs.wine-ge;
-
-        boot.binfmt.registrations."DOSWin" = {
-          wrapInterpreterInShell = false;
-          interpreter = lib.getExe pkgs.wine-ge;
-          recognitionType = "magic";
-          offset = 0;
-          magicOrExtension = "MZ";
+        programs.wine = {
+          enable = true;
+          package = inputs.nix-gaming.packages.${pkgs.stdenv.hostPlatform.system}.wine-ge;
+          binfmt = true;
+          ntsync = true;
         };
 
         services.udev.packages = [
