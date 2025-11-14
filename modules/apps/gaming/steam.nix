@@ -148,28 +148,28 @@
             ];
           };
 
-          gamemode = {
-            enable = true;
-            enableRenice = true;
-            settings = {
-              general = {
-                softrealtime = "auto";
-                renice = 15;
-              };
+          # gamemode = {
+          #   enable = true;
+          #   enableRenice = true;
+          #   settings = {
+          #     general = {
+          #       softrealtime = "auto";
+          #       renice = 15;
+          #     };
 
-              gpu = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
-                apply_gpu_optimisations = "accept-responsibility";
-                gpu_device = 0;
-                amd_performance_level = "high";
-              };
+          #     gpu = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
+          #       apply_gpu_optimisations = "accept-responsibility";
+          #       gpu_device = 0;
+          #       amd_performance_level = "high";
+          #     };
 
-              custom = {
-                start = "${lib.getExe pkgs.libnotify} 'GameMode started'";
-                end = "${lib.getExe pkgs.libnotify} 'GameMode ended'";
-              };
-            };
+          #     custom = {
+          #       start = "${lib.getExe pkgs.libnotify} 'GameMode started'";
+          #       end = "${lib.getExe pkgs.libnotify} 'GameMode ended'";
+          #     };
+          #   };
 
-          };
+          # };
         };
 
         # Smooth-criminal bleeding-edge Mesa3D
