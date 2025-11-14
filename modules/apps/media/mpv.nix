@@ -6,8 +6,14 @@
         enable = true;
 
         config = {
+          ytdl-format = "bestvideo+bestaudio";
           slang = "eng,en";
           alang = "jpn,jap,ja,jp";
+          hwdec = "auto";
+          hwdec-codecs = "all";
+          profile = "gpu-hq";
+          vo = "gpu";
+          gpu-api = "opengl";
         };
 
         bindings = {
@@ -18,6 +24,10 @@
           UP = "add volume 2.5";
           DOWN = "add volume -2.5";
           ENTER = "ignore";
+          "=" = "add video-zoom 0.1";
+          "-" = "add video-zoom -0.1";
+          "alt+=" = "add video-rotate 90";
+          "alt+-" = "add video-rotate -90";
         };
 
         scripts = with pkgs.mpvScripts; [
