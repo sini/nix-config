@@ -24,7 +24,7 @@
 
         patchedBwrap = pkgs.bubblewrap.overrideAttrs (o: {
           patches = (o.patches or [ ]) ++ [
-            ./bwrap.patch
+            ./patches/bwrap.patch
           ];
         });
 
