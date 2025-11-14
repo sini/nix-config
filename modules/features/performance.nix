@@ -2,11 +2,8 @@
   flake.features.performance.nixos =
     { pkgs, lib, ... }:
     {
-      boot.kernelModules = [
-        "ntsync"
-      ];
-
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
+
       services = {
         irqbalance.enable = true;
         scx = {
@@ -22,13 +19,6 @@
             "-p"
           ];
         };
-        udev.packages = [
-          (pkgs.writeTextFile {
-            name = "ntsync-udev-rules";
-            text = ''KERNEL=="ntsync", MODE="0660", TAG+="uaccess"'';
-            destination = "/etc/udev/rules.d/70-ntsync.rules";
-          })
-        ];
       };
 
       # Based on: https://github.com/CachyOS/CachyOS-Settings/blob/e96d1e1dd253ed09e4104b096df543e6ecad08be/usr/lib/sysctl.d/99-cachyos-settings.conf
