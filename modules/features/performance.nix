@@ -22,6 +22,13 @@
             "-p"
           ];
         };
+        udev.packages = [
+          (pkgs.writeTextFile {
+            name = "ntsync-udev-rules";
+            text = ''KERNEL=="ntsync", MODE="0660", TAG+="uaccess"'';
+            destination = "/etc/udev/rules.d/70-ntsync.rules";
+          })
+        ];
       };
 
       # Based on: https://github.com/CachyOS/CachyOS-Settings/blob/e96d1e1dd253ed09e4104b096df543e6ecad08be/usr/lib/sysctl.d/99-cachyos-settings.conf
@@ -54,6 +61,10 @@
         # tunable expresses the interval between those wakeups, in hundredths of a second (Default is 500).
         "vm.dirty_writeback_centisecs" = 1500;
 
+        # USE MAX_INT - MAPCOUNT_ELF_CORE_MARGIN.
+        # see comment in include/linux/mm.h in the kernel tree.
+        "vm.max_map_count" = 2147483642;
+
         # This action will speed up your boot and shutdown, because one less module is loaded. Additionally disabling watchdog timers increases performance and lowers power consumption
         # Disable NMI watchdog
         "kernel.nmi_watchdog" = 0;
@@ -76,6 +87,10 @@
         # use TCP BBR has significantly increased throughput and reduced latency for connections
         "net.ipv4.tcp_congestion_control" = "bbr";
 
+        # This is required due to some games being unable to reuse their TCP ports
+        # if they're killed and restarted quickly - the default timeout is too large.
+        "net.ipv4.tcp_fin_timeout" = 5;
+
         # TODO: Look into this option
         # https://wiki.defect.ch/os/linux/kernel-tuning suggests its no longer required with bbr
         # "net.core.default_qdisc" = "fq";
@@ -96,6 +111,10 @@
 
         # Increase writeback interval  for xfs
         "fs.xfs.xfssyncd_centisecs" = 10000;
+
+        # Prevents intentional slowdowns in case games experience split locks
+        # This is valid for kernels v6.0+
+        "kernel.split_lock_mitigate" = 0;
       };
     };
 }

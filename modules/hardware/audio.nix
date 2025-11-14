@@ -1,8 +1,17 @@
 {
   flake.features.audio = {
     nixos =
-      { pkgs, lib, ... }:
       {
+        inputs,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        imports = [
+          inputs.nix-gaming.nixosModules.pipewireLowLatency
+        ];
+
         security.rtkit.enable = true;
 
         services.pipewire = {
@@ -12,6 +21,12 @@
           wireplumber.enable = true;
           jack.enable = true;
           pulse.enable = true;
+
+          lowLatency = {
+            enable = true;
+            quantum = 64;
+            rate = 96000;
+          };
 
           wireplumber.extraConfig = {
             # Enable Fancy Blueooth Codecs
