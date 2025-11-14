@@ -1,5 +1,5 @@
 {
-  flake.features.gaming = {
+  flake.features.emulation = {
     nixos =
       { pkgs, ... }:
       {

@@ -7,6 +7,7 @@
       "steam"
       "sunshine"
       "mangohud"
+      "emulation"
     ];
   };
 }
