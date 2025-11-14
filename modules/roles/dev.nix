@@ -11,6 +11,7 @@
       "nvf"
       "git"
       "ssh"
+      "sysmon"
       "yazi"
       #"zellij"
 
