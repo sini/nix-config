@@ -10,6 +10,7 @@
 
         programs.ns-usbloader.enable = true;
       };
+
     home =
       { pkgs, ... }:
       {
@@ -33,31 +34,8 @@
 
           # Remote play
           moonlight-qt # Client
-
-          # VR tools
-          sidequest
         ];
-        # services.wivrn = {
-        #   enable = true;
 
-        #   package = pkgs.wivrn;
-
-        #   autoStart = true;
-        #   openFirewall = true;
-        #   highPriority = true;
-        #   defaultRuntime = true;
-        #   steam.importOXRRuntimes = true;
-
-        #   config = {
-        #     enable = true;
-
-        #     json = {
-        #       bitrate = 135000000;
-        #       # application = pkgs.wlx-overlay-s;
-        #     };
-        #   };
-        # };
-        # services.desktopManager.gnome.sessionPath = [ pkgs.sidequest ];
       };
   };
 }
