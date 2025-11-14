@@ -27,6 +27,7 @@
 
           # TODO: Torzu lives on TOR now, need tor onion access to download the git repo.
           #torzu_git # Switch
+          ryubing
           pkgs.local.citron
           pkgs.local.eden
 
