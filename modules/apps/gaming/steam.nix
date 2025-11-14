@@ -171,13 +171,6 @@
 
           # };
         };
-
-        # Smooth-criminal bleeding-edge Mesa3D
-        # WARNING: It will break NVIDIA's libgbm, don't use with NVIDIA Optimus setups.
-        chaotic.mesa-git = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
-          enable = true;
-          fallbackSpecialisation = false;
-        };
       };
 
     home =

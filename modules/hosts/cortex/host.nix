@@ -57,13 +57,6 @@
           "br0"
         ];
 
-        # Enable HDR support
-        # TODO: move to hardware module
-        chaotic.hdr = {
-          enable = true;
-          specialisation.enable = false;
-        };
-
         # Quirks for Focusrite
         # https://another.maple4ever.net/archives/2994/
         boot.extraModprobeConfig = ''
