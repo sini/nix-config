@@ -300,12 +300,20 @@
     #   flake = false;
     # };
 
-    # XR stuff...
-    buttplug-lite = {
-      url = "github:runtime-shady-backroom/buttplug-lite";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    niri.url = "github:sodiboo/niri-flake";
+
+    # XR & Gaming stuff...
+    # I know... I borrowed this from this cultured user and havent played with it: https://github.com/ToasterUwU/flake
+    # buttplug-lite = {
+    #   url = "github:runtime-shady-backroom/buttplug-lite";
+    #   inputs.nixpkgs.follows = "nixpkgs-unstable";
+    # };
 
     nixpkgs-xr.url = "github:nix-community/nixpkgs-xr";
+
+    steam-config-nix = {
+      url = "github:different-name/steam-config-nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 }
