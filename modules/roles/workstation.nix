@@ -6,6 +6,7 @@
       "bluetooth"
       "coolercontrol"
       "ddcutil"
+      "keyboard"
 
       # Styles
       "stylix"
