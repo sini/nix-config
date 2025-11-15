@@ -4,33 +4,6 @@
     nixos =
       { pkgs, inputs, ... }:
       # let
-      # https://discord.com/channels/1065291958328758352/1071254299998421052/threads/1428125264319352904
-      # branch: next
-      # custom-monado = pkgs.monado.overrideAttrs (old: {
-      #   src = pkgs.fetchgit {
-      #     url = "https://tangled.org/@matrixfurry.com/monado";
-      #     rev = "e8dc56e3d02ecd9ab16331649516b3dd0f73d4ad";
-      #     hash = "sha256-M4tFZeTlvmybMAltSdkbmei0mMf/sh9A/S8t7ZxefHA=";
-      #   };
-      # });
-
-      # custom-xrizer = pkgs.xrizer.overrideAttrs rec {
-      #   src = pkgs.fetchFromGitHub {
-      #     owner = "Mr-Zero88";
-      #     repo = "xrizer";
-      #     rev = "7328384195e3255f16b83ba06248cd74d67237eb";
-      #     hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
-      #   };
-
-      #   cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-      #     inherit src;
-      #     hash = "sha256-87JcULH1tAA487VwKVBmXhYTXCdMoYM3gOQTkM53ehE=";
-      #   };
-
-      #   patches = [ ];
-
-      #   doCheck = false;
-      # };
 
       #   monado-start-desktop = pkgs.makeDesktopItem {
       #     exec = "monado-start";
@@ -186,6 +159,11 @@
 
         # ++ [ inputs.buttplug-lite.packages.x86_64-linux.default ];
 
+        # https://monado.freedesktop.org/valve-index-setup.html
+        # clear .config/libsurvive
+        # put headset on floor in center of playspace, no trackers or controllers connected, and power it on
+        # run 2x for 30 seconds: survive-cli --steamvr-calibration
+        # now monado will be able to start
         services.monado = {
           enable = true;
           # forceDefaultRuntime = true;

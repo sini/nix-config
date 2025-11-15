@@ -76,7 +76,7 @@
       mkNetworkConfig = ipv4: {
         networkConfig = {
           Address = [ "${ipv4}${managementSubnet}" ];
-          DHCP = "yes"; # enable DHCPv6 only, so we can get a GUA.
+          DHCP = "ipv6"; # enable DHCPv6 only, so we can get a GUA.
           IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
           IPv6PrivacyExtensions = "yes";
           LinkLocalAddressing = "ipv6";
