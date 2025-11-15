@@ -34,7 +34,6 @@
             vulkanPackages_latest.vulkan-validation-layers
             vulkanPackages_latest.vulkan-extension-layer
             rocmPackages.clr.icd
-            monado-vulkan-layers # VR support
           ];
         };
 

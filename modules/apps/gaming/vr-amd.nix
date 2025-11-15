@@ -3,126 +3,131 @@
     requires = [ "steam" ];
     nixos =
       { pkgs, inputs, ... }:
-      let
-        custom-monado = pkgs.monado.overrideAttrs (old: {
-          src = pkgs.fetchgit {
-            url = "https://tangled.org/@matrixfurry.com/monado";
-            rev = "9267299e9cc7837c0a2458dc0bd490a2377288d0";
-            hash = "sha256-6p2c4DSn0x4RyylONT3U+xFEULt/f4QKQ75/bxWM+5E=";
-          };
-        });
+      # let
+      # https://discord.com/channels/1065291958328758352/1071254299998421052/threads/1428125264319352904
+      # branch: next
+      # custom-monado = pkgs.monado.overrideAttrs (old: {
+      #   src = pkgs.fetchgit {
+      #     url = "https://tangled.org/@matrixfurry.com/monado";
+      #     rev = "e8dc56e3d02ecd9ab16331649516b3dd0f73d4ad";
+      #     hash = "sha256-M4tFZeTlvmybMAltSdkbmei0mMf/sh9A/S8t7ZxefHA=";
+      #   };
+      # });
 
-        # custom-xrizer = pkgs.xrizer.overrideAttrs rec {
-        #   src = pkgs.fetchFromGitHub {
-        #     owner = "RinLovesYou";
-        #     repo = "xrizer";
-        #     rev = "f491eddd0d9839d85dbb773f61bd1096d5b004ef";
-        #     hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
-        #   };
+      # custom-xrizer = pkgs.xrizer.overrideAttrs rec {
+      #   src = pkgs.fetchFromGitHub {
+      #     owner = "Mr-Zero88";
+      #     repo = "xrizer";
+      #     rev = "7328384195e3255f16b83ba06248cd74d67237eb";
+      #     hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
+      #   };
 
-        #   cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-        #     inherit src;
-        #     hash = "sha256-87JcULH1tAA487VwKVBmXhYTXCdMoYM3gOQTkM53ehE=";
-        #   };
+      #   cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+      #     inherit src;
+      #     hash = "sha256-87JcULH1tAA487VwKVBmXhYTXCdMoYM3gOQTkM53ehE=";
+      #   };
 
-        #   patches = [ ];
+      #   patches = [ ];
 
-        #   doCheck = false;
-        # };
+      #   doCheck = false;
+      # };
 
-        #   monado-start-desktop = pkgs.makeDesktopItem {
-        #     exec = "monado-start";
-        #     icon = "steamvr";
-        #     name = "Start Monado";
-        #     desktopName = "Start Monado";
-        #     terminal = true;
-        #   };
+      #   monado-start-desktop = pkgs.makeDesktopItem {
+      #     exec = "monado-start";
+      #     icon = "steamvr";
+      #     name = "Start Monado";
+      #     desktopName = "Start Monado";
+      #     terminal = true;
+      #   };
 
-        #   monado-start = pkgs.stdenv.mkDerivation {
-        #     pname = "monado-start";
-        #     version = "3.1.0";
+      #   monado-start = pkgs.stdenv.mkDerivation {
+      #     pname = "monado-start";
+      #     version = "3.1.0";
 
-        #     src = pkgs.writeShellApplication {
-        #       name = "monado-start";
+      #     src = pkgs.writeShellApplication {
+      #       name = "monado-start";
 
-        #       runtimeInputs =
-        #         with pkgs;
-        #         [
-        #           wlx-overlay-s
-        #           wayvr-dashboard
-        #           # index_camera_passthrough
-        #           lighthouse-steamvr
-        #           kdePackages.kde-cli-tools
-        #         ]
-        #         ++ [
-        #           lovr-playspace
-        #         ];
+      #       runtimeInputs =
+      #         with pkgs;
+      #         [
+      #           wlx-overlay-s
+      #           wayvr-dashboard
+      #           # index_camera_passthrough
+      #           lighthouse-steamvr
+      #           kdePackages.kde-cli-tools
+      #         ]
+      #         ++ [
+      #           lovr-playspace
+      #         ];
 
-        #       text = ''
-        #         GROUP_PID_FILE="/tmp/monado-group-pid-$$"
+      #       text = ''
+      #         GROUP_PID_FILE="/tmp/monado-group-pid-$$"
 
-        #         function off() {
-        #           echo "Stopping Monado and other stuff..."
+      #         function off() {
+      #           echo "Stopping Monado and other stuff..."
 
-        #           if [ -f "$GROUP_PID_FILE" ]; then
-        #             PGID=$(cat "$GROUP_PID_FILE")
-        #             echo "Killing process group $PGID..."
-        #             kill -- -"$PGID" 2>/dev/null
-        #             rm -f "$GROUP_PID_FILE"
-        #           fi
+      #           if [ -f "$GROUP_PID_FILE" ]; then
+      #             PGID=$(cat "$GROUP_PID_FILE")
+      #             echo "Killing process group $PGID..."
+      #             kill -- -"$PGID" 2>/dev/null
+      #             rm -f "$GROUP_PID_FILE"
+      #           fi
 
-        #           systemctl --user --no-block stop monado.service
-        #           lighthouse -vv --state off &
-        #           wait
+      #           systemctl --user --no-block stop monado.service
+      #           lighthouse -vv --state off &
+      #           wait
 
-        #           exit 0
-        #         }
+      #           exit 0
+      #         }
 
-        #         function on() {
-        #           echo "Starting Monado and other stuff..."
+      #         function on() {
+      #           echo "Starting Monado and other stuff..."
 
-        #           lighthouse -vv --state on &
-        #           systemctl --user restart monado.service
+      #           lighthouse -vv --state on &
+      #           systemctl --user restart monado.service
 
-        #           setsid sh -c '
-        #             # lovr-playspace &
-        #             wlx-overlay-s --replace &
-        #             # index_camera_passthrough &
-        #             # kde-inhibit --power --screenSaver sleep infinity &
-        #             wait
-        #           ' &
-        #           PGID=$!
-        #           echo "$PGID" > "$GROUP_PID_FILE"
-        #         }
+      #           setsid sh -c '
+      #             # lovr-playspace &
+      #             wlx-overlay-s --replace &
+      #             # index_camera_passthrough &
+      #             # kde-inhibit --power --screenSaver sleep infinity &
+      #             wait
+      #           ' &
+      #           PGID=$!
+      #           echo "$PGID" > "$GROUP_PID_FILE"
+      #         }
 
-        #         trap off EXIT INT TERM
-        #         echo "Press ENTER to turn everything OFF."
+      #         trap off EXIT INT TERM
+      #         echo "Press ENTER to turn everything OFF."
 
-        #         on
-        #         read -r
-        #         off
-        #       '';
-        #     };
+      #         on
+      #         read -r
+      #         off
+      #       '';
+      #     };
 
-        #     installPhase = ''
-        #       mkdir -p $out/bin
-        #       cp $src/bin/monado-start $out/bin/
-        #       chmod +x $out/bin/monado-start
+      #     installPhase = ''
+      #       mkdir -p $out/bin
+      #       cp $src/bin/monado-start $out/bin/
+      #       chmod +x $out/bin/monado-start
 
-        #       cp -r ${monado-start-desktop}/* $out/
-        #     '';
+      #       cp -r ${monado-start-desktop}/* $out/
+      #     '';
 
-        #     meta = {
-        #       description = "Start script for monado and all other things i use with it.";
-        #     };
-        #   };
-      in
+      #     meta = {
+      #       description = "Start script for monado and all other things i use with it.";
+      #     };
+      #   };
+      # in
       {
         imports = [
           inputs.nixpkgs-xr.nixosModules.nixpkgs-xr
         ];
 
         nixpkgs.xr.enable = true;
+
+        # Monado vulkan layers
+        hardware.graphics.extraPackages = [ pkgs.monado-vulkan-layers ];
 
         # Bigscreen Beyond Kernel patches from LVRA Discord Thread
         boot.kernelPatches = [
@@ -161,6 +166,7 @@
         programs.steam.extraCompatPackages = [ pkgs.proton-ge-rtsp-bin ];
 
         environment.systemPackages = with pkgs; [
+          monado-vulkan-layers
           libsurvive
           xrgears
           openvr
@@ -172,6 +178,8 @@
           resolute
           # monado-start
           pkgs.lighthouse-steamvr
+          custom-monado
+          custom-xrizer
           # VR tools
           sidequest
         ];
@@ -183,33 +191,33 @@
           # forceDefaultRuntime = true;
           defaultRuntime = true;
           highPriority = true;
-          package = custom-monado;
+          package = pkgs.custom-monado;
         };
 
-        # systemd.user.services.monado = {
-        #   serviceConfig.LimitNOFILE = 8192;
-        #   environment = {
-        #     #     # STEAMVR_PATH = "${config.hm.xdg.dataHome}/Steam/steamapps/common/SteamVR";
-        #     #     # XR_RUNTIME_JSON = "${config.hm.xdg.configHome}/openxr/1/active_runtime.json";
-        #     AMD_VULKAN_ICD = "RADV";
-        #     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
+        systemd.user.services.monado = {
+          serviceConfig.LimitNOFILE = 8192;
+          environment = {
+            #     #     # STEAMVR_PATH = "${config.hm.xdg.dataHome}/Steam/steamapps/common/SteamVR";
+            #     #     # XR_RUNTIME_JSON = "${config.hm.xdg.configHome}/openxr/1/active_runtime.json";
+            #     AMD_VULKAN_ICD = "RADV";
+            #     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
 
-        #     STEAMVR_LH_ENABLE = "1";
-        #     XRT_COMPOSITOR_COMPUTE = "1";
-        #     XRT_COMPOSITOR_FORCE_WAYLAND_DIRECT = "1";
-        #     # XRT_DEBUG_GUI = "1";
-        #     # XRT_CURATED_GUI = "1";
-        #     XRT_COMPOSITOR_SCALE_PERCENTAGE = "100";
-        #     # XRT_COMPOSITOR_PRINT_MODES = "1";
-        #     XRT_COMPOSITOR_LOG = "debug";
-        #     XRT_COMPOSITOR_DESIRED_MODE = "1";
-        #     XRT_COMPOSITOR_USE_PRESENT_WAIT = "1";
-        #     # XRT_COMPOSITOR_FORCE_GPU_INDEX = "3";
-        #     # XRT_COMPOSITOR_FORCE_CLIENT_GPU_INDEX = "4";
-        #     #     # XRT_COMPOSITOR_DESIRED_MODE=0 is the 75hz mode
-        #     #     # XRT_COMPOSITOR_DESIRED_MODE=1 is the 90hz mode
-        #   };
-        # };
+            STEAMVR_LH_ENABLE = "1";
+            XRT_COMPOSITOR_COMPUTE = "1";
+            XRT_COMPOSITOR_FORCE_WAYLAND_DIRECT = "1";
+            #     # XRT_DEBUG_GUI = "1";
+            #     # XRT_CURATED_GUI = "1";
+            XRT_COMPOSITOR_SCALE_PERCENTAGE = "100";
+            #     # XRT_COMPOSITOR_PRINT_MODES = "1";
+            XRT_COMPOSITOR_LOG = "debug";
+            XRT_COMPOSITOR_DESIRED_MODE = "1";
+            XRT_COMPOSITOR_USE_PRESENT_WAIT = "1";
+            #     # XRT_COMPOSITOR_FORCE_GPU_INDEX = "3";
+            #     # XRT_COMPOSITOR_FORCE_CLIENT_GPU_INDEX = "4";
+            #     #     # XRT_COMPOSITOR_DESIRED_MODE=0 is the 75hz mode
+            #     #     # XRT_COMPOSITOR_DESIRED_MODE=1 is the 90hz mode
+          };
+        };
 
         # services.wivrn = {
         #   enable = true;
@@ -236,35 +244,58 @@
     home =
       { pkgs, ... }:
       {
-        xdg.configFile.".config/openxr/1/active_runtime.json".text = ''
-          {
-            "file_format_version": "1.0.0",
-            "runtime": {
-              "VALVE_runtime_is_steamvr": true,
-              "library_path": "/home/sini/.local/share/Steam/steamapps/common/SteamVR/bin/linux64/vrclient.so",
-              "name": "SteamVR"
-            }
-          }
-        '';
-        xdg.configFile.".config/openvr/openvrpaths.vrpath".text = ''
+
+        xdg.configFile."openxr/1/active_runtime.json".source =
+          "${pkgs.custom-monado}/share/openxr/1/openxr_monado.json";
+        xdg.configFile."openvr/openvrpaths.vrpath".text = ''
           {
             "config" :
             [
-              "/home/sini/.local/share/Steam/config"
+              "/home/aki/.local/share/Steam/config"
             ],
             "external_drivers" : null,
             "jsonid" : "vrpathreg",
             "log" :
             [
-              "/home/sini/.local/share//Steam/logs"
+              "~/.local/share/Steam/logs"
             ],
             "runtime" :
             [
-              "/home/sini/.local/share/Steam/steamapps/common/SteamVR"
+              "${pkgs.custom-xrizer}/lib/xrizer",
+              "~/.local/share/Steam/steamapps/common/SteamVR"
             ],
             "version" : 1
           }
         '';
+        # xdg.configFile.".config/openxr/1/active_runtime.json".text = ''
+        #   {
+        #     "file_format_version": "1.0.0",
+        #     "runtime": {
+        #       "VALVE_runtime_is_steamvr": true,
+        #       "library_path": "/home/sini/.local/share/Steam/steamapps/common/SteamVR/bin/linux64/vrclient.so",
+        #       "name": "SteamVR"
+        #     }
+        #   }
+        # '';
+        # xdg.configFile.".config/openvr/openvrpaths.vrpath".text = ''
+        #   {
+        #     "config" :
+        #     [
+        #       "/home/sini/.local/share/Steam/config"
+        #     ],
+        #     "external_drivers" : null,
+        #     "jsonid" : "vrpathreg",
+        #     "log" :
+        #     [
+        #       "/home/sini/.local/share//Steam/logs"
+        #     ],
+        #     "runtime" :
+        #     [
+        #       "/home/sini/.local/share/Steam/steamapps/common/SteamVR"
+        #     ],
+        #     "version" : 1
+        #   }
+        # '';
 
         home.file.".local/share/monado/hand-tracking-models".source = pkgs.fetchgit {
           url = "https://gitlab.freedesktop.org/monado/utilities/hand-tracking-models";
