@@ -29,6 +29,7 @@
       "media-data-share"
       "cad"
       "podman"
+      "vr-amd"
     ];
     users = {
       "sini" = {
