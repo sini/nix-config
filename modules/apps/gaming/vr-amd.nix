@@ -3,125 +3,120 @@
     requires = [ "steam" ];
     nixos =
       { pkgs, inputs, ... }:
-      # let
-      #   custom-monado = pkgs.monado.overrideAttrs (old: {
-      #     src = pkgs.fetchFromGitHub {
-      #       owner = "ToasterUwU";
-      #       repo = "monado";
-      #       rev = "8f85280c406ce2e23939c58bc925cf939f36e1e8";
-      #       hash = "sha256-ZeSmnAZ2gDiLTdlVAKQeS3cc6fcRBcSjYZf/M6eI8j4=";
-      #     };
+      let
+        custom-monado = pkgs.monado.overrideAttrs (old: {
+          src = pkgs.fetchgit {
+            url = "https://tangled.org/@matrixfurry.com/monado";
+            rev = "9267299e9cc7837c0a2458dc0bd490a2377288d0";
+            hash = "sha256-6p2c4DSn0x4RyylONT3U+xFEULt/f4QKQ75/bxWM+5E=";
+          };
+        });
 
-      #     cmakeFlags = old.cmakeFlags ++ [
-      #       (pkgs.lib.cmakeBool "XRT_HAVE_OPENCV" false)
-      #     ];
-      #   });
+        # custom-xrizer = pkgs.xrizer.overrideAttrs rec {
+        #   src = pkgs.fetchFromGitHub {
+        #     owner = "RinLovesYou";
+        #     repo = "xrizer";
+        #     rev = "f491eddd0d9839d85dbb773f61bd1096d5b004ef";
+        #     hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
+        #   };
 
-      #   custom-xrizer = pkgs.xrizer.overrideAttrs rec {
-      #     src = pkgs.fetchFromGitHub {
-      #       owner = "RinLovesYou";
-      #       repo = "xrizer";
-      #       rev = "f491eddd0d9839d85dbb773f61bd1096d5b004ef";
-      #       hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
-      #     };
+        #   cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
+        #     inherit src;
+        #     hash = "sha256-87JcULH1tAA487VwKVBmXhYTXCdMoYM3gOQTkM53ehE=";
+        #   };
 
-      #     cargoDeps = pkgs.rustPlatform.fetchCargoVendor {
-      #       inherit src;
-      #       hash = "sha256-87JcULH1tAA487VwKVBmXhYTXCdMoYM3gOQTkM53ehE=";
-      #     };
+        #   patches = [ ];
 
-      #     patches = [ ];
+        #   doCheck = false;
+        # };
 
-      #     doCheck = false;
-      #   };
+        #   monado-start-desktop = pkgs.makeDesktopItem {
+        #     exec = "monado-start";
+        #     icon = "steamvr";
+        #     name = "Start Monado";
+        #     desktopName = "Start Monado";
+        #     terminal = true;
+        #   };
 
-      #   monado-start-desktop = pkgs.makeDesktopItem {
-      #     exec = "monado-start";
-      #     icon = "steamvr";
-      #     name = "Start Monado";
-      #     desktopName = "Start Monado";
-      #     terminal = true;
-      #   };
+        #   monado-start = pkgs.stdenv.mkDerivation {
+        #     pname = "monado-start";
+        #     version = "3.1.0";
 
-      #   monado-start = pkgs.stdenv.mkDerivation {
-      #     pname = "monado-start";
-      #     version = "3.1.0";
+        #     src = pkgs.writeShellApplication {
+        #       name = "monado-start";
 
-      #     src = pkgs.writeShellApplication {
-      #       name = "monado-start";
+        #       runtimeInputs =
+        #         with pkgs;
+        #         [
+        #           wlx-overlay-s
+        #           wayvr-dashboard
+        #           # index_camera_passthrough
+        #           lighthouse-steamvr
+        #           kdePackages.kde-cli-tools
+        #         ]
+        #         ++ [
+        #           lovr-playspace
+        #         ];
 
-      #       runtimeInputs =
-      #         with pkgs;
-      #         [
-      #           wlx-overlay-s
-      #           wayvr-dashboard
-      #           # index_camera_passthrough
-      #           lighthouse-steamvr
-      #           kdePackages.kde-cli-tools
-      #         ]
-      #         ++ [
-      #           lovr-playspace
-      #         ];
+        #       text = ''
+        #         GROUP_PID_FILE="/tmp/monado-group-pid-$$"
 
-      #       text = ''
-      #         GROUP_PID_FILE="/tmp/monado-group-pid-$$"
+        #         function off() {
+        #           echo "Stopping Monado and other stuff..."
 
-      #         function off() {
-      #           echo "Stopping Monado and other stuff..."
+        #           if [ -f "$GROUP_PID_FILE" ]; then
+        #             PGID=$(cat "$GROUP_PID_FILE")
+        #             echo "Killing process group $PGID..."
+        #             kill -- -"$PGID" 2>/dev/null
+        #             rm -f "$GROUP_PID_FILE"
+        #           fi
 
-      #           if [ -f "$GROUP_PID_FILE" ]; then
-      #             PGID=$(cat "$GROUP_PID_FILE")
-      #             echo "Killing process group $PGID..."
-      #             kill -- -"$PGID" 2>/dev/null
-      #             rm -f "$GROUP_PID_FILE"
-      #           fi
+        #           systemctl --user --no-block stop monado.service
+        #           lighthouse -vv --state off &
+        #           wait
 
-      #           systemctl --user --no-block stop monado.service
-      #           lighthouse -vv --state off &
-      #           wait
+        #           exit 0
+        #         }
 
-      #           exit 0
-      #         }
+        #         function on() {
+        #           echo "Starting Monado and other stuff..."
 
-      #         function on() {
-      #           echo "Starting Monado and other stuff..."
+        #           lighthouse -vv --state on &
+        #           systemctl --user restart monado.service
 
-      #           lighthouse -vv --state on &
-      #           systemctl --user restart monado.service
+        #           setsid sh -c '
+        #             # lovr-playspace &
+        #             wlx-overlay-s --replace &
+        #             # index_camera_passthrough &
+        #             # kde-inhibit --power --screenSaver sleep infinity &
+        #             wait
+        #           ' &
+        #           PGID=$!
+        #           echo "$PGID" > "$GROUP_PID_FILE"
+        #         }
 
-      #           setsid sh -c '
-      #             # lovr-playspace &
-      #             wlx-overlay-s --replace &
-      #             # index_camera_passthrough &
-      #             # kde-inhibit --power --screenSaver sleep infinity &
-      #             wait
-      #           ' &
-      #           PGID=$!
-      #           echo "$PGID" > "$GROUP_PID_FILE"
-      #         }
+        #         trap off EXIT INT TERM
+        #         echo "Press ENTER to turn everything OFF."
 
-      #         trap off EXIT INT TERM
-      #         echo "Press ENTER to turn everything OFF."
+        #         on
+        #         read -r
+        #         off
+        #       '';
+        #     };
 
-      #         on
-      #         read -r
-      #         off
-      #       '';
-      #     };
+        #     installPhase = ''
+        #       mkdir -p $out/bin
+        #       cp $src/bin/monado-start $out/bin/
+        #       chmod +x $out/bin/monado-start
 
-      #     installPhase = ''
-      #       mkdir -p $out/bin
-      #       cp $src/bin/monado-start $out/bin/
-      #       chmod +x $out/bin/monado-start
+        #       cp -r ${monado-start-desktop}/* $out/
+        #     '';
 
-      #       cp -r ${monado-start-desktop}/* $out/
-      #     '';
-
-      #     meta = {
-      #       description = "Start script for monado and all other things i use with it.";
-      #     };
-      #   };
-      # in
+        #     meta = {
+        #       description = "Start script for monado and all other things i use with it.";
+        #     };
+        #   };
+      in
       {
         imports = [
           inputs.nixpkgs-xr.nixosModules.nixpkgs-xr
@@ -183,13 +178,13 @@
 
         # ++ [ inputs.buttplug-lite.packages.x86_64-linux.default ];
 
-        # services.monado = {
-        #   enable = true;
-        #   # forceDefaultRuntime = true;
-        #   # defaultRuntime = true;
-        #   highPriority = true;
-        #   package = custom-monado;
-        # };
+        services.monado = {
+          enable = true;
+          # forceDefaultRuntime = true;
+          defaultRuntime = true;
+          highPriority = true;
+          package = custom-monado;
+        };
 
         # systemd.user.services.monado = {
         #   serviceConfig.LimitNOFILE = 8192;
