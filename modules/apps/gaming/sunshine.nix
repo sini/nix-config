@@ -53,7 +53,7 @@ in
               {
                 name = "Steam Big Picture";
                 image-path = "steam.png";
-                detached = [ "steam steam://open/bigpicture" ];
+                detached = [ "${pkgs.util-linux}/bin/setsid ${pkgs.steam}/bin/steam steam://open/bigpicture" ];
                 auto-detach = "true";
                 wait-all = "true";
                 exit-timeout = "5";
@@ -61,10 +61,23 @@ in
             ];
           };
           settings = {
-            output_name = 1;
+            adapter_name = "/dev/dri/renderD128";
+            origin_web_ui_allowed = "lan";
+            capture = "kms";
+            encoder = "vaapi";
+            output_name = 0;
           };
         };
 
+        services.udev.extraRules = ''
+          SUBSYSTEM=="misc", KERNEL=="uhid", GROUP="uinput", MODE="0660"
+          SUBSYSTEMS=="input", ATTRS{name}=="Sunshine * (virtual) pad*", OWNER="sini"
+          SUBSYSTEMS=="input", ATTRS{id/vendor}=="beef", ATTRS{id/product}=="dead", ATTRS{name}=="* passthrough*", OWNER="sini"
+        '';
+        # services.udev.extraRules = ''
+        #   KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+        #   KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
+        # '';
       };
 
     home =
