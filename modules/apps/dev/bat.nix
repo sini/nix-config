@@ -11,7 +11,7 @@
           batwatch
           batpipe
           batman
-          # batgrep # TODO: restore once building again...
+          batgrep
           batdiff
         ];
       };

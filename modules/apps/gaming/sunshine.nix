@@ -69,15 +69,15 @@ in
           };
         };
 
-        services.udev.extraRules = ''
-          SUBSYSTEM=="misc", KERNEL=="uhid", GROUP="uinput", MODE="0660"
-          SUBSYSTEMS=="input", ATTRS{name}=="Sunshine * (virtual) pad*", OWNER="sini"
-          SUBSYSTEMS=="input", ATTRS{id/vendor}=="beef", ATTRS{id/product}=="dead", ATTRS{name}=="* passthrough*", OWNER="sini"
-        '';
         # services.udev.extraRules = ''
-        #   KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
-        #   KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
+        #   SUBSYSTEM=="misc", KERNEL=="uhid", GROUP="uinput", MODE="0660"
+        #   SUBSYSTEMS=="input", ATTRS{name}=="Sunshine * (virtual) pad*", OWNER="sini"
+        #   SUBSYSTEMS=="input", ATTRS{id/vendor}=="beef", ATTRS{id/product}=="dead", ATTRS{name}=="* passthrough*", OWNER="sini"
         # '';
+        services.udev.extraRules = ''
+          KERNEL=="uinput", GROUP="input", MODE="0660", OPTIONS+="static_node=uinput"
+          KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
+        '';
       };
 
     home =

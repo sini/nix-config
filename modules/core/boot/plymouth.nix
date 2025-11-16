@@ -1,7 +1,6 @@
 {
   flake.features.workstation.nixos = {
     boot = {
-      # TODO: add plymouth theming, enable only on workstation/laptop
       plymouth.enable = true;
       consoleLogLevel = 3;
       initrd.verbose = false;

@@ -50,7 +50,6 @@ let
     };
 
   featureSubmoduleGenericOptions = {
-    # TODO: accept actual feature shape
     requires = mkOption {
       type = types.listOf types.str;
       default = [ ];

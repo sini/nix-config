@@ -51,7 +51,7 @@
         powerManagement.enable = true;
         open = true;
         nvidiaSettings = false;
-        nvidiaPersistenced = false; # TODO: Followup on https://github.com/NixOS/nixpkgs/issues/437066
+        nvidiaPersistenced = true;
         package = config.boot.kernelPackages.nvidiaPackages.beta;
       };
     };
