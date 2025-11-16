@@ -81,10 +81,6 @@
         # if they're killed and restarted quickly - the default timeout is too large.
         "net.ipv4.tcp_fin_timeout" = 5;
 
-        # TODO: Look into this option
-        # https://wiki.defect.ch/os/linux/kernel-tuning suggests its no longer required with bbr
-        # "net.core.default_qdisc" = "fq";
-
         # Increase netdev receive queue
         # May help prevent losing packets
         "net.core.netdev_max_backlog" = 4096;

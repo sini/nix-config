@@ -1,5 +1,6 @@
 { config, ... }:
 let
+  # TODO: can we make this more magic?
   user = config.flake.meta.user.username;
 in
 {
@@ -100,7 +101,6 @@ in
 
         programs.virt-manager.enable = true;
 
-        # TODO: remove hardcoded user 'sini'
         systemd.tmpfiles.rules = [
           "d /dev/hugepages 1770 root kvm -"
           "d /dev/shm 1777 root root -"
@@ -185,8 +185,6 @@ in
           spice-webdavd.enable = true;
         };
 
-        # TODO: Setup CPU pinning and scheduler hooks...
-        # https://github.com/stele95/AMD-Single-GPU-Passthrough/blob/main/README.md#cpu-pinning
         # Manage the virtualisation services
         virtualisation = {
           libvirtd = {

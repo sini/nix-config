@@ -25,7 +25,7 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+        boot.kernelPackages = pkgs.linuxPackages_cachyos;
 
         hardware.networking.interfaces = [ "wlp3s0" ];
 

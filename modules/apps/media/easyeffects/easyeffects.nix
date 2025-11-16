@@ -6,6 +6,9 @@
         environment.systemPackages = with pkgs; [
           easyeffects
         ];
+
+        # Technically not easyeffects, but we want it on the same systems
+        programs.noisetorch.enable = true;
       };
 
     home = {
