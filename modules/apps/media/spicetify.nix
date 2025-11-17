@@ -14,6 +14,8 @@
 
         imports = [ inputs.spicetify-nix.homeManagerModules.spicetify ];
 
+        # Note: Spotify requires NetworkManager to have internet connectivity if it's enabled;
+        # it does not like hybrid systemd-networkd+networkmanager configurations for split interfaces.
         programs.spicetify = {
           enable = true;
           enabledExtensions = with spicePkgs.extensions; [
@@ -43,8 +45,8 @@
 
           # wayland = true;
           # windowManagerPatch = true;
-          experimentalFeatures = true;
-          alwaysEnableDevTools = true;
+          # experimentalFeatures = true;
+          # alwaysEnableDevTools = true;
         };
 
       };
