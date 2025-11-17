@@ -21,6 +21,17 @@
         };
       };
 
+      # zramSwap = {
+      #   enable = true;
+      #   algorithm = "zstd";
+      #   memoryPercent = 25;
+      # };
+
+      services.udev.extraRules = ''
+        ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/scheduler}="none"
+        ACTION=="add|change", KERNEL=="nvme[0-9]n[0-9]", ATTR{queue/read_ahead_kb}="1024"
+      '';
+
       # Based on: https://github.com/CachyOS/CachyOS-Settings/blob/e96d1e1dd253ed09e4104b096df543e6ecad08be/usr/lib/sysctl.d/99-cachyos-settings.conf
       boot.kernel.sysctl = {
         # The sysctl swappiness parameter determines the kernel's preference for pushing anonymous pages or page cache to disk in memory-starved situations.

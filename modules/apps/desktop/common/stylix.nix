@@ -60,10 +60,6 @@ in
             enable = true;
             autoEnable = true;
 
-            # TODO: https://github.com/NixOS/nixpkgs/issues/461564
-            # TODO: https://github.com/nix-community/stylix/issues/1967
-            targets.gnome.enable = false;
-
             homeManagerIntegration.autoImport = false;
             homeManagerIntegration.followSystem = false;
 
