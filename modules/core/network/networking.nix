@@ -49,6 +49,7 @@
       config,
       hostOptions,
       environment,
+      activeFeatures,
       lib,
       ...
     }:
@@ -197,6 +198,8 @@
           )
         ) bridgeConfig
       );
+
+      networkManagerEnabled = elem "network-manager" activeFeatures;
     in
     {
       options.hardware.networking = with types; {
@@ -270,6 +273,8 @@
           hostName = hostOptions.hostname;
           domain = environment.domain;
           hostId = with builtins; substring 0 8 (hashString "md5" config.networking.hostName);
+
+          networkmanager.enable = lib.mkForce networkManagerEnabled;
 
           useDHCP = false;
           dhcpcd.enable = false;

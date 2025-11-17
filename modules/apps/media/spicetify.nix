@@ -11,9 +11,9 @@
         spicePkgs = inputs.spicetify-nix.legacyPackages.${pkgs.stdenv.system};
       in
       {
-        # home.packages = with pkgs; [ spotify ];
 
         imports = [ inputs.spicetify-nix.homeManagerModules.spicetify ];
+
         programs.spicetify = {
           enable = true;
           enabledExtensions = with spicePkgs.extensions; [
@@ -41,8 +41,8 @@
             pointer
           ];
 
-          wayland = true;
-          windowManagerPatch = true;
+          # wayland = true;
+          # windowManagerPatch = true;
           experimentalFeatures = true;
           alwaysEnableDevTools = true;
         };

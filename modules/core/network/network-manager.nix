@@ -13,6 +13,11 @@
         networking.networkmanager = {
           enable = true;
           unmanaged = unmanagedInterfaces;
+          settings = {
+            connectivity = {
+              enabled = false;
+            };
+          };
         };
 
         systemd.services.NetworkManager-wait-online.enable = false;
