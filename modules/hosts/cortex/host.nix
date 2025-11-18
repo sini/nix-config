@@ -32,9 +32,11 @@
       "vr-amd"
     ];
     users = {
-      "sini" = {
+      "shuo" = {
         "features" = [
-          "spotify-player"
+          "firefox"
+          "steam"
+          "spicetify"
         ];
       };
     };
