@@ -22,8 +22,10 @@ let
     features: roots:
     let
       rootNames = lib.catAttrs "name" roots;
+      # Collect initial exclusions from root features
+      initialExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" roots));
       op =
-        visited: toVisit:
+        visited: toVisit: exclusions:
         if toVisit == [ ] then
           visited
         else
@@ -31,15 +33,32 @@ let
             cur = head toVisit;
             rest = tail toVisit;
           in
-          if elem cur.name (map (v: v.name) visited) then
-            op visited rest
+          # Skip if current feature is excluded
+          if elem cur.name exclusions then
+            op visited rest exclusions
+          else if elem cur.name (map (v: v.name) visited) then
+            op visited rest exclusions
           else
             let
-              deps = map (name: features.${name}) (cur.requires or [ ]);
+              # Add current feature's exclusions to the accumulated set
+              newExclusions = lib.unique (exclusions ++ (cur.excludes or [ ]));
+              # Filter out excluded features from requires
+              deps = map (name: features.${name}) (
+                filter (name: !(elem name newExclusions)) (cur.requires or [ ])
+              );
             in
-            op (op visited deps ++ [ cur ]) rest;
+            op (op visited deps newExclusions ++ [ cur ]) rest newExclusions;
+
+      # Get initial result (may include features that are later excluded)
+      resultWithRoots = op [ ] roots initialExclusions;
+
+      # Collect ALL exclusions from the entire dependency tree (roots + dependencies)
+      allExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" (roots ++ resultWithRoots)));
+
+      # Filter out features that are excluded anywhere in the tree, and remove roots
+      finalResult = filter (v: !(elem v.name allExclusions) && !(elem v.name rootNames)) resultWithRoots;
     in
-    (op [ ] roots) |> filter (v: !(lib.elem v.name rootNames));
+    finalResult;
 
   mkDeferredModuleOpt =
     description:
@@ -54,6 +73,11 @@ let
       type = types.listOf types.str;
       default = [ ];
       description = "List of names of features required by this feature";
+    };
+    excludes = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = "List of names of features to exclude from this feature (prevents the feature and its requires from being added)";
     };
     nixos = mkDeferredModuleOpt "A NixOS module for this feature";
     home = mkDeferredModuleOpt "A Home-Manager module for this feature";
