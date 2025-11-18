@@ -23,9 +23,11 @@
       "gamedev"
     ];
     users = {
-      "sini" = {
+      "shuo" = {
         "features" = [
-          "spotify-player"
+          "firefox"
+          "steam"
+          "spicetify"
         ];
       };
     };
