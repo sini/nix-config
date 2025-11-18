@@ -44,6 +44,7 @@
         {
           hostRoles,
           hostFeatures ? [ ],
+          hostExclusions ? [ ],
         }:
         let
           # 1. Get feature names from roles
@@ -55,9 +56,16 @@
           # 3. Map feature names to actual feature modules
           allFeatures = builtins.map (name: config.features.${name}) allFeatureNames;
 
-          # 4. Resolve dependencies for all features
-          featureDeps = collectRequires config.features allFeatures;
-          allFeaturesWithDeps = allFeatures ++ featureDeps;
+          # 4. Collect all exclusions from features and host-level exclusions
+          featureExclusions = lib.flatten (lib.catAttrs "excludes" allFeatures);
+          allExclusions = lib.unique (featureExclusions ++ hostExclusions);
+
+          # 5. Filter out excluded features from the root set
+          filteredFeatures = lib.filter (f: !(lib.elem f.name allExclusions)) allFeatures;
+
+          # 6. Resolve dependencies for filtered features
+          featureDeps = collectRequires config.features filteredFeatures;
+          allFeaturesWithDeps = filteredFeatures ++ featureDeps;
 
         in
         allFeaturesWithDeps;
@@ -82,6 +90,7 @@
             allHostFeatures = getModulesForFeatures {
               hostRoles = hostOptions.roles;
               hostFeatures = hostOptions.features or [ ];
+              hostExclusions = hostOptions.exclude-features or [ ];
             };
 
             # Get active feature names (including transitive dependencies)
@@ -123,9 +132,15 @@
                     # Map to actual feature modules
                     userFeatureModules = builtins.map (name: config.features.${name}) allUserFeatureNames;
 
-                    # Resolve dependencies
-                    userFeatureDeps = collectRequires config.features userFeatureModules;
-                    allUserFeatures = userFeatureModules ++ userFeatureDeps;
+                    # Collect all exclusions from user features
+                    userExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
+
+                    # Filter out excluded features from the user's root set
+                    filteredUserFeatures = lib.filter (f: !(lib.elem f.name userExclusions)) userFeatureModules;
+
+                    # Resolve dependencies for filtered user features
+                    userFeatureDeps = collectRequires config.features filteredUserFeatures;
+                    allUserFeatures = filteredUserFeatures ++ userFeatureDeps;
                   in
                   allUserFeatures;
 
