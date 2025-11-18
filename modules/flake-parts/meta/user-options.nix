@@ -63,6 +63,20 @@ in
                       configurations.
                     '';
                   };
+                  inheritHostFeatures = mkOption {
+                    type = types.bool;
+                    default = false;
+                    description = ''
+                      Whether to inherit all home-manager features from the host configuration.
+
+                      When true, this user will receive all home-manager modules from the host's
+                      enabled features. When false, only user-specific features and baseline features
+                      will be included.
+
+                      This allows for more granular control over which users get which features on
+                      shared systems.
+                    '';
+                  };
                 };
               };
               description = "Baseline features and configurations shared by all of this user's configurations";

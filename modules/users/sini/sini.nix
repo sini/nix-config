@@ -1,6 +1,8 @@
 { rootPath, ... }:
 {
   flake.users.sini = {
+    baseline.inheritHostFeatures = true;
+
     configuration =
       { config, ... }:
       let
