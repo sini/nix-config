@@ -110,51 +110,65 @@
                   inputs.chaotic.nixosModules.nyx-registry
                 ];
 
+            # Compute enabled users (used in specialArgs and home-manager)
+            enabledUsers =
+              let
+                environmentUserNames = builtins.attrNames (environment.users or { });
+                hostUserNames = builtins.attrNames (hostOptions.users or { });
+                enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
+              in
+              lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
+
             # Home Manager configuration for users
             makeHome =
               username: userSpec:
               let
-                # Collect home modules from host features
-                hostHomeModules = collectHomeModules allHostFeatures;
+                # Get user contexts
+                globalUser = config.users.${username} or { };
+                envUser = environment.users.${username} or { };
+                hostUser = hostOptions.users.${username} or { };
+                inheritHostFeatures = globalUser.baseline.inheritHostFeatures or false;
 
-                # Get user-specific features and modules
-                userFeatures =
-                  let
-                    # Get user from environment and host users
-                    envUser = environment.users.${username} or { };
-                    hostUser = hostOptions.users.${username} or { };
+                # Collect all exclusions (host + user features)
+                hostExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allHostFeatures));
 
-                    # Combine features from environment and host
-                    envFeatureNames = envUser.features or [ ];
-                    hostFeatureNames = hostUser.features or [ ];
-                    allUserFeatureNames = lib.unique (envFeatureNames ++ hostFeatureNames);
+                baselineFeatureNames = globalUser.baseline.features or [ ];
+                envFeatureNames = envUser.features or [ ];
+                hostFeatureNames = hostUser.features or [ ];
+                allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
+                userFeatureModules = builtins.map (name: config.features.${name}) allUserFeatureNames;
+                userOnlyExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
 
-                    # Map to actual feature modules
-                    userFeatureModules = builtins.map (name: config.features.${name}) allUserFeatureNames;
+                allExclusions = lib.unique (hostExclusions ++ userOnlyExclusions);
 
-                    # Collect all exclusions from user features
-                    userExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
+                # Build filter predicates
+                coreRoleFeatureNames = config.roles.core.features;
+                isCore = f: lib.elem f.name coreRoleFeatureNames;
+                isNotExcluded = f: !(lib.elem f.name allExclusions);
 
-                    # Filter out excluded features from the user's root set
-                    filteredUserFeatures = lib.filter (f: !(lib.elem f.name userExclusions)) userFeatureModules;
+                # Filter and process user features
+                filteredUserFeatures = lib.filter isNotExcluded userFeatureModules;
+                userFeatureDeps = collectRequires config.features filteredUserFeatures;
+                userFeatures = filteredUserFeatures ++ userFeatureDeps;
 
-                    # Resolve dependencies for filtered user features
-                    userFeatureDeps = collectRequires config.features filteredUserFeatures;
-                    allUserFeatures = filteredUserFeatures ++ userFeatureDeps;
-                  in
-                  allUserFeatures;
+                # Split host features into core and non-core, applying all exclusions
+                coreHostFeatures = lib.filter (f: isCore f && isNotExcluded f) allHostFeatures;
+                nonCoreHostFeatures = lib.filter (f: !(isCore f) && isNotExcluded f) allHostFeatures;
 
-                # Collect user-specific home modules
+                # Collect home modules
+                coreHomeModules = collectHomeModules coreHostFeatures;
+                nonCoreHostHomeModules =
+                  if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
                 userHomeModules = collectHomeModules userFeatures;
 
-                # Get user-specific configuration
+                # User configurations
                 userConfigs = [
                   (environment.users.${username}.configuration or { })
                   (hostOptions.users.${username}.configuration or { })
                 ];
               in
               {
-                imports = hostHomeModules ++ userHomeModules ++ userConfigs;
+                imports = coreHomeModules ++ nonCoreHostHomeModules ++ userHomeModules ++ userConfigs;
               };
 
           in
@@ -170,19 +184,7 @@
                 activeFeatures
                 ;
               inherit (config) nodes;
-              users =
-                let
-                  # Get user names from environment and host configuration
-                  environmentUserNames = builtins.attrNames (environment.users or { });
-                  hostUserNames = builtins.attrNames (hostOptions.users or { });
-
-                  # Merge and deduplicate user lists
-                  enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
-
-                  # Filter config.users to only include enabled users
-                  enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
-                in
-                enabledUsers;
+              users = enabledUsers;
               lib = lib'; # Pass the correct lib (stable or unstable) to modules.
             };
 
@@ -203,16 +205,7 @@
               ++ [
                 {
                   # Configure Home Manager with feature-based modules
-                  home-manager.users = lib'.mapAttrs makeHome (
-                    let
-                      # Get user names from environment and host configuration
-                      environmentUserNames = builtins.attrNames (environment.users or { });
-                      hostUserNames = builtins.attrNames (hostOptions.users or { });
-                      enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
-                      enabledUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.users;
-                    in
-                    enabledUsers
-                  );
+                  home-manager.users = lib'.mapAttrs makeHome enabledUsers;
                 }
               ];
           }
