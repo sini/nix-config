@@ -36,14 +36,14 @@
     ayugram-desktop =
       inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}.ayugram-desktop;
 
-    # TODO: remove once nixpkgs is fixed
-    ddcutil = prev.ddcutil.overrideAttrs (old: {
-      version = "2.2.3";
-      src = prev.fetchurl {
-        url = "https://www.ddcutil.com/tarballs/ddcutil-2.2.3.tar.gz";
-        hash = "sha256-4XvAUqYvnqhS2eOLpPHtfnNmVnoOGdvhpDnuca2+BqA=";
-      };
-    });
+    # # TODO: remove once nixpkgs is fixed
+    # ddcutil = prev.ddcutil.overrideAttrs (old: {
+    #   version = "2.2.3";
+    #   src = prev.fetchurl {
+    #     url = "https://www.ddcutil.com/tarballs/ddcutil-2.2.3.tar.gz";
+    #     hash = "sha256-4XvAUqYvnqhS2eOLpPHtfnNmVnoOGdvhpDnuca2+BqA=";
+    #   };
+    # });
 
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;
     nixidy = inputs.nixidy.packages.${prev.stdenv.hostPlatform.system}.default;
