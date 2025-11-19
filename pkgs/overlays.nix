@@ -33,6 +33,9 @@
       doCheck = false;
     };
 
+    ayugram-desktop =
+      inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}.ayugram-desktop;
+
     # TODO: remove once nixpkgs is fixed
     ddcutil = prev.ddcutil.overrideAttrs (old: {
       version = "2.2.3";
