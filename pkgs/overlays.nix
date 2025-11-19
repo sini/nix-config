@@ -10,8 +10,8 @@
     custom-monado = prev.monado.overrideAttrs (old: {
       src = prev.fetchgit {
         url = "https://tangled.org/@matrixfurry.com/monado";
-        rev = "e8dc56e3d02ecd9ab16331649516b3dd0f73d4ad";
-        hash = "sha256-M4tFZeTlvmybMAltSdkbmei0mMf/sh9A/S8t7ZxefHA=";
+        rev = "c6ee4146cd629f4e5bd59b1758ea54f556e89933";
+        hash = "sha256-QuBbiSz3rluBREh0CW5MVYaf0czj+kBm92vul3p7jdI=";
       };
     });
 
@@ -32,6 +32,15 @@
 
       doCheck = false;
     };
+
+    # TODO: remove once nixpkgs is fixed
+    ddcutil = prev.ddcutil.overrideAttrs (old: {
+      version = "2.2.3";
+      src = prev.fetchurl {
+        url = "https://www.ddcutil.com/tarballs/ddcutil-2.2.3.tar.gz";
+        hash = "sha256-4XvAUqYvnqhS2eOLpPHtfnNmVnoOGdvhpDnuca2+BqA=";
+      };
+    });
 
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;
     nixidy = inputs.nixidy.packages.${prev.stdenv.hostPlatform.system}.default;
