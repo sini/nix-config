@@ -2,15 +2,14 @@
   flake.features.audio = {
     nixos =
       {
-        inputs,
         pkgs,
         lib,
         ...
       }:
       {
-        imports = [
-          inputs.nix-gaming.nixosModules.pipewireLowLatency
-        ];
+        # imports = [
+        #   inputs.nix-gaming.nixosModules.pipewireLowLatency
+        # ];
 
         security.rtkit.enable = true;
         services.pulseaudio.enable = lib.mkForce false; # disable pulseAudio
@@ -24,11 +23,11 @@
           jack.enable = true;
           pulse.enable = true;
 
-          lowLatency = {
-            enable = true;
-            quantum = 64;
-            rate = 96000;
-          };
+          # lowLatency = {
+          #   enable = true;
+          #   quantum = 64;
+          #   rate = 96000;
+          # };
 
           wireplumber.extraConfig = {
             # Enable Fancy Blueooth Codecs
@@ -44,19 +43,19 @@
               ];
             };
 
-            alsa-monitor = {
-              properties = {
-                "alsa.use-acp" = false;
-                "alsa.midi" = false; # Disable if not needed
-                # Better hardware parameter handling
-                "api.alsa.period-size" = 512;
-                "api.alsa.period-num" = 2;
-                "api.alsa.headroom" = 1024;
-                # Disable hardware mixing for pure output
-                "api.alsa.disable-mmap" = false;
-                "api.alsa.use-chmap" = false;
-              };
-            };
+            # alsa-monitor = {
+            #   properties = {
+            #     # "alsa.use-acp" = false;
+            #     "alsa.midi" = false; # Disable if not needed
+            #     # Better hardware parameter handling
+            #     "api.alsa.period-size" = 512;
+            #     "api.alsa.period-num" = 2;
+            #     "api.alsa.headroom" = 1024;
+            #     # Disable hardware mixing for pure output
+            #     "api.alsa.disable-mmap" = false;
+            #     "api.alsa.use-chmap" = false;
+            #   };
+            # };
           };
 
           extraConfig = {
@@ -69,7 +68,7 @@
             # Up-to 192kHz in the Focusrite
             pipewire."99-playback-96khz" = {
               "context.properties" = {
-                "default.clock.rate" = 96000;
+                "default.clock.rate" = 48000;
                 "default.clock.allowed-rates" = [
                   44100
                   48000
@@ -81,11 +80,11 @@
               };
             };
 
-            pipewire."99-disable-acp-global" = {
-              "context.properties" = {
-                "alsa.use-acp" = false;
-              };
-            };
+            # pipewire."99-disable-acp-global" = {
+            #   "context.properties" = {
+            #     "alsa.use-ucm" = true;
+            #   };
+            # };
           };
 
         };
