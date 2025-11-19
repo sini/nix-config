@@ -3,6 +3,7 @@
     ipv4 = [ "10.9.2.1" ];
     ipv6 = [ "fd64:0:1::5/64" ];
     environment = "dev";
+
     roles = [
       "workstation"
       "gaming"
@@ -11,6 +12,7 @@
       "media"
       "inference"
     ];
+
     features = [
       "cpu-amd"
       "gpu-amd"
@@ -30,7 +32,17 @@
       "cad"
       "podman"
       "vr-amd"
+
+      # Hyprland config
+      "regreet"
+      "hyprland"
     ];
+
+    exclude-features = [
+      "gdm" # these are included with workstation
+      "gnome"
+    ];
+
     users = {
       "shuo" = {
         "features" = [
