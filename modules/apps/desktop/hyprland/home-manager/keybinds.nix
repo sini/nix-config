@@ -118,6 +118,11 @@
           "${PRIMARY}, P, pseudo" # dwindle layout
           "${PRIMARY}, S, togglesplit" # dwindle layout
           "${PRIMARY} ${SECONDARY}, L, exec, ${loginctl}  lock-session"
+          # GDM Session Switch:
+          # gdbus call --system \
+          # --dest org.gnome.DisplayManager \
+          # --object-path /org/gnome/DisplayManager/LocalDisplayFactory \
+          # --method org.gnome.DisplayManager.LocalDisplayFactory.CreateTransientDisplay
           "${PRIMARY} ${SECONDARY}, C, exec, ${uwsm} stop"
 
           # group
