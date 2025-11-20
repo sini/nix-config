@@ -7,6 +7,9 @@
       ];
       programs.zen-browser.enable = true;
       programs.zen-browser.nativeMessagingHosts = [ pkgs.firefoxpwa ];
+
+      # stylix.targets.zen-browser.profileNames = [ "<PROFILE_NAME>" ];
+
       programs.zen-browser.policies = {
         AutofillAddressEnabled = false;
         AutofillCreditCardEnabled = false;
