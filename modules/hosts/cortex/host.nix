@@ -90,7 +90,7 @@
                     "node.name" = "alsa_input.usb-Focusrite_Scarlett_2i2_USB_Y80HQQ415BC300-00.HiFi__Mic1__source";
                   }
                   {
-                    "node.name" = "alsa_output.usb-Topping_D10-00.HiFi__Headphones__sink";
+                    "node.name" = "alsa_output.usb-Topping_D10-00.pro-output-0";
                     # "node.name" = "alsa_output.usb-Focusrite_Scarlett_2i2_USB_Y80HQQ415BC300-00.HiFi__Line1__sink";
                   }
                 ];
@@ -115,10 +115,10 @@
               "HDMI-A-1, 2560x2880@59.98, 3840x0, 1, vrr, 0, bitdepth, 10"
             ];
             xdg.configFile = {
-              "easyeffects/autoload/output/alsa_output.usb-Topping_D10-00.HiFi__Headphones__sink.json".text =
+              "easyeffects/autoload/output/alsa_output.usb-Topping_D10-00.pro-output-0.json".text =
                 builtins.toJSON
                   {
-                    device = "alsa_output.usb-Topping_D10-00.HiFi__Headphones__sink";
+                    device = "alsa_output.usb-Topping_D10-00.pro-output-0";
                     device-description = "Created by Home Manager";
                     device-profile = "[Out] Headphones";
                     preset-name = "HD650-Harmon";
