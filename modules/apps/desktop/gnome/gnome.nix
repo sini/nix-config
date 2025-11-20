@@ -3,6 +3,7 @@
     nixos =
       {
         pkgs,
+        lib,
         ...
       }:
       {
@@ -35,6 +36,10 @@
           enable = true;
           terminal = "kitty";
         };
+
+        # We don't want to start orca automatically in non-gnome WM's which don't manage the
+        # dbus config setting that disables it from auto-starting
+        systemd.user.services.orca.wantedBy = lib.mkForce [ ];
 
         environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
       };

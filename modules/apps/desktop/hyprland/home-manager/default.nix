@@ -28,8 +28,8 @@
         snapshot
       ];
 
-      # xdg.configFile."uwsm/env".source =
-      #   "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
+      xdg.configFile."uwsm/env".source =
+        "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
       programs = {
         hyprlock.enable = true;
@@ -51,9 +51,14 @@
         };
       };
 
-      xdg.configFile."uwsm/env".source =
-        "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
+      # xdg.configFile."uwsm/env".source =
+      #   "${config.home.profileDirectory}/etc/profile.d/hm-session-vars.sh";
 
+      # xdg.configFile."uwsm/env".text = ''
+      #   # Explicitly source the Home Manager session variables
+      #   . "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh"
+      #   export __HM_SESS_VARS_SOURCED=
+      # '';
       wayland.windowManager.hyprland = {
         enable = true;
         # Managed by system configuration

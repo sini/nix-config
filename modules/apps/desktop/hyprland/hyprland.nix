@@ -43,6 +43,8 @@
       };
 
       programs.uwsm.enable = true;
+
+      security.pam.services.gdm.enableGnomeKeyring = true;
       #services.hypridle.enable = true;
       #programs.hyprlock.enable = true;
 
@@ -64,7 +66,7 @@
         };
 
         gnome.gnome-keyring.enable = true;
-
+        gnome.sushi.enable = true;
         devmon.enable = true;
         gvfs.enable = true;
         udisks2.enable = true;

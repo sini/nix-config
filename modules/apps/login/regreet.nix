@@ -1,6 +1,7 @@
 {
   flake.features.regreet = {
     excludes = [ "gdm" ];
+
     nixos = {
       services.greetd.enable = true;
 

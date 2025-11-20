@@ -27,9 +27,23 @@
         xdgOpenUsePortal = true;
         config = {
           common.default = [ "gtk" ];
+          hyprland = {
+            default = [
+              "gtk"
+              "hyprland"
+            ];
+          };
+          niri = {
+            default = [
+              "gtk"
+              "gnome"
+            ];
+          };
         };
         extraPortals = with pkgs; [
           xdg-desktop-portal-gtk
+          xdg-desktop-portal-gnome
+          # xdg-desktop-portal-hyprland
         ];
       };
     };
