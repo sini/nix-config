@@ -211,8 +211,9 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
 
     # NixPkgs Unstable
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/master";
+    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable"; # Has binary cache + tests
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable"; # Has binary cache
+    # nixpkgs-unstable.url = "github:nixos/nixpkgs/master"; # Bleeding edge...
 
     nvf.url = "github:notashelf/nvf";
 
