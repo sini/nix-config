@@ -42,16 +42,6 @@
           wantedBy = [ "graphical-session.target" ];
         };
         security.pam.services.gdm.enableGnomeKeyring = true;
-        #services.hypridle.enable = true;
-        #programs.hyprlock.enable = true;
-
-        # programs.gnupg.agent.pinentryPackage = pkgs.writeShellApplication {
-        #   name = "pinentry-rofi";
-        #   runtimeInputs = with pkgs; [ rofi-wayland ];
-        #   text = ''
-        #     exec ${pinentry-rofi}/bin/pinentry-rofi "$@"
-        #   '';
-        # };
 
         services = {
           dbus = {
