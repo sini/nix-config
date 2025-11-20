@@ -71,7 +71,7 @@
         path = lib.mkForce [ ];
         serviceConfig.ExecStart = [
           "" # to replace original ExecStart
-          (pkgs.getExe' config.programs.uwsm.package "fumon")
+          (lib.getExe' config.programs.uwsm.package "fumon")
         ];
       };
     };

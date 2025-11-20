@@ -1,10 +1,14 @@
 {
   flake.features.hyprland = {
-    requires = [ "uwsm" ];
+    requires = [
+      "xdg-portal"
+      "uwsm"
+    ];
     nixos =
       {
         inputs,
         pkgs,
+        lib,
         ...
       }:
       {
@@ -32,6 +36,11 @@
           xwayland.enable = true; # Xwayland can be disabled.
         };
 
+        systemd.user.services.hyprpolkitagent = {
+          path = lib.mkForce [ ]; # reason explained in desktop/default.nix
+          serviceConfig.Slice = "session$-graphical.slice";
+          wantedBy = [ "graphical-session.target" ];
+        };
         security.pam.services.gdm.enableGnomeKeyring = true;
         #services.hypridle.enable = true;
         #programs.hyprlock.enable = true;
