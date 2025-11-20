@@ -165,7 +165,7 @@
 
           #"${PRIMARY}, grave, hyprexpo:expo, toggle"
 
-          "${PRIMARY}, z, easymotion, action:hyprctl dispatch focuswindow address:{}"
+          # "${PRIMARY}, z, easymotion, action:hyprctl dispatch focuswindow address:{}"
           # 1..10 workspaces
         ]
         ++ (builtins.concatLists (

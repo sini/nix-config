@@ -7,10 +7,10 @@
       ...
     }:
     let
-      easymotion = inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion;
+      # easymotion = inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion;
       #hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
       split-monitor-workspaces =
-        inputs.hyprland-split-monitor-workspaces.packages.${pkgs.system}.split-monitor-workspaces;
+        inputs.hyprland-split-monitor-workspaces.packages.${pkgs.stdenv.hostPlatform.system}.split-monitor-workspaces;
     in
     {
 
@@ -67,7 +67,7 @@
         xwayland.enable = true;
 
         plugins = [
-          easymotion
+          # easymotion
           #hyprsplit
           split-monitor-workspaces
         ];

@@ -159,10 +159,10 @@
       inputs.hyprland.follows = "hyprland";
     };
 
-    hyprland-easymotion = {
-      url = "github:zakk4223/hyprland-easymotion";
-      inputs.hyprland.follows = "hyprland";
-    };
+    # hyprland-easymotion = {
+    #   url = "github:zakk4223/hyprland-easymotion";
+    #   inputs.hyprland.follows = "hyprland";
+    # };
 
     impermanence.url = "github:nix-community/impermanence";
 
