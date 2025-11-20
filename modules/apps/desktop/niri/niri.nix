@@ -1,3 +1,6 @@
 {
-  flake.features.niri.nixos = { };
+  flake.features.niri = {
+    requires = [ "uwsm" ];
+    nixos = { };
+  };
 }
