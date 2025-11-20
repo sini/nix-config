@@ -1,6 +1,7 @@
 {
   flake.features.xdg-portal.nixos =
     {
+      inputs,
       pkgs,
       ...
     }:
@@ -26,6 +27,7 @@
         extraPortals = with pkgs; [
           xdg-desktop-portal-gtk
           xdg-desktop-portal-gnome
+          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
           # xdg-desktop-portal-hyprland
         ];
       };
