@@ -1,17 +1,13 @@
 {
   flake.features.easyeffects = {
-    nixos =
-      { pkgs, ... }:
-      {
-        environment.systemPackages = with pkgs; [
-          easyeffects
-        ];
-
-        # Technically not easyeffects, but we want it on the same systems
-        programs.noisetorch.enable = true;
-      };
+    nixos = {
+      # Technically not easyeffects, but we want it on the same systems
+      programs.noisetorch.enable = true;
+    };
 
     home = {
+      services.easyeffects.enable = true;
+
       xdg.configFile = {
         "easyeffects/output/HD650-Harmon.json".source = ./presets/HD650-Harmon.json;
         "easyeffects/output/HD6XX.json".source = ./presets/HD6XX.json;

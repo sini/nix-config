@@ -248,6 +248,15 @@
 
     zjstatus.url = "github:dj95/zjstatus";
 
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
+      inputs = {
+        # IMPORTANT: we're using "libgbm" and is only available in unstable so ensure
+        # to have it up-to-date or simply don't specify the nixpkgs input
+        nixpkgs.follows = "nixpkgs-unstable";
+        home-manager.follows = "home-manager-unstable";
+      };
+    };
     # Firefox extensions
 
     firefox-addons = {

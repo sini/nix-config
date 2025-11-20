@@ -28,8 +28,6 @@
         snapshot
       ];
 
-      systemd.user.sessionVariables = config.home.sessionVariables;
-
       xdg.configFile."uwsm/env".source =
         "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
@@ -43,7 +41,7 @@
 
       services = {
         clipman.enable = true;
-        hypridle.enable = true;
+        # hypridle.enable = true;
         hyprpaper = {
           enable = true;
           settings = {
