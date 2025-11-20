@@ -33,15 +33,13 @@
       "podman"
       "vr-amd"
 
-      # Hyprland config
-      "regreet"
       "hyprland"
     ];
 
-    exclude-features = [
-      "gdm" # these are included with workstation
-      "gnome"
-    ];
+    # exclude-features = [
+    #   #"gdm" # these are included with workstation
+    #   #"gnome"
+    # ];
 
     users = {
       "shuo" = {
@@ -111,9 +109,9 @@
         home-manager.sharedModules = [
           {
             wayland.windowManager.hyprland.settings.monitor = [
-              "DP-2, 2560x1440@165.00, 0x0, 1, vrr, 1, transform, 1"
-              "DP-1, 3840x2160@119.88, 2560x0, 1, vrr, 1, bitdepth, 10"
-              "DP-3, 2560x2880@59.98, 6400x0, 1.25, vrr, 0, bitdepth, 10"
+              "DP-2, 2560x1440@165.00, -1440x0, 1, vrr, 1, transform, 1"
+              "DP-1, 3840x2160@119.88, 0x0, 1, vrr, 1, bitdepth, 10"
+              "HDMI-A-1, 2560x2880@59.98, 3840x0, 1, vrr, 0, bitdepth, 10"
             ];
             xdg.configFile = {
               "easyeffects/autoload/output/alsa_output.usb-Topping_D10-00.HiFi__Headphones__sink.json".text =

@@ -117,8 +117,11 @@
           # Audio related packages
           alsa-utils
           playerctl
-          #pavucontrol
+          pavucontrol
           pwvucontrol
+          paprefs
+          pulsemixer
+
           coppwr
           qpwgraph # More extensive patchbay for Pipewire
 

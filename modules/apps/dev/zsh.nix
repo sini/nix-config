@@ -31,6 +31,12 @@
           ".local/share/zsh" # History
         ];
 
+        # This works around some logic that tries to prevent reloading env vars
+        home.sessionVariablesExtra = ''
+          unset __HM_SESS_VARS_SOURCED
+          unset __HM_ZSH_SESS_VARS_SOURCED
+        '';
+
         programs.zsh = {
           enable = true;
           dotDir = # TODO: Remove this on next release update
