@@ -34,6 +34,7 @@
       "vr-amd"
 
       "hyprland"
+      "zen-browser"
     ];
 
     # exclude-features = [
