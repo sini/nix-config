@@ -43,8 +43,13 @@
     # ];
 
     users = {
-      "shuo" = {
-        "features" = [
+      sini = {
+        features = [
+          "spotify-player"
+        ];
+      };
+      shuo = {
+        features = [
           "firefox"
           "steam"
           "spicetify"
