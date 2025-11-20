@@ -5,21 +5,27 @@
       programs.noisetorch.enable = true;
     };
 
-    home = {
-      services.easyeffects.enable = true;
+    home =
+      { lib, pkgs, ... }:
+      {
+        services.easyeffects.enable = true;
 
-      xdg.configFile = {
-        "easyeffects/input/improved-microphone.json".source = ./presets/ImprovedMicrophone.json;
-        "easyeffects/output/HD650-Harmon.json".source = ./presets/HD650-Harmon.json;
-        "easyeffects/output/HD6XX.json".source = ./presets/HD6XX.json;
-        "easyeffects/output/GalaxyBuds.json".source = ./presets/GalaxyBuds.json;
-      };
+        systemd.user.services.easyeffects = {
+          Service.ExecStart = lib.mkForce "${pkgs.easyeffects}/bin/easyeffects --service-mode --hide-window";
+        };
 
-      home.persistence."/persist" = {
-        directories = [
-          ".config/easyeffects"
-        ];
+        xdg.configFile = {
+          "easyeffects/input/improved-microphone.json".source = ./presets/ImprovedMicrophone.json;
+          "easyeffects/output/HD650-Harmon.json".source = ./presets/HD650-Harmon.json;
+          "easyeffects/output/HD6XX.json".source = ./presets/HD6XX.json;
+          "easyeffects/output/GalaxyBuds.json".source = ./presets/GalaxyBuds.json;
+        };
+
+        home.persistence."/persist" = {
+          directories = [
+            ".config/easyeffects"
+          ];
+        };
       };
-    };
   };
 }

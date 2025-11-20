@@ -89,7 +89,6 @@
 
           sessionVariables = {
             "DIRSTACKSIZE" = "20";
-            "NIX_BUILD_SHELL" = "zsh";
             # Set locale archives
             # https://github.com/NixOS/nixpkgs/issues/38991
             "LOCALE_ARCHIVE_2_11" = "${pkgs.glibcLocales}/lib/locale/locale-archive";
