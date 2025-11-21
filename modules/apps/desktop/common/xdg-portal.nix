@@ -6,6 +6,16 @@
       ...
     }:
     {
+      security.pam.services = {
+        gdm.enableGnomeKeyring = true;
+        gdm-password.enableGnomeKeyring = true;
+        login.enableGnomeKeyring = true;
+        hyprlock.text = "auth include login";
+        swaylock = {
+          text = "auth include login";
+        };
+      };
+
       xdg.portal = {
         enable = true;
         xdgOpenUsePortal = true;
@@ -21,6 +31,7 @@
               "hyprland"
               "gtk"
             ];
+            "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
           };
           niri = {
             default = [
