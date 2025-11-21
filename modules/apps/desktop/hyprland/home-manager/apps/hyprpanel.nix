@@ -1,5 +1,5 @@
 {
-  flake.features.hyprland.home =
+  flake.features.hyprpanel.home =
     {
       config,
       lib,

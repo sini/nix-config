@@ -6,12 +6,6 @@
       pkgs,
       ...
     }:
-    let
-      # easymotion = inputs.hyprland-easymotion.packages.${pkgs.system}.hyprland-easymotion;
-      #hyprsplit = inputs.hyprsplit.packages.${pkgs.system}.hyprsplit;
-      split-monitor-workspaces =
-        inputs.hyprland-split-monitor-workspaces.packages.${pkgs.stdenv.hostPlatform.system}.split-monitor-workspaces;
-    in
     {
 
       imports = [
@@ -32,7 +26,6 @@
         "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
       programs = {
-        hyprlock.enable = true;
         wofi.enable = true;
         rofi = {
           enable = true;
@@ -70,19 +63,6 @@
         systemd.enable = false;
 
         xwayland.enable = true;
-
-        plugins = [
-          # easymotion
-          #hyprsplit
-          split-monitor-workspaces
-        ];
-        # ++ with inputs.hyprland-plugins.packages.${pkgs.system};
-        #   [
-        #     # hyprbars
-        #     #hyprexpo
-        #     # hyprtrails
-        #     # hyprwinwrap
-        #   ];
 
         settings = {
           exec-once = [

@@ -25,28 +25,6 @@
     in
     {
       wayland.windowManager.hyprland.settings = {
-        plugin = {
-          split-monitor-workspaces = {
-            count = 10;
-            keep_focused = 0;
-            enable_notifications = 0;
-          };
-          hyprexo = {
-            columns = 3;
-            gap_size = 5;
-            bg_col = "rgb(000000)";
-            workspace_method = [
-              "center"
-              "current"
-            ]; # [center/first] [workspace] e.g. first 1 or center m+1
-
-            enable_gesture = true; # laptop touchpad
-            gesture_fingers = 3; # 3 or 4
-            gesture_distance = 300; # how far is the "max"
-            gesture_positive = true; # positive = swipe down. Negative = swipe up.
-          };
-        };
-
         # mouse
         bindm = [
           "${PRIMARY}, mouse:272, movewindow" # move floating windows with ${PRIMARY}+LMK
@@ -149,48 +127,7 @@
           "${PRIMARY} ${TERTIARY}, down, movewindow, d"
           "${PRIMARY} ${TERTIARY}, up, movewindow, u"
           "${PRIMARY} ${TERTIARY}, right, movewindow, r"
-
-          # workspaces
-          "${PRIMARY}, page_up, split-workspace, m-1"
-          "${PRIMARY}, page_down, split-workspace, m+1"
-          "${PRIMARY}, bracketleft, split-workspace, -1"
-          "${PRIMARY}, bracketright, split-workspace, +1"
-          "${PRIMARY}, mouse_up, split-workspace, m+1"
-          "${PRIMARY}, mouse_down, split-workspace, m-1"
-          "${PRIMARY} ${SECONDARY}, U, movetoworkspace, special"
-          "${PRIMARY}, U, togglespecialworkspace,"
-          "${PRIMARY} ${TERTIARY}, page_up, split-movetoworkspace, -1"
-          "${PRIMARY} ${TERTIARY}, page_down, split-movetoworkspace, +1"
-          "${PRIMARY} ${SECONDARY}, page_up, split-movetoworkspacesilent, -1"
-          "${PRIMARY} ${SECONDARY}, page_down, split-movetoworkspacesilent, +1"
-
-          # Move active window to other monitor with mainMod + TERTIARY + arrow keys
-          "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
-          "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
-
-          #"${PRIMARY}, grave, hyprexpo:expo, toggle"
-
-          # "${PRIMARY}, z, easymotion, action:hyprctl dispatch focuswindow address:{}"
-          # 1..10 workspaces
-        ]
-        ++ (builtins.concatLists (
-          builtins.genList (
-            x:
-            let
-              ws =
-                let
-                  c = builtins.div (x + 1) 10;
-                in
-                builtins.toString (x + 1 - (c * 10));
-            in
-            [
-              "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
-              "${PRIMARY} ${TERTIARY}, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
-              "${PRIMARY} ${SECONDARY}, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
-            ]
-          ) 10
-        ));
-
+        ];
       };
     };
 }

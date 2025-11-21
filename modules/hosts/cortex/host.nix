@@ -46,6 +46,9 @@
       sini = {
         features = [
           "spotify-player"
+          "waybar"
+          "hypridle"
+          "hyprland-split-monitors"
         ];
       };
       shuo = {
