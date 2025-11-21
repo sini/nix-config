@@ -9,7 +9,6 @@
       { lib, pkgs, ... }:
       {
         home.packages = [
-          pkgs.at-spi2-core
           pkgs.easyeffects
         ];
 
@@ -38,7 +37,7 @@
           };
         };
 
-        xdg.configFile = {
+        xdg.dataFile = {
           "easyeffects/input/improved-microphone.json".source = ./presets/ImprovedMicrophone.json;
           "easyeffects/output/HD650-Harmon.json".source = ./presets/HD650-Harmon.json;
           "easyeffects/output/HD6XX.json".source = ./presets/HD6XX.json;
@@ -47,7 +46,7 @@
 
         home.persistence."/persist" = {
           directories = [
-            ".config/easyeffects"
+            ".local/share/easyeffects"
           ];
         };
       };
