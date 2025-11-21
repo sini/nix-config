@@ -36,6 +36,8 @@
     ayugram-desktop =
       inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}.ayugram-desktop;
 
+    split-monitor-workspaces =
+      inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system}.split-monitor-workspaces;
     # # TODO: remove once nixpkgs is fixed
     # ddcutil = prev.ddcutil.overrideAttrs (old: {
     #   version = "2.2.3";
