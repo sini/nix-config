@@ -12,6 +12,13 @@
         ...
       }:
       {
+
+        environment.systemPackages = with pkgs; [
+          xwayland-satellite
+          wlogout
+          swaylock
+        ];
+
         # Enable cachix
         nix.settings = {
           substituters = [ "https://hyprland.cachix.org" ];
@@ -41,7 +48,6 @@
           serviceConfig.Slice = "session$-graphical.slice";
           wantedBy = [ "graphical-session.target" ];
         };
-        security.pam.services.gdm.enableGnomeKeyring = true;
 
         services = {
           dbus = {
