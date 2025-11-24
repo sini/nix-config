@@ -31,7 +31,7 @@
               sort-by-name = false;
               all-outputs = true;
               persistent-workspaces = {
-                "Home" = [ ];
+                "1" = [ ];
                 "2" = [ ];
                 "3" = [ ];
                 "4" = [ ];
@@ -40,7 +40,6 @@
                 "7" = [ ];
                 "8" = [ ];
                 "9" = [ ];
-                "0" = [ ];
               };
             };
 
