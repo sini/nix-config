@@ -1,120 +1,129 @@
 {
   flake.features.waybar.home =
-    { pkgs, ... }:
     {
-      programs.waybar = {
+      lib,
+      pkgs,
+      config,
+      activeFeatures,
+      ...
+    }:
+    let
+      isLaptop = lib.elem "laptop" activeFeatures;
+    in
+    {
+      stylix.targets.waybar.enable = false;
+
+      programs.waybar = with config.lib.stylix.colors; {
         enable = true;
-        systemd.enable = true;
-        settings = [
-          {
-            layer = "top";
-            position = "top";
-            output = [
-              "DP-2"
-              "HDMI-A-1"
+        settings = lib.fix (final: {
+          hyprland-bar = final.mainBar // {
+            name = "hyprland";
+            id = "hyprland";
+            modules-left = [
+              "group/indicators"
+            ]
+            ++ (lib.optional isLaptop "battery")
+            ++ [
+              "mpris"
             ];
-            modules-left = [ "hyprland/workspaces" ];
-            modules-center = [ "hyprland/window" ];
             modules-right = [
-              "custom/notifications"
-              "network"
-              "backlight"
-              "battery"
               "clock"
+              "idle_inhibitor"
+              "wireplumber#sink"
+              "wireplumber#source"
+              "custom/notifications"
               "tray"
-              "custom/lock"
-              "custom/power"
+              "hyprland/language"
             ];
-
-            "hyprland/workspaces" = {
-              disable-scroll = true;
-              sort-by-name = false;
-              all-outputs = true;
-              persistent-workspaces = {
-                "1" = [ ];
-                "2" = [ ];
-                "3" = [ ];
-                "4" = [ ];
-                "5" = [ ];
-                "6" = [ ];
-                "7" = [ ];
-                "8" = [ ];
-                "9" = [ ];
-              };
-            };
-
-            "tray" = {
-              icon-size = 21;
-              spacing = 10;
-            };
-
-            "clock" = {
-              timezone = "Europe/Amsterdam";
-              tooltip-format = "<big>{:%Y %B}</big>\n<tt><small>{calendar}</small></tt>";
-              format-alt = "  {:%d/%m/%Y}";
-              format = "  {:%H:%M}";
-            };
-
-            "network" = {
-              format-wifi = "{icon} ({signalStrength}%)  ";
-              format-ethernet = "{ifname}: {ipaddr}/{cidr} 󰈀 ";
-              format-linked = "{ifname} (No IP) 󰌘 ";
-              format-disc = "Disconnected 󰟦 ";
-              format-alt = "{ifname}: {ipaddr}/{cidr}";
-            };
-
-            "backlight" = {
-              device = "intel_backlight";
-              format = "{icon}";
-              format-icons = [
-                ""
-                ""
-                ""
-                ""
-                ""
-                ""
-                ""
-                ""
-                ""
-              ];
-            };
-
-            "battery" = {
+          };
+          sway-bar = final.mainBar // {
+            name = "sway";
+            id = "sway";
+            modules-left = [
+              "group/indicators"
+            ]
+            ++ (lib.optional config.wm-settings.deviceUsesBattery "battery")
+            ++ [
+              "mpris"
+            ];
+            modules-right = [
+              "clock"
+              "idle_inhibitor"
+              "wireplumber#sink"
+              "wireplumber#source"
+              "custom/notifications"
+              "tray"
+              "sway/language"
+            ];
+          };
+          niri-bar = final.mainBar // {
+            name = "niri";
+            id = "niri";
+            position = "left";
+            modules-left = [
+              "group/indicators"
+            ]
+            ++ (lib.optional config.wm-settings.deviceUsesBattery "battery")
+            ++ [
+              "mpris"
+            ];
+            modules-right = [
+              "clock"
+              "idle_inhibitor"
+              "wireplumber#sink"
+              "wireplumber#source"
+              "custom/notifications"
+              "tray"
+              "niri/language"
+            ];
+          };
+          mainBar = {
+            name = "main";
+            id = "main";
+            layer = "top";
+            position = "right";
+            margin = "10 10 10 0";
+            battery = {
+              format = "bat\n{capacity:03d}";
               states = {
-                warning = 30;
-                critical = 15;
+                critical = 20;
               };
-              format = "{icon}";
-              format-charging = "󰂄";
-              format-plugged = "󱟢";
-              format-alt = "{icon}";
-              format-icons = [
-                "󰁺"
-                "󰁻"
-                "󰁼"
-                "󰁽"
-                "󰁾"
-                "󰁿"
-                "󰂀"
-                "󰂁"
-                "󰂂"
-                "󰁹"
-              ];
+              tooltip-format = ''
+                Capacity: {capacity}%
+                {timeTo}
+                Draw: {power} watts.'';
             };
-
-            ## https://github.com/Frost-Phoenix/nixos-config/blob/4d75ca005a820672a43db9db66949bd33f8fbe9c/modules/home/waybar/settings.nix#L116
+            clock = {
+              calendar = {
+                format = {
+                  today = "<span color='${withHashtag.base08}'><b><u>{}</u></b></span>";
+                };
+                mode = "month";
+                mode-mon-col = 3;
+                on-click-right = "mode";
+                on-scroll = 1;
+                weeks-pos = "right";
+              };
+              format = "{:%H\n%M\n%S}";
+              interval = 1;
+              tooltip-format = "<tt><small>{calendar}</small></tt>";
+            };
+            cpu = {
+              format = "cpu\n{usage:03d}";
+              interval = 3;
+            };
             "custom/notifications" = {
               tooltip = false;
-              format = "{icon} Notifications";
+              format = "{icon}";
               format-icons = {
-                notification = "󱥁 <span foreground='red'><sup></sup></span>";
-                none = "󰍥 ";
-                dnd-notification = "󱙍 <span foreground='red'><sup></sup></span>";
-                dnd-none = "󱙎 ";
-                inhibited-notification = "󱥁 <span foreground='red'><sup></sup></span>";
-                inhibited-none = "󰍥 ";
-                dnd-inhibited-notification = "󱙍 <span foreground='red'><sup></sup></span>";
-                dnd-inhibited-none = "󱙎 ";
+                notification = "<span foreground='${withHashtag.base08}'><sup></sup></span>";
+                none = "";
+                dnd-notification = "<span foreground='${withHashtag.base08}'><sup></sup></span>";
+                dnd-none = "";
+                inhibited-notification = "<span foreground='${withHashtag.base08}'><sup></sup></span>";
+                inhibited-none = "";
+                dnd-inhibited-notification = "<span foreground='${withHashtag.base08}'><sup></sup></span>";
+                dnd-inhibited-none = "";
               };
               return-type = "json";
               exec-if = "which swaync-client";
@@ -123,152 +132,157 @@
               on-click-right = "swaync-client -d -sw";
               escape = true;
             };
-            ##
-
-            "custom/lock" = {
-              tooltip = false;
-              on-click = "${pkgs.hyprlock}/bin/hyprlock";
-              format = " ";
+            "group/indicators" = {
+              modules = [
+                "memory"
+                "cpu"
+              ];
+              orientation = "inherit";
             };
-
-            "custom/power" = {
-              tooltip = false;
-              on-click = "${pkgs.wlogout}/bin/wlogout &";
-              format = " ";
+            "hyprland/language" = {
+              format = "{}";
+              format-en = "EN";
+              format-ru = "RU";
             };
-          }
-        ];
+            "hyprland/workspaces" = {
+              all-outputs = false;
+              disable-click = false;
+              disable-scroll = false;
+              format = "{name}";
+            };
+            "niri/language" = {
+              format = "{}";
+              format-en = "ENG";
+              format-ru = "RUS";
+            };
+            "niri/workspaces" = {
+              all-outputs = false;
+              disable-click = false;
+              disable-scroll = false;
+              format = "{name:.3}";
+            };
+            idle_inhibitor = {
+              format = "inh\n{icon}";
+              format-icons = {
+                activated = " on";
+                deactivated = "off";
+              };
+            };
+            memory = {
+              format = "mem\n{percentage:03d}";
+              interval = 3;
+              tooltip-format = ''
+                Total: {total:.1f} GiB
+                Total swap: {swapTotal:.1f} GiB
+
+                Used: {used:.1f} GiB
+                Used swap: {swapUsed:.1f} GiB
+
+                Free: {avail:.1f} GiB
+                Free swap: {swapAvail:.1f} GiB'';
+            };
+            mpris = {
+              dynamic-order = [
+                "artist"
+                "title"
+                "album"
+                "position"
+                "length"
+              ];
+              format-paused = " 󰐊 ";
+              format-playing = " 󰏤 ";
+              format-stopped = " 󰓛 ";
+            };
+            tray = {
+              icon-size = 24;
+              spacing = 6;
+            };
+            "wireplumber#sink" = {
+              format = "vol\n{volume:03d}";
+              max-volume = 150;
+              on-click = "'${lib.getExe pkgs.pavucontrol}'";
+              node-type = "Audio/Sink";
+              tooltip = true;
+              tooltip-format = "{volume}% {node_name}";
+            };
+            "wireplumber#source" = {
+              format = "mic\n{volume:03d}";
+              max-volume = 150;
+              on-click = "'${lib.getExe pkgs.pavucontrol}'";
+              node-type = "Audio/Source";
+              tooltip = true;
+              tooltip-format = "{volume}% {node_name}";
+            };
+          };
+        });
 
         style = ''
+          /* colors in comments are examples, not actual color scheme */
+          @define-color base00 ${withHashtag.base00}; /* #00211f Default Background */
+          @define-color base01 ${withHashtag.base01}; /* #003a38 Lighter Background (Used for status bars, line number and folding marks) */
+          @define-color base02 ${withHashtag.base02}; /* #005453 Selection Background */
+          @define-color base03 ${withHashtag.base03}; /* #ababab Comments, Invisibles, Line Highlighting */
+          @define-color base04 ${withHashtag.base04}; /* #c3c3c3 Dark Foreground (Used for status bars) */
+          @define-color base05 ${withHashtag.base05}; /* #dcdcdc Default Foreground, Caret, Delimiters, Operators */
+          @define-color base06 ${withHashtag.base06}; /* #efefef Light Foreground (Not often used) */
+          @define-color base07 ${withHashtag.base07}; /* #f5f5f5 Brightest Foreground (Not often used) */
+          @define-color base08 ${withHashtag.base08}; /* #ce7e8e Variables, XML Tags, Markup Link Text, Markup Lists, Diff Deleted */
+          @define-color base09 ${withHashtag.base09}; /* #dca37c Integers, Boolean, Constants, XML Attributes, Markup Link Url */
+          @define-color base0A ${withHashtag.base0A}; /* #bfac4e Classes, Markup Bold, Search Text Background */
+          @define-color base0B ${withHashtag.base0B}; /* #56c16f Strings, Inherited Class, Markup Code, Diff Inserted */
+          @define-color base0C ${withHashtag.base0C}; /* #62c0be Support, Regular Expressions, Escape Characters, Markup Quotes */
+          @define-color base0D ${withHashtag.base0D}; /* #88b0da Functions, Methods, Attribute IDs, Headings */
+          @define-color base0E ${withHashtag.base0E}; /* #b39be0 Keywords, Storage, Selector, Markup Italic, Diff Changed */
+          @define-color base0F ${withHashtag.base0F}; /* #d89aba Deprecated, Opening/Closing Embedded Language Tags, e.g. <?php ?> */
+
           * {
-            font-family: '0xProto Nerd Font';
+            font-family: ${config.stylix.fonts.monospace.name};
             font-size: 18px;
-            min-height: 0;
           }
 
           #waybar {
-            background: transparent;
-            color: @text;
-            margin: 5px 5px;
+            background-color: rgba(${
+              lib.concatStringsSep ", " [
+                base00-rgb-r
+                base00-rgb-g
+                base00-rgb-b
+                (toString config.stylix.opacity.desktop)
+              ]
+            });
+            color: @base05;
+            border-radius: 0px;
+            border: 3px solid @base0D;
+          }
+
+          #waybar.hidden {
+            opacity: 0.1;
+          }
+
+          #waybar > box > * > widget > * {
+            padding: 2.5px;
+          }
+
+          #waybar > box > * > widget > * {
+            margin: 5px;
+            background-color: @base01;
+            border-radius: 0px;
+            border: 0.5px solid @base02;
+          }
+
+          #waybar > box > * {
+            margin: 5px;
           }
 
           #workspaces {
-            border-radius: 1rem;
-            margin: 5px;
-            background-color: @surface0;
-            margin-left: 1rem;
           }
 
-          #workspaces button {
-            color: @lavender;
-            border-radius: 1rem;
-            padding: 0.4rem;
+          #workspaces > button {
+            padding: 0px;
           }
 
-          #workspaces button.active {
-            color: @peach;
-            border-radius: 1rem;
+          #workspaces .active {
+            background-color: @base02;
           }
-
-          #workspaces button:hover {
-            color: @peach;
-            border-radius: 1rem;
-          }
-
-          #custom-music,
-          #tray,
-          #backlight,
-          #network,
-          #clock,
-          #battery,
-          #custom-lock,
-          #custom-notifications,
-          #custom-power {
-            background-color: @surface0;
-            padding: 0.5rem 1rem;
-            margin: 5px 0;
-          }
-
-          #clock {
-            color: @blue;
-            border-radius: 0px 1rem 1rem 0px;
-            margin-right: 1rem;
-          }
-
-          #battery {
-            color: @green;
-          }
-
-          #battery.charging {
-            color: @green;
-          }
-
-          #battery.warning:not(.charging) {
-            color: @red;
-          }
-
-          #backlight {
-            color: @yellow;
-          }
-
-          #custom-notifications {
-            border-radius: 1rem;
-            margin-right: 1rem;
-            color: @peach;
-          }
-
-          #network {
-            border-radius: 1rem 0px 0px 1rem;
-            color: @sky;
-          }
-
-          #custom-music {
-            color: @mauve;
-            border-radius: 1rem;
-          }
-
-          #custom-lock {
-              border-radius: 1rem 0px 0px 1rem;
-              color: @lavender;
-          }
-
-          #custom-power {
-              margin-right: 1rem;
-              border-radius: 0px 1rem 1rem 0px;
-              color: @red;
-          }
-
-          #tray {
-            margin-right: 1rem;
-            border-radius: 1rem;
-          }
-
-          @define-color rosewater #f4dbd6;
-          @define-color flamingo #f0c6c6;
-          @define-color pink #f5bde6;
-          @define-color mauve #c6a0f6;
-          @define-color red #ed8796;
-          @define-color maroon #ee99a0;
-          @define-color peach #f5a97f;
-          @define-color yellow #eed49f;
-          @define-color green #a6da95;
-          @define-color teal #8bd5ca;
-          @define-color sky #91d7e3;
-          @define-color sapphire #7dc4e4;
-          @define-color blue #8aadf4;
-          @define-color lavender #b7bdf8;
-          @define-color text #cad3f5;
-          @define-color subtext1 #b8c0e0;
-          @define-color subtext0 #a5adcb;
-          @define-color overlay2 #939ab7;
-          @define-color overlay1 #8087a2;
-          @define-color overlay0 #6e738d;
-          @define-color surface2 #5b6078;
-          @define-color surface1 #494d64;
-          @define-color surface0 #363a4f;
-          @define-color base #24273a;
-          @define-color mantle #1e2030;
-          @define-color crust #181926;
         '';
       };
     };
