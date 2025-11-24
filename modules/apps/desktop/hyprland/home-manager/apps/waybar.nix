@@ -78,7 +78,7 @@
             };
 
             "hyprland/workspaces" = {
-              format = "{name}";
+              format = "{icon}";
               format-icons = {
                 active = "";
                 default = "";
@@ -87,9 +87,9 @@
               on-scroll-up = "hyprctl dispatch workspace r-1";
               on-scroll-down = "hyprctl dispatch workspace r+1";
               all-outputs = false;
-              #persistent_workspaces = {
-              #  "*" = 5;
-              #};
+              persistent_workspaces = {
+                "*" = 5;
+              };
             };
 
             "hyprland/window" = {
