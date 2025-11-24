@@ -21,7 +21,7 @@
 
       environment.persistence."/cache".files = [
         "/var/lib/lastlog/lastlog2.db"
-        "/var/lib/systemd/timesync/clock"
+        # "/var/lib/systemd/timesync/clock"
       ];
 
       environment.persistence."/cache".directories = [
