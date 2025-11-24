@@ -47,11 +47,11 @@
               builtins.genList (
                 x:
                 let
-                  ws =
-                    let
-                      c = builtins.div (x + 1) 5;
-                    in
-                    builtins.toString (x + 1 - (c * 5));
+                  ws = x + 1;
+                  # let
+                  #   c = builtins.div (x + 1) 5;
+                  # in
+                  # builtins.toString (x + 1 - (c * 5));
                 in
                 [
                   "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
