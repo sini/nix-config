@@ -41,7 +41,7 @@
             }
             # Turn off displays after 10 minutes
             {
-              timeout = 330;
+              timeout = 600;
               on-timeout = "hyprctl dispatch dpms off";
               on-resume = "hyprctl dispatch dpms on";
             }

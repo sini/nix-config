@@ -47,6 +47,7 @@
         features = [
           "spotify-player"
           "waybar"
+          "swaync"
           "hypridle"
           "hyprland-split-monitors"
         ];
