@@ -4,6 +4,7 @@
     {
       inputs,
       hostOptions,
+      activeFeatures,
       pkgs,
       ...
     }:
@@ -19,7 +20,12 @@
         backupFileExtension = ".hm-backup";
 
         extraSpecialArgs = {
-          inherit inputs hostOptions pkgs;
+          inherit
+            inputs
+            hostOptions
+            activeFeatures
+            pkgs
+            ;
           hasGlobalPkgs = true;
         };
 
