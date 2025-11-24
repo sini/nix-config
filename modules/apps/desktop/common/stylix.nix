@@ -93,7 +93,12 @@
           enable = true;
           autoEnable = true;
 
-          image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
+          image = pkgs.fetchurl {
+            url = "https://w.wallhaven.cc/full/qr/wallhaven-qrd6xd.png";
+            hash = "sha256-ZS/ALvkETellw2squBX7bRmx1VURGQ9SAvQIjTuP9FI=";
+          };
+
+          # pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
           polarity = "dark";
 
