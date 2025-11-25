@@ -99,8 +99,15 @@
           };
         };
 
+        systemd.user.services.hyprpaper = {
+          Unit.ConditionExec = [
+            "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+          ];
+          Service.Slice = "background-graphical.slice";
+        };
+
         services = {
-          clipman.enable = true;
+          # clipman.enable = true;
           # hypridle.enable = true;
           hyprpaper = {
             enable = true;
