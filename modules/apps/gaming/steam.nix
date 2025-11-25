@@ -21,59 +21,16 @@
             ''
           );
 
-        patchedBwrap = pkgs.bubblewrap.overrideAttrs (o: {
-          patches = (o.patches or [ ]) ++ [
-            ./patches/bwrap.patch
-          ];
-        });
+        # patchedBwrap = pkgs.bubblewrap.overrideAttrs (o: {
+        #   patches = (o.patches or [ ]) ++ [
+        #     ./patches/bwrap.patch
+        #   ];
+        # });
 
-        steamPkg = pkgs.steam.override {
-          extraPkgs =
-            pkgs: with pkgs; [
-              xorg.libXcursor
-              xorg.libXi
-              xorg.libXinerama
-              xorg.libXScrnSaver
-              libpng
-              libpulseaudio
-              libvorbis
-              stdenv.cc.cc.lib
-              libkrb5
-              keyutils
-              attr
-              gamemode
-              procps
-              usbutils
-            ];
-          extraEnv = {
-            MANGOHUD = true;
-            OBS_VKCAPTURE = true;
-            PROTON_ENABLE_WAYLAND = true;
-            PROTON_ENABLE_HDR = true;
-            PROTON_USE_NTSYNC = true;
-            PROTON_USE_WOW64 = true;
-            PULSE_SINK = "Game";
-          };
-          extraProfile = ''
-            unset TZ
-          '';
-          buildFHSEnv = (
-            args:
-            (
-              (pkgs.buildFHSEnv.override {
-                bubblewrap = patchedBwrap;
-              })
-              (
-                args
-                // {
-                  extraBwrapArgs = (args.extraBwrapArgs or [ ]) ++ [ "--cap-add ALL" ];
-                }
-              )
-            )
-          );
-        };
       in
       {
+        # nixpkgs.overlays = [ inputs.millennium.overlays.default ];
+
         nix.settings = {
           substituters = [ "https://nix-gaming.cachix.org" ];
           trusted-public-keys = [ "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4=" ];
@@ -106,8 +63,71 @@
             dedicatedServer.openFirewall = true;
             localNetworkGameTransfers.openFirewall = true;
             protontricks.enable = true;
-            package = steamPkg;
-            extraPackages = [ pkgs.latencyflex-vulkan ];
+
+            package = pkgs.steam.override {
+              extraEnv = {
+                MANGOHUD = true;
+                OBS_VKCAPTURE = true;
+                PROTON_ENABLE_WAYLAND = true;
+                PROTON_ENABLE_HDR = true;
+                PROTON_USE_NTSYNC = true;
+                PROTON_USE_WOW64 = true;
+                RADV_TEX_ANISO = 16;
+                PULSE_SINK = "Game";
+              };
+              extraPkgs =
+                pkgs':
+                let
+                  mkDeps =
+                    pkgsSet: with pkgsSet; [
+                      qt6.qtwayland
+                      xdg-utils
+
+                      # Core X11 libs required by many titles
+                      xorg.libX11
+                      xorg.libXext
+                      xorg.libXrender
+                      xorg.libXi
+                      xorg.libXinerama
+                      xorg.libXcursor
+                      xorg.libXScrnSaver
+                      xorg.libSM
+                      xorg.libICE
+                      xorg.libxcb
+                      xorg.libXrandr
+
+                      # Common multimedia/system libs
+                      libxkbcommon
+                      freetype
+                      fontconfig
+                      glib
+                      libpng
+                      libpulseaudio
+                      libvorbis
+                      libkrb5
+                      keyutils
+
+                      # GL/Vulkan plumbing for AMD on X11 (host RADV)
+                      libglvnd
+                      libdrm
+                      vulkanPackages_latest.vulkan-tools
+                      vulkanPackages_latest.vulkan-loader
+                      vulkanPackages_latest.vulkan-validation-layers
+                      vulkanPackages_latest.vulkan-extension-layer
+                      latencyflex-vulkan
+
+                      # libstdc++ for the runtime
+                      (lib.getLib stdenv.cc.cc)
+                    ];
+                in
+                mkDeps pkgs';
+
+              extraLibraries =
+                p: with p; [
+                  atk
+                ];
+            };
+
             extraCompatPackages = with pkgs; [
               luxtorpeda
               # proton-ge-bin
@@ -136,30 +156,30 @@
             };
           };
 
-          gamescope = {
-            enable = true;
-            package = pkgs.gamescope_git;
-            capSysNice = true;
-            #capSysNice = false; # 'true' breaks gamescope for Steam https://github.com/NixOS/nixpkgs/issues/292620#issuecomment-2143529075
-            args = [
-              #   # "-W ${toString hostOptions.primaryDisplay.width}"
-              #   # "-H ${toString hostOptions.primaryDisplay.height}"
-              #   # "-r ${toString hostOptions.primaryDisplay.refreshRate}"
-              #   # "-O ${hostOptions.primaryDisplay.name}"
-              #   "-f"
-              "--adaptive-sync"
-              "--mangoapp"
-              "--rt"
-              "--expose-wayland"
-              "--hdr-enabled"
-              "--hdr-itm-enabled"
-              "--hdr-debug-force-output"
-              "--xwayland-count 2"
-              "-W 3840"
-              "-H 2160"
-              "-r 120"
-            ];
-          };
+          # gamescope = {
+          #   enable = true;
+          #   package = pkgs.gamescope_git;
+          #   capSysNice = true;
+          #   #capSysNice = false; # 'true' breaks gamescope for Steam https://github.com/NixOS/nixpkgs/issues/292620#issuecomment-2143529075
+          #   args = [
+          #     #   # "-W ${toString hostOptions.primaryDisplay.width}"
+          #     #   # "-H ${toString hostOptions.primaryDisplay.height}"
+          #     #   # "-r ${toString hostOptions.primaryDisplay.refreshRate}"
+          #     #   # "-O ${hostOptions.primaryDisplay.name}"
+          #     #   "-f"
+          #     "--adaptive-sync"
+          #     "--mangoapp"
+          #     "--rt"
+          #     "--expose-wayland"
+          #     "--hdr-enabled"
+          #     "--hdr-itm-enabled"
+          #     "--hdr-debug-force-output"
+          #     "--xwayland-count 2"
+          #     "-W 3840"
+          #     "-H 2160"
+          #     "-r 120"
+          #   ];
+          # };
 
           # gamemode = {
           #   enable = true;
