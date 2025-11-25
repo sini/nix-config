@@ -99,6 +99,8 @@
       inputs.nixpkgs-lib.follows = "nixpkgs-unstable";
     };
 
+    nix-flatpak.url = "github:gmodena/nix-flatpak"; # unstable branch. Use github:gmodena/nix-flatpak/?ref=<tag> to pin releases.
+
     # Home Manager
     home-manager = {
       url = "github:nix-community/home-manager/release-25.05";
@@ -229,6 +231,9 @@
 
     # styling
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
+
+    # Steam ricing
+    # millennium.url = "git+https://github.com/SteamClientHomebrew/Millennium";
 
     stylix = {
       url = "github:danth/stylix";

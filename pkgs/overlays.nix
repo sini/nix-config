@@ -10,8 +10,8 @@
     custom-monado = prev.monado.overrideAttrs (old: {
       src = prev.fetchgit {
         url = "https://tangled.org/@matrixfurry.com/monado";
-        rev = "c6ee4146cd629f4e5bd59b1758ea54f556e89933";
-        hash = "sha256-QuBbiSz3rluBREh0CW5MVYaf0czj+kBm92vul3p7jdI=";
+        rev = "c51275cb06738cdbcd6a356c3b2fcf508ab92f1e";
+        hash = "sha256-RK3bCj0V/44/efDD0VFWerAGMLJhpR4/V5NK4BmDUs0=";
       };
     });
 
@@ -19,7 +19,7 @@
       src = prev.fetchFromGitHub {
         owner = "Mr-Zero88";
         repo = "xrizer";
-        rev = "7328384195e3255f16b83ba06248cd74d67237eb";
+        rev = "494617d132c59fceeb10cc70c865b3065e6070c1";
         hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
       };
 

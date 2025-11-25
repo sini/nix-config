@@ -105,19 +105,6 @@
               "format" = " {title}";
             };
 
-            # "hyprland/workspaces" = {
-            #   all-outputs = false;
-            #   disable-click = false;
-            #   disable-scroll = false;
-            #   format = "{name}";
-            # };
-            # "niri/workspaces" = {
-            #   all-outputs = false;
-            #   disable-click = false;
-            #   disable-scroll = false;
-            #   format = "{name:.3}";
-            # };
-
             battery = {
               format = "{icon}";
               "format-icons" = [
