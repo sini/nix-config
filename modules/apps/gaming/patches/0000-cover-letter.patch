@@ -1,0 +1,92 @@
+From 2c86585658f04aebea833b297dc6392dab0fd418 Mon Sep 17 00:00:00 2001
+From: Yaroslav Bolyukin <iam@lach.pw>
+Date: Sun, 23 Nov 2025 22:39:03 +0100
+Subject: [PATCH v6 0/7] VESA DisplayID spec allows the device to force its DSC
+ bits per pixel value.
+
+For example, the HTC Vive Pro 2 VR headset uses this value in
+high-resolution modes (3680x1836@90-120, 4896x2448@90-120), and when the
+kernel doesn't respect this parameter, garbage is displayed on the HMD
+instead.
+
+Me and other users have successfully tested the old (v3) version of this
+patch (which was applying DSC BPP value unconditionally, thus incorrect:
+https://lkml.org/lkml/2023/2/26/116) on Vive Pro 2 and
+Bigscreen Beyond VR headsets, and have been using it daily, it is known
+to work and doesn't seem to break anything else since 2022.
+
+Previously, I didn't have enough dedication to get it merged, I hope
+this time I will manage to get it to v6.19 :D
+
+Regarding driver support - I have looked at amdgpu and Nvidia's
+open-gpu-kernel-modules, and both seem to have some indication for this
+value; however, in Linux, it is unused in both.
+
+First patch implements parsing of DSC BPP values and display mode VII
+timings flag which mandates that the DSC BPP value should actually be
+used for this display mode.
+
+The second patch implements handling of this value for AMDGPU driver.
+
+The only thing that I don't like in the current implementation, is how
+the value of `dsc_passthrough_timings_support` flag is propagated from
+the connector display modes to the mode created in `DRM_IOCTL_MODE_SETCRTC`
+handler (which is used for VR display initialization in Monado and
+StreamVR), it feels like this flag should be initialized by the kernel
+itself, but as far as I can see there is no correct way to do this, as
+the timing constraints calculation belongs to the individual drivers.
+
+Another problem with how this flag is set, is that there is no hard
+connection between modes creaded in `SETCRTC` and the modes actually
+defined by connector, so the current implementation searches for the
+resolution and refresh rate that match exactly declared to obtain
+this flag value. This might not be correct, as device might not support
+the other mode at all, but the situation won't be any worse for the
+existing devices, as the currently they don't work at all, and there
+is no other known devices on the market to check their assumption in
+regard to this part of specs, and the spec does not describe how that
+should work.
+
+Both of those downsides are due to the fact my understanding of DRM
+subsystem is not that high. If another implementation would be proposed
+by AMDGPU maintainers - I will gladly implement it here.
+
+v5->v6:
+ * amdgpu: only apply dsc bpp to modes that match exactly the declared
+   modes with this flag set.
+v4->v5:
+ * The patch was split into multiple
+ * Disabled MSO parsing for eDP displays
+ * Disabled MSO logs if not used
+ * Minor codestyle changes: lines moved around, naming, passing of
+   function arguments
+v3->v4:
+ * This patch now parses timings support flag on type VII block, instead
+   of applying it unconditionally. Previously I didn't understand the
+   spec properly.
+ * Now it also is not being applied for non-supported and/or non-VII
+   blocks in amdgpu driver.
+
+Regards,
+
+Lach
+
+Yaroslav Bolyukin (7):
+  drm/edid: rename VESA block parsing functions to more generic name
+  drm/edid: prepare for VESA vendor-specific data block extension
+  drm/edid: MSO should only be used for non-eDP displays
+  drm/edid: parse DSC DPP passthru support flag for mode VII timings
+  drm/edid: for consistency, use mask everywhere for block rev parsing
+  drm/edid: parse DRM VESA dsc bpp target
+  drm/amd: use fixed dsc bits-per-pixel from edid
+
+ .../gpu/drm/amd/display/amdgpu_dm/amdgpu_dm.c |  16 +++
+ drivers/gpu/drm/drm_displayid_internal.h      |  11 ++
+ drivers/gpu/drm/drm_edid.c                    | 101 +++++++++++-------
+ include/drm/drm_connector.h                   |   6 ++
+ include/drm/drm_modes.h                       |  10 ++
+ 5 files changed, 107 insertions(+), 37 deletions(-)
+
+-- 
+2.51.2
+

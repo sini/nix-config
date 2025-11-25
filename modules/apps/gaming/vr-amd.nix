@@ -3,95 +3,6 @@
     requires = [ "steam" ];
     nixos =
       { pkgs, inputs, ... }:
-      # let
-
-      #   monado-start-desktop = pkgs.makeDesktopItem {
-      #     exec = "monado-start";
-      #     icon = "steamvr";
-      #     name = "Start Monado";
-      #     desktopName = "Start Monado";
-      #     terminal = true;
-      #   };
-
-      #   monado-start = pkgs.stdenv.mkDerivation {
-      #     pname = "monado-start";
-      #     version = "3.1.0";
-
-      #     src = pkgs.writeShellApplication {
-      #       name = "monado-start";
-
-      #       runtimeInputs =
-      #         with pkgs;
-      #         [
-      #           wlx-overlay-s
-      #           wayvr-dashboard
-      #           # index_camera_passthrough
-      #           lighthouse-steamvr
-      #           kdePackages.kde-cli-tools
-      #         ]
-      #         ++ [
-      #           lovr-playspace
-      #         ];
-
-      #       text = ''
-      #         GROUP_PID_FILE="/tmp/monado-group-pid-$$"
-
-      #         function off() {
-      #           echo "Stopping Monado and other stuff..."
-
-      #           if [ -f "$GROUP_PID_FILE" ]; then
-      #             PGID=$(cat "$GROUP_PID_FILE")
-      #             echo "Killing process group $PGID..."
-      #             kill -- -"$PGID" 2>/dev/null
-      #             rm -f "$GROUP_PID_FILE"
-      #           fi
-
-      #           systemctl --user --no-block stop monado.service
-      #           lighthouse -vv --state off &
-      #           wait
-
-      #           exit 0
-      #         }
-
-      #         function on() {
-      #           echo "Starting Monado and other stuff..."
-
-      #           lighthouse -vv --state on &
-      #           systemctl --user restart monado.service
-
-      #           setsid sh -c '
-      #             # lovr-playspace &
-      #             wlx-overlay-s --replace &
-      #             # index_camera_passthrough &
-      #             # kde-inhibit --power --screenSaver sleep infinity &
-      #             wait
-      #           ' &
-      #           PGID=$!
-      #           echo "$PGID" > "$GROUP_PID_FILE"
-      #         }
-
-      #         trap off EXIT INT TERM
-      #         echo "Press ENTER to turn everything OFF."
-
-      #         on
-      #         read -r
-      #         off
-      #       '';
-      #     };
-
-      #     installPhase = ''
-      #       mkdir -p $out/bin
-      #       cp $src/bin/monado-start $out/bin/
-      #       chmod +x $out/bin/monado-start
-
-      #       cp -r ${monado-start-desktop}/* $out/
-      #     '';
-
-      #     meta = {
-      #       description = "Start script for monado and all other things i use with it.";
-      #     };
-      #   };
-      # in
       {
         imports = [
           inputs.nixpkgs-xr.nixosModules.nixpkgs-xr
@@ -105,12 +16,32 @@
         # Bigscreen Beyond Kernel patches from LVRA Discord Thread
         boot.kernelPatches = [
           {
-            name = "0001-drm-edid-parse-DRM-VESA-dsc-bpp-target";
-            patch = ./patches/0001-drm-edid-parse-DRM-VESA-dsc-bpp-target.patch;
+            name = "0001-drm-edid-rename-VESA-block-parsing-functions-to-more";
+            patch = ./patches/0001-drm-edid-rename-VESA-block-parsing-functions-to-more.patch;
           }
           {
-            name = "0002-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid";
-            patch = ./patches/0002-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid.patch;
+            name = "0002-drm-edid-prepare-for-VESA-vendor-specific-data-block";
+            patch = ./patches/0002-drm-edid-prepare-for-VESA-vendor-specific-data-block.patch;
+          }
+          {
+            name = "0003-drm-edid-MSO-should-only-be-used-for-non-eDP-display";
+            patch = ./patches/0003-drm-edid-MSO-should-only-be-used-for-non-eDP-display.patch;
+          }
+          {
+            name = "0004-drm-edid-parse-DSC-DPP-passthru-support-flag-for-mod";
+            patch = ./patches/0004-drm-edid-parse-DSC-DPP-passthru-support-flag-for-mod.patch;
+          }
+          {
+            name = "0005-drm-edid-for-consistency-use-mask-everywhere-for-blo";
+            patch = ./patches/0005-drm-edid-for-consistency-use-mask-everywhere-for-blo.patch;
+          }
+          {
+            name = "0006-drm-edid-parse-DRM-VESA-dsc-bpp-target";
+            patch = ./patches/0006-drm-edid-parse-DRM-VESA-dsc-bpp-target.patch;
+          }
+          {
+            name = "0007-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid";
+            patch = ./patches/0007-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid.patch;
           }
           {
             # see https://wiki.nixos.org/wiki/VR#Applying_as_a_NixOS_kernel_patch
@@ -139,7 +70,7 @@
         programs.steam.extraCompatPackages = [ pkgs.proton-ge-rtsp-bin ];
 
         environment.systemPackages = with pkgs; [
-          monado-vulkan-layers
+          # monado-vulkan-layers
           libsurvive
           xrgears
           openvr
@@ -152,6 +83,7 @@
           # monado-start
           pkgs.lighthouse-steamvr
           custom-monado
+          # monado
           custom-xrizer
           # VR tools
           sidequest
@@ -166,7 +98,6 @@
         # now monado will be able to start
         services.monado = {
           enable = true;
-          # forceDefaultRuntime = true;
           defaultRuntime = true;
           highPriority = true;
           package = pkgs.custom-monado;
@@ -175,22 +106,23 @@
         systemd.user.services.monado = {
           serviceConfig.LimitNOFILE = 8192;
           environment = {
-            #     #     # STEAMVR_PATH = "${config.hm.xdg.dataHome}/Steam/steamapps/common/SteamVR";
-            #     #     # XR_RUNTIME_JSON = "${config.hm.xdg.configHome}/openxr/1/active_runtime.json";
-            #     AMD_VULKAN_ICD = "RADV";
-            #     VK_ICD_FILENAMES = "/run/opengl-driver/share/vulkan/icd.d/radeon_icd.x86_64.json";
-
+            AMD_VULKAN_ICD = "RADV";
             STEAMVR_LH_ENABLE = "1";
             XRT_COMPOSITOR_COMPUTE = "1";
-            XRT_COMPOSITOR_SCALE_PERCENTAGE = "100";
+            WMR_HANDTRACKING = "1";
+            XRT_DEBUG_VK = "1";
+            XRT_COMPOSITOR_FORCE_WAYLAND_DIRECT = "1";
+            XRT_COMPOSITOR_SCALE_PERCENTAGE = "200";
             XRT_COMPOSITOR_DESIRED_MODE = "0";
-            # XRT_COMPOSITOR_USE_PRESENT_WAIT = "1";
+            # XRT_COMPOSITOR_DESIRED_MODE=0 is the 75hz mode
+            # XRT_COMPOSITOR_DESIRED_MODE=1 is the 90hz mode
             U_PACING_COMP_PRESENT_TO_DISPLAY_OFFSET = "5";
             U_PACING_APP_USE_MIN_FRAME_PERIOD = "1";
-            # XRT_COMPOSITOR_FORCE_GPU_INDEX = "3";
-            # XRT_COMPOSITOR_FORCE_CLIENT_GPU_INDEX = "4";
-            #     # XRT_COMPOSITOR_DESIRED_MODE=0 is the 75hz mode
-            #     # XRT_COMPOSITOR_DESIRED_MODE=1 is the 90hz mode
+            XRT_COMPOSITOR_FORCE_GPU_INDEX = "0";
+            WAYLAND_DISPLAY = "wayland-1";
+
+            IPC_EXIT_WHEN_IDLE = "on"; # kill on idle! :)
+            IPC_EXIT_WHEN_IDLE_DELAY_MS = "300000"; # 5 minutes
           };
         };
 
@@ -232,18 +164,16 @@
             "jsonid" : "vrpathreg",
             "log" :
             [
-              "~/.local/share/Steam/logs"
+              "/home/sini/.local/share/Steam/logs"
             ],
             "runtime" :
             [
-              "${pkgs.opencomposite}/lib/opencomposite"
-              "~/.local/share/Steam/steamapps/common/SteamVR"
+              "${pkgs.custom-xrizer}/lib/xrizer"
             ],
             "version" : 1
           }
         '';
-        #"${pkgs.custom-xrizer}/lib/xrizer",
-
+        #"${pkgs.custom-xrizer}/lib/xrizer"
         # xdg.configFile.".config/openxr/1/active_runtime.json".text = ''
         #   {
         #     "file_format_version": "1.0.0",

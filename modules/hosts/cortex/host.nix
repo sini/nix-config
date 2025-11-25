@@ -46,9 +46,9 @@
       sini = {
         features = [
           "spotify-player"
-          # "waybar"
-          # "swaync"
-          # "hypridle"
+          "waybar"
+          "swaync"
+          "hypridle"
           "hyprland-split-monitors"
         ];
       };
