@@ -264,7 +264,15 @@
       <audio id="1"/>
       <address type="pci" domain="0x0000" bus="0x00" slot="0x1b" function="0x0"/>
     </sound>
+    <sound model="ich9">
+      <audio id="2"/>
+      <address type="pci" domain="0x0000" bus="0x00" slot="0x1c" function="0x0"/>
+    </sound>
     <audio id="1" type="spice"/>
+    <audio id="2" type="pulseaudio" serverName="/run/user/1000/pulse/native">
+      <input mixingEngine="no" latency="20000"/>
+      <output mixingEngine="no" latency="20000"/>
+    </audio>
     <video>
       <model type="vga" vram="16384" heads="1" primary="yes"/>
       <address type="pci" domain="0x0000" bus="0x00" slot="0x01" function="0x0"/>
@@ -313,6 +321,7 @@
     <qemu:arg value="{'driver':'ivshmem-plain','id':'shmem0','memdev':'looking-glass'}"/>
     <qemu:arg value="-object"/>
     <qemu:arg value="{'qom-type':'memory-backend-file','id':'looking-glass','mem-path':'/dev/kvmfr0','size':268435456,'share':true}"/>
+    <qemu:env name="PIPEWIRE_RUNTIME_DIR" value="/run/user/1000"/>
     <qemu:env name="PIPEWIRE_LATENCY" value="128/48000"/>
     <qemu:env name="LD_LIBRARY_PATH" value="$LD_LIBRARY_PATH:/run/current-system/sw/lib/pipewire"/>
     <qemu:env name="SPICE_DEBUG_ALLOW_MC" value="1"/>
