@@ -1,12 +1,25 @@
 {
   flake.features.hypridle.home =
-    { pkgs, ... }:
+    { lib, pkgs, ... }:
     {
       home.packages = [
         pkgs.brightnessctl
       ];
 
       programs.hyprlock.enable = true;
+
+      systemd.user.services.hypridle = {
+        Unit = {
+          After = lib.mkForce [ "graphical-session.target" ];
+          Requisite = [ "graphical-session.target" ];
+        };
+
+        Service = {
+          Type = "dbus";
+          BusName = "org.freedesktop.ScreenSaver";
+          Slice = "background-graphical.slice";
+        };
+      };
 
       services.hypridle = {
         enable = true;

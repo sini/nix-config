@@ -65,208 +65,23 @@
       };
     in
     {
-      # services.swaync = {
-      #   enable = true;
-      #   # systemd.enable = true;
-      #   # systemd.target = "graphical-session.target";
-
-      #   settings = {
-      #     # General settings
-      #     cssPriority = "user";
-      #     image-visibility = "when-available";
-      #     keyboard-shortcut = true;
-      #     relative-timestamps = true;
-      #     timeout = 5;
-      #     timeout-low = 5;
-      #     timeout-critical = 0;
-      #     script-fail-notify = true;
-      #     transition-time = 200;
-
-      #     # Layer settings
-      #     layer-shell = true;
-      #     layer = "overlay";
-      #     control-center-layer = "overlay";
-
-      #     # Notification settings
-      #     positionX = "right";
-      #     positionY = "top";
-      #     notification-2fa-action = true;
-      #     notification-inline-replies = false;
-      #     notification-icon-size = 32;
-      #     notification-body-image-height = 100;
-      #     notification-body-image-width = 200;
-      #     notification-window-width = 300;
-
-      #     # Control center settings
-      #     control-center-positionX = "right";
-      #     control-center-positionY = "top";
-      #     control-center-margin-top = 4;
-      #     control-center-margin-bottom = 4;
-      #     control-center-margin-left = 0;
-      #     control-center-margin-right = 4;
-      #     control-center-width = 500;
-      #     control-center-exclusive-zone = true;
-      #     fit-to-screen = true;
-      #     hide-on-action = true;
-      #     hide-on-clear = false;
-
-      #     # Widget settings
-      #     widgets = [
-      #       "title"
-      #       "dnd"
-      #       "notifications"
-      #       "mpris"
-      #     ];
-
-      #     # Widget config
-      #     widget-config = {
-      #       title = {
-      #         text = "Notifications";
-      #         clear-all-button = true;
-      #         button-text = "Clear All";
-      #       };
-      #       dnd = {
-      #         text = "Do Not Disturb";
-      #       };
-      #       mpris = {
-      #         image-size = 96;
-      #         image-radius = 12;
-      #         blur = true;
-      #       };
-      #     };
-      #   };
-
-      #   # style = lib.mkAfter ''
-      #   #   /*** Global ***/
-      #   #   progress,
-      #   #   progressbar,
-      #   #   trough {
-      #   #     border-radius: 16px;
-      #   #   }
-
-      #   #   .app-icon,
-      #   #   .image {
-      #   #     -gtk-icon-effect: none;
-      #   #   }
-
-      #   #   .notification-action {
-      #   #     border-radius: 5px;
-      #   #     margin: 0.5rem;
-      #   #   }
-
-      #   #   .close-button {
-      #   #     margin: 0.5rem;
-      #   #     padding: 0.25rem;
-      #   #     border-radius: 5px;
-      #   #   }
-
-      #   #   /*** Notifications ***/
-      #   #   .notification-group.collapsed
-      #   #     .notification-row:not(:last-child)
-      #   #     .notification-action,
-      #   #   .notification-group.collapsed
-      #   #     .notification-row:not(:last-child)
-      #   #     .notification-default-action {
-      #   #     opacity: 0;
-      #   #   }
-
-      #   #   /*** Control Center ***/
-      #   #   .control-center {
-      #   #     border-radius: 8px;
-      #   #     padding: 2rem;
-      #   #   }
-
-      #   #   .control-center-list {
-      #   #     background: transparent;
-      #   #   }
-
-      #   #   /*** Widgets ***/
-      #   #   /* Title widget */
-      #   #   .widget-title {
-      #   #     margin: 0.5rem;
-      #   #   }
-
-      #   #   .widget-title > label {
-      #   #     font-weight: bold;
-      #   #   }
-
-      #   #   .widget-title > button {
-      #   #     border-radius: 8px;
-      #   #     padding: 0.5rem;
-      #   #   }
-
-      #   #   /* DND Widget */
-      #   #   .widget-dnd {
-      #   #     margin: 0.5rem;
-      #   #   }
-
-      #   #   .widget-dnd > label {
-      #   #     font-weight: bold;
-      #   #   }
-
-      #   #   .widget-dnd > switch {
-      #   #     border-radius: 8px;
-      #   #   }
-
-      #   #   .widget-dnd > switch slider {
-      #   #     border-radius: 8px;
-      #   #     padding: 0.25rem;
-      #   #   }
-
-      #   #   /* Mpris widget */
-      #   #   .widget-mpris .widget-mpris-player {
-      #   #     border-radius: 8px;
-      #   #     margin: 0.5rem;
-      #   #     padding: 0.5rem;
-      #   #   }
-
-      #   #   .widget-mpris .widget-mpris-player .widget-mpris-album-art {
-      #   #     border-radius: 16px;
-      #   #   }
-
-      #   #   .widget-mpris .widget-mpris-player .widget-mpris-title {
-      #   #     font-weight: bold;
-      #   #   }
-
-      #   #   .widget-mpris .widget-mpris-player .widget-mpris-subtitle {
-      #   #     font-weight: normal;
-      #   #   }
-
-      #   #   .widget-mpris .widget-mpris-player > box > button {
-      #   #     border: 1px solid transparent;
-      #   #     border-radius: 8px;
-      #   #     padding: 0.25rem;
-      #   #   }
-      #   # '';
-
-      # };
-
-      # wayland.windowManager.hyprland.settings = {
-      #   exec-once = ["swayosd-server"];
-      #   bind = [",XF86AudioMute, exec, ${pkgs.swayosd}/bin/swayosd-client --output-volume mute-toggle"];
-      #   bindl = [
-      #     ",XF86MonBrightnessUp, exec, ${pkgs.swayosd}/bin/swayosd-client --brightness raise 5%+"
-      #     ",XF86MonBrightnessDown, exec, ${pkgs.swayosd}/bin/swayosd-client --brightness lower 5%-"
-      #     "$mod,F2,exec, ${pkgs.swayosd}/bin/swayosd-client --brightness 100"
-      #     "$mod,F3,exec, ${pkgs.swayosd}/bin/swayosd-client --brightness 0"
-      #     ",XF86AudioPlay, exec, ${pkgs.swayosd}/bin/swayosd-client --playerctl play-pause"
-      #     ",XF86AudioNext, exec, ${pkgs.swayosd}/bin/swayosd-client --playerctl next"
-      #     ",XF86AudioPrev, exec, ${pkgs.swayosd}/bin/swayosd-client --playerctl previous"
-      #   ];
-      #   bindle = [
-      #     ",XF86AudioRaiseVolume, exec, ${pkgs.swayosd}/bin/swayosd-client --output-volume +2 --max-volume=100"
-      #     ",XF86AudioLowerVolume, exec, ${pkgs.swayosd}/bin/swayosd-client --output-volume -2"
-      #   ];
-      #   bindr = [
-      #     "CAPS,Caps_Lock,exec,${pkgs.swayosd}/bin/swayosd-client --caps-lock"
-      #     ",Scroll_Lock,exec,${pkgs.swayosd}/bin/swayosd-client --scroll-lock"
-      #     ",Num_Lock,exec,${pkgs.swayosd}/bin/swayosd-client --num-lock"
-      #   ];
-      # };
+      systemd.user.services.swayosd = {
+        Unit.ConditionExec = [
+          "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+        ];
+        Service.Slice = "background-graphical.slice";
+      };
 
       services.swayosd = {
         enable = true;
         stylePath = theme;
+      };
+
+      systemd.user.services.swaync = {
+        Unit.ConditionExec = [
+          "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+        ];
+        Service.Slice = "background-graphical.slice";
       };
 
       services.swaync = {

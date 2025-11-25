@@ -119,7 +119,7 @@
             U_PACING_COMP_PRESENT_TO_DISPLAY_OFFSET = "5";
             U_PACING_APP_USE_MIN_FRAME_PERIOD = "1";
             XRT_COMPOSITOR_FORCE_GPU_INDEX = "0";
-            WAYLAND_DISPLAY = "wayland-1";
+            # WAYLAND_DISPLAY = "wayland-1";
 
             IPC_EXIT_WHEN_IDLE = "on"; # kill on idle! :)
             IPC_EXIT_WHEN_IDLE_DELAY_MS = "300000"; # 5 minutes
