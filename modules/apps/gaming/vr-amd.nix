@@ -126,14 +126,14 @@
         # Udev rules for Bigscreen devices
         services.udev.extraRules = ''
           # Bigscreen Beyond
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0101", MODE="0660", TAG+="uaccess"
+          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0101", MODE="0666", TAG+="uaccess"
           # Bigscreen Bigeye
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0660", TAG+="uaccess", GROUP="users"
+          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0666", TAG+="uaccess", GROUP="users"
           SUBSYSTEM=="usb", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0660", TAG+="uaccess", GROUP="users"
           # Bigscreen Beyond Audio Strap
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0105", MODE="0660", TAG+="uaccess"
+          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0105", MODE="0666", TAG+="uaccess"
           # Bigscreen Beyond Firmware Mode?
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="4004", MODE="0660", TAG+="uaccess"
+          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="4004", MODE="0666", TAG+="uaccess"
         '';
 
         programs.steam.extraCompatPackages = [ pkgs.proton-ge-rtsp-bin ];
@@ -182,18 +182,15 @@
 
             STEAMVR_LH_ENABLE = "1";
             XRT_COMPOSITOR_COMPUTE = "1";
-            XRT_COMPOSITOR_FORCE_WAYLAND_DIRECT = "1";
-            #     # XRT_DEBUG_GUI = "1";
-            #     # XRT_CURATED_GUI = "1";
             XRT_COMPOSITOR_SCALE_PERCENTAGE = "100";
-            #     # XRT_COMPOSITOR_PRINT_MODES = "1";
-            XRT_COMPOSITOR_LOG = "debug";
-            XRT_COMPOSITOR_DESIRED_MODE = "1";
-            XRT_COMPOSITOR_USE_PRESENT_WAIT = "1";
-            #     # XRT_COMPOSITOR_FORCE_GPU_INDEX = "3";
-            #     # XRT_COMPOSITOR_FORCE_CLIENT_GPU_INDEX = "4";
-            #     #     # XRT_COMPOSITOR_DESIRED_MODE=0 is the 75hz mode
-            #     #     # XRT_COMPOSITOR_DESIRED_MODE=1 is the 90hz mode
+            XRT_COMPOSITOR_DESIRED_MODE = "0";
+            # XRT_COMPOSITOR_USE_PRESENT_WAIT = "1";
+            U_PACING_COMP_PRESENT_TO_DISPLAY_OFFSET = "5";
+            U_PACING_APP_USE_MIN_FRAME_PERIOD = "1";
+            # XRT_COMPOSITOR_FORCE_GPU_INDEX = "3";
+            # XRT_COMPOSITOR_FORCE_CLIENT_GPU_INDEX = "4";
+            #     # XRT_COMPOSITOR_DESIRED_MODE=0 is the 75hz mode
+            #     # XRT_COMPOSITOR_DESIRED_MODE=1 is the 90hz mode
           };
         };
 
@@ -229,7 +226,7 @@
           {
             "config" :
             [
-              "/home/aki/.local/share/Steam/config"
+              "/home/sini/.local/share/Steam/config"
             ],
             "external_drivers" : null,
             "jsonid" : "vrpathreg",
@@ -239,12 +236,14 @@
             ],
             "runtime" :
             [
-              "${pkgs.custom-xrizer}/lib/xrizer",
+              "${pkgs.opencomposite}/lib/opencomposite"
               "~/.local/share/Steam/steamapps/common/SteamVR"
             ],
             "version" : 1
           }
         '';
+        #"${pkgs.custom-xrizer}/lib/xrizer",
+
         # xdg.configFile.".config/openxr/1/active_runtime.json".text = ''
         #   {
         #     "file_format_version": "1.0.0",

@@ -121,6 +121,7 @@
           pwvucontrol
           paprefs
           pulsemixer
+          cava
 
           coppwr
           qpwgraph # More extensive patchbay for Pipewire
