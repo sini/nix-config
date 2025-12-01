@@ -11,22 +11,6 @@
         # Check if both gpu-nvidia-prime and laptop features are active
         hasNvidiaPrimeOnLaptop =
           lib.elem "gpu-nvidia-prime" activeFeatures && lib.elem "laptop" activeFeatures;
-
-        patchDesktop =
-          pkg: appName: from: to:
-          lib.hiPrio (
-            pkgs.runCommand "patched-desktop-${appName}" { } ''
-              ${pkgs.coreutils}/bin/mkdir -p $out/share/applications
-              ${pkgs.gnused}/bin/sed 's#${from}#${to}#g' < ${pkg}/share/applications/${appName}.desktop > $out/share/applications/${appName}.desktop
-            ''
-          );
-
-        # patchedBwrap = pkgs.bubblewrap.overrideAttrs (o: {
-        #   patches = (o.patches or [ ]) ++ [
-        #     ./patches/bwrap.patch
-        #   ];
-        # });
-
       in
       {
         # nixpkgs.overlays = [ inputs.millennium.overlays.default ];
@@ -36,16 +20,11 @@
           trusted-public-keys = [ "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4=" ];
         };
 
-        environment.systemPackages =
-          with pkgs;
-          [
-            wine
-            winetricks
-            wineWowPackages.waylandFull
-          ]
-          ++ lib.optional hasNvidiaPrimeOnLaptop (
-            patchDesktop steamPkg "steam" "^Exec=" "Exec=nvidia-offload "
-          );
+        environment.systemPackages = with pkgs; [
+          wine
+          winetricks
+          wineWowPackages.waylandFull
+        ];
 
         hardware = {
           steam-hardware.enable = true;
@@ -74,6 +53,12 @@
                 PROTON_USE_WOW64 = true;
                 RADV_TEX_ANISO = 16;
                 PULSE_SINK = "Game";
+              }
+              // lib.optionalAttrs hasNvidiaPrimeOnLaptop {
+                NV_PRIME_RENDER_OFFLOAD = "1";
+                "__NV_PRIME_RENDER_OFFLOAD_PROVIDER" = "NVIDIA-G0";
+                "__GLX_VENDOR_LIBRARY_NAME" = "nvidia";
+                "__VK_LAYER_NV_optimus" = "NVIDIA_only";
               };
               extraPkgs =
                 pkgs':
