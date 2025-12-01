@@ -1,5 +1,6 @@
 {
   flake.features.shell.nixos = {
-    environment.enableAllTerminfo = true;
+    # TODO: re-enable after https://github.com/NixOS/nixpkgs/issues/465358
+    environment.enableAllTerminfo = false;
   };
 }
