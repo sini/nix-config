@@ -21,8 +21,18 @@
       "network-manager"
       "razer"
       "gamedev"
+      "performance"
     ];
     users = {
+      sini = {
+        features = [
+          "spotify-player"
+          "waybar"
+          "swaync"
+          "hypridle"
+          "hyprland-split-monitors"
+        ];
+      };
       "shuo" = {
         "features" = [
           "firefox"

@@ -1,12 +1,20 @@
 {
   flake.features.performance.nixos =
-    { pkgs, lib, ... }:
+    {
+      pkgs,
+      lib,
+      activeFeatures,
+      ...
+    }:
+    let
+      isLaptop = lib.elem "laptop" activeFeatures;
+    in
     {
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
 
       services = {
         irqbalance.enable = true;
-        scx = {
+        scx = lib.mkIf (!isLaptop) {
           enable = true;
           package = lib.mkDefault pkgs.scx.full;
           scheduler = "scx_bpfland";
