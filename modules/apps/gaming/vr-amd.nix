@@ -173,7 +173,7 @@
             ],
             "external_drivers" :
             [
-              "${pkgs.custom-monado}/share/steamvr-monado",
+              "${pkgs.custom-monado}/share/steamvr-monado"
             ],
             "jsonid" : "vrpathreg",
             "log" :
