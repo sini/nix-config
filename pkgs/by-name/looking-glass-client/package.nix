@@ -29,11 +29,6 @@
   wayland-protocols,
   wayland-scanner,
 
-  luajit,
-  vulkan-loader,
-  vulkan-headers,
-  glslang,
-
   pipewire,
   pulseaudio,
   libsamplerate,
@@ -45,14 +40,14 @@
   pulseSupport ? true,
 }:
 stdenv.mkDerivation (finalAttrs: {
-  pname = "looking-glass-client-vulkan";
-  version = "B7";
+  pname = "looking-glass-client";
+  version = "B7-188-53bfb654";
 
   src = fetchFromGitHub {
-    owner = "spencercw";
+    owner = "gnif";
     repo = "LookingGlass";
-    rev = "0382a46d492f3c1e3fe447382f7f50db20f1cc39";
-    hash = "sha256-Qe5Nx/tka4QwnQHSmjdMZaZglsHdZ3bjXlgF2gARWHI=";
+    rev = "53bfb6547f2b7abd6c183192e13a57068c1677ea";
+    hash = "sha256-I84oVLeS63mnR19vTalgvLvA5RzCPTXV+tSsw+ImDwQ=";
     fetchSubmodules = true;
   };
 
@@ -77,11 +72,6 @@ stdenv.mkDerivation (finalAttrs: {
     fontconfig
     libffi
     nanosvg
-    # Vulkan support
-    vulkan-loader
-    vulkan-headers
-    luajit
-    glslang
   ]
   ++ lib.optionals xorgSupport [
     libxkbcommon
@@ -110,7 +100,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   cmakeFlags = [
     "-DOPTIMIZE_FOR_NATIVE=OFF"
-    "-DENABLE_VULKAN=1"
   ]
   ++ lib.optionals (!openGLSupport) [ "-DENABLE_OPENGL=no" ]
   ++ lib.optionals (!xorgSupport) [ "-DENABLE_X11=no" ]

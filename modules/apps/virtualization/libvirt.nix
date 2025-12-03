@@ -91,7 +91,7 @@ in
           bridge-utils
 
           virtiofsd
-          looking-glass-client # For KVM
+          local.looking-glass-client-vulkan # For KVM
           qemu # Virtualizer
           OVMF # UEFI Firmware
           gvfs # Shared Directory
