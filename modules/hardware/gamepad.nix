@@ -1,21 +1,22 @@
 {
   flake.features.gamepad.nixos =
     {
-      config,
       pkgs,
       ...
     }:
     {
       hardware = {
         uinput.enable = true;
-        xone.enable = true; # support for the xbox controller USB dongle
-        xpadneo.enable = true; # Enable the xpadneo driver for Xbox One wireless controllers
+        # TODO: https://github.com/NixOS/nixpkgs/issues/467164
+        # xone.enable = true; # support for the xbox controller USB dongle
+        # xpadneo.enable = true; # Enable the xpadneo driver for Xbox One wireless controllers
       };
 
       boot = {
-        extraModulePackages = with config.boot.kernelPackages; [
-          xpadneo # xbox
-        ];
+        # TODO: https://github.com/NixOS/nixpkgs/issues/467164
+        # extraModulePackages = with config.boot.kernelPackages; [
+        #   xpadneo # xbox
+        # ];
         extraModprobeConfig = ''
           options bluetooth disable_ertm=Y
         ''; # connect xbox controller
