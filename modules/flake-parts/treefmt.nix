@@ -51,6 +51,7 @@
             "*.jwe"
             "*.xml"
             "*.dds"
+            "*.diff"
           ];
           formatter = {
             prettier = {

@@ -14,6 +14,7 @@
             base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
 
             enable = true;
+            enableReleaseChecks = false;
             autoEnable = true;
 
             homeManagerIntegration.autoImport = false;
@@ -91,6 +92,7 @@
           base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
 
           enable = true;
+          enableReleaseChecks = false;
           autoEnable = true;
 
           image = pkgs.fetchurl {
