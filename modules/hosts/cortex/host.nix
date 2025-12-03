@@ -124,44 +124,60 @@
             #   "HDMI-A-1, 2560x2880@59.98, 3840x0, 1, vrr, 0, bitdepth, 10"
             # ];
             wayland.windowManager.hyprland.settings = {
+              # misc = {
+              #   vfr = true;
+              #   vrr = 3;
+              # };
               render = {
                 direct_scanout = 1;
-                cm_fs_passthrough = 1;
+                cm_enabled = true;
+                send_content_type = true;
+                cm_fs_passthrough = 2;
+                cm_auto_hdr = true;
               };
               experimental = {
                 xx_color_management_v4 = true;
               };
-            };
-            wayland.windowManager.hyprland.extraConfig = ''
-              monitorv2 {
-                output = DP-1
-                mode = 3840x2160@119.88
-                position = 0x0
-                scale = 1
-                vrr = true
 
-                bitdepth = 10
-                supports_wide_color = true
-                supports_hdr = true
-                sdr_min_luminance = 0.005
-                sdr_max_luminance = 350
-              }
-              monitorv2 {
-                output = DP-2
-                mode = 2560x1440@165.00
-                position = -1440x0
-                scale = 1
-                vrr = true
-                transform = 1
-              }
-              monitorv2 {
-                output = HDMI-A-1
-                mode = 2560x2880@59.98
-                position = 3840x0
-                scale = 1
-                vrr = false
-              }
-            '';
+              monitorv2 = [
+                {
+                  output = "DP-1";
+                  mode = "3840x2160@119.88";
+                  position = "0x0";
+                  scale = 1;
+                  vrr = true;
+
+                  bitdepth = 10;
+                  # cm = "hdr";
+                  supports_wide_color = true;
+                  supports_hdr = true;
+                  # sdrbrightness = 1.2;
+                  # sdrsaturation = 0.98;
+
+                  sdr_min_luminance = "0.005";
+                  sdr_max_luminance = "350";
+                  # "sdr_max_luminance" = 200;
+                  "min_luminance" = 0;
+                  "max_luminance" = 1000;
+                  "max_avg_luminance" = 600;
+                }
+                {
+                  output = "DP-2";
+                  mode = "2560x1440@165.00";
+                  position = "-1440x0";
+                  scale = 1;
+                  vrr = true;
+                  transform = 1;
+                }
+                {
+                  output = "HDMI-A-1";
+                  mode = "2560x2880@59.98";
+                  position = "3840x0";
+                  scale = 1;
+                  vrr = false;
+                }
+              ];
+            };
             xdg.configFile = {
               "easyeffects/autoload/output/alsa_output.usb-Topping_D10-00.pro-output-0.json".text =
                 builtins.toJSON
