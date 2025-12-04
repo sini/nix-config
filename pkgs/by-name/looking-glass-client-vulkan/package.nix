@@ -46,13 +46,13 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "looking-glass-client-vulkan";
-  version = "B7";
+  version = "b8-vulkan";
 
   src = fetchFromGitHub {
-    owner = "spencercw";
+    owner = "sini";
     repo = "LookingGlass";
-    rev = "0382a46d492f3c1e3fe447382f7f50db20f1cc39";
-    hash = "sha256-Qe5Nx/tka4QwnQHSmjdMZaZglsHdZ3bjXlgF2gARWHI=";
+    rev = "d731c0570e9332cf543f5b4807dc83b8f405509c";
+    hash = "sha256-xN8L1PYM3KGIz4wkWporVzOMRqeox6BQYlAcbxD/6dk=";
     fetchSubmodules = true;
   };
 
