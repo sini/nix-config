@@ -51,8 +51,8 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitHub {
     owner = "sini";
     repo = "LookingGlass";
-    rev = "54ef6cb72ee7c7d4bc5af08f95e13f0c507b5ef5";
-    hash = "sha256-vrh4VcGRcV9Aq62mllUpdcdW1vipzCtu+GuL0ztLymY=";
+    rev = "d731c0570e9332cf543f5b4807dc83b8f405509c";
+    hash = "sha256-xN8L1PYM3KGIz4wkWporVzOMRqeox6BQYlAcbxD/6dk=";
     fetchSubmodules = true;
   };
 
@@ -124,6 +124,8 @@ stdenv.mkDerivation (finalAttrs: {
 
   postUnpack = ''
     echo ${finalAttrs.src.rev} > source/VERSION
+    # Apply cimgui vulkan ImVector fix before changing sourceRoot
+    patch -p1 -d source < ${./cimgui-vulkan-imvector.patch}
     export sourceRoot="source/client"
   '';
 
