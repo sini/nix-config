@@ -51,13 +51,14 @@ stdenv.mkDerivation (finalAttrs: {
   src = fetchFromGitHub {
     owner = "sini";
     repo = "LookingGlass";
-    rev = "d731c0570e9332cf543f5b4807dc83b8f405509c";
-    hash = "sha256-xN8L1PYM3KGIz4wkWporVzOMRqeox6BQYlAcbxD/6dk=";
+    rev = "54ef6cb72ee7c7d4bc5af08f95e13f0c507b5ef5";
+    hash = "sha256-vrh4VcGRcV9Aq62mllUpdcdW1vipzCtu+GuL0ztLymY=";
     fetchSubmodules = true;
   };
 
   patches = [
     ./nanosvg-unvendor.diff
+    ./verbose-cimgui.patch
   ];
 
   nativeBuildInputs = [
@@ -117,6 +118,9 @@ stdenv.mkDerivation (finalAttrs: {
   ++ lib.optionals (!waylandSupport) [ "-DENABLE_WAYLAND=no" ]
   ++ lib.optionals (!pulseSupport) [ "-DENABLE_PULSEAUDIO=no" ]
   ++ lib.optionals (!pipewireSupport) [ "-DENABLE_PIPEWIRE=no" ];
+
+  # Suppress class-memaccess warning in imgui_impl_vulkan.cpp (upstream code)
+  env.NIX_CFLAGS_COMPILE = "-Wno-error=class-memaccess";
 
   postUnpack = ''
     echo ${finalAttrs.src.rev} > source/VERSION
