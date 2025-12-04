@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1111111..2222222 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -163,8 +163,6 @@ if(CIMGUI_GEN_BINDINGS)
+   execute_process(
+     COMMAND luajit ./generator.lua gcc internal opengl2 opengl3 vulkan
+     WORKING_DIRECTORY "${PROJECT_TOP}/repos/cimgui/generator"
+-    OUTPUT_QUIET
+-    ERROR_QUIET
+     COMMAND_ERROR_IS_FATAL ANY
+   )
+ endif()
