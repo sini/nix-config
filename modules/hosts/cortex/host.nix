@@ -125,18 +125,25 @@
             #   "HDMI-A-1, 2560x2880@59.98, 3840x0, 1, vrr, 0, bitdepth, 10"
             # ];
             wayland.windowManager.hyprland.settings = {
-              # misc = {
-              #   vfr = true;
-              #   vrr = 3;
-              # };
+              misc = {
+                vfr = true;
+                vrr = 3;
+              };
               render = {
-                direct_scanout = 1;
+                direct_scanout = 2;
                 cm_enabled = true;
                 send_content_type = true;
-                # cm_fs_passthrough = 2;
-                cm_fs_passthrough = 1;
-                cm_auto_hdr = true;
+                cm_fs_passthrough = 2;
+                # cm_fs_passthrough = 1;
+                cm_auto_hdr = 2;
+                expand_undersized_textures = false;
+                cm_sdr_eotf = 2;
               };
+
+              general = {
+                allow_tearing = true;
+              };
+
               experimental = {
                 xx_color_management_v4 = true;
               };
