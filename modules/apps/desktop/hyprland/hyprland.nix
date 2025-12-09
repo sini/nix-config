@@ -147,7 +147,7 @@
               no_donation_nag = true;
             };
             misc = {
-              vrr = 1;
+              # vrr = 1;
               disable_hyprland_logo = true;
             };
             # monitor = [ ",highres,auto,1" ];
