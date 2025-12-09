@@ -26,15 +26,15 @@
           home = "/cache/var/lib/private/ollama";
           models = "/cache/var/lib/private/ollama/models";
 
-          package = lib.mkIf amdEnabled pkgs.ollama-rocm;
-
-          acceleration =
+          package =
             if amdEnabled then
-              "rocm"
+              pkgs.ollama-rocm
             else if nvidiaEnabled then
-              "cuda"
+              pkgs.ollama-cuda
             else
-              null; # Fallback to CPU-only inference
+              # TODO: maybe vulkan?
+              pkgs.ollama-cpu;
+
           # rocmOverrideGfx = "11.0.1"; # 7900xtx (gpu-family)
 
           # TODO for mini PC's with APU's... https://github.com/rjmalagon/ollama-linux-amd-apu
