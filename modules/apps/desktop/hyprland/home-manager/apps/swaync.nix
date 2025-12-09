@@ -66,7 +66,7 @@
     in
     {
       systemd.user.services.swayosd = {
-        Unit.ConditionExec = [
+        Unit.ExecCondition = [
           "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
         ];
         Service.Slice = "background-graphical.slice";
@@ -78,7 +78,7 @@
       };
 
       systemd.user.services.swaync = {
-        Unit.ConditionExec = [
+        Unit.ExecCondition = [
           "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
         ];
         Service.Slice = "background-graphical.slice";

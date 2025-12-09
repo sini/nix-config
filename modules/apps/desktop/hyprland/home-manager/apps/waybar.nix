@@ -12,7 +12,7 @@
     in
     {
       systemd.user.services.waybar = {
-        Unit.ConditionExec = [
+        Unit.ExecCondition = [
           "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
         ];
         Service.Slice = "background-graphical.slice";
