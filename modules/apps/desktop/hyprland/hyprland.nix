@@ -45,7 +45,7 @@
 
         systemd.user.services.hyprpolkitagent = {
           path = lib.mkForce [ ]; # reason explained in desktop/default.nix
-          serviceConfig.Slice = "session$-graphical.slice";
+          serviceConfig.Slice = "session-graphical.slice";
           wantedBy = [ "graphical-session.target" ];
         };
 
@@ -99,12 +99,12 @@
           };
         };
 
-        # systemd.user.services.hyprpaper = {
-        #   Unit.ConditionExec = [
-        #     "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
-        #   ];
-        #   Service.Slice = "background-graphical.slice";
-        # };
+        systemd.user.services.hyprpaper = {
+          Unit.ExecCondition = [
+            "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+          ];
+          Service.Slice = "background-graphical.slice";
+        };
 
         services = {
           # clipman.enable = true;

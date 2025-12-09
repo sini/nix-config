@@ -10,6 +10,9 @@
 
       systemd.user.services.hypridle = {
         Unit = {
+          ExecCondition = [
+            "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+          ];
           After = lib.mkForce [ "graphical-session.target" ];
           Requisite = [ "graphical-session.target" ];
         };
