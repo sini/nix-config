@@ -91,7 +91,9 @@ in
           bridge-utils
 
           virtiofsd
-          local.looking-glass-client-vulkan # For KVM
+          # local.looking-glass-client-vulkan # For HDR
+          local.looking-glass-client # git branch client
+          # looking-glass-client # 'release' client -- at time of comment B7
           qemu # Virtualizer
           OVMF # UEFI Firmware
           gvfs # Shared Directory
