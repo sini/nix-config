@@ -31,18 +31,18 @@ flakeConfig: {
     in
     {
 
-      # systemd.services."microvm@fancontrol".serviceConfig.ExecCondition =
-      #   pkgs.writeScript "check_vfio_status.sh" ''
-      #     #! ${pkgs.runtimeShell} -e
-      #     content=$(< /sys/bus/pci/drivers/vfio-pci/0000\:18\:00.0/enable)
+      systemd.services."microvm@cuda".serviceConfig.ExecCondition =
+        pkgs.writeScript "check_vfio_status.sh" ''
+          #! ${pkgs.runtimeShell} -e
+          content=$(< /sys/bus/pci/drivers/vfio-pci/${nvidiaGpuDeviceID}/enable)
 
-      #     # Check if the content is equal to 0
-      #     if [ "$content" == "0" ]; then
-      #       exit 0
-      #     else
-      #       exit 1
-      #     fi
-      #   '';
+          # Check if the content is equal to 0
+          if [ "$content" == "0" ]; then
+            exit 0
+          else
+            exit 1
+          fi
+        '';
 
       # systemd.tmpfiles.rules =
       #   let
