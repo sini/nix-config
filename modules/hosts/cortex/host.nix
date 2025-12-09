@@ -46,6 +46,7 @@
       sini = {
         features = [
           "spotify-player"
+          # TODO: properly feature flag these
           "waybar"
           "swaync"
           "hypridle"
@@ -132,7 +133,8 @@
                 direct_scanout = 1;
                 cm_enabled = true;
                 send_content_type = true;
-                cm_fs_passthrough = 2;
+                # cm_fs_passthrough = 2;
+                cm_fs_passthrough = 1;
                 cm_auto_hdr = true;
               };
               experimental = {
