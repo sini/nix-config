@@ -28,21 +28,27 @@ flakeConfig: {
           _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
         ) config.users.users
       );
+
+      vfioStatusCheck = pkgs.writeScript "check_vfio_status.sh" ''
+        #! ${pkgs.runtimeShell} -e
+        content=$(< /sys/bus/pci/drivers/vfio-pci/${nvidiaGpuDeviceID}/enable)
+
+        # Log what we read for debugging
+        echo "VFIO enable check: device ${nvidiaGpuDeviceID} enable=$content" | ${pkgs.systemd}/bin/systemd-cat -t vfio-check -p info
+
+        # Check if the content is equal to 0
+        if [ "$content" == "0" ]; then
+          exit 0
+        else
+          exit 1
+        fi
+      '';
+
     in
     {
-
-      systemd.services."microvm@cuda".serviceConfig.ExecCondition =
-        pkgs.writeScript "check_vfio_status.sh" ''
-          #! ${pkgs.runtimeShell} -e
-          content=$(< /sys/bus/pci/drivers/vfio-pci/${nvidiaGpuDeviceID}/enable)
-
-          # Check if the content is equal to 0
-          if [ "$content" == "0" ]; then
-            exit 0
-          else
-            exit 1
-          fi
-        '';
+      # Don't start microvm if the device is already bound
+      systemd.services."microvm-pci-devices@cuda".serviceConfig.ExecCondition = vfioStatusCheck;
+      systemd.services."microvm@cuda".serviceConfig.ExecCondition = vfioStatusCheck;
 
       # systemd.tmpfiles.rules =
       #   let
