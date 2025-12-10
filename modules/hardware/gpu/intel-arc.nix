@@ -31,9 +31,9 @@
         intel-gpu-tools
         nvtopPackages.intel
         mesa-demos
-        vulkanPackages_latest.vulkan-loader
-        vulkanPackages_latest.vulkan-validation-layers
-        vulkanPackages_latest.vulkan-tools
+        vulkan-loader
+        vulkan-validation-layers
+        vulkan-tools
         libva-utils
       ];
     };
