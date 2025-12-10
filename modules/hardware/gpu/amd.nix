@@ -30,9 +30,10 @@
             libva-vdpau-driver
             libva
             libvdpau-va-gl
-            vulkanPackages_latest.vulkan-loader
-            vulkanPackages_latest.vulkan-validation-layers
-            vulkanPackages_latest.vulkan-extension-layer
+            vulkan-tools
+            vulkan-loader
+            vulkan-validation-layers
+            vulkan-extension-layer
             rocmPackages.clr.icd
           ];
         };
@@ -42,16 +43,16 @@
       nixpkgs.config.rocmSupport = true;
 
       # WARNING: It will break NVIDIA's libgbm, don't use with NVIDIA Optimus setups.
-      chaotic.mesa-git = {
-        enable = true;
-        fallbackSpecialisation = false;
-      };
+      # chaotic.mesa-git = {
+      #   enable = true;
+      #   fallbackSpecialisation = false;
+      # };
 
       # Enable HDR support
-      chaotic.hdr = {
-        enable = true;
-        specialisation.enable = false;
-      };
+      # chaotic.hdr = {
+      #   enable = true;
+      #   specialisation.enable = false;
+      # };
 
       # environment.variables = {
       #   AMD_VULKAN_ICD = "RADV"; # Force RADV when amdvlk is enabled
@@ -74,10 +75,10 @@
         clinfo
         nvtopPackages.amd
         amdgpu_top
-        vulkanPackages_latest.vulkan-tools
-        vulkanPackages_latest.vulkan-loader
-        vulkanPackages_latest.vulkan-validation-layers
-        vulkanPackages_latest.vulkan-extension-layer
+        vulkan-tools
+        vulkan-loader
+        vulkan-validation-layers
+        vulkan-extension-layer
         libva-utils
         mesa-demos
       ];

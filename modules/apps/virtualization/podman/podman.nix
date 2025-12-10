@@ -2,9 +2,9 @@
   flake.features.podman = {
     nixos =
       {
+        config,
         lib,
         pkgs,
-        config,
         activeFeatures,
         ...
       }:
@@ -33,7 +33,7 @@
             enable = true;
 
             # ZFS requires zfs package for volume management
-            extraPackages = lib.optional zfsEnabled pkgs.zfs_cachyos;
+            extraPackages = lib.optional zfsEnabled config.boot.zfs.package;
 
             # prune images and containers periodically
             autoPrune = {

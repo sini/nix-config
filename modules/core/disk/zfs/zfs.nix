@@ -16,6 +16,9 @@
 
         boot.zfs = {
           package = pkgs.zfs_cachyos;
+          # package = pkgs.cachyosKernels.zfs-cachyos.override {
+          #   kernel = config.boot.kernelPackages.kernel;
+          # };
           devNodes = "/dev/disk/by-id/";
           forceImportAll = true;
           requestEncryptionCredentials = [ "zroot" ];

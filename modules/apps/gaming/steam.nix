@@ -95,11 +95,10 @@
                       # GL/Vulkan plumbing for AMD on X11 (host RADV)
                       libglvnd
                       libdrm
-                      vulkanPackages_latest.vulkan-tools
-                      vulkanPackages_latest.vulkan-loader
-                      vulkanPackages_latest.vulkan-validation-layers
-                      vulkanPackages_latest.vulkan-extension-layer
-                      latencyflex-vulkan
+                      vulkan-tools
+                      vulkan-loader
+                      vulkan-validation-layers
+                      vulkan-extension-layer
 
                       # libstdc++ for the runtime
                       (lib.getLib stdenv.cc.cc)
@@ -114,11 +113,9 @@
             };
 
             extraCompatPackages = with pkgs; [
-              luxtorpeda
-              # proton-ge-bin
-              proton-ge-custom # From chaotic
-              steamtinkerlaunch
-              proton-cachyos # From chaotic
+              proton-ge-bin
+              # https://github.com/powerofthe69/proton-cachyos-nix
+              proton-cachyos-x86_64_v4
             ];
 
             gamescopeSession = {

@@ -56,7 +56,7 @@
           xdg-desktop-portal-gtk
           xdg-desktop-portal-gnome
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
-          xdg-desktop-portal-wlr_git
+          xdg-desktop-portal-wlr
         ];
         configPackages = [
           pkgs.xdg-desktop-portal-gtk
@@ -64,7 +64,7 @@
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
           pkgs.xdg-desktop-portal
           pkgs.niri
-          pkgs.xdg-desktop-portal-wlr_git
+          pkgs.xdg-desktop-portal-wlr
         ];
       };
 

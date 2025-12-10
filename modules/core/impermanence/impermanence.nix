@@ -262,7 +262,7 @@
                 wantedBy = [ "initrd.target" ];
                 after = [ "zfs-import-zroot.service" ]; # Wait for ZFS pool import
                 before = [ "sysroot.mount" ]; # Must complete before root is mounted
-                path = with pkgs; [ zfs_cachyos ];
+                path = [ config.boot.zfs.package ];
                 unitConfig.DefaultDependencies = "no";
                 serviceConfig.Type = "oneshot";
                 script = ''
@@ -327,7 +327,7 @@
                 wantedBy = [ "initrd.target" ];
                 after = [ "zfs-import-zroot.service" ];
                 before = [ "-.mount" ];
-                path = with pkgs; [ zfs_cachyos ];
+                path = [ config.boot.zfs.package ];
                 unitConfig.DefaultDependencies = "no";
                 serviceConfig.Type = "oneshot";
                 script = ''

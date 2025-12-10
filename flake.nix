@@ -63,9 +63,6 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # Nix flake for "too much bleeding-edge" and unreleased packages (e.g., mesa_git, linux_cachyos, firefox_nightly, sway_git, gamescope_git). And experimental modules (e.g., HDR, duckdns).
-    chaotic.url = "github:chaotic-cx/nyx/nyxpkgs-unstable";
-
     colmena = {
       url = "github:zhaofengli/colmena";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -134,6 +131,12 @@
         treefmt-nix.follows = "treefmt-nix";
       };
     };
+
+    # Cachyos kernel
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
+    proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
+    # TODO: deprecate...
+    chaotic.url = "github:lonerOrz/nyx-loner"; # fork for compat
 
     # Facter - an alternative to nixos-generate-config
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
