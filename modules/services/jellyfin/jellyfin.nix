@@ -8,13 +8,19 @@
         config,
         ...
       }:
-      # let
-      #   mediaRoot = "/mnt/data/media";
-      # in
+      let
+        mediaRoot = "/mnt/data/media";
+      in
       {
 
         imports = [
           inputs.declarative-jellyfin.nixosModules.default
+        ];
+
+        networking.firewall.allowedTCPPorts = [
+          7359
+          8096
+          8920
         ];
 
         services = {
@@ -31,7 +37,7 @@
               enableHttps = false; # Handled by Nginx
               internalHttpPort = 8096;
               publicHttpPort = 8096;
-              publishedServerUriBySubnet = [ "all=https://jellyfin.${config.networking.domain}}" ];
+              publishedServerUriBySubnet = [ "all=https://jellyfin.${config.networking.domain}" ];
             };
 
             encoding = {
@@ -86,65 +92,65 @@
               ];
             };
 
-            # libraries = {
-            #   Movies = {
-            #     enabled = true;
-            #     contentType = "movies";
-            #     pathInfos = [ "${mediaRoot}/movies" ];
-            #     typeOptions.Movies = {
-            #       metadataFetchers = [
-            #         "The Open Movie Database"
-            #         "TheMovieDb"
-            #       ];
-            #       imageFetchers = [
-            #         "The Open Movie Database"
-            #         "TheMovieDb"
-            #       ];
-            #     };
-            #   };
-            #   Shows = {
-            #     enabled = true;
-            #     contentType = "tvshows";
-            #     pathInfos = [ "${mediaRoot}/tv" ];
-            #     enableAutomaticSeriesGrouping = true;
-            #   };
-            #   Anime = {
-            #     enabled = true;
-            #     contentType = "tvshows";
-            #     pathInfos = [ "${mediaRoot}/anime" ];
-            #     enableAutomaticSeriesGrouping = true;
-            #   };
-            #   Books = {
-            #     enabled = true;
-            #     contentType = "books";
-            #     pathInfos = [ "${mediaRoot}/books" ];
-            #   };
-            #   Music = {
-            #     enabled = true;
-            #     contentType = "music";
-            #     pathInfos = [ "${mediaRoot}/music" ];
-            #   };
-            #   MusicVideos = {
-            #     enabled = true;
-            #     contentType = "musicvideos";
-            #     pathInfos = [ "${mediaRoot}/mv" ];
-            #   };
-            #   Concerts = {
-            #     enabled = true;
-            #     contentType = "musicvideos";
-            #     pathInfos = [ "${mediaRoot}/concerts" ];
-            #   };
-            # };
+            libraries = {
+              Movies = {
+                enabled = true;
+                contentType = "movies";
+                pathInfos = [ "${mediaRoot}/movies" ];
+                typeOptions.Movies = {
+                  metadataFetchers = [
+                    "The Open Movie Database"
+                    "TheMovieDb"
+                  ];
+                  imageFetchers = [
+                    "The Open Movie Database"
+                    "TheMovieDb"
+                  ];
+                };
+              };
+              Shows = {
+                enabled = true;
+                contentType = "tvshows";
+                pathInfos = [ "${mediaRoot}/tv" ];
+                enableAutomaticSeriesGrouping = true;
+              };
+              Anime = {
+                enabled = true;
+                contentType = "tvshows";
+                pathInfos = [ "${mediaRoot}/anime" ];
+                enableAutomaticSeriesGrouping = true;
+              };
+              Books = {
+                enabled = true;
+                contentType = "books";
+                pathInfos = [ "${mediaRoot}/books" ];
+              };
+              Music = {
+                enabled = true;
+                contentType = "music";
+                pathInfos = [ "${mediaRoot}/music" ];
+              };
+              MusicVideos = {
+                enabled = true;
+                contentType = "musicvideos";
+                pathInfos = [ "${mediaRoot}/mv" ];
+              };
+              Concerts = {
+                enabled = true;
+                contentType = "musicvideos";
+                pathInfos = [ "${mediaRoot}/concerts" ];
+              };
+            };
 
-            # users = {
-            #   Admin = {
-            #     mutable = false;
-            #     hashedPassword = "$PBKDF2-SHA512$iterations=210000$40ED1F46D80C99D30D668942213CC8AB$4118D9203F97D407B57E3D1B4C24B6DB844D3777736D80283FC1942BFF5E834AF4CE174B8F8FAB85ED0E2B5579066A0250BCECE434811EA451D30C07F9AD00A6";
-            #     permissions = {
-            #       isAdministrator = true;
-            #     };
-            #   };
-            # };
+            users = {
+              Admin = {
+                mutable = false;
+                hashedPassword = "$PBKDF2-SHA512$iterations=210000$40ED1F46D80C99D30D668942213CC8AB$4118D9203F97D407B57E3D1B4C24B6DB844D3777736D80283FC1942BFF5E834AF4CE174B8F8FAB85ED0E2B5579066A0250BCECE434811EA451D30C07F9AD00A6";
+                permissions = {
+                  isAdministrator = true;
+                };
+              };
+            };
 
             branding = {
               loginDisclaimer = ''
