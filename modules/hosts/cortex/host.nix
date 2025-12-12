@@ -70,6 +70,9 @@
       {
         # TODO: switch to this fork once it has working ZFS
         # boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
+        boot.kernelParams = [
+          "amd_3d_vcache.x3d_mode=cache" # AMD V-Cache https://wiki.cachyos.org/configuration/general_system_tweaks/#amd-3d-v-cache-optimizer
+        ];
 
         boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
 

@@ -26,7 +26,7 @@
           "iommu=pt"
 
           "iomem=relaxed"
-          "amd_pstate=guided" # power management
+          "amd_pstate=active" # power management
         ];
         # extraModulePackages = [ config.boot.kernelPackages.zenpower ];
       };
