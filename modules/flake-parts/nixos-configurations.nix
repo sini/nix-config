@@ -100,15 +100,15 @@
             nixosModules = (collectNixosModules allHostFeatures);
 
             # Select the correct chaotic-nyx modules based on channel.
-            chaoticImports =
-              if useUnstable then
-                [ inputs.chaotic.nixosModules.default ]
-              else
-                [
-                  inputs.chaotic.nixosModules.nyx-cache
-                  inputs.chaotic.nixosModules.nyx-overlay
-                  inputs.chaotic.nixosModules.nyx-registry
-                ];
+            # chaoticImports =
+            #   if useUnstable then
+            #     [ inputs.chaotic.nixosModules.default ]
+            #   else
+            #     [
+            #       inputs.chaotic.nixosModules.nyx-cache
+            #       inputs.chaotic.nixosModules.nyx-overlay
+            #       inputs.chaotic.nixosModules.nyx-registry
+            #     ];
 
             # Compute enabled users (used in specialArgs and home-manager)
             enabledUsers =
@@ -192,7 +192,7 @@
               # Import modules from features
               nixosModules
               # Add modules from external flakes and sources.
-              ++ chaoticImports
+              # ++ chaoticImports
               ++ [
                 pkgs'.nixosModules.notDetected
                 home-manager'.nixosModules.home-manager

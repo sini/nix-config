@@ -34,7 +34,7 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.linuxPackages_cachyos-server.cachyOverride { mArch = "GENERIC_V4"; };
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
 
         hardware = {
           disk.single = {
