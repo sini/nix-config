@@ -3,7 +3,7 @@
     requires = [ "zfs-diff" ];
 
     nixos =
-      { pkgs, ... }:
+      { config, pkgs, ... }:
       {
 
         environment.systemPackages = with pkgs; [
@@ -15,7 +15,8 @@
         boot.supportedFilesystems.zfs = true;
 
         boot.zfs = {
-          package = pkgs.zfs_cachyos;
+          package = config.boot.kernelPackages.zfs_unstable;
+          # package = pkgs.zfs_cachyos;
           # package = pkgs.cachyosKernels.zfs-cachyos.override {
           #   kernel = config.boot.kernelPackages.kernel;
           # };

@@ -33,8 +33,7 @@
         ...
       }:
       {
-        # boot.kernelPackages = pkgs.linuxPackages_latest;
-        boot.kernelPackages = pkgs.linuxPackages_cachyos-server.cachyOverride { mArch = "ZEN4"; };
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
 
         hardware = {
           networking.interfaces = [ "enp2s0" ];
