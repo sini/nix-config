@@ -22,6 +22,11 @@
         config = {
           common = {
             default = [
+              "gtk"
+            ];
+          };
+          gnome = {
+            default = [
               "gnome"
               "gtk"
             ];
