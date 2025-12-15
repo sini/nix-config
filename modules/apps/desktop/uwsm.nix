@@ -47,23 +47,24 @@
       # We workaround this by instead defining plain unit files containing just
       # the set text. Setting `systemd.user.services.<name>.paths = mkForce []`
       # also works (it still adds extra Environment= vars however).
-      systemd.user.units =
-        lib.genAttrs
-          [
-            "at-spi-dbus-bus.service"
-            "xdg-desktop-portal-gtk.service"
-            "xdg-desktop-portal-hyprland.service"
-            "xdg-desktop-portal.service"
-            "xdg-document-portal.service"
-            "xdg-permission-store.service"
-          ]
-          (_: {
-            overrideStrategy = "asDropin";
-            text = ''
-              [Service]
-              Slice=session-graphical.slice
-            '';
-          });
+      # systemd.user.units =
+      #   lib.genAttrs
+      #     [
+      #       "at-spi-dbus-bus.service"
+      #       "xdg-desktop-portal-gtk.service"
+      #       "xdg-desktop-portal-hyprland.service"
+      #       "xdg-desktop-portal.service"
+      #       "xdg-document-portal.service"
+      #       "xdg-permission-store.service"
+      #     ]
+      #     (_: {
+      #       overrideStrategy = "asDropin";
+      #       text = ''
+      #         [Service]
+      #         Slice=session-graphical.slice
+      #       '';
+      #     });
+      # xdg.portal.enable = lib.mkForce false;
 
       systemd.user.services.fumon = {
         enable = true;
