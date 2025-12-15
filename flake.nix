@@ -219,6 +219,7 @@
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable"; # Has binary cache + tests
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable"; # Has binary cache
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/master"; # Bleeding edge...
+    # nixpkgs-unstable.url = "github:NixOS/nixpkgs/d64e5cdca35b5fad7c504f615357a7afe6d9c49e"; # a commit from nixpkgs-unstable
 
     nvf.url = "github:notashelf/nvf";
 

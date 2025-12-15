@@ -69,12 +69,12 @@
       }:
       {
         # TODO: switch to this fork once it has working ZFS
-        # boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest;
+        # boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
+        boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
+
         boot.kernelParams = [
           "amd_3d_vcache.x3d_mode=cache" # AMD V-Cache https://wiki.cachyos.org/configuration/general_system_tweaks/#amd-3d-v-cache-optimizer
         ];
-
-        boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
 
         hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
 
