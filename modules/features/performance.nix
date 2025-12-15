@@ -10,6 +10,10 @@
       isLaptop = lib.elem "laptop" activeFeatures;
     in
     {
+      # GPU overclocking/undervolting daemon
+      systemd.packages = with pkgs; [ lact ];
+      systemd.services.lactd.wantedBy = [ "multi-user.target" ];
+
       powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
 
       services = {
