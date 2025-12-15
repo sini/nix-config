@@ -7,6 +7,10 @@
     }:
     {
       security.pam.services = {
+        # login = {
+        #   enableKwallet = true;
+        #   enableGnomeKeyring = true;
+        # };
         gdm.enableGnomeKeyring = true;
         gdm-password.enableGnomeKeyring = true;
         login.enableGnomeKeyring = true;
@@ -38,6 +42,14 @@
             ];
             "org.freedesktop.impl.portal.Secret" = [ "gnome-keyring" ];
           };
+          kde = {
+            default = [
+              "kde"
+              "gtk"
+            ];
+            "org.freedesktop.portal.FileChooser" = [ "kde" ];
+            "org.freedesktop.portal.OpenURI" = [ "kde" ];
+          };
           niri = {
             default = [
               "gtk"
@@ -61,16 +73,17 @@
           xdg-desktop-portal-gtk
           xdg-desktop-portal-gnome
           inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
+          kdePackages.xdg-desktop-portal-kde
           xdg-desktop-portal-wlr
         ];
-        configPackages = [
-          pkgs.xdg-desktop-portal-gtk
-          pkgs.xdg-desktop-portal-gnome
-          inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
-          pkgs.xdg-desktop-portal
-          pkgs.niri
-          pkgs.xdg-desktop-portal-wlr
-        ];
+        # configPackages = [
+        #   pkgs.xdg-desktop-portal-gtk
+        #   pkgs.xdg-desktop-portal-gnome
+        #   inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.xdg-desktop-portal-hyprland
+        #   pkgs.xdg-desktop-portal
+        #   pkgs.niri
+        #   pkgs.xdg-desktop-portal-wlr
+        # ];
       };
 
       # Necessary for xdg-portal home-manager module to work with useUserPackages enabled

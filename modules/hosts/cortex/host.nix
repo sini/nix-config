@@ -35,12 +35,16 @@
 
       "hyprland"
       "zen-browser"
+
+      "sddm"
+      "kde"
     ];
 
-    # exclude-features = [
-    #   #"gdm" # these are included with workstation
-    #   #"gnome"
-    # ];
+    exclude-features = [
+      "gdm" # these are included with workstation
+      "gnome"
+      "xdg-portal"
+    ];
 
     users = {
       sini = {
@@ -134,16 +138,17 @@
               misc = {
                 vfr = true;
                 vrr = 3;
+                disable_xdg_env_checks = true;
               };
               render = {
                 direct_scanout = 2;
                 cm_enabled = true;
                 send_content_type = true;
-                cm_fs_passthrough = 2;
+                cm_fs_passthrough = 1;
                 # cm_fs_passthrough = 1;
                 cm_auto_hdr = 2;
                 expand_undersized_textures = false;
-                cm_sdr_eotf = 2;
+                cm_sdr_eotf = 0; # 1?
               };
 
               general = {
@@ -154,27 +159,32 @@
                 xx_color_management_v4 = true;
               };
 
+              quirks = {
+                prefer_hdr = 2;
+              };
+
               monitorv2 = [
                 {
                   output = "DP-1";
                   mode = "3840x2160@119.88";
                   position = "0x0";
                   scale = 1;
-                  vrr = true;
+                  vrr = 3;
 
                   bitdepth = 10;
-                  # cm = "hdr";
+                  cm = "hdredid";
+
                   supports_wide_color = true;
                   supports_hdr = true;
                   # sdrbrightness = 1.2;
                   # sdrsaturation = 0.98;
 
                   sdr_min_luminance = "0.005";
-                  sdr_max_luminance = "350";
+                  sdr_max_luminance = "200";
                   # "sdr_max_luminance" = 200;
-                  "min_luminance" = 0;
-                  "max_luminance" = 1000;
-                  "max_avg_luminance" = 600;
+                  min_luminance = 0;
+                  max_luminance = 1200;
+                  max_avg_luminance = 600;
                 }
                 {
                   output = "DP-2";

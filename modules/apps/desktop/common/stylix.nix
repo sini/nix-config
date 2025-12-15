@@ -118,6 +118,9 @@
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
             };
+
+            qt.enable = false;
+            # qt.platform = "kde6";
           };
 
           cursor = {
