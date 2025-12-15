@@ -1,10 +1,10 @@
 {
   flake.features.waybar.home =
     {
-      lib,
-      pkgs,
       activeFeatures,
       config,
+      lib,
+      pkgs,
       ...
     }:
     let
@@ -12,8 +12,10 @@
     in
     {
       systemd.user.services.waybar = {
-        Unit.ExecCondition = [
-          "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+        Unit.ConditionEnvironment = lib.mkForce [
+          "|XDG_CURRENT_DESKTOP=Hyprland"
+          "|XDG_CURRENT_DESKTOP=niri"
+          "WAYLAND_DISPLAY"
         ];
         Service.Slice = "background-graphical.slice";
       };

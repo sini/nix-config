@@ -101,7 +101,7 @@
           };
           wipeHomeOnBoot = lib.mkOption {
             type = types.bool;
-            default = true;
+            default = false;
             description = ''
               Enable home rollback on boot. When enabled, /home is reset to a
               blank snapshot on every boot. Use with caution - ensure all

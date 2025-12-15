@@ -68,8 +68,9 @@
 
     home =
       {
-        inputs,
         config,
+        inputs,
+        lib,
         pkgs,
         ...
       }:
@@ -99,9 +100,17 @@
           };
         };
 
+        systemd.user.services.hyprpolkitagent = {
+          Unit.ConditionEnvironment = lib.mkForce [
+            "|XDG_CURRENT_DESKTOP=Hyprland"
+            "|XDG_CURRENT_DESKTOP=niri"
+          ];
+        };
+
         systemd.user.services.hyprpaper = {
-          Unit.ExecCondition = [
-            "${pkgs.bash}/bin/bash -c '[[ \"$XDG_CURRENT_DESKTOP\" = niri || \"$XDG_CURRENT_DESKTOP\" = Hyprland ]]'"
+          Unit.ConditionEnvironment = lib.mkForce [
+            "|XDG_CURRENT_DESKTOP=Hyprland"
+            "|XDG_CURRENT_DESKTOP=niri"
           ];
           Service.Slice = "background-graphical.slice";
         };
