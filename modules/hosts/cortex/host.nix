@@ -73,8 +73,8 @@
       }:
       {
         # TODO: switch to this fork once it has working ZFS
-        # boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
-        boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
+        # boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
 
         boot.kernelParams = [
           "amd_3d_vcache.x3d_mode=cache" # AMD V-Cache https://wiki.cachyos.org/configuration/general_system_tweaks/#amd-3d-v-cache-optimizer
@@ -135,20 +135,26 @@
             #   "HDMI-A-1, 2560x2880@59.98, 3840x0, 1, vrr, 0, bitdepth, 10"
             # ];
             wayland.windowManager.hyprland.settings = {
+
+              debug = {
+                full_cm_proto = true;
+              };
+
               misc = {
                 vfr = true;
                 vrr = 3;
                 disable_xdg_env_checks = true;
               };
+
               render = {
-                direct_scanout = 2;
+                direct_scanout = 1;
                 cm_enabled = true;
                 send_content_type = true;
                 cm_fs_passthrough = 1;
-                # cm_fs_passthrough = 1;
                 cm_auto_hdr = 2;
                 expand_undersized_textures = false;
                 cm_sdr_eotf = 0; # 1?
+                non_shader_cm = 2;
               };
 
               general = {
@@ -169,19 +175,19 @@
                   mode = "3840x2160@119.88";
                   position = "0x0";
                   scale = 1;
-                  vrr = 3;
+                  vrr = 0; # We get really bad brightness flickering. :(
 
                   bitdepth = 10;
                   cm = "hdredid";
 
                   supports_wide_color = true;
                   supports_hdr = true;
-                  # sdrbrightness = 1.2;
-                  # sdrsaturation = 0.98;
+                  sdrbrightness = 1.2;
+                  sdrsaturation = 1.05;
 
                   sdr_min_luminance = "0.005";
-                  sdr_max_luminance = "200";
-                  # "sdr_max_luminance" = 200;
+                  sdr_max_luminance = "250";
+
                   min_luminance = 0;
                   max_luminance = 1200;
                   max_avg_luminance = 600;
