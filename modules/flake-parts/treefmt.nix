@@ -52,6 +52,7 @@
             "*.xml"
             "*.dds"
             "*.diff"
+            "*.bin"
           ];
           formatter = {
             prettier = {

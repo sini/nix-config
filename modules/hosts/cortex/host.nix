@@ -74,7 +74,6 @@
       {
         # TODO: switch to this fork once it has working ZFS
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
-        # boot.kernelPackages = pkgs.linuxPackages_cachyos.cachyOverride { mArch = "ZEN4"; };
 
         boot.kernelParams = [
           "amd_3d_vcache.x3d_mode=cache" # AMD V-Cache https://wiki.cachyos.org/configuration/general_system_tweaks/#amd-3d-v-cache-optimizer
@@ -83,6 +82,21 @@
         hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
 
         hardware.networking.interfaces = [ "enp8s0" ];
+
+        # hardware.display.edid = {
+        #   enable = true;
+        #   packages = [
+        #     (pkgs.runCommand "samsung-odyssey-ark-g1-edid-firmware" { } ''
+        #       mkdir -p $out/lib/firmware/edid
+        #       cp ${./firmware/samsung-odyssey-ark-g1.bin} $out/lib/firmware/edid/samsung-odyssey-ark-g1.bin
+        #     '')
+        #   ];
+        # };
+
+        # hardware.display.outputs."DP-1" = {
+        #   mode = "e";
+        #   edid = "samsung-odyssey-ark-g1.bin";
+        # };
 
         # For Network Manager TODO: RENAME
         hardware.networking.unmanagedInterfaces = [
@@ -129,11 +143,6 @@
         # Host-specific home-manager configuration
         home-manager.sharedModules = [
           {
-            # wayland.windowManager.hyprland.settings.monitor = [
-            #   "DP-2, 2560x1440@165.00, -1440x0, 1, vrr, 1, transform, 1"
-            #   "DP-1, 3840x2160@119.88, 0x0, 1, vrr, 1, bitdepth, 10"
-            #   "HDMI-A-1, 2560x2880@59.98, 3840x0, 1, vrr, 0, bitdepth, 10"
-            # ];
             wayland.windowManager.hyprland.settings = {
 
               debug = {
@@ -172,7 +181,7 @@
               monitorv2 = [
                 {
                   output = "DP-1";
-                  mode = "3840x2160@119.88";
+                  mode = "3840x2160@120.00";
                   position = "0x0";
                   scale = 1;
                   vrr = 0; # We get really bad brightness flickering. :(
@@ -182,11 +191,13 @@
 
                   supports_wide_color = true;
                   supports_hdr = true;
-                  sdrbrightness = 1.2;
-                  sdrsaturation = 1.05;
+                  # sdrbrightness = 1.05;
+                  sdrbrightness = 1.00;
+
+                  sdrsaturation = 0.75;
 
                   sdr_min_luminance = "0.005";
-                  sdr_max_luminance = "250";
+                  sdr_max_luminance = "200";
 
                   min_luminance = 0;
                   max_luminance = 1200;
