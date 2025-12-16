@@ -1,8 +1,4 @@
-- setup zfs
-
-- setup impermenance
-
-- Migrate from btrfs to ZFS
+- Migrate from btrfs to ZFS on bitstream
 
 - Add yubikey unlock/lock
 

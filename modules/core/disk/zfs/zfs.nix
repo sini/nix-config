@@ -15,8 +15,9 @@
         boot.supportedFilesystems.zfs = true;
 
         boot.zfs = {
+          package = pkgs.zfs_unstable;
+          # package = pkgs.zfs_cachyos;
           # package = config.boot.kernelPackages.zfs_unstable;
-          package = pkgs.zfs_cachyos;
           # package = pkgs.cachyosKernels.zfs-cachyos.override {
           #   kernel = config.boot.kernelPackages.kernel;
           # };
@@ -25,6 +26,9 @@
           requestEncryptionCredentials = [ "zroot" ];
         };
 
+        # https://github.com/openzfs/zfs/issues/10891
+        systemd.services.systemd-udev-settle.enable = false;
+
         boot.kernelParams = [
           # ZFS-related params
           "zfs.zfs_arc_max=${toString (16 * 1024 * 1024 * 1024)}"
@@ -32,12 +36,16 @@
           "nohibernate"
         ];
 
-        # Expand all devices on boot
-        services.zfs.expandOnBoot = "all";
+        services.zfs = {
+          # Expand all devices on boot
+          expandOnBoot = "all";
 
-        # Enable auto-scrub
-        services.zfs.autoScrub.enable = true;
-        services.zfs.autoScrub.interval = "weekly";
+          # Enable auto-scrub
+          autoScrub.enable = true;
+          autoScrub.interval = "weekly";
+
+          trim.enable = true;
+        };
 
         # # Enable ZED's pushbullet compat
         # services.zfs.zed.settings = {

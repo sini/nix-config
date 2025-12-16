@@ -186,8 +186,10 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    # TODO: Revert back after https://github.com/nix-community/nix-vscode-extensions/pull/161 is merged
     nix-vscode-extensions = {
-      url = "github:nix-community/nix-vscode-extensions";
+      # url = "github:nix-community/nix-vscode-extensions";
+      url = "github:dseum/nix-vscode-extensions";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
@@ -217,9 +219,8 @@
 
     # NixPkgs Unstable
     # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable"; # Has binary cache + tests
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable"; # Has binary cache
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/master"; # Bleeding edge...
-    # nixpkgs-unstable.url = "github:NixOS/nixpkgs/d64e5cdca35b5fad7c504f615357a7afe6d9c49e"; # a commit from nixpkgs-unstable
+    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable"; # Has binary cache
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/master"; # Bleeding edge...
 
     nvf.url = "github:notashelf/nvf";
 
