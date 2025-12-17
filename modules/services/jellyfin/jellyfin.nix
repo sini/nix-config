@@ -6,6 +6,7 @@
       {
         inputs,
         config,
+        pkgs,
         ...
       }:
       let
@@ -27,6 +28,9 @@
           declarative-jellyfin = {
             enable = true;
             serverId = (builtins.hashString "md5" "jellyfin.${config.networking.domain}");
+
+            # Upstream declarative-jellfin locked version is broken against unstable
+            package = pkgs.jellyfin;
 
             # This user is configured in ./modules/users/media/media.nix and is a normal user for legacy/NAS reasons
             user = "media";
@@ -145,7 +149,7 @@
             users = {
               Admin = {
                 mutable = false;
-                hashedPassword = "$PBKDF2-SHA512$iterations=210000$40ED1F46D80C99D30D668942213CC8AB$4118D9203F97D407B57E3D1B4C24B6DB844D3777736D80283FC1942BFF5E834AF4CE174B8F8FAB85ED0E2B5579066A0250BCECE434811EA451D30C07F9AD00A6";
+                hashedPassword = "$PBKDF2-SHA512$iterations=210000$E7332528F62FF592B1BC0BDC5B40E709$C86BCCB2501A0E816F9AA90B775D2D95F7A23791A1EE5EBD2DB0812B87BCF179AF18E682C224E429D03DA51C4E262D1D1C6A2EA0964C7E2957C831CB80B85DC8";
                 permissions = {
                   isAdministrator = true;
                 };

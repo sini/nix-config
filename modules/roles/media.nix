@@ -2,8 +2,9 @@
   flake.roles.media = {
     features = [
       # "spotify-player"
-      "spicetify"
+      "jellyfin-client"
       "mpv"
+      "spicetify"
       "youtube-music-desktop"
       "yt-dlp"
     ];
