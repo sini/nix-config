@@ -33,7 +33,7 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
 
         hardware = {
           networking.interfaces = [ "enp2s0" ];

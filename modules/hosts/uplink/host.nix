@@ -37,7 +37,7 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
 
         hardware = {
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";

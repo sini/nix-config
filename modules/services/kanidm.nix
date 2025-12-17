@@ -69,7 +69,7 @@
         kanidm = {
           enableServer = true;
           enableClient = true;
-          package = pkgs.kanidm_1_7.withSecretProvisioning;
+          package = pkgs.kanidm_1_8.withSecretProvisioning;
 
           serverSettings = {
             domain = config.networking.domain;
