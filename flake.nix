@@ -186,10 +186,8 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # TODO: Revert back after https://github.com/nix-community/nix-vscode-extensions/pull/161 is merged
     nix-vscode-extensions = {
-      # url = "github:nix-community/nix-vscode-extensions";
-      url = "github:nix-community/nix-vscode-extensions/fix-issue-caused-by-nixpkgs-464215";
+      url = "github:nix-community/nix-vscode-extensions";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 

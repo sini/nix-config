@@ -2184,16 +2184,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1766016790,
-        "narHash": "sha256-WzEk2lZrJn3c8Mo2GBLLBUVU2P3egfzCpCgxn1oBVtM=",
+        "lastModified": 1766023187,
+        "narHash": "sha256-1GY5NaOc3Yn4DctY2tAqKJaSbfb1z2fNd6JS7OAH40U=",
         "owner": "nix-community",
         "repo": "nix-vscode-extensions",
-        "rev": "7b43f1716f0ae2944e374e494030b2315f4bf238",
+        "rev": "bd3fdab2b882463aaa14626e416b492e261d5ea0",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
-        "ref": "fix-issue-caused-by-nixpkgs-464215",
         "repo": "nix-vscode-extensions",
         "type": "github"
       }
