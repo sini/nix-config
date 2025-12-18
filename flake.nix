@@ -189,7 +189,7 @@
     # TODO: Revert back after https://github.com/nix-community/nix-vscode-extensions/pull/161 is merged
     nix-vscode-extensions = {
       # url = "github:nix-community/nix-vscode-extensions";
-      url = "github:dseum/nix-vscode-extensions";
+      url = "github:nix-community/nix-vscode-extensions/fix-issue-caused-by-nixpkgs-464215";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
