@@ -211,12 +211,30 @@
                   vrr = true;
                   transform = 1;
                 }
+                # LG DualUp 28MQ780-B
                 {
                   output = "HDMI-A-1";
-                  mode = "2560x2880@59.98";
+                  mode = "2560x2880@60.00";
                   position = "3840x0";
-                  scale = 1;
+                  scale = 1.33;
                   vrr = false;
+
+                  bitdepth = 10;
+                  cm = "hdredid";
+
+                  supports_wide_color = true;
+                  supports_hdr = true;
+
+                  sdrbrightness = 1.00;
+
+                  sdrsaturation = 1.00;
+
+                  sdr_min_luminance = "0.005";
+                  sdr_max_luminance = "200";
+
+                  min_luminance = 0;
+                  max_luminance = 300;
+                  max_avg_luminance = 300;
                 }
               ];
             };
