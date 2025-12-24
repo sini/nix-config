@@ -52,7 +52,7 @@
         impermanence = {
           enable = true;
           wipeRootOnBoot = true;
-          wipeHomeOnBoot = true;
+          wipeHomeOnBoot = false;
         };
 
         system.stateVersion = "25.05";

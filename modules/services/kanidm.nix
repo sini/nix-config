@@ -117,6 +117,14 @@
                 displayName = "Shawn";
                 mailAddresses = [ "hugs@${environment.email.domain}" ];
               };
+              ellen = {
+                displayName = "Ellen";
+                mailAddresses = [ "ellen@${environment.email.domain}" ];
+              };
+              jenn = {
+                displayName = "Jennifer";
+                mailAddresses = [ "jenn@${environment.email.domain}" ];
+              };
             };
 
             # OAuth2 clients and groups for services
@@ -156,6 +164,8 @@
                 "hugs"
                 "taiche"
                 "jennism"
+                "ellen"
+                "jenn"
               ];
 
               "media.admins" = {
