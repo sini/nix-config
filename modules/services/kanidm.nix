@@ -125,6 +125,10 @@
                 displayName = "Jennifer";
                 mailAddresses = [ "jenn@${environment.email.domain}" ];
               };
+              tyr = {
+                displayName = "tyr";
+                mailAddresses = [ "tyr@${environment.email.domain}" ];
+              };
             };
 
             # OAuth2 clients and groups for services
@@ -166,6 +170,7 @@
                 "jennism"
                 "ellen"
                 "jenn"
+                "tyr"
               ];
 
               "media.admins" = {
