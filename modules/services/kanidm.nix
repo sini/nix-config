@@ -129,6 +129,10 @@
                 displayName = "tyr";
                 mailAddresses = [ "tyr@${environment.email.domain}" ];
               };
+              zogger = {
+                displayName = "zogger";
+                mailAddresses = [ "zogger@${environment.email.domain}" ];
+              };
             };
 
             # OAuth2 clients and groups for services
@@ -171,6 +175,7 @@
                 "ellen"
                 "jenn"
                 "tyr"
+                "zogger"
               ];
 
               "media.admins" = {
