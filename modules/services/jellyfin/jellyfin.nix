@@ -6,7 +6,7 @@
       {
         inputs,
         config,
-        # pkgs,
+        pkgs,
         ...
       }:
       let
@@ -30,7 +30,7 @@
             serverId = (builtins.hashString "md5" "jellyfin.${config.networking.domain}");
 
             # Upstream declarative-jellfin locked version is broken against unstable
-            # package = pkgs.jellyfin;
+            package = pkgs.jellyfin;
 
             # This user is configured in ./modules/users/media/media.nix and is a normal user for legacy/NAS reasons
             user = "media";
