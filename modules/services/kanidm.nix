@@ -133,6 +133,14 @@
                 displayName = "zogger";
                 mailAddresses = [ "zogger@${environment.email.domain}" ];
               };
+              jess = {
+                displayName = "jess";
+                mailAddresses = [ "jess@${environment.email.domain}" ];
+              };
+              leo = {
+                displayName = "leo";
+                mailAddresses = [ "leo@${environment.email.domain}" ];
+              };
             };
 
             # OAuth2 clients and groups for services
@@ -176,6 +184,8 @@
                 "jenn"
                 "tyr"
                 "zogger"
+                "jess"
+                "leo"
               ];
 
               "media.admins" = {
