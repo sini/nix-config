@@ -82,7 +82,7 @@
         # TUI & REPLs
         click # The "Command Line Interactive Controller for Kubernetes" (REPL)
         k9s # Kubernetes CLI To Manage Your Clusters In Style
-        kdash # A simple and fast dashboard for Kubernetes
+        # kdash # A simple and fast dashboard for Kubernetes
         kubectl-explore # A better kubectl explain with the fuzzy finder
         kubernetes-code-generator # Kubernetes code generation
 
