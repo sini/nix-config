@@ -20,7 +20,7 @@
         owner = "Mr-Zero88";
         repo = "xrizer";
         rev = "494617d132c59fceeb10cc70c865b3065e6070c1";
-        hash = "sha256-12M7rkTMbIwNY56Jc36nC08owVSPOr1eBu0xpJxikdw=";
+        hash = "sha256-D9jLaxWNce8XHfYePyOF2HEmJuDMKhuty+VO0CP8I38=";
       };
 
       cargoDeps = prev.rustPlatform.fetchCargoVendor {
