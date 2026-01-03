@@ -32,8 +32,8 @@
       "zathura" # PDF viewer
 
       # Messaging
-      "discord"
-      "telegram"
+      #"discord"
+      #"telegram"
     ];
   };
 }

@@ -129,8 +129,9 @@
           openal
           pulseaudio
 
-          yabridge
-          yabridgectl
+          # TODO: restore
+          # yabridge
+          # yabridgectl
           beets
 
           vital
