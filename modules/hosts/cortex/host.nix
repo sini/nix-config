@@ -26,10 +26,10 @@
       "microvm"
       "microvm-cuda"
       "windows-vfio"
-      "gamedev"
+      #"gamedev"
       "easyeffects"
       "media-data-share"
-      "cad"
+      #"cad"
       "podman"
       "vr-amd"
 

@@ -83,7 +83,7 @@
           bs-manager
           eepyxr
           wlx-overlay-s
-          lovr-playspace
+          # lovr-playspace
           resolute
           lighthouse-steamvr
           custom-monado
