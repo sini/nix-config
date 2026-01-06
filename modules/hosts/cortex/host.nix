@@ -11,6 +11,7 @@
       "dev-gui"
       "media"
       "inference"
+      "messaging"
     ];
 
     features = [
