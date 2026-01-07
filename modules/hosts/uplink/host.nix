@@ -27,6 +27,8 @@
       "ollama"
       "open-webui"
       "jellyfin"
+      # TODO: ehhh
+      "homepage"
       # "minio"
       # "vault"
     ];
