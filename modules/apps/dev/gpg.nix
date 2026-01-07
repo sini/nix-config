@@ -150,7 +150,10 @@
         #   };
         # };
         home.persistence."/persist".directories = [
-          ".gnupg"
+          {
+            directory = ".gnupg";
+            mode = "0700";
+          }
         ];
       };
   };
