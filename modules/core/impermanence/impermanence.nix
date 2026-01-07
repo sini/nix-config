@@ -51,38 +51,7 @@
       {
         imports = [
           inputs.impermanence.nixosModules.impermanence
-        ]
-        ++ (
-          # Taken from: https://github.com/oddlama/nix-config/blob/804336241eed5d3a84efe8f375ae74c6625a62f0/config/impermanence.nix#L4
-          # For each user that has a home-manager config, merge the locally defined
-          # persistence options that we define below.
-          let
-            mkUserFiles = map (
-              x: { parentDirectory.mode = "700"; } // (if isAttrs x then x else { file = x; })
-            );
-            mkUserDirs = map (x: { mode = "700"; } // (if isAttrs x then x else { directory = x; }));
-          in
-          [
-            {
-              environment.persistence = mkMerge (
-                flip map (attrNames config.home-manager.users) (
-                  user:
-                  let
-                    hmUserCfg = config.home-manager.users.${user};
-                  in
-                  flip mapAttrs hmUserCfg.home.persistence (
-                    _: sourceCfg: {
-                      users.${user} = {
-                        files = mkUserFiles sourceCfg.files;
-                        directories = mkUserDirs sourceCfg.directories;
-                      };
-                    }
-                  )
-                )
-              );
-            }
-          ]
-        );
+        ];
 
         options.impermanence = with lib.types; {
           enable = lib.mkOption {
@@ -123,31 +92,6 @@
         };
 
         config = {
-          home-manager.sharedModules = [
-            {
-              options.home.persistence = mkOption {
-                description = "Additional persistence config for the given source path";
-                default = { };
-                type = types.attrsOf (
-                  types.submodule {
-                    options = {
-                      files = mkOption {
-                        description = "Additional files to persist via NixOS impermanence.";
-                        type = types.listOf (types.either types.attrs types.str);
-                        default = [ ];
-                      };
-
-                      directories = mkOption {
-                        description = "Additional directories to persist via NixOS impermanence.";
-                        type = types.listOf (types.either types.attrs types.str);
-                        default = [ ];
-                      };
-                    };
-                  }
-                );
-              };
-            }
-          ];
 
           # Persistence Configuration
           # =========================
@@ -366,40 +310,7 @@
               };
             };
 
-          systemd = {
-            # Automatic Home Directory Creation
-            # ==================================
-            # Ensure user home directories exist in both /persist and /cache
-            # before they're needed. systemd-tmpfiles creates these directories
-            # with correct ownership and permissions during early boot.
-            #
-            # This prevents permission errors when impermanence tries to bind mount
-            # user directories that don't exist yet in the persistent storage.
-            tmpfiles.settings."persistent-dirs" =
-              let
-                mkHomePersist =
-                  user:
-                  lib.optionalAttrs user.createHome {
-                    "${config.environment.persistence."/persist".persistentStoragePath}/${user.home}" = {
-                      d = {
-                        group = user.group;
-                        user = user.name;
-                        mode = user.homeMode;
-                      };
-                    };
-                    "${config.environment.persistence."/cache".persistentStoragePath}/${user.home}" = {
-                      d = {
-                        group = user.group;
-                        user = user.name;
-                        mode = user.homeMode;
-                      };
-                    };
-                  };
-                users = lib.attrValues config.users.users;
-              in
-              lib.mkMerge (map mkHomePersist users);
-          }
-          // lib.optionalAttrs (zfsEnabled && cfg.wipeRootOnBoot && cfg.wipeHomeOnBoot) {
+          systemd = lib.mkIf (zfsEnabled && cfg.wipeRootOnBoot && cfg.wipeHomeOnBoot) {
             # ZFS Shutdown Hook
             # =================
             # Before shutdown, create recovery snapshots and rollback to empty state.
@@ -432,15 +343,6 @@
             # Ensure zfs binary is available in the shutdown ramfs
             shutdownRamfs.storePaths = [ "${config.boot.zfs.package}/bin/zfs" ];
           };
-
-          # FUSE Configuration
-          # ==================
-          # Enable userAllowOther for FUSE filesystems. Required for home-manager's
-          # impermanence module to work correctly when using the allowOther option.
-          # This allows bind mounts created by unprivileged users (via home-manager)
-          # to be accessible by other users, including the user themselves in
-          # different contexts (e.g., systemd services running as that user).
-          programs.fuse.userAllowOther = true;
         };
       };
 
@@ -469,8 +371,14 @@
             "Videos"
 
             # Security/Authentication
-            ".ssh" # SSH keys and known hosts
-            ".local/share/keyrings" # Keyring/password storage
+            {
+              directory = ".ssh"; # SSH keys and known hosts
+              mode = "0700";
+            }
+            {
+              directory = ".local/share/keyrings"; # Keyring/password storage
+              mode = "0700";
+            }
           ];
 
         };
