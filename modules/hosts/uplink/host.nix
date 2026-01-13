@@ -29,6 +29,7 @@
       "jellyfin"
       # TODO: ehhh
       "homepage"
+      "oauth2-proxy"
       # "minio"
       # "vault"
     ];
