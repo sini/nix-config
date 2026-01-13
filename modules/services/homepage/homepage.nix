@@ -1,12 +1,14 @@
 {
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
   flake.features.homepage.nixos =
-    # { pkgs, ... }:
+    { config, ... }:
     {
 
       services.homepage-dashboard = {
         enable = true;
         listenPort = 8082;
+
+        allowedHosts = "*";
 
         services = [
 
@@ -70,7 +72,20 @@
 
       };
 
-      networking.firewall.allowedTCPPorts = [ 8082 ];
+      services.oauth2-proxy.nginx.virtualHosts = {
+        "homepage.${config.networking.domain}" = { };
+      };
+
+      services.nginx.virtualHosts = {
+        "homepage.${config.networking.domain}" = {
+          forceSSL = true;
+          useACMEHost = config.networking.domain;
+          locations."/" = {
+            proxyPass = "http://127.0.0.1:8082";
+            proxyWebsockets = true;
+          };
+        };
+      };
 
       # environment.persistence."/persist".directories = [
       #   {

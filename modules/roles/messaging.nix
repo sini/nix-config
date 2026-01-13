@@ -1,9 +1,10 @@
 {
   flake.roles.messaging = {
     features = [
-      "kdeconnect"
       "discord"
+      "kdeconnect"
       "telegram"
+      "zoom"
     ];
   };
 }

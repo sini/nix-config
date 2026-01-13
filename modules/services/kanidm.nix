@@ -58,10 +58,11 @@
             kanidm-admin-password = mkSecret "kanidm-admin-password.age";
           }
         ]
-        ++ builtins.map mkOidcSecrets [
+        ++ map mkOidcSecrets [
           "grafana"
-          "open-webui"
           "jellyfin"
+          "oauth2-proxy"
+          "open-webui"
         ]
       );
 
@@ -145,6 +146,11 @@
 
             # OAuth2 clients and groups for services
             groups = {
+              "admins".members = [
+                "json"
+                "shuo"
+              ];
+
               "grafana.access".members = [
                 "json"
                 "shuo"
@@ -273,6 +279,34 @@
                     ];
                     "media.access" = [ "user" ];
                   };
+                };
+              };
+
+              oauth2-proxy = {
+                displayName = "OAuth2-Proxy";
+                originUrl = "https://${config.networking.domain}/oauth2/callback";
+                originLanding = "https://${config.networking.domain}/";
+                basicSecretFile = config.age.secrets.oauth2-proxy-oidc-client-secret.path;
+                preferShortUsername = true;
+                scopeMaps = {
+                  "media.access" = [
+                    "openid"
+                    "email"
+                    "profile"
+                    "groups"
+                  ];
+                  "media.admins" = [
+                    "openid"
+                    "email"
+                    "profile"
+                    "groups"
+                  ];
+                  "admins" = [
+                    "openid"
+                    "email"
+                    "profile"
+                    "groups"
+                  ];
                 };
               };
             };

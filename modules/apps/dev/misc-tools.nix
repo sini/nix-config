@@ -1,11 +1,6 @@
 {
   flake.features.misc-tools.home =
-    {
-      lib,
-      pkgs,
-      hostOptions,
-      ...
-    }:
+    { pkgs, ... }:
     {
       home.packages = with pkgs; [
         atool
@@ -106,9 +101,11 @@
             "cd"
           ];
         };
-      }
-      // lib.optionalAttrs (hostOptions.unstable) {
+
         lazysql.enable = true;
+        # TODO : Cache
+        # .local/share/zoxide
+
       };
     };
 }
