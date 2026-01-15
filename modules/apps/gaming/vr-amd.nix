@@ -82,7 +82,7 @@
           libusb1
           bs-manager
           eepyxr
-          wlx-overlay-s
+          wayvr
           # lovr-playspace
           resolute
           lighthouse-steamvr
