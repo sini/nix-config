@@ -61,6 +61,7 @@
         ++ map mkOidcSecrets [
           "grafana"
           "jellyfin"
+          "kubernetes"
           "oauth2-proxy"
           "open-webui"
         ]
@@ -77,7 +78,6 @@
             origin = "https://idm.${config.networking.domain}";
             bindaddress = "127.0.0.1:8443";
             ldapbindaddress = "127.0.0.1:3636";
-            trust_x_forward_for = true;
 
             # TLS certificates from ACME
             tls_chain = "${config.security.acme.certs.${config.networking.domain}.directory}/fullchain.pem";
@@ -222,6 +222,22 @@
                   };
                 };
                 allowInsecureClientDisablePkce = false;
+                preferShortUsername = true;
+              };
+
+              kubernetes = {
+                displayName = "kubernetes";
+                originUrl = "http://localhost:8000";
+                originLanding = "http://localhost:8000";
+                # basicSecretFile = config.age.secrets.kubernetes-oidc-client-secret.path;
+                public = true;
+                enableLocalhostRedirects = true;
+                scopeMaps."admins" = [
+                  "openid"
+                  "email"
+                  "profile"
+                  "groups"
+                ];
                 preferShortUsername = true;
               };
 

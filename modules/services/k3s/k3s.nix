@@ -54,6 +54,30 @@ in
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-token.age";
       };
 
+      # age.secrets.kubernetes-oidc-secret = {
+      #   rekeyFile = rootPath + "/.secrets/services/kubernetes-oidc-client-secret.age";
+      #   intermediary = true;
+      # };
+      # age.secrets.kubernetes-oidc-env = {
+      #   generator.dependencies = [ config.age.secrets.kubernetes-oidc-secret ];
+      #   generator.script = (
+      #     {
+      #       lib,
+      #       decrypt,
+      #       deps,
+      #       ...
+      #     }:
+      #     ''
+      #       echo -n "OIDC_CLIENT_SECRET="
+      #       ${decrypt} ${lib.escapeShellArg (lib.head deps).file}
+      #     ''
+      #   );
+      # };
+
+      # systemd.services.k3s = {
+      #   serviceConfig.EnvironmentFile = config.age.secrets.kubernetes-oidc-secret.path;
+      # };
+
       environment.systemPackages = with pkgs; [
         k3s
         k9s
@@ -140,6 +164,8 @@ in
               "--service-cidr=${environment.kubernetes.serviceCidr}"
               "--cluster-domain k8s.${environment.domain}"
 
+              "--kubelet-arg=fail-swap-on=false"
+
               "--write-kubeconfig-mode \"0644\""
               "--etcd-expose-metrics"
               "--disable-helm-controller"
@@ -155,9 +181,17 @@ in
               "--disable-kube-proxy" # Cilium will handle this
               "--disable-cloud-controller"
 
+              "--tls-san=k8s.${config.networking.domain}"
               "--tls-san=${config.networking.fqdn}"
               "--tls-san=${config.networking.hostName}"
               "--tls-san=${externalIP}"
+
+              "--kube-apiserver-arg=oidc-issuer-url=https://idm.${config.networking.domain}/oauth2/openid/kubernetes"
+              "--kube-apiserver-arg=oidc-client-id=kubernetes"
+              "--kube-apiserver-arg=oidc-signing-algs=ES256"
+              "--kube-apiserver-arg=oidc-username-claim=email"
+              "--kube-apiserver-arg=oidc-groups-claim=groups"
+              # "--kube-apiserver-arg=oidc-client-secret=\${OIDC_CLIENT_SECRET}"
             ]
             ++ (lib.map (ip: "--tls-san=${ip}") environment.kubernetes.tlsSanIps);
             #agentFlags = builtins.concatStringsSep " " generalFlagList;
