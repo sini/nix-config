@@ -7,7 +7,7 @@
     roles = [
       "server"
       "unlock"
-      # "kubernetes"
+      "kubernetes"
       "bgp-spoke"
       # "vault"
     ];

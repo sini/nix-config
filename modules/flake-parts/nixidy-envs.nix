@@ -58,10 +58,10 @@
             src = pkgs.fetchFromGitHub {
               owner = "cilium";
               repo = "cilium";
-              rev = "v1.18.3";
-              hash = "sha256-A73b9aOOYoB0hsdrvVPH1I8/LsZiCZ+NoJc2D3Mdh2g=";
+              rev = "v1.18.6";
+              hash = "sha256-V4CbizefPn8VnZnnSxgQP2eq72wNVD0niuEmAlr28Xs=";
             };
-            crds = builtins.map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
+            crds = map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
               "CiliumBGPPeerConfigs"
               "CiliumBGPClusterConfigs"
               "CiliumBGPAdvertisements"
