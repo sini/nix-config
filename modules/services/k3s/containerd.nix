@@ -1,5 +1,5 @@
 {
-  flake.features.kubernetes.nixos =
+  flake.features.containerd.nixos =
     {
       inputs,
       lib,
@@ -9,6 +9,8 @@
     {
       imports = [ inputs.nix-snapshotter.nixosModules.default ];
 
+      services.nix-snapshotter.enable = true;
+
       systemd.services.k3s.requires = [ "containerd.service" ];
 
       virtualisation.containerd = {
@@ -16,6 +18,15 @@
 
         settings = {
           version = 2;
+
+          root = "/var/lib/containerd";
+          state = "/run/containerd";
+
+          oom_score = 0;
+
+          grpc = {
+            address = "/run/containerd/containerd.sock";
+          };
 
           proxy_plugins.nix = {
             type = "snapshot";
@@ -64,10 +75,26 @@
 
       };
 
+      # Required by third-party CNI installed outside of Nix.
+      environment.etc = {
+        "cni/net.d".enable = false;
+        "cni/net.d/05-cilium.conf" = {
+          text = builtins.toJSON {
+            cniVersion = "0.3.1";
+            enable-debug = true;
+            log-file = "/var/run/cilium/cilium-cni.log";
+            name = "cilium";
+            type = "cilium-cni";
+          };
+          mode = "0644";
+        };
+      };
+
       environment.persistence."/persist".directories = [
         "/var/lib/cni"
         "/var/lib/containers"
         "/var/lib/containerd"
+        "/var/lib/dockershim"
       ];
     };
 
