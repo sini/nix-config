@@ -106,6 +106,10 @@
                 displayName = "Will";
                 mailAddresses = [ "will@${environment.email.domain}" ];
               };
+              greco = {
+                displayName = "Jason";
+                mailAddresses = [ "greco@${environment.email.domain}" ];
+              };
               taiche = {
                 displayName = "Chris";
                 mailAddresses = [ "taiche@${environment.email.domain}" ];
@@ -171,6 +175,7 @@
                 "json"
                 "shuo"
                 "will"
+                "greco"
                 "hugs"
               ];
 
@@ -183,6 +188,7 @@
                 "json"
                 "shuo"
                 "will"
+                "greco"
                 "hugs"
                 "taiche"
                 "jennism"
