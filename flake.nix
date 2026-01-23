@@ -133,7 +133,7 @@
     };
 
     # Cachyos kernel
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
     proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
     # TODO: deprecate...
     chaotic.url = "github:lonerOrz/nyx-loner"; # fork for compat
