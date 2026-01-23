@@ -247,150 +247,6 @@ in
               tokenFile = config.age.secrets.kubernetes-cluster-token.path;
               gracefulNodeShutdown.enable = true;
               extraFlags = lib.mkForce serverFlags;
-
-              # autoDeployCharts =
-              #   let
-              #     cilium = pkgs.runCommand "helm-template" { allowSubstitution = false; } ''
-              #       mkdir -p "$out"
-              #       ${pkgs.kubernetes-helm}/bin/helm template cilium ${pkgs.inputs.cilium-chart} \
-              #         --namespace kube-system \
-              #         --set kubeProxyReplacement=true \
-              #         --set k8sServiceHost=192.168.123.101 \
-              #         --set k8sServicePort=6443 \
-              #         --set enableExternalIPs=true \
-              #         --set enableHostPort=true \
-              #         --set enableNodePort=true \
-              #         --set ipam.operator.clusterPoolIPv4PodCIDRList=${settings.cluster-cidr} \
-              #         --set ipv4NativeRoutingCIDR=${settings.cluster-cidr} \
-              #         --set routingMode=native \
-              #         --set autoDirectNodeRoutes=true \
-              #         --set devices='{enp199s0f5,enp199s0f6}' \
-              #         --set bpf.masquerade=true \
-              #         --set endpointRoutes.enabled=true \
-              #         --set autoDirectNodeRoute=true \
-              #         --set encryption.enabled=true\
-              #         --set encryption.type=wireguard \
-              #         --set encryption.nodeEncryption=true > "$out"/cilium.yaml
-              #     '';
-              #   in
-              #   {
-              #     flux = "${pkgs.fluxcd-yaml}/flux.yaml";
-              #     cilium = "${cilium}/cilium.yaml";
-              #   };
-              # Based on: https://github.com/CallumTarttelin/dotfiles/blob/b8c4dfef47b826652620266c1dc52eb825626424/modules/k3s.nix#L42
-              autoDeployCharts = {
-                cilium = {
-                  enable = true;
-
-                  name = "cilium";
-                  repo = "https://helm.cilium.io/";
-                  version = "1.18.6";
-                  hash = "sha256-+yr38lc5X1+eXCFE/rq/K0m4g/IiNFJHuhB+Nu24eUs=";
-
-                  targetNamespace = "kube-system";
-
-                  values = {
-                    kubeProxyReplacement = true;
-                    # routingMode = "native";
-                    # bpf.masquerade = true;
-                    # ipam.mode = "cluster-pool";
-
-                    # bandwidthManager.enabled = true;
-                    # bandwidthManager.bbr = true;
-
-                    # CNI chaining
-                    cni.chainingMode = "portmap";
-
-                    # IPAM & Pod CIDRs
-                    ipam = {
-                      mode = "cluster-pool";
-                      operator.clusterPoolIPv4PodCIDRList = [ "172.20.0.0/16" ];
-                    };
-
-                    # Routing Mode
-                    routingMode = "tunnel";
-                    tunnelProtocol = "geneve";
-
-                    # Masquerading (SNAT) behavior
-                    enableIPv4 = true;
-                    enableIpMasqAgent = false;
-                    enableIPv4Masquerade = true;
-                    nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
-                    masqLinkLocal = false;
-
-                    devices = [
-                      "dummy0"
-                      "enp2s0"
-                      "enp199s0f5"
-                      "enp199s0f6"
-                    ];
-
-                    policyEnforcementMode = "always";
-                    encryption = {
-                      enabled = true;
-                      type = "wireguard";
-                    };
-
-                    hubble = {
-                      relay.enabled = true;
-                      ui.enabled = true;
-                      metrics.enabled = [
-                        "dns"
-                        "drop"
-                        "tcp"
-                        "flow"
-                        "port-distribution"
-                        "icmp"
-                        "http"
-                      ];
-                    };
-                  };
-
-                  extraFieldDefinitions = {
-                    spec = {
-                      repo = "https://helm.cilium.io/";
-                      chart = "cilium";
-                      version = "1.18.6";
-                      bootstrap = true;
-                    };
-                  };
-
-                  # extraDeploy = [
-                  #   {
-                  #     apiVersion = "cilium.io/v2";
-                  #     kind = "CiliumLoadBalancerIPPool";
-                  #     metadata = {
-                  #       name = "all";
-                  #     };
-                  #     spec = {
-                  #       blocks = [
-                  #         {
-                  #           start = "10.11.0.1";
-                  #           stop = "10.11.0.255";
-                  #         }
-                  #       ];
-                  #     };
-                  #   }
-                  #   {
-                  #     apiVersion = "cilium.io/v2alpha1";
-                  #     kind = "CiliumL2AnnouncementPolicy";
-                  #     metadata = {
-                  #       name = "policy-all";
-                  #     };
-                  #     spec = {
-                  #       interfaces = [
-                  #         "^ens[0-9]+"
-                  #         "enp0s[0-9]+"
-                  #         "enp199s0f5"
-                  #         "enp199s0f6"
-                  #       ];
-                  #       externalIPs = true;
-                  #       loadBalancerIPs = true;
-                  #     };
-                  #   }
-                  # ];
-                };
-              };
             }
             // lib.optionalAttrs (!isMaster && masterIP != null) {
               serverAddr = "https://${masterIP}:6443";
@@ -400,6 +256,52 @@ in
           openiscsi = {
             enable = true;
             name = "iqn.2016-04.com.open-iscsi:${config.networking.fqdn}";
+          };
+
+          # GitOps bootstrap
+          systemd.services.k3s-bootstrap-cilium = lib.mkIf isMaster {
+            description = "Install Cilium for bootstrapping";
+            after = [ "k3s.service" ];
+            requires = [ "k3s.service" ];
+            path = with pkgs; [
+              kubectl
+              kubernetes-helm
+              cilium-cli
+            ];
+            environment = {
+              KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+            };
+            serviceConfig = {
+              Type = "oneshot";
+              ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
+                set -e
+
+                echo "Starting k3s bootstrap process..."
+
+                # Wait for k3s to be fully up
+                echo "Waiting for k3s to be ready..."
+                until kubectl get nodes; do
+                  echo "Waiting for k3s API server to be available..."
+                  sleep 5
+                done
+
+                echo "k3s is ready!"
+
+                # Check if Cilium is already installed
+                if ${lib.getExe pkgs.cilium-cli} --kubeconfig $KUBECONFIG status >/dev/null 2>&1; then
+                  echo "Cilium is already installed."
+                  exit 0
+                fi
+
+                ${lib.getExe pkgs.helm} repo add cilium https://helm.cilium.io/
+                ${lib.getExe pkgs.helm} install cilium cilium/cilium --version 1.18.6 --namespace kube-system \
+                --set ipam.mode=kubernetes \
+                --set kubeProxyReplacement=strict \
+                --set k8sServiceHost=$(hostname) \
+                --set k8sServicePort=6443
+              '';
+            };
+            wantedBy = [ "multi-user.target" ];
           };
         };
 
