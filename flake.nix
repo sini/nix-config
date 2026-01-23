@@ -243,7 +243,10 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    treefmt-nix.url = "github:numtide/treefmt-nix";
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
 
     ucodenix = {
       url = "github:e-tho/ucodenix";
