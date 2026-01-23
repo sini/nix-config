@@ -223,6 +223,7 @@ in
                 "--disable-network-policy" # Cilium
                 "--disable-kube-proxy" # Cilium will handle this
                 "--disable-cloud-controller"
+                "--disable-helm-controller"
 
                 "--tls-san=k8s.${config.networking.domain}"
                 "--tls-san=${config.networking.fqdn}"

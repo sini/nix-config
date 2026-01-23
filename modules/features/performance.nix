@@ -46,6 +46,12 @@
 
       # Based on: https://github.com/CachyOS/CachyOS-Settings/blob/e96d1e1dd253ed09e4104b096df543e6ecad08be/usr/lib/sysctl.d/99-cachyos-settings.conf
       boot.kernel.sysctl = {
+        # Increase the amount of inotify watchers
+        # Note that inotify watches consume 1kB on 64-bit machines.
+        "fs.inotify.max_user_watches" = 1048576; # default:  8192
+        "fs.inotify.max_user_instances" = 1024; # default:   128
+        "fs.inotify.max_queued_events" = 32768; # default: 16384
+
         # The sysctl swappiness parameter determines the kernel's preference for pushing anonymous pages or page cache to disk in memory-starved situations.
         # A low value causes the kernel to prefer freeing up open files (page cache), a high value causes the kernel to try to use swap space,
         # and a value of 100 means IO cost is assumed to be equal.
