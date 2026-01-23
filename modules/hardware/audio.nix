@@ -133,9 +133,10 @@
           yabridgectl
           beets
 
+          # VST stuff
           vital
           odin2
-          surge
+          # surge # TODO: Re-enable
           fire
           decent-sampler
           lsp-plugins
