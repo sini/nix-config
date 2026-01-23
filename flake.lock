@@ -1491,11 +1491,11 @@
         "nix-filter": "nix-filter"
       },
       "locked": {
-        "lastModified": 1767711026,
-        "narHash": "sha256-yTuyde8TpBR3NhNnOcK4uOGukvMCwrH3otP8E04e9X0=",
+        "lastModified": 1769203574,
+        "narHash": "sha256-cbBy1KCSbSI+uV7QrpgXwRQf+xdallYqTJ++hSBfPm4=",
         "owner": "Duckonaut",
         "repo": "split-monitor-workspaces",
-        "rev": "764548c3aa22c9f4cb436ec7243d21795eb6ebec",
+        "rev": "5ae28a939dc248b0e16d35addb8ea81c41277e55",
         "type": "github"
       },
       "original": {
@@ -2431,11 +2431,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1769202763,
-        "narHash": "sha256-y1saCeKoXdZhJ7fFNdEVUgyGxm+AHnUZ9lZjOIHmhJw=",
+        "lastModified": 1769205588,
+        "narHash": "sha256-ugJzenE0+X/5ILJEcl0+NavMQhqMro3cwPhR/NjOOzU=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "4c51e3519fe4d0b7d71f918c8623dda05a20d316",
+        "rev": "28528e01b00d737528b90d0ccb9cd468290fdc36",
         "type": "github"
       },
       "original": {

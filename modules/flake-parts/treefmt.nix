@@ -72,7 +72,7 @@
           mdformat.enable = true;
           nixfmt = {
             enable = true;
-            package = pkgs.nixfmt-rfc-style;
+            package = pkgs.nixfmt;
           };
           nixf-diagnose.enable = true;
           prettier.enable = true;
