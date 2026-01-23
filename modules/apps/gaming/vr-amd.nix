@@ -81,7 +81,6 @@
           openvr
           libusb1
           bs-manager
-          eepyxr
           wayvr
           # lovr-playspace
           resolute
