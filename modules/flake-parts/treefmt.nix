@@ -53,6 +53,7 @@
             "*.dds"
             "*.diff"
             "*.bin"
+            "*.md" # TODO: re-enable after mdformat is fixed
           ];
           formatter = {
             prettier = {
@@ -69,7 +70,7 @@
           actionlint.enable = true;
           fish_indent.enable = true;
           isort.enable = true;
-          mdformat.enable = true;
+          # mdformat.enable = true; #TODO: re-enable when it supports markdown-it-py >= 4.0.0
           nixfmt = {
             enable = true;
             package = pkgs.nixfmt;

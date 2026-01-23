@@ -28,7 +28,7 @@
             luajit
             lua-language-server
             nil
-            nixfmt-rfc-style
+            nixfmt
             nodePackages.prettier
             shellcheck
             shfmt
