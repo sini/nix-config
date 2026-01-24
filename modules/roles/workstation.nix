@@ -28,7 +28,8 @@
       "kitty"
       "firefox"
       "obs-studio"
-      "obsidian" # note-taking app
+      # TODO: Re-enable and configure
+      # "obsidian" # note-taking app
       "zathura" # PDF viewer
     ];
   };
