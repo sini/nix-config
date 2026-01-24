@@ -19,6 +19,11 @@
         ripgrep
         ripgrep-all
         unzip
+        unrar
+        cabextract
+        p7zip
+        zip
+        xz
         tokei
       ];
 
