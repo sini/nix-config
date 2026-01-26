@@ -1,8 +1,13 @@
 {
   flake.features.discord.home =
-    { inputs, ... }:
+    { inputs, pkgs, ... }:
     {
       imports = [ inputs.nixcord.homeModules.nixcord ];
+
+      home.packages = [
+        pkgs.discordo # Discord TUI
+      ];
+
       programs.nixcord = {
         enable = true;
         discord.enable = false;
