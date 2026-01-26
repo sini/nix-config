@@ -26,6 +26,7 @@
       { pkgs, ... }:
       {
         home.packages = with pkgs; [
+          igir # Rom organization
           prismlauncher # Minecraft launcher
           lutris # General games
 
