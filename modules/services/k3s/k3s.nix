@@ -200,9 +200,13 @@ in
                 "--node-label=node.longhorn.io/create-default-disk=true"
                 # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
                 "--resolv-conf=/run/systemd/resolve/resolv.conf"
+
+                "--node-label \"k3s-upgrade=false\""
+                "--kubelet-arg=register-with-taints=node.cilium.io/agent-not-ready:NoExecute"
               ];
               serverFlagList = [
                 "--bind-address=0.0.0.0"
+                "--advertise-address=${internalIP}"
                 "--cluster-cidr=${environment.kubernetes.clusterCidr}"
                 "--service-cidr=${environment.kubernetes.serviceCidr}"
                 "--cluster-domain k8s.${environment.domain}"
@@ -294,11 +298,16 @@ in
                 exit 0
               fi
 
-              ${lib.getExe pkgs.helm} repo add cilium https://helm.cilium.io/
-              ${lib.getExe pkgs.helm} install cilium cilium/cilium --version 1.18.6 --namespace kube-system \
-              --set ipam.mode=kubernetes \
-              --set kubeProxyReplacement=strict \
-              --set k8sServiceHost=$(hostname) \
+              echo "Adding helm repo for cilium..."
+
+              ${lib.getExe pkgs.kubernetes-helm} --kubeconfig $KUBECONFIG repo add cilium https://helm.cilium.io/
+
+              echo "Installing cilium..."
+
+              ${lib.getExe pkgs.kubernetes-helm} --kubeconfig $KUBECONFIG install cilium cilium/cilium --version 1.18.6 \
+              --namespace kube-system \
+              --set kubeProxyReplacement=true \
+              --set k8sServiceHost=${internalIP} \
               --set k8sServicePort=6443
             '';
           };
