@@ -257,52 +257,52 @@ in
             enable = true;
             name = "iqn.2016-04.com.open-iscsi:${config.networking.fqdn}";
           };
+        };
 
-          # GitOps bootstrap
-          systemd.services.k3s-bootstrap-cilium = lib.mkIf isMaster {
-            description = "Install Cilium for bootstrapping";
-            after = [ "k3s.service" ];
-            requires = [ "k3s.service" ];
-            path = with pkgs; [
-              kubectl
-              kubernetes-helm
-              cilium-cli
-            ];
-            environment = {
-              KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            };
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
-                set -e
-
-                echo "Starting k3s bootstrap process..."
-
-                # Wait for k3s to be fully up
-                echo "Waiting for k3s to be ready..."
-                until kubectl get nodes; do
-                  echo "Waiting for k3s API server to be available..."
-                  sleep 5
-                done
-
-                echo "k3s is ready!"
-
-                # Check if Cilium is already installed
-                if ${lib.getExe pkgs.cilium-cli} --kubeconfig $KUBECONFIG status >/dev/null 2>&1; then
-                  echo "Cilium is already installed."
-                  exit 0
-                fi
-
-                ${lib.getExe pkgs.helm} repo add cilium https://helm.cilium.io/
-                ${lib.getExe pkgs.helm} install cilium cilium/cilium --version 1.18.6 --namespace kube-system \
-                --set ipam.mode=kubernetes \
-                --set kubeProxyReplacement=strict \
-                --set k8sServiceHost=$(hostname) \
-                --set k8sServicePort=6443
-              '';
-            };
-            wantedBy = [ "multi-user.target" ];
+        # GitOps bootstrap
+        systemd.services.k3s-bootstrap-cilium = lib.mkIf isMaster {
+          description = "Install Cilium for bootstrapping";
+          after = [ "k3s.service" ];
+          requires = [ "k3s.service" ];
+          path = with pkgs; [
+            kubectl
+            kubernetes-helm
+            cilium-cli
+          ];
+          environment = {
+            KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
           };
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
+              set -e
+
+              echo "Starting k3s bootstrap process..."
+
+              # Wait for k3s to be fully up
+              echo "Waiting for k3s to be ready..."
+              until kubectl get nodes; do
+                echo "Waiting for k3s API server to be available..."
+                sleep 5
+              done
+
+              echo "k3s is ready!"
+
+              # Check if Cilium is already installed
+              if ${lib.getExe pkgs.cilium-cli} --kubeconfig $KUBECONFIG status >/dev/null 2>&1; then
+                echo "Cilium is already installed."
+                exit 0
+              fi
+
+              ${lib.getExe pkgs.helm} repo add cilium https://helm.cilium.io/
+              ${lib.getExe pkgs.helm} install cilium cilium/cilium --version 1.18.6 --namespace kube-system \
+              --set ipam.mode=kubernetes \
+              --set kubeProxyReplacement=strict \
+              --set k8sServiceHost=$(hostname) \
+              --set k8sServicePort=6443
+            '';
+          };
+          wantedBy = [ "multi-user.target" ];
         };
 
         environment.persistence."/persist".directories = [
