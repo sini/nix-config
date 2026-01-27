@@ -133,10 +133,8 @@
     };
 
     # Cachyos kernel
-    nix-cachyos-kernel.url = "github:sini/nix-cachyos-kernel"; # TODO: move back to xddxdd's repo after it updates
+    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
     proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
-    # TODO: deprecate...
-    chaotic.url = "github:lonerOrz/nyx-loner"; # fork for compat
 
     # Facter - an alternative to nixos-generate-config
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";

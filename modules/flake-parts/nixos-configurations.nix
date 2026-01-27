@@ -26,7 +26,7 @@
           # 2. Get features from additional roles defined on the host.
           additionalFeatures = lib.optionals (hostRoles != null) (
             lib.flatten (
-              builtins.map (roleName: config.roles.${roleName}.features) (
+              map (roleName: config.roles.${roleName}.features) (
                 # Ensure the role actually exists before trying to access it.
                 lib.filter (roleName: lib.hasAttr roleName config.roles) hostRoles
               )
@@ -54,7 +54,7 @@
           allFeatureNames = lib.unique (roleFeatureNames ++ hostFeatures);
 
           # 3. Map feature names to actual feature modules
-          allFeatures = builtins.map (name: config.features.${name}) allFeatureNames;
+          allFeatures = map (name: config.features.${name}) allFeatureNames;
 
           # 4. Collect all exclusions from features and host-level exclusions
           featureExclusions = lib.flatten (lib.catAttrs "excludes" allFeatures);
@@ -94,21 +94,10 @@
             };
 
             # Get active feature names (including transitive dependencies)
-            activeFeatures = lib.unique (builtins.map (f: f.name) allHostFeatures);
+            activeFeatures = lib.unique (map (f: f.name) allHostFeatures);
 
             # Collect NixOS modules from features
             nixosModules = (collectNixosModules allHostFeatures);
-
-            # Select the correct chaotic-nyx modules based on channel.
-            chaoticImports =
-              if useUnstable then
-                [ inputs.chaotic.nixosModules.default ]
-              else
-                [
-                  inputs.chaotic.nixosModules.nyx-cache
-                  inputs.chaotic.nixosModules.nyx-overlay
-                  inputs.chaotic.nixosModules.nyx-registry
-                ];
 
             # Compute enabled users (used in specialArgs and home-manager)
             enabledUsers =
@@ -136,7 +125,7 @@
                 envFeatureNames = envUser.features or [ ];
                 hostFeatureNames = hostUser.features or [ ];
                 allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
-                userFeatureModules = builtins.map (name: config.features.${name}) allUserFeatureNames;
+                userFeatureModules = map (name: config.features.${name}) allUserFeatureNames;
                 userOnlyExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
 
                 allExclusions = lib.unique (hostExclusions ++ userOnlyExclusions);
@@ -192,7 +181,6 @@
               # Import modules from features
               nixosModules
               # Add modules from external flakes and sources.
-              ++ chaoticImports
               ++ [
                 pkgs'.nixosModules.notDetected
                 home-manager'.nixosModules.home-manager
