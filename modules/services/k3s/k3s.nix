@@ -308,7 +308,15 @@ in
               --namespace kube-system \
               --set kubeProxyReplacement=true \
               --set k8sServiceHost=${internalIP} \
-              --set k8sServicePort=6443
+              --set k8sServicePort=6443 \
+              --set socketLB.hostNamespaceOnly=true \
+              --set enableHostPort=true \
+              --set enableNodePort=true \
+              --set ipam.operator.clusterPoolIPv4PodCIDRList=${environment.kubernetes.clusterCidr} \
+              --set gatewayAPI.enabled=true \
+              --set encryption.enabled=false \
+              --set encryption.type=wireguard \
+              --set encryption.nodeEncryption=true
             '';
           };
           wantedBy = [ "multi-user.target" ];
