@@ -1,5 +1,4 @@
 {
-  self,
   config,
   inputs,
   lib,
@@ -15,6 +14,9 @@
         inputs.nixidy.lib.mkEnvs {
           inherit pkgs;
           charts = inputs.nixhelm.chartsDerivations.${system};
+          # extraSpecialArgs = {
+          #   inherit (config) environments hosts;
+          # };
           envs = {
             prod.modules = [
               ../../k8s/prod/default.nix
@@ -23,75 +25,6 @@
         }
       ))
     );
-
-    generators = lib.genAttrs config.systems (
-      system:
-      (withSystem system (
-        { pkgs, ... }:
-        let
-          inherit (inputs.nixidy.packages.${system}.generators) fromCRD;
-        in
-        {
-          cert-manager = fromCRD {
-            name = "cert-manager";
-            src = pkgs.fetchFromGitHub {
-              owner = "cert-manager";
-              repo = "cert-manager";
-              rev = "v1.19.1";
-              hash = "sha256-OK6U9QIRYolLBjcNBhzFmZZqfBFoJzY8aUHew2F0MAQ=";
-            };
-            crds = [
-              "deploy/crds/cert-manager.io_certificaterequests.yaml"
-              "deploy/crds/cert-manager.io_certificates.yaml"
-              "deploy/crds/cert-manager.io_clusterissuers.yaml"
-              "deploy/crds/cert-manager.io_issuers.yaml"
-              "deploy/crds/acme.cert-manager.io_challenges.yaml"
-              "deploy/crds/acme.cert-manager.io_orders.yaml"
-            ];
-          };
-
-          cilium = fromCRD {
-            name = "cilium";
-            # nix run nixpkgs#nix-prefetch-github -- cilium cilium --rev v1.18.3
-
-            # NOTE: Remember to keep pkgs/by-name/cni-plugin-cilium in sync
-            src = pkgs.fetchFromGitHub {
-              owner = "cilium";
-              repo = "cilium";
-              rev = "v1.18.6";
-              hash = "sha256-V4CbizefPn8VnZnnSxgQP2eq72wNVD0niuEmAlr28Xs=";
-            };
-            crds = map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
-              "CiliumBGPPeerConfigs"
-              "CiliumBGPClusterConfigs"
-              "CiliumBGPAdvertisements"
-              "CiliumBGPNodeConfigOverrides"
-              "CiliumNetworkPolicies"
-              "CiliumLoadBalancerIPPools"
-              "CiliumClusterWideNetworkPolicies"
-            ];
-          };
-
-          traefik = fromCRD {
-            name = "traefik";
-            src = inputs.nixhelm.chartsDerivations.${system}.traefik.traefik;
-            crds = [
-              "crds/traefik.io_ingressroutes.yaml"
-              "crds/traefik.io_ingressroutetcps.yaml"
-              "crds/traefik.io_ingressrouteudps.yaml"
-              "crds/traefik.io_middlewares.yaml"
-              "crds/traefik.io_middlewaretcps.yaml"
-              "crds/traefik.io_serverstransports.yaml"
-              "crds/traefik.io_serverstransporttcps.yaml"
-              "crds/traefik.io_tlsoptions.yaml"
-              "crds/traefik.io_tlsstores.yaml"
-              "crds/traefik.io_traefikservices.yaml"
-            ];
-          };
-        }
-      ))
-    );
-
   };
 
   perSystem =
@@ -101,7 +34,19 @@
       system,
       ...
     }:
+    let
+      generators = import ../../k8s/generators {
+        inherit
+          inputs
+          system
+          pkgs
+          lib
+          ;
+      };
+    in
     {
+      imports = [ generators ];
+
       devshells.default.packages = [ inputs'.nixidy.packages.default ];
       devshells.default.commands = [
         {
@@ -109,18 +54,8 @@
           help = "Manage kubernetes cluster deployment configuration";
         }
         {
-          package = pkgs.writeShellApplication {
-            name = "generate-crds";
-            text = ''
-              set -eo pipefail
-
-              ${lib.concatMapStringsSep "\n" (name: ''
-                echo "generate ${name}"
-                cat ${self.generators.${system}.${name}} > manifests/crd/${name}.nix
-              '') (lib.attrNames self.generators.${system})}
-            '';
-          };
-          help = "Generate CRD definitions";
+          package = generators.packages.generate-crds;
+          help = "Generate crds";
         }
       ];
     };
