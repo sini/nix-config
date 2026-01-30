@@ -906,7 +906,7 @@ let
       options = {
         "config" = mkOption {
           description = "Additional configuration that should be passed to the webhook apiserver\nwhen challenges are processed.\nThis can contain arbitrary JSON data.\nSecret values should not be specified in this stanza.\nIf secret values are needed (e.g., credentials for a DNS service), you\nshould use a SecretKeySelector to reference a Secret resource.\nFor details on the schema of this field, consult the webhook provider\nimplementation's documentation.";
-          type = (types.nullOr types.attrs);
+          type = (types.nullOr types.unspecified);
         };
         "groupName" = mkOption {
           description = "The API group name that should be used when POSTing ChallengePayload\nresources to the webhook apiserver.\nThis should be the same as the GroupName specified in the webhook\nprovider implementation.";
@@ -5478,7 +5478,7 @@ let
       options = {
         "config" = mkOption {
           description = "Additional configuration that should be passed to the webhook apiserver\nwhen challenges are processed.\nThis can contain arbitrary JSON data.\nSecret values should not be specified in this stanza.\nIf secret values are needed (e.g., credentials for a DNS service), you\nshould use a SecretKeySelector to reference a Secret resource.\nFor details on the schema of this field, consult the webhook provider\nimplementation's documentation.";
-          type = (types.nullOr types.attrs);
+          type = (types.nullOr types.unspecified);
         };
         "groupName" = mkOption {
           description = "The API group name that should be used when POSTing ChallengePayload\nresources to the webhook apiserver.\nThis should be the same as the GroupName specified in the webhook\nprovider implementation.";
@@ -9567,7 +9567,7 @@ let
       options = {
         "config" = mkOption {
           description = "Additional configuration that should be passed to the webhook apiserver\nwhen challenges are processed.\nThis can contain arbitrary JSON data.\nSecret values should not be specified in this stanza.\nIf secret values are needed (e.g., credentials for a DNS service), you\nshould use a SecretKeySelector to reference a Secret resource.\nFor details on the schema of this field, consult the webhook provider\nimplementation's documentation.";
-          type = (types.nullOr types.attrs);
+          type = (types.nullOr types.unspecified);
         };
         "groupName" = mkOption {
           description = "The API group name that should be used when POSTing ChallengePayload\nresources to the webhook apiserver.\nThis should be the same as the GroupName specified in the webhook\nprovider implementation.";
