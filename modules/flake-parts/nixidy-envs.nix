@@ -35,7 +35,7 @@
       ...
     }:
     let
-      generators = import ../../k8s/generators {
+      crds = import ../../k8s/crds {
         inherit
           inputs
           system
@@ -45,7 +45,7 @@
       };
     in
     {
-      imports = [ generators ];
+      imports = [ crds ];
 
       devshells.default.packages = [ inputs'.nixidy.packages.default ];
       devshells.default.commands = [
@@ -54,8 +54,8 @@
           help = "Manage kubernetes cluster deployment configuration";
         }
         {
-          package = generators.packages.generate-crds;
-          help = "Generate crds";
+          package = crds.packages.generate-crds;
+          help = "Generate CRDs";
         }
       ];
     };
