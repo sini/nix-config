@@ -23,9 +23,9 @@
             modules = [
               {
                 nixidy.env = lib.mkDefault env;
-                nixidy.target.rootPath = lib.mkDefault "./manifests/${env}";
+                nixidy.target.rootPath = lib.mkDefault "./kubernetes/manifests/${env}";
               }
-              ../../k8s/${env}/default.nix
+              ../../kubernetes/envs/${env}
             ];
           }
         ) flakeOpts.config.environments)
@@ -43,7 +43,7 @@
       ...
     }:
     let
-      crds = import ../../k8s/crds {
+      crds = import ../../kubernetes/crds {
         inherit
           inputs
           system

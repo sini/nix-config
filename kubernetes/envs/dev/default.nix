@@ -8,37 +8,37 @@
 # nixidy bootstrap .#prod | kubectl apply -f -
 { lib, ... }:
 {
-  imports = [
-    ./argocd.nix
+  # imports = [
+  #   # ./argocd.nix
 
-    # ./caching.nix
-    # ./certificates.nix
-    ./cilium.nix
-    # # ./container-registry.nix
-    # ./devices.nix
-    # ./loadbalancer.nix
-    # ./monitoring.nix
-    # ./policies.nix
-    # ./secrets.nix
-    # ./storage.nix
+  #   # ./caching.nix
+  #   # ./certificates.nix
+  #   # ./cilium.nix
+  #   # # ./container-registry.nix
+  #   # ./devices.nix
+  #   # ./loadbalancer.nix
+  #   # ./monitoring.nix
+  #   # ./policies.nix
+  #   # ./secrets.nix
+  #   # ./storage.nix
 
-    # ./adguard
-    # ./homeassistant
-    # ./paperless
-    # ./rustdesk.nix
-  ];
+  #   # ./adguard
+  #   # ./homeassistant
+  #   # ./paperless
+  #   # ./rustdesk.nix
+  # ];
 
   nixidy = {
     resourceImports = [
-      ../crds/generated/cert-manager.nix
-      ../crds/generated/cilium.nix
-      ../crds/generated/traefik.nix
+      ../../crds/generated/cert-manager.nix
+      ../../crds/generated/cilium.nix
+      ../../crds/generated/traefik.nix
     ];
 
     target = {
       repository = "https://github.com/sini/nix-config.git";
       branch = "main";
-      rootPath = "./manifests/prod";
+      rootPath = "./manifests/dev";
     };
 
     bootstrapManifest.enable = true;
