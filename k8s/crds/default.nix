@@ -1,3 +1,4 @@
+# Originally based on https://github.com/duck1123/k3s-fleetops/blob/ae0791b718069bbc48b66840cd8c1520299a3d6a/generators/default.nix
 {
   inputs,
   system,
