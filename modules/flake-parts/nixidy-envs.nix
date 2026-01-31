@@ -6,24 +6,32 @@
   ...
 }:
 {
-  flake = {
+  flake = flakeOpts: {
     nixidyEnvs = lib.genAttrs config.systems (
       system:
       (withSystem system (
         { pkgs, ... }:
-        inputs.nixidy.lib.mkEnvs {
-          inherit pkgs;
-          charts = inputs.nixhelm.chartsDerivations.${system};
-          # extraSpecialArgs = {
-          #   inherit (config) environments hosts;
-          # };
-          envs = {
-            prod.modules = [
-              ../../k8s/prod/default.nix
+        (lib.mapAttrs (
+          env: environment:
+          inputs.nixidy.lib.mkEnv {
+            inherit pkgs;
+            charts = inputs.nixhelm.chartsDerivations.${system};
+            extraSpecialArgs = {
+              inherit environment;
+              hosts = flakeOpts.config.hosts;
+            };
+            modules = [
+              {
+                nixidy.env = lib.mkDefault env;
+                nixidy.target.rootPath = lib.mkDefault "./manifests/${env}";
+              }
+              ../../k8s/${env}/default.nix
             ];
-          };
-        }
-      ))
+          }
+        ) flakeOpts.config.environments)
+      )
+
+      )
     );
   };
 
