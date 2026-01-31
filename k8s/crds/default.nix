@@ -8,14 +8,14 @@
 let
   inherit (inputs) nixpkgs;
   pkgs = import nixpkgs { inherit system; };
-  gFiles = builtins.attrNames (builtins.readDir ./.);
+  gFiles = builtins.attrNames (builtins.readDir ./src);
   generatorFiles = builtins.filter (
     file: builtins.match ".*\\.nix" file != null && file != "default.nix"
   ) gFiles;
   generators = builtins.listToAttrs (
     map (file: {
       name = builtins.replaceStrings [ ".nix" ] [ "" ] file;
-      value = import (./. + "/${file}") sharedConfig;
+      value = import (./src + "/${file}") sharedConfig;
     }) generatorFiles
   );
 in
