@@ -1,4 +1,4 @@
-{ charts, ... }:
+{ charts, environment, ... }:
 {
   applications.cilium = {
     namespace = "kube-system";
@@ -11,7 +11,7 @@
       values = {
         # Cluster identity
         cluster = {
-          name = "prod";
+          name = "${environment.name}";
           id = 1;
         };
 

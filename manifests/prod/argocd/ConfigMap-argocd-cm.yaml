@@ -49,7 +49,6 @@ data:
         - CiliumIdentity
       clusters:
         - "*"
-  server.rbac.log.enforce.enable: "false"
   statusbadge.enabled: "false"
   timeout.hard.reconciliation: 0s
   timeout.reconciliation: 180s

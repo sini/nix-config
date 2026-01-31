@@ -127,179 +127,184 @@ in
         };
       };
 
-      environmentType = types.submodule {
-        options = {
-          name = mkOption {
-            type = types.str;
-            description = "Human-readable environment name";
-          };
+      environmentType = types.submodule (
+        { name, ... }:
+        {
+          options = {
+            name = mkOption {
+              type = types.str;
+              default = name;
+              readOnly = true;
+              description = "Human-readable environment name";
+            };
 
-          domain = mkOption {
-            type = types.str;
-            description = "Base domain for the environment";
-          };
+            domain = mkOption {
+              type = types.str;
+              description = "Base domain for the environment";
+            };
 
-          gatewayIp = mkOption {
-            type = types.str;
-            description = "Gateway IP address for the environment";
-          };
+            gatewayIp = mkOption {
+              type = types.str;
+              description = "Gateway IP address for the environment";
+            };
 
-          gatewayIpV6 = mkOption {
-            type = types.str;
-            description = "Gateway IPv6 address for the environment";
-          };
+            gatewayIpV6 = mkOption {
+              type = types.str;
+              description = "Gateway IPv6 address for the environment";
+            };
 
-          dnsServers = mkOption {
-            type = types.listOf types.str;
-            default = [
-              "1.1.1.1"
-              "8.8.8.8"
-            ];
-            description = "DNS server IPs for the environment";
-          };
+            dnsServers = mkOption {
+              type = types.listOf types.str;
+              default = [
+                "1.1.1.1"
+                "8.8.8.8"
+              ];
+              description = "DNS server IPs for the environment";
+            };
 
-          networks = mkOption {
-            type = types.attrsOf networkType;
-            default = { };
-            description = ''
-              Network definitions for the environment.
-              Example: `{
-                management = { cidr = "10.0.0.0/24"; purpose = "management"; };
-                cluster = { cidr = "172.20.0.0/16"; purpose = "kubernetes-pods"; };
-              }`
-            '';
-          };
+            networks = mkOption {
+              type = types.attrsOf networkType;
+              default = { };
+              description = ''
+                Network definitions for the environment.
+                Example: `{
+                  management = { cidr = "10.0.0.0/24"; purpose = "management"; };
+                  cluster = { cidr = "172.20.0.0/16"; purpose = "kubernetes-pods"; };
+                }`
+              '';
+            };
 
-          kubernetes = mkOption {
-            type = kubernetesType;
-            default = { };
-            description = "Kubernetes-specific network configuration";
-          };
+            kubernetes = mkOption {
+              type = kubernetesType;
+              default = { };
+              description = "Kubernetes-specific network configuration";
+            };
 
-          email = mkOption {
-            type = emailType;
-            description = "Email configuration for the environment";
-          };
+            email = mkOption {
+              type = emailType;
+              description = "Email configuration for the environment";
+            };
 
-          acme = mkOption {
-            type = acmeType;
-            default = { };
-            description = "ACME certificate authority configuration";
-          };
+            acme = mkOption {
+              type = acmeType;
+              default = { };
+              description = "ACME certificate authority configuration";
+            };
 
-          timezone = mkOption {
-            type = types.str;
-            default = "UTC";
-            description = "Default timezone for the environment";
-          };
+            timezone = mkOption {
+              type = types.str;
+              default = "UTC";
+              description = "Default timezone for the environment";
+            };
 
-          location = mkOption {
-            type = types.submodule {
-              options = {
-                country = mkOption {
-                  type = types.str;
-                  default = "US";
-                  description = "ISO country code";
-                };
+            location = mkOption {
+              type = types.submodule {
+                options = {
+                  country = mkOption {
+                    type = types.str;
+                    default = "US";
+                    description = "ISO country code";
+                  };
 
-                region = mkOption {
-                  type = types.str;
-                  default = "";
-                  description = "Geographic region or datacenter";
+                  region = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Geographic region or datacenter";
+                  };
                 };
               };
+              default = { };
+              description = "Geographic location information";
             };
-            default = { };
-            description = "Geographic location information";
-          };
 
-          tags = mkOption {
-            type = types.attrsOf types.str;
-            default = { };
-            description = "Environment-wide tags for metadata and organization";
-          };
+            tags = mkOption {
+              type = types.attrsOf types.str;
+              default = { };
+              description = "Environment-wide tags for metadata and organization";
+            };
 
-          delegation = mkOption {
-            type = types.submodule {
-              options = {
-                metricsTo = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Environment to delegate metrics reporting to (e.g., 'prod')";
-                };
+            delegation = mkOption {
+              type = types.submodule {
+                options = {
+                  metricsTo = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Environment to delegate metrics reporting to (e.g., 'prod')";
+                  };
 
-                authTo = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Environment to delegate authentication to (e.g., 'prod')";
-                };
+                  authTo = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Environment to delegate authentication to (e.g., 'prod')";
+                  };
 
-                logsTo = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Environment to delegate log shipping to (e.g., 'prod')";
+                  logsTo = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Environment to delegate log shipping to (e.g., 'prod')";
+                  };
                 };
               };
+              default = { };
+              description = "Cross-environment delegation configuration";
             };
-            default = { };
-            description = "Cross-environment delegation configuration";
-          };
 
-          monitoring = mkOption {
-            type = types.submodule {
-              options = {
-                scanEnvironments = mkOption {
-                  type = types.listOf types.str;
-                  default = [ ];
-                  description = "Additional environments to scan for metrics (e.g., ['dev'] for prod scanning dev)";
+            monitoring = mkOption {
+              type = types.submodule {
+                options = {
+                  scanEnvironments = mkOption {
+                    type = types.listOf types.str;
+                    default = [ ];
+                    description = "Additional environments to scan for metrics (e.g., ['dev'] for prod scanning dev)";
+                  };
                 };
               };
+              default = { };
+              description = "Monitoring configuration including cross-environment scanning";
             };
-            default = { };
-            description = "Monitoring configuration including cross-environment scanning";
-          };
 
-          users = mkUsersWithFeaturesOpt "Users in this environment with their features and configuration";
+            users = mkUsersWithFeaturesOpt "Users in this environment with their features and configuration";
 
-          ipv6 = mkOption {
-            type = types.submodule {
-              options = {
-                ula_prefix = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "ULA prefix for the environment (e.g., fd64::/48)";
-                };
+            ipv6 = mkOption {
+              type = types.submodule {
+                options = {
+                  ula_prefix = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "ULA prefix for the environment (e.g., fd64::/48)";
+                  };
 
-                management_prefix = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "IPv6 prefix for management network (e.g., fd64:0:1::/64)";
-                };
+                  management_prefix = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "IPv6 prefix for management network (e.g., fd64:0:1::/64)";
+                  };
 
-                kubernetes_prefix = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "IPv6 prefix for Kubernetes pods (e.g., fd64:0:2::/64)";
-                };
+                  kubernetes_prefix = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "IPv6 prefix for Kubernetes pods (e.g., fd64:0:2::/64)";
+                  };
 
-                services_prefix = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "IPv6 prefix for Kubernetes services (e.g., fd64:0:3::/64)";
-                };
+                  services_prefix = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "IPv6 prefix for Kubernetes services (e.g., fd64:0:3::/64)";
+                  };
 
-                external_prefix = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "External ISP prefix for NPTv6 translation (e.g., 2001:db8::/64)";
+                  external_prefix = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "External ISP prefix for NPTv6 translation (e.g., 2001:db8::/64)";
+                  };
                 };
               };
+              default = { };
+              description = "IPv6 ULA and prefix configuration for NPTv6 translation";
             };
-            default = { };
-            description = "IPv6 ULA and prefix configuration for NPTv6 translation";
           };
-        };
-      };
+        }
+      );
     in
     mkOption {
       type = types.attrsOf environmentType;
