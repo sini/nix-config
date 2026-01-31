@@ -86,6 +86,7 @@ data:
   external-envoy-proxy: "true"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"
+  http-stream-idle-timeout: "300"
   hubble-disable-tls: "false"
   hubble-listen-address: :4244
   hubble-network-policy-correlation-enabled: "true"
