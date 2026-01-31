@@ -37,7 +37,7 @@ rules:
   - apiGroups:
       - cilium.io
     resources:
-      - '*'
+      - "*"
     verbs:
       - get
       - list

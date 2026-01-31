@@ -9,9 +9,9 @@ metadata:
   name: argocd-server
 rules:
   - apiGroups:
-      - '*'
+      - "*"
     resources:
-      - '*'
+      - "*"
     verbs:
       - delete
       - get
