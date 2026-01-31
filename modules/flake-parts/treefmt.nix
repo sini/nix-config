@@ -24,6 +24,7 @@
         settings = {
           on-unmatched = "fatal";
           global.excludes = [
+            "k8s/crds/generated/**"
             "manifests/**"
             ".secrets/**"
             "*.editorconfig"
