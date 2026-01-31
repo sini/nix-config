@@ -38,7 +38,7 @@
     target = {
       repository = "https://github.com/sini/nix-config.git";
       branch = "main";
-      rootPath = "./manifests/prod";
+      rootPath = "./kubernetes/manifests/prod";
     };
 
     bootstrapManifest.enable = true;
