@@ -24,7 +24,7 @@ in
 
     ${lib.concatMapStringsSep "\n" (name: ''
       echo "generate ${name}"
-      cat ${generators.${name}} > manifests/crd/${name}.nix
+      cat ${generators.${name}} > k8s/crds/generated/${name}.nix
     '') (lib.attrNames generators)}
   '';
 }

@@ -30,9 +30,9 @@
 
   nixidy = {
     resourceImports = [
-      ../../manifests/crd/cert-manager.nix
-      ../../manifests/crd/cilium.nix
-      ../../manifests/crd/traefik.nix
+      ../crds/generated/cert-manager.nix
+      ../crds/generated/cilium.nix
+      ../crds/generated/traefik.nix
     ];
 
     target = {
