@@ -30,15 +30,15 @@
 
   nixidy = {
     resourceImports = [
-      ../../crds/generated/cert-manager.nix
-      ../../crds/generated/cilium.nix
-      ../../crds/generated/traefik.nix
+      ../../generated/crds/cert-manager.nix
+      ../../generated/crds/cilium.nix
+      ../../generated/crds/traefik.nix
     ];
 
     target = {
       repository = "https://github.com/sini/nix-config.git";
       branch = "main";
-      rootPath = "./kubernetes/manifests/prod";
+      rootPath = "./kubernetes/generated/manifests/prod";
     };
 
     bootstrapManifest.enable = true;
