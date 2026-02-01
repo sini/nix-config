@@ -24,8 +24,7 @@
         settings = {
           on-unmatched = "fatal";
           global.excludes = [
-            "kubernetes/crds/generated/**"
-            "kubernetes/manifests/**"
+            "kubernetes/generated/**"
             ".secrets/**"
             "*.editorconfig"
             "*.envrc"
