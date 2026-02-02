@@ -1,4 +1,34 @@
-{ charts, environment, ... }:
+{
+  charts,
+  environment,
+  hosts,
+  lib,
+  ...
+}:
+let
+  findClusterMaster =
+    hosts:
+    let
+      masterHosts =
+        hosts
+        |> lib.attrsets.filterAttrs (
+          hostname: hostConfig:
+          (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
+          && (hostConfig.environment == environment.name)
+        )
+        |> lib.attrsets.filterAttrs (
+          hostname: hostConfig: builtins.elem "kubernetes-master" (hostConfig.roles or [ ])
+        );
+    in
+    if lib.length (lib.attrNames masterHosts) > 0 then
+      let
+        masterHost = lib.head (lib.attrValues masterHosts);
+      in
+      masterHost.tags.kubernetes-internal-ip or (builtins.head masterHost.ipv4)
+    else
+      null;
+  masterIP = findClusterMaster hosts;
+in
 {
   applications.cilium = {
     namespace = "kube-system";
@@ -12,11 +42,11 @@
         # Cluster identity
         cluster = {
           name = "${environment.name}";
-          id = 1;
+          id = "${environment.id}";
         };
 
         # Points to the stable loopback routed by the BGP fabric
-        k8sServiceHost = "172.16.255.1";
+        k8sServiceHost = masterIP;
         k8sServicePort = 6443;
 
         # Service handling / kube-proxy replacement
