@@ -138,6 +138,12 @@ in
               description = "Human-readable environment name";
             };
 
+            id = mkOption {
+              type = types.int;
+              default = 1;
+              description = "ID of the environment";
+            };
+
             domain = mkOption {
               type = types.str;
               description = "Base domain for the environment";

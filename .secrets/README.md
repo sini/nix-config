@@ -63,4 +63,10 @@ cat foo.txt.age | age -d -i age-identity.txt
 * Decrypt:
 age --decrypt -i .secrets/pub/master.pub FILE.age
 
+* Encrypt:
+age -r ${pub_key} -e data.txt > data.txt.age
 
+sops --encrypt \
+  -age $pub_key \
+  --output secret-enc.yaml \
+  secret.yaml
