@@ -56,3 +56,11 @@ age-plugin-yubikey -l
 age-plugin-yubikey -i --serial $SERIAL --slot 1 > age-identity.txt
 cat foo.txt.age | age -d -i age-identity.txt
 ```
+
+
+# Notes:
+
+* Decrypt:
+age --decrypt -i .secrets/pub/master.pub FILE.age
+
+
