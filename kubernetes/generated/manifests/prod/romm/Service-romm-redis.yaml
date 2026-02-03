@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: redis-17.15.18
+    app.kubernetes.io/instance: romm
+    app.kubernetes.io/name: redis
+    helm-revision: "1"
+    release: romm
+    service.name: main
+  name: romm-redis
+  namespace: romm
+spec:
+  ports:
+    - name: main
+      port: 6379
+      protocol: TCP
+      targetPort: 6379
+  publishNotReadyAddresses: false
+  selector:
+    app.kubernetes.io/instance: romm
+    app.kubernetes.io/name: redis
+    pod.name: main
+  type: ClusterIP

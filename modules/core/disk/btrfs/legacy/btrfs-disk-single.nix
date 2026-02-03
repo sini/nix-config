@@ -29,7 +29,7 @@
           else
             abort (
               "Multiple disks found. Please specify hardware.disk.single.device_id. Found: "
-              + builtins.toString disk-labels
+              + toString disk-labels
             );
 
       defaultBtrfsOpts = [
@@ -134,7 +134,7 @@
                         // lib.optionalAttrs (config.hardware.disk.single.swap_size > 0) {
                           "@swap" = {
                             mountpoint = "/swap";
-                            swap.swapfile.size = "${builtins.toString config.hardware.disk.single.swap_size}M";
+                            swap.swapfile.size = "${toString config.hardware.disk.single.swap_size}M";
                           };
                         };
                       };

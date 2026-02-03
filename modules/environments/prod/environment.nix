@@ -70,6 +70,14 @@
         "172.16.255.3" # axon-03 internal
       ];
       loadBalancerRange = "10.11.0.0/16";
+
+      # Kubernetes services configuration
+      services = {
+        romm = { };
+        sops-secrets-operator = {
+          replicaCount = 2; # High availability for prod
+        };
+      };
     };
 
     email = {

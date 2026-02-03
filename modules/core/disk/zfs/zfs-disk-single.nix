@@ -41,7 +41,7 @@
           else
             abort (
               "Multiple disks found. Please specify hardware.disk.zfs-disk-single.device_id. Found: "
-              + builtins.toString disk-labels
+              + toString disk-labels
             );
 
         emptySnapshot =

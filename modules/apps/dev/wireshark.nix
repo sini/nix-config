@@ -12,7 +12,7 @@
 
         # Add all enabled users to the wireshark group
         users.users = builtins.listToAttrs (
-          builtins.map (userName: {
+          map (userName: {
             name = userName;
             value = {
               extraGroups = [ "wireshark" ];

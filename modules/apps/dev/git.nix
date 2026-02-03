@@ -137,7 +137,7 @@
 
             includes = lib.pipe ([ cfg.defaultIdentity ] ++ cfg.extraIdentities) [
               (builtins.filter (v: v != null))
-              (builtins.map (
+              (map (
                 {
                   email,
                   fullName,
@@ -152,7 +152,7 @@
                     userEmail = email;
                   };
                 in
-                builtins.map (condition: {
+                map (condition: {
                   path = configFile;
                   inherit condition;
                 }) conditions

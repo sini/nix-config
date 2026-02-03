@@ -9,7 +9,6 @@ let
     head
     filter
     tail
-    map
     ;
 
   collectTypedModules =

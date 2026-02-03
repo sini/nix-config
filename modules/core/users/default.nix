@@ -37,7 +37,7 @@
         in
         mergedConfig;
 
-      userConfigs = builtins.map buildUserConfig enabledUsers;
+      userConfigs = map buildUserConfig enabledUsers;
     in
     {
       imports = userConfigs;
