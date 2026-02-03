@@ -41,8 +41,8 @@ in
       values = {
         # Cluster identity
         cluster = {
-          name = "${environment.name}";
-          id = "${environment.id}";
+          name = environment.name;
+          id = environment.id;
         };
 
         # Points to the stable loopback routed by the BGP fabric
