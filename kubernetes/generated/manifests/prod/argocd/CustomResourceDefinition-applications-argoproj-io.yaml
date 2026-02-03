@@ -104,7 +104,7 @@ spec:
                       format: int64
                       type: integer
                     refresh:
-                      description: "Refresh indicates if the latest revision should be used on retry instead of the initial one (default: false)"
+                      description: 'Refresh indicates if the latest revision should be used on retry instead of the initial one (default: false)'
                       type: boolean
                   type: object
                 sync:
@@ -1619,16 +1619,16 @@ spec:
                       description: Automated will keep an application synced to the target revision
                       properties:
                         allowEmpty:
-                          description: "AllowEmpty allows apps have zero live resources (default: false)"
+                          description: 'AllowEmpty allows apps have zero live resources (default: false)'
                           type: boolean
                         enabled:
                           description: Enable allows apps to explicitly control automated sync
                           type: boolean
                         prune:
-                          description: "Prune specifies whether to delete resources from the cluster that are not found in the sources anymore as part of automated sync (default: false)"
+                          description: 'Prune specifies whether to delete resources from the cluster that are not found in the sources anymore as part of automated sync (default: false)'
                           type: boolean
                         selfHeal:
-                          description: "SelfHeal specifies whether to revert resources back to their desired state upon modification in the cluster (default: false)"
+                          description: 'SelfHeal specifies whether to revert resources back to their desired state upon modification in the cluster (default: false)'
                           type: boolean
                       type: object
                     managedNamespaceMetadata:
@@ -1665,7 +1665,7 @@ spec:
                           format: int64
                           type: integer
                         refresh:
-                          description: "Refresh indicates if the latest revision should be used on retry instead of the initial one (default: false)"
+                          description: 'Refresh indicates if the latest revision should be used on retry instead of the initial one (default: false)'
                           type: boolean
                       type: object
                     syncOptions:
@@ -2470,7 +2470,7 @@ spec:
                               format: int64
                               type: integer
                             refresh:
-                              description: "Refresh indicates if the latest revision should be used on retry instead of the initial one (default: false)"
+                              description: 'Refresh indicates if the latest revision should be used on retry instead of the initial one (default: false)'
                               type: boolean
                           type: object
                         sync:
@@ -3943,7 +3943,7 @@ spec:
                   format: date-time
                   type: string
                 resourceHealthSource:
-                  description: "ResourceHealthSource indicates where the resource health status is stored: inline if not set or appTree"
+                  description: 'ResourceHealthSource indicates where the resource health status is stored: inline if not set or appTree'
                   type: string
                 resources:
                   description: Resources is a list of Kubernetes resources managed by this application

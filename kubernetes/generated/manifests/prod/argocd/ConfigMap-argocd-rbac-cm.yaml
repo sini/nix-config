@@ -3,7 +3,7 @@ data:
   policy.csv: ""
   policy.default: ""
   policy.matchMode: glob
-  scopes: "[groups]"
+  scopes: '[groups]'
 kind: ConfigMap
 metadata:
   labels:

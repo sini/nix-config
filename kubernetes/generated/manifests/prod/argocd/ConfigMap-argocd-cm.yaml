@@ -31,15 +31,13 @@ data:
   resource.customizations.ignoreResourceUpdates.argoproj.io_Rollout: |
     jqPathExpressions:
       - '.metadata.annotations."notified.notifications.argoproj.io"'
-  resource.customizations.ignoreResourceUpdates.autoscaling_HorizontalPodAutoscaler:
-    |
+  resource.customizations.ignoreResourceUpdates.autoscaling_HorizontalPodAutoscaler: |
     jqPathExpressions:
       - '.metadata.annotations."autoscaling.alpha.kubernetes.io/behavior"'
       - '.metadata.annotations."autoscaling.alpha.kubernetes.io/conditions"'
       - '.metadata.annotations."autoscaling.alpha.kubernetes.io/metrics"'
       - '.metadata.annotations."autoscaling.alpha.kubernetes.io/current-metrics"'
-  resource.customizations.ignoreResourceUpdates.discovery.k8s.io_EndpointSlice:
-    |
+  resource.customizations.ignoreResourceUpdates.discovery.k8s.io_EndpointSlice: |
     jsonPointers:
       - /metadata
       - /endpoints

@@ -9,11 +9,12 @@
 { lib, ... }:
 {
   imports = [
-    ./argocd.nix
+    ../../modules/argocd.nix
+    ../../modules/cilium.nix
+    ../../modules/sops-secrets-operator.nix
 
     # ./caching.nix
     # ./certificates.nix
-    ./cilium.nix
     # # ./container-registry.nix
     # ./devices.nix
     # ./loadbalancer.nix
