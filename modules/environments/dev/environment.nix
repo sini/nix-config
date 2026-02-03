@@ -57,6 +57,11 @@
         "10.9.1.1" # axon-01 external
       ];
       loadBalancerRange = "10.12.0.0/16";
+
+      # Kubernetes services configuration
+      services = {
+        sops-secrets-operator = { };
+      };
     };
 
     email = {

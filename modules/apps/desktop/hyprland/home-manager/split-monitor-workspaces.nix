@@ -47,7 +47,7 @@
               builtins.genList (
                 x:
                 let
-                  ws = builtins.toString (x + 1);
+                  ws = toString (x + 1);
                   # let
                   #   c = builtins.div (x + 1) 5;
                   # in

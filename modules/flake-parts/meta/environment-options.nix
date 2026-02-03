@@ -88,6 +88,21 @@ in
             default = "10.0.100.0/24";
             description = "IP range for LoadBalancer services";
           };
+
+          services = mkOption {
+            type = types.attrsOf types.attrs;
+            default = { };
+            description = ''
+              Kubernetes services to deploy with their configuration.
+              Service options are defined by each service's nixidy module.
+
+              Example:
+                services.argocd = {
+                  namespace = "argocd";
+                  version = "v2.10.0";
+                };
+            '';
+          };
         };
       };
 

@@ -1,0 +1,233 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: mariadb-17.11.16
+    app.kubernetes.io/instance: romm
+    app.kubernetes.io/name: mariadb
+    helm-revision: "1"
+    release: romm
+  name: romm-mariadb
+  namespace: romm
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: romm
+      app.kubernetes.io/name: mariadb
+      pod.name: main
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/cnpg: fc940fff4269c53072f7039f0811133e9b83400670af014010bf50d3f13740f4
+        checksum/configmaps: 2f70d6807f093247fad96153a9c6c0d57b4aa02789e19be1b9c088c65f4e2d07
+        checksum/mariadb: 09c85576cb45b1eecd1467732b11ea8fa3363b0105c465f02a6ad64991521d52
+        checksum/mongodb: 09c85576cb45b1eecd1467732b11ea8fa3363b0105c465f02a6ad64991521d52
+        checksum/persistence: 8ffd0e1ed704294dee132aa12aa878607a18e34eb50683c4740e2587a5b9361b
+        checksum/redis: 013343a028cbb3f7e08f4ba7522702dd98e52632c688641074b0b1db3df29894
+        checksum/secrets: 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a
+        checksum/services: 3c1dd612ec74ee9e0f9d1999416f52f56037e0b49ff3a1234059de4203563ec5
+        checksum/solr: 29c14feeaddbf7762052db593898d274941f539cee681ddc613957587686f347
+      labels:
+        app: mariadb-17.11.16
+        app.kubernetes.io/instance: romm
+        app.kubernetes.io/name: mariadb
+        helm-revision: "1"
+        pod.lifecycle: permanent
+        pod.name: main
+        release: romm
+        truecharts.org/pvc: data
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: truecharts.org/pvc
+                    operator: In
+                    values:
+                      - data
+              topologyKey: kubernetes.io/hostname
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: TZ
+              value: UTC
+            - name: UMASK
+              value: "0022"
+            - name: UMASK_SET
+              value: "0022"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: void
+            - name: PUID
+              value: "568"
+            - name: USER_ID
+              value: "568"
+            - name: UID
+              value: "568"
+            - name: PGID
+              value: "568"
+            - name: GROUP_ID
+              value: "568"
+            - name: GID
+              value: "568"
+            - name: MARIADB_DATABASE
+              value: romm
+            - name: MARIADB_EXTRA_FLAGS
+              value: --init-file=/init/passinit.sql
+            - name: MARIADB_PASSWORD
+              value: PLACEHOLDERPASSWORD
+            - name: MARIADB_ROOT_PASSWORD
+              value: PLACEHOLDERROOTPASSWORD
+            - name: MARIADB_USER
+              value: romm
+          image: docker.io/bitnamisecure/mariadb:latest@sha256:fc61d7cc2bda19903fb29ea0cb129c20cc51447465a1476cb286e70922375dd1
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - until /opt/bitnami/scripts/mariadb/healthcheck.sh; do sleep 2; done
+            failureThreshold: 5
+            initialDelaySeconds: 12
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 5
+          name: romm-mariadb
+          ports:
+            - containerPort: 3306
+              name: main
+              protocol: TCP
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - until /opt/bitnami/scripts/mariadb/healthcheck.sh; do sleep 2; done
+            failureThreshold: 4
+            initialDelaySeconds: 10
+            periodSeconds: 12
+            successThreshold: 2
+            timeoutSeconds: 5
+          resources:
+            limits:
+              cpu: 1500m
+              memory: 2400Mi
+            requests:
+              cpu: 75m
+              memory: 200Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add: []
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: false
+            runAsGroup: 0
+            runAsNonRoot: false
+            runAsUser: 568
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            exec:
+              command:
+                - /bin/bash
+                - -ec
+                - until /opt/bitnami/scripts/mariadb/healthcheck.sh; do sleep 2; done
+            failureThreshold: 60
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 3
+          stdin: false
+          tty: false
+          volumeMounts:
+            - mountPath: /bitnami/mariadb
+              name: data
+              readOnly: false
+            - mountPath: /dev/shm
+              name: devshm
+              readOnly: false
+            - mountPath: /init/passinit.sql
+              name: passinit
+              readOnly: false
+              subPath: passinit.sql
+            - mountPath: /shared
+              name: shared
+              readOnly: false
+            - mountPath: /tmp
+              name: tmp
+              readOnly: false
+            - mountPath: /var/logs
+              name: varlogs
+              readOnly: false
+            - mountPath: /var/run
+              name: varrun
+              readOnly: false
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      hostUsers: true
+      nodeSelector:
+        kubernetes.io/arch: amd64
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 568
+        fsGroupChangePolicy: OnRootMismatch
+        supplementalGroups:
+          - 568
+        sysctls: []
+      serviceAccountName: default
+      shareProcessNamespace: false
+      terminationGracePeriodSeconds: 60
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/instance: romm
+              app.kubernetes.io/name: mariadb
+              pod.name: main
+          maxSkew: 1
+          nodeAffinityPolicy: Honor
+          nodeTaintsPolicy: Honor
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+      volumes:
+        - configMap:
+            items:
+              - key: passinit.sql
+                path: passinit.sql
+            name: romm-mariadb-passinit
+            optional: false
+          name: passinit
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 2400Mi
+          name: devshm
+        - emptyDir: {}
+          name: shared
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 2400Mi
+          name: tmp
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 2400Mi
+          name: varlogs
+        - emptyDir:
+            medium: Memory
+            sizeLimit: 2400Mi
+          name: varrun
+        - name: data
+          persistentVolumeClaim:
+            claimName: romm-mariadb-data

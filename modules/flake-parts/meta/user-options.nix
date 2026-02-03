@@ -32,7 +32,7 @@ in
                 types.submodule (
                   { name, ... }:
                   {
-                    options = (builtins.removeAttrs featureSubmoduleGenericOptions [ "nixos" ]) // {
+                    options = (removeAttrs featureSubmoduleGenericOptions [ "nixos" ]) // {
                       name = mkFeatureNameOpt name;
                     };
                   }
