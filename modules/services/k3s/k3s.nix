@@ -56,6 +56,11 @@ in
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-token.age";
         };
 
+        age.secrets.kubernetes-sops-age-key = {
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-sops-age-key.age";
+          path = "/var/lib/sops/age/key.txt";
+        };
+
         # age.secrets.kubernetes-oidc-secret = {
         #   rekeyFile = rootPath + "/.secrets/services/kubernetes-oidc-client-secret.age";
         #   intermediary = true;

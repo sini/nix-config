@@ -8,26 +8,6 @@
 # nixidy bootstrap .#prod | kubectl apply -f -
 { lib, ... }:
 {
-  # imports = [
-  #   # ./argocd.nix
-
-  #   # ./caching.nix
-  #   # ./certificates.nix
-  #   # ./cilium.nix
-  #   # # ./container-registry.nix
-  #   # ./devices.nix
-  #   # ./loadbalancer.nix
-  #   # ./monitoring.nix
-  #   # ./policies.nix
-  #   # ./secrets.nix
-  #   # ./storage.nix
-
-  #   # ./adguard
-  #   # ./homeassistant
-  #   # ./paperless
-  #   # ./rustdesk.nix
-  # ];
-
   nixidy = {
     resourceImports = [
       ../../generated/crds/cert-manager.nix

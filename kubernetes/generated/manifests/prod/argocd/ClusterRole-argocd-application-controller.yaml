@@ -9,12 +9,12 @@ metadata:
   name: argocd-application-controller
 rules:
   - apiGroups:
-      - "*"
+      - '*'
     resources:
-      - "*"
+      - '*'
     verbs:
-      - "*"
+      - '*'
   - nonResourceURLs:
-      - "*"
+      - '*'
     verbs:
-      - "*"
+      - '*'
