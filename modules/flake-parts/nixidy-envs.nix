@@ -55,9 +55,12 @@ in
                         let
                           crdsDir = ../../kubernetes/generated/crds;
                           nixFiles = lib.attrNames (
-                            lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
-                              builtins.readDir crdsDir
-                            )
+                            lib.filterAttrs (
+                              name: type:
+                              type == "regular"
+                              && lib.hasSuffix ".nix" name
+                              && !(lib.elem (lib.removeSuffix ".nix" name) enabledServices)
+                            ) (builtins.readDir crdsDir)
                           );
                         in
                         map (name: crdsDir + "/${name}") nixFiles;
