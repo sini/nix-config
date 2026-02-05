@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: hubble-relay
+    app.kubernetes.io/part-of: cilium
+    k8s-app: hubble-relay
+  name: hubble-relay
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: hubble-relay
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: hubble-relay
+        app.kubernetes.io/part-of: cilium
+        k8s-app: hubble-relay
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  k8s-app: cilium
+              topologyKey: kubernetes.io/hostname
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - serve
+          command:
+            - hubble-relay
+          image: quay.io/cilium/hubble-relay:v1.18.6@sha256:fb6135e34c31e5f175cb5e75f86cea52ef2ff12b49bcefb7088ed93f5009eb8e
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 12
+            grpc:
+              port: 4222
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 10
+          name: hubble-relay
+          ports:
+            - containerPort: 4245
+              name: grpc
+          readinessProbe:
+            grpc:
+              port: 4222
+            timeoutSeconds: 3
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 20
+            grpc:
+              port: 4222
+            initialDelaySeconds: 10
+            periodSeconds: 3
+          terminationMessagePolicy: FallbackToLogsOnError
+          volumeMounts:
+            - mountPath: /etc/hubble-relay
+              name: config
+              readOnly: true
+            - mountPath: /var/lib/hubble-relay/tls
+              name: tls
+              readOnly: true
+      nodeSelector:
+        kubernetes.io/os: linux
+      restartPolicy: Always
+      securityContext:
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: hubble-relay
+      terminationGracePeriodSeconds: 1
+      volumes:
+        - configMap:
+            items:
+              - key: config.yaml
+                path: config.yaml
+            name: hubble-relay-config
+          name: config
+        - name: tls
+          projected:
+            defaultMode: 256
+            sources:
+              - secret:
+                  items:
+                    - key: tls.crt
+                      path: client.crt
+                    - key: tls.key
+                      path: client.key
+                    - key: ca.crt
+                      path: hubble-server-ca.crt
+                  name: hubble-relay-client-certs

@@ -56,10 +56,8 @@ in
                           crdsDir = ../../kubernetes/generated/crds;
                           nixFiles = lib.attrNames (
                             lib.filterAttrs (
-                              name: type:
-                              type == "regular"
-                              && lib.hasSuffix ".nix" name
-                              && !(lib.elem (lib.removeSuffix ".nix" name) enabledServices)
+                              name: type: type == "regular" && lib.hasSuffix ".nix" name
+                              # && !(lib.elem (lib.removeSuffix ".nix" name) enabledServices)
                             ) (builtins.readDir crdsDir)
                           );
                         in
