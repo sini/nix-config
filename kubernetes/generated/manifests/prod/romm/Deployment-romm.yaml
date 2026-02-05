@@ -28,7 +28,7 @@ spec:
         checksum/mongodb: 09c85576cb45b1eecd1467732b11ea8fa3363b0105c465f02a6ad64991521d52
         checksum/persistence: 93f297b2dc801369910048359b61f369b9fa6ef724d690f7364d70cf9aeb0073
         checksum/redis: 4d1bb1dd0b5adf09a380822068e73255eb13cb1813e88ae6a4484184bb96ef41
-        checksum/secrets: 57bf320e00fad4536a3dd9c558f037ed68e472dce105e95a15379d138b20c992
+        checksum/secrets: 6957f38cdcee03c5e413515892d5d1d47e28809ba4fbe6c6c2c21f4e0f652409
         checksum/services: 4b546be00d25ad56b44b4d24cbff97d9830c9d79b2a43912df4e5912c109bf16
         checksum/solr: 29c14feeaddbf7762052db593898d274941f539cee681ddc613957587686f347
       labels:
