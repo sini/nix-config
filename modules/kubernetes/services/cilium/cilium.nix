@@ -47,6 +47,9 @@
                 name = environment.name;
                 id = environment.id;
               };
+              # Routing Mode
+              routingMode = "tunnel";
+              tunnelProtocol = "geneve";
 
               # Points to the stable loopback routed by the BGP fabric
               k8sServiceHost = masterIP;
@@ -55,8 +58,8 @@
               # Service handling / kube-proxy replacement
               kubeProxyReplacement = true;
               socketLB.hostNamespaceOnly = true;
-              localRedirectPolicies.enabled = true;
-              l2NeighDiscovery.enabled = false;
+              # localRedirectPolicies.enabled = true;
+              # l2NeighDiscovery.enabled = false;
 
               # Datapath & BPF knobs
               bpf = {
@@ -66,61 +69,90 @@
               };
 
               # CNI chaining
-              cni.chainingMode = "portmap";
+              # cni.chainingMode = "portmap";
 
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";
-                operator.clusterPoolIPv4PodCIDRList = [ "172.20.0.0/16" ];
+                operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
               };
-
-              # Routing Mode
-              routingMode = "tunnel";
-              tunnelProtocol = "geneve";
+              # ipam.mode = "kubernetes";
 
               # Masquerading (SNAT) behavior
-              enableIPv4 = true;
-              enableIpMasqAgent = false;
-              enableIPv4Masquerade = true;
-              nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
-              masqLinkLocal = false;
+              # enableIPv4 = true;
+              # enableIpMasqAgent = false;
+              # enableIPv4Masquerade = true;
+              # nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
+              # masqLinkLocal = false;
 
               # Device exposure to Cilium
               # With tunneling enabled, it is safe to manage both devices:
               # - 'dummy0': Used for sending/receiving VXLAN traffic over BGP fabric
               # - 'enp2s0': Used for BPF program handling ingress for ExternalIP services
-              devices = [
-                "dummy0"
-                "enp2s0"
-                "enp199s0f5"
-                "enp199s0f6"
-              ];
+              # devices = [
+              #   "dummy0"
+              #   "enp2s0"
+              #   "enp199s0f5"
+              #   "enp199s0f6"
+              # ];
 
               # BGP control-plane (for FRR peering)
-              bgpControlPlane.enabled = true;
+              # bgpControlPlane.enabled = true;
 
-              externalIPs.enabled = true;
+              # externalIPs.enabled = true;
 
-              loadBalancer.mode = "snat";
+              # loadBalancer.mode = "snat";
 
               # Hubble (observability)
               hubble = {
                 enabled = true;
                 relay.enabled = true;
                 ui.enabled = true;
+                metrics.enabled = [
+                  "dns"
+                  "drop"
+                  "tcp"
+                  "flow"
+                  "port-distribution"
+                  "icmp"
+                  "http"
+                ];
+              };
+
+              gatewayAPI.enabled = true;
+              gatewayAPI.service = {
+                enabled = true;
+                type = "LoadBalancer";
+                ports = [
+                  {
+                    name = "http";
+                    port = 8080;
+                  }
+                  {
+                    name = "https";
+                    port = 8443;
+                  }
+                ];
               };
 
               # Operator & rollout
               operator.replicas = 2;
               rollOutCiliumPods = true;
+              operator.rollOutPods = true;
 
+              policyEnforcementMode = "always";
+              policyAuditMode = false;
+
+              encryption = {
+                enabled = true;
+                type = "wireguard";
+              };
               # Logging
-              debug.enabled = true;
+              # debug.enabled = true;
             };
           };
 
           resources = {
-
             ciliumNetworkPolicies = {
               # Allow hubble relay server egress to nodes
               allow-hubble-relay-server-egress.spec = {
@@ -307,189 +339,6 @@
                 ];
               };
             };
-
-            # Shared peer configuration for all nodes
-            ciliumBGPPeerConfigs = {
-              local-frr-peer.spec = {
-                ebgpMultihop = 4;
-                timers = {
-                  connectRetryTimeSeconds = 5;
-                  holdTimeSeconds = 30;
-                  keepAliveTimeSeconds = 10;
-                };
-                families = [
-                  {
-                    afi = "ipv4";
-                    safi = "unicast";
-                    advertisements.matchLabels."advertise" = "cilium-routes";
-                  }
-                ];
-              };
-            };
-
-            # BGP Cluster Configurations for each node
-            ciliumBGPClusterConfigs = {
-              cilium-bgp-axon-01.spec = {
-                nodeSelector.matchLabels."kubernetes.io/hostname" = "axon-01";
-                bgpInstances = [
-                  {
-                    name = "local-frr-instance";
-                    localASN = 65001;
-                    peers = [
-                      {
-                        name = "local-frr-daemon";
-                        peerASN = 65001;
-                        peerAddress = "172.16.255.1";
-                        peerConfigRef.name = "local-frr-peer";
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              cilium-bgp-axon-02.spec = {
-                nodeSelector.matchLabels."kubernetes.io/hostname" = "axon-02";
-                bgpInstances = [
-                  {
-                    name = "local-frr-instance";
-                    localASN = 65002;
-                    peers = [
-                      {
-                        name = "local-frr-daemon";
-                        peerASN = 65002;
-                        peerAddress = "172.16.255.2";
-                        peerConfigRef.name = "local-frr-peer";
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              cilium-bgp-axon-03.spec = {
-                nodeSelector.matchLabels."kubernetes.io/hostname" = "axon-03";
-                bgpInstances = [
-                  {
-                    name = "local-frr-instance";
-                    localASN = 65003;
-                    peers = [
-                      {
-                        name = "local-frr-daemon";
-                        peerASN = 65003;
-                        peerAddress = "172.16.255.3";
-                        peerConfigRef.name = "local-frr-peer";
-                      }
-                    ];
-                  }
-                ];
-              };
-            };
-
-            # BGP Advertisements
-            ciliumBGPAdvertisements = {
-              pod-cidr-advertisement = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [
-                  { advertisementType = "PodCIDR"; }
-                ];
-              };
-
-              service-cluster-ips = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [
-                  {
-                    advertisementType = "Service";
-                    service.addresses = [ "ClusterIP" ];
-                    selector.matchExpressions = [
-                      {
-                        key = "service.kubernetes.io/headless";
-                        operator = "DoesNotExist";
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              loadbalancer-ips = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [
-                  {
-                    advertisementType = "Service";
-                    service.addresses = [
-                      "LoadBalancerIP"
-                      "ExternalIP"
-                    ];
-                    selector.matchExpressions = [
-                      {
-                        key = "service.kubernetes.io/headless";
-                        operator = "DoesNotExist";
-                      }
-                    ];
-                  }
-                ];
-              };
-            };
-
-            # LoadBalancer IP Pool
-            ciliumLoadBalancerIPPools = {
-              main-lb-pool.spec = {
-                blocks = [ { cidr = "10.11.0.0/16"; } ];
-                serviceSelector.matchLabels = { };
-              };
-            };
-
-            # Node-specific router ID overrides
-            ciliumBGPNodeConfigOverrides = {
-              axon-01 = {
-                metadata.name = "axon-01";
-                spec.bgpInstances = [
-                  {
-                    name = "local-frr-instance";
-                    routerID = "172.16.255.11";
-                  }
-                ];
-              };
-
-              axon-02 = {
-                metadata.name = "axon-02";
-                spec.bgpInstances = [
-                  {
-                    name = "local-frr-instance";
-                    routerID = "172.16.255.12";
-                  }
-                ];
-              };
-
-              axon-03 = {
-                metadata.name = "axon-03";
-                spec.bgpInstances = [
-                  {
-                    name = "local-frr-instance";
-                    routerID = "172.16.255.13";
-                  }
-                ];
-              };
-            };
-
-            # # Ingress route for Hubble UI
-            # ingressRoutes = {
-            #   cilium-dashboard-route.spec = {
-            #     entryPoints = [ "websecure" ];
-            #     routes = [
-            #       {
-            #         match = "Host(`cni.json64.dev`)";
-            #         kind = "Rule";
-            #         services = [
-            #           {
-            #             name = "hubble-ui";
-            #             namespace = "kube-system";
-            #             port = 80;
-            #           }
-            #         ];
-            #       }
-            #     ];
-            #     tls.secretName = "anderwersede-tls-certificate";
-            #   };
-            # };
           };
         };
       };

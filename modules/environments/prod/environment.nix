@@ -73,7 +73,9 @@
 
       # Kubernetes services configuration
       services = {
-        romm = { };
+        argocd = { };
+        cilium = { };
+        # romm = { };
         sops-secrets-operator = {
           replicaCount = 2; # High availability for prod
         };
