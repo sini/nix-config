@@ -174,6 +174,19 @@
                 ];
               };
             };
+
+            ciliumClusterwideNetworkPolicies = {
+              # Allow all cilium endpoints to talk egress to each other
+              allow-internal-egress.spec = {
+                description = "Policy to allow all Cilium managed endpoint to talk to all other cilium managed endpoints on egress";
+                endpointSelector.matchLabels."app.kubernetes.io/part-of" = "argocd";
+                ingress = [
+                  {
+                    fromEndpoints = [ { } ];
+                  }
+                ];
+              };
+            };
           };
 
           # resources = {
