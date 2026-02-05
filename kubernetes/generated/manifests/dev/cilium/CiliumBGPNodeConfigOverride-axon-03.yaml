@@ -1,8 +1,0 @@
-apiVersion: cilium.io/v2
-kind: CiliumBGPNodeConfigOverride
-metadata:
-  name: axon-03
-spec:
-  bgpInstances:
-    - name: local-frr-instance
-      routerID: 172.16.255.13
