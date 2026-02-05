@@ -36,7 +36,7 @@
 
               # Redis (for caching)
               redis = {
-                enabled = false;
+                enabled = true;
               };
 
               # Disable HA redis for local dev
