@@ -61,27 +61,32 @@
               # localRedirectPolicies.enabled = true;
               # l2NeighDiscovery.enabled = false;
 
+              hostPort.enabled = true;
+              nodePort.enabled = true;
+
               # Datapath & BPF knobs
-              bpf = {
-                masquerade = true;
-                lbExternalClusterIP = true;
-                hostLegacyRouting = true;
-              };
+              # bpf = {
+              #   masquerade = true;
+              #   lbExternalClusterIP = true;
+              #   hostLegacyRouting = true;
+              # };
 
               # CNI chaining
               # cni.chainingMode = "portmap";
 
               # IPAM & Pod CIDRs
-              ipam = {
-                mode = "cluster-pool";
-                operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
-              };
-              # ipam.mode = "kubernetes";
+              # ipam = {
+              #   mode = "cluster-pool";
+              #   operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
+              # };
+              ipam.mode = "kubernetes";
 
               # Masquerading (SNAT) behavior
-              # enableIPv4 = true;
+              enableIPv4 = true;
+              ipv6.enabled = false;
+
               # enableIpMasqAgent = false;
-              # enableIPv4Masquerade = true;
+              enableIPv4Masquerade = true;
               # nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
               # masqLinkLocal = false;
 
@@ -315,6 +320,28 @@
                 ];
               };
 
+              # Allow CoreDNS to talk to kube-apiserver
+              allow-argocd-apiserver-egress.spec = {
+                description = "Allow argocd to talk to kube-apiserver.";
+                endpointSelector.matchLabels = {
+                  "k8s:io.kubernetes.pod.namespace" = "argocd";
+                };
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
               # Allow all cilium managed endpoints to talk to cluster dns
               allow-kube-dns-cluster-ingress.spec = {
                 description = "Policy for ingress allow to kube-dns from all Cilium managed endpoints in the cluster.";
