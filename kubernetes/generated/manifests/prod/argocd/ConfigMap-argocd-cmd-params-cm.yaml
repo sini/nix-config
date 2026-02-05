@@ -11,7 +11,7 @@ data:
   dexserver.log.level: info
   notificationscontroller.log.format: text
   notificationscontroller.log.level: info
-  redis.server: argocd-redis:6379
+  redis.server: ""
   repo.server: argocd-repo-server:8081
   reposerver.log.format: text
   reposerver.log.level: info
