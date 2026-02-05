@@ -8,7 +8,7 @@ data:
   bpf-events-trace-enabled: "true"
   bpf-lb-acceleration: disabled
   bpf-lb-algorithm-annotation: "false"
-  bpf-lb-external-clusterip: "true"
+  bpf-lb-external-clusterip: "false"
   bpf-lb-map-max: "65536"
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
@@ -22,8 +22,6 @@ data:
   cilium-endpoint-gc-interval: 5m0s
   cluster-id: "1"
   cluster-name: prod
-  cluster-pool-ipv4-cidr: 172.20.0.0/16
-  cluster-pool-ipv4-mask-size: "24"
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
   cni-exclusive: "true"
@@ -39,7 +37,6 @@ data:
   egress-gateway-reconciliation-trigger-interval: 1s
   enable-auto-protect-node-port-range: "true"
   enable-bpf-clock-probe: "false"
-  enable-bpf-masquerade: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-envoy-config: "true"
@@ -51,7 +48,6 @@ data:
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
-  enable-host-legacy-routing: "true"
   enable-hubble: "true"
   enable-hubble-open-metrics: "false"
   enable-internal-traffic-policy: "true"
@@ -107,7 +103,7 @@ data:
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
   install-no-conntrack-iptables-rules: "false"
-  ipam: cluster-pool
+  ipam: kubernetes
   ipam-cilium-node-update-rate: 15s
   iptables-random-fully: "false"
   k8s-require-ipv4-pod-cidr: "false"
