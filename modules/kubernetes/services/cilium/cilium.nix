@@ -320,28 +320,6 @@
                 ];
               };
 
-              # Allow CoreDNS to talk to kube-apiserver
-              allow-argocd-apiserver-egress.spec = {
-                description = "Allow argocd to talk to kube-apiserver.";
-                endpointSelector.matchLabels = {
-                  "k8s:io.kubernetes.pod.namespace" = "argocd";
-                };
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
               # Allow all cilium managed endpoints to talk to cluster dns
               allow-kube-dns-cluster-ingress.spec = {
                 description = "Policy for ingress allow to kube-dns from all Cilium managed endpoints in the cluster.";
