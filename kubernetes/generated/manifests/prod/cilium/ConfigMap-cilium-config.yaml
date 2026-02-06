@@ -65,7 +65,7 @@ data:
   enable-metrics: "true"
   enable-node-selector-labels: "false"
   enable-non-default-deny-policies: "true"
-  enable-policy: default
+  enable-policy: never
   enable-policy-secrets-sync: "true"
   enable-sctp: "false"
   enable-source-ip-verification: "true"
