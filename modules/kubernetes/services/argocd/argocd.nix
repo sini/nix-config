@@ -22,7 +22,7 @@
 
               # API Server - insecure mode for kubectl port-forward
               server = {
-                replicas = 1;
+                replicas = 2;
                 # Disable TLS on server (use port-forward for local dev)
                 insecure = true;
                 # DNS config for proper resolution
@@ -49,7 +49,7 @@
 
               # ApplicationSet Controller
               applicationSet = {
-                replicas = 1;
+                replicas = 2;
               };
 
               # Notifications Controller
