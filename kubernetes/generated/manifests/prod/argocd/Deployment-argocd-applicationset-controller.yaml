@@ -9,7 +9,7 @@ metadata:
   name: argocd-applicationset-controller
   namespace: argocd
 spec:
-  replicas: 1
+  replicas: 2
   revisionHistoryLimit: 3
   selector:
     matchLabels:
@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cmd-params: 784f45d7e3450dbb50631c5cabda6e7ea2f3faed0c32e83f6fa00d17c050c53f
+        checksum/cmd-params: 644e4a431dc7edbbf322048aa70717d0d22744f7af32cd413cf3f83541693391
       labels:
         app.kubernetes.io/component: applicationset-controller
         app.kubernetes.io/instance: argocd
