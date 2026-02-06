@@ -145,7 +145,9 @@
               rollOutCiliumPods = true;
               operator.rollOutPods = true;
 
-              policyEnforcementMode = "default";
+              policyEnforcementMode = "never";
+              # policyEnforcementMode = "default";
+
               policyAuditMode = false;
 
               encryption = {
