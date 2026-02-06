@@ -26,12 +26,12 @@
                 # Disable TLS on server (use port-forward for local dev)
                 insecure = true;
                 # DNS config for proper resolution
-                dnsConfig.options = [
-                  {
-                    name = "ndots";
-                    value = "1";
-                  }
-                ];
+                # dnsConfig.options = [
+                #   {
+                #     name = "ndots";
+                #     value = "1";
+                #   }
+                # ];
               };
 
               # Redis (for caching)
