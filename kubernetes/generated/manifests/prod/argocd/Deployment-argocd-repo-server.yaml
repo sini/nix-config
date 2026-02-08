@@ -357,6 +357,10 @@ spec:
               name: plugins
             - mountPath: /tmp
               name: tmp
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       dnsPolicy: ClusterFirst
       initContainers:
         - command:

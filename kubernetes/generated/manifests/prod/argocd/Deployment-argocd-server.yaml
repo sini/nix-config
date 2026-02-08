@@ -405,6 +405,10 @@ spec:
               name: tmp
             - mountPath: /home/argocd/params
               name: argocd-cmd-params-cm
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
