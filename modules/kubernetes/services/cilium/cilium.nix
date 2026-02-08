@@ -75,11 +75,11 @@
               # cni.chainingMode = "portmap";
 
               # IPAM & Pod CIDRs
-              # ipam = {
-              #   mode = "cluster-pool";
-              #   operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
-              # };
-              ipam.mode = "kubernetes";
+              ipam = {
+                mode = "cluster-pool";
+                operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
+              };
+              # ipam.mode = "kubernetes";
 
               # Masquerading (SNAT) behavior
               enableIPv4 = true;
