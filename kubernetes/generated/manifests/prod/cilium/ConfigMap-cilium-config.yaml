@@ -12,7 +12,6 @@ data:
   bpf-lb-map-max: "65536"
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
-  bpf-lb-sock-hostns-only: "true"
   bpf-lb-source-range-all-types: "false"
   bpf-map-dynamic-size-ratio: "0.0025"
   bpf-policy-map-max: "16384"
@@ -42,17 +41,10 @@ data:
   enable-bpf-masquerade: "false"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
-  enable-envoy-config: "true"
-  enable-gateway-api: "true"
-  enable-gateway-api-alpn: "false"
-  enable-gateway-api-app-protocol: "false"
-  enable-gateway-api-proxy-protocol: "false"
-  enable-gateway-api-secrets-sync: "true"
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
   enable-hubble: "true"
-  enable-hubble-open-metrics: "false"
   enable-internal-traffic-policy: "true"
   enable-ipv4: "true"
   enable-ipv4-big-tcp: "false"
@@ -76,26 +68,16 @@ data:
   enable-tcx: "true"
   enable-vtep: "false"
   enable-well-known-identities: "false"
-  enable-wireguard: "true"
   enable-xt-socket-fallback: "true"
   envoy-access-log-buffer-size: "4096"
   envoy-base-id: "0"
-  envoy-config-retry-interval: 15s
   envoy-keep-cap-netbindservice: "false"
   external-envoy-proxy: "true"
-  gateway-api-hostnetwork-enabled: "false"
-  gateway-api-hostnetwork-nodelabelselector: ""
-  gateway-api-secrets-namespace: cilium-secrets
-  gateway-api-service-externaltrafficpolicy: Cluster
-  gateway-api-xff-num-trusted-hops: "0"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"
   http-stream-idle-timeout: "300"
   hubble-disable-tls: "false"
   hubble-listen-address: :4244
-  hubble-metrics: dns drop tcp flow port-distribution icmp http
-  hubble-metrics-server: :9965
-  hubble-metrics-server-enable-tls: "false"
   hubble-network-policy-correlation-enabled: "true"
   hubble-socket-path: /var/run/cilium/hubble.sock
   hubble-tls-cert-file: /var/lib/cilium/tls/hubble/server.crt
@@ -164,7 +146,6 @@ data:
   vtep-endpoint: ""
   vtep-mac: ""
   vtep-mask: ""
-  wireguard-persistent-keepalive: 0s
   write-cni-conf-when-ready: /host/etc/cni/net.d/05-cilium.conflist
 kind: ConfigMap
 metadata:
