@@ -22,6 +22,8 @@ data:
   cilium-endpoint-gc-interval: 5m0s
   cluster-id: "1"
   cluster-name: prod
+  cluster-pool-ipv4-cidr: 172.20.0.0/16
+  cluster-pool-ipv4-mask-size: "24"
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
   cni-exclusive: "true"
@@ -103,7 +105,7 @@ data:
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
   install-no-conntrack-iptables-rules: "false"
-  ipam: kubernetes
+  ipam: cluster-pool
   ipam-cilium-node-update-rate: 15s
   iptables-random-fully: "false"
   k8s-require-ipv4-pod-cidr: "false"
