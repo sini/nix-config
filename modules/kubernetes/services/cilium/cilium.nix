@@ -36,6 +36,23 @@
         applications.cilium = {
           namespace = "kube-system";
 
+          # Adoption-safe sync options
+          syncPolicy = {
+            autoSync = {
+              enable = true;
+              prune = true;
+              selfHeal = true;
+            };
+            syncOptions = {
+              serverSideApply = true;
+              applyOutOfSyncOnly = true;
+              # Namespace exists from kluctl deployment
+              createNamespace = false;
+            };
+          };
+
+          annotations."argocd.argoproj.io/sync-wave" = "-1";
+
           compareOptions.serverSideDiff = true;
 
           helm.releases.cilium = {
@@ -65,6 +82,8 @@
               nodePort.enabled = true;
 
               # Datapath & BPF knobs
+              bpf.masquerade = false;
+              enableIPv4Masquerade = true;
               # bpf = {
               #   masquerade = true;
               #   lbExternalClusterIP = true;
@@ -85,8 +104,6 @@
               enableIPv4 = true;
               ipv6.enabled = false;
 
-              # enableIpMasqAgent = false;
-              enableIPv4Masquerade = true;
               # nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
               # masqLinkLocal = false;
 
@@ -145,8 +162,8 @@
               rollOutCiliumPods = true;
               operator.rollOutPods = true;
 
-              policyEnforcementMode = "never";
-              # policyEnforcementMode = "default";
+              # policyEnforcementMode = "never";
+              policyEnforcementMode = "default";
 
               policyAuditMode = false;
 

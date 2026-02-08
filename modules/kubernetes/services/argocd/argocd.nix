@@ -6,6 +6,25 @@
         applications.argocd = {
           namespace = "argocd";
 
+          # Adoption-safe sync options
+          syncPolicy = {
+            autoSync = {
+              enable = true;
+              prune = true;
+              selfHeal = true;
+            };
+            syncOptions = {
+              serverSideApply = true;
+              applyOutOfSyncOnly = true;
+              # Namespace exists from kluctl deployment
+              createNamespace = false;
+            };
+          };
+
+          # Sync wave: ArgoCD at -1 (infrastructure component)
+          # Must be operational before managing other applications
+          annotations."argocd.argoproj.io/sync-wave" = "-1";
+
           helm.releases.argocd = {
             chart = charts.argoproj.argo-cd;
 
@@ -26,12 +45,24 @@
                 # Disable TLS on server (use port-forward for local dev)
                 insecure = true;
                 # DNS config for proper resolution
-                # dnsConfig.options = [
-                #   {
-                #     name = "ndots";
-                #     value = "1";
-                #   }
-                # ];
+                dnsConfig.options = [
+                  {
+                    name = "ndots";
+                    value = "1";
+                  }
+                ];
+              };
+
+              # Repository Server
+              repoServer = {
+                replicas = 1;
+                # DNS config for proper resolution
+                dnsConfig.options = [
+                  {
+                    name = "ndots";
+                    value = "1";
+                  }
+                ];
               };
 
               # Redis (for caching)
@@ -81,8 +112,14 @@
               global.networkPolicy.create = true;
             };
           };
-
           resources = {
+            # TODO: move to sops
+            secrets.argocd-redis = {
+              metadata.namespace = "argocd";
+              type = "Opaque";
+              stringData.auth = "argocd-redis-password-local-dev";
+            };
+
             # Allow ingress traffic from traefik to
             # argocd-server.
             # networkPolicies.allow-traefik-ingress.spec = {

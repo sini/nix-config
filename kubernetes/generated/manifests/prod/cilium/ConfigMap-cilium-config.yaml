@@ -39,6 +39,7 @@ data:
   egress-gateway-reconciliation-trigger-interval: 1s
   enable-auto-protect-node-port-range: "true"
   enable-bpf-clock-probe: "false"
+  enable-bpf-masquerade: "false"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-envoy-config: "true"
@@ -67,7 +68,7 @@ data:
   enable-metrics: "true"
   enable-node-selector-labels: "false"
   enable-non-default-deny-policies: "true"
-  enable-policy: never
+  enable-policy: default
   enable-policy-secrets-sync: "true"
   enable-sctp: "false"
   enable-source-ip-verification: "true"
