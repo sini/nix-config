@@ -1,4 +1,5 @@
 {
+  rootPath,
   config,
   inputs,
   lib,
@@ -35,6 +36,7 @@ in
                 { lib, ... }:
                 let
                   inherit (flakeOpts.config.lib.modules) kubernetesConfigType;
+                  k3sSopsAgeKey = builtins.readFile (rootPath + "/.secrets/env/${env}/k3s-sops-age-key.pub");
                 in
                 {
                   # Use shared kubernetesConfigType which includes ageRecipients, network options, and services
@@ -46,7 +48,9 @@ in
 
                   # Inject environment kubernetes config
                   config = {
-                    kubernetes = environment.kubernetes or { };
+                    kubernetes = environment.kubernetes or { } // {
+                      ageRecipients = [ k3sSopsAgeKey ]; # TODO: Pull from rootPath/.sops.yaml
+                    };
 
                     nixidy = {
                       env = lib.mkDefault env;
@@ -55,8 +59,10 @@ in
                           crdsDir = ../../kubernetes/generated/crds;
                           nixFiles = lib.attrNames (
                             lib.filterAttrs (
-                              name: type: type == "regular" && lib.hasSuffix ".nix" name
-                              # && !(lib.elem (lib.removeSuffix ".nix" name) enabledServices)
+                              name: type:
+                              type == "regular"
+                              && lib.hasSuffix ".nix" name
+                              && (lib.elem (lib.removeSuffix ".nix" name) enabledServices)
                             ) (builtins.readDir crdsDir)
                           );
                         in
