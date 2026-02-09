@@ -183,6 +183,17 @@ let
 
   # Shared kubernetes network options used by both types
   kubernetesNetworkOptions = {
+    pgpPublicKeys = mkOption {
+      type = types.listOf types.path;
+      default = [ ];
+      description = "List of pgp public keys for encrypting Kubernetes secrets";
+    };
+    pgpRecipients = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = "List of pgp public keys for encrypting Kubernetes secrets";
+    };
+
     ageRecipients = mkOption {
       type = types.listOf types.str;
       default = [ ];

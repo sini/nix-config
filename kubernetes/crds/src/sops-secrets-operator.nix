@@ -6,7 +6,7 @@ let
     ;
 in
 fromCRD {
-  name = "sops";
+  name = "sops-secrets-operator";
   src = sops-secrets-operator;
   crds = [ "crds/isindir.github.com_sopssecrets.yaml" ];
 }
