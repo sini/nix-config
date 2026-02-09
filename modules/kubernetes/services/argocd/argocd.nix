@@ -38,9 +38,7 @@
                   # import public key(s)
                   ${lib.concatMapStringsSep "\n                  " (key: "gpg --batch --import ${key}") pgpPublicKeys}
                   # set trust for all recipients
-                  ${lib.concatMapStringsSep "\n                  " (
-                    recipient: "echo '${recipient}:6:' | gpg --batch --import-ownertrust"
-                  ) pgpRecipients}
+
                   cat ${json-file} | yq -y . > output.yaml
                   sops --encrypt ${lib.concatMapStringsSep " " (key: "--age ${key}") ageRecipients} ${
                     lib.concatMapStringsSep " " (key: "--pgp ${key}") pgpRecipients
