@@ -1,7 +1,7 @@
 # We use sops with kubernetes, agenix with Nix.
 keys:
   - "users": &users
-      - &sini 7ABBD02D2A9F7976BA091C55E822121B6A3D7FC6 # gpg --list-keys --with-colons --with-fingerprint
+      - &sini E822121B6A3D7FC6 # gpg --list-keys --with-colons --with-fingerprint
   # NOTE: For host keys: nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age'
   - "envs": &envs
       - &prod age1702hgudfz8y5ms3m4fukvvjhll7w9yeqk4tahewuv34t09rhd9sq756enl

@@ -39,6 +39,16 @@ in
                   k3sSopsAgeKey = lib.removeSuffix "\n" (
                     builtins.readFile (rootPath + "/.secrets/env/${env}/k3s-sops-age-key.pub")
                   );
+
+                  # We auto encrypt kube secrets for any GPG public keys in .secrets/pub
+                  pgpKeyFiles = lib.attrNames (
+                    lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".asc" name) (
+                      builtins.readDir (rootPath + "/.secrets/pub/")
+                    )
+                  );
+                  pgpPublicKeys = map (name: rootPath + "/.secrets/pub/${name}") pgpKeyFiles;
+                  pgpRecipients = map (name: lib.head (lib.splitString "-" name)) pgpKeyFiles;
+
                 in
                 {
                   # Use shared kubernetesConfigType which includes ageRecipients, network options, and services
@@ -52,8 +62,7 @@ in
                   config = {
                     kubernetes = environment.kubernetes or { } // {
                       ageRecipients = [ k3sSopsAgeKey ];
-                      # pgpPublicKeys = [ (rootPath + /.secrets/pub/E822121B6A3D7FC6-2025-01-15.asc) ];
-                      # pgpRecipients = [ "7ABBD02D2A9F7976BA091C55E822121B6A3D7FC6" ];
+                      inherit pgpPublicKeys pgpRecipients;
                     };
 
                     nixidy = {
