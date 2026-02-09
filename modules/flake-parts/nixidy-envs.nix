@@ -52,8 +52,8 @@ in
                   config = {
                     kubernetes = environment.kubernetes or { } // {
                       ageRecipients = [ k3sSopsAgeKey ];
-                      pgpPublicKeys = [ (rootPath + /.secrets/pub/E822121B6A3D7FC6-2025-01-15.asc) ];
-                      pgpRecipients = [ "7ABBD02D2A9F7976BA091C55E822121B6A3D7FC6" ];
+                      # pgpPublicKeys = [ (rootPath + /.secrets/pub/E822121B6A3D7FC6-2025-01-15.asc) ];
+                      # pgpRecipients = [ "7ABBD02D2A9F7976BA091C55E822121B6A3D7FC6" ];
                     };
 
                     nixidy = {

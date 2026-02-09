@@ -10,7 +10,6 @@
       }:
       let
         pgpPublicKeys = config.kubernetes.pgpPublicKeys;
-        pgpPublicKey = builtins.head pgpPublicKeys;
 
         pgpRecipients = config.kubernetes.pgpRecipients;
         ageRecipients = config.kubernetes.ageRecipients;
@@ -37,9 +36,11 @@
                   mkdir -p "$GNUPGHOME"
                   chmod 700 "$GNUPGHOME"
                   # import public key(s)
-                  gpg --batch --import ${pgpPublicKey}
-                  echo "${builtins.head pgpRecipients}:6:" | gpg --batch --import-ownertrust
-                  gpg --batch --list-keys --fingerprint  --with-keygrip
+                  ${lib.concatMapStringsSep "\n                  " (key: "gpg --batch --import ${key}") pgpPublicKeys}
+                  # set trust for all recipients
+                  ${lib.concatMapStringsSep "\n                  " (
+                    recipient: "echo '${recipient}:6:' | gpg --batch --import-ownertrust"
+                  ) pgpRecipients}
                   cat ${json-file} | yq -y . > output.yaml
                   sops --encrypt ${lib.concatMapStringsSep " " (key: "--age ${key}") ageRecipients} ${
                     lib.concatMapStringsSep " " (key: "--pgp ${key}") pgpRecipients
