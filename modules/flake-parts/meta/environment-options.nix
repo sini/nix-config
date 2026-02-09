@@ -5,7 +5,7 @@
 }:
 let
   inherit (lib) types mkOption;
-  inherit (self.lib.modules) mkUsersWithFeaturesOpt;
+  inherit (self.lib.modules) kubernetesConfigType mkUsersWithFeaturesOpt;
 in
 {
   config.text.readme.parts.environment-options =
@@ -53,55 +53,6 @@ in
             type = types.str;
             default = "";
             description = "Human-readable description of the network";
-          };
-        };
-      };
-
-      kubernetesType = types.submodule {
-        options = {
-          clusterCidr = mkOption {
-            type = types.str;
-            default = "172.20.0.0/16";
-            description = "Kubernetes pod network CIDR";
-          };
-
-          serviceCidr = mkOption {
-            type = types.str;
-            default = "172.21.0.0/16";
-            description = "Kubernetes service network CIDR";
-          };
-
-          internalMeshCidr = mkOption {
-            type = types.str;
-            default = "172.16.255.0/24";
-            description = "Internal mesh network for Kubernetes nodes";
-          };
-
-          tlsSanIps = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "Additional IPs to include in Kubernetes API server TLS certificate SANs";
-          };
-
-          loadBalancerRange = mkOption {
-            type = types.str;
-            default = "10.0.100.0/24";
-            description = "IP range for LoadBalancer services";
-          };
-
-          services = mkOption {
-            type = types.attrsOf types.attrs;
-            default = { };
-            description = ''
-              Kubernetes services to deploy with their configuration.
-              Service options are defined by each service's nixidy module.
-
-              Example:
-                services.argocd = {
-                  namespace = "argocd";
-                  version = "v2.10.0";
-                };
-            '';
           };
         };
       };
@@ -196,7 +147,7 @@ in
             };
 
             kubernetes = mkOption {
-              type = kubernetesType;
+              type = kubernetesConfigType;
               default = { };
               description = "Kubernetes-specific network configuration";
             };

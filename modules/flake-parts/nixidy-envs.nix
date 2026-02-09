@@ -33,21 +33,20 @@ in
             modules = [
               (
                 { lib, ... }:
+                let
+                  inherit (flakeOpts.config.lib.modules) kubernetesConfigType;
+                in
                 {
-                  # Define kubernetes.services with freeform submodule
-                  # This allows both arbitrary attributes AND typed option declarations
-                  options.kubernetes.services = lib.mkOption {
-                    type = lib.types.submodule {
-                      freeformType = lib.types.attrsOf lib.types.attrs;
-                      options = { }; # Service modules can add typed options here
-                    };
+                  # Use shared kubernetesConfigType which includes ageRecipients, network options, and services
+                  options.kubernetes = lib.mkOption {
+                    type = kubernetesConfigType;
                     default = { };
-                    description = "Kubernetes service configurations";
+                    description = "Kubernetes configuration for this nixidy environment";
                   };
 
-                  # Inject environment service configs
+                  # Inject environment kubernetes config
                   config = {
-                    kubernetes.services = environment.kubernetes.services or { };
+                    kubernetes = environment.kubernetes or { };
 
                     nixidy = {
                       env = lib.mkDefault env;

@@ -8,14 +8,14 @@ keys:
       - &dev age1v9fv8xdeektkl6uanpttlcw8qt4c37rhy4hkm63cyg4emzz5rfkqfdgffc
 creation_rules:
   #path should be relative to location of this file (.sops.yaml)
-  - path_regex: .*prod.*-secret.sops.yaml$
+  - path_regex: .*prod.*(S|s)ecret.*yaml$
     encrypted_regex: ^(data|stringData)$
     key_groups:
       - pgp:
           - *sini
         age:
           - *prod
-  - path_regex: .*dev.*-secret.sops.yaml$
+  - path_regex: .*dev.*(S|s)ecret.*yaml$
     encrypted_regex: ^(data|stringData)$
     key_groups:
       - pgp:
