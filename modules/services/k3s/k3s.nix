@@ -327,6 +327,43 @@ in
           wantedBy = [ "multi-user.target" ];
         };
 
+        systemd.services.k3s-install-sops-age-key = lib.mkIf isMaster {
+          description = "Install Cilium for bootstrapping";
+          after = [ "k3s.service" ];
+          requires = [ "k3s.service" ];
+          path = with pkgs; [
+            kubectl
+          ];
+          environment = {
+            KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = pkgs.writeShellScript "k3s-install-sops-age-key" ''
+              set -e
+              echo "Starting k3s bootstrap process..."
+
+              # Wait for k3s to be fully up
+              echo "Waiting for k3s to be ready..."
+              until kubectl get nodes; do
+                echo "Waiting for k3s API server to be available..."
+                sleep 5
+              done
+
+              # Check if secret is already installed
+              if ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG --namespace sops-secrets-operator get secret sops-age-key-file >/dev/null 2>&1; then
+                echo "SOPS secret age key is already installed."
+                exit 0
+              fi
+
+              ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
+                --namespace sops-secrets-operator \
+                --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
+            '';
+          };
+          wantedBy = [ "multi-user.target" ];
+        };
+
         environment.persistence."/persist".directories = [
           "/var/lib/rancher"
           "/var/lib/kubelet"
