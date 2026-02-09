@@ -16,6 +16,7 @@
         fd
         file
         jq
+        yq
         ripgrep
         ripgrep-all
         unzip
