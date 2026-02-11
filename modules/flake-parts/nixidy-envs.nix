@@ -136,22 +136,9 @@ in
     {
       inputs',
       pkgs,
-      system,
       ...
-    }:
-    let
-      crds = import ../../kubernetes/crds {
-        inherit
-          inputs
-          system
-          pkgs
-          lib
-          ;
-      };
-    in
+    }@sharedConfig:
     {
-      imports = [ crds ];
-
       devshells.default.packages = [ inputs'.nixidy.packages.default ];
       devshells.default.commands = [
         {
@@ -159,7 +146,34 @@ in
           help = "Manage kubernetes cluster deployment configuration";
         }
         {
-          package = crds.packages.generate-crds;
+          package =
+            let
+              gFiles = builtins.attrNames (builtins.readDir ../../kubernetes/crds);
+              generatorFiles = builtins.filter (
+                file: builtins.match ".*\\.nix" file != null && file != "default.nix"
+              ) gFiles;
+              generators = builtins.listToAttrs (
+                map (file: {
+                  name = builtins.replaceStrings [ ".nix" ] [ "" ] file;
+                  value = import (../../kubernetes/crds + "/${file}") (
+                    sharedConfig
+                    // {
+                      inherit inputs;
+                    }
+                  );
+                }) generatorFiles
+              );
+            in
+            pkgs.writeShellScriptBin "generate-crds" ''
+              set -eo pipefail
+
+              echo "Generating CRDs..."
+
+              ${lib.concatMapStringsSep "\n" (name: ''
+                echo "generate ${name}"
+                cat ${generators.${name}} > kubernetes/generated/crds/${name}.nix
+              '') (lib.attrNames generators)}
+            '';
           help = "Generate CRDs";
         }
       ];
