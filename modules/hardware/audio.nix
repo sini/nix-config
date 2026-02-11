@@ -129,8 +129,8 @@
           openal
           pulseaudio
 
-          yabridge
-          yabridgectl
+          #yabridge # TODO: re-enable when fixed upstream
+          #yabridgectl
           beets
 
           # VST stuff
