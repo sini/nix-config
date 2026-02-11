@@ -3,8 +3,28 @@
 
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
+
+
+def get_git_root() -> Path | None:
+    """Get the root directory of the current git repository.
+
+    Returns:
+        Path to the git repository root, or None if not in a git repo.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            text=True,
+            check=True,
+            cwd=os.getcwd(),
+        )
+        return Path(result.stdout.strip())
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
 
 
 def main() -> int:
@@ -14,6 +34,15 @@ def main() -> int:
     )
 
     args = parser.parse_args()
+
+    # Detect git repository root
+    git_root = get_git_root()
+    if git_root is None:
+        print("Error: not running from within a git repository", file=sys.stderr)
+        return 1
+
+    print(f"Git repository root: {git_root}")
+    print()
 
     # Find the environments directory relative to this script
     script_path = Path(__file__).resolve()

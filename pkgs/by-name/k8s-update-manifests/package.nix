@@ -7,6 +7,7 @@
   jq,
   yq,
   rsync,
+  git,
 }:
 python3.pkgs.buildPythonApplication {
   pname = "k8s-update-manifests";
@@ -43,6 +44,7 @@ python3.pkgs.buildPythonApplication {
           jq
           yq
           rsync
+          git
         ]
       }
   '';
