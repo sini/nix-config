@@ -6,6 +6,7 @@
 }:
 writeShellApplication {
   name = "generate-host-keys";
+  meta.description = "Generate and encrypt SSH host keys for a new host";
   runtimeInputs = [
     age
     openssh

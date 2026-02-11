@@ -6,6 +6,7 @@
 }:
 writeShellApplication {
   name = "reset-axon";
+  meta.description = "Delete all k3s data and reset the cluster";
   runtimeInputs = [
     openssh
     kubectl

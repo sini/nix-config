@@ -10,6 +10,7 @@
 }:
 writeShellApplication {
   name = "nix-flake-install";
+  meta.description = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
   runtimeInputs = [
     age
     age-plugin-yubikey

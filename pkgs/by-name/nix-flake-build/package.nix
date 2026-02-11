@@ -4,6 +4,8 @@
 }:
 writeShellApplication {
   name = "nix-flake-build";
+  meta.description = "Build a host configuration";
+
   runtimeInputs = [ nix-output-monitor ];
   text = ''
     [[ "$#" -ge 1 ]] \

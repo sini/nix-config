@@ -8,6 +8,7 @@
 }:
 writeShellApplication {
   name = "update-host-keys";
+  meta.description = "Collect and encrypt SSH host keys from all configured hosts";
   runtimeInputs = [
     age
     openssh

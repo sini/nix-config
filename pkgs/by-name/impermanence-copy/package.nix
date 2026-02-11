@@ -6,6 +6,7 @@
 }:
 writeShellApplication {
   name = "impermanence-copy";
+  meta.description = "Copy existing data to impermanence persistent storage for a host";
   runtimeInputs = [
     nix
     jq

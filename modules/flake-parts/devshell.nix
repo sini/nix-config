@@ -110,6 +110,11 @@
             name = "impermanence-copy";
             help = "Copy existing data to impermanence persistent storage for a host";
           }
+          {
+            package = config.packages.k8s-update-manifests;
+            name = "k8s-update-manifests";
+            help = "Update Kubernetes manifests for nixidy environments";
+          }
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
