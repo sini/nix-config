@@ -33,7 +33,7 @@
           # Emulators
           sameboy # GB/GBC
           mgba # GBA
-          melonDS # DS
+          melonds # DS
           azahar # 3DS
           dolphin-emu # Wii/GameCube
           cemu # Wii U
