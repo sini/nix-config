@@ -66,23 +66,27 @@
 
       services = {
         kanidm = {
-          enableServer = true;
-          enableClient = true;
           package = pkgs.kanidm_1_8.withSecretProvisioning;
 
-          serverSettings = {
-            domain = config.networking.domain;
-            origin = "https://idm.${config.networking.domain}";
-            bindaddress = "127.0.0.1:8443";
-            ldapbindaddress = "127.0.0.1:3636";
+          server = {
+            enable = true;
+            settings = {
+              domain = config.networking.domain;
+              origin = "https://idm.${config.networking.domain}";
+              bindaddress = "127.0.0.1:8443";
+              ldapbindaddress = "127.0.0.1:3636";
 
-            # TLS certificates from ACME
-            tls_chain = "${config.security.acme.certs.${config.networking.domain}.directory}/fullchain.pem";
-            tls_key = "${config.security.acme.certs.${config.networking.domain}.directory}/key.pem";
+              # TLS certificates from ACME
+              tls_chain = "${config.security.acme.certs.${config.networking.domain}.directory}/fullchain.pem";
+              tls_key = "${config.security.acme.certs.${config.networking.domain}.directory}/key.pem";
+            };
           };
 
-          clientSettings = {
-            uri = "https://idm.${config.networking.domain}";
+          client = {
+            enable = true;
+            settings = {
+              uri = "https://idm.${config.networking.domain}";
+            };
           };
 
           provision = {
