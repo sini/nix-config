@@ -7,6 +7,7 @@
 }:
 writeShellApplication {
   name = "update-tang-disk-keys";
+  meta.description = "Update disk encryption keys using Tang servers and TPM2";
   runtimeInputs = [
     nix
     jq

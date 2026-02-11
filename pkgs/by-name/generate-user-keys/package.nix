@@ -8,6 +8,8 @@
 }:
 writeShellApplication {
   name = "generate-user-keys";
+  meta.description = "Generate and encrypt ed25519 SSH keys for users";
+
   runtimeInputs = [
     age
     openssh

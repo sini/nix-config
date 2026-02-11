@@ -7,6 +7,7 @@
 }:
 writeShellApplication {
   name = "generate-vault-certs";
+  meta.description = "Generate certificates for Vault raft cluster";
   runtimeInputs = [
     openssl
     nix

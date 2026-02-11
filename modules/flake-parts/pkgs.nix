@@ -39,6 +39,10 @@
           )
           ++ [
             inputs.nix-topology.overlays.default
+            # Expose nixidyEnvs to packages
+            (final: prev: {
+              nixidyEnvs = inputs.self.nixidyEnvs.${system};
+            })
           ];
       };
       pkgsDirectory = rootPath + "/pkgs/by-name";

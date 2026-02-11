@@ -6,6 +6,7 @@
 }:
 writeShellApplication {
   name = "list-infra";
+  meta.description = "List all flake environments and hosts with details";
   runtimeInputs = [
     nix
     jq

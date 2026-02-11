@@ -5,6 +5,7 @@
 }:
 writeShellApplication {
   name = "nix-flake-update";
+  meta.description = "Update flake inputs with GitHub access token";
   runtimeInputs = [
     gh
     nix
