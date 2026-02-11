@@ -1,10 +1,10 @@
 { rootPath, ... }:
 {
   flake.features.minio.nixos =
-    { config, ... }:
+    { config, environment, ... }:
     {
       age.secrets.minio-root-credentials = {
-        rekeyFile = rootPath + "/.secrets/services/minio-root-credentials.age";
+        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/minio-root-credentials.age";
         owner = "minio";
         group = "minio";
       };

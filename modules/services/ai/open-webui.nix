@@ -17,11 +17,12 @@ in
   flake.features.open-webui.nixos =
     {
       config,
+      environment,
       ...
     }:
     {
       age.secrets.open-webui-oidc-secret = {
-        rekeyFile = rootPath + "/.secrets/services/open-webui-oidc-client-secret.age";
+        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/open-webui-oidc-client-secret.age";
         intermediary = true;
       };
 

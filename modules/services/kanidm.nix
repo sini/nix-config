@@ -9,15 +9,9 @@
       ...
     }:
     let
-      mkSecret = name: {
-        rekeyFile = rootPath + "/.secrets/services/${name}";
-        owner = "kanidm";
-        group = "kanidm";
-      };
-
       mkOidcSecrets = name: {
         "${name}-oidc-client-secret" = {
-          rekeyFile = rootPath + "/.secrets/services/${name}-oidc-client-secret.age";
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/${name}-oidc-client-secret.age";
           owner = "kanidm";
           group = "kanidm";
           # If we switch to a service that only requires hashes like authelia, we can make this intermediate
@@ -55,13 +49,16 @@
       age.secrets = lib.mkMerge (
         [
           {
-            kanidm-admin-password = mkSecret "kanidm-admin-password.age";
+            kanidm-admin-password = {
+              rekeyFile = rootPath + "/.secrets/env/${environment.name}/kanidm-admin-password.age";
+              owner = "kanidm";
+              group = "kanidm";
+            };
           }
         ]
         ++ map mkOidcSecrets [
           "grafana"
           "jellyfin"
-          "kubernetes"
           "oauth2-proxy"
           "open-webui"
         ]

@@ -1,10 +1,15 @@
 { rootPath, ... }:
 {
   flake.features.grafana.nixos =
-    { config, pkgs, ... }:
+    {
+      config,
+      environment,
+      pkgs,
+      ...
+    }:
     {
       age.secrets.grafana-oidc-secret = {
-        rekeyFile = rootPath + "/.secrets/services/grafana-oidc-client-secret.age";
+        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/grafana-oidc-client-secret.age";
         owner = "grafana";
         group = "grafana";
       };

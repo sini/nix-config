@@ -8,7 +8,7 @@
     }:
     {
       age.secrets.cloudflare-api-key = {
-        rekeyFile = rootPath + "/.secrets/services/cloudflare-api-key.age";
+        rekeyFile = rootPath + "/.secrets/env/${environment.name}/cloudflare-api-key.age";
       };
 
       environment.persistence."/persist".directories = [
