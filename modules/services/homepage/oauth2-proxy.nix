@@ -75,7 +75,7 @@
         # Pass authentication headers
         setXauthrequest = true;
 
-        # upstream = [ "static://200" ];
+        upstream = [ ];
 
         extraConfig = {
           provider-display-name = "Kanidm";
@@ -95,7 +95,7 @@
           ];
           # client-secret-file = config.age.secrets.oauth2-proxy-oidc-secret.path;
           # cookie-secret-file = config.age.secrets.oauth2-proxy-cookie-secret.path;
-          upstream = "static://202";
+          # upstream = "static://202";
         };
 
         nginx.domain = config.networking.domain;
