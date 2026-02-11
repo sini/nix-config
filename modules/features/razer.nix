@@ -2,8 +2,12 @@
 {
   flake.features.razer = {
     nixos =
-      { pkgs, ... }:
+      { inputs, pkgs, ... }:
       {
+        imports = [ inputs.razerdaemon.nixosModules.default ];
+
+        services.razer-laptop-control.enable = true;
+
         hardware.openrazer.enable = true;
         environment.systemPackages = with pkgs; [
           openrazer-daemon
