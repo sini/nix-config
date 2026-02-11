@@ -4,7 +4,6 @@
   inputs,
   lib,
   withSystem,
-  self,
   ...
 }:
 let
@@ -137,50 +136,16 @@ in
     {
       inputs',
       pkgs,
-      system,
       ...
     }@sharedConfig:
     {
-      # Expose nixidyEnvs to pkgs
-      # _module.args = {
-      #   nixidyEnvs = inputs.self.nixidyEnvs.${system};
-      # };
 
-      packages.apply-prod =
-        let
-          nixidyOut = self.nixidyEnvs.${system}.prod.declarativePackage;
-        in
-        pkgs.writeShellApplication {
-          name = "nixidy-apply-prod";
-          runtimeInputs = with pkgs; [
-            coreutils
-            yq
-            sops
-            age
-            age-plugin-yubikey
-          ];
-          text = ''
-            set -euo pipefail
-
-            # nixidy output is an input via the store
-            SRC="${nixidyOut}"
-
-            WORKDIR="$(mktemp -d)"
-            trap 'rm -rf "$WORKDIR"' EXIT
-            cp -a "$SRC/." "$WORKDIR/"
-
-            # mutate manifests.yml in WORKDIR (Secret -> SopsSecret etc)
-            # ... your transform + sops encrypt ...
-            # then run apply from WORKDIR
-            # ( cd "$WORKDIR" && ./apply )
-            echo "$WORKDIR"
-          '';
-        };
       devshells.default.packages = [ inputs'.nixidy.packages.default ];
       devshells.default.commands = [
         {
           package = inputs'.nixidy.packages.default;
-          help = "Manage kubernetes cluster deployment configuration";
+          # help = "Manage kubernetes cluster deployment configuration";
+          help = "[DEPRECATED] - use k8s-update-manifests instead as it has secret wrapping";
         }
         {
           package =
