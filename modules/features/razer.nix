@@ -14,6 +14,23 @@
           polychromatic
         ];
         hardware.openrazer.users = [ config.flake.meta.user.username ];
+
+        systemd.services.razer-activate-power-unlock = {
+          description = "Uncap power limits";
+          after = [ "razerdaemon.service" ];
+          requires = [ "razerdaemon.service" ];
+          path = with pkgs; [
+            razer-cli
+          ];
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = pkgs.writeShellScript "razer-uncap-ac-power" ''
+              set -e
+              razer-cli write power ac 4 3 2
+            '';
+          };
+          wantedBy = [ "multi-user.target" ];
+        };
       };
 
     home = {
