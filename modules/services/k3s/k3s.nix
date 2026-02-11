@@ -56,7 +56,7 @@ in
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-token.age";
         };
 
-        age.secrets.kubernetes-sops-age-key = {
+        age.secrets.kubernetes-sops-age-key = lib.mkIf isMaster {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-sops-age-key.age";
           path = "/var/lib/sops/age/key.txt";
         };
