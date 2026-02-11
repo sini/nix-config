@@ -227,6 +227,8 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    razerdaemon.url = "github:encomjp/razer-control-revived";
+
     # global, so they can be `.follow`ed
     systems.url = "github:nix-systems/default";
 
