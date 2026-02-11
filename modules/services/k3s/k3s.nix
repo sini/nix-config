@@ -62,7 +62,7 @@ in
         };
 
         # age.secrets.kubernetes-oidc-secret = {
-        #   rekeyFile = rootPath + "/.secrets/services/kubernetes-oidc-client-secret.age";
+        #   rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/kubernetes-oidc-client-secret.age";
         #   intermediary = true;
         # };
         # age.secrets.kubernetes-oidc-env = {
