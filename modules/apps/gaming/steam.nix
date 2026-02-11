@@ -23,7 +23,7 @@
         environment.systemPackages = with pkgs; [
           wine
           winetricks
-          wineWowPackages.waylandFull
+          wineWow64Packages.waylandFull
         ];
 
         hardware = {
@@ -69,17 +69,17 @@
                       xdg-utils
 
                       # Core X11 libs required by many titles
-                      xorg.libX11
-                      xorg.libXext
-                      xorg.libXrender
-                      xorg.libXi
-                      xorg.libXinerama
-                      xorg.libXcursor
-                      xorg.libXScrnSaver
-                      xorg.libSM
-                      xorg.libICE
-                      xorg.libxcb
-                      xorg.libXrandr
+                      libx11
+                      libxext
+                      libxrender
+                      libxi
+                      libxinerama
+                      libxcursor
+                      libxscrnsaver
+                      libsm
+                      libice
+                      libxcb
+                      libxrandr
 
                       # Common multimedia/system libs
                       libxkbcommon

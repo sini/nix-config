@@ -27,8 +27,8 @@
             openssl
             pkg-config
             stdenv.cc.cc
-            xorg.libX11
-            xorg.libXext
+            libx11
+            libxext
             udev
             vulkan-loader
           ];
