@@ -52,7 +52,7 @@
               "gamemode"
               "render"
             ];
-            linger = true;
+            linger = false;
           };
         };
       };

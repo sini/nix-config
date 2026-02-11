@@ -15,10 +15,15 @@
         ];
         hardware.openrazer.users = [ config.flake.meta.user.username ];
 
-        systemd.services.razer-activate-power-unlock = {
+        systemd.user.services.razerdaemon = {
+          unitConfig.ConditionUser = "!media";
+        };
+
+        systemd.user.services.razer-activate-power-unlock = {
           description = "Uncap power limits";
           after = [ "razerdaemon.service" ];
           requires = [ "razerdaemon.service" ];
+          unitConfig.ConditionUser = "!media";
           path = with pkgs; [
             razer-cli
           ];
@@ -29,7 +34,7 @@
               razer-cli write power ac 4 3 2
             '';
           };
-          wantedBy = [ "multi-user.target" ];
+          wantedBy = [ "default.target" ];
         };
       };
 
@@ -37,6 +42,7 @@
       home.persistence."/persist".directories = [
         ".config/openrazer/"
         ".config/polychromatic/"
+        ".local/share/razercontrol"
       ];
 
     };
