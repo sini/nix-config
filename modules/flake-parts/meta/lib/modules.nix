@@ -183,23 +183,6 @@ let
 
   # Shared kubernetes network options used by both types
   kubernetesNetworkOptions = {
-    pgpPublicKeys = mkOption {
-      type = types.listOf types.path;
-      default = [ ];
-      description = "List of pgp public keys for encrypting Kubernetes secrets";
-    };
-    pgpRecipients = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      description = "List of pgp public keys for encrypting Kubernetes secrets";
-    };
-
-    ageRecipients = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      description = "List of age public keys for encrypting Kubernetes secrets";
-    };
-
     clusterCidr = mkOption {
       type = types.str;
       default = "172.20.0.0/16";
@@ -234,6 +217,11 @@ let
   # Type for flake.kubernetes - service definitions with nixidy modules
   kubernetesType = types.submodule {
     options = kubernetesNetworkOptions // {
+      secretsFile = mkOption {
+        type = types.path;
+        description = "Path to sops encrypted secret file for kubernetes environment";
+      };
+
       services = mkOption {
         type = types.lazyAttrsOf (types.submodule serviceSubmodule);
         default = { };
