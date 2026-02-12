@@ -5,4 +5,5 @@
 # kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 # nixidy bootstrap .#prod | kubectl apply -f -
 {
+  # kubernetes.services.sops-secrets-operator.replicaCount = 3;
 }

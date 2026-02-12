@@ -1,0 +1,31 @@
+{ rootPath, ... }:
+{
+  flake.environments.prod.kubernetes = {
+    secretsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+
+    clusterCidr = "172.20.0.0/16";
+    serviceCidr = "172.21.0.0/16";
+    internalMeshCidr = "172.16.255.0/24";
+    tlsSanIps = [
+      "10.10.10.2" # axon-01 external
+      "10.10.10.3" # axon-02 external
+      "10.10.10.4" # axon-03 external
+      "172.16.255.1" # axon-01 internal
+      "172.16.255.2" # axon-02 internal
+      "172.16.255.3" # axon-03 internal
+    ];
+    loadBalancerRange = "10.11.0.0/16";
+
+    # Kubernetes services configuration
+    services = {
+      enabled = [
+        "argocd"
+        "cilium"
+        "sops-secrets-operator"
+      ];
+      config = {
+        sops-secrets-operator.replicaCount = 2; # High availability for prod
+      };
+    };
+  };
+}
