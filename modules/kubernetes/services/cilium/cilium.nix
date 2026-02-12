@@ -74,7 +74,7 @@
 
               # Service handling / kube-proxy replacement
               kubeProxyReplacement = true;
-              # socketLB.hostNamespaceOnly = true;
+              socketLB.hostNamespaceOnly = true;
               # localRedirectPolicies.enabled = true;
               # l2NeighDiscovery.enabled = false;
 
@@ -82,23 +82,23 @@
               # nodePort.enabled = true;
 
               # Datapath & BPF knobs
-              bpf.masquerade = false;
+              # bpf.masquerade = false;
               enableIPv4Masquerade = true;
-              # bpf = {
-              #   masquerade = true;
-              #   lbExternalClusterIP = true;
-              #   hostLegacyRouting = true;
-              # };
+              bpf = {
+                masquerade = true;
+                lbExternalClusterIP = true;
+                hostLegacyRouting = true;
+              };
 
               # CNI chaining
               # cni.chainingMode = "portmap";
 
               # IPAM & Pod CIDRs
-              ipam = {
-                mode = "cluster-pool";
-                operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
-              };
-              # ipam.mode = "kubernetes";
+              # ipam = {
+              #   mode = "cluster-pool";
+              #   operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
+              # };
+              ipam.mode = "kubernetes";
 
               # Masquerading (SNAT) behavior
               enableIPv4 = true;
