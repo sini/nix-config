@@ -1,5 +1,4 @@
 {
-  rootPath,
   config,
   inputs,
   lib,
@@ -36,19 +35,6 @@ in
                 { lib, ... }:
                 let
                   inherit (flakeOpts.config.lib.modules) kubernetesConfigType;
-                  k3sSopsAgeKey = lib.removeSuffix "\n" (
-                    builtins.readFile (rootPath + "/.secrets/env/${env}/k3s-sops-age-key.pub")
-                  );
-
-                  # We auto encrypt kube secrets for any GPG public keys in .secrets/pub
-                  pgpKeyFiles = lib.attrNames (
-                    lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".asc" name) (
-                      builtins.readDir (rootPath + "/.secrets/pub/")
-                    )
-                  );
-                  pgpPublicKeys = map (name: rootPath + "/.secrets/pub/${name}") pgpKeyFiles;
-                  pgpRecipients = map (name: lib.head (lib.splitString "-" name)) pgpKeyFiles;
-
                 in
                 {
                   # Use shared kubernetesConfigType which includes ageRecipients, network options, and services
@@ -60,10 +46,7 @@ in
 
                   # Inject environment kubernetes config
                   config = {
-                    kubernetes = environment.kubernetes or { } // {
-                      ageRecipients = [ k3sSopsAgeKey ];
-                      inherit pgpPublicKeys pgpRecipients;
-                    };
+                    kubernetes = environment.kubernetes or { };
 
                     nixidy = {
                       env = lib.mkDefault env;

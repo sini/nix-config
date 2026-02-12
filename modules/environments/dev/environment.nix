@@ -1,3 +1,4 @@
+{ rootPath, ... }:
 {
   flake.environments.dev = {
     id = 2;
@@ -51,6 +52,8 @@
     };
 
     kubernetes = {
+      secretsFile = (rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml");
+
       clusterCidr = "172.16.0.0/16";
       serviceCidr = "172.17.0.0/16";
       tlsSanIps = [
