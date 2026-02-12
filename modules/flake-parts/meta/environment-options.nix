@@ -5,7 +5,8 @@
 }:
 let
   inherit (lib) types mkOption;
-  inherit (self.lib.modules) kubernetesConfigType mkUsersWithFeaturesOpt;
+  inherit (self.lib.modules) mkUsersWithFeaturesOpt;
+  inherit (self.lib.kubernetes-services) kubernetesConfigType;
 in
 {
   config.text.readme.parts.environment-options =

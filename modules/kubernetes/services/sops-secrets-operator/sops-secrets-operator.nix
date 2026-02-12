@@ -1,21 +1,23 @@
+{ lib, ... }:
+
 {
   flake.kubernetes.services.sops-secrets-operator = {
+    # Option declarations for environment-level configuration
+    options = {
+      replicaCount = lib.mkOption {
+        type = lib.types.int;
+        default = 1;
+        description = "Number of replicas for the sops-secrets-operator";
+      };
+    };
+
     nixidy =
       {
-        lib,
         config,
         charts,
         ...
       }:
       {
-        options.kubernetes.services.sops-secrets-operator = {
-          replicaCount = lib.mkOption {
-            type = lib.types.int;
-            default = 1;
-            description = "Number of replicas for the sops-secrets-operator";
-          };
-        };
-
         config = {
           applications.sops-secrets-operator = {
             namespace = "sops-secrets-operator";

@@ -63,7 +63,14 @@
 
       # Kubernetes services configuration
       services = {
-        sops-secrets-operator = { };
+        enabled = [
+          "argocd"
+          "cilium"
+          "sops-secrets-operator"
+        ];
+        config = {
+          sops-secrets-operator.replicaCount = 1; # High availability for prod
+        };
       };
     };
 

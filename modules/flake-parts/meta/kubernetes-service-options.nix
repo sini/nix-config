@@ -1,7 +1,7 @@
 { self, lib, ... }:
 let
   inherit (lib) mkOption;
-  inherit (self.lib.modules) kubernetesType;
+  inherit (self.lib.kubernetes-services) kubernetesType;
 in
 {
   options.flake.kubernetes = mkOption {

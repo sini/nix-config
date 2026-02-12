@@ -7,9 +7,10 @@
 }:
 let
   inherit (config.flake.meta) repo;
+  inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
 in
 {
-  flake = flakeOpts: {
+  flake = {
     nixidyEnvs = lib.genAttrs config.systems (
       system:
       (withSystem system (
@@ -17,10 +18,10 @@ in
         (lib.mapAttrs (
           env: environment:
           let
-            # Collect nixidy modules from services defined in environment
-            enabledServices = lib.attrNames (environment.kubernetes.services or { });
-            serviceModules = lib.map (serviceName: flakeOpts.config.kubernetes.services.${serviceName}.nixidy) (
-              lib.filter (serviceName: flakeOpts.config.kubernetes.services ? ${serviceName}) enabledServices
+            # Collect nixidy modules from services enabled in environment
+            enabledServices = environment.kubernetes.services.enabled or [ ];
+            serviceModules = lib.map (serviceName: config.flake.kubernetes.services.${serviceName}.nixidy) (
+              lib.filter (serviceName: config.flake.kubernetes.services ? ${serviceName}) enabledServices
             );
           in
           inputs.nixidy.lib.mkEnv {
@@ -28,25 +29,39 @@ in
             charts = inputs.nixhelm.chartsDerivations.${system};
             extraSpecialArgs = {
               inherit environment;
-              hosts = flakeOpts.config.hosts;
+              hosts = config.flake.hosts;
+              secrets = lib.kubernetes-secrets.mkSecretHelpers environment;
             };
             modules = [
               (
                 { lib, ... }:
-                let
-                  inherit (flakeOpts.config.lib.modules) kubernetesConfigType;
-                in
+
                 {
-                  # Use shared kubernetesConfigType which includes ageRecipients, network options, and services
+                  # Use flattened nixidy type for direct service access
                   options.kubernetes = lib.mkOption {
-                    type = kubernetesConfigType;
+                    type = nixidyKubernetesType;
                     default = { };
                     description = "Kubernetes configuration for this nixidy environment";
                   };
 
-                  # Inject environment kubernetes config
+                  # Add computed option for secret helpers
+                  options.secrets = lib.mkOption {
+                    type = lib.types.attrs;
+                    readOnly = true;
+                    internal = true;
+                    description = "Secret helper functions (computed from kubernetes.secretsFile)";
+                  };
+
+                  # Inject environment kubernetes config with flattened services structure
                   config = {
-                    kubernetes = environment.kubernetes or { };
+                    kubernetes = lib.mkAliasDefinitions (
+                      environment.kubernetes
+                      // {
+                        # Flatten services: move services.config to services for cleaner nixidy access
+                        services = environment.kubernetes.services.config or { };
+                      }
+                    );
+                    secrets = lib.kubernetes-secrets.mkSecretHelpers environment;
 
                     nixidy = {
                       env = lib.mkDefault env;
@@ -110,7 +125,7 @@ in
               ../../kubernetes/envs/${env}
             ];
           }
-        ) flakeOpts.config.environments)
+        ) config.flake.environments)
       ))
     );
   };
