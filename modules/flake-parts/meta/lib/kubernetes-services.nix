@@ -87,22 +87,6 @@ let
     };
   };
 
-  # Helper: Create service option declarations from service definitions
-  mkServiceOptions =
-    services:
-    lib.mapAttrs (
-      name: service:
-      mkOption {
-        type =
-          if service.options or { } != { } then
-            types.submodule { options = service.options; }
-          else
-            types.attrs;
-        default = { };
-        description = "Configuration for ${name} service";
-      }
-    ) services;
-
   # Type for flake.kubernetes - service definitions with nixidy modules
   kubernetesType = types.submodule {
     options = kubernetesNetworkOptions // {
@@ -112,6 +96,28 @@ let
         description = "Kubernetes service definitions with their nixidy modules";
       };
     };
+  };
+
+  serviceOptions = mkOption {
+    type = types.submodule {
+      options = lib.mapAttrs (
+        name: service:
+        mkOption {
+          type =
+            if service.options or { } != { } then
+              types.submodule { options = service.options; }
+            else
+              types.attrs;
+          default = { };
+          description = "Configuration for ${name} service";
+        }
+      ) (config.flake.kubernetes.services or { });
+    };
+    default = { };
+    description = ''
+      Service-specific configurations for this environment.
+      Options are imported from flake.kubernetes.services.<name>.options.
+    '';
   };
 
   # Type for flake.environments.<name>.kubernetes - split enabled/config structure
@@ -129,16 +135,7 @@ let
               '';
             };
 
-            config = mkOption {
-              type = types.submodule {
-                options = mkServiceOptions (config.flake.kubernetes.services or { });
-              };
-              default = { };
-              description = ''
-                Service-specific configurations for this environment.
-                Options are imported from flake.kubernetes.services.<name>.options.
-              '';
-            };
+            config = serviceOptions;
           };
         };
         default = { };
@@ -153,16 +150,7 @@ let
   # Type for nixidy modules - flattened services for direct access
   nixidyKubernetesType = types.submodule {
     options = baseKubernetesOptions // {
-      services = mkOption {
-        type = types.submodule {
-          options = mkServiceOptions (config.flake.kubernetes.services or { });
-        };
-        default = { };
-        description = ''
-          Kubernetes service configurations with direct access (flattened structure).
-          Used in nixidy modules for cleaner access patterns.
-        '';
-      };
+      services = serviceOptions;
     };
   };
 

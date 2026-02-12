@@ -54,13 +54,16 @@ in
 
                   # Inject environment kubernetes config with flattened services structure
                   config = {
-                    kubernetes = lib.mkAliasDefinitions (
-                      environment.kubernetes
-                      // {
-                        # Flatten services: move services.config to services for cleaner nixidy access
-                        services = environment.kubernetes.services.config or { };
-                      }
-                    );
+                    # Inject environment values as defaults that nixidy modules can override
+                    kubernetes = lib.mapAttrs (
+                      name: value:
+                      if name == "services" then
+                        # Flatten: use services.config as services
+                        lib.mapAttrs (_: lib.mkDefault) environment.kubernetes.services.config
+                      else
+                        lib.mkDefault value
+                    ) environment.kubernetes;
+
                     secrets = lib.kubernetes-secrets.mkSecretHelpers environment;
 
                     nixidy = {

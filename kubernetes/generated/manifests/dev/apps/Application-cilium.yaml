@@ -1,18 +1,24 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: sops-secrets-operator
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
+    argocd.argoproj.io/sync-wave: "-1"
+  name: cilium
   namespace: argocd
 spec:
   destination:
-    namespace: sops-secrets-operator
+    namespace: kube-system
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: ./kubernetes/generated/manifests/dev/sops-secrets-operator
+    path: ./kubernetes/generated/manifests/dev/cilium
     repoURL: https://github.com/sini/nix-config.git
     targetRevision: main
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - ApplyOutOfSyncOnly=true
+      - ServerSideApply=true

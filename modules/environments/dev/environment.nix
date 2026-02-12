@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.environments.dev = {
     id = 2;
@@ -49,29 +48,6 @@
       management_prefix = "fd64:1:1::/64";
       kubernetes_prefix = "fd64:1:2::/64";
       services_prefix = "fd64:1:3::/64";
-    };
-
-    kubernetes = {
-      secretsFile = (rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml");
-
-      clusterCidr = "172.16.0.0/16";
-      serviceCidr = "172.17.0.0/16";
-      tlsSanIps = [
-        "10.9.1.1" # axon-01 external
-      ];
-      loadBalancerRange = "10.12.0.0/16";
-
-      # Kubernetes services configuration
-      services = {
-        enabled = [
-          "argocd"
-          "cilium"
-          "sops-secrets-operator"
-        ];
-        config = {
-          sops-secrets-operator.replicaCount = 1; # High availability for prod
-        };
-      };
     };
 
     email = {
