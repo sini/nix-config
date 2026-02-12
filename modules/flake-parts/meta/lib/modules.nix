@@ -154,100 +154,6 @@ let
       inherit description;
     };
 
-  serviceSubmodule =
-    { name, ... }:
-    {
-      options = {
-        name = mkOption {
-          type = types.str;
-          default = name;
-          readOnly = true;
-          internal = true;
-        };
-
-        requires = mkOption {
-          type = types.listOf types.str;
-          default = [ ];
-          description = "List of names of services required by this service";
-        };
-
-        excludes = mkOption {
-          type = types.listOf types.str;
-          default = [ ];
-          description = "List of names of services to exclude from this service";
-        };
-
-        nixidy = mkDeferredModuleOpt "A nixidy module for this Kubernetes service";
-      };
-    };
-
-  # Shared kubernetes network options used by both types
-  kubernetesNetworkOptions = {
-    clusterCidr = mkOption {
-      type = types.str;
-      default = "172.20.0.0/16";
-      description = "Kubernetes pod network CIDR";
-    };
-
-    serviceCidr = mkOption {
-      type = types.str;
-      default = "172.21.0.0/16";
-      description = "Kubernetes service network CIDR";
-    };
-
-    internalMeshCidr = mkOption {
-      type = types.str;
-      default = "172.16.255.0/24";
-      description = "Internal mesh network for Kubernetes nodes";
-    };
-
-    tlsSanIps = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      description = "Additional IPs to include in Kubernetes API server TLS certificate SANs";
-    };
-
-    loadBalancerRange = mkOption {
-      type = types.str;
-      default = "10.0.100.0/24";
-      description = "IP range for LoadBalancer services";
-    };
-  };
-
-  # Type for flake.kubernetes - service definitions with nixidy modules
-  kubernetesType = types.submodule {
-    options = kubernetesNetworkOptions // {
-      secretsFile = mkOption {
-        type = types.path;
-        description = "Path to sops encrypted secret file for kubernetes environment";
-      };
-
-      services = mkOption {
-        type = types.lazyAttrsOf (types.submodule serviceSubmodule);
-        default = { };
-        description = "Kubernetes service definitions with their nixidy modules";
-      };
-    };
-  };
-
-  # Type for flake.environments.<name>.kubernetes - service configurations (values passed to nixidy)
-  # Uses freeform submodule to allow both arbitrary attributes AND typed option declarations from service modules
-  kubernetesConfigType = types.submodule {
-    options = kubernetesNetworkOptions // {
-      services = mkOption {
-        type = types.submodule {
-          freeformType = types.attrsOf types.attrs;
-          options = { }; # Service modules can add typed options here
-        };
-        default = { };
-        description = ''
-          Kubernetes service configurations for this environment.
-          Values are passed to the nixidy modules defined in flake.kubernetes.services.
-        '';
-      };
-    };
-  };
-
 in
 {
   flake.lib.modules = {
@@ -258,13 +164,10 @@ in
       collectNixosModules
       collectRequires
       collectTypedModules
-      kubernetesConfigType
-      kubernetesType
       mkFeatureListOpt
       mkFeatureNameOpt
       mkDeferredModuleOpt
       mkUsersWithFeaturesOpt
-      serviceSubmodule
       ;
   };
 }

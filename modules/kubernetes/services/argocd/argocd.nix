@@ -2,108 +2,11 @@
   flake.kubernetes.services.argocd = {
     nixidy =
       {
-        config,
         charts,
-        lib,
-        pkgs,
+        # secrets,
         ...
       }:
-      let
-        pgpPublicKeys = config.kubernetes.pgpPublicKeys;
 
-        pgpRecipients = config.kubernetes.pgpRecipients;
-        ageRecipients = config.kubernetes.ageRecipients;
-        demoKey = "example-key";
-        encryptString =
-          {
-            secretName,
-            value,
-          }:
-          let
-            json-file = builtins.toFile "input.json" value;
-            encrypted-drv =
-              pkgs.runCommand secretName
-                {
-                  nativeBuildInputs = with pkgs; [
-                    gnupg
-                    jq
-                    sops
-                    yq
-                  ];
-                }
-                ''
-                  export GNUPGHOME="$TMPDIR/gnupg"
-                  mkdir -p "$GNUPGHOME"
-                  chmod 700 "$GNUPGHOME"
-                  # import public key(s)
-                  ${lib.concatMapStringsSep "\n                  " (key: "gpg --batch --import ${key}") pgpPublicKeys}
-                  # set trust for all recipients
-
-                  cat ${json-file} | yq -y . > output.yaml
-                  sops --encrypt ${lib.concatMapStringsSep " " (key: "--age ${key}") ageRecipients} ${
-                    lib.concatMapStringsSep " " (key: "--pgp ${key}") pgpRecipients
-                  } --encrypted-regex='^(data|stringData)$' output.yaml > output.enc.yaml
-                  cat output.enc.yaml | yq . > $out
-                '';
-            encrypted-string = builtins.readFile encrypted-drv;
-          in
-          encrypted-string;
-
-        toYAML =
-          { value }:
-          let
-            yaml-formatter = pkgs.formats.yaml { };
-            json-str = (yaml-formatter.generate "config.yaml" value).drvAttrs.value;
-            json-file = builtins.toFile "input.json" json-str;
-            yaml-drv =
-              pkgs.runCommand "convert-values-yaml"
-                {
-                  nativeBuildInputs = [ pkgs.yq ];
-                }
-                ''
-                  cat ${json-file} | yq -y . > $out
-                '';
-            yaml-str = builtins.readFile yaml-drv;
-          in
-          yaml-str;
-
-        createSecret =
-          {
-            namespace ? "argocd",
-            secretName ? "some-secret",
-            values ? { },
-            ...
-          }:
-          let
-            secret-spec = {
-              apiVersion = "isindir.github.com/v1alpha3";
-              kind = "SopsSecret";
-              metadata = {
-                inherit namespace;
-                name = secretName;
-              };
-              spec.secretTemplates = [
-                {
-                  name = secretName;
-                  stringData = values;
-                }
-              ];
-            };
-            value = toYAML {
-              value = secret-spec;
-            };
-            encrypted-string = encryptString {
-              inherit
-                secretName
-                value
-                ;
-            };
-            encrypted-object = builtins.fromJSON encrypted-string;
-          in
-          {
-            inherit (encrypted-object) sops spec;
-          };
-      in
       {
         applications.argocd = {
           namespace = "argocd";
@@ -222,9 +125,10 @@
               stringData.auth = "argocd-redis-password-local-dev";
             };
 
-            sopsSecrets.argo-demo = createSecret {
-              secretName = "argo-demo";
-              values.password = demoKey;
+            secrets.argo-demo = {
+              metadata.namespace = "argocd";
+              type = "Opaque";
+              stringData.argo-demo = "argocd-redis-password-local-dev";
             };
 
             # Allow ingress traffic from traefik to
