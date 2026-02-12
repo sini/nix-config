@@ -18,7 +18,7 @@
 
         config = {
           applications.sops-secrets-operator = {
-            namespace = "sops-operator";
+            namespace = "sops-secrets-operator";
             createNamespace = true;
 
             helm.releases.sops = {

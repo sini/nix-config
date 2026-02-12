@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: 91fcdc444c2e55c273d144a25aa7164caba195e517d94e6475060f4eabe7cb29
+        cilium.io/cilium-configmap-checksum: 9f008948d7fcbe2cc884e340821f2c7719bfd10882899b35f48fb4cbc7a538f3
         prometheus.io/port: "9963"
         prometheus.io/scrape: "true"
       labels:
@@ -66,19 +66,22 @@ spec:
               value: 172.16.255.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/operator-generic:v1.18.6@sha256:34a827ce9ed021c8adf8f0feca131f53b3c54a3ef529053d871d0347ec4d69af
+          image: quay.io/cilium/operator-generic:v1.19.0@sha256:5b04006015e5800307dc6314676edc4c0bb7ac2fc7848be2b94b43bb030ab648
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
               host: 127.0.0.1
               path: /healthz
-              port: 9234
+              port: health
               scheme: HTTP
             initialDelaySeconds: 60
             periodSeconds: 10
             timeoutSeconds: 3
           name: cilium-operator
           ports:
+            - containerPort: 9234
+              hostPort: 9234
+              name: health
             - containerPort: 9963
               hostPort: 9963
               name: prometheus
@@ -88,7 +91,7 @@ spec:
             httpGet:
               host: 127.0.0.1
               path: /healthz
-              port: 9234
+              port: health
               scheme: HTTP
             initialDelaySeconds: 0
             periodSeconds: 5

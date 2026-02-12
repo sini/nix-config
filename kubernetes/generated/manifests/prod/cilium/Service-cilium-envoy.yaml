@@ -17,7 +17,7 @@ spec:
     - name: envoy-metrics
       port: 9964
       protocol: TCP
-      targetPort: envoy-metrics
+      targetPort: 9964
   selector:
     k8s-app: cilium-envoy
   type: ClusterIP
