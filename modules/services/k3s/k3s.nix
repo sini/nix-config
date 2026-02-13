@@ -315,7 +315,7 @@ in
           requires = [ "k3s.service" ];
           path = with pkgs; [
             kubectl
-            kubernetes-helm
+            # kubernetes-helm
             cilium-cli
           ];
           environment = {
@@ -348,20 +348,11 @@ in
               ${lib.getExe pkgs.kubernetes-helm} --kubeconfig $KUBECONFIG repo add cilium https://helm.cilium.io/
 
               echo "Installing cilium..."
-
-              ${lib.getExe pkgs.kubernetes-helm} --kubeconfig $KUBECONFIG install cilium cilium/cilium --version 1.18.6 \
-              --namespace kube-system \
-              --set kubeProxyReplacement=true \
-              --set k8sServiceHost=${internalIP} \
-              --set k8sServicePort=6443 \
-              --set socketLB.hostNamespaceOnly=true \
-              --set enableHostPort=true \
-              --set enableNodePort=true \
-              --set ipam.operator.clusterPoolIPv4PodCIDRList=${environment.kubernetes.clusterCidr} \
-              --set gatewayAPI.enabled=true \
-              --set encryption.enabled=false \
-              --set encryption.type=wireguard \
-              --set encryption.nodeEncryption=true
+              ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                -n kube-system \
+                --server-side \
+                --force-conflicts \
+                -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cilium/"}
             '';
           };
           wantedBy = [ "multi-user.target" ];
