@@ -1,5 +1,9 @@
+{ lib, ... }:
 {
-  flake.lib.kubernetes-secrets = {
+  flake.lib.kubernetes-utils = {
+    getNamespaceList =
+      config: lib.unique (map (app: app.namespace) (builtins.attrValues config.applications));
+
     # Helper to create SOPS secret reference functions for a given environment
     mkSecretHelpers = environment: {
       secretFor = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}";

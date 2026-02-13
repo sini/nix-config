@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: 220975f61e033e0cdb722883ab308edc2db15b2d5caa31e73d08f3a35952a6e6
+        cilium.io/cilium-configmap-checksum: db26ba04db358b783ae93e736bdc6f4e1e35b704b0adafa89f64640f2a7136fa
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -109,10 +109,6 @@ spec:
               hostPort: 9879
               name: health
               protocol: TCP
-            - containerPort: 4244
-              hostPort: 4244
-              name: peer-service
-              protocol: TCP
           readinessProbe:
             failureThreshold: 3
             httpGet:
@@ -162,9 +158,6 @@ spec:
             successThreshold: 1
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
-            - mountPath: /var/run/cilium/envoy/sockets
-              name: envoy-sockets
-              readOnly: false
             - mountPath: /host/proc/sys/net
               name: host-proc-sys-net
             - mountPath: /host/proc/sys/kernel
@@ -187,9 +180,6 @@ spec:
               readOnly: true
             - mountPath: /run/xtables.lock
               name: xtables-lock
-            - mountPath: /var/lib/cilium/tls/hubble
-              name: hubble-tls
-              readOnly: true
             - mountPath: /tmp
               name: tmp
       hostNetwork: true
@@ -418,10 +408,6 @@ spec:
             path: /run/xtables.lock
             type: FileOrCreate
           name: xtables-lock
-        - hostPath:
-            path: /var/run/cilium/envoy/sockets
-            type: DirectoryOrCreate
-          name: envoy-sockets
         - name: clustermesh-secrets
           projected:
             defaultMode: 256
@@ -457,20 +443,6 @@ spec:
             path: /proc/sys/kernel
             type: Directory
           name: host-proc-sys-kernel
-        - name: hubble-tls
-          projected:
-            defaultMode: 256
-            sources:
-              - secret:
-                  items:
-                    - key: tls.crt
-                      path: server.crt
-                    - key: tls.key
-                      path: server.key
-                    - key: ca.crt
-                      path: client-ca.crt
-                  name: hubble-server-certs
-                  optional: true
   updateStrategy:
     rollingUpdate:
       maxUnavailable: 2

@@ -8,11 +8,10 @@ data:
   bpf-events-trace-enabled: "true"
   bpf-lb-acceleration: disabled
   bpf-lb-algorithm-annotation: "false"
-  bpf-lb-external-clusterip: "true"
+  bpf-lb-external-clusterip: "false"
   bpf-lb-map-max: "65536"
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
-  bpf-lb-sock-hostns-only: "true"
   bpf-lb-source-range-all-types: "false"
   bpf-map-dynamic-size-ratio: "0.0025"
   bpf-policy-map-max: "16384"
@@ -22,6 +21,8 @@ data:
   cilium-endpoint-gc-interval: 5m0s
   cluster-id: "1"
   cluster-name: prod
+  cluster-pool-ipv4-cidr: 10.0.0.0/8
+  cluster-pool-ipv4-mask-size: "24"
   clustermesh-cache-ttl: 0s
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
@@ -39,14 +40,16 @@ data:
   egress-gateway-reconciliation-trigger-interval: 1s
   enable-auto-protect-node-port-range: "true"
   enable-bpf-clock-probe: "false"
-  enable-bpf-masquerade: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
+  enable-envoy-config: "true"
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
-  enable-host-legacy-routing: "true"
-  enable-hubble: "true"
+  enable-hubble: "false"
+  enable-ingress-controller: "true"
+  enable-ingress-proxy-protocol: "false"
+  enable-ingress-secrets-sync: "true"
   enable-ipv4: "true"
   enable-ipv4-big-tcp: "false"
   enable-ipv4-masquerade: "true"
@@ -54,6 +57,7 @@ data:
   enable-ipv6-big-tcp: "false"
   enable-ipv6-masquerade: "true"
   enable-k8s-networkpolicy: "true"
+  enable-l2-announcements: "true"
   enable-l2-neigh-discovery: "false"
   enable-l7-proxy: "true"
   enable-lb-ipam: "true"
@@ -71,28 +75,32 @@ data:
   enable-vtep: "false"
   enable-well-known-identities: "false"
   enable-xt-socket-fallback: "true"
+  enforce-ingress-https: "true"
   envoy-access-log-buffer-size: "4096"
   envoy-base-id: "0"
+  envoy-config-retry-interval: 15s
   envoy-keep-cap-netbindservice: "false"
-  external-envoy-proxy: "true"
+  external-envoy-proxy: "false"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"
   http-stream-idle-timeout: "300"
-  hubble-disable-tls: "false"
-  hubble-listen-address: :4244
-  hubble-network-policy-correlation-enabled: "true"
-  hubble-socket-path: /var/run/cilium/hubble.sock
-  hubble-tls-cert-file: /var/lib/cilium/tls/hubble/server.crt
-  hubble-tls-client-ca-files: /var/lib/cilium/tls/hubble/client-ca.crt
-  hubble-tls-key-file: /var/lib/cilium/tls/hubble/server.key
   identity-allocation-mode: crd
   identity-gc-interval: 15m0s
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
+  ingress-default-lb-mode: shared
+  ingress-hostnetwork-enabled: "false"
+  ingress-hostnetwork-nodelabelselector: ""
+  ingress-hostnetwork-shared-listener-port: "8080"
+  ingress-lb-annotation-prefixes: lbipam.cilium.io nodeipam.cilium.io service.beta.kubernetes.io service.kubernetes.io cloud.google.com
+  ingress-secrets-namespace: cilium-secrets
+  ingress-shared-lb-service-name: cilium-ingress
   install-no-conntrack-iptables-rules: "false"
-  ipam: kubernetes
+  ipam: cluster-pool
   ipam-cilium-node-update-rate: 15s
   iptables-random-fully: "false"
+  k8s-client-burst: "200"
+  k8s-client-qps: "50"
   k8s-require-ipv4-pod-cidr: "false"
   k8s-require-ipv6-pod-cidr: "false"
   kube-proxy-replacement: "true"
@@ -114,7 +122,6 @@ data:
   operator-api-serve-addr: 127.0.0.1:9234
   operator-prometheus-serve-addr: :9963
   packetization-layer-pmtud-mode: blackhole
-  policy-audit-mode: "false"
   policy-cidr-match-mode: ""
   policy-default-local-cluster: "true"
   policy-deny-response: none
@@ -131,6 +138,7 @@ data:
   proxy-max-concurrent-retries: "128"
   proxy-max-connection-duration-seconds: "0"
   proxy-max-requests-per-connection: "0"
+  proxy-prometheus-port: "9964"
   proxy-use-original-source-address: "true"
   proxy-xff-num-trusted-hops-egress: "0"
   proxy-xff-num-trusted-hops-ingress: "0"
