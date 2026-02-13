@@ -12982,6 +12982,221 @@ let
       };
 
     };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicy" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "Spec is a human readable description of a L2 announcement policy";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpec"));
+        };
+        "status" = mkOption {
+          description = "Status is the status of the policy.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicyStatus"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "spec" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpec" = {
+
+      options = {
+        "externalIPs" = mkOption {
+          description = "If true, the external IPs of the services are announced";
+          type = (types.nullOr types.bool);
+        };
+        "interfaces" = mkOption {
+          description = "A list of regular expressions that express which network interface(s) should be used\nto announce the services over. If nil, all network interfaces are used.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "loadBalancerIPs" = mkOption {
+          description = "If true, the loadbalancer IPs of the services are announced\n\nIf nil this policy applies to all services.";
+          type = (types.nullOr types.bool);
+        };
+        "nodeSelector" = mkOption {
+          description = "NodeSelector selects a group of nodes which will announce the IPs for\nthe services selected by the service selector.\n\nIf nil this policy applies to all nodes.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecNodeSelector"));
+        };
+        "serviceSelector" = mkOption {
+          description = "ServiceSelector selects a set of services which will be announced over L2 networks.\nThe loadBalancerClass for a service must be nil or specify a supported class, e.g.\n\"io.cilium/l2-announcer\". Refer to the following document for additional details\nregarding load balancer classes:\n\n  https://kubernetes.io/docs/concepts/services-networking/service/#load-balancer-class\n\nIf nil this policy applies to all services.";
+          type = (
+            types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecServiceSelector")
+          );
+        };
+      };
+
+      config = {
+        "externalIPs" = mkOverride 1002 null;
+        "interfaces" = mkOverride 1002 null;
+        "loadBalancerIPs" = mkOverride 1002 null;
+        "nodeSelector" = mkOverride 1002 null;
+        "serviceSelector" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecNodeSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecServiceSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecServiceSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicySpecServiceSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicyStatus" = {
+
+      options = {
+        "conditions" = mkOption {
+          description = "Current service state";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2alpha1.CiliumL2AnnouncementPolicyStatusConditions")
+            )
+          );
+        };
+      };
+
+      config = {
+        "conditions" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumL2AnnouncementPolicyStatusConditions" = {
+
+      options = {
+        "lastTransitionTime" = mkOption {
+          description = "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.";
+          type = types.str;
+        };
+        "message" = mkOption {
+          description = "message is a human readable message indicating details about the transition.\nThis may be an empty string.";
+          type = types.str;
+        };
+        "observedGeneration" = mkOption {
+          description = "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.";
+          type = (types.nullOr types.int);
+        };
+        "reason" = mkOption {
+          description = "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.";
+          type = types.str;
+        };
+        "status" = mkOption {
+          description = "status of the condition, one of True, False, Unknown.";
+          type = types.str;
+        };
+        "type" = mkOption {
+          description = "type of condition in CamelCase or in foo.example.com/CamelCase.";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "observedGeneration" = mkOverride 1002 null;
+      };
+
+    };
     "cilium.io.v2alpha1.CiliumLoadBalancerIPPool" = {
 
       options = {
@@ -13262,6 +13477,19 @@ in
         );
         default = { };
       };
+      "cilium.io"."v2alpha1"."CiliumL2AnnouncementPolicy" = mkOption {
+        description = "CiliumL2AnnouncementPolicy is a Kubernetes third-party resource which\nis used to defined which nodes should announce what services on the\nL2 network.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumL2AnnouncementPolicy"
+              "ciliuml2announcementpolicies"
+              "CiliumL2AnnouncementPolicy"
+              "cilium.io"
+              "v2alpha1"
+          )
+        );
+        default = { };
+      };
       "cilium.io"."v2alpha1"."CiliumLoadBalancerIPPool" = mkOption {
         description = "CiliumLoadBalancerIPPool is a Kubernetes third-party resource which\nis used to defined pools of IPs which the operator can use to to allocate\nand advertise IPs for Services of type LoadBalancer.";
         type = (
@@ -13334,6 +13562,19 @@ in
               "CiliumClusterwideNetworkPolicy"
               "cilium.io"
               "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumL2AnnouncementPolicies" = mkOption {
+        description = "CiliumL2AnnouncementPolicy is a Kubernetes third-party resource which\nis used to defined which nodes should announce what services on the\nL2 network.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumL2AnnouncementPolicy"
+              "ciliuml2announcementpolicies"
+              "CiliumL2AnnouncementPolicy"
+              "cilium.io"
+              "v2alpha1"
           )
         );
         default = { };
@@ -13422,6 +13663,13 @@ in
         attrName = "ciliumNetworkPolicies";
       }
       {
+        name = "ciliuml2announcementpolicies";
+        group = "cilium.io";
+        version = "v2alpha1";
+        kind = "CiliumL2AnnouncementPolicy";
+        attrName = "ciliumL2AnnouncementPolicies";
+      }
+      {
         name = "ciliumloadbalancerippools";
         group = "cilium.io";
         version = "v2alpha1";
@@ -13446,6 +13694,9 @@ in
       "cilium.io"."v2"."CiliumClusterwideNetworkPolicy" =
         mkAliasDefinitions
           options.resources."ciliumClusterwideNetworkPolicies";
+      "cilium.io"."v2alpha1"."CiliumL2AnnouncementPolicy" =
+        mkAliasDefinitions
+          options.resources."ciliumL2AnnouncementPolicies";
       "cilium.io"."v2"."CiliumLoadBalancerIPPool" =
         mkAliasDefinitions
           options.resources."ciliumLoadBalancerIPPools";

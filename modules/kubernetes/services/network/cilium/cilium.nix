@@ -1,45 +1,20 @@
-{ lib, ... }:
+{ self, ... }:
+let
+  inherit (self.lib.kubernetes-utils) findClusterMaster;
+in
 {
   flake.kubernetes.services.cilium = {
-    options = {
-      ingressControllerAddress = lib.mkOption {
-        type = lib.types.str;
-        default = "10.11.0.1";
-        description = "The IP address to use for the ingress controller";
-      };
-    };
 
     nixidy =
       {
+        config,
         charts,
         environment,
-        hosts,
-        lib,
         ...
       }:
       let
-        findClusterMaster =
-          hosts:
-          let
-            masterHosts =
-              hosts
-              |> lib.attrsets.filterAttrs (
-                hostname: hostConfig:
-                (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
-                && (hostConfig.environment == environment.name)
-              )
-              |> lib.attrsets.filterAttrs (
-                hostname: hostConfig: builtins.elem "kubernetes-master" (hostConfig.roles or [ ])
-              );
-          in
-          if lib.length (lib.attrNames masterHosts) > 0 then
-            let
-              masterHost = lib.head (lib.attrValues masterHosts);
-            in
-            masterHost.tags.kubernetes-internal-ip or (builtins.head masterHost.ipv4)
-          else
-            null;
-        masterIP = findClusterMaster hosts;
+        loadbalancer-cidr = config.kubernetes.loadBalancer.cidr;
+        ingress-controller-address = config.kubernetes.loadBalancer.reservations.cilium-ingress-controller;
       in
       {
         applications.cilium = {
@@ -75,12 +50,13 @@
                 name = environment.name;
                 id = environment.id;
               };
+
               # Routing Mode
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
               # Points to the stable loopback routed by the BGP fabric
-              k8sServiceHost = masterIP;
+              k8sServiceHost = findClusterMaster environment;
               k8sServicePort = 6443;
 
               kubeProxyReplacement = true;
@@ -97,7 +73,7 @@
                 loadbalancerMode = "shared";
                 service = {
                   annotations = {
-                    # "lbipam.cilium.io/ips" = config.kubernetes.services.cilium.ingressControllerAddress;
+                    "lbipam.cilium.io/ips" = ingress-controller-address;
                     "lbipam.cilium.io/sharing-key" = "cilium-ingress";
                   };
                 };
@@ -217,6 +193,27 @@
               # # };
               # # Logging
               # # debug.enabled = true;
+            };
+          };
+
+          resources = {
+            ciliumLoadBalancerIPPools."lb-pool" = {
+              metadata = {
+                name = "lb-pool";
+              };
+              spec = {
+                blocks = [ { cidr = loadbalancer-cidr; } ];
+              };
+            };
+            ciliumL2AnnouncementPolicies."default-l2-announcement-policy" = {
+              metadata = {
+                name = "default-l2-announcement-policy";
+                namespace = "kube-system";
+              };
+              spec = {
+                externalIPs = true;
+                loadBalancerIPs = true;
+              };
             };
           };
 
