@@ -127,6 +127,26 @@
             };
 
             certificates = builtins.listToAttrs certificatesResources;
+
+            # Allow all cert-manager pods to access kube-apiserver
+            ciliumNetworkPolicies.allow-kube-apiserver-egress.spec = {
+              endpointSelector.matchLabels."app.kubernetes.io/part-of" = "cert-manager";
+              egress = [
+                {
+                  toEntities = [ "kube-apiserver" ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = "6443";
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
           };
         };
       };
