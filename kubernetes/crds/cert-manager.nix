@@ -9,11 +9,12 @@ let
 in
 fromCRD {
   name = "cert-manager";
+  # nix run nixpkgs#nix-prefetch-github -- cert-manager cert-manager --rev v1.19.3
   src = pkgs.fetchFromGitHub {
     owner = "cert-manager";
     repo = "cert-manager";
-    rev = "v1.19.1";
-    hash = "sha256-OK6U9QIRYolLBjcNBhzFmZZqfBFoJzY8aUHew2F0MAQ=";
+    rev = "v1.19.3";
+    hash = "sha256-XsGNcIv23YLLC4tY6MttPRhQDhf7SeaOMub/ZY+p7t0=";
   };
   crds = [
     "deploy/crds/cert-manager.io_certificaterequests.yaml"
