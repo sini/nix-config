@@ -16,7 +16,7 @@
       "172.16.255.3" # axon-03 internal
     ];
     loadBalancer = {
-      range = "10.11.0.0/16";
+      cidr = "10.11.0.0/16";
       reservations = {
         cilium-ingress-controller = "10.11.0.1";
       };

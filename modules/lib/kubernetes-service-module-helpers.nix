@@ -74,7 +74,7 @@ let
     loadBalancer = mkOption {
       type = types.submodule {
         options = {
-          range = mkOption {
+          cidr = mkOption {
             type = types.str;
             default = "10.0.100.0/24";
             description = "IP range for LoadBalancer services";

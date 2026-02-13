@@ -19,13 +19,17 @@ fromCRD {
     rev = "v1.18.6";
     hash = "sha256-V4CbizefPn8VnZnnSxgQP2eq72wNVD0niuEmAlr28Xs=";
   };
-  crds = map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
-    "CiliumBGPPeerConfigs"
-    "CiliumBGPClusterConfigs"
-    "CiliumBGPAdvertisements"
-    "CiliumBGPNodeConfigOverrides"
-    "CiliumNetworkPolicies"
-    "CiliumLoadBalancerIPPools"
-    "CiliumClusterWideNetworkPolicies"
-  ];
+  crds =
+    (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
+      "CiliumBGPPeerConfigs"
+      "CiliumBGPClusterConfigs"
+      "CiliumBGPAdvertisements"
+      "CiliumBGPNodeConfigOverrides"
+      "CiliumNetworkPolicies"
+      "CiliumLoadBalancerIPPools"
+      "CiliumClusterWideNetworkPolicies"
+    ])
+    ++ (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2alpha1/${lib.toLower crd}.yaml") [
+      "CiliumL2AnnouncementPolicies"
+    ]);
 }

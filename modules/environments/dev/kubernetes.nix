@@ -10,7 +10,7 @@
     ];
 
     loadBalancer = {
-      range = "10.12.0.0/16";
+      cidr = "10.12.0.0/16";
       reservations = {
         cilium-ingress-controller = "10.12.0.1";
       };
