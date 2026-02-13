@@ -13,6 +13,10 @@
 
       systemd.services.k3s.requires = [ "containerd.service" ];
 
+      systemd.services.containerd.serviceConfig = {
+        LimitNOFILE = lib.mkForce null;
+      };
+
       virtualisation.containerd = {
         enable = true;
 

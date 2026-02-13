@@ -102,17 +102,49 @@ in
 
           openiscsi # Required for Longhorn
           nfs-utils # Required for Longhorn
+
+          # Filesystem tools
+          ceph
+          ceph-client
+          util-linux
+          parted
+          gptfdisk
+          lvm2
         ];
 
-        # Kernel modules required by cilium
+        # Kernel modules required by k3s
         boot.kernelModules = [
+          # Filesystem support:
+          "ceph"
+          "rbd"
+          "nfs"
+          # Networking support:
+          "br_netfilter"
+          "nft-expr-counter"
+          "iptable_nat"
+          "iptable_filter"
+          "nft_counter"
           "ip6_tables"
           "ip6table_mangle"
           "ip6table_raw"
           "ip6table_filter"
+          "ip_conntrack"
+          "ip_vs"
+          "ip_vs_rr"
+          "ip_vs_wrr"
+          "ip_vs_sh"
         ];
 
+        # Blacklist nbd module to prevent ceph-volume from hanging when scanning devices
+        # nbd devices cause ceph-bluestore-tool show-label to hang indefinitely
+        boot.blacklistedKernelModules = [ "nbd" ];
+
         networking = {
+          nat = {
+            enable = true;
+            enableIPv6 = true;
+          };
+
           firewall = {
             # For debug, disable firewall...
             enable = lib.mkForce false;
@@ -120,6 +152,8 @@ in
             # enable = lib.mkForce false;
             allowedTCPPorts = lib.flatten [
               6443 # Kubernetes API
+              6444
+
               10250 # Kubelet metrics
               2379 # etcd
               2380 # etcd
@@ -219,7 +253,13 @@ in
                 "--kubelet-arg=fail-swap-on=false"
 
                 "--write-kubeconfig-mode \"0644\""
+
                 "--etcd-expose-metrics"
+                "--etcd-snapshot-schedule-cron='0 */12 * * *'"
+                "--etcd-arg=quota-backend-bytes=8589934592"
+                "--etcd-arg=max-wals=5"
+                "--etcd-arg=auto-compaction-mode=periodic"
+                "--etcd-arg=auto-compaction-retention=30m"
 
                 "--disable local-storage"
                 "--disable metrics-server"
