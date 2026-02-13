@@ -20,6 +20,7 @@
     services = {
       enabled = [
         "argocd"
+        "cert-manager"
         "cilium"
         "sops-secrets-operator"
       ];
