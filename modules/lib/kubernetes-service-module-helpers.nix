@@ -71,10 +71,24 @@ let
       description = "Additional IPs to include in Kubernetes API server TLS certificate SANs";
     };
 
-    loadBalancerRange = mkOption {
-      type = types.str;
-      default = "10.0.100.0/24";
-      description = "IP range for LoadBalancer services";
+    loadBalancer = mkOption {
+      type = types.submodule {
+        options = {
+          range = mkOption {
+            type = types.str;
+            default = "10.0.100.0/24";
+            description = "IP range for LoadBalancer services";
+          };
+
+          reservations = mkOption {
+            type = types.attrsOf types.str;
+            default = { };
+            description = "Reserved IP addresses for specific LoadBalancer services";
+          };
+        };
+      };
+      default = { };
+      description = "LoadBalancer configuration";
     };
   };
 

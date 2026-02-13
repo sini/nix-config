@@ -1,0 +1,13 @@
+addressType: IPv4
+apiVersion: discovery.k8s.io/v1
+endpoints:
+  - addresses:
+      - 192.192.192.192
+kind: EndpointSlice
+metadata:
+  annotations:
+    lbipam.cilium.io/sharing-key: cilium-ingress
+  name: cilium-ingress
+  namespace: kube-system
+ports:
+  - port: 9999

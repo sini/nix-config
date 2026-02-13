@@ -1,5 +1,14 @@
+{ lib, ... }:
 {
   flake.kubernetes.services.cilium = {
+    options = {
+      ingressControllerAddress = lib.mkOption {
+        type = lib.types.str;
+        default = "10.11.0.1";
+        description = "The IP address to use for the ingress controller";
+      };
+    };
+
     nixidy =
       {
         charts,
@@ -59,6 +68,8 @@
             chart = charts.cilium.cilium;
 
             values = {
+              namespaceOverride = "kube-system";
+
               # Cluster identity
               cluster = {
                 name = environment.name;
@@ -72,107 +83,140 @@
               k8sServiceHost = masterIP;
               k8sServicePort = 6443;
 
-              # Service handling / kube-proxy replacement
               kubeProxyReplacement = true;
-              socketLB.hostNamespaceOnly = true;
-              # localRedirectPolicies.enabled = true;
-              # l2NeighDiscovery.enabled = false;
 
-              # hostPort.enabled = true;
-              # nodePort.enabled = true;
-
-              # Datapath & BPF knobs
-              # bpf.masquerade = false;
-              enableIPv4Masquerade = true;
-              bpf = {
-                masquerade = true;
-                lbExternalClusterIP = true;
-                hostLegacyRouting = true;
-              };
-
-              # CNI chaining
-              # cni.chainingMode = "portmap";
-
-              # IPAM & Pod CIDRs
-              # ipam = {
-              #   mode = "cluster-pool";
-              #   operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
-              # };
-              ipam.mode = "kubernetes";
-
-              # Masquerading (SNAT) behavior
-              enableIPv4 = true;
-              ipv6.enabled = false;
-
-              # nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
-              # masqLinkLocal = false;
-
-              # Device exposure to Cilium
-              # With tunneling enabled, it is safe to manage both devices:
-              # - 'dummy0': Used for sending/receiving VXLAN traffic over BGP fabric
-              # - 'enp2s0': Used for BPF program handling ingress for ExternalIP services
-              # devices = [
-              #   "dummy0"
-              #   "enp2s0"
-              #   "enp199s0f5"
-              #   "enp199s0f6"
-              # ];
-
-              # BGP control-plane (for FRR peering)
-              # bgpControlPlane.enabled = true;
-
-              # externalIPs.enabled = true;
-
-              # loadBalancer.mode = "snat";
-
-              # Hubble (observability)
-              # hubble = {
-              #   enabled = true;
-              #   relay.enabled = true;
-              #   ui.enabled = true;
-              #   metrics.enabled = [
-              #     "dns"
-              #     "drop"
-              #     "tcp"
-              #     "flow"
-              #     "port-distribution"
-              #     "icmp"
-              #     "http"
-              #   ];
-              # };
-
-              # gatewayAPI.enabled = true;
-              # gatewayAPI.service = {
-              #   enabled = true;
-              #   type = "LoadBalancer";
-              #   ports = [
-              #     {
-              #       name = "http";
-              #       port = 8080;
-              #     }
-              #     {
-              #       name = "https";
-              #       port = 8443;
-              #     }
-              #   ];
-              # };
-
-              # Operator & rollout
-              operator.replicas = 2;
+              socketLB.enabled = false;
+              envoy.enabled = false;
+              gatewayAPI.enabled = false;
               rollOutCiliumPods = true;
-              operator.rollOutPods = true;
+              l2announcements.enabled = true;
+              externalIPs.enabled = true;
+              ingressController = {
+                enabled = true;
+                default = true;
+                loadbalancerMode = "shared";
+                service = {
+                  annotations = {
+                    # "lbipam.cilium.io/ips" = config.kubernetes.services.cilium.ingressControllerAddress;
+                    "lbipam.cilium.io/sharing-key" = "cilium-ingress";
+                  };
+                };
+              };
+              k8sClientRateLimit = {
+                qps = 50;
+                burst = 200;
+              };
+              operator = {
+                enabled = true;
+                rollOutPods = true;
+              };
+              hubble = {
+                enabled = false;
+                relay.enabled = false;
+                ui.enabled = false;
+              };
+              nodePort.enabled = true;
+              # # Service handling / kube-proxy replacement
+              # kubeProxyReplacement = true;
+              # socketLB.hostNamespaceOnly = true;
+              # # localRedirectPolicies.enabled = true;
+              # # l2NeighDiscovery.enabled = false;
 
-              # policyEnforcementMode = "never";
-              # policyEnforcementMode = "default";
+              # # hostPort.enabled = true;
+              # # nodePort.enabled = true;
 
-              policyAuditMode = false;
-
-              # encryption = {
-              # enabled = true;
-              # type = "wireguard";
+              # # Datapath & BPF knobs
+              # # bpf.masquerade = false;
+              # enableIPv4Masquerade = true;
+              # bpf = {
+              #   masquerade = true;
+              #   lbExternalClusterIP = true;
+              #   hostLegacyRouting = true;
               # };
-              # Logging
-              # debug.enabled = true;
+
+              # # CNI chaining
+              # # cni.chainingMode = "portmap";
+
+              # # IPAM & Pod CIDRs
+              # # ipam = {
+              # #   mode = "cluster-pool";
+              # #   operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
+              # # };
+              # ipam.mode = "kubernetes";
+
+              # # Masquerading (SNAT) behavior
+              # enableIPv4 = true;
+              # ipv6.enabled = false;
+
+              # # nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
+              # # masqLinkLocal = false;
+
+              # # Device exposure to Cilium
+              # # With tunneling enabled, it is safe to manage both devices:
+              # # - 'dummy0': Used for sending/receiving VXLAN traffic over BGP fabric
+              # # - 'enp2s0': Used for BPF program handling ingress for ExternalIP services
+              # # devices = [
+              # #   "dummy0"
+              # #   "enp2s0"
+              # #   "enp199s0f5"
+              # #   "enp199s0f6"
+              # # ];
+
+              # # BGP control-plane (for FRR peering)
+              # # bgpControlPlane.enabled = true;
+
+              # # externalIPs.enabled = true;
+
+              # # loadBalancer.mode = "snat";
+
+              # # Hubble (observability)
+              # # hubble = {
+              # #   enabled = true;
+              # #   relay.enabled = true;
+              # #   ui.enabled = true;
+              # #   metrics.enabled = [
+              # #     "dns"
+              # #     "drop"
+              # #     "tcp"
+              # #     "flow"
+              # #     "port-distribution"
+              # #     "icmp"
+              # #     "http"
+              # #   ];
+              # # };
+
+              # # gatewayAPI.enabled = true;
+              # # gatewayAPI.service = {
+              # #   enabled = true;
+              # #   type = "LoadBalancer";
+              # #   ports = [
+              # #     {
+              # #       name = "http";
+              # #       port = 8080;
+              # #     }
+              # #     {
+              # #       name = "https";
+              # #       port = 8443;
+              # #     }
+              # #   ];
+              # # };
+
+              # # Operator & rollout
+              # operator.replicas = 2;
+              # rollOutCiliumPods = true;
+              # operator.rollOutPods = true;
+
+              # # policyEnforcementMode = "never";
+              # # policyEnforcementMode = "default";
+
+              # policyAuditMode = false;
+
+              # # encryption = {
+              # # enabled = true;
+              # # type = "wireguard";
+              # # };
+              # # Logging
+              # # debug.enabled = true;
             };
           };
 

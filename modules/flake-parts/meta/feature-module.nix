@@ -1,12 +1,17 @@
 { self, lib, ... }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) featureSubmoduleGenericOptions mkFeatureNameOpt;
+  inherit (self.lib.modules) featureSubmoduleGenericOptions;
   featureSubmodule =
     { name, ... }:
     {
       options = featureSubmoduleGenericOptions // {
-        name = mkFeatureNameOpt name;
+        name = mkOption {
+          type = types.str;
+          default = name;
+          readOnly = true;
+          internal = true;
+        };
       };
     };
 in

@@ -6,6 +6,7 @@
     clusterCidr = "172.20.0.0/16";
     serviceCidr = "172.21.0.0/16";
     internalMeshCidr = "172.16.255.0/24";
+
     tlsSanIps = [
       "10.10.10.2" # axon-01 external
       "10.10.10.3" # axon-02 external
@@ -14,7 +15,12 @@
       "172.16.255.2" # axon-02 internal
       "172.16.255.3" # axon-03 internal
     ];
-    loadBalancerRange = "10.11.0.0/16";
+    loadBalancer = {
+      range = "10.11.0.0/16";
+      reservations = {
+        cilium-ingress-controller = "10.11.0.1";
+      };
+    };
 
     # Kubernetes services configuration
     services = {

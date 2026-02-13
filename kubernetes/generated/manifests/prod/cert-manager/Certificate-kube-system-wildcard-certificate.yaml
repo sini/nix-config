@@ -4,7 +4,7 @@ metadata:
   annotations:
     cert-manager.io/issue-temporary-certificate: "true"
   name: wildcard-certificate
-  namespace: cert-manager
+  namespace: kube-system
 spec:
   dnsNames:
     - json64.dev

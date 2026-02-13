@@ -8,7 +8,13 @@
     tlsSanIps = [
       "10.9.1.1" # axon-01 external
     ];
-    loadBalancerRange = "10.12.0.0/16";
+
+    loadBalancer = {
+      range = "10.12.0.0/16";
+      reservations = {
+        cilium-ingress-controller = "10.12.0.1";
+      };
+    };
 
     # Kubernetes services configuration
     services = {
