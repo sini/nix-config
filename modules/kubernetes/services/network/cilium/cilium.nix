@@ -182,8 +182,8 @@ in
               # rollOutCiliumPods = true;
               # operator.rollOutPods = true;
 
-              # # policyEnforcementMode = "never";
-              # # policyEnforcementMode = "default";
+              policyEnforcementMode = "never";
+              # policyEnforcementMode = "default";
 
               # policyAuditMode = false;
 
