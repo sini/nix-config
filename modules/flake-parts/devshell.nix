@@ -24,6 +24,7 @@
           pkgs.nixd
           pkgs.nodePackages.prettier
           pkgs.sops
+          pkgs.vals
         ]
         ++ lib.optionals pkgs.stdenv.buildPlatform.isDarwin [
           pkgs.coreutils-full # Include GNU coreutils for darwin systems

@@ -3,10 +3,9 @@
     nixidy =
       {
         charts,
-        # secrets,
+        secrets,
         ...
       }:
-
       {
         applications.argocd = {
           namespace = "argocd";
@@ -104,7 +103,6 @@
                 rbac = {
                   "policy.default" = "role:admin";
                 };
-                secret.argocdServerAdminPassword = "$2y$10$VQgJvznVuhDbYveIvUsr1uKh0CgmBKbWP.DhKH2L5fr6e6SLBgP2i";
                 cm."resource.exclusions" = ''
                   - apiGroups:
                     - cilium.io
@@ -118,17 +116,14 @@
             };
           };
           resources = {
-            # TODO: move to sops
             secrets.argocd-redis = {
-              metadata.namespace = "argocd";
               type = "Opaque";
-              stringData.auth = "argocd-redis-password-local-dev";
+              stringData.auth = secrets.for "argocd-redis";
             };
 
-            secrets.argo-demo = {
-              metadata.namespace = "argocd";
-              type = "Opaque";
-              stringData.argo-demo = "argocd-redis-password-local-dev";
+            secrets.argocd-secret.stringData = {
+              "admin.password" = secrets.for "argocd-admin-password";
+              "admin.passwordMtime" = secrets.for "argocd-admin-mtime";
             };
 
             # Allow ingress traffic from traefik to
