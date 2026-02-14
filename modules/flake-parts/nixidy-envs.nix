@@ -8,6 +8,7 @@
 let
   inherit (config.flake.meta) repo;
   inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
+  inherit (config.flake.lib.kubernetes-utils) mkSecretHelpers;
 in
 {
   flake = {
@@ -30,7 +31,7 @@ in
             extraSpecialArgs = {
               inherit environment;
               hosts = config.flake.hosts;
-              secrets = lib.kubernetes-secrets.mkSecretHelpers environment;
+              secrets = mkSecretHelpers environment;
             };
             modules = [
               (
@@ -44,14 +45,6 @@ in
                     description = "Kubernetes configuration for this nixidy environment";
                   };
 
-                  # Add computed option for secret helpers
-                  options.secrets = lib.mkOption {
-                    type = lib.types.attrs;
-                    readOnly = true;
-                    internal = true;
-                    description = "Secret helper functions (computed from kubernetes.secretsFile)";
-                  };
-
                   # Inject environment kubernetes config with flattened services structure
                   config = {
                     # Inject environment values as defaults that nixidy modules can override
@@ -63,8 +56,6 @@ in
                       else
                         lib.mkDefault value
                     ) environment.kubernetes;
-
-                    secrets = lib.kubernetes-secrets.mkSecretHelpers environment;
 
                     nixidy = {
                       env = lib.mkDefault env;

@@ -1,41 +1,5 @@
-# { lib, ... }:
-# let
-#   inherit (lib) mkOption types;
-# in
 {
   flake.kubernetes.services.cert-manager = {
-    # options = {
-    #   provider = mkOption {
-    #     description = "Configuration for specific providers";
-    #     type = types.attrTag {
-    #       google = mkOption {
-    #         description = "Google cert-manager configuration";
-    #         type = types.submodule {
-    #           options.project = mkOption {
-    #             type = types.nullOr types.str;
-    #             default = null;
-    #             description = "Google project with DNS service enabled";
-    #           };
-    #           options.credentials = mkOption {
-    #             type = types.nullOr types.str;
-    #             default = null;
-    #             description = "Contents of service account credentials (supports vals)";
-    #           };
-    #         };
-    #       };
-    #       cloudflare = mkOption {
-    #         description = "Cloudflare cert-manager configuration";
-    #         type = types.submodule {
-    #           options.token = mkOption {
-    #             type = types.nullOr types.str;
-    #             default = null;
-    #             description = "Secret personal API token (supports vals)";
-    #           };
-    #         };
-    #       };
-    #     };
-    #   };
-    # };
 
     nixidy =
       {
@@ -43,6 +7,7 @@
         environment,
         charts,
         lib,
+        secrets,
         ...
       }:
       let
@@ -99,6 +64,12 @@
           };
 
           resources = {
+            secrets.cloudflare-api-token = {
+              metadata.namespace = "cert-manager";
+              type = "Opaque";
+              stringData.auth = secrets.for "cloudflare-api-token";
+            };
+
             clusterIssuers."cloudflare-issuer" = {
               metadata = {
                 name = "cloudflare-issuer";
