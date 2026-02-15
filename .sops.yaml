@@ -13,15 +13,17 @@ creation_rules:
     key_groups:
       - pgp: *admins
   # Secrets keyed for Production environments
-  - path_regex: .*prod.*/SopsSecret-.*\.ya?ml$
+  - path_regex: .*prod.*/(SopsS|S)ecret-.*\.ya?ml$
     encrypted_regex: ^(data|stringData)$
+    mac-only-encrypted: true
     key_groups:
       - pgp: *admins
         age:
           - *prod
   # Secrets keyed for the dev environment
-  - path_regex: .*dev.*/SopsSecret-.*\.ya?ml$
+  - path_regex: .*dev.*/(SopsS|S)ecret-.*\.ya?ml$
     encrypted_regex: ^(data|stringData)$
+    mac-only-encrypted: true
     key_groups:
       - pgp: *admins
         age:
