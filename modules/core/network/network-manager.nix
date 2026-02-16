@@ -1,12 +1,9 @@
 {
   flake.features.network-manager.nixos =
-    {
-      config,
-      ...
-    }:
+    { config, pkgs, ... }:
     let
-      cfg = config.hardware.networking;
-      unmanagedInterfaces = cfg.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
+      unmanagedInterfaces =
+        config.hardware.networking.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
     in
     {
       config = {
@@ -18,6 +15,9 @@
               enabled = false;
             };
           };
+          plugins = with pkgs; [
+            networkmanager-openvpn
+          ];
         };
 
         systemd.services.NetworkManager-wait-online.enable = false;
