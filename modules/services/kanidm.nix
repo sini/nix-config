@@ -215,6 +215,10 @@
                 "zogger"
                 "jess"
                 "leo"
+                "vincentpierre"
+                "you"
+                "yiran"
+                "louisabella"
               ];
 
               "media.admins" = {
