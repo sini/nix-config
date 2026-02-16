@@ -2117,15 +2117,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1770950253,
-        "narHash": "sha256-9W9IgY2+NxVyCwokgywNToB6aaG1azLbIO+J4EjuW+c=",
-        "owner": "sini",
+        "lastModified": 1771231394,
+        "narHash": "sha256-dh0kqU92kQP3jMxQ53jwNH7Z+e9OGJKqlAjMQh+4MLs=",
+        "owner": "arnarg",
         "repo": "nixidy",
-        "rev": "c9a44910080dcf7cb9b6b8077f0b01b746c0f7a8",
+        "rev": "6ab9481d2c138f3dc8c19337dca4abdcbb82b724",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
+        "owner": "arnarg",
+        "ref": "feat/resource-multi-doc",
         "repo": "nixidy",
         "type": "github"
       }
