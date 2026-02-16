@@ -18,7 +18,7 @@
       services.tailscale = {
         enable = true;
         openFirewall = true;
-        authKeyFile = config.age.secrets.tailscale-key.path;
+        authKeyFile = config.age.secrets.tailscale-auth-key.path;
         extraUpFlags = lib.mkIf (!isMobile) [
           "--advertise-exit-node"
           "--exit-node-allow-lan-access"
