@@ -22,6 +22,7 @@
       "razer"
       "gamedev"
       "performance"
+      "tailscale"
     ];
     users = {
       sini = {

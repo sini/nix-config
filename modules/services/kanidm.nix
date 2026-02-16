@@ -147,6 +147,22 @@
                 displayName = "leo";
                 mailAddresses = [ "leo@${environment.email.domain}" ];
               };
+              vincentpierre = {
+                displayName = "vincentpierre";
+                mailAddresses = [ "vincentpierre@${environment.email.domain}" ];
+              };
+              you = {
+                displayName = "You";
+                mailAddresses = [ "you@${environment.email.domain}" ];
+              };
+              yiran = {
+                displayName = "Yiran";
+                mailAddresses = [ "yiran@${environment.email.domain}" ];
+              };
+              louisabella = {
+                displayName = "louisabella";
+                mailAddresses = [ "louisabella${environment.email.domain}" ];
+              };
             };
 
             # OAuth2 clients and groups for services
