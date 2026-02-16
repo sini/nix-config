@@ -30,6 +30,7 @@
       # TODO: ehhh
       "homepage"
       "oauth2-proxy"
+      "tailscale"
       # "minio"
       # "vault"
     ];
