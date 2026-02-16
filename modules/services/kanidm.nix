@@ -161,7 +161,7 @@
               };
               louisabella = {
                 displayName = "louisabella";
-                mailAddresses = [ "louisabella${environment.email.domain}" ];
+                mailAddresses = [ "louisabella@${environment.email.domain}" ];
               };
             };
 
