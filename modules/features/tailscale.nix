@@ -3,13 +3,13 @@
   flake.features.tailscale.nixos =
     {
       config,
-      lib,
-      activeFeatures,
+      # lib,
+      # activeFeatures,
       ...
     }:
-    let
-      isMobile = lib.elem "laptop" activeFeatures;
-    in
+    # let
+    # isMobile = lib.elem "laptop" activeFeatures;
+    # in
     {
       age.secrets.tailscale-auth-key = {
         rekeyFile = rootPath + "/.secrets/services/tailscale.age";
@@ -19,11 +19,11 @@
         enable = true;
         openFirewall = true;
         authKeyFile = config.age.secrets.tailscale-auth-key.path;
-        extraUpFlags = lib.mkIf (!isMobile) [
-          "--advertise-exit-node"
-          "--exit-node-allow-lan-access"
-        ];
-        extraDaemonFlags = [ "--no-logs-no-support" ];
+        # extraUpFlags = lib.mkIf (!isMobile) [
+        #   "--advertise-exit-node"
+        #   "--exit-node-allow-lan-access"
+        # ];
+        # extraDaemonFlags = [ "--no-logs-no-support" ];
       };
 
       networking = {
