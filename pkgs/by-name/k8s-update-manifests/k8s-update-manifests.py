@@ -190,7 +190,7 @@ class EnvironmentManager:
 
   def print(self):
     print("Hello: " + str(self.source) + " -> " + str(self.environment.output_path))
-    self._compute_difference()
+    self._compute_file_difference()
     # for f in self.sourceSecretFiles:
     #   print(self._relative_to_source(f))
 
