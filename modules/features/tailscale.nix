@@ -12,6 +12,7 @@
     # isMobile = lib.elem "laptop" activeFeatures;
     # in
     {
+      # sudo headscale preauthkeys create --user 1 --reusable -e 10y
       age.secrets.tailscale-auth-key = {
         rekeyFile = rootPath + "/.secrets/services/tailscale.age";
       };
