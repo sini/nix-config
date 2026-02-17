@@ -50,7 +50,7 @@ in
           stateDir = "/var/lib/open-webui";
           environment = {
             WEBUI_NAME = "LLM @ Home";
-            WEBUI_URL = "https://open-webui.${config.networking.domain}";
+            WEBUI_URL = "https://open-webui.${environment.domain}";
 
             OLLAMA_BASE_URLS = builtins.concatStringsSep ";" (
               [ "http://10.9.2.2:11434" ] ++ (map (host: "http://${host}:11434") ollamaHosts)
@@ -69,7 +69,7 @@ in
             OAUTH_MERGE_ACCOUNTS_BY_EMAIL = "True";
 
             OAUTH_CLIENT_ID = "open-webui";
-            OPENID_PROVIDER_URL = "https://idm.${config.networking.domain}/oauth2/openid/open-webui/.well-known/openid-configuration";
+            OPENID_PROVIDER_URL = "https://idm.${environment.domain}/oauth2/openid/open-webui/.well-known/openid-configuration";
             OAUTH_CODE_CHALLENGE_METHOD = "S256";
             OAUTH_PROVIDER_NAME = "idm";
             OAUTH_ALLOWED_ROLES = "user";
@@ -117,9 +117,9 @@ in
 
         nginx = {
           virtualHosts = {
-            "open-webui.${config.networking.domain}" = {
+            "open-webui.${environment.domain}" = {
               forceSSL = true;
-              useACMEHost = config.networking.domain;
+              useACMEHost = environment.domain;
               locations."/" = {
                 proxyPass = "http://127.0.0.1:10715";
                 proxyWebsockets = true;

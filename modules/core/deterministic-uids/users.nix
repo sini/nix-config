@@ -50,6 +50,7 @@
         gnome-initial-setup = uidGid 960;
         wpa_supplicant = uidGid 959;
         oauth2-proxy = uidGid 958;
+        headscale = uidGid 957;
       };
   };
 }

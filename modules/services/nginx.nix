@@ -1,9 +1,9 @@
 {
   flake.features.nginx.nixos =
-    { config, ... }:
+    { config, environment, ... }:
     {
-      security.acme.certs.${config.networking.domain} = {
-        extraDomainNames = [ "*.${config.networking.domain}" ];
+      security.acme.certs.${environment.domain} = {
+        extraDomainNames = [ "*.${environment.domain}" ];
         group = config.services.nginx.group;
       };
 
@@ -33,7 +33,7 @@
         virtualHosts = {
           _ = {
             forceSSL = true;
-            useACMEHost = config.networking.domain;
+            useACMEHost = environment.domain;
             default = true;
             locations."/" = {
               return = "404";

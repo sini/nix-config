@@ -7,7 +7,7 @@ let
       hostname: hostConfig:
       let
         targetEnv = config.flake.environments.${hostConfig.environment};
-        fqdn = "${hostname}.${targetEnv.domain}";
+        fqdn = "${hostname}.${targetEnv.name}.${targetEnv.domain}";
       in
       lib.attrsets.nameValuePair hostname {
         hostname = "${fqdn}";

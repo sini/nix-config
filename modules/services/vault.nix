@@ -9,6 +9,7 @@ in
       lib,
       pkgs,
       hostOptions,
+      environment,
       ...
     }:
     let
@@ -25,7 +26,7 @@ in
         ) allVaultHosts
       );
 
-      vaultServiceHostname = "vault.${config.networking.domain}";
+      vaultServiceHostname = "vault.${environment.domain}";
 
       mkRaftPeer = hostname: ''
         retry_join {

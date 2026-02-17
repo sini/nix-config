@@ -10,7 +10,7 @@ let
       in
       lib.attrsets.nameValuePair (builtins.head ipList) [
         hostname
-        "${hostname}.${targetEnv.domain}"
+        "${hostname}.${targetEnv.name}.${targetEnv.domain}"
       ]
     );
 
@@ -25,7 +25,7 @@ let
       lib.attrsets.nameValuePair hostname {
         hostNames = [
           hostname
-          "${hostname}.${targetEnv.domain}"
+          "${hostname}.${targetEnv.name}.${targetEnv.domain}"
         ]
         ++ ipList;
         publicKeyFile = hostConfig.public_key;

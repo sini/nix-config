@@ -160,9 +160,9 @@ in
 
         nginx = {
           virtualHosts = {
-            "prometheus.${config.networking.domain}" = {
+            "prometheus.${environment.domain}" = {
               forceSSL = true;
-              useACMEHost = config.networking.domain;
+              useACMEHost = environment.domain;
               locations."/" = {
                 proxyPass = "http://127.0.0.1:9090";
                 proxyWebsockets = true;

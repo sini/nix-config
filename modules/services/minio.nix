@@ -19,9 +19,9 @@
         };
 
         nginx.virtualHosts = {
-          "minio.${config.networking.domain}" = {
+          "minio.${environment.domain}" = {
             forceSSL = true;
-            useACMEHost = config.networking.domain;
+            useACMEHost = environment.domain;
             locations."/" = {
               proxyPass = "http://127.0.0.1:9000";
               proxyWebsockets = true;
@@ -35,9 +35,9 @@
             };
           };
 
-          "minio-console.${config.networking.domain}" = {
+          "minio-console.${environment.domain}" = {
             forceSSL = true;
-            useACMEHost = config.networking.domain;
+            useACMEHost = environment.domain;
             locations."/" = {
               proxyPass = "http://127.0.0.1:9001";
               proxyWebsockets = true;

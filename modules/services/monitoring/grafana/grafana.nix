@@ -19,10 +19,10 @@
           enable = true;
           settings = {
             server = {
-              domain = "grafana.${config.networking.domain}";
+              domain = "grafana.${environment.domain}";
               http_addr = "127.0.0.1";
               http_port = 3000;
-              root_url = "https://grafana.${config.networking.domain}";
+              root_url = "https://grafana.${environment.domain}";
               enforce_domain = false;
             };
 
@@ -64,9 +64,9 @@
               client_secret = "$__file{${config.age.secrets.grafana-oidc-secret.path}}";
               scopes = "openid email profile";
               login_attribute_path = "preferred_username";
-              auth_url = "https://idm.${config.networking.domain}/ui/oauth2";
-              token_url = "https://idm.${config.networking.domain}/oauth2/token";
-              api_url = "https://idm.${config.networking.domain}/oauth2/openid/grafana/userinfo";
+              auth_url = "https://idm.${environment.domain}/ui/oauth2";
+              token_url = "https://idm.${environment.domain}/oauth2/token";
+              api_url = "https://idm.${environment.domain}/oauth2/openid/grafana/userinfo";
               use_pkce = true;
               use_refresh_token = true;
               role_attribute_path = "contains(groups[*], 'server_admin') && 'GrafanaAdmin' || contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'editor') && 'Editor' || 'Viewer'";
@@ -117,9 +117,9 @@
           };
         };
 
-        nginx.virtualHosts."grafana.${config.networking.domain}" = {
+        nginx.virtualHosts."grafana.${environment.domain}" = {
           forceSSL = true;
-          useACMEHost = config.networking.domain;
+          useACMEHost = environment.domain;
           locations."/" = {
             proxyPass = "http://127.0.0.1:3000";
             proxyWebsockets = true;

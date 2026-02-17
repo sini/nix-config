@@ -3,6 +3,7 @@
   flake.features.tailscale.nixos =
     {
       config,
+      environment,
       # lib,
       # activeFeatures,
       ...
@@ -19,11 +20,12 @@
         enable = true;
         openFirewall = true;
         authKeyFile = config.age.secrets.tailscale-auth-key.path;
+        extraUpFlags = [ "--login-server=https://hs.${environment.domain}" ];
         # extraUpFlags = lib.mkIf (!isMobile) [
         #   "--advertise-exit-node"
         #   "--exit-node-allow-lan-access"
         # ];
-        # extraDaemonFlags = [ "--no-logs-no-support" ];
+        extraDaemonFlags = [ "--no-logs-no-support" ];
       };
 
       networking = {

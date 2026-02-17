@@ -274,12 +274,12 @@ in
                 "--disable-cloud-controller"
                 "--disable-helm-controller"
 
-                "--tls-san=k8s.${config.networking.domain}"
+                "--tls-san=k8s.${environment.domain}"
                 "--tls-san=${config.networking.fqdn}"
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${externalIP}"
 
-                "--kube-apiserver-arg=oidc-issuer-url=https://idm.${config.networking.domain}/oauth2/openid/kubernetes"
+                "--kube-apiserver-arg=oidc-issuer-url=https://idm.${environment.domain}/oauth2/openid/kubernetes"
                 "--kube-apiserver-arg=oidc-client-id=kubernetes"
                 "--kube-apiserver-arg=oidc-signing-algs=ES256"
                 "--kube-apiserver-arg=oidc-username-claim=email"

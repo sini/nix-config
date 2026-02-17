@@ -1,7 +1,7 @@
 # { rootPath, ... }:
 {
   flake.features.loki.nixos =
-    { config, ... }:
+    { environment, ... }:
     {
       services = {
         loki = {
@@ -85,9 +85,9 @@
         };
 
         nginx.virtualHosts = {
-          "loki.${config.networking.domain}" = {
+          "loki.${environment.domain}" = {
             forceSSL = true;
-            useACMEHost = config.networking.domain;
+            useACMEHost = environment.domain;
             locations."/" = {
               proxyPass = "http://127.0.0.1:3100";
               proxyWebsockets = true;
