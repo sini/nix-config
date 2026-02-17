@@ -5,6 +5,7 @@ import argparse
 import filecmp
 import json
 import os
+import shutil
 import subprocess
 import sys
 from dataclasses import dataclass
@@ -159,16 +160,22 @@ class EnvironmentManager:
     self._create_directories(new_dirs)
 
     print("New files:")
-    for f in new_files:
-      print(f)
+    self._copy_files(new_files)
 
     print("Changed files:")
-    for f in updated_files:
-      print(f)
+    self._copy_files(updated_files)
 
     print("unchanged files:")
     for f in unchanged_files:
       print(f)
+
+  def _copy_files(self, files: set[Path]):
+    """Copy files from source to target directory."""
+    for f in files:
+      source_file = self.source / f
+      target_file = self.environment.output_path / f
+      shutil.copy2(source_file, target_file)
+      print(f"Copied: {f}")
 
   def _create_directories(self, dirs: set[Path]):
     """Create directories in sorted order (parents before children)."""
