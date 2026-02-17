@@ -7,6 +7,7 @@
         inputs,
         config,
         pkgs,
+        environment,
         ...
       }:
       let
@@ -27,7 +28,7 @@
         services = {
           declarative-jellyfin = {
             enable = true;
-            serverId = (builtins.hashString "md5" "jellyfin.${config.networking.domain}");
+            serverId = (builtins.hashString "md5" "jellyfin.${environment.domain}");
 
             # Upstream declarative-jellfin locked version is broken against unstable
             package = pkgs.jellyfin;
@@ -41,7 +42,7 @@
               enableHttps = false; # Handled by Nginx
               internalHttpPort = 8096;
               publicHttpPort = 8096;
-              publishedServerUriBySubnet = [ "all=https://jellyfin.${config.networking.domain}" ];
+              publishedServerUriBySubnet = [ "all=https://jellyfin.${environment.domain}" ];
             };
 
             encoding = {
@@ -158,7 +159,7 @@
 
             branding = {
               loginDisclaimer = ''
-                <form action="https://jellyfin.${config.networking.domain}/sso/OID/start/kanidm">
+                <form action="https://jellyfin.${environment.domain}/sso/OID/start/kanidm">
                   <button class="raised block emby-button button-submit">
                     Sign in with SSO
                   </button>
@@ -180,9 +181,9 @@
 
         # TODO: auto-configure SSO, see https://github.com/tecosaur/golgi/blob/568849ce1d6601e1a478b77ad71437aa177a2f5c/modules/streaming/jellyfin.nix#L14
 
-        services.nginx.virtualHosts."jellyfin.${config.networking.domain}" = {
+        services.nginx.virtualHosts."jellyfin.${environment.domain}" = {
           forceSSL = true;
-          useACMEHost = config.networking.domain;
+          useACMEHost = environment.domain;
           locations."/" = {
             proxyPass = "http://127.0.0.1:8096";
             extraConfig = ''

@@ -1,7 +1,7 @@
 {
   flake.environments.dev = {
     id = 2;
-    domain = "dev.json64.dev";
+    domain = "json64.dev";
     gatewayIp = "10.9.0.1";
     gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
     dnsServers = [

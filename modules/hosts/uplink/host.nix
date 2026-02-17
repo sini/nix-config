@@ -31,6 +31,7 @@
       "homepage"
       "oauth2-proxy"
       "tailscale"
+      "headscale"
       # "minio"
       # "vault"
     ];

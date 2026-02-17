@@ -56,17 +56,17 @@
 
         # OIDC configuration
         clientID = "oauth2-proxy";
-        oidcIssuerUrl = "https://idm.${config.networking.domain}/oauth2/openid/oauth2-proxy";
-        redirectURL = "https://${config.networking.domain}/oauth2/callback";
-        loginURL = "https://${config.networking.domain}/oauth2/authorise";
-        profileURL = "https://idm.${config.networking.domain}/oauth2/openid/oauth2-proxy/userinfo";
-        redeemURL = "https://idm.${config.networking.domain}/oauth2/token";
-        validateURL = "https://idm.${config.networking.domain}/oauth2/token/introspect";
+        oidcIssuerUrl = "https://idm.${environment.domain}/oauth2/openid/oauth2-proxy";
+        redirectURL = "https://${environment.domain}/oauth2/callback";
+        loginURL = "https://${environment.domain}/oauth2/authorise";
+        profileURL = "https://idm.${environment.domain}/oauth2/openid/oauth2-proxy/userinfo";
+        redeemURL = "https://idm.${environment.domain}/oauth2/token";
+        validateURL = "https://idm.${environment.domain}/oauth2/token/introspect";
 
         scope = "openid email profile";
 
         cookie = {
-          domain = ".${config.networking.domain}";
+          domain = ".${environment.domain}";
           secure = true;
           httpOnly = true;
           name = "_oauth2_proxy";
@@ -90,20 +90,20 @@
 
           oidc-groups-claim = "groups";
           whitelist-domain = [
-            "${config.networking.domain}"
-            "*.${config.networking.domain}"
+            "${environment.domain}"
+            "*.${environment.domain}"
           ];
           # client-secret-file = config.age.secrets.oauth2-proxy-oidc-secret.path;
           # cookie-secret-file = config.age.secrets.oauth2-proxy-cookie-secret.path;
           # upstream = "static://202";
         };
 
-        nginx.domain = config.networking.domain;
+        nginx.domain = environment.domain;
       };
 
-      services.nginx.virtualHosts.${config.networking.domain} = {
+      services.nginx.virtualHosts.${environment.domain} = {
         forceSSL = true;
-        useACMEHost = config.networking.domain;
+        useACMEHost = environment.domain;
         locations."/" = {
           proxyPass = "http://127.0.0.1:4180";
           recommendedProxySettings = true;
@@ -114,7 +114,7 @@
         };
       };
 
-      services.nginx.upstreams.${config.networking.domain} = {
+      services.nginx.upstreams.${environment.domain} = {
         servers = {
           "localhost:4180" = { };
         };

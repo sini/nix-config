@@ -61,6 +61,7 @@
           "jellyfin"
           "oauth2-proxy"
           "open-webui"
+          "headscale"
         ]
       );
 
@@ -71,21 +72,21 @@
           server = {
             enable = true;
             settings = {
-              domain = config.networking.domain;
-              origin = "https://idm.${config.networking.domain}";
+              domain = environment.domain;
+              origin = "https://idm.${environment.domain}";
               bindaddress = "127.0.0.1:8443";
               ldapbindaddress = "127.0.0.1:3636";
 
               # TLS certificates from ACME
-              tls_chain = "${config.security.acme.certs.${config.networking.domain}.directory}/fullchain.pem";
-              tls_key = "${config.security.acme.certs.${config.networking.domain}.directory}/key.pem";
+              tls_chain = "${config.security.acme.certs.${environment.domain}.directory}/fullchain.pem";
+              tls_key = "${config.security.acme.certs.${environment.domain}.directory}/key.pem";
             };
           };
 
           client = {
             enable = true;
             settings = {
-              uri = "https://idm.${config.networking.domain}";
+              uri = "https://idm.${environment.domain}";
             };
           };
 
@@ -221,19 +222,22 @@
                 "louisabella"
               ];
 
-              "media.admins" = {
-                members = [
-                  "json"
-                  "shuo"
-                ];
-              };
+              "media.admins".members = [
+                "json"
+                "shuo"
+              ];
+
+              "vpn.users".members = [
+                "json"
+                "shuo"
+              ];
             };
 
             systems.oauth2 = {
               grafana = {
                 displayName = "Grafana Dashboard";
-                originLanding = "https://grafana.${config.networking.domain}/login/generic_oauth";
-                originUrl = "https://grafana.${config.networking.domain}";
+                originLanding = "https://grafana.${environment.domain}/login/generic_oauth";
+                originUrl = "https://grafana.${environment.domain}";
                 basicSecretFile = config.age.secrets.grafana-oidc-client-secret.path;
                 scopeMaps."grafana.access" = [
                   "openid"
@@ -249,6 +253,22 @@
                   };
                 };
                 allowInsecureClientDisablePkce = false;
+                preferShortUsername = true;
+              };
+
+              headscale = {
+                displayName = "vpn";
+                originUrl = [
+                  "https://hs.${environment.domain}/oidc/callback"
+                  "https://hs.${environment.domain}/admin/oidc/callback"
+                ];
+                originLanding = "https://hs.${environment.domain}/admin";
+                basicSecretFile = config.age.secrets.headscale-oidc-client-secret.path;
+                scopeMaps."vpn.users" = [
+                  "openid"
+                  "email"
+                  "profile"
+                ];
                 preferShortUsername = true;
               };
 
@@ -271,8 +291,8 @@
               open-webui = {
                 displayName = "open-webui";
                 imageFile = builtins.path { path = rootPath + /assets/open-webui.svg; };
-                originUrl = "https://open-webui.${config.networking.domain}/oauth/oidc/callback";
-                originLanding = "https://open-webui.${config.networking.domain}/auth";
+                originUrl = "https://open-webui.${environment.domain}/oauth/oidc/callback";
+                originLanding = "https://open-webui.${environment.domain}/auth";
                 basicSecretFile = config.age.secrets.open-webui-oidc-client-secret.path;
                 scopeMaps."open-webui.access" = [
                   "openid"
@@ -297,8 +317,8 @@
 
               jellyfin = {
                 displayName = "Jellyfin";
-                originUrl = "https://jellyfin.${config.networking.domain}/sso/OID/redirect/kanidm";
-                originLanding = "https://jellyfin.${config.networking.domain}";
+                originUrl = "https://jellyfin.${environment.domain}/sso/OID/redirect/kanidm";
+                originLanding = "https://jellyfin.${environment.domain}";
                 basicSecretFile = config.age.secrets.jellyfin-oidc-client-secret.path;
                 preferShortUsername = true;
                 scopeMaps = {
@@ -327,8 +347,8 @@
 
               oauth2-proxy = {
                 displayName = "OAuth2-Proxy";
-                originUrl = "https://${config.networking.domain}/oauth2/callback";
-                originLanding = "https://${config.networking.domain}/";
+                originUrl = "https://${environment.domain}/oauth2/callback";
+                originLanding = "https://${environment.domain}/";
                 basicSecretFile = config.age.secrets.oauth2-proxy-oidc-client-secret.path;
                 preferShortUsername = true;
                 scopeMaps = {
@@ -356,9 +376,9 @@
           };
         };
 
-        nginx.virtualHosts."idm.${config.networking.domain}" = {
+        nginx.virtualHosts."idm.${environment.domain}" = {
           forceSSL = true;
-          useACMEHost = config.networking.domain;
+          useACMEHost = environment.domain;
           locations."/" = {
             proxyPass = "https://127.0.0.1:8443";
             proxyWebsockets = true;

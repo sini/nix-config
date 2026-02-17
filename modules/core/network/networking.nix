@@ -271,7 +271,7 @@
 
         networking = {
           hostName = hostOptions.hostname;
-          domain = environment.domain;
+          domain = "${environment.name}.${environment.domain}";
           hostId = with builtins; substring 0 8 (hashString "md5" config.networking.hostName);
 
           networkmanager.enable = lib.mkForce networkManagerEnabled;
