@@ -4,6 +4,7 @@
 import argparse
 import filecmp
 import json
+import logging
 import os
 import shutil
 import subprocess
@@ -84,11 +85,13 @@ class EnvironmentManager:
 
   environment: EnvironmentMetadata = None
 
-  def __init__(self, source: Path, environment: EnvironmentMetadata):
+  def __init__(self, source: Path, environment: EnvironmentMetadata, dry_run: bool = False, skip_secrets: bool = False):
     self.source = source
     self.environment = environment
-    self._index_source()
-    self._index_target()
+    self.dry_run = dry_run
+    self.skip_secrets = skip_secrets
+    (self.sourceFiles, self.sourceDirs) = self._scan_path(self.source)
+    (self.targetFiles, self.targetDirs) = self._scan_path(self.environment.output_path)
     self.secret_files: List[SecretWorkItem] = []
 
   @staticmethod
@@ -102,17 +105,8 @@ class EnvironmentManager:
     return files, directories
     pass
 
-  def _index_source(self):
-    (files, directories) = self._scan_path(self.source)
-    self.sourceDirs = directories
-    self.sourceFiles = [f for f in files if not f.name.startswith('Secret-')]
-    self.sourceSecretFiles = [f for f in files if f.name.startswith('Secret-')]
-
-  def _index_target(self):
-    (files, directories) = self._scan_path(self.environment.output_path)
-    self.targetDirs = directories
-    self.targetFiles = [f for f in files if not f.name.startswith('SopsSecret-')]
-    self.targetSecretFiles = [f for f in files if f.name.startswith('SopsSecret-')]
+  def _resource_is_secret(resource: Path) -> bool:
+    return f.name.startswith('Secret-') or f.name.startswith('SopsSecret-')
 
   def _relative_to_source(self, f: Path) -> Path:
     return f.relative_to(self.source)
@@ -126,12 +120,15 @@ class EnvironmentManager:
     # difflib.unified_diff()
 
   def _cleanup_files(self, files: set[Path]):
-    """Remove files from target directory."""
+    """Delete files from target directory."""
     for f in files:
       target_file = self.environment.output_path / f
       if target_file.exists() and target_file.is_file():
-        target_file.unlink()
-        print(f"Removed: {f}")
+        if self.dry_run:
+          logging.info(f"[DRY RUN] Would delete: {f}")
+        else:
+          target_file.unlink()
+          logging.info(f"Delete: {f}")
 
   def _compute_file_difference(self):
     src_files = {self._relative_to_source(f) for f in self.sourceFiles}
@@ -150,24 +147,17 @@ class EnvironmentManager:
     deleted_files = target_files - src_files
     deleted_dirs = target_dirs - src_dirs
 
-    print("Deleted files:")
     self._cleanup_files(deleted_files)
-
-    print("Deleted directories:")
     self._cleanup_directories(deleted_dirs)
-
-    print("New directories:")
     self._create_directories(new_dirs)
-
     print("New files:")
     self._copy_files(new_files)
 
     print("Changed files:")
     self._copy_files(updated_files)
 
-    print("unchanged files:")
     for f in unchanged_files:
-      print(f)
+      logging.info(f)
 
   def _copy_files(self, files: set[Path]):
     """Copy files from source to target directory."""
@@ -182,8 +172,11 @@ class EnvironmentManager:
     sorted_dirs = sorted(dirs, key=lambda d: (len(d.parts), str(d)))
     for d in sorted_dirs:
       target_dir = self.environment.output_path / d
-      target_dir.mkdir(parents=True, exist_ok=True)
-      print(f"Created: {d}")
+      if self.dry_run:
+        logging.info(f"[DRY RUN] Would create: {d}")
+      else:
+        target_dir.mkdir(parents=True, exist_ok=True)
+        logging.info(f"Created: {d}")
 
   def _cleanup_directories(self, dirs: set[Path]):
     """Remove directories in reverse sorted order (children before parents)."""
@@ -191,15 +184,18 @@ class EnvironmentManager:
     for d in sorted_dirs:
       target_dir = self.environment.output_path / d
       if target_dir.exists() and target_dir.is_dir():
-        target_dir.rmdir()
-        print(f"Removed: {d}")
+        if self.dry_run:
+          logging.info(f"[DRY RUN] Would remove: {d}")
+        else:
+          target_dir.rmdir()
+          logging.info(f"Removed: {d}")
 
 
   def print(self):
-    print("Hello: " + str(self.source) + " -> " + str(self.environment.output_path))
+    logging.info("Hello: " + str(self.source) + " -> " + str(self.environment.output_path))
     self._compute_file_difference()
     # for f in self.sourceSecretFiles:
-    #   print(self._relative_to_source(f))
+    #   logging.info(self._relative_to_source(f))
 
 
 
@@ -219,6 +215,12 @@ def get_git_root() -> Optional[Path]:
 
 def main() -> int:
   """Main entry point."""
+  # Configure logging
+  logging.basicConfig(
+    level=logging.INFO,
+    format='%(levelname)s: %(message)s'
+  )
+
   parser = argparse.ArgumentParser(
     description="Update Kubernetes manifests for nixidy environments"
   )
@@ -227,6 +229,16 @@ def main() -> int:
     type=Path,
     help="Git repository root path (auto-detected if not specified)"
   )
+  parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="Show what would be changed without actually making changes"
+  )
+  parser.add_argument(
+    "--skip-secrets",
+    action="store_true",
+    help="Exclude secret files from processing"
+  )
 
   args = parser.parse_args()
 
@@ -234,23 +246,31 @@ def main() -> int:
   if args.git_root:
     git_root = args.git_root.resolve()
     if not git_root.exists():
-      print(f"Error: specified git root does not exist: {git_root}", file=sys.stderr)
+      logging.error(f"specified git root does not exist: {git_root}")
       return 1
   else:
     git_root = get_git_root()
     if git_root is None:
-      print("Error: not running from within a git repository", file=sys.stderr)
+      logging.error("not running from within a git repository")
       return 1
 
-  print(f"Git repository root: {git_root}")
-  print()
+  if args.dry_run:
+    logging.info("DRY RUN MODE: No changes will be made")
+    logging.info("")
+
+  if args.skip_secrets:
+    logging.info("SKIP SECRETS MODE: Secret files will be excluded from processing")
+    logging.info("")
+
+  logging.info(f"Git repository root: {git_root}")
+  logging.info("")
 
   # Find the environments directory relative to this script
   script_path = Path(__file__).resolve()
   envs_dir = script_path.parent.parent / "share" / "nixidy-environments"
 
   if not envs_dir.exists():
-    print(f"Error: environments directory not found at {envs_dir}", file=sys.stderr)
+    logging.error(f"environments directory not found at {envs_dir}")
     return 1
 
   # Discover environments from symlinks and metadata
@@ -260,7 +280,7 @@ def main() -> int:
     if entry.is_dir():
       metadata_file = envs_dir / f"{entry.name}.yaml"
       if not metadata_file.exists():
-        print(f"Warning: metadata file not found for environment {entry.name}", file=sys.stderr)
+        logging.warning(f"metadata file not found for environment {entry.name}")
         continue
 
       # Read metadata
@@ -276,12 +296,12 @@ def main() -> int:
       environments[entry.name] = (entry, metadata)
 
   if not environments:
-    print("Error: no environments found", file=sys.stderr)
+    logging.error("no environments found")
     return 1
 
   # Print environment mappings
   for env, (src_path, metadata) in environments.items():
-    em = EnvironmentManager(src_path, metadata)
+    em = EnvironmentManager(src_path, metadata, dry_run=args.dry_run, skip_secrets=args.skip_secrets)
     em.print()
 
   return 0
