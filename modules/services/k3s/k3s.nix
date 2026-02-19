@@ -61,30 +61,6 @@ in
           path = "/var/lib/sops/age/key.txt";
         };
 
-        # age.secrets.kubernetes-oidc-secret = {
-        #   rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/kubernetes-oidc-client-secret.age";
-        #   intermediary = true;
-        # };
-        # age.secrets.kubernetes-oidc-env = {
-        #   generator.dependencies = [ config.age.secrets.kubernetes-oidc-secret ];
-        #   generator.script = (
-        #     {
-        #       lib,
-        #       decrypt,
-        #       deps,
-        #       ...
-        #     }:
-        #     ''
-        #       echo -n "OIDC_CLIENT_SECRET="
-        #       ${decrypt} ${lib.escapeShellArg (lib.head deps).file}
-        #     ''
-        #   );
-        # };
-
-        # systemd.services.k3s = {
-        #   serviceConfig.EnvironmentFile = config.age.secrets.kubernetes-oidc-secret.path;
-        # };
-
         environment.systemPackages = with pkgs; [
           k3s
           k9s
@@ -180,47 +156,6 @@ in
               "enp199s0f5"
               "enp199s0f6"
             ];
-
-            # Critical: Allow packet forwarding for Kubernetes networking
-            extraCommands = ''
-              # Allow forwarding for pod and service networks
-              iptables -A FORWARD -s ${environment.kubernetes.clusterCidr} -j ACCEPT  # Default k3s pod CIDR
-              iptables -A FORWARD -d ${environment.kubernetes.clusterCidr} -j ACCEPT
-              iptables -A FORWARD -s ${environment.kubernetes.serviceCidr} -j ACCEPT  # Default k3s service CIDR
-              iptables -A FORWARD -d ${environment.kubernetes.serviceCidr} -j ACCEPT
-
-              iptables -A FORWARD -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT  # Default k3s pod CIDR
-              iptables -A FORWARD -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-
-              # Allow pods to reach API server through service IP
-              iptables -A INPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.serviceCidr} -j ACCEPT
-              iptables -A OUTPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.serviceCidr} -j ACCEPT
-
-              iptables -A INPUT -s ${environment.kubernetes.serviceCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-              iptables -A OUTPUT -s ${environment.kubernetes.serviceCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-
-              iptables -A INPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-              iptables -A OUTPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-
-              # Allow established connections
-              iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-
-              # Allow ICMP for health checks
-              iptables -A INPUT -p icmp --icmp-type echo-request -s ${environment.kubernetes.clusterCidr} -j ACCEPT
-              iptables -A INPUT -p icmp --icmp-type echo-reply -s ${environment.kubernetes.clusterCidr} -j ACCEPT
-
-              iptables -A INPUT -p icmp --icmp-type echo-request -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-              iptables -A INPUT -p icmp --icmp-type echo-reply -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-
-            '';
-
-            # Clean up custom rules when firewall stops
-            extraStopCommands = ''
-              iptables -D FORWARD -s ${environment.kubernetes.clusterCidr} -j ACCEPT 2>/dev/null || true
-              iptables -D FORWARD -d ${environment.kubernetes.clusterCidr} -j ACCEPT 2>/dev/null || true
-              iptables -D FORWARD -s ${environment.kubernetes.serviceCidr} -j ACCEPT 2>/dev/null || true
-              iptables -D FORWARD -d ${environment.kubernetes.serviceCidr} -j ACCEPT 2>/dev/null || true
-            '';
           };
         };
 
@@ -277,6 +212,7 @@ in
                 "--tls-san=k8s.${environment.domain}"
                 "--tls-san=${config.networking.fqdn}"
                 "--tls-san=${config.networking.hostName}"
+                "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
                 "--tls-san=${externalIP}"
 
                 "--kube-apiserver-arg=oidc-issuer-url=https://idm.${environment.domain}/oauth2/openid/kubernetes"
