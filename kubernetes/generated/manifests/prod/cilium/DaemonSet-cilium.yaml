@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: c72a491b940f4fe6b88a53ea83fa62d8a5abf7d8795b205f12b68111d9bd1357
+        cilium.io/cilium-configmap-checksum: c4101d1214fde2bc0b7465e0584f437cf14ba2d80cf8bbb408dccc831475a24a
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -116,10 +116,6 @@ spec:
             - containerPort: 4244
               hostPort: 4244
               name: peer-service
-              protocol: TCP
-            - containerPort: 9965
-              hostPort: 9965
-              name: hubble-metrics
               protocol: TCP
           readinessProbe:
             failureThreshold: 3
