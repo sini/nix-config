@@ -19,5 +19,5 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - ApplyOutOfSyncOnly=true
+      - ClientSideApplyMigration=false
       - ServerSideApply=true

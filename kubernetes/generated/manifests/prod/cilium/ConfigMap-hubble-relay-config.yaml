@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config.yaml: "cluster-name: prod\npeer-service: \"hubble-peer.kube-system.svc.cluster.local.:443\"\nlisten-address: :4245\ngops: true\ngops-port: \"9893\"\nretry-timeout: \nsort-buffer-len-max: \nsort-buffer-drain-timeout: \ntls-hubble-client-cert-file: /var/lib/hubble-relay/tls/client.crt\ntls-hubble-client-key-file: /var/lib/hubble-relay/tls/client.key\ntls-hubble-server-ca-files: /var/lib/hubble-relay/tls/hubble-server-ca.crt\n\ndisable-server-tls: true\n"
+kind: ConfigMap
+metadata:
+  name: hubble-relay-config
+  namespace: kube-system
