@@ -4,9 +4,11 @@
 import argparse
 import difflib
 import filecmp
+import hashlib
 import json
 import logging
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -20,25 +22,7 @@ import yaml
 
 # TODO: Update isindir/sops-secrets-operator to support mac-only-encrypted
 
-# cat kubernetes/generated/manifests/prod/argocd/Secret-argocd-secret.yaml \
-# | vals eval \
-# | sops --config git_root/.sops.yaml  -filename-override prod/Secret-foo.yaml \
-# --input-type yaml --output-type yaml -e /dev/stdin
-
-"""
-apiVersion: isindir.github.com/v1alpha3
-kind: SopsSecret
-metadata:
-  name: ${name}
-  namespace: namespace
-spec:
-  secretTemplates:
-    - name: ${name}
-      type: Opaque
-      stringData:
-        username: "$username"
-        password: "$password"
-"""
+PLAINTEXT_SHA_ANNOTATION = "secrets.json64.dev/plaintext-sha256"
 
 def run(cmd: List[str], *, cwd: Optional[Path] = None, input_text: Optional[str] = None) -> str:
     """Run a command, return stdout, raise on failure."""
@@ -57,11 +41,6 @@ def run(cmd: List[str], *, cwd: Optional[Path] = None, input_text: Optional[str]
             f"--- stderr ---\n{p.stderr}\n"
         )
     return p.stdout
-
-class SecretConverter(object):
-  @staticmethod
-  def convertSecretToSopsSecret(secretFilePath):
-    name = secretFilePath
 
 class SecretOperation(Enum):
   CREATE = 1
@@ -92,9 +71,10 @@ class EnvironmentManager:
 
   environment: EnvironmentMetadata = None
 
-  def __init__(self, source: Path, environment: EnvironmentMetadata, dry_run: bool = False, skip_secrets: bool = False):
+  def __init__(self, source: Path, environment: EnvironmentMetadata, git_root: Path, dry_run: bool = False, skip_secrets: bool = False):
     self.source = source
     self.environment = environment
+    self.git_root = git_root
     self.dry_run = dry_run
     self.skip_secrets = skip_secrets
     (self.sourceFiles, self.sourceDirs) = self._scan_path(self.source)
@@ -141,15 +121,230 @@ class EnvironmentManager:
       secrets.add(item)
     return secrets
 
+  @staticmethod
+  def _dump_yaml_documents(docs: List[Dict[str, Any]]) -> str:
+    # stable-ish output; don’t rely on this for hashing (we hash canonical JSON instead)
+    return yaml.safe_dump_all(docs, sort_keys=True)
+
+  @staticmethod
+  def _filter_dict(d: Optional[Dict[str, str]], pattern: str, include: bool) -> Dict[str, str]:
+      """Filter dictionary keys by regex pattern.
+
+      Args:
+          d: Dictionary to filter
+          pattern: Regex pattern to match (e.g., '(argocd\\.argoproj\\.io|app\\.kubernetes\\.io)')
+          include: If True, keep only matching keys; if False, exclude matching keys
+
+      Returns:
+          Filtered dictionary
+      """
+      if not d:
+          return {}
+
+      result = {}
+      regex = re.compile(pattern)
+      for k, v in d.items():
+          matches = regex.search(k) is not None
+          if (include and matches) or (not include and not matches):
+              result[k] = v
+      return result
+
+  def _resolve_vals(self, file: Path) -> str:
+    with open(self.source / file,'r') as f:
+      return run(["vals", "eval"], cwd=Path(self.git_root), input_text=f.read())
+
+  def _sops_encrypt_document(self, contents: Dict[str, Any], target_path: Path) -> Dict[str, Any]:
+    raw_yaml = yaml.safe_dump(contents, sort_keys=True)
+    result = run(
+      ["sops",
+        "--config", str(self.git_root / ".sops.yaml"),
+        "--filename-override", str(target_path),
+        "--input-type", "yaml",
+        "--output-type", "yaml",
+        "-e", "/dev/stdin"
+      ],
+      cwd=Path(self.git_root),
+      input_text=raw_yaml)
+    return yaml.safe_load(result)
+
+
+  @classmethod
+  def _convert_secret_to_sopssecret_with_hash(cls, document: Dict[str, Any], hash: str) -> Dict[str, Any]:
+    """Convert a Kubernetes Secret to a SopsSecret.
+
+    Transformation spec:
+    apiVersion: isindir.github.com/v1alpha3
+    kind: SopsSecret
+    metadata:
+      name: ${root.metadata.name}
+      namespace: ${root.metadata.namespace}
+      annotations: ${root.metadata.annotations only *(argocd.argoproj.io|app.kubernetes.io)*}
+      labels: ${root.metadata.labels only *(argocd.argoproj.io|app.kubernetes.io)*}
+    spec:
+      secretTemplates:
+        - name: ${root.metadata.name}
+          type: ${root.type}
+          labels: ${root.metadata.labels except *(argocd.argoproj.io|app.kubernetes.io)*}
+          annotations: ${root.metadata.annotations except *(argocd.argoproj.io|app.kubernetes.io)*}
+          stringData: {root.stringData}
+          data: {root.data}
+    """
+
+    metadata = document.get('metadata', {})
+
+    # Build SopsSecret metadata
+    sops_metadata = {
+        'name': metadata.get('name'),
+        'namespace': metadata.get('namespace'),
+    }
+
+    # Filter annotations - only keep argocd.argoproj.io and app.kubernetes.io ones for top-level metadata
+    annotations = cls._filter_dict(
+        metadata.get('annotations'),
+        '(argocd\\.argoproj\\.io|app\\.kubernetes\\.io)',
+        include=True
+    )
+    if annotations:
+        sops_metadata['annotations'] = annotations
+    else:
+        sops_metadata['annotations'] = {}
+
+    # Add plaintext hash annotation
+    sops_metadata['annotations'][PLAINTEXT_SHA_ANNOTATION] = hash
+
+    # Filter labels - only keep argocd.argoproj.io and app.kubernetes.io ones for top-level metadata
+    labels = cls._filter_dict(
+        metadata.get('labels'),
+        '(argocd\\.argoproj\\.io|app\\.kubernetes\\.io)',
+        include=True
+    )
+    if labels:
+        sops_metadata['labels'] = labels
+
+    # Build secret template
+    secret_template = {
+        'name': metadata.get('name'),
+    }
+
+    # Add type if present
+    if 'type' in document:
+        secret_template['type'] = document['type']
+
+    # Filter labels - exclude argocd.argoproj.io and app.kubernetes.io ones for secret template
+    template_labels = cls._filter_dict(
+        metadata.get('labels'),
+        '(argocd\\.argoproj\\.io|app\\.kubernetes\\.io)',
+        include=False
+    )
+    if template_labels:
+        secret_template['labels'] = template_labels
+
+    # Filter annotations - exclude argocd.argoproj.io and app.kubernetes.io ones for secret template
+    template_annotations = cls._filter_dict(
+        metadata.get('annotations'),
+        '(argocd\\.argoproj\\.io|app\\.kubernetes\\.io)',
+        include=False
+    )
+    if template_annotations:
+        secret_template['annotations'] = template_annotations
+
+    # Add stringData if present
+    if 'stringData' in document:
+        secret_template['stringData'] = document['stringData']
+
+    # Add data if present
+    if 'data' in document:
+        secret_template['data'] = document['data']
+
+    # Build final SopsSecret
+    sops_secret = {
+        'apiVersion': 'isindir.github.com/v1alpha3',
+        'kind': 'SopsSecret',
+        'metadata': sops_metadata,
+        'spec': {
+            'secretTemplates': [secret_template]
+        }
+    }
+
+    return sops_secret
+
+
+  @staticmethod
+  def _load_yaml_documents(text: str) -> List[Dict[str, Any]]:
+    docs: List[Dict[str, Any]] = []
+    for d in yaml.safe_load_all(text):
+      if d is None:
+        continue
+      if not isinstance(d, dict):
+        raise ValueError("YAML document is not a mapping/object")
+      docs.append(d)
+    return docs
+
+  @staticmethod
+  def _sha256_hex(text: str) -> str:
+    h = hashlib.sha256()
+    h.update(text.encode("utf-8"))
+    return h.hexdigest()
+
   def _process_secrets(self):
     for secret in self.secretWorkItems:
       match secret.op:
         case SecretOperation.CREATE:
-          print("Create...")
+          enriched = self._resolve_vals(secret.source_path)
+          sha256 = self._sha256_hex(enriched)
+          documents = self._load_yaml_documents(enriched)
+          sopssecret_documents = [self._convert_secret_to_sopssecret_with_hash(document,sha256) for document in documents]
+          encrypted_sops = [self._sops_encrypt_document(document, self.environment.output_path / secret.target_path) for document in sopssecret_documents]
+          output_document = yaml.safe_dump_all(encrypted_sops)
+
+          target_file = self.environment.output_path / secret.target_path
+          target_file.parent.mkdir(parents=True, exist_ok=True)
+          if self.dry_run:
+            logging.debug(f"[DRY RUN] Would create secret: {secret.target_path}")
+          else:
+            with open(target_file, 'w') as f:
+              f.write(output_document)
+            os.chmod(target_file, 0o644)
+            logging.debug(f"Created secret: {secret.target_path}")
+
         case SecretOperation.DELETE:
-          print("Delete...")
+          self._cleanup_files({self.environment.output_path / secret.target_path})
+
         case SecretOperation.UPDATE:
-          print("Update...")
+          target_file_path = self.environment.output_path / secret.target_path
+
+          # Read existing target file to check if update is needed
+          with open(target_file_path, 'r') as f:
+            existing_content = f.read()
+          existing_docs = self._load_yaml_documents(existing_content)
+
+          # Compute hash of current source content
+          enriched = self._resolve_vals(secret.source_path)
+          sha256 = self._sha256_hex(enriched)
+
+          # Check if the plaintext has changed by comparing hashes
+          # The first document in a SopsSecret should have the annotation
+          existing_hash = None
+          if existing_docs and 'metadata' in existing_docs[0]:
+            existing_hash = existing_docs[0]['metadata'].get('annotations', {}).get(PLAINTEXT_SHA_ANNOTATION)
+
+          if existing_hash == sha256:
+            # No changes needed, skip update
+            logging.debug(f"Secret unchanged (hash match): {secret.target_path}")
+          else:
+            # Hash mismatch or missing, proceed with update
+            documents = self._load_yaml_documents(enriched)
+            sopssecret_documents = [self._convert_secret_to_sopssecret_with_hash(document, sha256) for document in documents]
+            encrypted_sops = [self._sops_encrypt_document(document, self.environment.output_path / secret.target_path) for document in sopssecret_documents]
+            output_document = yaml.safe_dump_all(encrypted_sops)
+
+            if self.dry_run:
+              logging.debug(f"[DRY RUN] Would update secret: {secret.target_path}")
+            else:
+              with open(target_file_path, 'w') as f:
+                f.write(output_document)
+              os.chmod(target_file_path, 0o644)
+              logging.debug(f"Updated secret: {secret.target_path}")
         case SecretOperation.NOOP:
           print("Noop")
           # TODO: Optionally verify encryption keys...
@@ -169,11 +364,13 @@ class EnvironmentManager:
     return files, directories
     pass
 
-  def _resource_is_secret(self, resource: Path) -> bool:
+  def _resource_is_secret(self, resource: Path, targetOnly: bool = False) -> bool:
     for secret in self.secretWorkItems:
       if secret.op == SecretOperation.NOOP:
         continue
-      if resource in [secret.source_path, secret.target_path]:
+      if resource == secret.source_path and not targetOnly:
+        return True
+      if resource == secret.target_path:
         return True
     return False
 
@@ -291,8 +488,8 @@ class EnvironmentManager:
 
 
     # Convert absolute paths to relative paths for comparison
-    src_files = {self._relative_to_source(f) for f in self.sourceFiles if not self._resource_is_secret(f)}
-    target_files = {self._relative_to_target(f) for f in self.targetFiles if not self._resource_is_secret(f)}
+    src_files = {i for i in [self._relative_to_source(f) for f in self.sourceFiles] if not self._resource_is_secret(i)}
+    target_files = {i for i in [self._relative_to_target(f) for f in self.targetFiles] if not self._resource_is_secret(i, True)}
     src_dirs = {self._relative_to_source(d) for d in self.sourceDirs}
     target_dirs = {self._relative_to_target(d) for d in self.targetDirs}
 
@@ -333,8 +530,6 @@ class EnvironmentManager:
       logging.info(f"{len(deleted_dirs)} director(ies) deleted")
     if unchanged_files:
       logging.info(f"{len(unchanged_files)} file(s) unchanged")
-
-
 
 
 def get_git_root() -> Optional[Path]:
@@ -442,7 +637,7 @@ def main() -> int:
     return 1
 
   for env, (src_path, metadata) in environments.items():
-    em = EnvironmentManager(src_path, metadata, dry_run=args.dry_run, skip_secrets=args.skip_secrets)
+    em = EnvironmentManager(src_path, metadata, git_root=git_root, dry_run=args.dry_run, skip_secrets=args.skip_secrets)
     em.update()
 
   return 0
