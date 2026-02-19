@@ -20,21 +20,6 @@ in
         applications.cilium = {
           namespace = "kube-system";
 
-          # Adoption-safe sync options
-          syncPolicy = {
-            autoSync = {
-              enable = true;
-              prune = true;
-              selfHeal = true;
-            };
-            syncOptions = {
-              serverSideApply = true;
-              applyOutOfSyncOnly = true;
-              # Namespace exists from kluctl deployment
-              createNamespace = false;
-            };
-          };
-
           annotations."argocd.argoproj.io/sync-wave" = "-1";
 
           compareOptions.serverSideDiff = true;
@@ -559,14 +544,5 @@ in
           # };
         };
       };
-    # Set resource exclusions in argocd
-    services.argocd.values.configs.cm."resource.exclusions" = ''
-      - apiGroups:
-        - cilium.io
-        kinds:
-        - CiliumIdentity
-        clusters:
-        - "*"
-    '';
   };
 }

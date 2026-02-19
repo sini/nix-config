@@ -2,16 +2,20 @@ apiVersion: v1
 data:
   agent-not-ready-taint-key: node.cilium.io/agent-not-ready
   auto-direct-node-routes: "false"
+  bgp-router-id-allocation-ip-pool: ""
+  bgp-router-id-allocation-mode: default
+  bgp-secrets-namespace: kube-system
   bpf-distributed-lru: "false"
   bpf-events-drop-enabled: "true"
   bpf-events-policy-verdict-enabled: "true"
   bpf-events-trace-enabled: "true"
   bpf-lb-acceleration: disabled
   bpf-lb-algorithm-annotation: "false"
-  bpf-lb-external-clusterip: "false"
+  bpf-lb-external-clusterip: "true"
   bpf-lb-map-max: "65536"
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
+  bpf-lb-sock-hostns-only: "true"
   bpf-lb-source-range-all-types: "false"
   bpf-map-dynamic-size-ratio: "0.0025"
   bpf-policy-map-max: "16384"
@@ -21,7 +25,7 @@ data:
   cilium-endpoint-gc-interval: 5m0s
   cluster-id: "2"
   cluster-name: dev
-  cluster-pool-ipv4-cidr: 10.0.0.0/8
+  cluster-pool-ipv4-cidr: 172.16.0.0/16
   cluster-pool-ipv4-mask-size: "24"
   clustermesh-cache-ttl: 0s
   clustermesh-enable-endpoint-sync: "false"
@@ -39,6 +43,9 @@ data:
   dnsproxy-socket-linger-timeout: "10"
   egress-gateway-reconciliation-trigger-interval: 1s
   enable-auto-protect-node-port-range: "true"
+  enable-bgp-control-plane: "true"
+  enable-bgp-control-plane-status-report: "true"
+  enable-bgp-legacy-origin-attribute: "false"
   enable-bpf-clock-probe: "false"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
@@ -46,7 +53,8 @@ data:
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
-  enable-hubble: "false"
+  enable-hubble: "true"
+  enable-hubble-open-metrics: "false"
   enable-ingress-controller: "true"
   enable-ingress-proxy-protocol: "false"
   enable-ingress-secrets-sync: "true"
@@ -66,7 +74,7 @@ data:
   enable-no-service-endpoints-routable: "true"
   enable-node-selector-labels: "false"
   enable-non-default-deny-policies: "true"
-  enable-policy: never
+  enable-policy: default
   enable-policy-secrets-sync: "true"
   enable-sctp: "false"
   enable-source-ip-verification: "true"
@@ -80,10 +88,20 @@ data:
   envoy-base-id: "0"
   envoy-config-retry-interval: 15s
   envoy-keep-cap-netbindservice: "false"
-  external-envoy-proxy: "false"
+  external-envoy-proxy: "true"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"
   http-stream-idle-timeout: "300"
+  hubble-disable-tls: "false"
+  hubble-listen-address: :4244
+  hubble-metrics: dns drop tcp flow port-distribution icmp http
+  hubble-metrics-server: :9965
+  hubble-metrics-server-enable-tls: "false"
+  hubble-network-policy-correlation-enabled: "true"
+  hubble-socket-path: /var/run/cilium/hubble.sock
+  hubble-tls-cert-file: /var/lib/cilium/tls/hubble/server.crt
+  hubble-tls-client-ca-files: /var/lib/cilium/tls/hubble/client-ca.crt
+  hubble-tls-key-file: /var/lib/cilium/tls/hubble/server.key
   identity-allocation-mode: crd
   identity-gc-interval: 15m0s
   identity-heartbeat-timeout: 30m0s
@@ -122,6 +140,7 @@ data:
   operator-api-serve-addr: 127.0.0.1:9234
   operator-prometheus-serve-addr: :9963
   packetization-layer-pmtud-mode: blackhole
+  policy-audit-mode: "false"
   policy-cidr-match-mode: ""
   policy-default-local-cluster: "true"
   policy-deny-response: none
@@ -138,7 +157,6 @@ data:
   proxy-max-concurrent-retries: "128"
   proxy-max-connection-duration-seconds: "0"
   proxy-max-requests-per-connection: "0"
-  proxy-prometheus-port: "9964"
   proxy-use-original-source-address: "true"
   proxy-xff-num-trusted-hops-egress: "0"
   proxy-xff-num-trusted-hops-ingress: "0"

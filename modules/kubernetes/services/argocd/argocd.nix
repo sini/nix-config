@@ -13,17 +13,9 @@
           createNamespace = true;
 
           # Adoption-safe sync options
-          syncPolicy = {
-            autoSync = {
-              enable = true;
-              prune = true;
-              selfHeal = true;
-            };
-            syncOptions = {
-              serverSideApply = true;
-              applyOutOfSyncOnly = true;
-              createNamespace = false;
-            };
+          syncPolicy.syncOptions = {
+            clientSideApplyMigration = false;
+            serverSideApply = true;
           };
 
           # Sync wave: ArgoCD at -1 (infrastructure component)
