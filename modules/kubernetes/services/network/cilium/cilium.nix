@@ -59,14 +59,13 @@ in
               k8sServiceHost = findClusterMaster environment;
               k8sServicePort = 6443;
 
+              # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
 
-              socketLB.enabled = false;
-              envoy.enabled = false;
-              gatewayAPI.enabled = false;
               rollOutCiliumPods = true;
               l2announcements.enabled = true;
               externalIPs.enabled = true;
+
               ingressController = {
                 enabled = true;
                 default = true;
@@ -78,121 +77,88 @@ in
                   };
                 };
               };
+
               k8sClientRateLimit = {
                 qps = 50;
                 burst = 200;
               };
+
               operator = {
                 enabled = true;
                 rollOutPods = true;
               };
+
+              # Enable Hubble UI (Observability)
               hubble = {
-                enabled = false;
-                relay.enabled = false;
-                ui.enabled = false;
+                enabled = true;
+                relay.enabled = true;
+                ui.enabled = true;
+                metrics.enabled = [
+                  "dns"
+                  "drop"
+                  "tcp"
+                  "flow"
+                  "port-distribution"
+                  "icmp"
+                  "http"
+                ];
+                # This should be used so the rendered manifest
+                # doesn't contain TLS secrets.
+                tls.auto.method = "cronJob";
+                # tls.auto = {
+                #   enabled = true;
+                #   method = "certmanager";
+                #   certValidityDuration = 90;
+                #   certManagerIssuerRef = {
+                #     group = "cert-manager.io";
+                #     kind = "ClusterIssuer";
+                #     name = "cloudflare-issuer";
+                #   };
+                # };
               };
-              nodePort.enabled = true;
-              # # Service handling / kube-proxy replacement
-              # kubeProxyReplacement = true;
-              # socketLB.hostNamespaceOnly = true;
-              # # localRedirectPolicies.enabled = true;
-              # # l2NeighDiscovery.enabled = false;
 
-              # # hostPort.enabled = true;
-              # # nodePort.enabled = true;
+              # Needed for the tailscale proxy setup to work.
+              socketLB.hostNamespaceOnly = true;
+              bpf.lbExternalClusterIP = true;
 
-              # # Datapath & BPF knobs
-              # # bpf.masquerade = false;
-              # enableIPv4Masquerade = true;
-              # bpf = {
-              #   masquerade = true;
-              #   lbExternalClusterIP = true;
-              #   hostLegacyRouting = true;
-              # };
-
-              # # CNI chaining
-              # # cni.chainingMode = "portmap";
-
-              # # IPAM & Pod CIDRs
-              # # ipam = {
-              # #   mode = "cluster-pool";
-              # #   operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
-              # # };
+              # IPAM & Pod CIDRs
+              ipam = {
+                mode = "cluster-pool";
+                operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
+              };
               # ipam.mode = "kubernetes";
 
-              # # Masquerading (SNAT) behavior
-              # enableIPv4 = true;
-              # ipv6.enabled = false;
-
-              # # nonMasqueradeCIDRs = "{10.0.0.0/8,172.16.0.0/12,192.168.0.0/16}";
-              # # masqLinkLocal = false;
-
-              # # Device exposure to Cilium
-              # # With tunneling enabled, it is safe to manage both devices:
-              # # - 'dummy0': Used for sending/receiving VXLAN traffic over BGP fabric
-              # # - 'enp2s0': Used for BPF program handling ingress for ExternalIP services
-              # # devices = [
-              # #   "dummy0"
-              # #   "enp2s0"
-              # #   "enp199s0f5"
-              # #   "enp199s0f6"
-              # # ];
-
-              # # BGP control-plane (for FRR peering)
-              # # bgpControlPlane.enabled = true;
+              # BGP control-plane (for FRR peering)
+              bgpControlPlane.enabled = true;
 
               # # externalIPs.enabled = true;
 
-              # # loadBalancer.mode = "snat";
+              # gatewayAPI.enabled = true;
+              # gatewayAPI.service = {
+              #   enabled = true;
+              #   type = "LoadBalancer";
+              #   ports = [
+              #     {
+              #       name = "http";
+              #       port = 8080;
+              #     }
+              #     {
+              #       name = "https";
+              #       port = 8443;
+              #     }
+              #   ];
+              # };
 
-              # # Hubble (observability)
-              # # hubble = {
-              # #   enabled = true;
-              # #   relay.enabled = true;
-              # #   ui.enabled = true;
-              # #   metrics.enabled = [
-              # #     "dns"
-              # #     "drop"
-              # #     "tcp"
-              # #     "flow"
-              # #     "port-distribution"
-              # #     "icmp"
-              # #     "http"
-              # #   ];
-              # # };
+              # policyEnforcementMode = "never";
+              policyEnforcementMode = "default";
+              policyAuditMode = false;
 
-              # # gatewayAPI.enabled = true;
-              # # gatewayAPI.service = {
-              # #   enabled = true;
-              # #   type = "LoadBalancer";
-              # #   ports = [
-              # #     {
-              # #       name = "http";
-              # #       port = 8080;
-              # #     }
-              # #     {
-              # #       name = "https";
-              # #       port = 8443;
-              # #     }
-              # #   ];
-              # # };
-
-              # # Operator & rollout
-              # operator.replicas = 2;
-              # rollOutCiliumPods = true;
-              # operator.rollOutPods = true;
-
-              policyEnforcementMode = "never";
-              # policyEnforcementMode = "default";
-
-              # policyAuditMode = false;
-
-              # # encryption = {
-              # # enabled = true;
-              # # type = "wireguard";
-              # # };
-              # # Logging
-              # # debug.enabled = true;
+              # encryption = {
+              #   enabled = true;
+              #   type = "wireguard";
+              # };
+              # Logging
+              # debug.enabled = true;
             };
           };
 
@@ -593,5 +559,14 @@ in
           # };
         };
       };
+    # Set resource exclusions in argocd
+    services.argocd.values.configs.cm."resource.exclusions" = ''
+      - apiGroups:
+        - cilium.io
+        kinds:
+        - CiliumIdentity
+        clusters:
+        - "*"
+    '';
   };
 }
