@@ -9,7 +9,7 @@ metadata:
   name: argocd-server
   namespace: argocd
 spec:
-  replicas: 2
+  replicas: 1
   revisionHistoryLimit: 3
   selector:
     matchLabels:
@@ -18,8 +18,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: 54e1c2aeacb021ae1ce83d39cafb5d0cde5df0bb46a8c12f8385cae6e66e31d6
-        checksum/cmd-params: 719b001126dc4b6a948a5cba3e74b1b0ebbe134f0e6b11d19351115188501572
+        checksum/cm: 12106dc9ebb30a5f3e19e621103167c1f9279fb75b3f12db2612f614830bf407
+        checksum/cmd-params: c09e695848ce0f91c339ee9cb82817b17db5f5364887b64bf86c3e0ac6266e1b
       labels:
         app.kubernetes.io/component: server
         app.kubernetes.io/instance: argocd
@@ -350,7 +350,7 @@ spec:
                   key: server.sync.replace.allowed
                   name: argocd-cmd-params-cm
                   optional: true
-          image: quay.io/argoproj/argocd:v3.3.0
+          image: quay.io/argoproj/argocd:v3.3.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -405,10 +405,6 @@ spec:
               name: tmp
             - mountPath: /home/argocd/params
               name: argocd-cmd-params-cm
-      dnsConfig:
-        options:
-          - name: ndots
-            value: "1"
       dnsPolicy: ClusterFirst
       nodeSelector:
         kubernetes.io/os: linux
