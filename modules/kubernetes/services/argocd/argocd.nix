@@ -124,6 +124,7 @@
             secrets.argocd-secret.stringData = {
               "admin.password" = secrets.for "argocd-admin-password";
               "admin.passwordMtime" = secrets.for "argocd-admin-mtime";
+              "server.secretkey" = secrets.for "argocd-secretkey";
             };
 
             # Allow ingress traffic from traefik to
