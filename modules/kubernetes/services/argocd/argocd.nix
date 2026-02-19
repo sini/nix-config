@@ -46,7 +46,7 @@
 
               # API Server - insecure mode for kubectl port-forward
               server = {
-                replicas = 2;
+                replicas = 1;
                 # Disable TLS on server (use port-forward for local dev)
                 insecure = true;
                 # DNS config for proper resolution
@@ -68,6 +68,9 @@
                     value = "1";
                   }
                 ];
+                readinessProbe.timeoutSeconds = 60;
+                livenessProbe.timeoutSeconds = 60;
+
               };
 
               # Redis (for caching)
