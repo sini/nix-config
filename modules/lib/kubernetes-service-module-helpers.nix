@@ -41,6 +41,42 @@ let
           '';
         };
 
+        crds = mkOption {
+          type = types.nullOr types.raw;
+          default = null;
+          description = ''
+            CRD generator configuration function for this service.
+
+            Should be a function that receives perSystem module args ({ pkgs, lib, inputs, system, ... })
+            and returns an attribute set with CRD configuration.
+
+            Two patterns are supported:
+            - fromCRD: Return { src, crds } to manually specify CRD files
+            - fromChartCRD: Return { chart } or { chartAttrs } to auto-discover CRDs from a helm chart
+
+            Example (fromCRD):
+              crds = { pkgs, lib, ... }: {
+                src = pkgs.fetchFromGitHub { ... };
+                crds = [ "path/to/crd.yaml" ];
+              };
+
+            Example (fromChartCRD):
+              crds = { inputs, system, ... }: {
+                chart = inputs.nixhelm.chartsDerivations.''${system}.traefik.traefik;
+              };
+
+            Available options in the returned attrset:
+            - src: Source package with CRD YAML files (for fromCRD)
+            - chart: Helm chart derivation (for fromChartCRD)
+            - chartAttrs: Attributes for downloadHelmChart (for fromChartCRD)
+            - values: Helm values for chart rendering (for fromChartCRD)
+            - crds: List of CRD file paths (fromCRD) or kind names (fromChartCRD)
+            - namePrefix: Prefix for generated type names
+            - attrNameOverrides: Custom attribute name mappings
+            - skipCoerceToList: Control list coercion behavior
+          '';
+        };
+
         nixidy = mkDeferredModuleOpt "A nixidy module for this Kubernetes service";
       };
     };
