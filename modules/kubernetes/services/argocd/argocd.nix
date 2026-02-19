@@ -38,28 +38,8 @@
                 revisionHistoryLimit = 3;
               };
 
-              # Application Controller
-              controller = {
-                replicas = 1;
-              };
-
-              # API Server - insecure mode for kubectl port-forward
-              server = {
-                replicas = 2;
-                # Disable TLS on server (use port-forward for local dev)
-                insecure = true;
-                # DNS config for proper resolution
-                dnsConfig.options = [
-                  {
-                    name = "ndots";
-                    value = "1";
-                  }
-                ];
-              };
-
               # Repository Server
               repoServer = {
-                replicas = 2;
                 # DNS config for proper resolution
                 dnsConfig.options = [
                   {
@@ -82,16 +62,6 @@
               # its ServiceAccount dependency. We provide the redis secret ourselves below.
               redisSecretInit.enabled = false;
 
-              # ApplicationSet Controller
-              applicationSet = {
-                replicas = 2;
-              };
-
-              # Notifications Controller
-              notifications = {
-                enabled = false; # Disable for local dev
-              };
-
               # Dex (OIDC) - disable for local dev
               dex.enabled = false;
 
@@ -112,7 +82,6 @@
                       - "*"
                 '';
               };
-              global.networkPolicy.create = true;
             };
           };
           resources = {
