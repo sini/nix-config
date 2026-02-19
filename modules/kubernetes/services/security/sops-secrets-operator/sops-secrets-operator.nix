@@ -46,7 +46,7 @@
                 extraEnv = [
                   {
                     name = "SOPS_AGE_KEY_FILE";
-                    value = "/var/lib/sops/age/key.txt";
+                    value = "/var/lib/sops/age/key";
                   }
                 ];
               };
