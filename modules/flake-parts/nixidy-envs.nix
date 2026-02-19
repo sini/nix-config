@@ -20,7 +20,13 @@ in
           env: environment:
           let
             # Collect nixidy modules from services enabled in environment
-            enabledServices = environment.kubernetes.services.enabled or [ ];
+            defaultServices = [
+              "argocd"
+              "cert-manager"
+              "cilium"
+              "sops-secrets-operator"
+            ];
+            enabledServices = lib.unique (defaultServices ++ (environment.kubernetes.services.enabled or [ ]));
             serviceModules = lib.map (serviceName: config.flake.kubernetes.services.${serviceName}.nixidy) (
               lib.filter (serviceName: config.flake.kubernetes.services ? ${serviceName}) enabledServices
             );
