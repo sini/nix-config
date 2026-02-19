@@ -54,7 +54,6 @@ data:
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
   enable-hubble: "true"
-  enable-hubble-open-metrics: "false"
   enable-ingress-controller: "true"
   enable-ingress-proxy-protocol: "false"
   enable-ingress-secrets-sync: "true"
@@ -94,9 +93,6 @@ data:
   http-stream-idle-timeout: "300"
   hubble-disable-tls: "false"
   hubble-listen-address: :4244
-  hubble-metrics: dns drop tcp flow port-distribution icmp http
-  hubble-metrics-server: :9965
-  hubble-metrics-server-enable-tls: "false"
   hubble-network-policy-correlation-enabled: "true"
   hubble-socket-path: /var/run/cilium/hubble.sock
   hubble-tls-cert-file: /var/lib/cilium/tls/hubble/server.crt

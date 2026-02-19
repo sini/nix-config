@@ -108,28 +108,32 @@ in
                 enabled = true;
                 relay.enabled = true;
                 ui.enabled = true;
-                metrics.enabled = [
-                  "dns"
-                  "drop"
-                  "tcp"
-                  "flow"
-                  "port-distribution"
-                  "icmp"
-                  "http"
-                ];
+                peerService.clusterDomain = "mesh.${environment.name}.${environment.domain}";
+                # metrics.enabled = [
+                #   "dns"
+                #   "drop"
+                #   "tcp"
+                #   "flow"
+                #   "port-distribution"
+                #   "icmp"
+                #   "http"
+                # ];
                 # This should be used so the rendered manifest
                 # doesn't contain TLS secrets.
-                tls.auto.method = "cronJob";
-                # tls.auto = {
-                #   enabled = true;
-                #   method = "certmanager";
-                #   certValidityDuration = 90;
-                #   certManagerIssuerRef = {
-                #     group = "cert-manager.io";
-                #     kind = "ClusterIssuer";
-                #     name = "cloudflare-issuer";
-                #   };
-                # };
+                # tls.auto.method = "cronJob";
+                tls = {
+                  auto = {
+                    enabled = true;
+                    method = "certmanager";
+                    certValidityDuration = 90;
+                    certManagerIssuerRef = {
+                      group = "cert-manager.io";
+                      kind = "ClusterIssuer";
+                      name = "cloudflare-issuer";
+                    };
+                  };
+                  server.extraDnsNames = [ "*.mesh.${environment.name}.${environment.domain}" ];
+                };
               };
 
               # Needed for the tailscale proxy setup to work.
