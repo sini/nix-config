@@ -1,33 +1,10 @@
 {
+  self,
   rootPath,
-  config,
   ...
 }:
 let
-  # Get hosts from the flake config
-  hosts = config.flake.hosts;
-  # Helper function to find master nodes in the same cluster and environment
-  findClusterMaster =
-    currentHostEnvironment: hosts: lib:
-    let
-      masterHosts =
-        hosts
-        |> lib.attrsets.filterAttrs (
-          hostname: hostConfig:
-          (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
-          && (hostConfig.environment == currentHostEnvironment)
-        )
-        |> lib.attrsets.filterAttrs (
-          hostname: hostConfig: builtins.elem "kubernetes-master" (hostConfig.roles or [ ])
-        );
-    in
-    if lib.length (lib.attrNames masterHosts) > 0 then
-      let
-        masterHost = lib.head (lib.attrValues masterHosts);
-      in
-      masterHost.tags.kubernetes-internal-ip or (builtins.head masterHost.ipv4)
-    else
-      null;
+  inherit (self.lib.kubernetes-utils) findClusterMaster;
 in
 {
   flake.features.kubernetes = {
@@ -42,14 +19,12 @@ in
         ...
       }:
       let
-        currentHostEnvironment = hostOptions.environment;
         isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
-        clusterInit = isMaster;
         internalIP = hostOptions.tags.kubernetes-internal-ip or (builtins.head hostOptions.ipv4);
         externalIP = builtins.head hostOptions.ipv4;
 
         # Find master node for agent connection (using hosts from outer scope)
-        masterIP = findClusterMaster currentHostEnvironment hosts lib;
+        masterIP = findClusterMaster environment;
       in
       {
         age.secrets.kubernetes-cluster-token = {
@@ -171,6 +146,7 @@ in
                 "--node-ip=${internalIP}"
                 "--node-external-ip=${internalIP}"
                 "--node-name=${config.networking.hostName}"
+                # TODO: If longhorn disk enabled...
                 "--node-label=node.longhorn.io/create-default-disk=true"
                 # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
                 "--resolv-conf=/run/systemd/resolve/resolv.conf"
@@ -220,13 +196,12 @@ in
                 "--kube-apiserver-arg=oidc-signing-algs=ES256"
                 "--kube-apiserver-arg=oidc-username-claim=email"
                 "--kube-apiserver-arg=oidc-groups-claim=groups"
-                ## "--kube-apiserver-arg=oidc-client-secret=\${OIDC_CLIENT_SECRET}"
               ]
               ++ (lib.map (ip: "--tls-san=${ip}") environment.kubernetes.tlsSanIps);
               serverFlags = builtins.concatStringsSep " " (generalFlagList ++ serverFlagList);
             in
             {
-              inherit clusterInit;
+              clusterInit = isMaster;
               enable = true;
               role = "server";
               tokenFile = config.age.secrets.kubernetes-cluster-token.path;
@@ -279,13 +254,8 @@ in
                 exit 0
               fi
 
-              echo "Adding helm repo for cilium..."
-
-              ${lib.getExe pkgs.kubernetes-helm} --kubeconfig $KUBECONFIG repo add cilium https://helm.cilium.io/
-
               echo "Installing cilium..."
               ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                -n kube-system \
                 --server-side \
                 --force-conflicts \
                 -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cilium/"}
@@ -294,10 +264,16 @@ in
           wantedBy = [ "multi-user.target" ];
         };
 
-        systemd.services.k3s-install-sops-age-key = lib.mkIf isMaster {
-          description = "Install Cilium for bootstrapping";
-          after = [ "k3s.service" ];
-          requires = [ "k3s.service" ];
+        systemd.services.k3s-install-sops-secrets-operator = lib.mkIf isMaster {
+          description = "Install SOPS Secrets Operator for bootstrapping";
+          after = [
+            "k3s.service"
+            "k3s-bootstrap-cilium.service"
+          ];
+          requires = [
+            "k3s.service"
+            "k3s-bootstrap-cilium.service"
+          ];
           path = with pkgs; [
             kubectl
           ];
@@ -317,15 +293,85 @@ in
                 sleep 5
               done
 
+              # Create namespace if it doesn't exist
+              if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace sops-secrets-operator >/dev/null 2>&1; then
+                echo "Creating sops-secrets-operator namespace..."
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace sops-secrets-operator
+              fi
+
               # Check if secret is already installed
               if ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG --namespace sops-secrets-operator get secret sops-age-key-file >/dev/null 2>&1; then
                 echo "SOPS secret age key is already installed."
-                exit 0
+              else
+                echo "Creating SOPS age key secret..."
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
+                  --namespace sops-secrets-operator \
+                  --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
               fi
 
-              ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
-                --namespace sops-secrets-operator \
-                --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
+              # Install sops-secrets-operator if deployment doesn't exist
+              if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n sops-secrets-operator sops-sops-secrets-operator >/dev/null 2>&1; then
+                echo "Installing sops-secrets-operator..."
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                  --server-side \
+                  --force-conflicts \
+                  -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/sops-secrets-operator/"}
+              fi
+            '';
+          };
+          wantedBy = [ "multi-user.target" ];
+        };
+
+        systemd.services.k3s-install-argocd = lib.mkIf isMaster {
+          description = "Install ArgoCD for bootstrapping";
+          after = [
+            "k3s.service"
+            "k3s-bootstrap-cilium.service"
+            "k3s-install-sops-secrets-operator.service"
+          ];
+          requires = [
+            "k3s.service"
+            "k3s-bootstrap-cilium.service"
+            "k3s-install-sops-secrets-operator.service"
+          ];
+          path = with pkgs; [
+            kubectl
+          ];
+          environment = {
+            KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+          };
+          serviceConfig = {
+            Type = "oneshot";
+            ExecStart = pkgs.writeShellScript "k3s-install-argocd" ''
+              set -e
+              echo "Starting ArgoCD installation..."
+
+              # Wait for k3s to be fully up
+              echo "Waiting for k3s to be ready..."
+              until kubectl get nodes; do
+                echo "Waiting for k3s API server to be available..."
+                sleep 5
+              done
+
+              # Create namespace if it doesn't exist
+              if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace argocd >/dev/null 2>&1; then
+                echo "Creating argocd namespace..."
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace argocd
+              fi
+
+              # Install ArgoCD if deployment doesn't exist
+              if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n argocd argocd-server >/dev/null 2>&1; then
+                echo "Installing ArgoCD..."
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                  --server-side \
+                  --force-conflicts \
+                  -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/argocd/"}
+                echo "Installing App bootstrap.yaml"
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                  -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/bootstrap.yaml"}
+              else
+                echo "ArgoCD is already installed."
+              fi
             '';
           };
           wantedBy = [ "multi-user.target" ];
