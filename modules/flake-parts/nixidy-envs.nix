@@ -1,8 +1,8 @@
 {
   config,
   inputs,
-  lib,
   withSystem,
+  lib,
   ...
 }:
 let
@@ -30,6 +30,27 @@ in
             serviceModules = lib.map (serviceName: config.flake.kubernetes.services.${serviceName}.nixidy) (
               lib.filter (serviceName: config.flake.kubernetes.services ? ${serviceName}) enabledServices
             );
+
+            # Extract CRD files for enabled services
+            serviceCrdFiles = lib.mapAttrs (
+              serviceName: service:
+              let
+                crdConfig =
+                  if service.crds != null then
+                    service.crds {
+                      inherit pkgs lib system;
+                      inherit (inputs) inputs';
+                      inherit inputs;
+                    }
+                  else
+                    null;
+              in
+              if crdConfig != null && crdConfig.src or null != null && crdConfig.crds or [ ] != [ ] then
+                # Map CRD file paths to actual file references
+                map (crdPath: crdConfig.src + "/${crdPath}") crdConfig.crds
+              else
+                [ ]
+            ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
           in
           inputs.nixidy.lib.mkEnv {
             inherit pkgs;
@@ -38,6 +59,8 @@ in
               inherit environment;
               hosts = config.flake.hosts;
               secrets = mkSecretHelpers environment;
+              # Expose CRD files for services to use with yamls resources
+              crdFiles = serviceCrdFiles;
             };
             modules = [
               (
@@ -134,6 +157,7 @@ in
     {
       inputs',
       pkgs,
+      lib,
       ...
     }@sharedConfig:
     {
@@ -148,11 +172,14 @@ in
         {
           package =
             let
+              inherit (inputs'.nixidy.packages.generators) fromCRD fromChartCRD;
+
+              # Legacy: Import CRDs from kubernetes/crds/ directory
               gFiles = builtins.attrNames (builtins.readDir ../../kubernetes/crds);
               generatorFiles = builtins.filter (
                 file: builtins.match ".*\\.nix" file != null && file != "default.nix"
               ) gFiles;
-              generators = builtins.listToAttrs (
+              legacyGenerators = builtins.listToAttrs (
                 map (file: {
                   name = builtins.replaceStrings [ ".nix" ] [ "" ] file;
                   value = import (../../kubernetes/crds + "/${file}") (
@@ -163,6 +190,66 @@ in
                   );
                 }) generatorFiles
               );
+
+              # New: Generate CRDs from service module definitions
+              servicesWithCrds = lib.filterAttrs (
+                _name: service: service.crds != null
+              ) config.flake.kubernetes.services;
+
+              serviceCrdGenerators = lib.mapAttrs (
+                name: service:
+                let
+                  # Call the CRD function with perSystem args
+                  crdConfig = service.crds (
+                    sharedConfig
+                    // {
+                      inherit inputs;
+                    }
+                  );
+                  # Determine which generator to use based on configuration
+                  useChartGenerator = crdConfig.chart or null != null || crdConfig.chartAttrs or { } != { };
+                  useSrcGenerator = crdConfig.src or null != null;
+                in
+                if useChartGenerator then
+                  fromChartCRD (
+                    {
+                      inherit name;
+                    }
+                    // (lib.optionalAttrs (crdConfig.chart or null != null) { chart = crdConfig.chart; })
+                    // (lib.optionalAttrs (crdConfig.chartAttrs or { } != { }) {
+                      chartAttrs = crdConfig.chartAttrs;
+                    })
+                    // (lib.optionalAttrs (crdConfig.values or { } != { }) { values = crdConfig.values; })
+                    // (lib.optionalAttrs (crdConfig.crds or [ ] != [ ]) { crds = crdConfig.crds; })
+                    // (lib.optionalAttrs (crdConfig.namePrefix or "" != "") { namePrefix = crdConfig.namePrefix; })
+                    // (lib.optionalAttrs (crdConfig.attrNameOverrides or { } != { }) {
+                      attrNameOverrides = crdConfig.attrNameOverrides;
+                    })
+                    // (lib.optionalAttrs (crdConfig.skipCoerceToList or { } != { }) {
+                      skipCoerceToList = crdConfig.skipCoerceToList;
+                    })
+                  )
+                else if useSrcGenerator then
+                  fromCRD (
+                    {
+                      inherit name;
+                      src = crdConfig.src;
+                      crds = crdConfig.crds;
+                    }
+                    // (lib.optionalAttrs (crdConfig.namePrefix or "" != "") { namePrefix = crdConfig.namePrefix; })
+                    // (lib.optionalAttrs (crdConfig.attrNameOverrides or { } != { }) {
+                      attrNameOverrides = crdConfig.attrNameOverrides;
+                    })
+                    // (lib.optionalAttrs (crdConfig.skipCoerceToList or { } != { }) {
+                      skipCoerceToList = crdConfig.skipCoerceToList;
+                    })
+                  )
+                else
+                  throw "Service '${name}' has CRDs defined but neither 'src' nor 'chart'/'chartAttrs' are set"
+              ) servicesWithCrds;
+
+              # Combine legacy and new generators (new ones override legacy)
+              generators = legacyGenerators // serviceCrdGenerators;
             in
             pkgs.writeShellScriptBin "generate-crds" ''
               set -eo pipefail

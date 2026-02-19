@@ -4,12 +4,38 @@ let
 in
 {
   flake.kubernetes.services.cilium = {
+    crds =
+      { pkgs, lib, ... }:
+      {
+        # nix run nixpkgs#nix-prefetch-github -- cilium cilium --rev v1.19.1
+        # NOTE: Remember to keep pkgs/by-name/cni-plugin-cilium in sync
+        src = pkgs.fetchFromGitHub {
+          owner = "cilium";
+          repo = "cilium";
+          rev = "v1.19.1";
+          hash = "sha256-wswY4u2Z7Z8hvGVnLONxSD1Mu1RV1AglC4ijUHsCCW4=";
+        };
+        crds =
+          (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
+            "CiliumBGPPeerConfigs"
+            "CiliumBGPClusterConfigs"
+            "CiliumBGPAdvertisements"
+            "CiliumBGPNodeConfigOverrides"
+            "CiliumNetworkPolicies"
+            "CiliumLoadBalancerIPPools"
+            "CiliumClusterWideNetworkPolicies"
+          ])
+          ++ (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2alpha1/${lib.toLower crd}.yaml") [
+            "CiliumL2AnnouncementPolicies"
+          ]);
+      };
 
     nixidy =
       {
         config,
         charts,
         environment,
+        crdFiles,
         ...
       }:
       let
@@ -24,8 +50,12 @@ in
 
           compareOptions.serverSideDiff = true;
 
+          # Include the CRD resource files...
+          yamls = map builtins.readFile crdFiles.cilium;
+
           helm.releases.cilium = {
             chart = charts.cilium.cilium;
+            includeCRDs = true;
 
             values = {
               namespaceOverride = "kube-system";

@@ -1,7 +1,13 @@
 { lib, ... }:
-
 {
   flake.kubernetes.services.sops-secrets-operator = {
+    crds =
+      { inputs, system, ... }:
+      {
+        src = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
+        crds = [ "crds/isindir.github.com_sopssecrets.yaml" ];
+      };
+
     # Option declarations for environment-level configuration
     options = {
       replicaCount = lib.mkOption {
