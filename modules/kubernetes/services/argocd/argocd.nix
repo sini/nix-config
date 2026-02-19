@@ -10,6 +10,8 @@
         applications.argocd = {
           namespace = "argocd";
 
+          createNamespace = true;
+
           # Adoption-safe sync options
           syncPolicy = {
             autoSync = {
@@ -20,7 +22,6 @@
             syncOptions = {
               serverSideApply = true;
               applyOutOfSyncOnly = true;
-              # Namespace exists from kluctl deployment
               createNamespace = false;
             };
           };
@@ -38,8 +39,28 @@
                 revisionHistoryLimit = 3;
               };
 
+              # Application Controller
+              controller = {
+                replicas = 1;
+              };
+
+              # API Server - insecure mode for kubectl port-forward
+              server = {
+                replicas = 2;
+                # Disable TLS on server (use port-forward for local dev)
+                insecure = true;
+                # DNS config for proper resolution
+                dnsConfig.options = [
+                  {
+                    name = "ndots";
+                    value = "1";
+                  }
+                ];
+              };
+
               # Repository Server
               repoServer = {
+                replicas = 1;
                 # DNS config for proper resolution
                 dnsConfig.options = [
                   {
@@ -62,6 +83,16 @@
               # its ServiceAccount dependency. We provide the redis secret ourselves below.
               redisSecretInit.enabled = false;
 
+              # ApplicationSet Controller
+              applicationSet = {
+                replicas = 1;
+              };
+
+              # Notifications Controller
+              notifications = {
+                enabled = false; # Disable for local dev
+              };
+
               # Dex (OIDC) - disable for local dev
               dex.enabled = false;
 
@@ -82,6 +113,7 @@
                       - "*"
                 '';
               };
+              global.networkPolicy.create = true;
             };
           };
           resources = {
@@ -187,6 +219,19 @@
                 ];
               };
             };
+
+            # ciliumClusterwideNetworkPolicies = {
+            #   # Allow all cilium endpoints to talk egress to each other
+            #   allow-internal-egress.spec = {
+            #     description = "Policy to allow all Cilium managed endpoint to talk to all other cilium managed endpoints on egress";
+            #     endpointSelector.matchLabels."app.kubernetes.io/part-of" = "argocd";
+            #     ingress = [
+            #       {
+            #         fromEndpoints = [ { } ];
+            #       }
+            #     ];
+            #   };
+            # };
           };
 
           # resources = {
