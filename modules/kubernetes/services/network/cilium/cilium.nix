@@ -182,8 +182,8 @@ in
               # rollOutCiliumPods = true;
               # operator.rollOutPods = true;
 
-              policyEnforcementMode = "never";
-              # policyEnforcementMode = "default";
+              # policyEnforcementMode = "never";
+              policyEnforcementMode = "default";
 
               # policyAuditMode = false;
 
@@ -214,6 +214,58 @@ in
                 externalIPs = true;
                 loadBalancerIPs = true;
               };
+            };
+
+            ciliumClusterwideNetworkPolicies = {
+              # Allow all cilium endpoints to talk egress to each other
+              allow-internal-egress.spec = {
+                description = "Policy to allow all Cilium managed endpoint to talk to all other cilium managed endpoints on egress";
+                endpointSelector = { };
+                egress = [
+                  {
+                    toEndpoints = [ { } ];
+                  }
+                ];
+              };
+
+              # Allow all health checks
+              cilium-health-checks.spec = {
+                endpointSelector.matchLabels."reserved:health" = "";
+                ingress = [
+                  {
+                    fromEntities = [ "remote-node" ];
+                  }
+                ];
+                egress = [
+                  {
+                    toEntities = [ "remote-node" ];
+                  }
+                ];
+              };
+
+              allow-kube-dns-cluster-ingress.spec = {
+                description = "Policy for ingress allow to kube-dns from all Cilium managed endpoints in the cluster.";
+                endpointSelector.matchLabels = {
+                  "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                  "k8s-app" = "kube-dns";
+                };
+                ingress = [
+                  {
+                    fromEndpoints = [ { } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "53";
+                            protocol = "UDP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
             };
           };
 
