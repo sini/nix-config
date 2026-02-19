@@ -57,6 +57,26 @@
                 ];
               };
             };
+            resources.ciliumNetworkPolicies = {
+              allow-kube-apiserver-egress.spec = {
+                endpointSelector.matchLabels."app.kubernetes.io/instance" = "sops";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
           };
         };
       };
