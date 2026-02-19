@@ -34,21 +34,11 @@
                 namespaced = false;
 
                 # We have our key managed by agenix in our modules/services/k3s/k3s.nix on all of our nodes
-                extraVolumes = [
+                secretsAsFiles = [
                   {
-                    name = "sops-age";
-                    hostPath = {
-                      path = "/var/lib/sops/age";
-                      type = "Directory";
-                    };
-                  }
-                ];
-
-                extraVolumeMounts = [
-                  {
-                    name = "sops-age";
+                    name = "keys";
                     mountPath = "/var/lib/sops/age";
-                    readOnly = true;
+                    secretName = "sops-age-key-file";
                   }
                 ];
 
