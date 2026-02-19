@@ -19,7 +19,7 @@ writeShellApplication {
     colmena exec --on axon-01,axon-02,axon-03 -- 'KUBELET_PATH=$(mount | grep kubelet | cut -d" " -f3) ''${KUBELET_PATH:+umount $KUBELET_PATH}'
     colmena exec --on axon-01,axon-02,axon-03 -- systemctl start containerd
     colmena exec --on axon-01,axon-02,axon-03 -- systemctl stop containerd
-    colmena exec --on axon-01,axon-02,axon-03 -- rm -rf /etc/rancher/ /var/lib/rancher/ /var/lib/containerd/ /var/lib/kubelet/ /var/lib/cni/ /run/k3s/ /run/containerd/ /run/cni/ /opt/cni/ /opt/containerd/
+    colmena exec --on axon-01,axon-02,axon-03 -- rm -rf /persist/var/lib/rancher /persist/var/lib/kubelet /persist/etc/rancher /persist/var/lib/cni /persist/var/lib/containers /persist/var/lib/containerd
     echo "Applying changes to axon-01..."
     colmena apply --on axon-01
     scp sini@axon-01:/etc/rancher/k3s/k3s.yaml "''${HOME}/.config/kube/config"
