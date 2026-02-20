@@ -6,6 +6,8 @@ writeShellApplication {
   name = "nix-flake-build";
   meta.description = "Build a host configuration";
 
+  excludeShellChecks = [ "SC2068" ];
+
   runtimeInputs = [ nix-output-monitor ];
   text = ''
     [[ "$#" -ge 1 ]] \
@@ -16,7 +18,13 @@ writeShellApplication {
 
     for arg in "$@"; do
       if [[ "$arg" == -* ]]; then
-        OPTIONS+=("$arg")
+        # Split arguments containing = into separate option and value
+        if [[ "$arg" == *=* ]]; then
+          IFS='=' read -r opt val <<< "$arg"
+          OPTIONS+=("$opt" "$val")
+        else
+          OPTIONS+=("$arg")
+        fi
       else
         HOST_NAMES+=("$arg")
       fi
@@ -32,6 +40,6 @@ writeShellApplication {
       HOSTS+=(".#nixosConfigurations.$h.config.system.build.toplevel")
     done
 
-    nom build --no-link --print-out-paths --show-trace "''${OPTIONS[@]}" "''${HOSTS[@]}"
+    nom build --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}"
   '';
 }
