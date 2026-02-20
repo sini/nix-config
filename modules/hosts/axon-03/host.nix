@@ -9,6 +9,7 @@
       "unlock"
       "kubernetes"
       "bgp-spoke"
+      "nix-builder"
       # "vault"
     ];
     features = [
