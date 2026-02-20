@@ -317,7 +317,7 @@ in
               # Allow hubble-generate-certs job to talk to kube-apiserver
               allow-hubble-generate-certs-apiserver-egress.spec = {
                 description = "Allow hubble-generate-certs job to talk to kube-apiserver.";
-                endpointSelector.matchLabels."batch.kubernetes.io/job-name" = "hubble-generate-certs";
+                endpointSelector.matchLabels.k8s-app = "hubble-generate-certs";
                 egress = [
                   {
                     toEntities = [ "kube-apiserver" ];
