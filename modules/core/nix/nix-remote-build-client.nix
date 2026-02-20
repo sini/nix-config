@@ -9,6 +9,10 @@ in
       builders = findHostsWithRole "nix-builder";
     in
     {
+      age.secrets.nix-remote-build-user-key = {
+        rekeyFile = rootPath + "/.secrets/users/nix-remote-build/id_agenix.age";
+        mode = "600";
+      };
       nix = {
         buildMachines = lib.mapAttrsToList (hostname: hostConfig: {
           hostName = hostname;
@@ -27,7 +31,7 @@ in
           # The server side user to login with
           sshUser = "nix-remote-build";
           # The client side private key for login as sshUser
-          sshKey = config.age.secrets.user-nix-remote-build-id_agenix.path;
+          sshKey = config.age.secrets.nix-remote-build-user-key.path;
         }) builders;
 
         settings = {
