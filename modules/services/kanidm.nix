@@ -347,8 +347,8 @@
 
               oauth2-proxy = {
                 displayName = "OAuth2-Proxy";
-                originUrl = "https://${environment.domain}/oauth2/callback";
-                originLanding = "https://${environment.domain}/";
+                originUrl = "https://oauth2-proxy.${environment.domain}/oauth2/callback";
+                originLanding = "https://oauth2-proxy.${environment.domain}/";
                 basicSecretFile = config.age.secrets.oauth2-proxy-oidc-client-secret.path;
                 preferShortUsername = true;
                 scopeMaps = {
