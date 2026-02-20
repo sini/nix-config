@@ -119,23 +119,75 @@
             certificates = builtins.listToAttrs certificatesResources;
 
             # Allow all cert-manager pods to access kube-apiserver
-            ciliumNetworkPolicies.allow-kube-apiserver-egress.spec = {
-              endpointSelector.matchLabels."app.kubernetes.io/instance" = "cert-manager";
-              egress = [
-                {
-                  toEntities = [ "kube-apiserver" ];
-                  toPorts = [
-                    {
-                      ports = [
-                        {
-                          port = "6443";
-                          protocol = "TCP";
-                        }
-                      ];
-                    }
-                  ];
-                }
-              ];
+            ciliumNetworkPolicies = {
+              allow-world-egress.spec = {
+                endpointSelector.matchLabels = {
+                  "app.kubernetes.io/instance" = "cert-manager";
+                };
+                egress = [
+                  # Enable DNS proxying
+                  {
+                    toEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                          "k8s:k8s-app" = "kube-dns";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "53";
+                            protocol = "ANY";
+                          }
+                        ];
+                        rules.dns = [
+                          { matchPattern = "*"; }
+                        ];
+                      }
+                    ];
+                  }
+                  {
+                    toEntities = [
+                      "world"
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "443";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "53";
+                            protocol = "UDP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+              allow-kube-apiserver-egress.spec = {
+                endpointSelector.matchLabels."app.kubernetes.io/instance" = "cert-manager";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
             };
           };
         };
