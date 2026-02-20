@@ -145,7 +145,7 @@
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
       # url = "github:sini/nixidy";
-      url = "github:arnarg/nixidy/feat/resource-multi-doc";
+      url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
