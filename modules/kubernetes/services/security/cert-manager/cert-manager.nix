@@ -96,7 +96,7 @@
               };
               spec = {
                 acme = {
-                  server = "https://acme-v02.api.letsencrypt.org/directory";
+                  server = "https://acme-v02.api.letsencrypt.org./directory";
                   privateKeySecretRef = {
                     name = "cloudflare-issuer-account-key";
                   };
