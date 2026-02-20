@@ -14,6 +14,13 @@
         group = "grafana";
       };
 
+      age.secrets.grafana-secret-key = {
+        rekeyFile = rootPath + "/.secrets/env/${environment.name}/grafana-secret-key.age";
+        generator.script = { pkgs, ... }: "${pkgs.openssl}/bin/openssl rand -hex 32";
+        owner = "grafana";
+        group = "grafana";
+      };
+
       services = {
         grafana = {
           enable = true;
@@ -31,6 +38,8 @@
               cookie_secure = true;
               disable_gravatar = true;
               hide_version = true;
+              # `openssl rand -hex 32
+              secret_key = "$__file{${config.age.secrets.grafana-secret-key.path}}";
             };
 
             database = {
