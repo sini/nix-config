@@ -170,9 +170,9 @@
                 allow_tearing = true;
               };
 
-              experimental = {
-                xx_color_management_v4 = true;
-              };
+              # experimental = {
+              #   xx_color_management_v4 = true;
+              # };
 
               quirks = {
                 prefer_hdr = 2;
@@ -184,24 +184,24 @@
                   mode = "3840x2160@120.00";
                   position = "0x0";
                   scale = 1;
-                  vrr = 0; # We get really bad brightness flickering. :(
+                  # vrr = 0; # We get really bad brightness flickering. :(
 
                   bitdepth = 10;
-                  cm = "hdredid";
+                  # cm = "hdredid";
 
-                  supports_wide_color = true;
-                  supports_hdr = true;
-                  # sdrbrightness = 1.05;
-                  sdrbrightness = 1.00;
+                  # supports_wide_color = true;
+                  # supports_hdr = true;
+                  # # sdrbrightness = 1.05;
+                  # sdrbrightness = 1.00;
 
-                  sdrsaturation = 0.75;
+                  # sdrsaturation = 0.75;
 
-                  sdr_min_luminance = "0.005";
-                  sdr_max_luminance = "200";
+                  # sdr_min_luminance = "0.005";
+                  # sdr_max_luminance = "200";
 
-                  min_luminance = 0;
-                  max_luminance = 1200;
-                  max_avg_luminance = 600;
+                  # min_luminance = 0;
+                  # max_luminance = 1200;
+                  # max_avg_luminance = 600;
                 }
                 {
                   output = "DP-2";
@@ -220,21 +220,21 @@
                   vrr = false;
 
                   bitdepth = 10;
-                  cm = "hdredid";
+                  # cm = "hdredid";
 
-                  supports_wide_color = true;
-                  supports_hdr = true;
+                  # supports_wide_color = true;
+                  # supports_hdr = true;
 
-                  sdrbrightness = 1.00;
+                  # sdrbrightness = 1.00;
 
-                  sdrsaturation = 1.00;
+                  # sdrsaturation = 1.00;
 
-                  sdr_min_luminance = "0.005";
-                  sdr_max_luminance = "200";
+                  # sdr_min_luminance = "0.005";
+                  # sdr_max_luminance = "200";
 
-                  min_luminance = 0;
-                  max_luminance = 300;
-                  max_avg_luminance = 300;
+                  # min_luminance = 0;
+                  # max_luminance = 300;
+                  # max_avg_luminance = 300;
                 }
               ];
             };
