@@ -1,6 +1,6 @@
 {
   flake.features.nix.nixos =
-    { pkgs, ... }:
+    { pkgs, lib, ... }:
     {
       nix =
         let
@@ -97,6 +97,32 @@
             dates = "05:00";
             options = "--delete-older-than 8d";
           };
+
+          daemonCPUSchedPolicy = lib.mkDefault "batch";
+          daemonIOSchedClass = lib.mkDefault "idle";
+          daemonIOSchedPriority = lib.mkDefault 7;
         };
+
+      # OOM prevention configuration:
+      systemd = {
+        # Create a separate slice for nix-daemon that is
+        # memory-managed by the userspace systemd-oomd killer
+        slices."nix-daemon".sliceConfig = {
+          ManagedOOMMemoryPressure = "kill";
+          ManagedOOMMemoryPressureLimit = "50%";
+        };
+        services."nix-daemon".serviceConfig.Slice = "nix-daemon.slice";
+
+        # If a kernel-level OOM event does occur anyway,
+        # strongly prefer killing nix-daemon child processes
+        services."nix-daemon".serviceConfig.OOMScoreAdjust = lib.mkDefault 250;
+      };
+
+      systemd.services.nix-gc.serviceConfig = {
+        CPUSchedulingPolicy = "batch";
+        IOSchedulingClass = "idle";
+        IOSchedulingPriority = 7;
+      };
+
     };
 }
