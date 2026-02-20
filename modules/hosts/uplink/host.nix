@@ -33,6 +33,7 @@
       "oauth2-proxy"
       "tailscale"
       "headscale"
+      "haproxy"
       # "minio"
       # "vault"
     ];
