@@ -14,4 +14,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      batch.kubernetes.io/job-name: hubble-generate-certs
+      k8s-app: hubble-generate-certs
