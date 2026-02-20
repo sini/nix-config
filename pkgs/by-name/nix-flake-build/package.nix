@@ -22,8 +22,10 @@ writeShellApplication {
       fi
     done
 
-    [[ "''${#HOST_NAMES[@]}" -ge 1 ]] \
-      || { echo "error: at least one HOST must be specified" >&2; exit 1; }
+    # Default to current hostname if no hosts specified
+    if [[ "''${#HOST_NAMES[@]}" -eq 0 ]]; then
+      HOST_NAMES=("$(hostname)")
+    fi
 
     HOSTS=()
     for h in "''${HOST_NAMES[@]}"; do
