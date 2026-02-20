@@ -12,6 +12,7 @@
       "media"
       "inference"
       "messaging"
+      "nix-builder"
     ];
 
     features = [

@@ -19,6 +19,8 @@
       "dev"
       "dev-gui"
       "media"
+      # TODO:
+      # "nix-builder"
       # "vault"
     ];
     features = [

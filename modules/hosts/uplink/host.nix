@@ -10,6 +10,7 @@
       "bgp-hub"
       # "inference"
       "metrics-ingester"
+      "nix-builder"
     ];
     tags = {
       "bgp-asn" = "65000";

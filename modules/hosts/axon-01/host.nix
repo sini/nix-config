@@ -10,6 +10,7 @@
       "kubernetes"
       "kubernetes-master"
       "bgp-spoke"
+      "nix-builder"
       # "vault"
     ];
     features = [
