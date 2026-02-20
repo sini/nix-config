@@ -13,4 +13,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/part-of: cert-manager
+      app.kubernetes.io/instance: cert-manager
