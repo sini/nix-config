@@ -41,11 +41,12 @@ in
               option tcp-check
           ''
           + (lib.concatStringsSep "\n" (
-            map (host: "        server ${host.hostname} ${builtins.head host.ipv4}:6444 check") hosts
+            map (host: "        server ${host.hostname} ${builtins.head host.ipv4}:6443 check") hosts
           ))
+          + "\n"
           + ''
             frontend http_ing
-              bind *:8080
+              bind *:12080
               default_backend http_servers
 
             backend http_servers
@@ -54,9 +55,10 @@ in
           + (lib.concatStringsSep "\n" (
             map (host: "        server ${host.hostname} ${builtins.head host.ipv4}:80 check") hosts
           ))
+          + "\n"
           + ''
             frontend https_ing
-              bind *:8443
+              bind *:12443
               default_backend https_servers
 
             backend https_servers
