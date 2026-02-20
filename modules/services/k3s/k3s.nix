@@ -159,7 +159,7 @@ in
                 "--advertise-address=${internalIP}"
                 "--cluster-cidr=${environment.kubernetes.clusterCidr}"
                 "--service-cidr=${environment.kubernetes.serviceCidr}"
-                "--cluster-domain k8s.${environment.domain}"
+                "--cluster-domain mesh.${environment.name}.${environment.domain}"
 
                 "--kubelet-arg=fail-swap-on=false"
 
@@ -258,7 +258,7 @@ in
               ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                 --server-side \
                 --force-conflicts \
-                -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cilium/"}
+                -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cilium/"} || true
             '';
           };
           wantedBy = [ "multi-user.target" ];
@@ -316,6 +316,15 @@ in
                   --server-side \
                   --force-conflicts \
                   -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/sops-secrets-operator/"}
+              fi
+
+              # Install cert-manager if deployment doesn't exist
+              if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
+                echo "Installing sops-secrets-operator..."
+                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                  --server-side \
+                  --force-conflicts \
+                  -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cert-manager/"}
               fi
             '';
           };
