@@ -57,8 +57,8 @@
         # OIDC configuration
         clientID = "oauth2-proxy";
         oidcIssuerUrl = "https://idm.${environment.domain}/oauth2/openid/oauth2-proxy";
-        redirectURL = "https://${environment.domain}/oauth2/callback";
-        loginURL = "https://${environment.domain}/oauth2/authorise";
+        redirectURL = "https://oauth2-proxy.${environment.domain}/oauth2/callback";
+        loginURL = "https://oauth2-proxy.${environment.domain}/oauth2/authorise";
         profileURL = "https://idm.${environment.domain}/oauth2/openid/oauth2-proxy/userinfo";
         redeemURL = "https://idm.${environment.domain}/oauth2/token";
         validateURL = "https://idm.${environment.domain}/oauth2/token/introspect";
@@ -98,10 +98,10 @@
           # upstream = "static://202";
         };
 
-        nginx.domain = environment.domain;
+        nginx.domain = "oauth2-proxy.${environment.domain}";
       };
 
-      services.nginx.virtualHosts.${environment.domain} = {
+      services.nginx.virtualHosts."oauth2-proxy.${environment.domain}" = {
         forceSSL = true;
         useACMEHost = environment.domain;
         locations."/" = {
@@ -114,7 +114,7 @@
         };
       };
 
-      services.nginx.upstreams.${environment.domain} = {
+      services.nginx.upstreams."oauth2-proxy.${environment.domain}" = {
         servers = {
           "localhost:4180" = { };
         };
