@@ -86,7 +86,7 @@
             secrets.cloudflare-api-token = {
               metadata.namespace = "cert-manager";
               type = "Opaque";
-              stringData.auth = secrets.for "cloudflare-api-token";
+              stringData.cloudflare-api-token = secrets.for "cloudflare-api-token";
             };
 
             clusterIssuers."cloudflare-issuer" = {
