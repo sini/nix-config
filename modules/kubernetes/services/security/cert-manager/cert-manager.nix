@@ -120,7 +120,7 @@
 
             # Allow all cert-manager pods to access kube-apiserver
             ciliumNetworkPolicies.allow-kube-apiserver-egress.spec = {
-              endpointSelector.matchLabels."app.kubernetes.io/part-of" = "cert-manager";
+              endpointSelector.matchLabels."app.kubernetes.io/instance" = "cert-manager";
               egress = [
                 {
                   toEntities = [ "kube-apiserver" ];
