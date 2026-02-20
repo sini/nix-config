@@ -8,9 +8,11 @@
       ...
     }:
     {
-      age.secrets.nix_store_signing_key.file =
-        rootPath + "/.secrets/services/nix-serve/cache-priv-key.pem.age";
-
+      age.secrets.nix_store_signing_key = {
+        rekeyFile = rootPath + "/.secrets/services/nix-serve/cache-priv-key.pem.age";
+        owner = "nix-serve";
+        mode = "0400";
+      };
       networking.firewall.allowedTCPPorts = [ 16893 ];
 
       services.nix-serve = {
