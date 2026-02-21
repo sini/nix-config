@@ -23,6 +23,8 @@ in
         6443
         12443
       ];
+      # TODO: Look into proxy protocol and socket based communication; this user config looks promising:
+      # https://github.com/Bert-Proesmans/nix/blob/3da2d7d68617202d68e91575683ac4ba2ce718e7/flake/nixosConfigurations/freddy/tls-termination.nix#L126
       services = {
         haproxy = {
           enable = true;
