@@ -1,10 +1,11 @@
 {
+  self,
   config,
   lib,
-  getAutoExporters,
   ...
 }:
 let
+  inherit (self.lib.host-utils) getAutoExporters;
   # Generate scrape configs from all exporters on server hosts
   generateScrapeConfigs =
     targetEnvironments:
