@@ -17,6 +17,8 @@ in
         |> lib.attrValues;
     in
     {
+      # We fwd our public 443 to 12443 on this host since it has a 10gb link
+
       networking.firewall.allowedTCPPorts = [
         6443
         12443
