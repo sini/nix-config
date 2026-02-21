@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: f97fc4bb07c637e99d33f9d4f3595b2cc8d3a5ffa3bddd1832d3bbda96ce50a6
+        cilium.io/cilium-configmap-checksum: c4101d1214fde2bc0b7465e0584f437cf14ba2d80cf8bbb408dccc831475a24a
         prometheus.io/port: "9963"
         prometheus.io/scrape: "true"
       labels:
@@ -66,7 +66,7 @@ spec:
               value: 172.16.255.1
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/operator-generic:v1.19.0@sha256:5b04006015e5800307dc6314676edc4c0bb7ac2fc7848be2b94b43bb030ab648
+          image: quay.io/cilium/operator-generic:v1.19.1@sha256:e7278d763e448bf6c184b0682cf98cdca078d58a27e1b2f3c906792670aa211a
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
