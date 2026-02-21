@@ -17,6 +17,10 @@ in
         |> lib.attrValues;
     in
     {
+      networking.firewall.allowedTCPPorts = [
+        6443
+        12443
+      ];
       services = {
         haproxy = {
           enable = true;
