@@ -27,15 +27,16 @@
 
     nixidy =
       {
-        config,
+        # config,
         environment,
         charts,
-        lib,
+        # lib,
         secrets,
         ...
       }:
       let
-        namespaceList = lib.unique (map (app: app.namespace) (builtins.attrValues config.applications));
+        namespaceList = [ "argocd" ];
+        # lib.unique (map (app: app.namespace) (builtins.attrValues config.applications));
         certificatesResources = map (namespace: {
           name = "${namespace}-wildcard-certificate";
           value = {
