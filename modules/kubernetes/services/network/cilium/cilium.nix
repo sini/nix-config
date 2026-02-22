@@ -132,7 +132,7 @@ in
                 enabled = true;
                 relay.enabled = true;
                 ui.enabled = true;
-                peerService.clusterDomain = "mesh.${environment.name}.${environment.domain}";
+                # peerService.clusterDomain = "mesh.${environment.name}.${environment.domain}";
                 # metrics.enabled = [
                 #   "dns"
                 #   "drop"

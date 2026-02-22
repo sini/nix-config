@@ -159,7 +159,7 @@ in
                 "--advertise-address=${internalIP}"
                 "--cluster-cidr=${environment.kubernetes.clusterCidr}"
                 "--service-cidr=${environment.kubernetes.serviceCidr}"
-                "--cluster-domain mesh.${environment.name}.${environment.domain}"
+                # "--cluster-domain mesh.${environment.name}.${environment.domain}"
 
                 "--kubelet-arg=fail-swap-on=false"
 
