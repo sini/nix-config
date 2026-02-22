@@ -193,16 +193,8 @@ in
               #   ];
               # };
 
-              # policyEnforcementMode = "never";
               policyEnforcementMode = "default";
               policyAuditMode = false;
-
-              # encryption = {
-              #   enabled = true;
-              #   type = "wireguard";
-              # };
-              # Logging
-              # debug.enabled = true;
             };
           };
 
