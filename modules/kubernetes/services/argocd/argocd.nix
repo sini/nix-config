@@ -49,6 +49,22 @@
                     value = "1";
                   }
                 ];
+
+                ingress = {
+                  enabled = true;
+                  ingressClassName = "cilium";
+                  annotations = {
+                    "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
+                  };
+                  extraTls = [
+                    {
+                      hosts = [
+                        "argocd.${environment.domain}"
+                      ];
+                      secretName = "wildcard-certificate";
+                    }
+                  ];
+                };
               };
 
               # Repository Server
@@ -134,41 +150,41 @@
             #   ];
             # };
 
-            ingresses."argocd" = {
-              metadata.annotations = {
-                "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
-              };
-              spec = {
-                ingressClassName = "cilium";
+            # ingresses."argocd" = {
+            #   metadata.annotations = {
+            #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
+            #   };
+            #   spec = {
+            #     ingressClassName = "cilium";
 
-                rules = [
-                  {
-                    host = "argocd.${environment.domain}";
-                    http.paths = [
-                      {
-                        path = "/";
-                        pathType = "Prefix";
-                        backend = {
-                          service = {
-                            name = "argocd-server";
-                            port.name = "http";
-                          };
-                        };
-                      }
-                    ];
-                  }
-                ];
+            #     rules = [
+            #       {
+            #         host = "argocd.${environment.domain}";
+            #         http.paths = [
+            #           {
+            #             path = "/";
+            #             pathType = "Prefix";
+            #             backend = {
+            #               service = {
+            #                 name = "argocd-server";
+            #                 port.name = "http";
+            #               };
+            #             };
+            #           }
+            #         ];
+            #       }
+            #     ];
 
-                tls = [
-                  {
-                    hosts = [
-                      "argocd.${environment.domain}"
-                    ];
-                    secretName = "wildcard-certificate";
-                  }
-                ];
-              };
-            };
+            #     tls = [
+            #       {
+            #         hosts = [
+            #           "argocd.${environment.domain}"
+            #         ];
+            #         secretName = "wildcard-certificate";
+            #       }
+            #     ];
+            #   };
+            # };
 
             secrets.argocd-redis = {
               type = "Opaque";
