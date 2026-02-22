@@ -24,6 +24,18 @@
       else
         null;
 
+    findKubernetesNodes =
+      environment:
+      let
+        hosts = config.flake.hosts;
+      in
+      hosts
+      |> lib.attrsets.filterAttrs (
+        hostname: hostConfig:
+        (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
+        && (hostConfig.environment == environment.name)
+      );
+
     # Helper to create SOPS secret reference functions for a given environment
     mkSecretHelpers = environment: {
       for = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}";

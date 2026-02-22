@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: db26ba04db358b783ae93e736bdc6f4e1e35b704b0adafa89f64640f2a7136fa
+        cilium.io/cilium-configmap-checksum: c6437ddf813e32b96a3f7117e30628b3d90493c148e38029a58f39d22cff45bc
         prometheus.io/port: "9963"
         prometheus.io/scrape: "true"
       labels:
@@ -62,7 +62,7 @@ spec:
                   key: debug
                   name: cilium-config
                   optional: true
-          image: quay.io/cilium/operator-generic:v1.19.0@sha256:5b04006015e5800307dc6314676edc4c0bb7ac2fc7848be2b94b43bb030ab648
+          image: quay.io/cilium/operator-generic:v1.19.1@sha256:e7278d763e448bf6c184b0682cf98cdca078d58a27e1b2f3c906792670aa211a
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
