@@ -4,6 +4,7 @@
       {
         charts,
         secrets,
+        environment,
         ...
       }:
       {
@@ -27,7 +28,7 @@
 
             values = {
               global = {
-                # Local dev: single replica for all components
+                domain = "argocd.${environment.domain}";
                 revisionHistoryLimit = 3;
               };
 
@@ -112,6 +113,63 @@
             };
           };
           resources = {
+
+            # httpRoutes.argocd.spec = {
+            #   parentRefs = [
+            #     {
+            #       name = "";
+            #       namespace = "";
+            #     }
+            #   ];
+            #   hostnames = [ "argocd.${environment.domain}" ];
+            #   rules = [
+            #     {
+            #       backendRefs = [
+            #         {
+            #           name = "argocd-server";
+            #           port = 80;
+            #         }
+            #       ];
+            #     }
+            #   ];
+            # };
+
+            ingresses."argocd" = {
+              metadata.annotations = {
+                "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
+              };
+              spec = {
+                ingressClassName = "cilium";
+
+                rules = [
+                  {
+                    host = "argocd.${environment.domain}";
+                    http.paths = [
+                      {
+                        path = "/";
+                        pathType = "Prefix";
+                        backend = {
+                          service = {
+                            name = "argocd-server";
+                            port.name = "http";
+                          };
+                        };
+                      }
+                    ];
+                  }
+                ];
+
+                tls = [
+                  {
+                    hosts = [
+                      "argocd.${environment.domain}"
+                    ];
+                    secretName = "wildcard-certificate";
+                  }
+                ];
+              };
+            };
+
             secrets.argocd-redis = {
               type = "Opaque";
               stringData.auth = secrets.for "argocd-redis";

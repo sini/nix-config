@@ -24,6 +24,7 @@ in
               "argocd"
               "cert-manager"
               "cilium"
+              "gateway-api"
               "sops-secrets-operator"
             ];
             enabledServices = lib.unique (defaultServices ++ (environment.kubernetes.services.enabled or [ ]));

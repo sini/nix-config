@@ -652,6 +652,38 @@ let
       };
 
     };
+    "cilium.io.v2.CiliumBGPNodeConfig" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "Spec is the specification of the desired behavior of the CiliumBGPNodeConfig.";
+          type = (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigSpec");
+        };
+        "status" = mkOption {
+          description = "Status is the most recently observed status of the CiliumBGPNodeConfig.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigStatus"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+      };
+
+    };
     "cilium.io.v2.CiliumBGPNodeConfigOverride" = {
 
       options = {
@@ -755,6 +787,334 @@ let
       config = {
         "localAddress" = mkOverride 1002 null;
         "localPort" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigSpec" = {
+
+      options = {
+        "bgpInstances" = mkOption {
+          description = "BGPInstances is a list of BGP router instances on the node.";
+          type = (
+            coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstances" "name" [
+              "name"
+            ]
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstances" = {
+
+      options = {
+        "localASN" = mkOption {
+          description = "LocalASN is the ASN of this virtual router.\nSupports extended 32bit ASNs.";
+          type = (types.nullOr types.int);
+        };
+        "localPort" = mkOption {
+          description = "LocalPort is the port on which the BGP daemon listens for incoming connections.\n\nIf not specified, BGP instance will not listen for incoming connections.";
+          type = (types.nullOr types.int);
+        };
+        "name" = mkOption {
+          description = "Name is the name of the BGP instance. This name is used to identify the BGP instance on the node.";
+          type = types.str;
+        };
+        "peers" = mkOption {
+          description = "Peers is a list of neighboring BGP peers for this virtual router";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeers" "name" [
+                "name"
+              ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "routerID" = mkOption {
+          description = "RouterID is the BGP router ID of this virtual router.\nThis configuration is derived from CiliumBGPNodeConfigOverride resource.\n\nIf not specified, the router ID will be derived from the node local address.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "localASN" = mkOverride 1002 null;
+        "localPort" = mkOverride 1002 null;
+        "peers" = mkOverride 1002 null;
+        "routerID" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeers" = {
+
+      options = {
+        "autoDiscovery" = mkOption {
+          description = "AutoDiscovery is the configuration for auto-discovery of the peer address.";
+          type = (
+            types.nullOr (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeersAutoDiscovery")
+          );
+        };
+        "localAddress" = mkOption {
+          description = "LocalAddress is the IP address of the local interface to use for the peering session.\nThis configuration is derived from CiliumBGPNodeConfigOverride resource. If not specified, the local address will be used for setting up peering.";
+          type = (types.nullOr types.str);
+        };
+        "name" = mkOption {
+          description = "Name is the name of the BGP peer. This name is used to identify the BGP peer for the BGP instance.";
+          type = types.str;
+        };
+        "peerASN" = mkOption {
+          description = "PeerASN is the ASN of the peer BGP router.\nSupports extended 32bit ASNs";
+          type = (types.nullOr types.int);
+        };
+        "peerAddress" = mkOption {
+          description = "PeerAddress is the IP address of the neighbor.\nSupports IPv4 and IPv6 addresses.";
+          type = (types.nullOr types.str);
+        };
+        "peerConfigRef" = mkOption {
+          description = "PeerConfigRef is a reference to a peer configuration resource.\nIf not specified, the default BGP configuration is used for this peer.";
+          type = (
+            types.nullOr (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeersPeerConfigRef")
+          );
+        };
+      };
+
+      config = {
+        "autoDiscovery" = mkOverride 1002 null;
+        "localAddress" = mkOverride 1002 null;
+        "peerASN" = mkOverride 1002 null;
+        "peerAddress" = mkOverride 1002 null;
+        "peerConfigRef" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeersAutoDiscovery" = {
+
+      options = {
+        "defaultGateway" = mkOption {
+          description = "defaultGateway is the configuration for auto-discovery of the default gateway.";
+          type = (
+            types.nullOr (
+              submoduleOf "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeersAutoDiscoveryDefaultGateway"
+            )
+          );
+        };
+        "mode" = mkOption {
+          description = "mode is the mode of the auto-discovery.";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "defaultGateway" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeersAutoDiscoveryDefaultGateway" = {
+
+      options = {
+        "addressFamily" = mkOption {
+          description = "addressFamily is the address family of the default gateway.";
+          type = types.str;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigSpecBgpInstancesPeersPeerConfigRef" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Name is the name of the peer config resource.\nName refers to the name of a Kubernetes object (typically a CiliumBGPPeerConfig).";
+          type = types.str;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigStatus" = {
+
+      options = {
+        "bgpInstances" = mkOption {
+          description = "BGPInstances is the status of the BGP instances on the node.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstances" "name" [
+                "name"
+              ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "conditions" = mkOption {
+          description = "The current conditions of the CiliumBGPNodeConfig";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigStatusConditions"))
+          );
+        };
+      };
+
+      config = {
+        "bgpInstances" = mkOverride 1002 null;
+        "conditions" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstances" = {
+
+      options = {
+        "localASN" = mkOption {
+          description = "LocalASN is the ASN of this BGP instance.";
+          type = (types.nullOr types.int);
+        };
+        "name" = mkOption {
+          description = "Name is the name of the BGP instance. This name is used to identify the BGP instance on the node.";
+          type = types.str;
+        };
+        "peers" = mkOption {
+          description = "PeerStatuses is the state of the BGP peers for this BGP instance.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstancesPeers" "name"
+                [ "name" ]
+            )
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = {
+        "localASN" = mkOverride 1002 null;
+        "peers" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstancesPeers" = {
+
+      options = {
+        "establishedTime" = mkOption {
+          description = "EstablishedTime is the time when the peering session was established.\nIt is represented in RFC3339 form and is in UTC.";
+          type = (types.nullOr types.str);
+        };
+        "name" = mkOption {
+          description = "Name is the name of the BGP peer.";
+          type = types.str;
+        };
+        "peerASN" = mkOption {
+          description = "PeerASN is the ASN of the neighbor.";
+          type = (types.nullOr types.int);
+        };
+        "peerAddress" = mkOption {
+          description = "PeerAddress is the IP address of the neighbor.";
+          type = types.str;
+        };
+        "peeringState" = mkOption {
+          description = "PeeringState is last known state of the peering session.";
+          type = (types.nullOr types.str);
+        };
+        "routeCount" = mkOption {
+          description = "RouteCount is the number of routes exchanged with this peer per AFI/SAFI.";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstancesPeersRouteCount")
+            )
+          );
+        };
+        "timers" = mkOption {
+          description = "Timers is the state of the negotiated BGP timers for this peer.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstancesPeersTimers"));
+        };
+      };
+
+      config = {
+        "establishedTime" = mkOverride 1002 null;
+        "peerASN" = mkOverride 1002 null;
+        "peeringState" = mkOverride 1002 null;
+        "routeCount" = mkOverride 1002 null;
+        "timers" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstancesPeersRouteCount" = {
+
+      options = {
+        "advertised" = mkOption {
+          description = "Advertised is the number of routes advertised to this peer.";
+          type = (types.nullOr types.int);
+        };
+        "afi" = mkOption {
+          description = "Afi is the Address Family Identifier (AFI) of the family.";
+          type = types.str;
+        };
+        "received" = mkOption {
+          description = "Received is the number of routes received from this peer.";
+          type = (types.nullOr types.int);
+        };
+        "safi" = mkOption {
+          description = "Safi is the Subsequent Address Family Identifier (SAFI) of the family.";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "advertised" = mkOverride 1002 null;
+        "received" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigStatusBgpInstancesPeersTimers" = {
+
+      options = {
+        "appliedHoldTimeSeconds" = mkOption {
+          description = "AppliedHoldTimeSeconds is the negotiated hold time for this peer.";
+          type = (types.nullOr types.int);
+        };
+        "appliedKeepaliveSeconds" = mkOption {
+          description = "AppliedKeepaliveSeconds is the negotiated keepalive time for this peer.";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "appliedHoldTimeSeconds" = mkOverride 1002 null;
+        "appliedKeepaliveSeconds" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumBGPNodeConfigStatusConditions" = {
+
+      options = {
+        "lastTransitionTime" = mkOption {
+          description = "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.";
+          type = types.str;
+        };
+        "message" = mkOption {
+          description = "message is a human readable message indicating details about the transition.\nThis may be an empty string.";
+          type = types.str;
+        };
+        "observedGeneration" = mkOption {
+          description = "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.";
+          type = (types.nullOr types.int);
+        };
+        "reason" = mkOption {
+          description = "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.";
+          type = types.str;
+        };
+        "status" = mkOption {
+          description = "status of the condition, one of True, False, Unknown.";
+          type = types.str;
+        };
+        "type" = mkOption {
+          description = "type of condition in CamelCase or in foo.example.com/CamelCase.";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "observedGeneration" = mkOverride 1002 null;
       };
 
     };
@@ -1006,6 +1366,213 @@ let
 
       config = {
         "observedGeneration" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumCIDRGroup" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (types.nullOr (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"));
+        };
+        "spec" = mkOption {
+          description = "";
+          type = (submoduleOf "cilium.io.v2.CiliumCIDRGroupSpec");
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "metadata" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumCIDRGroupSpec" = {
+
+      options = {
+        "externalCIDRs" = mkOption {
+          description = "ExternalCIDRs is a list of CIDRs selecting peers outside the clusters.";
+          type = (types.listOf types.str);
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumClusterwideEnvoyConfig" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumClusterwideEnvoyConfigSpec"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "spec" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumClusterwideEnvoyConfigSpec" = {
+
+      options = {
+        "backendServices" = mkOption {
+          description = "BackendServices specifies Kubernetes services whose backends\nare automatically synced to Envoy using EDS.  Traffic for these\nservices is not forwarded to an Envoy listener. This allows an\nEnvoy listener load balance traffic to these backends while\nnormal Cilium service load balancing takes care of balancing\ntraffic for these services at the same time.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecBackendServices"
+                "name"
+                [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "nodeSelector" = mkOption {
+          description = "NodeSelector is a label selector that determines to which nodes\nthis configuration applies.\nIf nil, then this config applies to all nodes.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecNodeSelector"));
+        };
+        "resources" = mkOption {
+          description = "Envoy xDS resources, a list of the following Envoy resource types:\ntype.googleapis.com/envoy.config.listener.v3.Listener,\ntype.googleapis.com/envoy.config.route.v3.RouteConfiguration,\ntype.googleapis.com/envoy.config.cluster.v3.Cluster,\ntype.googleapis.com/envoy.config.endpoint.v3.ClusterLoadAssignment, and\ntype.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret.";
+          type = (types.listOf types.attrs);
+        };
+        "services" = mkOption {
+          description = "Services specifies Kubernetes services for which traffic is\nforwarded to an Envoy listener for L7 load balancing. Backends\nof these services are automatically synced to Envoy usign EDS.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecServices" "name"
+                [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = {
+        "backendServices" = mkOverride 1002 null;
+        "nodeSelector" = mkOverride 1002 null;
+        "services" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecBackendServices" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Name is the name of a destination Kubernetes service that identifies traffic\nto be redirected.";
+          type = types.str;
+        };
+        "namespace" = mkOption {
+          description = "Namespace is the Kubernetes service namespace.\nIn CiliumEnvoyConfig namespace defaults to the namespace of the CEC,\nIn CiliumClusterwideEnvoyConfig namespace defaults to \"default\".";
+          type = (types.nullOr types.str);
+        };
+        "number" = mkOption {
+          description = "Ports is a set of port numbers, which can be used for filtering in case of underlying\nis exposing multiple port numbers.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "namespace" = mkOverride 1002 null;
+        "number" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecNodeSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumClusterwideEnvoyConfigSpecServices" = {
+
+      options = {
+        "listener" = mkOption {
+          description = "Listener specifies the name of the Envoy listener the\nservice traffic is redirected to. The listener must be\nspecified in the Envoy 'resources' of the same\nCiliumEnvoyConfig.\n\nIf omitted, the first listener specified in 'resources' is\nused.";
+          type = (types.nullOr types.str);
+        };
+        "name" = mkOption {
+          description = "Name is the name of a destination Kubernetes service that identifies traffic\nto be redirected.";
+          type = types.str;
+        };
+        "namespace" = mkOption {
+          description = "Namespace is the Kubernetes service namespace.\nIn CiliumEnvoyConfig namespace this is overridden to the namespace of the CEC,\nIn CiliumClusterwideEnvoyConfig namespace defaults to \"default\".";
+          type = (types.nullOr types.str);
+        };
+        "ports" = mkOption {
+          description = "Ports is a set of service's frontend ports that should be redirected to the Envoy\nlistener. By default all frontend ports of the service are redirected.";
+          type = (types.nullOr (types.listOf types.int));
+        };
+      };
+
+      config = {
+        "listener" = mkOverride 1002 null;
+        "namespace" = mkOverride 1002 null;
+        "ports" = mkOverride 1002 null;
       };
 
     };
@@ -6660,6 +7227,1310 @@ let
       };
 
     };
+    "cilium.io.v2.CiliumEgressGatewayPolicy" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpec"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "spec" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpec" = {
+
+      options = {
+        "destinationCIDRs" = mkOption {
+          description = "DestinationCIDRs is a list of destination CIDRs for destination IP addresses.\nIf a destination IP matches any one CIDR, it will be selected.";
+          type = (types.listOf types.str);
+        };
+        "egressGateway" = mkOption {
+          description = "EgressGateway is the gateway node responsible for SNATing traffic.\nIn case multiple nodes are a match for the given set of labels, the first node\nin lexical ordering based on their name will be selected.";
+          type = (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGateway");
+        };
+        "egressGateways" = mkOption {
+          description = "Optional list of gateway nodes responsible for SNATing traffic.\nIf this field has any entries the contents of the egressGateway field will be ignored.\nIn case multiple nodes are a match for the given set of labels in each entry,\nthe first node in lexical ordering based on their name will be selected for each entry.";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGateways"))
+          );
+        };
+        "excludedCIDRs" = mkOption {
+          description = "ExcludedCIDRs is a list of destination CIDRs that will be excluded\nfrom the egress gateway redirection and SNAT logic.\nShould be a subset of destinationCIDRs otherwise it will not have any\neffect.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "selectors" = mkOption {
+          description = "Egress represents a list of rules by which egress traffic is\nfiltered from the source pods.";
+          type = (types.listOf (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectors"));
+        };
+      };
+
+      config = {
+        "egressGateways" = mkOverride 1002 null;
+        "excludedCIDRs" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGateway" = {
+
+      options = {
+        "egressIP" = mkOption {
+          description = "EgressIP is the source IP address that the egress traffic is SNATed\nwith.\n\nExample:\nWhen set to \"192.168.1.100\", matching egress traffic will be\nredirected to the node matching the NodeSelector field and SNATed\nwith IP address 192.168.1.100.\n\nWhen none of the Interface or EgressIP fields is specified, the\npolicy will use the first IPv4 assigned to the interface with the\ndefault route.";
+          type = (types.nullOr types.str);
+        };
+        "interface" = mkOption {
+          description = "Interface is the network interface to which the egress IP address\nthat the traffic is SNATed with is assigned.\n\nExample:\nWhen set to \"eth1\", matching egress traffic will be redirected to the\nnode matching the NodeSelector field and SNATed with the first IPv4\naddress assigned to the eth1 interface.\n\nWhen none of the Interface or EgressIP fields is specified, the\npolicy will use the first IPv4 assigned to the interface with the\ndefault route.";
+          type = (types.nullOr types.str);
+        };
+        "nodeSelector" = mkOption {
+          description = "This is a label selector which selects the node that should act as\negress gateway for the given policy.\nIn case multiple nodes are selected, only the first one in the\nlexical ordering over the node names will be used.\nThis field follows standard label selector semantics.";
+          type = (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewayNodeSelector");
+        };
+      };
+
+      config = {
+        "egressIP" = mkOverride 1002 null;
+        "interface" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewayNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewayNodeSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewayNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGateways" = {
+
+      options = {
+        "egressIP" = mkOption {
+          description = "EgressIP is the source IP address that the egress traffic is SNATed\nwith.\n\nExample:\nWhen set to \"192.168.1.100\", matching egress traffic will be\nredirected to the node matching the NodeSelector field and SNATed\nwith IP address 192.168.1.100.\n\nWhen none of the Interface or EgressIP fields is specified, the\npolicy will use the first IPv4 assigned to the interface with the\ndefault route.";
+          type = (types.nullOr types.str);
+        };
+        "interface" = mkOption {
+          description = "Interface is the network interface to which the egress IP address\nthat the traffic is SNATed with is assigned.\n\nExample:\nWhen set to \"eth1\", matching egress traffic will be redirected to the\nnode matching the NodeSelector field and SNATed with the first IPv4\naddress assigned to the eth1 interface.\n\nWhen none of the Interface or EgressIP fields is specified, the\npolicy will use the first IPv4 assigned to the interface with the\ndefault route.";
+          type = (types.nullOr types.str);
+        };
+        "nodeSelector" = mkOption {
+          description = "This is a label selector which selects the node that should act as\negress gateway for the given policy.\nIn case multiple nodes are selected, only the first one in the\nlexical ordering over the node names will be used.\nThis field follows standard label selector semantics.";
+          type = (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewaysNodeSelector");
+        };
+      };
+
+      config = {
+        "egressIP" = mkOverride 1002 null;
+        "interface" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewaysNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewaysNodeSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecEgressGatewaysNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectors" = {
+
+      options = {
+        "namespaceSelector" = mkOption {
+          description = "Selects Namespaces using cluster-scoped labels. This field follows standard label\nselector semantics; if present but empty, it selects all namespaces.";
+          type = (
+            types.nullOr (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNamespaceSelector")
+          );
+        };
+        "nodeSelector" = mkOption {
+          description = "This is a label selector which selects Pods by Node. This field follows standard label\nselector semantics; if present but empty, it selects all nodes.";
+          type = (
+            types.nullOr (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNodeSelector")
+          );
+        };
+        "podSelector" = mkOption {
+          description = "This is a label selector which selects Pods. This field follows standard label\nselector semantics; if present but empty, it selects all pods.";
+          type = (
+            types.nullOr (submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsPodSelector")
+          );
+        };
+      };
+
+      config = {
+        "namespaceSelector" = mkOverride 1002 null;
+        "nodeSelector" = mkOverride 1002 null;
+        "podSelector" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNamespaceSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNamespaceSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNamespaceSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNodeSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsPodSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsPodSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEgressGatewayPolicySpecSelectorsPodSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpoint" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "status" = mkOption {
+          description = "EndpointStatus is the status of a Cilium endpoint.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatus"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatus" = {
+
+      options = {
+        "controllers" = mkOption {
+          description = "Controllers is the list of failing controllers for this endpoint.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumEndpointStatusControllers" "name" [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "encryption" = mkOption {
+          description = "Encryption is the encryption configuration of the node";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusEncryption"));
+        };
+        "external-identifiers" = mkOption {
+          description = "ExternalIdentifiers is a set of identifiers to identify the endpoint\napart from the pod name. This includes container runtime IDs.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusExternal-identifiers"));
+        };
+        "health" = mkOption {
+          description = "Health is the overall endpoint & subcomponent health.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusHealth"));
+        };
+        "id" = mkOption {
+          description = "ID is the cilium-agent-local ID of the endpoint.";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "Identity is the security identity associated with the endpoint";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusIdentity"));
+        };
+        "log" = mkOption {
+          description = "Log is the list of the last few warning and error log entries";
+          type = (types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusLog")));
+        };
+        "named-ports" = mkOption {
+          description = "NamedPorts List of named Layer 4 port and protocol pairs which will be used in Network\nPolicy specs.\n\nswagger:model NamedPorts";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumEndpointStatusNamed-ports" "name" [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "networking" = mkOption {
+          description = "Networking is the networking properties of the endpoint.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusNetworking"));
+        };
+        "policy" = mkOption {
+          description = "EndpointPolicy represents the endpoint's policy by listing all allowed\ningress and egress identities in combination with L4 port and protocol.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicy"));
+        };
+        "service-account" = mkOption {
+          description = "ServiceAccount is the service account associated with the endpoint";
+          type = (types.nullOr types.str);
+        };
+        "state" = mkOption {
+          description = "State is the state of the endpoint.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "controllers" = mkOverride 1002 null;
+        "encryption" = mkOverride 1002 null;
+        "external-identifiers" = mkOverride 1002 null;
+        "health" = mkOverride 1002 null;
+        "id" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "log" = mkOverride 1002 null;
+        "named-ports" = mkOverride 1002 null;
+        "networking" = mkOverride 1002 null;
+        "policy" = mkOverride 1002 null;
+        "service-account" = mkOverride 1002 null;
+        "state" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusControllers" = {
+
+      options = {
+        "configuration" = mkOption {
+          description = "Configuration is the controller configuration";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusControllersConfiguration"));
+        };
+        "name" = mkOption {
+          description = "Name is the name of the controller";
+          type = (types.nullOr types.str);
+        };
+        "status" = mkOption {
+          description = "Status is the status of the controller";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusControllersStatus"));
+        };
+        "uuid" = mkOption {
+          description = "UUID is the UUID of the controller";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "configuration" = mkOverride 1002 null;
+        "name" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+        "uuid" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusControllersConfiguration" = {
+
+      options = {
+        "error-retry" = mkOption {
+          description = "Retry on error";
+          type = (types.nullOr types.bool);
+        };
+        "error-retry-base" = mkOption {
+          description = "Base error retry back-off time\nFormat: duration";
+          type = (types.nullOr types.int);
+        };
+        "interval" = mkOption {
+          description = "Regular synchronization interval\nFormat: duration";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "error-retry" = mkOverride 1002 null;
+        "error-retry-base" = mkOverride 1002 null;
+        "interval" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusControllersStatus" = {
+
+      options = {
+        "consecutive-failure-count" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "failure-count" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "last-failure-msg" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+        "last-failure-timestamp" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+        "last-success-timestamp" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+        "success-count" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "consecutive-failure-count" = mkOverride 1002 null;
+        "failure-count" = mkOverride 1002 null;
+        "last-failure-msg" = mkOverride 1002 null;
+        "last-failure-timestamp" = mkOverride 1002 null;
+        "last-success-timestamp" = mkOverride 1002 null;
+        "success-count" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusEncryption" = {
+
+      options = {
+        "key" = mkOption {
+          description = "Key is the index to the key to use for encryption or 0 if encryption is\ndisabled.";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "key" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusExternal-identifiers" = {
+
+      options = {
+        "cni-attachment-id" = mkOption {
+          description = "ID assigned to this attachment by container runtime";
+          type = (types.nullOr types.str);
+        };
+        "container-id" = mkOption {
+          description = "ID assigned by container runtime (deprecated, may not be unique)";
+          type = (types.nullOr types.str);
+        };
+        "container-name" = mkOption {
+          description = "Name assigned to container (deprecated, may not be unique)";
+          type = (types.nullOr types.str);
+        };
+        "docker-endpoint-id" = mkOption {
+          description = "Docker endpoint ID";
+          type = (types.nullOr types.str);
+        };
+        "docker-network-id" = mkOption {
+          description = "Docker network ID";
+          type = (types.nullOr types.str);
+        };
+        "k8s-namespace" = mkOption {
+          description = "K8s namespace for this endpoint (deprecated, may not be unique)";
+          type = (types.nullOr types.str);
+        };
+        "k8s-pod-name" = mkOption {
+          description = "K8s pod name for this endpoint (deprecated, may not be unique)";
+          type = (types.nullOr types.str);
+        };
+        "pod-name" = mkOption {
+          description = "K8s pod for this endpoint (deprecated, may not be unique)";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "cni-attachment-id" = mkOverride 1002 null;
+        "container-id" = mkOverride 1002 null;
+        "container-name" = mkOverride 1002 null;
+        "docker-endpoint-id" = mkOverride 1002 null;
+        "docker-network-id" = mkOverride 1002 null;
+        "k8s-namespace" = mkOverride 1002 null;
+        "k8s-pod-name" = mkOverride 1002 null;
+        "pod-name" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusHealth" = {
+
+      options = {
+        "bpf" = mkOption {
+          description = "bpf";
+          type = (types.nullOr types.str);
+        };
+        "connected" = mkOption {
+          description = "Is this endpoint reachable";
+          type = (types.nullOr types.bool);
+        };
+        "overallHealth" = mkOption {
+          description = "overall health";
+          type = (types.nullOr types.str);
+        };
+        "policy" = mkOption {
+          description = "policy";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "bpf" = mkOverride 1002 null;
+        "connected" = mkOverride 1002 null;
+        "overallHealth" = mkOverride 1002 null;
+        "policy" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusIdentity" = {
+
+      options = {
+        "id" = mkOption {
+          description = "ID is the numeric identity of the endpoint";
+          type = (types.nullOr types.int);
+        };
+        "labels" = mkOption {
+          description = "Labels is the list of labels associated with the identity";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "id" = mkOverride 1002 null;
+        "labels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusLog" = {
+
+      options = {
+        "code" = mkOption {
+          description = "Code indicate type of status change\nEnum: [\"ok\",\"failed\"]";
+          type = (types.nullOr types.str);
+        };
+        "message" = mkOption {
+          description = "Status message";
+          type = (types.nullOr types.str);
+        };
+        "state" = mkOption {
+          description = "state";
+          type = (types.nullOr types.str);
+        };
+        "timestamp" = mkOption {
+          description = "Timestamp when status change occurred";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "code" = mkOverride 1002 null;
+        "message" = mkOverride 1002 null;
+        "state" = mkOverride 1002 null;
+        "timestamp" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusNamed-ports" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Optional layer 4 port name";
+          type = (types.nullOr types.str);
+        };
+        "port" = mkOption {
+          description = "Layer 4 port number";
+          type = (types.nullOr types.int);
+        };
+        "protocol" = mkOption {
+          description = "Layer 4 protocol\nEnum: [\"TCP\",\"UDP\",\"SCTP\",\"ICMP\",\"ICMPV6\",\"ANY\"]";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "name" = mkOverride 1002 null;
+        "port" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusNetworking" = {
+
+      options = {
+        "addressing" = mkOption {
+          description = "IP4/6 addresses assigned to this Endpoint";
+          type = (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusNetworkingAddressing"));
+        };
+        "node" = mkOption {
+          description = "NodeIP is the IP of the node the endpoint is running on. The IP must\nbe reachable between nodes.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "node" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusNetworkingAddressing" = {
+
+      options = {
+        "ipv4" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+        "ipv6" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "ipv4" = mkOverride 1002 null;
+        "ipv6" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicy" = {
+
+      options = {
+        "egress" = mkOption {
+          description = "EndpointPolicyDirection is the list of allowed identities per direction.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyEgress"));
+        };
+        "ingress" = mkOption {
+          description = "EndpointPolicyDirection is the list of allowed identities per direction.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyIngress"));
+        };
+      };
+
+      config = {
+        "egress" = mkOverride 1002 null;
+        "ingress" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyEgress" = {
+
+      options = {
+        "adding" = mkOption {
+          description = "Deprecated";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyEgressAdding"))
+          );
+        };
+        "allowed" = mkOption {
+          description = "AllowedIdentityList is a list of IdentityTuples that species peers that are\nallowed.";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyEgressAllowed"))
+          );
+        };
+        "denied" = mkOption {
+          description = "DenyIdentityList is a list of IdentityTuples that species peers that are\ndenied.";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyEgressDenied"))
+          );
+        };
+        "enforcing" = mkOption {
+          description = "";
+          type = types.bool;
+        };
+        "removing" = mkOption {
+          description = "Deprecated";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyEgressRemoving"))
+          );
+        };
+        "state" = mkOption {
+          description = "EndpointPolicyState defines the state of the Policy mode: \"enforcing\", \"non-enforcing\", \"disabled\"";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "adding" = mkOverride 1002 null;
+        "allowed" = mkOverride 1002 null;
+        "denied" = mkOverride 1002 null;
+        "removing" = mkOverride 1002 null;
+        "state" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyEgressAdding" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyEgressAllowed" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyEgressDenied" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyEgressRemoving" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyIngress" = {
+
+      options = {
+        "adding" = mkOption {
+          description = "Deprecated";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyIngressAdding"))
+          );
+        };
+        "allowed" = mkOption {
+          description = "AllowedIdentityList is a list of IdentityTuples that species peers that are\nallowed.";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyIngressAllowed"))
+          );
+        };
+        "denied" = mkOption {
+          description = "DenyIdentityList is a list of IdentityTuples that species peers that are\ndenied.";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyIngressDenied"))
+          );
+        };
+        "enforcing" = mkOption {
+          description = "";
+          type = types.bool;
+        };
+        "removing" = mkOption {
+          description = "Deprecated";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumEndpointStatusPolicyIngressRemoving"))
+          );
+        };
+        "state" = mkOption {
+          description = "EndpointPolicyState defines the state of the Policy mode: \"enforcing\", \"non-enforcing\", \"disabled\"";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "adding" = mkOverride 1002 null;
+        "allowed" = mkOverride 1002 null;
+        "denied" = mkOverride 1002 null;
+        "removing" = mkOverride 1002 null;
+        "state" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyIngressAdding" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyIngressAllowed" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyIngressDenied" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEndpointStatusPolicyIngressRemoving" = {
+
+      options = {
+        "dest-port" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+        "identity-labels" = mkOption {
+          description = "";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "protocol" = mkOption {
+          description = "";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "dest-port" = mkOverride 1002 null;
+        "identity" = mkOverride 1002 null;
+        "identity-labels" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEnvoyConfig" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEnvoyConfigSpec"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "spec" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEnvoyConfigSpec" = {
+
+      options = {
+        "backendServices" = mkOption {
+          description = "BackendServices specifies Kubernetes services whose backends\nare automatically synced to Envoy using EDS.  Traffic for these\nservices is not forwarded to an Envoy listener. This allows an\nEnvoy listener load balance traffic to these backends while\nnormal Cilium service load balancing takes care of balancing\ntraffic for these services at the same time.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumEnvoyConfigSpecBackendServices" "name" [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "nodeSelector" = mkOption {
+          description = "NodeSelector is a label selector that determines to which nodes\nthis configuration applies.\nIf nil, then this config applies to all nodes.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumEnvoyConfigSpecNodeSelector"));
+        };
+        "resources" = mkOption {
+          description = "Envoy xDS resources, a list of the following Envoy resource types:\ntype.googleapis.com/envoy.config.listener.v3.Listener,\ntype.googleapis.com/envoy.config.route.v3.RouteConfiguration,\ntype.googleapis.com/envoy.config.cluster.v3.Cluster,\ntype.googleapis.com/envoy.config.endpoint.v3.ClusterLoadAssignment, and\ntype.googleapis.com/envoy.extensions.transport_sockets.tls.v3.Secret.";
+          type = (types.listOf types.attrs);
+        };
+        "services" = mkOption {
+          description = "Services specifies Kubernetes services for which traffic is\nforwarded to an Envoy listener for L7 load balancing. Backends\nof these services are automatically synced to Envoy usign EDS.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumEnvoyConfigSpecServices" "name" [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = {
+        "backendServices" = mkOverride 1002 null;
+        "nodeSelector" = mkOverride 1002 null;
+        "services" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEnvoyConfigSpecBackendServices" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Name is the name of a destination Kubernetes service that identifies traffic\nto be redirected.";
+          type = types.str;
+        };
+        "namespace" = mkOption {
+          description = "Namespace is the Kubernetes service namespace.\nIn CiliumEnvoyConfig namespace defaults to the namespace of the CEC,\nIn CiliumClusterwideEnvoyConfig namespace defaults to \"default\".";
+          type = (types.nullOr types.str);
+        };
+        "number" = mkOption {
+          description = "Ports is a set of port numbers, which can be used for filtering in case of underlying\nis exposing multiple port numbers.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "namespace" = mkOverride 1002 null;
+        "number" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEnvoyConfigSpecNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2.CiliumEnvoyConfigSpecNodeSelectorMatchExpressions")
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEnvoyConfigSpecNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumEnvoyConfigSpecServices" = {
+
+      options = {
+        "listener" = mkOption {
+          description = "Listener specifies the name of the Envoy listener the\nservice traffic is redirected to. The listener must be\nspecified in the Envoy 'resources' of the same\nCiliumEnvoyConfig.\n\nIf omitted, the first listener specified in 'resources' is\nused.";
+          type = (types.nullOr types.str);
+        };
+        "name" = mkOption {
+          description = "Name is the name of a destination Kubernetes service that identifies traffic\nto be redirected.";
+          type = types.str;
+        };
+        "namespace" = mkOption {
+          description = "Namespace is the Kubernetes service namespace.\nIn CiliumEnvoyConfig namespace this is overridden to the namespace of the CEC,\nIn CiliumClusterwideEnvoyConfig namespace defaults to \"default\".";
+          type = (types.nullOr types.str);
+        };
+        "ports" = mkOption {
+          description = "Ports is a set of service's frontend ports that should be redirected to the Envoy\nlistener. By default all frontend ports of the service are redirected.";
+          type = (types.nullOr (types.listOf types.int));
+        };
+      };
+
+      config = {
+        "listener" = mkOverride 1002 null;
+        "namespace" = mkOverride 1002 null;
+        "ports" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumIdentity" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "security-labels" = mkOption {
+          description = "SecurityLabels is the source-of-truth set of labels for this identity.";
+          type = (types.attrsOf types.str);
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+      };
+
+    };
     "cilium.io.v2.CiliumLoadBalancerIPPool" = {
 
       options = {
@@ -6841,6 +8712,296 @@ let
 
       config = {
         "observedGeneration" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicy" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "Spec is the desired behavior of the local redirect policy.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpec"));
+        };
+        "status" = mkOption {
+          description = "Status is the most recent status of the local redirect policy.\nIt is a read-only field.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicyStatus"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "spec" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpec" = {
+
+      options = {
+        "description" = mkOption {
+          description = "Description can be used by the creator of the policy to describe the\npurpose of this policy.";
+          type = (types.nullOr types.str);
+        };
+        "redirectBackend" = mkOption {
+          description = "RedirectBackend specifies backend configuration to redirect traffic to.\nIt can not be empty.";
+          type = (submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackend");
+        };
+        "redirectFrontend" = mkOption {
+          description = "RedirectFrontend specifies frontend configuration to redirect traffic from.\nIt can not be empty.";
+          type = (submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontend");
+        };
+        "skipRedirectFromBackend" = mkOption {
+          description = "SkipRedirectFromBackend indicates whether traffic matching RedirectFrontend\nfrom RedirectBackend should skip redirection, and hence the traffic will\nbe forwarded as-is.\n\nThe default is false which means traffic matching RedirectFrontend will\nget redirected from all pods, including the RedirectBackend(s).\n\nExample: If RedirectFrontend is configured to \"169.254.169.254:80\" as the traffic\nthat needs to be redirected to backends selected by RedirectBackend, if\nSkipRedirectFromBackend is set to true, traffic going to \"169.254.169.254:80\"\nfrom such backends will not be redirected back to the backends. Instead,\nthe matched traffic from the backends will be forwarded to the original\ndestination \"169.254.169.254:80\".";
+          type = (types.nullOr types.bool);
+        };
+      };
+
+      config = {
+        "description" = mkOverride 1002 null;
+        "skipRedirectFromBackend" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackend" = {
+
+      options = {
+        "localEndpointSelector" = mkOption {
+          description = "LocalEndpointSelector selects node local pod(s) where traffic is redirected to.";
+          type = (
+            submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackendLocalEndpointSelector"
+          );
+        };
+        "toPorts" = mkOption {
+          description = "ToPorts is a list of L4 ports with protocol of node local pod(s) where traffic\nis redirected to.\nWhen multiple ports are specified, the ports must be named.";
+          type = (
+            coerceAttrsOfSubmodulesToListByKey
+              "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackendToPorts"
+              "name"
+              [ ]
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackendLocalEndpointSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (
+                submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackendLocalEndpointSelectorMatchExpressions"
+              )
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackendLocalEndpointSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectBackendToPorts" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Name is a port name, which must contain at least one [a-z],\nand may also contain [0-9] and '-' anywhere except adjacent to another\n'-' or in the beginning or the end.";
+          type = (types.nullOr types.str);
+        };
+        "port" = mkOption {
+          description = "Port is an L4 port number. The string will be strictly parsed as a single uint16.";
+          type = types.str;
+        };
+        "protocol" = mkOption {
+          description = "Protocol is the L4 protocol.\nAccepted values: \"TCP\", \"UDP\"";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "name" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontend" = {
+
+      options = {
+        "addressMatcher" = mkOption {
+          description = "AddressMatcher is a tuple {IP, port, protocol} that matches traffic to be\nredirected.";
+          type = (
+            types.nullOr (
+              submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendAddressMatcher"
+            )
+          );
+        };
+        "serviceMatcher" = mkOption {
+          description = "ServiceMatcher specifies Kubernetes service and port that matches\ntraffic to be redirected.";
+          type = (
+            types.nullOr (
+              submoduleOf "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendServiceMatcher"
+            )
+          );
+        };
+      };
+
+      config = {
+        "addressMatcher" = mkOverride 1002 null;
+        "serviceMatcher" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendAddressMatcher" = {
+
+      options = {
+        "ip" = mkOption {
+          description = "IP is a destination ip address for traffic to be redirected.\n\nExample:\nWhen it is set to \"169.254.169.254\", traffic destined to\n\"169.254.169.254\" is redirected.";
+          type = types.str;
+        };
+        "toPorts" = mkOption {
+          description = "ToPorts is a list of destination L4 ports with protocol for traffic\nto be redirected.\nWhen multiple ports are specified, the ports must be named.\n\nExample:\nWhen set to Port: \"53\" and Protocol: UDP, traffic destined to port '53'\nwith UDP protocol is redirected.";
+          type = (
+            coerceAttrsOfSubmodulesToListByKey
+              "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendAddressMatcherToPorts"
+              "name"
+              [ ]
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendAddressMatcherToPorts" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Name is a port name, which must contain at least one [a-z],\nand may also contain [0-9] and '-' anywhere except adjacent to another\n'-' or in the beginning or the end.";
+          type = (types.nullOr types.str);
+        };
+        "port" = mkOption {
+          description = "Port is an L4 port number. The string will be strictly parsed as a single uint16.";
+          type = types.str;
+        };
+        "protocol" = mkOption {
+          description = "Protocol is the L4 protocol.\nAccepted values: \"TCP\", \"UDP\"";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "name" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendServiceMatcher" = {
+
+      options = {
+        "namespace" = mkOption {
+          description = "Namespace is the Kubernetes service namespace.\nThe service namespace must match the namespace of the parent Local\nRedirect Policy.  For Cluster-wide Local Redirect Policy, this\ncan be any namespace.";
+          type = types.str;
+        };
+        "serviceName" = mkOption {
+          description = "Name is the name of a destination Kubernetes service that identifies traffic\nto be redirected.\nThe service type needs to be ClusterIP.\n\nExample:\nWhen this field is populated with 'serviceName:myService', all the traffic\ndestined to the cluster IP of this service at the (specified)\nservice port(s) will be redirected.";
+          type = types.str;
+        };
+        "toPorts" = mkOption {
+          description = "ToPorts is a list of destination service L4 ports with protocol for\ntraffic to be redirected. If not specified, traffic for all the service\nports will be redirected.\nWhen multiple ports are specified, the ports must be named.";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey
+                "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendServiceMatcherToPorts"
+                "name"
+                [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = {
+        "toPorts" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicySpecRedirectFrontendServiceMatcherToPorts" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Name is a port name, which must contain at least one [a-z],\nand may also contain [0-9] and '-' anywhere except adjacent to another\n'-' or in the beginning or the end.";
+          type = (types.nullOr types.str);
+        };
+        "port" = mkOption {
+          description = "Port is an L4 port number. The string will be strictly parsed as a single uint16.";
+          type = types.str;
+        };
+        "protocol" = mkOption {
+          description = "Protocol is the L4 protocol.\nAccepted values: \"TCP\", \"UDP\"";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "name" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumLocalRedirectPolicyStatus" = {
+
+      options = {
+        "ok" = mkOption {
+          description = "";
+          type = (types.nullOr types.bool);
+        };
+      };
+
+      config = {
+        "ok" = mkOverride 1002 null;
       };
 
     };
@@ -12222,6 +14383,1077 @@ let
       };
 
     };
+    "cilium.io.v2.CiliumNode" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "Spec defines the desired specification/configuration of the node.";
+          type = (submoduleOf "cilium.io.v2.CiliumNodeSpec");
+        };
+        "status" = mkOption {
+          description = "Status defines the realized specification/configuration and status\nof the node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeStatus"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeConfig" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (types.nullOr (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"));
+        };
+        "spec" = mkOption {
+          description = "Spec is the desired Cilium configuration overrides for a given node";
+          type = (submoduleOf "cilium.io.v2.CiliumNodeConfigSpec");
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "metadata" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeConfigSpec" = {
+
+      options = {
+        "defaults" = mkOption {
+          description = "Defaults is treated the same as the cilium-config ConfigMap - a set\nof key-value pairs parsed by the agent and operator processes.\nEach key must be a valid config-map data field (i.e. a-z, A-Z, -, _, and .)";
+          type = (types.attrsOf types.str);
+        };
+        "nodeSelector" = mkOption {
+          description = "NodeSelector is a label selector that determines to which nodes\nthis configuration applies.\nIf not supplied, then this config applies to no nodes. If\nempty, then it applies to all nodes.";
+          type = (submoduleOf "cilium.io.v2.CiliumNodeConfigSpecNodeSelector");
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2.CiliumNodeConfigSpecNodeSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2.CiliumNodeConfigSpecNodeSelectorMatchExpressions")
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeConfigSpecNodeSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpec" = {
+
+      options = {
+        "addresses" = mkOption {
+          description = "Addresses is the list of all node addresses.";
+          type = (types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumNodeSpecAddresses")));
+        };
+        "alibaba-cloud" = mkOption {
+          description = "AlibabaCloud is the AlibabaCloud IPAM specific configuration.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecAlibaba-cloud"));
+        };
+        "azure" = mkOption {
+          description = "Azure is the Azure IPAM specific configuration.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecAzure"));
+        };
+        "bootid" = mkOption {
+          description = "BootID is a unique node identifier generated on boot";
+          type = (types.nullOr types.str);
+        };
+        "encryption" = mkOption {
+          description = "Encryption is the encryption configuration of the node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecEncryption"));
+        };
+        "eni" = mkOption {
+          description = "ENI is the AWS ENI specific configuration.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecEni"));
+        };
+        "health" = mkOption {
+          description = "HealthAddressing is the addressing information for health connectivity\nchecking.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecHealth"));
+        };
+        "ingress" = mkOption {
+          description = "IngressAddressing is the addressing information for Ingress listener.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecIngress"));
+        };
+        "instance-id" = mkOption {
+          description = "InstanceID is the identifier of the node. This is different from the\nnode name which is typically the FQDN of the node. The InstanceID\ntypically refers to the identifier used by the cloud provider or\nsome other means of identification.";
+          type = (types.nullOr types.str);
+        };
+        "ipam" = mkOption {
+          description = "IPAM is the address management specification. This section can be\npopulated by a user or it can be automatically populated by an IPAM\noperator.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecIpam"));
+        };
+        "nodeidentity" = mkOption {
+          description = "NodeIdentity is the Cilium numeric identity allocated for the node, if any.";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "addresses" = mkOverride 1002 null;
+        "alibaba-cloud" = mkOverride 1002 null;
+        "azure" = mkOverride 1002 null;
+        "bootid" = mkOverride 1002 null;
+        "encryption" = mkOverride 1002 null;
+        "eni" = mkOverride 1002 null;
+        "health" = mkOverride 1002 null;
+        "ingress" = mkOverride 1002 null;
+        "instance-id" = mkOverride 1002 null;
+        "ipam" = mkOverride 1002 null;
+        "nodeidentity" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecAddresses" = {
+
+      options = {
+        "ip" = mkOption {
+          description = "IP is an IP of a node";
+          type = (types.nullOr types.str);
+        };
+        "type" = mkOption {
+          description = "Type is the type of the node address";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "ip" = mkOverride 1002 null;
+        "type" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecAlibaba-cloud" = {
+
+      options = {
+        "availability-zone" = mkOption {
+          description = "AvailabilityZone is the availability zone to use when allocating\nENIs.";
+          type = (types.nullOr types.str);
+        };
+        "cidr-block" = mkOption {
+          description = "CIDRBlock is vpc ipv4 CIDR";
+          type = (types.nullOr types.str);
+        };
+        "instance-type" = mkOption {
+          description = "InstanceType is the ECS instance type, e.g. \"ecs.g6.2xlarge\"";
+          type = (types.nullOr types.str);
+        };
+        "security-group-tags" = mkOption {
+          description = "SecurityGroupTags is the list of tags to use when evaluating which\nsecurity groups to use for the ENI.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "security-groups" = mkOption {
+          description = "SecurityGroups is the list of security groups to attach to any ENI\nthat is created and attached to the instance.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "vpc-id" = mkOption {
+          description = "VPCID is the VPC ID to use when allocating ENIs.";
+          type = (types.nullOr types.str);
+        };
+        "vswitch-tags" = mkOption {
+          description = "VSwitchTags is the list of tags to use when evaluating which\nvSwitch to use for the ENI.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "vswitches" = mkOption {
+          description = "VSwitches is the ID of vSwitch available for ENI";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "availability-zone" = mkOverride 1002 null;
+        "cidr-block" = mkOverride 1002 null;
+        "instance-type" = mkOverride 1002 null;
+        "security-group-tags" = mkOverride 1002 null;
+        "security-groups" = mkOverride 1002 null;
+        "vpc-id" = mkOverride 1002 null;
+        "vswitch-tags" = mkOverride 1002 null;
+        "vswitches" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecAzure" = {
+
+      options = {
+        "interface-name" = mkOption {
+          description = "InterfaceName is the name of the interface the cilium-operator\nwill use to allocate all the IPs on";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "interface-name" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecEncryption" = {
+
+      options = {
+        "key" = mkOption {
+          description = "Key is the index to the key to use for encryption or 0 if encryption is\ndisabled.";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "key" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecEni" = {
+
+      options = {
+        "availability-zone" = mkOption {
+          description = "AvailabilityZone is the availability zone to use when allocating\nENIs.";
+          type = (types.nullOr types.str);
+        };
+        "delete-on-termination" = mkOption {
+          description = "DeleteOnTermination defines that the ENI should be deleted when the\nassociated instance is terminated. If the parameter is not set the\ndefault behavior is to delete the ENI on instance termination.";
+          type = (types.nullOr types.bool);
+        };
+        "disable-prefix-delegation" = mkOption {
+          description = "DisablePrefixDelegation determines whether ENI prefix delegation should be\ndisabled on this node.";
+          type = (types.nullOr types.bool);
+        };
+        "exclude-interface-tags" = mkOption {
+          description = "ExcludeInterfaceTags is the list of tags to use when excluding ENIs for\nCilium IP allocation. Any interface matching this set of tags will not\nbe managed by Cilium.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "first-interface-index" = mkOption {
+          description = "FirstInterfaceIndex is the index of the first ENI to use for IP\nallocation, e.g. if the node has eth0, eth1, eth2 and\nFirstInterfaceIndex is set to 1, then only eth1 and eth2 will be\nused for IP allocation, eth0 will be ignored for PodIP allocation.";
+          type = (types.nullOr types.int);
+        };
+        "instance-id" = mkOption {
+          description = "InstanceID is the AWS InstanceId of the node. The InstanceID is used\nto retrieve AWS metadata for the node.\n\nOBSOLETE: This field is obsolete, please use Spec.InstanceID";
+          type = (types.nullOr types.str);
+        };
+        "instance-type" = mkOption {
+          description = "InstanceType is the AWS EC2 instance type, e.g. \"m5.large\"";
+          type = (types.nullOr types.str);
+        };
+        "max-above-watermark" = mkOption {
+          description = "MaxAboveWatermark is the maximum number of addresses to allocate\nbeyond the addresses needed to reach the PreAllocate watermark.\nGoing above the watermark can help reduce the number of API calls to\nallocate IPs, e.g. when a new ENI is allocated, as many secondary\nIPs as possible are allocated. Limiting the amount can help reduce\nwaste of IPs.\n\nOBSOLETE: This field is obsolete, please use Spec.IPAM.MaxAboveWatermark";
+          type = (types.nullOr types.int);
+        };
+        "min-allocate" = mkOption {
+          description = "MinAllocate is the minimum number of IPs that must be allocated when\nthe node is first bootstrapped. It defines the minimum base socket\nof addresses that must be available. After reaching this watermark,\nthe PreAllocate and MaxAboveWatermark logic takes over to continue\nallocating IPs.\n\nOBSOLETE: This field is obsolete, please use Spec.IPAM.MinAllocate";
+          type = (types.nullOr types.int);
+        };
+        "node-subnet-id" = mkOption {
+          description = "NodeSubnetID is the subnet of the primary ENI the instance was brought up\nwith. It is used as a sensible default subnet to create ENIs in.";
+          type = (types.nullOr types.str);
+        };
+        "pre-allocate" = mkOption {
+          description = "PreAllocate defines the number of IP addresses that must be\navailable for allocation in the IPAMspec. It defines the buffer of\naddresses available immediately without requiring cilium-operator to\nget involved.\n\nOBSOLETE: This field is obsolete, please use Spec.IPAM.PreAllocate";
+          type = (types.nullOr types.int);
+        };
+        "security-group-tags" = mkOption {
+          description = "SecurityGroupTags is the list of tags to use when evaliating what\nAWS security groups to use for the ENI.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "security-groups" = mkOption {
+          description = "SecurityGroups is the list of security groups to attach to any ENI\nthat is created and attached to the instance.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "subnet-ids" = mkOption {
+          description = "SubnetIDs is the list of subnet ids to use when evaluating what AWS\nsubnets to use for ENI and IP allocation.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "subnet-tags" = mkOption {
+          description = "SubnetTags is the list of tags to use when evaluating what AWS\nsubnets to use for ENI and IP allocation.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "use-primary-address" = mkOption {
+          description = "UsePrimaryAddress determines whether an ENI's primary address\nshould be available for allocations on the node";
+          type = (types.nullOr types.bool);
+        };
+        "vpc-id" = mkOption {
+          description = "VpcID is the VPC ID to use when allocating ENIs.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "availability-zone" = mkOverride 1002 null;
+        "delete-on-termination" = mkOverride 1002 null;
+        "disable-prefix-delegation" = mkOverride 1002 null;
+        "exclude-interface-tags" = mkOverride 1002 null;
+        "first-interface-index" = mkOverride 1002 null;
+        "instance-id" = mkOverride 1002 null;
+        "instance-type" = mkOverride 1002 null;
+        "max-above-watermark" = mkOverride 1002 null;
+        "min-allocate" = mkOverride 1002 null;
+        "node-subnet-id" = mkOverride 1002 null;
+        "pre-allocate" = mkOverride 1002 null;
+        "security-group-tags" = mkOverride 1002 null;
+        "security-groups" = mkOverride 1002 null;
+        "subnet-ids" = mkOverride 1002 null;
+        "subnet-tags" = mkOverride 1002 null;
+        "use-primary-address" = mkOverride 1002 null;
+        "vpc-id" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecHealth" = {
+
+      options = {
+        "ipv4" = mkOption {
+          description = "IPv4 is the IPv4 address of the IPv4 health endpoint.";
+          type = (types.nullOr types.str);
+        };
+        "ipv6" = mkOption {
+          description = "IPv6 is the IPv6 address of the IPv4 health endpoint.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "ipv4" = mkOverride 1002 null;
+        "ipv6" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecIngress" = {
+
+      options = {
+        "ipv4" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+        "ipv6" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "ipv4" = mkOverride 1002 null;
+        "ipv6" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecIpam" = {
+
+      options = {
+        "ipv6-pool" = mkOption {
+          description = "IPv6Pool is the list of IPv6 addresses available to the node for allocation.\nWhen an IPv6 address is used, it will remain on this list but will be added to\nStatus.IPAM.IPv6Used";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+        "max-above-watermark" = mkOption {
+          description = "MaxAboveWatermark is the maximum number of addresses to allocate\nbeyond the addresses needed to reach the PreAllocate watermark.\nGoing above the watermark can help reduce the number of API calls to\nallocate IPs, e.g. when a new ENI is allocated, as many secondary\nIPs as possible are allocated. Limiting the amount can help reduce\nwaste of IPs.";
+          type = (types.nullOr types.int);
+        };
+        "max-allocate" = mkOption {
+          description = "MaxAllocate is the maximum number of IPs that can be allocated to the\nnode. When the current amount of allocated IPs will approach this value,\nthe considered value for PreAllocate will decrease down to 0 in order to\nnot attempt to allocate more addresses than defined.";
+          type = (types.nullOr types.int);
+        };
+        "min-allocate" = mkOption {
+          description = "MinAllocate is the minimum number of IPs that must be allocated when\nthe node is first bootstrapped. It defines the minimum base socket\nof addresses that must be available. After reaching this watermark,\nthe PreAllocate and MaxAboveWatermark logic takes over to continue\nallocating IPs.";
+          type = (types.nullOr types.int);
+        };
+        "podCIDRs" = mkOption {
+          description = "PodCIDRs is the list of CIDRs available to the node for allocation.\nWhen an IP is used, the IP will be added to Status.IPAM.Used";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "pool" = mkOption {
+          description = "Pool is the list of IPv4 addresses available to the node for allocation.\nWhen an IPv4 address is used, it will remain on this list but will be added to\nStatus.IPAM.Used";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+        "pools" = mkOption {
+          description = "Pools contains the list of assigned IPAM pools for this node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecIpamPools"));
+        };
+        "pre-allocate" = mkOption {
+          description = "PreAllocate defines the number of IP addresses that must be\navailable for allocation in the IPAMspec. It defines the buffer of\naddresses available immediately without requiring cilium-operator to\nget involved.";
+          type = (types.nullOr types.int);
+        };
+        "static-ip-tags" = mkOption {
+          description = "StaticIPTags are used to determine the pool of IPs from which to\nattribute a static IP to the node. For example in AWS this is used to\nfilter Elastic IP Addresses.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "ipv6-pool" = mkOverride 1002 null;
+        "max-above-watermark" = mkOverride 1002 null;
+        "max-allocate" = mkOverride 1002 null;
+        "min-allocate" = mkOverride 1002 null;
+        "podCIDRs" = mkOverride 1002 null;
+        "pool" = mkOverride 1002 null;
+        "pools" = mkOverride 1002 null;
+        "pre-allocate" = mkOverride 1002 null;
+        "static-ip-tags" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecIpamPools" = {
+
+      options = {
+        "allocated" = mkOption {
+          description = "Allocated contains the list of pooled CIDR assigned to this node. The\noperator will add new pod CIDRs to this field, whereas the agent will\nremove CIDRs it has released.";
+          type = (types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumNodeSpecIpamPoolsAllocated")));
+        };
+        "requested" = mkOption {
+          description = "Requested contains a list of IPAM pool requests, i.e. indicates how many\naddresses this node requests out of each pool listed here. This field\nis owned and written to by cilium-agent and read by the operator.";
+          type = (types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumNodeSpecIpamPoolsRequested")));
+        };
+      };
+
+      config = {
+        "allocated" = mkOverride 1002 null;
+        "requested" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecIpamPoolsAllocated" = {
+
+      options = {
+        "cidrs" = mkOption {
+          description = "CIDRs contains a list of pod CIDRs currently allocated from this pool";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "pool" = mkOption {
+          description = "Pool is the name of the IPAM pool backing this allocation";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "cidrs" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecIpamPoolsRequested" = {
+
+      options = {
+        "needed" = mkOption {
+          description = "Needed indicates how many IPs out of the above Pool this node requests\nfrom the operator. The operator runs a reconciliation loop to ensure each\nnode always has enough PodCIDRs allocated in each pool to fulfill the\nrequested number of IPs here.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeSpecIpamPoolsRequestedNeeded"));
+        };
+        "pool" = mkOption {
+          description = "Pool is the name of the IPAM pool backing this request";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "needed" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeSpecIpamPoolsRequestedNeeded" = {
+
+      options = {
+        "ipv4-addrs" = mkOption {
+          description = "IPv4Addrs contains the number of requested IPv4 addresses out of a given\npool";
+          type = (types.nullOr types.int);
+        };
+        "ipv6-addrs" = mkOption {
+          description = "IPv6Addrs contains the number of requested IPv6 addresses out of a given\npool";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "ipv4-addrs" = mkOverride 1002 null;
+        "ipv6-addrs" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatus" = {
+
+      options = {
+        "alibaba-cloud" = mkOption {
+          description = "AlibabaCloud is the AlibabaCloud specific status of the node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeStatusAlibaba-cloud"));
+        };
+        "azure" = mkOption {
+          description = "Azure is the Azure specific status of the node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeStatusAzure"));
+        };
+        "eni" = mkOption {
+          description = "ENI is the AWS ENI specific status of the node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeStatusEni"));
+        };
+        "ipam" = mkOption {
+          description = "IPAM is the IPAM status of the node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeStatusIpam"));
+        };
+      };
+
+      config = {
+        "alibaba-cloud" = mkOverride 1002 null;
+        "azure" = mkOverride 1002 null;
+        "eni" = mkOverride 1002 null;
+        "ipam" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusAlibaba-cloud" = {
+
+      options = {
+        "enis" = mkOption {
+          description = "ENIs is the list of ENIs on the node";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+      };
+
+      config = {
+        "enis" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusAzure" = {
+
+      options = {
+        "interfaces" = mkOption {
+          description = "Interfaces is the list of interfaces on the node";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2.CiliumNodeStatusAzureInterfaces" "name" [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+      };
+
+      config = {
+        "interfaces" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusAzureInterfaces" = {
+
+      options = {
+        "GatewayIP" = mkOption {
+          description = "GatewayIP is the interface's subnet's default route\n\nOBSOLETE: This field is obsolete, please use Gateway field instead.";
+          type = (types.nullOr types.str);
+        };
+        "addresses" = mkOption {
+          description = "Addresses is the list of all IPs associated with the interface,\nincluding all secondary addresses";
+          type = (
+            types.nullOr (types.listOf (submoduleOf "cilium.io.v2.CiliumNodeStatusAzureInterfacesAddresses"))
+          );
+        };
+        "cidr" = mkOption {
+          description = "CIDR is the range that the interface belongs to.";
+          type = (types.nullOr types.str);
+        };
+        "gateway" = mkOption {
+          description = "Gateway is the interface's subnet's default route";
+          type = (types.nullOr types.str);
+        };
+        "id" = mkOption {
+          description = "ID is the identifier";
+          type = (types.nullOr types.str);
+        };
+        "mac" = mkOption {
+          description = "MAC is the mac address";
+          type = (types.nullOr types.str);
+        };
+        "name" = mkOption {
+          description = "Name is the name of the interface";
+          type = (types.nullOr types.str);
+        };
+        "security-group" = mkOption {
+          description = "SecurityGroup is the security group associated with the interface";
+          type = (types.nullOr types.str);
+        };
+        "state" = mkOption {
+          description = "State is the provisioning state";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "GatewayIP" = mkOverride 1002 null;
+        "addresses" = mkOverride 1002 null;
+        "cidr" = mkOverride 1002 null;
+        "gateway" = mkOverride 1002 null;
+        "id" = mkOverride 1002 null;
+        "mac" = mkOverride 1002 null;
+        "name" = mkOverride 1002 null;
+        "security-group" = mkOverride 1002 null;
+        "state" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusAzureInterfacesAddresses" = {
+
+      options = {
+        "ip" = mkOption {
+          description = "IP is the ip address of the address";
+          type = (types.nullOr types.str);
+        };
+        "state" = mkOption {
+          description = "State is the provisioning state of the address";
+          type = (types.nullOr types.str);
+        };
+        "subnet" = mkOption {
+          description = "Subnet is the subnet the address belongs to";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "ip" = mkOverride 1002 null;
+        "state" = mkOverride 1002 null;
+        "subnet" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusEni" = {
+
+      options = {
+        "enis" = mkOption {
+          description = "ENIs is the list of ENIs on the node";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+      };
+
+      config = {
+        "enis" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusIpam" = {
+
+      options = {
+        "assigned-static-ip" = mkOption {
+          description = "AssignedStaticIP is the static IP assigned to the node (ex: public Elastic IP address in AWS)";
+          type = (types.nullOr types.str);
+        };
+        "ipv6-used" = mkOption {
+          description = "IPv6Used lists all IPv6 addresses out of Spec.IPAM.IPv6Pool which have been\nallocated and are in use.";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+        "operator-status" = mkOption {
+          description = "Operator is the Operator status of the node";
+          type = (types.nullOr (submoduleOf "cilium.io.v2.CiliumNodeStatusIpamOperator-status"));
+        };
+        "pod-cidrs" = mkOption {
+          description = "PodCIDRs lists the status of each pod CIDR allocated to this node.";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+        "release-ips" = mkOption {
+          description = "ReleaseIPs tracks the state for every IPv4 address considered for release.\nThe value can be one of the following strings:\n* marked-for-release : Set by operator as possible candidate for IP\n* ready-for-release  : Acknowledged as safe to release by agent\n* do-not-release     : IP already in use / not owned by the node. Set by agent\n* released           : IP successfully released. Set by operator";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "release-ipv6s" = mkOption {
+          description = "ReleaseIPv6s tracks the state for every IPv6 address considered for release.\nThe value can be one of the following strings:\n* marked-for-release : Set by operator as possible candidate for IP\n* ready-for-release  : Acknowledged as safe to release by agent\n* do-not-release     : IP already in use / not owned by the node. Set by agent\n* released           : IP successfully released. Set by operator";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+        "used" = mkOption {
+          description = "Used lists all IPv4 addresses out of Spec.IPAM.Pool which have been allocated\nand are in use.";
+          type = (types.nullOr (types.attrsOf types.attrs));
+        };
+      };
+
+      config = {
+        "assigned-static-ip" = mkOverride 1002 null;
+        "ipv6-used" = mkOverride 1002 null;
+        "operator-status" = mkOverride 1002 null;
+        "pod-cidrs" = mkOverride 1002 null;
+        "release-ips" = mkOverride 1002 null;
+        "release-ipv6s" = mkOverride 1002 null;
+        "used" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2.CiliumNodeStatusIpamOperator-status" = {
+
+      options = {
+        "error" = mkOption {
+          description = "Error is the error message set by cilium-operator.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "error" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumEndpointSlice" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "endpoints" = mkOption {
+          description = "Endpoints is a list of coreCEPs packed in a CiliumEndpointSlice";
+          type = (
+            coerceAttrsOfSubmodulesToListByKey "cilium.io.v2alpha1.CiliumEndpointSliceEndpoints" "name" [ ]
+          );
+          apply = attrsToList;
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "namespace" = mkOption {
+          description = "Namespace indicate as CiliumEndpointSlice namespace.\nAll the CiliumEndpoints within the same namespace are put together\nin CiliumEndpointSlice.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "namespace" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumEndpointSliceEndpoints" = {
+
+      options = {
+        "encryption" = mkOption {
+          description = "EncryptionSpec defines the encryption relevant configuration of a node.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsEncryption"));
+        };
+        "id" = mkOption {
+          description = "IdentityID is the numeric identity of the endpoint";
+          type = (types.nullOr types.int);
+        };
+        "name" = mkOption {
+          description = "Name indicate as CiliumEndpoint name.";
+          type = (types.nullOr types.str);
+        };
+        "named-ports" = mkOption {
+          description = "NamedPorts List of named Layer 4 port and protocol pairs which will be used in Network\nPolicy specs.\n\nswagger:model NamedPorts";
+          type = (
+            types.nullOr (
+              coerceAttrsOfSubmodulesToListByKey "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsNamed-ports"
+                "name"
+                [ ]
+            )
+          );
+          apply = attrsToList;
+        };
+        "networking" = mkOption {
+          description = "EndpointNetworking is the addressing information of an endpoint.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsNetworking"));
+        };
+        "service-account" = mkOption {
+          description = "ServiceAccount is the service account of the endpoint.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "encryption" = mkOverride 1002 null;
+        "id" = mkOverride 1002 null;
+        "name" = mkOverride 1002 null;
+        "named-ports" = mkOverride 1002 null;
+        "networking" = mkOverride 1002 null;
+        "service-account" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsEncryption" = {
+
+      options = {
+        "key" = mkOption {
+          description = "Key is the index to the key to use for encryption or 0 if encryption is\ndisabled.";
+          type = (types.nullOr types.int);
+        };
+      };
+
+      config = {
+        "key" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsNamed-ports" = {
+
+      options = {
+        "name" = mkOption {
+          description = "Optional layer 4 port name";
+          type = (types.nullOr types.str);
+        };
+        "port" = mkOption {
+          description = "Layer 4 port number";
+          type = (types.nullOr types.int);
+        };
+        "protocol" = mkOption {
+          description = "Layer 4 protocol\nEnum: [\"TCP\",\"UDP\",\"SCTP\",\"ICMP\",\"ICMPV6\",\"ANY\"]";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "name" = mkOverride 1002 null;
+        "port" = mkOverride 1002 null;
+        "protocol" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsNetworking" = {
+
+      options = {
+        "addressing" = mkOption {
+          description = "IP4/6 addresses assigned to this Endpoint";
+          type = (
+            types.listOf (submoduleOf "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsNetworkingAddressing")
+          );
+        };
+        "node" = mkOption {
+          description = "NodeIP is the IP of the node the endpoint is running on. The IP must\nbe reachable between nodes.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "node" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumEndpointSliceEndpointsNetworkingAddressing" = {
+
+      options = {
+        "ipv4" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+        "ipv6" = mkOption {
+          description = "";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "ipv4" = mkOverride 1002 null;
+        "ipv6" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumGatewayClassConfig" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta");
+        };
+        "spec" = mkOption {
+          description = "Spec is a human-readable of a GatewayClass configuration.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumGatewayClassConfigSpec"));
+        };
+        "status" = mkOption {
+          description = "Status is the status of the policy.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumGatewayClassConfigStatus"));
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "spec" = mkOverride 1002 null;
+        "status" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumGatewayClassConfigSpec" = {
+
+      options = {
+        "description" = mkOption {
+          description = "Description helps describe a GatewayClass configuration with more details.";
+          type = (types.nullOr types.str);
+        };
+        "service" = mkOption {
+          description = "Service specifies the configuration for the generated Service.\nNote that not all fields from upstream Service.Spec are supported";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumGatewayClassConfigSpecService"));
+        };
+      };
+
+      config = {
+        "description" = mkOverride 1002 null;
+        "service" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumGatewayClassConfigSpecService" = {
+
+      options = {
+        "allocateLoadBalancerNodePorts" = mkOption {
+          description = "Sets the Service.Spec.AllocateLoadBalancerNodePorts in generated Service objects to the given value.";
+          type = (types.nullOr types.bool);
+        };
+        "externalTrafficPolicy" = mkOption {
+          description = "Sets the Service.Spec.ExternalTrafficPolicy in generated Service objects to the given value.";
+          type = (types.nullOr types.str);
+        };
+        "ipFamilies" = mkOption {
+          description = "Sets the Service.Spec.IPFamilies in generated Service objects to the given value.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "ipFamilyPolicy" = mkOption {
+          description = "Sets the Service.Spec.IPFamilyPolicy in generated Service objects to the given value.";
+          type = (types.nullOr types.str);
+        };
+        "loadBalancerClass" = mkOption {
+          description = "Sets the Service.Spec.LoadBalancerClass in generated Service objects to the given value.";
+          type = (types.nullOr types.str);
+        };
+        "loadBalancerSourceRanges" = mkOption {
+          description = "Sets the Service.Spec.LoadBalancerSourceRanges in generated Service objects to the given value.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+        "loadBalancerSourceRangesPolicy" = mkOption {
+          description = "LoadBalancerSourceRangesPolicy defines the policy for the LoadBalancerSourceRanges if the incoming traffic\nis allowed or denied.";
+          type = (types.nullOr types.str);
+        };
+        "trafficDistribution" = mkOption {
+          description = "Sets the Service.Spec.TrafficDistribution in generated Service objects to the given value.";
+          type = (types.nullOr types.str);
+        };
+        "type" = mkOption {
+          description = "Sets the Service.Spec.Type in generated Service objects to the given value.\nOnly LoadBalancer and NodePort are supported.";
+          type = (types.nullOr types.str);
+        };
+      };
+
+      config = {
+        "allocateLoadBalancerNodePorts" = mkOverride 1002 null;
+        "externalTrafficPolicy" = mkOverride 1002 null;
+        "ipFamilies" = mkOverride 1002 null;
+        "ipFamilyPolicy" = mkOverride 1002 null;
+        "loadBalancerClass" = mkOverride 1002 null;
+        "loadBalancerSourceRanges" = mkOverride 1002 null;
+        "loadBalancerSourceRangesPolicy" = mkOverride 1002 null;
+        "trafficDistribution" = mkOverride 1002 null;
+        "type" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumGatewayClassConfigStatus" = {
+
+      options = {
+        "conditions" = mkOption {
+          description = "Current service state";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2alpha1.CiliumGatewayClassConfigStatusConditions")
+            )
+          );
+        };
+      };
+
+      config = {
+        "conditions" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumGatewayClassConfigStatusConditions" = {
+
+      options = {
+        "lastTransitionTime" = mkOption {
+          description = "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.";
+          type = types.str;
+        };
+        "message" = mkOption {
+          description = "message is a human readable message indicating details about the transition.\nThis may be an empty string.";
+          type = types.str;
+        };
+        "observedGeneration" = mkOption {
+          description = "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.";
+          type = (types.nullOr types.int);
+        };
+        "reason" = mkOption {
+          description = "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.";
+          type = types.str;
+        };
+        "status" = mkOption {
+          description = "status of the condition, one of True, False, Unknown.";
+          type = types.str;
+        };
+        "type" = mkOption {
+          description = "type of condition in CamelCase or in foo.example.com/CamelCase.";
+          type = types.str;
+        };
+      };
+
+      config = {
+        "observedGeneration" = mkOverride 1002 null;
+      };
+
+    };
     "cilium.io.v2alpha1.CiliumL2AnnouncementPolicy" = {
 
       options = {
@@ -12437,6 +15669,185 @@ let
       };
 
     };
+    "cilium.io.v2alpha1.CiliumPodIPPool" = {
+
+      options = {
+        "apiVersion" = mkOption {
+          description = "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources";
+          type = (types.nullOr types.str);
+        };
+        "kind" = mkOption {
+          description = "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds";
+          type = (types.nullOr types.str);
+        };
+        "metadata" = mkOption {
+          description = "Standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata";
+          type = (types.nullOr (globalSubmoduleOf "io.k8s.apimachinery.pkg.apis.meta.v1.ObjectMeta"));
+        };
+        "spec" = mkOption {
+          description = "";
+          type = (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpec");
+        };
+      };
+
+      config = {
+        "apiVersion" = mkOverride 1002 null;
+        "kind" = mkOverride 1002 null;
+        "metadata" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpec" = {
+
+      options = {
+        "ipv4" = mkOption {
+          description = "IPv4 specifies the IPv4 CIDRs and mask sizes of the pool";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpecIpv4"));
+        };
+        "ipv6" = mkOption {
+          description = "IPv6 specifies the IPv6 CIDRs and mask sizes of the pool";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpecIpv6"));
+        };
+        "namespaceSelector" = mkOption {
+          description = "NamespaceSelector selects the set of Namespaces that are eligible to use\nthis pool. If both PodSelector and NamespaceSelector are specified, a Pod\nmust match both selectors to be eligible for IP allocation from this pool.\n\nIf NamespaceSelector is empty, the pool can be used by Pods in any namespace\n(subject to PodSelector constraints).";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpecNamespaceSelector"));
+        };
+        "podSelector" = mkOption {
+          description = "PodSelector selects the set of Pods that are eligible to receive IPs from\nthis pool when neither the Pod nor its Namespace specify an explicit\n`ipam.cilium.io/*` annotation.\n\nThe selector can match on regular Pod labels and on the following synthetic\nlabels that Cilium adds for convenience:\n\nio.kubernetes.pod.namespace – the Pod's namespace\nio.kubernetes.pod.name      – the Pod's name\n\nA single Pod must not match more than one pool for the same IP family.\nIf multiple pools match, IP allocation fails for that Pod and a warning event\nis emitted in the namespace of the Pod.";
+          type = (types.nullOr (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpecPodSelector"));
+        };
+      };
+
+      config = {
+        "ipv4" = mkOverride 1002 null;
+        "ipv6" = mkOverride 1002 null;
+        "namespaceSelector" = mkOverride 1002 null;
+        "podSelector" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpecIpv4" = {
+
+      options = {
+        "cidrs" = mkOption {
+          description = "CIDRs is a list of IPv4 CIDRs that are part of the pool.";
+          type = (types.listOf types.str);
+        };
+        "maskSize" = mkOption {
+          description = "MaskSize is the mask size of the pool.";
+          type = types.int;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpecIpv6" = {
+
+      options = {
+        "cidrs" = mkOption {
+          description = "CIDRs is a list of IPv6 CIDRs that are part of the pool.";
+          type = (types.listOf types.str);
+        };
+        "maskSize" = mkOption {
+          description = "MaskSize is the mask size of the pool.";
+          type = types.int;
+        };
+      };
+
+      config = { };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpecNamespaceSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpecNamespaceSelectorMatchExpressions")
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpecNamespaceSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpecPodSelector" = {
+
+      options = {
+        "matchExpressions" = mkOption {
+          description = "matchExpressions is a list of label selector requirements. The requirements are ANDed.";
+          type = (
+            types.nullOr (
+              types.listOf (submoduleOf "cilium.io.v2alpha1.CiliumPodIPPoolSpecPodSelectorMatchExpressions")
+            )
+          );
+        };
+        "matchLabels" = mkOption {
+          description = "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.";
+          type = (types.nullOr (types.attrsOf types.str));
+        };
+      };
+
+      config = {
+        "matchExpressions" = mkOverride 1002 null;
+        "matchLabels" = mkOverride 1002 null;
+      };
+
+    };
+    "cilium.io.v2alpha1.CiliumPodIPPoolSpecPodSelectorMatchExpressions" = {
+
+      options = {
+        "key" = mkOption {
+          description = "key is the label key that the selector applies to.";
+          type = types.str;
+        };
+        "operator" = mkOption {
+          description = "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.";
+          type = types.str;
+        };
+        "values" = mkOption {
+          description = "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.";
+          type = (types.nullOr (types.listOf types.str));
+        };
+      };
+
+      config = {
+        "values" = mkOverride 1002 null;
+      };
+
+    };
 
   };
 in
@@ -12468,6 +15879,18 @@ in
         );
         default = { };
       };
+      "cilium.io"."v2"."CiliumBGPNodeConfig" = mkOption {
+        description = "CiliumBGPNodeConfig is node local configuration for BGP agent. Name of the object should be node name.\nThis resource will be created by Cilium operator and is read-only for the users.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumBGPNodeConfig" "ciliumbgpnodeconfigs"
+              "CiliumBGPNodeConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
       "cilium.io"."v2"."CiliumBGPNodeConfigOverride" = mkOption {
         description = "CiliumBGPNodeConfigOverride specifies configuration overrides for a CiliumBGPNodeConfig.\nIt allows fine-tuning of BGP behavior on a per-node basis. For the override to be effective,\nthe names in CiliumBGPNodeConfigOverride and CiliumBGPNodeConfig must match exactly. This\nmatching ensures that specific node configurations are applied correctly and only where intended.";
         type = (
@@ -12492,6 +15915,29 @@ in
         );
         default = { };
       };
+      "cilium.io"."v2"."CiliumCIDRGroup" = mkOption {
+        description = "CiliumCIDRGroup is a list of external CIDRs (i.e: CIDRs selecting peers\noutside the clusters) that can be referenced as a single entity from\nCiliumNetworkPolicies.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumCIDRGroup" "ciliumcidrgroups" "CiliumCIDRGroup"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2"."CiliumClusterwideEnvoyConfig" = mkOption {
+        description = "";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumClusterwideEnvoyConfig" "ciliumclusterwideenvoyconfigs"
+              "CiliumClusterwideEnvoyConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
       "cilium.io"."v2"."CiliumClusterwideNetworkPolicy" = mkOption {
         description = "CiliumClusterwideNetworkPolicy is a Kubernetes third-party resource with an\nmodified version of CiliumNetworkPolicy which is cluster scoped rather than\nnamespace scoped.";
         type = (
@@ -12505,12 +15951,67 @@ in
         );
         default = { };
       };
+      "cilium.io"."v2"."CiliumEgressGatewayPolicy" = mkOption {
+        description = "";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumEgressGatewayPolicy" "ciliumegressgatewaypolicies"
+              "CiliumEgressGatewayPolicy"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2"."CiliumEndpoint" = mkOption {
+        description = "CiliumEndpoint is the status of a Cilium policy rule.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumEndpoint" "ciliumendpoints" "CiliumEndpoint" "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2"."CiliumEnvoyConfig" = mkOption {
+        description = "";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumEnvoyConfig" "ciliumenvoyconfigs" "CiliumEnvoyConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2"."CiliumIdentity" = mkOption {
+        description = "CiliumIdentity is a CRD that represents an identity managed by Cilium.\nIt is intended as a backing store for identity allocation, acting as the\nglobal coordination backend, and can be used in place of a KVStore (such as\netcd).\nThe name of the CRD is the numeric identity and the labels on the CRD object\nare the kubernetes sourced labels seen by cilium. This is currently the\nonly label source possible when running under kubernetes. Non-kubernetes\nlabels are filtered but all labels, from all sources, are places in the\nSecurityLabels field. These also include the source and are used to define\nthe identity.\nThe labels under metav1.ObjectMeta can be used when searching for\nCiliumIdentity instances that include particular labels. This can be done\nwith invocations such as:\n\n\tkubectl get ciliumid -l 'foo=bar'";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumIdentity" "ciliumidentities" "CiliumIdentity" "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
       "cilium.io"."v2"."CiliumLoadBalancerIPPool" = mkOption {
         description = "CiliumLoadBalancerIPPool is a Kubernetes third-party resource which\nis used to defined pools of IPs which the operator can use to to allocate\nand advertise IPs for Services of type LoadBalancer.";
         type = (
           types.attrsOf (
             submoduleForDefinition "cilium.io.v2.CiliumLoadBalancerIPPool" "ciliumloadbalancerippools"
               "CiliumLoadBalancerIPPool"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2"."CiliumLocalRedirectPolicy" = mkOption {
+        description = "CiliumLocalRedirectPolicy is a Kubernetes Custom Resource that contains a\nspecification to redirect traffic locally within a node.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumLocalRedirectPolicy" "ciliumlocalredirectpolicies"
+              "CiliumLocalRedirectPolicy"
               "cilium.io"
               "v2"
           )
@@ -12529,6 +16030,50 @@ in
         );
         default = { };
       };
+      "cilium.io"."v2"."CiliumNode" = mkOption {
+        description = "CiliumNode represents a node managed by Cilium. It contains a specification\nto control various node specific configuration aspects and a status section\nto represent the status of the node.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumNode" "ciliumnodes" "CiliumNode" "cilium.io" "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2"."CiliumNodeConfig" = mkOption {
+        description = "CiliumNodeConfig is a list of configuration key-value pairs. It is applied to\nnodes indicated by a label selector.\n\nIf multiple overrides apply to the same node, they will be ordered by name\nwith later Overrides overwriting any conflicting keys.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumNodeConfig" "ciliumnodeconfigs" "CiliumNodeConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2alpha1"."CiliumEndpointSlice" = mkOption {
+        description = "CiliumEndpointSlice contains a group of CoreCiliumendpoints.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumEndpointSlice" "ciliumendpointslices"
+              "CiliumEndpointSlice"
+              "cilium.io"
+              "v2alpha1"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2alpha1"."CiliumGatewayClassConfig" = mkOption {
+        description = "CiliumGatewayClassConfig is a Kubernetes third-party resource which\nis used to configure Gateways owned by GatewayClass.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumGatewayClassConfig" "ciliumgatewayclassconfigs"
+              "CiliumGatewayClassConfig"
+              "cilium.io"
+              "v2alpha1"
+          )
+        );
+        default = { };
+      };
       "cilium.io"."v2alpha1"."CiliumL2AnnouncementPolicy" = mkOption {
         description = "CiliumL2AnnouncementPolicy is a Kubernetes third-party resource which\nis used to defined which nodes should announce what services on the\nL2 network.";
         type = (
@@ -12536,6 +16081,17 @@ in
             submoduleForDefinition "cilium.io.v2alpha1.CiliumL2AnnouncementPolicy"
               "ciliuml2announcementpolicies"
               "CiliumL2AnnouncementPolicy"
+              "cilium.io"
+              "v2alpha1"
+          )
+        );
+        default = { };
+      };
+      "cilium.io"."v2alpha1"."CiliumPodIPPool" = mkOption {
+        description = "CiliumPodIPPool defines an IP pool that can be used for pooled IPAM (i.e. the multi-pool IPAM\nmode).";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumPodIPPool" "ciliumpodippools" "CiliumPodIPPool"
               "cilium.io"
               "v2alpha1"
           )
@@ -12569,6 +16125,18 @@ in
         );
         default = { };
       };
+      "ciliumBGPNodeConfigs" = mkOption {
+        description = "CiliumBGPNodeConfig is node local configuration for BGP agent. Name of the object should be node name.\nThis resource will be created by Cilium operator and is read-only for the users.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumBGPNodeConfig" "ciliumbgpnodeconfigs"
+              "CiliumBGPNodeConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
       "ciliumBGPNodeConfigOverrides" = mkOption {
         description = "CiliumBGPNodeConfigOverride specifies configuration overrides for a CiliumBGPNodeConfig.\nIt allows fine-tuning of BGP behavior on a per-node basis. For the override to be effective,\nthe names in CiliumBGPNodeConfigOverride and CiliumBGPNodeConfig must match exactly. This\nmatching ensures that specific node configurations are applied correctly and only where intended.";
         type = (
@@ -12593,6 +16161,29 @@ in
         );
         default = { };
       };
+      "ciliumCIDRGroups" = mkOption {
+        description = "CiliumCIDRGroup is a list of external CIDRs (i.e: CIDRs selecting peers\noutside the clusters) that can be referenced as a single entity from\nCiliumNetworkPolicies.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumCIDRGroup" "ciliumcidrgroups" "CiliumCIDRGroup"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumClusterwideEnvoyConfigs" = mkOption {
+        description = "";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumClusterwideEnvoyConfig" "ciliumclusterwideenvoyconfigs"
+              "CiliumClusterwideEnvoyConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
       "ciliumClusterwideNetworkPolicies" = mkOption {
         description = "CiliumClusterwideNetworkPolicy is a Kubernetes third-party resource with an\nmodified version of CiliumNetworkPolicy which is cluster scoped rather than\nnamespace scoped.";
         type = (
@@ -12601,6 +16192,73 @@ in
               "ciliumclusterwidenetworkpolicies"
               "CiliumClusterwideNetworkPolicy"
               "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumEgressGatewayPolicies" = mkOption {
+        description = "";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumEgressGatewayPolicy" "ciliumegressgatewaypolicies"
+              "CiliumEgressGatewayPolicy"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumEndpoints" = mkOption {
+        description = "CiliumEndpoint is the status of a Cilium policy rule.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumEndpoint" "ciliumendpoints" "CiliumEndpoint" "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumEndpointSlices" = mkOption {
+        description = "CiliumEndpointSlice contains a group of CoreCiliumendpoints.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumEndpointSlice" "ciliumendpointslices"
+              "CiliumEndpointSlice"
+              "cilium.io"
+              "v2alpha1"
+          )
+        );
+        default = { };
+      };
+      "ciliumEnvoyConfigs" = mkOption {
+        description = "";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumEnvoyConfig" "ciliumenvoyconfigs" "CiliumEnvoyConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumGatewayClassConfigs" = mkOption {
+        description = "CiliumGatewayClassConfig is a Kubernetes third-party resource which\nis used to configure Gateways owned by GatewayClass.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumGatewayClassConfig" "ciliumgatewayclassconfigs"
+              "CiliumGatewayClassConfig"
+              "cilium.io"
+              "v2alpha1"
+          )
+        );
+        default = { };
+      };
+      "ciliumIdentities" = mkOption {
+        description = "CiliumIdentity is a CRD that represents an identity managed by Cilium.\nIt is intended as a backing store for identity allocation, acting as the\nglobal coordination backend, and can be used in place of a KVStore (such as\netcd).\nThe name of the CRD is the numeric identity and the labels on the CRD object\nare the kubernetes sourced labels seen by cilium. This is currently the\nonly label source possible when running under kubernetes. Non-kubernetes\nlabels are filtered but all labels, from all sources, are places in the\nSecurityLabels field. These also include the source and are used to define\nthe identity.\nThe labels under metav1.ObjectMeta can be used when searching for\nCiliumIdentity instances that include particular labels. This can be done\nwith invocations such as:\n\n\tkubectl get ciliumid -l 'foo=bar'";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumIdentity" "ciliumidentities" "CiliumIdentity" "cilium.io"
               "v2"
           )
         );
@@ -12631,6 +16289,18 @@ in
         );
         default = { };
       };
+      "ciliumLocalRedirectPolicies" = mkOption {
+        description = "CiliumLocalRedirectPolicy is a Kubernetes Custom Resource that contains a\nspecification to redirect traffic locally within a node.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumLocalRedirectPolicy" "ciliumlocalredirectpolicies"
+              "CiliumLocalRedirectPolicy"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
       "ciliumNetworkPolicies" = mkOption {
         description = "CiliumNetworkPolicy is a Kubernetes third-party resource with an extended\nversion of NetworkPolicy.";
         type = (
@@ -12639,6 +16309,37 @@ in
               "CiliumNetworkPolicy"
               "cilium.io"
               "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumNodes" = mkOption {
+        description = "CiliumNode represents a node managed by Cilium. It contains a specification\nto control various node specific configuration aspects and a status section\nto represent the status of the node.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumNode" "ciliumnodes" "CiliumNode" "cilium.io" "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumNodeConfigs" = mkOption {
+        description = "CiliumNodeConfig is a list of configuration key-value pairs. It is applied to\nnodes indicated by a label selector.\n\nIf multiple overrides apply to the same node, they will be ordered by name\nwith later Overrides overwriting any conflicting keys.";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2.CiliumNodeConfig" "ciliumnodeconfigs" "CiliumNodeConfig"
+              "cilium.io"
+              "v2"
+          )
+        );
+        default = { };
+      };
+      "ciliumPodIPPools" = mkOption {
+        description = "CiliumPodIPPool defines an IP pool that can be used for pooled IPAM (i.e. the multi-pool IPAM\nmode).";
+        type = (
+          types.attrsOf (
+            submoduleForDefinition "cilium.io.v2alpha1.CiliumPodIPPool" "ciliumpodippools" "CiliumPodIPPool"
+              "cilium.io"
+              "v2alpha1"
           )
         );
         default = { };
@@ -12668,6 +16369,13 @@ in
         attrName = "ciliumBGPClusterConfigs";
       }
       {
+        name = "ciliumbgpnodeconfigs";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumBGPNodeConfig";
+        attrName = "ciliumBGPNodeConfigs";
+      }
+      {
         name = "ciliumbgpnodeconfigoverrides";
         group = "cilium.io";
         version = "v2";
@@ -12682,11 +16390,53 @@ in
         attrName = "ciliumBGPPeerConfigs";
       }
       {
+        name = "ciliumcidrgroups";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumCIDRGroup";
+        attrName = "ciliumCIDRGroups";
+      }
+      {
+        name = "ciliumclusterwideenvoyconfigs";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumClusterwideEnvoyConfig";
+        attrName = "ciliumClusterwideEnvoyConfigs";
+      }
+      {
         name = "ciliumclusterwidenetworkpolicies";
         group = "cilium.io";
         version = "v2";
         kind = "CiliumClusterwideNetworkPolicy";
         attrName = "ciliumClusterwideNetworkPolicies";
+      }
+      {
+        name = "ciliumegressgatewaypolicies";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumEgressGatewayPolicy";
+        attrName = "ciliumEgressGatewayPolicies";
+      }
+      {
+        name = "ciliumendpoints";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumEndpoint";
+        attrName = "ciliumEndpoints";
+      }
+      {
+        name = "ciliumenvoyconfigs";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumEnvoyConfig";
+        attrName = "ciliumEnvoyConfigs";
+      }
+      {
+        name = "ciliumidentities";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumIdentity";
+        attrName = "ciliumIdentities";
       }
       {
         name = "ciliumloadbalancerippools";
@@ -12696,6 +16446,13 @@ in
         attrName = "ciliumLoadBalancerIPPools";
       }
       {
+        name = "ciliumlocalredirectpolicies";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumLocalRedirectPolicy";
+        attrName = "ciliumLocalRedirectPolicies";
+      }
+      {
         name = "ciliumnetworkpolicies";
         group = "cilium.io";
         version = "v2";
@@ -12703,11 +16460,46 @@ in
         attrName = "ciliumNetworkPolicies";
       }
       {
+        name = "ciliumnodes";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumNode";
+        attrName = "ciliumNodes";
+      }
+      {
+        name = "ciliumnodeconfigs";
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumNodeConfig";
+        attrName = "ciliumNodeConfigs";
+      }
+      {
+        name = "ciliumendpointslices";
+        group = "cilium.io";
+        version = "v2alpha1";
+        kind = "CiliumEndpointSlice";
+        attrName = "ciliumEndpointSlices";
+      }
+      {
+        name = "ciliumgatewayclassconfigs";
+        group = "cilium.io";
+        version = "v2alpha1";
+        kind = "CiliumGatewayClassConfig";
+        attrName = "ciliumGatewayClassConfigs";
+      }
+      {
         name = "ciliuml2announcementpolicies";
         group = "cilium.io";
         version = "v2alpha1";
         kind = "CiliumL2AnnouncementPolicy";
         attrName = "ciliumL2AnnouncementPolicies";
+      }
+      {
+        name = "ciliumpodippools";
+        group = "cilium.io";
+        version = "v2alpha1";
+        kind = "CiliumPodIPPool";
+        attrName = "ciliumPodIPPools";
       }
     ];
 
@@ -12718,24 +16510,49 @@ in
       "cilium.io"."v2"."CiliumBGPClusterConfig" =
         mkAliasDefinitions
           options.resources."ciliumBGPClusterConfigs";
+      "cilium.io"."v2"."CiliumBGPNodeConfig" =
+        mkAliasDefinitions
+          options.resources."ciliumBGPNodeConfigs";
       "cilium.io"."v2"."CiliumBGPNodeConfigOverride" =
         mkAliasDefinitions
           options.resources."ciliumBGPNodeConfigOverrides";
       "cilium.io"."v2"."CiliumBGPPeerConfig" =
         mkAliasDefinitions
           options.resources."ciliumBGPPeerConfigs";
+      "cilium.io"."v2"."CiliumCIDRGroup" = mkAliasDefinitions options.resources."ciliumCIDRGroups";
+      "cilium.io"."v2"."CiliumClusterwideEnvoyConfig" =
+        mkAliasDefinitions
+          options.resources."ciliumClusterwideEnvoyConfigs";
       "cilium.io"."v2"."CiliumClusterwideNetworkPolicy" =
         mkAliasDefinitions
           options.resources."ciliumClusterwideNetworkPolicies";
+      "cilium.io"."v2"."CiliumEgressGatewayPolicy" =
+        mkAliasDefinitions
+          options.resources."ciliumEgressGatewayPolicies";
+      "cilium.io"."v2"."CiliumEndpoint" = mkAliasDefinitions options.resources."ciliumEndpoints";
+      "cilium.io"."v2alpha1"."CiliumEndpointSlice" =
+        mkAliasDefinitions
+          options.resources."ciliumEndpointSlices";
+      "cilium.io"."v2"."CiliumEnvoyConfig" = mkAliasDefinitions options.resources."ciliumEnvoyConfigs";
+      "cilium.io"."v2alpha1"."CiliumGatewayClassConfig" =
+        mkAliasDefinitions
+          options.resources."ciliumGatewayClassConfigs";
+      "cilium.io"."v2"."CiliumIdentity" = mkAliasDefinitions options.resources."ciliumIdentities";
       "cilium.io"."v2alpha1"."CiliumL2AnnouncementPolicy" =
         mkAliasDefinitions
           options.resources."ciliumL2AnnouncementPolicies";
       "cilium.io"."v2"."CiliumLoadBalancerIPPool" =
         mkAliasDefinitions
           options.resources."ciliumLoadBalancerIPPools";
+      "cilium.io"."v2"."CiliumLocalRedirectPolicy" =
+        mkAliasDefinitions
+          options.resources."ciliumLocalRedirectPolicies";
       "cilium.io"."v2"."CiliumNetworkPolicy" =
         mkAliasDefinitions
           options.resources."ciliumNetworkPolicies";
+      "cilium.io"."v2"."CiliumNode" = mkAliasDefinitions options.resources."ciliumNodes";
+      "cilium.io"."v2"."CiliumNodeConfig" = mkAliasDefinitions options.resources."ciliumNodeConfigs";
+      "cilium.io"."v2alpha1"."CiliumPodIPPool" = mkAliasDefinitions options.resources."ciliumPodIPPools";
 
     };
 
@@ -12745,7 +16562,37 @@ in
       {
         group = "cilium.io";
         version = "v2";
+        kind = "CiliumEndpoint";
+        default.metadata.namespace = lib.mkDefault config.namespace;
+      }
+      {
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumEnvoyConfig";
+        default.metadata.namespace = lib.mkDefault config.namespace;
+      }
+      {
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumLocalRedirectPolicy";
+        default.metadata.namespace = lib.mkDefault config.namespace;
+      }
+      {
+        group = "cilium.io";
+        version = "v2";
         kind = "CiliumNetworkPolicy";
+        default.metadata.namespace = lib.mkDefault config.namespace;
+      }
+      {
+        group = "cilium.io";
+        version = "v2";
+        kind = "CiliumNodeConfig";
+        default.metadata.namespace = lib.mkDefault config.namespace;
+      }
+      {
+        group = "cilium.io";
+        version = "v2alpha1";
+        kind = "CiliumGatewayClassConfig";
         default.metadata.namespace = lib.mkDefault config.namespace;
       }
     ];
