@@ -6,7 +6,7 @@ in
   flake.kubernetes.services.cilium = {
     crds =
       { pkgs, lib, ... }:
-      {
+      let
         # nix run nixpkgs#nix-prefetch-github -- cilium cilium --rev v1.19.1
         # NOTE: Remember to keep pkgs/by-name/cni-plugin-cilium in sync
         src = pkgs.fetchFromGitHub {
@@ -16,18 +16,39 @@ in
           hash = "sha256-wswY4u2Z7Z8hvGVnLONxSD1Mu1RV1AglC4ijUHsCCW4=";
         };
         crds =
-          (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
-            "CiliumBGPPeerConfigs"
-            "CiliumBGPClusterConfigs"
-            "CiliumBGPAdvertisements"
-            "CiliumBGPNodeConfigOverrides"
-            "CiliumNetworkPolicies"
-            "CiliumLoadBalancerIPPools"
-            "CiliumClusterWideNetworkPolicies"
-          ])
-          ++ (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2alpha1/${lib.toLower crd}.yaml") [
-            "CiliumL2AnnouncementPolicies"
-          ]);
+          lib.concatMap
+            (
+              version:
+              let
+                path = "pkg/k8s/apis/cilium.io/client/crds/${version}";
+              in
+              lib.pipe (builtins.readDir "${src}/${path}") [
+                (lib.filterAttrs (_name: type: type == "regular"))
+                (lib.filterAttrs (name: _type: lib.hasSuffix ".yaml" name))
+                builtins.attrNames
+                (map (file: "${path}/${file}"))
+              ]
+            )
+            [
+              "v2"
+              "v2alpha1"
+            ];
+      in
+      {
+        inherit src crds;
+        # crds =
+        #   (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
+        #     "CiliumBGPPeerConfigs"
+        #     "CiliumBGPClusterConfigs"
+        #     "CiliumBGPAdvertisements"
+        #     "CiliumBGPNodeConfigOverrides"
+        #     "CiliumNetworkPolicies"
+        #     "CiliumLoadBalancerIPPools"
+        #     "CiliumClusterWideNetworkPolicies"
+        #   ])
+        #   ++ (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2alpha1/${lib.toLower crd}.yaml") [
+        #     "CiliumL2AnnouncementPolicies"
+        #   ]);
       };
 
     nixidy =
@@ -92,6 +113,9 @@ in
                   };
                 };
               };
+
+              gatewayAPI.enabled = true;
+              gatewayAPI.hostNetwork.enabled = false;
 
               k8sClientRateLimit = {
                 qps = 50;
@@ -183,6 +207,42 @@ in
           };
 
           resources = {
+            # gateways.default-gateway =
+            #   let
+            #     ip = ingress-controller-address;
+            #   in
+            #   {
+            #     # metadata.annotations."external-dns.alpha.kubernetes.io/target" = "${name}.${domain}";
+            #     spec = {
+            #       gatewayClassName = "cilium";
+            #       addresses = lib.toList {
+            #         type = "IPAddress";
+            #         value = ip;
+            #       };
+            #       # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
+            #       listeners = [
+            #         {
+            #           name = "http";
+            #           protocol = "HTTP";
+            #           port = 80;
+            #           hostname = "*.${environment.domain}";
+            #           allowedRoutes.namespaces.from = "All";
+            #         }
+            #         {
+            #           name = "https";
+            #           protocol = "HTTPS";
+            #           port = 443;
+            #           hostname = "*.${environment.domain}";
+            #           allowedRoutes.namespaces.from = "All";
+            #           tls.certificateRefs = lib.toList {
+            #             kind = "Secret";
+            #             name = "kube-system-wildcard-certificate";
+            #             namespace = "kube-system";
+            #           };
+            #         }
+            #       ];
+            #     };
+            #   };
             ciliumLoadBalancerIPPools."lb-pool" = {
               metadata = {
                 name = "lb-pool";

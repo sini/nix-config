@@ -1,8 +1,8 @@
 {
   flake.kubernetes.services.cert-manager = {
     crds =
-      { pkgs, ... }:
-      {
+      { pkgs, lib, ... }:
+      let
         # nix run nixpkgs#nix-prefetch-github -- cert-manager cert-manager --rev v1.19.3
         src = pkgs.fetchFromGitHub {
           owner = "cert-manager";
@@ -10,14 +10,19 @@
           rev = "v1.19.3";
           hash = "sha256-XsGNcIv23YLLC4tY6MttPRhQDhf7SeaOMub/ZY+p7t0=";
         };
-        crds = [
-          "deploy/crds/cert-manager.io_certificaterequests.yaml"
-          "deploy/crds/cert-manager.io_certificates.yaml"
-          "deploy/crds/cert-manager.io_clusterissuers.yaml"
-          "deploy/crds/cert-manager.io_issuers.yaml"
-          "deploy/crds/acme.cert-manager.io_challenges.yaml"
-          "deploy/crds/acme.cert-manager.io_orders.yaml"
-        ];
+        crds =
+          let
+            path = "deploy/crds/";
+          in
+          lib.pipe (builtins.readDir "${src}/${path}") [
+            (lib.filterAttrs (_name: type: type == "regular"))
+            (lib.filterAttrs (name: _type: lib.hasSuffix ".yaml" name))
+            builtins.attrNames
+            (map (file: "${path}/${file}"))
+          ];
+      in
+      {
+        inherit src crds;
       };
 
     nixidy =

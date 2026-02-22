@@ -52,7 +52,7 @@ data:
   statusbadge.enabled: "false"
   timeout.hard.reconciliation: 0s
   timeout.reconciliation: 180s
-  url: https://argocd.example.com
+  url: https://argocd.json64.dev
 kind: ConfigMap
 metadata:
   labels:
