@@ -115,7 +115,7 @@ in
                 enabled = true;
                 default = true;
                 loadbalancerMode = "shared";
-                hostNetwork.enabled = true;
+                # hostNetwork.enabled = true;
                 # defaultSecretName
                 # defaultSecretNamespace
                 # enforceHttps
