@@ -17,6 +17,8 @@
       "cpu-amd"
       "gpu-amd"
       "thunderbolt-mesh"
+      "cilium-bgp"
+
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.2";
