@@ -1,4 +1,4 @@
-{ self, ... }:
+{ self, lib, ... }:
 let
   inherit (self.lib.kubernetes-utils) findClusterMaster;
 in
@@ -37,6 +37,19 @@ in
       {
         inherit src crds;
       };
+
+    options = {
+      devices = lib.mkOption {
+        type = lib.types.nullOr (lib.types.listOf lib.types.str);
+        default = null;
+        description = "List of devices";
+      };
+      directRoutingDevice = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Default routing device";
+      };
+    };
 
     nixidy =
       {
@@ -78,6 +91,15 @@ in
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
+              devices = lib.mkIf (
+                config.kubernetes.services.cilium.directRoutingDevice != null
+              ) config.kubernetes.services.cilium.devices;
+
+              nodePort = lib.optionalAttrs (config.kubernetes.services.cilium.directRoutingDevice != null) {
+                directRoutingDevice = config.kubernetes.services.cilium.directRoutingDevice;
+              };
+              # egress-masquerade-interfaces:
+
               # Points to the stable loopback routed by the BGP fabric
               k8sServiceHost = findClusterMaster environment;
               k8sServicePort = 6443;
@@ -93,6 +115,10 @@ in
                 enabled = true;
                 default = true;
                 loadbalancerMode = "shared";
+                hostNetwork.enabled = true;
+                # defaultSecretName
+                # defaultSecretNamespace
+                # enforceHttps
                 service = {
                   annotations = {
                     "lbipam.cilium.io/ips" = ingress-controller-address;
@@ -152,6 +178,7 @@ in
               socketLB.hostNamespaceOnly = true;
               bpf.lbExternalClusterIP = true;
 
+              #bpf.masquerade=true
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";

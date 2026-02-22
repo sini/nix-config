@@ -144,7 +144,7 @@ in
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 
                 "--node-ip=${internalIP}"
-                "--node-external-ip=${internalIP}"
+                "--node-external-ip=${externalIP}"
                 "--node-name=${config.networking.hostName}"
                 # TODO: If longhorn disk enabled...
                 "--node-label=node.longhorn.io/create-default-disk=true"
