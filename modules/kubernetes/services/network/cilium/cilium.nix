@@ -36,19 +36,6 @@ in
       in
       {
         inherit src crds;
-        # crds =
-        #   (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2/${lib.toLower crd}.yaml") [
-        #     "CiliumBGPPeerConfigs"
-        #     "CiliumBGPClusterConfigs"
-        #     "CiliumBGPAdvertisements"
-        #     "CiliumBGPNodeConfigOverrides"
-        #     "CiliumNetworkPolicies"
-        #     "CiliumLoadBalancerIPPools"
-        #     "CiliumClusterWideNetworkPolicies"
-        #   ])
-        #   ++ (map (crd: "pkg/k8s/apis/cilium.io/client/crds/v2alpha1/${lib.toLower crd}.yaml") [
-        #     "CiliumL2AnnouncementPolicies"
-        #   ]);
       };
 
     nixidy =
@@ -174,8 +161,6 @@ in
 
               # BGP control-plane (for FRR peering)
               bgpControlPlane.enabled = true;
-
-              # # externalIPs.enabled = true;
 
               # gatewayAPI.enabled = true;
               # gatewayAPI.service = {

@@ -14,7 +14,6 @@ in
           namespace = "kube-system";
 
           resources = {
-
             ciliumBGPAdvertisements = {
               loadbalancer-ips = {
                 metadata.labels.advertise = "cilium-routes";
@@ -35,6 +34,7 @@ in
                   }
                 ];
               };
+
               service-cluster-ips = {
                 metadata.labels.advertise = "cilium-routes";
                 spec.advertisements = [
