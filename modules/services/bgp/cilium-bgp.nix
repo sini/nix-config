@@ -71,7 +71,7 @@ in
             routeMaps = [
               "route-map CILIUM-INGRESS-FIX permit 10"
               "  match ip address prefix-list CILIUM-ROUTES"
-              "  set ip next-hop ${nodeLoopbackIp}"
+              # "  set ip next-hop ${nodeLoopbackIp}"
               "route-map FROM-UPLINK-IN permit 10"
               "  match ip address prefix-list DEFAULT-ONLY"
             ];
@@ -80,7 +80,7 @@ in
               remoteAs = localAsn;
               softReconfiguration = true;
               ebgpMultihop = 4;
-              updateSource = lib.mkIf hasMeshConfig "dummy0";
+              # updateSource = lib.mkIf hasMeshConfig "dummy0";
               listenRange = "${nodeLoopbackIp}/32";
             };
 
