@@ -24,6 +24,7 @@ in
                     service.addresses = [
                       "ClusterIP"
                       "ExternalIP"
+                      "LoadBalancerIP"
                     ];
                     selector.matchExpressions = [
                       {
