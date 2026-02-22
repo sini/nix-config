@@ -22,6 +22,7 @@
     ];
     tags = {
       "kubernetes-internal-ip" = "172.16.255.3";
+      "kubernetes-cilium-bgp-id" = "172.16.255.13";
       "bgp-asn" = "65003";
       "thunderbolt-loopback-ipv4" = "172.16.255.3/32";
       "thunderbolt-loopback-ipv6" = "fdb4:5edb:1b00::3/128";

@@ -28,6 +28,7 @@
         "argocd"
         "cert-manager"
         "cilium"
+        "cilium-bgp"
         "sops-secrets-operator"
       ];
       config = {
