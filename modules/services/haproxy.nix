@@ -64,12 +64,7 @@ in
             backend be_k8s_ingress_443
               balance roundrobin
               option tcp-check
-              # each node must expose ingress on NodePort 32443 (example)
-              ${
-                (lib.concatStringsSep "\n  " (
-                  map (host: "server ${host.hostname} ${builtins.head host.ipv4}:32443 check") hosts
-                ))
-              }
+              server kube-vip 10.11.0.1:443 check
 
             frontend kubernetes-api
               bind *:6443
