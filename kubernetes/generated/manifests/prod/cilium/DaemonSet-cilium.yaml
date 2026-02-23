@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: eed05ec7aed190c1e0182884bc588617002b2e6992a137ff6a1b0b71385bde8f
+        cilium.io/cilium-configmap-checksum: a5d440eed52b7ef041b308d7e5e9a55876a26f91bbd59e488e407eb82a31165c
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -185,6 +185,9 @@ spec:
               name: etc-cni-netd
             - mountPath: /var/lib/cilium/clustermesh
               name: clustermesh-secrets
+              readOnly: true
+            - mountPath: /etc/config
+              name: ip-masq-agent
               readOnly: true
             - mountPath: /lib/modules
               name: lib-modules
@@ -461,6 +464,13 @@ spec:
                       path: local-etcd-client-ca.crt
                   name: clustermesh-apiserver-local-cert
                   optional: true
+        - configMap:
+            items:
+              - key: config
+                path: ip-masq-agent
+            name: ip-masq-agent
+            optional: true
+          name: ip-masq-agent
         - hostPath:
             path: /proc/sys/net
             type: Directory
