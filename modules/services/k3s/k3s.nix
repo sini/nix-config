@@ -91,9 +91,10 @@ in
 
         # Enable eBPF
         boot.kernel.sysctl = {
-          "net.ipv4.ip_forward" = 1;
-          "net.ipv4.conf.all.forwarding" = 1;
-          "net.ipv6.conf.all.forwarding" = 1;
+          # These are set in server, don't feel like lib.mkDefaulting them...
+          # "net.ipv4.ip_forward" = 1;
+          # "net.ipv4.conf.all.forwarding" = 1;
+          # "net.ipv6.conf.all.forwarding" = 1;
           "net.bridge.bridge-nf-call-iptables" = 1;
           "net.bridge.bridge-nf-call-ip6tables" = 1;
           "net.core.bpf_jit_enable" = 1;
