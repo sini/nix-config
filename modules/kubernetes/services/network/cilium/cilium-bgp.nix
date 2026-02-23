@@ -105,7 +105,7 @@ in
                       bgpInstances = [
                         {
                           name = "local-frr-instance";
-                          localASN = lib.toInt hostConfig.tags.bgp-asn;
+                          localASN = 65011; # lib.toInt hostConfig.tags.bgp-asn;
                           peers = [
                             {
                               name = "local-frr-daemon";

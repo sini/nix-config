@@ -382,7 +382,7 @@ class EnvironmentManager:
 
   def _compare_files(self, sourceFile: Path, destFile: Path):
     # print("Comparing: %s -> %s" % (sourceFile, destFile))
-    return not filecmp.cmp(sourceFile, destFile)
+    return not filecmp.cmp(sourceFile, destFile, shallow=False)
     # difflib.unified_diff()
 
   def _cleanup_files(self, files: set[Path]):
