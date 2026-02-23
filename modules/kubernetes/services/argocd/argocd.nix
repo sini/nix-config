@@ -11,8 +11,6 @@
         applications.argocd = {
           namespace = "argocd";
 
-          createNamespace = true;
-
           # Adoption-safe sync options
           syncPolicy.syncOptions = {
             clientSideApplyMigration = false;

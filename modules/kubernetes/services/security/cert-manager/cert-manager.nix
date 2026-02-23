@@ -67,14 +67,10 @@
       {
         applications.cert-manager = {
           namespace = "cert-manager";
-          createNamespace = true;
 
           helm.releases.cert-manager = {
             chart = charts.jetstack.cert-manager;
-            includeCRDs = true;
-
             values = {
-              crds.enabled = true;
               global.leaderElection.namespace = "cert-manager";
               extraArgs = [
                 "--dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53"

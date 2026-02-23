@@ -9,7 +9,7 @@ spec:
       peers:
         - name: local-frr-daemon
           peerASN: 65002
-          peerAddress: 172.16.255.2
+          peerAddress: 10.10.10.3
           peerConfigRef:
             name: local-frr-peer
   nodeSelector:

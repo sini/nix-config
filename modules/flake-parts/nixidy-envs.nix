@@ -21,6 +21,7 @@ in
           let
             # Collect nixidy modules from services enabled in environment
             defaultServices = [
+              "bootstrap"
               "argocd"
               "cert-manager"
               "cilium"

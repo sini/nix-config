@@ -25,26 +25,15 @@
         inherit src crds;
       };
 
-    nixidy =
-      {
-        crdFiles,
-        ...
-      }:
-      {
-        applications.gateway-api = {
-          namespace = "kube-system";
+    nixidy = {
+      applications.gateway-api = {
+        namespace = "kube-system";
 
-          # Sync wave -2: CRDs before Cilium (-1)
-          annotations."argocd.argoproj.io/sync-wave" = "-2";
-
-          # Include the CRD resource files...
-          yamls = (map builtins.readFile crdFiles.gateway-api);
-
-          resources = {
-            gatewayClasses.cilium.spec.controllerName = "io.cilium/gateway-controller";
-          };
-
+        resources = {
+          gatewayClasses.cilium.spec.controllerName = "io.cilium/gateway-controller";
         };
+
       };
+    };
   };
 }

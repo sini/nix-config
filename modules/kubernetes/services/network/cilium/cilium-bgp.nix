@@ -110,7 +110,7 @@ in
                             {
                               name = "local-frr-daemon";
                               peerASN = lib.toInt hostConfig.tags.bgp-asn;
-                              peerAddress = hostConfig.tags.kubernetes-internal-ip;
+                              peerAddress = builtins.head hostConfig.ipv4;
                               peerConfigRef.name = "local-frr-peer";
                             }
                           ];

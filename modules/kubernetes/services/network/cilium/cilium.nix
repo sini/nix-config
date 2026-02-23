@@ -56,7 +56,6 @@ in
         config,
         charts,
         environment,
-        crdFiles,
         ...
       }:
       let
@@ -67,16 +66,12 @@ in
         applications.cilium = {
           namespace = "kube-system";
 
-          annotations."argocd.argoproj.io/sync-wave" = "-1";
+          annotations."argocd.argoproj.io/sync-wave" = "-2";
 
           compareOptions.serverSideDiff = true;
 
-          # Include the CRD resource files...
-          yamls = map builtins.readFile crdFiles.cilium;
-
           helm.releases.cilium = {
             chart = charts.cilium.cilium;
-            includeCRDs = true;
 
             values = {
               namespaceOverride = "kube-system";
