@@ -5,7 +5,7 @@ data:
   bgp-router-id-allocation-ip-pool: ""
   bgp-router-id-allocation-mode: default
   bgp-secrets-namespace: kube-system
-  bpf-distributed-lru: "true"
+  bpf-distributed-lru: "false"
   bpf-events-drop-enabled: "true"
   bpf-events-policy-verdict-enabled: "true"
   bpf-events-trace-enabled: "true"
@@ -19,7 +19,7 @@ data:
   bpf-lb-sock: "false"
   bpf-lb-sock-hostns-only: "true"
   bpf-lb-source-range-all-types: "true"
-  bpf-map-dynamic-size-ratio: "0.08"
+  bpf-map-dynamic-size-ratio: "0.0025"
   bpf-policy-map-max: "16384"
   bpf-policy-stats-map-max: "65536"
   bpf-root: /sys/fs/bpf
@@ -36,7 +36,7 @@ data:
   cni-exclusive: "true"
   cni-log-file: /var/run/cilium/cilium-cni.log
   custom-cni-conf: "false"
-  datapath-mode: netkit
+  datapath-mode: veth
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
@@ -62,7 +62,6 @@ data:
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
-  enable-host-legacy-routing: "true"
   enable-hubble: "true"
   enable-ingress-controller: "true"
   enable-ingress-proxy-protocol: "false"
@@ -78,7 +77,6 @@ data:
   enable-l2-neigh-discovery: "true"
   enable-l7-proxy: "true"
   enable-lb-ipam: "true"
-  enable-local-redirect-policy: "true"
   enable-masquerade-to-route-source: "false"
   enable-metrics: "true"
   enable-no-service-endpoints-routable: "true"
