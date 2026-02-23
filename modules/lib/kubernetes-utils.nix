@@ -20,7 +20,8 @@
         let
           masterHost = lib.head (lib.attrValues masterHosts);
         in
-        masterHost.tags.kubernetes-internal-ip or (builtins.head masterHost.ipv4)
+        # masterHost.tags.kubernetes-internal-ip or
+        (builtins.head masterHost.ipv4)
       else
         null;
 
