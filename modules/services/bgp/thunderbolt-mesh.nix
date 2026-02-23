@@ -113,7 +113,7 @@ let
     lib.filterAttrs (
       name: host:
       name != currentHostname
-      && host.tags ? "thunderbolt-loopback-ipv4"
+      && (builtins.elem "thunderbolt-mesh" host.features)
       && host.environment == currentHostEnvironment
     ) config.flake.hosts;
 in
@@ -204,7 +204,7 @@ in
             peerHostname:
             let
               peerHost = thunderboltPeers.${peerHostname};
-              peerLoopbackIp = lib.removeSuffix "/32" (peerHost.tags."thunderbolt-loopback-ipv4");
+              peerLoopbackIp = builtins.head peerHost.ipv4; # lib.removeSuffix "/32" (peerHost.tags."thunderbolt-loopback-ipv4");
               gateway = getGatewayForPeer peerHostname peerLoopbackIp;
             in
             {
@@ -219,8 +219,9 @@ in
         # Current node configuration from tags
         nodeConfig = {
           loopback = {
-            ipv4 = hostOptions.tags."thunderbolt-loopback-ipv4";
-            ipv6 = hostOptions.tags."thunderbolt-loopback-ipv6";
+            ipv4 = builtins.head hostOptions.ipv4;
+            # ipv4 = hostOptions.tags."thunderbolt-loopback-ipv4";
+            # ipv6 = hostOptions.tags."thunderbolt-loopback-ipv6";
           };
           interfaceIps = {
             enp199s0f5 = hostOptions.tags."thunderbolt-interface-1";
@@ -250,7 +251,7 @@ in
 
             staticRoutes = lib.flatten (
               map (peer: [
-                "ip route ${peer.ip}/32 ${peer.gateway}"
+                # "ip route ${peer.ip}/32 ${peer.gateway}"
                 "ip route ${peer.lanip}/32 ${peer.gateway}"
               ]) nodeConfig.peers
             );
@@ -258,7 +259,7 @@ in
             neighbors = map (peer: {
               ip = peer.ip;
               asn = peer.asn;
-              updateSource = "dummy0";
+              # updateSource = "dummy0";
               ebgpMultihop = 4;
               softReconfiguration = true;
               allowasIn = 1;
@@ -326,13 +327,13 @@ in
               };
 
               networks = {
-                "00-dummy" = {
-                  matchConfig.Name = "dummy0";
-                  address = [
-                    nodeConfig.loopback.ipv4
-                    nodeConfig.loopback.ipv6
-                  ];
-                };
+                # "00-dummy" = {
+                #   matchConfig.Name = "dummy0";
+                #   address = [
+                #     nodeConfig.loopback.ipv4
+                #     nodeConfig.loopback.ipv6
+                #   ];
+                # };
                 "21-thunderbolt-1" = {
                   matchConfig.Name = "enp199s0f5";
                   address = [ nodeConfig.interfaceIps.enp199s0f5 ];
