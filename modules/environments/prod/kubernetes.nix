@@ -38,6 +38,7 @@
             "enp199s0f5"
             "enp199s0f6"
             "br0"
+            "enp2s0"
             "tailscale0"
           ];
           directRoutingDevice = "dummy0";
