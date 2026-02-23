@@ -54,7 +54,6 @@ data:
   enable-bpf-tproxy: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
-  enable-endpoint-routes: "true"
   enable-envoy-config: "true"
   enable-gateway-api: "true"
   enable-gateway-api-alpn: "false"

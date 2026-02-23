@@ -88,7 +88,7 @@ in
               # routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
-              endpointRoutes.enabled = true;
+              # endpointRoutes.enabled = true;
 
               devices = lib.mkIf (
                 config.kubernetes.services.cilium.devices != null
