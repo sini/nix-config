@@ -9,10 +9,12 @@ data:
   bpf-events-drop-enabled: "true"
   bpf-events-policy-verdict-enabled: "true"
   bpf-events-trace-enabled: "true"
-  bpf-lb-acceleration: disabled
+  bpf-lb-acceleration: best-effort
   bpf-lb-algorithm-annotation: "false"
+  bpf-lb-dsr-dispatch: opt
   bpf-lb-external-clusterip: "true"
   bpf-lb-map-max: "65536"
+  bpf-lb-mode: dsr
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
   bpf-lb-sock-hostns-only: "true"
@@ -41,6 +43,7 @@ data:
   devices: dummy0 enp199s0f5 enp199s0f6 br0 tailscale0
   direct-routing-device: dummy0
   direct-routing-skip-unreachable: "false"
+  disable-external-ip-mitigation: "true"
   dnsproxy-enable-transparent-mode: "true"
   dnsproxy-socket-linger-timeout: "10"
   egress-gateway-reconciliation-trigger-interval: 1s

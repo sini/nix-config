@@ -197,8 +197,12 @@ in
               socketLB.hostNamespaceOnly = true;
               # localRedirectPolicies.enabled = true;
 
+              loadBalancer.acceleration = "best-effort";
+              loadBalancer.mode = "dsr";
+              loadBalancer.dsrDispatch = "opt";
               bpf = {
                 masquerade = true;
+                disableExternalIPMitigation = true;
                 datapathMode = "netkit";
                 hostLegacyRouting = true;
                 enableTCX = true;
