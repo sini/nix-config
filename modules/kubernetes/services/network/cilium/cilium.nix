@@ -68,6 +68,13 @@ in
 
           annotations."argocd.argoproj.io/sync-wave" = "-2";
 
+          syncPolicy = {
+            syncOptions = {
+              serverSideApply = true;
+              applyOutOfSyncOnly = true;
+            };
+          };
+
           compareOptions.serverSideDiff = true;
 
           helm.releases.cilium = {
