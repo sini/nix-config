@@ -69,7 +69,10 @@ in
           "ceph"
           "rbd"
           "nfs"
+          "overlay"
           # Networking support:
+          "bpf"
+          "ip_tables"
           "br_netfilter"
           "nft-expr-counter"
           "iptable_nat"
@@ -86,11 +89,29 @@ in
           "ip_vs_sh"
         ];
 
+        # Enable eBPF
+        boot.kernel.sysctl = {
+          "net.ipv4.ip_forward" = 1;
+          "net.ipv4.conf.all.forwarding" = 1;
+          "net.ipv6.conf.all.forwarding" = 1;
+          "net.bridge.bridge-nf-call-iptables" = 1;
+          "net.bridge.bridge-nf-call-ip6tables" = 1;
+          "net.core.bpf_jit_enable" = 1;
+          "net.core.bpf_jit_harden" = 0;
+        };
+
         # Blacklist nbd module to prevent ceph-volume from hanging when scanning devices
         # nbd devices cause ceph-bluestore-tool show-label to hang indefinitely
         boot.blacklistedKernelModules = [ "nbd" ];
 
         networking = {
+          #           nat = lib.mkIf ... {
+          #             enable = true;
+          #             externalInterface = "br0";
+          #             internalInterfaces = [
+          # ...
+          #             ];
+          #           };
           firewall = {
             # For debug, disable firewall...
             enable = lib.mkForce false;
@@ -100,8 +121,8 @@ in
               179 # BGP
               6443 # Kubernetes API
               6444
-              6081 # geneve
-
+              6081
+              # Cilium Geneve
               10250 # Kubelet metrics
               2379 # etcd
               2380 # etcd

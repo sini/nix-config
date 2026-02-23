@@ -35,10 +35,11 @@
         "net.ipv4.tcp_congestion_control" = "bbr";
         "net.ipv4.route.max_size" = 524288;
         "net.ipv4.tcp_fastopen" = "3";
+        "net.ipv4.ip_forward" = 1;
+        "net.ipv4.conf.all.forwarding" = 1;
         "net.ipv6.conf.all.forwarding" = true;
         "net.netfilter.nf_conntrack_max" = 131072;
         "net.nf_conntrack_max" = 131072;
-        "net.ipv4.ip_forward" = 1;
         # These need to be increased for k8s
         # Although the default settings might not cause issues initially, you'll get strange behavior after a while
         "fs.inotify.max_user_instances" = 1048576;
