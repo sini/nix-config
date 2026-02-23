@@ -93,10 +93,11 @@ in
         networking = {
           firewall = {
             # For debug, disable firewall...
-            enable = lib.mkForce false;
+            enable = lib.mkForce true;
 
             # enable = lib.mkForce false;
             allowedTCPPorts = lib.flatten [
+              179 # BGP
               6443 # Kubernetes API
               6444
 
