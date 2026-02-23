@@ -40,7 +40,7 @@ data:
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
-  devices: br0 enp199s0f5 enp199s0f6 tailscale0
+  devices: br0
   direct-routing-device: br0
   direct-routing-skip-unreachable: "false"
   disable-external-ip-mitigation: "true"
@@ -56,7 +56,6 @@ data:
   enable-bpf-tproxy: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
-  enable-endpoint-routes: "true"
   enable-envoy-config: "true"
   enable-gateway-api: "true"
   enable-gateway-api-alpn: "false"
