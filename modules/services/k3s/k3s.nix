@@ -314,11 +314,19 @@ in
                 exit 0
               fi
 
+              echo "Installing bootstrap resources..."
+              ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                --server-side \
+                --force-conflicts \
+                -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/bootstrap/"} || true
+
               echo "Installing cilium..."
               ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                 --server-side \
                 --force-conflicts \
                 -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cilium/"} || true
+              echo "Sleeping for 30 seconds for resources to settle..."
+              sleep 30;
             '';
           };
           wantedBy = [ "multi-user.target" ];
@@ -376,15 +384,19 @@ in
                   --server-side \
                   --force-conflicts \
                   -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/sops-secrets-operator/"}
+                echo "Sleeping for 30 seconds..."
+                sleep 30
               fi
 
               # Install cert-manager if deployment doesn't exist
               if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
-                echo "Installing sops-secrets-operator..."
+                echo "Installing cert-manager..."
                 ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                   --server-side \
                   --force-conflicts \
                   -f ${rootPath + "/kubernetes/generated/manifests/${environment.name}/cert-manager/"}
+                echo "Sleeping for 30 seconds..."
+                sleep 30
               fi
             '';
           };
