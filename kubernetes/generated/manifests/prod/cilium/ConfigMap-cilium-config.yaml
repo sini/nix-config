@@ -40,7 +40,6 @@ data:
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
-  devices: dummy0
   direct-routing-skip-unreachable: "false"
   disable-external-ip-mitigation: "true"
   dnsproxy-enable-transparent-mode: "true"
