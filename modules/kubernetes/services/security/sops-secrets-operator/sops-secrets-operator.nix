@@ -27,7 +27,6 @@
         config = {
           applications.sops-secrets-operator = {
             namespace = "sops-secrets-operator";
-            createNamespace = true;
 
             helm.releases.sops = {
               chart = charts.isindir.sops-secrets-operator;
@@ -57,6 +56,7 @@
                 ];
               };
             };
+
             resources.ciliumNetworkPolicies = {
               allow-kube-apiserver-egress.spec = {
                 endpointSelector.matchLabels."app.kubernetes.io/instance" = "sops";

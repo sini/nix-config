@@ -1,7 +1,9 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: gateway-api
+  annotations:
+    argocd.argoproj.io/sync-wave: "-3"
+  name: bootstrap
   namespace: argocd
 spec:
   destination:
@@ -9,7 +11,7 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: ./kubernetes/generated/manifests/prod/gateway-api
+    path: ./kubernetes/generated/manifests/prod/bootstrap
     repoURL: https://github.com/sini/nix-config.git
     targetRevision: main
   syncPolicy:
