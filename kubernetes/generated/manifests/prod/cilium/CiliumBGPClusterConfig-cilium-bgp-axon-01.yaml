@@ -4,7 +4,7 @@ metadata:
   name: cilium-bgp-axon-01
 spec:
   bgpInstances:
-    - localASN: 65001
+    - localASN: 65011
       name: local-frr-instance
       peers:
         - name: local-frr-daemon
