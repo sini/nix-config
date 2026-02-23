@@ -93,7 +93,7 @@ in
         networking = {
           firewall = {
             # For debug, disable firewall...
-            enable = lib.mkForce true;
+            enable = lib.mkForce false;
 
             # enable = lib.mkForce false;
             allowedTCPPorts = lib.flatten [
@@ -128,45 +128,45 @@ in
               "enp199s0f6"
             ];
 
-            extraCommands = ''
-              # Allow forwarding for pod and service networks
-              iptables -A FORWARD -s ${environment.kubernetes.clusterCidr} -j ACCEPT  # Default k3s pod CIDR
-              iptables -A FORWARD -d ${environment.kubernetes.clusterCidr} -j ACCEPT
-              iptables -A FORWARD -s ${environment.kubernetes.serviceCidr} -j ACCEPT  # Default k3s service CIDR
-              iptables -A FORWARD -d ${environment.kubernetes.serviceCidr} -j ACCEPT
+            # extraCommands = ''
+            #   # Allow forwarding for pod and service networks
+            #   iptables -A FORWARD -s ${environment.kubernetes.clusterCidr} -j ACCEPT  # Default k3s pod CIDR
+            #   iptables -A FORWARD -d ${environment.kubernetes.clusterCidr} -j ACCEPT
+            #   iptables -A FORWARD -s ${environment.kubernetes.serviceCidr} -j ACCEPT  # Default k3s service CIDR
+            #   iptables -A FORWARD -d ${environment.kubernetes.serviceCidr} -j ACCEPT
 
-              iptables -A FORWARD -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT  # Default k3s pod CIDR
-              iptables -A FORWARD -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A FORWARD -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT  # Default k3s pod CIDR
+            #   iptables -A FORWARD -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
 
-              # Allow pods to reach API server through service IP
-              iptables -A INPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.serviceCidr} -j ACCEPT
-              iptables -A OUTPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.serviceCidr} -j ACCEPT
+            #   # Allow pods to reach API server through service IP
+            #   iptables -A INPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.serviceCidr} -j ACCEPT
+            #   iptables -A OUTPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.serviceCidr} -j ACCEPT
 
-              iptables -A INPUT -s ${environment.kubernetes.serviceCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-              iptables -A OUTPUT -s ${environment.kubernetes.serviceCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A INPUT -s ${environment.kubernetes.serviceCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A OUTPUT -s ${environment.kubernetes.serviceCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
 
-              iptables -A INPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-              iptables -A OUTPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A INPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A OUTPUT -s ${environment.kubernetes.clusterCidr} -d ${environment.kubernetes.internalMeshCidr} -j ACCEPT
 
-              # Allow established connections
-              iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+            #   # Allow established connections
+            #   iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-              # Allow ICMP for health checks
-              iptables -A INPUT -p icmp --icmp-type echo-request -s ${environment.kubernetes.clusterCidr} -j ACCEPT
-              iptables -A INPUT -p icmp --icmp-type echo-reply -s ${environment.kubernetes.clusterCidr} -j ACCEPT
+            #   # Allow ICMP for health checks
+            #   iptables -A INPUT -p icmp --icmp-type echo-request -s ${environment.kubernetes.clusterCidr} -j ACCEPT
+            #   iptables -A INPUT -p icmp --icmp-type echo-reply -s ${environment.kubernetes.clusterCidr} -j ACCEPT
 
-              iptables -A INPUT -p icmp --icmp-type echo-request -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT
-              iptables -A INPUT -p icmp --icmp-type echo-reply -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A INPUT -p icmp --icmp-type echo-request -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT
+            #   iptables -A INPUT -p icmp --icmp-type echo-reply -s ${environment.kubernetes.internalMeshCidr} -j ACCEPT
 
-            '';
+            # '';
 
-            # Clean up custom rules when firewall stops
-            extraStopCommands = ''
-              iptables -D FORWARD -s ${environment.kubernetes.clusterCidr} -j ACCEPT 2>/dev/null || true
-              iptables -D FORWARD -d ${environment.kubernetes.clusterCidr} -j ACCEPT 2>/dev/null || true
-              iptables -D FORWARD -s ${environment.kubernetes.serviceCidr} -j ACCEPT 2>/dev/null || true
-              iptables -D FORWARD -d ${environment.kubernetes.serviceCidr} -j ACCEPT 2>/dev/null || true
-            '';
+            # # Clean up custom rules when firewall stops
+            # extraStopCommands = ''
+            #   iptables -D FORWARD -s ${environment.kubernetes.clusterCidr} -j ACCEPT 2>/dev/null || true
+            #   iptables -D FORWARD -d ${environment.kubernetes.clusterCidr} -j ACCEPT 2>/dev/null || true
+            #   iptables -D FORWARD -s ${environment.kubernetes.serviceCidr} -j ACCEPT 2>/dev/null || true
+            #   iptables -D FORWARD -d ${environment.kubernetes.serviceCidr} -j ACCEPT 2>/dev/null || true
+            # '';
           };
         };
 
