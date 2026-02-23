@@ -141,8 +141,6 @@ in
             trustedInterfaces = [
               "lo"
               "cni+"
-              "flannel.1"
-              "calico+"
               "cilium+"
               "lxc+"
               "dummy+"
@@ -202,7 +200,8 @@ in
                 "--snapshotter=overlayfs"
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 
-                "--node-ip=${internalIP}"
+                # "--node-ip=${internalIP}"
+                "--node-ip=${externalIP}"
                 "--node-external-ip=${externalIP}"
                 "--node-name=${config.networking.hostName}"
                 # TODO: If longhorn disk enabled...
@@ -215,7 +214,8 @@ in
               ];
               serverFlagList = [
                 "--bind-address=0.0.0.0"
-                "--advertise-address=${internalIP}"
+                "--advertise-address=${externalIP}"
+                # "--advertise-address=${internalIP}"
                 "--cluster-cidr=${environment.kubernetes.clusterCidr}"
                 "--service-cidr=${environment.kubernetes.serviceCidr}"
                 # "--cluster-domain mesh.${environment.name}.${environment.domain}"
@@ -249,6 +249,7 @@ in
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
                 "--tls-san=${externalIP}"
+                "--tls-san=${internalIP}"
 
                 "--kube-apiserver-arg=oidc-issuer-url=https://idm.${environment.domain}/oauth2/openid/kubernetes"
                 "--kube-apiserver-arg=oidc-client-id=kubernetes"
