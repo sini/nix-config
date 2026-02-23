@@ -5,7 +5,7 @@ data:
   bgp-router-id-allocation-ip-pool: ""
   bgp-router-id-allocation-mode: default
   bgp-secrets-namespace: kube-system
-  bpf-distributed-lru: "false"
+  bpf-distributed-lru: "true"
   bpf-events-drop-enabled: "true"
   bpf-events-policy-verdict-enabled: "true"
   bpf-events-trace-enabled: "true"
@@ -16,8 +16,8 @@ data:
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
   bpf-lb-sock-hostns-only: "true"
-  bpf-lb-source-range-all-types: "false"
-  bpf-map-dynamic-size-ratio: "0.0025"
+  bpf-lb-source-range-all-types: "true"
+  bpf-map-dynamic-size-ratio: "0.08"
   bpf-policy-map-max: "16384"
   bpf-policy-stats-map-max: "65536"
   bpf-root: /sys/fs/bpf
@@ -34,7 +34,7 @@ data:
   cni-exclusive: "true"
   cni-log-file: /var/run/cilium/cilium-cni.log
   custom-cni-conf: "false"
-  datapath-mode: veth
+  datapath-mode: netkit
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
@@ -47,6 +47,7 @@ data:
   enable-bgp-control-plane-status-report: "true"
   enable-bgp-legacy-origin-attribute: "false"
   enable-bpf-clock-probe: "false"
+  enable-bpf-masquerade: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-envoy-config: "true"
@@ -58,6 +59,7 @@ data:
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
+  enable-host-legacy-routing: "true"
   enable-hubble: "true"
   enable-ingress-controller: "true"
   enable-ingress-proxy-protocol: "false"
@@ -113,6 +115,8 @@ data:
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
   ingress-default-lb-mode: shared
+  ingress-default-secret-name: wildcard-certificate
+  ingress-default-secret-namespace: kube-system
   ingress-hostnetwork-enabled: "false"
   ingress-hostnetwork-nodelabelselector: ""
   ingress-hostnetwork-shared-listener-port: "8080"
@@ -123,6 +127,7 @@ data:
   ipam: cluster-pool
   ipam-cilium-node-update-rate: 15s
   iptables-random-fully: "false"
+  ipv4-native-routing-cidr: 172.16.0.0/16
   k8s-client-burst: "200"
   k8s-client-qps: "50"
   k8s-require-ipv4-pod-cidr: "false"
@@ -167,7 +172,7 @@ data:
   proxy-xff-num-trusted-hops-egress: "0"
   proxy-xff-num-trusted-hops-ingress: "0"
   remove-cilium-node-taints: "true"
-  routing-mode: tunnel
+  routing-mode: native
   service-no-backend-response: reject
   set-cilium-is-up-condition: "true"
   set-cilium-node-taints: "true"
@@ -179,7 +184,7 @@ data:
   tofqdns-max-deferred-connection-deletes: "10000"
   tofqdns-preallocate-identities: "true"
   tofqdns-proxy-response-max-delay: 100ms
-  tunnel-protocol: geneve
+  tunnel-protocol: vxlan
   tunnel-source-port-range: 0-0
   unmanaged-pod-watcher-interval: 15s
   vtep-cidr: ""

@@ -88,8 +88,12 @@ in
               };
 
               # Routing Mode
-              routingMode = "tunnel";
-              tunnelProtocol = "geneve";
+              # routingMode = "tunnel";
+              # tunnelProtocol = "geneve";
+
+              routingMode = "native";
+
+              ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
 
               devices = lib.mkIf (
                 config.kubernetes.services.cilium.directRoutingDevice != null
@@ -107,9 +111,12 @@ in
               # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
 
-              rollOutCiliumPods = true;
+              rollOutCiliumPods = true; # Auto-update on config-map
+
               l2announcements.enabled = true;
               externalIPs.enabled = true;
+
+              # l2NeighDiscovery.enabled = false;
 
               ingressController = {
                 enabled = true;
@@ -118,6 +125,8 @@ in
                 # hostNetwork.enabled = true;
                 # defaultSecretName
                 # defaultSecretNamespace
+                defaultSecretNamespace = "kube-system";
+                defaultSecretName = "wildcard-certificate";
                 # enforceHttps
                 service = {
                   annotations = {
@@ -144,7 +153,17 @@ in
               hubble = {
                 enabled = true;
                 relay.enabled = true;
-                ui.enabled = true;
+                ui = {
+                  enabled = true;
+                  ingress = {
+                    annotations = { };
+                    className = "cilium";
+                    enabled = true;
+                    hosts = [ "hubble.${environment.domain}" ];
+                    labels = { };
+                    tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
+                  };
+                };
                 # peerService.clusterDomain = "mesh.${environment.name}.${environment.domain}";
                 # metrics.enabled = [
                 #   "dns"
@@ -176,9 +195,19 @@ in
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              bpf.lbExternalClusterIP = true;
+              # localRedirectPolicies.enabled = true;
 
-              #bpf.masquerade=true
+              bpf = {
+                masquerade = true;
+                datapathMode = "netkit";
+                hostLegacyRouting = true;
+                enableTCX = true;
+                lbExternalClusterIP = true;
+                lbSourceRangeAllTypes = true; # need to check if kernel supports it, otherwise falls back to classic TC
+                distributedLRU.enabled = true;
+                mapDynamicSizeRatio = 0.08;
+              };
+
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";

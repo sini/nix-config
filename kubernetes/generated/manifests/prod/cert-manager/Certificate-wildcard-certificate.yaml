@@ -13,3 +13,19 @@ spec:
     kind: ClusterIssuer
     name: cloudflare-issuer
   secretName: wildcard-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: wildcard-certificate
+  namespace: kube-system
+spec:
+  dnsNames:
+    - json64.dev
+    - '*.json64.dev'
+  issuerRef:
+    kind: ClusterIssuer
+    name: cloudflare-issuer
+  secretName: wildcard-tls
