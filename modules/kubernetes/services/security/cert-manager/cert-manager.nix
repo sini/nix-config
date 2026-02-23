@@ -35,7 +35,10 @@
         ...
       }:
       let
-        namespaceList = [ "argocd" ];
+        namespaceList = [
+          "argocd"
+          "kube-system"
+        ];
         # lib.unique (map (app: app.namespace) (builtins.attrValues config.applications));
         certificatesResources = map (namespace: {
           name = "${namespace}-wildcard-certificate";
