@@ -91,10 +91,6 @@ in
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
-              # routingMode = "native";
-
-              # ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
-
               devices = lib.mkIf (
                 config.kubernetes.services.cilium.directRoutingDevice != null
               ) config.kubernetes.services.cilium.devices;
@@ -111,14 +107,10 @@ in
               # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
 
-              rollOutCiliumPods = true; # Auto-update on config-map
-
+              rollOutCiliumPods = true;
               l2announcements.enabled = true;
               externalIPs.enabled = true;
-              # enableMasqueradeRouteSource = true;
 
-              # autoDirectNodeRoutes = true;
-              # directRoutingSkipUnreachable = true;
               l2NeighDiscovery.enabled = true;
 
               ingressController = {
@@ -126,8 +118,6 @@ in
                 default = true;
                 loadbalancerMode = "shared";
                 # hostNetwork.enabled = true;
-                # defaultSecretName
-                # defaultSecretNamespace
                 defaultSecretNamespace = "kube-system";
                 defaultSecretName = "wildcard-certificate";
                 # enforceHttps
@@ -198,23 +188,14 @@ in
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              localRedirectPolicies.enabled = true;
+              bpf.lbExternalClusterIP = true;
+              bpf.lbSourceRangeAllTypes = true;
+              bpf.masquerade = true;
+              bpf.disableExternalIPMitigation = true;
 
               loadBalancer.acceleration = "best-effort";
               loadBalancer.mode = "dsr";
               loadBalancer.dsrDispatch = "geneve";
-              bpf = {
-                masquerade = true;
-                disableExternalIPMitigation = true;
-                datapathMode = "netkit";
-                hostLegacyRouting = true;
-                enableTCX = true;
-                lbExternalClusterIP = true;
-                lbSourceRangeAllTypes = true; # need to check if kernel supports it, otherwise falls back to classic TC
-                distributedLRU.enabled = true;
-                mapDynamicSizeRatio = 0.08;
-              };
-
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";
