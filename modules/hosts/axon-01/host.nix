@@ -7,8 +7,8 @@
     roles = [
       "server"
       "unlock"
-      "kubernetes"
-      "kubernetes-master"
+      # "kubernetes"
+      # "kubernetes-master"
       "bgp-spoke"
       "nix-builder"
       # "vault"
