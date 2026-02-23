@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   agent-not-ready-taint-key: node.cilium.io/agent-not-ready
-  auto-direct-node-routes: "false"
+  auto-direct-node-routes: "true"
   bgp-router-id-allocation-ip-pool: ""
   bgp-router-id-allocation-mode: default
   bgp-secrets-namespace: kube-system
@@ -42,7 +42,7 @@ data:
   default-lb-service-ipam: lbipam
   devices: dummy0 enp199s0f5 enp199s0f6 br0 tailscale0
   direct-routing-device: dummy0
-  direct-routing-skip-unreachable: "false"
+  direct-routing-skip-unreachable: "true"
   disable-external-ip-mitigation: "true"
   dnsproxy-enable-transparent-mode: "true"
   dnsproxy-socket-linger-timeout: "10"
@@ -76,7 +76,6 @@ data:
   enable-ipv6-big-tcp: "false"
   enable-ipv6-masquerade: "true"
   enable-k8s-networkpolicy: "true"
-  enable-l2-announcements: "true"
   enable-l2-neigh-discovery: "false"
   enable-l7-proxy: "true"
   enable-lb-ipam: "true"

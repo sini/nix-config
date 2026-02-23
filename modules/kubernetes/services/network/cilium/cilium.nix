@@ -113,10 +113,12 @@ in
 
               rollOutCiliumPods = true; # Auto-update on config-map
 
-              l2announcements.enabled = true;
+              # l2announcements.enabled = true;
               externalIPs.enabled = true;
 
-              # l2NeighDiscovery.enabled = false;
+              autoDirectNodeRoutes = true;
+              directRoutingSkipUnreachable = true;
+              l2NeighDiscovery.enabled = true;
 
               ingressController = {
                 enabled = true;
@@ -288,16 +290,16 @@ in
                 blocks = [ { cidr = loadbalancer-cidr; } ];
               };
             };
-            ciliumL2AnnouncementPolicies."default-l2-announcement-policy" = {
-              metadata = {
-                name = "default-l2-announcement-policy";
-                namespace = "kube-system";
-              };
-              spec = {
-                externalIPs = true;
-                loadBalancerIPs = true;
-              };
-            };
+            # ciliumL2AnnouncementPolicies."default-l2-announcement-policy" = {
+            #   metadata = {
+            #     name = "default-l2-announcement-policy";
+            #     namespace = "kube-system";
+            #   };
+            #   spec = {
+            #     externalIPs = true;
+            #     loadBalancerIPs = true;
+            #   };
+            # };
             ciliumNetworkPolicies = {
               # Allow hubble relay server egress to nodes
               allow-hubble-relay-server-egress.spec = {
