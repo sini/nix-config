@@ -48,6 +48,22 @@
       {
         applications.bootstrap = {
           namespace = "kube-system";
+
+          syncPolicy = {
+            autoSync = {
+              enable = true;
+              prune = true;
+              selfHeal = true;
+            };
+            syncOptions = {
+              serverSideApply = true;
+              applyOutOfSyncOnly = true;
+              createNamespace = false;
+            };
+          };
+
+          compareOptions.serverSideDiff = true;
+
           # Deploy early (wave -3) so CRDs and namespaces exist before other apps
           annotations."argocd.argoproj.io/sync-wave" = "-3";
           # Load CRD YAML files from each public application
