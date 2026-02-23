@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: 012b7a6a42a6e3a558a673132d00009d1ca137713726949f268f70e783bf1263
+        cilium.io/cilium-configmap-checksum: 86770400c92aec6e5cca830b7375f12bba24c8086b0cf5c2ef08a6a6632c9876
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
