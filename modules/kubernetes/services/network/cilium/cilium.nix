@@ -88,13 +88,15 @@ in
               };
 
               # Routing Mode
-              routingMode = "tunnel";
+              routingMode = "native";
+              ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
+              # routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
               endpointRoutes.enabled = true;
 
               devices = lib.mkIf (
-                config.kubernetes.services.cilium.directRoutingDevice != null
+                config.kubernetes.services.cilium.devices != null
               ) config.kubernetes.services.cilium.devices;
 
               nodePort = lib.optionalAttrs (config.kubernetes.services.cilium.directRoutingDevice != null) {
@@ -195,6 +197,7 @@ in
               bpf.masquerade = true;
               bpf.disableExternalIPMitigation = true;
               bpf.tproxy = true;
+              ipMasqAgent.enabled = true;
               loadBalancer.acceleration = "best-effort";
               loadBalancer.mode = "dsr";
               loadBalancer.dsrDispatch = "geneve";
