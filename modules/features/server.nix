@@ -37,7 +37,8 @@
         "net.ipv4.tcp_fastopen" = "3";
         "net.ipv4.ip_forward" = 1;
         "net.ipv4.conf.all.forwarding" = 1;
-        "net.ipv6.conf.all.forwarding" = true;
+        "net.ipv6.conf.all.forwarding" = 1;
+
         "net.netfilter.nf_conntrack_max" = 131072;
         "net.nf_conntrack_max" = 131072;
         # These need to be increased for k8s
