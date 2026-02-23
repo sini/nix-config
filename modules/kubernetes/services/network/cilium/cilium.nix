@@ -197,7 +197,14 @@ in
               bpf.masquerade = true;
               bpf.disableExternalIPMitigation = true;
               bpf.tproxy = true;
-              ipMasqAgent.enabled = true;
+              ipMasqAgent = {
+                enabled = true;
+                config.nonMasqueradeCIDRs = "{${environment.kubernetes.clusterCidr},${environment.kubernetes.serviceCidr}}";
+                config.masqLinkLocal = false;
+              };
+
+              enableMasqueradeRouteSource = true;
+
               loadBalancer.acceleration = "best-effort";
               loadBalancer.mode = "dsr";
               loadBalancer.dsrDispatch = "geneve";

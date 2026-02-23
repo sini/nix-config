@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config: '{"masqLinkLocal":false,"nonMasqueradeCIDRs":"{172.20.0.0/16,172.21.0.0/16}"}'
+kind: ConfigMap
+metadata:
+  name: ip-masq-agent
+  namespace: kube-system
