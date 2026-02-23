@@ -100,6 +100,7 @@ in
               179 # BGP
               6443 # Kubernetes API
               6444
+              6081 # geneve
 
               10250 # Kubelet metrics
               2379 # etcd

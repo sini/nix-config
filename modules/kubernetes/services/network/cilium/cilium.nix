@@ -88,12 +88,12 @@ in
               };
 
               # Routing Mode
-              # routingMode = "tunnel";
-              # tunnelProtocol = "geneve";
+              routingMode = "tunnel";
+              tunnelProtocol = "geneve";
 
-              routingMode = "native";
+              # routingMode = "native";
 
-              ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
+              # ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
 
               devices = lib.mkIf (
                 config.kubernetes.services.cilium.directRoutingDevice != null
@@ -115,8 +115,9 @@ in
 
               l2announcements.enabled = true;
               externalIPs.enabled = true;
+              # enableMasqueradeRouteSource = true;
 
-              autoDirectNodeRoutes = true;
+              # autoDirectNodeRoutes = true;
               # directRoutingSkipUnreachable = true;
               l2NeighDiscovery.enabled = true;
 
@@ -197,11 +198,11 @@ in
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              # localRedirectPolicies.enabled = true;
+              localRedirectPolicies.enabled = true;
 
               loadBalancer.acceleration = "best-effort";
               loadBalancer.mode = "dsr";
-              loadBalancer.dsrDispatch = "opt";
+              loadBalancer.dsrDispatch = "geneve";
               bpf = {
                 masquerade = true;
                 disableExternalIPMitigation = true;
