@@ -82,7 +82,7 @@ data:
   enable-l2-neigh-discovery: "true"
   enable-l7-proxy: "true"
   enable-lb-ipam: "true"
-  enable-masquerade-to-route-source: "true"
+  enable-masquerade-to-route-source: "false"
   enable-metrics: "true"
   enable-no-service-endpoints-routable: "true"
   enable-node-selector-labels: "false"
