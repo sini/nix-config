@@ -203,7 +203,7 @@ in
                 config.masqLinkLocal = false;
               };
 
-              enableMasqueradeRouteSource = true;
+              # enableMasqueradeRouteSource = true;
 
               loadBalancer.acceleration = "best-effort";
               loadBalancer.mode = "dsr";
