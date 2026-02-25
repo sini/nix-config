@@ -30,7 +30,6 @@ in
         );
 
         # Extract server IPs from sorted nodes
-        serverIps = map (node: builtins.head node.ipv4) sortedKubernetesNodes;
 
         # Get current node's index in the sorted list
         nodeId = lib.lists.findFirstIndex (
@@ -163,22 +162,22 @@ in
 
         services = {
           # 1. HAProxy: Routes traffic from port 6443 to the actual k3s API
-          haproxy = {
-            enable = true;
-            config = ''
-              frontend k3s-frontend
-                bind *:6443
-                mode tcp
-                option tcplog
-                default_backend k3s-backend
+          # haproxy = {
+          #   enable = true;
+          #   config = ''
+          #     frontend k3s-frontend
+          #       bind *:6443
+          #       mode tcp
+          #       option tcplog
+          #       default_backend k3s-backend
 
-              backend k3s-backend
-                mode tcp
-                option tcp-check
-                balance roundrobin
-                ${lib.concatStringsSep "\n" (map (ip: "server node-${ip} ${ip}:6444 check") serverIps)}
-            '';
-          };
+          #     backend k3s-backend
+          #       mode tcp
+          #       option tcp-check
+          #       balance roundrobin
+          #       ${lib.concatStringsSep "\n" (map (ip: "server node-${ip} ${ip}:6444 check") serverIps)}
+          #   '';
+          # };
 
           keepalived = {
             enable = true;
