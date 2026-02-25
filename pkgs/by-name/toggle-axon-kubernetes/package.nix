@@ -145,7 +145,7 @@ writeShellApplication {
       echo ""
       echo "==> Copying kubeconfig..."
       sleep 5  # Give k3s a moment to start
-      scp sini@axon-01:/etc/rancher/k3s/k3s.yaml "''${HOME}/.config/kube/config" && sed -i 's/0.0.0.0/axon-01.ts.json64.dev/' "''${HOME}/.config/kube/config"
+      scp sini@axon-01:/etc/rancher/k3s/k3s.yaml "''${HOME}/.config/kube/config" && sed -i 's/0.0.0.0/10.10.10.100/' "''${HOME}/.config/kube/config"
 
       echo ""
       echo "==> Cluster bootstrapped on axon-01"
