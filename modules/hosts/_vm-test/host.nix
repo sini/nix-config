@@ -7,7 +7,6 @@
     roles = [
       "server"
       # "kubernetes"
-      # "kubernetes-master"
       # "bgp-spoke"
       # "vault"
       "metrics-ingester"

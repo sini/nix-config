@@ -13,7 +13,6 @@
     roles = [
       "server"
       #      "kubernetes"
-      #     "kubernetes-master"
       "workstation"
       #      "gaming"
       "dev"

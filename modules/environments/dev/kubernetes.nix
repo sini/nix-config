@@ -3,10 +3,15 @@
   flake.environments.dev.kubernetes = {
     secretsFile = (rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml");
 
+    kubeAPIVIP = "10.9.0.100";
+
     clusterCidr = "172.16.0.0/16";
+
     serviceCidr = "172.17.0.0/16";
+
     tlsSanIps = [
-      "10.9.1.1" # axon-01 external
+      "10.9.1.1" # bitstream
+      "10.9.1.2" # bitstream
     ];
 
     loadBalancer = {

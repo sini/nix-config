@@ -8,7 +8,6 @@
       "server"
       "unlock"
       "kubernetes" # TOGGLE_ENABLE/DISABLE
-      "kubernetes-master" # TOGGLE_ENABLE/DISABLE
       "bgp-spoke"
       "nix-builder"
       # "vault"

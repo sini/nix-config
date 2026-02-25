@@ -31,10 +31,6 @@
 #     # BGP AS number for this node
 #     "bgp-asn" = "65001";
 #
-#     # Loopback interface for BGP router ID and peering
-#     "thunderbolt-loopback-ipv4" = "172.16.255.1/32";
-#     "thunderbolt-loopback-ipv6" = "fdb4:5edb:1b00::1/128";
-#
 #     # Thunderbolt interface IP assignments (/31 networks)
 #     "thunderbolt-interface-1" = "169.254.12.0/31";  # connects to axon-02
 #     "thunderbolt-interface-2" = "169.254.31.1/31";  # connects to axon-03
@@ -63,37 +59,9 @@
 # - eBGP multihop configuration for loopback-to-loopback peering
 # - Route advertisement for the local loopback network
 #
-# ## Example 3-Node Ring Setup
-#
-# ```nix
-# # Node 1: connects to nodes 2 and 3
-# flake.hosts.axon-01.tags = {
-#   "bgp-asn" = "65001";
-#   "thunderbolt-loopback-ipv4" = "172.16.255.1/32";
-#   "thunderbolt-interface-1" = "169.254.12.0/31";  # → axon-02
-#   "thunderbolt-interface-2" = "169.254.31.1/31";  # → axon-03
-# };
-#
-# # Node 2: connects to nodes 3 and 1
-# flake.hosts.axon-02.tags = {
-#   "bgp-asn" = "65002";
-#   "thunderbolt-loopback-ipv4" = "172.16.255.2/32";
-#   "thunderbolt-interface-1" = "169.254.23.0/31";  # → axon-03
-#   "thunderbolt-interface-2" = "169.254.12.1/31";  # → axon-01
-# };
-#
-# # Node 3: connects to nodes 1 and 2
-# flake.hosts.axon-03.tags = {
-#   "bgp-asn" = "65003";
-#   "thunderbolt-loopback-ipv4" = "172.16.255.3/32";
-#   "thunderbolt-interface-1" = "169.254.31.0/31";  # → axon-01
-#   "thunderbolt-interface-2" = "169.254.23.1/31";  # → axon-02
-# };
-# ```
-#
 # ## Peer Discovery Algorithm
 #
-# 1. Find all hosts in the same environment with `thunderbolt-loopback-ipv4` tags
+# 1. Find all hosts in the same environment with `thunderbolt-mesh` role
 # 2. For each potential peer, check if any of our interfaces form a /31 pair
 #    with any of their interfaces
 # 3. Create BGP sessions only for directly connected peers
@@ -204,7 +172,7 @@ in
             peerHostname:
             let
               peerHost = thunderboltPeers.${peerHostname};
-              peerLoopbackIp = builtins.head peerHost.ipv4; # lib.removeSuffix "/32" (peerHost.tags."thunderbolt-loopback-ipv4");
+              peerLoopbackIp = builtins.head peerHost.ipv4;
               gateway = getGatewayForPeer peerHostname peerLoopbackIp;
             in
             {
@@ -237,7 +205,6 @@ in
               "pcie=pcie_bus_perf"
             ];
             kernelModules = [
-              "dummy"
               "thunderbolt"
               "thunderbolt-net"
             ];
@@ -256,7 +223,6 @@ in
             neighbors = map (peer: {
               ip = peer.ip;
               asn = peer.asn;
-              # updateSource = "dummy0";
               ebgpMultihop = 4;
               softReconfiguration = true;
               allowasIn = 1;
@@ -283,19 +249,11 @@ in
                 after = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
               };
             };
+
             network = {
               config.networkConfig = {
                 IPv4Forwarding = true;
                 IPv6Forwarding = true;
-              };
-
-              netdevs = {
-                dummy0 = {
-                  netdevConfig = {
-                    Kind = "dummy";
-                    Name = "dummy0";
-                  };
-                };
               };
 
               links = {
