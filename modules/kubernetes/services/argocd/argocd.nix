@@ -61,14 +61,14 @@
                   annotations = {
                     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
                   };
-                  # extraTls = [
-                  #   {
-                  #     hosts = [
-                  #       "argocd.${environment.domain}"
-                  #     ];
-                  #     secretName = "wildcard-certificate";
-                  #   }
-                  # ];
+                  extraTls = [
+                    {
+                      hosts = [
+                        "argocd.${environment.domain}"
+                      ];
+                      secretName = "wildcard-certificate";
+                    }
+                  ];
                 };
               };
 
@@ -84,7 +84,6 @@
                 ];
                 readinessProbe.timeoutSeconds = 60;
                 livenessProbe.timeoutSeconds = 60;
-
               };
 
               # Redis (for caching)

@@ -23,3 +23,7 @@ spec:
                   number: 80
             path: /
             pathType: Prefix
+  tls:
+    - hosts:
+        - argocd.json64.dev
+      secretName: wildcard-certificate
