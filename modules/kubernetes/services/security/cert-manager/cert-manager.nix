@@ -27,10 +27,8 @@
 
     nixidy =
       {
-        # config,
         environment,
         charts,
-        # lib,
         secrets,
         ...
       }:
@@ -56,7 +54,7 @@
                 kind = "ClusterIssuer";
               };
               dnsNames = [
-                "${environment.domain}"
+                # "${environment.domain}"
                 "*.${environment.domain}"
               ];
             };

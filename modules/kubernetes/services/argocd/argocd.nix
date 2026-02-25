@@ -61,15 +61,15 @@
                   annotations = {
                     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
                   };
-                  tls = true;
-                  # extraTls = [
-                  #   {
-                  #     hosts = [
-                  #       "argocd.${environment.domain}"
-                  #     ];
-                  #     secretName = "wildcard-certificate";
-                  #   }
-                  # ];
+                  # tls = true;
+                  extraTls = [
+                    {
+                      hosts = [
+                        "*.${environment.domain}"
+                      ];
+                      secretName = "wildcard-certificate";
+                    }
+                  ];
                 };
               };
 

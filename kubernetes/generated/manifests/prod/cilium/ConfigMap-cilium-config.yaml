@@ -110,6 +110,8 @@ data:
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
   ingress-default-lb-mode: shared
+  ingress-default-secret-name: wildcard-certificate
+  ingress-default-secret-namespace: kube-system
   ingress-hostnetwork-enabled: "false"
   ingress-hostnetwork-nodelabelselector: ""
   ingress-hostnetwork-shared-listener-port: "8080"

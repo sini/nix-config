@@ -7,7 +7,6 @@ metadata:
   namespace: argocd
 spec:
   dnsNames:
-    - json64.dev
     - '*.json64.dev'
   issuerRef:
     kind: ClusterIssuer
@@ -23,7 +22,6 @@ metadata:
   namespace: kube-system
 spec:
   dnsNames:
-    - json64.dev
     - '*.json64.dev'
   issuerRef:
     kind: ClusterIssuer

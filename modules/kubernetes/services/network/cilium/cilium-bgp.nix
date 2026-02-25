@@ -34,28 +34,6 @@ in
                   }
                 ];
               };
-
-              # service-cluster-ips = {
-              #   metadata.labels.advertise = "cilium-routes";
-              #   spec.advertisements = [
-              #     {
-              #       advertisementType = "Service";
-              #       service.addresses = [
-              #         "ClusterIP"
-              #       ];
-              #       selector.matchExpressions = [
-              #         {
-              #           key = "service.kubernetes.io/headless";
-              #           operator = "DoesNotExist";
-              #         }
-              #       ];
-              #     }
-              #   ];
-              # };
-              # pod-cidr-advertisement = {
-              #   metadata.labels.advertise = "cilium-routes";
-              #   spec.advertisements = [ { advertisementType = "PodCIDR"; } ];
-              # };
             };
 
             ciliumBGPPeerConfigs = {
@@ -89,7 +67,6 @@ in
                     spec.bgpInstances = [
                       {
                         name = "local-frr-instance";
-                        # routerID = "127.0.0.1"; # builtins.head hostConfig.ipv4;
                       }
                     ];
                   };
