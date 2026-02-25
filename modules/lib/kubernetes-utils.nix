@@ -11,14 +11,16 @@
             hostname: hostConfig:
             (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
             && (hostConfig.environment == environment.name)
-          )
-          |> lib.attrsets.filterAttrs (
-            hostname: hostConfig: builtins.elem "kubernetes-master" (hostConfig.roles or [ ])
           );
+
+        # Sort master hosts by hostname for deterministic selection
+        sortedMasterHosts = builtins.sort (a: b: a.hostname < b.hostname) (
+          lib.mapAttrsToList (hostname: hostConfig: hostConfig // { inherit hostname; }) masterHosts
+        );
       in
-      if lib.length (lib.attrNames masterHosts) > 0 then
+      if sortedMasterHosts != [ ] then
         let
-          masterHost = lib.head (lib.attrValues masterHosts);
+          masterHost = builtins.head sortedMasterHosts;
         in
         # masterHost.tags.kubernetes-internal-ip or
         (builtins.head masterHost.ipv4)

@@ -4,7 +4,7 @@
   ...
 }:
 let
-  inherit (self.lib.kubernetes-utils) findClusterMaster;
+  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
 in
 {
   flake.features.kubernetes = {
@@ -19,17 +19,37 @@ in
         ...
       }:
       let
-        isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
+
+        managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.management.cidr)}";
+
+        kubernetesNodes = findKubernetesNodes environment;
+
+        # Sort kubernetes nodes by hostname for deterministic ordering
+        sortedKubernetesNodes = builtins.sort (a: b: a.hostname < b.hostname) (
+          lib.attrValues kubernetesNodes
+        );
+
+        # Extract server IPs from sorted nodes
+        serverIps = map (node: builtins.head node.ipv4) sortedKubernetesNodes;
+
+        # Get current node's index in the sorted list
+        nodeId = lib.lists.findFirstIndex (
+          node: node.hostname == config.networking.hostName
+        ) null sortedKubernetesNodes;
+
+        # Initialize if there is only one kubernetes node -- the cluster is bootstrapping
+        shouldInit = (builtins.length (lib.attrValues kubernetesNodes)) == 1;
 
         # Find master node for agent connection (using hosts from outer scope)
-        masterIP = findClusterMaster environment;
+        # masterIP = findClusterMaster environment;
+        masterIP = environment.kubernetes.kubeAPIVIP;
       in
       {
         age.secrets.kubernetes-cluster-token = {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-token.age";
         };
 
-        age.secrets.kubernetes-sops-age-key = lib.mkIf isMaster {
+        age.secrets.kubernetes-sops-age-key = lib.mkIf shouldInit {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/k3s-sops-age-key.age";
           path = "/var/lib/sops/age/key.txt";
         };
@@ -142,6 +162,34 @@ in
         };
 
         services = {
+          # 1. HAProxy: Routes traffic from port 6443 to the actual k3s API
+          haproxy = {
+            enable = true;
+            config = ''
+              frontend k3s-frontend
+                bind *:6443
+                mode tcp
+                option tcplog
+                default_backend k3s-backend
+
+              backend k3s-backend
+                mode tcp
+                option tcp-check
+                balance roundrobin
+                ${lib.concatStringsSep "\n" (map (ip: "server node-${ip} ${ip}:6444 check") serverIps)}
+            '';
+          };
+
+          keepalived = {
+            enable = true;
+            vrrpInstances.k3s = {
+              state = if (nodeId == 0) then "MASTER" else "BACKUP";
+              interface = "br0"; # We use br0 cause we're cool like that...
+              virtualRouterId = 51;
+              priority = 100 - nodeId; # Higher number wins (e.g., 101 on MASTER)
+              virtualIps = [ { addr = "${environment.kubernetes.kubeAPIVIP}/${managementSubnet}"; } ]; # Our networks are all /16...
+            };
+          };
 
           k3s =
             let
@@ -150,7 +198,6 @@ in
                 "--snapshotter=overlayfs"
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 
-                # "--node-ip=${internalIP}"
                 "--node-ip=${builtins.head hostOptions.ipv4}"
                 "--node-external-ip=${builtins.head hostOptions.ipv4}"
                 "--node-name=${config.networking.hostName}"
@@ -167,7 +214,6 @@ in
                 "--advertise-address=${builtins.head hostOptions.ipv4}"
                 "--cluster-cidr=${environment.kubernetes.clusterCidr}"
                 "--service-cidr=${environment.kubernetes.serviceCidr}"
-                # "--cluster-domain mesh.${environment.name}.${environment.domain}"
 
                 "--kubelet-arg=fail-swap-on=false"
 
@@ -198,6 +244,7 @@ in
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
                 "--tls-san=${builtins.head hostOptions.ipv4}"
+                "--tls-san=${environment.kubernetes.kubeAPIVIP}"
 
                 "--kube-apiserver-arg=oidc-issuer-url=https://idm.${environment.domain}/oauth2/openid/kubernetes"
                 "--kube-apiserver-arg=oidc-client-id=kubernetes"
@@ -209,14 +256,14 @@ in
               serverFlags = builtins.concatStringsSep " " (generalFlagList ++ serverFlagList);
             in
             {
-              clusterInit = isMaster;
+              clusterInit = shouldInit;
               enable = true;
               role = "server";
               tokenFile = config.age.secrets.kubernetes-cluster-token.path;
               gracefulNodeShutdown.enable = true;
               extraFlags = lib.mkForce serverFlags;
             }
-            // lib.optionalAttrs (!isMaster && masterIP != null) {
+            // lib.optionalAttrs (!shouldInit) {
               serverAddr = "https://${masterIP}:6443";
             };
 
@@ -228,7 +275,7 @@ in
         };
 
         # GitOps bootstrap
-        systemd.services.k3s-bootstrap-cilium = lib.mkIf isMaster {
+        systemd.services.k3s-bootstrap-cilium = lib.mkIf shouldInit {
           description = "Install Cilium for bootstrapping";
           after = [ "k3s.service" ];
           requires = [ "k3s.service" ];
@@ -280,7 +327,7 @@ in
           wantedBy = [ "multi-user.target" ];
         };
 
-        systemd.services.k3s-install-sops-secrets-operator = lib.mkIf isMaster {
+        systemd.services.k3s-install-sops-secrets-operator = lib.mkIf shouldInit {
           description = "Install SOPS Secrets Operator for bootstrapping";
           after = [
             "k3s.service"
@@ -351,7 +398,7 @@ in
           wantedBy = [ "multi-user.target" ];
         };
 
-        systemd.services.k3s-install-argocd = lib.mkIf isMaster {
+        systemd.services.k3s-install-argocd = lib.mkIf shouldInit {
           description = "Install ArgoCD for bootstrapping";
           after = [
             "k3s.service"
