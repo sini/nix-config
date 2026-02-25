@@ -181,14 +181,27 @@ in
 
           keepalived = {
             enable = true;
+            vrrpScripts.check_k3s = {
+              script = "${lib.getExe pkgs.netcat} -z 127.0.0.1 6443";
+              interval = 2;
+              weight = -20;
+              fall = 2;
+              rise = 2;
+            };
             vrrpInstances.k3s = {
               state = if (nodeId == 0) then "MASTER" else "BACKUP";
               interface = "br0"; # We use br0 cause we're cool like that...
               virtualRouterId = 51;
-              priority = 100 - nodeId; # Higher number wins (e.g., 101 on MASTER)
-              virtualIps = [ { addr = "${environment.kubernetes.kubeAPIVIP}/${managementSubnet}"; } ]; # Our networks are all /16...
+              priority = 100 - nodeId; # Higher number wins (e.g., 100 on MASTER)
+              virtualIps = [ { addr = "${environment.kubernetes.kubeAPIVIP}/${managementSubnet}"; } ];
+              trackScripts = [ "check_k3s" ];
             };
           };
+
+          # Allow VRRP protocol for Keepalived (IPv4 only)
+          networking.firewall.extraCommands = ''
+            iptables -A nixos-fw -p vrrp -j ACCEPT
+          '';
 
           k3s =
             let
