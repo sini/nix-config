@@ -144,6 +144,12 @@ in
               gatewayAPI.enabled = true;
               gatewayAPI.hostNetwork.enabled = false;
 
+              # Don't create secretsNamespace, we do this in the bootstrap app
+              tls.secretsNamespace.create = false;
+              ingressController.secretsNamespace.create = false;
+              gatewayAPI.secretsNamespace.create = false;
+              envoyConfig.secretsNamespace.create = false;
+
               k8sClientRateLimit = {
                 qps = 50;
                 burst = 200;
