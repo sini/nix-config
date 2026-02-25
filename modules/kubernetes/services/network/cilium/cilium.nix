@@ -256,42 +256,42 @@ in
           };
 
           resources = {
-            # gateways.default-gateway =
-            #   let
-            #     ip = ingress-controller-address;
-            #   in
-            #   {
-            #     # metadata.annotations."external-dns.alpha.kubernetes.io/target" = "${name}.${domain}";
-            #     spec = {
-            #       gatewayClassName = "cilium";
-            #       addresses = lib.toList {
-            #         type = "IPAddress";
-            #         value = ip;
-            #       };
-            #       # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
-            #       listeners = [
-            #         {
-            #           name = "http";
-            #           protocol = "HTTP";
-            #           port = 80;
-            #           hostname = "*.${environment.domain}";
-            #           allowedRoutes.namespaces.from = "All";
-            #         }
-            #         {
-            #           name = "https";
-            #           protocol = "HTTPS";
-            #           port = 443;
-            #           hostname = "*.${environment.domain}";
-            #           allowedRoutes.namespaces.from = "All";
-            #           tls.certificateRefs = lib.toList {
-            #             kind = "Secret";
-            #             name = "kube-system-wildcard-certificate";
-            #             namespace = "kube-system";
-            #           };
-            #         }
-            #       ];
-            #     };
-            #   };
+            gateways.default-gateway =
+              let
+                ip = ingress-controller-address;
+              in
+              {
+                # metadata.annotations."external-dns.alpha.kubernetes.io/target" = "${name}.${domain}";
+                spec = {
+                  gatewayClassName = "cilium";
+                  addresses = lib.toList {
+                    type = "IPAddress";
+                    value = ip;
+                  };
+                  # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
+                  listeners = [
+                    {
+                      name = "http";
+                      protocol = "HTTP";
+                      port = 80;
+                      hostname = "*.${environment.domain}";
+                      allowedRoutes.namespaces.from = "All";
+                    }
+                    {
+                      name = "https";
+                      protocol = "HTTPS";
+                      port = 443;
+                      hostname = "*.${environment.domain}";
+                      allowedRoutes.namespaces.from = "All";
+                      tls.certificateRefs = lib.toList {
+                        kind = "Secret";
+                        name = "wildcard-certificate";
+                        namespace = "kube-system";
+                      };
+                    }
+                  ];
+                };
+              };
             ciliumLoadBalancerIPPools."lb-pool" = {
               metadata = {
                 name = "lb-pool";
