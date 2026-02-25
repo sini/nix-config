@@ -79,7 +79,7 @@ in
               softReconfiguration = true;
               ebgpMultihop = 4;
               # updateSource = lib.mkIf hasMeshConfig "dummy0";
-              listenRange = "${environment.kubernetes.clusterCidr}"; # "127.0.0.1/32";
+              listenRange = "${builtins.head hostOptions.ipv4}/32"; # "${environment.kubernetes.clusterCidr}"; # "127.0.0.1/32";
             };
 
             neighbors = lib.optional (uplinkIp != null) {
