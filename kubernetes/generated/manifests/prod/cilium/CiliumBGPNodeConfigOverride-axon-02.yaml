@@ -1,0 +1,7 @@
+apiVersion: cilium.io/v2
+kind: CiliumBGPNodeConfigOverride
+metadata:
+  name: axon-02
+spec:
+  bgpInstances:
+    - name: local-frr-instance
