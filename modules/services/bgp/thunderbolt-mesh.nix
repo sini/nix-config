@@ -220,8 +220,6 @@ in
         nodeConfig = {
           loopback = {
             ipv4 = builtins.head hostOptions.ipv4;
-            # ipv4 = hostOptions.tags."thunderbolt-loopback-ipv4";
-            # ipv6 = hostOptions.tags."thunderbolt-loopback-ipv6";
           };
           interfaceIps = {
             enp199s0f5 = hostOptions.tags."thunderbolt-interface-1";
@@ -251,7 +249,6 @@ in
 
             staticRoutes = lib.flatten (
               map (peer: [
-                # "ip route ${peer.ip}/32 ${peer.gateway}"
                 "ip route ${peer.lanip}/32 ${peer.gateway}"
               ]) nodeConfig.peers
             );
@@ -327,13 +324,6 @@ in
               };
 
               networks = {
-                # "00-dummy" = {
-                #   matchConfig.Name = "dummy0";
-                #   address = [
-                #     nodeConfig.loopback.ipv4
-                #     nodeConfig.loopback.ipv6
-                #   ];
-                # };
                 "21-thunderbolt-1" = {
                   matchConfig.Name = "enp199s0f5";
                   address = [ nodeConfig.interfaceIps.enp199s0f5 ];

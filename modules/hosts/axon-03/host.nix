@@ -7,7 +7,7 @@
     roles = [
       "server"
       "unlock"
-      # "kubernetes"
+      # "kubernetes" # TOGGLE_ENABLE/DISABLE
       "bgp-spoke"
       "nix-builder"
       # "vault"
@@ -22,6 +22,8 @@
     ];
     tags = {
       "bgp-asn" = "65001";
+      "cilium-asn" = "65002";
+
       "thunderbolt-interface-1" = "169.254.31.0/31";
       "thunderbolt-interface-2" = "169.254.23.1/31";
     };

@@ -13,6 +13,4 @@ spec:
             operator: DoesNotExist
       service:
         addresses:
-          - ClusterIP
-          - ExternalIP
           - LoadBalancerIP

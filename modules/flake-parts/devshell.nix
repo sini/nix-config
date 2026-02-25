@@ -71,6 +71,11 @@
             help = "Delete all k3s data and reset the cluster";
           }
           {
+            package = config.packages.toggle-axon-kubernetes;
+            name = "toggle-axon-kubernetes";
+            help = "Toggle enable/disable Kubernetes on axon cluster nodes";
+          }
+          {
             package = config.packages.list-infra;
             name = "list-infra";
             help = "List all flake environments and hosts with details";
