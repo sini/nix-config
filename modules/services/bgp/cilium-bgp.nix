@@ -40,6 +40,13 @@ in
             # Default logic for nodes without specific ASN
             65001;
 
+        ciliumAsn =
+          if hostOptions.tags ? "cilium-asn" then
+            lib.toInt hostOptions.tags."cilium-asn"
+          else
+            # Default logic for nodes without specific ASN
+            65002;
+
         uplinkIp = findBgpHub hostOptions.environment;
       in
       {
@@ -68,11 +75,11 @@ in
             ];
 
             peerGroups.cilium = {
-              remoteAs = localAsn;
+              remoteAs = ciliumAsn;
               softReconfiguration = true;
               ebgpMultihop = 4;
               # updateSource = lib.mkIf hasMeshConfig "dummy0";
-              listenRange = "${nodeLoopbackIp}/32";
+              listenRange = "${environment.kubernetes.clusterCidr}"; # "127.0.0.1/32";
             };
 
             neighbors = lib.optional (uplinkIp != null) {

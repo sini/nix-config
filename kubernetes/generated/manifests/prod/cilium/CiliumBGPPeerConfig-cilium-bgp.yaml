@@ -1,7 +1,7 @@
 apiVersion: cilium.io/v2
 kind: CiliumBGPPeerConfig
 metadata:
-  name: local-frr-peer
+  name: cilium-bgp
 spec:
   ebgpMultihop: 4
   families:
@@ -10,6 +10,9 @@ spec:
           advertise: cilium-routes
       afi: ipv4
       safi: unicast
+  gracefulRestart:
+    enabled: true
+    restartTimeSeconds: 15
   timers:
     connectRetryTimeSeconds: 5
     holdTimeSeconds: 30

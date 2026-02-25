@@ -83,6 +83,12 @@ let
 
   # Shared kubernetes network options
   kubernetesNetworkOptions = {
+    kubeAPIVIP = mkOption {
+      type = types.str;
+      default = "10.10.10.100";
+      description = "Kubernetes API VIP";
+    };
+
     clusterCidr = mkOption {
       type = types.str;
       default = "172.20.0.0/16";
@@ -93,12 +99,6 @@ let
       type = types.str;
       default = "172.21.0.0/16";
       description = "Kubernetes service network CIDR";
-    };
-
-    internalMeshCidr = mkOption {
-      type = types.str;
-      default = "172.16.255.0/24";
-      description = "Internal mesh network for Kubernetes nodes";
     };
 
     tlsSanIps = mkOption {

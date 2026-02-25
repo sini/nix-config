@@ -3,9 +3,10 @@
   flake.environments.prod.kubernetes = {
     secretsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
 
+    kubeAPIVIP = "10.10.10.100";
+
     clusterCidr = "172.20.0.0/16";
     serviceCidr = "172.21.0.0/16";
-    internalMeshCidr = "172.16.255.0/24";
 
     tlsSanIps = [
       "10.10.10.2" # axon-01 external
@@ -15,6 +16,7 @@
       "172.16.255.2" # axon-02 internal
       "172.16.255.3" # axon-03 internal
     ];
+
     loadBalancer = {
       cidr = "10.11.0.0/16";
       reservations = {

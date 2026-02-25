@@ -21,8 +21,8 @@ in
                   {
                     advertisementType = "Service";
                     service.addresses = [
-                      "ClusterIP"
-                      "ExternalIP"
+                      # "ClusterIP"
+                      # "ExternalIP"
                       "LoadBalancerIP"
                     ];
                     selector.matchExpressions = [
@@ -35,36 +35,40 @@ in
                 ];
               };
 
-              service-cluster-ips = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [
-                  {
-                    advertisementType = "Service";
-                    service.addresses = [
-                      "ClusterIP"
-                    ];
-                    selector.matchExpressions = [
-                      {
-                        key = "service.kubernetes.io/headless";
-                        operator = "DoesNotExist";
-                      }
-                    ];
-                  }
-                ];
-              };
-              pod-cidr-advertisement = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [ { advertisementType = "PodCIDR"; } ];
-              };
+              # service-cluster-ips = {
+              #   metadata.labels.advertise = "cilium-routes";
+              #   spec.advertisements = [
+              #     {
+              #       advertisementType = "Service";
+              #       service.addresses = [
+              #         "ClusterIP"
+              #       ];
+              #       selector.matchExpressions = [
+              #         {
+              #           key = "service.kubernetes.io/headless";
+              #           operator = "DoesNotExist";
+              #         }
+              #       ];
+              #     }
+              #   ];
+              # };
+              # pod-cidr-advertisement = {
+              #   metadata.labels.advertise = "cilium-routes";
+              #   spec.advertisements = [ { advertisementType = "PodCIDR"; } ];
+              # };
             };
 
             ciliumBGPPeerConfigs = {
-              "local-frr-peer".spec = {
+              "cilium-bgp".spec = {
                 ebgpMultihop = 4;
                 timers = {
                   connectRetryTimeSeconds = 5;
                   holdTimeSeconds = 30;
                   keepAliveTimeSeconds = 10;
+                };
+                gracefulRestart = {
+                  enabled = true;
+                  restartTimeSeconds = 15;
                 };
                 families = [
                   {
@@ -85,7 +89,7 @@ in
                     spec.bgpInstances = [
                       {
                         name = "local-frr-instance";
-                        routerID = hostConfig.tags.kubernetes-cilium-bgp-id;
+                        # routerID = "127.0.0.1"; # builtins.head hostConfig.ipv4;
                       }
                     ];
                   };
@@ -105,14 +109,20 @@ in
                       bgpInstances = [
                         {
                           name = "local-frr-instance";
-                          localASN = lib.toInt hostConfig.tags.bgp-asn;
+                          localASN = lib.toInt hostConfig.tags.cilium-asn;
                           peers = [
                             {
                               name = "local-frr-daemon";
                               peerASN = lib.toInt hostConfig.tags.bgp-asn;
-                              peerAddress = builtins.head hostConfig.ipv4;
-                              peerConfigRef.name = "local-frr-peer";
+                              peerAddress = builtins.head hostConfig.ipv4; # "127.0.0.1";
+                              peerConfigRef.name = "cilium-bgp";
                             }
+                            # {
+                            #   name = "uplink-frr-daemon";
+                            #   peerASN = 65000;
+                            #   peerAddress = "10.10.10.1"; # "127.0.0.1";
+                            #   peerConfigRef.name = "cilium-bgp";
+                            # }
                           ];
                         }
                       ];
