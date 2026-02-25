@@ -157,7 +157,13 @@ in
               "enp199s0f5"
               "enp199s0f6"
             ];
+
+            # Allow VRRP protocol for Keepalived (IPv4 only)
+            extraCommands = ''
+              iptables -A nixos-fw -p vrrp -j ACCEPT
+            '';
           };
+
         };
 
         services = {
@@ -197,11 +203,6 @@ in
               trackScripts = [ "check_k3s" ];
             };
           };
-
-          # Allow VRRP protocol for Keepalived (IPv4 only)
-          networking.firewall.extraCommands = ''
-            iptables -A nixos-fw -p vrrp -j ACCEPT
-          '';
 
           k3s =
             let
