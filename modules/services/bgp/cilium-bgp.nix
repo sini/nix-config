@@ -30,16 +30,7 @@ in
         ...
       }:
       let
-        # Get the thunderbolt mesh configuration if it exists
-        hasMeshConfig = hostOptions.tags ? "thunderbolt-loopback-ipv4";
-
-        # For nodes with thunderbolt mesh, get the loopback IP
-        # For other nodes, use the main IP
-        nodeLoopbackIp =
-          if hasMeshConfig then
-            lib.removeSuffix "/32" hostOptions.tags."thunderbolt-loopback-ipv4"
-          else
-            builtins.head hostOptions.ipv4;
+        nodeLoopbackIp = builtins.head hostOptions.ipv4;
 
         # Get local ASN from host tags or use default
         localAsn =
@@ -55,7 +46,7 @@ in
         config = {
           services.bgp = {
             localAsn = localAsn;
-            routerId = lib.mkIf (!hasMeshConfig) nodeLoopbackIp;
+            routerId = nodeLoopbackIp;
 
             prefixLists = {
               CILIUM-ROUTES = [
@@ -80,7 +71,7 @@ in
               remoteAs = localAsn;
               softReconfiguration = true;
               ebgpMultihop = 4;
-              updateSource = lib.mkIf hasMeshConfig "dummy0";
+              # updateSource = lib.mkIf hasMeshConfig "dummy0";
               listenRange = "${nodeLoopbackIp}/32";
             };
 
@@ -99,7 +90,7 @@ in
               };
               peerGroups.cilium = {
                 activate = true;
-                nextHopSelf = true;
+                # nextHopSelf = true; # TODO: Verify...
               };
             };
           };

@@ -90,12 +90,12 @@ in
               };
 
               # Routing Mode
-              routingMode = "native";
-              ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
-              # routingMode = "tunnel";
+              # routingMode = "native";
+              # ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
+              routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
-              # endpointRoutes.enabled = true;
+              endpointRoutes.enabled = true;
 
               devices = lib.mkIf (
                 config.kubernetes.services.cilium.devices != null
@@ -115,17 +115,18 @@ in
 
               rollOutCiliumPods = true;
               l2announcements.enabled = true;
-              externalIPs.enabled = true;
 
               l2NeighDiscovery.enabled = true;
+
+              externalIPs.enabled = true;
 
               ingressController = {
                 enabled = true;
                 default = true;
                 loadbalancerMode = "shared";
                 # hostNetwork.enabled = true;
-                defaultSecretNamespace = "kube-system";
-                defaultSecretName = "wildcard-certificate";
+                # defaultSecretNamespace = "kube-system";
+                # defaultSecretName = "wildcard-certificate";
                 # enforceHttps
                 service = {
                   annotations = {
@@ -199,6 +200,7 @@ in
               bpf.masquerade = true;
               bpf.disableExternalIPMitigation = true;
               bpf.tproxy = true;
+
               ipMasqAgent = {
                 enabled = true;
                 config.nonMasqueradeCIDRs = "{${environment.kubernetes.clusterCidr},${environment.kubernetes.serviceCidr}}";
@@ -207,9 +209,10 @@ in
 
               # enableMasqueradeRouteSource = true;
 
-              loadBalancer.acceleration = "best-effort";
-              loadBalancer.mode = "dsr";
-              loadBalancer.dsrDispatch = "geneve";
+              # loadBalancer.acceleration = "best-effort";
+              # loadBalancer.mode = "dsr";
+              # loadBalancer.dsrDispatch = "geneve";
+
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";

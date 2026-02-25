@@ -7,8 +7,8 @@
     roles = [
       "server"
       "unlock"
-      "kubernetes"
-      "kubernetes-master"
+      # "kubernetes"
+      # "kubernetes-master"
       "bgp-spoke"
       "nix-builder"
       # "vault"
@@ -18,14 +18,9 @@
       "cpu-amd"
       "gpu-amd"
       "thunderbolt-mesh"
-      "cilium-bgp"
     ];
     tags = {
-      "kubernetes-internal-ip" = "172.16.255.1";
-      "kubernetes-cilium-bgp-id" = "172.16.255.11";
       "bgp-asn" = "65001";
-      # "thunderbolt-loopback-ipv4" = "172.16.255.1/32";
-      # "thunderbolt-loopback-ipv6" = "fdb4:5edb:1b00::1/128";
       "thunderbolt-interface-1" = "169.254.12.0/31";
       "thunderbolt-interface-2" = "169.254.31.1/31";
     };

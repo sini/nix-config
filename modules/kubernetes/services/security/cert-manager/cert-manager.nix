@@ -28,42 +28,12 @@
     nixidy =
       {
         # config,
-        environment,
+        # environment,
         charts,
         # lib,
         secrets,
         ...
       }:
-      let
-        namespaceList = [
-          "argocd"
-          "kube-system"
-        ];
-        # lib.unique (map (app: app.namespace) (builtins.attrValues config.applications));
-        certificatesResources = map (namespace: {
-          name = "${namespace}-wildcard-certificate";
-          value = {
-            metadata = {
-              name = "wildcard-certificate";
-              namespace = namespace;
-              annotations = {
-                "cert-manager.io/issue-temporary-certificate" = "true";
-              };
-            };
-            spec = {
-              secretName = "wildcard-tls";
-              issuerRef = {
-                name = "cloudflare-issuer";
-                kind = "ClusterIssuer";
-              };
-              dnsNames = [
-                "${environment.domain}"
-                "*.${environment.domain}"
-              ];
-            };
-          };
-        }) namespaceList;
-      in
       {
         applications.cert-manager = {
           namespace = "cert-manager";
@@ -121,7 +91,7 @@
               };
             };
 
-            certificates = builtins.listToAttrs certificatesResources;
+            # certificates = builtins.listToAttrs certificatesResources;
 
             # Allow all cert-manager pods to access kube-apiserver
             ciliumNetworkPolicies = {

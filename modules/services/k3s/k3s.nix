@@ -20,8 +20,6 @@ in
       }:
       let
         isMaster = builtins.elem "kubernetes-master" hostOptions.roles;
-        internalIP = hostOptions.tags.kubernetes-internal-ip or (builtins.head hostOptions.ipv4);
-        externalIP = builtins.head hostOptions.ipv4;
 
         # Find master node for agent connection (using hosts from outer scope)
         masterIP = findClusterMaster environment;
@@ -201,8 +199,8 @@ in
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 
                 # "--node-ip=${internalIP}"
-                "--node-ip=${externalIP}"
-                "--node-external-ip=${externalIP}"
+                "--node-ip=${builtins.head hostOptions.ipv4}"
+                "--node-external-ip=${builtins.head hostOptions.ipv4}"
                 "--node-name=${config.networking.hostName}"
                 # TODO: If longhorn disk enabled...
                 "--node-label=node.longhorn.io/create-default-disk=true"
@@ -214,8 +212,7 @@ in
               ];
               serverFlagList = [
                 "--bind-address=0.0.0.0"
-                "--advertise-address=${externalIP}"
-                # "--advertise-address=${internalIP}"
+                "--advertise-address=${builtins.head hostOptions.ipv4}"
                 "--cluster-cidr=${environment.kubernetes.clusterCidr}"
                 "--service-cidr=${environment.kubernetes.serviceCidr}"
                 # "--cluster-domain mesh.${environment.name}.${environment.domain}"
@@ -248,8 +245,7 @@ in
                 "--tls-san=${config.networking.fqdn}"
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
-                "--tls-san=${externalIP}"
-                "--tls-san=${internalIP}"
+                "--tls-san=${builtins.head hostOptions.ipv4}"
 
                 "--kube-apiserver-arg=oidc-issuer-url=https://idm.${environment.domain}/oauth2/openid/kubernetes"
                 "--kube-apiserver-arg=oidc-client-id=kubernetes"
