@@ -12,9 +12,16 @@
           namespace = "argocd";
 
           # Adoption-safe sync options
-          syncPolicy.syncOptions = {
-            clientSideApplyMigration = false;
-            serverSideApply = true;
+          syncPolicy = {
+            autoSync = {
+              enable = false;
+              prune = true;
+              selfHeal = true;
+            };
+            syncOptions = {
+              clientSideApplyMigration = false;
+              serverSideApply = true;
+            };
           };
 
           # Sync wave: ArgoCD at -1 (infrastructure component)

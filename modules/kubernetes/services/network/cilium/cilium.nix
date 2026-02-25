@@ -69,6 +69,11 @@ in
           annotations."argocd.argoproj.io/sync-wave" = "-2";
 
           syncPolicy = {
+            autoSync = {
+              enable = false;
+              prune = true;
+              selfHeal = true;
+            };
             syncOptions = {
               serverSideApply = true;
               applyOutOfSyncOnly = true;
