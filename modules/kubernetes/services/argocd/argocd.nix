@@ -55,21 +55,22 @@
                   }
                 ];
 
-                # ingress = {
-                #   enabled = true;
-                #   ingressClassName = "cilium";
-                #   annotations = {
-                #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
-                #   };
-                #   extraTls = [
-                #     {
-                #       hosts = [
-                #         "argocd.${environment.domain}"
-                #       ];
-                #       secretName = "wildcard-certificate";
-                #     }
-                #   ];
-                # };
+                ingress = {
+                  enabled = true;
+                  ingressClassName = "cilium";
+                  annotations = {
+                    "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
+                  };
+                  tls = true;
+                  # extraTls = [
+                  #   {
+                  #     hosts = [
+                  #       "argocd.${environment.domain}"
+                  #     ];
+                  #     secretName = "wildcard-certificate";
+                  #   }
+                  # ];
+                };
               };
 
               # Repository Server
@@ -84,6 +85,7 @@
                 ];
                 readinessProbe.timeoutSeconds = 60;
                 livenessProbe.timeoutSeconds = 60;
+
               };
 
               # Redis (for caching)
@@ -134,27 +136,27 @@
           };
           resources = {
 
-            httpRoutes.argocd.spec = {
-              parentRefs = [
-                {
-                  name = "default-gateway";
-                  namespace = "kube-system";
-                }
-              ];
-              hostnames = [ "argocd.${environment.domain}" ];
-              rules = [
-                {
-                  backendRefs = [
-                    {
-                      name = "argocd-server";
-                      port = 80;
-                    }
-                  ];
-                }
-              ];
-            };
+            # httpRoutes.argocd.spec = {
+            #   parentRefs = [
+            #     {
+            #       name = "";
+            #       namespace = "";
+            #     }
+            #   ];
+            #   hostnames = [ "argocd.${environment.domain}" ];
+            #   rules = [
+            #     {
+            #       backendRefs = [
+            #         {
+            #           name = "argocd-server";
+            #           port = 80;
+            #         }
+            #       ];
+            #     }
+            #   ];
+            # };
 
-            # ingresses."argocd-server" = {
+            # ingresses."argocd" = {
             #   metadata.annotations = {
             #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
             #   };
