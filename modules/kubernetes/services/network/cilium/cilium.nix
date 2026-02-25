@@ -130,8 +130,8 @@ in
                 default = true;
                 loadbalancerMode = "shared";
                 # hostNetwork.enabled = true;
-                # defaultSecretNamespace = "kube-system";
-                # defaultSecretName = "wildcard-certificate";
+                defaultSecretNamespace = "kube-system";
+                defaultSecretName = "wildcard-certificate";
                 # enforceHttps
                 service = {
                   annotations = {
@@ -300,6 +300,7 @@ in
                 blocks = [ { cidr = loadbalancer-cidr; } ];
               };
             };
+
             ciliumL2AnnouncementPolicies."default-l2-announcement-policy" = {
               metadata = {
                 name = "default-l2-announcement-policy";
@@ -310,6 +311,7 @@ in
                 loadBalancerIPs = true;
               };
             };
+
             ciliumNetworkPolicies = {
               # Allow hubble relay server egress to nodes
               allow-hubble-relay-server-egress.spec = {
