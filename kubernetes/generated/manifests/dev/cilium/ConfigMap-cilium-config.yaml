@@ -9,12 +9,10 @@ data:
   bpf-events-drop-enabled: "true"
   bpf-events-policy-verdict-enabled: "true"
   bpf-events-trace-enabled: "true"
-  bpf-lb-acceleration: best-effort
+  bpf-lb-acceleration: disabled
   bpf-lb-algorithm-annotation: "false"
-  bpf-lb-dsr-dispatch: geneve
   bpf-lb-external-clusterip: "true"
   bpf-lb-map-max: "65536"
-  bpf-lb-mode: dsr
   bpf-lb-mode-annotation: "false"
   bpf-lb-sock: "false"
   bpf-lb-sock-hostns-only: "true"
@@ -54,6 +52,7 @@ data:
   enable-bpf-tproxy: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
+  enable-endpoint-routes: "true"
   enable-envoy-config: "true"
   enable-gateway-api: "true"
   enable-gateway-api-alpn: "false"
@@ -119,8 +118,6 @@ data:
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
   ingress-default-lb-mode: shared
-  ingress-default-secret-name: wildcard-certificate
-  ingress-default-secret-namespace: kube-system
   ingress-hostnetwork-enabled: "false"
   ingress-hostnetwork-nodelabelselector: ""
   ingress-hostnetwork-shared-listener-port: "8080"
@@ -131,7 +128,6 @@ data:
   ipam: cluster-pool
   ipam-cilium-node-update-rate: 15s
   iptables-random-fully: "false"
-  ipv4-native-routing-cidr: 172.16.0.0/16
   k8s-client-burst: "200"
   k8s-client-qps: "50"
   k8s-require-ipv4-pod-cidr: "false"
@@ -176,7 +172,7 @@ data:
   proxy-xff-num-trusted-hops-egress: "0"
   proxy-xff-num-trusted-hops-ingress: "0"
   remove-cilium-node-taints: "true"
-  routing-mode: native
+  routing-mode: tunnel
   service-no-backend-response: reject
   set-cilium-is-up-condition: "true"
   set-cilium-node-taints: "true"
