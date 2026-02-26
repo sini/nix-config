@@ -64,6 +64,25 @@
                   }
                 ];
               };
+
+              allow-certgen-to-kube-apiserver-egress.spec = {
+                endpointSelector.matchLabels."job-name" = "envoy-gateway-helm-certgen";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
             };
 
           };
