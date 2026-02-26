@@ -68,7 +68,7 @@
 
             secrets.kanidm-hubble-oidc = {
               type = "Opaque";
-              stringData.auth = secrets.for "kanidm-hubble-oidc";
+              stringData.client-secret = secrets.for "kanidm-hubble-oidc";
             };
 
             ciliumNetworkPolicies = {
