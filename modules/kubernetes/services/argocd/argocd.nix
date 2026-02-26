@@ -67,7 +67,7 @@
                       hosts = [
                         "*.${environment.domain}"
                       ];
-                      secretName = "wildcard-certificate";
+                      secretName = "wildcard-tls";
                     }
                   ];
                 };
