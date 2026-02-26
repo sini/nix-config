@@ -64,7 +64,7 @@ in
             backend be_k8s_ingress_443
               balance roundrobin
               option tcp-check
-              server kube-vip 10.11.0.1:443 check
+              server kube-vip 10.11.0.2:443 check
 
             frontend kubernetes-api
               bind *:6443

@@ -61,7 +61,7 @@
                   annotations = {
                     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
                   };
-                  # tls = true;
+                  tls = true;
                   extraTls = [
                     {
                       hosts = [
