@@ -60,7 +60,7 @@ in
       }:
       let
         loadbalancer-cidr = config.kubernetes.loadBalancer.cidr;
-
+        # ingress-controller-address = config.kubernetes.loadBalancer.reservations.cilium-ingress-controller;
       in
       {
         applications.cilium = {

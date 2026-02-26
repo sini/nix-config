@@ -28,7 +28,7 @@
     nixidy =
       { lib, config, ... }:
       let
-        ingress-controller-address = config.kubernetes.loadBalancer.reservations.cilium-ingress-controller;
+        gateway-controller-address = config.kubernetes.loadBalancer.reservations.gateway-controller;
       in
       {
         applications.envoy-gateway = {
@@ -53,6 +53,7 @@
                   enableEnvoyPatchPolicy = true;
                   enableBackend = true;
                 };
+                gatewayAPI.enabled = true;
                 # rateLimit.backend = {
                 #   type = "Redis";
                 #   redis.url = "envoy-ratelimit-db.envoy-gateway-system.svc.cluster.local:6379";
@@ -62,51 +63,48 @@
           };
 
           resources = {
-            gateways.default-gateway =
-              let
-                # ip = gateway-controller-address;
-                ip = ingress-controller-address;
-              in
-              {
-                metadata = {
-                  namespace = "kube-system";
-                  annotations."cert-manager.io/cluster-issuer" = "cloudflare-issuer";
-                };
-                spec = {
-                  gatewayClassName = "envoy"; # alt: cilium
-                  addresses = lib.toList {
-                    type = "IPAddress";
-                    value = ip;
-                  };
-                  # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
-                  listeners = [
-                    {
-                      name = "http";
-                      protocol = "HTTP";
-                      port = 80;
-                      # hostname = "*.${environment.domain}";
-                      allowedRoutes.namespaces.from = "All";
-                    }
-                    {
-                      name = "https";
-                      protocol = "HTTPS";
-                      port = 443;
-                      # hostname = "*.${environment.domain}";
-                      allowedRoutes.namespaces.from = "All";
-                      tls = {
-                        mode = "Terminate";
-                        certificateRefs = [
-                          {
-                            kind = "Secret";
-                            name = "wildcard-tls";
-                            namespace = "kube-system";
-                          }
-                        ];
-                      };
-                    }
-                  ];
-                };
+            gatewayClasses.envoy.spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+
+            gateways.default-gateway = {
+              metadata = {
+                namespace = "kube-system";
+                annotations."cert-manager.io/cluster-issuer" = "cloudflare-issuer";
               };
+              spec = {
+                gatewayClassName = "envoy"; # alt: cilium
+                addresses = lib.toList {
+                  type = "IPAddress";
+                  value = gateway-controller-address;
+                };
+                # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
+                listeners = [
+                  {
+                    name = "http";
+                    protocol = "HTTP";
+                    port = 80;
+                    # hostname = "*.${environment.domain}";
+                    allowedRoutes.namespaces.from = "All";
+                  }
+                  {
+                    name = "https";
+                    protocol = "HTTPS";
+                    port = 443;
+                    # hostname = "*.${environment.domain}";
+                    allowedRoutes.namespaces.from = "All";
+                    tls = {
+                      mode = "Terminate";
+                      certificateRefs = [
+                        {
+                          kind = "Secret";
+                          name = "wildcard-tls";
+                          namespace = "kube-system";
+                        }
+                      ];
+                    };
+                  }
+                ];
+              };
+            };
 
             ciliumNetworkPolicies = {
 
