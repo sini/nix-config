@@ -1,0 +1,50 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  annotations:
+    helm.sh/hook: pre-install, pre-upgrade
+  labels:
+    app.kubernetes.io/instance: envoy
+    app.kubernetes.io/name: gateway-helm
+  name: envoy-gateway-helm-certgen
+  namespace: envoy-gateway-system
+spec:
+  backoffLimit: 1
+  completions: 1
+  parallelism: 1
+  template:
+    metadata:
+      labels:
+        app: certgen
+    spec:
+      containers:
+        - command:
+            - envoy-gateway
+            - certgen
+          env:
+            - name: ENVOY_GATEWAY_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+            - name: KUBERNETES_CLUSTER_DOMAIN
+              value: cluster.local
+          image: docker.io/envoyproxy/gateway:v1.7.0
+          imagePullPolicy: IfNotPresent
+          name: envoy-gateway-certgen
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
+      imagePullSecrets: []
+      restartPolicy: Never
+      serviceAccountName: envoy-gateway-helm-certgen
+  ttlSecondsAfterFinished: 30
