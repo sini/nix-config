@@ -20,5 +20,5 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - '*.json64.dev'
+        - argocd.json64.dev
       secretName: wildcard-tls

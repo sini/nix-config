@@ -14,7 +14,7 @@
           # Adoption-safe sync options
           syncPolicy = {
             autoSync = {
-              enable = false;
+              enable = true;
               prune = true;
               selfHeal = true;
             };
@@ -186,7 +186,7 @@
                 tls = [
                   {
                     hosts = [
-                      "*.${environment.domain}"
+                      "argocd.${environment.domain}"
                     ];
                     secretName = "wildcard-tls";
                   }

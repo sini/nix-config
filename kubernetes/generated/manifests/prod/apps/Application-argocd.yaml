@@ -15,6 +15,9 @@ spec:
     repoURL: https://github.com/sini/nix-config.git
     targetRevision: main
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - ClientSideApplyMigration=false
       - ServerSideApply=true
