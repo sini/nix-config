@@ -26,7 +26,7 @@ in
               "cert-manager"
               "cilium"
               "envoy-gateway"
-              "gateway-api"
+              # "gateway-api"
               "sops-secrets-operator"
             ];
             enabledServices = lib.unique (defaultServices ++ (environment.kubernetes.services.enabled or [ ]));
