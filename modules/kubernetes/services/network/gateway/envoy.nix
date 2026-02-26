@@ -25,15 +25,26 @@
         inherit src crds;
       };
 
-    nixidy = {
-      applications.envoy-gateway = {
-        namespace = "kube-system";
+    nixidy =
+      { lib, ... }:
+      {
+        applications.envoy-gateway = {
+          namespace = "envoy-gateway-system";
 
-        resources = {
-          gatewayClasses.envoy.spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+          helm.releases.envoy = {
+            chart = lib.helm.downloadHelmChart {
+              repo = "oci://docker.io/envoyproxy";
+              chart = "gateway-helm";
+              version = "v1.7.0";
+              chartHash = "sha256-JePGNofWs86ZVT1M6FI4Zg79BFvh2KudMnMOHjAbhJM=";
+            };
+          };
+
+          resources = {
+            gatewayClasses.envoy.spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+          };
+
         };
-
       };
-    };
   };
 }
