@@ -143,11 +143,11 @@ in
               #   };
               # };
 
-              gatewayAPI.enabled = true;
+              gatewayAPI.enabled = false; # Trying out envoy...
               gatewayAPI.hostNetwork.enabled = false;
 
               # Explicitly enable Envoy...
-              envoy.enabled = true;
+              envoy.enabled = false; # Trying out envoy...
               envoy.rollOutPods = true;
 
               # Don't create secretsNamespace, we do this in the bootstrap app

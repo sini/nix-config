@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: 9d1eb07335bce9fed04ce8b685a5af686a032097866784430d2ec9e30a6cdb76
+        cilium.io/cilium-configmap-checksum: cd76231b147090634fd2b9cb1ed90f0a3cf093147bf1dc3550841e82e1cb46c6
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -166,9 +166,6 @@ spec:
             successThreshold: 1
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
-            - mountPath: /var/run/cilium/envoy/sockets
-              name: envoy-sockets
-              readOnly: false
             - mountPath: /host/proc/sys/net
               name: host-proc-sys-net
             - mountPath: /host/proc/sys/kernel
@@ -433,10 +430,6 @@ spec:
             path: /run/xtables.lock
             type: FileOrCreate
           name: xtables-lock
-        - hostPath:
-            path: /var/run/cilium/envoy/sockets
-            type: DirectoryOrCreate
-          name: envoy-sockets
         - name: clustermesh-secrets
           projected:
             defaultMode: 256
