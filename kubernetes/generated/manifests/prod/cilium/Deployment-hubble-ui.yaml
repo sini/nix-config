@@ -18,6 +18,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        cilium.io/hubble-ui-nginx-configmap-checksum: 76283720d1bb70050debf51116121fa9a67ebc9d1cd9167c3dd9bdbfb613df37
       labels:
         app.kubernetes.io/name: hubble-ui
         app.kubernetes.io/part-of: cilium

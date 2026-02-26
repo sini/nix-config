@@ -18,6 +18,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        cilium.io/hubble-relay-configmap-checksum: 9a7859043382844a1ccba43365ed474705992eaae14e01945202d423a4c63348
       labels:
         app.kubernetes.io/name: hubble-relay
         app.kubernetes.io/part-of: cilium
