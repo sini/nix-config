@@ -61,6 +61,7 @@ in
       let
         loadbalancer-cidr = config.kubernetes.loadBalancer.cidr;
         ingress-controller-address = config.kubernetes.loadBalancer.reservations.cilium-ingress-controller;
+        gateway-controller-address = config.kubernetes.loadBalancer.reservations.cilium-gateway-controller;
       in
       {
         applications.cilium = {
@@ -100,7 +101,7 @@ in
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
-              endpointRoutes.enabled = true;
+              # endpointRoutes.enabled = true;
 
               devices = lib.mkIf (
                 config.kubernetes.services.cilium.devices != null
@@ -141,8 +142,8 @@ in
                 };
               };
 
-              # gatewayAPI.enabled = true;
-              # gatewayAPI.hostNetwork.enabled = false;
+              gatewayAPI.enabled = true;
+              gatewayAPI.hostNetwork.enabled = false;
 
               # Don't create secretsNamespace, we do this in the bootstrap app
               tls.secretsNamespace.create = false;
@@ -166,16 +167,15 @@ in
                 relay.enabled = true;
                 ui = {
                   enabled = true;
-                  ingress = {
-                    annotations = { };
-                    className = "cilium";
-                    enabled = true;
-                    hosts = [ "hubble.${environment.domain}" ];
-                    labels = { };
-                    tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
-                  };
+                  # ingress = {
+                  #   annotations = { };
+                  #   className = "cilium";
+                  #   enabled = true;
+                  #   hosts = [ "hubble.${environment.domain}" ];
+                  #   labels = { };
+                  #   tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
+                  # };
                 };
-                # peerService.clusterDomain = "mesh.${environment.name}.${environment.domain}";
                 # metrics.enabled = [
                 #   "dns"
                 #   "drop"
@@ -185,9 +185,7 @@ in
                 #   "icmp"
                 #   "http"
                 # ];
-                # This should be used so the rendered manifest
-                # doesn't contain TLS secrets.
-                # tls.auto.method = "cronJob";
+
                 tls = {
                   auto = {
                     enabled = true;
@@ -218,8 +216,6 @@ in
                 config.masqLinkLocal = false;
               };
 
-              # enableMasqueradeRouteSource = true;
-
               # loadBalancer.acceleration = "best-effort";
               # loadBalancer.mode = "dsr";
               # loadBalancer.dsrDispatch = "geneve";
@@ -229,26 +225,9 @@ in
                 mode = "cluster-pool";
                 operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
               };
-              # ipam.mode = "kubernetes";
 
               # BGP control-plane (for FRR peering)
               bgpControlPlane.enabled = true;
-
-              # gatewayAPI.enabled = true;
-              # gatewayAPI.service = {
-              #   enabled = true;
-              #   type = "LoadBalancer";
-              #   ports = [
-              #     {
-              #       name = "http";
-              #       port = 8080;
-              #     }
-              #     {
-              #       name = "https";
-              #       port = 8443;
-              #     }
-              #   ];
-              # };
 
               policyEnforcementMode = "default";
               policyAuditMode = false;
@@ -256,42 +235,43 @@ in
           };
 
           resources = {
-            # gateways.default-gateway =
-            #   let
-            #     ip = ingress-controller-address;
-            #   in
-            #   {
-            #     # metadata.annotations."external-dns.alpha.kubernetes.io/target" = "${name}.${domain}";
-            #     spec = {
-            #       gatewayClassName = "cilium";
-            #       addresses = lib.toList {
-            #         type = "IPAddress";
-            #         value = ip;
-            #       };
-            #       # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
-            #       listeners = [
-            #         {
-            #           name = "http";
-            #           protocol = "HTTP";
-            #           port = 80;
-            #           hostname = "*.${environment.domain}";
-            #           allowedRoutes.namespaces.from = "All";
-            #         }
-            #         {
-            #           name = "https";
-            #           protocol = "HTTPS";
-            #           port = 443;
-            #           hostname = "*.${environment.domain}";
-            #           allowedRoutes.namespaces.from = "All";
-            #           tls.certificateRefs = lib.toList {
-            #             kind = "Secret";
-            #             name = "wildcard-certificate";
-            #             namespace = "kube-system";
-            #           };
-            #         }
-            #       ];
-            #     };
-            #   };
+            gateways.default-gateway =
+              let
+                ip = gateway-controller-address;
+              in
+              {
+                # metadata.annotations."external-dns.alpha.kubernetes.io/target" = "${name}.${domain}";
+                spec = {
+                  gatewayClassName = "cilium";
+                  addresses = lib.toList {
+                    type = "IPAddress";
+                    value = ip;
+                  };
+                  # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
+                  listeners = [
+                    {
+                      name = "http";
+                      protocol = "HTTP";
+                      port = 80;
+                      # hostname = "*.${environment.domain}";
+                      allowedRoutes.namespaces.from = "All";
+                    }
+                    {
+                      name = "https";
+                      protocol = "HTTPS";
+                      port = 443;
+                      # hostname = "*.${environment.domain}";
+                      allowedRoutes.namespaces.from = "All";
+                      tls.certificateRefs = lib.toList {
+                        kind = "Secret";
+                        name = "wildcard-certificate";
+                        namespace = "kube-system";
+                      };
+                    }
+                  ];
+                };
+              };
+
             ciliumLoadBalancerIPPools."lb-pool" = {
               metadata = {
                 name = "lb-pool";

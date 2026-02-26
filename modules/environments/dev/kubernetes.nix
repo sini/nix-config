@@ -18,6 +18,7 @@
       cidr = "10.12.0.0/16";
       reservations = {
         cilium-ingress-controller = "10.12.0.1";
+        cilium-gateway-controller = "10.12.0.2";
       };
     };
 
