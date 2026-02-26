@@ -20,12 +20,6 @@ webhooks:
         port: 9443
     failurePolicy: Ignore
     name: topology.webhook.gateway.envoyproxy.io
-    namespaceSelector:
-      matchExpressions:
-        - key: kubernetes.io/metadata.name
-          operator: In
-          values:
-            - envoy-gateway-system
     rules:
       - apiGroups:
           - ""

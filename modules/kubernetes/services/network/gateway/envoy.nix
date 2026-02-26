@@ -38,10 +38,27 @@
               version = "v1.7.0";
               chartHash = "sha256-JePGNofWs86ZVT1M6FI4Zg79BFvh2KudMnMOHjAbhJM=";
             };
+            values = {
+              deployment.replicas = 2;
+              config.envoyGateway = {
+                gateway.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+                provider = {
+                  type = "Kubernetes";
+                  kubernetes.deploy.type = "GatewayNamespace";
+                };
+                extensionApis = {
+                  enableEnvoyPatchPolicy = true;
+                  enableBackend = true;
+                };
+                # rateLimit.backend = {
+                #   type = "Redis";
+                #   redis.url = "envoy-ratelimit-db.envoy-gateway-system.svc.cluster.local:6379";
+                # };
+              };
+            };
           };
 
           resources = {
-            gatewayClasses.envoy.spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
 
             ciliumNetworkPolicies = {
 
