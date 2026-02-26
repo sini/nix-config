@@ -7,6 +7,7 @@ metadata:
   namespace: argocd
 spec:
   dnsNames:
+    - argocd.json64.dev
     - '*.json64.dev'
   issuerRef:
     kind: ClusterIssuer
@@ -22,6 +23,23 @@ metadata:
   namespace: kube-system
 spec:
   dnsNames:
+    - kube-system.json64.dev
+    - '*.json64.dev'
+  issuerRef:
+    kind: ClusterIssuer
+    name: cloudflare-issuer
+  secretName: wildcard-tls
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: wildcard-certificate
+  namespace: security
+spec:
+  dnsNames:
+    - security.json64.dev
     - '*.json64.dev'
   issuerRef:
     kind: ClusterIssuer
