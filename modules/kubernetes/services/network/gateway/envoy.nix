@@ -45,6 +45,33 @@
 
             ciliumNetworkPolicies = {
 
+              allow-world-egress.spec = {
+                endpointSelector.matchLabels = {
+                  "app.kubernetes.io/name" = "envoy";
+                };
+                egress = [
+                  {
+                    toEntities = [
+                      "world"
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "443";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "53";
+                            protocol = "UDP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
               # Allow all envoy pods to access kube-apiserver
               allow-kube-apiserver-egress.spec = {
                 endpointSelector.matchLabels."app.kubernetes.io/instance" = "envoy";
