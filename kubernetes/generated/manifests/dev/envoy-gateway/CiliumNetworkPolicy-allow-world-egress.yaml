@@ -15,4 +15,4 @@ spec:
               protocol: UDP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: envoy
+      k8s:io.kubernetes.pod.namespace: envoy-gateway-system
