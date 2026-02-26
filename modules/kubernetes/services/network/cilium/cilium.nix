@@ -162,6 +162,7 @@ in
 
               operator = {
                 enabled = true;
+                replicas = 1;
                 rollOutPods = true;
               };
 

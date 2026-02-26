@@ -59,7 +59,7 @@ class EnvironmentMetadata:
   name: str
   repository: str
   branch: str
-  output_path: str
+  output_path: Path
 
 class EnvironmentManager:
   sourceFiles: List[Path] = []
@@ -545,6 +545,164 @@ def get_git_root() -> Optional[Path]:
       return None
 
 
+def nix_eval(flake_ref: str, attr: str, json_output: bool = True) -> str:
+  """Evaluate a nix flake attribute.
+
+  Args:
+      flake_ref: Flake reference (e.g., ".", "/path/to/flake")
+      attr: Attribute path to evaluate (e.g., "nixidyEnvs.x86_64-linux")
+      json_output: Whether to use --json flag
+
+  Returns:
+      Output from nix eval command
+  """
+  cmd = [
+    "nix",
+    "eval",
+    "--extra-experimental-features", "nix-command",
+    "--extra-experimental-features", "flakes",
+  ]
+  if json_output:
+    cmd.append("--json")
+  cmd.append(f"{flake_ref}#{attr}")
+  return run(cmd)
+
+
+def nix_build(flake_ref: str, attr: str, out_link: Optional[Path] = None) -> Path:
+  """Build a nix flake attribute.
+
+  Args:
+      flake_ref: Flake reference (e.g., ".", "/path/to/flake")
+      attr: Attribute path to build (e.g., "nixidyEnvs.x86_64-linux.prod.environmentPackage")
+      out_link: Optional path for result symlink
+
+  Returns:
+      Path to the built package
+  """
+  cmd = [
+    "nix",
+    "build",
+    "--extra-experimental-features", "nix-command",
+    "--extra-experimental-features", "flakes",
+    "--print-out-paths",
+  ]
+  if out_link:
+    cmd.extend(["--out-link", str(out_link)])
+  else:
+    cmd.append("--no-link")
+
+  cmd.append(f"{flake_ref}#{attr}")
+  out = run(cmd)
+  return Path(out.strip())
+
+
+def get_system() -> str:
+  """Detect the current system platform.
+
+  Returns:
+      System string (e.g., "x86_64-linux", "aarch64-darwin")
+  """
+  import platform
+
+  machine = platform.machine()
+  system_name = platform.system().lower()
+
+  # Map machine architectures
+  arch_map = {
+    "x86_64": "x86_64",
+    "amd64": "x86_64",
+    "arm64": "aarch64",
+    "aarch64": "aarch64",
+  }
+
+  # Map system names
+  os_map = {
+    "linux": "linux",
+    "darwin": "darwin",
+  }
+
+  arch = arch_map.get(machine.lower(), machine)
+  os_name = os_map.get(system_name, system_name)
+
+  return f"{arch}-{os_name}"
+
+
+def discover_environments(flake_ref: str, system: Optional[str] = None) -> List[str]:
+  """Discover available nixidy environments from the flake.
+
+  Args:
+      flake_ref: Flake reference (e.g., ".", "/path/to/flake")
+      system: System platform (auto-detected if not specified)
+
+  Returns:
+      List of environment names
+  """
+  if system is None:
+    system = get_system()
+
+  try:
+    # Use --apply to extract attribute names without evaluating the full attrset
+    # This avoids trying to convert functions to JSON
+    cmd = [
+      "nix",
+      "eval",
+      "--extra-experimental-features", "nix-command",
+      "--extra-experimental-features", "flakes",
+      "--json",
+      "--apply", "envs: builtins.attrNames envs",
+      f"{flake_ref}#nixidyEnvs.{system}",
+    ]
+    out = run(cmd)
+    # The JSON output is a list of environment names
+    return json.loads(out)
+  except Exception as e:
+    logging.error(f"Failed to discover environments: {e}")
+    return []
+
+
+def get_environment_metadata(flake_ref: str, env: str, system: Optional[str] = None) -> EnvironmentMetadata:
+  """Get metadata for a specific nixidy environment.
+
+  Args:
+      flake_ref: Flake reference (e.g., ".", "/path/to/flake")
+      env: Environment name
+      system: System platform (auto-detected if not specified)
+
+  Returns:
+      EnvironmentMetadata object
+  """
+  if system is None:
+    system = get_system()
+
+  # Evaluate the nixidy.target configuration
+  target_json = nix_eval(flake_ref, f"nixidyEnvs.{system}.{env}.config.nixidy.target", json_output=True)
+  target_data = json.loads(target_json)
+
+  return EnvironmentMetadata(
+    name=env,
+    repository=target_data["repository"],
+    branch=target_data["branch"],
+    output_path=Path(target_data["rootPath"])
+  )
+
+
+def build_environment_package(flake_ref: str, env: str, system: Optional[str] = None) -> Path:
+  """Build the environmentPackage for a nixidy environment.
+
+  Args:
+      flake_ref: Flake reference (e.g., ".", "/path/to/flake")
+      env: Environment name
+      system: System platform (auto-detected if not specified)
+
+  Returns:
+      Path to the built environment package
+  """
+  if system is None:
+    system = get_system()
+
+  return nix_build(flake_ref, f"nixidyEnvs.{system}.{env}.environmentPackage")
+
+
 def main() -> int:
   """Main entry point."""
   parser = argparse.ArgumentParser(
@@ -554,6 +712,24 @@ def main() -> int:
     "--git-root",
     type=Path,
     help="Git repository root path (auto-detected if not specified)"
+  )
+  parser.add_argument(
+    "--flake",
+    type=str,
+    default=".",
+    help="Flake reference to use (default: current directory)"
+  )
+  parser.add_argument(
+    "--system",
+    type=str,
+    help="System platform (auto-detected if not specified)"
+  )
+  parser.add_argument(
+    "--env",
+    type=str,
+    action="append",
+    dest="environments",
+    help="Specific environment(s) to process (can be specified multiple times; processes all if not specified)"
   )
   parser.add_argument(
     "--dry-run",
@@ -600,45 +776,68 @@ def main() -> int:
     logging.info("")
 
   logging.info(f"Git repository root: {git_root}")
+  logging.info(f"Flake reference: {args.flake}")
+
+  # Discover environments from the flake
+  system = args.system
+  logging.info(f"Discovering environments for system: {system or 'auto-detect'}")
+  env_names = discover_environments(args.flake, system)
+
+  if not env_names:
+    logging.error("No environments found in flake")
+    return 1
+
+  # Filter to specific environments if requested
+  if args.environments:
+    requested_envs = set(args.environments)
+    available_envs = set(env_names)
+    missing_envs = requested_envs - available_envs
+    if missing_envs:
+      logging.error(f"Requested environments not found: {', '.join(sorted(missing_envs))}")
+      logging.error(f"Available environments: {', '.join(sorted(available_envs))}")
+      return 1
+    env_names = [e for e in env_names if e in requested_envs]
+
+  logging.info(f"Processing {len(env_names)} environment(s): {', '.join(sorted(env_names))}")
   logging.info("")
 
-  # Find the environments directory relative to this script
-  script_path = Path(__file__).resolve()
-  envs_dir = script_path.parent.parent / "share" / "nixidy-environments"
+  # Process each environment
+  for env in sorted(env_names):
+    logging.info(f"Processing environment: {env}")
 
-  if not envs_dir.exists():
-    logging.error(f"environments directory not found at {envs_dir}")
-    return 1
+    # Get metadata for this environment
+    metadata = get_environment_metadata(args.flake, env, system)
 
-  # Discover environments from symlinks and metadata
-  environments: Dict[str, Tuple[Path, EnvironmentMetadata]] = {}
-  for entry in sorted(envs_dir.iterdir()):
-    # Look for environment directories (symlinks or directories)
-    if entry.is_dir():
-      metadata_file = envs_dir / f"{entry.name}.yaml"
-      if not metadata_file.exists():
-        logging.warning(f"metadata file not found for environment {entry.name}")
-        continue
+    # Convert rootPath to absolute path relative to git root
+    output_path_str = str(metadata.output_path)
+    if output_path_str.startswith("./"):
+      output_path = git_root / output_path_str.lstrip("./")
+    else:
+      output_path = metadata.output_path
 
-      # Read metadata
-      with open(metadata_file, 'r') as f:
-        metadata_data = yaml.safe_load(f)
-        metadata = EnvironmentMetadata(
-          name = metadata_data['name'],
-          repository = metadata_data['repository'],
-          branch = metadata_data['branch'],
-          output_path = git_root / metadata_data['rootPath'].lstrip('./')
-        )
+    # Update metadata with absolute path
+    metadata = EnvironmentMetadata(
+      name=metadata.name,
+      repository=metadata.repository,
+      branch=metadata.branch,
+      output_path=output_path
+    )
 
-      environments[entry.name] = (entry, metadata)
+    # Build the environment package
+    logging.info(f"Building environment package...")
+    src_path = build_environment_package(args.flake, env, system)
+    logging.info(f"Built: {src_path}")
 
-  if not environments:
-    logging.error("No environments found")
-    return 1
-
-  for env, (src_path, metadata) in environments.items():
-    em = EnvironmentManager(src_path, metadata, git_root=git_root, dry_run=args.dry_run, skip_secrets=args.skip_secrets)
+    # Update the environment
+    em = EnvironmentManager(
+      src_path,
+      metadata,
+      git_root=git_root,
+      dry_run=args.dry_run,
+      skip_secrets=args.skip_secrets
+    )
     em.update()
+    logging.info("")
 
   return 0
 

@@ -9,7 +9,7 @@ metadata:
   name: cilium-operator
   namespace: kube-system
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       io.cilium/app: operator
@@ -17,7 +17,7 @@ spec:
   strategy:
     rollingUpdate:
       maxSurge: 25%
-      maxUnavailable: 50%
+      maxUnavailable: 100%
     type: RollingUpdate
   template:
     metadata:
