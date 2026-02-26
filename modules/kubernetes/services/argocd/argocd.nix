@@ -61,11 +61,10 @@
                 #   annotations = {
                 #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
                 #   };
-                #   tls = true;
                 #   extraTls = [
                 #     {
                 #       hosts = [
-                #         "*.${environment.domain}"
+                #         "argocd.${environment.domain}"
                 #       ];
                 #       secretName = "wildcard-tls";
                 #     }
@@ -297,43 +296,8 @@
               };
             };
 
-            # ciliumClusterwideNetworkPolicies = {
-            #   # Allow all cilium endpoints to talk egress to each other
-            #   allow-internal-egress.spec = {
-            #     description = "Policy to allow all Cilium managed endpoint to talk to all other cilium managed endpoints on egress";
-            #     endpointSelector.matchLabels."app.kubernetes.io/part-of" = "argocd";
-            #     ingress = [
-            #       {
-            #         fromEndpoints = [ { } ];
-            #       }
-            #     ];
-            #   };
-            # };
           };
 
-          # resources = {
-          #   ingressRoutes = {
-          #     argocd-dashboard-route.spec = {
-          #       entryPoints = [
-          #         "websecure"
-          #       ];
-          #       routes = [
-          #         {
-          #           match = "Host(`argo.sinistar.io`)";
-          #           kind = "Rule";
-          #           services = [
-          #             {
-          #               name = "argocd-server";
-          #               namespace = "argocd";
-          #               port = 80;
-          #             }
-          #           ];
-          #         }
-          #       ];
-          #       tls.secretName = "anderwersede-tls-certificate";
-          #     };
-          #   };
-          # };
         };
       };
   };

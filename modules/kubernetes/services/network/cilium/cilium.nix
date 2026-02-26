@@ -133,7 +133,6 @@ in
                 # hostNetwork.enabled = true;
                 defaultSecretNamespace = "kube-system";
                 defaultSecretName = "wildcard-tls";
-                enforceHttps = true;
                 service = {
                   annotations = {
                     "lbipam.cilium.io/ips" = ingress-controller-address;
