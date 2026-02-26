@@ -276,6 +276,27 @@ in
                 };
               };
 
+            httpRoutes.hubble-ui.spec = {
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "kube-system";
+                  sectionName = "https";
+                }
+              ];
+              hostnames = [ "hubble.${environment.domain}" ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      name = "hubble-ui";
+                      port = 80;
+                    }
+                  ];
+                }
+              ];
+            };
+
             ciliumLoadBalancerIPPools."lb-pool" = {
               metadata = {
                 name = "lb-pool";
