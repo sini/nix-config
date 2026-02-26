@@ -166,48 +166,6 @@ in
                 rollOutPods = true;
               };
 
-              # Enable Hubble UI (Observability)
-              hubble = {
-                enabled = true;
-                relay.enabled = true;
-                relay.rollOutPods = true;
-                ui.enabled = true;
-                ui.rollOutPods = true;
-
-                # ingress = {
-                #   annotations = { };
-                #   className = "cilium";
-                #   enabled = true;
-                #   hosts = [ "hubble.${environment.domain}" ];
-                #   labels = { };
-                #   tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
-                # };
-
-                # metrics.enabled = [
-                #   "dns"
-                #   "drop"
-                #   "tcp"
-                #   "flow"
-                #   "port-distribution"
-                #   "icmp"
-                #   "http"
-                # ];
-
-                tls = {
-                  auto = {
-                    enabled = true;
-                    method = "cronJob";
-                    # method = "certmanager";
-                    # certValidityDuration = 90;
-                    # certManagerIssuerRef = {
-                    #   group = "cert-manager.io";
-                    #   kind = "ClusterIssuer";
-                    #   name = "cloudflare-issuer";
-                    # };
-                  };
-                };
-              };
-
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
               bpf.lbExternalClusterIP = true;
@@ -284,27 +242,6 @@ in
                 };
               };
 
-            httpRoutes.hubble-ui.spec = {
-              parentRefs = [
-                {
-                  name = "default-gateway";
-                  namespace = "kube-system";
-                  sectionName = "https";
-                }
-              ];
-              hostnames = [ "hubble.${environment.domain}" ];
-              rules = [
-                {
-                  backendRefs = [
-                    {
-                      name = "hubble-ui";
-                      port = 80;
-                    }
-                  ];
-                }
-              ];
-            };
-
             ciliumLoadBalancerIPPools."lb-pool" = {
               metadata = {
                 name = "lb-pool";
@@ -326,76 +263,6 @@ in
             };
 
             ciliumNetworkPolicies = {
-              # Allow hubble relay server egress to nodes
-              allow-hubble-relay-server-egress.spec = {
-                description = "Policy for egress from hubble relay to hubble server in Cilium agent.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "hubble-relay";
-                egress = [
-                  {
-                    toEntities = [
-                      "remote-node"
-                      "host"
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "4244";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              # Allow hubble UI to talk to hubble relay
-              allow-hubble-ui-relay-ingress.spec = {
-                description = "Policy for ingress from hubble UI to hubble relay.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "hubble-relay";
-                ingress = [
-                  {
-                    fromEndpoints = [
-                      {
-                        matchLabels."app.kubernetes.io/name" = "hubble-ui";
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "4245";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              # Allow hubble UI to talk to kube-apiserver
-              allow-hubble-ui-kube-apiserver-egress.spec = {
-                description = "Allow Hubble UI to talk to kube-apiserver";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "hubble-ui";
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               # Allow kube-dns to talk to upstream DNS
               allow-kube-dns-upstream-egress.spec = {
                 description = "Policy for egress to allow kube-dns to talk to upstream DNS.";
@@ -421,27 +288,6 @@ in
               allow-kube-dns-apiserver-egress.spec = {
                 description = "Allow coredns to talk to kube-apiserver.";
                 endpointSelector.matchLabels.k8s-app = "kube-dns";
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              # Allow hubble-generate-certs job to talk to kube-apiserver
-              allow-hubble-generate-certs-apiserver-egress.spec = {
-                description = "Allow hubble-generate-certs job to talk to kube-apiserver.";
-                endpointSelector.matchLabels.k8s-app = "hubble-generate-certs";
                 egress = [
                   {
                     toEntities = [ "kube-apiserver" ];
