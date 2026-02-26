@@ -267,7 +267,7 @@ in
                         certificateRefs = [
                           {
                             kind = "Secret";
-                            name = "wildcard-certificate";
+                            name = "wildcard-tls";
                             namespace = "kube-system";
                           }
                         ];
