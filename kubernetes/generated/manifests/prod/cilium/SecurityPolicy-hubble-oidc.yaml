@@ -1,0 +1,19 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: hubble-oidc
+  namespace: kube-system
+spec:
+  oidc:
+    clientID: hubble
+    clientSecret:
+      name: kanidm-hubble-oidc
+    cookieDomain: json64.dev
+    logoutPath: /logout
+    provider:
+      issuer: https://idm.json64.dev/oauth2/openid/hubble
+    redirectURL: https://hubble.json64.dev/oidc/callback
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: hubble-ui
