@@ -13,4 +13,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/instance: envoy
+      k8s:io.kubernetes.pod.namespace: envoy-gateway-system
