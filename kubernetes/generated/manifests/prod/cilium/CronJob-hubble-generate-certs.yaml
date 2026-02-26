@@ -36,7 +36,6 @@ spec:
                       commonName: "*.prod.hubble-grpc.cilium.io"
                       hosts:
                       - "*.prod.hubble-grpc.cilium.io"
-                      - "*.mesh.prod.json64.dev"
                       usage:
                       - signing
                       - key encipherment
