@@ -156,41 +156,41 @@
               ];
             };
 
-            ingresses."argocd-server" = {
-              metadata.annotations = {
-                "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
-              };
-              spec = {
-                ingressClassName = "cilium";
+            # ingresses."argocd-server" = {
+            #   metadata.annotations = {
+            #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
+            #   };
+            #   spec = {
+            #     ingressClassName = "cilium";
 
-                rules = [
-                  {
-                    host = "argocd.${environment.domain}";
-                    http.paths = [
-                      {
-                        path = "/";
-                        pathType = "Prefix";
-                        backend = {
-                          service = {
-                            name = "argocd-server";
-                            port.name = "http";
-                          };
-                        };
-                      }
-                    ];
-                  }
-                ];
+            #     rules = [
+            #       {
+            #         host = "argocd.${environment.domain}";
+            #         http.paths = [
+            #           {
+            #             path = "/";
+            #             pathType = "Prefix";
+            #             backend = {
+            #               service = {
+            #                 name = "argocd-server";
+            #                 port.name = "http";
+            #               };
+            #             };
+            #           }
+            #         ];
+            #       }
+            #     ];
 
-                tls = [
-                  {
-                    hosts = [
-                      "argocd.${environment.domain}"
-                    ];
-                    secretName = "wildcard-tls";
-                  }
-                ];
-              };
-            };
+            #     tls = [
+            #       {
+            #         hosts = [
+            #           "argocd.${environment.domain}"
+            #         ];
+            #         secretName = "wildcard-tls";
+            #       }
+            #     ];
+            #   };
+            # };
 
             secrets.argocd-redis = {
               type = "Opaque";

@@ -62,9 +62,6 @@ data:
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
   enable-hubble: "true"
-  enable-ingress-controller: "true"
-  enable-ingress-proxy-protocol: "false"
-  enable-ingress-secrets-sync: "true"
   enable-ip-masq-agent: "true"
   enable-ipv4: "true"
   enable-ipv4-big-tcp: "false"
@@ -91,7 +88,6 @@ data:
   enable-vtep: "false"
   enable-well-known-identities: "false"
   enable-xt-socket-fallback: "true"
-  enforce-ingress-https: "true"
   envoy-access-log-buffer-size: "4096"
   envoy-base-id: "0"
   envoy-config-retry-interval: 15s
@@ -116,15 +112,6 @@ data:
   identity-gc-interval: 15m0s
   identity-heartbeat-timeout: 30m0s
   identity-management-mode: agent
-  ingress-default-lb-mode: shared
-  ingress-default-secret-name: wildcard-tls
-  ingress-default-secret-namespace: kube-system
-  ingress-hostnetwork-enabled: "false"
-  ingress-hostnetwork-nodelabelselector: ""
-  ingress-hostnetwork-shared-listener-port: "8080"
-  ingress-lb-annotation-prefixes: lbipam.cilium.io nodeipam.cilium.io service.beta.kubernetes.io service.kubernetes.io cloud.google.com
-  ingress-secrets-namespace: cilium-secrets
-  ingress-shared-lb-service-name: cilium-ingress
   install-no-conntrack-iptables-rules: "false"
   ipam: cluster-pool
   ipam-cilium-node-update-rate: 15s

@@ -61,7 +61,7 @@ in
       let
         loadbalancer-cidr = config.kubernetes.loadBalancer.cidr;
         ingress-controller-address = config.kubernetes.loadBalancer.reservations.cilium-ingress-controller;
-        gateway-controller-address = config.kubernetes.loadBalancer.reservations.cilium-gateway-controller;
+
       in
       {
         applications.cilium = {
@@ -126,20 +126,20 @@ in
 
               externalIPs.enabled = true;
 
-              ingressController = {
-                enabled = true;
-                default = true;
-                loadbalancerMode = "shared";
-                # hostNetwork.enabled = true;
-                defaultSecretNamespace = "kube-system";
-                defaultSecretName = "wildcard-tls";
-                service = {
-                  annotations = {
-                    "lbipam.cilium.io/ips" = ingress-controller-address;
-                    "lbipam.cilium.io/sharing-key" = "cilium-ingress";
-                  };
-                };
-              };
+              # ingressController = {
+              #   enabled = true;
+              #   default = true;
+              #   loadbalancerMode = "shared";
+              #   # hostNetwork.enabled = true;
+              #   defaultSecretNamespace = "kube-system";
+              #   defaultSecretName = "wildcard-tls";
+              #   service = {
+              #     annotations = {
+              #       "lbipam.cilium.io/ips" = ingress-controller-address;
+              #       "lbipam.cilium.io/sharing-key" = "cilium-ingress";
+              #     };
+              #   };
+              # };
 
               gatewayAPI.enabled = true;
               gatewayAPI.hostNetwork.enabled = false;
@@ -166,14 +166,14 @@ in
                 relay.enabled = true;
                 ui = {
                   enabled = true;
-                  ingress = {
-                    annotations = { };
-                    className = "cilium";
-                    enabled = true;
-                    hosts = [ "hubble.${environment.domain}" ];
-                    labels = { };
-                    tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
-                  };
+                  # ingress = {
+                  #   annotations = { };
+                  #   className = "cilium";
+                  #   enabled = true;
+                  #   hosts = [ "hubble.${environment.domain}" ];
+                  #   labels = { };
+                  #   tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
+                  # };
                 };
                 # metrics.enabled = [
                 #   "dns"
@@ -197,7 +197,6 @@ in
                     #   name = "cloudflare-issuer";
                     # };
                   };
-                  server.extraDnsNames = [ "*.mesh.${environment.name}.${environment.domain}" ];
                 };
               };
 
@@ -236,7 +235,8 @@ in
           resources = {
             gateways.default-gateway =
               let
-                ip = gateway-controller-address;
+                # ip = gateway-controller-address;
+                ip = ingress-controller-address;
               in
               {
                 metadata.annotations."cert-manager.io/cluster-issuer" = "cloudflare-issuer";
@@ -252,14 +252,14 @@ in
                       name = "http";
                       protocol = "HTTP";
                       port = 80;
-                      hostname = "*.${environment.domain}";
+                      # hostname = "*.${environment.domain}";
                       allowedRoutes.namespaces.from = "All";
                     }
                     {
                       name = "https";
                       protocol = "HTTPS";
                       port = 443;
-                      hostname = "*.${environment.domain}";
+                      # hostname = "*.${environment.domain}";
                       allowedRoutes.namespaces.from = "All";
                       tls = {
                         mode = "Terminate";
