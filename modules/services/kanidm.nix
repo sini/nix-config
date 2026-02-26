@@ -62,6 +62,7 @@
           "oauth2-proxy"
           "open-webui"
           "headscale"
+          "hubble"
         ]
       );
 
@@ -265,6 +266,21 @@
                 originLanding = "https://hs.${environment.domain}/admin";
                 basicSecretFile = config.age.secrets.headscale-oidc-client-secret.path;
                 scopeMaps."vpn.users" = [
+                  "openid"
+                  "email"
+                  "profile"
+                ];
+                preferShortUsername = true;
+              };
+
+              hubble = {
+                displayName = "hubble";
+                originUrl = [
+                  "https://hubble.${environment.domain}/oidc/callback"
+                ];
+                originLanding = "https://hubble.${environment.domain}/";
+                basicSecretFile = config.age.secrets.hubble-oidc-client-secret.path;
+                scopeMaps."admins" = [
                   "openid"
                   "email"
                   "profile"
