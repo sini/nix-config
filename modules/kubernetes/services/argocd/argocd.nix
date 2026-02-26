@@ -28,6 +28,8 @@
           # Must be operational before managing other applications
           annotations."argocd.argoproj.io/sync-wave" = "-1";
 
+          compareOptions.serverSideDiff = true;
+
           helm.releases.argocd = {
             chart = charts.argoproj.argo-cd;
 
