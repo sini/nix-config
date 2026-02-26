@@ -35,6 +35,7 @@
       let
         namespaceList = [
           "argocd"
+          "security"
           "kube-system"
         ];
         certificatesResources = map (namespace: {
@@ -54,7 +55,7 @@
                 kind = "ClusterIssuer";
               };
               dnsNames = [
-                # "${environment.domain}"
+                "${namespace}.${environment.domain}"
                 "*.${environment.domain}"
               ];
             };
