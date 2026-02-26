@@ -207,7 +207,7 @@ in
               {
                 metadata.annotations."cert-manager.io/cluster-issuer" = "cloudflare-issuer";
                 spec = {
-                  gatewayClassName = "cilium";
+                  gatewayClassName = "envoy"; # alt: cilium
                   addresses = lib.toList {
                     type = "IPAddress";
                     value = ip;
