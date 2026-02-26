@@ -131,8 +131,8 @@ in
                 default = true;
                 loadbalancerMode = "shared";
                 # hostNetwork.enabled = true;
-                defaultSecretNamespace = "kube-system";
-                defaultSecretName = "wildcard-certificate";
+                # defaultSecretNamespace = "kube-system";
+                # defaultSecretName = "wildcard-certificate";
                 # enforceHttps
                 service = {
                   annotations = {
@@ -262,10 +262,15 @@ in
                       port = 443;
                       # hostname = "*.${environment.domain}";
                       allowedRoutes.namespaces.from = "All";
-                      tls.certificateRefs = lib.toList {
-                        kind = "Secret";
-                        name = "wildcard-certificate";
-                        namespace = "kube-system";
+                      tls = {
+                        mode = "Terminate";
+                        certificateRefs = [
+                          {
+                            kind = "Secret";
+                            name = "wildcard-certificate";
+                            namespace = "kube-system";
+                          }
+                        ];
                       };
                     }
                   ];
