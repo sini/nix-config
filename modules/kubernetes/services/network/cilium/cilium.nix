@@ -239,7 +239,7 @@ in
                 ip = gateway-controller-address;
               in
               {
-                # metadata.annotations."external-dns.alpha.kubernetes.io/target" = "${name}.${domain}";
+                metadata.annotations."cert-manager.io/cluster-issuer" = "cloudflare-issuer";
                 spec = {
                   gatewayClassName = "cilium";
                   addresses = lib.toList {

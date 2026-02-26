@@ -141,7 +141,6 @@
                   name = "default-gateway";
                   namespace = "kube-system";
                   sectionName = "https";
-
                 }
               ];
               hostnames = [ "argocd.${environment.domain}" ];
@@ -203,29 +202,6 @@
               "admin.passwordMtime" = secrets.for "argocd-admin-mtime";
               "server.secretkey" = secrets.for "argocd-secretkey";
             };
-
-            # Allow ingress traffic from traefik to
-            # argocd-server.
-            # networkPolicies.allow-traefik-ingress.spec = {
-            #   podSelector.matchLabels."app.kubernetes.io/name" = "argocd-server";
-            #   policyTypes = [ "Ingress" ];
-            #   ingress = [
-            #     {
-            #       from = [
-            #         {
-            #           namespaceSelector.matchLabels."kubernetes.io/metadata.name" = "traefik";
-            #           podSelector.matchLabels."app.kubernetes.io/name" = "traefik";
-            #         }
-            #       ];
-            #       ports = [
-            #         {
-            #           protocol = "TCP";
-            #           port = 8080;
-            #         }
-            #       ];
-            #     }
-            #   ];
-            # };
 
             ciliumNetworkPolicies = {
               # Allow argocd-repo-server egress access to github.com
