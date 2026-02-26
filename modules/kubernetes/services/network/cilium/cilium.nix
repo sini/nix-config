@@ -119,7 +119,9 @@ in
               # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
 
+              # Roll out when config changes
               rollOutCiliumPods = true;
+
               l2announcements.enabled = true;
 
               l2NeighDiscovery.enabled = true;
@@ -144,6 +146,10 @@ in
               gatewayAPI.enabled = true;
               gatewayAPI.hostNetwork.enabled = false;
 
+              # Explicitly enable Envoy...
+              envoy.enabled = true;
+              envoy.rollOutPods = true;
+
               # Don't create secretsNamespace, we do this in the bootstrap app
               tls.secretsNamespace.create = false;
               ingressController.secretsNamespace.create = false;
@@ -164,17 +170,19 @@ in
               hubble = {
                 enabled = true;
                 relay.enabled = true;
-                ui = {
-                  enabled = true;
-                  # ingress = {
-                  #   annotations = { };
-                  #   className = "cilium";
-                  #   enabled = true;
-                  #   hosts = [ "hubble.${environment.domain}" ];
-                  #   labels = { };
-                  #   tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
-                  # };
-                };
+                relay.rollOutPods = true;
+                ui.enabled = true;
+                ui.rollOutPods = true;
+
+                # ingress = {
+                #   annotations = { };
+                #   className = "cilium";
+                #   enabled = true;
+                #   hosts = [ "hubble.${environment.domain}" ];
+                #   labels = { };
+                #   tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
+                # };
+
                 # metrics.enabled = [
                 #   "dns"
                 #   "drop"
