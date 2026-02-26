@@ -42,6 +42,30 @@
 
           resources = {
             gatewayClasses.envoy.spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+
+            ciliumNetworkPolicies = {
+
+              # Allow all envoy pods to access kube-apiserver
+              allow-kube-apiserver-egress.spec = {
+                endpointSelector.matchLabels."app.kubernetes.io/instance" = "envoy";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
+
           };
 
         };
