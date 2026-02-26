@@ -131,8 +131,8 @@ in
                 default = true;
                 loadbalancerMode = "shared";
                 # hostNetwork.enabled = true;
-                # defaultSecretNamespace = "kube-system";
-                # defaultSecretName = "wildcard-certificate";
+                defaultSecretNamespace = "kube-system";
+                defaultSecretName = "wildcard-tls";
                 # enforceHttps
                 service = {
                   annotations = {
@@ -167,14 +167,14 @@ in
                 relay.enabled = true;
                 ui = {
                   enabled = true;
-                  # ingress = {
-                  #   annotations = { };
-                  #   className = "cilium";
-                  #   enabled = true;
-                  #   hosts = [ "hubble.${environment.domain}" ];
-                  #   labels = { };
-                  #   tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
-                  # };
+                  ingress = {
+                    annotations = { };
+                    className = "cilium";
+                    enabled = true;
+                    hosts = [ "hubble.${environment.domain}" ];
+                    labels = { };
+                    tls = [ { hosts = [ "hubble.${environment.domain}" ]; } ];
+                  };
                 };
                 # metrics.enabled = [
                 #   "dns"
