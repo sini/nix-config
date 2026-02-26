@@ -3,11 +3,6 @@ kind: Ingress
 metadata:
   annotations:
     cert-manager.io/cluster-issuer: cloudflare-issuer
-  labels:
-    app.kubernetes.io/component: server
-    app.kubernetes.io/instance: argocd
-    app.kubernetes.io/name: argocd-server
-    app.kubernetes.io/part-of: argocd
   name: argocd-server
   namespace: argocd
 spec:
@@ -20,7 +15,7 @@ spec:
               service:
                 name: argocd-server
                 port:
-                  number: 80
+                  name: http
             path: /
             pathType: Prefix
   tls:
