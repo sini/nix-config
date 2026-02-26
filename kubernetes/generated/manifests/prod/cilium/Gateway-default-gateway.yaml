@@ -9,7 +9,7 @@ spec:
   addresses:
     - type: IPAddress
       value: 10.11.0.1
-  gatewayClassName: cilium
+  gatewayClassName: envoy
   listeners:
     - allowedRoutes:
         namespaces:

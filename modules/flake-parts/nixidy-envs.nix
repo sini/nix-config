@@ -25,6 +25,7 @@ in
               "argocd"
               "cert-manager"
               "cilium"
+              "envoy-gateway"
               "gateway-api"
               "sops-secrets-operator"
             ];
