@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-world-egress
+  namespace: envoy-gateway-system
+spec:
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "53"
+              protocol: UDP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: envoy
