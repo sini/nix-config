@@ -136,27 +136,29 @@
           };
           resources = {
 
-            # httpRoutes.argocd.spec = {
-            #   parentRefs = [
-            #     {
-            #       name = "";
-            #       namespace = "";
-            #     }
-            #   ];
-            #   hostnames = [ "argocd.${environment.domain}" ];
-            #   rules = [
-            #     {
-            #       backendRefs = [
-            #         {
-            #           name = "argocd-server";
-            #           port = 80;
-            #         }
-            #       ];
-            #     }
-            #   ];
-            # };
+            httpRoutes.argocd-server.spec = {
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "kube-system";
+                  sectionName = "https";
 
-            # ingresses."argocd" = {
+                }
+              ];
+              hostnames = [ "argocd.${environment.domain}" ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      name = "argocd-server";
+                      port = 80;
+                    }
+                  ];
+                }
+              ];
+            };
+
+            # ingresses."argocd-server" = {
             #   metadata.annotations = {
             #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
             #   };
@@ -184,7 +186,7 @@
             #     tls = [
             #       {
             #         hosts = [
-            #           "argocd.${environment.domain}"
+            #           "*.${environment.domain}"
             #         ];
             #         secretName = "wildcard-certificate";
             #       }
