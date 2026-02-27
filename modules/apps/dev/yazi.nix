@@ -9,6 +9,7 @@
           enableBashIntegration = true;
           enableNushellIntegration = true;
           enableZshIntegration = true;
+          shellWrapperName = "y";
           plugins = lib.genAttrs [
             "toggle-pane"
             "chmod"
