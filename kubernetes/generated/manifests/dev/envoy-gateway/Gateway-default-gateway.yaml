@@ -25,7 +25,8 @@ spec:
       protocol: HTTPS
       tls:
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: wildcard-tls
             namespace: security
         mode: Terminate

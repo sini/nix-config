@@ -42,8 +42,6 @@
             };
           };
 
-          compareOptions.serverSideDiff = true;
-
           helm.releases.envoy = {
             chart = lib.helm.downloadHelmChart {
               repo = "oci://docker.io/envoyproxy";
@@ -63,7 +61,6 @@
                   enableEnvoyPatchPolicy = true;
                   enableBackend = true;
                 };
-                gatewayAPI.enabled = true;
                 # rateLimit.backend = {
                 #   type = "Redis";
                 #   redis.url = "envoy-ratelimit-db.envoy-gateway-system.svc.cluster.local:6379";
@@ -105,6 +102,7 @@
                       mode = "Terminate";
                       certificateRefs = [
                         {
+                          group = "";
                           kind = "Secret";
                           name = "wildcard-tls";
                           namespace = "security";
