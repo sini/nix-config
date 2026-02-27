@@ -276,7 +276,7 @@
               hubble = {
                 displayName = "hubble";
                 originUrl = [
-                  "https://hubble.${environment.domain}/oidc/callback"
+                  "https://hubble.${environment.domain}/oauth2/callback"
                 ];
                 originLanding = "https://hubble.${environment.domain}/";
                 basicSecretFile = config.age.secrets.hubble-oidc-client-secret.path;
