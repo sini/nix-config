@@ -1,8 +1,6 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  annotations:
-    lbipam.cilium.io/ips: 10.12.0.1
   name: default-gateway
   namespace: kube-system
 spec:
@@ -10,11 +8,6 @@ spec:
     - type: IPAddress
       value: 10.12.0.1
   gatewayClassName: envoy
-  infrastructure:
-    parametersRef:
-      group: gateway.envoyproxy.io
-      kind: EnvoyProxy
-      name: envoy-proxy-config
   listeners:
     - allowedRoutes:
         namespaces:
@@ -30,7 +23,8 @@ spec:
       protocol: HTTPS
       tls:
         certificateRefs:
-          - kind: Secret
+          - group: ""
+            kind: Secret
             name: wildcard-tls
             namespace: security
         mode: Terminate
