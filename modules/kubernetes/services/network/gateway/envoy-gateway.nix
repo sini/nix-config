@@ -75,7 +75,9 @@
             gateways.default-gateway = {
               metadata = {
                 namespace = "kube-system";
-                annotations."cert-manager.io/cluster-issuer" = "cloudflare-issuer";
+                annotations = {
+                  "lbipam.cilium.io/ips" = gateway-controller-address;
+                };
               };
               spec = {
                 gatewayClassName = "envoy"; # alt: cilium
@@ -102,7 +104,7 @@
                       mode = "Terminate";
                       certificateRefs = [
                         {
-                          group = "";
+                          # group = "";
                           kind = "Secret";
                           name = "wildcard-tls";
                           namespace = "security";
@@ -112,6 +114,27 @@
                   }
                 ];
               };
+            };
+
+            referenceGrants.allow-kubesystem-gateway-to-wildcard-tls = {
+              metadata.namespace = "security";
+              spec = {
+                from = [
+                  {
+                    group = "gateway.networking.k8s.io";
+                    kind = "Gateway";
+                    namespace = "kube-system";
+                  }
+                ];
+                to = [
+                  {
+                    group = "";
+                    kind = "Secret";
+                    name = "wildcard-tls";
+                  }
+                ];
+              };
+
             };
 
             ciliumNetworkPolicies = {
