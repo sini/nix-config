@@ -103,9 +103,10 @@
                       mode = "Terminate";
                       certificateRefs = [
                         {
+                          group = "";
                           kind = "Secret";
                           name = "wildcard-tls";
-                          namespace = "kube-system";
+                          namespace = "security";
                         }
                       ];
                     };

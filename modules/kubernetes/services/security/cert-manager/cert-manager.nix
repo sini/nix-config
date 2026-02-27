@@ -34,9 +34,7 @@
       }:
       let
         namespaceList = [
-          "argocd"
           "security"
-          "kube-system"
         ];
         certificatesResources = map (namespace: {
           name = "${namespace}-wildcard-certificate";
