@@ -1,0 +1,13 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: envoy-proxy-config
+  namespace: envoy-gateway-system
+spec:
+  provider:
+    kubernetes:
+      envoyService:
+        annotations:
+          lbipam.cilium.io/ips: 10.12.0.1
+        type: LoadBalancer
+    type: Kubernetes
