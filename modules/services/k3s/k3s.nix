@@ -72,8 +72,8 @@ in
           nfs-utils # Required for Longhorn
 
           # Filesystem tools
-          ceph
-          ceph-client
+          # ceph # TODO: Restore... https://github.com/NixOS/nixpkgs/issues/493884
+          # ceph-client
           util-linux
           parted
           gptfdisk
