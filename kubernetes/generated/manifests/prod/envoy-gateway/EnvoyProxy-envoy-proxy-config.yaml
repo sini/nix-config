@@ -2,10 +2,28 @@ apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
   name: envoy-proxy-config
-  namespace: envoy-gateway-system
+  namespace: kube-system
 spec:
   provider:
     kubernetes:
+      envoyDeployment:
+        pod:
+          topologySpreadConstraints:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: envoy
+              matchLabelKeys:
+                - pod-template-hash
+                - gateway.envoyproxy.io/owning-gateway-name
+                - gateway.envoyproxy.io/owning-gateway-namespace
+              maxSkew: 1
+              topologyKey: kubernetes.io/hostname
+              whenUnsatisfiable: DoNotSchedule
+        replicas: 3
+        strategy:
+          rollingUpdate:
+            maxSurge: 1
+            maxUnavailable: 0
       envoyService:
         annotations:
           lbipam.cilium.io/ips: 10.11.0.1

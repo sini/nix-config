@@ -4,9 +4,6 @@ metadata:
   name: default-gateway
   namespace: kube-system
 spec:
-  addresses:
-    - type: IPAddress
-      value: 10.12.0.1
   gatewayClassName: envoy
   infrastructure:
     parametersRef:
