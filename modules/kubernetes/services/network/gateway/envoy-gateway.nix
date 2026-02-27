@@ -51,20 +51,26 @@
             };
             values = {
               deployment.replicas = 2;
-              config.envoyGateway = {
-                gateway.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
-                provider = {
-                  type = "Kubernetes";
-                  kubernetes.deploy.type = "GatewayNamespace";
+              config = {
+                envoyGateway = {
+                  gateway.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
+                  provider = {
+                    type = "Kubernetes";
+                    kubernetes.deploy.type = "GatewayNamespace";
+                  };
+                  extensionApis = {
+                    enableEnvoyPatchPolicy = true;
+                    enableBackend = true;
+                  };
+                  # rateLimit.backend = {
+                  #   type = "Redis";
+                  #   redis.url = "envoy-ratelimit-db.envoy-gateway-system.svc.cluster.local:6379";
+                  # };
+
                 };
-                extensionApis = {
-                  enableEnvoyPatchPolicy = true;
-                  enableBackend = true;
-                };
-                # rateLimit.backend = {
-                #   type = "Redis";
-                #   redis.url = "envoy-ratelimit-db.envoy-gateway-system.svc.cluster.local:6379";
-                # };
+                service.type = "LoadBalancer";
+                service.loadBalancerIP = gateway-controller-address;
+                service.annotations."lbipam.cilium.io/ips" = gateway-controller-address;
               };
             };
           };
@@ -75,17 +81,17 @@
             gateways.default-gateway = {
               metadata = {
                 namespace = "kube-system";
-                annotations = {
-                  "lbipam.cilium.io/ips" = gateway-controller-address;
-                };
+                # annotations = {
+                #   "lbipam.cilium.io/ips" = gateway-controller-address;
+                # };
               };
               spec = {
                 gatewayClassName = "envoy"; # alt: cilium
-                infrastructure.parametersRef = {
-                  group = "gateway.envoyproxy.io";
-                  kind = "EnvoyProxy";
-                  name = "envoy-proxy-config";
-                };
+                # infrastructure.parametersRef = {
+                #   group = "gateway.envoyproxy.io";
+                #   kind = "EnvoyProxy";
+                #   name = "envoy-proxy-config";
+                # };
                 addresses = lib.toList {
                   type = "IPAddress";
                   value = gateway-controller-address;
@@ -109,7 +115,7 @@
                       mode = "Terminate";
                       certificateRefs = [
                         {
-                          # group = "";
+                          group = "";
                           kind = "Secret";
                           name = "wildcard-tls";
                           namespace = "security";
@@ -121,10 +127,10 @@
               };
             };
 
-            envoyProxies.envoy-proxy-config.spec.provider = {
-              type = "Kubernetes";
-              kubernetes.envoyService.annotations."lbipam.cilium.io/ips" = gateway-controller-address;
-            };
+            # envoyProxies.envoy-proxy-config.spec.provider = {
+            #   type = "Kubernetes";
+            #   kubernetes.envoyService.annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+            # };
 
             referenceGrants.allow-kubesystem-gateway-to-wildcard-tls = {
               metadata.namespace = "security";
