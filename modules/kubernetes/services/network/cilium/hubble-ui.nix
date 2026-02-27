@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.cilium = {
+  flake.kubernetes.services.hubble-ui = {
     nixidy =
       { environment, secrets, ... }:
       {
@@ -59,7 +59,7 @@
               oidc = {
                 provider.issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
                 clientID = "hubble";
-                clientSecret.name = "kanidm-hubble-oidc";
+                clientSecret.name = "hubble-oidc-client-secret";
                 # redirectURL = "https://hubble.${environment.domain}/oauth2/callback";
                 # logoutPath = "/oidc/sign_out";
                 # cookieDomain = "${environment.domain}";
@@ -73,9 +73,9 @@
               };
             };
 
-            secrets.kanidm-hubble-oidc = {
+            secrets.hubble-oidc-client-secret = {
               type = "Opaque";
-              stringData.client-secret = secrets.for "kanidm-hubble-oidc";
+              stringData.client-secret = secrets.forOidcService "hubble";
             };
 
             ciliumNetworkPolicies = {

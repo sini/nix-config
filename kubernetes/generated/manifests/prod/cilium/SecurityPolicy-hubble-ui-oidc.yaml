@@ -7,7 +7,7 @@ spec:
   oidc:
     clientID: hubble
     clientSecret:
-      name: kanidm-hubble-oidc
+      name: hubble-oidc-client-secret
     forwardAccessToken: true
     passThroughAuthHeader: true
     provider:
