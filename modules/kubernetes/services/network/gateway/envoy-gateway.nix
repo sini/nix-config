@@ -34,6 +34,14 @@
         applications.envoy-gateway = {
           namespace = "envoy-gateway-system";
 
+          # Adoption-safe sync options
+          syncPolicy = {
+            syncOptions = {
+              clientSideApplyMigration = false;
+              serverSideApply = true;
+            };
+          };
+
           helm.releases.envoy = {
             chart = lib.helm.downloadHelmChart {
               repo = "oci://docker.io/envoyproxy";
