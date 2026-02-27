@@ -33,6 +33,7 @@
         "cilium"
         "cilium-bgp"
         "sops-secrets-operator"
+        "hubble-ui"
       ];
       config = {
         cilium = {

@@ -120,6 +120,11 @@
             name = "k8s-update-manifests";
             help = "Update Kubernetes manifests for nixidy environments";
           }
+          {
+            package = config.packages.convert-oidc-secrets;
+            name = "convert-oidc-secrets";
+            help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
+          }
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
