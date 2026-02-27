@@ -23,6 +23,7 @@
       "gamedev"
       "performance"
       "tailscale"
+      "discord"
     ];
     users = {
       sini = {
