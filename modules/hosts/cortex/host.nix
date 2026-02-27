@@ -4,6 +4,9 @@
     ipv6 = [ "fd64:0:1::5/64" ];
     environment = "dev";
 
+    remoteBuildSpeed = 20;
+    remoteBuildJobs = 16;
+
     roles = [
       "workstation"
       "gaming"

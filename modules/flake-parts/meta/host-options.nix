@@ -67,6 +67,18 @@ in
               description = "System string for the host";
             };
 
+            remoteBuildJobs = mkOption {
+              type = types.int;
+              default = 4;
+              description = "The number of build jobs to be scheduled";
+            };
+
+            remoteBuildSpeed = mkOption {
+              type = types.int;
+              default = 1;
+              description = "The relative build speed";
+            };
+
             unstable = lib.mkOption {
               type = types.bool;
               default = true;

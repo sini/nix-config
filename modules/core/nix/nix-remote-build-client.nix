@@ -13,14 +13,15 @@ in
         rekeyFile = rootPath + "/.secrets/users/nix-remote-build/id_agenix.age";
         mode = "600";
       };
+
       nix = {
         buildMachines = lib.mapAttrsToList (hostname: hostConfig: {
           hostName = hostname;
           systems = [ hostConfig.system ];
           # TODO: I belive maxJobs = "auto" is documented somewhere, but nix-2.2.2
           # and 2.3 fail with unhelpful "error: stoull".
-          maxJobs = 4;
-          speedFactor = 10;
+          maxJobs = hostConfig.remoteBuildJobs;
+          speedFactor = hostConfig.remoteBuildSpeed;
           supportedFeatures = [
             "benchmark"
             "big-parallel"
