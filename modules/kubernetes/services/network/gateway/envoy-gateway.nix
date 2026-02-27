@@ -1,3 +1,7 @@
+{ self, ... }:
+let
+  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
+in
 {
   flake.kubernetes.services.envoy-gateway = {
     crds =
@@ -26,9 +30,15 @@
       };
 
     nixidy =
-      { lib, config, ... }:
+      {
+        lib,
+        config,
+        environment,
+        ...
+      }:
       let
         gateway-controller-address = config.kubernetes.loadBalancer.reservations.gateway-controller;
+        numReplicas = builtins.length (lib.attrValues (findKubernetesNodes environment));
       in
       {
         applications.envoy-gateway = {
@@ -50,7 +60,7 @@
               chartHash = "sha256-JePGNofWs86ZVT1M6FI4Zg79BFvh2KudMnMOHjAbhJM=";
             };
             values = {
-              deployment.replicas = 2;
+              deployment.replicas = numReplicas;
               config = {
                 envoyGateway = {
                   gateway.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
@@ -92,10 +102,10 @@
                   kind = "EnvoyProxy";
                   name = "envoy-proxy-config";
                 };
-                addresses = lib.toList {
-                  type = "IPAddress";
-                  value = gateway-controller-address;
-                };
+                # addresses = lib.toList {
+                #   type = "IPAddress";
+                #   value = gateway-controller-address;
+                # };
                 # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
                 listeners = [
                   {
@@ -127,11 +137,38 @@
               };
             };
 
-            envoyProxies.envoy-proxy-config.spec.provider = {
-              type = "Kubernetes";
-              kubernetes.envoyService = {
-                type = "LoadBalancer";
-                annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+            envoyProxies.envoy-proxy-config = {
+              metadata.namespace = "kube-system";
+              spec.provider = {
+                type = "Kubernetes";
+                kubernetes = {
+                  envoyDeployment = {
+                    replicas = numReplicas;
+                    strategy.rollingUpdate = {
+                      maxSurge = 1;
+                      maxUnavailable = 0;
+                    };
+                    pod.topologySpreadConstraints = [
+                      {
+                        maxSkew = 1;
+                        topologyKey = "kubernetes.io/hostname";
+                        whenUnsatisfiable = "DoNotSchedule";
+                        labelSelector.matchLabels = {
+                          "app.kubernetes.io/name" = "envoy";
+                        };
+                        matchLabelKeys = [
+                          "pod-template-hash"
+                          "gateway.envoyproxy.io/owning-gateway-name"
+                          "gateway.envoyproxy.io/owning-gateway-namespace"
+                        ];
+                      }
+                    ];
+                  };
+                  envoyService = {
+                    type = "LoadBalancer";
+                    annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+                  };
+                };
               };
             };
 
