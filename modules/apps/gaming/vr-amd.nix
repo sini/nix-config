@@ -15,34 +15,35 @@
 
         # Bigscreen Beyond Kernel patches from LVRA Discord Thread
         boot.kernelPatches = [
-          {
-            name = "0001-drm-edid-rename-VESA-block-parsing-functions-to-more";
-            patch = ./patches/0001-drm-edid-rename-VESA-block-parsing-functions-to-more.patch;
-          }
-          {
-            name = "0002-drm-edid-prepare-for-VESA-vendor-specific-data-block";
-            patch = ./patches/0002-drm-edid-prepare-for-VESA-vendor-specific-data-block.patch;
-          }
-          {
-            name = "0003-drm-edid-MSO-should-only-be-used-for-non-eDP-display";
-            patch = ./patches/0003-drm-edid-MSO-should-only-be-used-for-non-eDP-display.patch;
-          }
-          {
-            name = "0004-drm-edid-parse-DSC-DPP-passthru-support-flag-for-mod";
-            patch = ./patches/0004-drm-edid-parse-DSC-DPP-passthru-support-flag-for-mod.patch;
-          }
-          {
-            name = "0005-drm-edid-for-consistency-use-mask-everywhere-for-blo";
-            patch = ./patches/0005-drm-edid-for-consistency-use-mask-everywhere-for-blo.patch;
-          }
-          {
-            name = "0006-drm-edid-parse-DRM-VESA-dsc-bpp-target";
-            patch = ./patches/0006-drm-edid-parse-DRM-VESA-dsc-bpp-target.patch;
-          }
-          {
-            name = "0007-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid";
-            patch = ./patches/0007-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid.patch;
-          }
+          # TODO: look into updated patch if needed
+          # {
+          #   name = "0001-drm-edid-rename-VESA-block-parsing-functions-to-more";
+          #   patch = ./patches/0001-drm-edid-rename-VESA-block-parsing-functions-to-more.patch;
+          # }
+          # {
+          #   name = "0002-drm-edid-prepare-for-VESA-vendor-specific-data-block";
+          #   patch = ./patches/0002-drm-edid-prepare-for-VESA-vendor-specific-data-block.patch;
+          # }
+          # {
+          #   name = "0003-drm-edid-MSO-should-only-be-used-for-non-eDP-display";
+          #   patch = ./patches/0003-drm-edid-MSO-should-only-be-used-for-non-eDP-display.patch;
+          # }
+          # {
+          #   name = "0004-drm-edid-parse-DSC-DPP-passthru-support-flag-for-mod";
+          #   patch = ./patches/0004-drm-edid-parse-DSC-DPP-passthru-support-flag-for-mod.patch;
+          # }
+          # {
+          #   name = "0005-drm-edid-for-consistency-use-mask-everywhere-for-blo";
+          #   patch = ./patches/0005-drm-edid-for-consistency-use-mask-everywhere-for-blo.patch;
+          # }
+          # {
+          #   name = "0006-drm-edid-parse-DRM-VESA-dsc-bpp-target";
+          #   patch = ./patches/0006-drm-edid-parse-DRM-VESA-dsc-bpp-target.patch;
+          # }
+          # {
+          #   name = "0007-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid";
+          #   patch = ./patches/0007-drm-amd-use-fixed-dsc-bits-per-pixel-from-edid.patch;
+          # }
           {
             # see https://wiki.nixos.org/wiki/VR#Applying_as_a_NixOS_kernel_patch
             name = "amdgpu-ignore-ctx-privileges";
