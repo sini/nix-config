@@ -42,6 +42,8 @@
             };
           };
 
+          compareOptions.serverSideDiff = true;
+
           helm.releases.envoy = {
             chart = lib.helm.downloadHelmChart {
               repo = "oci://docker.io/envoyproxy";
@@ -103,7 +105,6 @@
                       mode = "Terminate";
                       certificateRefs = [
                         {
-                          group = "";
                           kind = "Secret";
                           name = "wildcard-tls";
                           namespace = "security";
