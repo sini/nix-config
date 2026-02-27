@@ -13,11 +13,6 @@
 
           # Adoption-safe sync options
           syncPolicy = {
-            autoSync = {
-              enable = true;
-              prune = true;
-              selfHeal = true;
-            };
             syncOptions = {
               clientSideApplyMigration = false;
               serverSideApply = true;
