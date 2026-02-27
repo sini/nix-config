@@ -8,8 +8,6 @@ data:
       enableEnvoyPatchPolicy: true
     gateway:
       controllerName: gateway.envoyproxy.io/gatewayclass-controller
-    gatewayAPI:
-      enabled: true
     logging:
       level:
         default: info
