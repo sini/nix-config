@@ -10,6 +10,11 @@ spec:
     - type: IPAddress
       value: 10.11.0.1
   gatewayClassName: envoy
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: envoy-proxy-config
   listeners:
     - allowedRoutes:
         namespaces:

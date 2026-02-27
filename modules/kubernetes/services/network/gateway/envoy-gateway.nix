@@ -81,6 +81,11 @@
               };
               spec = {
                 gatewayClassName = "envoy"; # alt: cilium
+                infrastructure.parametersRef = {
+                  group = "gateway.envoyproxy.io";
+                  kind = "EnvoyProxy";
+                  name = "envoy-proxy-config";
+                };
                 addresses = lib.toList {
                   type = "IPAddress";
                   value = gateway-controller-address;
@@ -114,6 +119,11 @@
                   }
                 ];
               };
+            };
+
+            envoyProxies.envoy-proxy-config.spec.provider = {
+              type = "Kubernetes";
+              kubernetes.envoyService.annotations."lbipam.cilium.io/ips" = gateway-controller-address;
             };
 
             referenceGrants.allow-kubesystem-gateway-to-wildcard-tls = {
