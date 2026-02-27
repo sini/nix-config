@@ -53,6 +53,7 @@
         headscale = uidGid 957;
         nix-remote-build = uidGid 956;
         haproxy = uidGid 955;
+        pcscd = uidGid 954;
       };
   };
 }

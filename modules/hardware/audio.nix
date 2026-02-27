@@ -131,7 +131,7 @@
 
           #yabridge # TODO: re-enable when fixed upstream
           #yabridgectl
-          beets
+          # beets # TODO: Blocked on python docscumm
 
           # VST stuff
           vital

@@ -15,7 +15,7 @@
         boot.supportedFilesystems.zfs = true;
 
         boot.zfs = {
-          package = pkgs.zfs_unstable;
+          package = pkgs.zfs_2_4;
           # package = pkgs.zfs_cachyos;
           # package = config.boot.kernelPackages.zfs_unstable;
           # package = pkgs.cachyosKernels.zfs-cachyos.override {

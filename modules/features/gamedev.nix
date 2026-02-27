@@ -44,7 +44,7 @@
           alda
           lenmus
           milkytracker
-          sonic-pi
+          #sonic-pi  # TODO: restore...
           supercollider
           famistudio
           furnace
