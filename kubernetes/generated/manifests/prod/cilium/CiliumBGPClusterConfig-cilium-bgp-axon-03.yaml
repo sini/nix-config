@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-bgp-axon-03
+spec:
+  bgpInstances:
+    - localASN: 65002
+      name: local-frr-instance
+      peers:
+        - name: local-frr-daemon
+          peerASN: 65001
+          peerAddress: 10.10.10.4
+          peerConfigRef:
+            name: cilium-bgp
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: axon-03
