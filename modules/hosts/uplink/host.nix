@@ -3,6 +3,8 @@
   flake.hosts.uplink = {
     ipv4 = [ "10.10.10.1" ];
     ipv6 = [ "fd64:0:1::1/64" ];
+    remoteBuildSpeed = 10;
+    remoteBuildJobs = 16;
     environment = "prod";
     roles = [
       "server"
