@@ -60,9 +60,9 @@
                 provider.issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
                 clientID = "hubble";
                 clientSecret.name = "hubble-oidc-client-secret";
-                # redirectURL = "https://hubble.${environment.domain}/oauth2/callback";
-                # logoutPath = "/oidc/sign_out";
-                # cookieDomain = "${environment.domain}";
+                redirectURL = "https://hubble.${environment.domain}/oauth2/callback";
+                logoutPath = "/oidc/sign_out";
+                cookieDomain = "${environment.domain}";
                 scopes = [
                   "openid"
                   "profile"

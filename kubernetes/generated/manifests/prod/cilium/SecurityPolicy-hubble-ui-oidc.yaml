@@ -8,9 +8,12 @@ spec:
     clientID: hubble
     clientSecret:
       name: hubble-oidc-client-secret
+    cookieDomain: json64.dev
     forwardAccessToken: true
+    logoutPath: /oidc/sign_out
     provider:
       issuer: https://idm.json64.dev/oauth2/openid/hubble
+    redirectURL: https://hubble.json64.dev/oauth2/callback
     scopes:
       - openid
       - profile
