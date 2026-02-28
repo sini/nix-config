@@ -5,6 +5,7 @@ metadata:
   namespace: kube-system
 spec:
   cors:
+    allowCredentials: true
     allowOrigins:
       - https://*.json64.dev
   oidc:
