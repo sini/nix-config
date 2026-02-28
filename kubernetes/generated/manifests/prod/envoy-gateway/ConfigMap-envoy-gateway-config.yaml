@@ -3,8 +3,6 @@ data:
   envoy-gateway.yaml: |
     apiVersion: gateway.envoyproxy.io/v1alpha1
     kind: EnvoyGateway
-    admin:
-      address: 0.0.0.0
     envoyProxy:
       provider:
         kubernetes:

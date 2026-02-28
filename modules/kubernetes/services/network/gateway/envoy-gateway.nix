@@ -63,7 +63,6 @@ in
               deployment.replicas = numReplicas;
               config = {
                 envoyGateway = {
-                  admin.address = "0.0.0.0";
                   gateway.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
                   provider = {
                     type = "Kubernetes";
