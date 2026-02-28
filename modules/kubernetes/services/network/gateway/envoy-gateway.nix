@@ -192,6 +192,7 @@ in
 
             ciliumNetworkPolicies = {
 
+              # Allow envoy gateway controller pods to reach external services
               allow-world-egress = {
                 metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
                 spec = {
@@ -206,6 +207,42 @@ in
                           ports = [
                             {
                               port = "443";
+                              protocol = "TCP";
+                            }
+                            {
+                              port = "53";
+                              protocol = "UDP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
+                };
+              };
+
+              # Allow gateway proxy pods in kube-system to reach external services (e.g., for OIDC token exchange)
+              allow-gateway-world-egress = {
+                metadata = {
+                  namespace = "kube-system";
+                  annotations."argocd.argoproj.io/sync-wave" = "-1";
+                };
+                spec = {
+                  endpointSelector.matchLabels."gateway.networking.k8s.io/gateway-name" = "default-gateway";
+                  egress = [
+                    {
+                      toEntities = [
+                        "world"
+                      ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "443";
+                              protocol = "TCP";
+                            }
+                            {
+                              port = "80";
                               protocol = "TCP";
                             }
                             {
