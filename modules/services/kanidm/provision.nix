@@ -96,6 +96,11 @@
             mailAddresses = [ "jason@${environment.email.domain}" ];
             groups = [ "admins" ];
           };
+          json_user = {
+            displayName = "Jason-user";
+            mailAddresses = [ "jason_user@${environment.email.domain}" ];
+            groups = [ "users" ];
+          };
           shuo = {
             displayName = "Shuo";
             mailAddresses = [ "shuo@${environment.email.domain}" ];
