@@ -33,7 +33,7 @@
             name = "k8s-update-manifests";
             entry = "${config.packages.k8s-update-manifests}/bin/k8s-update-manifests --skip-secrets";
             pass_filenames = false;
-            files = "\\.nix$";
+            files = "^(flake\\.lock|modules/(environments|flake-parts|lib|kubernetes)/.*\\.nix)$";
           };
         };
       };
