@@ -92,8 +92,13 @@ in
           map (
             neighbor:
             let
+              # Never send default-originate to the gateway (it's our internet source)
+              isGateway = neighbor.ip == environment.gatewayIp;
+
               shouldOriginate =
-                if cfg.neighbors != [ ] then
+                if isGateway then
+                  false
+                else if cfg.neighbors != [ ] then
                   # For manual neighbors, check their defaultOriginate setting
                   let
                     matchingManual = lib.findFirst (n: n.address == neighbor.ip) null cfg.neighbors;

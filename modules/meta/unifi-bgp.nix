@@ -69,14 +69,8 @@ let
        ${lib.concatStringsSep "\n " (lib.mapAttrsToList generateNeighborPeerGroup envBgpHubHosts)}
        !
        address-family ipv4 unicast
-        redistribute connected
         neighbor bgp-hubs activate
-        neighbor bgp-hubs route-map ALLOW-ALL in
-        neighbor bgp-hubs route-map ALLOW-ALL out
-        neighbor bgp-hubs next-hop-self
        exit-address-family
-      !
-      route-map ALLOW-ALL permit 10
       !
       line vty
       !
