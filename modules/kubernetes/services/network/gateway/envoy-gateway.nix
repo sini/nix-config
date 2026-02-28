@@ -210,6 +210,10 @@ in
                               protocol = "TCP";
                             }
                             {
+                              port = "80";
+                              protocol = "TCP";
+                            }
+                            {
                               port = "53";
                               protocol = "UDP";
                             }

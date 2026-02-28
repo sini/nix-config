@@ -13,6 +13,8 @@ spec:
         - ports:
             - port: "443"
               protocol: TCP
+            - port: "80"
+              protocol: TCP
             - port: "53"
               protocol: UDP
   endpointSelector:

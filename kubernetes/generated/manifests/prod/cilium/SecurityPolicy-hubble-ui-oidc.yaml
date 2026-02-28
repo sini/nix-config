@@ -4,21 +4,13 @@ metadata:
   name: hubble-ui-oidc
   namespace: kube-system
 spec:
-  cors:
-    allowCredentials: true
-    allowOrigins:
-      - https://*.json64.dev
   oidc:
     clientID: hubble
     clientSecret:
       name: hubble-oidc-client-secret
-    cookieDomain: json64.dev
-    logoutPath: /oidc/sign_out
+    forwardAccessToken: true
     provider:
-      authorizationEndpoint: https://idm.json64.dev/ui/oauth2
       issuer: https://idm.json64.dev/oauth2/openid/hubble
-      tokenEndpoint: https://idm.json64.dev/oauth2/token
-    redirectURL: https://hubble.json64.dev/oauth2/callback
     scopes:
       - email
       - openid
