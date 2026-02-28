@@ -8,7 +8,7 @@ metadata:
   name: envoy-gateway
   namespace: envoy-gateway-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/instance: envoy
