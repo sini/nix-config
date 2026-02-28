@@ -73,28 +73,13 @@
                 redirectURL = "https://hubble.${environment.domain}/oauth2/callback";
                 logoutPath = "/oidc/sign_out";
                 cookieDomain = "${environment.domain}";
-                # scopes = [
-                #   "email"
-                #   "openid"
-                #   "profile"
-                # ];
-                # forwardAccessToken = true;
-                # passThroughAuthHeader = true;
+                scopes = [
+                  "email"
+                  "openid"
+                  "profile"
+                ];
               };
-              # jwt.providers = [
-              #   {
-              #     name = "kanidm";
-              #     issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
-              #     audiences = [ "hubble" ];
-              #     remoteJWKS.uri = "https://idm.${environment.domain}/oauth2/openid/hubble/public_key.jwk";
-              #     claimToHeaders = [
-              #       {
-              #         header = "x-auth-user";
-              #         claim = "sub";
-              #       }
-              #     ];
-              #   }
-              # ];
+
             };
 
             secrets.hubble-oidc-client-secret = {

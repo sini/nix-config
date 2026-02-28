@@ -53,7 +53,7 @@
                 kind = "ClusterIssuer";
               };
               dnsNames = [
-                # "${namespace}.${environment.domain}"
+                "${environment.domain}"
                 "*.${environment.domain}"
               ];
             };
