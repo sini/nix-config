@@ -1,6 +1,5 @@
 /result
 /result.*
-.gcroots
 .direnv
 .claude
 /.pre-commit-config.yaml
