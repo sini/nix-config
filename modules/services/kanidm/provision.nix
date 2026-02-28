@@ -72,7 +72,7 @@
             "email"
             "profile"
           ]);
-          preferShortUsername = true;
+          # preferShortUsername = true;
         };
     in
     {
