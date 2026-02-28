@@ -13,8 +13,6 @@
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/${name}-oidc-client-secret.age";
           owner = "kanidm";
           group = "kanidm";
-          # If we switch to a service that only requires hashes like authelia, we can make this intermediate
-          # intermediary = true;
           generator = {
             tags = [ "oidc" ];
             script =
@@ -22,22 +20,6 @@
               ''
                 # Generate an rfc3986 secret
                 secret=$(${pkgs.openssl}/bin/openssl rand -base64 54 | tr -d '\n' | tr '+/' '-_' | tr -d '=' | cut -c1-72)
-
-                # Generate a pbkdf2 hash, and store in plaintext file
-                hashed=$(echo $secret | ${pkgs.python3}/bin/python3 -c "
-                import hashlib, base64, os, sys
-                input = sys.stdin.readlines()[0].strip()
-                base64_adapted_alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./'
-                def encode_base64_adapted(data):
-                    base64_encoded = base64.b64encode(data).decode('utf-8').strip('=')
-                    return base64_encoded.translate(str.maketrans('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', base64_adapted_alphabet))
-                salt = os.urandom(16)
-                key = hashlib.pbkdf2_hmac('sha512', input.encode(), salt, 310000, 64)
-                salt_b64 = encode_base64_adapted(salt)
-                key_b64 = encode_base64_adapted(key)
-                print(f'\$pbkdf2-sha512\''${310000}\''${salt_b64}\''${key_b64}')")
-
-                echo "$hashed" > ${lib.escapeShellArg (lib.removeSuffix "-secret.age" file + "-hash")}
 
                 # Generate SOPS-encrypted YAML file for Kubernetes use
                 # Encrypt directly via stdin so unencrypted content never touches filesystem
