@@ -133,34 +133,37 @@ in
 
             envoyProxies.envoy-proxy-config = {
               metadata.namespace = "kube-system";
-              spec.provider = {
-                type = "Kubernetes";
-                kubernetes = {
-                  envoyDeployment = {
-                    replicas = numReplicas;
-                    strategy.rollingUpdate = {
-                      maxSurge = 1;
-                      maxUnavailable = 0;
+              spec = {
+                logging.level.default = "debug";
+                provider = {
+                  type = "Kubernetes";
+                  kubernetes = {
+                    envoyDeployment = {
+                      replicas = numReplicas;
+                      strategy.rollingUpdate = {
+                        maxSurge = 1;
+                        maxUnavailable = 0;
+                      };
+                      pod.topologySpreadConstraints = [
+                        {
+                          maxSkew = 1;
+                          topologyKey = "kubernetes.io/hostname";
+                          whenUnsatisfiable = "DoNotSchedule";
+                          labelSelector.matchLabels = {
+                            "app.kubernetes.io/name" = "envoy";
+                          };
+                          matchLabelKeys = [
+                            "pod-template-hash"
+                            "gateway.envoyproxy.io/owning-gateway-name"
+                            "gateway.envoyproxy.io/owning-gateway-namespace"
+                          ];
+                        }
+                      ];
                     };
-                    pod.topologySpreadConstraints = [
-                      {
-                        maxSkew = 1;
-                        topologyKey = "kubernetes.io/hostname";
-                        whenUnsatisfiable = "DoNotSchedule";
-                        labelSelector.matchLabels = {
-                          "app.kubernetes.io/name" = "envoy";
-                        };
-                        matchLabelKeys = [
-                          "pod-template-hash"
-                          "gateway.envoyproxy.io/owning-gateway-name"
-                          "gateway.envoyproxy.io/owning-gateway-namespace"
-                        ];
-                      }
-                    ];
-                  };
-                  envoyService = {
-                    type = "LoadBalancer";
-                    annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+                    envoyService = {
+                      type = "LoadBalancer";
+                      annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+                    };
                   };
                 };
               };
