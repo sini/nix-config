@@ -4,6 +4,9 @@ metadata:
   name: hubble-ui-oidc
   namespace: kube-system
 spec:
+  cors:
+    allowOrigins:
+      - https://*.json64.dev
   oidc:
     clientID: hubble
     clientSecret:
