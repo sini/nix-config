@@ -56,6 +56,7 @@
                   name = "hubble-ui";
                 }
               ];
+              cors.allowOrigins = [ "https://*.${environment.domain}" ];
               oidc = {
                 provider.issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
                 clientID = "hubble";

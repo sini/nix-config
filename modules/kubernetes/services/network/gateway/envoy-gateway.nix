@@ -78,9 +78,6 @@ in
                   # };
 
                 };
-                # service.type = "LoadBalancer";
-                # service.loadBalancerIP = gateway-controller-address;
-                # service.annotations."lbipam.cilium.io/ips" = gateway-controller-address;
               };
             };
           };
@@ -91,9 +88,6 @@ in
             gateways.default-gateway = {
               metadata = {
                 namespace = "kube-system";
-                # annotations = {
-                #   "lbipam.cilium.io/ips" = gateway-controller-address;
-                # };
               };
               spec = {
                 gatewayClassName = "envoy"; # alt: cilium
