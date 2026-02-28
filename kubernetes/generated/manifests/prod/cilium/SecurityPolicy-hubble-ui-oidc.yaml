@@ -9,7 +9,6 @@ spec:
     clientSecret:
       name: hubble-oidc-client-secret
     forwardAccessToken: true
-    passThroughAuthHeader: true
     provider:
       issuer: https://idm.json64.dev/oauth2/openid/hubble
     scopes:
