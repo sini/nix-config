@@ -4,6 +4,9 @@ metadata:
   name: envoy-proxy-config
   namespace: kube-system
 spec:
+  logging:
+    level:
+      default: debug
   provider:
     kubernetes:
       envoyDeployment:
