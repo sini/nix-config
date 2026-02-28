@@ -68,12 +68,12 @@
                 redirectURL = "https://hubble.${environment.domain}/oauth2/callback";
                 logoutPath = "/oidc/sign_out";
                 cookieDomain = "${environment.domain}";
-                scopes = [
-                  "email"
-                  "openid"
-                  "profile"
-                ];
-                forwardAccessToken = true;
+                # scopes = [
+                #   "email"
+                #   "openid"
+                #   "profile"
+                # ];
+                # forwardAccessToken = true;
                 # passThroughAuthHeader = true;
               };
               # jwt.providers = [
