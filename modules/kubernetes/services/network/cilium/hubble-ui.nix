@@ -74,22 +74,22 @@
                   "profile"
                 ];
                 forwardAccessToken = true;
-                passThroughAuthHeader = true;
+                # passThroughAuthHeader = true;
               };
-              jwt.providers = [
-                {
-                  name = "kanidm";
-                  issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
-                  audiences = [ "hubble" ];
-                  remoteJWKS.uri = "https://idm.${environment.domain}/oauth2/openid/hubble/public_key.jwk";
-                  claimToHeaders = [
-                    {
-                      header = "x-auth-user";
-                      claim = "sub";
-                    }
-                  ];
-                }
-              ];
+              # jwt.providers = [
+              #   {
+              #     name = "kanidm";
+              #     issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
+              #     audiences = [ "hubble" ];
+              #     remoteJWKS.uri = "https://idm.${environment.domain}/oauth2/openid/hubble/public_key.jwk";
+              #     claimToHeaders = [
+              #       {
+              #         header = "x-auth-user";
+              #         claim = "sub";
+              #       }
+              #     ];
+              #   }
+              # ];
             };
 
             secrets.hubble-oidc-client-secret = {
