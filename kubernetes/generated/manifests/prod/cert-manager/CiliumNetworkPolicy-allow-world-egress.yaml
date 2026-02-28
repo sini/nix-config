@@ -1,21 +1,12 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
   name: allow-world-egress
   namespace: cert-manager
 spec:
   egress:
-    - toEndpoints:
-        - matchLabels:
-            k8s:io.kubernetes.pod.namespace: kube-system
-            k8s:k8s-app: kube-dns
-      toPorts:
-        - ports:
-            - port: "53"
-              protocol: ANY
-          rules:
-            dns:
-              - matchPattern: '*'
     - toEntities:
         - world
       toPorts:

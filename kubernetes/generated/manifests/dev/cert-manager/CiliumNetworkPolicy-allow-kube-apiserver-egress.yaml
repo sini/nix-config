@@ -1,6 +1,8 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
   name: allow-kube-apiserver-egress
   namespace: cert-manager
 spec:
