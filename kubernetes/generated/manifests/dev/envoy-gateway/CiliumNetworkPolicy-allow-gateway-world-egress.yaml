@@ -1,0 +1,22 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: allow-gateway-world-egress
+  namespace: kube-system
+spec:
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "80"
+              protocol: TCP
+            - port: "53"
+              protocol: UDP
+  endpointSelector:
+    matchLabels:
+      gateway.networking.k8s.io/gateway-name: default-gateway
