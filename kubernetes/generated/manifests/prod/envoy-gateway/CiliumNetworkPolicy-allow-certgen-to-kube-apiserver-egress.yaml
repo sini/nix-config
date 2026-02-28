@@ -1,6 +1,8 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
   name: allow-certgen-to-kube-apiserver-egress
   namespace: envoy-gateway-system
 spec:

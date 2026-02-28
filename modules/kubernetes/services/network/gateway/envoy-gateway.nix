@@ -189,68 +189,77 @@ in
 
             ciliumNetworkPolicies = {
 
-              allow-world-egress.spec = {
-                endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "envoy-gateway-system";
-                egress = [
-                  {
-                    toEntities = [
-                      "world"
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "443";
-                            protocol = "TCP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
+              allow-world-egress = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "envoy-gateway-system";
+                  egress = [
+                    {
+                      toEntities = [
+                        "world"
+                      ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "443";
+                              protocol = "TCP";
+                            }
+                            {
+                              port = "53";
+                              protocol = "UDP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
+                };
               };
 
               # Allow all envoy pods to access kube-apiserver
-              allow-kube-apiserver-egress.spec = {
-                endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "envoy-gateway-system";
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
+              allow-kube-apiserver-egress = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "envoy-gateway-system";
+                  egress = [
+                    {
+                      toEntities = [ "kube-apiserver" ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "6443";
+                              protocol = "TCP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
+                };
               };
 
-              allow-certgen-to-kube-apiserver-egress.spec = {
-                endpointSelector.matchLabels."job-name" = "envoy-gateway-helm-certgen";
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
+              allow-certgen-to-kube-apiserver-egress = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  endpointSelector.matchLabels."job-name" = "envoy-gateway-helm-certgen";
+                  egress = [
+                    {
+                      toEntities = [ "kube-apiserver" ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "6443";
+                              protocol = "TCP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
+                };
               };
             };
 

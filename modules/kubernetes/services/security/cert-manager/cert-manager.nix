@@ -119,75 +119,59 @@
 
             certificates = builtins.listToAttrs certificatesResources;
 
-            # Allow all cert-manager pods to access kube-apiserver
             ciliumNetworkPolicies = {
-              allow-world-egress.spec = {
-                endpointSelector.matchLabels = {
-                  "app.kubernetes.io/instance" = "cert-manager";
+              # Talk to letsencrypt, cloudflare, and external DNS.
+              allow-world-egress = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  endpointSelector.matchLabels = {
+                    "app.kubernetes.io/instance" = "cert-manager";
+                  };
+                  egress = [
+                    {
+                      toEntities = [
+                        "world"
+                      ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "443";
+                              protocol = "TCP";
+                            }
+                            {
+                              port = "53";
+                              protocol = "UDP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
                 };
-                egress = [
-                  # Enable DNS proxying
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s:k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "ANY";
-                          }
-                        ];
-                        rules.dns = [
-                          { matchPattern = "*"; }
-                        ];
-                      }
-                    ];
-                  }
-                  {
-                    toEntities = [
-                      "world"
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "443";
-                            protocol = "TCP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
               };
-              allow-kube-apiserver-egress.spec = {
-                endpointSelector.matchLabels."app.kubernetes.io/instance" = "cert-manager";
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
+
+              # Allow all cert-manager pods to access kube-apiserver
+              allow-kube-apiserver-egress = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  endpointSelector.matchLabels."app.kubernetes.io/instance" = "cert-manager";
+                  egress = [
+                    {
+                      toEntities = [ "kube-apiserver" ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "6443";
+                              protocol = "TCP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
+                };
               };
             };
           };
