@@ -69,7 +69,7 @@
                   "email"
                 ];
                 forwardAccessToken = true;
-                passThroughAuthHeader = true;
+                # passThroughAuthHeader = true;
               };
             };
 
