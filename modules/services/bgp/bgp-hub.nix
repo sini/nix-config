@@ -28,11 +28,24 @@ in
         config,
         lib,
         hostOptions,
+        environment,
         ...
       }:
       let
         cfg = config.services.bgp-hub;
         currentHostEnvironment = hostOptions.environment;
+
+        # Gateway neighbor (Unifi router)
+        gatewayNeighbor =
+          if cfg.peerWithGateway then
+            [
+              {
+                ip = environment.gatewayIp;
+                asn = cfg.gatewayAsNumber;
+              }
+            ]
+          else
+            [ ];
 
         # Auto-generate neighbors from hosts with specific tags/roles
         shouldAutoDiscover = cfg.autoDiscoverNeighbors || (cfg.neighbors == [ ]);
@@ -71,8 +84,8 @@ in
           asn = neighbor.asNumber;
         }) cfg.neighbors;
 
-        # Combine manual and auto-discovered neighbors
-        allNeighbors = manualNeighbors ++ autoNeighbors;
+        # Combine gateway, manual, and auto-discovered neighbors
+        allNeighbors = gatewayNeighbor ++ manualNeighbors ++ autoNeighbors;
 
         # Create address family configuration for all neighbors
         addressFamilyNeighbors = lib.listToAttrs (
@@ -188,6 +201,18 @@ in
             type = lib.types.int;
             default = 8;
             description = "Maximum number of BGP paths";
+          };
+
+          peerWithGateway = lib.mkOption {
+            type = lib.types.bool;
+            default = true;
+            description = "Whether to automatically peer with the environment gateway (Unifi router)";
+          };
+
+          gatewayAsNumber = lib.mkOption {
+            type = lib.types.int;
+            default = 65999;
+            description = "AS number of the gateway router";
           };
         };
 

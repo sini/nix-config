@@ -63,6 +63,8 @@ every host and include:
 - `ipv4`: The static IP addresses of this host in it's home vlan.
 - `ipv6`: The static IPv6 addresses of this host.
 - `roles`: A list of roles for the host, which can also be used to target deployment.
+- `features`: A list of features to enable for the host.
+- `exclude-features`: A list of features to exclude (prevents the feature and its requires from being added).
 - `public_key`: The path or value of the public SSH key for the host used for encryption.
 - `facts`: The path to the Facter JSON file for the host, which is used to provide
   additional information about the host and for automated hardware configuration.
@@ -141,6 +143,8 @@ using [the _files_ flake-parts module](https://github.com/mightyiam/files):
 - `LICENSE`
 - `README.md`
 - `.github/workflows/check.yml`
+- `docs/unifi-frr-bgp-dev.conf`
+- `docs/unifi-frr-bgp-prod.conf`
 
 ## Running checks on GitHub Actions
 
