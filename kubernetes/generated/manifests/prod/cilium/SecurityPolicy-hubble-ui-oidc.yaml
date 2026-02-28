@@ -7,6 +7,17 @@ spec:
   cors:
     allowOrigins:
       - https://*.json64.dev
+  jwt:
+    providers:
+      - audiences:
+          - hubble
+        claimToHeaders:
+          - claim: sub
+            header: x-auth-user
+        issuer: https://idm.json64.dev/oauth2/openid/hubble
+        name: kanidm
+        remoteJWKS:
+          uri: https://idm.json64.dev/oauth2/openid/hubble/public_key.jwk
   oidc:
     clientID: hubble
     clientSecret:
@@ -14,6 +25,7 @@ spec:
     cookieDomain: json64.dev
     forwardAccessToken: true
     logoutPath: /oidc/sign_out
+    passThroughAuthHeader: true
     provider:
       authorizationEndpoint: https://idm.json64.dev/ui/oauth2
       issuer: https://idm.json64.dev/oauth2/openid/hubble
