@@ -57,27 +57,17 @@
                 }
               ];
 
-              cors = {
-                allowCredentials = true;
-                allowOrigins = [ "https://*.${environment.domain}" ];
-              };
-
               oidc = {
-                provider = {
-                  issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
-                  authorizationEndpoint = "https://idm.${environment.domain}/ui/oauth2";
-                  tokenEndpoint = "https://idm.${environment.domain}/oauth2/token";
-                };
+                provider.issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
                 clientID = "hubble";
                 clientSecret.name = "hubble-oidc-client-secret";
-                redirectURL = "https://hubble.${environment.domain}/oauth2/callback";
-                logoutPath = "/oidc/sign_out";
-                cookieDomain = "${environment.domain}";
+                # cookieDomain = "${environment.domain}";
                 scopes = [
                   "email"
                   "openid"
                   "profile"
                 ];
+                forwardAccessToken = true;
               };
 
             };
