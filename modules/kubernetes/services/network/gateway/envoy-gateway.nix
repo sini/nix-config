@@ -63,6 +63,7 @@ in
               deployment.replicas = numReplicas;
               config = {
                 envoyGateway = {
+                  admin.address = "0.0.0.0";
                   gateway.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
                   provider = {
                     type = "Kubernetes";
@@ -76,7 +77,39 @@ in
                   #   type = "Redis";
                   #   redis.url = "envoy-ratelimit-db.envoy-gateway-system.svc.cluster.local:6379";
                   # };
-
+                  envoyProxy = {
+                    provider = {
+                      type = "Kubernetes";
+                      kubernetes = {
+                        envoyDeployment = {
+                          replicas = numReplicas;
+                          strategy.rollingUpdate = {
+                            maxSurge = 1;
+                            maxUnavailable = 0;
+                          };
+                          pod.topologySpreadConstraints = [
+                            {
+                              maxSkew = 1;
+                              topologyKey = "kubernetes.io/hostname";
+                              whenUnsatisfiable = "DoNotSchedule";
+                              labelSelector.matchLabels = {
+                                "app.kubernetes.io/name" = "envoy";
+                              };
+                              matchLabelKeys = [
+                                "pod-template-hash"
+                                "gateway.envoyproxy.io/owning-gateway-name"
+                                "gateway.envoyproxy.io/owning-gateway-namespace"
+                              ];
+                            }
+                          ];
+                        };
+                        envoyService = {
+                          type = "LoadBalancer";
+                          annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+                        };
+                      };
+                    };
+                  };
                 };
               };
             };
@@ -131,43 +164,42 @@ in
               };
             };
 
-            envoyProxies.envoy-proxy-config = {
-              metadata.namespace = "kube-system";
-              spec = {
-                logging.level.default = "debug";
-                provider = {
-                  type = "Kubernetes";
-                  kubernetes = {
-                    envoyDeployment = {
-                      replicas = numReplicas;
-                      strategy.rollingUpdate = {
-                        maxSurge = 1;
-                        maxUnavailable = 0;
-                      };
-                      pod.topologySpreadConstraints = [
-                        {
-                          maxSkew = 1;
-                          topologyKey = "kubernetes.io/hostname";
-                          whenUnsatisfiable = "DoNotSchedule";
-                          labelSelector.matchLabels = {
-                            "app.kubernetes.io/name" = "envoy";
-                          };
-                          matchLabelKeys = [
-                            "pod-template-hash"
-                            "gateway.envoyproxy.io/owning-gateway-name"
-                            "gateway.envoyproxy.io/owning-gateway-namespace"
-                          ];
-                        }
-                      ];
-                    };
-                    envoyService = {
-                      type = "LoadBalancer";
-                      annotations."lbipam.cilium.io/ips" = gateway-controller-address;
-                    };
-                  };
-                };
-              };
-            };
+            # envoyProxies.envoy-proxy-config = {
+            #   metadata.namespace = "kube-system";
+            #   spec = {
+            #     provider = {
+            #       type = "Kubernetes";
+            #       kubernetes = {
+            #         envoyDeployment = {
+            #           replicas = numReplicas;
+            #           strategy.rollingUpdate = {
+            #             maxSurge = 1;
+            #             maxUnavailable = 0;
+            #           };
+            #           pod.topologySpreadConstraints = [
+            #             {
+            #               maxSkew = 1;
+            #               topologyKey = "kubernetes.io/hostname";
+            #               whenUnsatisfiable = "DoNotSchedule";
+            #               labelSelector.matchLabels = {
+            #                 "app.kubernetes.io/name" = "envoy";
+            #               };
+            #               matchLabelKeys = [
+            #                 "pod-template-hash"
+            #                 "gateway.envoyproxy.io/owning-gateway-name"
+            #                 "gateway.envoyproxy.io/owning-gateway-namespace"
+            #               ];
+            #             }
+            #           ];
+            #         };
+            #         envoyService = {
+            #           type = "LoadBalancer";
+            #           annotations."lbipam.cilium.io/ips" = gateway-controller-address;
+            #         };
+            #       };
+            #     };
+            #   };
+            # };
 
             referenceGrants.allow-kubesystem-gateway-to-wildcard-tls = {
               metadata.namespace = "security";
@@ -189,6 +221,50 @@ in
               };
 
             };
+
+            # httpRoutes.envoy-gateway.spec = {
+            #   parentRefs = [
+            #     {
+            #       name = "default-gateway";
+            #       namespace = "kube-system";
+            #       sectionName = "https";
+            #     }
+            #   ];
+            #   hostnames = [ "envoy.${environment.domain}" ];
+            #   rules = [
+            #     {
+            #       backendRefs = [
+            #         {
+            #           name = "envoy-gateway";
+            #           port = 19000;
+            #         }
+            #       ];
+            #     }
+            #   ];
+            # };
+
+            # securityPolicies."envoy-gateway-oidc".spec = {
+            #   targetRefs = [
+            #     {
+            #       group = "gateway.networking.k8s.io";
+            #       kind = "HTTPRoute";
+            #       name = "envoy-gateway";
+            #     }
+            #   ];
+
+            #   oidc = {
+            #     provider.issuer = "https://idm.${environment.domain}/oauth2/openid/envoy";
+            #     clientID = "envoy";
+            #     clientSecret.name = "envoy-oidc-client-secret";
+            #     # cookieDomain = "${environment.domain}";
+            #     scopes = [
+            #       "email"
+            #       "openid"
+            #       "profile"
+            #     ];
+            #     forwardAccessToken = true;
+            #   };
+            # };
 
             ciliumNetworkPolicies = {
 
