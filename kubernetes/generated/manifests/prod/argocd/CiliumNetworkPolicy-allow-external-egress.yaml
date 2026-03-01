@@ -3,7 +3,7 @@ kind: CiliumNetworkPolicy
 metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
-  name: allow-github-egress
+  name: allow-external-egress
   namespace: argocd
 spec:
   egress:
@@ -20,6 +20,7 @@ spec:
               - matchPattern: '*'
     - toFQDNs:
         - matchName: github.com
+        - matchName: idm.json64.dev
       toPorts:
         - ports:
             - port: "443"

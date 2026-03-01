@@ -223,8 +223,8 @@
             };
 
             ciliumNetworkPolicies = {
-              # Allow argocd-repo-server egress access to github.com
-              allow-github-egress = {
+              # Allow argocd-repo-server egress access to github.com and IDM
+              allow-external-egress = {
                 metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
                 spec = {
                   endpointSelector.matchLabels."app.kubernetes.io/name" = "argocd-repo-server";
@@ -253,10 +253,11 @@
                         }
                       ];
                     }
-                    # Allow HTTPS to github.com
+                    # Allow HTTPS to github.com and IDM
                     {
                       toFQDNs = [
                         { matchName = "github.com"; }
+                        { matchName = "idm.${environment.domain}"; }
                       ];
                       toPorts = [
                         {
