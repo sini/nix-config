@@ -252,18 +252,18 @@
             ];
             originLanding = "https://argocd.${environment.domain}/applications";
             basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
+            preferShortUsername = true;
+
             scopeMaps = {
               "argocd.access" = [
                 "openid"
                 "email"
                 "profile"
-                "groups"
               ];
               "argocd.admins" = [
                 "openid"
                 "email"
                 "profile"
-                "groups"
               ];
             };
             claimMaps.groups = {
@@ -273,6 +273,7 @@
                 "argocd.access" = [ "readonly" ];
               };
             };
+
           };
 
           hubble = envoyOidcConfigFor { name = "hubble"; };
