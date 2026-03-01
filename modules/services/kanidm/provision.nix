@@ -258,7 +258,6 @@
                 "openid"
                 "email"
                 "profile"
-                "groups"
               ];
             };
             claimMaps.groups = {

@@ -136,7 +136,7 @@
                     "email"
                     "openid"
                     "profile"
-                    "groups"
+                    # "groups"
                   ];
                   requestedIDTokenClaims.groups.essential = true;
                 };
