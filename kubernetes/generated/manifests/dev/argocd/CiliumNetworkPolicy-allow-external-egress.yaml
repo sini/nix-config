@@ -18,13 +18,12 @@ spec:
           rules:
             dns:
               - matchPattern: '*'
-    - toFQDNs:
-        - matchName: github.com
-        - matchName: idm.json64.dev
+    - toEntities:
+        - world
       toPorts:
         - ports:
             - port: "443"
               protocol: TCP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: argocd-repo-server
+      app.kubernetes.io/part-of: argocd
