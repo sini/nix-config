@@ -228,7 +228,7 @@
               allow-external-egress = {
                 metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
                 spec = {
-                  endpointSelector.matchLabels."app.kubernetes.io/name" = "argocd-repo-server";
+                  endpointSelector.matchLabels."app.kubernetes.io/part-of" = "argocd";
                   egress = [
                     # Enable DNS proxying
                     {
@@ -256,9 +256,8 @@
                     }
                     # Allow HTTPS to github.com and IDM
                     {
-                      toFQDNs = [
-                        { matchName = "github.com"; }
-                        { matchName = "idm.${environment.domain}"; }
+                      toEntities = [
+                        "world"
                       ];
                       toPorts = [
                         {
