@@ -126,7 +126,7 @@
                     clusters:
                       - "*"
                 '';
-                cm."oidc.config" = {
+                cm."oidc.config" = builtins.toJSON {
                   name = "kanidm";
                   issuer = "https://idm.${environment.domain}/oauth2/openid/argocd";
                   clientID = "argocd";

@@ -4,7 +4,7 @@ data:
   application.instanceLabelKey: argocd.argoproj.io/instance
   application.sync.impersonation.enabled: "false"
   exec.enabled: "false"
-  oidc.config: map[clientID:argocd clientSecret:$oidc.clientSecret issuer:https://idm.json64.dev/oauth2/openid/argocd name:kanidm requestedScopes:[email openid profile groups]]
+  oidc.config: '{"clientID":"argocd","clientSecret":"$oidc.clientSecret","issuer":"https://idm.json64.dev/oauth2/openid/argocd","name":"kanidm","requestedScopes":["email","openid","profile","groups"]}'
   resource.customizations.ignoreResourceUpdates.ConfigMap: |
     jqPathExpressions:
       # Ignore the cluster-autoscaler status
