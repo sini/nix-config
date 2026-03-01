@@ -114,45 +114,41 @@
                 params = {
                   "server.insecure" = true;
                 };
-                # RBAC: allow admin to do everything
-                rbac = {
-                  "policy.default" = "role:admin";
-                };
 
                 # Disable admin account...
-                cm."admin.enabled" = false;
+                cm = {
+                  "admin.enabled" = false;
 
-                cm."resource.exclusions" = ''
-                  - apiGroups:
-                    - cilium.io
-                    kinds:
-                      - CiliumIdentity
-                    clusters:
-                      - "*"
-                '';
-                cm."oidc.config" = builtins.toJSON {
-                  name = "kanidm";
-                  issuer = "https://idm.${environment.domain}/oauth2/openid/argocd";
-                  clientID = "argocd";
-                  clientSecret = "$oidc.clientSecret";
-                  enablePKCEAuthentication = true;
-                  requestedScopes = [
-                    "email"
-                    "openid"
-                    "profile"
-                    # "groups"
-                  ];
-                  requestedIDTokenClaims.groups.essential = true;
+                  "resource.exclusions" = ''
+                    - apiGroups:
+                      - cilium.io
+                      kinds:
+                        - CiliumIdentity
+                      clusters:
+                        - "*"
+                  '';
+                  "oidc.config" = builtins.toJSON {
+                    name = "kanidm";
+                    issuer = "https://idm.${environment.domain}/oauth2/openid/argocd";
+                    clientID = "argocd";
+                    clientSecret = "$oidc.clientSecret";
+                    enablePKCEAuthentication = true;
+                    requestedScopes = [
+                      "email"
+                      "openid"
+                      "profile"
+                    ];
+                    requestedIDTokenClaims.groups.essential = true;
+                  };
                 };
-              };
-
-              rbac = {
-                "policy.default" = "role:readonly";
-                scopes = "[groups]";
-                "policy.csv" = ''
-                  g, admin, role:admin
-                  g, user, role:readonly
-                '';
+                rbac = {
+                  "policy.default" = "role:readonly";
+                  "policy.csv" = ''
+                    g, admin, role:admin
+                    g, user, role:readonly
+                  '';
+                  scopes = "[groups]";
+                };
               };
               global.networkPolicy.create = true;
             };
