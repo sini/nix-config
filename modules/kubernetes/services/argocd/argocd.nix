@@ -118,6 +118,10 @@
                 rbac = {
                   "policy.default" = "role:admin";
                 };
+
+                # Disable admin account...
+                cm."admin.enabled" = false;
+
                 cm."resource.exclusions" = ''
                   - apiGroups:
                     - cilium.io
@@ -147,6 +151,7 @@
                 scopes = "[groups]";
                 "policy.csv" = ''
                   g, admin, role:admin
+                  g, user, role:readonly
                 '';
               };
               global.networkPolicy.create = true;
