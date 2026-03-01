@@ -67,6 +67,7 @@
           "open-webui"
           "headscale"
           # Envoy OIDC services
+          "argocd"
           "hubble"
         ]
       );
@@ -240,6 +241,8 @@
             ];
             preferShortUsername = true;
           };
+
+          argocd = envoyOidcConfigFor { name = "argocd"; };
 
           hubble = envoyOidcConfigFor { name = "hubble"; };
 
