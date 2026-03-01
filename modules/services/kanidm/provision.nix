@@ -248,8 +248,9 @@
             displayName = "argocd";
             originUrl = [
               "https://argocd.${environment.domain}/oauth2/callback"
+              "https://argocd.${environment.domain}/auth/callback"
             ];
-            originLanding = "https://argocd.${environment.domain}/";
+            originLanding = "https://argocd.${environment.domain}/applications";
             basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
             scopeMaps = {
               "argocd.access" = [

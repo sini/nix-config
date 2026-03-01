@@ -131,6 +131,7 @@
                   issuer = "https://idm.${environment.domain}/oauth2/openid/argocd";
                   clientID = "argocd";
                   clientSecret = "$oidc.clientSecret";
+                  enablePKCEAuthentication = true;
                   requestedScopes = [
                     "email"
                     "openid"
