@@ -166,6 +166,17 @@
                 </form>
               '';
               customCss = ''
+                 /* Hide manual login form */
+                .manualLoginForm {
+                  display: none !important;
+                }
+
+                /* Hide 'Forgot password' button */
+                .btnForgotPassword {
+                  display: none !important;
+                }
+
+                /* Add SSO button */
                 a.raised.emby-button {
                   padding: 0.9em 1em;
                   color: inherit !important;
