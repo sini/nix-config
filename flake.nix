@@ -133,7 +133,7 @@
     };
 
     # Cachyos kernel
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel/release";
+    nix-cachyos-kernel.url = "github:sini/nix-cachyos-kernel/I-39";
     proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
 
     # Facter - an alternative to nixos-generate-config
