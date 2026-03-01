@@ -49,8 +49,8 @@
       for = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}";
       forInlineFor = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}+";
       forOidcService =
-        name:
-        "ref+sops://${rootPath}/.secrets/env/${environment.name}/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
+        name: # TODO: replace prod with environment.name...
+        "ref+sops://${rootPath}/.secrets/env/prod/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
     };
   };
 }

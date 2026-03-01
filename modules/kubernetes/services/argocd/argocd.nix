@@ -126,6 +126,27 @@
                     clusters:
                       - "*"
                 '';
+                cm."oidc.config" = {
+                  name = "kanidm";
+                  issuer = "https://idm.${environment.domain}/oauth2/openid/argocd";
+                  clientID = "argocd";
+                  clientSecret = "$oidc.clientSecret";
+                  requestedScopes = [
+                    "email"
+                    "openid"
+                    "profile"
+                    "groups"
+                  ];
+                };
+              };
+
+              rbac = {
+                "policy.default" = "";
+                scopes = "[groups]";
+                "policy.csv" = ''
+                  g, admin, role:admin
+                  g, user, role:readonly
+                '';
               };
               global.networkPolicy.create = true;
             };
@@ -198,6 +219,7 @@
               "admin.password" = secrets.for "argocd-admin-password";
               "admin.passwordMtime" = secrets.for "argocd-admin-mtime";
               "server.secretkey" = secrets.for "argocd-secretkey";
+              "oidc.clientSecret" = secrets.forOidcService "argocd";
             };
 
             ciliumNetworkPolicies = {

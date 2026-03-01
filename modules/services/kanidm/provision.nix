@@ -192,8 +192,10 @@
           "grafana.admins" = { };
           "grafana.server-admins".members = [ "admins" ];
 
-          "open-webui.access".members = [ "admins" ];
+          "argocd.access".members = [ "users" ];
+          "argocd.admins".members = [ "admins" ];
 
+          "open-webui.access".members = [ "admins" ];
           "open-webui.admins".members = [ "admins" ];
 
           "media.access".members = [ "users" ];
@@ -242,7 +244,35 @@
             preferShortUsername = true;
           };
 
-          argocd = envoyOidcConfigFor { name = "argocd"; };
+          argocd = {
+            displayName = "argocd";
+            originUrl = [
+              "https://argocd.${environment.domain}/oauth2/callback"
+            ];
+            originLanding = "https://argocd.${environment.domain}/";
+            basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
+            scopeMaps = {
+              "argocd.access" = [
+                "openid"
+                "email"
+                "profile"
+                "groups"
+              ];
+              "argocd.admins" = [
+                "openid"
+                "email"
+                "profile"
+                "groups"
+              ];
+            };
+            claimMaps.groups = {
+              joinType = "array";
+              valuesByGroup = {
+                "argocd.admins" = [ "admin" ];
+                "argocd.access" = [ "readonly" ];
+              };
+            };
+          };
 
           hubble = envoyOidcConfigFor { name = "hubble"; };
 
