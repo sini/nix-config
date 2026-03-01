@@ -47,7 +47,7 @@
     nixosConfiguration =
       { pkgs, ... }:
       {
-        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto;
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v4;
 
         hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
 
