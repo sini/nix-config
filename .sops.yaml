@@ -9,7 +9,7 @@ keys:
 creation_rules:
   #path should be relative to location of this file (.sops.yaml)
   # This is for our master kubernetes keys keys
-  - path_regex: ^\.secrets/.*\.enc\.ya?ml$
+  - path_regex: .*\.enc\.ya?ml$
     key_groups:
       - pgp: *admins
   # Secrets keyed for Production environments
