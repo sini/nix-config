@@ -138,15 +138,15 @@
                     "profile"
                     "groups"
                   ];
+                  requestedIDTokenClaims.groups.essential = true;
                 };
               };
 
               rbac = {
-                "policy.default" = "";
+                "policy.default" = "role:readonly";
                 scopes = "[groups]";
                 "policy.csv" = ''
                   g, admin, role:admin
-                  g, user, role:readonly
                 '';
               };
               global.networkPolicy.create = true;

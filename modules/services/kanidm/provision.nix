@@ -187,7 +187,6 @@
           "users".members = [ "admins" ];
 
           "grafana.access".members = [ "users" ];
-
           "grafana.editors" = { };
           "grafana.admins" = { };
           "grafana.server-admins".members = [ "admins" ];
@@ -260,17 +259,12 @@
                 "email"
                 "profile"
               ];
-              "argocd.admins" = [
-                "openid"
-                "email"
-                "profile"
-              ];
             };
             claimMaps.groups = {
               joinType = "array";
               valuesByGroup = {
                 "argocd.admins" = [ "admin" ];
-                "argocd.access" = [ "readonly" ];
+                "argocd.access" = [ "user" ];
               };
             };
 
@@ -329,11 +323,6 @@
             preferShortUsername = true;
             scopeMaps = {
               "media.access" = [
-                "openid"
-                "profile"
-                "groups"
-              ];
-              "media.admins" = [
                 "openid"
                 "profile"
                 "groups"
