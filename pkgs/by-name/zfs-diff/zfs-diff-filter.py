@@ -119,9 +119,7 @@ def main() -> int:
     # Output to skim
     if filtered_lines:
         try:
-            subprocess.run(
-                [args.skim_bin], input="\n".join(filtered_lines), text=True
-            )
+            subprocess.run([args.skim_bin], input="\n".join(filtered_lines), text=True)
         except KeyboardInterrupt:
             pass
 

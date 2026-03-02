@@ -79,6 +79,8 @@
           prettier.enable = true;
           shfmt.enable = true;
           taplo.enable = true;
+          # Python formatting
+          black.enable = true;
         };
       };
     };

@@ -196,7 +196,10 @@
             #   };
             # };
 
-            secrets.argocd-redis.stringData.auth = secrets.for "argocd-redis";
+            secrets.argocd-redis = {
+              type = "Opaque";
+              stringData.auth = secrets.for "argocd-redis";
+            };
 
             secrets.argocd-secret.stringData = {
               "admin.password" = secrets.for "argocd-admin-password";
