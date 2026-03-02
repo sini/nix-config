@@ -135,6 +135,30 @@ let
       default = null;
       description = "Path to sops encrypted secret file for kubernetes environment";
     };
+
+    sso = mkOption {
+      type = types.submodule {
+        options = {
+          issuerPattern = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = ''
+              SSO issuer URL pattern for authentication.
+              Use {clientID} as a placeholder for the client ID.
+              Example: "https://idm.example.com/oauth2/openid/{clientID}"
+            '';
+          };
+
+          credentialsEnvironment = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Environment variable name containing SSO credentials";
+          };
+        };
+      };
+      default = { };
+      description = "Single Sign-On configuration";
+    };
   };
 
   # Type for flake.kubernetes - service definitions with nixidy modules

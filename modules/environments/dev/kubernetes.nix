@@ -14,6 +14,11 @@
       "10.9.1.2" # bitstream
     ];
 
+    sso = {
+      credentialsEnvironment = "prod";
+      issuerPattern = "https://idm.json64.dev/oauth2/openid/{clientID}";
+    };
+
     loadBalancer = {
       cidr = "10.12.0.0/16";
       reservations = {

@@ -86,21 +86,14 @@ in
             gatewayClasses.envoy.spec.controllerName = "gateway.envoyproxy.io/gatewayclass-controller";
 
             gateways.default-gateway = {
-              metadata = {
-                namespace = "kube-system";
-              };
+              metadata.namespace = "kube-system";
               spec = {
-                gatewayClassName = "envoy"; # alt: cilium
+                gatewayClassName = "envoy";
                 infrastructure.parametersRef = {
                   group = "gateway.envoyproxy.io";
                   kind = "EnvoyProxy";
                   name = "envoy-proxy-config";
                 };
-                # addresses = lib.toList {
-                #   type = "IPAddress";
-                #   value = gateway-controller-address;
-                # };
-                # infrastructure.annotations."external-dns.alpha.kubernetes.io/hostname" = "${name}.${domain}";
                 listeners = [
                   {
                     name = "http";
@@ -141,6 +134,8 @@ in
                       replicas = numReplicas;
                       strategy.rollingUpdate = {
                         maxSurge = 1;
+                      }
+                      // lib.optionalAttrs (numReplicas == 1) {
                         maxUnavailable = 0;
                       };
                       pod.topologySpreadConstraints = [

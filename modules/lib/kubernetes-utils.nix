@@ -6,6 +6,13 @@
 }:
 {
   flake.lib.kubernetes-utils = {
+    findEnvironmentByName =
+      name:
+      let
+        environments = config.flake.environments or { };
+      in
+      environments.${name} or null;
+
     findClusterMaster =
       environment:
       let
@@ -45,12 +52,35 @@
       );
 
     # Helper to create SOPS secret reference functions for a given environment
-    mkSecretHelpers = environment: {
-      for = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}";
-      forInlineFor = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}+";
-      forOidcService =
-        name: # TODO: replace prod with environment.name...
-        "ref+sops://${rootPath}/.secrets/env/prod/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
-    };
+    mkSecretHelpers =
+      environment:
+      let
+        credentialsEnv =
+          if environment.kubernetes.sso.credentialsEnvironment != null then
+            environment.kubernetes.sso.credentialsEnvironment
+          else
+            environment.name;
+      in
+      {
+        for = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}";
+        forInlineFor = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}+";
+        forOidcService =
+          name:
+          "ref+sops://${rootPath}/.secrets/env/${credentialsEnv}/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
+        oidcIssuerFor =
+          clientID:
+          let
+            pattern =
+              if environment.kubernetes.sso.issuerPattern != null then
+                environment.kubernetes.sso.issuerPattern
+              else
+                let
+                  credEnv = config.flake.lib.kubernetes-utils.findEnvironmentByName credentialsEnv;
+                  domain = if credEnv != null then credEnv.domain else environment.domain;
+                in
+                "https://idm.${domain}/oauth2/openid/{clientID}";
+          in
+          lib.replaceStrings [ "{clientID}" ] [ clientID ] pattern;
+      };
   };
 }
