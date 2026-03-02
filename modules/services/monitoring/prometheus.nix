@@ -11,7 +11,7 @@ let
     targetEnvironments:
     config.flake.hosts
     |> lib.attrsets.filterAttrs (
-      hostname: hostConfig:
+      _hostname: hostConfig:
       builtins.elem "server" hostConfig.roles && builtins.elem hostConfig.environment targetEnvironments
     )
     |> lib.mapAttrsToList (

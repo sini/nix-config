@@ -6,7 +6,7 @@
       let
         matchingHosts =
           config.flake.hosts
-          |> lib.attrsets.filterAttrs (hostname: hostConfig: builtins.elem role (hostConfig.roles or [ ]));
+          |> lib.attrsets.filterAttrs (_hostname: hostConfig: builtins.elem role (hostConfig.roles or [ ]));
       in
       matchingHosts;
 
