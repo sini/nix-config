@@ -36,7 +36,7 @@ in
 
             # Extract CRD files for enabled services
             serviceCrdFiles = lib.mapAttrs (
-              serviceName: service:
+              _serviceName: service:
               let
                 crdConfig =
                   if service.crds != null then

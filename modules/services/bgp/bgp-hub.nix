@@ -8,7 +8,7 @@ let
   getHostsByTag =
     tag: value: currentHostEnvironment:
     lib.filterAttrs (
-      name: host:
+      _name: host:
       (host.tags or { }) ? ${tag}
       && host.tags.${tag} == value
       && host.environment == currentHostEnvironment
@@ -17,7 +17,7 @@ let
   getHostsByRole =
     role: currentHostEnvironment:
     lib.filterAttrs (
-      name: host: lib.elem role (host.roles or [ ]) && host.environment == currentHostEnvironment
+      _name: host: lib.elem role (host.roles or [ ]) && host.environment == currentHostEnvironment
     ) config.flake.hosts;
 in
 {
@@ -192,7 +192,7 @@ in
 
           neighborAsNumberOffset = lib.mkOption {
             type = lib.types.functionTo lib.types.int;
-            default = hostname: 0;
+            default = _hostname: 0;
             description = "Function to calculate AS number offset from hostname based on sorted position";
           };
 

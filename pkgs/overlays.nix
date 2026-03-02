@@ -7,7 +7,7 @@
   modifications = _final: prev: {
     # https://discord.com/channels/1065291958328758352/1071254299998421052/threads/1428125264319352904
     # branch: next
-    custom-monado = prev.monado.overrideAttrs (old: {
+    custom-monado = prev.monado.overrideAttrs (_old: {
       src = prev.fetchgit {
         url = "https://tangled.org/@matrixfurry.com/monado";
         rev = "ecf484dd36c2bb475616189dbc222f5dc9c1c396";

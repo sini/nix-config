@@ -9,20 +9,6 @@
 with lib;
 
 let
-  hasAttrNotNull = attr: set: hasAttr attr set && set.${attr} != null;
-
-  attrsToList =
-    values:
-    if values != null then
-      sort (
-        a: b:
-        if (hasAttrNotNull "_priority" a && hasAttrNotNull "_priority" b) then
-          a._priority < b._priority
-        else
-          false
-      ) (mapAttrsToList (n: v: v) values)
-    else
-      values;
 
   getDefaults =
     resource: group: version: kind:
@@ -71,7 +57,7 @@ let
           in
           finalType.merge loc (map (def: def // { value = coerceVal def.value; }) defs);
         substSubModules = m: coercedTo coercedType coerceFunc (finalType.substSubModules m);
-        typeMerge = t1: t2: null;
+        typeMerge = _t1: _t2: null;
         functor = (defaultFunctor name) // {
           wrapped = finalType;
         };
@@ -80,33 +66,10 @@ let
 
   mkOptionDefault = mkOverride 1001;
 
-  mergeValuesByKey =
-    attrMergeKey: listMergeKeys: values:
-    listToAttrs (
-      imap0 (
-        i: value:
-        nameValuePair (
-          if hasAttr attrMergeKey value then
-            if isAttrs value.${attrMergeKey} then
-              toString value.${attrMergeKey}.content
-            else
-              (toString value.${attrMergeKey})
-          else
-            # generate merge key for list elements if it's not present
-            "__kubenix_list_merge_key_"
-            + (concatStringsSep "" (
-              map (
-                key: if isAttrs value.${key} then toString value.${key}.content else (toString value.${key})
-              ) listMergeKeys
-            ))
-        ) (value // { _priority = i; })
-      ) values
-    );
-
   submoduleOf =
     ref:
     types.submodule (
-      { name, ... }:
+      { ... }:
       {
         options = definitions."${ref}".options or { };
         config = definitions."${ref}".config or { };
@@ -116,36 +79,10 @@ let
   globalSubmoduleOf =
     ref:
     types.submodule (
-      { name, ... }:
+      { ... }:
       {
         options = config.definitions."${ref}".options or { };
         config = config.definitions."${ref}".config or { };
-      }
-    );
-
-  submoduleWithMergeOf =
-    ref: mergeKey:
-    types.submodule (
-      { name, ... }:
-      let
-        convertName =
-          name: if definitions."${ref}".options.${mergeKey}.type == types.int then toInt name else name;
-      in
-      {
-        options = definitions."${ref}".options // {
-          # position in original array
-          _priority = mkOption {
-            type = types.nullOr types.int;
-            default = null;
-            internal = true;
-          };
-        };
-        config = definitions."${ref}".config // {
-          ${mergeKey} = mkOverride 1002 (
-            # use name as mergeKey only if it is not coming from mergeValuesByKey
-            if (!hasPrefix "__kubenix_list_merge_key_" name) then convertName name else null
-          );
-        };
       }
     );
 
@@ -172,12 +109,6 @@ let
         ];
       }
     );
-
-  coerceAttrsOfSubmodulesToListByKey =
-    ref: attrMergeKey: listMergeKeys:
-    (types.coercedTo (types.listOf (submoduleOf ref)) (mergeValuesByKey attrMergeKey listMergeKeys) (
-      types.attrsOf (submoduleWithMergeOf ref attrMergeKey)
-    ));
 
   definitions = {
     "bitnami.com.v1alpha1.SealedSecret" = {

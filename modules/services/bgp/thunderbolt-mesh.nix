@@ -107,7 +107,7 @@ in
         # Derive gateway IPs from peer interface assignments
         # This logic determines which interface connects to which peer by checking /31 network pairs
         getGatewayForPeer =
-          peerHostname: peerLoopbackIp:
+          peerHostname: _peerLoopbackIp:
           let
             peerHost = thunderboltPeers.${peerHostname};
 

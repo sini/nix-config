@@ -1,4 +1,4 @@
-flakeConfig: {
+_flakeConfig: {
   flake.features.windows-vfio = {
     requires = [
       "microvm-cuda"

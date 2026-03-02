@@ -20,7 +20,7 @@ let
           a._priority < b._priority
         else
           false
-      ) (mapAttrsToList (n: v: v) values)
+      ) (mapAttrsToList (_n: v: v) values)
     else
       values;
 
@@ -71,7 +71,7 @@ let
           in
           finalType.merge loc (map (def: def // { value = coerceVal def.value; }) defs);
         substSubModules = m: coercedTo coercedType coerceFunc (finalType.substSubModules m);
-        typeMerge = t1: t2: null;
+        typeMerge = _t1: _t2: null;
         functor = (defaultFunctor name) // {
           wrapped = finalType;
         };
@@ -106,7 +106,7 @@ let
   submoduleOf =
     ref:
     types.submodule (
-      { name, ... }:
+      { ... }:
       {
         options = definitions."${ref}".options or { };
         config = definitions."${ref}".config or { };
@@ -116,7 +116,7 @@ let
   globalSubmoduleOf =
     ref:
     types.submodule (
-      { name, ... }:
+      { ... }:
       {
         options = config.definitions."${ref}".options or { };
         config = config.definitions."${ref}".config or { };

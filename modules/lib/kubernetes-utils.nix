@@ -13,7 +13,7 @@
         masterHosts =
           hosts
           |> lib.attrsets.filterAttrs (
-            hostname: hostConfig:
+            _hostname: hostConfig:
             (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
             && (hostConfig.environment == environment.name)
           );
@@ -39,7 +39,7 @@
       in
       hosts
       |> lib.attrsets.filterAttrs (
-        hostname: hostConfig:
+        _hostname: hostConfig:
         (builtins.elem "kubernetes" (hostConfig.roles or [ ]))
         && (hostConfig.environment == environment.name)
       );

@@ -37,7 +37,7 @@ in
     { config, lib, ... }:
     {
       networking.hosts = lib.attrsets.filterAttrs (
-        ip: hostnames: !(builtins.elem config.networking.hostName hostnames)
+        _ip: hostnames: !(builtins.elem config.networking.hostName hostnames)
       ) hosts;
 
       services.openssh.knownHosts = lib.attrsets.filterAttrs (
