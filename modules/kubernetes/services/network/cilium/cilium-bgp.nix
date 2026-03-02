@@ -61,7 +61,7 @@ in
             ciliumBGPNodeConfigOverrides =
               hosts
               |> lib.attrsets.mapAttrs' (
-                hostname: hostConfig: {
+                hostname: _hostConfig: {
                   name = hostname;
                   value = {
                     spec.bgpInstances = [

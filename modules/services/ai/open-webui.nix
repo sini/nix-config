@@ -6,9 +6,9 @@
 }:
 let
   ollamaHosts = builtins.sort (a: b: a < b) (
-    lib.mapAttrsToList (hostname: hostConfig: builtins.head hostConfig.ipv4) (
+    lib.mapAttrsToList (_hostname: hostConfig: builtins.head hostConfig.ipv4) (
       lib.attrsets.filterAttrs (
-        hostname: hostConfig: builtins.elem "inference" hostConfig.roles
+        _hostname: hostConfig: builtins.elem "inference" hostConfig.roles
       ) config.flake.hosts
     )
   );

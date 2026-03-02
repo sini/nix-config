@@ -1,4 +1,4 @@
-flakeConfig: {
+_flakeConfig: {
   flake.features.microvm-cuda.nixos =
     {
       lib,

@@ -26,7 +26,7 @@ let
     let
       # Filter bgp-hub hosts for this environment
       envBgpHubHosts = lib.filterAttrs (
-        name: host: lib.elem "bgp-hub" (host.roles or [ ]) && host.environment == envName
+        _name: host: lib.elem "bgp-hub" (host.roles or [ ]) && host.environment == envName
       ) config.flake.hosts;
 
       routerId = getManagementGateway env;

@@ -37,7 +37,7 @@ in
 
         settings = {
           builders-use-substitutes = true;
-          substituters = lib.mapAttrsToList (hostname: hostConfig: "http://${hostname}:16893") (
+          substituters = lib.mapAttrsToList (hostname: _hostConfig: "http://${hostname}:16893") (
             lib.filterAttrs (hostname: _: hostname != config.networking.hostName) builders
           );
           trusted-public-keys = [
