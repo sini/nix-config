@@ -1,15 +1,15 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: sops-secrets-operator
+  name: apps
   namespace: argocd
 spec:
   destination:
-    namespace: sops-secrets-operator
+    namespace: argocd
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: ./kubernetes/generated/manifests/prod/sops-secrets-operator
+    path: ./generated/manifests/prod/apps
     repoURL: https://github.com/sini/nix-config.git
     targetRevision: main
   syncPolicy:
