@@ -52,7 +52,7 @@
         open = true;
         nvidiaSettings = false;
         nvidiaPersistenced = true;
-        # package = config.boot.kernelPackages.nvidiaPackages.beta;
+        # package = config.boot.kernelPackages.nvidiaPackages.latest;
         #TODO:
         package =
           let
