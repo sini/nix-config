@@ -26,13 +26,26 @@ python3.pkgs.buildPythonApplication {
   installPhase = ''
     runHook preInstall
 
-    install -Dm755 k8s-update-manifests.py $out/bin/k8s-update-manifests
+    # Install the Python package
+    mkdir -p $out/${python3.sitePackages}
+    cp -r k8s_update_manifests $out/${python3.sitePackages}/
+
+    # Create the executable wrapper
+    mkdir -p $out/bin
+    cat > $out/bin/k8s-update-manifests <<EOF
+    #!${python3}/bin/python3
+    import sys
+    from k8s_update_manifests.__main__ import main
+    sys.exit(main())
+    EOF
+    chmod +x $out/bin/k8s-update-manifests
 
     runHook postInstall
   '';
 
   postFixup = ''
     wrapProgram $out/bin/k8s-update-manifests \
+      --prefix PYTHONPATH : $out/${python3.sitePackages} \
       --prefix PATH : ${
         lib.makeBinPath [
           nix
