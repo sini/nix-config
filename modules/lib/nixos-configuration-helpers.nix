@@ -155,7 +155,7 @@
 
             # Home Manager configuration for users
             makeHome =
-              username: userSpec:
+              username: _userSpec:
               let
                 # Get user contexts
                 globalUser = config.flake.users.${username} or { };

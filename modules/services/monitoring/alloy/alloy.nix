@@ -22,9 +22,9 @@
           currentHostEnvironment;
 
       # Find the first host with the metrics-ingester role in target environment
-      reportingHosts = lib.mapAttrsToList (hostname: hostConfig: builtins.head hostConfig.ipv4) (
+      reportingHosts = lib.mapAttrsToList (_hostname: hostConfig: builtins.head hostConfig.ipv4) (
         lib.attrsets.filterAttrs (
-          hostname: hostConfig:
+          _hostname: hostConfig:
           builtins.elem "metrics-ingester" hostConfig.roles && hostConfig.environment == targetEnvironment
         ) config.flake.hosts
       );

@@ -10,9 +10,9 @@ let
   findBgpHub =
     currentHostEnvironment:
     let
-      bgpHubHosts = lib.mapAttrsToList (hostname: hostConfig: builtins.head hostConfig.ipv4) (
+      bgpHubHosts = lib.mapAttrsToList (_hostname: hostConfig: builtins.head hostConfig.ipv4) (
         lib.attrsets.filterAttrs (
-          hostname: hostConfig:
+          _hostname: hostConfig:
           builtins.elem "bgp-hub" hostConfig.roles && hostConfig.environment == currentHostEnvironment
         ) config.flake.hosts
       );
