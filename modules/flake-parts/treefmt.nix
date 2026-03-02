@@ -24,7 +24,7 @@
         settings = {
           on-unmatched = "fatal";
           global.excludes = [
-            "kubernetes/generated/**"
+            "generated/**"
             ".secrets/**"
             "*.editorconfig"
             "*.envrc"
@@ -70,7 +70,7 @@
           actionlint.enable = true;
           fish_indent.enable = true;
           isort.enable = true;
-          # mdformat.enable = true; #TODO: re-enable when it supports markdown-it-py >= 4.0.0
+          mdformat.enable = true; # TODO: re-enable when it supports markdown-it-py >= 4.0.0
           nixfmt = {
             enable = true;
             package = pkgs.nixfmt;
