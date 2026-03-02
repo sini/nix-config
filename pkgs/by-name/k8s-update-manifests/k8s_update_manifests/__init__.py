@@ -7,11 +7,10 @@ and encryption using SOPS.
 
 __version__ = "1.0.0"
 
-from .environment_manager import EnvironmentManager
-from .file_sync import FileSync
+from .environment import EnvironmentManager
 from .models import EnvironmentMetadata, SecretOperation, SecretWorkItem
-from .secret_converter import SecretConverter
-from .secret_manager import SecretManager
+from .secrets import SecretConverter, SecretManager
+from .sync import FileSync
 from .utils import GitUtils, NixUtils, ProcessUtils, YAMLProcessor
 
 __all__ = [

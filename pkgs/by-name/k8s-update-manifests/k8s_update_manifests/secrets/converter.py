@@ -3,8 +3,7 @@
 import re
 from typing import Any, Dict, Optional
 
-# Annotation key for storing plaintext SHA256 hash
-PLAINTEXT_SHA_ANNOTATION = "secrets.json64.dev/plaintext-sha256"
+from .constants import PLAINTEXT_SHA_ANNOTATION
 
 
 class SecretConverter:

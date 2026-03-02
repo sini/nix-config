@@ -1,133 +1,13 @@
-"""Utility classes for process execution, YAML processing, Git, and Nix operations."""
+"""Nix utilities."""
 
-import hashlib
 import json
 import logging
-import os
 import platform
-import subprocess
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
-import yaml
-
-from .models import EnvironmentMetadata
-
-
-class ProcessUtils:
-    """Utility class for subprocess execution."""
-
-    @staticmethod
-    def run(
-        cmd: List[str],
-        *,
-        cwd: Optional[Path] = None,
-        input_text: Optional[str] = None,
-    ) -> str:
-        """Run a command, return stdout, raise on failure.
-
-        Args:
-            cmd: Command and arguments to execute
-            cwd: Working directory for command execution
-            input_text: Text to pass to stdin
-
-        Returns:
-            Command stdout as string
-
-        Raises:
-            RuntimeError: If command exits with non-zero status
-        """
-        process = subprocess.run(
-            cmd,
-            cwd=str(cwd) if cwd else None,
-            input=input_text,
-            text=True,
-            capture_output=True,
-            check=False,
-        )
-        if process.returncode != 0:
-            raise RuntimeError(
-                f"Command failed ({process.returncode}): {' '.join(cmd)}\n"
-                f"--- stdout ---\n{process.stdout}\n"
-                f"--- stderr ---\n{process.stderr}\n"
-            )
-        return process.stdout
-
-
-class YAMLProcessor:
-    """Utility class for YAML processing operations."""
-
-    @staticmethod
-    def load_documents(text: str) -> List[Dict[str, Any]]:
-        """Load YAML documents from text.
-
-        Args:
-            text: YAML text containing one or more documents
-
-        Returns:
-            List of parsed YAML documents as dictionaries
-
-        Raises:
-            ValueError: If a YAML document is not a mapping/object
-        """
-        docs: List[Dict[str, Any]] = []
-        for doc in yaml.safe_load_all(text):
-            if doc is None:
-                continue
-            if not isinstance(doc, dict):
-                raise ValueError("YAML document is not a mapping/object")
-            docs.append(doc)
-        return docs
-
-    @staticmethod
-    def dump_documents(docs: List[Dict[str, Any]]) -> str:
-        """Dump YAML documents to text.
-
-        Args:
-            docs: List of dictionaries to serialize as YAML
-
-        Returns:
-            YAML text with documents separated by '---'
-
-        Note:
-            Output is stable-ish but should not be relied upon for hashing.
-            Use sha256_hex() for content hashing instead.
-        """
-        return yaml.safe_dump_all(docs, sort_keys=True)
-
-    @staticmethod
-    def sha256_hex(text: str) -> str:
-        """Calculate SHA256 hash of text.
-
-        Args:
-            text: Text to hash
-
-        Returns:
-            Hexadecimal SHA256 hash string
-        """
-        hasher = hashlib.sha256()
-        hasher.update(text.encode("utf-8"))
-        return hasher.hexdigest()
-
-
-class GitUtils:
-    """Utility class for git operations."""
-
-    @staticmethod
-    def get_root() -> Optional[Path]:
-        """Get the root directory of the current git repository.
-
-        Returns:
-            Path to the git repository root, or None if not in a git repo.
-        """
-        try:
-            output = ProcessUtils.run(
-                ["git", "rev-parse", "--show-toplevel"],
-                cwd=Path(os.getcwd()),
-            )
-            return Path(output.strip())
-        except Exception:
-            return None
+from ..models import EnvironmentMetadata
+from .process import ProcessUtils
 
 
 class NixUtils:
