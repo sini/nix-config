@@ -1,57 +1,14 @@
-"""Environment synchronization between source and target directories."""
+"""Environment synchronization management."""
 
 import logging
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional
 
-from .file_sync import FileSync
-from .models import EnvironmentMetadata
-from .secret_manager import SecretManager
-
-
-class FileSystemScanner:
-    """Scans filesystem directories to find files and subdirectories."""
-
-    @staticmethod
-    def scan_path(path: Path) -> Tuple[List[Path], List[Path]]:
-        """Scan a directory tree and return all files and directories.
-
-        Args:
-            path: Directory path to scan
-
-        Returns:
-            Tuple of (files, directories) as lists of Path objects
-        """
-        files: List[Path] = []
-        directories: List[Path] = []
-        for root, dirs, filenames in path.walk(follow_symlinks=True):
-            directories.append(root)
-            directories.extend(root / d for d in dirs)
-            files.extend(root / f for f in filenames)
-        return files, directories
-
-
-class PathConverter:
-    """Utility for converting between absolute and relative paths."""
-
-    def __init__(self, base_path: Path):
-        """Initialize PathConverter.
-
-        Args:
-            base_path: Base path for relative conversions
-        """
-        self.base_path = base_path
-
-    def to_relative(self, file_path: Path) -> Path:
-        """Convert absolute path to relative path from base.
-
-        Args:
-            file_path: Absolute path to convert
-
-        Returns:
-            Relative path from base
-        """
-        return file_path.relative_to(self.base_path)
+from ..models import EnvironmentMetadata
+from ..secrets import SecretManager
+from ..sync import FileSync
+from .path_converter import PathConverter
+from .scanner import FileSystemScanner
 
 
 class EnvironmentManager:

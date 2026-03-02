@@ -5,7 +5,7 @@ import logging
 import sys
 from pathlib import Path
 
-from .environment_manager import EnvironmentManager
+from .environment import EnvironmentManager
 from .models import EnvironmentMetadata
 from .utils import GitUtils, NixUtils
 
