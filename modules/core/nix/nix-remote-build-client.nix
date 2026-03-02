@@ -33,7 +33,7 @@ in
           sshUser = "nix-remote-build";
           # The client side private key for login as sshUser
           sshKey = config.age.secrets.nix-remote-build-user-key.path;
-        }) builders;
+        }) (lib.filterAttrs (hostname: _: hostname != config.networking.hostName) builders);
 
         settings = {
           builders-use-substitutes = true;
