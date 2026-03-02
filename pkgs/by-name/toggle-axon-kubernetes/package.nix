@@ -128,9 +128,30 @@ writeShellApplication {
     commit_and_push() {
       local action="$1"
       echo ""
-      echo "==> Committing and pushing changes..."
+      echo "==> Preparing to commit and push changes..."
       cd "$REPO_ROOT"
-      git add modules/hosts/axon-*/host.nix kubernetes/generated/manifests/
+      git add modules/hosts/axon-*/host.nix generated/manifests/
+
+      # Show the changes that will be committed
+      echo ""
+      echo "Changes to be committed:"
+      echo "----------------------------------------"
+      git diff --cached --stat
+      echo "----------------------------------------"
+      echo ""
+      echo "Commit message: chore: ''${action} axon cluster"
+      echo ""
+
+      # Prompt for confirmation
+      read -p "Do you want to commit and push these changes? (y/N): " -n 1 -r
+      echo ""
+      if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Aborted. Rolling back changes..."
+        git restore --staged modules/hosts/axon-*/host.nix generated/manifests/
+        exit 1
+      fi
+
+      echo "==> Committing and pushing changes..."
       git commit -m "chore: ''${action} axon cluster"
       git push
     }

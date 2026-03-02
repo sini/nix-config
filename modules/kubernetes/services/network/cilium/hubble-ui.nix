@@ -58,7 +58,7 @@
               ];
 
               oidc = {
-                provider.issuer = "https://idm.${environment.domain}/oauth2/openid/hubble";
+                provider.issuer = secrets.oidcIssuerFor "hubble";
                 clientID = "hubble";
                 clientSecret.name = "hubble-oidc-client-secret";
                 # cookieDomain = "${environment.domain}";

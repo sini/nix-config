@@ -51,22 +51,6 @@
                     value = "1";
                   }
                 ];
-
-                # ingress = {
-                #   enabled = true;
-                #   ingressClassName = "cilium";
-                #   annotations = {
-                #     "cert-manager.io/cluster-issuer" = "cloudflare-issuer";
-                #   };
-                #   extraTls = [
-                #     {
-                #       hosts = [
-                #         "argocd.${environment.domain}"
-                #       ];
-                #       secretName = "wildcard-tls";
-                #     }
-                #   ];
-                # };
               };
 
               # Repository Server
@@ -129,7 +113,7 @@
                   '';
                   "oidc.config" = builtins.toJSON {
                     name = "kanidm";
-                    issuer = "https://idm.${environment.domain}/oauth2/openid/argocd";
+                    issuer = secrets.oidcIssuerFor "argocd";
                     clientID = "argocd";
                     clientSecret = "$oidc.clientSecret";
                     enablePKCEAuthentication = true;
@@ -153,8 +137,8 @@
               global.networkPolicy.create = true;
             };
           };
-          resources = {
 
+          resources = {
             httpRoutes.argocd-server.spec = {
               parentRefs = [
                 {
@@ -212,10 +196,7 @@
             #   };
             # };
 
-            secrets.argocd-redis = {
-              type = "Opaque";
-              stringData.auth = secrets.for "argocd-redis";
-            };
+            secrets.argocd-redis.stringData.auth = secrets.for "argocd-redis";
 
             secrets.argocd-secret.stringData = {
               "admin.password" = secrets.for "argocd-admin-password";
