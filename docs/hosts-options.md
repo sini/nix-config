@@ -17,11 +17,6 @@ Baseline configurations for repeatable configuration types on this host
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.hosts\.\<name>\.baseline\.home
 
 

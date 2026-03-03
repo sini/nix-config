@@ -17,11 +17,6 @@ Baseline features and configurations shared by all of this user’s configuratio
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.users\.\<name>\.baseline\.features
 
 

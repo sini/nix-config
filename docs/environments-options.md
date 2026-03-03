@@ -17,11 +17,6 @@ ACME certificate authority configuration
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.environments\.\<name>\.acme\.dnsProvider
 
 
@@ -66,11 +61,6 @@ string
 
 
 Cross-environment delegation configuration
-
-
-
-*Type:*
-submodule
 
 
 
@@ -147,11 +137,6 @@ Email configuration for the environment
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.environments\.\<name>\.email\.adminEmail
 
 
@@ -222,11 +207,6 @@ signed integer
 
 
 IPv6 ULA and prefix configuration for NPTv6 translation
-
-
-
-*Type:*
-submodule
 
 
 
@@ -303,11 +283,6 @@ Kubernetes-specific network configuration
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.environments\.\<name>\.kubernetes\.clusterCidr
 
 
@@ -339,11 +314,6 @@ string
 
 
 LoadBalancer configuration
-
-
-
-*Type:*
-submodule
 
 
 
@@ -408,11 +378,6 @@ Use ‘enabled’ to enable services and ‘config’ for service-specific optio
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.environments\.\<name>\.kubernetes\.services\.enabled
 
 
@@ -433,11 +398,6 @@ list of string
 
 Service-specific configurations for this environment\.
 Options are imported from flake\.kubernetes\.services\.\<name>\.options\.
-
-
-
-*Type:*
-submodule
 
 
 
@@ -485,11 +445,6 @@ attribute set
 
 
 Configuration for cilium service
-
-
-
-*Type:*
-submodule
 
 
 
@@ -592,11 +547,6 @@ Configuration for sops-secrets-operator service
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.environments\.\<name>\.kubernetes\.services\.config\.sops-secrets-operator\.replicaCount
 
 
@@ -615,11 +565,6 @@ signed integer
 
 
 Single Sign-On configuration
-
-
-
-*Type:*
-submodule
 
 
 
@@ -672,11 +617,6 @@ Geographic location information
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.environments\.\<name>\.location\.country
 
 
@@ -708,11 +648,6 @@ string
 
 
 Monitoring configuration including cross-environment scanning
-
-
-
-*Type:*
-submodule
 
 
 

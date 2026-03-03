@@ -4,11 +4,6 @@ Global Kubernetes configuration
 
 
 
-*Type:*
-submodule
-
-
-
 ## flake\.kubernetes\.clusterCidr
 
 
@@ -40,11 +35,6 @@ string
 
 
 LoadBalancer configuration
-
-
-
-*Type:*
-submodule
 
 
 
