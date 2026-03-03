@@ -43,38 +43,19 @@ sini's [NixOS](https://nix.dev) homelab and workstation configuration repository
 | [patch](modules/hosts/patch/)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
 | [vault](modules/hosts/vault/)         | 1tb NVME + 80tb NFS - 2x1gbe + 2.5gbe                                                                   |     NAS     |  x86_64-linux  |
 
-## Host Options
+## Flake Options
 
-This repository defines a set of hosts in the `flake.hosts` attribute set.
-Each host is defined as a submodule with its own configuration options.
-The host configurations can be used to deploy NixOS configurations to remote
-machines using Colmena or for local development. These options are defined for
-every host and include:
+This repository defines configuration options in the following attribute sets:
 
-- `system`: The system architecture of the host (e.g., `x86_64-linux`).
-- `unstable`: Whether to use unstable packages for the host.
-- `ipv4`: The static IP addresses of this host in it's home vlan.
-- `ipv6`: The static IPv6 addresses of this host.
-- `roles`: A list of roles for the host, which can also be used to target deployment.
-- `features`: A list of features to enable for the host.
-- `exclude-features`: A list of features to exclude (prevents the feature and its requires from being added).
-- `public_key`: The path or value of the public SSH key for the host used for encryption.
-- `facts`: The path to the Facter JSON file for the host, which is used to provide
-  additional information about the host and for automated hardware configuration.
-- `extra_modules`: A list of additional modules to include for the host.
-- `tags`: An attribute set of string key-value pairs to annotate hosts with metadata.
-  For example: `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
-  Special tags:
-  - `kubernetes-cluster`: Groups hosts into Kubernetes clusters
-  - `kubernetes-internal-ip`: Override IP for Kubernetes internal communication (defaults to host ipv4)
-  - `bgp-asn`: BGP AS number for this host (used by bgp-hub and thunderbolt-mesh modules)
-  - `thunderbolt-loopback-ipv4`: Loopback IPv4 address for thunderbolt mesh BGP peering (e.g., "172.16.255.1/32")
-  - `thunderbolt-loopback-ipv6`: Loopback IPv6 address for thunderbolt mesh BGP peering (e.g., "fdb4:5edb:1b00::1/128")
-  - `thunderbolt-interface-1`: IPv4 address for first thunderbolt interface (e.g., "169.254.12.0/31")
-  - `thunderbolt-interface-2`: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
-- `exporters`: An attribute set defining Prometheus exporters exposed by this host.
-  For example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
+- **[environments](docs/environments-options.md)**: Environment settings including network and infrastructure configuration that can be shared across hosts. Each environment contains topology definitions for domains, networks, Kubernetes clusters, and ACME settings.
 
+- **[hosts](docs/hosts-options.md)**: Host definitions for individual machines. Each host configuration includes system architecture, IP addresses, roles, hardware settings, and deployment configuration for Colmena/deploy-rs.
+
+- **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration options for k3s deployments.
+
+- **[users](docs/users-options.md)**: User account definitions and configuration options.
+
+See the linked documentation files for complete option references.
 ## Remote deployment via Colmena
 
 This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
