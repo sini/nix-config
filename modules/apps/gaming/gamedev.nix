@@ -12,8 +12,8 @@
           # unity3d
           # ue4
 
-          # TODO: move off of stable pin
-          pkgs.stable.rx # rx is a modern and minimalist pixel editor.
+          # TODO: broken upstream
+          #rx # rx is a modern and minimalist pixel editor.
 
           ldtk # A modern 2D level editor from the director of Dead Cells.
 
@@ -35,7 +35,7 @@
           alda
           lenmus
           milkytracker
-          pkgs.stable.sonic-pi # TODO: move off of stable pin
+          # sonic-pi # TODO: broken upstream
           supercollider
           famistudio
           furnace
