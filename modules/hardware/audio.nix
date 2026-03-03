@@ -129,14 +129,14 @@
           openal
           pulseaudio
 
-          #yabridge # TODO: re-enable when fixed upstream
-          #yabridgectl
-          # beets # TODO: Blocked on python docscumm
+          yabridge
+          yabridgectl
+          # beets # TODO: blocked on python docsumm
 
           # VST stuff
           vital
           odin2
-          # surge # TODO: Re-enable
+          # surge # TODO: broken in nixpkgs
           fire
           decent-sampler
           lsp-plugins

@@ -13,6 +13,10 @@
       "ssh"
       "sysmon"
       "yazi"
+
+      # Lang support
+      "python"
+
       #"zellij"
 
       # Admin tools

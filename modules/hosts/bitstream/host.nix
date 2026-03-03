@@ -12,15 +12,11 @@
     environment = "dev";
     roles = [
       "server"
-      #      "kubernetes"
       "workstation"
-      #      "gaming"
       "dev"
       "dev-gui"
       "media"
-      # TODO:
-      # "nix-builder"
-      # "vault"
+      "nix-builder"
     ];
     features = [
       "disk-single"

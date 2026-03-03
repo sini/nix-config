@@ -28,7 +28,7 @@
         home.packages = with pkgs; [
           igir # Rom organization
           prismlauncher # Minecraft launcher
-          # lutris # General games # TODO: Re-enable
+          lutris # General games
 
           # Emulators
           sameboy # GB/GBC

@@ -102,7 +102,6 @@
         #   edid = "samsung-odyssey-ark-g1.bin";
         # };
 
-        # For Network Manager TODO: RENAME
         hardware.networking.unmanagedInterfaces = [
           "enp8s0"
           "br0"
