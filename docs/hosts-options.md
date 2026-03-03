@@ -1,9 +1,9 @@
-- `flake.hosts`: [attribute set of (submodule)] This option has no description.
-- `flake.hosts.<name>.baseline`: [null] Baseline configurations for repeatable configuration types on this host
+- `flake.hosts`: This option has no description.
+- `flake.hosts.<name>.baseline`: Baseline configurations for repeatable configuration types on this host
 - `flake.hosts.<name>.baseline.home`: [module] Host-specific home-manager configuration, applied to all users for host.
 - `flake.hosts.<name>.environment`: [string] Environment name that this host belongs to (references flake.environments)
 - `flake.hosts.<name>.exclude-features`: [list of string] List of features to exclude for the host (prevents the feature and its requires from being added)
-- `flake.hosts.<name>.exporters`: [attribute set of (submodule)] Prometheus exporters exposed by this host.
+- `flake.hosts.<name>.exporters`: Prometheus exporters exposed by this host.
 Example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
 
 - `flake.hosts.<name>.exporters.<name>.interval`: [string] Scrape interval
@@ -30,7 +30,7 @@ Special tags:
 - thunderbolt-interface-2: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
 
 - `flake.hosts.<name>.unstable`: [boolean] This option has no description.
-- `flake.hosts.<name>.users`: [lazy attribute set of (submodule)] Users on this host with their features and configuration
+- `flake.hosts.<name>.users`: Users on this host with their features and configuration
 - `flake.hosts.<name>.users.<name>.configuration`: [module] User-specific home configuration
 - `flake.hosts.<name>.users.<name>.features`: [list of string] List of features specific to the user.
 
