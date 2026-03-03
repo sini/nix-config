@@ -146,11 +146,7 @@ in
                 Example: `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
 
                 Special tags:
-                - kubernetes-cluster: Groups hosts into Kubernetes clusters
-                - kubernetes-internal-ip: Override IP for Kubernetes internal communication (defaults to host ipv4)
                 - bgp-asn: BGP AS number for this host (used by bgp-hub and thunderbolt-mesh modules)
-                - thunderbolt-loopback-ipv4: Loopback IPv4 address for thunderbolt mesh BGP peering (e.g., "172.16.255.1/32")
-                - thunderbolt-loopback-ipv6: Loopback IPv6 address for thunderbolt mesh BGP peering (e.g., "fdb4:5edb:1b00::1/128")
                 - thunderbolt-interface-1: IPv4 address for first thunderbolt interface (e.g., "169.254.12.0/31")
                 - thunderbolt-interface-2: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
               '';
