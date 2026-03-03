@@ -1,5 +1,5 @@
-- `flake.users`: [lazy attribute set of (submodule)] User specifications and configurations
-- `flake.users.<name>.baseline`: [null] Baseline features and configurations shared by all of this user's configurations
+- `flake.users`: User specifications and configurations
+- `flake.users.<name>.baseline`: Baseline features and configurations shared by all of this user's configurations
 - `flake.users.<name>.baseline.features`: [list of string] List of baseline features shared by all of this user's configurations.
 
 Note that the "core" feature
@@ -19,7 +19,7 @@ This allows for more granular control over which users get which features on
 shared systems.
 
 - `flake.users.<name>.configuration`: [module] NixOS configuration for this user
-- `flake.users.<name>.features`: [lazy attribute set of (submodule)] User-specific feature definitions.
+- `flake.users.<name>.features`: User-specific feature definitions.
 
 Note that due to these features' nature as user-specific, they
 may not define NixOS modules, which would affect the entire system.

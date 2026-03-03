@@ -1,11 +1,11 @@
-- `flake.kubernetes`: [null] Global Kubernetes configuration
+- `flake.kubernetes`: Global Kubernetes configuration
 - `flake.kubernetes.clusterCidr`: [string] Kubernetes pod network CIDR
 - `flake.kubernetes.kubeAPIVIP`: [string] Kubernetes API VIP
-- `flake.kubernetes.loadBalancer`: [null] LoadBalancer configuration
+- `flake.kubernetes.loadBalancer`: LoadBalancer configuration
 - `flake.kubernetes.loadBalancer.cidr`: [string] IP range for LoadBalancer services
 - `flake.kubernetes.loadBalancer.reservations`: [attribute set of string] Reserved IP addresses for specific LoadBalancer services
 - `flake.kubernetes.serviceCidr`: [string] Kubernetes service network CIDR
-- `flake.kubernetes.services`: [lazy attribute set of (submodule)] Kubernetes service definitions with their nixidy modules
+- `flake.kubernetes.services`: Kubernetes service definitions with their nixidy modules
 - `flake.kubernetes.services.<name>.crds`: [null or raw value] CRD generator configuration function for this service.
 
 Should be a function that receives perSystem module args ({ pkgs, lib, inputs, system, ... })

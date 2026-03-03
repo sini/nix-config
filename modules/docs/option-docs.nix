@@ -43,7 +43,13 @@
                 };
               in
               pkgs.runCommand "${name}-options.md" { buildInputs = [ pkgs.jq ]; } ''
-                jq -r 'to_entries | map("- `\(.key)`: [\(.value.type)] \(.value.description)") | join("\n")' \
+                jq -r 'to_entries | map(
+                  if (.value.type == null or (.value.type | tostring | contains("submodule"))) then
+                    "- `\(.key)`: \(.value.description)"
+                  else
+                    "- `\(.key)`: [\(.value.type)] \(.value.description)"
+                  end
+                ) | join("\n")' \
                   ${doc.optionsJSON}/share/doc/nixos/options.json > $out
               '';
           };
