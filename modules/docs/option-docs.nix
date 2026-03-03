@@ -38,16 +38,25 @@
                       declarations = [ ]; # Keeps the output cleaner for READMEs
                       # Optional: Hide the type if it's just 'submodule' to save space
                       type = if opt.type == "submodule" then null else opt.type;
-                      # visible = (opt.description != null) && !(opt.type == "submodule");
+                      visible = (opt.description != null); # && !(opt.type == "submodule");
                     };
                 };
               in
               pkgs.runCommand "${name}-options.md" { buildInputs = [ pkgs.jq ]; } ''
                 jq -r 'to_entries | map(
-                  if (.value.type == null or (.value.type | tostring | contains("submodule"))) then
-                    "- `\(.key)`: \(.value.description)"
+                  .value.isMultiline = (.value.description | contains("\n")) |
+                  if (.value.type == null or (.value.type | tostring | contains("submodule")) or (.value.type | tostring | contains("raw"))) then
+                    if .value.isMultiline then
+                      "* `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  "))"
+                    else
+                      "* `\(.key)`: \(.value.description)"
+                    end
                   else
-                    "- `\(.key)`: [\(.value.type)] \(.value.description)"
+                    if .value.isMultiline then
+                      "* `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  "))"
+                    else
+                      "* `\(.key)`: [\(.value.type)] \(.value.description)"
+                    end
                   end
                 ) | join("\n")' \
                   ${doc.optionsJSON}/share/doc/nixos/options.json > $out
