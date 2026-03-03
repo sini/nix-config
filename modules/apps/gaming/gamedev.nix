@@ -35,7 +35,7 @@
           alda
           lenmus
           milkytracker
-          sonic-pi
+          # sonic-pi # TODO: blocked on a cmake build error
           supercollider
           famistudio
           furnace
