@@ -9,27 +9,6 @@ let
   inherit (self.lib.kubernetes-services) kubernetesConfigType;
 in
 {
-  config.text.readme.parts.environment-options =
-    # markdown
-    ''
-      ## Environment Options
-
-      This repository defines environment settings in the `flake.environments` attribute set.
-      Each environment contains network and infrastructure configuration that can be shared
-      across hosts. These options define the infrastructure topology and include:
-
-      - `name`: Human-readable environment name (e.g., "dev", "prod").
-      - `domain`: Base domain for the environment (e.g., "json64.dev").
-      - `gatewayIp`: Gateway IP address for the environment's primary network.
-      - `dnsServers`: List of DNS server IPs for the environment.
-      - `networks`: Network definitions including IPv4/IPv6 subnets and purposes.
-      - `ipv6`: IPv6 ULA prefix configuration for NPTv6 translation.
-      - `kubernetes`: Kubernetes-specific network configuration.
-      - `email`: Default email settings for the environment.
-      - `acme`: ACME certificate authority settings.
-
-    '';
-
   options.flake.environments =
     let
       networkType = types.submodule {

@@ -5,7 +5,7 @@
       "logo"
       "header"
       "hosts"
-      "host-options"
+      "flake-options"
       "colmena"
       "users"
       "automatic-import"
