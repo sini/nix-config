@@ -134,6 +134,10 @@ using [the _files_ flake-parts module](https://github.com/mightyiam/files):
 
 - `.gitignore`
 - `LICENSE`
+- `docs/environments-options.md`
+- `docs/hosts-options.md`
+- `docs/kubernetes-options.md`
+- `docs/users-options.md`
 - `README.md`
 - `generated/bgp/unifi-frr-bgp-dev.conf`
 - `generated/bgp/unifi-frr-bgp-prod.conf`
