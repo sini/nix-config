@@ -38,14 +38,6 @@
 
     split-monitor-workspaces =
       inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system}.split-monitor-workspaces;
-    # # TODO: remove once nixpkgs is fixed
-    # ddcutil = prev.ddcutil.overrideAttrs (old: {
-    #   version = "2.2.3";
-    #   src = prev.fetchurl {
-    #     url = "https://www.ddcutil.com/tarballs/ddcutil-2.2.3.tar.gz";
-    #     hash = "sha256-4XvAUqYvnqhS2eOLpPHtfnNmVnoOGdvhpDnuca2+BqA=";
-    #   };
-    # });
 
     kvmfr = prev.kvmfr.override { looking-glass-client = prev.local.looking-glass-client-vulkan; };
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;

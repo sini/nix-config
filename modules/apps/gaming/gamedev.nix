@@ -12,7 +12,9 @@
           # unity3d
           # ue4
 
+          # TODO: blocked on cmake change, maybe try and fix it upstream?
           # rx # rx is a modern and minimalist pixel editor.
+
           ldtk # A modern 2D level editor from the director of Dead Cells.
 
           # images
@@ -33,7 +35,7 @@
           alda
           lenmus
           milkytracker
-          #sonic-pi  # TODO: restore...
+          sonic-pi
           supercollider
           famistudio
           furnace

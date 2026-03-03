@@ -29,7 +29,7 @@
       "firefox"
       "obs-studio"
       # TODO: Re-enable and configure
-      # "obsidian" # note-taking app
+      "obsidian" # note-taking app
       "zathura" # PDF viewer
 
       "tailscale"
