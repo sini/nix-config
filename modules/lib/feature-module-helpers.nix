@@ -28,6 +28,15 @@ let
     home = mkDeferredModuleOpt "A Home-Manager module for this feature";
   };
 
+  mkFeatureNameOpt =
+    name:
+    mkOption {
+      type = types.str;
+      default = name;
+      readOnly = true;
+      internal = true;
+    };
+
   mkUsersWithFeaturesOpt =
     description:
     mkOption {
@@ -59,6 +68,7 @@ in
   flake.lib.modules = {
     inherit
       featureSubmoduleGenericOptions
+      mkFeatureNameOpt
       mkDeferredModuleOpt
       mkUsersWithFeaturesOpt
       ;

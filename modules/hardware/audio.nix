@@ -131,12 +131,12 @@
 
           yabridge
           yabridgectl
-          # beets # TODO: blocked on python docsumm
+          pkgs.stable.beets # TODO: blocked on python docsumm
 
           # VST stuff
           vital
           odin2
-          # surge # TODO: broken in nixpkgs
+          pkgs.stable.surge # TODO: broken in nixpkgs
           fire
           decent-sampler
           lsp-plugins
