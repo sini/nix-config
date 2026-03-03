@@ -82,7 +82,7 @@ in
     { pkgs, ... }:
     {
       files.files = lib.mapAttrsToList (envName: env: {
-        path_ = "docs/unifi-frr-bgp-${envName}.conf";
+        path_ = "generated/bgp/unifi-frr-bgp-${envName}.conf";
         drv = pkgs.writeText "unifi-frr-bgp-${envName}.conf" (generateFrrConfig envName env);
       }) environments;
     };
