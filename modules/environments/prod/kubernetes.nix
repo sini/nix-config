@@ -45,6 +45,7 @@
         "amd-gpu-device-plugin"
 
         # Storage drivers
+        "external-snapshotter"
         "csi-driver-nfs"
       ];
       config = {
