@@ -14,7 +14,7 @@
     nixidy =
       {
         config,
-        crdFiles,
+        crdObjects,
         lib,
         ...
       }:
@@ -44,6 +44,9 @@
 
         # Find all CRD objects that need to be deployed
         objectCrds = globalObjects |> lib.filter (object: object.kind == "CustomResourceDefinition");
+
+        # Get CRD objects from service definitions (helm charts, etc.)
+        serviceCrds = publicApps |> map (app: crdObjects.${app} or [ ]) |> lib.flatten;
       in
       {
         applications.bootstrap = {
@@ -66,10 +69,8 @@
 
           # Deploy early (wave -3) so CRDs and namespaces exist before other apps
           annotations."argocd.argoproj.io/sync-wave" = "-3";
-          # Load CRD YAML files from each public application
-          yamls = publicApps |> map (app: crdFiles.${app} or [ ]) |> lib.flatten |> map builtins.readFile;
-          # Include CRD objects found in application definitions
-          objects = objectCrds;
+          # Include CRD objects from services (helm charts) and applications
+          objects = serviceCrds ++ objectCrds;
           # Create all required namespaces (except system ones)
           # Set Prune=false to prevent accidental namespace deletion
           resources.namespaces =
