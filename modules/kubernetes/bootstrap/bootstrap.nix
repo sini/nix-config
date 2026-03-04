@@ -22,9 +22,6 @@
         # Collect all unique namespaces declared by applications
         appNamespaces = lib.unique (map (app: app.namespace) (builtins.attrValues config.applications));
 
-        # Get all public apps except bootstrap itself to avoid circular dependency
-        publicApps = lib.filter (app: app != "bootstrap") config.nixidy.publicApps;
-
         # Gather all Kubernetes objects from applications (excluding bootstrap)
         globalObjects =
           builtins.attrValues config.applications
@@ -46,7 +43,7 @@
         # objectCrds = globalObjects |> lib.filter (object: object.kind == "CustomResourceDefinition");
 
         # Get CRD objects from service definitions (helm charts, etc.)
-        serviceCrds = publicApps |> map (app: crdObjects.${app} or [ ]) |> lib.flatten;
+        serviceCrds = crdObjects |> builtins.attrValues |> lib.flatten;
       in
       {
         applications.bootstrap = {

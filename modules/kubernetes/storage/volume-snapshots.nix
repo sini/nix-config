@@ -26,9 +26,9 @@
       };
 
     nixidy = {
-      applications.volume-snapshots = {
-        namespace = "kube-system";
-      };
+      # applications.volume-snapshots = {
+      #   namespace = "kube-system";
+      # };
     };
   };
 }
