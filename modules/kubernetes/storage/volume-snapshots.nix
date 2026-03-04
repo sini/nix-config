@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.external-snapshotter = {
+  flake.kubernetes.services.volume-snapshots = {
     crds =
       { pkgs, lib, ... }:
       let
@@ -26,7 +26,7 @@
       };
 
     nixidy = {
-      applications.external-snapshotter = {
+      applications.volume-snapshots = {
         namespace = "kube-system";
       };
     };
