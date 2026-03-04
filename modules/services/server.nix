@@ -3,14 +3,6 @@
   flake.features.server.nixos =
     { lib, ... }:
     {
-      # Servers don't sleep
-      systemd.sleep.extraConfig = ''
-        AllowSuspend=no
-        AllowHibernation=no
-        AllowHybridSleep=no
-        AllowSuspendThenHibernate=no
-      '';
-
       systemd.targets = (
         lib.genAttrs
           [
