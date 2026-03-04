@@ -42,12 +42,22 @@
           service,
           accessGroups ? [ "admins" ],
         }:
+        let
+          domain =
+            if
+              environment.kubernetes.services.config ? ${service}
+              && environment.kubernetes.services.config.${service} ? domain
+            then
+              environment.kubernetes.services.config.${service}.domain
+            else
+              "${service}.${environment.domain}";
+        in
         {
           displayName = service;
           originUrl = [
-            "https://${environment.kubernetes.services.config.${service}.domain}/oauth2/callback"
+            "https://${domain}/oauth2/callback"
           ];
-          originLanding = "https://${environment.kubernetes.services.config.${service}.domain}/";
+          originLanding = "https://${domain}/";
           basicSecretFile = config.age.secrets."${service}-oidc-client-secret".path;
           scopeMaps = lib.genAttrs accessGroups (_group: [
             "openid"
