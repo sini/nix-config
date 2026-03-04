@@ -49,6 +49,20 @@
         "csi-driver-nfs"
       ];
       config = {
+        coredns.clusterIP = "172.21.0.10";
+        cert-manager = {
+          domains = {
+            "json64.dev" = {
+              issuer = "json64-dev";
+            };
+          };
+          issuers = {
+            "json64-dev" = {
+              sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+              secretKey = "cloudflare-api-token";
+            };
+          };
+        };
         cilium = {
           devices = [
             "br0" # "enp2s0"

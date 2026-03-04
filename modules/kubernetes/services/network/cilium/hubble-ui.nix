@@ -1,3 +1,7 @@
+{ self, ... }:
+let
+  inherit (self.lib.kubernetes-utils) domainToResourceName;
+in
 {
   flake.kubernetes.services.hubble-ui = {
     nixidy =
@@ -32,7 +36,7 @@
                 {
                   name = "default-gateway";
                   namespace = "kube-system";
-                  sectionName = "https";
+                  sectionName = "${domainToResourceName environment.domain}-https";
                 }
               ];
               hostnames = [ "hubble.${environment.domain}" ];

@@ -1,6 +1,6 @@
 { self, ... }:
 let
-  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
+  inherit (self.lib.kubernetes-utils) findKubernetesNodes domainToResourceName;
 in
 {
   flake.kubernetes.services.envoy-gateway = {
@@ -26,6 +26,7 @@ in
       let
         gateway-controller-address = config.kubernetes.loadBalancer.reservations.gateway-controller;
         numReplicas = builtins.length (lib.attrValues (findKubernetesNodes environment));
+        cert-manager-domains = config.kubernetes.services.cert-manager.domains;
       in
       {
         applications.envoy-gateway = {
@@ -80,33 +81,43 @@ in
                   kind = "EnvoyProxy";
                   name = "envoy-proxy-config";
                 };
-                listeners = [
-                  {
-                    name = "http";
-                    protocol = "HTTP";
-                    port = 80;
-                    # hostname = "*.${environment.domain}";
-                    allowedRoutes.namespaces.from = "All";
-                  }
-                  {
-                    name = "https";
-                    protocol = "HTTPS";
-                    port = 443;
-                    # hostname = "*.${environment.domain}";
-                    allowedRoutes.namespaces.from = "All";
-                    tls = {
-                      mode = "Terminate";
-                      certificateRefs = [
-                        {
-                          group = "";
-                          kind = "Secret";
-                          name = "wildcard-tls";
-                          namespace = "security";
-                        }
-                      ];
-                    };
-                  }
-                ];
+                listeners =
+                  cert-manager-domains
+                  |> builtins.attrNames
+                  |> map (
+                    domain:
+                    let
+                      domainResourceName = domainToResourceName domain;
+                    in
+                    [
+                      {
+                        name = "${domainResourceName}-http";
+                        protocol = "HTTP";
+                        port = 80;
+                        hostname = "*.${domain}";
+                        allowedRoutes.namespaces.from = "All";
+                      }
+                      {
+                        name = "${domainResourceName}-https";
+                        protocol = "HTTPS";
+                        port = 443;
+                        hostname = "*.${domain}";
+                        allowedRoutes.namespaces.from = "All";
+                        tls = {
+                          mode = "Terminate";
+                          certificateRefs = [
+                            {
+                              group = "";
+                              kind = "Secret";
+                              name = "${domainResourceName}-wildcard-tls";
+                              namespace = "certs";
+                            }
+                          ];
+                        };
+                      }
+                    ]
+                  )
+                  |> lib.flatten;
               };
             };
 
@@ -149,8 +160,8 @@ in
               };
             };
 
-            referenceGrants.allow-kubesystem-gateway-to-wildcard-tls = {
-              metadata.namespace = "security";
+            referenceGrants.allow-kubesystem-gateway-to-cert-manager-tls = {
+              metadata.namespace = "certs";
               spec = {
                 from = [
                   {
@@ -159,15 +170,15 @@ in
                     namespace = "kube-system";
                   }
                 ];
-                to = [
-                  {
+                to =
+                  cert-manager-domains
+                  |> builtins.attrNames
+                  |> map (domain: {
                     group = "";
                     kind = "Secret";
-                    name = "wildcard-tls";
-                  }
-                ];
+                    name = "${domainToResourceName domain}-wildcard-tls";
+                  });
               };
-
             };
 
             ciliumNetworkPolicies = {

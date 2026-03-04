@@ -1,3 +1,7 @@
+{ self, ... }:
+let
+  inherit (self.lib.kubernetes-utils) domainToResourceName;
+in
 {
   flake.kubernetes.services.argocd = {
     nixidy =
@@ -65,7 +69,6 @@
                 ];
                 readinessProbe.timeoutSeconds = 60;
                 livenessProbe.timeoutSeconds = 60;
-
               };
 
               # Redis (for caching)
@@ -144,7 +147,7 @@
                 {
                   name = "default-gateway";
                   namespace = "kube-system";
-                  sectionName = "https";
+                  sectionName = "${domainToResourceName environment.domain}-https";
                 }
               ];
               hostnames = [ "argocd.${environment.domain}" ];
@@ -230,6 +233,10 @@
                           ports = [
                             {
                               port = "53";
+                              protocol = "ANY";
+                            }
+                            {
+                              port = "853";
                               protocol = "ANY";
                             }
                           ];

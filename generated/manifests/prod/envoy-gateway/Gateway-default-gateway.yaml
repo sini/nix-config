@@ -14,19 +14,21 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      name: http
+      hostname: '*.json64.dev'
+      name: json64-dev-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      name: https
+      hostname: '*.json64.dev'
+      name: json64-dev-https
       port: 443
       protocol: HTTPS
       tls:
         certificateRefs:
           - group: ""
             kind: Secret
-            name: wildcard-tls
-            namespace: security
+            name: json64-dev-wildcard-tls
+            namespace: certs
         mode: Terminate
