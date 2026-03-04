@@ -16,7 +16,7 @@
         ];
       };
       home.shellAliases = {
-        cat = "${lib.getExe pkgs.bat} --color=always --style=plain --paging=never";
+        cat = "${lib.getExe pkgs.bat} -pp";
       };
     };
 }
