@@ -5,9 +5,9 @@ metadata:
   namespace: kube-system
 spec:
   oidc:
-    clientID: hubble
+    clientID: hubble-ui
     clientSecret:
-      name: hubble-oidc-client-secret
+      name: hubble-ui-oidc-client-secret
     forwardAccessToken: true
     provider:
       issuer: https://idm.json64.dev/oauth2/openid/hubble

@@ -39,16 +39,16 @@
 
       envoyOidcConfigFor =
         {
-          name,
+          service,
           accessGroups ? [ "admins" ],
         }:
         {
-          displayName = name;
+          displayName = service;
           originUrl = [
-            "https://${name}.${environment.domain}/oauth2/callback"
+            "https://${environment.kubernetes.services.config.${service}.domain}/oauth2/callback"
           ];
-          originLanding = "https://${name}.${environment.domain}/";
-          basicSecretFile = config.age.secrets."${name}-oidc-client-secret".path;
+          originLanding = "https://${environment.kubernetes.services.config.${service}.domain}/";
+          basicSecretFile = config.age.secrets."${service}-oidc-client-secret".path;
           scopeMaps = lib.genAttrs accessGroups (_group: [
             "openid"
             "email"
@@ -68,7 +68,7 @@
           "headscale"
           # Envoy OIDC services
           "argocd"
-          "hubble"
+          "hubble-ui"
         ]
       );
 
@@ -246,10 +246,9 @@
           argocd = {
             displayName = "argocd";
             originUrl = [
-              "https://argocd.${environment.domain}/oauth2/callback"
-              "https://argocd.${environment.domain}/auth/callback"
+              "https://${environment.kubernetes.services.config.argocd.domain}/auth/callback"
             ];
-            originLanding = "https://argocd.${environment.domain}/applications";
+            originLanding = "https://${environment.kubernetes.services.config.argocd.domain}/applications";
             basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
             preferShortUsername = true;
 
@@ -270,7 +269,7 @@
 
           };
 
-          hubble = envoyOidcConfigFor { name = "hubble"; };
+          hubble-ui = envoyOidcConfigFor { name = "hubble-ui"; };
 
           kubernetes = {
             displayName = "kubernetes";
