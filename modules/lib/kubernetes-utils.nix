@@ -6,6 +6,40 @@
 }:
 {
   flake.lib.kubernetes-utils = {
+
+    extractCRDsFromChart =
+      {
+        name,
+        pkgs,
+        klib,
+        chartAttrs ? { },
+        chart ? null,
+        values ? { },
+        crds ? [ ],
+        namePrefix ? "",
+        attrNameOverrides ? { },
+        skipCoerceToList ? { },
+        extraOpts ? [ ],
+      }:
+      let
+        _chart = if chart != null then chart else klib.downloadHelmChart chartAttrs;
+
+        objects = klib.fromHelm {
+          inherit name values extraOpts;
+          includeCRDs = true;
+          chart = _chart;
+        };
+
+        isWanted =
+          obj:
+          obj ? kind
+          && obj.kind == "CustomResourceDefinition"
+          && (crds == [ ] || (lib.any (x: obj.spec.names.kind == x) crds));
+
+        resourceObjects = lib.filter isWanted objects;
+      in
+      resourceObjects;
+
     findEnvironmentByName =
       name:
       let
