@@ -8,7 +8,7 @@
 let
   inherit (config.flake.meta) repo;
   inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
-  inherit (config.flake.lib.kubernetes-utils) mkSecretHelpers;
+  inherit (config.flake.lib.kubernetes-utils) mkSecretHelpers extractCRDsFromChart;
 in
 {
   flake = {
@@ -34,9 +34,10 @@ in
               lib.filter (serviceName: config.flake.kubernetes.services ? ${serviceName}) enabledServices
             );
 
-            # Extract CRD files for enabled services
-            serviceCrdFiles = lib.mapAttrs (
-              _serviceName: service:
+            klib = inputs.nix-kube-generators.lib { inherit pkgs; };
+            # Extract CRD objects for enabled services
+            serviceCrdObjects = lib.mapAttrs (
+              name: service:
               let
                 crdConfig =
                   if service.crds != null then
@@ -48,9 +49,20 @@ in
                   else
                     null;
               in
-              if crdConfig != null && crdConfig.src or null != null && crdConfig.crds or [ ] != [ ] then
-                # Map CRD file paths to actual file references
-                map (crdPath: crdConfig.src + "/${crdPath}") crdConfig.crds
+              if crdConfig != null then
+                if (crdConfig.src or null != null) then
+                  # Read YAML files and convert to objects
+                  map (
+                    crdPath:
+                    let
+                      yamlContent = builtins.readFile (crdConfig.src + "/${crdPath}");
+                    in
+                    lib.filter (obj: obj ? kind && obj.kind == "CustomResourceDefinition") (klib.fromYAML yamlContent)
+                  ) crdConfig.crds
+                  |> lib.flatten # fromYAML returns a list, so flatten the nested lists
+                else
+                  # Already returns objects
+                  extractCRDsFromChart (crdConfig // { inherit name pkgs klib; })
               else
                 [ ]
             ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
@@ -62,8 +74,8 @@ in
               inherit environment;
               hosts = config.flake.hosts;
               secrets = mkSecretHelpers environment;
-              # Expose CRD files for services to use with yamls resources
-              crdFiles = serviceCrdFiles;
+              # Expose CRD objects for services to use in bootstrap
+              crdObjects = serviceCrdObjects;
             };
             modules = [
               (
@@ -212,19 +224,14 @@ in
                 {
                   inherit name;
                 }
-                // (lib.optionalAttrs (crdConfig.chart or null != null) { chart = crdConfig.chart; })
-                // (lib.optionalAttrs (crdConfig.chartAttrs or { } != { }) {
-                  chartAttrs = crdConfig.chartAttrs;
-                })
-                // (lib.optionalAttrs (crdConfig.values or { } != { }) { values = crdConfig.values; })
-                // (lib.optionalAttrs (crdConfig.crds or [ ] != [ ]) { crds = crdConfig.crds; })
-                // (lib.optionalAttrs (crdConfig.namePrefix or "" != "") { namePrefix = crdConfig.namePrefix; })
-                // (lib.optionalAttrs (crdConfig.attrNameOverrides or { } != { }) {
-                  attrNameOverrides = crdConfig.attrNameOverrides;
-                })
-                // (lib.optionalAttrs (crdConfig.skipCoerceToList or { } != { }) {
-                  skipCoerceToList = crdConfig.skipCoerceToList;
-                })
+                // (lib.optionalAttrs (crdConfig ? chart) { inherit (crdConfig) chart; })
+                // (lib.optionalAttrs (crdConfig ? chartAttrs) { inherit (crdConfig) chartAttrs; })
+                // (lib.optionalAttrs (crdConfig ? values) { inherit (crdConfig) values; })
+                // (lib.optionalAttrs (crdConfig ? crds) { inherit (crdConfig) crds; })
+                // (lib.optionalAttrs (crdConfig ? namePrefix) { inherit (crdConfig) namePrefix; })
+                // (lib.optionalAttrs (crdConfig ? attrNameOverrides) { inherit (crdConfig) attrNameOverrides; })
+                // (lib.optionalAttrs (crdConfig ? skipCoerceToList) { inherit (crdConfig) skipCoerceToList; })
+                // (lib.optionalAttrs (crdConfig ? extraOpts) { inherit (crdConfig) extraOpts; })
               )
             else if useSrcGenerator then
               fromCRD (
