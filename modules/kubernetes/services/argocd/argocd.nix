@@ -1,16 +1,33 @@
-{ self, ... }:
+{ self, lib, ... }:
 let
   inherit (self.lib.kubernetes-utils) domainToResourceName;
 in
 {
   flake.kubernetes.services.argocd = {
+
+    options = {
+      domain = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Default routing device";
+      };
+    };
+
     nixidy =
       {
+        config,
         charts,
         secrets,
         environment,
         ...
       }:
+      let
+        domain =
+          if config.kubernetes.services.argocd.domain != null then
+            config.kubernetes.services.argocd.domain
+          else
+            "argocd.${environment.domain}";
+      in
       {
         applications.argocd = {
           namespace = "argocd";
@@ -34,7 +51,7 @@ in
 
             values = {
               global = {
-                domain = "argocd.${environment.domain}";
+                inherit domain;
                 revisionHistoryLimit = 3;
               };
 
@@ -147,10 +164,10 @@ in
                 {
                   name = "default-gateway";
                   namespace = "kube-system";
-                  sectionName = "${domainToResourceName environment.domain}-https";
+                  sectionName = "${domainToResourceName domain}-https";
                 }
               ];
-              hostnames = [ "argocd.${environment.domain}" ];
+              hostnames = [ domain ];
               rules = [
                 {
                   backendRefs = [

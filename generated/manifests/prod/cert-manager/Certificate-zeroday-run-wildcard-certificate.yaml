@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: zeroday-run-wildcard-certificate
+  namespace: certs
+spec:
+  dnsNames:
+    - zeroday.run
+    - '*.zeroday.run'
+  issuerRef:
+    kind: ClusterIssuer
+    name: global-issuer
+  secretName: zeroday-run-wildcard-tls

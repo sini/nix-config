@@ -7,7 +7,14 @@
 {
   flake.lib.kubernetes-utils = {
 
-    domainToResourceName = domain: lib.replaceStrings [ "." ] [ "-" ] domain;
+    domainToResourceName =
+      domain:
+      let
+        parts = lib.splitString "." domain;
+        # Take the last 2 parts (e.g., ["json64", "dev"] from "argocd.prod.json64.dev")
+        topDomain = lib.reverseList (lib.take 2 (lib.reverseList parts));
+      in
+      lib.concatStringsSep "-" topDomain;
 
     extractCRDsFromChart =
       {
