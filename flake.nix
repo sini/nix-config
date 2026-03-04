@@ -144,8 +144,8 @@
 
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
-      url = "github:sini/nixidy/feat/expose-chart-options";
-      # url = "github:arnarg/nixidy";
+      # url = "github:sini/nixidy/feat/expose-chart-options";
+      url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 

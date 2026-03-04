@@ -2197,16 +2197,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1772587624,
+        "lastModified": 1772611680,
         "narHash": "sha256-NcEain2d9lKY7HvUaa7jvvrqdsBOI/uiag/yURA3aYs=",
-        "owner": "sini",
+        "owner": "arnarg",
         "repo": "nixidy",
-        "rev": "8e55c5bb21d576127ac0aa6726ff4d4ba4ed2a59",
+        "rev": "cca0bc217ba5155e4a147237bdf31a87d1d67e69",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
-        "ref": "feat/expose-chart-options",
+        "owner": "arnarg",
         "repo": "nixidy",
         "type": "github"
       }
