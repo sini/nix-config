@@ -216,6 +216,8 @@ in
                 "--node-name=${config.networking.hostName}"
                 # TODO: If longhorn disk enabled...
                 "--node-label=node.longhorn.io/create-default-disk=true"
+                # TODO: all my nodes are amd, key off of facter facts...
+                "--node-label=node.kubernetes.io/amd-gpu=true"
                 # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
                 "--resolv-conf=/run/systemd/resolve/resolv.conf"
 
