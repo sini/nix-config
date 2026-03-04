@@ -5,28 +5,9 @@ in
 {
   flake.kubernetes.services.envoy-gateway = {
     crds =
-      { pkgs, lib, ... }:
-      let
-        # nix run nixpkgs#nix-prefetch-github -- envoyproxy gateway --rev v1.7.0
-        src = pkgs.fetchFromGitHub {
-          owner = "envoyproxy";
-          repo = "gateway";
-          rev = "v1.7.0";
-          hash = "sha256-SlEGwfLeE+utdcqlY//xAvQt89bh2y1GHN/whZZ3XHE=";
-        };
-        crds =
-          let
-            path = "charts/gateway-helm/crds/generated";
-          in
-          lib.pipe (builtins.readDir "${src}/${path}") [
-            (lib.filterAttrs (_name: type: type == "regular"))
-            (lib.filterAttrs (name: _type: lib.hasSuffix ".yaml" name))
-            builtins.attrNames
-            (map (file: "${path}/${file}"))
-          ];
-      in
+      { inputs, system, ... }:
       {
-        inherit src crds;
+        chart = inputs.nixhelm.chartsDerivations.${system}.envoyproxy.gateway-helm;
       };
 
     nixidy =
@@ -34,6 +15,7 @@ in
         lib,
         config,
         environment,
+        charts,
         ...
       }:
       let
@@ -53,12 +35,7 @@ in
           };
 
           helm.releases.envoy = {
-            chart = lib.helm.downloadHelmChart {
-              repo = "oci://docker.io/envoyproxy";
-              chart = "gateway-helm";
-              version = "v1.7.0";
-              chartHash = "sha256-JePGNofWs86ZVT1M6FI4Zg79BFvh2KudMnMOHjAbhJM=";
-            };
+            chart = charts.envoyproxy.gateway-helm;
             values = {
               deployment.replicas = 1;
               config = {

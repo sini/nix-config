@@ -4,8 +4,7 @@
     crds =
       { inputs, system, ... }:
       {
-        src = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
-        crds = [ "crds/isindir.github.com_sopssecrets.yaml" ];
+        chart = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
       };
 
     # Option declarations for environment-level configuration
