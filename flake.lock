@@ -2175,11 +2175,11 @@
         "uv2nix": "uv2nix"
       },
       "locked": {
-        "lastModified": 1772582031,
-        "narHash": "sha256-FTObwGYquO4+FsIzaC3ewxgyt/WKtPXAezwfnOeCEv8=",
+        "lastModified": 1772645905,
+        "narHash": "sha256-/esCNTpOYzRBdrZpzpop9hQhruAyVm9bnRY5MCZuNbY=",
         "owner": "nix-community",
         "repo": "nixhelm",
-        "rev": "bf0f563c4b6cac3ee635896e14e43898f4a5dd5c",
+        "rev": "ccd1c051fb3c3b9bb0a25b6ed6ad98217e24b3d1",
         "type": "github"
       },
       "original": {
