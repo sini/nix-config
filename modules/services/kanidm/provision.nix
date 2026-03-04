@@ -253,33 +253,44 @@
             preferShortUsername = true;
           };
 
-          argocd = {
-            displayName = "argocd";
-            originUrl = [
-              "https://${environment.kubernetes.services.config.argocd.domain}/auth/callback"
-            ];
-            originLanding = "https://${environment.kubernetes.services.config.argocd.domain}/applications";
-            basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
-            preferShortUsername = true;
-
-            scopeMaps = {
-              "argocd.access" = [
-                "openid"
-                "email"
-                "profile"
+          argocd =
+            let
+              domain =
+                if
+                  environment.kubernetes.services.config ? "argocd"
+                  && environment.kubernetes.services.config.argocd ? domain
+                then
+                  environment.kubernetes.services.config.argocd.domain
+                else
+                  "argocd.${environment.domain}";
+            in
+            {
+              displayName = "argocd";
+              originUrl = [
+                "https://${domain}/auth/callback"
               ];
-            };
-            claimMaps.groups = {
-              joinType = "array";
-              valuesByGroup = {
-                "argocd.admins" = [ "admin" ];
-                "argocd.access" = [ "user" ];
+              originLanding = "https://${domain}/applications";
+              basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
+              preferShortUsername = true;
+
+              scopeMaps = {
+                "argocd.access" = [
+                  "openid"
+                  "email"
+                  "profile"
+                ];
               };
+              claimMaps.groups = {
+                joinType = "array";
+                valuesByGroup = {
+                  "argocd.admins" = [ "admin" ];
+                  "argocd.access" = [ "user" ];
+                };
+              };
+
             };
 
-          };
-
-          hubble-ui = envoyOidcConfigFor { name = "hubble-ui"; };
+          hubble-ui = envoyOidcConfigFor { service = "hubble-ui"; };
 
           kubernetes = {
             displayName = "kubernetes";
