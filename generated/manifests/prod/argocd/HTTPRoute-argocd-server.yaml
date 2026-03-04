@@ -9,7 +9,7 @@ spec:
   parentRefs:
     - name: default-gateway
       namespace: kube-system
-      sectionName: https
+      sectionName: json64-dev-https
   rules:
     - backendRefs:
         - name: argocd-server

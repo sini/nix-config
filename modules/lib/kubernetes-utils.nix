@@ -7,6 +7,8 @@
 {
   flake.lib.kubernetes-utils = {
 
+    domainToResourceName = domain: lib.replaceStrings [ "." ] [ "-" ] domain;
+
     extractCRDsFromChart =
       {
         name,
@@ -92,6 +94,13 @@
             environment.name;
       in
       {
+        from =
+          {
+            sopsFile ? environment.kubernetes.secretsFile,
+            secretKey,
+          }:
+          "ref+sops://${sopsFile}#${secretKey}";
+
         for = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}";
         forInlineFor = secretName: "ref+sops://${environment.kubernetes.secretsFile}#${secretName}+";
         forOidcService =

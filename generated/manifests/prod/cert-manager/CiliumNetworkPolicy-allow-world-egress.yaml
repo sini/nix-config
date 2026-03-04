@@ -15,6 +15,8 @@ spec:
               protocol: TCP
             - port: "53"
               protocol: UDP
+            - port: "853"
+              protocol: UDP
   endpointSelector:
     matchLabels:
       app.kubernetes.io/instance: cert-manager

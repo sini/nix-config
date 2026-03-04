@@ -3,13 +3,13 @@ kind: Certificate
 metadata:
   annotations:
     cert-manager.io/issue-temporary-certificate: "true"
-  name: wildcard-certificate
-  namespace: security
+  name: json64-dev-wildcard-certificate
+  namespace: certs
 spec:
   dnsNames:
     - json64.dev
     - '*.json64.dev'
   issuerRef:
     kind: ClusterIssuer
-    name: cloudflare-issuer
-  secretName: wildcard-tls
+    name: json64-dev-issuer
+  secretName: json64-dev-wildcard-tls

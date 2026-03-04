@@ -1,3 +1,7 @@
+{ self, lib, ... }:
+let
+  inherit (self.lib.kubernetes-utils) domainToResourceName;
+in
 {
   flake.kubernetes.services.cert-manager = {
     crds =
@@ -9,40 +13,54 @@
         ];
       };
 
+    options = {
+      domains = lib.mkOption {
+        type = lib.types.attrsOf (
+          lib.types.submodule {
+            options = {
+              issuer = lib.mkOption {
+                type = lib.types.str;
+                description = "The API key name to use for this domain";
+              };
+            };
+          }
+        );
+        default = { };
+        description = "Domains to generate certs for";
+      };
+
+      issuers = lib.mkOption {
+        type = lib.types.attrsOf (
+          lib.types.submodule {
+            options = {
+              sopsFile = lib.mkOption {
+                type = lib.types.nullOr lib.types.path;
+                default = null;
+                description = "Optional path to the file containing the API key";
+              };
+              secretKey = lib.mkOption {
+                type = lib.types.str;
+                description = "The secret key name";
+              };
+            };
+          }
+        );
+        default = { };
+        description = "API key configurations";
+      };
+    };
+
     nixidy =
       {
+        config,
         environment,
         charts,
         secrets,
         ...
       }:
       let
-        namespaceList = [
-          "security"
-        ];
-        certificatesResources = map (namespace: {
-          name = "${namespace}-wildcard-certificate";
-          value = {
-            metadata = {
-              name = "wildcard-certificate";
-              namespace = namespace;
-              annotations = {
-                "cert-manager.io/issue-temporary-certificate" = "true";
-              };
-            };
-            spec = {
-              secretName = "wildcard-tls";
-              issuerRef = {
-                name = "cloudflare-issuer";
-                kind = "ClusterIssuer";
-              };
-              dnsNames = [
-                "${environment.domain}"
-                "*.${environment.domain}"
-              ];
-            };
-          };
-        }) namespaceList;
+        domains = config.kubernetes.services.cert-manager.domains;
+        issuers = config.kubernetes.services.cert-manager.issuers;
       in
       {
         applications.cert-manager = {
@@ -68,40 +86,72 @@
           };
 
           resources = {
-            secrets.cloudflare-api-token = {
-              metadata.namespace = "cert-manager";
-              type = "Opaque";
-              stringData.cloudflare-api-token = secrets.for "cloudflare-api-token";
-            };
-
-            clusterIssuers."cloudflare-issuer" = {
-              metadata = {
-                name = "cloudflare-issuer";
-                namespace = "cert-manager";
-              };
-              spec = {
-                acme = {
-                  server = "https://acme-v02.api.letsencrypt.org./directory";
-                  privateKeySecretRef = {
-                    name = "cloudflare-issuer-account-key";
+            secrets =
+              issuers
+              |> lib.attrsets.mapAttrs' (
+                issuer: secretRef: {
+                  name = "${issuer}-secret";
+                  value = {
+                    type = "Opaque";
+                    stringData.cloudflare-api-token = secrets.from secretRef;
                   };
-                  solvers = [
-                    {
-                      dns01 = {
-                        cloudflare = {
-                          apiTokenSecretRef = {
-                            name = "cloudflare-api-token";
-                            key = "cloudflare-api-token";
-                          };
-                        };
-                      };
-                    }
-                  ];
-                };
-              };
-            };
+                }
+              );
 
-            certificates = builtins.listToAttrs certificatesResources;
+            clusterIssuers =
+              issuers
+              |> lib.attrsets.mapAttrs' (
+                issuer: _secretRef: {
+                  name = "${issuer}-issuer";
+                  value = {
+                    spec = {
+                      acme = {
+                        server = "https://acme-v02.api.letsencrypt.org./directory";
+                        privateKeySecretRef = {
+                          name = "${issuer}-issuer-account-key";
+                        };
+                        solvers = [
+                          {
+                            dns01 = {
+                              cloudflare = {
+                                apiTokenSecretRef = {
+                                  name = "${issuer}-secret";
+                                  key = "cloudflare-api-token";
+                                };
+                              };
+                            };
+                          }
+                        ];
+                      };
+                    };
+                  };
+                }
+              );
+
+            certificates =
+              domains
+              |> lib.attrsets.mapAttrs' (
+                domain: args: {
+                  name = (domainToResourceName domain) + "-wildcard-certificate";
+                  value = {
+                    metadata = {
+                      namespace = "certs";
+                      annotations."cert-manager.io/issue-temporary-certificate" = "true";
+                    };
+                    spec = {
+                      secretName = "${domainToResourceName domain}-wildcard-tls";
+                      issuerRef = {
+                        name = "${args.issuer}-issuer";
+                        kind = "ClusterIssuer";
+                      };
+                      dnsNames = [
+                        "${domain}"
+                        "*.${domain}"
+                      ];
+                    };
+                  };
+                }
+              );
 
             ciliumNetworkPolicies = {
               # Talk to letsencrypt, cloudflare, and external DNS.
@@ -125,6 +175,10 @@
                             }
                             {
                               port = "53";
+                              protocol = "UDP";
+                            }
+                            {
+                              port = "853";
                               protocol = "UDP";
                             }
                           ];
