@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: csi-driver-nfs
+  namespace: argocd
+spec:
+  destination:
+    namespace: csi-nfs
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./generated/manifests/prod/csi-driver-nfs
+    repoURL: https://github.com/sini/nix-config.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
