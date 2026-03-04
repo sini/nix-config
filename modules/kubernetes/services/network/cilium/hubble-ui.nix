@@ -84,8 +84,8 @@ in
 
               oidc = {
                 provider.issuer = secrets.oidcIssuerFor "hubble";
-                clientID = "hubble";
-                clientSecret.name = "hubble-oidc-client-secret";
+                clientID = "hubble-ui";
+                clientSecret.name = "hubble-ui-oidc-client-secret";
                 # cookieDomain = "${environment.domain}";
                 scopes = [
                   "email"
@@ -97,9 +97,9 @@ in
 
             };
 
-            secrets.hubble-oidc-client-secret = {
+            secrets.hubble-ui-oidc-client-secret = {
               type = "Opaque";
-              stringData.client-secret = secrets.forOidcService "hubble";
+              stringData.client-secret = secrets.forOidcService "hubble-ui";
             };
 
             ciliumNetworkPolicies = {
