@@ -83,7 +83,7 @@ in
               ];
 
               oidc = {
-                provider.issuer = secrets.oidcIssuerFor "hubble";
+                provider.issuer = secrets.oidcIssuerFor "hubble-ui";
                 clientID = "hubble-ui";
                 clientSecret.name = "hubble-ui-oidc-client-secret";
                 # cookieDomain = "${environment.domain}";

@@ -10,7 +10,7 @@ spec:
       name: hubble-ui-oidc-client-secret
     forwardAccessToken: true
     provider:
-      issuer: https://idm.json64.dev/oauth2/openid/hubble
+      issuer: https://idm.json64.dev/oauth2/openid/hubble-ui
     scopes:
       - email
       - openid
