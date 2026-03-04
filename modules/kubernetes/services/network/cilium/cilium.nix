@@ -220,50 +220,6 @@ in
               };
             };
 
-            ciliumNetworkPolicies = {
-              # Allow kube-dns to talk to upstream DNS
-              allow-kube-dns-upstream-egress.spec = {
-                description = "Policy for egress to allow kube-dns to talk to upstream DNS.";
-                endpointSelector.matchLabels.k8s-app = "kube-dns";
-                egress = [
-                  {
-                    toEntities = [ "world" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              # Allow CoreDNS to talk to kube-apiserver
-              allow-kube-dns-apiserver-egress.spec = {
-                description = "Allow coredns to talk to kube-apiserver.";
-                endpointSelector.matchLabels.k8s-app = "kube-dns";
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-            };
-
             ciliumClusterwideNetworkPolicies = {
               # Allow all cilium endpoints to talk egress to each other
               allow-internal-egress.spec = {
@@ -290,30 +246,6 @@ in
                   }
                 ];
               };
-
-              allow-kube-dns-cluster-ingress.spec = {
-                description = "Policy for ingress allow to kube-dns from all Cilium managed endpoints in the cluster.";
-                endpointSelector.matchLabels = {
-                  "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                  "k8s-app" = "kube-dns";
-                };
-                ingress = [
-                  {
-                    fromEndpoints = [ { } ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
             };
           };
         };

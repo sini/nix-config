@@ -1,14 +1,11 @@
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
-  name: allow-kubesystem-gateway-to-wildcard-tls
-  namespace: security
+  name: allow-kubesystem-gateway-to-cert-manager-tls
+  namespace: certs
 spec:
   from:
     - group: gateway.networking.k8s.io
       kind: Gateway
       namespace: kube-system
-  to:
-    - group: ""
-      kind: Secret
-      name: wildcard-tls
+  to: []

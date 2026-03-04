@@ -30,6 +30,7 @@
       enabled = [
         # Core Infra
         "cilium"
+        "coredns"
         "sops-secrets-operator"
 
         ## Internal services
