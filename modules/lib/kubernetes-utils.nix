@@ -10,15 +10,11 @@
     extractCRDsFromChart =
       {
         name,
-        pkgs,
         klib,
         chartAttrs ? { },
         chart ? null,
         values ? { },
         crds ? [ ],
-        namePrefix ? "",
-        attrNameOverrides ? { },
-        skipCoerceToList ? { },
         extraOpts ? [ ],
       }:
       let
