@@ -7,7 +7,12 @@ in
     crds =
       { inputs, system, ... }:
       {
-        chart = inputs.nixhelm.chartsDerivations.${system}.envoyproxy.gateway-helm;
+        chart = inputs.nixhelm.chartsDerivations.${system}.envoyproxy.gateway-crds-helm;
+        extraOpts = [
+          "--set crds.gatewayAPI.enabled=true"
+          "--set crds.gatewayAPI.channel=experimental"
+          "--set crds.envoyGateway.enabled=true"
+        ];
       };
 
     nixidy =
@@ -36,6 +41,10 @@ in
 
           helm.releases.envoy = {
             chart = charts.envoyproxy.gateway-helm;
+
+            includeCRDs = false;
+            extraOpts = [ "--skip-crds" ];
+
             values = {
               deployment.replicas = 1;
               config = {
