@@ -32,9 +32,12 @@
       enabled = [
         "argocd"
         "cilium"
+        "coredns"
         "sops-secrets-operator"
       ];
       config = {
+        coredns.clusterIP = "172.17.0.10";
+
         sops-secrets-operator.replicaCount = 1; # High availability for prod
       };
     };

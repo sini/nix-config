@@ -53,7 +53,6 @@ in
     nixidy =
       {
         config,
-        environment,
         charts,
         secrets,
         ...

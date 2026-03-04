@@ -1,12 +1,14 @@
 apiVersion: cilium.io/v2
 kind: CiliumClusterwideNetworkPolicy
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
   name: allow-kube-dns-cluster-ingress
 spec:
-  description: Policy for ingress allow to kube-dns from all Cilium managed endpoints in the cluster.
+  description: Policy for ingress allow to coredns from all Cilium managed endpoints in the cluster.
   endpointSelector:
     matchLabels:
-      k8s-app: kube-dns
+      app.kubernetes.io/name: coredns
       k8s:io.kubernetes.pod.namespace: kube-system
   ingress:
     - fromEndpoints:

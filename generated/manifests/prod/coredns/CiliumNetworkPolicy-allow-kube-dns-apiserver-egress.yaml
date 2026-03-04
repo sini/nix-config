@@ -1,6 +1,8 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
   name: allow-kube-dns-apiserver-egress
   namespace: kube-system
 spec:
@@ -14,4 +16,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      k8s-app: kube-dns
+      app.kubernetes.io/name: coredns

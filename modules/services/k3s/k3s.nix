@@ -241,12 +241,10 @@ in
                 "--etcd-arg=auto-compaction-mode=periodic"
                 "--etcd-arg=auto-compaction-retention=30m"
 
-                "--disable local-storage"
                 "--disable metrics-server"
-                "--disable traefik"
-
-                # "--disable coredns"
-
+                "--disable local-storage" # We'll configure our own storage backends
+                "--disable traefik" # We use envoyproxy-gateway
+                "--disable coredns" # We deploy it ourselves
                 "--disable servicelb" # Cilium
                 "--flannel-backend=none" # Cilium
                 "--disable-network-policy" # Cilium

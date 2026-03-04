@@ -1,6 +1,8 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
   name: allow-kube-dns-upstream-egress
   namespace: kube-system
 spec:
@@ -12,6 +14,8 @@ spec:
         - ports:
             - port: "53"
               protocol: UDP
+            - port: "853"
+              protocol: UDP
   endpointSelector:
     matchLabels:
-      k8s-app: kube-dns
+      app.kubernetes.io/name: coredns
