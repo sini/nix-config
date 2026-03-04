@@ -62,7 +62,7 @@ in
                   |> lib.flatten # fromYAML returns a list, so flatten the nested lists
                 else
                   # Already returns objects
-                  extractCRDsFromChart (crdConfig // { inherit name pkgs klib; })
+                  extractCRDsFromChart (crdConfig // { inherit name klib; })
               else
                 [ ]
             ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
