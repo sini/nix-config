@@ -28,24 +28,40 @@
     # Kubernetes services configuration
     services = {
       enabled = [
-        "argocd"
-        "cert-manager"
+        # Core Infra
         "cilium"
-        "cilium-bgp"
         "sops-secrets-operator"
+
+        ## Internal services
+        "argocd"
         "hubble-ui"
+
+        # Gateway/Ingress
+        "cilium-bgp"
+        "cert-manager"
+        "envoy-gateway"
+
+        # Node Features
+        "amd-gpu-device-plugin"
+
+        # Storage drivers
+        "csi-driver-nfs"
       ];
       config = {
         cilium = {
           devices = [
-            "br0"
+            "br0" # "enp2s0"
             # "enp199s0f5"
             # "enp199s0f6"
-            # "br0"
-            # "enp2s0"
             # "tailscale0"
           ];
           directRoutingDevice = "br0";
+        };
+        csi-driver-nfs.volumes = {
+          "vault-nfs" = {
+            server = "10.10.10.10";
+            share = "/volume2/data";
+          };
         };
         sops-secrets-operator.replicaCount = 1; # High availability for prod
       };
