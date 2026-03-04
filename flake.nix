@@ -144,12 +144,14 @@
 
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
-      # url = "github:sini/nixidy";
-      url = "github:arnarg/nixidy";
+      url = "github:sini/nixidy/feat/expose-chart-options";
+      # url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    nixhelm.url = "github:farcaller/nixhelm";
+    nixhelm.url = "github:nix-community/nixhelm";
+
+    nix-kube-generators.url = "github:farcaller/nix-kube-generators";
 
     hyprland.url = "github:hyprwm/Hyprland";
 
