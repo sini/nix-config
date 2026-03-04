@@ -97,14 +97,24 @@ in
                           generatedCrds = (withSystem system ({ config, ... }: config.packages.generated-crds));
 
                           # Read all .nix files from the generated-crds derivation
-                          nixFiles = lib.attrNames (
+                          allNixFiles = lib.attrNames (
                             lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
                               builtins.readDir generatedCrds
                             )
                           );
+
+                          # Filter to only include CRD files for enabled services
+                          enabledNixFiles = lib.filter (
+                            name:
+                            let
+                              # Extract service name by removing .nix suffix
+                              serviceName = lib.removeSuffix ".nix" name;
+                            in
+                            lib.elem serviceName enabledServices
+                          ) allNixFiles;
                         in
                         # Import each generated CRD file as a nixidy module
-                        map (name: import (generatedCrds + "/${name}")) nixFiles;
+                        map (name: import (generatedCrds + "/${name}")) enabledNixFiles;
 
                       target = {
                         repository = lib.mkDefault "https://github.com/${repo.owner}/${repo.name}.git";
