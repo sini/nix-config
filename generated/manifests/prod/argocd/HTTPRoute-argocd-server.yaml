@@ -5,11 +5,11 @@ metadata:
   namespace: argocd
 spec:
   hostnames:
-    - argocd.json64.dev
+    - argocd.zeroday.run
   parentRefs:
     - name: default-gateway
       namespace: kube-system
-      sectionName: json64-dev-https
+      sectionName: zeroday-run-https
   rules:
     - backendRefs:
         - name: argocd-server

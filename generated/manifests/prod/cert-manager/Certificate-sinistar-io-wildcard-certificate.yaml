@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: sinistar-io-wildcard-certificate
+  namespace: certs
+spec:
+  dnsNames:
+    - sinistar.io
+    - '*.sinistar.io'
+  issuerRef:
+    kind: ClusterIssuer
+    name: global-issuer
+  secretName: sinistar-io-wildcard-tls

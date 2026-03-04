@@ -5,11 +5,11 @@ metadata:
   namespace: kube-system
 spec:
   hostnames:
-    - hubble.json64.dev
+    - hubble.zeroday.run
   parentRefs:
     - name: default-gateway
       namespace: kube-system
-      sectionName: json64-dev-https
+      sectionName: zeroday-run-https
   rules:
     - backendRefs:
         - name: hubble-ui

@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: zeroday-pub-wildcard-certificate
+  namespace: certs
+spec:
+  dnsNames:
+    - zeroday.pub
+    - '*.zeroday.pub'
+  issuerRef:
+    kind: ClusterIssuer
+    name: global-issuer
+  secretName: zeroday-pub-wildcard-tls

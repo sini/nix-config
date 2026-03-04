@@ -1,11 +1,32 @@
-{ self, ... }:
+{ self, lib, ... }:
 let
   inherit (self.lib.kubernetes-utils) domainToResourceName;
 in
 {
   flake.kubernetes.services.hubble-ui = {
+
+    options = {
+      domain = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Default routing device";
+      };
+    };
+
     nixidy =
-      { environment, secrets, ... }:
+      {
+        config,
+        environment,
+        secrets,
+        ...
+      }:
+      let
+        domain =
+          if config.kubernetes.services.hubble-ui.domain != null then
+            config.kubernetes.services.hubble-ui.domain
+          else
+            "hubble.${environment.domain}";
+      in
       {
         applications.cilium = {
 
@@ -36,10 +57,10 @@ in
                 {
                   name = "default-gateway";
                   namespace = "kube-system";
-                  sectionName = "${domainToResourceName environment.domain}-https";
+                  sectionName = "${domainToResourceName domain}-https";
                 }
               ];
-              hostnames = [ "hubble.${environment.domain}" ];
+              hostnames = [ domain ];
               rules = [
                 {
                   backendRefs = [

@@ -56,14 +56,41 @@
             "json64.dev" = {
               issuer = "json64-dev";
             };
+            "json64.com" = {
+              issuer = "global";
+            };
+            "json64.net" = {
+              issuer = "global";
+            };
+            "sinistar.io" = {
+              issuer = "global";
+            };
+            "sinistar.org" = {
+              issuer = "global";
+            };
+            "zeroday.pub" = {
+              issuer = "global";
+            };
+            "zeroday.run" = {
+              issuer = "global";
+            };
           };
           issuers = {
             "json64-dev" = {
               sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
               secretKey = "cloudflare-api-token";
             };
+            "global" = {
+              sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+              secretKey = "cloudflare-global-api-token";
+            };
           };
         };
+
+        argocd.domain = "argocd.zeroday.run";
+
+        hubble-ui.domain = "hubble.zeroday.run";
+
         cilium = {
           devices = [
             "br0" # "enp2s0"

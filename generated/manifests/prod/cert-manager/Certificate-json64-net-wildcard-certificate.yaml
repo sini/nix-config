@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: json64-net-wildcard-certificate
+  namespace: certs
+spec:
+  dnsNames:
+    - json64.net
+    - '*.json64.net'
+  issuerRef:
+    kind: ClusterIssuer
+    name: global-issuer
+  secretName: json64-net-wildcard-tls

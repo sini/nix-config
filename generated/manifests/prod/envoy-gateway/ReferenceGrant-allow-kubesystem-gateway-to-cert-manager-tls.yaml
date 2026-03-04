@@ -11,4 +11,22 @@ spec:
   to:
     - group: ""
       kind: Secret
+      name: json64-com-wildcard-tls
+    - group: ""
+      kind: Secret
       name: json64-dev-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: json64-net-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: sinistar-io-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: sinistar-org-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: zeroday-pub-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: zeroday-run-wildcard-tls
