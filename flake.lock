@@ -2030,6 +2030,21 @@
     },
     "nix-kube-generators_2": {
       "locked": {
+        "lastModified": 1762437901,
+        "narHash": "sha256-5yuJODagAq+aMXQAT2c0gfXKLqapmA6eUHR33jKNHuU=",
+        "owner": "farcaller",
+        "repo": "nix-kube-generators",
+        "rev": "810dcf792081790648ba9ae705b9a2286115ace8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "farcaller",
+        "repo": "nix-kube-generators",
+        "type": "github"
+      }
+    },
+    "nix-kube-generators_3": {
+      "locked": {
         "lastModified": 1748274972,
         "narHash": "sha256-Z8Bh7Y9Rr8PPspfb5M1nNW+zdwdyt43htN1lDqiH09M=",
         "owner": "farcaller",
@@ -2153,7 +2168,7 @@
       "inputs": {
         "flake-utils": "flake-utils_2",
         "haumea": "haumea",
-        "nix-kube-generators": "nix-kube-generators",
+        "nix-kube-generators": "nix-kube-generators_2",
         "nixpkgs": "nixpkgs_11",
         "pyproject-build-systems": "pyproject-build-systems",
         "pyproject-nix": "pyproject-nix",
@@ -2168,7 +2183,7 @@
         "type": "github"
       },
       "original": {
-        "owner": "farcaller",
+        "owner": "nix-community",
         "repo": "nixhelm",
         "type": "github"
       }
@@ -2176,21 +2191,22 @@
     "nixidy": {
       "inputs": {
         "flake-utils": "flake-utils_3",
-        "nix-kube-generators": "nix-kube-generators_2",
+        "nix-kube-generators": "nix-kube-generators_3",
         "nixpkgs": [
           "nixpkgs-unstable"
         ]
       },
       "locked": {
-        "lastModified": 1771495335,
-        "narHash": "sha256-oje1+0KtmUqqYBHNyc92FeqEF6IWu4oQtudPwQID6OA=",
-        "owner": "arnarg",
+        "lastModified": 1772587624,
+        "narHash": "sha256-NcEain2d9lKY7HvUaa7jvvrqdsBOI/uiag/yURA3aYs=",
+        "owner": "sini",
         "repo": "nixidy",
-        "rev": "5e30679601f65b4039c9681457c80e0b1001e880",
+        "rev": "8e55c5bb21d576127ac0aa6726ff4d4ba4ed2a59",
         "type": "github"
       },
       "original": {
-        "owner": "arnarg",
+        "owner": "sini",
+        "ref": "feat/expose-chart-options",
         "repo": "nixidy",
         "type": "github"
       }
@@ -2998,6 +3014,7 @@
         "nix-flatpak": "nix-flatpak",
         "nix-gaming": "nix-gaming",
         "nix-index-database": "nix-index-database",
+        "nix-kube-generators": "nix-kube-generators",
         "nix-snapshotter": "nix-snapshotter",
         "nix-topology": "nix-topology",
         "nix-vscode-extensions": "nix-vscode-extensions",
