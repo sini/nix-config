@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: amd-gpu-device-plugin-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: amd-gpu-dp-ds
+  template:
+    metadata:
+      labels:
+        name: amd-gpu-dp-ds
+    spec:
+      containers:
+        - image: docker.io/rocm/k8s-device-plugin:1.31.0.9
+          name: amd-gpu-dp-cntr
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /var/lib/kubelet/device-plugins
+              name: dp
+            - mountPath: /sys
+              name: sys
+            - mountPath: /var/lib/amd-metrics-exporter/
+              name: health
+      nodeSelector:
+        node.kubernetes.io/amd-gpu: "true"
+      priorityClassName: system-node-critical
+      tolerations:
+        - key: CriticalAddonsOnly
+          operator: Exists
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet/device-plugins
+          name: dp
+        - hostPath:
+            path: /sys
+          name: sys
+        - hostPath:
+            path: /var/lib/amd-metrics-exporter/
+            type: DirectoryOrCreate
+          name: health
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
