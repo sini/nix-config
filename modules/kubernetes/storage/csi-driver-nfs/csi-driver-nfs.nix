@@ -45,7 +45,7 @@
           };
 
           resources = {
-            storageClasses = lib.mapAttrs (volumeName: volumeConfig: {
+            storageClasses = lib.mapAttrs (_volumeName: volumeConfig: {
               provisioner = "nfs.csi.k8s.io";
               reclaimPolicy = "Retain"; # or "Delete"
               volumeBindingMode = "Immediate";
