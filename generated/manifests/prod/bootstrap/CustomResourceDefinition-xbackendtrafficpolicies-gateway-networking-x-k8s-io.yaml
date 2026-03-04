@@ -594,3 +594,5 @@ status:
   acceptedNames:
     kind: ""
     plural: ""
+  conditions: null
+  storedVersions: null
