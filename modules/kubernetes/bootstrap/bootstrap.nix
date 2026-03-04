@@ -43,7 +43,7 @@
         namespaces = appNamespaces ++ resourceNamespaces |> lib.unique;
 
         # Find all CRD objects that need to be deployed
-        objectCrds = globalObjects |> lib.filter (object: object.kind == "CustomResourceDefinition");
+        # objectCrds = globalObjects |> lib.filter (object: object.kind == "CustomResourceDefinition");
 
         # Get CRD objects from service definitions (helm charts, etc.)
         serviceCrds = publicApps |> map (app: crdObjects.${app} or [ ]) |> lib.flatten;
@@ -70,7 +70,7 @@
           # Deploy early (wave -3) so CRDs and namespaces exist before other apps
           annotations."argocd.argoproj.io/sync-wave" = "-3";
           # Include CRD objects from services (helm charts) and applications
-          objects = serviceCrds ++ objectCrds;
+          objects = serviceCrds;
           # Create all required namespaces (except system ones)
           # Set Prune=false to prevent accidental namespace deletion
           resources.namespaces =
