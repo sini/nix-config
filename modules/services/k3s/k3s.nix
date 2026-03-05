@@ -242,7 +242,7 @@
                 "--advertise-address=${builtins.head hostOptions.ipv4}"
                 "--cluster-cidr=${podNetwork.cidr},${podNetwork.ipv6_cidr}"
                 "--service-cidr=${serviceNetwork.cidr},${serviceNetwork.ipv6_cidr}"
-
+                "--kube-controller-manager-arg=--node-cidr-mask-size-ipv6=112"
                 "--kubelet-arg=fail-swap-on=false"
 
                 "--write-kubeconfig-mode \"0644\""
