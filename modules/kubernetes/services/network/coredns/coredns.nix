@@ -60,6 +60,13 @@
                       parameters = "0.0.0.0:9153";
                     }
                     {
+                      name = "template";
+                      parameters = "IN AAAA .";
+                      configBlock = ''
+                        rcode NOERROR
+                      '';
+                    }
+                    {
                       name = "forward";
                       parameters = ". /etc/resolv.conf";
                       config = {
