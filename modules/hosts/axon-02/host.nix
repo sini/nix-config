@@ -10,13 +10,14 @@
       "kubernetes" # TOGGLE_ENABLE/DISABLE
       "bgp-spoke"
       "nix-builder"
+      "thunderbolt-mesh"
+
       # "vault"
     ];
     features = [
       "zfs-disk-single"
       "cpu-amd"
       "gpu-amd"
-      "thunderbolt-mesh"
       "cilium-bgp"
     ];
     tags = {

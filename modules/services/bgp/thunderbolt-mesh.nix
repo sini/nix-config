@@ -70,6 +70,7 @@
 # This ensures the module works correctly with partial meshes, broken links,
 # or any arbitrary thunderbolt topology.
 {
+  flake.roles.thunderbolt-mesh.features = [ "thunderbolt-mesh" ];
   flake.features.thunderbolt-mesh = {
     requires = [ "bgp-core" ];
     nixos =
