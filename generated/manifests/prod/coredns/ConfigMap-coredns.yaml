@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  Corefile: ".:53 {\n    errors\n    health\n    ready\n    kubernetes cluster.local cluster.local in-addr.arpa ip6.arpa {\n        pods insecure\n        fallthrough in-addr.arpa ip6.arpa\n        ttl 30\n        \n    }\n    prometheus 0.0.0.0:9153\n    template IN AAAA . {\n        rcode NOERROR\n        \n    }\n    forward . /etc/resolv.conf\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
+  Corefile: ".:53 {\n    errors\n    health\n    ready\n    kubernetes cluster.local cluster.local in-addr.arpa ip6.arpa {\n        pods insecure\n        fallthrough in-addr.arpa ip6.arpa\n        ttl 30\n        \n    }\n    prometheus 0.0.0.0:9153\n    template IN AAAA . {\n        rcode NOERROR\n        \n    }\n    forward . 1.1.1.1\n    cache 30\n    loop\n    reload\n    loadbalance\n}"
 kind: ConfigMap
 metadata:
   labels:
