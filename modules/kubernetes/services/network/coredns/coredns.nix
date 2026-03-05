@@ -52,8 +52,7 @@
                       configBlock = ''
                         pods insecure
                         fallthrough in-addr.arpa ip6.arpa
-                        ttl 30
-                      '';
+                        ttl 30'';
                     }
                     {
                       name = "prometheus";
@@ -61,10 +60,8 @@
                     }
                     {
                       name = "template"; # Filter IPv6 results since we're not currently dual stack...
-                      parameters = "IN AAAA .";
-                      configBlock = ''
-                        rcode NOERROR
-                      '';
+                      parameters = "ANY AAAA";
+                      configBlock = "rcode NXDOMAIN";
                     }
                     {
                       name = "forward";
