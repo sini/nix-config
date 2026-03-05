@@ -68,7 +68,7 @@
                     }
                     {
                       name = "forward";
-                      parameters = ". /etc/resolv.conf";
+                      parameters = ". 1.1.1.1";
                       config = {
                         policy = "sequential";
                         prefer_udp = true;

@@ -142,6 +142,8 @@ in
               #   };
               # };
 
+              ipv6.enabled = false;
+
               gatewayAPI.enabled = false; # Trying out envoy...
               gatewayAPI.hostNetwork.enabled = false;
 
