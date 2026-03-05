@@ -171,6 +171,7 @@
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
+              bpf.hostLegacyRouting = true;
               bpf.lbExternalClusterIP = true;
               bpf.lbSourceRangeAllTypes = true;
               bpf.masquerade = true;

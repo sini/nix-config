@@ -348,6 +348,14 @@
                 -f ${rootPath + "/generated/manifests/${environment.name}/cilium/"} || true
               echo "Sleeping for 30 seconds for resources to settle..."
               sleep 30;
+
+              echo "Installing coredns..."
+              ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                --server-side \
+                --force-conflicts \
+                -f ${rootPath + "/generated/manifests/${environment.name}/coredns/"} || true
+              echo "Sleeping for 30 seconds for resources to settle..."
+              sleep 30;
             '';
           };
           wantedBy = [ "multi-user.target" ];
