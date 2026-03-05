@@ -224,8 +224,8 @@
                 "--snapshotter=overlayfs"
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 
-                "--node-ip=${builtins.head hostOptions.ipv4}"
-                "--node-external-ip=${builtins.head hostOptions.ipv4}"
+                "--node-ip=${builtins.head hostOptions.ipv4},${builtins.head hostOptions.ipv6}"
+                "--node-external-ip=${builtins.head hostOptions.ipv4},${builtins.head hostOptions.ipv6}"
                 "--node-name=${config.networking.hostName}"
                 # TODO: If longhorn disk enabled...
                 "--node-label=node.longhorn.io/create-default-disk=true"
@@ -239,7 +239,7 @@
               ];
               serverFlagList = [
                 "--bind-address=0.0.0.0"
-                "--advertise-address=${builtins.head hostOptions.ipv4}"
+                "--advertise-address=${builtins.head hostOptions.ipv4},${builtins.head hostOptions.ipv6}"
                 "--cluster-cidr=${podNetwork.cidr},${podNetwork.ipv6_cidr}"
                 "--service-cidr=${serviceNetwork.cidr},${serviceNetwork.ipv6_cidr}"
 
