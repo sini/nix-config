@@ -15,5 +15,9 @@ spec:
             - port: "6443"
               protocol: TCP
   endpointSelector:
-    matchLabels:
-      app: rook-ceph-operator
+    matchExpressions:
+      - key: app
+        operator: In
+        values:
+          - rook-ceph-operator
+          - rook-discover
