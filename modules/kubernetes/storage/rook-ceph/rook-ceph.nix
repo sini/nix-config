@@ -172,6 +172,7 @@ in
                     values = [
                       "rook-ceph-operator"
                       "rook-discover"
+                      "rook-ceph-detect-version"
                     ];
                   }
                 ];
