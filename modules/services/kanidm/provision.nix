@@ -103,6 +103,7 @@
             displayName = "Will";
             mailAddresses = [ "will@${environment.email.domain}" ];
             groups = [
+              "admins"
               "users"
               "grafana.server-admins"
               "open-webui.access"
