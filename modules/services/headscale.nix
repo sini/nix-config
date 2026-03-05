@@ -7,6 +7,10 @@
       pkgs,
       ...
     }:
+    let
+      domain = environment.getDomainFor "headscale";
+      kanidmDomain = environment.getDomainFor "kanidm";
+    in
     {
       age.secrets.headscale-oidc-secret = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/headscale-oidc-client-secret.age";
@@ -22,7 +26,7 @@
           port = 8085;
 
           settings = {
-            server_url = "https://hs.${environment.domain}";
+            server_url = "https://${domain}";
             logtail = {
               enabled = false;
             };
@@ -60,7 +64,7 @@
             # OIDC authentication via kanidm.
             oidc = {
               only_start_if_oidc_is_available = true;
-              issuer = "https://idm.${environment.domain}/oauth2/openid/headscale";
+              issuer = "https://${kanidmDomain}/oauth2/openid/headscale";
               client_id = "headscale";
               client_secret_path = config.age.secrets.headscale-oidc-secret.path;
               scope = [
@@ -88,9 +92,9 @@
           };
         };
 
-        nginx.virtualHosts."hs.${environment.domain}" = {
+        nginx.virtualHosts."${domain}" = {
           forceSSL = true;
-          useACMEHost = environment.domain;
+          useACMEHost = environment.getTopDomainFor "headscale";
           locations = {
             "/" = {
               proxyPass = "http://localhost:${toString config.services.headscale.port}";

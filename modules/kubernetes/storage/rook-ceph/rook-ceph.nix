@@ -1,7 +1,3 @@
-{ self, ... }:
-let
-  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
-in
 {
   flake.kubernetes.services.rook-ceph = {
 
@@ -40,7 +36,9 @@ in
         ...
       }:
       let
-        hosts = findKubernetesNodes environment;
+        hosts =
+          environment.findHostsByRole "kubernetes"
+          |> lib.attrsets.filterAttrs (hostname: hostConfig: builtins.elem "ceph-device" hostConfig.tags);
       in
       {
         applications.rook-ceph = {
@@ -155,7 +153,6 @@ in
                   allowOsdCrushWeightUpdate = true;
                   nodes =
                     builtins.attrValues hosts
-                    |> lib.filter (hostConfig: hostConfig.tags ? ceph-device)
                     |> map (hostConfig: {
                       name = hostConfig.hostname;
                       devices = [ { name = hostConfig.tags.ceph-device; } ];

@@ -1,6 +1,7 @@
 {
   lib,
   self,
+  rootPath,
   ...
 }:
 let
@@ -33,6 +34,16 @@ in
             type = types.str;
             default = "";
             description = "Human-readable description of the network";
+          };
+
+          assignments = mkOption {
+            type = types.attrsOf types.str;
+            default = { };
+            description = ''
+              Static IP address assignments within this network.
+              Maps service/resource names to their assigned IP addresses.
+              Example: { kube-apiserver-vip = "10.9.0.100"; }
+            '';
           };
         };
       };
@@ -74,7 +85,7 @@ in
       };
 
       environmentType = types.submodule (
-        { name, ... }:
+        { name, config, ... }:
         {
           options = {
             name = mkOption {
@@ -93,6 +104,78 @@ in
             domain = mkOption {
               type = types.str;
               description = "Base domain for the environment";
+            };
+
+            certificates = mkOption {
+              type = types.submodule {
+                options = {
+                  domains = mkOption {
+                    type = types.attrsOf (
+                      types.submodule {
+                        options = {
+                          issuer = mkOption {
+                            type = types.str;
+                            description = "The issuer name to use for this domain";
+                          };
+                        };
+                      }
+                    );
+                    default = { };
+                    description = "Domains to generate certificates for (typically wildcard certs)";
+                  };
+
+                  issuers = mkOption {
+                    type = types.attrsOf (
+                      types.submodule {
+                        options = {
+                          ageKeyFile = mkOption {
+                            type = types.nullOr types.path;
+                            default = null;
+                            description = "Optional path to the file containing the API key (agenix)";
+                          };
+                          sopsFile = mkOption {
+                            type = types.nullOr types.path;
+                            default = null;
+                            description = "Optional path to the SOPS file containing the API key";
+                          };
+                          secretKey = mkOption {
+                            type = types.nullOr types.str;
+                            default = null;
+                            description = "The secret key name within the secrets file";
+                          };
+                        };
+                      }
+                    );
+                    default = { };
+                    description = "Certificate issuer configurations (e.g., ACME DNS API credentials)";
+                  };
+                };
+              };
+              default = { };
+              description = "Certificate management configuration for the environment";
+            };
+
+            services = mkOption {
+              type = types.attrsOf (
+                types.submodule {
+                  options = {
+                    domain = mkOption {
+                      type = types.nullOr types.str;
+                      default = null;
+                      description = ''
+                        Override domain for this service.
+                        If null, defaults to <service-name>.''${environment.domain}
+                      '';
+                    };
+                  };
+                }
+              );
+              default = { };
+              description = ''
+                Service-specific domain mappings for the environment.
+                Used by OAuth2 provisioning, ingress configuration, and service discovery.
+                Example: services.argocd.domain = "argocd.zeroday.run";
+              '';
             };
 
             gatewayIp = mkOption {
@@ -254,6 +337,158 @@ in
               default = { };
               description = "IPv6 ULA and prefix configuration for NPTv6 translation";
             };
+
+            getDomainFor = mkOption {
+              type = types.functionTo types.str;
+              readOnly = true;
+              description = ''
+                Helper function to get the domain for a service.
+                Returns the configured service domain or defaults to <service-name>.<environment.domain>
+              '';
+            };
+
+            domainToResourceName = mkOption {
+              type = types.functionTo types.str;
+              readOnly = true;
+              description = ''
+                Helper function to convert a domain to a Kubernetes resource name.
+                Takes the last 2 parts of the domain (e.g., "json64-dev" from "argocd.prod.json64.dev").
+              '';
+            };
+
+            getTopDomainFor = mkOption {
+              type = types.functionTo types.str;
+              readOnly = true;
+              description = ''
+                Helper function to get the top-level domain for a service.
+                Returns the last 2 parts of the service domain as a string (e.g., "json64.dev" from "argocd.prod.json64.dev").
+              '';
+            };
+
+            getAssignment = mkOption {
+              type = types.functionTo (types.nullOr types.str);
+              readOnly = true;
+              description = ''
+                Helper function to get an IP assignment by name across all networks.
+                Returns the IP address if found, null otherwise.
+                Example: getAssignment "kube-apiserver-vip" → "10.9.0.100"
+              '';
+            };
+
+            findHostsByRole = mkOption {
+              type = types.functionTo (types.attrsOf types.unspecified);
+              readOnly = true;
+              description = ''
+                Helper function to find all hosts in this environment that have a specific role.
+                Returns an attrset of hosts filtered by the specified role.
+              '';
+            };
+
+            secrets = mkOption {
+              type = types.unspecified;
+              readOnly = true;
+              description = ''
+                Secret helper functions for this environment.
+                Provides: from, for, forInlineFor, forOidcService, oidcIssuerFor
+              '';
+            };
+          };
+
+          config = {
+            getDomainFor =
+              serviceName:
+              if config.services ? ${serviceName} && config.services.${serviceName}.domain != null then
+                config.services.${serviceName}.domain
+              else
+                "${serviceName}.${config.domain}";
+
+            domainToResourceName =
+              domain:
+              let
+                parts = lib.splitString "." domain;
+                # Take the last 2 parts (e.g., ["json64", "dev"] from "argocd.prod.json64.dev")
+                topDomain = lib.reverseList (lib.take 2 (lib.reverseList parts));
+              in
+              lib.concatStringsSep "-" topDomain;
+
+            getTopDomainFor =
+              service:
+              let
+                domain = config.getDomainFor service;
+                parts = lib.splitString "." domain;
+                # Take the last 2 parts (e.g., ["json64", "dev"] from "argocd.prod.json64.dev")
+                topDomain = lib.reverseList (lib.take 2 (lib.reverseList parts));
+              in
+              lib.concatStringsSep "." topDomain;
+
+            getAssignment =
+              name:
+              let
+                # Flatten all assignments from all networks into a single list
+                allAssignments = lib.flatten (
+                  lib.mapAttrsToList (
+                    netName: net:
+                    lib.mapAttrsToList (assignName: addr: {
+                      inherit assignName addr;
+                      network = netName;
+                    }) (net.assignments or { })
+                  ) config.networks
+                );
+                # Find the first matching assignment
+                match = lib.findFirst (a: a.assignName == name) null allAssignments;
+              in
+              if match != null then match.addr else null;
+
+            findHostsByRole =
+              role:
+              let
+                hosts = config.flake.hosts or { };
+              in
+              hosts
+              |> lib.attrsets.filterAttrs (
+                _hostname: hostConfig:
+                (builtins.elem role (hostConfig.roles or [ ])) && (hostConfig.environment == config.name)
+              );
+
+            secrets =
+              let
+                credentialsEnv =
+                  if config.kubernetes.sso.credentialsEnvironment != null then
+                    config.kubernetes.sso.credentialsEnvironment
+                  else
+                    config.name;
+              in
+              {
+                from =
+                  {
+                    sopsFile ? config.kubernetes.secretsFile,
+                    secretKey,
+                    ...
+                  }:
+                  "ref+sops://${sopsFile}#${secretKey}";
+
+                for = secretName: "ref+sops://${config.kubernetes.secretsFile}#${secretName}";
+                forInlineFor = secretName: "ref+sops://${config.kubernetes.secretsFile}#${secretName}+";
+                forOidcService =
+                  name:
+                  "ref+sops://${rootPath}/.secrets/env/${credentialsEnv}/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
+                oidcIssuerFor =
+                  clientID:
+                  let
+                    pattern =
+                      if config.kubernetes.sso.issuerPattern != null then
+                        config.kubernetes.sso.issuerPattern
+                      else
+                        let
+                          # Look up credentials environment
+                          environments = config.flake.environments or { };
+                          credEnv = environments.${credentialsEnv} or null;
+                          domain = if credEnv != null then credEnv.domain else config.domain;
+                        in
+                        "https://idm.${domain}/oauth2/openid/{clientID}";
+                  in
+                  lib.replaceStrings [ "{clientID}" ] [ clientID ] pattern;
+              };
           };
         }
       );

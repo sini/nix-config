@@ -1,7 +1,8 @@
+{ rootPath, ... }:
 {
   flake.environments.dev = {
     id = 2;
-    domain = "json64.dev";
+    domain = "dev.json64.dev";
     gatewayIp = "10.9.0.1";
     gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
     dnsServers = [
@@ -16,29 +17,66 @@
       "2a00:1098:2b::1"
     ];
 
+    # Certificate management configuration
+    certificates = {
+      domains = {
+        "json64.dev" = {
+          issuer = "json64-dev";
+        };
+      };
+      issuers = {
+        "json64-dev" = {
+          ageKeyFile = rootPath + "/.secrets/env/dev/cloudflare-api-key.age";
+          sopsFile = (rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml");
+          secretKey = "cloudflare-api-token";
+        };
+      };
+    };
+
+    # Service domain mappings
+    services = {
+      # Kubernetes services
+      argocd.domain = "argocd.dev.json64.dev";
+      hubble-ui.domain = "hubble.dev.json64.dev";
+
+      # Prod references
+      headscale.domain = "hs.json64.dev";
+      kanidm.domain = "idm.json64.dev";
+    };
+
     networks = {
       management = {
         cidr = "10.9.0.0/16";
         ipv6_cidr = "fd64:1:1::/64";
         purpose = "management";
         description = "Management network for infrastructure hosts";
+        assignments = {
+          kube-apiserver-vip = "10.9.0.100";
+        };
       };
-      kubernetes = {
+      kubernetes-pods = {
         cidr = "172.16.0.0/16";
         ipv6_cidr = "fd64:1:2::/64";
         purpose = "kubernetes-pods";
         description = "Kubernetes pod network";
       };
-      services = {
+      kubernetes-services = {
         cidr = "172.17.0.0/16";
         ipv6_cidr = "fd64:1:3::/64";
         purpose = "kubernetes-services";
         description = "Kubernetes service network";
+        assignments = {
+          coredns = "172.17.0.10";
+        };
       };
-      loadbalancer = {
+      kubernetes-loadbalancers = {
         cidr = "10.12.0.0/16";
         purpose = "loadbalancer";
         description = "LoadBalancer service IP range";
+        assignments = {
+          cilium-ingress-controller = "10.12.0.2";
+          gateway-controller = "10.12.0.1";
+        };
       };
     };
 

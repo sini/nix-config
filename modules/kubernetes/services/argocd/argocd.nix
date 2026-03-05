@@ -1,32 +1,13 @@
-{ self, lib, ... }:
-let
-  inherit (self.lib.kubernetes-utils) domainToResourceName;
-in
 {
   flake.kubernetes.services.argocd = {
-
-    options = {
-      domain = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        description = "Default routing device";
-      };
-    };
-
     nixidy =
       {
-        config,
         charts,
-        secrets,
         environment,
         ...
       }:
       let
-        domain =
-          if config.kubernetes.services.argocd.domain != null then
-            config.kubernetes.services.argocd.domain
-          else
-            "argocd.${environment.domain}";
+        domain = environment.getDomainFor "argocd";
       in
       {
         applications.argocd = {
@@ -133,7 +114,7 @@ in
                   '';
                   "oidc.config" = builtins.toJSON {
                     name = "kanidm";
-                    issuer = secrets.oidcIssuerFor "argocd";
+                    issuer = environment.secrets.oidcIssuerFor "argocd";
                     clientID = "argocd";
                     clientSecret = "$oidc.clientSecret";
                     enablePKCEAuthentication = true;
@@ -164,7 +145,7 @@ in
                 {
                   name = "default-gateway";
                   namespace = "kube-system";
-                  sectionName = "${domainToResourceName domain}-https";
+                  sectionName = "${environment.domainToResourceName domain}-https";
                 }
               ];
               hostnames = [ domain ];
@@ -218,14 +199,14 @@ in
 
             secrets.argocd-redis = {
               type = "Opaque";
-              stringData.auth = secrets.for "argocd-redis";
+              stringData.auth = environment.secrets.for "argocd-redis";
             };
 
             secrets.argocd-secret.stringData = {
-              "admin.password" = secrets.for "argocd-admin-password";
-              "admin.passwordMtime" = secrets.for "argocd-admin-mtime";
-              "server.secretkey" = secrets.for "argocd-secretkey";
-              "oidc.clientSecret" = secrets.forOidcService "argocd";
+              "admin.password" = environment.secrets.for "argocd-admin-password";
+              "admin.passwordMtime" = environment.secrets.for "argocd-admin-mtime";
+              "server.secretkey" = environment.secrets.for "argocd-secretkey";
+              "oidc.clientSecret" = environment.secrets.forOidcService "argocd";
             };
 
             ciliumNetworkPolicies = {

@@ -26,7 +26,7 @@ in
         ) allVaultHosts
       );
 
-      vaultServiceHostname = "vault.${environment.domain}";
+      vaultServiceHostname = environment.getDomainFor "vault";
 
       mkRaftPeer = hostname: ''
         retry_join {

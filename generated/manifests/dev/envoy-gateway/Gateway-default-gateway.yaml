@@ -10,4 +10,25 @@ spec:
       group: gateway.envoyproxy.io
       kind: EnvoyProxy
       name: envoy-proxy-config
-  listeners: []
+  listeners:
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: '*.json64.dev'
+      name: json64-dev-http
+      port: 80
+      protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: '*.json64.dev'
+      name: json64-dev-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: json64-dev-wildcard-tls
+            namespace: certs
+        mode: Terminate

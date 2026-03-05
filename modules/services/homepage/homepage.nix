@@ -2,6 +2,9 @@
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
   flake.features.homepage.nixos =
     { environment, ... }:
+    let
+      domain = environment.getDomainFor "homepage";
+    in
     {
 
       services.homepage-dashboard = {
@@ -73,13 +76,13 @@
       };
 
       services.oauth2-proxy.nginx.virtualHosts = {
-        "homepage.${environment.domain}" = { };
+        "${domain}" = { };
       };
 
       services.nginx.virtualHosts = {
-        "homepage.${environment.domain}" = {
+        "${domain}" = {
           forceSSL = true;
-          useACMEHost = environment.domain;
+          useACMEHost = environment.getTopDomainFor "homepage";
           locations."/" = {
             proxyPass = "http://127.0.0.1:8082";
             proxyWebsockets = true;

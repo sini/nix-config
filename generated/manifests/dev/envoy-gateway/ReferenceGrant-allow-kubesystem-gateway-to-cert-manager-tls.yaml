@@ -8,4 +8,7 @@ spec:
     - group: gateway.networking.k8s.io
       kind: Gateway
       namespace: kube-system
-  to: []
+  to:
+    - group: ""
+      kind: Secret
+      name: json64-dev-wildcard-tls

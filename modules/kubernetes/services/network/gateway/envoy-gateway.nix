@@ -1,7 +1,3 @@
-{ self, ... }:
-let
-  inherit (self.lib.kubernetes-utils) findKubernetesNodes domainToResourceName;
-in
 {
   flake.kubernetes.services.envoy-gateway = {
     crds =
@@ -18,15 +14,15 @@ in
     nixidy =
       {
         lib,
-        config,
         environment,
         charts,
         ...
       }:
       let
-        gateway-controller-address = config.kubernetes.loadBalancer.reservations.gateway-controller;
-        numReplicas = builtins.length (lib.attrValues (findKubernetesNodes environment));
-        cert-manager-domains = config.kubernetes.services.cert-manager.domains;
+        gateway-controller-address = environment.getAssignment "gateway-controller";
+        numReplicas = builtins.length (lib.attrValues (environment.findHostsByRole "kubernetes"));
+        # Read certificate domains from environment configuration
+        domains = environment.certificates.domains;
       in
       {
         applications.envoy-gateway = {
@@ -82,12 +78,12 @@ in
                   name = "envoy-proxy-config";
                 };
                 listeners =
-                  cert-manager-domains
+                  domains
                   |> builtins.attrNames
                   |> map (
                     domain:
                     let
-                      domainResourceName = domainToResourceName domain;
+                      domainResourceName = environment.domainToResourceName domain;
                     in
                     [
                       {
@@ -171,12 +167,12 @@ in
                   }
                 ];
                 to =
-                  cert-manager-domains
+                  domains
                   |> builtins.attrNames
                   |> map (domain: {
                     group = "";
                     kind = "Secret";
-                    name = "${domainToResourceName domain}-wildcard-tls";
+                    name = "${environment.domainToResourceName domain}-wildcard-tls";
                   });
               };
             };

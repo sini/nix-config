@@ -7,6 +7,10 @@
       pkgs,
       ...
     }:
+    let
+      domain = environment.getDomainFor "grafana";
+      kanidmDomain = environment.getDomainFor "kanidm";
+    in
     {
       age.secrets.grafana-oidc-secret = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/grafana-oidc-client-secret.age";
@@ -26,10 +30,10 @@
           enable = true;
           settings = {
             server = {
-              domain = "grafana.${environment.domain}";
+              domain = domain;
               http_addr = "127.0.0.1";
               http_port = 3000;
-              root_url = "https://grafana.${environment.domain}";
+              root_url = "https://${domain}";
               enforce_domain = false;
             };
 
@@ -73,9 +77,9 @@
               client_secret = "$__file{${config.age.secrets.grafana-oidc-secret.path}}";
               scopes = "openid email profile";
               login_attribute_path = "preferred_username";
-              auth_url = "https://idm.${environment.domain}/ui/oauth2";
-              token_url = "https://idm.${environment.domain}/oauth2/token";
-              api_url = "https://idm.${environment.domain}/oauth2/openid/grafana/userinfo";
+              auth_url = "https://${kanidmDomain}/ui/oauth2";
+              token_url = "https://${kanidmDomain}/oauth2/token";
+              api_url = "https://${kanidmDomain}/oauth2/openid/grafana/userinfo";
               use_pkce = true;
               use_refresh_token = true;
               role_attribute_path = "contains(groups[*], 'server_admin') && 'GrafanaAdmin' || contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'editor') && 'Editor' || 'Viewer'";
@@ -126,9 +130,9 @@
           };
         };
 
-        nginx.virtualHosts."grafana.${environment.domain}" = {
+        nginx.virtualHosts."${domain}" = {
           forceSSL = true;
-          useACMEHost = environment.domain;
+          useACMEHost = environment.getTopDomainFor "grafana";
           locations."/" = {
             proxyPass = "http://127.0.0.1:3000";
             proxyWebsockets = true;

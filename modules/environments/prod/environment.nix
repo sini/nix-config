@@ -1,3 +1,4 @@
+{ rootPath, ... }:
 {
   flake.environments.prod = {
     id = 1;
@@ -16,12 +17,75 @@
       "2a00:1098:2b::1"
     ];
 
+    # Certificate management configuration
+    certificates = {
+      domains = {
+        "json64.dev" = {
+          issuer = "json64-dev";
+        };
+        "json64.com" = {
+          issuer = "global";
+        };
+        "json64.net" = {
+          issuer = "global";
+        };
+        "sinistar.io" = {
+          issuer = "global";
+        };
+        "sinistar.org" = {
+          issuer = "global";
+        };
+        "zeroday.pub" = {
+          issuer = "global";
+        };
+        "zeroday.run" = {
+          issuer = "global";
+        };
+      };
+      issuers = {
+        "json64-dev" = {
+          ageKeyFile = rootPath + "/.secrets/env/prod/cloudflare-api-key.age";
+          sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+          secretKey = "cloudflare-api-token";
+        };
+        "global" = {
+          ageKeyFile = rootPath + "/.secrets/env/prod/cloudflare-api-key.age";
+          sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+          secretKey = "cloudflare-global-api-token";
+        };
+      };
+    };
+
+    # Service domain mappings
+    services = {
+      # Kubernetes services
+      argocd.domain = "argocd.zeroday.run";
+      hubble-ui.domain = "hubble.zeroday.run";
+
+      # NixOS services
+      grafana.domain = "grafana.json64.dev";
+      headscale.domain = "hs.json64.dev";
+      homepage.domain = "homepage.json64.dev";
+      jellyfin.domain = "jellyfin.json64.dev";
+      kanidm.domain = "idm.json64.dev";
+      loki.domain = "loki.json64.dev";
+      minio.domain = "minio.json64.dev";
+      minio-console.domain = "minio-console.json64.dev";
+      oauth2-proxy.domain = "oauth2-proxy.json64.dev";
+      open-webui.domain = "open-webui.json64.dev";
+      prometheus.domain = "prometheus.json64.dev";
+      vault.domain = "vault.json64.dev";
+    };
+
     networks = {
       management = {
         cidr = "10.10.0.0/16";
         ipv6_cidr = "fd64:0:1::/64";
         purpose = "management";
         description = "Management network for infrastructure hosts";
+        assignments = {
+          kube-apiserver-vip = "10.10.10.100";
+        };
       };
       kubernetes = {
         cidr = "172.20.0.0/16";
@@ -34,16 +98,18 @@
         ipv6_cidr = "fd64:0:3::/64";
         purpose = "kubernetes-services";
         description = "Kubernetes service network";
+        assignments = {
+          coredns = "172.21.0.10";
+        };
       };
-      mesh = {
-        cidr = "172.16.255.0/24";
-        purpose = "kubernetes-internal";
-        description = "Internal mesh network for Kubernetes nodes";
-      };
-      loadbalancer = {
+      loadbalancers = {
         cidr = "10.11.0.0/16";
         purpose = "loadbalancer";
         description = "LoadBalancer service IP range";
+        assignments = {
+          cilium-ingress-controller = "10.11.0.2";
+          gateway-controller = "10.11.0.1";
+        };
       };
     };
 

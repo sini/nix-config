@@ -2,6 +2,10 @@
 {
   flake.features.minio.nixos =
     { config, environment, ... }:
+    let
+      minioDomain = environment.getDomainFor "minio";
+      minioConsoleDomain = environment.getDomainFor "minio-console";
+    in
     {
       age.secrets.minio-root-credentials = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/minio-root-credentials.age";
@@ -19,9 +23,9 @@
         };
 
         nginx.virtualHosts = {
-          "minio.${environment.domain}" = {
+          "${minioDomain}" = {
             forceSSL = true;
-            useACMEHost = environment.domain;
+            useACMEHost = environment.getTopDomainFor "minio";
             locations."/" = {
               proxyPass = "http://127.0.0.1:9000";
               proxyWebsockets = true;
@@ -35,9 +39,9 @@
             };
           };
 
-          "minio-console.${environment.domain}" = {
+          "${minioConsoleDomain}" = {
             forceSSL = true;
-            useACMEHost = environment.domain;
+            useACMEHost = environment.getTopDomainFor "minio-console";
             locations."/" = {
               proxyPass = "http://127.0.0.1:9001";
               proxyWebsockets = true;
