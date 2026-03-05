@@ -100,10 +100,10 @@
               };
 
               # Routing Mode
-              # routingMode = "native";
-              # ipv4NativeRoutingCIDR = podNetwork.cidr;
-              routingMode = "tunnel";
-              tunnelProtocol = "geneve";
+              routingMode = "native";
+              ipv4NativeRoutingCIDR = podNetwork.cidr;
+              # routingMode = "tunnel";
+              # tunnelProtocol = "geneve";
 
               # endpointRoutes.enabled = true;
 

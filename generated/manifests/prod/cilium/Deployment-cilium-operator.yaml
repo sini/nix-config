@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: d23752ee9c8f54eb503d683a57e3cb2cb8d5c4aa8bb5a1e65a1a5a34c777baf2
+        cilium.io/cilium-configmap-checksum: f5374e92e3018cf5cc411b83708c8deac6eabe8726044e9a07ec790f92470ada
         prometheus.io/port: "9963"
         prometheus.io/scrape: "true"
       labels:
