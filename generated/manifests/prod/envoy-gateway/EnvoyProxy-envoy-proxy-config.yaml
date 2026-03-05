@@ -19,11 +19,10 @@ spec:
               maxSkew: 1
               topologyKey: kubernetes.io/hostname
               whenUnsatisfiable: DoNotSchedule
-        replicas: 1
+        replicas: 0
         strategy:
           rollingUpdate:
             maxSurge: 1
-            maxUnavailable: 0
       envoyService:
         annotations:
           lbipam.cilium.io/ips: 10.11.0.1
