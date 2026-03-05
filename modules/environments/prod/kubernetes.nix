@@ -3,11 +3,6 @@
   flake.environments.prod.kubernetes = {
     secretsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
 
-    kubeAPIVIP = "10.10.10.100";
-
-    clusterCidr = "172.20.0.0/16";
-    serviceCidr = "172.21.0.0/16";
-
     tlsSanIps = [
       "10.10.10.2" # axon-01 external
       "10.10.10.3" # axon-02 external
@@ -16,14 +11,6 @@
       "172.16.255.2" # axon-02 internal
       "172.16.255.3" # axon-03 internal
     ];
-
-    loadBalancer = {
-      cidr = "10.11.0.0/16";
-      reservations = {
-        cilium-ingress-controller = "10.11.0.2";
-        gateway-controller = "10.11.0.1";
-      };
-    };
 
     # Kubernetes services configuration
     services = {
@@ -52,45 +39,6 @@
       ];
       config = {
         coredns.clusterIP = "172.21.0.10";
-        cert-manager = {
-          domains = {
-            "json64.dev" = {
-              issuer = "json64-dev";
-            };
-            "json64.com" = {
-              issuer = "global";
-            };
-            "json64.net" = {
-              issuer = "global";
-            };
-            "sinistar.io" = {
-              issuer = "global";
-            };
-            "sinistar.org" = {
-              issuer = "global";
-            };
-            "zeroday.pub" = {
-              issuer = "global";
-            };
-            "zeroday.run" = {
-              issuer = "global";
-            };
-          };
-          issuers = {
-            "json64-dev" = {
-              sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
-              secretKey = "cloudflare-api-token";
-            };
-            "global" = {
-              sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
-              secretKey = "cloudflare-global-api-token";
-            };
-          };
-        };
-
-        argocd.domain = "argocd.zeroday.run";
-
-        hubble-ui.domain = "hubble.zeroday.run";
 
         cilium = {
           devices = [

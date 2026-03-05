@@ -1,7 +1,4 @@
-{ self, lib, ... }:
-let
-  inherit (self.lib.kubernetes-utils) domainToResourceName;
-in
+{ lib, ... }:
 {
   flake.kubernetes.services.cert-manager = {
     crds =
@@ -13,53 +10,16 @@ in
         ];
       };
 
-    options = {
-      domains = lib.mkOption {
-        type = lib.types.attrsOf (
-          lib.types.submodule {
-            options = {
-              issuer = lib.mkOption {
-                type = lib.types.str;
-                description = "The API key name to use for this domain";
-              };
-            };
-          }
-        );
-        default = { };
-        description = "Domains to generate certs for";
-      };
-
-      issuers = lib.mkOption {
-        type = lib.types.attrsOf (
-          lib.types.submodule {
-            options = {
-              sopsFile = lib.mkOption {
-                type = lib.types.nullOr lib.types.path;
-                default = null;
-                description = "Optional path to the file containing the API key";
-              };
-              secretKey = lib.mkOption {
-                type = lib.types.str;
-                description = "The secret key name";
-              };
-            };
-          }
-        );
-        default = { };
-        description = "API key configurations";
-      };
-    };
-
     nixidy =
       {
-        config,
         charts,
-        secrets,
+        environment,
         ...
       }:
       let
-        domains = config.kubernetes.services.cert-manager.domains;
-        issuers = config.kubernetes.services.cert-manager.issuers;
+        # Consume certificate configuration from environment
+        domains = environment.certificates.domains;
+        issuers = environment.certificates.issuers;
       in
       {
         applications.cert-manager = {
@@ -92,7 +52,7 @@ in
                   name = "${issuer}-secret";
                   value = {
                     type = "Opaque";
-                    stringData.cloudflare-api-token = secrets.from secretRef;
+                    stringData.cloudflare-api-token = environment.secrets.from secretRef;
                   };
                 }
               );
@@ -131,14 +91,14 @@ in
               domains
               |> lib.attrsets.mapAttrs' (
                 domain: args: {
-                  name = (domainToResourceName domain) + "-wildcard-certificate";
+                  name = (environment.domainToResourceName domain) + "-wildcard-certificate";
                   value = {
                     metadata = {
                       namespace = "certs";
                       annotations."cert-manager.io/issue-temporary-certificate" = "true";
                     };
                     spec = {
-                      secretName = "${domainToResourceName domain}-wildcard-tls";
+                      secretName = "${environment.domainToResourceName domain}-wildcard-tls";
                       issuerRef = {
                         name = "${args.issuer}-issuer";
                         kind = "ClusterIssuer";

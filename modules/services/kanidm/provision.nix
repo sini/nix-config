@@ -37,20 +37,14 @@
         };
       };
 
+      # Helper to generate OIDC config for services with Envoy OIDC authentication
       envoyOidcConfigFor =
         {
           service,
           accessGroups ? [ "admins" ],
         }:
         let
-          domain =
-            if
-              environment.kubernetes.services.config ? ${service}
-              && environment.kubernetes.services.config.${service} ? domain
-            then
-              environment.kubernetes.services.config.${service}.domain
-            else
-              "${service}.${environment.domain}";
+          domain = environment.getDomainFor service;
         in
         {
           displayName = service;
@@ -216,54 +210,55 @@
         };
 
         systems.oauth2 = {
-          grafana = {
-            displayName = "Grafana Dashboard";
-            originLanding = "https://grafana.${environment.domain}/login/generic_oauth";
-            originUrl = "https://grafana.${environment.domain}";
-            basicSecretFile = config.age.secrets.grafana-oidc-client-secret.path;
-            scopeMaps."grafana.access" = [
-              "openid"
-              "email"
-              "profile"
-            ];
-            claimMaps.groups = {
-              joinType = "array";
-              valuesByGroup = {
-                "grafana.editors" = [ "editor" ];
-                "grafana.admins" = [ "admin" ];
-                "grafana.server-admins" = [ "server_admin" ];
+          grafana =
+            let
+              domain = environment.getDomainFor "grafana";
+            in
+            {
+              displayName = "Grafana Dashboard";
+              originLanding = "https://${domain}/login/generic_oauth";
+              originUrl = "https://${domain}";
+              basicSecretFile = config.age.secrets.grafana-oidc-client-secret.path;
+              scopeMaps."grafana.access" = [
+                "openid"
+                "email"
+                "profile"
+              ];
+              claimMaps.groups = {
+                joinType = "array";
+                valuesByGroup = {
+                  "grafana.editors" = [ "editor" ];
+                  "grafana.admins" = [ "admin" ];
+                  "grafana.server-admins" = [ "server_admin" ];
+                };
               };
+              allowInsecureClientDisablePkce = false;
+              preferShortUsername = true;
             };
-            allowInsecureClientDisablePkce = false;
-            preferShortUsername = true;
-          };
 
-          headscale = {
-            displayName = "vpn";
-            originUrl = [
-              "https://hs.${environment.domain}/oidc/callback"
-              "https://hs.${environment.domain}/admin/oidc/callback"
-            ];
-            originLanding = "https://hs.${environment.domain}/admin";
-            basicSecretFile = config.age.secrets.headscale-oidc-client-secret.path;
-            scopeMaps."vpn.users" = [
-              "openid"
-              "email"
-              "profile"
-            ];
-            preferShortUsername = true;
-          };
+          headscale =
+            let
+              domain = environment.getDomainFor "headscale";
+            in
+            {
+              displayName = "vpn";
+              originUrl = [
+                "https://${domain}/oidc/callback"
+                "https://${domain}/admin/oidc/callback"
+              ];
+              originLanding = "https://${domain}/admin";
+              basicSecretFile = config.age.secrets.headscale-oidc-client-secret.path;
+              scopeMaps."vpn.users" = [
+                "openid"
+                "email"
+                "profile"
+              ];
+              preferShortUsername = true;
+            };
 
           argocd =
             let
-              domain =
-                if
-                  environment.kubernetes.services.config ? "argocd"
-                  && environment.kubernetes.services.config.argocd ? domain
-                then
-                  environment.kubernetes.services.config.argocd.domain
-                else
-                  "argocd.${environment.domain}";
+              domain = environment.getDomainFor "argocd";
             in
             {
               displayName = "argocd";
@@ -309,85 +304,97 @@
             preferShortUsername = true;
           };
 
-          open-webui = {
-            displayName = "open-webui";
-            imageFile = builtins.path { path = rootPath + /assets/open-webui.svg; };
-            originUrl = "https://open-webui.${environment.domain}/oauth/oidc/callback";
-            originLanding = "https://open-webui.${environment.domain}/auth";
-            basicSecretFile = config.age.secrets.open-webui-oidc-client-secret.path;
-            scopeMaps."open-webui.access" = [
-              "openid"
-              "email"
-              "profile"
-            ];
-            preferShortUsername = true;
-            claimMaps = {
-              groups = {
-                joinType = "array";
-                valuesByGroup."open-webui.admins" = [ "admins" ];
-              };
-              roles = {
-                joinType = "array";
-                valuesByGroup = {
-                  "open-webui.admins" = [ "admin" ];
-                  "open-webui.access" = [ "user" ];
+          open-webui =
+            let
+              domain = environment.getDomainFor "open-webui";
+            in
+            {
+              displayName = "open-webui";
+              imageFile = builtins.path { path = rootPath + /assets/open-webui.svg; };
+              originUrl = "https://${domain}/oauth/oidc/callback";
+              originLanding = "https://${domain}/auth";
+              basicSecretFile = config.age.secrets.open-webui-oidc-client-secret.path;
+              scopeMaps."open-webui.access" = [
+                "openid"
+                "email"
+                "profile"
+              ];
+              preferShortUsername = true;
+              claimMaps = {
+                groups = {
+                  joinType = "array";
+                  valuesByGroup."open-webui.admins" = [ "admins" ];
+                };
+                roles = {
+                  joinType = "array";
+                  valuesByGroup = {
+                    "open-webui.admins" = [ "admin" ];
+                    "open-webui.access" = [ "user" ];
+                  };
                 };
               };
             };
-          };
 
-          jellyfin = {
-            displayName = "Jellyfin";
-            originUrl = "https://jellyfin.${environment.domain}/sso/OID/redirect/kanidm";
-            originLanding = "https://jellyfin.${environment.domain}";
-            basicSecretFile = config.age.secrets.jellyfin-oidc-client-secret.path;
-            preferShortUsername = true;
-            scopeMaps = {
-              "media.access" = [
-                "openid"
-                "profile"
-                "groups"
-              ];
-            };
-            claimMaps.roles = {
-              joinType = "array";
-              valuesByGroup = {
-                "media.admins" = [
-                  "admin"
-                  "user"
+          jellyfin =
+            let
+              domain = environment.getDomainFor "jellyfin";
+            in
+            {
+              displayName = "Jellyfin";
+              originUrl = "https://${domain}/sso/OID/redirect/kanidm";
+              originLanding = "https://${domain}";
+              basicSecretFile = config.age.secrets.jellyfin-oidc-client-secret.path;
+              preferShortUsername = true;
+              scopeMaps = {
+                "media.access" = [
+                  "openid"
+                  "profile"
+                  "groups"
                 ];
-                "media.access" = [ "user" ];
+              };
+              claimMaps.roles = {
+                joinType = "array";
+                valuesByGroup = {
+                  "media.admins" = [
+                    "admin"
+                    "user"
+                  ];
+                  "media.access" = [ "user" ];
+                };
               };
             };
-          };
 
-          oauth2-proxy = {
-            displayName = "OAuth2-Proxy";
-            originUrl = "https://oauth2-proxy.${environment.domain}/oauth2/callback";
-            originLanding = "https://oauth2-proxy.${environment.domain}/";
-            basicSecretFile = config.age.secrets.oauth2-proxy-oidc-client-secret.path;
-            preferShortUsername = true;
-            scopeMaps = {
-              "media.access" = [
-                "openid"
-                "email"
-                "profile"
-                "groups"
-              ];
-              "media.admins" = [
-                "openid"
-                "email"
-                "profile"
-                "groups"
-              ];
-              "admins" = [
-                "openid"
-                "email"
-                "profile"
-                "groups"
-              ];
+          oauth2-proxy =
+            let
+              domain = environment.getDomainFor "oauth2-proxy";
+            in
+            {
+              displayName = "OAuth2-Proxy";
+              originUrl = "https://${domain}/oauth2/callback";
+              originLanding = "https://${domain}/";
+              basicSecretFile = config.age.secrets.oauth2-proxy-oidc-client-secret.path;
+              preferShortUsername = true;
+              scopeMaps = {
+                "media.access" = [
+                  "openid"
+                  "email"
+                  "profile"
+                  "groups"
+                ];
+                "media.admins" = [
+                  "openid"
+                  "email"
+                  "profile"
+                  "groups"
+                ];
+                "admins" = [
+                  "openid"
+                  "email"
+                  "profile"
+                  "groups"
+                ];
+              };
             };
-          };
         };
       };
     };

@@ -5,7 +5,7 @@ metadata:
   namespace: argocd
 spec:
   hostnames:
-    - argocd.json64.dev
+    - argocd.dev.json64.dev
   parentRefs:
     - name: default-gateway
       namespace: kube-system

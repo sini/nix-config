@@ -1,31 +1,12 @@
-{ self, lib, ... }:
-let
-  inherit (self.lib.kubernetes-utils) domainToResourceName;
-in
 {
   flake.kubernetes.services.hubble-ui = {
-
-    options = {
-      domain = lib.mkOption {
-        type = lib.types.nullOr lib.types.str;
-        default = null;
-        description = "Default routing device";
-      };
-    };
-
     nixidy =
       {
-        config,
         environment,
-        secrets,
         ...
       }:
       let
-        domain =
-          if config.kubernetes.services.hubble-ui.domain != null then
-            config.kubernetes.services.hubble-ui.domain
-          else
-            "hubble.${environment.domain}";
+        domain = environment.getDomainFor "hubble-ui";
       in
       {
         applications.cilium = {
@@ -57,7 +38,7 @@ in
                 {
                   name = "default-gateway";
                   namespace = "kube-system";
-                  sectionName = "${domainToResourceName domain}-https";
+                  sectionName = "${environment.domainToResourceName domain}-https";
                 }
               ];
               hostnames = [ domain ];
@@ -83,7 +64,7 @@ in
               ];
 
               oidc = {
-                provider.issuer = secrets.oidcIssuerFor "hubble-ui";
+                provider.issuer = environment.secrets.oidcIssuerFor "hubble-ui";
                 clientID = "hubble-ui";
                 clientSecret.name = "hubble-ui-oidc-client-secret";
                 # cookieDomain = "${environment.domain}";
@@ -99,7 +80,7 @@ in
 
             secrets.hubble-ui-oidc-client-secret = {
               type = "Opaque";
-              stringData.client-secret = secrets.forOidcService "hubble-ui";
+              stringData.client-secret = environment.secrets.forOidcService "hubble-ui";
             };
 
             ciliumNetworkPolicies = {

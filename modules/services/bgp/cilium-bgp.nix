@@ -1,25 +1,6 @@
 # Cilium BGP configuration for Kubernetes clusters
 # Handles BGP peering with Cilium for pod/service CIDR advertisement
 {
-  config,
-  lib,
-  ...
-}:
-let
-  # Find the bgp-hub host in the same environment
-  findBgpHub =
-    currentHostEnvironment:
-    let
-      bgpHubHosts = lib.mapAttrsToList (_hostname: hostConfig: builtins.head hostConfig.ipv4) (
-        lib.attrsets.filterAttrs (
-          _hostname: hostConfig:
-          builtins.elem "bgp-hub" hostConfig.roles && hostConfig.environment == currentHostEnvironment
-        ) config.flake.hosts
-      );
-    in
-    if bgpHubHosts != [ ] then lib.head bgpHubHosts else null;
-in
-{
   flake.features.cilium-bgp = {
     requires = [ "bgp-core" ];
     nixos =
@@ -47,7 +28,19 @@ in
             # Default logic for nodes without specific ASN
             65002;
 
-        uplinkIp = findBgpHub hostOptions.environment;
+        uplinkIp =
+          environment.findHostsByRole "bgp-hub"
+          |> lib.attrValues
+          |> lib.head
+          |> map (host: lib.head host.ipv4);
+
+        # Find networks by purpose
+        findNetworkByPurpose =
+          purpose: lib.findFirst (net: net.purpose == purpose) null (lib.attrValues environment.networks);
+
+        podNetwork = findNetworkByPurpose "kubernetes-pods";
+        serviceNetwork = findNetworkByPurpose "kubernetes-services";
+        loadbalancerNetwork = findNetworkByPurpose "loadbalancer";
       in
       {
         config = {
@@ -57,9 +50,9 @@ in
 
             prefixLists = {
               CILIUM-ROUTES = [
-                "permit ${environment.kubernetes.clusterCidr} le 32"
-                "permit ${environment.kubernetes.serviceCidr} le 32"
-                "permit ${environment.kubernetes.loadBalancer.cidr} le 32"
+                "permit ${podNetwork.cidr} le 32"
+                "permit ${serviceNetwork.cidr} le 32"
+                "permit ${loadbalancerNetwork.cidr} le 32"
               ];
               DEFAULT-ONLY = [
                 "permit 0.0.0.0/0"
@@ -79,7 +72,7 @@ in
               softReconfiguration = true;
               ebgpMultihop = 4;
               # updateSource = lib.mkIf hasMeshConfig "dummy0";
-              listenRange = "${builtins.head hostOptions.ipv4}/32"; # "${environment.kubernetes.clusterCidr}"; # "127.0.0.1/32";
+              listenRange = "${builtins.head hostOptions.ipv4}/32"; # "${podNetwork.cidr}"; # "127.0.0.1/32";
             };
 
             neighbors = lib.optional (uplinkIp != null) {

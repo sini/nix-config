@@ -1,13 +1,9 @@
-{ self, ... }:
-let
-  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
-in
 {
   flake.kubernetes.services.cilium-bgp = {
     nixidy =
       { environment, lib, ... }:
       let
-        hosts = findKubernetesNodes environment;
+        hosts = environment.findHostsByRole "kubernetes";
       in
       {
         applications.cilium = {

@@ -12,7 +12,7 @@
         enable = true;
         openFirewall = true;
         authKeyFile = config.age.secrets.tailscale-auth-key.path;
-        extraUpFlags = [ "--login-server=https://hs.${environment.domain}" ];
+        extraUpFlags = [ "--login-server=https://${environment.getDomainFor "headscale"}" ];
         extraDaemonFlags = [ "--no-logs-no-support" ];
       };
 

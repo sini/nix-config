@@ -73,6 +73,8 @@ in
       ...
     }:
     let
+      domain = environment.getDomainFor "prometheus";
+
       currentHostEnvironment = hostOptions.environment;
 
       # Determine which environments to scan for metrics
@@ -161,9 +163,9 @@ in
 
         nginx = {
           virtualHosts = {
-            "prometheus.${environment.domain}" = {
+            "${domain}" = {
               forceSSL = true;
-              useACMEHost = environment.domain;
+              useACMEHost = environment.getTopDomainFor "prometheus";
               locations."/" = {
                 proxyPass = "http://127.0.0.1:9090";
                 proxyWebsockets = true;

@@ -1,7 +1,4 @@
-{ self, lib, ... }:
-let
-  inherit (self.lib.kubernetes-utils) findClusterMaster;
-in
+{ lib, ... }:
 {
   flake.kubernetes.services.cilium = {
     crds =
@@ -59,8 +56,16 @@ in
         ...
       }:
       let
-        loadbalancer-cidr = config.kubernetes.loadBalancer.cidr;
-        # ingress-controller-address = config.kubernetes.loadBalancer.reservations.cilium-ingress-controller;
+        # Find networks by purpose
+        findNetworkByPurpose =
+          purpose: lib.findFirst (net: net.purpose == purpose) null (lib.attrValues environment.networks);
+
+        podNetwork = findNetworkByPurpose "kubernetes-pods";
+        serviceNetwork = findNetworkByPurpose "kubernetes-services";
+        loadbalancerNetwork = findNetworkByPurpose "loadbalancer";
+
+        loadbalancer-cidr = loadbalancerNetwork.cidr;
+        # ingress-controller-address = environment.getAssignment "cilium-ingress-controller";
       in
       {
         applications.cilium = {
@@ -96,7 +101,7 @@ in
 
               # Routing Mode
               # routingMode = "native";
-              # ipv4NativeRoutingCIDR = environment.kubernetes.clusterCidr;
+              # ipv4NativeRoutingCIDR = podNetwork.cidr;
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
@@ -112,7 +117,7 @@ in
               # egress-masquerade-interfaces:
 
               # Points to the stable loopback routed by the BGP fabric
-              k8sServiceHost = findClusterMaster environment;
+              k8sServiceHost = environment.getAssignment "kube-apiserver-vip";
               k8sServicePort = 6443;
 
               # Set Cilium as a kube-proxy replacement.
@@ -178,7 +183,7 @@ in
 
               ipMasqAgent = {
                 enabled = true;
-                config.nonMasqueradeCIDRs = "{${environment.kubernetes.clusterCidr},${environment.kubernetes.serviceCidr}}";
+                config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr}}";
                 config.masqLinkLocal = false;
               };
 
@@ -189,7 +194,7 @@ in
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";
-                operator.clusterPoolIPv4PodCIDRList = [ environment.kubernetes.clusterCidr ];
+                operator.clusterPoolIPv4PodCIDRList = [ podNetwork.cidr ];
               };
 
               # BGP control-plane (for FRR peering)

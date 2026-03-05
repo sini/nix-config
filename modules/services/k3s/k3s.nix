@@ -1,11 +1,7 @@
 {
-  self,
   rootPath,
   ...
 }:
-let
-  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
-in
 {
   flake.features.kubernetes = {
     requires = [ "containerd" ];
@@ -22,7 +18,7 @@ in
 
         managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.management.cidr)}";
 
-        kubernetesNodes = findKubernetesNodes environment;
+        kubernetesNodes = environment.findHostsByRole "kubernetes";
 
         # Sort kubernetes nodes by hostname for deterministic ordering
         sortedKubernetesNodes = builtins.sort (a: b: a.hostname < b.hostname) (
@@ -41,7 +37,7 @@ in
 
         # Find master node for agent connection (using hosts from outer scope)
         # masterIP = findClusterMaster environment;
-        masterIP = environment.kubernetes.kubeAPIVIP;
+        masterIP = environment.getAssignment "kube-apiserver-vip";
       in
       {
         age.secrets.kubernetes-cluster-token = {
@@ -199,13 +195,22 @@ in
               interface = "br0"; # We use br0 cause we're cool like that...
               virtualRouterId = 51;
               priority = 100 - nodeId; # Higher number wins (e.g., 100 on MASTER)
-              virtualIps = [ { addr = "${environment.kubernetes.kubeAPIVIP}/${managementSubnet}"; } ];
+              virtualIps = [
+                { addr = "${environment.getAssignment "kube-apiserver-vip"}/${managementSubnet}"; }
+              ];
               trackScripts = [ "check_k3s" ];
             };
           };
 
           k3s =
             let
+              # Find networks by purpose
+              findNetworkByPurpose =
+                purpose: lib.findFirst (net: net.purpose == purpose) null (lib.attrValues environment.networks);
+
+              podNetwork = findNetworkByPurpose "kubernetes-pods";
+              serviceNetwork = findNetworkByPurpose "kubernetes-services";
+
               generalFlagList = [
                 "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
                 "--snapshotter=overlayfs"
@@ -227,8 +232,8 @@ in
               serverFlagList = [
                 "--bind-address=0.0.0.0"
                 "--advertise-address=${builtins.head hostOptions.ipv4}"
-                "--cluster-cidr=${environment.kubernetes.clusterCidr}"
-                "--service-cidr=${environment.kubernetes.serviceCidr}"
+                "--cluster-cidr=${podNetwork.cidr}:${podNetwork.cidr}"
+                "--service-cidr=${serviceNetwork.cidr}:"
 
                 "--kubelet-arg=fail-swap-on=false"
 
@@ -257,9 +262,9 @@ in
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
                 "--tls-san=${builtins.head hostOptions.ipv4}"
-                "--tls-san=${environment.kubernetes.kubeAPIVIP}"
+                "--tls-san=${environment.getAssignment "kube-apiserver-vip"}"
 
-                "--kube-apiserver-arg=oidc-issuer-url=https://idm.${environment.domain}/oauth2/openid/kubernetes"
+                "--kube-apiserver-arg=oidc-issuer-url=https://${environment.getDomainFor "kanidm"}/oauth2/openid/kubernetes"
                 "--kube-apiserver-arg=oidc-client-id=kubernetes"
                 "--kube-apiserver-arg=oidc-signing-algs=ES256"
                 "--kube-apiserver-arg=oidc-username-claim=email"

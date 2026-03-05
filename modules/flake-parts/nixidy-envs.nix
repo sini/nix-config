@@ -8,7 +8,7 @@
 let
   inherit (config.flake.meta) repo;
   inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
-  inherit (config.flake.lib.kubernetes-utils) mkSecretHelpers extractCRDsFromChart;
+  inherit (config.flake.lib.kubernetes-utils) extractCRDsFromChart;
 in
 {
   flake = {
@@ -73,7 +73,6 @@ in
             extraSpecialArgs = {
               inherit environment;
               hosts = config.flake.hosts;
-              secrets = mkSecretHelpers environment;
               # Expose CRD objects for services to use in bootstrap
               crdObjects = serviceCrdObjects;
             };

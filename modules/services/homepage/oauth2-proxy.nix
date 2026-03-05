@@ -3,6 +3,10 @@
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
   flake.features.oauth2-proxy.nixos =
     { config, environment, ... }:
+    let
+      domain = environment.getDomainFor "oauth2-proxy";
+      kanidmDomain = environment.getDomainFor "kanidm";
+    in
     {
 
       age.secrets.oauth2-proxy-oidc-secret = {
@@ -56,12 +60,12 @@
 
         # OIDC configuration
         clientID = "oauth2-proxy";
-        oidcIssuerUrl = "https://idm.${environment.domain}/oauth2/openid/oauth2-proxy";
-        redirectURL = "https://oauth2-proxy.${environment.domain}/oauth2/callback";
-        loginURL = "https://oauth2-proxy.${environment.domain}/oauth2/authorise";
-        profileURL = "https://idm.${environment.domain}/oauth2/openid/oauth2-proxy/userinfo";
-        redeemURL = "https://idm.${environment.domain}/oauth2/token";
-        validateURL = "https://idm.${environment.domain}/oauth2/token/introspect";
+        oidcIssuerUrl = "https://${kanidmDomain}/oauth2/openid/oauth2-proxy";
+        redirectURL = "https://${domain}/oauth2/callback";
+        loginURL = "https://${domain}/oauth2/authorise";
+        profileURL = "https://${kanidmDomain}/oauth2/openid/oauth2-proxy/userinfo";
+        redeemURL = "https://${kanidmDomain}/oauth2/token";
+        validateURL = "https://${kanidmDomain}/oauth2/token/introspect";
 
         scope = "openid email profile";
 
@@ -98,12 +102,12 @@
           # upstream = "static://202";
         };
 
-        nginx.domain = "oauth2-proxy.${environment.domain}";
+        nginx.domain = domain;
       };
 
-      services.nginx.virtualHosts."oauth2-proxy.${environment.domain}" = {
+      services.nginx.virtualHosts."${domain}" = {
         forceSSL = true;
-        useACMEHost = environment.domain;
+        useACMEHost = environment.getTopDomainFor "oauth2-proxy";
         locations."/" = {
           proxyPass = "http://127.0.0.1:4180";
           recommendedProxySettings = true;
@@ -114,7 +118,7 @@
         };
       };
 
-      services.nginx.upstreams."oauth2-proxy.${environment.domain}" = {
+      services.nginx.upstreams."${domain}" = {
         servers = {
           "localhost:4180" = { };
         };

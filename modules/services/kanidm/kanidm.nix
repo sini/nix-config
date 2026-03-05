@@ -7,6 +7,10 @@
       environment,
       ...
     }:
+    let
+      domain = environment.getDomainFor "kanidm";
+      topDomain = environment.getTopDomainFor "kanidm";
+    in
     {
       age.secrets.kanidm-admin-password = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/kanidm-admin-password.age";
@@ -22,20 +26,20 @@
             enable = true;
             settings = {
               domain = environment.domain;
-              origin = "https://idm.${environment.domain}";
+              origin = "https://${domain}";
               bindaddress = "127.0.0.1:8443";
               ldapbindaddress = "127.0.0.1:3636";
 
               # TLS certificates from ACME
-              tls_chain = "${config.security.acme.certs.${environment.domain}.directory}/fullchain.pem";
-              tls_key = "${config.security.acme.certs.${environment.domain}.directory}/key.pem";
+              tls_chain = "${config.security.acme.certs.${topDomain}.directory}/fullchain.pem";
+              tls_key = "${config.security.acme.certs.${topDomain}.directory}/key.pem";
             };
           };
 
           client = {
             enable = true;
             settings = {
-              uri = "https://idm.${environment.domain}";
+              uri = "https://${domain}";
             };
           };
 
@@ -47,9 +51,9 @@
 
         };
 
-        nginx.virtualHosts."idm.${environment.domain}" = {
+        nginx.virtualHosts."${domain}" = {
           forceSSL = true;
-          useACMEHost = environment.domain;
+          useACMEHost = environment.getTopDomainFor "kanidm";
           locations."/" = {
             proxyPass = "https://127.0.0.1:8443";
             proxyWebsockets = true;

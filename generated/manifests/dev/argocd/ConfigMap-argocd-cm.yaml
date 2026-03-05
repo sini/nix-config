@@ -54,7 +54,7 @@ data:
   timeout.hard.reconciliation: 0s
   timeout.reconciliation: 120s
   timeout.reconciliation.jitter: 60s
-  url: https://argocd.json64.dev
+  url: https://argocd.dev.json64.dev
 kind: ConfigMap
 metadata:
   labels:

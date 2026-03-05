@@ -81,50 +81,12 @@ let
       };
     };
 
-  # Shared kubernetes network options
+  # Shared kubernetes options
   kubernetesNetworkOptions = {
-    kubeAPIVIP = mkOption {
-      type = types.str;
-      default = "10.10.10.100";
-      description = "Kubernetes API VIP";
-    };
-
-    clusterCidr = mkOption {
-      type = types.str;
-      default = "172.20.0.0/16";
-      description = "Kubernetes pod network CIDR";
-    };
-
-    serviceCidr = mkOption {
-      type = types.str;
-      default = "172.21.0.0/16";
-      description = "Kubernetes service network CIDR";
-    };
-
     tlsSanIps = mkOption {
       type = types.listOf types.str;
       default = [ ];
       description = "Additional IPs to include in Kubernetes API server TLS certificate SANs";
-    };
-
-    loadBalancer = mkOption {
-      type = types.submodule {
-        options = {
-          cidr = mkOption {
-            type = types.str;
-            default = "10.0.100.0/24";
-            description = "IP range for LoadBalancer services";
-          };
-
-          reservations = mkOption {
-            type = types.attrsOf types.str;
-            default = { };
-            description = "Reserved IP addresses for specific LoadBalancer services";
-          };
-        };
-      };
-      default = { };
-      description = "LoadBalancer configuration";
     };
   };
 
