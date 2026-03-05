@@ -190,8 +190,12 @@
               # IPAM & Pod CIDRs
               ipam = {
                 mode = "cluster-pool";
-                operator.clusterPoolIPv4PodCIDRList = [ podNetwork.cidr ];
-                operator.clusterPoolIPv6PodCIDRList = [ podNetwork.ipv6_cidr ];
+                operator = {
+                  clusterPoolIPv4PodCIDRList = [ podNetwork.cidr ];
+                  clusterPoolIPv4MaskSize = 24;
+                  clusterPoolIPv6PodCIDRList = [ podNetwork.ipv6_cidr ];
+                  clusterPoolIPv6MaskSize = 112;
+                };
               };
 
               # BGP control-plane (for FRR peering)
