@@ -1,6 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
+  annotations:
+    argocd.argoproj.io/compare-options: ServerSideDiff=true
   name: rook-ceph
   namespace: argocd
 spec:
@@ -16,3 +18,5 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
