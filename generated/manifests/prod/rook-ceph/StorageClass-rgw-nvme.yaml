@@ -1,0 +1,9 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: rgw-nvme
+parameters:
+  objectStoreName: rgw-nvme
+  objectStoreNamespace: rook-ceph
+provisioner: rook-ceph.ceph.rook.io/bucket
+reclaimPolicy: Delete

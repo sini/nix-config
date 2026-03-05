@@ -1,0 +1,21 @@
+apiVersion: ceph.rook.io/v1
+kind: CephFilesystem
+metadata:
+  name: cephfs-nvme
+  namespace: rook-ceph
+spec:
+  dataPools:
+    - deviceClass: nvme
+      failureDomain: host
+      name: nvme
+      replicated:
+        size: 2
+  metadataPool:
+    deviceClass: nvme
+    failureDomain: host
+    replicated:
+      size: 2
+  metadataServer:
+    activeCount: 1
+    activeStandby: true
+  preserveFilesystemOnDelete: true

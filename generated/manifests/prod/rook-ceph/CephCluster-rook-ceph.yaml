@@ -81,6 +81,7 @@ spec:
       encryption:
         enabled: false
       requireMsgr2: true
+    ipFamily: IPv4
     provider: host
   priorityClassNames:
     mgr: system-cluster-critical
