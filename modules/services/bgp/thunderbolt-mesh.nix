@@ -70,28 +70,13 @@
 # This ensures the module works correctly with partial meshes, broken links,
 # or any arbitrary thunderbolt topology.
 {
-  config,
-  lib,
-  ...
-}:
-let
-  # Helper to get hosts with thunderbolt-mesh module in the same environment
-  getThunderboltPeers =
-    currentHostEnvironment: currentHostname:
-    lib.filterAttrs (
-      name: host:
-      name != currentHostname
-      && (builtins.elem "thunderbolt-mesh" host.features)
-      && host.environment == currentHostEnvironment
-    ) config.flake.hosts;
-in
-{
   flake.features.thunderbolt-mesh = {
     requires = [ "bgp-core" ];
     nixos =
       {
         lib,
         config,
+        environment,
         hostOptions,
         ...
       }:
@@ -102,7 +87,9 @@ in
         ];
 
         # Auto-discover peer configuration from host settings
-        thunderboltPeers = getThunderboltPeers hostOptions.environment config.networking.hostName;
+        thunderboltPeers = lib.filterAttrs (name: _host: name != config.networking.hostName) (
+          environment.findHostsByRole "thunderbolt-mesh"
+        );
 
         # Derive gateway IPs from peer interface assignments
         # This logic determines which interface connects to which peer by checking /31 network pairs
