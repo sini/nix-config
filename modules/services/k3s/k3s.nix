@@ -467,6 +467,7 @@ in
         };
 
         environment.persistence."/persist".directories = [
+          "/var/lib/rook"
           "/var/lib/rancher"
           "/var/lib/kubelet"
           "/etc/rancher"

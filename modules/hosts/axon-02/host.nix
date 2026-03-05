@@ -23,6 +23,7 @@
     tags = {
       "bgp-asn" = "65001";
       "cilium-asn" = "65002";
+      "ceph-device" = "/dev/disk/by-id/nvme-Force_MP600_192482300001285610CF";
 
       "thunderbolt-interface-1" = "169.254.23.0/31";
       "thunderbolt-interface-2" = "169.254.12.1/31";
@@ -39,11 +40,6 @@
         hardware = {
           networking.interfaces = [ "enp2s0" ];
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
-          # disk.longhorn = {
-          #   longhorn_drive = {
-          #     device_id = "nvme-Force_MP600_192482300001285610CF";
-          #   };
-          # };
         };
 
         impermanence = {
