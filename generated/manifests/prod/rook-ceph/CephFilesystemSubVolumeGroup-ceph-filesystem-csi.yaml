@@ -1,0 +1,10 @@
+apiVersion: ceph.rook.io/v1
+kind: CephFilesystemSubVolumeGroup
+metadata:
+  name: ceph-filesystem-csi
+  namespace: rook-ceph
+spec:
+  filesystemName: ceph-filesystem
+  name: csi
+  pinning:
+    distributed: 1

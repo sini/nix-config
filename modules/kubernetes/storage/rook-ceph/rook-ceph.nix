@@ -138,6 +138,7 @@ in
                     (enable "rook")
                   ];
                 network.provider = "host";
+                network.ipFamily = "IPv4";
                 network.connections.requireMsgr2 = true;
                 storage = {
                   useAllNodes = false;
@@ -153,47 +154,164 @@ in
                     });
                 };
               };
-              cephFileSystems = [ ];
+              # cephFileSystems = [ ];
               cephBlockPoolsVolumeSnapshotClass.enabled = true;
             };
           };
 
-          resources = {
+          resources =
+            let
+              defaultPool = {
+                failureDomain = "host";
+                replicated.size = 2;
+                deviceClass = "nvme";
+              };
+            in
+            {
+              cephBlockPools.rbd-nvme.spec = defaultPool;
 
-            # Allow csi-driver-nfs access to kube-apiserver
-            ciliumNetworkPolicies.allow-kube-apiserver-egress = {
-              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-              spec = {
-                description = "Allow snapshot controller to talk to kube-apiserver.";
-                endpointSelector.matchExpressions = [
-                  {
-                    key = "app";
-                    operator = "In";
-                    values = [
-                      "rook-ceph-operator"
-                      "rook-discover"
-                      "rook-ceph-detect-version"
-                    ];
-                  }
+              cephFilesystems.cephfs-nvme.spec = {
+                metadataPool = defaultPool;
+                dataPools = [
+                  (
+                    {
+                      name = "nvme";
+                    }
+                    // defaultPool
+                  )
                 ];
-                egress = [
-                  {
-                    toEntities = [ "kube-apiserver" ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "6443";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
+                preserveFilesystemOnDelete = true;
+                metadataServer = {
+                  activeCount = 1;
+                  activeStandby = true;
+                };
+              };
+
+              cephObjectStores.rgw-nvme.spec = {
+                metadataPool = defaultPool;
+                dataPool = defaultPool;
+                gateway = {
+                  port = 80;
+                  instances = 1;
+                };
+              };
+
+              storageClasses =
+                let
+                  commonStorageClassParamters = {
+                    clusterID = "rook-ceph";
+                    "csi.storage.k8s.io/provisioner-secret-namespace" = "rook-ceph";
+                    "csi.storage.k8s.io/controller-expand-secret-namespace" = "rook-ceph";
+                    "csi.storage.k8s.io/node-stage-secret-namespace" = "rook-ceph";
+                  };
+                in
+                rec {
+                  rbd-nvme = {
+                    provisioner = "rook-ceph.rbd.csi.ceph.com";
+                    parameters = commonStorageClassParamters // {
+                      pool = "rbd-nvme";
+                      imageFormat = "2";
+                      "csi.storage.k8s.io/provisioner-secret-name" = "rook-csi-rbd-provisioner";
+                      "csi.storage.k8s.io/controller-expand-secret-name" = "rook-csi-rbd-provisioner";
+                      "csi.storage.k8s.io/node-stage-secret-name" = "rook-csi-rbd-node";
+                      "csi.storage.k8s.io/fstype" = "ext4";
+                      # https://rook.io/docs/rook/latest-release/Getting-Started/Prerequisites/prerequisites/#rbd
+                      imageFeatures = "layering,fast-diff,object-map,deep-flatten,exclusive-lock";
+                    };
+                    allowVolumeExpansion = true;
+                    reclaimPolicy = "Delete";
+                  };
+
+                  rbd-nvme-retain = rbd-nvme // {
+                    metadata.annotations."storageclass.kubernetes.io/is-default-class" = "true";
+                    allowVolumeExpansion = true;
+                    reclaimPolicy = "Retain";
+                  };
+
+                  cephfs-nvme = {
+                    provisioner = "rook-ceph.cephfs.csi.ceph.com";
+                    parameters = commonStorageClassParamters // {
+                      fsName = "cephfs-nvme";
+                      pool = "cephfs-nvme-nvme";
+                      "csi.storage.k8s.io/provisioner-secret-name" = "rook-csi-cephfs-provisioner";
+                      "csi.storage.k8s.io/controller-expand-secret-name" = "rook-csi-cephfs-provisioner";
+                      "csi.storage.k8s.io/node-stage-secret-name" = "rook-csi-cephfs-node";
+                    };
+                    allowVolumeExpansion = true;
+                    reclaimPolicy = "Delete";
+                  };
+
+                  cephfs-nvme-retain = cephfs-nvme // {
+                    allowVolumeExpansion = true;
+                    reclaimPolicy = "Retain";
+                  };
+
+                  rgw-nvme = {
+                    provisioner = "rook-ceph.ceph.rook.io/bucket";
+                    reclaimPolicy = "Delete";
+                    parameters = {
+                      objectStoreName = "rgw-nvme";
+                      objectStoreNamespace = "rook-ceph";
+                    };
+                  };
+                };
+
+              volumeSnapshotClasses = {
+                csi-rbdplugin-snapclass = {
+                  driver = "rook-ceph.rbd.csi.ceph.com";
+                  parameters = {
+                    clusterID = "rook-ceph";
+                    "csi.storage.k8s.io/snapshotter-secret-name" = "rook-csi-rbd-provisioner";
+                    "csi.storage.k8s.io/snapshotter-secret-namespace" = "rook-ceph";
+                  };
+                  deletionPolicy = "Delete";
+                };
+
+                csi-cephfsplugin-snapclass = {
+                  driver = "rook-ceph.cephfs.csi.ceph.com";
+                  parameters = {
+                    clusterID = "rook-ceph";
+                    "csi.storage.k8s.io/snapshotter-secret-name" = "rook-csi-cephfs-provisioner";
+                    "csi.storage.k8s.io/snapshotter-secret-namespace" = "rook-ceph";
+                  };
+                  deletionPolicy = "Delete";
+                };
+              };
+
+              # Allow csi-driver-nfs access to kube-apiserver
+              ciliumNetworkPolicies.allow-kube-apiserver-egress = {
+                metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+                spec = {
+                  description = "Allow snapshot controller to talk to kube-apiserver.";
+                  endpointSelector.matchExpressions = [
+                    {
+                      key = "app";
+                      operator = "In";
+                      values = [
+                        "rook-ceph-operator"
+                        "rook-discover"
+                        "rook-ceph-detect-version"
+                      ];
+                    }
+                  ];
+                  egress = [
+                    {
+                      toEntities = [ "kube-apiserver" ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "6443";
+                              protocol = "TCP";
+                            }
+                          ];
+                        }
+                      ];
+                    }
+                  ];
+                };
               };
             };
-          };
         };
       };
   };
