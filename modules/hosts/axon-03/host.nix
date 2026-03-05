@@ -7,7 +7,7 @@
     roles = [
       "server"
       "unlock"
-      "kubernetes" # TOGGLE_ENABLE/DISABLE
+      # "kubernetes" # TOGGLE_ENABLE/DISABLE
       "bgp-spoke"
       "nix-builder"
       # "vault"
