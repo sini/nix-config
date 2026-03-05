@@ -70,6 +70,11 @@
                   default = null;
                   description = "Inbound route map";
                 };
+                routeMapOut = lib.mkOption {
+                  type = lib.types.nullOr lib.types.str;
+                  default = null;
+                  description = "Outbound route map";
+                };
                 allowasIn = lib.mkOption {
                   type = lib.types.nullOr lib.types.int;
                   default = null;
@@ -261,6 +266,9 @@
                   + lib.optionalString (
                     neighbor.routeMapIn != null
                   ) "\n  neighbor ${neighbor.ip} route-map ${neighbor.routeMapIn} in"
+                  + lib.optionalString (
+                    neighbor.routeMapOut != null
+                  ) "\n  neighbor ${neighbor.ip} route-map ${neighbor.routeMapOut} out"
                   + lib.optionalString (
                     neighbor.allowasIn != null
                   ) "\n  neighbor ${neighbor.ip} allowas-in ${toString neighbor.allowasIn}"
