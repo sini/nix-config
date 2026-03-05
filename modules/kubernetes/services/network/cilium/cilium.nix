@@ -147,7 +147,7 @@
               #   };
               # };
 
-              ipv6.enabled = false;
+              ipv6.enabled = true;
 
               gatewayAPI.enabled = false; # Trying out envoy...
               gatewayAPI.hostNetwork.enabled = false;
@@ -183,7 +183,7 @@
 
               ipMasqAgent = {
                 enabled = true;
-                config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr}}";
+                config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr},${podNetwork.ipv6_cidr},${serviceNetwork.ipv6_cidr}}";
                 config.masqLinkLocal = false;
               };
 
@@ -195,6 +195,7 @@
               ipam = {
                 mode = "cluster-pool";
                 operator.clusterPoolIPv4PodCIDRList = [ podNetwork.cidr ];
+                operator.clusterPoolIPv6PodCIDRList = [ podNetwork.ipv6_cidr ];
               };
 
               # BGP control-plane (for FRR peering)

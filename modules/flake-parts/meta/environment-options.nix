@@ -442,7 +442,7 @@ in
             findHostsByRole =
               role:
               let
-                hosts = config.flake.hosts or { };
+                hosts = self.flake.hosts or { };
               in
               hosts
               |> lib.attrsets.filterAttrs (

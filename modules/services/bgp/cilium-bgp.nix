@@ -29,10 +29,10 @@
             65002;
 
         uplinkIp =
-          environment.findHostsByRole "bgp-hub"
-          |> lib.attrValues
-          |> lib.head
-          |> map (host: lib.head host.ipv4);
+          let
+            bgpHubHosts = environment.findHostsByRole "bgp-hub" |> lib.attrValues;
+          in
+          if bgpHubHosts == [ ] then null else lib.head (lib.head bgpHubHosts).ipv4;
 
         # Find networks by purpose
         findNetworkByPurpose =

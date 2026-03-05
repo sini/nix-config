@@ -27,6 +27,8 @@ data:
   cluster-name: prod
   cluster-pool-ipv4-cidr: 172.20.0.0/16
   cluster-pool-ipv4-mask-size: "24"
+  cluster-pool-ipv6-cidr: fd64:0:2::/64
+  cluster-pool-ipv6-mask-size: "120"
   clustermesh-cache-ttl: 0s
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
@@ -62,7 +64,7 @@ data:
   enable-ipv4: "true"
   enable-ipv4-big-tcp: "false"
   enable-ipv4-masquerade: "true"
-  enable-ipv6: "false"
+  enable-ipv6: "true"
   enable-ipv6-big-tcp: "false"
   enable-ipv6-masquerade: "true"
   enable-k8s-networkpolicy: "true"
