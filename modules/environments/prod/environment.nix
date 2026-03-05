@@ -89,7 +89,7 @@
       };
       kubernetes = {
         cidr = "172.20.0.0/16";
-        ipv6_cidr = "fdfd:cafe:00:0001::/64";
+        ipv6_cidr = "fdfd:cafe:00:0001::/96";
         purpose = "kubernetes-pods";
         description = "Kubernetes pod network";
       };
