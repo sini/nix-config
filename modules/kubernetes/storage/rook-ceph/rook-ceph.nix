@@ -1,4 +1,7 @@
-# { lib, ... }:
+{ self, ... }:
+let
+  inherit (self.lib.kubernetes-utils) findKubernetesNodes;
+in
 {
   flake.kubernetes.services.rook-ceph = {
 
@@ -32,8 +35,13 @@
     nixidy =
       {
         charts,
+        environment,
+        lib,
         ...
       }:
+      let
+        hosts = findKubernetesNodes environment;
+      in
       {
         applications.rook-ceph = {
           namespace = "rook-ceph";
@@ -92,6 +100,61 @@
                   readOnly = true;
                 }
               ];
+            };
+          };
+
+          helm.releases.rook-ceph-cluster = {
+            chart = charts.rook-release.rook-ceph-cluster;
+            values = {
+              operatorNamespace = "rook-ceph";
+              # TODO: enable monitoring
+              # monitoring.enabled = true;
+              # monitoring.createPrometheusRules = true;
+              # cephClusterSpec.dashboard.prometheusEndpoint =
+              #   "http" + "://prometheus-operated.monitoring.svc.cluster.local:9090";
+              cephClusterSpec = {
+                cephConfig.global = {
+                  bdev_enable_discard = "true";
+                  bdev_async_discard_threads = "1";
+                  osd_class_update_on_start = "false";
+                  device_failure_prediction_mode = "local";
+                };
+                cleanupPolicy.wipeDevicesFromOtherClusters = true;
+                csi.readAffinity.enabled = true;
+                dashboard.enabled = true;
+                dashboard.urlPrefix = "/";
+                dashboard.ssl = false;
+                mgr.modules =
+                  let
+                    enable = name: {
+                      inherit name;
+                      enabled = true;
+                    };
+                  in
+                  [
+                    (enable "diskprediction_local")
+                    (enable "insights")
+                    (enable "pg_autoscaler")
+                    (enable "rook")
+                  ];
+                network.provider = "host";
+                network.connections.requireMsgr2 = true;
+                storage = {
+                  useAllNodes = false;
+                  useAllDevices = false;
+                  allowDeviceClassUpdate = true;
+                  allowOsdCrushWeightUpdate = true;
+                  nodes =
+                    builtins.attrValues hosts
+                    |> lib.filter (hostConfig: hostConfig.tags ? ceph-device)
+                    |> map (hostConfig: {
+                      name = hostConfig.hostname;
+                      devices = [ { name = hostConfig.tags.ceph-device; } ];
+                    });
+                };
+              };
+              cephFileSystems = [ ];
+              cephBlockPoolsVolumeSnapshotClass.enabled = true;
             };
           };
 

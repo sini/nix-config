@@ -21,6 +21,7 @@
     tags = {
       "bgp-asn" = "65001";
       "cilium-asn" = "65002";
+      "ceph-device" = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
 
       "thunderbolt-interface-1" = "169.254.12.0/31";
       "thunderbolt-interface-2" = "169.254.31.1/31";
@@ -37,11 +38,6 @@
         hardware = {
           networking.interfaces = [ "enp2s0" ];
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
-          # disk.longhorn = {
-          #   longhorn_drive = {
-          #     device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
-          #   };
-          # };
         };
 
         impermanence = {
