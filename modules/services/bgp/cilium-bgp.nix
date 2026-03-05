@@ -49,9 +49,13 @@
             routerId = nodeLoopbackIp;
 
             prefixLists = {
-              CILIUM-ROUTES = [
+              POD-ROUTES = [
                 "permit ${podNetwork.cidr} le 32"
+              ];
+              SERVICE-ROUTES = [
                 "permit ${serviceNetwork.cidr} le 32"
+              ];
+              LOADBALANCER-ROUTES = [
                 "permit ${loadbalancerNetwork.cidr} le 32"
               ];
               DEFAULT-ONLY = [
@@ -60,9 +64,10 @@
             };
 
             routeMaps = [
-              "route-map CILIUM-INGRESS-FIX permit 10"
-              "  match ip address prefix-list CILIUM-ROUTES"
-              # "  set ip next-hop ${nodeLoopbackIp}"
+              # Only announce loadbalancer IPs to uplink (bgp-hub)
+              # Pod and service IPs are only announced across the mesh
+              "route-map TO-UPLINK-OUT permit 10"
+              "  match ip address prefix-list LOADBALANCER-ROUTES"
               "route-map FROM-UPLINK-IN permit 10"
               "  match ip address prefix-list DEFAULT-ONLY"
             ];
@@ -79,6 +84,7 @@
               ip = uplinkIp;
               asn = 65000;
               routeMapIn = "FROM-UPLINK-IN";
+              routeMapOut = "TO-UPLINK-OUT";
             };
 
             addressFamilies.ipv4-unicast = {
