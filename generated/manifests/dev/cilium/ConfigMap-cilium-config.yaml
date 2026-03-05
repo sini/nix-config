@@ -57,6 +57,7 @@ data:
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
+  enable-host-legacy-routing: "true"
   enable-hubble: "true"
   enable-ip-masq-agent: "true"
   enable-ipv4: "true"
