@@ -95,54 +95,32 @@
             };
           };
 
-          # resources = {
-          #   storageClasses = lib.mapAttrs (_volumeName: volumeConfig: {
-          #     provisioner = "nfs.csi.k8s.io";
-          #     reclaimPolicy = "Retain"; # or "Delete"
-          #     volumeBindingMode = "Immediate";
-          #     allowVolumeExpansion = true;
+          resources = {
 
-          #     parameters = {
-          #       server = volumeConfig.server;
-          #       share = volumeConfig.share;
-          #       subDir = "\${pvc.metadata.namespace}/\${pvc.metadata.name}/\${pv.metadata.name}";
-          #       # onDelete = "delete"; # delete|retain|archive
-          #       # mountPermissions = "0";
-          #     };
-
-          #     mountOptions = [
-          #       "proto=tcp"
-          #       "noresvport"
-          #       "nfsvers=4.1"
-          #       "noauto"
-          #       "noatime"
-          #     ];
-          #   }) config.kubernetes.services.csi-driver-nfs.volumes;
-
-          #   # Allow csi-driver-nfs access to kube-apiserver
-          #   ciliumNetworkPolicies.allow-kube-apiserver-egress = {
-          #     metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
-          #     spec = {
-          #       description = "Allow snapshot controller to talk to kube-apiserver.";
-          #       endpointSelector.matchLabels.app = "snapshot-controller";
-          #       egress = [
-          #         {
-          #           toEntities = [ "kube-apiserver" ];
-          #           toPorts = [
-          #             {
-          #               ports = [
-          #                 {
-          #                   port = "6443";
-          #                   protocol = "TCP";
-          #                 }
-          #               ];
-          #             }
-          #           ];
-          #         }
-          #       ];
-          #     };
-          #   };
-          # };
+            # Allow csi-driver-nfs access to kube-apiserver
+            ciliumNetworkPolicies.allow-kube-apiserver-egress = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                description = "Allow snapshot controller to talk to kube-apiserver.";
+                endpointSelector.matchLabels.app = "rook-ceph-operator";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
+          };
         };
       };
   };
