@@ -126,10 +126,6 @@
               # Roll out when config changes
               rollOutCiliumPods = true;
 
-              l2announcements.enabled = true;
-
-              l2NeighDiscovery.enabled = true;
-
               externalIPs.enabled = true;
 
               # ingressController = {
@@ -200,6 +196,10 @@
 
               # BGP control-plane (for FRR peering)
               bgpControlPlane.enabled = true;
+
+              # We announce via BGP
+              l2announcements.enabled = false;
+              l2NeighDiscovery.enabled = false;
 
               policyEnforcementMode = "default";
               policyAuditMode = false;
