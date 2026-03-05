@@ -18,7 +18,6 @@
       "gpu-amd"
       "thunderbolt-mesh"
       "cilium-bgp"
-
     ];
     tags = {
       "bgp-asn" = "65001";
