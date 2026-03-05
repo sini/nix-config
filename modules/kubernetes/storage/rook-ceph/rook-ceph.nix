@@ -46,6 +46,14 @@ in
         applications.rook-ceph = {
           namespace = "rook-ceph";
 
+          syncPolicy = {
+            syncOptions = {
+              serverSideApply = true;
+            };
+          };
+
+          compareOptions.serverSideDiff = true;
+
           helm.releases.rook-ceph = {
             chart = charts.rook-release.rook-ceph;
             values = {
