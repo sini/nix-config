@@ -15,10 +15,5 @@ spec:
             - port: "6443"
               protocol: TCP
   endpointSelector:
-    matchExpressions:
-      - key: app
-        operator: In
-        values:
-          - rook-ceph-operator
-          - rook-discover
-          - rook-ceph-detect-version
+    matchLabels:
+      k8s:io.kubernetes.pod.namespace: rook-ceph

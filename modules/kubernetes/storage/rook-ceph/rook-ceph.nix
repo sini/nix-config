@@ -283,17 +283,18 @@ in
                 metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
                 spec = {
                   description = "Allow snapshot controller to talk to kube-apiserver.";
-                  endpointSelector.matchExpressions = [
-                    {
-                      key = "app";
-                      operator = "In";
-                      values = [
-                        "rook-ceph-operator"
-                        "rook-discover"
-                        "rook-ceph-detect-version"
-                      ];
-                    }
-                  ];
+                  endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "rook-ceph";
+                  # endpointSelector.matchExpressions = [
+                  #   {
+                  #     key = "app";
+                  #     operator = "In";
+                  #     values = [
+                  #       "rook-ceph-operator"
+                  #       "rook-discover"
+                  #       "rook-ceph-detect-version"
+                  #     ];
+                  #   }
+                  # ];
                   egress = [
                     {
                       toEntities = [ "kube-apiserver" ];
