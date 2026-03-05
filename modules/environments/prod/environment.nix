@@ -80,7 +80,7 @@
     networks = {
       management = {
         cidr = "10.10.0.0/16";
-        ipv6_cidr = "fd64:0:1::/64";
+        ipv6_cidr = "fe80::/64";
         purpose = "management";
         description = "Management network for infrastructure hosts";
         assignments = {
