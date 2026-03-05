@@ -27,7 +27,7 @@ data:
   cluster-name: prod
   cluster-pool-ipv4-cidr: 172.20.0.0/16
   cluster-pool-ipv4-mask-size: "24"
-  cluster-pool-ipv6-cidr: fd64:0:2::/64
+  cluster-pool-ipv6-cidr: fdfd:cafe:00:0001::/64
   cluster-pool-ipv6-mask-size: "120"
   clustermesh-cache-ttl: 0s
   clustermesh-enable-endpoint-sync: "false"

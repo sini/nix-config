@@ -89,13 +89,13 @@
       };
       kubernetes = {
         cidr = "172.20.0.0/16";
-        ipv6_cidr = "fd64:0:2::/64";
+        ipv6_cidr = "fdfd:cafe:00:0001::/64";
         purpose = "kubernetes-pods";
         description = "Kubernetes pod network";
       };
       services = {
         cidr = "172.21.0.0/16";
-        ipv6_cidr = "fd64:0:3::/64";
+        ipv6_cidr = "fdfd:cafe:00:8001::/112";
         purpose = "kubernetes-services";
         description = "Kubernetes service network";
         assignments = {
