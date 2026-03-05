@@ -232,8 +232,8 @@
               serverFlagList = [
                 "--bind-address=0.0.0.0"
                 "--advertise-address=${builtins.head hostOptions.ipv4}"
-                "--cluster-cidr=${podNetwork.cidr}:${podNetwork.cidr}"
-                "--service-cidr=${serviceNetwork.cidr}:"
+                "--cluster-cidr=${podNetwork.cidr}:${podNetwork.ipv6_cidr}"
+                "--service-cidr=${serviceNetwork.cidr}:${serviceNetwork.ipv6_cidr}"
 
                 "--kubelet-arg=fail-swap-on=false"
 
