@@ -1,0 +1,9 @@
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  labels:
+    advertise: cilium-routes
+  name: pod-cidr-advertisement
+spec:
+  advertisements:
+    - advertisementType: PodCIDR

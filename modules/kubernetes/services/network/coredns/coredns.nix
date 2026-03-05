@@ -10,7 +10,13 @@
     };
 
     nixidy =
-      { config, charts, ... }:
+      {
+        lib,
+        environment,
+        config,
+        charts,
+        ...
+      }:
       {
         applications.coredns = {
           namespace = "kube-system";
@@ -19,7 +25,15 @@
           helm.releases.coredns = {
             chart = charts.coredns.coredns;
             values = {
-              service.clusterIP = config.kubernetes.services.coredns.clusterIP;
+              service = {
+                clusterIP = config.kubernetes.services.coredns.clusterIP;
+                # TODO: clusterIPs: ipv6
+                ipFamilyPolicy = "RequireDualStack";
+                ipFamilies = [
+                  "IPv4"
+                  "IPv6"
+                ];
+              };
               servers = [
                 {
                   zones = [
@@ -49,28 +63,33 @@
                     {
                       name = "kubernetes";
                       parameters = "cluster.local cluster.local in-addr.arpa ip6.arpa";
-                      configBlock = ''
-                        pods insecure
-                        fallthrough in-addr.arpa ip6.arpa
-                        ttl 30'';
+                      config = {
+                        pods = "insecure";
+                        fallthrough = "in-addr.arpa ip6.arpa";
+                        ttl = 30;
+                      };
                     }
                     {
                       name = "prometheus";
                       parameters = "0.0.0.0:9153";
                     }
-                    {
-                      name = "template"; # Filter IPv6 results since we're not currently dual stack...
-                      parameters = "ANY AAAA";
-                      configBlock = "rcode NXDOMAIN";
-                    }
+
                     {
                       name = "forward";
-                      parameters = ". 1.1.1.1";
+                      parameters = ". ${lib.concatStringsSep " " environment.dnsServers}"; # . /etc/resolv.conf
                       config = {
+                        max_concurrent = 1000;
                         policy = "sequential";
+                        health_check = "5s";
+                        expire = "10s";
                         prefer_udp = true;
                       };
                     }
+                    # {
+                    #   name = "template"; # Filter IPv6 results since we're not currently dual stack...
+                    #   parameters = "ANY AAAA";
+                    #   configBlock = "rcode NXDOMAIN";
+                    # }
                     {
                       name = "cache";
                       parameters = "30";
