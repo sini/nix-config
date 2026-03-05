@@ -48,6 +48,7 @@
         # Storage drivers
         "volume-snapshots"
         "csi-driver-nfs"
+        "rook-ceph"
       ];
       config = {
         coredns.clusterIP = "172.21.0.10";
