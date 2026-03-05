@@ -60,7 +60,7 @@
                       parameters = "0.0.0.0:9153";
                     }
                     {
-                      name = "template";
+                      name = "template"; # Filter IPv6 results since we're not currently dual stack...
                       parameters = "IN AAAA .";
                       configBlock = ''
                         rcode NOERROR
