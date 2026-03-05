@@ -22,15 +22,23 @@
 
         # Sort kubernetes nodes by hostname for deterministic ordering
         sortedKubernetesNodes = builtins.sort (a: b: a.hostname < b.hostname) (
-          lib.attrValues kubernetesNodes
+          lib.mapAttrsToList (hostname: hostConfig: hostConfig // { inherit hostname; }) kubernetesNodes
         );
 
         # Extract server IPs from sorted nodes
 
         # Get current node's index in the sorted list
-        nodeId = lib.lists.findFirstIndex (
-          node: node.hostname == config.networking.hostName
-        ) null sortedKubernetesNodes;
+        nodeId =
+          let
+            result = lib.lists.findFirstIndex (
+              node: node.hostname == config.networking.hostName
+            ) null sortedKubernetesNodes;
+          in
+          assert lib.assertMsg (result != null) ''
+            Failed to find current host "${config.networking.hostName}" in kubernetes nodes.
+            Available nodes: ${builtins.concatStringsSep ", " (map (n: n.hostname) sortedKubernetesNodes)}
+          '';
+          result;
 
         # Initialize if there is only one kubernetes node -- the cluster is bootstrapping
         shouldInit = (builtins.length (lib.attrValues kubernetesNodes)) == 1;

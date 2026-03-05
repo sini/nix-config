@@ -1,6 +1,7 @@
 {
   lib,
   self,
+  config,
   rootPath,
   ...
 }:
@@ -8,6 +9,7 @@ let
   inherit (lib) types mkOption;
   inherit (self.lib.modules) mkUsersWithFeaturesOpt;
   inherit (self.lib.kubernetes-services) kubernetesConfigType;
+  flakeConfig = config; # Capture the flake-level config for use in submodules
 in
 {
   options.flake.environments =
@@ -442,7 +444,7 @@ in
             findHostsByRole =
               role:
               let
-                hosts = self.flake.hosts or { };
+                hosts = flakeConfig.flake.hosts;
               in
               hosts
               |> lib.attrsets.filterAttrs (
