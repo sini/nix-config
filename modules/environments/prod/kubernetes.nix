@@ -43,8 +43,8 @@
         cilium = {
           devices = [
             "br0" # "enp2s0"
-            # "enp199s0f5"
-            # "enp199s0f6"
+            "enp199s0f5"
+            "enp199s0f6"
             # "tailscale0"
           ];
           directRoutingDevice = "br0";
