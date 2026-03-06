@@ -8,7 +8,6 @@ spec:
     global:
       bdev_async_discard_threads: "1"
       bdev_enable_discard: "true"
-      device_failure_prediction_mode: local
       osd_class_update_on_start: "false"
   cephVersion:
     allowUnsupported: false
@@ -61,8 +60,6 @@ spec:
     allowMultiplePerNode: false
     count: 2
     modules:
-      - enabled: true
-        name: diskprediction_local
       - enabled: true
         name: insights
       - enabled: true
