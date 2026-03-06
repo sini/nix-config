@@ -169,6 +169,10 @@ writeShellApplication {
       scp sini@axon-01:/etc/rancher/k3s/k3s.yaml "''${HOME}/.config/kube/config" && sed -i 's/0.0.0.0/10.10.10.100/' "''${HOME}/.config/kube/config"
 
       echo ""
+      echo "==> Applying configuration to other nodes (axon-02, axon-03, uplink)..."
+      colmena apply --on axon-02,axon-03,uplink
+
+      echo ""
       echo "==> Cluster bootstrapped on axon-01"
     }
 
@@ -180,6 +184,10 @@ writeShellApplication {
       colmena apply --on axon-02 --reboot
 
       echo ""
+      echo "==> Applying configuration to other nodes (axon-01, axon-03, uplink)..."
+      colmena apply --on axon-01,axon-03,uplink
+
+      echo ""
       echo "==> axon-02 joined the cluster"
     }
 
@@ -189,6 +197,10 @@ writeShellApplication {
       echo "==> Deploying axon-03 (third node joins cluster)..."
       echo "    Applying configuration and rebooting..."
       colmena apply --on axon-03 --reboot
+
+      echo ""
+      echo "==> Applying configuration to other nodes (axon-01, axon-02, uplink)..."
+      colmena apply --on axon-01,axon-02,uplink
 
       echo ""
       echo "==> Cluster fully deployed (all 3 nodes)"
@@ -204,6 +216,10 @@ writeShellApplication {
       echo ""
       echo "==> Cleaning Kubernetes installation files..."
       colmena exec --on axon-01,axon-02,axon-03 -- rm -rf /persist/var/lib/rancher /persist/var/lib/kubelet /persist/etc/rancher /persist/var/lib/cni /persist/var/lib/containers /persist/var/lib/containerd
+
+      echo ""
+      echo "==> Applying configuration to uplink..."
+      colmena apply --on uplink
 
       echo ""
       echo "==> Cluster fully disabled and cleaned up"
