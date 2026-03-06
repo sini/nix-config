@@ -227,16 +227,17 @@
               };
             };
 
-            ciliumL2AnnouncementPolicies."default-l2-announcement-policy" = {
-              metadata = {
-                name = "default-l2-announcement-policy";
-                namespace = "kube-system";
-              };
-              spec = {
-                externalIPs = true;
-                loadBalancerIPs = true;
-              };
-            };
+            # Disabled in favor of BGP -> FRR
+            # ciliumL2AnnouncementPolicies."default-l2-announcement-policy" = {
+            #   metadata = {
+            #     name = "default-l2-announcement-policy";
+            #     namespace = "kube-system";
+            #   };
+            #   spec = {
+            #     externalIPs = true;
+            #     loadBalancerIPs = true;
+            #   };
+            # };
 
             ciliumClusterwideNetworkPolicies = {
               # Allow all cilium endpoints to talk egress to each other
