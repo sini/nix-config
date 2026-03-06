@@ -63,7 +63,6 @@
         podNetwork = findNetworkByPurpose "kubernetes-pods";
         serviceNetwork = findNetworkByPurpose "kubernetes-services";
         loadbalancerNetwork = findNetworkByPurpose "loadbalancer";
-        managementNetwork = findNetworkByPurpose "management";
 
         loadbalancer-cidr = loadbalancerNetwork.cidr;
         # ingress-controller-address = environment.getAssignment "cilium-ingress-controller";
@@ -102,7 +101,7 @@
 
               # Routing Mode
               # routingMode = "native";
-              # ipv4NativeRoutingCIDR = managementNetwork.cidr;
+              ipv4NativeRoutingCIDR = podNetwork.cidr;
 
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
@@ -174,7 +173,7 @@
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              bpf.hostLegacyRouting = true;
+              # bpf.hostLegacyRouting = true;
               bpf.lbExternalClusterIP = true;
               bpf.lbSourceRangeAllTypes = true;
               bpf.masquerade = true;
