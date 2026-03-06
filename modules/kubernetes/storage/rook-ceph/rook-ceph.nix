@@ -1,3 +1,4 @@
+# This module should work, but I'm not using it -- leaving for posterity
 {
   flake.kubernetes.services.rook-ceph = {
     crds =

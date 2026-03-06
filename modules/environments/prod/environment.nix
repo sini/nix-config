@@ -48,8 +48,6 @@
       # Kubernetes services
       argocd.domain = "argocd.zeroday.run";
       hubble-ui.domain = "hubble.zeroday.run";
-      rook-dashboard.domain = "rook.zeroday.run";
-      rook-rados.domain = "rados.zeroday.run";
 
       # NixOS services
       grafana.domain = "grafana.json64.dev";
