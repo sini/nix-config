@@ -152,7 +152,7 @@ data:
   proxy-xff-num-trusted-hops-egress: "0"
   proxy-xff-num-trusted-hops-ingress: "0"
   remove-cilium-node-taints: "true"
-  routing-mode: native
+  routing-mode: tunnel
   service-no-backend-response: reject
   set-cilium-is-up-condition: "true"
   set-cilium-node-taints: "true"
@@ -164,7 +164,7 @@ data:
   tofqdns-max-deferred-connection-deletes: "10000"
   tofqdns-preallocate-identities: "true"
   tofqdns-proxy-response-max-delay: 100ms
-  tunnel-protocol: vxlan
+  tunnel-protocol: geneve
   tunnel-source-port-range: 0-0
   unmanaged-pod-watcher-interval: 15s
   vtep-cidr: ""

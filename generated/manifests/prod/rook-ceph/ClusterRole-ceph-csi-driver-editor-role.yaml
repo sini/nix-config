@@ -1,0 +1,26 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: rook-ceph
+    app.kubernetes.io/name: ceph-csi
+  name: ceph-csi-driver-editor-role
+rules:
+  - apiGroups:
+      - csi.ceph.io
+    resources:
+      - drivers
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - csi.ceph.io
+    resources:
+      - drivers/status
+    verbs:
+      - get
