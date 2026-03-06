@@ -166,7 +166,11 @@
                     builtins.attrValues hosts
                     |> map (hostConfig: {
                       name = hostConfig.hostname;
-                      devices = [ { name = hostConfig.tags.ceph-device; } ];
+                      devices = [
+                        {
+                          fullpath = hostConfig.tags.ceph-device;
+                        }
+                      ];
                     });
                 };
               };
