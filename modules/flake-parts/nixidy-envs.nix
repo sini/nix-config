@@ -26,7 +26,6 @@ in
               "cert-manager"
               "cilium"
               "envoy-gateway"
-              # "gateway-api"
               "sops-secrets-operator"
             ];
             enabledServices = lib.unique (defaultServices ++ (environment.kubernetes.services.enabled or [ ]));
@@ -34,8 +33,10 @@ in
               lib.filter (serviceName: config.flake.kubernetes.services ? ${serviceName}) enabledServices
             );
 
-            klib = inputs.nix-kube-generators.lib { inherit pkgs; };
             # Extract CRD objects for enabled services
+            # Use pre-parsed CRD objects from build-time derivation for better caching
+            parsedCrdObjects = withSystem system ({ config, ... }: config.packages.parsed-crd-objects);
+
             serviceCrdObjects = lib.mapAttrs (
               name: service:
               let
@@ -51,17 +52,16 @@ in
               in
               if crdConfig != null then
                 if (crdConfig.src or null != null) then
-                  # Read YAML files and convert to objects
-                  map (
-                    crdPath:
-                    let
-                      yamlContent = builtins.readFile (crdConfig.src + "/${crdPath}");
-                    in
-                    lib.filter (obj: obj ? kind && obj.kind == "CustomResourceDefinition") (klib.fromYAML yamlContent)
-                  ) crdConfig.crds
-                  |> lib.flatten # fromYAML returns a list, so flatten the nested lists
+                  # Use pre-parsed JSON from derivation instead of parsing YAML at eval time
+                  let
+                    parsedFile = parsedCrdObjects + "/${name}.json";
+                  in
+                  if builtins.pathExists parsedFile then builtins.fromJSON (builtins.readFile parsedFile) else [ ]
                 else
-                  # Already returns objects
+                  # Chart-based CRDs - already handled by fromChartCRD generator
+                  let
+                    klib = inputs.nix-kube-generators.lib { inherit pkgs; };
+                  in
                   extractCRDsFromChart (crdConfig // { inherit name klib; })
               else
                 [ ]
@@ -194,6 +194,72 @@ in
           help = "[DEPRECATED] - use k8s-update-manifests instead as it has secret wrapping";
         }
       ];
+
+      # Pre-parse CRD YAML files at build time for caching
+      packages.parsed-crd-objects =
+        let
+          servicesWithSrcCrds = lib.filterAttrs (
+            _name: service:
+            service.crds != null
+            && (
+              let
+                crdConfig = service.crds (
+                  sharedConfig
+                  // {
+                    inherit inputs;
+                  }
+                );
+              in
+              crdConfig.src or null != null
+            )
+          ) config.flake.kubernetes.services;
+
+          # For each service, create a derivation that parses its YAML CRDs
+          parsedServices = lib.mapAttrs (
+            name: service:
+            let
+              crdConfig = service.crds (
+                sharedConfig
+                // {
+                  inherit inputs;
+                }
+              );
+            in
+            pkgs.runCommand "parse-${name}-crds"
+              {
+                nativeBuildInputs = [
+                  pkgs.yq-go
+                  pkgs.jq
+                ];
+                src = crdConfig.src;
+                crds = builtins.toJSON crdConfig.crds;
+              }
+              ''
+                # Parse each CRD YAML file and extract CustomResourceDefinition objects
+                # Collect all CRD objects from all files into a single JSON array
+                tempFiles=()
+                i=0
+                for crd in $(echo "$crds" | jq -r '.[]'); do
+                  # Use yq to convert YAML to JSON (handles multi-document YAML)
+                  # Then use jq to filter for CRD objects and output as array
+                  tempFile="temp_$i.json"
+                  yq eval -o=json '.' "$src/$crd" | \
+                    jq -s 'map(select(type == "object" and .kind == "CustomResourceDefinition"))' > "$tempFile"
+                  tempFiles+=("$tempFile")
+                  i=$((i + 1))
+                done
+
+                # Combine all arrays into a single array
+                jq -s 'add' "''${tempFiles[@]}" > $out
+              ''
+          ) servicesWithSrcCrds;
+        in
+        pkgs.runCommand "parsed-crd-objects" { } ''
+          mkdir -p $out
+          ${lib.concatMapStringsSep "\n" (name: ''
+            ln -s ${parsedServices.${name}} $out/${name}.json
+          '') (lib.attrNames parsedServices)}
+        '';
 
       packages.generated-crds =
         let
