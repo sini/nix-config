@@ -1,19 +1,10 @@
-{ lib, ... }:
 {
   flake.kubernetes.services.coredns = {
-
-    options = {
-      clusterIP = lib.mkOption {
-        type = lib.types.str;
-        description = "CoreDNS ClusterIP address allocation";
-      };
-    };
 
     nixidy =
       {
         lib,
         environment,
-        config,
         charts,
         ...
       }:
@@ -26,7 +17,8 @@
             chart = charts.coredns.coredns;
             values = {
               service = {
-                clusterIP = config.kubernetes.services.coredns.clusterIP;
+                k8sAppLabelOverride = "kube-dns";
+                clusterIP = environment.getAssignment "coredns";
                 # TODO: clusterIPs: ipv6
                 ipFamilyPolicy = "RequireDualStack";
                 ipFamilies = [
@@ -76,7 +68,7 @@
 
                     {
                       name = "forward";
-                      parameters = ". ${lib.concatStringsSep " " environment.dnsServers}"; # . /etc/resolv.conf
+                      parameters = ". ${lib.concatStringsSep " " (lib.lists.take 3 environment.networks.default.dnsServers)}"; # . /etc/resolv.conf
                       config = {
                         max_concurrent = 1000;
                         policy = "sequential";
