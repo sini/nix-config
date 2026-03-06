@@ -63,6 +63,7 @@
         podNetwork = findNetworkByPurpose "kubernetes-pods";
         serviceNetwork = findNetworkByPurpose "kubernetes-services";
         loadbalancerNetwork = findNetworkByPurpose "loadbalancer";
+        managementNetwork = findNetworkByPurpose "management";
 
         loadbalancer-cidr = loadbalancerNetwork.cidr;
         # ingress-controller-address = environment.getAssignment "cilium-ingress-controller";
@@ -100,10 +101,10 @@
               };
 
               # Routing Mode
-              routingMode = "native";
-              ipv4NativeRoutingCIDR = podNetwork.cidr;
-              # routingMode = "tunnel";
-              # tunnelProtocol = "geneve";
+              # routingMode = "native";
+              ipv4NativeRoutingCIDR = managementNetwork.cidr;
+              routingMode = "tunnel";
+              tunnelProtocol = "geneve";
 
               # endpointRoutes.enabled = true;
 
@@ -122,6 +123,7 @@
 
               # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
+              localRedirectPolicies.enabled = true;
 
               # Roll out when config changes
               rollOutCiliumPods = true;
@@ -171,12 +173,13 @@
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              bpf.hostLegacyRouting = true;
+              # bpf.hostLegacyRouting = true;
               bpf.lbExternalClusterIP = true;
               bpf.lbSourceRangeAllTypes = true;
               bpf.masquerade = true;
               bpf.disableExternalIPMitigation = true;
-              bpf.tproxy = true;
+              # bpf.tproxy = true;
+              bpf.datapathMode = "netkit";
 
               ipMasqAgent = {
                 enabled = true;
@@ -203,8 +206,8 @@
               bgpControlPlane.enabled = true;
 
               # We announce via BGP
-              l2announcements.enabled = false;
-              l2NeighDiscovery.enabled = false;
+              l2announcements.enabled = true;
+              l2NeighDiscovery.enabled = true;
 
               policyEnforcementMode = "default";
               policyAuditMode = false;

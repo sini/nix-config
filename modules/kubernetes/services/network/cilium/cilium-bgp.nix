@@ -30,27 +30,27 @@
                   }
                 ];
               };
-              service-cluster-ips = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [
-                  {
-                    advertisementType = "Service";
-                    service.addresses = [
-                      "ClusterIP"
-                    ];
-                    selector.matchExpressions = [
-                      {
-                        key = "service.kubernetes.io/headless";
-                        operator = "DoesNotExist";
-                      }
-                    ];
-                  }
-                ];
-              };
-              pod-cidr-advertisement = {
-                metadata.labels.advertise = "cilium-routes";
-                spec.advertisements = [ { advertisementType = "PodCIDR"; } ];
-              };
+              # service-cluster-ips = {
+              #   metadata.labels.advertise = "cilium-routes";
+              #   spec.advertisements = [
+              #     {
+              #       advertisementType = "Service";
+              #       service.addresses = [
+              #         "ClusterIP"
+              #       ];
+              #       selector.matchExpressions = [
+              #         {
+              #           key = "service.kubernetes.io/headless";
+              #           operator = "DoesNotExist";
+              #         }
+              #       ];
+              #     }
+              #   ];
+              # };
+              # pod-cidr-advertisement = {
+              #   metadata.labels.advertise = "cilium-routes";
+              #   spec.advertisements = [ { advertisementType = "PodCIDR"; } ];
+              # };
             };
 
             ciliumBGPPeerConfigs = {
