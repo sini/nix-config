@@ -124,7 +124,6 @@ spec:
               name: rook-config-override
               readOnly: true
       dnsPolicy: ClusterFirstWithHostNet
-      hostNetwork: true
       serviceAccountName: rook-ceph-default
       tolerations:
         - effect: NoExecute

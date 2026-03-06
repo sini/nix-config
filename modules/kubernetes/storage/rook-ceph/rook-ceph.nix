@@ -39,9 +39,11 @@
               crds.enabled = false; # Managed by bootstrap
 
               enableDiscoveryDaemon = true; # for "Physical Disks" in Ceph dashboard
+              # useOperatorHostNetwork = true; # Host
               csi = {
                 cephFSKernelMountOptions = "ms_mode=prefer-crc";
                 enableCephfsDriver = true;
+                # enableCSIHostNetwork = true; # Host
               };
 
               # TODO: Enable monitoring
@@ -130,9 +132,9 @@
                     (enable "pg_autoscaler")
                     (enable "rook")
                   ];
-                network.provider = "host";
-                network.ipFamily = "IPv4";
-                network.connections.requireMsgr2 = true;
+                # network.provider = "host";
+                # network.ipFamily = "IPv4";
+                # network.connections.requireMsgr2 = true;
                 storage = {
                   useAllNodes = false;
                   useAllDevices = false;
