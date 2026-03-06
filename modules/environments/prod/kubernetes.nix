@@ -47,7 +47,8 @@
             "enp199s0f6"
             # "tailscale0"
           ];
-          directRoutingDevice = "enp199+";
+          # directRoutingDevice = "enp199+";
+          directRoutingDevice = "*";
         };
         csi-driver-nfs.volumes = {
           "vault-nfs" = {
