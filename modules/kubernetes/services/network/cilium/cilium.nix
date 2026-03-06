@@ -63,6 +63,7 @@
         podNetwork = findNetworkByPurpose "kubernetes-pods";
         serviceNetwork = findNetworkByPurpose "kubernetes-services";
         loadbalancerNetwork = findNetworkByPurpose "loadbalancer";
+        managementNetwork = findNetworkByPurpose "management";
 
         loadbalancer-cidr = loadbalancerNetwork.cidr;
         # ingress-controller-address = environment.getAssignment "cilium-ingress-controller";
@@ -183,7 +184,7 @@
 
               ipMasqAgent = {
                 enabled = true;
-                config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr},${podNetwork.ipv6_cidr},${serviceNetwork.ipv6_cidr}}";
+                config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr},${podNetwork.ipv6_cidr},${serviceNetwork.ipv6_cidr},${managementNetwork.cidr},${managementNetwork.ipv6_cidr}}";
                 config.masqLinkLocal = false;
               };
 
