@@ -124,7 +124,7 @@
 
               # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
-              localRedirectPolicies.enabled = true;
+              # localRedirectPolicies.enabled = true;
 
               # Roll out when config changes
               rollOutCiliumPods = true;
