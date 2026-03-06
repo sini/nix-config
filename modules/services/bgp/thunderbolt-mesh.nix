@@ -202,14 +202,16 @@
             localAsn = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65001;
             routerId = lib.removeSuffix "/32" nodeConfig.loopback.ipv4;
 
-            staticRoutes = lib.flatten (
-              map (peer: [
-                "ip route ${peer.lanip}/32 ${peer.gateway}"
-              ]) nodeConfig.peers
-            );
+            staticRoutes = [ ];
+            # lib.flatten (
+            #   map (peer: [
+            #     "ip route ${peer.lanip}/32 ${peer.gateway}"
+            #   ]) nodeConfig.peers
+            # );
 
             neighbors = map (peer: {
-              ip = peer.ip;
+              # ip = peer.ip;
+              ip = peer.gateway;
               asn = peer.asn;
               ebgpMultihop = 4;
               softReconfiguration = true;
@@ -221,7 +223,7 @@
               neighbors = lib.listToAttrs (
                 map (
                   peer:
-                  lib.nameValuePair peer.ip {
+                  lib.nameValuePair peer.gateway {
                     activate = true;
                     nextHopSelf = true;
                   }

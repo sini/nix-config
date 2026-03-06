@@ -75,7 +75,7 @@
             peerGroups.cilium = {
               remoteAs = ciliumAsn;
               softReconfiguration = true;
-              ebgpMultihop = 4;
+              # ebgpMultihop = 4;
               # updateSource = lib.mkIf hasMeshConfig "dummy0";
               listenRange = "${builtins.head hostOptions.ipv4}/32"; # "${podNetwork.cidr}"; # "127.0.0.1/32";
             };
@@ -96,7 +96,7 @@
               };
               peerGroups.cilium = {
                 activate = true;
-                # nextHopSelf = true; # TODO: Verify...
+                nextHopSelf = true; # TODO: Verify...
               };
             };
           };
