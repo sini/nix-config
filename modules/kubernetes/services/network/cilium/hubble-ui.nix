@@ -37,7 +37,7 @@
               parentRefs = [
                 {
                   name = "default-gateway";
-                  namespace = "kube-system";
+                  namespace = "gateways";
                   sectionName = "${environment.domainToResourceName domain}-https";
                 }
               ];
@@ -75,7 +75,6 @@
                 ];
                 forwardAccessToken = true;
               };
-
             };
 
             secrets.hubble-ui-oidc-client-secret = {
