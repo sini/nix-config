@@ -147,13 +147,13 @@ spec:
     allowOsdCrushWeightUpdate: true
     nodes:
       - devices:
-          - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L
+          - fullpath: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L
         name: axon-01
       - devices:
-          - name: /dev/disk/by-id/nvme-Force_MP600_192482300001285610CF
+          - fullpath: /dev/disk/by-id/nvme-Force_MP600_192482300001285610CF
         name: axon-02
       - devices:
-          - name: /dev/disk/by-id/nvme-Force_MP600_1925823000012856500E
+          - fullpath: /dev/disk/by-id/nvme-Force_MP600_1925823000012856500E
         name: axon-03
     useAllDevices: false
     useAllNodes: false
