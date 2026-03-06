@@ -102,7 +102,8 @@
 
               # Routing Mode
               # routingMode = "native";
-              ipv4NativeRoutingCIDR = managementNetwork.cidr;
+              # ipv4NativeRoutingCIDR = managementNetwork.cidr;
+
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
 
@@ -173,7 +174,7 @@
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              # bpf.hostLegacyRouting = true;
+              bpf.hostLegacyRouting = true;
               bpf.lbExternalClusterIP = true;
               bpf.lbSourceRangeAllTypes = true;
               bpf.masquerade = true;
