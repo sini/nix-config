@@ -39,6 +39,8 @@
         hosts =
           environment.findHostsByRole "kubernetes"
           |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.tags ? "ceph-device");
+        rookDomain = environment.getDomainFor "rook-dashboard";
+        radosDomain = environment.getDomainFor "rook-rados";
       in
       {
         applications.rook-ceph = {
@@ -283,6 +285,48 @@
                 };
               };
 
+              httpRoutes.rook-ceph-dashboard.spec = {
+                hostnames = [ rookDomain ];
+                parentRefs = [
+                  {
+                    name = "default-gateway";
+                    namespace = "gateways";
+                    sectionName = "${environment.domainToResourceName rookDomain}-https";
+                  }
+                ];
+                rules = [
+                  {
+                    backendRefs = [
+                      {
+                        name = "rook-ceph-mgr-dashboard";
+                        port = 7000;
+                      }
+                    ];
+                  }
+                ];
+              };
+              httpRoutes.rook-ceph-rados.spec = {
+                hostnames = [ radosDomain ];
+                parentRefs = [
+                  {
+                    name = "default-gateway";
+                    namespace = "gateways";
+                    sectionName = "${environment.domainToResourceName radosDomain}-https";
+                  }
+                ];
+                rules = [
+                  {
+                    backendRefs = [
+                      {
+                        # TODO get actual service name
+                        name = "rook-ceph-radosgw";
+                        port = 80;
+                      }
+                    ];
+                  }
+                ];
+              };
+
               # Allow csi-driver-nfs access to kube-apiserver
               ciliumNetworkPolicies.allow-kube-apiserver-egress = {
                 metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
@@ -306,6 +350,10 @@
                       toPorts = [
                         {
                           ports = [
+                            {
+                              port = "443";
+                              protocol = "TCP";
+                            }
                             {
                               port = "6443";
                               protocol = "TCP";
