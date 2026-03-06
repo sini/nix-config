@@ -96,7 +96,7 @@
               };
               peerGroups.cilium = {
                 activate = true;
-                nextHopSelf = true; # TODO: Verify...
+                # nextHopSelf = true; # TODO: Verify...
               };
             };
           };
