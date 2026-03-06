@@ -149,6 +149,9 @@ spec:
       - devices:
           - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L
         name: axon-01
+      - devices:
+          - name: /dev/disk/by-id/nvme-Force_MP600_192482300001285610CF
+        name: axon-02
     useAllDevices: false
     useAllNodes: false
   upgradeOSDRequiresHealthyPGs: false
