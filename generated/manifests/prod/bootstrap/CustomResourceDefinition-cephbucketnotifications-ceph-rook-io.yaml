@@ -1,0 +1,195 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+    helm.sh/resource-policy: keep
+  name: cephbucketnotifications.ceph.rook.io
+spec:
+  group: ceph.rook.io
+  names:
+    kind: CephBucketNotification
+    listKind: CephBucketNotificationList
+    plural: cephbucketnotifications
+    shortNames:
+      - cephbn
+    singular: cephbucketnotification
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - jsonPath: .status.phase
+          name: Phase
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1
+      schema:
+        openAPIV3Schema:
+          description: CephBucketNotification represents a Bucket Notifications
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: BucketNotificationSpec represent the spec of a Bucket Notification
+              properties:
+                events:
+                  description: List of events that should trigger the notification
+                  items:
+                    description: |-
+                      BucketNotificationSpec represent the event type of the bucket notification
+                      See: https://docs.ceph.com/en/latest/radosgw/s3-notification-compatibility/#event-types
+                    enum:
+                      - s3:ObjectCreated:*
+                      - s3:ObjectCreated:Put
+                      - s3:ObjectCreated:Post
+                      - s3:ObjectCreated:Copy
+                      - s3:ObjectCreated:CompleteMultipartUpload
+                      - s3:ObjectRemoved:*
+                      - s3:ObjectRemoved:Delete
+                      - s3:ObjectRemoved:DeleteMarkerCreated
+                      - s3:ObjectLifecycle:Expiration:Current
+                      - s3:ObjectLifecycle:Expiration:NonCurrent
+                      - s3:ObjectLifecycle:Expiration:DeleteMarker
+                      - s3:ObjectLifecycle:Expiration:AbortMultipartUpload
+                      - s3:ObjectLifecycle:Transition:Current
+                      - s3:ObjectLifecycle:Transition:NonCurrent
+                      - s3:LifecycleExpiration:*
+                      - s3:LifecycleExpiration:Delete
+                      - s3:LifecycleExpiration:DeleteMarkerCreated
+                      - s3:LifecycleTransition
+                      - s3:ObjectSynced:*
+                      - s3:ObjectSynced:Create
+                      - s3:ObjectSynced:Delete
+                      - s3:ObjectSynced:DeletionMarkerCreated
+                      - s3:Replication:*
+                      - s3:Replication:Create
+                      - s3:Replication:Delete
+                      - s3:Replication:DeletionMarkerCreated
+                      - s3:ObjectRestore:*
+                      - s3:ObjectRestore:Post
+                      - s3:ObjectRestore:Completed
+                      - s3:ObjectRestore:Delete
+                    type: string
+                  type: array
+                filter:
+                  description: Spec of notification filter
+                  properties:
+                    keyFilters:
+                      description: Filters based on the object's key
+                      items:
+                        description: NotificationKeyFilterRule represent a single key rule in the Notification Filter spec
+                        properties:
+                          name:
+                            description: Name of the filter - prefix/suffix/regex
+                            enum:
+                              - prefix
+                              - suffix
+                              - regex
+                            type: string
+                          value:
+                            description: Value to filter on
+                            type: string
+                        required:
+                          - name
+                          - value
+                        type: object
+                      type: array
+                    metadataFilters:
+                      description: Filters based on the object's metadata
+                      items:
+                        description: NotificationFilterRule represent a single rule in the Notification Filter spec
+                        properties:
+                          name:
+                            description: Name of the metadata or tag
+                            minLength: 1
+                            type: string
+                          value:
+                            description: Value to filter on
+                            type: string
+                        required:
+                          - name
+                          - value
+                        type: object
+                      type: array
+                    tagFilters:
+                      description: Filters based on the object's tags
+                      items:
+                        description: NotificationFilterRule represent a single rule in the Notification Filter spec
+                        properties:
+                          name:
+                            description: Name of the metadata or tag
+                            minLength: 1
+                            type: string
+                          value:
+                            description: Value to filter on
+                            type: string
+                        required:
+                          - name
+                          - value
+                        type: object
+                      type: array
+                  type: object
+                topic:
+                  description: The name of the topic associated with this notification
+                  minLength: 1
+                  type: string
+              required:
+                - topic
+              type: object
+            status:
+              description: Status represents the status of an object
+              properties:
+                conditions:
+                  items:
+                    description: Condition represents a status condition on any Rook-Ceph Custom Resource.
+                    properties:
+                      lastHeartbeatTime:
+                        format: date-time
+                        type: string
+                      lastTransitionTime:
+                        format: date-time
+                        type: string
+                      message:
+                        type: string
+                      reason:
+                        description: ConditionReason is a reason for a condition
+                        type: string
+                      status:
+                        type: string
+                      type:
+                        description: ConditionType represent a resource's status
+                        type: string
+                    type: object
+                  type: array
+                observedGeneration:
+                  description: ObservedGeneration is the latest generation observed by the controller.
+                  format: int64
+                  type: integer
+                phase:
+                  type: string
+              type: object
+              x-kubernetes-preserve-unknown-fields: true
+          required:
+            - metadata
+            - spec
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

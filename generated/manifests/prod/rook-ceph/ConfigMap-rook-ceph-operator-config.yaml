@@ -1,0 +1,251 @@
+apiVersion: v1
+data:
+  CSI_CEPHFS_ATTACH_REQUIRED: "true"
+  CSI_CEPHFS_FSGROUPPOLICY: File
+  CSI_CEPHFS_KERNEL_MOUNT_OPTIONS: ms_mode=prefer-crc
+  CSI_CEPHFS_PLUGIN_RESOURCE: |
+    - name : driver-registrar
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+    - name : csi-cephfsplugin
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+    - name : liveness-prometheus
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+  CSI_CEPHFS_PLUGIN_VOLUME: |-
+    - hostPath:
+        path: /run/booted-system/kernel-modules/lib/modules/
+      name: lib-modules
+    - hostPath:
+        path: /nix
+      name: host-nix
+  CSI_CEPHFS_PLUGIN_VOLUME_MOUNT: |-
+    - mountPath: /nix
+      name: host-nix
+      readOnly: true
+  CSI_CEPHFS_PROVISIONER_RESOURCE: |
+    - name : csi-provisioner
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-resizer
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-attacher
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-snapshotter
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-cephfsplugin
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+    - name : liveness-prometheus
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+  CSI_ENABLE_CEPHFS_SNAPSHOTTER: "true"
+  CSI_ENABLE_CROSS_NAMESPACE_VOLUME_DATA_SOURCE: "false"
+  CSI_ENABLE_CSIADDONS: "false"
+  CSI_ENABLE_ENCRYPTION: "false"
+  CSI_ENABLE_HOST_NETWORK: "true"
+  CSI_ENABLE_METADATA: "false"
+  CSI_ENABLE_NFS_SNAPSHOTTER: "true"
+  CSI_ENABLE_OMAP_GENERATOR: "false"
+  CSI_ENABLE_RBD_SNAPSHOTTER: "true"
+  CSI_ENABLE_TOPOLOGY: "false"
+  CSI_ENABLE_VOLUME_GROUP_SNAPSHOT: "true"
+  CSI_FORCE_CEPHFS_KERNEL_CLIENT: "true"
+  CSI_GRPC_TIMEOUT_SECONDS: "150"
+  CSI_NFS_ATTACH_REQUIRED: "true"
+  CSI_NFS_FSGROUPPOLICY: File
+  CSI_NFS_PLUGIN_RESOURCE: |
+    - name : driver-registrar
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+    - name : csi-nfsplugin
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+  CSI_NFS_PROVISIONER_RESOURCE: |
+    - name : csi-provisioner
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-nfsplugin
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+    - name : csi-attacher
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+  CSI_PLUGIN_ENABLE_SELINUX_HOST_MOUNT: "false"
+  CSI_PLUGIN_PRIORITY_CLASSNAME: system-node-critical
+  CSI_PROVISIONER_PRIORITY_CLASSNAME: system-cluster-critical
+  CSI_PROVISIONER_REPLICAS: "2"
+  CSI_RBD_ATTACH_REQUIRED: "true"
+  CSI_RBD_FSGROUPPOLICY: File
+  CSI_RBD_PLUGIN_RESOURCE: |
+    - name : driver-registrar
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+    - name : csi-rbdplugin
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+    - name : liveness-prometheus
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+  CSI_RBD_PLUGIN_VOLUME: |-
+    - hostPath:
+        path: /run/booted-system/kernel-modules/lib/modules/
+      name: lib-modules
+    - hostPath:
+        path: /nix
+      name: host-nix
+  CSI_RBD_PLUGIN_VOLUME_MOUNT: |-
+    - mountPath: /nix
+      name: host-nix
+      readOnly: true
+  CSI_RBD_PROVISIONER_RESOURCE: |
+    - name : csi-provisioner
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-resizer
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-attacher
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-snapshotter
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 100m
+        limits:
+          memory: 256Mi
+    - name : csi-rbdplugin
+      resource:
+        requests:
+          memory: 512Mi
+        limits:
+          memory: 1Gi
+    - name : csi-omap-generator
+      resource:
+        requests:
+          memory: 512Mi
+          cpu: 250m
+        limits:
+          memory: 1Gi
+    - name : liveness-prometheus
+      resource:
+        requests:
+          memory: 128Mi
+          cpu: 50m
+        limits:
+          memory: 256Mi
+  ROOK_CEPH_ALLOW_LOOP_DEVICES: "false"
+  ROOK_CEPH_COMMANDS_TIMEOUT_SECONDS: "15"
+  ROOK_CSIADDONS_IMAGE: quay.io/csiaddons/k8s-sidecar:v0.14.0
+  ROOK_CSI_ATTACHER_IMAGE: registry.k8s.io/sig-storage/csi-attacher:v4.10.0
+  ROOK_CSI_CEPH_IMAGE: quay.io/cephcsi/cephcsi:v3.16.1
+  ROOK_CSI_DISABLE_DRIVER: "false"
+  ROOK_CSI_ENABLE_CEPHFS: "true"
+  ROOK_CSI_ENABLE_NFS: "false"
+  ROOK_CSI_ENABLE_RBD: "true"
+  ROOK_CSI_IMAGE_PULL_POLICY: IfNotPresent
+  ROOK_CSI_PROVISIONER_IMAGE: registry.k8s.io/sig-storage/csi-provisioner:v6.0.0
+  ROOK_CSI_REGISTRAR_IMAGE: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0
+  ROOK_CSI_RESIZER_IMAGE: registry.k8s.io/sig-storage/csi-resizer:v2.0.0
+  ROOK_CSI_SNAPSHOTTER_IMAGE: registry.k8s.io/sig-storage/csi-snapshotter:v8.4.0
+  ROOK_ENABLE_DISCOVERY_DAEMON: "true"
+  ROOK_LOG_LEVEL: INFO
+  ROOK_OBC_ALLOW_ADDITIONAL_CONFIG_FIELDS: maxObjects,maxSize
+  ROOK_OBC_WATCH_OPERATOR_NAMESPACE: "true"
+  ROOK_USE_CSI_OPERATOR: "true"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/created-by: helm
+    app.kubernetes.io/instance: rook-ceph
+    app.kubernetes.io/name: rook-ceph
+    app.kubernetes.io/part-of: rook-ceph-operator
+    operator: rook
+    storage-backend: ceph
+  name: rook-ceph-operator-config
+  namespace: rook-ceph
