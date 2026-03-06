@@ -1,27 +1,5 @@
 {
   flake.kubernetes.services.rook-ceph = {
-
-    # options = {
-    #   volumes = lib.mkOption {
-    #     type = lib.types.attrsOf (
-    #       lib.types.submodule {
-    #         options = {
-    #           server = lib.mkOption {
-    #             type = lib.types.str;
-    #             description = "NFS server address";
-    #           };
-    #           share = lib.mkOption {
-    #             type = lib.types.str;
-    #             description = "NFS share path";
-    #           };
-    #         };
-    #       }
-    #     );
-    #     default = { };
-    #     description = "NFS volumes to create storage classes for";
-    #   };
-    # };
-
     crds =
       { inputs, system, ... }:
       {
@@ -132,7 +110,6 @@
                   bdev_enable_discard = "true";
                   bdev_async_discard_threads = "1";
                   osd_class_update_on_start = "false";
-                  device_failure_prediction_mode = "local";
                 };
                 cleanupPolicy.wipeDevicesFromOtherClusters = true;
                 csi.readAffinity.enabled = true;
@@ -149,7 +126,6 @@
                     };
                   in
                   [
-                    (enable "diskprediction_local")
                     (enable "insights")
                     (enable "pg_autoscaler")
                     (enable "rook")
@@ -331,8 +307,7 @@
                   {
                     backendRefs = [
                       {
-                        # TODO get actual service name
-                        name = "rook-ceph-radosgw";
+                        name = "rook-ceph-rgw-rgw-nvme";
                         port = 80;
                       }
                     ];

@@ -12,5 +12,5 @@ spec:
       sectionName: zeroday-run-https
   rules:
     - backendRefs:
-        - name: rook-ceph-radosgw
+        - name: rook-ceph-rgw-rgw-nvme
           port: 80
