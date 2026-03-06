@@ -7,7 +7,7 @@ data:
         ready
         kubernetes cluster.local cluster.local in-addr.arpa ip6.arpa
         prometheus 0.0.0.0:9153
-        forward . 1.1.1.1 2606:4700:4700::1111 1.0.0.1 2606:4700:4700::1001 2a01:4f8:c2c:123f::1 2a00:1098:2b::1
+        forward . 1.1.1.1 2606:4700:4700::1111 1.0.0.1
         cache 30
         loop
         reload

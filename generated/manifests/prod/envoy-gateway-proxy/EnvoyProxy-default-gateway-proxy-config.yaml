@@ -1,8 +1,8 @@
 apiVersion: gateway.envoyproxy.io/v1alpha1
 kind: EnvoyProxy
 metadata:
-  name: envoy-proxy-config
-  namespace: kube-system
+  name: default-gateway-proxy-config
+  namespace: gateways
 spec:
   provider:
     kubernetes:
