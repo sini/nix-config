@@ -77,9 +77,7 @@ spec:
         enabled: false
       encryption:
         enabled: false
-      requireMsgr2: true
-    ipFamily: IPv4
-    provider: host
+      requireMsgr2: false
   priorityClassNames:
     mgr: system-cluster-critical
     mon: system-node-critical
