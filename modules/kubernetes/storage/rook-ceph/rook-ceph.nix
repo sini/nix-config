@@ -115,6 +115,13 @@
             chart = charts.rook-release.rook-ceph-cluster;
             values = {
               operatorNamespace = "rook-ceph";
+              toolbox = {
+                enabled = true;
+                # resources = {
+                #   requests.cpu = "50m";
+                #   requests.memory = "64Mi";
+                # };
+              };
               # TODO: enable monitoring
               # monitoring.enabled = true;
               # monitoring.createPrometheusRules = true;
@@ -129,9 +136,11 @@
                 };
                 cleanupPolicy.wipeDevicesFromOtherClusters = true;
                 csi.readAffinity.enabled = true;
-                dashboard.enabled = true;
-                dashboard.urlPrefix = "/";
-                dashboard.ssl = false;
+                dashboard = {
+                  enabled = true;
+                  port = 7000;
+                  ssl = false;
+                };
                 mgr.modules =
                   let
                     enable = name: {

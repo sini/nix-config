@@ -29,8 +29,8 @@ spec:
       enabled: true
   dashboard:
     enabled: true
+    port: 7000
     ssl: false
-    urlPrefix: /
   dataDirHostPath: /var/lib/rook
   disruptionManagement:
     managePodBudgets: true
