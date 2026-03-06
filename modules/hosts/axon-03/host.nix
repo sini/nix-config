@@ -20,8 +20,8 @@
       "cilium-bgp"
     ];
     tags = {
-      "bgp-asn" = "65001";
-      "cilium-asn" = "65002";
+      "bgp-asn" = "65003";
+      "cilium-asn" = "65010";
       "ceph-device" = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
 
       "thunderbolt-interface-1" = "169.254.31.0/31";
