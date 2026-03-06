@@ -3,19 +3,6 @@
   flake.environments.prod = {
     id = 1;
     domain = "json64.dev";
-    gatewayIp = "10.10.0.1";
-    gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
-    dnsServers = [
-      # Cloudflare
-      "1.1.1.1"
-      "2606:4700:4700::1111"
-      "1.0.0.1"
-      "2606:4700:4700::1001"
-
-      # Public Nat64 -- https://nat64.net
-      "2a01:4f8:c2c:123f::1"
-      "2a00:1098:2b::1"
-    ];
 
     # Certificate management configuration
     certificates = {
@@ -78,33 +65,42 @@
     };
 
     networks = {
-      management = {
+      default = {
         cidr = "10.10.0.0/16";
         ipv6_cidr = "fe80::/64";
-        purpose = "management";
-        description = "Management network for infrastructure hosts";
+        description = "Default network for infrastructure hosts";
+        gatewayIp = "10.10.0.1";
+        gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
+        dnsServers = [
+          # Cloudflare
+          "1.1.1.1"
+          "2606:4700:4700::1111"
+          "1.0.0.1"
+          "2606:4700:4700::1001"
+
+          # Public Nat64 -- https://nat64.net
+          "2a01:4f8:c2c:123f::1"
+          "2a00:1098:2b::1"
+        ];
         assignments = {
           kube-apiserver-vip = "10.10.10.100";
         };
       };
-      kubernetes = {
+      kubernetes-pods = {
         cidr = "172.20.0.0/16";
         ipv6_cidr = "fdfd:cafe:00:0001::/96";
-        purpose = "kubernetes-pods";
         description = "Kubernetes pod network";
       };
-      services = {
+      kubernetes-services = {
         cidr = "172.21.0.0/16";
         ipv6_cidr = "fdfd:cafe:00:8001::/112";
-        purpose = "kubernetes-services";
         description = "Kubernetes service network";
         assignments = {
           coredns = "172.21.0.10";
         };
       };
-      loadbalancers = {
+      kubernetes-loadbalancers = {
         cidr = "10.11.0.0/16";
-        purpose = "loadbalancer";
         description = "LoadBalancer service IP range";
         assignments = {
           cilium-ingress-controller = "10.11.0.2";

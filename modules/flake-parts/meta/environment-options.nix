@@ -27,15 +27,28 @@ in
             description = "IPv6 network CIDR (e.g., fd64:0:1::/64)";
           };
 
-          purpose = mkOption {
-            type = types.str;
-            description = "Network purpose (e.g., management, cluster, service)";
-          };
-
           description = mkOption {
             type = types.str;
             default = "";
             description = "Human-readable description of the network";
+          };
+
+          gatewayIp = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Gateway IP address for this network";
+          };
+
+          gatewayIpV6 = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            description = "Gateway IPv6 address for this network";
+          };
+
+          dnsServers = mkOption {
+            type = types.listOf types.str;
+            default = [ ];
+            description = "DNS server IPs for this network";
           };
 
           assignments = mkOption {
@@ -180,33 +193,15 @@ in
               '';
             };
 
-            gatewayIp = mkOption {
-              type = types.str;
-              description = "Gateway IP address for the environment";
-            };
-
-            gatewayIpV6 = mkOption {
-              type = types.str;
-              description = "Gateway IPv6 address for the environment";
-            };
-
-            dnsServers = mkOption {
-              type = types.listOf types.str;
-              default = [
-                "1.1.1.1"
-                "8.8.8.8"
-              ];
-              description = "DNS server IPs for the environment";
-            };
-
             networks = mkOption {
               type = types.attrsOf networkType;
               default = { };
               description = ''
                 Network definitions for the environment.
+                Network names should match their purpose (e.g., default, kubernetes-pods, kubernetes-services).
                 Example: `{
-                  management = { cidr = "10.0.0.0/24"; purpose = "management"; };
-                  cluster = { cidr = "172.20.0.0/16"; purpose = "kubernetes-pods"; };
+                  default = { cidr = "10.0.0.0/24"; };
+                  kubernetes-pods = { cidr = "172.20.0.0/16"; };
                 }`
               '';
             };

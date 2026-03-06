@@ -38,7 +38,7 @@
       let
         hosts =
           environment.findHostsByRole "kubernetes"
-          |> lib.attrsets.filterAttrs (hostname: hostConfig: hostConfig.tags ? "ceph-device");
+          |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.tags ? "ceph-device");
       in
       {
         applications.rook-ceph = {
