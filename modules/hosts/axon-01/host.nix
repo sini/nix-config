@@ -21,7 +21,7 @@
     ];
     tags = {
       "bgp-asn" = "65001";
-      "cilium-asn" = "65002";
+      "cilium-asn" = "65010";
       "ceph-device" = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
 
       "thunderbolt-interface-1" = "169.254.12.0/31";
