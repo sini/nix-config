@@ -419,6 +419,10 @@ in
               lib.concatStringsSep "." topDomain;
 
             getAssignment =
+              let
+                # Capture networks in closure to avoid evaluation issues
+                networks = config.networks;
+              in
               name:
               let
                 # Flatten all assignments from all networks into a single list
@@ -429,7 +433,7 @@ in
                       inherit assignName addr;
                       network = netName;
                     }) (net.assignments or { })
-                  ) config.networks
+                  ) networks
                 );
                 # Find the first matching assignment
                 match = lib.findFirst (a: a.assignName == name) null allAssignments;

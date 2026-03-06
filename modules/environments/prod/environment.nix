@@ -104,7 +104,7 @@
         description = "LoadBalancer service IP range";
         assignments = {
           cilium-ingress-controller = "10.11.0.2";
-          gateway-controller = "10.11.0.1";
+          default-gateway = "10.11.0.1";
         };
       };
     };
