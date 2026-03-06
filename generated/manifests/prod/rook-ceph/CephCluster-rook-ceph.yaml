@@ -145,7 +145,10 @@ spec:
   storage:
     allowDeviceClassUpdate: true
     allowOsdCrushWeightUpdate: true
-    nodes: []
+    nodes:
+      - devices:
+          - name: /dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L
+        name: axon-01
     useAllDevices: false
     useAllNodes: false
   upgradeOSDRequiresHealthyPGs: false
