@@ -41,13 +41,13 @@
         coredns.clusterIP = "172.21.0.10";
 
         cilium = {
-          # devices = [
-          #   "br0" # "enp2s0"
-          #   # "enp199s0f5"
-          #   # "enp199s0f6"
-          #   # "tailscale0"
-          # ];
-          # directRoutingDevice = "br0";
+          devices = [
+            "br0" # "enp2s0"
+            "enp199s0f5"
+            "enp199s0f6"
+            # "tailscale0"
+          ];
+          directRoutingDevice = "enp199+";
         };
         csi-driver-nfs.volumes = {
           "vault-nfs" = {

@@ -3,7 +3,7 @@ kind: CiliumBGPAdvertisement
 metadata:
   labels:
     advertise: cilium-routes
-  name: loadbalancer-ips
+  name: service-cluster-ips
 spec:
   advertisements:
     - advertisementType: Service
@@ -14,5 +14,3 @@ spec:
       service:
         addresses:
           - ClusterIP
-          - ExternalIP
-          - LoadBalancerIP
