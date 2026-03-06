@@ -2,14 +2,14 @@ apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
   name: default-gateway
-  namespace: kube-system
+  namespace: gateways
 spec:
   gatewayClassName: envoy
   infrastructure:
     parametersRef:
       group: gateway.envoyproxy.io
       kind: EnvoyProxy
-      name: envoy-proxy-config
+      name: default-gateway-proxy-config
   listeners:
     - allowedRoutes:
         namespaces:

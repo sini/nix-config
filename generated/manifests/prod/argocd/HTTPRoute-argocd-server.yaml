@@ -8,7 +8,7 @@ spec:
     - argocd.zeroday.run
   parentRefs:
     - name: default-gateway
-      namespace: kube-system
+      namespace: gateways
       sectionName: zeroday-run-https
   rules:
     - backendRefs:
