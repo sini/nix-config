@@ -101,11 +101,11 @@
               };
 
               # Routing Mode
-              # routingMode = "native";
+              routingMode = "native";
               ipv4NativeRoutingCIDR = podNetwork.cidr;
-
-              routingMode = "tunnel";
-              tunnelProtocol = "geneve";
+              ipv6NativeRoutingCIDR = podNetwork.ipv6_cidr;
+              # routingMode = "tunnel";
+              # tunnelProtocol = "geneve";
 
               # endpointRoutes.enabled = true;
 
@@ -124,7 +124,8 @@
 
               # Set Cilium as a kube-proxy replacement.
               kubeProxyReplacement = true;
-              # localRedirectPolicies.enabled = true;
+              localRedirectPolicies.enabled = true;
+              # autoDirectNodeRoutes = true;
 
               # Roll out when config changes
               rollOutCiliumPods = true;
@@ -174,19 +175,19 @@
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              # bpf.hostLegacyRouting = true;
+              bpf.hostLegacyRouting = true;
               bpf.lbExternalClusterIP = true;
               bpf.lbSourceRangeAllTypes = true;
               bpf.masquerade = true;
               bpf.disableExternalIPMitigation = true;
               # bpf.tproxy = true;
-              bpf.datapathMode = "netkit";
+              # bpf.datapathMode = "netkit";
 
-              ipMasqAgent = {
-                enabled = true;
-                config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr},${podNetwork.ipv6_cidr},${serviceNetwork.ipv6_cidr},${managementNetwork.cidr},${managementNetwork.ipv6_cidr}}";
-                config.masqLinkLocal = false;
-              };
+              # ipMasqAgent = {
+              #   enabled = true;
+              #   config.nonMasqueradeCIDRs = "{${podNetwork.cidr},${serviceNetwork.cidr},${podNetwork.ipv6_cidr},${serviceNetwork.ipv6_cidr},${managementNetwork.cidr},${managementNetwork.ipv6_cidr}}";
+              #   config.masqLinkLocal = false;
+              # };
 
               # loadBalancer.acceleration = "best-effort";
               # loadBalancer.mode = "dsr";
@@ -207,8 +208,8 @@
               bgpControlPlane.enabled = true;
 
               # We announce via BGP
-              l2announcements.enabled = true;
-              l2NeighDiscovery.enabled = true;
+              # l2announcements.enabled = true;
+              # l2NeighDiscovery.enabled = true;
 
               policyEnforcementMode = "default";
               policyAuditMode = false;

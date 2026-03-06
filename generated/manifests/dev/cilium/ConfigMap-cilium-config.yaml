@@ -36,7 +36,7 @@ data:
   cni-exclusive: "true"
   cni-log-file: /var/run/cilium/cilium-cni.log
   custom-cni-conf: "false"
-  datapath-mode: netkit
+  datapath-mode: veth
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
@@ -50,7 +50,6 @@ data:
   enable-bgp-control-plane-status-report: "true"
   enable-bgp-legacy-origin-attribute: "false"
   enable-bpf-clock-probe: "false"
-  enable-bpf-masquerade: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-health-check-loadbalancer-ip: "false"
