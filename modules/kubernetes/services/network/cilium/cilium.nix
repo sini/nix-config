@@ -56,13 +56,10 @@
         ...
       }:
       let
-        # Find networks by purpose
-        findNetworkByPurpose =
-          purpose: lib.findFirst (net: net.purpose == purpose) null (lib.attrValues environment.networks);
-
-        podNetwork = findNetworkByPurpose "kubernetes-pods";
-        # serviceNetwork = findNetworkByPurpose "kubernetes-services";
-        loadbalancerNetwork = findNetworkByPurpose "loadbalancer";
+        # Access networks by name
+        podNetwork = environment.networks.kubernetes-pods;
+        # serviceNetwork = environment.networks.kubernetes-services;
+        loadbalancerNetwork = environment.networks.kubernetes-loadbalancers;
 
         loadbalancer-cidr = loadbalancerNetwork.cidr;
         # ingress-controller-address = environment.getAssignment "cilium-ingress-controller";

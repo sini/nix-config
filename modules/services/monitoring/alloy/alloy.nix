@@ -44,7 +44,7 @@
             hostOptions.hostname
             reportingHost
             environment.name
-            environment.gatewayIp
+            environment.networks.default.gatewayIp
           ]
           (builtins.readFile ./configs/config.alloy.tmpl)
       );

@@ -40,7 +40,7 @@ in
           if cfg.peerWithGateway then
             [
               {
-                ip = environment.gatewayIp;
+                ip = environment.networks.default.gatewayIp;
                 asn = cfg.gatewayAsNumber;
               }
             ]
@@ -93,7 +93,7 @@ in
             neighbor:
             let
               # Never send default-originate to the gateway (it's our internet source)
-              isGateway = neighbor.ip == environment.gatewayIp;
+              isGateway = neighbor.ip == environment.networks.default.gatewayIp;
 
               shouldOriginate =
                 if isGateway then

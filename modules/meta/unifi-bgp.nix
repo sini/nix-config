@@ -6,8 +6,8 @@ let
   unifiAsn = 65999;
 
   # Helper to calculate .1 address from CIDR
-  # For now, we'll use the gatewayIp from the environment directly
-  getManagementGateway = env: env.gatewayIp;
+  # For now, we'll use the gatewayIp from the environment's default network
+  getDefaultGateway = env: env.networks.default.gatewayIp;
 
   # Generate neighbor peer-group assignment for each bgp-hub host
   generateNeighborPeerGroup =
@@ -29,7 +29,7 @@ let
         _name: host: lib.elem "bgp-hub" (host.roles or [ ]) && host.environment == envName
       ) config.flake.hosts;
 
-      routerId = getManagementGateway env;
+      routerId = getDefaultGateway env;
 
       # Get unique ASNs from bgp-hub hosts (assuming they all use the same ASN for the peer-group)
       hubAsn =
@@ -46,7 +46,7 @@ let
       !
       ! FRR BGP Configuration for Unifi Router
       ! Environment: ${envName}
-      ! Management Network: ${env.networks.management.cidr}
+      ! Default Network: ${env.networks.default.cidr}
       ! Generated: ${lib.trivial.release}
       !
       frr defaults traditional

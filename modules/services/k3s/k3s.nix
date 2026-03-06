@@ -16,7 +16,7 @@
       }:
       let
 
-        managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.management.cidr)}";
+        managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.default.cidr)}";
 
         kubernetesNodes = environment.findHostsByRole "kubernetes";
 
@@ -212,12 +212,9 @@
 
           k3s =
             let
-              # Find networks by purpose
-              findNetworkByPurpose =
-                purpose: lib.findFirst (net: net.purpose == purpose) null (lib.attrValues environment.networks);
-
-              podNetwork = findNetworkByPurpose "kubernetes-pods";
-              serviceNetwork = findNetworkByPurpose "kubernetes-services";
+              # Access networks by name
+              podNetwork = environment.networks.kubernetes-pods;
+              serviceNetwork = environment.networks.kubernetes-services;
 
               generalFlagList = [
                 "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
@@ -246,6 +243,7 @@
                 "--kubelet-arg=fail-swap-on=false"
 
                 "--write-kubeconfig-mode \"0644\""
+                "--kubelet-arg=--cluster-dns=${environment.getAssignment "coredns"}"
 
                 "--etcd-expose-metrics"
                 "--etcd-snapshot-schedule-cron='0 */12 * * *'"

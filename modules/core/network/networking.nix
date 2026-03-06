@@ -57,8 +57,8 @@
     let
       cfg = config.hardware.networking;
 
-      # Extract subnet mask from management network CIDR (e.g., "10.9.0.0/16" -> "/16")
-      managementSubnet = "/${last (splitString "/" environment.networks.management.cidr)}";
+      # Extract subnet mask from default network CIDR (e.g., "10.9.0.0/16" -> "/16")
+      managementSubnet = "/${last (splitString "/" environment.networks.default.cidr)}";
 
       # Helper to create name-value pairs for listToAttrs
       mkNameValue = name: value: { inherit name value; };
@@ -81,7 +81,7 @@
           IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguraton (SLAAC)
           IPv6PrivacyExtensions = "yes";
           LinkLocalAddressing = "ipv6";
-          DNS = environment.dnsServers;
+          DNS = environment.networks.default.dnsServers;
           DNSOverTLS = true;
           DNSSEC = "allow-downgrade";
         };
@@ -90,8 +90,8 @@
           PrefixDelegationHint = "::/64";
         };
         routes = [
-          (mkRoute environment.gatewayIp { })
-          (mkRoute environment.gatewayIpV6 {
+          (mkRoute environment.networks.default.gatewayIp { })
+          (mkRoute environment.networks.default.gatewayIpV6 {
             Destination = "::/0";
             GatewayOnLink = true; # it's a gateway on local link.
           })
