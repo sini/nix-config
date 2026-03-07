@@ -140,17 +140,22 @@
 
               ipv6.enabled = true;
 
-              gatewayAPI.enabled = false; # Trying out envoy...
-              gatewayAPI.hostNetwork.enabled = false;
+              gatewayAPI = {
+                enabled = false; # Trying out envoy...
+                hostNetwork.enabled = false;
+                # Don't create secretsNamespace, we do this in the bootstrap app
+                secretsNamespace.create = false;
+              };
 
               # Explicitly enable Envoy...
-              envoy.enabled = false; # Trying out envoy...
-              envoy.rollOutPods = true;
+              envoy = {
+                enabled = false; # Trying out envoy...
+                rollOutPods = true;
+              };
 
               # Don't create secretsNamespace, we do this in the bootstrap app
               tls.secretsNamespace.create = false;
               ingressController.secretsNamespace.create = false;
-              gatewayAPI.secretsNamespace.create = false;
               envoyConfig.secretsNamespace.create = false;
 
               k8sClientRateLimit = {
@@ -166,11 +171,13 @@
 
               # Needed for the tailscale proxy setup to work.
               socketLB.hostNamespaceOnly = true;
-              bpf.hostLegacyRouting = true;
-              bpf.lbExternalClusterIP = true;
-              bpf.lbSourceRangeAllTypes = true;
-              bpf.masquerade = true;
-              bpf.disableExternalIPMitigation = true;
+              bpf = {
+                hostLegacyRouting = true;
+                lbExternalClusterIP = true;
+                lbSourceRangeAllTypes = true;
+                masquerade = true;
+                disableExternalIPMitigation = true;
+              };
               # bpf.tproxy = true;
               # bpf.datapathMode = "netkit";
 

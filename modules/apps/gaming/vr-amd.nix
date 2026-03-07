@@ -56,22 +56,24 @@
         ];
 
         # Udev rules for VR devices
-        services.udev.packages = with pkgs; [
-          openvr
-        ];
+        services.udev = {
+          packages = with pkgs; [
+            openvr
+          ];
 
-        # Udev rules for Bigscreen devices
-        services.udev.extraRules = ''
-          # Bigscreen Beyond
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0101", MODE="0666", TAG+="uaccess"
-          # Bigscreen Bigeye
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0666", TAG+="uaccess", GROUP="video"
-          SUBSYSTEM=="usb", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0660", TAG+="uaccess", GROUP="video"
-          # Bigscreen Beyond Audio Strap
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0105", MODE="0666", TAG+="uaccess"
-          # Bigscreen Beyond Firmware Mode?
-          KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="4004", MODE="0666", TAG+="uaccess"
-        '';
+          # Udev rules for Bigscreen devices
+          extraRules = ''
+            # Bigscreen Beyond
+            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0101", MODE="0666", TAG+="uaccess"
+            # Bigscreen Bigeye
+            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0666", TAG+="uaccess", GROUP="video"
+            SUBSYSTEM=="usb", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0660", TAG+="uaccess", GROUP="video"
+            # Bigscreen Beyond Audio Strap
+            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0105", MODE="0666", TAG+="uaccess"
+            # Bigscreen Beyond Firmware Mode?
+            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="4004", MODE="0666", TAG+="uaccess"
+          '';
+        };
 
         programs.steam.extraCompatPackages = [ pkgs.proton-ge-rtsp-bin ];
 
@@ -163,30 +165,31 @@
           inputs.nix-flatpak.homeManagerModules.nix-flatpak
         ];
 
-        xdg.configFile."openxr/1/active_runtime.json".source =
-          "${pkgs.custom-monado}/share/openxr/1/openxr_monado.json";
-        xdg.configFile."openvr/openvrpaths.vrpath".text = ''
-          {
-            "config" :
-            [
-              "${config.xdg.dataHome}/Steam/config"
-            ],
-            "external_drivers" :
-            [
-              "${pkgs.custom-monado}/share/steamvr-monado"
-            ],
-            "jsonid" : "vrpathreg",
-            "log" :
-            [
-              "${config.xdg.dataHome}/Steam/logs"
-            ],
-            "runtime" :
-            [
-              "${pkgs.custom-xrizer}/lib/xrizer"
-            ],
-            "version" : 1
-          }
-        '';
+        xdg.configFile = {
+          "openxr/1/active_runtime.json".source = "${pkgs.custom-monado}/share/openxr/1/openxr_monado.json";
+          "openvr/openvrpaths.vrpath".text = ''
+            {
+              "config" :
+              [
+                "${config.xdg.dataHome}/Steam/config"
+              ],
+              "external_drivers" :
+              [
+                "${pkgs.custom-monado}/share/steamvr-monado"
+              ],
+              "jsonid" : "vrpathreg",
+              "log" :
+              [
+                "${config.xdg.dataHome}/Steam/logs"
+              ],
+              "runtime" :
+              [
+                "${pkgs.custom-xrizer}/lib/xrizer"
+              ],
+              "version" : 1
+            }
+          '';
+        };
         # "external_drivers" :
         # [
         #   "${config.xdg.dataHome}/Steam/steamapps/common/Bigscreen Beyond Driver"
@@ -241,36 +244,40 @@
         #       "$HOME/.local/share/Steam/steamapps/common/SteamVR/steamxr_linux64.json" "$RUNTIME_PATH";
         #   '';
         # };
-        home.packages = with pkgs; [
-          flatpak
-        ];
+        home = {
+          packages = with pkgs; [
+            flatpak
+          ];
 
-        home.sessionVariables = {
-          XDG_DATA_DIRS = "$XDG_DATA_DIRS:/usr/share:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share"; # lets flatpak work
+          sessionVariables = {
+            XDG_DATA_DIRS = "$XDG_DATA_DIRS:/usr/share:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share"; # lets flatpak work
+          };
         };
 
-        services.flatpak.enable = true;
-        services.flatpak.packages = [
-          "io.github.wivrn.wivrn" # SteamVR app streaming from linux
-          "com.github.tchx84.Flatseal"
-          "org.freedesktop.Bustle"
-          "com.valvesoftware.Steam"
-        ];
-
-        services.flatpak.update.auto = {
+        services.flatpak = {
           enable = true;
-          onCalendar = "weekly"; # Default value
-        };
+          packages = [
+            "io.github.wivrn.wivrn" # SteamVR app streaming from linux
+            "com.github.tchx84.Flatseal"
+            "org.freedesktop.Bustle"
+            "com.valvesoftware.Steam"
+          ];
 
-        services.flatpak.overrides = {
-          "com.valvesoftware.Steam".Context = {
-            filesystems = [
-              ## For Wivrn to work
-              "xdg-run/wivrn:ro"
-              "xdg-data/flatpak/app/io.github.wivrn.wivrn:ro"
-              "xdg-config/openxr:ro"
-              "xdg-config/openvr:ro"
-            ];
+          update.auto = {
+            enable = true;
+            onCalendar = "weekly"; # Default value
+          };
+
+          overrides = {
+            "com.valvesoftware.Steam".Context = {
+              filesystems = [
+                ## For Wivrn to work
+                "xdg-run/wivrn:ro"
+                "xdg-data/flatpak/app/io.github.wivrn.wivrn:ro"
+                "xdg-config/openxr:ro"
+                "xdg-config/openvr:ro"
+              ];
+            };
           };
         };
 

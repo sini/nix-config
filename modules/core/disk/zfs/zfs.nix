@@ -12,29 +12,31 @@
           pv
         ];
 
-        boot.supportedFilesystems.zfs = true;
+        boot = {
+          supportedFilesystems.zfs = true;
 
-        boot.zfs = {
-          package = pkgs.zfs_2_4;
-          # package = pkgs.zfs_cachyos;
-          # package = config.boot.kernelPackages.zfs_unstable;
-          # package = pkgs.cachyosKernels.zfs-cachyos.override {
-          #   kernel = config.boot.kernelPackages.kernel;
-          # };
-          devNodes = "/dev/disk/by-id/";
-          forceImportAll = true;
-          requestEncryptionCredentials = [ "zroot" ];
+          zfs = {
+            package = pkgs.zfs_2_4;
+            # package = pkgs.zfs_cachyos;
+            # package = config.boot.kernelPackages.zfs_unstable;
+            # package = pkgs.cachyosKernels.zfs-cachyos.override {
+            #   kernel = config.boot.kernelPackages.kernel;
+            # };
+            devNodes = "/dev/disk/by-id/";
+            forceImportAll = true;
+            requestEncryptionCredentials = [ "zroot" ];
+          };
+
+          kernelParams = [
+            # ZFS-related params
+            "zfs.zfs_arc_max=${toString (16 * 1024 * 1024 * 1024)}"
+            "elevator=none"
+            "nohibernate"
+          ];
         };
 
         # https://github.com/openzfs/zfs/issues/10891
         systemd.services.systemd-udev-settle.enable = false;
-
-        boot.kernelParams = [
-          # ZFS-related params
-          "zfs.zfs_arc_max=${toString (16 * 1024 * 1024 * 1024)}"
-          "elevator=none"
-          "nohibernate"
-        ];
 
         services.zfs = {
           # Expand all devices on boot

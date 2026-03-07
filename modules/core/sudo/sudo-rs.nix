@@ -5,25 +5,27 @@ in
 {
   flake.features.sudo.nixos = {
 
-    # Enable sudo-rs instead of c-based sudo.
-    security.sudo.enable = false;
-    security.sudo-rs = {
-      enable = true;
-      execWheelOnly = true;
-      wheelNeedsPassword = false;
-    };
+    security = {
+      # Enable sudo-rs instead of c-based sudo.
+      sudo.enable = false;
+      sudo-rs = {
+        enable = true;
+        execWheelOnly = true;
+        wheelNeedsPassword = false;
+      };
 
-    # Enable and configure `doas`.
-    security.doas = {
-      enable = true;
-      wheelNeedsPassword = false;
-      extraRules = [
-        {
-          users = [ user ];
-          noPass = true;
-          keepEnv = true;
-        }
-      ];
+      # Enable and configure `doas`.
+      doas = {
+        enable = true;
+        wheelNeedsPassword = false;
+        extraRules = [
+          {
+            users = [ user ];
+            noPass = true;
+            keepEnv = true;
+          }
+        ];
+      };
     };
 
     impermanence.ignorePaths = [

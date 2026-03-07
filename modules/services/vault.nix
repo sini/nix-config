@@ -40,59 +40,72 @@ in
     in
     {
       # Age secrets for vault certificates (organized by environment)
-      age.secrets.vault-ca = {
-        rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-ca.age";
-        owner = "vault";
-        group = "vault";
+      age.secrets = {
+        vault-ca = {
+          rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-ca.age";
+          owner = "vault";
+          group = "vault";
+        };
+
+        "vault-${config.networking.hostName}" = {
+          rekeyFile =
+            rootPath
+            + "/.secrets/services/vault/${hostOptions.environment}/vault-${config.networking.hostName}.age";
+          owner = "vault";
+          group = "vault";
+        };
+
+        "vault-${config.networking.hostName}-key" = {
+          rekeyFile =
+            rootPath
+            + "/.secrets/services/vault/${hostOptions.environment}/vault-${config.networking.hostName}-key.age";
+          owner = "vault";
+          group = "vault";
+          mode = "0400";
+        };
+
+        # Unseal keys for automatic unsealing (shared across all vault nodes in environment)
+        vault-unseal-key-1 = {
+          rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-unseal-key-1.age";
+          owner = "vault";
+          group = "vault";
+          mode = "0400";
+        };
+
+        vault-unseal-key-2 = {
+          rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-unseal-key-2.age";
+          owner = "vault";
+          group = "vault";
+          mode = "0400";
+        };
+
+        vault-unseal-key-3 = {
+          rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-unseal-key-3.age";
+          owner = "vault";
+          group = "vault";
+          mode = "0400";
+        };
       };
 
-      age.secrets."vault-${config.networking.hostName}" = {
-        rekeyFile =
-          rootPath
-          + "/.secrets/services/vault/${hostOptions.environment}/vault-${config.networking.hostName}.age";
-        owner = "vault";
-        group = "vault";
-      };
+      environment = {
+        systemPackages = with pkgs; [
+          vault
+          openssl
+        ];
 
-      age.secrets."vault-${config.networking.hostName}-key" = {
-        rekeyFile =
-          rootPath
-          + "/.secrets/services/vault/${hostOptions.environment}/vault-${config.networking.hostName}-key.age";
-        owner = "vault";
-        group = "vault";
-        mode = "0400";
-      };
+        sessionVariables = {
+          # Allow the vault CLI to hit the local vault instance, not the active VIP
+          VAULT_ADDR = "https://${config.networking.fqdn}:8200";
+        };
 
-      # Unseal keys for automatic unsealing (shared across all vault nodes in environment)
-      age.secrets.vault-unseal-key-1 = {
-        rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-unseal-key-1.age";
-        owner = "vault";
-        group = "vault";
-        mode = "0400";
-      };
-
-      age.secrets.vault-unseal-key-2 = {
-        rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-unseal-key-2.age";
-        owner = "vault";
-        group = "vault";
-        mode = "0400";
-      };
-
-      age.secrets.vault-unseal-key-3 = {
-        rekeyFile = rootPath + "/.secrets/services/vault/${hostOptions.environment}/vault-unseal-key-3.age";
-        owner = "vault";
-        group = "vault";
-        mode = "0400";
-      };
-
-      environment.systemPackages = with pkgs; [
-        vault
-        openssl
-      ];
-
-      environment.sessionVariables = {
-        # Allow the vault CLI to hit the local vault instance, not the active VIP
-        VAULT_ADDR = "https://${config.networking.fqdn}:8200";
+        persistence."/persist".directories = [
+          {
+            directory = "/var/lib/vault";
+            user = "vault";
+            group = "vault";
+            mode = "0755";
+          }
+        ];
       };
 
       services.vault = {
@@ -201,15 +214,6 @@ in
           exit 1
         '';
       };
-
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/vault";
-          user = "vault";
-          group = "vault";
-          mode = "0755";
-        }
-      ];
 
       # Open firewall for Vault API
       networking.firewall.allowedTCPPorts = [

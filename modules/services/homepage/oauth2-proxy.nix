@@ -9,117 +9,123 @@
     in
     {
 
-      age.secrets.oauth2-proxy-oidc-secret = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/oauth2-proxy-oidc-client-secret.age";
-        mode = "440";
-        owner = "oauth2-proxy";
-        group = "oauth2-proxy";
-      };
-
-      age.secrets.oauth2-proxy-cookie-secret = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oauth2-proxy-cookie-secret.age";
-        mode = "440";
-        owner = "oauth2-proxy";
-        group = "oauth2-proxy";
-      };
-
-      age.secrets.oauth2-proxy-keys = {
-        generator.dependencies = [
-          config.age.secrets.oauth2-proxy-cookie-secret
-          config.age.secrets.oauth2-proxy-oidc-secret
-        ];
-        generator.script =
-          {
-            lib,
-            decrypt,
-            deps,
-            ...
-          }:
-          ''
-            echo -n "OAUTH2_PROXY_COOKIE_SECRET="
-            ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 0).file}
-            echo -n "OAUTH2_PROXY_CLIENT_SECRET="
-            ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 1).file}
-          '';
-      };
-
-      services.oauth2-proxy = {
-        enable = true;
-
-        provider = "oidc";
-
-        keyFile = config.age.secrets.oauth2-proxy-keys.path;
-
-        # Email configuration - allow all authenticated users
-        email.domains = [ "*" ];
-
-        # Reverse proxy settings
-        reverseProxy = true;
-        # httpAddress = "127.0.0.1:4180";
-
-        # OIDC configuration
-        clientID = "oauth2-proxy";
-        oidcIssuerUrl = "https://${kanidmDomain}/oauth2/openid/oauth2-proxy";
-        redirectURL = "https://${domain}/oauth2/callback";
-        loginURL = "https://${domain}/oauth2/authorise";
-        profileURL = "https://${kanidmDomain}/oauth2/openid/oauth2-proxy/userinfo";
-        redeemURL = "https://${kanidmDomain}/oauth2/token";
-        validateURL = "https://${kanidmDomain}/oauth2/token/introspect";
-
-        scope = "openid email profile";
-
-        cookie = {
-          domain = ".${environment.domain}";
-          secure = true;
-          httpOnly = true;
-          name = "_oauth2_proxy";
+      age.secrets = {
+        oauth2-proxy-oidc-secret = {
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/oauth2-proxy-oidc-client-secret.age";
+          mode = "440";
+          owner = "oauth2-proxy";
+          group = "oauth2-proxy";
         };
 
-        # Pass authentication headers
-        setXauthrequest = true;
+        oauth2-proxy-cookie-secret = {
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oauth2-proxy-cookie-secret.age";
+          mode = "440";
+          owner = "oauth2-proxy";
+          group = "oauth2-proxy";
+        };
 
-        upstream = [ ];
-
-        extraConfig = {
-          provider-display-name = "Kanidm";
-          skip-provider-button = true;
-          code-challenge-method = "S256";
-          set-authorization-header = true;
-          pass-access-token = true;
-          skip-jwt-bearer-tokens = true;
-
-          cookie-csrf-expire = "15m";
-          cookie-csrf-per-request = true;
-
-          oidc-groups-claim = "groups";
-          whitelist-domain = [
-            "${environment.domain}"
-            "*.${environment.domain}"
+        oauth2-proxy-keys = {
+          generator.dependencies = [
+            config.age.secrets.oauth2-proxy-cookie-secret
+            config.age.secrets.oauth2-proxy-oidc-secret
           ];
-          # client-secret-file = config.age.secrets.oauth2-proxy-oidc-secret.path;
-          # cookie-secret-file = config.age.secrets.oauth2-proxy-cookie-secret.path;
-          # upstream = "static://202";
-        };
-
-        nginx.domain = domain;
-      };
-
-      services.nginx.virtualHosts."${domain}" = {
-        forceSSL = true;
-        useACMEHost = environment.getTopDomainFor "oauth2-proxy";
-        locations."/" = {
-          proxyPass = "http://127.0.0.1:4180";
-          recommendedProxySettings = true;
-          extraConfig = ''
-            proxy_set_header X-Scheme                $scheme;
-            proxy_set_header X-Auth-Request-Redirect $scheme://$host$request_uri;
-          '';
+          generator.script =
+            {
+              lib,
+              decrypt,
+              deps,
+              ...
+            }:
+            ''
+              echo -n "OAUTH2_PROXY_COOKIE_SECRET="
+              ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 0).file}
+              echo -n "OAUTH2_PROXY_CLIENT_SECRET="
+              ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 1).file}
+            '';
         };
       };
 
-      services.nginx.upstreams."${domain}" = {
-        servers = {
-          "localhost:4180" = { };
+      services = {
+        oauth2-proxy = {
+          enable = true;
+
+          provider = "oidc";
+
+          keyFile = config.age.secrets.oauth2-proxy-keys.path;
+
+          # Email configuration - allow all authenticated users
+          email.domains = [ "*" ];
+
+          # Reverse proxy settings
+          reverseProxy = true;
+          # httpAddress = "127.0.0.1:4180";
+
+          # OIDC configuration
+          clientID = "oauth2-proxy";
+          oidcIssuerUrl = "https://${kanidmDomain}/oauth2/openid/oauth2-proxy";
+          redirectURL = "https://${domain}/oauth2/callback";
+          loginURL = "https://${domain}/oauth2/authorise";
+          profileURL = "https://${kanidmDomain}/oauth2/openid/oauth2-proxy/userinfo";
+          redeemURL = "https://${kanidmDomain}/oauth2/token";
+          validateURL = "https://${kanidmDomain}/oauth2/token/introspect";
+
+          scope = "openid email profile";
+
+          cookie = {
+            domain = ".${environment.domain}";
+            secure = true;
+            httpOnly = true;
+            name = "_oauth2_proxy";
+          };
+
+          # Pass authentication headers
+          setXauthrequest = true;
+
+          upstream = [ ];
+
+          extraConfig = {
+            provider-display-name = "Kanidm";
+            skip-provider-button = true;
+            code-challenge-method = "S256";
+            set-authorization-header = true;
+            pass-access-token = true;
+            skip-jwt-bearer-tokens = true;
+
+            cookie-csrf-expire = "15m";
+            cookie-csrf-per-request = true;
+
+            oidc-groups-claim = "groups";
+            whitelist-domain = [
+              "${environment.domain}"
+              "*.${environment.domain}"
+            ];
+            # client-secret-file = config.age.secrets.oauth2-proxy-oidc-secret.path;
+            # cookie-secret-file = config.age.secrets.oauth2-proxy-cookie-secret.path;
+            # upstream = "static://202";
+          };
+
+          nginx.domain = domain;
+        };
+
+        nginx = {
+          virtualHosts."${domain}" = {
+            forceSSL = true;
+            useACMEHost = environment.getTopDomainFor "oauth2-proxy";
+            locations."/" = {
+              proxyPass = "http://127.0.0.1:4180";
+              recommendedProxySettings = true;
+              extraConfig = ''
+                proxy_set_header X-Scheme                $scheme;
+                proxy_set_header X-Auth-Request-Redirect $scheme://$host$request_uri;
+              '';
+            };
+          };
+
+          upstreams."${domain}" = {
+            servers = {
+              "localhost:4180" = { };
+            };
+          };
         };
       };
 
