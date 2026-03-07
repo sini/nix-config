@@ -15,6 +15,7 @@
     ];
     features = [
       "zfs-disk-single"
+      "xfs-disk-longhorn"
       "cpu-amd"
       "gpu-amd"
       "cilium-bgp"
@@ -22,7 +23,6 @@
     tags = {
       "bgp-asn" = "65001";
       "cilium-asn" = "65010";
-      "ceph-device" = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
 
       "thunderbolt-interface-1" = "169.254.31.0/31";
       "thunderbolt-interface-2" = "169.254.23.1/31";
@@ -39,6 +39,7 @@
         hardware = {
           networking.interfaces = [ "enp2s0" ];
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
+          disk.longhorn.device_id = "nvme-Force_MP600_1925823000012856500E";
         };
 
         impermanence = {
