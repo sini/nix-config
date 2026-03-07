@@ -74,7 +74,7 @@ in
             charts = (inputs.nixhelm.chartsDerivations.${system} or { }) // userCharts;
             extraSpecialArgs = {
               inherit environment;
-              hosts = config.flake.hosts;
+              inherit (config.flake) hosts;
               # Expose CRD objects for services to use in bootstrap
               crdObjects = serviceCrdObjects;
             };
@@ -107,7 +107,7 @@ in
                       resourceImports =
                         let
                           # Use the generated-crds package from perSystem
-                          generatedCrds = (withSystem system ({ config, ... }: config.packages.generated-crds));
+                          generatedCrds = withSystem system ({ config, ... }: config.packages.generated-crds);
 
                           # Read all .nix files from the generated-crds derivation
                           allNixFiles = lib.attrNames (
@@ -233,7 +233,7 @@ in
                   pkgs.yq-go
                   pkgs.jq
                 ];
-                src = crdConfig.src;
+                inherit (crdConfig) src;
                 crds = builtins.toJSON crdConfig.crds;
               }
               ''
@@ -304,15 +304,15 @@ in
               fromCRD (
                 {
                   inherit name;
-                  src = crdConfig.src;
-                  crds = crdConfig.crds;
+                  inherit (crdConfig) src;
+                  inherit (crdConfig) crds;
                 }
-                // (lib.optionalAttrs (crdConfig.namePrefix or "" != "") { namePrefix = crdConfig.namePrefix; })
+                // (lib.optionalAttrs (crdConfig.namePrefix or "" != "") { inherit (crdConfig) namePrefix; })
                 // (lib.optionalAttrs (crdConfig.attrNameOverrides or { } != { }) {
-                  attrNameOverrides = crdConfig.attrNameOverrides;
+                  inherit (crdConfig) attrNameOverrides;
                 })
                 // (lib.optionalAttrs (crdConfig.skipCoerceToList or { } != { }) {
-                  skipCoerceToList = crdConfig.skipCoerceToList;
+                  inherit (crdConfig) skipCoerceToList;
                 })
               )
             else

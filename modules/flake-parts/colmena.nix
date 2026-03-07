@@ -37,7 +37,6 @@
 
   flake =
     { lib, config, ... }:
-    with builtins;
     let
       stableHosts = lib.filterAttrs (_: h: !(h.unstable or false)) config.hosts;
       unstableHosts = lib.filterAttrs (_: h: h.unstable or false) config.hosts;
@@ -69,7 +68,7 @@
 
       colmena = mkColmenaHive {
         hosts = stableHosts;
-        nixpkgs = inputs.nixpkgs;
+        inherit (inputs) nixpkgs;
       };
 
       colmenaUnstable = mkColmenaHive {
@@ -93,7 +92,7 @@
         else
           throw "mergeMap: expected two attrsets or nulls";
 
-      # ✅ Final merged Hive
+      # Final merged Hive
       colmenaHive =
         let
           mergedNodes = mergeMap (if hiveStable != null then hiveStable.nodes else null) (
@@ -102,8 +101,9 @@
           mergedDeploymentConfig = mergeMap (
             if hiveStable != null then hiveStable.deploymentConfig else null
           ) (if hiveUnstable != null then hiveUnstable.deploymentConfig else null);
-          deploymentConfigSelected = names: lib.filterAttrs (name: _: elem name names) mergedDeploymentConfig;
-          evalSelected = names: lib.filterAttrs (name: _: elem name names) toplevel;
+          deploymentConfigSelected =
+            names: lib.filterAttrs (name: _: builtins.elem name names) mergedDeploymentConfig;
+          evalSelected = names: lib.filterAttrs (name: _: builtins.elem name names) toplevel;
           evalSelectedDrvPaths = names: lib.mapAttrs (_: v: v.drvPath) (evalSelected names);
 
           introspect =

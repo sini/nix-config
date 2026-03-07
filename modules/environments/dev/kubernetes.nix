@@ -1,7 +1,7 @@
 { rootPath, ... }:
 {
   flake.environments.dev.kubernetes = {
-    secretsFile = (rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml");
+    secretsFile = rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml";
 
     tlsSanIps = [
       "10.9.1.1" # bitstream

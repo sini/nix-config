@@ -25,7 +25,7 @@
           server = {
             enable = true;
             settings = {
-              domain = environment.domain;
+              inherit (environment) domain;
               origin = "https://${domain}";
               bindaddress = "127.0.0.1:8443";
               ldapbindaddress = "127.0.0.1:3636";

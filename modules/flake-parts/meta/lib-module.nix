@@ -4,8 +4,8 @@ let
 in
 {
   options.flake.lib = mkOption {
-    description = "Internal helpers library";
-    type = with types; lazyAttrsOf raw;
+    description = "Internal helpers library.";
+    type = types.lazyAttrsOf types.raw;
     default = { };
   };
 }

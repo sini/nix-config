@@ -28,7 +28,7 @@
           config.age.secrets.oauth2-proxy-cookie-secret
           config.age.secrets.oauth2-proxy-oidc-secret
         ];
-        generator.script = (
+        generator.script =
           {
             lib,
             decrypt,
@@ -40,8 +40,7 @@
             ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 0).file}
             echo -n "OAUTH2_PROXY_CLIENT_SECRET="
             ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 1).file}
-          ''
-        );
+          '';
       };
 
       services.oauth2-proxy = {

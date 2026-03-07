@@ -87,8 +87,8 @@
 
               # Cluster identity
               cluster = {
-                name = environment.name;
-                id = environment.id;
+                inherit (environment) name;
+                inherit (environment) id;
               };
 
               # Routing Mode
@@ -105,7 +105,7 @@
               ) config.kubernetes.services.cilium.devices;
 
               nodePort = lib.optionalAttrs (config.kubernetes.services.cilium.directRoutingDevice != null) {
-                directRoutingDevice = config.kubernetes.services.cilium.directRoutingDevice;
+                inherit (config.kubernetes.services.cilium) directRoutingDevice;
               };
               # egress-masquerade-interfaces:
 

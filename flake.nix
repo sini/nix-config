@@ -250,6 +250,14 @@
     # Steam ricing
     # millennium.url = "git+https://github.com/SteamClientHomebrew/Millennium";
 
+    statix = {
+      url = "github:molybdenumsoftware/statix";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+
     stylix = {
       url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

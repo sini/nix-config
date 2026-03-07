@@ -56,6 +56,7 @@ This repository defines configuration options in the following attribute sets:
 - **[users](docs/users-options.md)**: User account definitions and configuration options.
 
 See the linked documentation files for complete option references.
+
 ## Remote deployment via Colmena
 
 This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.

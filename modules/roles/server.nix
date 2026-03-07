@@ -16,7 +16,7 @@
   flake.features.server.nixos =
     { lib, ... }:
     {
-      systemd.targets = (
+      systemd.targets =
         lib.genAttrs
           [
             "sleep"
@@ -27,8 +27,7 @@
           (_: {
             enable = false;
             unitConfig.DefaultDependencies = false;
-          })
-      );
+          });
 
       boot.kernel.sysctl = {
         "net.core.rmem_default" = 1048576;

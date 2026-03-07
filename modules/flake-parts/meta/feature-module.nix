@@ -19,5 +19,6 @@ in
   options.flake.features = mkOption {
     type = types.lazyAttrsOf (types.submodule featureSubmodule);
     default = { };
+    description = "Feature definitions with NixOS and Home-Manager modules.";
   };
 }

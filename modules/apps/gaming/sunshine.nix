@@ -1,6 +1,6 @@
 { config, ... }:
 let
-  username = config.flake.meta.user.username;
+  inherit (config.flake.meta.user) username;
 in
 {
   flake.features.sunshine = {

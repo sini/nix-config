@@ -1,13 +1,15 @@
-# in your flake-parts module
 {
   lib,
   options,
   ...
 }:
+let
+  inherit (lib) mkOption types;
+in
 {
   # Declare a flake output so flake-parts can merge/typecheck it
-  options.flake.flakeOptions = lib.mkOption {
-    type = lib.types.raw; # option declarations are not “normal values”; keep it raw
+  options.flake.flakeOptions = mkOption {
+    type = types.raw; # option declarations are not "normal values"; keep it raw
     readOnly = true;
     description = "Option declarations for this flake-parts evaluation (for docs generation).";
   };

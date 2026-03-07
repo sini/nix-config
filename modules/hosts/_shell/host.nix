@@ -1,4 +1,4 @@
-{ ... }:
+_:
 {
   flake.hosts.shell = {
     ipv4 = [

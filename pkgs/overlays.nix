@@ -7,7 +7,7 @@
   modifications = _final: prev: {
     # https://discord.com/channels/1065291958328758352/1071254299998421052/threads/1428125264319352904
     # branch: next
-    custom-monado = prev.monado.overrideAttrs (old: {
+    custom-monado = prev.monado.overrideAttrs (_old: {
       src = prev.fetchgit {
         url = "https://tangled.org/@matrixfurry.com/monado";
         rev = "ecf484dd36c2bb475616189dbc222f5dc9c1c396";
@@ -33,11 +33,11 @@
       doCheck = false;
     };
 
-    ayugram-desktop =
-      inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}.ayugram-desktop;
+    inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
-    split-monitor-workspaces =
-      inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system}.split-monitor-workspaces;
+    inherit (inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system})
+      split-monitor-workspaces
+      ;
 
     kvmfr = prev.kvmfr.override { looking-glass-client = prev.local.looking-glass-client-vulkan; };
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;

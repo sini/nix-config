@@ -5,6 +5,7 @@ A Python tool for synchronizing Kubernetes manifests from nixidy environment bui
 ## Overview
 
 This package automates the process of:
+
 - Building nixidy environment packages from a Nix flake
 - Synchronizing manifest files from build output to target directories
 - Converting Kubernetes `Secret` resources to encrypted `SopsSecret` resources
@@ -110,17 +111,17 @@ File and directory synchronization:
 ## Workflow
 
 1. **Discovery**: Discover available nixidy environments from the flake
-2. **Build**: Build the environment package using Nix
-3. **Scan**: Scan both source (built package) and target directories
-4. **Secret Discovery**: Identify secrets that need processing
-5. **Diff Calculation**: Determine which files need to be created, updated, or deleted
-6. **Synchronization**: Apply file changes in the correct order:
+1. **Build**: Build the environment package using Nix
+1. **Scan**: Scan both source (built package) and target directories
+1. **Secret Discovery**: Identify secrets that need processing
+1. **Diff Calculation**: Determine which files need to be created, updated, or deleted
+1. **Synchronization**: Apply file changes in the correct order:
    - Delete obsolete files/directories
    - Create new directories
    - Copy new files
    - Update modified files
-7. **Secret Processing**: Convert and encrypt secrets using SOPS
-8. **Summary**: Report statistics on operations performed
+1. **Secret Processing**: Convert and encrypt secrets using SOPS
+1. **Summary**: Report statistics on operations performed
 
 ## Secret Handling
 
@@ -129,8 +130,8 @@ File and directory synchronization:
 The tool converts Kubernetes `Secret` resources to `SopsSecret` resources:
 
 1. **Source**: `Secret-*.yaml` files in the nixidy build output
-2. **Target**: `SopsSecret-*.yaml` files in the target directory
-3. **Process**:
+1. **Target**: `SopsSecret-*.yaml` files in the target directory
+1. **Process**:
    - Resolve vals templates (e.g., `ref+awssecrets://...`)
    - Convert to SopsSecret format (splits ArgoCD/K8s annotations)
    - Encrypt using SOPS with repository's `.sops.yaml` configuration
@@ -164,9 +165,9 @@ Each class is in its own file, making it easy to locate and modify specific func
 ### Adding New Features
 
 1. Create new class in appropriate subpackage directory
-2. Update subpackage `__init__.py` to export the class
-3. If needed, update main `__init__.py` for public API
-4. Import and use in appropriate manager classes
+1. Update subpackage `__init__.py` to export the class
+1. If needed, update main `__init__.py` for public API
+1. Import and use in appropriate manager classes
 
 ### Code Style
 

@@ -1,6 +1,6 @@
 { config, lib, ... }:
 let
-  environments = config.flake.environments;
+  inherit (config.flake) environments;
 
   # Unifi router ASN
   unifiAsn = 65999;

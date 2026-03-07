@@ -1,11 +1,11 @@
 {
+  lib,
   self,
   rootPath,
-  lib,
   ...
 }:
 let
-  inherit (lib) types mkOption;
+  inherit (lib) mkOption types;
   inherit (self.lib.modules) mkDeferredModuleOpt mkUsersWithFeaturesOpt;
 in
 {
@@ -42,15 +42,16 @@ in
               description = "The relative build speed";
             };
 
-            unstable = lib.mkOption {
+            unstable = mkOption {
               type = types.bool;
               default = true;
+              description = "Whether to use nixpkgs-unstable for this host.";
             };
 
             ipv4 = mkOption {
               type = types.listOf types.str;
               default = [ ];
-              description = "The static IP addresses of this host in it's home vlan.";
+              description = "The static IP addresses of this host in its home vlan.";
             };
 
             ipv6 = mkOption {
@@ -68,7 +69,7 @@ in
             features = mkOption {
               type = types.listOf types.str;
               default = [ ];
-              description = "List of features for the host";
+              description = "List of features for the host.";
             };
 
             exclude-features = mkOption {
@@ -167,5 +168,6 @@ in
     mkOption {
       type = types.attrsOf hostType;
       default = { };
+      description = "Per-host NixOS configurations.";
     };
 }

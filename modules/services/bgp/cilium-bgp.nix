@@ -42,7 +42,7 @@
       {
         config = {
           services.bgp = {
-            localAsn = localAsn;
+            inherit localAsn;
             routerId = nodeLoopbackIp;
 
             prefixLists = {

@@ -1,19 +1,21 @@
 {
-  inputs,
-  config,
   lib,
+  config,
+  inputs,
   withSystem,
   ...
 }:
+let
+  inherit (lib)
+    elem
+    filter
+    head
+    tail
+    ;
+in
 {
   flake.lib.nixos-configuration-helpers =
     let
-      inherit (lib)
-        elem
-        head
-        filter
-        tail
-        ;
 
       collectTypedModules =
         type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
@@ -142,7 +144,7 @@
             activeFeatures = lib.unique (map (f: f.name) allHostFeatures);
 
             # Collect NixOS modules from features
-            nixosModules = (collectNixosModules allHostFeatures);
+            nixosModules = collectNixosModules allHostFeatures;
 
             # Compute enabled users (used in specialArgs and home-manager)
             enabledUsers =
@@ -245,9 +247,6 @@
         );
     in
     {
-      inherit
-        mkHost
-        ;
+      inherit mkHost;
     };
-
 }

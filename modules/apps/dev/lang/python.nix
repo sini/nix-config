@@ -1,10 +1,9 @@
 {
-  flake.features.python.home = (
+  flake.features.python.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [
         python3
       ];
-    }
-  );
+    };
 }

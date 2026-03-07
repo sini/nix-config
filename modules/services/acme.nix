@@ -53,8 +53,8 @@
         acceptTerms = true;
         defaults = {
           email = environment.email.adminEmail;
-          dnsProvider = environment.acme.dnsProvider;
-          dnsResolver = environment.acme.dnsResolver;
+          inherit (environment.acme) dnsProvider;
+          inherit (environment.acme) dnsResolver;
           dnsPropagationCheck = true;
           credentialFiles = {
             CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets."${issuerName}-cloudflare-api-key".path;

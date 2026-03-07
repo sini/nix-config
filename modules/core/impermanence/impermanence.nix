@@ -127,7 +127,7 @@
             # Data here persists across reboots but is considered "safe to delete".
             # Typically used for caches, temporary state, and system-generated data.
             "/cache" = {
-              enable = cfg.enable;
+              inherit (cfg) enable;
               # TODO: Remove once we kill legacyFs support
               # Mount in persist/cache if using legacy disk config
               persistentStoragePath = if legacyFs then "/persist/cache" else "/cache";
@@ -144,7 +144,7 @@
             # Critical system state and configuration that must survive reboots.
             # Only essential files should be here to maintain system declarativeness.
             "/persist" = {
-              enable = cfg.enable;
+              inherit (cfg) enable;
               hideMounts = true;
               directories = [ ];
               files = [
