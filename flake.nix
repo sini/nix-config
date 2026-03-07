@@ -98,6 +98,12 @@
 
     nix-flatpak.url = "github:gmodena/nix-flatpak"; # unstable branch. Use github:gmodena/nix-flatpak/?ref=<tag> to pin releases.
 
+    # For use with nixhelm chart generation
+    haumea = {
+      url = "github:nix-community/haumea/v0.2.2";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
     # Home Manager
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";

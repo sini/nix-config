@@ -3,6 +3,7 @@
     nixidy =
       {
         lib,
+        charts,
         ...
       }:
       {
@@ -11,12 +12,7 @@
           createNamespace = true;
 
           helm.releases.romm = {
-            chart = lib.helm.downloadHelmChart {
-              repo = "oci://oci.trueforge.org/truecharts";
-              chart = "romm";
-              version = "14.27.4";
-              chartHash = "sha256-rTs2PVFkv0otQ4BwJ3H9uewFEofoLjsFFMRe00Jqbjw=";
-            };
+            chart = charts.truecharts.romm;
 
             values = {
               image.tag = "4.6.1";

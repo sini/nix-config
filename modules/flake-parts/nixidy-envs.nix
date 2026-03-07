@@ -66,10 +66,12 @@ in
               else
                 [ ]
             ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
+
+            userCharts = config.flake.chartsDerivations.${system} or { };
           in
           inputs.nixidy.lib.mkEnv {
             inherit pkgs;
-            charts = inputs.nixhelm.chartsDerivations.${system};
+            charts = (inputs.nixhelm.chartsDerivations.${system} or { }) // userCharts;
             extraSpecialArgs = {
               inherit environment;
               hosts = config.flake.hosts;
