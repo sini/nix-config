@@ -164,10 +164,10 @@
               gateway = getGatewayForPeer peerHostname peerLoopbackIp;
             in
             {
-              asn = lib.toInt (peerHost.tags."bgp-asn");
+              asn = lib.toInt peerHost.tags."bgp-asn";
               lanip = builtins.head peerHost.ipv4;
               ip = peerLoopbackIp;
-              gateway = gateway;
+              inherit gateway;
             }
           ) (lib.attrNames thunderboltPeers)
         );
@@ -211,7 +211,7 @@
             neighbors = map (peer: {
               # ip = peer.ip;
               ip = peer.gateway;
-              asn = peer.asn;
+              inherit (peer) asn;
               ebgpMultihop = 4;
               softReconfiguration = true;
               allowasIn = 1;

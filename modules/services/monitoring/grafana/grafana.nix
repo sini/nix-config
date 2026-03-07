@@ -30,7 +30,7 @@
           enable = true;
           settings = {
             server = {
-              domain = domain;
+              inherit domain;
               http_addr = "127.0.0.1";
               http_port = 3000;
               root_url = "https://${domain}";

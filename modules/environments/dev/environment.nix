@@ -14,7 +14,7 @@
       issuers = {
         "json64-dev" = {
           ageKeyFile = rootPath + "/.secrets/env/dev/cloudflare-api-key.age";
-          sopsFile = (rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml");
+          sopsFile = rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml";
           secretKey = "cloudflare-api-token";
         };
       };

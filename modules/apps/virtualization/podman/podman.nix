@@ -101,12 +101,10 @@
         ];
       };
 
-    home =
-      { ... }:
-      {
-        home.persistence."/cache".directories = [
-          ".local/share/containers"
-        ];
-      };
+    home = _: {
+      home.persistence."/cache".directories = [
+        ".local/share/containers"
+      ];
+    };
   };
 }

@@ -26,7 +26,7 @@ let
           {
             targets = [ "${builtins.head hostConfig.ipv4}:${toString exporterConfig.port}" ];
             labels = {
-              hostname = hostname;
+              inherit hostname;
               exporter = exporterName;
               source_environment = hostConfig.environment;
             }
@@ -59,8 +59,8 @@ let
       {
         inherit job_name;
         static_configs = allTargets;
-        metrics_path = firstConfig.metrics_path;
-        scrape_interval = firstConfig.scrape_interval;
+        inherit (firstConfig) metrics_path;
+        inherit (firstConfig) scrape_interval;
       }
     ) grouped;
 in

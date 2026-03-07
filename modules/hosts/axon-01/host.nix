@@ -1,5 +1,4 @@
-{ ... }:
-{
+_: {
   flake.hosts.axon-01 = {
     ipv4 = [ "10.10.10.2" ];
     ipv6 = [ "fe80::40d7:8aff:fe8e:fee4" ];

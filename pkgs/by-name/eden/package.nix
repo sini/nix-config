@@ -150,7 +150,7 @@ let
 
   });
 
-  xbyak_new = xbyak.overrideAttrs (oldAttrs: {
+  xbyak_new = xbyak.overrideAttrs (_oldAttrs: {
     version = "7.22";
     src = fetchFromGitHub {
       owner = "herumi";
@@ -160,7 +160,7 @@ let
     };
   });
 
-  frozen = stdenv.mkDerivation (finalAttrs: rec {
+  frozen = stdenv.mkDerivation (_finalAttrs: rec {
     pname = "frozen";
     version = "61dce5ae18ca59931e27675c468e64118aba8744";
     src = fetchFromGitHub {

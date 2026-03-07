@@ -188,12 +188,10 @@
         };
       };
 
-    home =
-      { ... }:
-      {
-        home.persistence."/cache".directories = [
-          ".local/share/Steam"
-        ];
-      };
+    home = _: {
+      home.persistence."/cache".directories = [
+        ".local/share/Steam"
+      ];
+    };
   };
 }

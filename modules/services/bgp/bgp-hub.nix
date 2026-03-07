@@ -228,9 +228,9 @@ in
           };
 
           services.bgp = {
-            localAsn = localAsn;
+            inherit localAsn;
             routerId = builtins.head hostOptions.ipv4;
-            maximumPaths = cfg.maximumPaths;
+            inherit (cfg) maximumPaths;
 
             neighbors = allNeighbors;
 

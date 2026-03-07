@@ -32,12 +32,12 @@
       issuers = {
         "json64-dev" = {
           ageKeyFile = rootPath + "/.secrets/env/prod/cloudflare-api-key.age";
-          sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+          sopsFile = rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml";
           secretKey = "cloudflare-api-token";
         };
         "global" = {
           ageKeyFile = rootPath + "/.secrets/env/prod/cloudflare-api-key.age";
-          sopsFile = (rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml");
+          sopsFile = rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml";
           secretKey = "cloudflare-global-api-token";
         };
       };

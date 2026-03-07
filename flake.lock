@@ -3132,6 +3132,7 @@
         "razerdaemon": "razerdaemon",
         "shimmer": "shimmer",
         "spicetify-nix": "spicetify-nix",
+        "statix": "statix",
         "steam-config-nix": "steam-config-nix",
         "stylix": "stylix",
         "systems": "systems_15",
@@ -3226,6 +3227,29 @@
         "owner": "NixOS",
         "ref": "nixos-25.05",
         "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "statix": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1772583427,
+        "narHash": "sha256-bSflAYuoHUlcVDFFaxDrVQQNp9cd6ZFjngoHljQLVOA=",
+        "owner": "molybdenumsoftware",
+        "repo": "statix",
+        "rev": "690a2f7c7a135d5d0156096ffdc897a8aae74c4c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "molybdenumsoftware",
+        "repo": "statix",
         "type": "github"
       }
     },

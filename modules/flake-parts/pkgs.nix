@@ -1,7 +1,7 @@
 {
   inputs,
-  withSystem,
   rootPath,
+  withSystem,
   ...
 }:
 {
@@ -42,7 +42,6 @@
           ];
       };
       pkgsDirectory = rootPath + "/pkgs/by-name";
-      # inherit pkgs;
     };
 
   flake = {

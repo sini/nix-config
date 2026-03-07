@@ -1,5 +1,4 @@
-{ ... }:
-{
+_: {
   flake.hosts.uplink = {
     ipv4 = [ "10.10.10.1" ];
     ipv6 = [ "fe80::3c7a:6eff:fee5:d3a6" ];

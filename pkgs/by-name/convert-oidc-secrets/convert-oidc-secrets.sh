@@ -57,6 +57,7 @@ convert_secret() {
   secret=$(age --decrypt -i "$IDENTITY_KEY" "$age_file")
 
   # Encrypt directly via stdin so unencrypted content never touches filesystem
+  # shellcheck disable=SC2094 # Input comes from pipe, not from yaml_file
   echo "${service}-oidc-client-secret: $secret" | sops \
     --config "$SOPS_CONFIG" \
     --filename-override "$yaml_file" \

@@ -29,7 +29,7 @@
         services = {
           declarative-jellyfin = {
             enable = true;
-            serverId = (builtins.hashString "md5" domain);
+            serverId = builtins.hashString "md5" domain;
 
             # Upstream declarative-jellfin locked version is broken against unstable
             package = pkgs.jellyfin;
@@ -216,8 +216,8 @@
           "/persist".directories = [
             {
               directory = "/var/lib/jellyfin";
-              user = config.services.jellyfin.user;
-              group = config.services.jellyfin.group;
+              inherit (config.services.jellyfin) user;
+              inherit (config.services.jellyfin) group;
               mode = "0700";
             }
           ];

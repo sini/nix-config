@@ -7,11 +7,15 @@
 
   perSystem =
     {
+      inputs',
       config,
       pkgs,
       ...
     }:
     {
+
+      devshells.default.packages = [ inputs'.statix.packages.default ];
+
       # Provide a formatter package for `nix fmt`. Setting this
       # to `config.treefmt.build.wrapper` will use the treefmt
       # package wrapped with my desired configuration.
@@ -53,7 +57,20 @@
             "*.dds"
             "*.diff"
             "*.bin"
-            "*.md" # TODO: re-enable after mdformat is fixed
+            # Underscore-prefixed files/dirs are ignored by the module auto-import system
+            "**/_*/**"
+            "**/_*"
+          ];
+          statix.options = [ "explain" ];
+          mdformat.options = [ "--number" ];
+          deadnix.options = [ "--no-lambda-pattern-names" ];
+          shellcheck.options = [
+            "--shell=bash"
+            "--check-sourced"
+          ];
+          yamlfmt.options = [
+            "-formatter"
+            "retain_line_breaks=true"
           ];
           formatter = {
             prettier = {
@@ -70,17 +87,36 @@
           actionlint.enable = true;
           fish_indent.enable = true;
           isort.enable = true;
-          mdformat.enable = true; # TODO: re-enable when it supports markdown-it-py >= 4.0.0
           nixfmt = {
             enable = true;
             package = pkgs.nixfmt;
           };
           nixf-diagnose.enable = true;
           prettier.enable = true;
-          shfmt.enable = true;
           taplo.enable = true;
           # Python formatting
           black.enable = true;
+          yamlfmt = {
+            enable = true;
+            package = pkgs.yamlfmt;
+          };
+          mdformat = {
+            enable = true;
+            package = pkgs.mdformat;
+          };
+          shellcheck = {
+            enable = true;
+            package = pkgs.shellcheck;
+          };
+          statix = {
+            enable = true;
+            package = inputs'.statix.packages.default;
+          };
+          deadnix = {
+            enable = true;
+            package = pkgs.deadnix;
+          };
+
         };
       };
     };

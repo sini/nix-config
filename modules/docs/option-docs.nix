@@ -28,7 +28,7 @@
             drv =
               let
                 doc = pkgs.nixosOptionsDoc {
-                  options = options;
+                  inherit options;
                   warningsAreErrors = false;
                   transformOptions =
                     opt:
@@ -38,7 +38,7 @@
                       declarations = [ ]; # Keeps the output cleaner for READMEs
                       # Optional: Hide the type if it's just 'submodule' to save space
                       type = if opt.type == "submodule" then null else opt.type;
-                      visible = (opt.description != null); # && !(opt.type == "submodule");
+                      visible = opt.description != null; # && !(opt.type == "submodule");
                     };
                 };
               in
@@ -58,7 +58,7 @@
                       "* `\(.key)`: [\(.value.type)] \(.value.description)"
                     end
                   end
-                ) | join("\n")' \
+                ) | join("\n\n")' \
                   ${doc.optionsJSON}/share/doc/nixos/options.json > $out
               '';
           };

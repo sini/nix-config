@@ -1,7 +1,11 @@
 { lib, ... }:
+let
+  inherit (lib) mkOption types;
+in
 {
-  options.flake.meta = lib.mkOption {
-    type = with lib.types; lazyAttrsOf anything;
+  options.flake.meta = mkOption {
+    type = types.lazyAttrsOf types.anything;
+    description = "Flake-level metadata.";
   };
 
   config.flake.meta.uri = "github:sini/nix-config";

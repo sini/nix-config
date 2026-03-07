@@ -1,17 +1,20 @@
 { lib, ... }:
+let
+  inherit (lib) mkOption types;
+in
 {
-  options.text = lib.mkOption {
+  options.text = mkOption {
     default = { };
-    type = lib.types.lazyAttrsOf (
-      lib.types.oneOf [
-        (lib.types.separatedString "")
-        (lib.types.submodule {
+    type = types.lazyAttrsOf (
+      types.oneOf [
+        (types.separatedString "")
+        (types.submodule {
           options = {
-            parts = lib.mkOption {
-              type = lib.types.lazyAttrsOf lib.types.str;
+            parts = mkOption {
+              type = types.lazyAttrsOf types.str;
             };
-            order = lib.mkOption {
-              type = lib.types.listOf lib.types.str;
+            order = mkOption {
+              type = types.listOf types.str;
             };
           };
         })

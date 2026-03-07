@@ -32,7 +32,7 @@
 
               values = {
                 # Configurable replica count
-                replicaCount = config.kubernetes.services.sops-secrets-operator.replicaCount;
+                inherit (config.kubernetes.services.sops-secrets-operator) replicaCount;
 
                 # Watch all namespaces (cluster-wide secret management)
                 namespaced = false;

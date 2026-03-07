@@ -73,7 +73,7 @@ _flakeConfig: {
             cudaSupport = true;
             cudnnSupport = true;
           };
-          system = pkgs.stdenv.hostPlatform.system;
+          inherit (pkgs.stdenv.hostPlatform) system;
         };
 
         # (Optional) A set of special arguments to be passed to the MicroVM's NixOS modules.

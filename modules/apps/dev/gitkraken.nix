@@ -46,7 +46,7 @@
         };
 
         user = {
-          email = config.programs.git.defaultIdentity.email;
+          inherit (config.programs.git.defaultIdentity) email;
           name = config.programs.git.defaultIdentity.fullName;
         };
 
@@ -54,7 +54,7 @@
           package = pkgs.gnupg;
           signCommits = true;
           signTags = true;
-          signingKey = config.programs.git.defaultIdentity.signingKey;
+          inherit (config.programs.git.defaultIdentity) signingKey;
         };
       };
 

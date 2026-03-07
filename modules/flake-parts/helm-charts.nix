@@ -13,7 +13,7 @@ let
     in
     inputs.haumea.lib.load {
       src = ../../charts;
-      loader = { ... }: p: kubelib.downloadHelmChart (trimBogusVersion (import p));
+      loader = _: p: kubelib.downloadHelmChart (trimBogusVersion (import p));
       transformer = inputs.haumea.lib.transformers.liftDefault;
     };
 in

@@ -52,8 +52,8 @@
               allowVolumeExpansion = true;
 
               parameters = {
-                server = volumeConfig.server;
-                share = volumeConfig.share;
+                inherit (volumeConfig) server;
+                inherit (volumeConfig) share;
                 subDir = "\${pvc.metadata.namespace}/\${pvc.metadata.name}/\${pv.metadata.name}";
                 # onDelete = "delete"; # delete|retain|archive
                 # mountPermissions = "0";

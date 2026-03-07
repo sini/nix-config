@@ -1,7 +1,7 @@
 {
-  self,
   lib,
   config,
+  self,
   ...
 }:
 let
@@ -141,7 +141,7 @@ let
         mkOption {
           type =
             if service.options or { } != { } then
-              types.submodule { options = service.options; }
+              types.submodule { inherit (service) options; }
             else
               types.attrs;
           default = { };

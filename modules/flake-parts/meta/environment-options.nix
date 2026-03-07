@@ -6,7 +6,7 @@
   ...
 }:
 let
-  inherit (lib) types mkOption;
+  inherit (lib) mkOption types;
   inherit (self.lib.modules) mkUsersWithFeaturesOpt;
   inherit (self.lib.kubernetes-services) kubernetesConfigType;
   flakeConfig = config; # Capture the flake-level config for use in submodules
@@ -421,7 +421,7 @@ in
             getAssignment =
               let
                 # Capture networks in closure to avoid evaluation issues
-                networks = config.networks;
+                inherit (config) networks;
               in
               name:
               let
