@@ -1,4 +1,8 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  ...
+}:
 let
   hosts =
     config.flake.hosts
@@ -34,7 +38,11 @@ let
 in
 {
   flake.features.hosts.nixos =
-    { config, lib, ... }:
+    {
+      config,
+      lib,
+      ...
+    }:
     {
       networking.hosts = lib.attrsets.filterAttrs (
         _ip: hostnames: !(builtins.elem config.networking.hostName hostnames)

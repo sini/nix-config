@@ -1,6 +1,10 @@
 {
   flake.features.utils.nixos =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      ...
+    }:
     {
       environment.systemPackages =
         with pkgs;

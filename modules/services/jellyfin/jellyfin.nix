@@ -15,7 +15,6 @@
         mediaRoot = "/mnt/data/media";
       in
       {
-
         imports = [
           inputs.declarative-jellyfin.nixosModules.default
         ];

@@ -68,7 +68,6 @@
 #     lib.concatStringsSep "\n\n" readFiles;
 # in
 {
-
   flake.features.gpg = {
     nixos = {
       services.pcscd.enable = true;
@@ -76,10 +75,7 @@
     };
 
     home =
-      {
-        pkgs,
-        ...
-      }:
+      { pkgs, ... }:
       {
         programs.gpg = {
           enable = true;

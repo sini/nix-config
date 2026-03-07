@@ -1,7 +1,4 @@
-{
-  rootPath,
-  ...
-}:
+{ rootPath, ... }:
 {
   flake.features.kubernetes = {
     requires = [ "containerd" ];
@@ -15,7 +12,6 @@
         ...
       }:
       let
-
         managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.default.cidr)}";
 
         kubernetesNodes = environment.findHostsByRole "kubernetes";
@@ -167,7 +163,6 @@
               iptables -A nixos-fw -p vrrp -j ACCEPT
             '';
           };
-
         };
 
         services = {

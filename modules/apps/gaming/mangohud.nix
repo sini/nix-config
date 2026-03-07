@@ -1,7 +1,6 @@
 {
   flake.features.mangohud.home =
     { pkgs, ... }:
-
     {
       programs.mangohud = {
         enable = true;
@@ -12,7 +11,8 @@
 
       # can't use the `programs.mangohud.settings` option as it sorts the keys, which changes the rendering order
       # Colors are taken from https://github.com/catppuccin/mangohud/blob/main/themes/mocha/MangoHud.conf
-      xdg.configFile."MangoHud/MangoHud.conf".text = # conf
+      xdg.configFile."MangoHud/MangoHud.conf".text =
+        # conf
         ''
           # Hidden by default
           no_display

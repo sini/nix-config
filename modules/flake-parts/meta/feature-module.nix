@@ -1,4 +1,8 @@
-{ self, lib, ... }:
+{
+  self,
+  lib,
+  ...
+}:
 let
   inherit (lib) mkOption types;
   inherit (self.lib.modules) featureSubmoduleGenericOptions;

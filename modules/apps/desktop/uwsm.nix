@@ -6,7 +6,6 @@
       lib,
       ...
     }:
-
     {
       programs.uwsm.enable = true;
 

@@ -128,7 +128,6 @@
         ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
-
       };
     };
 }

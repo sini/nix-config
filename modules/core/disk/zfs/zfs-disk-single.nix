@@ -10,7 +10,6 @@
         ...
       }:
       with lib;
-
       let
         cfg = config.hardware.disk.zfs-disk-single;
         disk-device =
@@ -204,7 +203,6 @@
                     "com.sun:auto-snapshot" = "true";
                   };
                   postCreateHook = emptySnapshot "zroot/local/libvirt-images";
-
                 };
               };
             };

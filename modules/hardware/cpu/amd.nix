@@ -1,7 +1,11 @@
 { inputs, ... }:
 {
   flake.features.cpu-amd.nixos =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      ...
+    }:
     {
       imports = [ inputs.ucodenix.nixosModules.default ];
 
@@ -34,5 +38,4 @@
       services.ucodenix.enable = true;
       services.ucodenix.cpuModelId = config.facter.reportPath;
     };
-
 }

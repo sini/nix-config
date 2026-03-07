@@ -18,9 +18,12 @@
       See the linked documentation files for complete option references.
     '';
   perSystem =
-    { pkgs, lib, ... }:
     {
-
+      pkgs,
+      lib,
+      ...
+    }:
+    {
       files.files =
         let
           mkOptionDoc = name: options: {

@@ -5,7 +5,6 @@
     nixos =
       { pkgs, ... }:
       {
-
         environment.systemPackages = with pkgs; [
           lzop
           mbuffer
@@ -94,7 +93,6 @@
         #       ZED_SCRUB_AFTER_RESILVER = true;
         #     };
         #   };
-
       };
   };
 }

@@ -59,7 +59,6 @@ let
       default = { };
       inherit description;
     };
-
 in
 {
   flake.lib.modules = {

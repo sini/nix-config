@@ -1,7 +1,11 @@
 { rootPath, ... }:
 {
   flake.features.minio.nixos =
-    { config, environment, ... }:
+    {
+      config,
+      environment,
+      ...
+    }:
     let
       minioDomain = environment.getDomainFor "minio";
       minioConsoleDomain = environment.getDomainFor "minio-console";

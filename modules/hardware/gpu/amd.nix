@@ -37,7 +37,6 @@
             rocmPackages.clr.icd
           ];
         };
-
       };
 
       nixpkgs.config.rocmSupport = true;
@@ -86,6 +85,5 @@
       # GPU overclocking/undervolting daemon
       systemd.packages = with pkgs; [ lact ];
       systemd.services.lactd.wantedBy = [ "multi-user.target" ];
-
     };
 }

@@ -9,7 +9,6 @@ _flakeConfig: {
     }:
     with lib;
     let
-
       nvidiaCard = lib.lists.findFirst (
         card: card.vendor.name == "nVidia Corporation"
       ) null config.facter.report.hardware.graphics_card;
@@ -43,7 +42,6 @@ _flakeConfig: {
           exit 1
         fi
       '';
-
     in
     {
       # Don't start microvm if the device is already bound
@@ -117,7 +115,6 @@ _flakeConfig: {
                   mountPoint = "/var/lib/private/ollama";
                   tag = "ollama";
                   proto = "virtiofs";
-
                 }
                 # {
                 #   # On the host
@@ -330,7 +327,6 @@ _flakeConfig: {
 
             system.stateVersion = "25.05";
           };
-
       };
 
       # systemd.services."microvm@fancontrol".restartIfChanged = true;

@@ -2,7 +2,11 @@
 {
   flake.kubernetes.services.sops-secrets-operator = {
     crds =
-      { inputs, system, ... }:
+      {
+        inputs,
+        system,
+        ...
+      }:
       {
         chart = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
       };

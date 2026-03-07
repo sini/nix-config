@@ -6,12 +6,8 @@
     ];
 
     nixos =
+      { pkgs, ... }:
       {
-        pkgs,
-        ...
-      }:
-      {
-
         nix.settings = {
           substituters = [
             "https://cuda-maintainers.cachix.org"

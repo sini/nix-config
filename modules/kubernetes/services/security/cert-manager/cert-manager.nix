@@ -2,7 +2,11 @@
 {
   flake.kubernetes.services.cert-manager = {
     crds =
-      { inputs, system, ... }:
+      {
+        inputs,
+        system,
+        ...
+      }:
       {
         chart = inputs.nixhelm.chartsDerivations.${system}.jetstack.cert-manager;
         extraOpts = [
@@ -174,6 +178,5 @@
           };
         };
       };
-
   };
 }

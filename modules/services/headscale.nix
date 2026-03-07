@@ -120,5 +120,4 @@
         "/var/lib/headscale"
       ];
     };
-
 }

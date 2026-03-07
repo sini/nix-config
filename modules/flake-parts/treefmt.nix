@@ -1,5 +1,4 @@
 { inputs, ... }:
-
 {
   imports = [
     inputs.treefmt-nix.flakeModule
@@ -13,7 +12,6 @@
       ...
     }:
     {
-
       devshells.default.packages = [ inputs'.statix.packages.default ];
 
       # Provide a formatter package for `nix fmt`. Setting this
@@ -116,7 +114,6 @@
             enable = true;
             package = pkgs.deadnix;
           };
-
         };
       };
     };

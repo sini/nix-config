@@ -1,4 +1,8 @@
-{ self, lib, ... }:
+{
+  self,
+  lib,
+  ...
+}:
 let
   inherit (lib) mkOption;
   inherit (self.lib.kubernetes-services) kubernetesType;

@@ -15,7 +15,6 @@
               "node.kubernetes.io/amd-gpu" = "true";
             };
           };
-
         };
       };
   };

@@ -1,6 +1,10 @@
 {
   flake.features.ananicy.nixos =
-    { lib, pkgs, ... }:
+    {
+      lib,
+      pkgs,
+      ...
+    }:
     {
       services = {
         irqbalance.enable = true;

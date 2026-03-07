@@ -1,7 +1,6 @@
 {
   flake.features.hyprland.home = {
     wayland.windowManager.hyprland.settings = {
-
       # windowrulev2 = [
       #   "float, class:^(pavucontrol|.*pwvucontrol.*)$"
       #   "float, class:^(nm-connection-editor|blueman-manager|.blueman-manager-wrapped)$"
@@ -34,7 +33,6 @@
       #   "size 25% 25%, title:^(Firefox|Picture-in-Picture|Picture in picture)$"
       #   "move 72% 7%, title:^(Firefox|Picture-in-Picture|Picture in picture)$"
       # ];
-
     };
   };
 }

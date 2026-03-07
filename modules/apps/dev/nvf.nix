@@ -1,7 +1,4 @@
-{
-  inputs,
-  ...
-}:
+{ inputs, ... }:
 {
   flake.features.nvf.home = {
     imports = [ inputs.nvf.homeManagerModules.default ];

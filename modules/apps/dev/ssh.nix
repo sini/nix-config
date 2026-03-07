@@ -1,4 +1,8 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  ...
+}:
 let
   # Generate SSH matchBlocks for each host with agent forwarding
   hostMatchBlocks =
@@ -14,7 +18,6 @@ let
         forwardAgent = true;
       }
     );
-
 in
 {
   flake.features.ssh.home = {

@@ -1,7 +1,6 @@
 { lib, ... }:
 {
   flake.kubernetes.services.csi-driver-nfs = {
-
     options = {
       volumes = lib.mkOption {
         type = lib.types.attrsOf (
@@ -24,7 +23,11 @@
     };
 
     crds =
-      { inputs, system, ... }:
+      {
+        inputs,
+        system,
+        ...
+      }:
       {
         chart = inputs.nixhelm.chartsDerivations.${system}.kubernetes-csi.csi-driver-nfs;
       };

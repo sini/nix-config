@@ -12,7 +12,6 @@
         ...
       }:
       {
-
         environment.systemPackages = with pkgs; [
           xwayland-satellite
           wlogout
@@ -75,7 +74,6 @@
         ...
       }:
       {
-
         imports = [
           inputs.hyprland.homeManagerModules.default
         ];
@@ -168,7 +166,6 @@
             xwayland.force_zero_scaling = true;
           };
         };
-
       };
   };
 }

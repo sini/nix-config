@@ -4,7 +4,6 @@
   skim,
   makeWrapper,
 }:
-
 python3.pkgs.buildPythonApplication {
   pname = "zfs-diff-filter";
   version = "1.0.0";

@@ -1,5 +1,4 @@
-{ inputs, ... }:
-{
+{inputs, ...}: {
   flake.hosts.ghost = {
     ipv4 = [
       "10.9.2.1"
@@ -26,52 +25,46 @@
       inputs.nixos-hardware.nixosModules.microsoft-surface-pro-intel
     ];
     facts = ./facter.json;
-    nixosConfiguration =
-      {
-        pkgs,
-        ...
-      }:
+    nixosConfiguration = {pkgs, ...}: {
+      # boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
 
-      {
-        # boot.kernelPackages = lib.mkDefault pkgs.linuxPackages_cachyos-gcc; # TODO: https://github.com/chaotic-cx/nyx/issues/1178
+      boot.kernelModules = [
+        "hid-microsoft"
+        "battery"
+        "ac"
+      ];
+      boot.initrd.kernelModules = [
+        # Surface Aggregator Module (SAM): buttons, sensors, keyboard
+        "surface_aggregator"
+        "surface_aggregator_registry"
+        "surface_aggregator_hub"
+        "surface_hid_core"
+        "surface_hid"
 
-        boot.kernelModules = [
-          "hid-microsoft"
-          "battery"
-          "ac"
-        ];
-        boot.initrd.kernelModules = [
-          # Surface Aggregator Module (SAM): buttons, sensors, keyboard
-          "surface_aggregator"
-          "surface_aggregator_registry"
-          "surface_aggregator_hub"
-          "surface_hid_core"
-          "surface_hid"
+        # Intel Low Power Subsystem (keyboard, I2C, etc.)
+        "intel_lpss"
+        "intel_lpss_pci"
+        "8250_dw"
+      ];
 
-          # Intel Low Power Subsystem (keyboard, I2C, etc.)
-          "intel_lpss"
-          "intel_lpss_pci"
-          "8250_dw"
-        ];
+      hardware.microsoft-surface.kernelVersion = "stable";
 
-        hardware.microsoft-surface.kernelVersion = "stable";
+      environment.systemPackages = with pkgs; [
+        #for camera
+        libcamera
 
-        environment.systemPackages = with pkgs; [
-          #for camera
-          libcamera
+        # for Battery
+        tlp
+        upower
+        acpi
+      ];
 
-          # for Battery
-          tlp
-          upower
-          acpi
-        ];
+      services.udev.packages = [pkgs.iptsd];
+      systemd.packages = [pkgs.iptsd];
 
-        services.udev.packages = [ pkgs.iptsd ];
-        systemd.packages = [ pkgs.iptsd ];
+      hardware.networking.interfaces = ["wlp1s0"];
 
-        hardware.networking.interfaces = [ "wlp1s0" ];
-
-        system.stateVersion = "25.05";
-      };
+      system.stateVersion = "25.05";
+    };
   };
 }

@@ -2,7 +2,11 @@
 {
   flake.features.razer = {
     nixos =
-      { inputs, pkgs, ... }:
+      {
+        inputs,
+        pkgs,
+        ...
+      }:
       {
         imports = [ inputs.razerdaemon.nixosModules.default ];
 
@@ -44,7 +48,6 @@
         ".config/polychromatic/"
         ".local/share/razercontrol"
       ];
-
     };
   };
 }

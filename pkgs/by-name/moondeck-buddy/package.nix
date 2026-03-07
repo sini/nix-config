@@ -13,7 +13,6 @@
   steam,
   useNixSteam ? true,
 }:
-
 let
   inherit (kdePackages) qtbase wrapQtAppsHook;
   qtEnv =

@@ -1,7 +1,11 @@
 { lib, ... }:
 {
   flake.features.yazi.home =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      ...
+    }:
     {
       programs = {
         yazi = {

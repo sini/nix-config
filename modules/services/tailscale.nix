@@ -1,7 +1,11 @@
 { rootPath, ... }:
 {
   flake.features.tailscale.nixos =
-    { config, environment, ... }:
+    {
+      config,
+      environment,
+      ...
+    }:
     {
       # sudo headscale preauthkeys create --user 1 --reusable -e 10y
       age.secrets.tailscale-auth-key = {

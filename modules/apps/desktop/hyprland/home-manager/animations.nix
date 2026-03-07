@@ -1,7 +1,6 @@
 {
   flake.features.hyprland.home = {
     wayland.windowManager.hyprland.settings.animations = {
-
       enabled = "yes";
 
       bezier = [
@@ -26,7 +25,6 @@
         "workspaces, 1, 3, wind"
         "windows, 1, 3, bounce, popin"
       ];
-
     };
   };
 }

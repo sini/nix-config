@@ -1,11 +1,7 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
-{
-  inputs,
-  ...
-}:
-{
+{inputs, ...}: {
   # This is manually composed and somewhat fragile.
-  imports = [ inputs.disko.nixosModules.default ];
+  imports = [inputs.disko.nixosModules.default];
   config = {
     disko.devices = {
       disk = {
@@ -89,43 +85,41 @@
                       "nixos"
                       "-f"
                     ];
-                    subvolumes =
-                      let
-                        defaultBtrfsOpts = [
-                          "defaults"
-                          "compress=zstd:1"
-                          "ssd"
-                          "discard=async"
-                          "noatime"
-                          "nodiratime"
-                        ];
-                      in
-                      {
-                        "@root" = {
-                          mountpoint = "/";
-                          mountOptions = defaultBtrfsOpts;
-                        };
-                        "@home" = {
-                          mountpoint = "/home";
-                          mountOptions = defaultBtrfsOpts;
-                        };
-                        "@nix" = {
-                          mountpoint = "/nix";
-                          mountOptions = defaultBtrfsOpts;
-                        };
-                        "@persist" = {
-                          mountpoint = "/persist";
-                          mountOptions = defaultBtrfsOpts;
-                        };
-                        "@log" = {
-                          mountpoint = "/var/log";
-                          mountOptions = defaultBtrfsOpts;
-                        };
-                        "@swap" = {
-                          mountpoint = "/swap";
-                          swap.swapfile.size = "64G";
-                        };
+                    subvolumes = let
+                      defaultBtrfsOpts = [
+                        "defaults"
+                        "compress=zstd:1"
+                        "ssd"
+                        "discard=async"
+                        "noatime"
+                        "nodiratime"
+                      ];
+                    in {
+                      "@root" = {
+                        mountpoint = "/";
+                        mountOptions = defaultBtrfsOpts;
                       };
+                      "@home" = {
+                        mountpoint = "/home";
+                        mountOptions = defaultBtrfsOpts;
+                      };
+                      "@nix" = {
+                        mountpoint = "/nix";
+                        mountOptions = defaultBtrfsOpts;
+                      };
+                      "@persist" = {
+                        mountpoint = "/persist";
+                        mountOptions = defaultBtrfsOpts;
+                      };
+                      "@log" = {
+                        mountpoint = "/var/log";
+                        mountOptions = defaultBtrfsOpts;
+                      };
+                      "@swap" = {
+                        mountpoint = "/swap";
+                        swap.swapfile.size = "64G";
+                      };
+                    };
                   };
                 };
               };
@@ -137,6 +131,5 @@
 
     fileSystems."/persist".neededForBoot = true;
     fileSystems."/var/log".neededForBoot = true;
-
   };
 }

@@ -1,4 +1,8 @@
-{ config, rootPath, ... }:
+{
+  config,
+  rootPath,
+  ...
+}:
 let
   flakeHosts = config.flake.hosts;
 in
