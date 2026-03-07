@@ -14,6 +14,8 @@ jobs:
         with:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Update helm charts
+        run: nix run github:nix-community/nixhelm#helmupdater -- update-all
       - name: Update flake.lock
         uses: DeterminateSystems/update-flake-lock@v28
         with:
