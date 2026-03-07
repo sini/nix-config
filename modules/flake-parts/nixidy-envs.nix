@@ -81,7 +81,6 @@ in
             modules = [
               (
                 { lib, ... }:
-
                 {
                   # Use flattened nixidy type for direct service access
                   options.kubernetes = lib.mkOption {
@@ -187,7 +186,6 @@ in
       ...
     }@sharedConfig:
     {
-
       devshells.default.packages = [ inputs'.nixidy.packages.default ];
       devshells.default.commands = [
         {

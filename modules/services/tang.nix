@@ -3,7 +3,6 @@
   flake.features.tang.nixos =
     # { pkgs, ... }:
     {
-
       services.tang = {
         enable = true;
         ipAddressAllow = [

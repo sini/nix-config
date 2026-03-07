@@ -1,4 +1,8 @@
-{ lib, inputs, ... }:
+{
+  lib,
+  inputs,
+  ...
+}:
 {
   imports = [
     inputs.pre-commit-hooks.flakeModule
@@ -43,6 +47,5 @@
           };
         };
       };
-
     };
 }

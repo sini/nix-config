@@ -1,16 +1,12 @@
 {
   flake.kubernetes.services.hubble-ui = {
     nixidy =
-      {
-        environment,
-        ...
-      }:
+      { environment, ... }:
       let
         domain = environment.getDomainFor "hubble-ui";
       in
       {
         applications.cilium = {
-
           compareOptions.serverSideDiff = true;
 
           helm.releases.cilium.values = {
@@ -28,7 +24,6 @@
                   method = "cronJob";
                 };
               };
-
             };
           };
 

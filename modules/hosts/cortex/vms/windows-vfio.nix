@@ -14,20 +14,15 @@ _flakeConfig: {
       }:
       # with lib;
       # let
-
       #   nvidiaCard = lib.lists.findFirst (
       #     card: card.vendor.name == "nVidia Corporation"
       #   ) null config.facter.report.hardware.graphics_card;
-
       #   nvidiaGpuDeviceID = if nvidiaCard != null then nvidiaCard.sysfs_bus_id else "0000:05:00.0";
-
       #   nvidiaAudioController = lib.lists.findFirst (
       #     card: card.vendor.name == "nVidia Corporation"
       #   ) null config.facter.report.hardware.sound;
-
       #   nvidiaAudioDeviceID =
       #     if nvidiaAudioController != null then nvidiaAudioController.sysfs_bus_id else "0000:05:00.1";
-
       #   pubkeys = concatLists (
       #     mapAttrsToList (
       #       _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
@@ -35,7 +30,6 @@ _flakeConfig: {
       #   );
       # in
       {
-
         virtualisation = {
           libvirtd = {
             enable = true;
@@ -66,6 +60,7 @@ _flakeConfig: {
                     virsh = "${pkgs.libvirt}/bin/virsh";
                   in
                   pkgs.writeScript "windows-vfio-hook" # bash
+
                     ''
                       #!${bash}
                       # See https://libvirt.org/hooks.html#etc-libvirt-hooks-qemu for hook documentation

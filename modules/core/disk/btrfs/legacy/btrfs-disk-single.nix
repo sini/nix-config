@@ -8,7 +8,6 @@
       ...
     }:
     with lib;
-
     let
       disk-device =
         if config.hardware.disk.single.device_id != "" then

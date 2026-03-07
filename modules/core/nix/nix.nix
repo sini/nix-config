@@ -1,6 +1,10 @@
 {
   flake.features.nix.nixos =
-    { pkgs, lib, ... }:
+    {
+      pkgs,
+      lib,
+      ...
+    }:
     {
       nix =
         let
@@ -123,6 +127,5 @@
         IOSchedulingClass = "idle";
         IOSchedulingPriority = 7;
       };
-
     };
 }

@@ -48,7 +48,6 @@
             adminPasswordFile = config.age.secrets.kanidm-admin-password.path;
             idmAdminPasswordFile = config.age.secrets.kanidm-admin-password.path;
           };
-
         };
 
         nginx.virtualHosts."${domain}" = {

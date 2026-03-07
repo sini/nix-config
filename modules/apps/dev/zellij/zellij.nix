@@ -1,6 +1,10 @@
 {
   flake.features.zellij.home =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      ...
+    }:
     let
       inherit (config.lib.stylix) colors;
       sesh = pkgs.writeScriptBin "sesh" ''

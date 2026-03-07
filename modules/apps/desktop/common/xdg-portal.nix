@@ -94,6 +94,5 @@
         "/share/xdg-desktop-portal"
         "/share/applications"
       ];
-
     };
 }

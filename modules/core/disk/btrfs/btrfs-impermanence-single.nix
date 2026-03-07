@@ -10,7 +10,6 @@
         ...
       }:
       with lib;
-
       let
         cfg = config.hardware.disk.btrfs-impermanence-single;
         disk-device =

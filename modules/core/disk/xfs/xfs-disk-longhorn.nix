@@ -1,6 +1,5 @@
 # NixOS module for configuring a dedicated Longhorn data drive (XFS, no encryption).
 { inputs, ... }:
-
 {
   flake.features.xfs-disk-longhorn.nixos =
     {

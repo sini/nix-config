@@ -13,7 +13,6 @@
 
         # https://sw.kovidgoyal.net/kitty/conf/
         settings = {
-
           # gotta go fast!
           repaint_delay = 8; # 150 FPS
           input_delay = 0; # Remove artificial input delay

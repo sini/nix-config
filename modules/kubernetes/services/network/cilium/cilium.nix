@@ -2,7 +2,11 @@
 {
   flake.kubernetes.services.cilium = {
     crds =
-      { pkgs, lib, ... }:
+      {
+        pkgs,
+        lib,
+        ...
+      }:
       let
         # nix run nixpkgs#nix-prefetch-github -- cilium cilium --rev v1.19.1
         # NOTE: Remember to keep pkgs/by-name/cni-plugin-cilium in sync
@@ -215,7 +219,6 @@
           };
 
           resources = {
-
             ciliumLoadBalancerIPPools."lb-pool" = {
               metadata = {
                 name = "lb-pool";

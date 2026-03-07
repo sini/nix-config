@@ -11,7 +11,6 @@
       has_battery = builtins.elem "laptop" hostOptions.roles;
     in
     {
-
       # Override systemd unit settings for hyprpanel to only run with Hyprland (and not Gnome)
       # systemd.user.services.hyprpanel = {
       #   Unit = {
@@ -49,7 +48,6 @@
                     ];
                   in
                   base ++ extras ++ end;
-
               };
               # "1" = {
               #   left = [ ];
@@ -161,9 +159,7 @@
               orientation = "horizontal";
             };
           };
-
         };
       };
-
     };
 }

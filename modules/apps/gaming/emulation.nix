@@ -1,7 +1,11 @@
 {
   flake.features.emulation = {
     nixos =
-      { inputs, pkgs, ... }:
+      {
+        inputs,
+        pkgs,
+        ...
+      }:
       {
         imports = [
           inputs.nix-gaming.nixosModules.wine
@@ -45,7 +49,6 @@
           # Remote play
           moonlight-qt # Client
         ];
-
       };
   };
 }

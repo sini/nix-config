@@ -16,7 +16,11 @@
           generator = {
             tags = [ "oidc" ];
             script =
-              { pkgs, file, ... }:
+              {
+                pkgs,
+                file,
+                ...
+              }:
               ''
                 # Generate an rfc3986 secret
                 secret=$(${pkgs.openssl}/bin/openssl rand -base64 54 | tr -d '\n' | tr '+/' '-_' | tr -d '=' | cut -c1-72)
@@ -107,19 +111,16 @@
             displayName = "Jason";
             mailAddresses = [ "greco@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           taiche = {
             displayName = "Chris";
             mailAddresses = [ "taiche@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           jennism = {
             displayName = "Jennifer";
             mailAddresses = [ "jennism@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           hugs = {
             displayName = "Shawn";
@@ -133,19 +134,16 @@
             displayName = "Ellen";
             mailAddresses = [ "ellen@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           jenn = {
             displayName = "Jennifer";
             mailAddresses = [ "jenn@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           tyr = {
             displayName = "tyr";
             mailAddresses = [ "tyr@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           zogger = {
             displayName = "zogger";
@@ -156,7 +154,6 @@
             displayName = "jess";
             mailAddresses = [ "jess@${environment.email.domain}" ];
             groups = [ "users" ];
-
           };
           leo = {
             displayName = "leo";
@@ -283,7 +280,6 @@
                   "argocd.access" = [ "user" ];
                 };
               };
-
             };
 
           hubble-ui = envoyOidcConfigFor { service = "hubble-ui"; };

@@ -1,7 +1,11 @@
 {
   flake.kubernetes.services.cilium-bgp = {
     nixidy =
-      { environment, lib, ... }:
+      {
+        environment,
+        lib,
+        ...
+      }:
       let
         hosts = environment.findHostsByRole "kubernetes";
       in

@@ -147,7 +147,6 @@ let
     buildCommand = ''
       unzip $src -d $out
     '';
-
   });
 
   xbyak_new = xbyak.overrideAttrs (_oldAttrs: {
@@ -174,7 +173,6 @@ let
       cmake
     ];
   });
-
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "eden";

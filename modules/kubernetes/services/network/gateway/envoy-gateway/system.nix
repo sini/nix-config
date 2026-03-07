@@ -1,7 +1,11 @@
 {
   flake.kubernetes.services.envoy-gateway = {
     crds =
-      { inputs, system, ... }:
+      {
+        inputs,
+        system,
+        ...
+      }:
       {
         chart = inputs.nixhelm.chartsDerivations.${system}.envoyproxy.gateway-crds-helm;
         extraOpts = [

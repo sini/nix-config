@@ -86,7 +86,6 @@
             #   };
             # };
           };
-
         };
 
         # https://github.com/hlissner/dotfiles/blob/b51c0d90673a3f3779197ca53952bfe85718f708/modules/desktop/media/daw.nix
@@ -110,7 +109,6 @@
             LXVST_PATH = makePluginPath "lxvst";
             VST_PATH = makePluginPath "vst";
             VST3_PATH = makePluginPath "vst3";
-
           };
 
         environment.systemPackages = with pkgs; [

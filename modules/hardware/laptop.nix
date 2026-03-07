@@ -1,6 +1,10 @@
 {
   flake.features.laptop.nixos =
-    { pkgs, lib, ... }:
+    {
+      pkgs,
+      lib,
+      ...
+    }:
     {
       environment.systemPackages = with pkgs; [
         brightnessctl

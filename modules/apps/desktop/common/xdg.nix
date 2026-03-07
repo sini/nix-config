@@ -1,9 +1,6 @@
 {
   flake.features.xdg.home =
-    {
-      pkgs,
-      ...
-    }:
+    { pkgs, ... }:
     {
       home.packages = with pkgs; [
         xdg-utils

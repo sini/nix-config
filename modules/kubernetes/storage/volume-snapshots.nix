@@ -1,7 +1,11 @@
 {
   flake.kubernetes.services.volume-snapshots = {
     crds =
-      { pkgs, lib, ... }:
+      {
+        pkgs,
+        lib,
+        ...
+      }:
       let
         # nix run nixpkgs#nix-prefetch-github -- kubernetes-csi external-snapshotter --rev v8.5.0
         src = pkgs.fetchFromGitHub {

@@ -36,7 +36,6 @@
   vulkan-memory-allocator,
   zstd,
 }:
-
 let
   inherit (qt6)
     qtbase
@@ -77,11 +76,8 @@ let
     buildCommand = ''
       unzip $src -d $out
     '';
-
   };
-
 in
-
 stdenv.mkDerivation (finalAttrs: {
   pname = "citron";
   version = "0.11.0";

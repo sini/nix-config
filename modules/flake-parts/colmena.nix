@@ -36,13 +36,20 @@
     '';
 
   flake =
-    { lib, config, ... }:
+    {
+      lib,
+      config,
+      ...
+    }:
     let
       stableHosts = lib.filterAttrs (_: h: !(h.unstable or false)) config.hosts;
       unstableHosts = lib.filterAttrs (_: h: h.unstable or false) config.hosts;
 
       mkColmenaHive =
-        { hosts, nixpkgs }:
+        {
+          hosts,
+          nixpkgs,
+        }:
         lib.mapAttrs (
           hostname: hostOptions:
           let
@@ -127,7 +134,6 @@
               ) hiveUnstable
             else
               { };
-
         in
         passthrough
         // {
@@ -143,7 +149,6 @@
             toplevel
             ;
         };
-
     in
     {
       inherit

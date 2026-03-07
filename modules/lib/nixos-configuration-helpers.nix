@@ -16,7 +16,6 @@ in
 {
   flake.lib.nixos-configuration-helpers =
     let
-
       collectTypedModules =
         type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
       collectNixosModules = collectTypedModules "nixos";
@@ -82,7 +81,6 @@ in
 
           # 3. Combine core and additional feature names and deduplicate.
           allFeatureNames = lib.unique (coreFeatures ++ additionalFeatures);
-
         in
         allFeatureNames;
 
@@ -113,7 +111,6 @@ in
           # 6. Resolve dependencies for filtered features
           featureDeps = collectRequires config.flake.features filteredFeatures;
           allFeaturesWithDeps = filteredFeatures ++ featureDeps;
-
         in
         allFeaturesWithDeps;
 
@@ -206,7 +203,6 @@ in
               {
                 imports = coreHomeModules ++ nonCoreHostHomeModules ++ userHomeModules ++ userConfigs;
               };
-
           in
           lib'.nixosSystem {
             inherit system;

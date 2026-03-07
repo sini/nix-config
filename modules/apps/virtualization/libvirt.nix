@@ -5,12 +5,8 @@ let
 in
 {
   flake.features.libvirt = {
-
     nixos =
-      {
-        pkgs,
-        ...
-      }:
+      { pkgs, ... }:
       let
         primaryNetwork = pkgs.writeText "default-network.xml" ''
           <network>
@@ -40,7 +36,6 @@ in
         '';
       in
       {
-
         boot = {
           kernelModules = [
             "kvm"

@@ -1,7 +1,11 @@
 {
   flake.users.media = {
     configuration =
-      { config, lib, ... }:
+      {
+        config,
+        lib,
+        ...
+      }:
       {
         users = {
           deterministicIds.media = {

@@ -1,4 +1,8 @@
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  ...
+}:
 let
   inherit (config.flake) environments;
 
@@ -75,7 +79,6 @@ let
       line vty
       !
     '';
-
 in
 {
   perSystem =

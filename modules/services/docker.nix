@@ -1,9 +1,6 @@
 {
   flake.features.docker.nixos =
-    {
-      pkgs,
-      ...
-    }:
+    { pkgs, ... }:
     {
       environment.systemPackages = with pkgs; [
         dive # look into docker image layers

@@ -13,7 +13,6 @@
   expat,
   libGL,
   nanosvg,
-
   libX11,
   libxkbcommon,
   libXext,
@@ -24,20 +23,16 @@
   libXcursor,
   libXpresent,
   libXdmcp,
-
   wayland,
   wayland-protocols,
   wayland-scanner,
-
   luajit,
   vulkan-loader,
   vulkan-headers,
   glslang,
-
   pipewire,
   pulseaudio,
   libsamplerate,
-
   openGLSupport ? true,
   xorgSupport ? true,
   waylandSupport ? true,

@@ -1,9 +1,12 @@
 { lib, ... }:
 {
   flake.features.sysmon.home =
-    { osConfig, pkgs, ... }:
     {
-
+      osConfig,
+      pkgs,
+      ...
+    }:
+    {
       home.packages = with pkgs; [
         ctop
         iotop-c

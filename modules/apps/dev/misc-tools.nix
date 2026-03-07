@@ -111,7 +111,6 @@
         lazysql.enable = true;
         # TODO : Cache
         # .local/share/zoxide
-
       };
     };
 }

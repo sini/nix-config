@@ -48,7 +48,6 @@
           ]
           (builtins.readFile ./configs/config.alloy.tmpl)
       );
-
     in
     {
       # Create configuration files

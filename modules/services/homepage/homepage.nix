@@ -6,7 +6,6 @@
       domain = environment.getDomainFor "homepage";
     in
     {
-
       services = {
         homepage-dashboard = {
           enable = true;
@@ -15,7 +14,6 @@
           allowedHosts = "*";
 
           services = [
-
             {
               "Self-hosted services" = [
                 {
@@ -73,7 +71,6 @@
               ];
             }
           ];
-
         };
 
         oauth2-proxy.nginx.virtualHosts = {

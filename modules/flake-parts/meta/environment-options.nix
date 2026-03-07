@@ -100,7 +100,11 @@ in
       };
 
       environmentType = types.submodule (
-        { name, config, ... }:
+        {
+          name,
+          config,
+          ...
+        }:
         {
           options = {
             name = mkOption {

@@ -2,7 +2,11 @@
 {
   flake.kubernetes.services.rook-ceph = {
     crds =
-      { inputs, system, ... }:
+      {
+        inputs,
+        system,
+        ...
+      }:
       {
         chart = inputs.nixhelm.chartsDerivations.${system}.rook-release.rook-ceph;
       };

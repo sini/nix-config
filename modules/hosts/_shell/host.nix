@@ -1,5 +1,4 @@
-_:
-{
+_: {
   flake.hosts.shell = {
     ipv4 = [
       "10.9.2.2"
@@ -19,17 +18,12 @@ _:
       "podman"
     ];
     facts = ./facter.json;
-    nixosConfiguration =
-      {
-        pkgs,
-        ...
-      }:
-      {
-        boot.kernelPackages = pkgs.linuxPackages_cachyos;
+    nixosConfiguration = {pkgs, ...}: {
+      boot.kernelPackages = pkgs.linuxPackages_cachyos;
 
-        hardware.networking.interfaces = [ "wlp3s0" ];
+      hardware.networking.interfaces = ["wlp3s0"];
 
-        system.stateVersion = "25.05";
-      };
+      system.stateVersion = "25.05";
+    };
   };
 }

@@ -1,10 +1,18 @@
-{ self, rootPath, ... }:
+{
+  self,
+  rootPath,
+  ...
+}:
 let
   inherit (self.lib.host-utils) findHostsWithRole;
 in
 {
   flake.features.nix.nixos =
-    { config, lib, ... }:
+    {
+      config,
+      lib,
+      ...
+    }:
     let
       builders = findHostsWithRole "nix-builder";
     in

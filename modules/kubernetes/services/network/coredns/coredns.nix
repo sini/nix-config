@@ -1,6 +1,5 @@
 {
   flake.kubernetes.services.coredns = {
-
     nixidy =
       {
         lib,

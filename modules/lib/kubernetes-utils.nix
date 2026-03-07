@@ -1,7 +1,6 @@
 { lib, ... }:
 {
   flake.lib.kubernetes-utils = {
-
     # Extract CRDs from a Helm chart
     # This is a general utility function for working with Helm charts and CRDs
     # All environment-specific functions have been moved to environment-options.nix

@@ -40,10 +40,7 @@ _: {
     ];
     facts = ./facter.json;
     nixosConfiguration =
-      {
-        pkgs,
-        ...
-      }:
+      { pkgs, ... }:
       {
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
 

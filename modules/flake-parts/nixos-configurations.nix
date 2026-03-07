@@ -1,4 +1,8 @@
-{ lib, self, ... }:
+{
+  lib,
+  self,
+  ...
+}:
 let
   inherit (self.lib.nixos-configuration-helpers) mkHost;
 in

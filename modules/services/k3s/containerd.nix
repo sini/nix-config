@@ -76,7 +76,6 @@
               ];
             };
         };
-
       };
 
       # Required by third-party CNI installed outside of Nix.
@@ -101,5 +100,4 @@
         "/var/lib/dockershim"
       ];
     };
-
 }

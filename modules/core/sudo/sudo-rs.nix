@@ -4,7 +4,6 @@ let
 in
 {
   flake.features.sudo.nixos = {
-
     security = {
       # Enable sudo-rs instead of c-based sudo.
       sudo.enable = false;

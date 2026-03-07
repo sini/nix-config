@@ -1,6 +1,10 @@
 {
   flake.features.firefox.home =
-    { inputs, pkgs, ... }:
+    {
+      inputs,
+      pkgs,
+      ...
+    }:
     {
       programs.firefox = {
         enable = true;

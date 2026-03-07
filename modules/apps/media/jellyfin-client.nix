@@ -1,5 +1,4 @@
 {
-
   flake.features.jellyfin-client.home =
     { pkgs, ... }:
     {

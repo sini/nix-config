@@ -189,7 +189,6 @@ let
       services = serviceOptions;
     };
   };
-
 in
 {
   flake.lib.kubernetes-services = {

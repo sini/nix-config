@@ -1,7 +1,6 @@
 {
   flake.features.hyprland.home = {
     wayland.windowManager.hyprland.settings = {
-
       dwindle = {
         pseudotile = true;
         preserve_split = true;
@@ -17,7 +16,6 @@
         # swallow_regex = "^(${vars.terminal.name})$";
         swallow_regex = "^(kitty)$";
       };
-
     };
   };
 }

@@ -92,7 +92,6 @@
         };
 
         config = {
-
           # Persistence Configuration
           # =========================
           # Define what files and directories should persist across reboots.
@@ -380,7 +379,6 @@
               mode = "0700";
             }
           ];
-
         };
 
         # /cache: Temporary user data

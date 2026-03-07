@@ -1,7 +1,11 @@
 {
   flake.kubernetes.services.gateway-api = {
     crds =
-      { pkgs, lib, ... }:
+      {
+        pkgs,
+        lib,
+        ...
+      }:
       let
         # nix run nixpkgs#nix-prefetch-github -- kubernetes-sigs gateway-api --rev v1.4.1
         src = pkgs.fetchFromGitHub {
@@ -32,7 +36,6 @@
         resources = {
           gatewayClasses.cilium.spec.controllerName = "io.cilium/gateway-controller";
         };
-
       };
     };
   };

@@ -2,7 +2,11 @@
   flake.features.vr-amd = {
     requires = [ "steam" ];
     nixos =
-      { pkgs, inputs, ... }:
+      {
+        pkgs,
+        inputs,
+        ...
+      }:
       {
         imports = [
           inputs.nixpkgs-xr.nixosModules.nixpkgs-xr
@@ -160,7 +164,6 @@
         ...
       }:
       {
-
         imports = [
           inputs.nix-flatpak.homeManagerModules.nix-flatpak
         ];

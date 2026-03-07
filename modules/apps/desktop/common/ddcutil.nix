@@ -1,6 +1,10 @@
 {
   flake.features.ddcutil.nixos =
-    { config, pkgs, ... }:
+    {
+      config,
+      pkgs,
+      ...
+    }:
     {
       imports = [
         (

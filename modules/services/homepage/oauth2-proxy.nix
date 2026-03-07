@@ -2,13 +2,16 @@
 {
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
   flake.features.oauth2-proxy.nixos =
-    { config, environment, ... }:
+    {
+      config,
+      environment,
+      ...
+    }:
     let
       domain = environment.getDomainFor "oauth2-proxy";
       kanidmDomain = environment.getDomainFor "kanidm";
     in
     {
-
       age.secrets = {
         oauth2-proxy-oidc-secret = {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/oauth2-proxy-oidc-client-secret.age";

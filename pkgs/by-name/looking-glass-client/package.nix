@@ -13,7 +13,6 @@
   expat,
   libGL,
   nanosvg,
-
   libX11,
   libxkbcommon,
   libXext,
@@ -24,15 +23,12 @@
   libXcursor,
   libXpresent,
   libXdmcp,
-
   wayland,
   wayland-protocols,
   wayland-scanner,
-
   pipewire,
   pulseaudio,
   libsamplerate,
-
   openGLSupport ? true,
   xorgSupport ? true,
   waylandSupport ? true,

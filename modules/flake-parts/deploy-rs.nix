@@ -39,6 +39,5 @@ in
           help = "Deploy this nix config to nodes";
         }
       ];
-
     };
 }

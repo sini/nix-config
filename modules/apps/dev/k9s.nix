@@ -1,7 +1,10 @@
 {
-
   flake.features.k9s.home =
-    { pkgs, config, ... }:
+    {
+      pkgs,
+      config,
+      ...
+    }:
     {
       home.packages = with pkgs; [
         kubelogin
@@ -33,7 +36,6 @@
               textWrap = false;
               showTime = false;
             };
-
           };
         };
       };

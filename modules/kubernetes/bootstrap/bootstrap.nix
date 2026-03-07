@@ -10,7 +10,6 @@
 # - CRDs extracted from application objects
 {
   flake.kubernetes.services.bootstrap = {
-
     nixidy =
       {
         config,
@@ -78,9 +77,7 @@
               value.metadata.annotations."argocd.argoproj.io/sync-options" = "Prune=false";
             })
             |> builtins.listToAttrs;
-
         };
-
       };
   };
 }

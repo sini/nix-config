@@ -1,6 +1,10 @@
 {
   flake.features.hypridle.home =
-    { lib, pkgs, ... }:
+    {
+      lib,
+      pkgs,
+      ...
+    }:
     {
       home.packages = [
         pkgs.brightnessctl
@@ -66,5 +70,4 @@
         };
       };
     };
-
 }

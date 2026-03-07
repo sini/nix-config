@@ -64,5 +64,4 @@
         ".config/GitKraken/"
       ];
     };
-
 }

@@ -1,7 +1,11 @@
 {
   flake.features.wireshark = {
     nixos =
-      { pkgs, users, ... }:
+      {
+        pkgs,
+        users,
+        ...
+      }:
       {
         programs = {
           wireshark = {

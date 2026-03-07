@@ -16,7 +16,6 @@
     in
     {
       boot = {
-
         initrd = {
           availableKernelModules = [
             "r8169" # Host: surge, burst, pulse

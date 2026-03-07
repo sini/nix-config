@@ -72,10 +72,7 @@
     };
     facts = ./facter.json;
     nixosConfiguration =
-      {
-        pkgs,
-        ...
-      }:
+      { pkgs, ... }:
       {
         boot = {
           kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-zen4;
@@ -153,7 +150,6 @@
         home-manager.sharedModules = [
           {
             wayland.windowManager.hyprland.settings = {
-
               debug = {
                 full_cm_proto = true;
               };
@@ -256,7 +252,8 @@
                     device-profile = "[Out] Headphones";
                     preset-name = "HD650-Harmon";
                   };
-              "easyeffects/autoload/output/bluez_output.38_8F_30_F0_D1_9D.1.json".text = # DeviceID
+              "easyeffects/autoload/output/bluez_output.38_8F_30_F0_D1_9D.1.json".text =
+                # DeviceID
                 builtins.toJSON {
                   device = "bluez_output.38_8F_30_F0_D1_9D.1";
                   device-description = "Created by Home Manager";

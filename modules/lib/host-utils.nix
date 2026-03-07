@@ -1,4 +1,8 @@
-{ lib, config, ... }:
+{
+  lib,
+  config,
+  ...
+}:
 {
   flake.lib.host-utils = {
     findHostsWithRole =
@@ -47,5 +51,4 @@
       in
       serverExporters // k3sExporters;
   };
-
 }
