@@ -13,6 +13,7 @@
     {
       self',
       config,
+      inputs',
       ...
     }:
     {
@@ -26,6 +27,11 @@
           nix-fmt = {
             enable = true;
             entry = lib.getExe self'.formatter;
+          };
+          statix = {
+            enable = true;
+            entry = "${lib.getExe inputs'.statix.packages.default} check";
+            pass_filenames = false;
           };
           k8s-update-manifests = {
             enable = true;
