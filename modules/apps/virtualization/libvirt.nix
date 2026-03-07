@@ -41,41 +41,43 @@ in
       in
       {
 
-        boot.kernelModules = [
-          "kvm"
-          "vhost-net"
-        ];
+        boot = {
+          kernelModules = [
+            "kvm"
+            "vhost-net"
+          ];
 
-        # Sysctl parameters for virtualization
-        boot.kernel.sysctl = {
-          # Network performance
-          "net.bridge.bridge-nf-call-iptables" = 0;
-          "net.bridge.bridge-nf-call-arptables" = 0;
-          "net.bridge.bridge-nf-call-ip6tables" = 0;
+          # Sysctl parameters for virtualization
+          kernel.sysctl = {
+            # Network performance
+            "net.bridge.bridge-nf-call-iptables" = 0;
+            "net.bridge.bridge-nf-call-arptables" = 0;
+            "net.bridge.bridge-nf-call-ip6tables" = 0;
 
-          # Huge pages
-          "vm.nr_hugepages" = 1024;
+            # Huge pages
+            "vm.nr_hugepages" = 1024;
+          };
+
+          kernelParams = [
+            # Memory Management
+            "default_hugepagesz=2M" # Set default huge page size to 2MB
+            "hugepagesz=2M" # Configure huge page size as 2MB
+            "transparent_hugepage=never" # Disable transparent huge pages
+            "mem_sleep_default=deep" # Set default sleep mode to deep sleep
+
+            # TODO: Do these belong in this module?
+            # ACPI & Power Management
+            "acpi_osi=Linux" # Set ACPI OS interface to Linux
+            "acpi=force" # Force ACPI
+            "acpi_enforce_resources=lax"
+
+            # Performance & Security
+            "mitigations=off" # Disable CPU vulnerabilities mitigations (security trade-off)
+            "nowatchdog" # Disable watchdog timer
+            "nmi_watchdog=0" # Disable NMI watchdog
+            # "pcie_aspm=off" # Disable PCIe Active State Power Management
+          ];
         };
-
-        boot.kernelParams = [
-          # Memory Management
-          "default_hugepagesz=2M" # Set default huge page size to 2MB
-          "hugepagesz=2M" # Configure huge page size as 2MB
-          "transparent_hugepage=never" # Disable transparent huge pages
-          "mem_sleep_default=deep" # Set default sleep mode to deep sleep
-
-          # TODO: Do these belong in this module?
-          # ACPI & Power Management
-          "acpi_osi=Linux" # Set ACPI OS interface to Linux
-          "acpi=force" # Force ACPI
-          "acpi_enforce_resources=lax"
-
-          # Performance & Security
-          "mitigations=off" # Disable CPU vulnerabilities mitigations (security trade-off)
-          "nowatchdog" # Disable watchdog timer
-          "nmi_watchdog=0" # Disable NMI watchdog
-          # "pcie_aspm=off" # Disable PCIe Active State Power Management
-        ];
 
         # Install necessary packages
         environment.systemPackages = with pkgs; [

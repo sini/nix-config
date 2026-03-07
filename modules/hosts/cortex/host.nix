@@ -77,41 +77,47 @@
         ...
       }:
       {
-        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-zen4;
+        boot = {
+          kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-zen4;
 
-        boot.kernelParams = [
-          "amd_3d_vcache.x3d_mode=cache" # AMD V-Cache https://wiki.cachyos.org/configuration/general_system_tweaks/#amd-3d-v-cache-optimizer
-        ];
+          kernelParams = [
+            "amd_3d_vcache.x3d_mode=cache" # AMD V-Cache https://wiki.cachyos.org/configuration/general_system_tweaks/#amd-3d-v-cache-optimizer
+          ];
 
-        hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
+          # Quirks for Focusrite
+          # https://another.maple4ever.net/archives/2994/
+          extraModprobeConfig = ''
+            options snd_usb_audio vid=0x1235 pid=0x8210 device_setup=1 quirk_flags=0x1
+          '';
+        };
 
-        hardware.networking.interfaces = [ "enp8s0" ];
+        hardware = {
+          disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
 
-        # hardware.display.edid = {
-        #   enable = true;
-        #   packages = [
-        #     (pkgs.runCommand "samsung-odyssey-ark-g1-edid-firmware" { } ''
-        #       mkdir -p $out/lib/firmware/edid
-        #       cp ${./firmware/samsung-odyssey-ark-g1.bin} $out/lib/firmware/edid/samsung-odyssey-ark-g1.bin
-        #     '')
-        #   ];
-        # };
+          networking = {
+            interfaces = [ "enp8s0" ];
 
-        # hardware.display.outputs."DP-1" = {
-        #   mode = "e";
-        #   edid = "samsung-odyssey-ark-g1.bin";
-        # };
+            # hardware.display.edid = {
+            #   enable = true;
+            #   packages = [
+            #     (pkgs.runCommand "samsung-odyssey-ark-g1-edid-firmware" { } ''
+            #       mkdir -p $out/lib/firmware/edid
+            #       cp ${./firmware/samsung-odyssey-ark-g1.bin} $out/lib/firmware/edid/samsung-odyssey-ark-g1.bin
+            #     '')
+            #   ];
+            # };
 
-        hardware.networking.unmanagedInterfaces = [
-          "enp8s0"
-          "br0"
-        ];
+            # hardware.display.outputs."DP-1" = {
+            #   mode = "e";
+            #   edid = "samsung-odyssey-ark-g1.bin";
+            # };
 
-        # Quirks for Focusrite
-        # https://another.maple4ever.net/archives/2994/
-        boot.extraModprobeConfig = ''
-          options snd_usb_audio vid=0x1235 pid=0x8210 device_setup=1 quirk_flags=0x1
-        '';
+            unmanagedInterfaces = [
+              "enp8s0"
+              "br0"
+            ];
+          };
+        };
 
         # Set audio rules
         services.pipewire.wireplumber.extraConfig = {

@@ -147,10 +147,6 @@ _flakeConfig: {
               text = (builtins.hashString "md5" "cortex-cuda") + "\n";
             };
 
-            services.openssh.enable = true;
-            services.openssh.settings.PasswordAuthentication = false;
-            services.openssh.settings.PermitRootLogin = "yes";
-
             networking.firewall.allowedTCPPorts = [ 22 ];
 
             # # Just use 99-ethernet-default-dhcp.network
@@ -160,22 +156,48 @@ _flakeConfig: {
             #   networkConfig.DHCP = "yes";
             # };
 
-            systemd.network.enable = true;
+            systemd = {
+              network = {
+                enable = true;
 
-            systemd.network.networks."20-lan" = {
-              matchConfig.Type = "ether";
-              networkConfig = {
-                Address = [
-                  "10.9.2.2/16"
-                  "fe80::ff:fe01:101/64"
-                ];
-                Gateway = "10.9.0.1";
-                DNS = [
-                  "1.1.1.1"
-                  "8.8.8.8"
-                ];
-                IPv6AcceptRA = true;
-                DHCP = "no";
+                networks."20-lan" = {
+                  matchConfig.Type = "ether";
+                  networkConfig = {
+                    Address = [
+                      "10.9.2.2/16"
+                      "fe80::ff:fe01:101/64"
+                    ];
+                    Gateway = "10.9.0.1";
+                    DNS = [
+                      "1.1.1.1"
+                      "8.8.8.8"
+                    ];
+                    IPv6AcceptRA = true;
+                    DHCP = "no";
+                  };
+                };
+              };
+
+              services = {
+                nvidia-gpu-config = {
+                  description = "Configure NVIDIA GPU";
+                  wantedBy = [ "multi-user.target" ];
+                  path = [ config.hardware.nvidia.package.bin ];
+                  script = ''
+                    echo 'Limiting NVIDIA GPU TDP to 450W...'
+                    nvidia-smi -pl 450
+                    nvidia-smi -rmc
+                  '';
+                  serviceConfig.Type = "oneshot";
+                };
+
+                ollama = {
+                  after = [ "nvidia-gpu-config.service" ];
+                  serviceConfig = {
+                    DeviceAllow = lib.mkForce [ ];
+                    DevicePolicy = lib.mkForce "auto";
+                  };
+                };
               };
             };
 
@@ -217,8 +239,6 @@ _flakeConfig: {
               ];
             };
 
-            services.xserver.videoDrivers = [ "nvidia" ];
-
             hardware.graphics = {
               enable = true;
               extraPackages = with pkgs; [
@@ -256,6 +276,16 @@ _flakeConfig: {
             ];
 
             services = {
+              openssh = {
+                enable = true;
+                settings = {
+                  PasswordAuthentication = false;
+                  PermitRootLogin = "yes";
+                };
+              };
+
+              xserver.videoDrivers = [ "nvidia" ];
+
               ollama = {
                 enable = true;
                 user = "ollama";
@@ -283,35 +313,19 @@ _flakeConfig: {
               };
             };
 
-            systemd.services.nvidia-gpu-config = {
-              description = "Configure NVIDIA GPU";
-              wantedBy = [ "multi-user.target" ];
-              path = [ config.hardware.nvidia.package.bin ];
-              script = ''
-                echo 'Limiting NVIDIA GPU TDP to 450W...'
-                nvidia-smi -pl 450
-                nvidia-smi -rmc
-              '';
-              serviceConfig.Type = "oneshot";
-            };
-
-            systemd.services.ollama.after = [ "nvidia-gpu-config.service" ];
-
-            systemd.services.ollama.serviceConfig = {
-              DeviceAllow = lib.mkForce [ ];
-              DevicePolicy = lib.mkForce "auto";
-            };
-
-            users.mutableUsers = false;
-            users.users.root.openssh.authorizedKeys.keys = pubkeys;
-            users.users.ollama = {
-              isSystemUser = true;
-              group = "ollama";
-              uid = 962;
-            };
-
-            users.groups.ollama = {
-              gid = 962;
+            users = {
+              mutableUsers = false;
+              users = {
+                root.openssh.authorizedKeys.keys = pubkeys;
+                ollama = {
+                  isSystemUser = true;
+                  group = "ollama";
+                  uid = 962;
+                };
+              };
+              groups.ollama = {
+                gid = 962;
+              };
             };
 
             system.stateVersion = "25.05";

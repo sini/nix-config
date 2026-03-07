@@ -7,85 +7,87 @@
     in
     {
 
-      services.homepage-dashboard = {
-        enable = true;
-        listenPort = 8082;
+      services = {
+        homepage-dashboard = {
+          enable = true;
+          listenPort = 8082;
 
-        allowedHosts = "*";
+          allowedHosts = "*";
 
-        services = [
+          services = [
 
-          {
-            "Self-hosted services" = [
-              {
-                "Blog" = {
-                  description = "Blog";
-                  href = "http://google.com/";
-                  siteMonitor = "http://google.com/";
-                  icon = "sonarr.png";
-                };
-              }
-            ];
-          }
-          {
-            "My Second Group" = [
-              {
-                "My Second Service" = {
-                  description = "Homepage is the best";
-                  href = "http://localhost/";
-                };
-              }
-            ];
-          }
-        ];
+            {
+              "Self-hosted services" = [
+                {
+                  "Blog" = {
+                    description = "Blog";
+                    href = "http://google.com/";
+                    siteMonitor = "http://google.com/";
+                    icon = "sonarr.png";
+                  };
+                }
+              ];
+            }
+            {
+              "My Second Group" = [
+                {
+                  "My Second Service" = {
+                    description = "Homepage is the best";
+                    href = "http://localhost/";
+                  };
+                }
+              ];
+            }
+          ];
 
-        settings = {
-          # startUrl: https://custom.url
-          title = "hello world";
+          settings = {
+            # startUrl: https://custom.url
+            title = "hello world";
+          };
+
+          # listenPort=
+          # oopenFirewall
+          bookmarks = [
+            {
+              Developer = [
+                {
+                  Github = [
+                    {
+                      abbr = "GH";
+                      href = "https://github.com/";
+                    }
+                  ];
+                }
+              ];
+            }
+            {
+              Entertainment = [
+                {
+                  YouTube = [
+                    {
+                      abbr = "YT";
+                      href = "https://youtube.com/";
+                    }
+                  ];
+                }
+              ];
+            }
+          ];
+
         };
 
-        # listenPort=
-        # oopenFirewall
-        bookmarks = [
-          {
-            Developer = [
-              {
-                Github = [
-                  {
-                    abbr = "GH";
-                    href = "https://github.com/";
-                  }
-                ];
-              }
-            ];
-          }
-          {
-            Entertainment = [
-              {
-                YouTube = [
-                  {
-                    abbr = "YT";
-                    href = "https://youtube.com/";
-                  }
-                ];
-              }
-            ];
-          }
-        ];
+        oauth2-proxy.nginx.virtualHosts = {
+          "${domain}" = { };
+        };
 
-      };
-
-      services.oauth2-proxy.nginx.virtualHosts = {
-        "${domain}" = { };
-      };
-
-      services.nginx.virtualHosts = {
-        "${domain}" = {
-          forceSSL = true;
-          useACMEHost = environment.getTopDomainFor "homepage";
-          locations."/" = {
-            proxyPass = "http://127.0.0.1:8082";
-            proxyWebsockets = true;
+        nginx.virtualHosts = {
+          "${domain}" = {
+            forceSSL = true;
+            useACMEHost = environment.getTopDomainFor "homepage";
+            locations."/" = {
+              proxyPass = "http://127.0.0.1:8082";
+              proxyWebsockets = true;
+            };
           };
         };
       };

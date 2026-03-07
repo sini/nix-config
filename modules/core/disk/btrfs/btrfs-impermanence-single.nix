@@ -155,10 +155,12 @@
               };
             };
           };
-          fileSystems."/nix".neededForBoot = true;
-          fileSystems."/home".neededForBoot = true;
-          fileSystems."/persist".neededForBoot = true;
-          fileSystems."/cache".neededForBoot = true;
+          fileSystems = {
+            "/nix".neededForBoot = true;
+            "/home".neededForBoot = true;
+            "/persist".neededForBoot = true;
+            "/cache".neededForBoot = true;
+          };
         };
       };
   };
