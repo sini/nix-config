@@ -15,9 +15,10 @@ jobs:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
             experimental-features = nix-command flakes
+            accept-flake-config = true
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Update helm charts
-        run: nix run github:nix-community/nixhelm#helmupdater -- update-all
+        run: nix run github:nix-community/nixhelm#helmupdater -- update-all --commit
       - name: Update flake.lock
         uses: DeterminateSystems/update-flake-lock@v28
         with:
