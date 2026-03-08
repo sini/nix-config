@@ -189,6 +189,11 @@ in
       devshells.default.packages = [ inputs'.nixidy.packages.default ];
       devshells.default.commands = [
         {
+          package = sharedConfig.config.packages.k8s-update-manifests;
+          name = "k8s-update-manifests";
+          help = "Update Kubernetes manifests for nixidy environments";
+        }
+        {
           package = inputs'.nixidy.packages.default;
           # help = "Manage kubernetes cluster deployment configuration";
           help = "[DEPRECATED] - use k8s-update-manifests instead as it has secret wrapping";
