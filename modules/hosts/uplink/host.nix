@@ -35,6 +35,7 @@ _: {
       "tailscale"
       "headscale"
       "haproxy"
+      "attic-server"
       # "minio"
       # "vault"
     ];

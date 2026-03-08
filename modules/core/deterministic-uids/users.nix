@@ -54,6 +54,7 @@
         nix-remote-build = uidGid 956;
         haproxy = uidGid 955;
         pcscd = uidGid 954;
+        atticd = uidGid 953;
       };
   };
 }
