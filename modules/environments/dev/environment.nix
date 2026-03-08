@@ -27,8 +27,18 @@
       hubble-ui.domain = "hubble.dev.json64.dev";
 
       # Prod references
-      headscale.domain = "hs.json64.dev";
-      kanidm.domain = "idm.json64.dev";
+      attic = {
+        delegateTo = "prod";
+        domain = "attic.json64.dev";
+      };
+      headscale = {
+        delegateTo = "prod";
+        domain = "hs.json64.dev";
+      };
+      kanidm = {
+        delegateTo = "prod";
+        domain = "idm.json64.dev";
+      };
     };
 
     networks = {

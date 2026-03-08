@@ -186,6 +186,15 @@ in
                         If null, defaults to <service-name>.''${environment.domain}
                       '';
                     };
+
+                    delegateTo = mkOption {
+                      type = types.nullOr types.str;
+                      default = null;
+                      description = ''
+                        Name of another environment to delegate this service to.
+                        When set, the service is considered to be hosted by the specified environment.
+                      '';
+                    };
                   };
                 }
               );
