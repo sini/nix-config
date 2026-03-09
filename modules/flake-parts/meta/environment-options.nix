@@ -308,7 +308,10 @@ in
               description = "Monitoring configuration including cross-environment scanning";
             };
 
-            users = mkUsersWithFeaturesOpt "Users in this environment with their features and configuration";
+            users = mkUsersWithFeaturesOpt ''
+              Users in this environment with their identity, Unix account, and home configuration.
+              Set enableUnixAccount = true for users that should be created on hosts.
+            '';
 
             ipv6 = mkOption {
               type = types.submodule {
