@@ -39,7 +39,7 @@
       "vr-amd"
 
       "hyprland"
-      "zen-browser"
+      # "zen-browser"
 
       "sddm"
       "kde"
