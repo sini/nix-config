@@ -1,4 +1,4 @@
-_: {
+{
   flake.features.home-manager.nixos =
     {
       inputs,
