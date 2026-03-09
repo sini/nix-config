@@ -3,6 +3,7 @@
   python3,
   makeWrapper,
   nix,
+  nix-fast-build,
   sops,
   jq,
   yq,
@@ -49,6 +50,7 @@ python3.pkgs.buildPythonApplication {
       --prefix PATH : ${
         lib.makeBinPath [
           nix
+          nix-fast-build
           sops
           jq
           yq

@@ -144,13 +144,15 @@ in
             nixosModules = collectNixosModules allHostFeatures;
 
             # Compute enabled users (used in specialArgs and home-manager)
+            # Only include users with enableUnixAccount = true
             enabledUsers =
               let
                 environmentUserNames = builtins.attrNames (environment.users or { });
                 hostUserNames = builtins.attrNames (hostOptions.users or { });
                 enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
+                allUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
               in
-              lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
+              lib'.filterAttrs (_userName: user: user.enableUnixAccount or false) allUsers;
 
             # Home Manager configuration for users
             makeHome =
