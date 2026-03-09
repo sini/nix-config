@@ -11,7 +11,7 @@
       ];
       programs.zen-browser = {
         enable = true;
-        nativeMessagingHosts = [ pkgs.firefoxpwa ];
+        # nativeMessagingHosts = [ pkgs.firefoxpwa ];
 
         # stylix.targets.zen-browser.profileNames = [ "<PROFILE_NAME>" ];
 
