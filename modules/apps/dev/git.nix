@@ -42,7 +42,7 @@
       defaultIdentity =
         if envUser != null && envUser.gpgKey != null then
           {
-            email = envUser.email or "${username}@${environment.email.domain}";
+            email = if envUser.email != null then envUser.email else "${username}@${environment.email.domain}";
             fullName = envUser.displayName;
             githubUser = username;
             signingKey = envUser.gpgKey;

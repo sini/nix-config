@@ -7,6 +7,7 @@
       gid = 1000;
       linger = true;
       displayName = "Jason Bowman";
+      email = "jason@json64.dev";
       groups = [ "admins" ];
       systemGroups = [
         "wheel"
