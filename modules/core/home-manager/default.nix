@@ -2,6 +2,7 @@
   flake.features.home-manager.nixos =
     {
       inputs,
+      environment,
       hostOptions,
       activeFeatures,
       pkgs,
@@ -21,6 +22,7 @@
         extraSpecialArgs = {
           inherit
             inputs
+            environment
             hostOptions
             activeFeatures
             pkgs
