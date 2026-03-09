@@ -4,12 +4,17 @@
       config,
       pkgs,
       lib,
+      environment,
       ...
     }:
     let
       inherit (lib) mkOption types;
 
       cfg = config.programs.git;
+
+      # Get current user's identity from environment
+      username = config.home.username;
+      envUser = environment.users.${username} or null;
 
       makeGitConfig =
         {
@@ -33,15 +38,20 @@
           ''
         );
 
-      defaultIdentity = {
-        email = "jason@json64.dev"; # Should reference config.flake.meta.user.email
-        fullName = "Jason Bowman";
-        githubUser = "sini";
-        signingKey = "0xA3CDE710F034AB0B";
-        conditions = [
-          "hasconfig:remote.*.url:git@github.com:sini/**"
-        ];
-      };
+      # Build default identity from environment user config
+      defaultIdentity =
+        if envUser != null && envUser.gpgKey != null then
+          {
+            email = envUser.email or "${username}@${environment.email.domain}";
+            fullName = envUser.displayName;
+            githubUser = username;
+            signingKey = envUser.gpgKey;
+            conditions = [
+              "hasconfig:remote.*.url:git@github.com:${username}/**"
+            ];
+          }
+        else
+          null;
 
       identityType = types.submodule {
         options = {

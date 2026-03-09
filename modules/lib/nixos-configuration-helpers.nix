@@ -150,22 +150,21 @@ in
                 hostUserNames = builtins.attrNames (hostOptions.users or { });
                 enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
               in
-              lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) config.flake.users;
+              lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
 
             # Home Manager configuration for users
             makeHome =
               username: _userSpec:
               let
-                # Get user contexts
-                globalUser = config.flake.users.${username} or { };
+                # Get user contexts from environment and host
                 envUser = environment.users.${username} or { };
                 hostUser = hostOptions.users.${username} or { };
-                inheritHostFeatures = globalUser.baseline.inheritHostFeatures or false;
+                inheritHostFeatures = envUser.baseline.inheritHostFeatures or false;
 
                 # Collect all exclusions (host + user features)
                 hostExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allHostFeatures));
 
-                baselineFeatureNames = globalUser.baseline.features or [ ];
+                baselineFeatureNames = envUser.baseline.features or [ ];
                 envFeatureNames = envUser.features or [ ];
                 hostFeatureNames = hostUser.features or [ ];
                 allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
