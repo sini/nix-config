@@ -40,6 +40,6 @@ writeShellApplication {
       HOSTS+=(".#nixosConfigurations.$h.config.system.build.toplevel")
     done
 
-    nom build --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}"
+    nom build --keep-going --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}"
   '';
 }
