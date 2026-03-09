@@ -80,22 +80,5 @@
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMKKUMmeJtEOYi6rU0tumxlrZjH9Y3FCyOhVFIpu3LF1 will.t.bryant@gmail.com"
       ];
     };
-
-    media = {
-      enableUnixAccount = true;
-      uid = 1027;
-      gid = 65536;
-      linger = true;
-      displayName = "Media user for rootless podman";
-      groups = [ ];
-      systemGroups = [
-        "video"
-        "render"
-        "podman"
-        "input"
-        "tty"
-      ];
-      sshKeys = [ ];
-    };
   };
 }
