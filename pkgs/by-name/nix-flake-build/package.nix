@@ -1,6 +1,6 @@
 {
   writeShellApplication,
-  nix-fast-build,
+  nix-output-monitor,
 }:
 writeShellApplication {
   name = "nix-flake-build";
@@ -8,7 +8,7 @@ writeShellApplication {
 
   excludeShellChecks = [ "SC2068" ];
 
-  runtimeInputs = [ nix-fast-build ];
+  runtimeInputs = [ nix-output-monitor ];
   text = ''
     [[ "$#" -ge 1 ]] \
       || { echo "usage: nix-flake-build [OPTIONS...] <HOST>..." >&2; exit 1; }
@@ -35,11 +35,11 @@ writeShellApplication {
       HOST_NAMES=("$(hostname)")
     fi
 
+    HOSTS=()
     for h in "''${HOST_NAMES[@]}"; do
-      HOST=".#nixosConfigurations.$h.config.system.build.toplevel"
-      # --option keep-going --option no-link --option print-out-paths --option show-trace
-      nix-fast-build --skip-cached --option accept-flake-config true ''${OPTIONS[@]} -f "$HOST"
+      HOSTS+=(".#nixosConfigurations.$h.config.system.build.toplevel")
     done
 
+    nom build --keep-going --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}"
   '';
 }
