@@ -41,15 +41,15 @@
       "hyprland"
       # "zen-browser"
 
-      "sddm"
-      "kde"
+      #      "sddm" # TODO: properly integrate KDE later
+      #      "kde"
     ];
 
-    exclude-features = [
-      "gdm" # these are included with workstation
-      "gnome"
-      "xdg-portal"
-    ];
+    #    exclude-features = [
+    #      "gdm" # these are included with workstation
+    #      "gnome"
+    #      "xdg-portal"
+    #    ];
 
     users = {
       sini = {
