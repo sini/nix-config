@@ -2,7 +2,6 @@
   flake.features.zen-browser.home =
     {
       inputs,
-      pkgs,
       ...
     }:
     {
