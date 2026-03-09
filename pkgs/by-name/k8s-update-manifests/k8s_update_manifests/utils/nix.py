@@ -44,33 +44,60 @@ class NixUtils:
         attr: str,
         out_link: Optional[Path] = None,
     ) -> Path:
-        """Build a nix flake attribute.
+        """Build a nix flake attribute using nix-fast-build.
 
         Args:
             flake_ref: Flake reference (e.g., ".", "/path/to/flake")
             attr: Attribute path to build (e.g., "nixidyEnvs.x86_64-linux.prod.environmentPackage")
-            out_link: Optional path for result symlink
+            out_link: Optional path for result symlink (Note: nix-fast-build doesn't support out-link)
 
         Returns:
             Path to the built package
         """
         cmd = [
-            "nix",
-            "build",
-            "--extra-experimental-features",
-            "nix-command",
-            "--extra-experimental-features",
-            "flakes",
-            "--print-out-paths",
+            "nix-fast-build",
+            "--skip-cached",
+            "--no-nom",
+            "--option",
+            "accept-flake-config",
+            "true",
+            "-f",
+            f"{flake_ref}#{attr}",
         ]
-        if out_link:
-            cmd.extend(["--out-link", str(out_link)])
-        else:
-            cmd.append("--no-link")
 
-        cmd.append(f"{flake_ref}#{attr}")
+        logging.debug(f"Running: {' '.join(cmd)}")
         output = ProcessUtils.run(cmd)
-        return Path(output.strip())
+
+        # nix-fast-build outputs build information followed by the store path on the last line
+        lines = output.strip().splitlines()
+        if not lines:
+            raise RuntimeError(
+                f"nix-fast-build produced no output for {flake_ref}#{attr}"
+            )
+
+        store_path_str = lines[-1].strip()
+        logging.debug(
+            f"nix-fast-build output ({len(lines)} lines), store path: {store_path_str}"
+        )
+
+        # Validate that the last line looks like a store path
+        if not store_path_str.startswith("/nix/store/"):
+            logging.error(f"Full nix-fast-build output:\n{output}")
+            raise RuntimeError(
+                f"Expected store path, got: {store_path_str}\n"
+                f"Full output has {len(lines)} lines"
+            )
+
+        store_path = Path(store_path_str)
+
+        # If out_link is requested, create it manually since nix-fast-build doesn't support --out-link
+        if out_link:
+            if out_link.exists() or out_link.is_symlink():
+                out_link.unlink()
+            out_link.symlink_to(store_path)
+            logging.debug(f"Created symlink: {out_link} -> {store_path}")
+
+        return store_path
 
     @staticmethod
     def get_system() -> str:
