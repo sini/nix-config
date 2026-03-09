@@ -51,6 +51,7 @@
 
       # NixOS services
       attic.domain = "attic.json64.dev";
+      forgejo.domain = "git.json64.dev";
       grafana.domain = "grafana.json64.dev";
       headscale.domain = "hs.json64.dev";
       homepage.domain = "homepage.json64.dev";
