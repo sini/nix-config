@@ -6,6 +6,11 @@
   ...
 }:
 {
+  imports = [
+    inputs.agenix-rekey.flakeModule
+    inputs.agenix-rekey-to-sops.flakeModule
+  ];
+
   flake.secretsConfig = {
     masterIdentities = [
       (rootPath + "/.secrets/pub/master.pub")
@@ -17,26 +22,16 @@
 
   perSystem =
     {
+      config,
       pkgs,
       system,
       ...
     }:
-    let
-      agenixApps = inputs.agenix-rekey-to-sops.configure {
-        userFlake = self;
+    {
+      agenix-rekey = {
         nixosConfigurations = self.nodes;
         collectHomeManagerConfigurations = true;
-        # Flatten the nested nixidyEnvs structure for all systems
         extraConfigurations = self.nixidyEnvs.${system} or { };
-      };
-    in
-    {
-      # Expose agenix-rekey apps
-      apps = {
-        agenix-rekey = agenixApps.${system}.rekey;
-        agenix-generate = agenixApps.${system}.generate;
-        agenix-edit = agenixApps.${system}.edit-view;
-        agenix-sops-rekey = agenixApps.${system}.sops-rekey;
       };
 
       devshells.default = {
@@ -46,20 +41,8 @@
         ];
         commands = [
           {
-            package = agenixApps.${system}.rekey;
-            help = "Rekey all secrets";
-          }
-          {
-            package = agenixApps.${system}.generate;
-            help = "Generate missing secrets";
-          }
-          {
-            package = agenixApps.${system}.edit-view;
-            help = "Edit a secret";
-          }
-          {
-            package = agenixApps.${system}.sops-rekey;
-            help = "Generate SOPS-encrypted secrets";
+            inherit (config.agenix-rekey-sops) package;
+            help = "Edit, generate, rekey secrets, and generate SOPS files";
           }
         ];
         env = [
