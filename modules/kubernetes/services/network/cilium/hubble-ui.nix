@@ -1,11 +1,20 @@
+{ rootPath, ... }:
 {
   flake.kubernetes.services.hubble-ui = {
     nixidy =
-      { environment, ... }:
+      { config, environment, ... }:
       let
         domain = environment.getDomainFor "hubble-ui";
       in
       {
+        age.secrets.hubble-ui-oidc-client-secret = {
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/hubble-ui-oidc-client-secret.age";
+          sopsOutput = {
+            file = "oidc";
+            key = "hubble-ui";
+          };
+        };
+
         applications.cilium = {
           compareOptions.serverSideDiff = true;
 
@@ -74,7 +83,7 @@
 
             secrets.hubble-ui-oidc-client-secret = {
               type = "Opaque";
-              stringData.client-secret = environment.secrets.forOidcService "hubble-ui";
+              stringData.client-secret = config.age.secrets.hubble-ui-oidc-client-secret.sopsRef;
             };
 
             ciliumNetworkPolicies = {
