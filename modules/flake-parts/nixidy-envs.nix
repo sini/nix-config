@@ -1,5 +1,6 @@
 {
   config,
+  rootPath,
   inputs,
   withSystem,
   lib,
@@ -73,12 +74,32 @@ in
             inherit pkgs;
             charts = (inputs.nixhelm.chartsDerivations.${system} or { }) // userCharts;
             extraSpecialArgs = {
-              inherit environment;
+              inherit environment inputs;
               inherit (config.flake) hosts;
               # Expose CRD objects for services to use in bootstrap
               crdObjects = serviceCrdObjects;
             };
             modules = [
+              inputs.agenix-rekey-to-sops.sopsModules.default # agenix/sops bridge support
+              (
+                { inputs, ... }:
+                {
+                  age = {
+                    # SOPS configuration
+                    sops = {
+                      configFile = rootPath + "/.sops.yaml";
+                      outputDir = rootPath + "/.secrets/env/${env}/sops"; # Only used for local mode
+                    };
+
+                    # Master identity for decrypting source secrets
+                    rekey = {
+                      recipientIdentifier = env;
+                      storageMode = "local"; # or "derivation"
+                      inherit (inputs.self.secretsConfig) masterIdentities;
+                    };
+                  };
+                }
+              )
               (
                 { lib, ... }:
                 {

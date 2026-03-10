@@ -1,7 +1,9 @@
+{ rootPath, ... }:
 {
   flake.kubernetes.services.argocd = {
     nixidy =
       {
+        config,
         charts,
         environment,
         ...
@@ -10,6 +12,27 @@
         domain = environment.getDomainFor "argocd";
       in
       {
+        age.secrets.argocd-oidc-client-secret = {
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/argocd-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script =
+              {
+                pkgs,
+                ...
+              }:
+              ''
+                # Generate an rfc3986 secret
+                secret=$(${pkgs.openssl}/bin/openssl rand -base64 54 | tr -d '\n' | tr '+/' '-_' | tr -d '=' | cut -c1-72)
+                echo "$secret"
+              '';
+          };
+          sopsOutput = {
+            file = "oidc";
+            key = "argocd";
+          };
+        };
+
         applications.argocd = {
           namespace = "argocd";
 
@@ -206,7 +229,7 @@
               "admin.password" = environment.secrets.for "argocd-admin-password";
               "admin.passwordMtime" = environment.secrets.for "argocd-admin-mtime";
               "server.secretkey" = environment.secrets.for "argocd-secretkey";
-              "oidc.clientSecret" = environment.secrets.forOidcService "argocd";
+              "oidc.clientSecret" = config.age.secrets.argocd-oidc-client-secret.sopsRef;
             };
 
             ciliumNetworkPolicies = {

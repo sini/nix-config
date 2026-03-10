@@ -59,8 +59,16 @@
     };
 
     agenix-rekey = {
-      url = "github:oddlama/agenix-rekey";
+      # url = "github:oddlama/agenix-rekey";
+      url = "github:sini/agenix-rekey"; # Fork with support for alternate input types
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    agenix-rekey-to-sops = {
+      # url = "path:/home/sini/Documents/repos/sini/agenix-rekey-to-sops";
+      url = "github:sini/agenix-rekey-to-sops"; # Fork with support for alternate input types
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.agenix-rekey.follows = "agenix-rekey";
     };
 
     colmena = {
@@ -209,12 +217,6 @@
 
     # NixOS modules for gaming
     nix-gaming.url = "github:fufexan/nix-gaming";
-
-    # Generate System Images
-    # nixos-generators = {
-    #   url = "github:nix-community/nixos-generators";
-    #   inputs.nixpkgs.follows = "nixpkgs";
-    # };
 
     # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
