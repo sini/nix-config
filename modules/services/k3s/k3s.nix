@@ -112,6 +112,7 @@
             "ip_vs_rr"
             "ip_vs_wrr"
             "ip_vs_sh"
+            "iscsi_tcp"
           ];
 
           # Enable eBPF
@@ -150,6 +151,11 @@
               4244 # hubble api
               8080
               443
+
+              # Longhorn Manager
+              9500
+              # Longhorn Engine
+              10250
             ];
 
             allowedUDPPorts = [
@@ -303,196 +309,204 @@
         };
 
         # GitOps bootstrap
-        systemd.services = {
-          k3s-bootstrap-cilium = lib.mkIf shouldInit {
-            description = "Install Cilium for bootstrapping";
-            after = [ "k3s.service" ];
-            requires = [ "k3s.service" ];
-            path = with pkgs; [
-              kubectl
-              # kubernetes-helm
-              cilium-cli
-            ];
-            environment = {
-              KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            };
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
-                set -e
+        systemd = {
+          tmpfiles.rules = [
+            "d /var/lib/longhorn 0750 root root -"
+            "L+ /usr/local/bin/iscsiadm - - - - ${pkgs.openiscsi}/bin/iscsiadm"
+          ];
+          services = {
+            # Ensure multipathd is disabled (can conflict with Longhorn)
+            multipathd.enable = lib.mkForce false;
 
-                echo "Starting k3s bootstrap process..."
+            k3s-bootstrap-cilium = lib.mkIf shouldInit {
+              description = "Install Cilium for bootstrapping";
+              after = [ "k3s.service" ];
+              requires = [ "k3s.service" ];
+              path = with pkgs; [
+                kubectl
+                # kubernetes-helm
+                cilium-cli
+              ];
+              environment = {
+                KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+              };
+              serviceConfig = {
+                Type = "oneshot";
+                ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
+                  set -e
 
-                # Wait for k3s to be fully up
-                echo "Waiting for k3s to be ready..."
-                until kubectl get nodes; do
-                  echo "Waiting for k3s API server to be available..."
-                  sleep 5
-                done
+                  echo "Starting k3s bootstrap process..."
 
-                echo "k3s is ready!"
+                  # Wait for k3s to be fully up
+                  echo "Waiting for k3s to be ready..."
+                  until kubectl get nodes; do
+                    echo "Waiting for k3s API server to be available..."
+                    sleep 5
+                  done
 
-                # Check if Cilium is already installed
-                if ${lib.getExe pkgs.cilium-cli} --kubeconfig $KUBECONFIG status >/dev/null 2>&1; then
-                  echo "Cilium is already installed."
-                  exit 0
-                fi
+                  echo "k3s is ready!"
 
-                echo "Installing bootstrap resources..."
-                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                  --server-side \
-                  --force-conflicts \
-                  -f ${rootPath + "/generated/manifests/${environment.name}/bootstrap/"} || true
+                  # Check if Cilium is already installed
+                  if ${lib.getExe pkgs.cilium-cli} --kubeconfig $KUBECONFIG status >/dev/null 2>&1; then
+                    echo "Cilium is already installed."
+                    exit 0
+                  fi
 
-                echo "Installing cilium..."
-                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                  --server-side \
-                  --force-conflicts \
-                  -f ${rootPath + "/generated/manifests/${environment.name}/cilium/"} || true
-                echo "Sleeping for 30 seconds for resources to settle..."
-                sleep 30;
-
-                echo "Installing coredns..."
-                ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                  --server-side \
-                  --force-conflicts \
-                  -f ${rootPath + "/generated/manifests/${environment.name}/coredns/"} || true
-                echo "Sleeping for 30 seconds for resources to settle..."
-                sleep 30;
-              '';
-            };
-            wantedBy = [ "multi-user.target" ];
-          };
-
-          k3s-install-sops-secrets-operator = lib.mkIf shouldInit {
-            description = "Install SOPS Secrets Operator for bootstrapping";
-            after = [
-              "k3s.service"
-              "k3s-bootstrap-cilium.service"
-            ];
-            requires = [
-              "k3s.service"
-              "k3s-bootstrap-cilium.service"
-            ];
-            path = with pkgs; [
-              kubectl
-            ];
-            environment = {
-              KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            };
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = pkgs.writeShellScript "k3s-install-sops-age-key" ''
-                set -e
-                echo "Starting k3s bootstrap process..."
-
-                # Wait for k3s to be fully up
-                echo "Waiting for k3s to be ready..."
-                until kubectl get nodes; do
-                  echo "Waiting for k3s API server to be available..."
-                  sleep 5
-                done
-
-                # Create namespace if it doesn't exist
-                if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace sops-secrets-operator >/dev/null 2>&1; then
-                  echo "Creating sops-secrets-operator namespace..."
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace sops-secrets-operator
-                fi
-
-                # Check if secret is already installed
-                if ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG --namespace sops-secrets-operator get secret sops-age-key-file >/dev/null 2>&1; then
-                  echo "SOPS secret age key is already installed."
-                else
-                  echo "Creating SOPS age key secret..."
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
-                    --namespace sops-secrets-operator \
-                    --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
-                fi
-
-                # Install sops-secrets-operator if deployment doesn't exist
-                if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n sops-secrets-operator sops-sops-secrets-operator >/dev/null 2>&1; then
-                  echo "Installing sops-secrets-operator..."
+                  echo "Installing bootstrap resources..."
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/sops-secrets-operator/"}
-                  echo "Sleeping for 30 seconds..."
-                  sleep 30
-                fi
+                    -f ${rootPath + "/generated/manifests/${environment.name}/bootstrap/"} || true
 
-                # Install cert-manager if deployment doesn't exist
-                if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
-                  echo "Installing cert-manager..."
+                  echo "Installing cilium..."
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/cert-manager/"}
-                  echo "Sleeping for 30 seconds..."
-                  sleep 30
-                fi
-              '';
-            };
-            wantedBy = [ "multi-user.target" ];
-          };
+                    -f ${rootPath + "/generated/manifests/${environment.name}/cilium/"} || true
+                  echo "Sleeping for 30 seconds for resources to settle..."
+                  sleep 30;
 
-          k3s-install-argocd = lib.mkIf shouldInit {
-            description = "Install ArgoCD for bootstrapping";
-            after = [
-              "k3s.service"
-              "k3s-bootstrap-cilium.service"
-              "k3s-install-sops-secrets-operator.service"
-            ];
-            requires = [
-              "k3s.service"
-              "k3s-bootstrap-cilium.service"
-              "k3s-install-sops-secrets-operator.service"
-            ];
-            path = with pkgs; [
-              kubectl
-            ];
-            environment = {
-              KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-            };
-            serviceConfig = {
-              Type = "oneshot";
-              ExecStart = pkgs.writeShellScript "k3s-install-argocd" ''
-                set -e
-                echo "Starting ArgoCD installation..."
-
-                # Wait for k3s to be fully up
-                echo "Waiting for k3s to be ready..."
-                until kubectl get nodes; do
-                  echo "Waiting for k3s API server to be available..."
-                  sleep 5
-                done
-
-                # Create namespace if it doesn't exist
-                if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace argocd >/dev/null 2>&1; then
-                  echo "Creating argocd namespace..."
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace argocd
-                fi
-
-                # Install ArgoCD if deployment doesn't exist
-                if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n argocd argocd-server >/dev/null 2>&1; then
-                  echo "Installing ArgoCD..."
+                  echo "Installing coredns..."
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/argocd/"}
-                  echo "Installing App bootstrap.yaml"
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/bootstrap.yaml"}
-                else
-                  echo "ArgoCD is already installed."
-                fi
-              '';
+                    -f ${rootPath + "/generated/manifests/${environment.name}/coredns/"} || true
+                  echo "Sleeping for 30 seconds for resources to settle..."
+                  sleep 30;
+                '';
+              };
+              wantedBy = [ "multi-user.target" ];
             };
-            wantedBy = [ "multi-user.target" ];
+
+            k3s-install-sops-secrets-operator = lib.mkIf shouldInit {
+              description = "Install SOPS Secrets Operator for bootstrapping";
+              after = [
+                "k3s.service"
+                "k3s-bootstrap-cilium.service"
+              ];
+              requires = [
+                "k3s.service"
+                "k3s-bootstrap-cilium.service"
+              ];
+              path = with pkgs; [
+                kubectl
+              ];
+              environment = {
+                KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+              };
+              serviceConfig = {
+                Type = "oneshot";
+                ExecStart = pkgs.writeShellScript "k3s-install-sops-age-key" ''
+                  set -e
+                  echo "Starting k3s bootstrap process..."
+
+                  # Wait for k3s to be fully up
+                  echo "Waiting for k3s to be ready..."
+                  until kubectl get nodes; do
+                    echo "Waiting for k3s API server to be available..."
+                    sleep 5
+                  done
+
+                  # Create namespace if it doesn't exist
+                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace sops-secrets-operator >/dev/null 2>&1; then
+                    echo "Creating sops-secrets-operator namespace..."
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace sops-secrets-operator
+                  fi
+
+                  # Check if secret is already installed
+                  if ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG --namespace sops-secrets-operator get secret sops-age-key-file >/dev/null 2>&1; then
+                    echo "SOPS secret age key is already installed."
+                  else
+                    echo "Creating SOPS age key secret..."
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
+                      --namespace sops-secrets-operator \
+                      --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
+                  fi
+
+                  # Install sops-secrets-operator if deployment doesn't exist
+                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n sops-secrets-operator sops-sops-secrets-operator >/dev/null 2>&1; then
+                    echo "Installing sops-secrets-operator..."
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                      --server-side \
+                      --force-conflicts \
+                      -f ${rootPath + "/generated/manifests/${environment.name}/sops-secrets-operator/"}
+                    echo "Sleeping for 30 seconds..."
+                    sleep 30
+                  fi
+
+                  # Install cert-manager if deployment doesn't exist
+                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
+                    echo "Installing cert-manager..."
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                      --server-side \
+                      --force-conflicts \
+                      -f ${rootPath + "/generated/manifests/${environment.name}/cert-manager/"}
+                    echo "Sleeping for 30 seconds..."
+                    sleep 30
+                  fi
+                '';
+              };
+              wantedBy = [ "multi-user.target" ];
+            };
+
+            k3s-install-argocd = lib.mkIf shouldInit {
+              description = "Install ArgoCD for bootstrapping";
+              after = [
+                "k3s.service"
+                "k3s-bootstrap-cilium.service"
+                "k3s-install-sops-secrets-operator.service"
+              ];
+              requires = [
+                "k3s.service"
+                "k3s-bootstrap-cilium.service"
+                "k3s-install-sops-secrets-operator.service"
+              ];
+              path = with pkgs; [
+                kubectl
+              ];
+              environment = {
+                KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
+              };
+              serviceConfig = {
+                Type = "oneshot";
+                ExecStart = pkgs.writeShellScript "k3s-install-argocd" ''
+                  set -e
+                  echo "Starting ArgoCD installation..."
+
+                  # Wait for k3s to be fully up
+                  echo "Waiting for k3s to be ready..."
+                  until kubectl get nodes; do
+                    echo "Waiting for k3s API server to be available..."
+                    sleep 5
+                  done
+
+                  # Create namespace if it doesn't exist
+                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace argocd >/dev/null 2>&1; then
+                    echo "Creating argocd namespace..."
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace argocd
+                  fi
+
+                  # Install ArgoCD if deployment doesn't exist
+                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n argocd argocd-server >/dev/null 2>&1; then
+                    echo "Installing ArgoCD..."
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                      --server-side \
+                      --force-conflicts \
+                      -f ${rootPath + "/generated/manifests/${environment.name}/argocd/"}
+                    echo "Installing App bootstrap.yaml"
+                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                      -f ${rootPath + "/generated/manifests/${environment.name}/bootstrap.yaml"}
+                  else
+                    echo "ArgoCD is already installed."
+                  fi
+                '';
+              };
+              wantedBy = [ "multi-user.target" ];
+            };
           };
         };
 
         environment.persistence."/persist".directories = [
-          "/var/lib/rook"
           "/var/lib/rancher"
           "/var/lib/kubelet"
           "/etc/rancher"
