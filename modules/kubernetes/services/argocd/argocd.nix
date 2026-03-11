@@ -299,6 +299,10 @@
                         {
                           ports = [
                             {
+                              port = "443";
+                              protocol = "TCP";
+                            }
+                            {
                               port = "6443";
                               protocol = "TCP";
                             }
