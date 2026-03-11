@@ -1,0 +1,16 @@
+apiVersion: v1
+data:
+  default-setting.yaml: |-
+    create-default-disk-labeled-nodes: true
+    default-data-path: "/var/lib/longhorn"
+    replica-soft-anti-affinity: true
+    replica-auto-balance: "best-effort"
+    priority-class: "longhorn-critical"
+    disable-revision-counter: "{\"v1\":\"true\"}"
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: longhorn
+    app.kubernetes.io/name: longhorn
+  name: longhorn-default-setting
+  namespace: longhorn-system

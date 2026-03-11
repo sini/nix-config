@@ -48,6 +48,7 @@
       # Kubernetes services
       argocd.domain = "argocd.zeroday.run";
       hubble-ui.domain = "hubble.zeroday.run";
+      longhorn.domain = "longhorn.zeroday.run";
 
       # NixOS services
       attic.domain = "attic.json64.dev";

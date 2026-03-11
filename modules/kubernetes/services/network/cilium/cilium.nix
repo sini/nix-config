@@ -141,7 +141,6 @@
               #     };
               #   };
               # };
-
               ipv6.enabled = true;
 
               gatewayAPI = {
@@ -157,6 +156,14 @@
                 rollOutPods = true;
               };
 
+              hubble = {
+                tls = {
+                  auto = {
+                    enabled = true;
+                    method = "cronJob";
+                  };
+                };
+              };
               # Don't create secretsNamespace, we do this in the bootstrap app
               tls.secretsNamespace.create = false;
               ingressController.secretsNamespace.create = false;

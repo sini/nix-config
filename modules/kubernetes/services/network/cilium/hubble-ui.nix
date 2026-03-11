@@ -26,13 +26,6 @@
               relay.rollOutPods = true;
               ui.enabled = true;
               ui.rollOutPods = true;
-
-              tls = {
-                auto = {
-                  enabled = true;
-                  method = "cronJob";
-                };
-              };
             };
           };
 
