@@ -3,11 +3,12 @@
     features = [
       "adb"
       "direnv"
-      #"gpg"
+      "gpg"
       "bat"
       "claude"
       "eza"
       "misc-tools"
+      "nix-index"
       "nvf"
       "git"
       "ssh"
