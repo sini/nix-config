@@ -75,7 +75,10 @@
     };
 
     home =
-      { pkgs, ... }:
+      { pkgs, activeFeatures, ... }:
+      let
+        isWorkstation = builtins.elem "xserver" activeFeatures;
+      in
       {
         programs.gpg = {
           enable = true;
@@ -131,7 +134,7 @@
             maxCacheTtlSsh = 86400;
 
             # TODO: If system is darwin, use pinentry-mac
-            pinentry.package = pkgs.pinentry-gnome3;
+            pinentry.package = if isWorkstation then pkgs.pinentry-gnome3 else pkgs.pinentry-tty;
 
             extraConfig = ''
               ttyname $GPG_TTY
@@ -139,12 +142,6 @@
           };
         };
 
-        # xdg.configFile = {
-        #   "pubkeys" = {
-        #     target = "nixpkgs/files/pubkeys.txt";
-        #     text = gpg-public-keys;
-        #   };
-        # };
         home.persistence."/persist".directories = [
           {
             directory = ".gnupg";
