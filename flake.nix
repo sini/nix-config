@@ -243,8 +243,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # global, so they can be `.follow`ed
-    systems.url = "github:nix-systems/default";
+    # systems.url = "github:nix-systems/default";
 
     # styling
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
