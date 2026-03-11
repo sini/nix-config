@@ -32,6 +32,7 @@
         # Storage drivers
         "volume-snapshots"
         "csi-driver-nfs"
+        "longhorn"
         # "rook-ceph"
       ];
       config = {

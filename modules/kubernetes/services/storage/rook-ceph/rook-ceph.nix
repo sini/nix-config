@@ -9,6 +9,7 @@
       }:
       {
         chart = inputs.nixhelm.chartsDerivations.${system}.rook-release.rook-ceph;
+        namePrefix = "rook";
       };
 
     nixidy =

@@ -93,8 +93,17 @@
             # Chart-based CRDs: extract at eval time via nix-kube-generators
             let
               klib = inputs.nix-kube-generators.lib { inherit pkgs; };
+              # Filter out generator-only options (namePrefix, attrNameOverrides, skipCoerceToList)
+              # that extractCRDsFromChart doesn't accept
+              extractConfig = builtins.intersectAttrs {
+                chart = null;
+                chartAttrs = null;
+                values = null;
+                crds = null;
+                extraOpts = null;
+              } crdConfig;
             in
-            extractCRDsFromChart (crdConfig // { inherit name klib; })
+            extractCRDsFromChart (extractConfig // { inherit name klib; })
         ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
 
       # Produce the agenix-rekey-to-sops configuration module for a nixidy environment.
@@ -117,11 +126,11 @@
           };
         };
 
-      # Import generated CRD type definitions as nixidy resourceImports, filtered
+      # Import generated CRD type definitions as nixidy applicationImports, filtered
       # to only include services that are enabled in this environment.
       # Reads .nix files from the generated-crds perSystem package derivation.
       # { system, enabledServices } -> [module]
-      getCrdResourceImports =
+      getCrdApplicationImports =
         { system, enabledServices }:
         let
           generatedCrds = withSystem system ({ config, ... }: config.packages.generated-crds);
@@ -140,7 +149,7 @@
       # This sets up:
       # - The kubernetes option type (flattened service access for nixidy modules)
       # - Environment kubernetes config injection as mkDefault values
-      # - CRD resource imports for enabled services
+      # - CRD application imports for enabled services
       # - Git target repository and branch for rendered manifests
       # - ArgoCD sync policy and helm label stripping defaults
       # { env, environment, enabledServices, system } -> module
@@ -173,7 +182,7 @@
 
             nixidy = {
               env = lib.mkDefault env;
-              resourceImports = getCrdResourceImports { inherit system enabledServices; };
+              applicationImports = getCrdApplicationImports { inherit system enabledServices; };
 
               target = {
                 repository = lib.mkDefault "https://github.com/${repo.owner}/${repo.name}.git";
