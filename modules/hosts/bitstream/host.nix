@@ -16,7 +16,6 @@
       "zfs-disk-single"
       "cpu-amd"
       "gpu-amd"
-      "podman"
     ];
     facts = ./facter.json;
     nixosConfiguration =
