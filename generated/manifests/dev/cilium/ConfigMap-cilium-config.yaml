@@ -120,6 +120,7 @@ data:
   monitor-aggregation: medium
   monitor-aggregation-flags: all
   monitor-aggregation-interval: 5s
+  mtu: "1450"
   nat-map-stats-entries: "32"
   nat-map-stats-interval: 30s
   node-port-bind-protection: "true"
