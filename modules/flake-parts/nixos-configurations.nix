@@ -17,6 +17,9 @@ in
       nixosConfigurations = lib.mapAttrs mkHost config.hosts;
 
       # Allow systems to refer to each other via nodes.<name>
-      nodes = self.outputs.nixosConfigurations;
+      # Exclude installer ISOs from deployment nodes
+      nodes = lib.filterAttrs (
+        name: _: !(lib.hasPrefix "installer-" name)
+      ) self.outputs.nixosConfigurations;
     };
 }
