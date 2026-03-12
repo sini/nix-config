@@ -17,10 +17,7 @@
           generator = {
             tags = [ "oidc" ];
             script =
-              {
-                pkgs,
-                ...
-              }:
+              { pkgs, ... }:
               ''
                 # Generate an rfc3986 secret
                 secret=$(${pkgs.openssl}/bin/openssl rand -base64 54 | tr -d '\n' | tr '+/' '-_' | tr -d '=' | cut -c1-72)

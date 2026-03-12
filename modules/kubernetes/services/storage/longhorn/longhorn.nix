@@ -1,4 +1,5 @@
 # This module should work, but I'm not using it -- leaving for posterity
+{ rootPath, ... }:
 {
   flake.kubernetes.services.longhorn = {
     crds =
@@ -14,6 +15,7 @@
 
     nixidy =
       {
+        config,
         charts,
         environment,
         ...
@@ -22,6 +24,25 @@
         longhornDomain = environment.getDomainFor "longhorn";
       in
       {
+
+        age.secrets.longhorn-oidc-client-secret = {
+          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/longhorn-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script =
+              { pkgs, ... }:
+              ''
+                # Generate an rfc3986 secret
+                secret=$(${pkgs.openssl}/bin/openssl rand -base64 54 | tr -d '\n' | tr '+/' '-_' | tr -d '=' | cut -c1-72)
+                echo "$secret"
+              '';
+          };
+          sopsOutput = {
+            file = "oidc";
+            key = "longhorn";
+          };
+        };
+
         applications.longhorn = {
           namespace = "longhorn-system";
 
@@ -86,7 +107,7 @@
           };
 
           resources = {
-            httpRoutes.rook-ceph-dashboard.spec = {
+            httpRoutes.longhorn-dashboard.spec = {
               hostnames = [ longhornDomain ];
               parentRefs = [
                 {
@@ -105,6 +126,33 @@
                   ];
                 }
               ];
+            };
+
+            securityPolicies."longhorn-oidc".spec = {
+              targetRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "HTTPRoute";
+                  name = "longhorn-dashboard";
+                }
+              ];
+
+              oidc = {
+                provider.issuer = environment.secrets.oidcIssuerFor "longhorn";
+                clientID = "longhorn";
+                clientSecret.name = "longhorn-oidc-client-secret";
+                scopes = [
+                  "email"
+                  "openid"
+                  "profile"
+                ];
+                forwardAccessToken = true;
+              };
+            };
+
+            secrets.longhorn-oidc-client-secret = {
+              type = "Opaque";
+              stringData.client-secret = config.age.secrets.longhorn-oidc-client-secret.sopsRef;
             };
 
             # Allow csi-driver-nfs access to kube-apiserver
