@@ -58,6 +58,7 @@ class NixUtils:
             "nix-fast-build",
             "--skip-cached",
             "--no-nom",
+            "--no-link",
             "--option",
             "accept-flake-config",
             "true",
@@ -90,7 +91,7 @@ class NixUtils:
 
         store_path = Path(store_path_str)
 
-        # If out_link is requested, create it manually since nix-fast-build doesn't support --out-link
+        # Create out_link if requested (handled manually instead of using --out-link)
         if out_link:
             if out_link.exists() or out_link.is_symlink():
                 out_link.unlink()
