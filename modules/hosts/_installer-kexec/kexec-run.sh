@@ -15,6 +15,17 @@ if [[ ! -f "$SCRIPT_DIR/bzImage" ]] || [[ ! -f "$SCRIPT_DIR/initrd" ]]; then
     exit 1
 fi
 
+# Save network configuration before kexec
+echo "Saving current network configuration..."
+NETWORK_DIR="/root/network"
+mkdir -p "$NETWORK_DIR"
+
+"$SCRIPT_DIR/ip" -json addr show > "$NETWORK_DIR/addrs.json" 2>/dev/null || true
+"$SCRIPT_DIR/ip" -json -4 route show > "$NETWORK_DIR/routes-v4.json" 2>/dev/null || true
+"$SCRIPT_DIR/ip" -json -6 route show > "$NETWORK_DIR/routes-v6.json" 2>/dev/null || true
+
+echo "Network configuration saved to $NETWORK_DIR"
+
 echo "Countdown: 6 seconds..."
 for i in 6 5 4 3 2 1; do
     echo "$i..."

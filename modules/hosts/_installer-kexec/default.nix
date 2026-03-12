@@ -34,11 +34,15 @@ in
     wants = [ "network-online.target" ];
   };
 
-  # Enable interactive console access via serial and TTY
+  # Enable interactive console access via serial and TTY with verbose logging
   # This allows debugging if SSH doesn't work
   boot.kernelParams = [
     "console=tty1"
     "console=ttyS0,115200n8"
+    "boot.shell_on_fail"
+    "debug"
+    "systemd.log_level=debug"
+    "systemd.log_target=console"
   ];
 
   # Enable getty on tty1 for local console access
@@ -60,23 +64,96 @@ in
   systemd.services.installer-debug = {
     description = "Kexec Installer Debug Info";
     wantedBy = [ "multi-user.target" ];
-    after = [ "network.target" ];
+    after = [
+      "network-online.target"
+      "sshd.service"
+    ];
+    wants = [ "network-online.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      StandardOutput = "journal+console";
+      StandardError = "journal+console";
+    };
+    script = ''
+      echo ""
+      echo "============================================"
+      echo "  NixOS Kexec Installer Ready"
+      echo "============================================"
+      echo "Hostname: $(hostname)"
+      echo ""
+      echo "IP Addresses:"
+      ${pkgs.iproute2}/bin/ip -br addr show | grep -v "^lo" || true
+      echo ""
+      echo "Full network configuration:"
+      ${pkgs.iproute2}/bin/ip addr show
+      echo ""
+      echo "Routes:"
+      ${pkgs.iproute2}/bin/ip route show
+      echo ""
+      echo "DNS Configuration:"
+      cat /etc/resolv.conf || true
+      echo ""
+      echo "SSH Service Status:"
+      systemctl status sshd --no-pager || true
+      echo ""
+      echo "Listening Ports:"
+      ${pkgs.nettools}/bin/netstat -tlnp || true
+      echo ""
+      echo "============================================"
+      echo "  Try: ssh root@<ip-address>"
+      echo "  Password: (none - key-based auth only)"
+      echo "============================================"
+      echo ""
+    '';
+  };
+
+  # Early boot message
+  systemd.services.installer-boot-message = {
+    description = "Kexec Installer Boot Message";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "systemd-networkd.service" ];
+    before = [ "sshd.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+      StandardOutput = "journal+console";
+    };
+    script = ''
+      echo ""
+      echo ">>> NixOS Kexec Installer is booting..."
+      echo ">>> Waiting for network configuration..."
+    '';
+  };
+
+  # Restore network configuration from pre-kexec state
+  systemd.services.restore-network = {
+    description = "Restore Network Configuration After Kexec";
+    wantedBy = [ "network-pre.target" ];
+    before = [ "systemd-networkd.service" ];
+    after = [ "systemd-networkd.socket" ];
+    conflicts = [ "shutdown.target" ];
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
     };
+    # Only run if network state was saved
+    unitConfig.ConditionPathExists = [
+      "/root/network/addrs.json"
+      "/root/network/routes-v4.json"
+      "/root/network/routes-v6.json"
+    ];
     script = ''
-      echo "=== NixOS Kexec Installer Debug Info ===" > /dev/console
-      echo "Hostname: $(hostname)" > /dev/console
-      echo "IP Addresses:" > /dev/console
-      ${pkgs.iproute2}/bin/ip addr show > /dev/console 2>&1 || true
-      echo "Routes:" > /dev/console
-      ${pkgs.iproute2}/bin/ip route show > /dev/console 2>&1 || true
-      echo "SSH Service Status:" > /dev/console
-      systemctl status sshd --no-pager > /dev/console 2>&1 || true
-      echo "Listening Ports:" > /dev/console
-      ${pkgs.nettools}/bin/netstat -tlnp > /dev/console 2>&1 || true
-      echo "=== End Debug Info ===" > /dev/console
+      echo "Restoring network configuration from /root/network..." > /dev/console
+      ${pkgs.python3}/bin/python3 ${./restore-network.py} \
+        /root/network/addrs.json \
+        /root/network/routes-v4.json \
+        /root/network/routes-v6.json \
+        /etc/systemd/network
+
+      # Restart networkd to apply configuration
+      systemctl restart systemd-networkd
+      echo "Network configuration restored" > /dev/console
     '';
   };
 
@@ -152,6 +229,6 @@ in
       tar -czvf $out/${kexecInstallerName}-${pkgs.stdenv.hostPlatform.system}.tar.gz kexec
     '';
 
-    stateVersion = "25.05";
+    stateVersion = "25.11";
   };
 }
