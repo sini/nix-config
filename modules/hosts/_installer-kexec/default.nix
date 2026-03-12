@@ -200,7 +200,22 @@ in
   systemd.network.wait-online.timeout = 60;
 
   # Use xz compression for faster boot
-  boot.initrd.compressor = "xz";
+  boot = {
+    initrd = {
+      compressor = "xz";
+      availableKernelModules = [
+        "r8169" # Host: surge, burst, pulse
+        "mlx4_core"
+        "mlx4_en" # Hosts: uplink
+        "atlantic" # Hosts: cortex
+        "bridge"
+        "bonding"
+        "8021q"
+        "tpm_crb" # TPM support
+        "tpm_tis"
+      ];
+    };
+  };
   system = {
     # Build the kexec run script
     build.kexecRun = pkgs.runCommand "kexec-run" { } ''
