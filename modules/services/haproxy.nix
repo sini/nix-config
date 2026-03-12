@@ -12,7 +12,7 @@ in
     }:
     let
       hosts =
-        findHostsWithRole "kubernetes"
+        findHostsWithRole "k3s"
         |> lib.attrsets.filterAttrs (_hostname: hostConfig: environment.name == hostConfig.environment)
         |> lib.attrValues;
     in

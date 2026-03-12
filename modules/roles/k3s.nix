@@ -1,7 +1,7 @@
 {
-  flake.roles.kubernetes = {
+  flake.roles.k3s = {
     features = [
-      "kubernetes"
+      "k3s"
       "cilium-bgp"
     ];
   };
