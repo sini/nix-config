@@ -169,10 +169,10 @@
               ingressController.secretsNamespace.create = false;
               envoyConfig.secretsNamespace.create = false;
 
-              k8sClientRateLimit = {
-                qps = 50;
-                burst = 200;
-              };
+              # k8sClientRateLimit = {
+              #   qps = 50;
+              #   burst = 200;
+              # };
 
               operator = {
                 enabled = true;

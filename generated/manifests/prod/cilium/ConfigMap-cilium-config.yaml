@@ -109,8 +109,6 @@ data:
   iptables-random-fully: "false"
   ipv4-native-routing-cidr: 172.20.0.0/16
   ipv6-native-routing-cidr: fdfd:cafe:00:0001::/96
-  k8s-client-burst: "200"
-  k8s-client-qps: "50"
   k8s-require-ipv4-pod-cidr: "false"
   k8s-require-ipv6-pod-cidr: "false"
   kube-proxy-replacement: "true"
