@@ -34,129 +34,6 @@ in
     wants = [ "network-online.target" ];
   };
 
-  # Enable interactive console access via serial and TTY with verbose logging
-  # This allows debugging if SSH doesn't work
-  boot.kernelParams = [
-    "console=tty1"
-    "console=ttyS0,115200n8"
-    "boot.shell_on_fail"
-    "debug"
-    "systemd.log_level=debug"
-    "systemd.log_target=console"
-  ];
-
-  # Enable getty on tty1 for local console access
-  systemd.services."getty@tty1" = {
-    enable = true;
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  # Enable serial console
-  systemd.services."serial-getty@ttyS0" = {
-    enable = true;
-    wantedBy = [ "multi-user.target" ];
-  };
-
-  # Allow root login without password on console (for debugging)
-  users.users.root.initialHashedPassword = lib.mkForce "";
-
-  # Add a debug service that outputs network and system status
-  systemd.services.installer-debug = {
-    description = "Kexec Installer Debug Info";
-    wantedBy = [ "multi-user.target" ];
-    after = [
-      "network-online.target"
-      "sshd.service"
-    ];
-    wants = [ "network-online.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      StandardOutput = "journal+console";
-      StandardError = "journal+console";
-    };
-    script = ''
-      echo ""
-      echo "============================================"
-      echo "  NixOS Kexec Installer Ready"
-      echo "============================================"
-      echo "Hostname: $(hostname)"
-      echo ""
-      echo "IP Addresses:"
-      ${pkgs.iproute2}/bin/ip -br addr show | grep -v "^lo" || true
-      echo ""
-      echo "Full network configuration:"
-      ${pkgs.iproute2}/bin/ip addr show
-      echo ""
-      echo "Routes:"
-      ${pkgs.iproute2}/bin/ip route show
-      echo ""
-      echo "DNS Configuration:"
-      cat /etc/resolv.conf || true
-      echo ""
-      echo "SSH Service Status:"
-      systemctl status sshd --no-pager || true
-      echo ""
-      echo "Listening Ports:"
-      ${pkgs.nettools}/bin/netstat -tlnp || true
-      echo ""
-      echo "============================================"
-      echo "  Try: ssh root@<ip-address>"
-      echo "  Password: (none - key-based auth only)"
-      echo "============================================"
-      echo ""
-    '';
-  };
-
-  # Early boot message
-  systemd.services.installer-boot-message = {
-    description = "Kexec Installer Boot Message";
-    wantedBy = [ "multi-user.target" ];
-    after = [ "systemd-networkd.service" ];
-    before = [ "sshd.service" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-      StandardOutput = "journal+console";
-    };
-    script = ''
-      echo ""
-      echo ">>> NixOS Kexec Installer is booting..."
-      echo ">>> Waiting for network configuration..."
-    '';
-  };
-
-  # Restore network configuration from pre-kexec state
-  systemd.services.restore-network = {
-    description = "Restore Network Configuration After Kexec";
-    wantedBy = [ "network-pre.target" ];
-    before = [ "systemd-networkd.service" ];
-    after = [ "systemd-networkd.socket" ];
-    conflicts = [ "shutdown.target" ];
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-    # Only run if network state was saved
-    unitConfig.ConditionPathExists = [
-      "/root/network/addrs.json"
-      "/root/network/routes-v4.json"
-      "/root/network/routes-v6.json"
-    ];
-    script = ''
-      echo "Restoring network configuration from /root/network..." > /dev/console
-      ${pkgs.python3}/bin/python3 ${./restore-network.py} \
-        /root/network/addrs.json \
-        /root/network/routes-v4.json \
-        /root/network/routes-v6.json \
-        /etc/systemd/network
-
-      # Restart networkd to apply configuration
-      systemctl restart systemd-networkd
-      echo "Network configuration restored" > /dev/console
-    '';
-  };
-
   # Add SSH keys for root user (for nixos-anywhere)
   users.users.root.openssh.authorizedKeys.keys = [
     # sini's keys
@@ -166,38 +43,22 @@ in
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMKKUMmeJtEOYi6rU0tumxlrZjH9Y3FCyOhVFIpu3LF1 will.t.bryant@gmail.com"
   ];
 
-  # Provide useful tools for installation and debugging
+  # Provide useful tools for installation
   environment.systemPackages = with pkgs; [
     git
     vim
     tmux
-    htop
-    iftop
-    tcpdump
-    traceroute
-    netcat
-    curl
-    wget
-    iproute2
-    ethtool
-    dnsutils
   ];
 
   # Set a readable hostname
   networking.hostName = "nixos-kexec-installer";
 
   # Ensure network is enabled and properly configured
+  # Note: netboot-minimal.nix handles network configuration via dhcpcd, not networkd
   networking.useDHCP = lib.mkDefault true;
-  networking.useNetworkd = true;
 
-  # Enable networkd wait-online to ensure network is up before services start
-  systemd.services.systemd-networkd-wait-online = {
-    enable = true;
-    wantedBy = [ "network-online.target" ];
-  };
-
-  # Increase DHCP timeout
-  systemd.network.wait-online.timeout = 60;
+  # Disable networkd wait-online since netboot uses dhcpcd for networking
+  systemd.services.systemd-networkd-wait-online.enable = lib.mkForce false;
 
   # Use xz compression for faster boot
   boot = {

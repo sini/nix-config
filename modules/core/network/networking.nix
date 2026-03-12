@@ -219,7 +219,7 @@
         };
 
         autobridging = mkEnableOption "automatic 1:1 bridge creation for each interface" // {
-          default = true;
+          default = false;
         };
 
         bridges = mkOption {

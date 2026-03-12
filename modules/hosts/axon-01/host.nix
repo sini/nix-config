@@ -35,7 +35,7 @@
         hardware = {
           networking.interfaces = [ "enp2s0" ];
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
-          disk.longhorn.device_id = "nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
+          disk.longhorn.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
         };
 
         impermanence = {

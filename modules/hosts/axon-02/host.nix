@@ -36,7 +36,7 @@
         hardware = {
           networking.interfaces = [ "enp2s0" ];
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300BDD8";
-          disk.longhorn.device_id = "nvme-Force_MP600_192482300001285610CF";
+          disk.longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_192482300001285610CF";
         };
 
         impermanence = {
