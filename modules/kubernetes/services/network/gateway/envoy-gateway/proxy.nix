@@ -132,7 +132,7 @@
               # Allow gateway proxy pods in kube-system to reach external services (e.g., for OIDC token exchange)
               allow-gateway-world-egress = {
                 metadata = {
-                  namespace = "kube-system";
+                  namespace = "gateways";
                   annotations."argocd.argoproj.io/sync-wave" = "-1";
                 };
                 spec = {

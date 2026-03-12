@@ -4,7 +4,7 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
   name: allow-gateway-world-egress
-  namespace: kube-system
+  namespace: gateways
 spec:
   egress:
     - toEntities:
