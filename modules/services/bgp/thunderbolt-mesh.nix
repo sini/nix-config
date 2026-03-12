@@ -276,7 +276,8 @@
                   address = [ nodeConfig.interfaceIps.enp199s0f5 ];
                   linkConfig = {
                     ActivationPolicy = "up";
-                    MTUBytes = "9000"; # Recommended for performance
+                    # MTUBytes = "9000"; # Recommended for performance
+                    MTUBytes = 1500; # for compat
                   };
                   networkConfig.LinkLocalAddressing = "no";
                 };
@@ -285,7 +286,8 @@
                   address = [ nodeConfig.interfaceIps.enp199s0f6 ];
                   linkConfig = {
                     ActivationPolicy = "up";
-                    MTUBytes = "9000"; # Recommended for performance
+                    # MTUBytes = "9000"; # Recommended for performance
+                    MTUBytes = 1500; # for compat
                   };
                   networkConfig.LinkLocalAddressing = "no";
                 };

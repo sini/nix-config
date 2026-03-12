@@ -101,6 +101,8 @@
               ipv6NativeRoutingCIDR = podNetwork.ipv6_cidr;
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
+              # Set the explicit MTU to account for the 50-byte Geneve tunnel overhead
+              MTU = 1450;
 
               # endpointRoutes.enabled = true;
 
