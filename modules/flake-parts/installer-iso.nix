@@ -13,7 +13,7 @@
   # Add a package output for easy building of the ISO image
   # Use "iso" to avoid conflict with meta-build-target.nix which creates "installer-iso" package
   perSystem =
-    { system, ... }:
+    { ... }:
     {
       packages.iso = inputs.self.nixosConfigurations.installer-iso.config.system.build.isoImage;
     };
