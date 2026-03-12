@@ -61,11 +61,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773186767,
-        "narHash": "sha256-kI1jO72phQY415Lra4bf1JIRrt/5QVES+WEgTVIxEns=",
+        "lastModified": 1773275041,
+        "narHash": "sha256-9vKoRQEGWNojqXI+/cHGDM3hVM7XljGorXntc2vHQ/Q=",
         "owner": "sini",
         "repo": "agenix-rekey-to-sops",
-        "rev": "c62e72eda8dae3893cc817ab3371efa4983cdb79",
+        "rev": "109052290933a7587c0c27e3578b4086b16c34f0",
         "type": "github"
       },
       "original": {

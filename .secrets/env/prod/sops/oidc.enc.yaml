@@ -1,27 +1,28 @@
-argocd: ENC[AES256_GCM,data:68ho4mELbv3/KY3DPlIirzXtxtwdt4Y/aDAnyQDFUkt1EwJCjcSpMmB5sZ7n42i4Ijp/lN001GXThHfzyEA+KsLbzeXryiyK,iv:xKK20iQ82J4afpR6hz+xBHfhEx/l5jR2OpqR55ZBBbk=,tag:e7dGVTHIl8WW7m6DP/KNUg==,type:str]
-hubble-ui: ENC[AES256_GCM,data:hQNpCRUQyHoF+D7Z3eB5YZAsI1/vHFEm3JJAnT3mC9y8L5SQIAg4H7RE4zi+Ny6Uc3qUqlGEdzG8pCu9LiRN0zlV2CGwuoGD,iv:EUF8JoO9RDeiFnpy+cNmcQOnCicLk2IGWI8LCeNvYjM=,tag:jUZDS+g67qIL4eBzuFcadw==,type:str]
+argocd: ENC[AES256_GCM,data:xM86NkSK/259WWJOb4G4D3brofcS39z8irnhIwraN6KSR95A0+TrzTKHXk46V9ncN4eQzltKvyNtntEirwYrGQQJjsly1W1A,iv:XWtUCpX3vUgpBxdc9LhQrclTi0z8DRJNfcXtMKOxS+k=,tag:/cRs03OqO/EgBDLs2YOC7Q==,type:str]
+hubble-ui: ENC[AES256_GCM,data:GcwvKNXbHlHVm5dHNnRZwHLwFnOywxrP2rgKcubOLSxRI+JY9/EvyTmErQ7c8Ejnw2lThluzZtcx+F05B+xGoKzPG+ZTWvMd,iv:nbYxx7BznX690r9h6eKNX4v36InHEn5OZUTs3c76zMU=,tag:kLpOZl21975yq8DjLOwWmA==,type:str]
+longhorn: ENC[AES256_GCM,data:e5yOycc1bU549PBpikGXjHQVFHXO11jnP2uzpBvd9ToTG7cjzjbmG8RWXM9TScYYUEvuhlEZQ2cQivyc7oj+M5sWgt1/FxtQ,iv:O/roolvws2SObmgvGEsNnEq3L3u9ZnZsLpzJb4gVZ8A=,tag:sxs3QZqbVJIPjFjjy+IivQ==,type:str]
 sops:
-    lastmodified: "2026-03-10T23:28:14Z"
-    mac: ENC[AES256_GCM,data:j/ioxjsZQp7uzwytyB2l6IZ3TQvSRPqMsPg0Hh/zp8Opoz7jdBq80DYfum8ipz7PqVI8RAeut8aKERE9K1n1ufcznzYUp5feuEQ+VUhXcyyWH75QtlVjU2ZYX+140uDOdVIGHvqsCCMKV53gFWfyaw6PQes8PCXpO2nU+tk+04k=,iv:RL+13eq+gxqyfJdsCJApHzLmu7XSn7r2ADAmMoNThVg=,tag:7thKa0dCtDfas5ewZMCFVg==,type:str]
+    lastmodified: "2026-03-12T00:21:57Z"
+    mac: ENC[AES256_GCM,data:PYZiaMcJbgThIg9ruVb3mVHzOX5Z6Q6aXTza9O6xe07+tjC/FntJjkh0X0m1fNOnbJxLChJihManZSx2qSh8vrfiwZhf4NOnttoPKCWGtLK0VvPnJ5ZTBe2IEmXMiGAOGcF5Z4OzuqPisXVtNtTuQM7SWe0wnyciymj6Eihy5Pw=,iv:vWbDWCmn9vOsL7vnNSpb7J4pDMkOeqaRhmZKcp4wS94=,tag:drL7Gr8xOSz6DUO1hRWS8g==,type:str]
     pgp:
-        - created_at: "2026-03-10T23:28:14Z"
+        - created_at: "2026-03-12T00:21:57Z"
           enc: |-
             -----BEGIN PGP MESSAGE-----
 
-            hQIMAwAAAAAAAAAAARAAj7QYcQ/RrBy2kwglDvylnLBMzkXXRvg5QDJTFVwFXh/D
-            l2ShF1Den9vRwg6y9defV0gP9SgGJl2ZsbD8ZAMvVthzxCHrPzhtr+WU+UsHAGqK
-            8y8WGfQVVydvnyGkxsZ1eYlyoaR9liUW/pCdF57pNYX+ARTmxwuzvgE84dRcThJb
-            hJJLiEKbCsgf8x0JXP+yfFu3z93KBaMBFcfEcnuK/jYykBLqrSXEkTmUC12uMO9F
-            gghgAekYm387Ka/CZ9OhLb1elE3JW485IDcaSm6Hkj/HoD+LkL/79GY891nsOyxt
-            vF44ZnBcwKkr7RLsmNcXDEkmzmqH67SNIBrFhMvy0x2AvPT/Wf7NhQmhmsX+E8kS
-            C7b9nPorQx7b60ery0hJgPa9lCGwJxtjVcCrdZ4wqQSXgTUd/7wQeJHTxa2UPRuJ
-            1m0LvE5uYIMaO3MecpmLXv3p2gHd7kit5dGjJ4/CExaRuiNhDEVe6cRflkBcv6Yf
-            0dlPUaX4B5pM5/ThlnD0wJj3CVSxJn/dg9r0lESp4F0laVR0qPKC7FUpZeEuhP24
-            HMLzIzVs+pR1KiMe4wU6Xrv9Tk+F2aukLIRjmxa65seF1QQrsKJlUeMjmQKSprCY
-            HRaGZDcOyZxENkhGfw7m84xt8DTSUvZ9ACN8vNHN05bfH4x/PIlBuH7F8cl7OXXS
-            XgGvUK0NKlGb9d8ivwFQ3ASqYki9uAICrgrLSxCnANafc/g7qvQQ5DCdtBDzmr2Y
-            S0pmlRf0n/IoZUl+dcf/6k99AbzDOK4/4xAx0/fTFwBMtudHp+v+V5qJBBTyF7c=
-            =t272
+            hQIMAwAAAAAAAAAAARAAklc+4/aHm+UZck3zj8/7VEVM8OT2nP/O+S7V+vJDx2EH
+            8s+sHZhKnualXyP+0be+OrIr8TAfE5Bb9IIBEH7U/KqFffpjPpFvvLEELDcj1pxt
+            BtU2Dl/ryaAs3uZzPNfOjsr4LmW8xIpju5ttoPTyn3Gi/3RfRTkcPLuc6EtdAR1F
+            SxgRBLdxTC+1WHQNkJouzG4GTs/u++7xCv+WABDzAmH1RvLYN7tzPxenOtwoD61c
+            Z000KTpEBc/nez8xIGz7MQUo9Bc4DUHWloVu4uPVUUUsy3P06IOYZ9SGYxi1zA4b
+            73L4JVVRZm95DUbU5qvJUdbDLJ2dyjY3X1Y2B1qou51fZ67DUfsvnfT5y00sMd3O
+            0w1UM5O1A+BEPB8b+Qq+76Lxm6NIjZ7i2Azl02mCXyIlliBfpu2Rb/u4EkgPv3jc
+            DqYz9TJ0AOdJ6xOdlQ+Qy4AGxkkMgg89CIWGX6fb2hnUxF7vKxO5hlkO0VRlO90M
+            mzVR0r0Iv+UQ7xmQ44g3OnnyLLV/DV7ofm7Gc3OAHp4US01e+u6UaZUJ6oscZn5A
+            VxAttfdGsUFQzUg6+UMPmR1rKamy3azmtA+DynV3HLqtA3kOKKMsuupHysAy3Ocj
+            yQ0NsucPdIrC9pnL94VFkm/DnzdFjFsZCO8h1Lz+FaMFcsNM3r7iPg1Q0H+6S87S
+            XgFOG3OooCZzANz9LpuSUlOQ4F43dU7ZjW7J0r0LG6OF7gI9OA0Td9cRtullVyvO
+            FwlFcaDCLAilhhPenPOSfpKary/G+ILKS7eM01XMeHk4mxFuX8CPKDPsOoLdUM0=
+            =9Jkp
             -----END PGP MESSAGE-----
           fp: E822121B6A3D7FC6
     unencrypted_suffix: _unencrypted
