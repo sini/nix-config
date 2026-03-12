@@ -17,7 +17,7 @@ in
     (modulesPath + "/installer/netboot/netboot-minimal.nix")
   ];
 
-  # Enable SSH in the installer
+  # Enable SSH in the installer and ensure it starts
   services.openssh = {
     enable = true;
     settings = {
@@ -25,6 +25,59 @@ in
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
     };
+  };
+
+  # Ensure SSH starts after network is ready
+  systemd.services.sshd = {
+    wantedBy = lib.mkForce [ "multi-user.target" ];
+    after = [ "network-online.target" ];
+    wants = [ "network-online.target" ];
+  };
+
+  # Enable interactive console access via serial and TTY
+  # This allows debugging if SSH doesn't work
+  boot.kernelParams = [
+    "console=tty1"
+    "console=ttyS0,115200n8"
+  ];
+
+  # Enable getty on tty1 for local console access
+  systemd.services."getty@tty1" = {
+    enable = true;
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  # Enable serial console
+  systemd.services."serial-getty@ttyS0" = {
+    enable = true;
+    wantedBy = [ "multi-user.target" ];
+  };
+
+  # Allow root login without password on console (for debugging)
+  users.users.root.initialHashedPassword = lib.mkForce "";
+
+  # Add a debug service that outputs network and system status
+  systemd.services.installer-debug = {
+    description = "Kexec Installer Debug Info";
+    wantedBy = [ "multi-user.target" ];
+    after = [ "network.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+    script = ''
+      echo "=== NixOS Kexec Installer Debug Info ===" > /dev/console
+      echo "Hostname: $(hostname)" > /dev/console
+      echo "IP Addresses:" > /dev/console
+      ${pkgs.iproute2}/bin/ip addr show > /dev/console 2>&1 || true
+      echo "Routes:" > /dev/console
+      ${pkgs.iproute2}/bin/ip route show > /dev/console 2>&1 || true
+      echo "SSH Service Status:" > /dev/console
+      systemctl status sshd --no-pager > /dev/console 2>&1 || true
+      echo "Listening Ports:" > /dev/console
+      ${pkgs.nettools}/bin/netstat -tlnp > /dev/console 2>&1 || true
+      echo "=== End Debug Info ===" > /dev/console
+    '';
   };
 
   # Add SSH keys for root user (for nixos-anywhere)
@@ -36,18 +89,38 @@ in
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMKKUMmeJtEOYi6rU0tumxlrZjH9Y3FCyOhVFIpu3LF1 will.t.bryant@gmail.com"
   ];
 
-  # Provide useful tools for installation
+  # Provide useful tools for installation and debugging
   environment.systemPackages = with pkgs; [
     git
     vim
     tmux
+    htop
+    iftop
+    tcpdump
+    traceroute
+    netcat
+    curl
+    wget
+    iproute2
+    ethtool
+    dnsutils
   ];
 
   # Set a readable hostname
   networking.hostName = "nixos-kexec-installer";
 
-  # Ensure network is enabled
+  # Ensure network is enabled and properly configured
   networking.useDHCP = lib.mkDefault true;
+  networking.useNetworkd = true;
+
+  # Enable networkd wait-online to ensure network is up before services start
+  systemd.services.systemd-networkd-wait-online = {
+    enable = true;
+    wantedBy = [ "network-online.target" ];
+  };
+
+  # Increase DHCP timeout
+  systemd.network.wait-online.timeout = 60;
 
   # Use xz compression for faster boot
   boot.initrd.compressor = "xz";
