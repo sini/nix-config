@@ -11,10 +11,12 @@ in
     {
       config,
       lib,
+      hostOptions,
       ...
     }:
     let
       builders = findHostsWithRole "nix-builder";
+      localBuildSpeed = hostOptions.remoteBuildSpeed;
     in
     {
       age.secrets.nix-remote-build-user-key = {
@@ -23,12 +25,13 @@ in
       };
 
       nix = {
-        buildMachines = lib.mapAttrsToList (hostname: hostConfig: {
+        buildMachines = lib.mapAttrsToList (hostname: buildHostConfig: {
           hostName = hostname;
-          systems = [ hostConfig.system ];
-          maxJobs = hostConfig.remoteBuildJobs;
-          speedFactor = hostConfig.remoteBuildSpeed;
-          supportedFeatures = lib.optionals (hostConfig.remoteBuildSpeed > 1) [
+          systems = [ buildHostConfig.system ];
+          maxJobs = buildHostConfig.remoteBuildJobs;
+          speedFactor =
+            if buildHostConfig.remoteBuildSpeed < localBuildSpeed then 1 else buildHostConfig.remoteBuildJobs;
+          supportedFeatures = lib.optionals (buildHostConfig.remoteBuildSpeed > 1) [
             "benchmark"
             "big-parallel"
             "kvm"
@@ -43,7 +46,7 @@ in
 
         settings = {
           builders-use-substitutes = true;
-          substituters = lib.mapAttrsToList (hostname: _hostConfig: "http://${hostname}:16893") (
+          substituters = lib.mapAttrsToList (hostname: _: "http://${hostname}:16893") (
             lib.filterAttrs (hostname: _: hostname != config.networking.hostName) builders
           );
           trusted-public-keys = [
