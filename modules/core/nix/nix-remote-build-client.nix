@@ -28,7 +28,7 @@ in
           systems = [ hostConfig.system ];
           maxJobs = hostConfig.remoteBuildJobs;
           speedFactor = hostConfig.remoteBuildSpeed;
-          supportedFeatures = [
+          supportedFeatures = lib.optionals (hostConfig.remoteBuildSpeed > 1) [
             "benchmark"
             "big-parallel"
             "kvm"
