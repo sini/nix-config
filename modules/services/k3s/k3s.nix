@@ -41,7 +41,15 @@
 
         # Find master node for agent connection (using hosts from outer scope)
         # masterIP = findClusterMaster environment;
-        masterIP = environment.getAssignment "kube-apiserver-vip";
+        masterIP =
+          if shouldInit then
+            environment.getAssignment "kube-apiserver-vip"
+          else
+            let
+              otherNodes = lib.filter (node: node.hostname != config.networking.hostName) sortedKubernetesNodes;
+              firstOtherNode = builtins.head otherNodes;
+            in
+            builtins.head firstOtherNode.ipv4;
       in
       {
         age.secrets.kubernetes-cluster-token = {
