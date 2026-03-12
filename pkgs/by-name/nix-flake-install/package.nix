@@ -48,6 +48,7 @@ writeShellApplication {
         echo "  -i, --identity FILE        SSH identity file to use for authentication"
         echo "  --disko-mode MODE          Disko mode (format, mount, or destroy) [default: format]"
         echo "  --no-reboot                Don't reboot after installation"
+        echo "  --use-kexec                Use custom kexec installer from this flake"
         echo "  --help                     Show this help message"
         echo
         echo "Examples:"
@@ -55,11 +56,14 @@ writeShellApplication {
         echo "  $0 myhost 192.168.1.100 mypassword"
         echo "  $0 myhost 192.168.1.100 --disko-mode mount"
         echo "  $0 myhost 192.168.1.100 -i ~/.ssh/id_rsa"
+        echo "  $0 myhost 192.168.1.100 --use-kexec"
         echo
         echo "The script will:"
         echo "  1. Decrypt and install SSH host keys on the target"
         echo "  2. Set up disk encryption with the provided password"
         echo "  3. Run nixos-anywhere to install the system"
+        echo
+        echo "Note: --use-kexec will build and use the custom kexec installer from .#kexec"
         exit 1
     }
 
@@ -217,6 +221,7 @@ writeShellApplication {
         local disko_mode="$4"
         local no_reboot="$5"
         local identity_file="$6"
+        local use_kexec="$7"
 
         log "Running nixos-anywhere for $hostname on $target_ip"
 
@@ -234,6 +239,24 @@ writeShellApplication {
             "--extra-files" "$temp_dir"
             "--disk-encryption-keys" "/tmp/secret.key" "$temp_dir/tmp/secret.key"
         )
+
+        # Build and use custom kexec if requested
+        if [[ "$use_kexec" == "true" ]]; then
+            log "Building custom kexec installer..."
+            local kexec_path
+            kexec_path=$(nix build --print-out-paths .#kexec)
+
+            # Find the tarball in the output
+            local kexec_tarball
+            kexec_tarball=$(find "$kexec_path" -name "*.tar.gz" -type f | head -1)
+
+            if [[ -z "$kexec_tarball" ]]; then
+                error "Failed to find kexec tarball in build output"
+            fi
+
+            log "  ✓ Custom kexec installer built: $kexec_tarball"
+            nix_anywhere_args+=("--kexec" "$kexec_tarball")
+        fi
 
         # Handle SSH identity file
         local should_cleanup=false
@@ -283,6 +306,7 @@ writeShellApplication {
         local disko_mode="disko"
         local no_reboot="false"
         local identity_file=""
+        local use_kexec="false"
 
         # Parse arguments
         while [[ $# -gt 0 ]]; do
@@ -297,6 +321,10 @@ writeShellApplication {
                     ;;
                 --no-reboot)
                     no_reboot="true"
+                    shift
+                    ;;
+                --use-kexec)
+                    use_kexec="true"
                     shift
                     ;;
                 --help)
@@ -351,7 +379,7 @@ writeShellApplication {
         prepare_ssh_host_keys "$hostname"
 
         # Run nixos-anywhere
-        run_nixos_anywhere "$hostname" "$target_ip" "$disk_password" "$disko_mode" "$no_reboot" "$identity_file"
+        run_nixos_anywhere "$hostname" "$target_ip" "$disk_password" "$disko_mode" "$no_reboot" "$identity_file" "$use_kexec"
 
         log "Installation completed successfully!"
     }
