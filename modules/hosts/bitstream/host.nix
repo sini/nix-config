@@ -24,7 +24,7 @@
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
 
         hardware = {
-          disk.zfs-disk-single.device_id = "nvme-NVMe_CA6-8D1024_0023065001TG";
+          disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
           networking.interfaces = [
             "eno1"
             "enp2s0"

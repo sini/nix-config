@@ -27,7 +27,7 @@
         device_id = lib.mkOption {
           type = lib.types.str;
           default = "";
-          description = "Longhorn data drive /dev/disk/by-id/ path (e.g., nvme-...).";
+          description = "Longhorn data drive full device path (e.g., /dev/disk/by-id/nvme-...).";
         };
 
         mountPoint = lib.mkOption {
@@ -48,7 +48,7 @@
         ];
 
         disko.devices.disk.data = lib.mkIf (cfg.device_id != "") {
-          device = "/dev/disk/by-id/" + cfg.device_id;
+          device = cfg.device_id;
           type = "disk";
           content = {
             type = "gpt";
