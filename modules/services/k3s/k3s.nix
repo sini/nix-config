@@ -1,7 +1,7 @@
 { rootPath, ... }:
 {
-  flake.features.kubernetes = {
-    requires = [ "containerd" ];
+  flake.features.k3s = {
+    requires = [ "k3s-containerd" ];
     nixos =
       {
         lib,
@@ -14,7 +14,7 @@
       let
         managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.default.cidr)}";
 
-        kubernetesNodes = environment.findHostsByRole "kubernetes";
+        kubernetesNodes = environment.findHostsByRole "k3s";
 
         # Sort kubernetes nodes by hostname for deterministic ordering
         sortedKubernetesNodes = builtins.sort (a: b: a.hostname < b.hostname) (
