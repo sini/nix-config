@@ -32,7 +32,9 @@
       system.activationScripts.diff = {
         supportsDryActivation = true;
         text = ''
-          ${pkgs.nvd}/bin/nvd --nix-bin-dir=${pkgs.nix}/bin diff /run/current-system "$systemConfig"
+          if [[ -e /run/current-system ]]; then
+            ${lib.getExe pkgs.nvd} --color=always --nix-bin-dir=${config.nix.package}/bin diff /run/current-system "$systemConfig" || echo "FAILED TO GENERATE DIFF"
+          fi
         '';
       };
     };
