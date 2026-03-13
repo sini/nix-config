@@ -285,14 +285,20 @@ provision_host_secrets() {
         log "  ✓ SSH host keys already exist"
     fi
 
-    # Get or prompt for disk encryption password
-    local disk_password
-    disk_password=$(get_or_prompt_disk_password "$provided_disk_password")
+    # Check if disk encryption key already exists
+    local disk_key_file="$host_dir/root-disk-key.age"
+    if [[ -f "$disk_key_file" ]]; then
+        log "  ✓ Disk encryption key already exists"
+    else
+        # Get or prompt for disk encryption password only if key doesn't exist
+        log "  Disk encryption key not found, generating..."
+        local disk_password
+        disk_password=$(get_or_prompt_disk_password "$provided_disk_password")
 
-    # Generate and encrypt disk encryption key if needed
-    log "  Checking disk encryption key..."
-    if ! generate_and_encrypt_disk_key "$hostname" "$age_recipient" "$disk_password"; then
-        error "Failed to generate disk encryption key for: $hostname"
+        # Generate and encrypt disk encryption key
+        if ! generate_and_encrypt_disk_key "$hostname" "$age_recipient" "$disk_password"; then
+            error "Failed to generate disk encryption key for: $hostname"
+        fi
     fi
 
     # Run agenix generate to create age keys from host keys
