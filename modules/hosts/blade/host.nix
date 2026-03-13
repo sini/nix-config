@@ -1,7 +1,7 @@
 {
   flake.hosts.blade = {
-    ipv4 = [ "10.9.3.1" ];
-    ipv6 = [ "2001:5a8:608c:4a00::31/64" ];
+    # No static networking config - NetworkManager handles DHCP dynamically
+    # Accessed via Tailscale: blade.ts.json64.dev
     environment = "dev";
     roles = [
       "workstation"
@@ -11,6 +11,11 @@
       "dev-gui"
       "media"
     ];
+
+    exclude-features = [
+      "wireless" # NetworkManager handles WiFi instead of wpa_supplicant
+    ];
+
     features = [
       "cpu-intel"
       "gpu-intel"

@@ -1,7 +1,18 @@
 {
   flake.hosts.cortex = {
-    ipv4 = [ "10.9.2.1" ];
-    ipv6 = [ "fd64:0:1::5/64" ];
+    networking = {
+      interfaces = {
+        enp8s0 = {
+          ipv4 = [ "10.9.2.1" ];
+          ipv6 = [ "fd64:0:1::5/64" ];
+        };
+      };
+      unmanagedInterfaces = [
+        "enp8s0"
+        "br0"
+      ];
+    };
+
     environment = "dev";
 
     remoteBuildSpeed = 20;
@@ -91,29 +102,20 @@
         hardware = {
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
 
-          networking = {
-            interfaces = [ "enp8s0" ];
+          # hardware.display.edid = {
+          #   enable = true;
+          #   packages = [
+          #     (pkgs.runCommand "samsung-odyssey-ark-g1-edid-firmware" { } ''
+          #       mkdir -p $out/lib/firmware/edid
+          #       cp ${./firmware/samsung-odyssey-ark-g1.bin} $out/lib/firmware/edid/samsung-odyssey-ark-g1.bin
+          #     '')
+          #   ];
+          # };
 
-            # hardware.display.edid = {
-            #   enable = true;
-            #   packages = [
-            #     (pkgs.runCommand "samsung-odyssey-ark-g1-edid-firmware" { } ''
-            #       mkdir -p $out/lib/firmware/edid
-            #       cp ${./firmware/samsung-odyssey-ark-g1.bin} $out/lib/firmware/edid/samsung-odyssey-ark-g1.bin
-            #     '')
-            #   ];
-            # };
-
-            # hardware.display.outputs."DP-1" = {
-            #   mode = "e";
-            #   edid = "samsung-odyssey-ark-g1.bin";
-            # };
-
-            unmanagedInterfaces = [
-              "enp8s0"
-              "br0"
-            ];
-          };
+          # hardware.display.outputs."DP-1" = {
+          #   mode = "e";
+          #   edid = "samsung-odyssey-ark-g1.bin";
+          # };
         };
 
         # Set audio rules

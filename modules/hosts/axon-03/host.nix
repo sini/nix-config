@@ -1,8 +1,16 @@
 {
   flake.hosts.axon-03 = {
-    ipv4 = [ "10.10.10.4" ];
-    ipv6 = [ "fe80::dc50:e5ff:feac:7353" ];
     environment = "prod";
+    networking = {
+      interfaces.enp2s0 = {
+        ipv4 = [ "10.10.10.4" ];
+        ipv6 = [ "fe80::dc50:e5ff:feac:7353" ];
+      };
+      unmanagedInterfaces = [
+        "enp199s0f5"
+        "enp199s0f6"
+      ];
+    };
     roles = [
       "server"
       "unlock"
@@ -33,7 +41,6 @@
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
 
         hardware = {
-          networking.interfaces = [ "enp2s0" ];
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
           disk.longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
         };

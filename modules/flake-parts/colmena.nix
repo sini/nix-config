@@ -58,7 +58,8 @@
           {
             imports = nixosConfig._module.args.modules;
             deployment = {
-              targetHost = builtins.head hostOptions.ipv4;
+              targetHost =
+                if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
               tags = [ hostOptions.environment ] ++ hostOptions.roles;
               allowLocalDeployment = true;
             };

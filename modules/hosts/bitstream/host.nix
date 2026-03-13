@@ -1,13 +1,15 @@
 {
   flake.hosts.bitstream = {
-    ipv4 = [
-      "10.9.1.1"
-      "10.9.1.2"
-    ];
-    ipv6 = [
-      "2001:5a8:608c:4a00::1/64"
-      "2001:5a8:608c:4a00::2/64"
-    ];
+    networking.interfaces = {
+      eno1 = {
+        ipv4 = [ "10.9.1.1" ];
+        ipv6 = [ "2001:5a8:608c:4a00::1/64" ];
+      };
+      enp2s0 = {
+        ipv4 = [ "10.9.1.2" ];
+        ipv6 = [ "2001:5a8:608c:4a00::2/64" ];
+      };
+    };
     environment = "dev";
     roles = [
       "server"
@@ -25,10 +27,6 @@
 
         hardware = {
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
-          networking.interfaces = [
-            "eno1"
-            "enp2s0"
-          ];
         };
 
         # systemd.network = {
