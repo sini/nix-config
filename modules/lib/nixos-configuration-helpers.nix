@@ -16,75 +16,99 @@ in
 {
   flake.lib.nixos-configuration-helpers =
     let
+      # ============================================================================
+      # SECTION 1: Module Collection Utilities
+      # ============================================================================
+      # These functions extract typed modules (nixos/home) from feature definitions
+
+      # Generic collector for modules of a specific type from feature list
       collectTypedModules =
         type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
+
       collectNixosModules = collectTypedModules "nixos";
       collectHomeModules = collectTypedModules "home";
+
+      # ============================================================================
+      # SECTION 2: Feature Dependency Resolution
+      # ============================================================================
+      # Resolves transitive dependencies between features while respecting exclusions
+
+      # Recursively collect all dependencies for a set of root features
+      # Returns only the dependencies (not the roots themselves)
+      # Exclusions are propagated through the dependency tree
       collectRequires =
         features: roots:
         let
           rootNames = lib.catAttrs "name" roots;
-          # Collect initial exclusions from root features
           initialExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" roots));
-          op =
+
+          # Depth-first traversal of dependency tree
+          traverseDependencies =
             visited: toVisit: exclusions:
             if toVisit == [ ] then
               visited
             else
               let
-                cur = head toVisit;
-                rest = tail toVisit;
+                current = head toVisit;
+                remaining = tail toVisit;
+                isExcluded = elem current.name exclusions;
+                isVisited = elem current.name (map (v: v.name) visited);
               in
-              # Skip if current feature is excluded
-              if elem cur.name exclusions then
-                op visited rest exclusions
-              else if elem cur.name (map (v: v.name) visited) then
-                op visited rest exclusions
+              # Skip if excluded or already visited
+              if isExcluded || isVisited then
+                traverseDependencies visited remaining exclusions
               else
                 let
-                  # Add current feature's exclusions to the accumulated set
-                  newExclusions = lib.unique (exclusions ++ (cur.excludes or [ ]));
-                  # Filter out excluded features from requires
-                  deps = map (name: features.${name}) (
-                    filter (name: !(elem name newExclusions)) (cur.requires or [ ])
-                  );
+                  # Accumulate exclusions from current feature
+                  updatedExclusions = lib.unique (exclusions ++ (current.excludes or [ ]));
+
+                  # Resolve dependencies, filtering out excluded ones
+                  dependencyNames = filter (name: !(elem name updatedExclusions)) (current.requires or [ ]);
+                  dependencies = map (name: features.${name}) dependencyNames;
+
+                  # Recursively process dependencies, then add current feature
+                  visitedWithDeps = traverseDependencies visited dependencies updatedExclusions;
                 in
-                op (op visited deps newExclusions ++ [ cur ]) rest newExclusions;
+                traverseDependencies (visitedWithDeps ++ [ current ]) remaining updatedExclusions;
 
-          # Get initial result (may include features that are later excluded)
-          resultWithRoots = op [ ] roots initialExclusions;
+          # Initial traversal (includes roots in result)
+          resultWithRoots = traverseDependencies [ ] roots initialExclusions;
 
-          # Collect ALL exclusions from the entire dependency tree (roots + dependencies)
+          # Collect ALL exclusions from entire tree for final filtering
           allExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" (roots ++ resultWithRoots)));
 
-          # Filter out features that are excluded anywhere in the tree, and remove roots
-          finalResult = filter (v: !(elem v.name allExclusions) && !(elem v.name rootNames)) resultWithRoots;
+          # Filter out excluded features and remove roots (they're already included elsewhere)
+          dependenciesOnly = filter (
+            v: !(elem v.name allExclusions) && !(elem v.name rootNames)
+          ) resultWithRoots;
         in
-        finalResult;
+        dependenciesOnly;
 
-      # Helper function to gather features from core and host-specific roles
+      # ============================================================================
+      # SECTION 3: Feature Aggregation from Roles
+      # ============================================================================
+      # Builds the complete feature set from role definitions
+
+      # Aggregate feature names from core role and additional host-specific roles
       getFeaturesForRoles =
         hostRoles:
         let
-          # 1. Start with the core features required for all systems.
           coreFeatures = config.flake.roles.core.features;
 
-          # 2. Get features from additional roles defined on the host.
           additionalFeatures = lib.optionals (hostRoles != null) (
             lib.flatten (
               map (roleName: config.flake.roles.${roleName}.features) (
-                # Ensure the role actually exists before trying to access it.
                 lib.filter (roleName: lib.hasAttr roleName config.flake.roles) hostRoles
               )
             )
           );
 
-          # 3. Combine core and additional feature names and deduplicate.
           allFeatureNames = lib.unique (coreFeatures ++ additionalFeatures);
         in
         allFeatureNames;
 
-      # Helper function to gather modules from features (both from roles and direct host features)
+      # Resolve complete feature set for a host (roles + direct features + dependencies)
+      # Returns feature modules with all dependencies resolved and exclusions applied
       getModulesForFeatures =
         {
           hostRoles,
@@ -92,30 +116,102 @@ in
           hostExclusions ? [ ],
         }:
         let
-          # 1. Get feature names from roles
+          # Step 1: Aggregate feature names from all sources
           roleFeatureNames = getFeaturesForRoles hostRoles;
-
-          # 2. Combine with direct host feature names and deduplicate
           allFeatureNames = lib.unique (roleFeatureNames ++ hostFeatures);
 
-          # 3. Map feature names to actual feature modules
+          # Step 2: Convert names to feature modules
           allFeatures = map (name: config.flake.features.${name}) allFeatureNames;
 
-          # 4. Collect all exclusions from features and host-level exclusions
+          # Step 3: Collect and merge all exclusions
           featureExclusions = lib.flatten (lib.catAttrs "excludes" allFeatures);
           allExclusions = lib.unique (featureExclusions ++ hostExclusions);
 
-          # 5. Filter out excluded features from the root set
+          # Step 4: Filter out excluded features
           filteredFeatures = lib.filter (f: !(lib.elem f.name allExclusions)) allFeatures;
 
-          # 6. Resolve dependencies for filtered features
+          # Step 5: Resolve transitive dependencies
           featureDeps = collectRequires config.flake.features filteredFeatures;
+
+          # Step 6: Combine roots and dependencies
           allFeaturesWithDeps = filteredFeatures ++ featureDeps;
         in
         allFeaturesWithDeps;
 
-      # Shared logic for building host configurations
-      # This encapsulates common logic between mkHost and mkHostKexec
+      # ============================================================================
+      # SECTION 4: Home Manager User Configuration
+      # ============================================================================
+      # Builds home-manager configuration for individual users
+
+      # Create home-manager configuration for a specific user
+      # Combines: baseline features + environment features + host features + user-specific features
+      # Respects: host exclusions, user exclusions, and inheritHostFeatures setting
+      makeHomeConfig =
+        {
+          username,
+          environment,
+          hostOptions,
+          allHostFeatures,
+          lib',
+        }:
+        let
+          # Get user specifications from environment and host
+          envUser = environment.users.${username} or { };
+          hostUser = hostOptions.users.${username} or { };
+          inheritHostFeatures = envUser.baseline.inheritHostFeatures or false;
+
+          # Aggregate exclusions from host features
+          hostExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allHostFeatures));
+
+          # Aggregate user feature names from all sources
+          baselineFeatureNames = envUser.baseline.features or [ ];
+          envFeatureNames = envUser.features or [ ];
+          hostFeatureNames = hostUser.features or [ ];
+          allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
+
+          # Convert to feature modules and collect user-specific exclusions
+          userFeatureModules = map (name: config.flake.features.${name}) allUserFeatureNames;
+          userOnlyExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
+
+          # Merge all exclusions
+          allExclusions = lib.unique (hostExclusions ++ userOnlyExclusions);
+
+          # Helper predicates for filtering
+          coreRoleFeatureNames = config.flake.roles.core.features;
+          isCore = f: lib.elem f.name coreRoleFeatureNames;
+          isNotExcluded = f: !(lib.elem f.name allExclusions);
+
+          # Process user features: filter and resolve dependencies
+          filteredUserFeatures = lib.filter isNotExcluded userFeatureModules;
+          userFeatureDeps = collectRequires config.flake.features filteredUserFeatures;
+          userFeatures = filteredUserFeatures ++ userFeatureDeps;
+
+          # Split host features into core (always included) and non-core (conditional)
+          coreHostFeatures = lib.filter (f: isCore f && isNotExcluded f) allHostFeatures;
+          nonCoreHostFeatures = lib.filter (f: !(isCore f) && isNotExcluded f) allHostFeatures;
+
+          # Collect home modules from each source
+          coreHomeModules = collectHomeModules coreHostFeatures;
+          nonCoreHostHomeModules = if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
+          userHomeModules = collectHomeModules userFeatures;
+
+          # User-specific configuration overrides
+          userConfigs = [
+            (envUser.configuration or { })
+            (hostUser.configuration or { })
+          ];
+        in
+        {
+          imports = coreHomeModules ++ nonCoreHostHomeModules ++ userHomeModules ++ userConfigs;
+        };
+
+      # ============================================================================
+      # SECTION 5: Host Configuration Builder
+      # ============================================================================
+      # Core logic for building NixOS system configurations
+
+      # Shared implementation for mkHost and mkHostKexec
+      # Allows overriding roles and selectively skipping components for specialized builds
       mkHostCommon =
         {
           hostOptions,
@@ -127,33 +223,30 @@ in
         withSystem hostOptions.system (
           { system, ... }:
           let
-            # Determine whether to use stable or unstable packages based on the host's options.
+            # Step 1: Select package set (stable vs unstable)
             useUnstable = hostOptions.unstable or false;
             pkgs' = if useUnstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
             lib' = pkgs'.lib;
             home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
 
-            # Select the correct environment configuration (e.g., prod, dev).
+            # Step 2: Load environment configuration
             environment = config.flake.environments.${hostOptions.environment};
 
-            # Use overridden roles if provided, otherwise use host's roles
+            # Step 3: Determine effective roles (allows override for specialized builds like kexec)
             effectiveRoles = if overrideRoles != null then overrideRoles else hostOptions.roles;
 
-            # Get all feature modules (from roles + direct host features + dependencies)
+            # Step 4: Resolve all features with dependencies
             allHostFeatures = getModulesForFeatures {
               hostRoles = effectiveRoles;
               hostFeatures = hostOptions.features or [ ];
               hostExclusions = hostOptions.exclude-features or [ ];
             };
 
-            # Get active feature names (including transitive dependencies)
+            # Step 5: Extract feature names and NixOS modules
             activeFeatures = lib.unique (map (f: f.name) allHostFeatures);
-
-            # Collect NixOS modules from features
             nixosModules = collectNixosModules allHostFeatures;
 
-            # Compute enabled users (used in specialArgs and home-manager)
-            # Only include users with enableUnixAccount = true
+            # Step 6: Compute enabled users (only those with enableUnixAccount = true)
             enabledUsers =
               let
                 environmentUserNames = builtins.attrNames (environment.users or { });
@@ -162,57 +255,6 @@ in
                 allUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
               in
               lib'.filterAttrs (_userName: user: user.enableUnixAccount or false) allUsers;
-
-            # Home Manager configuration for users
-            makeHome =
-              username: _userSpec:
-              let
-                # Get user contexts from environment and host
-                envUser = environment.users.${username} or { };
-                hostUser = hostOptions.users.${username} or { };
-                inheritHostFeatures = envUser.baseline.inheritHostFeatures or false;
-
-                # Collect all exclusions (host + user features)
-                hostExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allHostFeatures));
-
-                baselineFeatureNames = envUser.baseline.features or [ ];
-                envFeatureNames = envUser.features or [ ];
-                hostFeatureNames = hostUser.features or [ ];
-                allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
-                userFeatureModules = map (name: config.flake.features.${name}) allUserFeatureNames;
-                userOnlyExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
-
-                allExclusions = lib.unique (hostExclusions ++ userOnlyExclusions);
-
-                # Build filter predicates
-                coreRoleFeatureNames = config.flake.roles.core.features;
-                isCore = f: lib.elem f.name coreRoleFeatureNames;
-                isNotExcluded = f: !(lib.elem f.name allExclusions);
-
-                # Filter and process user features
-                filteredUserFeatures = lib.filter isNotExcluded userFeatureModules;
-                userFeatureDeps = collectRequires config.flake.features filteredUserFeatures;
-                userFeatures = filteredUserFeatures ++ userFeatureDeps;
-
-                # Split host features into core and non-core, applying all exclusions
-                coreHostFeatures = lib.filter (f: isCore f && isNotExcluded f) allHostFeatures;
-                nonCoreHostFeatures = lib.filter (f: !(isCore f) && isNotExcluded f) allHostFeatures;
-
-                # Collect home modules
-                coreHomeModules = collectHomeModules coreHostFeatures;
-                nonCoreHostHomeModules =
-                  if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
-                userHomeModules = collectHomeModules userFeatures;
-
-                # User configurations
-                userConfigs = [
-                  (environment.users.${username}.configuration or { })
-                  (hostOptions.users.${username}.configuration or { })
-                ];
-              in
-              {
-                imports = coreHomeModules ++ nonCoreHostHomeModules ++ userHomeModules ++ userConfigs;
-              };
           in
           lib'.nixosSystem {
             inherit system;
@@ -233,7 +275,7 @@ in
             modules =
               # Import modules from features
               nixosModules
-              # Add modules from external flakes and sources.
+              # Add modules from external flakes and sources
               ++ [
                 pkgs'.nixosModules.notDetected
                 # Always include home-manager NixOS module for option definitions
@@ -247,11 +289,22 @@ in
                   [
                     {
                       # Configure Home Manager with feature-based modules
-                      home-manager.users = lib'.mapAttrs makeHome enabledUsers;
+                      home-manager.users = lib'.mapAttrs (
+                        username: _userSpec:
+                        makeHomeConfig {
+                          inherit
+                            username
+                            environment
+                            hostOptions
+                            allHostFeatures
+                            lib'
+                            ;
+                        }
+                      ) enabledUsers;
                     }
                   ]
               )
-              # Add any extra modules defined directly on the host.
+              # Add any extra modules defined directly on the host
               ++ hostOptions.extra_modules
               # Add extra modules passed to this function
               ++ extraModules
@@ -260,8 +313,12 @@ in
           }
         );
 
-      # A dedicated function to build a single NixOS host configuration.
-      # This encapsulates all the logic for one machine.
+      # ============================================================================
+      # SECTION 6: Public API Functions
+      # ============================================================================
+
+      # Build a standard NixOS host configuration
+      # This is the primary function for creating host system configurations
       mkHost =
         _name: hostOptions:
         mkHostCommon {
@@ -272,45 +329,44 @@ in
           extraModules = [ ];
         };
 
-      # Build a kexec variant of a host configuration.
-      # This strips down to core-minimal role and skips home-manager.
+      # Build a minimal kexec installer variant of a host configuration
+      # This creates a stripped-down system suitable for network-based installation
+      # - Uses only the "kexec" role (minimal feature set)
+      # - Excludes hardware-specific and installer-incompatible features
+      # - Skips home-manager (not needed for installer)
+      # - Skips host-specific hardware configuration
       mkHostKexec =
         name: hostOptions:
         let
-          # Features to exclude from kexec variants (host-specific or installer-incompatible)
+          # Features incompatible with or unnecessary for kexec installer environment
           kexecExclusions = [
-            "network-boot"
-            "facter"
-            "systemd-boot"
-            "avahi" # Not needed for installer
-            "power-mgmt" # Not needed for installer
-            "ssd" # Not needed for installer
+            "network-boot" # Host-specific network boot settings
+            "facter" # Hardware detection not needed for installer
+            "systemd-boot" # Bootloader not needed for installer
+            "avahi" # Service discovery not needed for installer
+            "power-mgmt" # Power management not needed for installer
+            "ssd" # SSD optimizations not needed for installer
           ];
 
-          # Merge kexec exclusions with any existing host exclusions
+          # Merge installer exclusions with any existing host exclusions
           mergedExclusions = lib.unique ((hostOptions.exclude-features or [ ]) ++ kexecExclusions);
 
-          # Create modified hostOptions with merged exclusions
-          # Clear host-specific features since kexec should be minimal
+          # Create modified host options for installer build
           modifiedHostOptions = hostOptions // {
             exclude-features = mergedExclusions;
-            features = [ ]; # Clear all host-specific features
+            features = [ ]; # Clear all host-specific features for minimal build
           };
         in
         mkHostCommon {
           hostOptions = modifiedHostOptions;
-          # Override to use only core-minimal role (which includes kexec feature)
-          overrideRoles = [ "core-minimal" ];
-          # Skip home-manager for kexec
-          skipHomeManager = true;
-          # Skip host-specific configuration (contains hardware settings)
-          skipHostConfig = true;
-          # Add kexec-specific hostname override
+          overrideRoles = [ "kexec" ]; # Use only kexec role
+          skipHomeManager = true; # No user home configurations in installer
+          skipHostConfig = true; # Skip hardware-specific configuration
+          # Set installer-specific hostname
           extraModules = [
             (
               { lib, ... }:
               {
-                # Set kexec-specific hostname
                 networking.hostName = lib.mkForce "${name}";
               }
             )

@@ -1,5 +1,5 @@
 {
-  flake.roles.core-minimal = {
+  flake.roles.kexec = {
     features = [
       "agenix"
       "deterministic-uids"
