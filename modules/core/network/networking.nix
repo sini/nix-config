@@ -51,7 +51,15 @@
 # - DNS over TLS and DNSSEC
 # - TCP congestion window optimization
 {
-  flake.features.networking.nixos =
+  flake.features.networking.system =
+    { hostOptions, ... }:
+    {
+      networking = {
+        hostName = hostOptions.hostname;
+      };
+    };
+
+  flake.features.networking.linux =
     {
       config,
       hostOptions,
@@ -250,7 +258,6 @@
         ];
 
         networking = {
-          hostName = hostOptions.hostname;
           domain = "${environment.name}.${environment.domain}";
           hostId = with builtins; substring 0 8 (hashString "md5" config.networking.hostName);
 

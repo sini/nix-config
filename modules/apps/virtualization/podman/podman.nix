@@ -1,6 +1,6 @@
 {
   flake.features.podman = {
-    nixos =
+    linux =
       {
         config,
         lib,

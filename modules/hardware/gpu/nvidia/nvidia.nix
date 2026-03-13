@@ -5,7 +5,7 @@
       "gpu-nvidia-kernel"
     ];
 
-    nixos =
+    system =
       { pkgs, ... }:
       {
         nix.settings = {

@@ -1,5 +1,5 @@
 {
-  flake.features.nixpkgs.nixos =
+  flake.features.nixpkgs.system =
     { inputs, ... }:
     {
       nixpkgs.overlays = [

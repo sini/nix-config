@@ -1,5 +1,5 @@
 {
-  flake.features.deterministic-uids.nixos = {
+  flake.features.deterministic-uids.linux = {
     users.deterministicIds =
       let
         uidGid = id: {

@@ -4,7 +4,7 @@
       "xdg-portal"
       "uwsm"
     ];
-    nixos =
+    linux =
       {
         inputs,
         pkgs,

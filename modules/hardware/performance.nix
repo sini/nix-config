@@ -1,5 +1,5 @@
 {
-  flake.features.performance.nixos =
+  flake.features.performance.linux =
     {
       pkgs,
       lib,

@@ -1,5 +1,5 @@
 {
-  flake.features.docker.nixos =
+  flake.features.docker.linux =
     { pkgs, ... }:
     {
       environment.systemPackages = with pkgs; [

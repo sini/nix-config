@@ -1,5 +1,5 @@
 {
-  flake.features.home-manager.nixos =
+  flake.features.home-manager.system =
     {
       inputs,
       environment,
@@ -32,13 +32,16 @@
 
         sharedModules = [
           (
-            { osConfig, ... }:
+            { osConfig, lib, ... }:
             {
-              # TODO: Fix this to support nix-darwin which uses a different stateVersion and homeDirectory
-              home.stateVersion = osConfig.system.stateVersion;
-              systemd.user.startServices = "sd-switch";
-              # Home Manager manages itself
+              # On NixOS, system.stateVersion is a string (e.g. "25.05") matching HM format.
+              # On nix-darwin, it's an integer (e.g. 6) which HM can't use.
+              home.stateVersion =
+                if pkgs.stdenv.isLinux then osConfig.system.stateVersion else lib.trivial.release;
               programs.home-manager.enable = true;
+            }
+            // lib.optionalAttrs pkgs.stdenv.isLinux {
+              systemd.user.startServices = "sd-switch";
             }
           )
         ];

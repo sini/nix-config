@@ -42,7 +42,7 @@
       # "vault"
     ];
     facts = ./facter.json;
-    nixosConfiguration =
+    systemConfiguration =
       { pkgs, ... }:
       {
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;

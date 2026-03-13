@@ -1,5 +1,5 @@
 {
-  flake.features.ollama.nixos =
+  flake.features.ollama.linux =
     {
       pkgs,
       lib,

@@ -1,6 +1,6 @@
 {
   flake.features.steam = {
-    nixos =
+    linux =
       {
         lib,
         pkgs,

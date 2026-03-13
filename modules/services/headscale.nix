@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.headscale.nixos =
+  flake.features.headscale.linux =
     {
       config,
       environment,

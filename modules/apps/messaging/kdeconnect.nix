@@ -1,6 +1,6 @@
 {
   flake.features.kdeconnect = {
-    nixos = {
+    linux = {
       networking.firewall =
         let
           ports = [

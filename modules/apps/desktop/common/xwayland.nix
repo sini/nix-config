@@ -1,5 +1,5 @@
 {
-  flake.features.xwayland.nixos = {
+  flake.features.xwayland.linux = {
     programs.xwayland.enable = true;
   };
 }

@@ -1,13 +1,15 @@
 {
   flake.features.zsh = {
-    nixos =
+    system = {
+      programs.zsh = {
+        enable = true;
+        enableCompletion = true;
+      };
+    };
+
+    linux =
       { pkgs, ... }:
       {
-        programs.zsh = {
-          enable = true;
-          enableCompletion = true;
-        };
-
         users.defaultUserShell = pkgs.zsh;
       };
 
@@ -82,7 +84,9 @@
 
           sessionVariables = {
             "DIRSTACKSIZE" = "20";
-            # Set locale archives
+          }
+          // lib.optionalAttrs pkgs.stdenv.isLinux {
+            # Set locale archives (glibc is Linux-only)
             # https://github.com/NixOS/nixpkgs/issues/38991
             "LOCALE_ARCHIVE_2_11" = "${pkgs.glibcLocales}/lib/locale/locale-archive";
             "LOCALE_ARCHIVE_2_27" = "${pkgs.glibcLocales}/lib/locale/locale-archive";

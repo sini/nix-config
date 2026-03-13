@@ -1,7 +1,7 @@
 { config, ... }:
 {
   flake.features.razer = {
-    nixos =
+    linux =
       {
         inputs,
         pkgs,

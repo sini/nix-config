@@ -319,9 +319,14 @@
     # };
 
     # macOS Support (master)
-    # nix-darwin = {
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    # nix-darwin-stable = {
     #   url = "github:LnL7/nix-darwin/nix-darwin-25.11";
-    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
+    #   inputs.nixpkgs.follows = "nixpkgs-unatable";
     # };
 
     # Homebrew

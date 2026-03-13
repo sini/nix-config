@@ -1,6 +1,6 @@
 {
   flake.features.kde = {
-    nixos =
+    linux =
       # { pkgs, ... }:
       {
         services.desktopManager.plasma6.enable = true;

@@ -1,5 +1,5 @@
 {
-  flake.features.avahi.nixos =
+  flake.features.avahi.linux =
     { hostOptions, ... }:
     let
       interfaces = builtins.attrNames hostOptions.networking.interfaces;

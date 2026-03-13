@@ -1,5 +1,5 @@
 {
-  flake.features.coolercontrol.nixos =
+  flake.features.coolercontrol.linux =
     { pkgs, ... }:
     {
       environment.systemPackages = with pkgs; [ liquidctl ];

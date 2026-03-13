@@ -1,7 +1,7 @@
 { rootPath, ... }:
 {
   flake.features.wireless = {
-    nixos =
+    linux =
       {
         config,
         environment,

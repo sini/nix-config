@@ -1,13 +1,15 @@
 {
   flake.features.shell = {
-    nixos =
+    system = {
+      programs.zsh = {
+        enable = true;
+        enableCompletion = true;
+      };
+    };
+
+    linux =
       { pkgs, ... }:
       {
-        programs.zsh = {
-          enable = true;
-          enableCompletion = true;
-        };
-
         users.defaultUserShell = pkgs.zsh;
       };
   };

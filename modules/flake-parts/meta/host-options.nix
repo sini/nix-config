@@ -25,6 +25,7 @@ in
               type = types.enum [
                 "aarch64-linux"
                 "x86_64-linux"
+                "aarch64-darwin"
               ];
               default = "x86_64-linux";
               description = "System string for the host";
@@ -156,10 +157,10 @@ in
               description = "Path to the Facter JSON file for the host.";
             };
 
-            nixosConfiguration = mkOption {
+            systemConfiguration = mkOption {
               type = types.deferredModule;
               default = { };
-              description = "Host-specific NixOS module configuration.";
+              description = "Host-specific system module configuration.";
             };
 
             extra_modules = mkOption {

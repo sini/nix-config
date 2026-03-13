@@ -1,15 +1,21 @@
 { config, ... }:
 {
-  flake.features.adb.nixos =
+  flake.features.adb.system =
     { pkgs, ... }:
     {
-      users.users.${config.flake.meta.user.username}.extraGroups = [
-        "adbusers"
-      ];
-
       environment.systemPackages = [
         pkgs.android-tools
+      ];
+    };
+
+  flake.features.adb.linux =
+    { pkgs, ... }:
+    {
+      environment.systemPackages = [
         pkgs.android-file-transfer # => <https://github.com/whoozle/android-file-transfer-linux>
+      ];
+      users.users.${config.flake.meta.user.username}.extraGroups = [
+        "adbusers"
       ];
     };
 }

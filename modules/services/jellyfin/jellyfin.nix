@@ -2,7 +2,7 @@
   flake.features.jellyfin = {
     requires = [ "media-data-share" ];
 
-    nixos =
+    linux =
       {
         inputs,
         config,

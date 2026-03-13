@@ -2,7 +2,7 @@
 {
   flake.features.k3s = {
     requires = [ "k3s-containerd" ];
-    nixos =
+    linux =
       {
         lib,
         pkgs,

@@ -1,5 +1,5 @@
 {
-  flake.features.gdm.nixos =
+  flake.features.gdm.linux =
     { pkgs, ... }:
     {
       services = {

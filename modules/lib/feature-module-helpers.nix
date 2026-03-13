@@ -21,7 +21,15 @@ let
       default = [ ];
       description = "List of names of features to exclude from this feature (prevents the feature and its requires from being added)";
     };
-    nixos = mkDeferredModuleOpt "A NixOS module for this feature";
+
+    # Cross-platform system module (included on both NixOS and Darwin)
+    system = mkDeferredModuleOpt "A cross-platform system module for this feature (NixOS and Darwin)";
+
+    # Platform-specific system modules (for config that only applies to one platform)
+    linux = mkDeferredModuleOpt "A Linux-specific system module for this feature (NixOS only)";
+    darwin = mkDeferredModuleOpt "A Darwin-specific system module for this feature (macOS only)";
+
+    # Home-manager module (works on all platforms)
     home = mkDeferredModuleOpt "A Home-Manager module for this feature";
   };
 

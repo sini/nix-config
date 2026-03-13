@@ -1,5 +1,5 @@
 {
-  flake.features.workstation.nixos = {
+  flake.features.workstation.system = {
     boot = {
       plymouth.enable = true;
       consoleLogLevel = 3;

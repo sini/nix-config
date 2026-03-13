@@ -2,7 +2,7 @@
   flake.features.regreet = {
     excludes = [ "gdm" ];
 
-    nixos = {
+    linux = {
       services.greetd.enable = true;
 
       users.extraUsers.greeter = {

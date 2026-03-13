@@ -1,7 +1,7 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
 { inputs, ... }:
 {
-  flake.features.disk-single.nixos =
+  flake.features.disk-single.linux =
     {
       config,
       lib,

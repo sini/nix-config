@@ -1,6 +1,6 @@
 {
   flake.features.easyeffects = {
-    nixos = {
+    linux = {
       # Technically not easyeffects, but we want it on the same systems
       programs.noisetorch.enable = true;
     };

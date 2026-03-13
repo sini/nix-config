@@ -1,6 +1,6 @@
 {
   flake.features.fonts = {
-    nixos =
+    linux =
       { pkgs, ... }:
       {
         fonts = {
