@@ -152,7 +152,6 @@ in
           environment,
           hostOptions,
           allHostFeatures,
-          lib',
         }:
         let
           # Get user specifications from environment and host
@@ -192,7 +191,8 @@ in
 
           # Collect home modules from each source
           coreHomeModules = collectHomeModules coreHostFeatures;
-          nonCoreHostHomeModules = if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
+          nonCoreHostHomeModules =
+            if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
           userHomeModules = collectHomeModules userFeatures;
 
           # User-specific configuration overrides
