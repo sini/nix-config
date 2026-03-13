@@ -477,7 +477,7 @@ run_nixos_anywhere() {
     if [[ "$use_kexec" == "true" ]]; then
         log "Building custom kexec installer for $hostname..."
         local kexec_path
-        kexec_path=$(nix build --print-out-paths ".#nixosConfigurations.$hostname-kexec.config.system.build.kexecTarball")
+        kexec_path=$(nix build --print-out-paths ".#kexecNixosConfigurations.$hostname-kexec.config.system.build.kexecTarball")
 
         # Find the tarball in the output
         local kexec_tarball

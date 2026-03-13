@@ -20,9 +20,10 @@
       }:
       {
         imports = [
-          (modulesPath + "/profiles/minimal.nix")
-          (modulesPath + "/profiles/installation-device.nix")
+          (modulesPath + "/installer/netboot/netboot-minimal.nix")
         ];
+
+        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
 
         # Set stateVersion for kexec installers
         system.stateVersion = lib.mkDefault "25.11";
@@ -35,14 +36,51 @@
         };
         impermanence.enable = false;
 
+        environment.systemPackages = [
+          pkgs.nixos-install-tools
+          # for zapping of disko
+          pkgs.jq
+          # for copying extra files of nixos-anywhere
+          pkgs.rsync
+          # alternative to nixos-generate-config
+          # TODO: use nixpkgs again after next nixos release
+          pkgs.nixos-facter
+
+          pkgs.disko
+        ];
+
+        networking.firewall.enable = lib.mkForce false;
+        documentation.enable = lib.mkForce false;
+        documentation.man.man-db.enable = lib.mkForce false;
+
         # Boot configuration for kexec
         boot = {
           loader.grub.enable = lib.mkForce false;
-          loader.systemd-boot.enable = lib.mkForce false;
+          # loader.systemd-boot.enable = lib.mkForce false;
+
+          # Enable bcachefs support
+          supportedFilesystems.bcachefs = lib.mkDefault true;
+
+          # use latest kernel we can support to get more hardware support
           supportedFilesystems.zfs = true;
+          zfs.package = pkgs.zfs_unstable;
+
+          # enable zswap to help with low memory systems
+          kernelParams = [
+            "zswap.enabled=1"
+            "zswap.max_pool_percent=50"
+            "zswap.compressor=zstd"
+            # recommended for systems with little memory
+            "zswap.zpool=zsmalloc"
+          ];
+
           initrd = {
+            # make it easier to debug boot failures
+            systemd.emergencyAccess = true;
+
             # Use xz compression for faster boot
             compressor = "xz";
+
             # Ensure kernel modules are available for common network interfaces
             availableKernelModules = [
               "r8169" # Host: surge, burst, pulse
@@ -82,8 +120,8 @@
               }
             ];
           };
-        # Build the kexec tarball
-        system.build.kexecTarball =
+        # Build the kexec tarball (override the one from netboot-minimal.nix)
+        system.build.kexecTarball = lib.mkForce (
           let
             kexecInstallerName = "nixos-kexec-installer-${config.networking.hostName}";
             iprouteStatic = pkgs.pkgsStatic.iproute2.override { iptables = null; };
@@ -93,6 +131,9 @@
               #!/usr/bin/env bash
               set -efu
 
+              # Get the directory where this script is located
+              SCRIPT_DIR="$(cd "$(dirname "''${BASH_SOURCE[0]}")" && pwd)"
+
               echo "Loading ${config.networking.hostName} kexec image..."
 
               # Preserve network configuration
@@ -100,22 +141,22 @@
               ip route show
 
               # Load and execute kexec
-              kexec -l ./bzImage \
-                --initrd=./initrd \
+              "$SCRIPT_DIR/kexec" -l "$SCRIPT_DIR/bzImage" \
+                --initrd="$SCRIPT_DIR/initrd" \
                 --command-line="init=${config.system.build.toplevel}/init ${toString config.boot.kernelParams}"
 
               # Sync and execute
               sync
               echo "Executing kexec..."
-              kexec -e
+              exec "$SCRIPT_DIR/kexec" -e
             '';
           in
           pkgs.runCommand "kexec-tarball" { } ''
             mkdir kexec $out
 
-            # Copy kernel and initrd
+            # Copy kernel and initrd (using netbootRamdisk from netboot-minimal.nix)
             cp "${config.system.build.kernel}/${config.system.boot.loader.kernelFile}" kexec/bzImage
-            cp "${config.system.build.initialRamdisk}/initrd" kexec/initrd
+            cp "${config.system.build.netbootRamdisk}/initrd" kexec/initrd
 
             # Copy static binaries
             cp "${pkgs.pkgsStatic.kexec-tools}/bin/kexec" kexec/kexec
@@ -127,7 +168,8 @@
 
             # Create tarball
             tar -czvf $out/${kexecInstallerName}-${pkgs.stdenv.hostPlatform.system}.tar.gz kexec
-          '';
+          ''
+        );
       };
   };
 }

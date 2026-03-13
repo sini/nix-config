@@ -77,6 +77,7 @@ in
       ];
     };
   };
+
   system = {
     # Build the kexec run script
     build.kexecRun = pkgs.runCommand "kexec-run" { } ''
