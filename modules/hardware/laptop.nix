@@ -1,5 +1,5 @@
 {
-  flake.features.laptop.nixos =
+  flake.features.laptop.linux =
     {
       pkgs,
       lib,

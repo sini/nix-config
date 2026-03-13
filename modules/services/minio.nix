@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.minio.nixos =
+  flake.features.minio.linux =
     {
       config,
       environment,

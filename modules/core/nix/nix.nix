@@ -1,19 +1,18 @@
 {
-  flake.features.nix.nixos =
-    {
-      pkgs,
-      lib,
-      ...
-    }:
-    {
-      nix =
-        let
-          users = [
-            "root"
-            "@wheel"
-          ];
-        in
-        {
+  flake.features.nix = {
+    system =
+      {
+        pkgs,
+        ...
+      }:
+      let
+        users = [
+          "root"
+          "@wheel"
+        ];
+      in
+      {
+        nix = {
           # package = pkgs.nixVersions.nix_2_31;
           package = pkgs.nixVersions.latest;
           settings = {
@@ -98,34 +97,48 @@
 
           gc = {
             automatic = true;
-            dates = "05:00";
             options = "--delete-older-than 8d";
           };
+        };
+      };
 
+    darwin = {
+      nix.gc.interval = {
+        Hour = 5;
+        Minute = 0;
+      };
+    };
+
+    linux =
+      { lib, ... }:
+      {
+        nix = {
+          gc.dates = "05:00";
           daemonCPUSchedPolicy = lib.mkDefault "batch";
           daemonIOSchedClass = lib.mkDefault "idle";
           daemonIOSchedPriority = lib.mkDefault 7;
         };
 
-      # OOM prevention configuration:
-      systemd = {
-        # Create a separate slice for nix-daemon that is
-        # memory-managed by the userspace systemd-oomd killer
-        slices."nix-daemon".sliceConfig = {
-          ManagedOOMMemoryPressure = "kill";
-          ManagedOOMMemoryPressureLimit = "50%";
+        # OOM prevention configuration:
+        systemd = {
+          # Create a separate slice for nix-daemon that is
+          # memory-managed by the userspace systemd-oomd killer
+          slices."nix-daemon".sliceConfig = {
+            ManagedOOMMemoryPressure = "kill";
+            ManagedOOMMemoryPressureLimit = "50%";
+          };
+          services."nix-daemon".serviceConfig.Slice = "nix-daemon.slice";
+
+          # If a kernel-level OOM event does occur anyway,
+          # strongly prefer killing nix-daemon child processes
+          services."nix-daemon".serviceConfig.OOMScoreAdjust = lib.mkDefault 250;
         };
-        services."nix-daemon".serviceConfig.Slice = "nix-daemon.slice";
 
-        # If a kernel-level OOM event does occur anyway,
-        # strongly prefer killing nix-daemon child processes
-        services."nix-daemon".serviceConfig.OOMScoreAdjust = lib.mkDefault 250;
+        systemd.services.nix-gc.serviceConfig = {
+          CPUSchedulingPolicy = "batch";
+          IOSchedulingClass = "idle";
+          IOSchedulingPriority = 7;
+        };
       };
-
-      systemd.services.nix-gc.serviceConfig = {
-        CPUSchedulingPolicy = "batch";
-        IOSchedulingClass = "idle";
-        IOSchedulingPriority = 7;
-      };
-    };
+  };
 }

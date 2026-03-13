@@ -3,7 +3,7 @@
 {
   flake.features.zfs-disk-single = {
     requires = [ "zfs" ];
-    nixos =
+    linux =
       {
         config,
         lib,

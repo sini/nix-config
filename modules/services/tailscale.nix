@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.tailscale.nixos =
+  flake.features.tailscale.linux =
     {
       config,
       environment,

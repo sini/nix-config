@@ -1,6 +1,6 @@
 {
   flake.features.spicetify = {
-    nixos = {
+    linux = {
       # Local Discovery and Google Cast ports
       networking.firewall.allowedTCPPorts = [ 57621 ];
       networking.firewall.allowedUDPPorts = [ 5353 ];

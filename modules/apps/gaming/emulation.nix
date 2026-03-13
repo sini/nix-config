@@ -1,6 +1,6 @@
 {
   flake.features.emulation = {
-    nixos =
+    linux =
       {
         inputs,
         pkgs,

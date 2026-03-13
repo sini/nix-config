@@ -1,6 +1,6 @@
 {
   flake.features.gnome = {
-    nixos =
+    linux =
       {
         pkgs,
         lib,

@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-amd.nixos =
+  flake.features.gpu-amd.linux =
     { pkgs, ... }:
     {
       # Allow for overclocking

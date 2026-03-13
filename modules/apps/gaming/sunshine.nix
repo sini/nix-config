@@ -4,7 +4,7 @@ let
 in
 {
   flake.features.sunshine = {
-    nixos =
+    linux =
       { pkgs, ... }:
       {
         networking = {

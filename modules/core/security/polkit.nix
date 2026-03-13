@@ -1,5 +1,5 @@
 {
-  flake.features.security.nixos = {
+  flake.features.security.linux = {
     security.polkit.enable = true;
   };
 }

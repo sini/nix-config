@@ -1,6 +1,6 @@
 {
   flake.features.nix-index = {
-    nixos =
+    system =
       { inputs, ... }:
       {
         home-manager.sharedModules = [ inputs.nix-index-database.homeModules.default ];

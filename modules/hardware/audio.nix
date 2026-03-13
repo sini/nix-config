@@ -1,6 +1,6 @@
 {
   flake.features.audio = {
-    nixos =
+    linux =
       {
         pkgs,
         lib,

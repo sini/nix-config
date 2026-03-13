@@ -3,7 +3,7 @@
 {
   flake.features.btrfs-impermanence-single = {
     requires = [ "btrfs" ];
-    nixos =
+    linux =
       {
         config,
         lib,

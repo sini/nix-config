@@ -1,7 +1,7 @@
 {
   flake.features.zfs-diff = {
     requires = [ "impermanence" ];
-    nixos =
+    linux =
       {
         config,
         pkgs,

@@ -35,7 +35,7 @@
       "thunderbolt-interface-2" = "169.254.23.1/31";
     };
     facts = ./facter.json;
-    nixosConfiguration =
+    systemConfiguration =
       { pkgs, ... }:
       {
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;

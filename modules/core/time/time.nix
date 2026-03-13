@@ -1,5 +1,5 @@
 {
-  flake.features.time.nixos =
+  flake.features.time.system =
     { environment, ... }:
     {
       time.timeZone = environment.timezone or "UTC";

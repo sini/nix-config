@@ -5,7 +5,7 @@ let
 in
 {
   flake.features.libvirt = {
-    nixos =
+    linux =
       { pkgs, ... }:
       let
         primaryNetwork = pkgs.writeText "default-network.xml" ''

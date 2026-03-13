@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.nix-remote-build-server.nixos =
+  flake.features.nix-remote-build-server.system =
     {
       config,
       pkgs,

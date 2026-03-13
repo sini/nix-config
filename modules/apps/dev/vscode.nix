@@ -1,6 +1,6 @@
 {
   flake.features.vscode = {
-    nixos =
+    system =
       { inputs, ... }:
       {
         nixpkgs.overlays = [

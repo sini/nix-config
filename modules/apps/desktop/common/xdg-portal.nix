@@ -1,5 +1,5 @@
 {
-  flake.features.xdg-portal.nixos =
+  flake.features.xdg-portal.linux =
     {
       inputs,
       pkgs,

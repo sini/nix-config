@@ -73,7 +73,7 @@
   flake.roles.thunderbolt-mesh.features = [ "thunderbolt-mesh" ];
   flake.features.thunderbolt-mesh = {
     requires = [ "bgp-core" ];
-    nixos =
+    linux =
       {
         lib,
         config,

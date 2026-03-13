@@ -1,5 +1,5 @@
 {
-  flake.features.btrfs.nixos =
+  flake.features.btrfs.linux =
     { pkgs, ... }:
     {
       boot.supportedFilesystems.btrfs = true;

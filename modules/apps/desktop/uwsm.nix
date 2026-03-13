@@ -1,5 +1,5 @@
 {
-  flake.features.uwsm.nixos =
+  flake.features.uwsm.linux =
     {
       config,
       pkgs,

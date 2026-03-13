@@ -1,23 +1,15 @@
 { inputs, ... }:
 {
-  flake.features.facter = {
-    nixos =
-      { hostOptions, ... }:
-      {
-        imports = [ inputs.nixos-facter-modules.nixosModules.facter ];
-        facter = {
-          reportPath = hostOptions.facts;
-          detected = {
-            dhcp.enable = false;
-            graphics.enable = false; # Don't configure graphics, we'll do that...
-          };
+  flake.features.facter.linux =
+    { hostOptions, ... }:
+    {
+      imports = [ inputs.nixos-facter-modules.nixosModules.facter ];
+      facter = {
+        reportPath = hostOptions.facts;
+        detected = {
+          dhcp.enable = false;
+          graphics.enable = false; # Don't configure graphics, we'll do that...
         };
       };
-
-    home =
-      { pkgs, ... }:
-      {
-        home.packages = with pkgs; [ nixos-facter ];
-      };
-  };
+    };
 }

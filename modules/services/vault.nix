@@ -7,7 +7,7 @@ let
   flakeHosts = config.flake.hosts;
 in
 {
-  flake.features.vault.nixos =
+  flake.features.vault.linux =
     {
       config,
       lib,

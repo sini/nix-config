@@ -1,5 +1,5 @@
 {
-  flake.features.media-data-share.nixos = {
+  flake.features.media-data-share.linux = {
     boot.supportedFilesystems = [
       "nfs"
       "nfs4"

@@ -1,5 +1,5 @@
 {
-  flake.features.gamepad.nixos =
+  flake.features.gamepad.linux =
     {
       pkgs,
       config,

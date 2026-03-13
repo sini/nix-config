@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.grafana.nixos =
+  flake.features.grafana.linux =
     {
       config,
       environment,

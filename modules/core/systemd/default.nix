@@ -1,5 +1,5 @@
 {
-  flake.features.systemd.nixos =
+  flake.features.systemd.linux =
     {
       lib,
       activeFeatures,
