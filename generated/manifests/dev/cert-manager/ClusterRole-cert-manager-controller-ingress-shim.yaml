@@ -47,6 +47,7 @@ rules:
     resources:
       - gateways
       - httproutes
+      - listenersets
     verbs:
       - get
       - list
@@ -56,6 +57,7 @@ rules:
     resources:
       - gateways/finalizers
       - httproutes/finalizers
+      - listenersets/finalizers
     verbs:
       - update
   - apiGroups:
