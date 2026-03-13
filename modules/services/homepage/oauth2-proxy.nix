@@ -1,7 +1,7 @@
 { rootPath, ... }:
 {
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
-  flake.features.oauth2-proxy.nixos =
+  flake.features.oauth2-proxy.linux =
     {
       config,
       environment,

@@ -1,6 +1,6 @@
 {
   flake.features.gpu-nvidia-prime = {
-    nixos =
+    linux =
       {
         config,
         lib,

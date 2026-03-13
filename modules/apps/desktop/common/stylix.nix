@@ -1,6 +1,6 @@
 {
   flake.features.stylix = {
-    nixos =
+    linux =
       {
         inputs,
         pkgs,

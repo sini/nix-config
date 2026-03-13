@@ -1,6 +1,6 @@
 {
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
-  flake.features.homepage.nixos =
+  flake.features.homepage.linux =
     { environment, ... }:
     let
       domain = environment.getDomainFor "homepage";

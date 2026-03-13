@@ -1,5 +1,5 @@
 {
-  flake.features.k3s-containerd.nixos =
+  flake.features.k3s-containerd.linux =
     {
       inputs,
       lib,

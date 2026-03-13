@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.features.acme.nixos =
+  flake.features.acme.linux =
     {
       config,
       environment,

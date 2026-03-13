@@ -1,6 +1,6 @@
 {
   flake.features.bluetooth = {
-    nixos =
+    linux =
       { pkgs, ... }:
       {
         hardware.bluetooth = {

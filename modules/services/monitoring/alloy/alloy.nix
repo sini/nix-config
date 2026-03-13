@@ -4,7 +4,7 @@
   ...
 }:
 {
-  flake.features.alloy.nixos =
+  flake.features.alloy.linux =
     {
       pkgs,
       hostOptions,

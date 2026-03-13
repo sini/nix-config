@@ -1,5 +1,5 @@
 {
-  flake.features.network-manager.nixos =
+  flake.features.network-manager.linux =
     {
       hostOptions,
       pkgs,

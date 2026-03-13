@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.attic-server.nixos =
+  flake.features.attic-server.linux =
     {
       activeFeatures,
       config,

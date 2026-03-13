@@ -1,7 +1,7 @@
 {
   flake.features.vr-amd = {
     requires = [ "steam" ];
-    nixos =
+    linux =
       {
         pkgs,
         inputs,

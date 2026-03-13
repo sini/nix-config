@@ -3,7 +3,7 @@
 {
   flake.features.cilium-bgp = {
     requires = [ "bgp-core" ];
-    nixos =
+    linux =
       {
         lib,
         environment,

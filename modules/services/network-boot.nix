@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.network-boot.nixos =
+  flake.features.network-boot.linux =
     {
       config,
       lib,

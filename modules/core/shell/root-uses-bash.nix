@@ -1,6 +1,6 @@
 {
   flake.features.shell = {
-    nixos =
+    system =
       { pkgs, ... }:
       {
         users.users.root.shell = pkgs.bashInteractive;

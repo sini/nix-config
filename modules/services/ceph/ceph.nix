@@ -1,5 +1,5 @@
 {
-  flake.features.ceph.nixos = {
+  flake.features.ceph.linux = {
     environment.persistence."/persist".directories = [
     ];
   };

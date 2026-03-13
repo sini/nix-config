@@ -5,7 +5,7 @@ _flakeConfig: {
       "gpu-nvidia-vfio"
     ];
 
-    nixos =
+    linux =
       {
         lib,
         config,

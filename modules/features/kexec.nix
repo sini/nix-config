@@ -10,7 +10,7 @@
       "ssd"
     ];
 
-    nixos =
+    linux =
       {
         config,
         pkgs,
@@ -97,7 +97,7 @@
         };
         # Allow mutable users for the ephemeral installer
         users.mutableUsers = lib.mkForce true;
-        users.deterministicIds.nixos =
+        users.deterministicIds.system =
           let
             uid = 1100;
             gid = 1100;

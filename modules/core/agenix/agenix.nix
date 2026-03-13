@@ -5,7 +5,7 @@
 }:
 {
   flake.features.agenix = {
-    nixos =
+    system =
       {
         config,
         hostOptions,

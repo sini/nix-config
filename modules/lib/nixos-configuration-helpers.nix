@@ -22,11 +22,41 @@ in
       # These functions extract typed modules (nixos/home) from feature definitions
 
       # Generic collector for modules of a specific type from feature list
+      # Skips features where the type key is missing or set to the default empty module
       collectTypedModules =
         type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
 
-      collectNixosModules = collectTypedModules "nixos";
+      # Cross-platform system modules
+      collectSystemModules = collectTypedModules "system";
+
+      # Platform-specific system modules
+      collectLinuxModules = collectTypedModules "linux";
+      collectDarwinModules = collectTypedModules "darwin";
+
+      # Home-manager modules (all platforms)
       collectHomeModules = collectTypedModules "home";
+
+      # Collect all applicable system modules for a given platform
+      # Includes: cross-platform (system) + platform-specific (linux/darwin)
+      collectPlatformSystemModules =
+        features: system:
+        let
+          isDarwin = lib.hasSuffix "-darwin" system;
+          isLinux = lib.hasSuffix "-linux" system;
+
+          # Cross-platform modules (always included)
+          sharedModules = collectSystemModules features;
+
+          # Platform-specific modules
+          platformModules =
+            if isLinux then
+              collectLinuxModules features
+            else if isDarwin then
+              collectDarwinModules features
+            else
+              throw "Unsupported system architecture: ${system}";
+        in
+        sharedModules ++ platformModules;
 
       # ============================================================================
       # SECTION 2: Feature Dependency Resolution
@@ -207,13 +237,96 @@ in
         };
 
       # ============================================================================
-      # SECTION 5: Host Configuration Builder
+      # SECTION 5: Host Configuration Builders
       # ============================================================================
-      # Core logic for building NixOS system configurations
 
-      # Shared implementation for mkHost and mkHostKexec
-      # Allows overriding roles and selectively skipping components for specialized builds
-      mkHostCommon =
+      # Prepare platform-agnostic host context (shared between NixOS and Darwin builders)
+      prepareHostContext =
+        {
+          hostOptions,
+          overrideRoles ? null,
+        }:
+        _system:
+        let
+          # Select package set (stable vs unstable)
+          useUnstable = hostOptions.unstable or false;
+          pkgs' = if useUnstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
+          lib' = pkgs'.lib;
+          home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
+
+          # Load environment configuration
+          environment = config.flake.environments.${hostOptions.environment};
+
+          # Determine effective roles (allows override for specialized builds like kexec)
+          effectiveRoles = if overrideRoles != null then overrideRoles else hostOptions.roles;
+
+          # Resolve all features with dependencies
+          allHostFeatures = getModulesForFeatures {
+            hostRoles = effectiveRoles;
+            hostFeatures = hostOptions.features or [ ];
+            hostExclusions = hostOptions.exclude-features or [ ];
+          };
+
+          # Extract feature names and collect platform-appropriate system modules
+          activeFeatures = lib.unique (map (f: f.name) allHostFeatures);
+          systemModules = collectPlatformSystemModules allHostFeatures hostOptions.system;
+
+          # Compute enabled users (only those with enableUnixAccount = true)
+          enabledUsers =
+            let
+              environmentUserNames = builtins.attrNames (environment.users or { });
+              hostUserNames = builtins.attrNames (hostOptions.users or { });
+              enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
+              allUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
+            in
+            lib'.filterAttrs (_userName: user: user.enableUnixAccount or false) allUsers;
+
+          # Common specialArgs passed to all system modules
+          specialArgs = {
+            inherit
+              pkgs'
+              inputs
+              hostOptions
+              environment
+              activeFeatures
+              ;
+            users = enabledUsers;
+            lib = lib';
+          };
+
+          # Home-manager user configuration module (shared between platforms)
+          homeManagerUsersModule = {
+            home-manager.users = lib'.mapAttrs (
+              username: _userSpec:
+              makeHomeConfig {
+                inherit
+                  username
+                  environment
+                  hostOptions
+                  allHostFeatures
+                  lib'
+                  ;
+              }
+            ) enabledUsers;
+          };
+        in
+        {
+          inherit
+            pkgs'
+            lib'
+            home-manager'
+            environment
+            allHostFeatures
+            activeFeatures
+            systemModules
+            enabledUsers
+            specialArgs
+            homeManagerUsersModule
+            ;
+        };
+
+      # Build a NixOS host configuration
+      mkNixosHost =
         {
           hostOptions,
           overrideRoles ? null,
@@ -224,93 +337,52 @@ in
         withSystem hostOptions.system (
           { system, ... }:
           let
-            # Step 1: Select package set (stable vs unstable)
-            useUnstable = hostOptions.unstable or false;
-            pkgs' = if useUnstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
-            lib' = pkgs'.lib;
-            home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
-
-            # Step 2: Load environment configuration
-            environment = config.flake.environments.${hostOptions.environment};
-
-            # Step 3: Determine effective roles (allows override for specialized builds like kexec)
-            effectiveRoles = if overrideRoles != null then overrideRoles else hostOptions.roles;
-
-            # Step 4: Resolve all features with dependencies
-            allHostFeatures = getModulesForFeatures {
-              hostRoles = effectiveRoles;
-              hostFeatures = hostOptions.features or [ ];
-              hostExclusions = hostOptions.exclude-features or [ ];
-            };
-
-            # Step 5: Extract feature names and NixOS modules
-            activeFeatures = lib.unique (map (f: f.name) allHostFeatures);
-            nixosModules = collectNixosModules allHostFeatures;
-
-            # Step 6: Compute enabled users (only those with enableUnixAccount = true)
-            enabledUsers =
-              let
-                environmentUserNames = builtins.attrNames (environment.users or { });
-                hostUserNames = builtins.attrNames (hostOptions.users or { });
-                enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
-                allUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
-              in
-              lib'.filterAttrs (_userName: user: user.enableUnixAccount or false) allUsers;
+            ctx = prepareHostContext { inherit hostOptions overrideRoles; } system;
           in
-          lib'.nixosSystem {
+          ctx.lib'.nixosSystem {
             inherit system;
-
-            specialArgs = {
-              inherit
-                pkgs'
-                inputs
-                hostOptions
-                environment
-                activeFeatures
-                ;
-              inherit (config.flake) nodes;
-              users = enabledUsers;
-              lib = lib'; # Pass the correct lib (stable or unstable) to modules.
-            };
+            inherit (ctx) specialArgs;
 
             modules =
-              # Import modules from features
-              nixosModules
-              # Add modules from external flakes and sources
+              ctx.systemModules
               ++ [
-                pkgs'.nixosModules.notDetected
-                # Always include home-manager NixOS module for option definitions
-                home-manager'.nixosModules.home-manager
+                ctx.pkgs'.nixosModules.notDetected
+                ctx.home-manager'.nixosModules.home-manager
               ]
-              # Conditionally configure home-manager users if not skipped
-              ++ (
-                if skipHomeManager then
-                  [ ]
-                else
-                  [
-                    {
-                      # Configure Home Manager with feature-based modules
-                      home-manager.users = lib'.mapAttrs (
-                        username: _userSpec:
-                        makeHomeConfig {
-                          inherit
-                            username
-                            environment
-                            hostOptions
-                            allHostFeatures
-                            lib'
-                            ;
-                        }
-                      ) enabledUsers;
-                    }
-                  ]
-              )
-              # Add any extra modules defined directly on the host
+              ++ (if skipHomeManager then [ ] else [ ctx.homeManagerUsersModule ])
               ++ hostOptions.extra_modules
-              # Add extra modules passed to this function
               ++ extraModules
-              # Conditionally add the host's primary configuration file
-              ++ (if skipHostConfig then [ ] else [ hostOptions.nixosConfiguration ]);
+              ++ (if skipHostConfig then [ ] else [ hostOptions.systemConfiguration ]);
+          }
+        );
+
+      # Build a Darwin (macOS) host configuration
+      mkDarwinHost =
+        {
+          hostOptions,
+          overrideRoles ? null,
+          skipHomeManager ? false,
+          skipHostConfig ? false,
+          extraModules ? [ ],
+        }:
+        withSystem hostOptions.system (
+          { system, ... }:
+          let
+            ctx = prepareHostContext { inherit hostOptions overrideRoles; } system;
+          in
+          inputs.nix-darwin.lib.darwinSystem {
+            inherit system;
+            inherit (ctx) specialArgs;
+
+            modules =
+              ctx.systemModules
+              ++ [
+                ctx.home-manager'.darwinModules.home-manager
+              ]
+              ++ (if skipHomeManager then [ ] else [ ctx.homeManagerUsersModule ])
+              ++ hostOptions.extra_modules
+              ++ extraModules
+              ++ (if skipHostConfig then [ ] else [ hostOptions.systemConfiguration ]);
           }
         );
 
@@ -318,52 +390,51 @@ in
       # SECTION 6: Public API Functions
       # ============================================================================
 
-      # Build a standard NixOS host configuration
-      # This is the primary function for creating host system configurations
+      # Platform detection helpers
+      isDarwin = lib.hasSuffix "-darwin";
+      isLinux = lib.hasSuffix "-linux";
+
+      # Build a host configuration, dispatching to NixOS or Darwin based on system architecture
       mkHost =
         _name: hostOptions:
-        mkHostCommon {
+        let
+          builder =
+            if isLinux hostOptions.system then
+              mkNixosHost
+            else if isDarwin hostOptions.system then
+              mkDarwinHost
+            else
+              throw "Unsupported system architecture: ${hostOptions.system}";
+        in
+        builder {
           inherit hostOptions;
-          overrideRoles = null;
-          skipHomeManager = false;
-          skipHostConfig = false;
-          extraModules = [ ];
         };
 
-      # Build a minimal kexec installer variant of a host configuration
-      # This creates a stripped-down system suitable for network-based installation
-      # - Uses only the "kexec" role (minimal feature set)
-      # - Excludes hardware-specific and installer-incompatible features
-      # - Skips home-manager (not needed for installer)
-      # - Skips host-specific hardware configuration
+      # Build a minimal kexec installer variant (Linux/NixOS only)
       mkHostKexec =
         name: hostOptions:
         let
-          # Features incompatible with or unnecessary for kexec installer environment
           kexecExclusions = [
-            "network-boot" # Host-specific network boot settings
-            "facter" # Hardware detection not needed for installer
-            "systemd-boot" # Bootloader not needed for installer
-            "avahi" # Service discovery not needed for installer
-            "power-mgmt" # Power management not needed for installer
-            "ssd" # SSD optimizations not needed for installer
+            "network-boot"
+            "facter"
+            "systemd-boot"
+            "avahi"
+            "power-mgmt"
+            "ssd"
           ];
 
-          # Merge installer exclusions with any existing host exclusions
           mergedExclusions = lib.unique ((hostOptions.exclude-features or [ ]) ++ kexecExclusions);
 
-          # Create modified host options for installer build
           modifiedHostOptions = hostOptions // {
             exclude-features = mergedExclusions;
-            features = [ ]; # Clear all host-specific features for minimal build
+            features = [ ];
           };
         in
-        mkHostCommon {
+        mkNixosHost {
           hostOptions = modifiedHostOptions;
-          overrideRoles = [ "kexec" ]; # Use only kexec role
-          skipHomeManager = true; # No user home configurations in installer
-          skipHostConfig = true; # Skip hardware-specific configuration
-          # Set installer-specific hostname
+          overrideRoles = [ "kexec" ];
+          skipHomeManager = true;
+          skipHostConfig = true;
           extraModules = [
             (
               { lib, ... }:
@@ -375,6 +446,11 @@ in
         };
     in
     {
-      inherit mkHost mkHostKexec;
+      inherit
+        mkHost
+        mkHostKexec
+        mkNixosHost
+        mkDarwinHost
+        ;
     };
 }

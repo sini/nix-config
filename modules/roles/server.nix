@@ -13,7 +13,7 @@
     ];
   };
 
-  flake.features.server.nixos =
+  flake.features.server.linux =
     { lib, ... }:
     {
       systemd.targets =

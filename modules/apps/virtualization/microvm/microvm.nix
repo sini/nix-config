@@ -1,6 +1,6 @@
 {
   flake.features.microvm = {
-    nixos =
+    linux =
       { inputs, ... }:
       {
         imports = [ inputs.microvm.nixosModules.host ];

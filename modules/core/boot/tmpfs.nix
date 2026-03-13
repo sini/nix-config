@@ -1,5 +1,5 @@
 {
-  flake.features.systemd-boot.nixos = {
+  flake.features.systemd-boot.linux = {
     boot.tmp = {
       useTmpfs = true;
       cleanOnBoot = true;

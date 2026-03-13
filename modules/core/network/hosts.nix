@@ -39,7 +39,7 @@ let
     );
 in
 {
-  flake.features.hosts.nixos =
+  flake.features.hosts.linux =
     {
       config,
       lib,

@@ -1,6 +1,6 @@
 {
   flake.features.wireshark = {
-    nixos =
+    system =
       {
         pkgs,
         users,

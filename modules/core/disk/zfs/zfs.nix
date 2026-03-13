@@ -2,7 +2,7 @@
   flake.features.zfs = {
     requires = [ "zfs-diff" ];
 
-    nixos =
+    linux =
       { pkgs, ... }:
       {
         environment.systemPackages = with pkgs; [

@@ -14,7 +14,7 @@ let
   );
 in
 {
-  flake.features.open-webui.nixos =
+  flake.features.open-webui.linux =
     {
       config,
       environment,

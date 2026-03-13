@@ -23,7 +23,7 @@ in
 {
   flake.features.bgp-hub = {
     requires = [ "bgp-core" ];
-    nixos =
+    linux =
       {
         config,
         lib,

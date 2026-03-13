@@ -82,7 +82,7 @@
       };
     };
     facts = ./facter.json;
-    nixosConfiguration =
+    systemConfiguration =
       { pkgs, ... }:
       {
         boot = {
