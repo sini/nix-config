@@ -16,6 +16,7 @@
     ];
     features = [
       "zfs-disk-single"
+      "network-boot"
       "cpu-amd"
       "gpu-amd"
     ];
