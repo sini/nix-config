@@ -3,6 +3,7 @@
     {
       config,
       pkgs,
+      lib,
       ...
     }:
     {
