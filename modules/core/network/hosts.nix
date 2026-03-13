@@ -6,6 +6,7 @@
 let
   hosts =
     config.flake.hosts
+    |> lib.attrsets.filterAttrs (_: hostConfig: hostConfig.ipv4 != [ ])
     |> lib.attrsets.mapAttrs' (
       hostname: hostConfig:
       let
@@ -31,7 +32,8 @@ let
           hostname
           "${hostname}.${targetEnv.name}.${targetEnv.domain}"
         ]
-        ++ ipList;
+        ++ ipList
+        ++ (if ipList == [ ] then [ "${hostname}.ts.json64.dev" ] else [ ]);
         publicKeyFile = hostConfig.public_key;
       }
     );

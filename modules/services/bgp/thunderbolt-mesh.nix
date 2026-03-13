@@ -186,8 +186,6 @@
       in
       {
         config = {
-          hardware.networking.unmanagedInterfaces = interfaces;
-
           boot = {
             kernelParams = [
               "pcie=pcie_bus_perf"

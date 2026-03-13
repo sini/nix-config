@@ -1,13 +1,13 @@
 {
   flake.features.network-manager.nixos =
     {
-      config,
+      hostOptions,
       pkgs,
       ...
     }:
     let
       unmanagedInterfaces =
-        config.hardware.networking.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
+        hostOptions.networking.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
     in
     {
       config = {

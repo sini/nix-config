@@ -1,13 +1,13 @@
 {
   flake.features.avahi.nixos =
-    { config, ... }:
+    { hostOptions, ... }:
     let
-      cfg = config.hardware.networking;
+      interfaces = builtins.attrNames hostOptions.networking.interfaces;
     in
     {
       services.avahi = {
         enable = true;
-        allowInterfaces = cfg.interfaces;
+        allowInterfaces = interfaces;
         nssmdns4 = true;
         nssmdns6 = true;
         publish = {

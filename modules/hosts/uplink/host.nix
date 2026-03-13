@@ -1,7 +1,9 @@
 {
   flake.hosts.uplink = {
-    ipv4 = [ "10.10.10.1" ];
-    ipv6 = [ "fe80::3c7a:6eff:fee5:d3a6" ];
+    networking.interfaces.enp4s0 = {
+      ipv4 = [ "10.10.10.1" ];
+      ipv6 = [ "fe80::3c7a:6eff:fee5:d3a6" ];
+    };
     remoteBuildSpeed = 10;
     remoteBuildJobs = 16;
     environment = "prod";
@@ -47,7 +49,6 @@
 
         hardware = {
           disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
-          networking.interfaces = [ "enp4s0" ];
         };
 
         impermanence = {

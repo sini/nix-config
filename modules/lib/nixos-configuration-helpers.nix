@@ -114,10 +114,16 @@ in
         in
         allFeaturesWithDeps;
 
-      # A dedicated function to build a single NixOS host configuration.
-      # This encapsulates all the logic for one machine.
-      mkHost =
-        _: hostOptions:
+      # Shared logic for building host configurations
+      # This encapsulates common logic between mkHost and mkHostKexec
+      mkHostCommon =
+        {
+          hostOptions,
+          overrideRoles ? null,
+          skipHomeManager ? false,
+          skipHostConfig ? false,
+          extraModules ? [ ],
+        }:
         withSystem hostOptions.system (
           { system, ... }:
           let
@@ -130,9 +136,12 @@ in
             # Select the correct environment configuration (e.g., prod, dev).
             environment = config.flake.environments.${hostOptions.environment};
 
+            # Use overridden roles if provided, otherwise use host's roles
+            effectiveRoles = if overrideRoles != null then overrideRoles else hostOptions.roles;
+
             # Get all feature modules (from roles + direct host features + dependencies)
             allHostFeatures = getModulesForFeatures {
-              hostRoles = hostOptions.roles;
+              hostRoles = effectiveRoles;
               hostFeatures = hostOptions.features or [ ];
               hostExclusions = hostOptions.exclude-features or [ ];
             };
@@ -227,23 +236,88 @@ in
               # Add modules from external flakes and sources.
               ++ [
                 pkgs'.nixosModules.notDetected
+                # Always include home-manager NixOS module for option definitions
                 home-manager'.nixosModules.home-manager
               ]
+              # Conditionally configure home-manager users if not skipped
+              ++ (
+                if skipHomeManager then
+                  [ ]
+                else
+                  [
+                    {
+                      # Configure Home Manager with feature-based modules
+                      home-manager.users = lib'.mapAttrs makeHome enabledUsers;
+                    }
+                  ]
+              )
               # Add any extra modules defined directly on the host.
               ++ hostOptions.extra_modules
-              # Add the host's primary configuration file.
-              ++ [ hostOptions.nixosConfiguration ]
-              # Finally, apply machine-specific settings and configure Home Manager.
-              ++ [
-                {
-                  # Configure Home Manager with feature-based modules
-                  home-manager.users = lib'.mapAttrs makeHome enabledUsers;
-                }
-              ];
+              # Add extra modules passed to this function
+              ++ extraModules
+              # Conditionally add the host's primary configuration file
+              ++ (if skipHostConfig then [ ] else [ hostOptions.nixosConfiguration ]);
           }
         );
+
+      # A dedicated function to build a single NixOS host configuration.
+      # This encapsulates all the logic for one machine.
+      mkHost =
+        _name: hostOptions:
+        mkHostCommon {
+          inherit hostOptions;
+          overrideRoles = null;
+          skipHomeManager = false;
+          skipHostConfig = false;
+          extraModules = [ ];
+        };
+
+      # Build a kexec variant of a host configuration.
+      # This strips down to core-minimal role and skips home-manager.
+      mkHostKexec =
+        name: hostOptions:
+        let
+          # Features to exclude from kexec variants (host-specific or installer-incompatible)
+          kexecExclusions = [
+            "network-boot"
+            "facter"
+            "systemd-boot"
+            "avahi" # Not needed for installer
+            "power-mgmt" # Not needed for installer
+            "ssd" # Not needed for installer
+          ];
+
+          # Merge kexec exclusions with any existing host exclusions
+          mergedExclusions = lib.unique ((hostOptions.exclude-features or [ ]) ++ kexecExclusions);
+
+          # Create modified hostOptions with merged exclusions
+          # Clear host-specific features since kexec should be minimal
+          modifiedHostOptions = hostOptions // {
+            exclude-features = mergedExclusions;
+            features = [ ]; # Clear all host-specific features
+          };
+        in
+        mkHostCommon {
+          hostOptions = modifiedHostOptions;
+          # Override to use only core-minimal role (which includes kexec feature)
+          overrideRoles = [ "core-minimal" ];
+          # Skip home-manager for kexec
+          skipHomeManager = true;
+          # Skip host-specific configuration (contains hardware settings)
+          skipHostConfig = true;
+          # Add kexec-specific hostname override
+          extraModules = [
+            (
+              { lib, ... }:
+              {
+                # Set kexec-specific hostname
+                networking.hostName = lib.mkForce "${name}";
+              }
+            )
+          ];
+        };
     in
     {
-      inherit mkHost;
+      inherit mkHost mkHostKexec;
     };
 }

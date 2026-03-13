@@ -2,7 +2,7 @@
 {
   flake.environments.dev = {
     id = 2;
-    domain = "dev.json64.dev";
+    domain = "json64.dev";
 
     # Certificate management configuration
     certificates = {
