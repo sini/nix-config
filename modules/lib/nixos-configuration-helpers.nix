@@ -152,7 +152,6 @@ in
           environment,
           hostOptions,
           allHostFeatures,
-          lib',
         }:
         let
           # Get user specifications from environment and host
