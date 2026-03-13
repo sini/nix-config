@@ -67,11 +67,6 @@
             help = "Update flake inputs with GitHub access token";
           }
           {
-            package = config.packages.reset-axon;
-            name = "reset-axon";
-            help = "Delete all k3s data and reset the cluster";
-          }
-          {
             package = config.packages.toggle-axon-kubernetes;
             name = "toggle-axon-kubernetes";
             help = "Toggle enable/disable Kubernetes on axon cluster nodes";
@@ -92,9 +87,9 @@
             help = "Update disk encryption keys using Tang servers and TPM2";
           }
           {
-            package = config.packages.generate-host-keys;
-            name = "generate-host-keys";
-            help = "Generate and encrypt SSH host keys for a new host";
+            package = config.packages.nix-flake-provision-keys;
+            name = "nix-flake-provision-keys";
+            help = "Provision SSH host keys and disk encryption secrets for a NixOS host";
           }
           {
             package = config.packages.nix-flake-install;

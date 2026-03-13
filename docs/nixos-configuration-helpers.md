@@ -19,11 +19,13 @@ The library is organized into 6 logical sections:
 **Purpose**: Extract typed modules (nixos/home) from feature definitions
 
 **Functions**:
+
 - `collectTypedModules`: Generic collector for modules of a specific type
 - `collectNixosModules`: Extracts NixOS system modules from features
 - `collectHomeModules`: Extracts Home Manager modules from features
 
 **Example**:
+
 ```nix
 # Given features with structure:
 features = [
@@ -42,15 +44,17 @@ collectHomeModules features   # => [ ./home-module.nix ]
 **Function**: `collectRequires`
 
 **Algorithm**:
+
 1. Perform depth-first traversal starting from root features
-2. Skip features that are excluded or already visited
-3. Accumulate exclusions as tree is traversed
-4. Filter dependencies by accumulated exclusions
-5. Recursively process dependencies
-6. Post-process to remove any features excluded by dependencies
-7. Remove root features from result (they're already included elsewhere)
+1. Skip features that are excluded or already visited
+1. Accumulate exclusions as tree is traversed
+1. Filter dependencies by accumulated exclusions
+1. Recursively process dependencies
+1. Post-process to remove any features excluded by dependencies
+1. Remove root features from result (they're already included elsewhere)
 
 **Flow Diagram**:
+
 ```
 Input: features (all available), roots (starting features)
   │
@@ -71,6 +75,7 @@ Input: features (all available), roots (starting features)
 ```
 
 **Example**:
+
 ```nix
 # Given:
 features = {
@@ -95,10 +100,12 @@ collectRequires features [features.A]
 **Purpose**: Build the complete feature set from role definitions
 
 **Functions**:
+
 - `getFeaturesForRoles`: Aggregate feature names from core + additional roles
 - `getModulesForFeatures`: Resolve complete feature set with dependencies
 
 **Flow**:
+
 ```
 Input: hostRoles, hostFeatures, hostExclusions
   │
@@ -124,6 +131,7 @@ Input: hostRoles, hostFeatures, hostExclusions
 ```
 
 **Example**:
+
 ```nix
 getModulesForFeatures {
   hostRoles = ["server"];           # Brings features: ["ssh", "monitoring"]
@@ -141,6 +149,7 @@ getModulesForFeatures {
 **Function**: `makeHomeConfig`
 
 **Inputs**:
+
 - `username`: User account name
 - `environment`: Environment configuration with user specs
 - `hostOptions`: Host configuration
@@ -148,6 +157,7 @@ getModulesForFeatures {
 - `lib'`: Nix library (stable or unstable)
 
 **Feature Inheritance Logic**:
+
 ```
 For each user:
   ├─> Core host features: ALWAYS included
@@ -162,12 +172,14 @@ For each user:
 ```
 
 **Exclusion Handling**:
+
 - Host exclusions are collected from all host features
 - User exclusions are collected from user-specific features
 - Both are merged and applied to filter features
 - Core features are filtered separately to ensure they're not excluded
 
 **Flow Diagram**:
+
 ```
 Input: username, environment, hostOptions, allHostFeatures
   │
@@ -207,6 +219,7 @@ Input: username, environment, hostOptions, allHostFeatures
 **Function**: `mkHostCommon`
 
 **Parameters**:
+
 - `hostOptions`: Host-specific configuration options
 - `overrideRoles`: Optional role override (for specialized builds)
 - `skipHomeManager`: Skip home-manager configuration
@@ -214,6 +227,7 @@ Input: username, environment, hostOptions, allHostFeatures
 - `extraModules`: Additional NixOS modules to include
 
 **Build Process**:
+
 ```
 1. Select package set (stable vs unstable)
    ├─> Based on hostOptions.unstable
@@ -248,6 +262,7 @@ Input: username, environment, hostOptions, allHostFeatures
 ### 6. Public API Functions
 
 **Functions**:
+
 - `mkHost`: Build standard NixOS host configuration
 - `mkHostKexec`: Build minimal kexec installer variant
 
@@ -256,6 +271,7 @@ Input: username, environment, hostOptions, allHostFeatures
 Standard host configuration builder.
 
 **Usage**:
+
 ```nix
 mkHost "hostname" {
   system = "x86_64-linux";
@@ -275,6 +291,7 @@ mkHost "hostname" {
 Builds a minimal network installer variant of a host.
 
 **Differences from mkHost**:
+
 - Uses only "kexec" role (minimal feature set)
 - Adds installer-specific exclusions
 - Clears all host-specific features
@@ -283,6 +300,7 @@ Builds a minimal network installer variant of a host.
 - Forces hostname to installer-specific name
 
 **Excluded Features**:
+
 - `network-boot`: Host-specific network boot settings
 - `facter`: Hardware detection not needed for installer
 - `systemd-boot`: Bootloader not needed for installer
@@ -291,6 +309,7 @@ Builds a minimal network installer variant of a host.
 - `ssd`: SSD optimizations not needed for installer
 
 **Usage**:
+
 ```nix
 mkHostKexec "hostname-installer" hostOptions
 # Creates: hostname-installer (minimal installer)
@@ -302,6 +321,7 @@ mkHostKexec "hostname-installer" hostOptions
 ### Features
 
 Features are composable units of system configuration that can:
+
 - Provide NixOS system modules (`nixos` attribute)
 - Provide Home Manager modules (`home` attribute)
 - Declare dependencies (`requires` attribute)
@@ -310,6 +330,7 @@ Features are composable units of system configuration that can:
 ### Roles
 
 Roles are collections of features that define a system profile:
+
 - `core`: Base features for all systems
 - `server`: Server-specific features
 - `workstation`: Desktop workstation features
@@ -319,6 +340,7 @@ Roles are collections of features that define a system profile:
 ### Exclusions
 
 Exclusions allow features to prevent other features from being included:
+
 - Exclusions propagate through the dependency tree
 - Excluded features are filtered at multiple stages
 - Host-level exclusions override feature-level inclusions
@@ -326,6 +348,7 @@ Exclusions allow features to prevent other features from being included:
 ### Package Set Selection
 
 Hosts can use either stable or unstable nixpkgs:
+
 - `hostOptions.unstable = false`: Use stable nixpkgs (default)
 - `hostOptions.unstable = true`: Use nixpkgs-unstable
 - This affects: pkgs, lib, and home-manager versions
@@ -337,16 +360,16 @@ Hosts can use either stable or unstable nixpkgs:
 When extending this library:
 
 1. **Identify the appropriate section** for your addition
-2. **Add clear comments** explaining the purpose and algorithm
-3. **Update this documentation** with examples and flow diagrams
-4. **Test with multiple hosts** to ensure no regressions
+1. **Add clear comments** explaining the purpose and algorithm
+1. **Update this documentation** with examples and flow diagrams
+1. **Test with multiple hosts** to ensure no regressions
 
 ### Common Pitfalls
 
 1. **Exclusion ordering**: Exclusions must be collected and applied at each stage
-2. **Root removal**: Dependency resolution should not include root features in results
-3. **Library consistency**: Use lib' (versioned) instead of lib in host configurations
-4. **Feature deduplication**: Always use lib.unique when merging feature lists
+1. **Root removal**: Dependency resolution should not include root features in results
+1. **Library consistency**: Use lib' (versioned) instead of lib in host configurations
+1. **Feature deduplication**: Always use lib.unique when merging feature lists
 
 ### Performance Considerations
 
