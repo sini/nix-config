@@ -1,4 +1,3 @@
-# Based on https://github.com/oddlama/nix-config/blob/7e32b6d4d9b922892bcbf991902dd88a0c4a8fe7/nix/devshell.nix
 { inputs, ... }:
 {
   imports = [
@@ -82,21 +81,6 @@
             help = "Collect and encrypt SSH host keys from all configured hosts";
           }
           {
-            package = config.packages.update-tang-disk-keys;
-            name = "update-tang-disk-keys";
-            help = "Update disk encryption keys using Tang servers and TPM2";
-          }
-          {
-            package = config.packages.nix-flake-provision-keys;
-            name = "nix-flake-provision-keys";
-            help = "Provision SSH host keys and disk encryption secrets for a NixOS host";
-          }
-          {
-            package = config.packages.nix-flake-install;
-            name = "nix-flake-install";
-            help = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
-          }
-          {
             package = config.packages.generate-user-keys;
             name = "generate-user-keys";
             help = "Generate and encrypt ed25519 SSH keys for users";
@@ -116,7 +100,24 @@
             name = "convert-oidc-secrets";
             help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
           }
-        ];
+        ] ++ (lib.optionals pkgs.stdenv.buildPlatform.isLinux [
+          # These depend on clevis which is linux only
+          {
+            package = config.packages.update-tang-disk-keys;
+            name = "update-tang-disk-keys";
+            help = "Update disk encryption keys using Tang servers and TPM2";
+          }
+          {
+            package = config.packages.nix-flake-provision-keys;
+            name = "nix-flake-provision-keys";
+            help = "Provision SSH host keys and disk encryption secrets for a NixOS host";
+          }
+          {
+            package = config.packages.nix-flake-install;
+            name = "nix-flake-install";
+            help = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
+          }
+        ]);
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
       };
