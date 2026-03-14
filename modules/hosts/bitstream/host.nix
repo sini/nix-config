@@ -13,6 +13,7 @@
     environment = "dev";
     roles = [
       "server"
+      "nix-builder"
     ];
     features = [
       "zfs-disk-single"
