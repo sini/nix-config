@@ -2,7 +2,7 @@
 { inputs, ... }:
 {
   flake.features.btrfs-impermanence-single = {
-    requires = [ "btrfs" ];
+    requires = [ "btrfs-root" ];
     linux =
       {
         config,

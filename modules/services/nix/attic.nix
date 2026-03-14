@@ -10,7 +10,7 @@
       ...
     }:
     let
-      zfsEnabled = lib.elem "zfs" activeFeatures;
+      zfsEnabled = lib.elem "zfs-root" activeFeatures;
       domain = environment.getDomainFor "attic";
     in
     {
