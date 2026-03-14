@@ -6,7 +6,10 @@
 # See README.md for full rationale and usage examples.
 {
   lib,
-  asciidoc-full,
+  # Use base asciidoc instead of asciidoc-full; the -full variant pulls in
+  # lilypond which fails to build on Darwin. The base package provides a2x
+  # which is all meson needs for man page generation.
+  asciidoc,
   coreutils,
   curl,
   fetchFromGitHub,
@@ -61,7 +64,7 @@ stdenv.mkDerivation (finalAttrs: {
   ];
 
   nativeBuildInputs = [
-    asciidoc-full # For generating man pages
+    asciidoc # For generating man pages (a2x)
     makeWrapper
     meson
     ninja
