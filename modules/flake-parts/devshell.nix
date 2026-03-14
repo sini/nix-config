@@ -100,7 +100,8 @@
             name = "convert-oidc-secrets";
             help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
           }
-        ] ++ (lib.optionals pkgs.stdenv.buildPlatform.isLinux [
+        ]
+        ++ (lib.optionals pkgs.stdenv.buildPlatform.isLinux [
           # These depend on clevis which is linux only
           {
             package = config.packages.update-tang-disk-keys;
