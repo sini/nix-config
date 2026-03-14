@@ -2,6 +2,8 @@
 #
 # This fork removes Linux-only dependencies (cryptsetup, luksmeta, tpm2-tools)
 # to enable Darwin systems to provision NixOS hosts with Tang disk encryption.
+# Darwin compatibility patches are maintained in the sini/clevis fork and
+# proposed upstream via PR.
 #
 # See README.md for full rationale and usage examples.
 {
@@ -32,12 +34,14 @@ let
   # Darwin-compatible `-exported_symbol` flag instead, then unmark it as broken.
   # https://github.com/latchset/jose/pull/163
   jose-fixed = jose.overrideAttrs (old: {
-    patches = (old.patches or [ ]) ++ lib.optionals stdenv.hostPlatform.isDarwin [
-      (fetchpatch {
-        url = "https://github.com/latchset/jose/commit/228d6782235238ed0d03eb2443caf530b377ffd5.patch?full_index=1";
-        hash = "sha256-PQGHp+ereU3Qx1IfXV89VI/ao0deBrosmH25h1jRvME=";
-      })
-    ];
+    patches =
+      (old.patches or [ ])
+      ++ lib.optionals stdenv.hostPlatform.isDarwin [
+        (fetchpatch {
+          url = "https://github.com/latchset/jose/commit/228d6782235238ed0d03eb2443caf530b377ffd5.patch?full_index=1";
+          hash = "sha256-PQGHp+ereU3Qx1IfXV89VI/ao0deBrosmH25h1jRvME=";
+        })
+      ];
     meta = old.meta // {
       broken = false;
     };
@@ -46,21 +50,22 @@ in
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "clevis-minimal";
-  version = "21";
+  version = "21-unstable-2026-03-14";
 
+  # Fork with Darwin compatibility patches (epoll→poll, pipe2→pipe+fcntl,
+  # optional cryptsetup in tests). Tracking upstream PR for merge.
+  # https://github.com/sini/clevis
   src = fetchFromGitHub {
-    owner = "latchset";
+    owner = "sini";
     repo = "clevis";
-    tag = "v${finalAttrs.version}";
-    hash = "sha256-2vDQP+yvH4v46fLEWG/37r5cYP3OeDfJz71cDHEGiUg=";
+    rev = "8b3c0409dea0ad9f271686b71ff3a73dfd21cc7c";
+    hash = "sha256-Q2CkuIIpGwv3bK0HICPoK9L0zfVPiIITxnEnQWnSB8o=";
   };
 
   patches = [
     # Replaces the clevis-decrypt 300s timeout to a 10s timeout
     # https://github.com/latchset/clevis/issues/289
     ./0000-tang-timeout.patch
-    # Make cryptsetup optional in LUKS tests for minimal build
-    ./0001-make-cryptsetup-optional.patch
   ];
 
   nativeBuildInputs = [
