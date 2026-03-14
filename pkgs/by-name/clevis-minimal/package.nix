@@ -10,6 +10,7 @@
   coreutils,
   curl,
   fetchFromGitHub,
+  fetchpatch,
   gnugrep,
   gnused,
   jansson,
@@ -22,10 +23,18 @@
 }:
 
 let
-  # jose is marked broken on Darwin in nixpkgs, but it builds and works fine.
-  # We only use it for JWE/JWK operations (clevis encrypt sss/tang), which are
-  # platform-agnostic. LUKS-specific functionality is excluded from this minimal build.
-  jose-unbroken = jose.overrideAttrs (old: {
+  # jose v14 is marked broken on Darwin in nixpkgs because its meson build passes
+  # `-export-symbols-regex=^jose_.*` — a GNU ld flag that Apple's clang linker
+  # doesn't understand. We apply the upstream fix (PR #163) which uses the
+  # Darwin-compatible `-exported_symbol` flag instead, then unmark it as broken.
+  # https://github.com/latchset/jose/pull/163
+  jose-fixed = jose.overrideAttrs (old: {
+    patches = (old.patches or [ ]) ++ lib.optionals stdenv.hostPlatform.isDarwin [
+      (fetchpatch {
+        url = "https://github.com/latchset/jose/commit/228d6782235238ed0d03eb2443caf530b377ffd5.patch?full_index=1";
+        hash = "sha256-FOFHsVQakVut76RlNZmcF/4/BNK6R1R3W5KOTV6Xzho=";
+      })
+    ];
     meta = old.meta // {
       broken = false;
     };
@@ -65,7 +74,7 @@ stdenv.mkDerivation (finalAttrs: {
   buildInputs = [
     curl # For HTTP requests to Tang servers
     jansson # JSON parsing
-    jose-unbroken # JWE/JWK cryptographic operations
+    jose-fixed # JWE/JWK cryptographic operations
   ];
 
   outputs = [
@@ -103,7 +112,7 @@ stdenv.mkDerivation (finalAttrs: {
         coreutils # Various utilities (cat, base64, etc.)
         gnugrep # Pattern matching in scripts
         gnused # Text transformations
-        jose-unbroken # JWE/JWK crypto operations
+        jose-fixed # JWE/JWK crypto operations
         curl # HTTP requests to Tang servers
       ];
     in
