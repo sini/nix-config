@@ -64,6 +64,5 @@ python3.pkgs.buildPythonApplication {
   meta = {
     description = "Update Kubernetes manifests for nixidy environments";
     mainProgram = "k8s-update-manifests";
-    platforms = lib.platforms.linux;
   };
 }

@@ -1,4 +1,5 @@
 {
+  lib,
   writeShellApplication,
   age,
   age-plugin-yubikey,
@@ -14,6 +15,8 @@
 writeShellApplication {
   name = "nix-flake-provision-keys";
   meta.description = "Provision SSH host keys and disk encryption secrets for a NixOS host";
+  meta.platforms = lib.platforms.linux;
+
   runtimeInputs = [
     age
     age-plugin-yubikey

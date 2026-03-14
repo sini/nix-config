@@ -56,6 +56,5 @@ python3.pkgs.buildPythonApplication {
   meta = {
     description = "Update OCI container image metadata for Nix flakes";
     mainProgram = "oci-image-updater";
-    platforms = lib.platforms.linux;
   };
 }
