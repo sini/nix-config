@@ -12,7 +12,16 @@ The upstream Clevis package in nixpkgs has hard dependencies on Linux-only packa
 
 ## What We Changed
 
-### 1. Removed Linux-Only Dependencies
+### Fork: [sini/clevis](https://github.com/sini/clevis) (`darwin-support` branch)
+
+The package sources from our fork which contains the following upstream-ready patches:
+
+1. **Remove unused `sys/epoll.h` include** from `clevis-encrypt-sss.c`
+2. **Replace Linux `epoll` with POSIX `poll`** in `clevis-decrypt-sss.c` - functionally equivalent for the small fd counts clevis uses
+3. **Replace `pipe2` with portable `pipe` + `fcntl`** in `sss.c` - safe because the program is single-threaded
+4. **Make `cryptsetup` optional in test suite** - uses `subdir_done()` to skip LUKS tests when cryptsetup is unavailable
+
+### Removed Linux-Only Dependencies
 
 Removed from `buildInputs`:
 
@@ -21,37 +30,25 @@ Removed from `buildInputs`:
 - `libpwquality` - Password quality checking (primarily for PAM)
 - `tpm2-tools` - TPM 2.0 support (hardware-specific)
 
-### 2. Overrode `jose` Package
+### jose Darwin Fix
 
-```nix
-jose-unbroken = jose.overrideAttrs (old: {
-  meta = old.meta // { broken = false; };
-});
-```
+jose v14 is marked broken on Darwin in nixpkgs because its meson build passes
+`-export-symbols-regex=^jose_.*` (a GNU ld flag) which Apple's clang linker doesn't
+understand. We apply the upstream fix ([PR #163](https://github.com/latchset/jose/pull/163))
+via `fetchpatch` and unmark it as broken.
 
-The `jose` package is marked as broken on Darwin in nixpkgs, but it builds fine and is only needed for JWE/JWK operations which are platform-agnostic.
-
-### 3. Applied Patches
+### Distribution-Specific Patch
 
 #### [0000-tang-timeout.patch](0000-tang-timeout.patch)
 
 - Reduces `clevis-decrypt-tang` network timeout from 300s to 10s
 - Prevents boot hangs when Tang servers are unreachable
 - Source: https://github.com/latchset/clevis/issues/289
+- Not upstreamed (distribution-specific preference)
 
-#### [0001-make-cryptsetup-optional.patch](0001-make-cryptsetup-optional.patch)
+### Disabled Tests
 
-- Makes cryptsetup optional in test suite
-- Skips LUKS2 tests when cryptsetup is unavailable
-- Allows build to succeed without Linux-only dependencies
-
-### 4. Disabled Tests
-
-```nix
-doCheck = false;
-```
-
-Most Clevis tests require LUKS devices and cryptsetup, which aren't available in the Nix sandbox or on Darwin.
+Tests are disabled because most require LUKS devices and cryptsetup, which aren't available in the Nix sandbox or on Darwin.
 
 ## What Still Works
 
@@ -103,20 +100,20 @@ boot.initrd.clevis = {
 
 ## Relationship to Upstream
 
-- **Upstream**: https://github.com/latchset/clevis/tree/v21
+- **Upstream**: https://github.com/latchset/clevis
+- **Fork**: https://github.com/sini/clevis (`darwin-support` branch)
 - **Nixpkgs**: `pkgs/by-name/cl/clevis/package.nix`
-- **Fork status**: Tracking v21 with minimal patches
-- **Update strategy**: Review upstream changes periodically, reapply patches as needed
+- **Goal**: Merge Darwin patches upstream, at which point we can switch back to upstream source
 
 ## Maintenance Notes
 
 When updating to new Clevis versions:
 
-1. Update `version` and `hash` in [package.nix](package.nix)
-1. Verify patches still apply cleanly (adjust line numbers if needed)
-1. Check if upstream added new Linux-only dependencies
-1. Test builds on both Linux and Darwin
-1. Verify JWE generation still works for Tang encryption
+1. Rebase the `darwin-support` branch onto the new upstream tag
+2. Update `rev` and `hash` in [package.nix](package.nix)
+3. Check if upstream added new Linux-only dependencies
+4. Test builds on both Linux and Darwin
+5. Verify JWE generation still works for Tang encryption
 
 ## Related Files
 
