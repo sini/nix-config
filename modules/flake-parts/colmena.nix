@@ -42,8 +42,10 @@
       ...
     }:
     let
-      stableHosts = lib.filterAttrs (_: h: !(h.unstable or false)) config.hosts;
-      unstableHosts = lib.filterAttrs (_: h: h.unstable or false) config.hosts;
+      colmenaHosts = lib.filterAttrs (_: h: lib.hasSuffix "-linux" h.system) config.hosts;
+
+      stableHosts = lib.filterAttrs (_: h: !(h.unstable or false)) colmenaHosts;
+      unstableHosts = lib.filterAttrs (_: h: h.unstable or false) colmenaHosts;
 
       mkColmenaHive =
         {
