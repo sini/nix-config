@@ -243,7 +243,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # systems.url = "github:nix-systems/default";
+    systems.url = "github:nix-systems/default";
 
     # styling
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";

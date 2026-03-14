@@ -1,9 +1,10 @@
+{ inputs, ... }:
 {
-  # systems = import inputs.systems;
-  systems = [
-    "x86_64-linux"
-    "aarch64-linux"
-    "aarch64-darwin"
-    # "x86_64-darwin"
-  ];
+  systems = import inputs.systems;
+  # systems = [
+  #   "x86_64-linux"
+  #   "aarch64-linux"
+  #   "aarch64-darwin"
+  #   # "x86_64-darwin"
+  # ];
 }
