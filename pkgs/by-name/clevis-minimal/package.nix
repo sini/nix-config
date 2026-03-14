@@ -32,7 +32,7 @@ let
     patches = (old.patches or [ ]) ++ lib.optionals stdenv.hostPlatform.isDarwin [
       (fetchpatch {
         url = "https://github.com/latchset/jose/commit/228d6782235238ed0d03eb2443caf530b377ffd5.patch?full_index=1";
-        hash = "sha256-FOFHsVQakVut76RlNZmcF/4/BNK6R1R3W5KOTV6Xzho=";
+        hash = "sha256-PQGHp+ereU3Qx1IfXV89VI/ao0deBrosmH25h1jRvME=";
       })
     ];
     meta = old.meta // {
