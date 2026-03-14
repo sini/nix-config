@@ -38,8 +38,9 @@ Arguments:
   hostname    The name of the host configuration in the flake
 
 Options:
-  --disk-password PASSWORD  Disk encryption password (prompts if not provided)
-  --help                    Show this help message
+  --disk-password PASSWORD    Disk encryption password (prompts if not provided)
+  --force-regenerate-jwe      Regenerate Tang JWE even if it already exists
+  --help                      Show this help message
 
 The script will:
   1. Generate and encrypt SSH host keys if they don't exist
@@ -291,12 +292,17 @@ generate_disk_key() {
 main() {
     local hostname=""
     local disk_password=""
+    local force_regenerate_jwe=false
 
     while [[ $# -gt 0 ]]; do
         case $1 in
             --disk-password)
                 disk_password="$2"
                 shift 2
+                ;;
+            --force-regenerate-jwe)
+                force_regenerate_jwe=true
+                shift
                 ;;
             --help)
                 usage
@@ -338,22 +344,41 @@ main() {
 
     # Generate disk encryption key if needed
     local resolved_password=""
+    local disk_key_generated=false
     local disk_key_file="$host_dir/root-disk-key.age"
     if [[ ! -f "$disk_key_file" ]]; then
         log "  Disk encryption key not found, generating..."
         resolved_password=$(get_or_prompt_disk_password "$disk_password")
         generate_disk_key "$hostname" "$age_recipient" "$resolved_password"
+        disk_key_generated=true
     else
         log "  ✓ Disk encryption key already exists"
     fi
 
-    # Generate Tang JWE for boot-time unlock if needed
+    # Generate Tang JWE for boot-time unlock
+    # Regenerate JWE if:
+    # 1. JWE doesn't exist
+    # 2. Disk key was just generated (passwords must match)
+    # 3. User explicitly requested regeneration
     local jwe_file="$host_dir/zroot-key.jwe"
     if [[ ! -f "$jwe_file" ]]; then
+        log "  Tang JWE not found, generating..."
         # Decrypt password from age if we don't already have it
         if [[ -z "$resolved_password" ]]; then
             resolved_password=$(decrypt_disk_password "$hostname")
         fi
+        generate_tang_jwe "$hostname" "$resolved_password"
+    elif [[ "$disk_key_generated" == true ]] || [[ "$force_regenerate_jwe" == true ]]; then
+        if [[ "$disk_key_generated" == true ]]; then
+            log "  Disk key was regenerated, updating Tang JWE to match..."
+        else
+            log "  Force-regenerating Tang JWE..."
+        fi
+        # Decrypt password from age if we don't already have it
+        if [[ -z "$resolved_password" ]]; then
+            resolved_password=$(decrypt_disk_password "$hostname")
+        fi
+        rm -f "$jwe_file"
         generate_tang_jwe "$hostname" "$resolved_password"
     else
         log "  ✓ Tang JWE already exists"
