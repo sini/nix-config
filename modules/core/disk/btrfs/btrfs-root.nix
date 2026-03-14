@@ -1,5 +1,5 @@
 {
-  flake.features.btrfs.linux =
+  flake.features.btrfs-root.linux =
     { pkgs, ... }:
     {
       boot.supportedFilesystems.btrfs = true;

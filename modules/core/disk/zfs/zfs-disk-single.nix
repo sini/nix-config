@@ -2,7 +2,7 @@
 { inputs, ... }:
 {
   flake.features.zfs-disk-single = {
-    requires = [ "zfs" ];
+    requires = [ "zfs-root" ];
     linux =
       {
         config,

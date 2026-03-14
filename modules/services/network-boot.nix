@@ -9,7 +9,7 @@
       ...
     }:
     let
-      zfsEnabled = lib.elem "zfs" activeFeatures;
+      zfsEnabled = lib.elem "zfs-root" activeFeatures;
       jweToken = builtins.path {
         path = rootPath + "/.secrets/host-keys/${config.networking.hostName}/zroot-key.jwe";
         name = "zroot-key.jwe";

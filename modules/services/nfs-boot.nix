@@ -13,7 +13,7 @@
       ...
     }:
     let
-      zfsEnabled = lib.elem "zfs" activeFeatures;
+      zfsEnabled = lib.elem "zfs-root" activeFeatures;
       nfsServer = "10.10.10.10";
       hostname = config.networking.hostName;
     in
