@@ -1,5 +1,4 @@
 {
-  lib,
   writeShellApplication,
   age,
   age-plugin-yubikey,
@@ -8,12 +7,11 @@
   jq,
   coreutils,
   git,
-  clevis,
+  clevis-minimal,
 }:
 writeShellApplication {
   name = "update-tang-disk-keys";
   meta.description = "Re-encrypt disk passphrase with TPM2 + Tang on a running host";
-  meta.platforms = lib.platforms.linux;
   runtimeInputs = [
     age
     age-plugin-yubikey
@@ -22,7 +20,7 @@ writeShellApplication {
     jq
     coreutils
     git
-    clevis
+    clevis-minimal
   ];
   text = builtins.readFile ./update-tang-disk-keys.sh;
 }

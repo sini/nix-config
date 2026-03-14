@@ -1,5 +1,4 @@
 {
-  lib,
   writeShellApplication,
   age,
   age-plugin-yubikey,
@@ -10,12 +9,11 @@
   coreutils,
   git,
   agenix-rekey,
-  clevis,
+  clevis-minimal,
 }:
 writeShellApplication {
   name = "nix-flake-provision-keys";
   meta.description = "Provision SSH host keys and disk encryption secrets for a NixOS host";
-  meta.platforms = lib.platforms.linux;
 
   runtimeInputs = [
     age
@@ -27,7 +25,7 @@ writeShellApplication {
     coreutils
     git
     agenix-rekey
-    clevis
+    clevis-minimal
   ];
   text = builtins.readFile ./nix-flake-provision-keys.sh;
 }

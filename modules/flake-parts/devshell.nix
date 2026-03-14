@@ -100,9 +100,6 @@
             name = "convert-oidc-secrets";
             help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
           }
-        ]
-        ++ (lib.optionals pkgs.stdenv.buildPlatform.isLinux [
-          # These depend on clevis which is linux only
           {
             package = config.packages.update-tang-disk-keys;
             name = "update-tang-disk-keys";
@@ -118,7 +115,7 @@
             name = "nix-flake-install";
             help = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
           }
-        ]);
+        ];
 
         devshell.startup.pre-commit.text = config.pre-commit.installationScript;
       };
