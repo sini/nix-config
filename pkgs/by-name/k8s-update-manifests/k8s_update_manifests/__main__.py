@@ -100,47 +100,6 @@ def validate_git_root(args: argparse.Namespace) -> Path:
     return git_root
 
 
-def discover_and_filter_environments(
-    flake_ref: str,
-    system: str,
-    requested_envs: list[str] | None,
-) -> list[str]:
-    """Discover and filter environments.
-
-    Args:
-        flake_ref: Flake reference
-        system: System platform
-        requested_envs: Optional list of requested environment names
-
-    Returns:
-        List of environment names to process
-
-    Raises:
-        SystemExit: If no environments found or requested environments don't exist
-    """
-    logging.info(f"Discovering environments for system: {system or 'auto-detect'}")
-    env_names = NixUtils.discover_environments(flake_ref, system)
-
-    if not env_names:
-        logging.error("No environments found in flake")
-        sys.exit(1)
-
-    # Filter to specific environments if requested
-    if requested_envs:
-        requested_set = set(requested_envs)
-        available_set = set(env_names)
-        missing_envs = requested_set - available_set
-        if missing_envs:
-            logging.error(
-                f"Requested environments not found: {', '.join(sorted(missing_envs))}"
-            )
-            logging.error(f"Available environments: {', '.join(sorted(available_set))}")
-            sys.exit(1)
-        env_names = [e for e in env_names if e in requested_set]
-
-    return env_names
-
-
 def resolve_output_path(metadata: EnvironmentMetadata, git_root: Path) -> Path:
     """Resolve output path to absolute path.
 
@@ -155,57 +114,6 @@ def resolve_output_path(metadata: EnvironmentMetadata, git_root: Path) -> Path:
     if output_path_str.startswith("./"):
         return git_root / output_path_str.lstrip("./")
     return metadata.output_path
-
-
-def process_environment(
-    env: str,
-    flake_ref: str,
-    system: str,
-    git_root: Path,
-    dry_run: bool,
-    skip_secrets: bool,
-) -> None:
-    """Process a single environment.
-
-    Args:
-        env: Environment name
-        flake_ref: Flake reference
-        system: System platform
-        git_root: Git repository root
-        dry_run: If True, don't write changes
-        skip_secrets: If True, don't process secrets
-    """
-    logging.info(f"Processing environment: {env}")
-
-    # Get metadata for this environment
-    metadata = NixUtils.get_environment_metadata(flake_ref, env, system)
-
-    # Resolve output path to absolute path
-    output_path = resolve_output_path(metadata, git_root)
-
-    # Update metadata with absolute path
-    metadata = EnvironmentMetadata(
-        name=metadata.name,
-        repository=metadata.repository,
-        branch=metadata.branch,
-        output_path=output_path,
-    )
-
-    # Build the environment package
-    logging.info("Building environment package...")
-    src_path = NixUtils.build_environment_package(flake_ref, env, system)
-    logging.info(f"Built: {src_path}")
-
-    # Update the environment
-    environment_manager = EnvironmentManager(
-        src_path,
-        metadata,
-        git_root=git_root,
-        dry_run=dry_run,
-        skip_secrets=skip_secrets,
-    )
-    environment_manager.update()
-    logging.info("")
 
 
 def main() -> int:
@@ -232,26 +140,59 @@ def main() -> int:
     logging.info(f"Git repository root: {git_root}")
     logging.info(f"Flake reference: {args.flake}")
 
-    # Discover and filter environments
-    env_names = discover_and_filter_environments(
-        args.flake, args.system, args.environments
-    )
+    # Build all environments in a single nix evaluation
+    logging.info("Building all environments...")
+    all_envs = NixUtils.build_all_environments(args.flake, args.system)
+
+    env_names = sorted(all_envs.keys())
+
+    # Filter to specific environments if requested
+    if args.environments:
+        requested_set = set(args.environments)
+        available_set = set(env_names)
+        missing_envs = requested_set - available_set
+        if missing_envs:
+            logging.error(
+                f"Requested environments not found: {', '.join(sorted(missing_envs))}"
+            )
+            logging.error(f"Available environments: {', '.join(sorted(available_set))}")
+            sys.exit(1)
+        env_names = [e for e in env_names if e in requested_set]
+
+    if not env_names:
+        logging.error("No environments found in flake")
+        sys.exit(1)
 
     logging.info(
-        f"Processing {len(env_names)} environment(s): {', '.join(sorted(env_names))}"
+        f"Processing {len(env_names)} environment(s): {', '.join(env_names)}"
     )
     logging.info("")
 
-    # Process each environment
-    for env in sorted(env_names):
-        process_environment(
-            env,
-            args.flake,
-            args.system,
-            git_root,
-            args.dry_run,
-            args.skip_secrets,
+    # Process each environment using pre-built results
+    for env in env_names:
+        metadata, src_path = all_envs[env]
+        logging.info(f"Processing environment: {env}")
+
+        # Resolve output path to absolute path
+        output_path = resolve_output_path(metadata, git_root)
+        metadata = EnvironmentMetadata(
+            name=metadata.name,
+            repository=metadata.repository,
+            branch=metadata.branch,
+            output_path=output_path,
         )
+
+        logging.info(f"Built: {src_path}")
+
+        environment_manager = EnvironmentManager(
+            src_path,
+            metadata,
+            git_root=git_root,
+            dry_run=args.dry_run,
+            skip_secrets=args.skip_secrets,
+        )
+        environment_manager.update()
+        logging.info("")
 
     return 0
 

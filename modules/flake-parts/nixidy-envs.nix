@@ -59,28 +59,69 @@ in
 
       # Pre-parse CRD objects (both source-based and chart-based) at build time.
       # Read back at eval time by getServiceCrdObjects to avoid IFD.
-      packages.parsed-crd-objects =
-        let
-          parsedServices = lib.mapAttrs mkParsedServiceCrds servicesWithCrds;
-        in
-        pkgs.runCommand "parsed-crd-objects" { } ''
-          mkdir -p $out
-          ${lib.concatMapStringsSep "\n" (name: ''
-            ln -s ${parsedServices.${name}} $out/${name}.json
-          '') (lib.attrNames parsedServices)}
-        '';
+      packages = {
+        parsed-crd-objects =
+          let
+            parsedServices = lib.mapAttrs mkParsedServiceCrds servicesWithCrds;
+          in
+          pkgs.runCommand "parsed-crd-objects" { } ''
+            mkdir -p $out
+            ${lib.concatMapStringsSep "\n" (name: ''
+              ln -s ${parsedServices.${name}} $out/${name}.json
+            '') (lib.attrNames parsedServices)}
+          '';
 
-      packages.generated-crds =
-        let
-          generators = lib.mapAttrs (mkCrdGenerator {
-            inherit (inputs'.nixidy.packages.generators) fromCRD fromChartCRD;
-          }) servicesWithCrds;
-        in
-        pkgs.runCommand "generated-crds" { } ''
-          mkdir -p $out
-          ${lib.concatMapStringsSep "\n" (name: ''
-            cp ${generators.${name}} $out/${name}.nix
-          '') (lib.attrNames generators)}
-        '';
+        # Combined build target for k8s-update-manifests: builds all environment
+        # packages and writes a manifest.json with metadata + store paths.
+        # This reduces 5 separate nix evaluations down to 1.
+        nixidy-all-envs =
+          let
+            system = pkgs.stdenv.hostPlatform.system;
+            envs = config.flake.nixidyEnvs.${system} or { };
+            envData = lib.mapAttrs (
+              _env: nixidyEnv:
+              let
+                target = nixidyEnv.config.nixidy.target;
+              in
+              {
+                inherit (target) repository branch rootPath;
+                package = nixidyEnv.environmentPackage;
+              }
+            ) envs;
+          in
+          pkgs.runCommand "nixidy-all-envs" { } ''
+            mkdir -p $out
+            ${lib.concatMapStringsSep "\n" (
+              env:
+              let
+                data = envData.${env};
+              in
+              ''
+                ln -s ${data.package} $out/${env}
+              ''
+            ) (lib.attrNames envData)}
+            cat > $out/manifest.json <<'MANIFEST'
+            ${builtins.toJSON (
+              lib.mapAttrs (_env: data: {
+                inherit (data) repository branch rootPath;
+                packagePath = "${data.package}";
+              }) envData
+            )}
+            MANIFEST
+          '';
+
+        generated-crds =
+          let
+            generators = lib.mapAttrs (mkCrdGenerator {
+              inherit (inputs'.nixidy.packages.generators) fromCRD;
+            }) servicesWithCrds;
+          in
+          pkgs.runCommand "generated-crds" { } ''
+            mkdir -p $out
+            ${lib.concatMapStringsSep "\n" (name: ''
+              cp ${generators.${name}} $out/${name}.nix
+            '') (lib.attrNames generators)}
+          '';
+      };
     };
 }
