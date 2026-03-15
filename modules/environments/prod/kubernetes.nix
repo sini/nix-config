@@ -1,7 +1,7 @@
-{ rootPath, ... }:
+{ config, ... }:
 {
   flake.environments.prod.kubernetes = {
-    secretsFile = rootPath + "/.secrets/env/prod/k8s-secrets.enc.yaml";
+    secretsFile = config.flake.secretsPaths.secretsPath + "/env/prod/k8s-secrets.enc.yaml";
 
     tlsSanIps = [
       "10.10.10.2" # axon-01 external

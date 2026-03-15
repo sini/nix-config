@@ -1,4 +1,7 @@
-{ rootPath, ... }:
+{ config, ... }:
+let
+  inherit (config.flake.secretsPaths) secretsPath;
+in
 {
   flake.environments.dev = {
     id = 2;
@@ -13,8 +16,8 @@
       };
       issuers = {
         "json64-dev" = {
-          ageKeyFile = rootPath + "/.secrets/env/dev/cloudflare-api-key.age";
-          sopsFile = rootPath + "/.secrets/env/dev/k8s-secrets.enc.yaml";
+          ageKeyFile = secretsPath + "/env/dev/cloudflare-api-key.age";
+          sopsFile = secretsPath + "/env/dev/k8s-secrets.enc.yaml";
           secretKey = "cloudflare-api-token";
         };
       };

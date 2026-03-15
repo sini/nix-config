@@ -2,7 +2,6 @@
   lib,
   self,
   config,
-  rootPath,
   ...
 }:
 let
@@ -488,7 +487,7 @@ in
                 forInlineFor = secretName: "ref+sops://${config.kubernetes.secretsFile}#${secretName}+";
                 forOidcService =
                   name:
-                  "ref+sops://${rootPath}/.secrets/env/${credentialsEnv}/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
+                  "ref+sops://${flakeConfig.flake.secretsPaths.secretsPath}/env/${credentialsEnv}/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
                 oidcIssuerFor =
                   clientID:
                   let
