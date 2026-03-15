@@ -233,70 +233,106 @@
       # Build helpers scoped to a specific system's packages and perSystem config.
       # These are used by the perSystem section of nixidy-envs.nix to build the
       # parsed-crd-objects and generated-crds packages.
-      # { pkgs, sharedConfig } -> { servicesWithSrcCrds, servicesWithCrds, mkParsedServiceCrds, mkCrdGenerator }
+      # { pkgs, sharedConfig } -> { servicesWithCrds, mkParsedServiceCrds, mkCrdGenerator }
       mkPerSystemHelpers =
         { pkgs, sharedConfig }:
         let
           # Evaluate a service's CRD function with perSystem module args.
-          # This is the perSystem equivalent of the inline service.crds call in
-          # getServiceCrdObjects — same result, different arg shape (perSystem
-          # module args pattern vs explicit { pkgs, lib, system, inputs }).
           callServiceCrds = service: service.crds (sharedConfig // { inherit inputs; });
+
+          klib = inputs.nix-kube-generators.lib { inherit pkgs; };
 
           # All services that define CRDs (either source-based or chart-based)
           servicesWithCrds = lib.filterAttrs (
             _name: service: service.crds != null
           ) config.flake.kubernetes.services;
+
+          # Resolve chart derivation from crdConfig. Shared between
+          # mkChartCrdYaml, mkParsedServiceCrds, and mkCrdGenerator.
+          resolveChart =
+            crdConfig:
+            if crdConfig.chart or null != null then
+              crdConfig.chart
+            else
+              klib.downloadHelmChart crdConfig.chartAttrs;
+
+          # Shared derivation: run helm template once per chart-based service.
+          # Both mkParsedServiceCrds and mkCrdGenerator (via fromCRD) consume
+          # this output, avoiding duplicate helm template builds.
+          mkChartCrdYaml =
+            name: crdConfig:
+            pkgs.stdenv.mkDerivation {
+              name = "chart-crds-${name}";
+              passAsFile = [ "helmValues" ];
+              helmValues = builtins.toJSON (crdConfig.values or { });
+
+              phases = [ "installPhase" ];
+              installPhase = ''
+                export HELM_CACHE_HOME="$TMP/.nix-helm-build-cache"
+                mkdir -p $out
+
+                ${pkgs.kubernetes-helm}/bin/helm template \
+                --include-crds \
+                --kube-version "v${pkgs.kubernetes.version}" \
+                --values "$helmValuesPath" \
+                "${name}" \
+                "${resolveChart crdConfig}" \
+                ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
+                > $out/crds.yaml
+              '';
+            };
+
+          # Pre-compute chart CRD YAML derivations for all chart-based services.
+          # This ensures the same derivation is reused by both mkParsedServiceCrds
+          # and mkCrdGenerator.
+          chartCrdYamls =
+            lib.mapAttrs
+              (
+                name: service:
+                let
+                  crdConfig = callServiceCrds service;
+                in
+                mkChartCrdYaml name crdConfig
+              )
+              (
+                lib.filterAttrs (
+                  _: service:
+                  let
+                    c = callServiceCrds service;
+                  in
+                  c.chart or null != null || c.chartAttrs or { } != { }
+                ) servicesWithCrds
+              );
         in
         {
           inherit servicesWithCrds;
 
           # Build a derivation that extracts CRD objects as JSON for a service.
-          # Dispatches to source-based or chart-based extraction depending on
-          # the service's CRD configuration. The resulting JSON is read at eval
-          # time by getServiceCrdObjects, avoiding expensive IFD during evaluation.
+          # For chart-based services, consumes the shared mkChartCrdYaml output.
+          # The resulting JSON is read at eval time by getServiceCrdObjects.
           # string -> service -> derivation
           mkParsedServiceCrds =
             name: service:
             let
               crdConfig = callServiceCrds service;
               useChart = crdConfig.chart or null != null || crdConfig.chartAttrs or { } != { };
-              useSrc = crdConfig.src or null != null;
-
-              klib = inputs.nix-kube-generators.lib { inherit pkgs; };
-              _chart =
-                if crdConfig.chart or null != null then
-                  crdConfig.chart
-                else
-                  klib.downloadHelmChart crdConfig.chartAttrs;
             in
             if useChart then
-              # Chart-based: helm template → extract CRDs → JSON array
+              # Chart-based: read shared helm template output → extract CRDs → JSON
               pkgs.runCommand "parse-${name}-crds"
                 {
                   nativeBuildInputs = [
-                    pkgs.kubernetes-helm
                     pkgs.yq
                     pkgs.jq
                   ];
-                  passAsFile = [ "helmValues" ];
-                  helmValues = builtins.toJSON (crdConfig.values or { });
+                  src = chartCrdYamls.${name};
                 }
                 ''
-                  export HELM_CACHE_HOME="$TMP/.nix-helm-build-cache"
-
-                  ${pkgs.kubernetes-helm}/bin/helm template \
-                  --include-crds \
-                  --kube-version "v${pkgs.kubernetes.version}" \
-                  --values "$helmValuesPath" \
-                  "${name}" \
-                  "${_chart}" \
-                  ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
-                  | ${pkgs.yq}/bin/yq -Ms '.' \
+                  ${pkgs.yq}/bin/yq -Ms '.' "$src/crds.yaml" \
                   | ${pkgs.jq}/bin/jq '[.[] | select(. != null and .kind == "CustomResourceDefinition")]' \
                   > $out
                 ''
-            else if useSrc then
+            else
               # Source-based: parse YAML files → extract CRDs → JSON array
               pkgs.runCommand "parse-${name}-crds"
                 {
@@ -318,39 +354,33 @@
                     i=$((i + 1))
                   done
                   jq -s 'add' "''${tempFiles[@]}" > $out
-                ''
-            else
-              throw "Service '${name}' has CRDs defined but neither 'src' nor 'chart'/'chartAttrs' are set";
+                '';
 
           # Build a nixidy CRD type generator derivation for a service.
-          # Dispatches to either fromChartCRD or fromCRD based on the service's
-          # CRD configuration, forwarding only the keys that are present and non-empty.
+          # For chart-based services, reuses the shared mkChartCrdYaml derivation
+          # as the src for fromCRD, so helm template runs only once per service.
           # { fromCRD, fromChartCRD } -> string -> service -> derivation
           mkCrdGenerator =
-            { fromCRD, fromChartCRD }:
+            { fromCRD }:
             name: service:
             let
               crdConfig = callServiceCrds service;
-              useChartGenerator = crdConfig.chart or null != null || crdConfig.chartAttrs or { } != { };
-              useSrcGenerator = crdConfig.src or null != null;
+              useChart = crdConfig.chart or null != null || crdConfig.chartAttrs or { } != { };
+              useSrc = crdConfig.src or null != null;
             in
-            if useChartGenerator then
-              fromChartCRD (
+            if useChart then
+              # Use fromCRD with the shared chart-crds derivation as src,
+              # instead of fromChartCRD which would run helm template again.
+              fromCRD (
                 {
                   inherit name;
+                  src = chartCrdYamls.${name};
+                  crds = [ "crds.yaml" ];
+                  kindFilter = crdConfig.crds or [ ];
                 }
-                // builtins.intersectAttrs {
-                  chart = null;
-                  chartAttrs = null;
-                  values = null;
-                  crds = null;
-                  namePrefix = null;
-                  attrNameOverrides = null;
-                  skipCoerceToList = null;
-                  extraOpts = null;
-                } crdConfig
+                // pickNonEmpty [ "namePrefix" "attrNameOverrides" "skipCoerceToList" ] crdConfig
               )
-            else if useSrcGenerator then
+            else if useSrc then
               fromCRD (
                 {
                   inherit name;
