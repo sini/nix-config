@@ -116,7 +116,7 @@
               # egress-masquerade-interfaces:
 
               # Points to the stable loopback routed by the BGP fabric
-              k8sServiceHost = environment.getAssignment "kube-apiserver-vip";
+              k8sServiceHost = "localhost"; # environment.getAssignment "kube-apiserver-vip";
               k8sServicePort = 6443;
 
               # Set Cilium as a kube-proxy replacement.
