@@ -1,6 +1,5 @@
 {
   config,
-  rootPath,
   inputs,
   withSystem,
   lib,
@@ -12,6 +11,7 @@
       inherit (config.flake.meta) repo;
       inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
       inherit (config.flake.lib.kubernetes-utils) extractCRDsFromChart;
+      inherit (config.flake.secretsPaths) secretsPath sopsConfigPath rawSecretsPath rawSopsConfigPath;
 
       # Core infrastructure services required by every nixidy environment.
       # These are always included regardless of per-environment configuration.
@@ -115,8 +115,8 @@
         {
           age = {
             sops = {
-              configFile = rootPath + "/.sops.yaml";
-              outputDir = rootPath + "/.secrets/env/${env}/sops";
+              configFile = rawSopsConfigPath;
+              outputDir = rawSecretsPath + "/env/${env}/sops";
             };
             rekey = {
               recipientIdentifier = env;
