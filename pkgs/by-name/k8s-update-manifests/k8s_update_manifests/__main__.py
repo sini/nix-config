@@ -7,7 +7,7 @@ from pathlib import Path
 
 from .environment import EnvironmentManager
 from .models import EnvironmentMetadata
-from .utils import GitUtils, NixUtils
+from .utils import BuildCache, GitUtils, NixUtils
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -51,6 +51,11 @@ def parse_arguments() -> argparse.Namespace:
         "--skip-secrets",
         action="store_true",
         help="Exclude secret files from processing",
+    )
+    parser.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Force full nix re-evaluation, ignoring build cache",
     )
     parser.add_argument(
         "--verbose",
@@ -140,9 +145,17 @@ def main() -> int:
     logging.info(f"Git repository root: {git_root}")
     logging.info(f"Flake reference: {args.flake}")
 
-    # Build all environments in a single nix evaluation
-    logging.info("Building all environments...")
-    all_envs = NixUtils.build_all_environments(args.flake, args.system)
+    # Build all environments, using cache to skip nix evaluation when
+    # only non-k8s files have changed.
+    cache = BuildCache(git_root)
+    cached_manifest = None if args.no_cache else cache.get()
+
+    if cached_manifest is not None:
+        all_envs = NixUtils.parse_manifest(cached_manifest)
+    else:
+        logging.info("Building all environments...")
+        all_envs, manifest = NixUtils.build_all_environments(args.flake, args.system)
+        cache.put(manifest)
 
     env_names = sorted(all_envs.keys())
 

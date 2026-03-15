@@ -82,20 +82,40 @@ class NixUtils:
         return f"{arch}-{os_name}"
 
     @staticmethod
+    def parse_manifest(manifest: dict) -> dict[str, tuple["EnvironmentMetadata", Path]]:
+        """Parse a manifest dict into environment results.
+
+        Args:
+            manifest: Raw manifest dict from nixidy-all-envs
+
+        Returns:
+            Dict of env name to (EnvironmentMetadata, Path) tuples
+        """
+        results = {}
+        for env_name, data in manifest.items():
+            metadata = EnvironmentMetadata(
+                name=env_name,
+                repository=data["repository"],
+                branch=data["branch"],
+                output_path=Path(data["rootPath"]),
+            )
+            package_path = Path(data["packagePath"])
+            results[env_name] = (metadata, package_path)
+        return results
+
+    @staticmethod
     def build_all_environments(
         flake_ref: str,
         system: Optional[str] = None,
-    ) -> dict[str, "EnvironmentMetadata"]:
+    ) -> tuple[dict[str, tuple["EnvironmentMetadata", Path]], dict]:
         """Build all environment packages in a single nix evaluation.
-
-        Returns a dict mapping env name -> (metadata, package_path).
 
         Args:
             flake_ref: Flake reference
             system: System platform (auto-detected if not specified)
 
         Returns:
-            Dict of env name to (EnvironmentMetadata, Path) tuples
+            Tuple of (parsed results dict, raw manifest dict)
         """
         if system is None:
             system = NixUtils.get_system()
@@ -109,15 +129,4 @@ class NixUtils:
         with open(manifest_path) as f:
             manifest = json.load(f)
 
-        results = {}
-        for env_name, data in manifest.items():
-            metadata = EnvironmentMetadata(
-                name=env_name,
-                repository=data["repository"],
-                branch=data["branch"],
-                output_path=Path(data["rootPath"]),
-            )
-            package_path = Path(data["packagePath"])
-            results[env_name] = (metadata, package_path)
-
-        return results
+        return NixUtils.parse_manifest(manifest), manifest
