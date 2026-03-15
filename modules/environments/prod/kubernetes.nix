@@ -39,7 +39,7 @@
         cilium = {
           devices = [
             "lo"
-            "br0" # "enp2s0"
+            "enp2s0"
             "enp199s0f5"
             "enp199s0f6"
             # "tailscale0"

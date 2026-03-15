@@ -204,7 +204,7 @@
             };
             vrrpInstances.k3s = {
               state = if (nodeId == 0) then "MASTER" else "BACKUP";
-              interface = "br0"; # We use br0 cause we're cool like that...
+              interface = "enp2s0"; # All our current k3s nodes have this interface...
               virtualRouterId = 51;
               priority = 100 - nodeId; # Higher number wins (e.g., 100 on MASTER)
               virtualIps = [
