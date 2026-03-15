@@ -11,7 +11,7 @@
       inherit (config.flake.meta) repo;
       inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
       inherit (config.flake.lib.kubernetes-utils) extractCRDsFromChart;
-      inherit (config.flake.secretsPaths) secretsPath sopsConfigPath rawSecretsPath rawSopsConfigPath;
+      inherit (config.flake.secretsPaths) rawSecretsPath rawSopsConfigPath;
 
       # Core infrastructure services required by every nixidy environment.
       # These are always included regardless of per-environment configuration.
