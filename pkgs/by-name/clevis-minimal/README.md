@@ -17,9 +17,9 @@ The upstream Clevis package in nixpkgs has hard dependencies on Linux-only packa
 The package sources from our fork which contains the following upstream-ready patches:
 
 1. **Remove unused `sys/epoll.h` include** from `clevis-encrypt-sss.c`
-2. **Replace Linux `epoll` with POSIX `poll`** in `clevis-decrypt-sss.c` - functionally equivalent for the small fd counts clevis uses
-3. **Replace `pipe2` with portable `pipe` + `fcntl`** in `sss.c` - safe because the program is single-threaded
-4. **Make `cryptsetup` optional in test suite** - uses `subdir_done()` to skip LUKS tests when cryptsetup is unavailable
+1. **Replace Linux `epoll` with POSIX `poll`** in `clevis-decrypt-sss.c` - functionally equivalent for the small fd counts clevis uses
+1. **Replace `pipe2` with portable `pipe` + `fcntl`** in `sss.c` - safe because the program is single-threaded
+1. **Make `cryptsetup` optional in test suite** - uses `subdir_done()` to skip LUKS tests when cryptsetup is unavailable
 
 ### Removed Linux-Only Dependencies
 
@@ -110,10 +110,10 @@ boot.initrd.clevis = {
 When updating to new Clevis versions:
 
 1. Rebase the `darwin-support` branch onto the new upstream tag
-2. Update `rev` and `hash` in [package.nix](package.nix)
-3. Check if upstream added new Linux-only dependencies
-4. Test builds on both Linux and Darwin
-5. Verify JWE generation still works for Tang encryption
+1. Update `rev` and `hash` in [package.nix](package.nix)
+1. Check if upstream added new Linux-only dependencies
+1. Test builds on both Linux and Darwin
+1. Verify JWE generation still works for Tang encryption
 
 ## Related Files
 
