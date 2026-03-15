@@ -7,7 +7,7 @@
         ...
       }:
       let
-        hosts = environment.findHostsByRole "kubernetes";
+        hosts = environment.findHostsByRole "k3s";
       in
       {
         applications.cilium = {

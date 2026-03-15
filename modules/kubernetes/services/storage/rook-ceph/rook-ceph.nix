@@ -21,7 +21,7 @@
       }:
       let
         hosts =
-          environment.findHostsByRole "kubernetes"
+          environment.findHostsByRole "k3s"
           |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.tags ? "ceph-device");
         rookDomain = environment.getDomainFor "rook-dashboard";
         radosDomain = environment.getDomainFor "rook-rados";

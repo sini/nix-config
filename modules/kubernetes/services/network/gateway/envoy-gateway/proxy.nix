@@ -8,7 +8,7 @@
       }:
       let
         default-gateway-address = environment.getAssignment "default-gateway";
-        numReplicas = builtins.length (lib.attrValues (environment.findHostsByRole "kubernetes"));
+        numReplicas = builtins.length (lib.attrValues (environment.findHostsByRole "k3s"));
         # Read certificate domains from environment configuration
         domains = environment.certificates.domains;
       in
