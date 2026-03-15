@@ -10,7 +10,6 @@
     let
       inherit (config.flake.meta) repo;
       inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
-      inherit (config.flake.lib.kubernetes-utils) extractCRDsFromChart;
       inherit (config.flake.secretsPaths) rawSecretsPath rawSopsConfigPath;
 
       # Core infrastructure services required by every nixidy environment.
@@ -50,19 +49,13 @@
         );
 
       # Resolve CRD objects for each enabled service at evaluation time.
-      # For source-based CRDs, reads from pre-parsed JSON build artifacts (see
-      # parsed-crd-objects package in perSystem) to avoid expensive YAML parsing
-      # during Nix evaluation. For chart-based CRDs, delegates to extractCRDsFromChart.
-      #
-      # Note: this evaluates service.crds with flake-level args ({ pkgs, lib, system, inputs }),
-      # which differs from the perSystem callServiceCrds that passes sharedConfig.
-      # Both produce the same crdConfig; the arg shapes differ because flake-level
-      # code doesn't have access to the perSystem module args pattern.
-      # { system, pkgs, enabledServices } -> { serviceName -> [crdObject] }
+      # All CRD objects (both source-based and chart-based) are pre-parsed into
+      # JSON at build time by the parsed-crd-objects package, then read back here.
+      # This avoids expensive IFD (helm template + YAML parsing) during evaluation.
+      # { system, enabledServices } -> { serviceName -> [crdObject] }
       getServiceCrdObjects =
         {
           system,
-          pkgs,
           enabledServices,
         }:
         let
@@ -70,40 +63,13 @@
         in
         lib.mapAttrs (
           name: service:
-          let
-            crdConfig =
-              if service.crds != null then
-                service.crds {
-                  inherit pkgs lib system;
-                  inherit (inputs) inputs';
-                  inherit inputs;
-                }
-              else
-                null;
-          in
-          if crdConfig == null then
+          if service.crds == null then
             [ ]
-          else if (crdConfig.src or null != null) then
-            # Source-based CRDs: use pre-parsed JSON from build-time derivation
+          else
             let
               parsedFile = parsedCrdObjects + "/${name}.json";
             in
             if builtins.pathExists parsedFile then builtins.fromJSON (builtins.readFile parsedFile) else [ ]
-          else
-            # Chart-based CRDs: extract at eval time via nix-kube-generators
-            let
-              klib = inputs.nix-kube-generators.lib { inherit pkgs; };
-              # Filter out generator-only options (namePrefix, attrNameOverrides, skipCoerceToList)
-              # that extractCRDsFromChart doesn't accept
-              extractConfig = builtins.intersectAttrs {
-                chart = null;
-                chartAttrs = null;
-                values = null;
-                crds = null;
-                extraOpts = null;
-              } crdConfig;
-            in
-            extractCRDsFromChart (extractConfig // { inherit name klib; })
         ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
 
       # Produce the agenix-rekey-to-sops configuration module for a nixidy environment.
@@ -238,7 +204,7 @@
         let
           enabledServices = getEnabledServices environment;
           serviceModules = getServiceModules enabledServices;
-          serviceCrdObjects = getServiceCrdObjects { inherit system pkgs enabledServices; };
+          serviceCrdObjects = getServiceCrdObjects { inherit system enabledServices; };
           userCharts = config.flake.chartsDerivations.${system} or { };
         in
         inputs.nixidy.lib.mkEnv {
@@ -285,43 +251,76 @@
         {
           inherit servicesWithCrds;
 
-          # Subset of servicesWithCrds that use source-based CRDs (YAML files
-          # that need to be parsed into JSON at build time for eval-time caching)
-          servicesWithSrcCrds = lib.filterAttrs (
-            _name: service: (callServiceCrds service).src or null != null
-          ) servicesWithCrds;
-
-          # Build a derivation that converts a service's CRD YAML files into a
-          # single JSON array of CustomResourceDefinition objects. These are read
-          # at eval time by getServiceCrdObjects to avoid slow YAML parsing.
+          # Build a derivation that extracts CRD objects as JSON for a service.
+          # Dispatches to source-based or chart-based extraction depending on
+          # the service's CRD configuration. The resulting JSON is read at eval
+          # time by getServiceCrdObjects, avoiding expensive IFD during evaluation.
           # string -> service -> derivation
           mkParsedServiceCrds =
             name: service:
             let
               crdConfig = callServiceCrds service;
+              useChart = crdConfig.chart or null != null || crdConfig.chartAttrs or { } != { };
+              useSrc = crdConfig.src or null != null;
+
+              klib = inputs.nix-kube-generators.lib { inherit pkgs; };
+              _chart =
+                if crdConfig.chart or null != null then
+                  crdConfig.chart
+                else
+                  klib.downloadHelmChart crdConfig.chartAttrs;
             in
-            pkgs.runCommand "parse-${name}-crds"
-              {
-                nativeBuildInputs = [
-                  pkgs.yq-go
-                  pkgs.jq
-                ];
-                inherit (crdConfig) src;
-                crds = builtins.toJSON crdConfig.crds;
-              }
-              ''
-                # Parse each CRD YAML file and extract CustomResourceDefinition objects
-                tempFiles=()
-                i=0
-                for crd in $(echo "$crds" | jq -r '.[]'); do
-                  tempFile="temp_$i.json"
-                  yq eval -o=json '.' "$src/$crd" | \
-                    jq -s 'map(select(type == "object" and .kind == "CustomResourceDefinition"))' > "$tempFile"
-                  tempFiles+=("$tempFile")
-                  i=$((i + 1))
-                done
-                jq -s 'add' "''${tempFiles[@]}" > $out
-              '';
+            if useChart then
+              # Chart-based: helm template → extract CRDs → JSON array
+              pkgs.runCommand "parse-${name}-crds"
+                {
+                  nativeBuildInputs = [
+                    pkgs.kubernetes-helm
+                    pkgs.yq
+                    pkgs.jq
+                  ];
+                  passAsFile = [ "helmValues" ];
+                  helmValues = builtins.toJSON (crdConfig.values or { });
+                }
+                ''
+                  export HELM_CACHE_HOME="$TMP/.nix-helm-build-cache"
+
+                  ${pkgs.kubernetes-helm}/bin/helm template \
+                  --include-crds \
+                  --kube-version "v${pkgs.kubernetes.version}" \
+                  --values "$helmValuesPath" \
+                  "${name}" \
+                  "${_chart}" \
+                  ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
+                  | ${pkgs.yq}/bin/yq -Ms '.' \
+                  | ${pkgs.jq}/bin/jq '[.[] | select(. != null and .kind == "CustomResourceDefinition")]' \
+                  > $out
+                ''
+            else if useSrc then
+              # Source-based: parse YAML files → extract CRDs → JSON array
+              pkgs.runCommand "parse-${name}-crds"
+                {
+                  nativeBuildInputs = [
+                    pkgs.yq
+                    pkgs.jq
+                  ];
+                  inherit (crdConfig) src;
+                  crds = builtins.toJSON crdConfig.crds;
+                }
+                ''
+                  tempFiles=()
+                  i=0
+                  for crd in $(echo "$crds" | jq -r '.[]'); do
+                    tempFile="temp_$i.json"
+                    ${pkgs.yq}/bin/yq -Ms '.' "$src/$crd" | \
+                      jq '[.[] | select(type == "object" and .kind == "CustomResourceDefinition")]' > "$tempFile"
+                    tempFiles+=("$tempFile")
+                    i=$((i + 1))
+                  done
+                  jq -s 'add' "''${tempFiles[@]}" > $out
+                ''
+            else
+              throw "Service '${name}' has CRDs defined but neither 'src' nor 'chart'/'chartAttrs' are set";
 
           # Build a nixidy CRD type generator derivation for a service.
           # Dispatches to either fromChartCRD or fromCRD based on the service's
