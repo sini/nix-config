@@ -34,8 +34,8 @@
             package = pkgs.jellyfin;
 
             # This user is configured in ./modules/users/media/media.nix and is a normal user for legacy/NAS reasons
-            user = "media";
-            group = "media";
+            # user = "media";
+            # group = "media";
 
             network = {
               enableIPv6 = true;

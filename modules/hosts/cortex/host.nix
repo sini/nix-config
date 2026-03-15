@@ -9,7 +9,6 @@
       };
       unmanagedInterfaces = [
         "enp8s0"
-        "br0"
       ];
     };
 
