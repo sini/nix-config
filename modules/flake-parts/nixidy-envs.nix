@@ -38,7 +38,6 @@ in
     let
       helpers = mkPerSystemHelpers { inherit pkgs sharedConfig; };
       inherit (helpers)
-        servicesWithSrcCrds
         servicesWithCrds
         mkParsedServiceCrds
         mkCrdGenerator
@@ -58,10 +57,11 @@ in
         }
       ];
 
-      # Pre-parse CRD YAML files at build time for caching
+      # Pre-parse CRD objects (both source-based and chart-based) at build time.
+      # Read back at eval time by getServiceCrdObjects to avoid IFD.
       packages.parsed-crd-objects =
         let
-          parsedServices = lib.mapAttrs mkParsedServiceCrds servicesWithSrcCrds;
+          parsedServices = lib.mapAttrs mkParsedServiceCrds servicesWithCrds;
         in
         pkgs.runCommand "parsed-crd-objects" { } ''
           mkdir -p $out
