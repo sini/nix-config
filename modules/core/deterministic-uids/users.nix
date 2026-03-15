@@ -56,6 +56,7 @@
         pcscd = uidGid 954;
         atticd = uidGid 953;
         git = uidGid 952;
+        jellyfin = uidGid 1027;
       };
   };
 }
