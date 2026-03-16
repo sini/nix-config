@@ -76,7 +76,7 @@
                 "--tab-width"
                 "2"
               ];
-              includes = [ "*.{css,html,js,json,jsx,md,mdx,scss,ts,yml,yaml}" ];
+              includes = [ "*.{css,html,js,json,jsx,scss,ts,yml,yaml}" ];
             };
           };
         };
