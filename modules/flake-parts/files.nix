@@ -23,17 +23,30 @@
     |> lib.concatLines
     |> (s: s + "\n");
 
-  perSystem = psArgs: {
-    devshells.default.packages = [ psArgs.config.files.writer.drv ];
-    devshells.default.commands = [
-      {
-        package = psArgs.config.files.writer.drv;
-        help = "Generate files";
-      }
-    ];
-    apps.write-files = {
-      type = "app";
-      program = "${psArgs.config.files.writer.drv}/bin/write-files";
+  perSystem =
+    {
+      pkgs,
+      config,
+      ...
+    }:
+    {
+      devshells.default.packages = [ config.files.writer.drv ];
+      devshells.default.commands = [
+        {
+          package = config.files.writer.drv;
+          help = "Generate files";
+        }
+      ];
+      apps.write-files = {
+        type = "app";
+        program =
+          let
+            wrapper = pkgs.writeShellScript "write-files-wrapper" ''
+              ${config.files.writer.drv}/bin/write-files
+              ${lib.getExe config.treefmt.build.wrapper} README.md docs/*-options.md
+            '';
+          in
+          "${wrapper}";
+      };
     };
-  };
 }
