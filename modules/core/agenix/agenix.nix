@@ -82,7 +82,7 @@
       {
         age = {
           identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${config.home.username}") [
-            osConfig.age.secrets."user-${config.home.username}-id_agenix".path
+            osConfig.age.secrets."user-identity-${config.home.username}".path
           ];
 
           rekey = {
