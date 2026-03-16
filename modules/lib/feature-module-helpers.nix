@@ -58,7 +58,7 @@ let
                   List of features specific to the user.
 
                   While a feature may specify NixOS modules in addition to home
-                  modules, only home modules will affect configuration.  For this
+                  modules, only home modules will affect configuration. For this
                   reason, users should be encouraged to avoid pointlessly specifying
                   their own NixOS modules.
                 '';

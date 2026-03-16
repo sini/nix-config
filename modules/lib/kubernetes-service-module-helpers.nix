@@ -55,15 +55,21 @@ let
             - fromChartCRD: Return { chart } or { chartAttrs } to auto-discover CRDs from a helm chart
 
             Example (fromCRD):
-              crds = { pkgs, lib, ... }: {
-                src = pkgs.fetchFromGitHub { ... };
-                crds = [ "path/to/crd.yaml" ];
-              };
+
+            ```nix
+            crds = { pkgs, lib, ... }: {
+              src = pkgs.fetchFromGitHub { ... };
+              crds = [ "path/to/crd.yaml" ];
+            };
+            ```
 
             Example (fromChartCRD):
-              crds = { inputs, system, ... }: {
-                chart = inputs.nixhelm.chartsDerivations.''${system}.traefik.traefik;
-              };
+
+            ```nix
+            crds = { inputs, system, ... }: {
+              chart = inputs.nixhelm.chartsDerivations.''${system}.traefik.traefik;
+            };
+            ```
 
             Available options in the returned attrset:
             - src: Source package with CRD YAML files (for fromCRD)
@@ -146,7 +152,7 @@ let
     default = { };
     description = ''
       Service-specific configurations for this environment.
-      Options are imported from flake.kubernetes.services.<name>.options.
+      Options are imported from flake.kubernetes.services.\<name>.options.
     '';
   };
 

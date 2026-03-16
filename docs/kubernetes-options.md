@@ -13,15 +13,21 @@
   - fromChartCRD: Return { chart } or { chartAttrs } to auto-discover CRDs from a helm chart
 
   Example (fromCRD):
+
+  ```nix
   crds = { pkgs, lib, ... }: {
-  src = pkgs.fetchFromGitHub { ... };
-  crds = [ "path/to/crd.yaml" ];
+    src = pkgs.fetchFromGitHub { ... };
+    crds = [ "path/to/crd.yaml" ];
   };
+  ```
 
   Example (fromChartCRD):
+
+  ```nix
   crds = { inputs, system, ... }: {
-  chart = inputs.nixhelm.chartsDerivations.${system}.traefik.traefik;
+    chart = inputs.nixhelm.chartsDerivations.${system}.traefik.traefik;
   };
+  ```
 
   Available options in the returned attrset:
   - src: Source package with CRD YAML files (for fromCRD)

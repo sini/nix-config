@@ -56,8 +56,8 @@ in
                       List of baseline features shared by all of this user's configurations.
 
                       Note that the "core" feature
-                      (`users.<username>.features.core`) will *always* be
-                      included in all of the user's configurations.  This
+                      (`users.<username>.features.core`) will _always_ be
+                      included in all of the user's configurations. This
                       follows the same behavior as the "core" feature in
                       the system scope, which is included in all system
                       configurations.

@@ -45,6 +45,14 @@
             pass_filenames = false;
             files = "^(flake\\.lock|modules/(environments|flake-parts|lib|kubernetes)/.*\\.nix)$";
           };
+          write-files = {
+            enable = true;
+            description = "Run write-files to re-generate documentation";
+            name = "write-files";
+            entry = "nix run .#write-files";
+            pass_filenames = false;
+            files = "\\.nix$";
+          };
         };
       };
     };

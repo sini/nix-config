@@ -49,7 +49,7 @@
 
 - `flake.environments.<name>.getDomainFor`: [function that evaluates to a(n) string] \
   Helper function to get the domain for a service.
-  Returns the configured service domain or defaults to <service-name>.\<environment.domain>
+  Returns the configured service domain or defaults to \<service-name>.\<environment.domain>
 
 - `flake.environments.<name>.getTopDomainFor`: [function that evaluates to a(n) string] \
   Helper function to get the top-level domain for a service.
@@ -77,7 +77,7 @@
 
 - `flake.environments.<name>.kubernetes.services.config`: \
   Service-specific configurations for this environment.
-  Options are imported from flake.kubernetes.services.<name>.options.
+  Options are imported from flake.kubernetes.services.\<name>.options.
 
 - `flake.environments.<name>.kubernetes.services.config.amd-gpu-device-plugin`: [attribute set] Configuration for amd-gpu-device-plugin service
 
@@ -153,7 +153,14 @@
 - `flake.environments.<name>.networks`: \
   Network definitions for the environment.
   Network names should match their purpose (e.g., default, kubernetes-pods, kubernetes-services).
-  Example: `{   default = { cidr = "10.0.0.0/24"; };   kubernetes-pods = { cidr = "172.20.0.0/16"; }; }`
+  Example:
+
+  ```nix
+  {
+    default = { cidr = "10.0.0.0/24"; };
+    kubernetes-pods = { cidr = "172.20.0.0/16"; };
+  }
+  ```
 
 - `flake.environments.<name>.networks.<name>.assignments`: [attribute set of string] \
   Static IP address assignments within this network.
@@ -187,7 +194,7 @@
 
 - `flake.environments.<name>.services.<name>.domain`: [null or string] \
   Override domain for this service.
-  If null, defaults to <service-name>.${environment.domain}
+  If null, defaults to \<service-name>.${environment.domain}
 
 - `flake.environments.<name>.tags`: [attribute set of string] Environment-wide tags for metadata and organization
 
@@ -199,8 +206,7 @@
 
 - `flake.environments.<name>.users.<name>.baseline`: Baseline features and configurations shared by all of this user's configurations
 
-- `flake.environments.<name>.users.<name>.baseline.features`: [list of string] \
-  List of baseline features shared by all of this user's configurations.
+- `flake.environments.<name>.users.<name>.baseline.features`: [list of string] List of baseline features shared by all of this user's configurations.
 
 - `flake.environments.<name>.users.<name>.baseline.inheritHostFeatures`: [boolean] \
   Whether to inherit all home-manager features from the host configuration.
