@@ -29,13 +29,7 @@
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/longhorn-oidc-client-secret.age";
           generator = {
             tags = [ "oidc" ];
-            script =
-              { pkgs, ... }:
-              ''
-                # Generate an rfc3986 secret
-                secret=$(${pkgs.openssl}/bin/openssl rand -base64 54 | tr -d '\n' | tr '+/' '-_' | tr -d '=' | cut -c1-72)
-                echo "$secret"
-              '';
+            script = "rfc3986-secret";
           };
           sopsOutput = {
             file = "oidc";

@@ -16,11 +16,15 @@
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/grafana-oidc-client-secret.age";
         owner = "grafana";
         group = "grafana";
+        generator = {
+          tags = [ "oidc" ];
+          script = "rfc3986-secret";
+        };
       };
 
       age.secrets.grafana-secret-key = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/grafana-secret-key.age";
-        generator.script = { pkgs, ... }: "${pkgs.openssl}/bin/openssl rand -hex 32";
+        generator.script = "hex32";
         owner = "grafana";
         group = "grafana";
       };

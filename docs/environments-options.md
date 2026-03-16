@@ -117,6 +117,8 @@
 
 - `flake.environments.<name>.kubernetes.services.config.hubble-ui`: [attribute set] Configuration for hubble-ui service
 
+- `flake.environments.<name>.kubernetes.services.config.longhorn`: [attribute set] Configuration for longhorn service
+
 - `flake.environments.<name>.kubernetes.services.config.romm`: [attribute set] Configuration for romm service
 
 - `flake.environments.<name>.kubernetes.services.config.rook-ceph`: [attribute set] Configuration for rook-ceph service
@@ -185,6 +187,10 @@
   Used by OAuth2 provisioning, ingress configuration, and service discovery.
   Example: services.argocd.domain = "argocd.zeroday.run";
 
+- `flake.environments.<name>.services.<name>.delegateTo`: [null or string] \
+  Name of another environment to delegate this service to.
+  When set, the service is considered to be hosted by the specified environment.
+
 - `flake.environments.<name>.services.<name>.domain`: [null or string] \
   Override domain for this service.
   If null, defaults to <service-name>.${environment.domain}
@@ -193,9 +199,34 @@
 
 - `flake.environments.<name>.timezone`: [string] Default timezone for the environment
 
-- `flake.environments.<name>.users`: Users in this environment with their features and configuration
+- `flake.environments.<name>.users`: \
+  Users in this environment with their identity, Unix account, and home configuration.
+  Set enableUnixAccount = true for users that should be created on hosts.
+
+- `flake.environments.<name>.users.<name>.baseline`: Baseline features and configurations shared by all of this user's configurations
+
+- `flake.environments.<name>.users.<name>.baseline.features`: [list of string] \
+  List of baseline features shared by all of this user's configurations.
+
+- `flake.environments.<name>.users.<name>.baseline.inheritHostFeatures`: [boolean] \
+  Whether to inherit all home-manager features from the host configuration.
+
+  When true, this user will receive all home-manager modules from the host's
+  enabled features. When false, only user-specific features and baseline features
+  will be included.
 
 - `flake.environments.<name>.users.<name>.configuration`: [module] User-specific home configuration
+
+- `flake.environments.<name>.users.<name>.displayName`: [string] Display name for the user (defaults to username)
+
+- `flake.environments.<name>.users.<name>.email`: [null or string] \
+  Email address for the user.
+  If null, defaults to username@domain.
+  If set, used as the full email address.
+
+- `flake.environments.<name>.users.<name>.enableUnixAccount`: [boolean] \
+  Whether to create a Unix user account on hosts.
+  If false, this is an identity-only user (e.g., for Kanidm).
 
 - `flake.environments.<name>.users.<name>.features`: [list of string] \
   List of features specific to the user.
@@ -204,3 +235,23 @@
   modules, only home modules will affect configuration. For this
   reason, users should be encouraged to avoid pointlessly specifying
   their own NixOS modules.
+
+- `flake.environments.<name>.users.<name>.gid`: [null or signed integer] Group ID for the Unix account (defaults to uid if not set)
+
+- `flake.environments.<name>.users.<name>.gpgKey`: [null or string] \
+  GPG key ID for the user (parent key ID).
+  Used for git commit signing, sops encryption, etc.
+
+- `flake.environments.<name>.users.<name>.groups`: [list of string] List of identity groups the user belongs to (defaults to ['users'])
+
+- `flake.environments.<name>.users.<name>.linger`: [boolean] Enable lingering for the user (systemd user services start without login)
+
+- `flake.environments.<name>.users.<name>.sshKeys`: [list of string] \
+  SSH public keys for the user.
+  Can be used by system user configuration, Forgejo, etc.
+
+- `flake.environments.<name>.users.<name>.systemGroups`: [list of string] \
+  System groups (extraGroups) for the user.
+  Example: ["wheel", "networkmanager", "podman"]
+
+- `flake.environments.<name>.users.<name>.uid`: [null or signed integer] User ID for the Unix account

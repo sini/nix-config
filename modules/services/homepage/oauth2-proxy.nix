@@ -15,6 +15,10 @@
       age.secrets = {
         oauth2-proxy-oidc-secret = {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/oauth2-proxy-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script = "rfc3986-secret";
+          };
           mode = "440";
           owner = "oauth2-proxy";
           group = "oauth2-proxy";
@@ -22,6 +26,7 @@
 
         oauth2-proxy-cookie-secret = {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/oauth2-proxy-cookie-secret.age";
+          generator.script = "hex32";
           mode = "440";
           owner = "oauth2-proxy";
           group = "oauth2-proxy";

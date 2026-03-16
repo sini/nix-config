@@ -30,10 +30,16 @@
   Note that due to these features' nature as user-specific, they
   may not define NixOS modules, which would affect the entire system.
 
+- `flake.users.<name>.features.<name>.darwin`: [module] A Darwin-specific system module for this feature (macOS only)
+
 - `flake.users.<name>.features.<name>.excludes`: [list of string] List of names of features to exclude from this feature (prevents the feature and its requires from being added)
 
 - `flake.users.<name>.features.<name>.home`: [module] A Home-Manager module for this feature
 
+- `flake.users.<name>.features.<name>.linux`: [module] A Linux-specific system module for this feature (NixOS only)
+
 - `flake.users.<name>.features.<name>.requires`: [list of string] List of names of features required by this feature
+
+- `flake.users.<name>.features.<name>.system`: [module] A cross-platform system module for this feature (NixOS and Darwin)
 
 - `flake.users.<name>.name`: [unspecified value] Username
