@@ -21,12 +21,18 @@
       };
 
       networking = {
+        nftables.enable = true;
         firewall = {
           checkReversePath = "loose";
           trustedInterfaces = [ config.services.tailscale.interfaceName ];
           allowedUDPPorts = [ config.services.tailscale.port ];
         };
       };
+
+      # Force tailscaled to use nftables, avoiding "iptables-compat" translation layer.
+      systemd.services.tailscaled.serviceConfig.Environment = [
+        "TS_DEBUG_FIREWALL_MODE=nftables"
+      ];
 
       environment.persistence."/persist".directories = [
         "/var/lib/tailscale"
