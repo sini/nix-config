@@ -172,7 +172,7 @@ in
                       default = null;
                       description = ''
                         Override domain for this service.
-                        If null, defaults to <service-name>.''${environment.domain}
+                        If null, defaults to \<service-name>.''${environment.domain}
                       '';
                     };
 
@@ -201,10 +201,14 @@ in
               description = ''
                 Network definitions for the environment.
                 Network names should match their purpose (e.g., default, kubernetes-pods, kubernetes-services).
-                Example: ```{
+                Example:
+
+                ```nix
+                {
                   default = { cidr = "10.0.0.0/24"; };
                   kubernetes-pods = { cidr = "172.20.0.0/16"; };
-                }```
+                }
+                ```
               '';
             };
 
@@ -345,7 +349,7 @@ in
               readOnly = true;
               description = ''
                 Helper function to get the domain for a service.
-                Returns the configured service domain or defaults to <service-name>.<environment.domain>
+                Returns the configured service domain or defaults to \<service-name>.\<environment.domain>
               '';
             };
 

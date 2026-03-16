@@ -16,6 +16,7 @@
       - **[users](docs/users-options.md)**: User account definitions and configuration options.
 
       See the linked documentation files for complete option references.
+
     '';
   perSystem =
     {
@@ -47,16 +48,22 @@
               in
               pkgs.runCommand "${name}-options.md" { buildInputs = [ pkgs.jq ]; } ''
                 jq -r 'to_entries | map(
+                  # Normalize description text
+                  .value.description = (
+                    .value.description
+                    | gsub("\\n+$"; "")                    # Remove trailing newlines
+                    | gsub(" +\\n"; "\\n")                 # Remove trailing spaces from lines
+                  ) |
                   .value.isMultiline = (.value.description | contains("\n")) |
                   if (.value.type == null or (.value.type | tostring | contains("submodule")) or (.value.type | tostring | contains("raw"))) then
                     if .value.isMultiline then
-                      "- `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  "))"
+                      "- `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  ") | gsub("\n  \n"; "\n\n"))"
                     else
                       "- `\(.key)`: \(.value.description)"
                     end
                   else
                     if .value.isMultiline then
-                      "- `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  "))"
+                      "- `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  ") | gsub("\n  \n"; "\n\n"))"
                     else
                       "- `\(.key)`: [\(.value.type)] \(.value.description)"
                     end

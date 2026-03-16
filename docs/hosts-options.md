@@ -71,8 +71,7 @@
 
 - `flake.hosts.<name>.users.<name>.baseline`: Baseline features and configurations shared by all of this user's configurations
 
-- `flake.hosts.<name>.users.<name>.baseline.features`: [list of string] \
-  List of baseline features shared by all of this user's configurations.
+- `flake.hosts.<name>.users.<name>.baseline.features`: [list of string] List of baseline features shared by all of this user's configurations.
 
 - `flake.hosts.<name>.users.<name>.baseline.inheritHostFeatures`: [boolean] \
   Whether to inherit all home-manager features from the host configuration.
