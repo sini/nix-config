@@ -1,8 +1,5 @@
-{ config, ... }:
 {
   flake.environments.dev.kubernetes = {
-    secretsFile = config.flake.secretsPaths.secretsPath + "/env/dev/k8s-secrets.enc.yaml";
-
     tlsSanIps = [
       "10.9.1.1" # bitstream
       "10.9.1.2" # bitstream

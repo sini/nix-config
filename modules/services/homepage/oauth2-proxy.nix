@@ -26,7 +26,7 @@
 
         oauth2-proxy-cookie-secret = {
           rekeyFile = rootPath + "/.secrets/env/${environment.name}/oauth2-proxy-cookie-secret.age";
-          generator.script = "hex32";
+          generator.script = "base64";
           mode = "440";
           owner = "oauth2-proxy";
           group = "oauth2-proxy";

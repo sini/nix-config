@@ -16,6 +16,7 @@
 
     nixidy =
       {
+        config,
         charts,
         environment,
         ...
@@ -24,8 +25,28 @@
         # Consume certificate configuration from environment
         domains = environment.certificates.domains;
         issuers = environment.certificates.issuers;
+
+        issuerSecrets = lib.listToAttrs (
+          lib.flatten (
+            lib.mapAttrsToList (
+              issuerName: issuerConfig:
+              lib.optional (issuerConfig.ageKeyFile != null) {
+                name = "${issuerName}-cloudflare-api-key";
+                value = {
+                  rekeyFile = issuerConfig.ageKeyFile;
+                  sopsOutput = {
+                    file = "cert-manager";
+                    key = "${issuerName}-cloudflare-api-key";
+                  };
+                };
+              }
+            ) environment.certificates.issuers
+          )
+        );
       in
       {
+        age.secrets = issuerSecrets;
+
         applications.cert-manager = {
           namespace = "cert-manager";
 
@@ -52,11 +73,11 @@
             secrets =
               issuers
               |> lib.attrsets.mapAttrs' (
-                issuer: secretRef: {
+                issuer: _secretRef: {
                   name = "${issuer}-secret";
                   value = {
                     type = "Opaque";
-                    stringData.cloudflare-api-token = environment.secrets.from secretRef;
+                    stringData.cloudflare-api-token = config.age.secrets."${issuer}-cloudflare-api-key".sopsRef;
                   };
                 }
               );

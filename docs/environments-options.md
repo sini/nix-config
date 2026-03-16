@@ -18,10 +18,6 @@
 
 - `flake.environments.<name>.certificates.issuers.<name>.ageKeyFile`: [null or absolute path] Optional path to the file containing the API key (agenix)
 
-- `flake.environments.<name>.certificates.issuers.<name>.secretKey`: [null or string] The secret key name within the secrets file
-
-- `flake.environments.<name>.certificates.issuers.<name>.sopsFile`: [null or absolute path] Optional path to the SOPS file containing the API key
-
 - `flake.environments.<name>.delegation`: Cross-environment delegation configuration
 
 - `flake.environments.<name>.delegation.authTo`: [null or string] Environment to delegate authentication to (e.g., 'prod')
@@ -74,8 +70,6 @@
 - `flake.environments.<name>.ipv6.ula_prefix`: [null or string] ULA prefix for the environment (e.g., fd64::/48)
 
 - `flake.environments.<name>.kubernetes`: Kubernetes-specific network configuration
-
-- `flake.environments.<name>.kubernetes.secretsFile`: [null or absolute path] Path to sops encrypted secret file for kubernetes environment
 
 - `flake.environments.<name>.kubernetes.services`: \
   Kubernetes service management for this environment.
