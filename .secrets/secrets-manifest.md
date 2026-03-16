@@ -353,7 +353,7 @@ They will be created automatically if they don't exist.
 - **Used by**: nixos:uplink
 - **Owner**: oauth2-proxy:oauth2-proxy (440)
 - **Rekey File**: `.secrets/env/prod/oauth2-proxy-cookie-secret.age`
-- **Generator**: built-in: hex32
+- **Generator**: built-in: base64
 
 
 

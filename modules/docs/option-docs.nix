@@ -50,15 +50,15 @@
                   .value.isMultiline = (.value.description | contains("\n")) |
                   if (.value.type == null or (.value.type | tostring | contains("submodule")) or (.value.type | tostring | contains("raw"))) then
                     if .value.isMultiline then
-                      "* `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  "))"
+                      "- `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  "))"
                     else
-                      "* `\(.key)`: \(.value.description)"
+                      "- `\(.key)`: \(.value.description)"
                     end
                   else
                     if .value.isMultiline then
-                      "* `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  "))"
+                      "- `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  "))"
                     else
-                      "* `\(.key)`: [\(.value.type)] \(.value.description)"
+                      "- `\(.key)`: [\(.value.type)] \(.value.description)"
                     end
                   end
                 ) | join("\n\n")' \

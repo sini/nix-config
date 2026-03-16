@@ -100,6 +100,10 @@
             # Generate 32 bytes of random hex (64 hex characters)
             ${pkgs.openssl}/bin/openssl rand -hex 32
           '';
+
+        timestamp = _: ''
+          date +%FT%T%Z
+        '';
       };
     };
 }

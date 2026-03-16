@@ -92,12 +92,6 @@ let
 
   # Base kubernetes options shared by config types (network + secrets)
   baseKubernetesOptions = kubernetesNetworkOptions // {
-    secretsFile = mkOption {
-      type = types.nullOr types.path;
-      default = null;
-      description = "Path to sops encrypted secret file for kubernetes environment";
-    };
-
     sso = mkOption {
       type = types.submodule {
         options = {

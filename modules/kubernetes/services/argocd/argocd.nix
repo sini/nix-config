@@ -12,15 +12,49 @@
         domain = environment.getDomainFor "argocd";
       in
       {
-        age.secrets.argocd-oidc-client-secret = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/argocd-oidc-client-secret.age";
-          generator = {
-            tags = [ "oidc" ];
-            script = "rfc3986-secret";
+        age.secrets = {
+          argocd-oidc-client-secret = {
+            rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/argocd-oidc-client-secret.age";
+            generator = {
+              tags = [ "oidc" ];
+              script = "rfc3986-secret";
+            };
+            sopsOutput = {
+              file = "oidc";
+              key = "argocd";
+            };
           };
-          sopsOutput = {
-            file = "oidc";
-            key = "argocd";
+
+          argocd-redis-secret = {
+            generator.script = "alnum";
+            sopsOutput = {
+              file = "argocd";
+              key = "redis-secret";
+            };
+          };
+
+          argocd-admin-pass = {
+            generator.script = "passphrase";
+            sopsOutput = {
+              file = "argocd";
+              key = "admin-pass";
+            };
+          };
+
+          argocd-admin-pass-mtime = {
+            generator.script = "timestamp";
+            sopsOutput = {
+              file = "argocd";
+              key = "admin-pass-mtime";
+            };
+          };
+
+          argocd-secret-key = {
+            generator.script = "base64";
+            sopsOutput = {
+              file = "argocd";
+              key = "secret-key";
+            };
           };
         };
 
@@ -213,13 +247,13 @@
 
             secrets.argocd-redis = {
               type = "Opaque";
-              stringData.auth = environment.secrets.for "argocd-redis";
+              stringData.auth = config.age.secrets.argocd-redis-secret.sopsRef;
             };
 
             secrets.argocd-secret.stringData = {
-              "admin.password" = environment.secrets.for "argocd-admin-password";
-              "admin.passwordMtime" = environment.secrets.for "argocd-admin-mtime";
-              "server.secretkey" = environment.secrets.for "argocd-secretkey";
+              "admin.password" = config.age.secrets.argocd-admin-pass.sopsRef;
+              "admin.passwordMtime" = config.age.secrets.argocd-admin-pass-mtime.sopsRef;
+              "server.secretkey" = config.age.secrets.argocd-secret-key.sopsRef;
               "oidc.clientSecret" = config.age.secrets.argocd-oidc-client-secret.sopsRef;
             };
 

@@ -87,6 +87,8 @@
             rekey = {
               recipientIdentifier = env;
               storageMode = "local";
+              generatedSecretsDir = rawSecretsPath + "/env/${env}/generated";
+              localStorageDir = rawSecretsPath + "/env/${env}/rekeyed";
               inherit (inputs.self.secretsConfig) masterIdentities;
             };
           };

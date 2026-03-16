@@ -151,16 +151,6 @@ in
                             default = null;
                             description = "Optional path to the file containing the API key (agenix)";
                           };
-                          sopsFile = mkOption {
-                            type = types.nullOr types.path;
-                            default = null;
-                            description = "Optional path to the SOPS file containing the API key";
-                          };
-                          secretKey = mkOption {
-                            type = types.nullOr types.str;
-                            default = null;
-                            description = "The secret key name within the secrets file";
-                          };
                         };
                       }
                     );
@@ -211,10 +201,10 @@ in
               description = ''
                 Network definitions for the environment.
                 Network names should match their purpose (e.g., default, kubernetes-pods, kubernetes-services).
-                Example: `{
+                Example: ```{
                   default = { cidr = "10.0.0.0/24"; };
                   kubernetes-pods = { cidr = "172.20.0.0/16"; };
-                }`
+                }```
               '';
             };
 
@@ -475,19 +465,6 @@ in
                     config.name;
               in
               {
-                from =
-                  {
-                    sopsFile ? config.kubernetes.secretsFile,
-                    secretKey,
-                    ...
-                  }:
-                  "ref+sops://${sopsFile}#${secretKey}";
-
-                for = secretName: "ref+sops://${config.kubernetes.secretsFile}#${secretName}";
-                forInlineFor = secretName: "ref+sops://${config.kubernetes.secretsFile}#${secretName}+";
-                forOidcService =
-                  name:
-                  "ref+sops://${flakeConfig.flake.secretsPaths.secretsPath}/env/${credentialsEnv}/oidc/${name}-oidc-client-secret.enc.yaml#${name}-oidc-client-secret";
                 oidcIssuerFor =
                   clientID:
                   let
