@@ -25,7 +25,6 @@
 
   perSystem =
     {
-      pkgs,
       config,
       ...
     }:
@@ -39,14 +38,7 @@
       ];
       apps.write-files = {
         type = "app";
-        program =
-          let
-            wrapper = pkgs.writeShellScript "write-files-wrapper" ''
-              ${config.files.writer.drv}/bin/write-files
-              ${lib.getExe config.treefmt.build.wrapper} README.md docs/*-options.md
-            '';
-          in
-          "${wrapper}";
+        program = "${config.files.writer.drv}/bin/write-files";
       };
     };
 }
