@@ -216,7 +216,13 @@
             crdObjects = serviceCrdObjects;
           };
           modules = [
+            # Include agenix-rekey-to-sops module
             inputs.agenix-rekey-to-sops.sopsModules.default
+
+            # This local feature system module is also compatible with nixidy envs
+            # It provides our custom agenix generator types
+            config.flake.features.agenix-generators.system
+
             (mkAgeModule env)
             (mkNixidyModule {
               inherit

@@ -14,6 +14,10 @@
     {
       age.secrets.headscale-oidc-secret = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/headscale-oidc-client-secret.age";
+        generator = {
+          tags = [ "oidc" ];
+          script = "rfc3986-secret";
+        };
         mode = "440";
         owner = config.services.headscale.user;
         inherit (config.services.headscale) group;

@@ -5,10 +5,12 @@
 }:
 {
   flake.features.agenix = {
+    requires = [ "agenix-generators" ];
     system =
       {
         config,
         hostOptions,
+        users,
         lib,
         ...
       }:
@@ -37,22 +39,16 @@
 
           # Create age secrets for each enabled user if their id_agenix.pub exists
           secrets = lib.mkMerge [
-            (lib.mapAttrs'
-              (username: _: {
-                name = "user-${username}-id_agenix";
-                value = {
-                  rekeyFile = rootPath + "/.secrets/users/${username}/id_agenix.age";
-                  owner = username;
-                  group = username;
-                  mode = "600";
-                };
-              })
-              (
-                lib.filterAttrs (
-                  username: _: builtins.pathExists (rootPath + "/.secrets/users/${username}/id_agenix.pub")
-                ) config.users.users
-              )
-            )
+            (lib.mapAttrs' (username: _: {
+              name = "user-identity-${username}";
+              value = {
+                rekeyFile = rootPath + "/.secrets/users/${username}/id_agenix.age";
+                owner = username;
+                group = username;
+                mode = "600";
+                generator.script = "age-identity";
+              };
+            }) users) # We create age identities for
           ];
         };
 
@@ -85,7 +81,7 @@
       }:
       {
         age = {
-          identityPaths = lib.optionals (osConfig.age.secrets ? "user-${config.home.username}-id_agenix") [
+          identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${config.home.username}") [
             osConfig.age.secrets."user-${config.home.username}-id_agenix".path
           ];
 
@@ -101,7 +97,7 @@
               rootPath + "/.secrets/rekeyed/${config.home.username}/${osConfig.networking.hostName}";
 
             hostPubkey =
-              if (osConfig.age.secrets ? "user-${config.home.username}-id_agenix") then
+              if (osConfig.age.secrets ? "user-identity-${config.home.username}") then
                 (rootPath + "/.secrets/users/${config.home.username}/id_agenix.pub")
               else
                 hostOptions.public_key;

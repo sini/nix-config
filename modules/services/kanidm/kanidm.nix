@@ -14,6 +14,7 @@
     {
       age.secrets.kanidm-admin-password = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/kanidm-admin-password.age";
+        generator.script = "passphrase";
         owner = "kanidm";
         group = "kanidm";
       };

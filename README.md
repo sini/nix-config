@@ -121,6 +121,7 @@ using [the _files_ flake-parts module](https://github.com/mightyiam/files):
 - `docs/kubernetes-options.md`
 - `docs/users-options.md`
 - `README.md`
+- `.secrets/secrets-manifest.md`
 - `generated/bgp/unifi-frr-bgp-dev.conf`
 - `generated/bgp/unifi-frr-bgp-prod.conf`
 

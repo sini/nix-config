@@ -9,10 +9,11 @@
     }:
     {
       age.secrets.nix_store_signing_key = {
-        rekeyFile = rootPath + "/.secrets/services/nix-serve/cache-priv-key.pem.age";
+        generator.script = "binary-cache-key";
         owner = "nix-serve";
         mode = "0400";
       };
+
       networking.firewall.allowedTCPPorts = [ 16893 ];
 
       services.nix-serve = {
@@ -41,7 +42,7 @@
           openssh.authorizedKeys.keys =
             with lib;
             map (key: ''command="nix-store --serve --write",restrict '' + key) (
-              [ (builtins.readFile (rootPath + "/.secrets/users/nix-remote-build/id_agenix.pub")) ]
+              [ (builtins.readFile (rootPath + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ]
               ++ concatLists (
                 mapAttrsToList (
                   _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
