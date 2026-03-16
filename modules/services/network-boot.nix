@@ -67,7 +67,7 @@
         };
       };
 
-      age.secrets.initrd_host_ed25519_key.generator.script = "ssh-ed25519-tmpdir";
+      age.secrets.initrd_host_ed25519_key.generator.script = "ssh-key";
 
       # Make sure that there is always a valid initrd hostkey available that can be installed into
       # the initrd. When bootstrapping a system (or re-installing), agenix cannot succeed in decrypting

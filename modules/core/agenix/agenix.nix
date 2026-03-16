@@ -35,26 +35,6 @@
             localStorageDir = rootPath + "/.secrets/rekeyed/${config.networking.hostName}";
           };
 
-          # Custom generator for ssh-ed25519 since upstream doesn't seem to work
-          # Reported issue here: https://github.com/oddlama/agenix-rekey/issues/104
-          generators.ssh-ed25519-tmpdir =
-            {
-              lib,
-              name,
-              pkgs,
-              ...
-            }:
-            ''
-              (
-                tmpdir=$(mktemp -d)
-                trap 'rm -rf "$tmpdir"' EXIT
-                ${pkgs.openssh}/bin/ssh-keygen -q -t ed25519 -N "" \
-                  -C ${lib.escapeShellArg "${config.networking.hostName}:${name}"} \
-                  -f "$tmpdir/key"
-                cat "$tmpdir/key" >&3
-              ) 3>&1 >/dev/null 2>&1
-            '';
-
           # Create age secrets for each enabled user if their id_agenix.pub exists
           secrets = lib.mkMerge [
             (lib.mapAttrs'
