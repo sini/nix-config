@@ -25,6 +25,16 @@
           8920
         ];
 
+        # TODO: This is a hack, revert it...
+        users.deterministicIds.jellyfin =
+          let
+            uidGid = id: {
+              uid = id;
+              gid = id;
+            };
+          in
+          uidGid 1027;
+
         services = {
           declarative-jellyfin = {
             enable = true;
