@@ -68,12 +68,10 @@
           {
             pkgs,
             file,
-            name,
             ...
           }:
           let
-            target = config.networking.hostName or config.home.username;
-            keyName = "${target}:${name}";
+            keyName = "${config.networking.fqdn}";
           in
           ''
             publicKeyFile=${lib.escapeShellArg (lib.removeSuffix ".age" file + ".pub")}
