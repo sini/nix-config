@@ -10,7 +10,7 @@
     let
       inherit (config.flake.meta) repo;
       inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
-      inherit (config.flake.secretsPaths) rawSecretsPath rawSopsConfigPath;
+      inherit (config.flake.secretsPaths) rawSecretsPath;
 
       # Core infrastructure services required by every nixidy environment.
       # These are always included regardless of per-environment configuration.
@@ -81,7 +81,6 @@
         {
           age = {
             sops = {
-              configFile = rawSopsConfigPath;
               outputDir = rawSecretsPath + "/env/${env}/sops";
             };
             rekey = {

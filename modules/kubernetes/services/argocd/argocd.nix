@@ -19,43 +19,46 @@
               tags = [ "oidc" ];
               script = "rfc3986-secret";
             };
-            sopsOutput = {
-              file = "oidc";
-              key = "argocd";
-            };
+            sopsOutput.file = "oidc";
           };
 
           argocd-redis-secret = {
             generator.script = "alnum";
-            sopsOutput = {
-              file = "argocd";
-              key = "redis-secret";
-            };
+            sopsOutput.file = "argocd";
           };
 
           argocd-admin-pass = {
             generator.script = "passphrase";
-            sopsOutput = {
-              file = "argocd";
-              key = "admin-pass";
-            };
+            sopsOutput.file = "argocd";
           };
 
           argocd-admin-pass-mtime = {
             generator.script = "timestamp";
-            sopsOutput = {
-              file = "argocd";
-              key = "admin-pass-mtime";
-            };
+            sopsOutput.file = "argocd";
           };
 
           argocd-secret-key = {
             generator.script = "base64";
-            sopsOutput = {
-              file = "argocd";
-              key = "secret-key";
-            };
+            sopsOutput.file = "argocd";
           };
+
+          # my-cert = {
+          #   generator.script = "passphrase";
+          #   settings = {
+          #     validity = 365;
+          #     subject = {
+          #       country = "US";
+          #       state = "California";
+          #       location = "San Francisco";
+          #       organization = "My Company";
+          #       organization-unit = "DevOps";
+          #     };
+          #   };
+
+          #   sopsOutput = {
+          #     file = "certs";
+          #   };
+          # };
         };
 
         applications.argocd = {

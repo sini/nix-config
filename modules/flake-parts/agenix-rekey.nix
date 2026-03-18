@@ -52,6 +52,11 @@
             name = "AGENIX_REKEY_ADD_TO_GIT";
             value = "true";
           }
+          # Use the default identity on our yubikey for sops
+          {
+            name = "SOPS_AGE_KEY_CMD";
+            value = "age-plugin-yubikey -i";
+          }
         ];
       };
     };
