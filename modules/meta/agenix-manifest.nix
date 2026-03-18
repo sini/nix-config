@@ -200,12 +200,27 @@ let
 in
 {
   perSystem =
-    { pkgs, ... }:
+    {
+      pkgs,
+      config,
+      ...
+    }:
     {
       files.files = [
         {
           path_ = ".secrets/secrets-manifest.md";
-          drv = pkgs.writeText "secrets-manifest.md" generateManifest;
+          drv =
+            pkgs.runCommand "secrets-manifest.md"
+              {
+                nativeBuildInputs = [ config.formatter ];
+              }
+              ''
+                # Create a fake flake.nix so treefmt can find the tree root
+                touch flake.nix
+                echo ${pkgs.lib.escapeShellArg generateManifest} > temp.md
+                ${config.formatter}/bin/treefmt --no-cache temp.md
+                cat temp.md > $out
+              '';
         }
       ];
     };

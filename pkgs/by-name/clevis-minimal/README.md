@@ -132,5 +132,5 @@ When updating to new Clevis versions:
   to generate Tang JWE files
 - [update-tang-disk-keys](../update-tang-disk-keys/) - Uses this package to
   re-encrypt with TPM2+Tang
-- [modules/services/network-boot.nix](../../../modules/services/network-boot.nix) -
-  Consumes JWE files at boot
+- [modules/services/network-boot.nix](../../../modules/services/network-boot.nix)
+  \- Consumes JWE files at boot

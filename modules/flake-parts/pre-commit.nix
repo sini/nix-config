@@ -27,7 +27,7 @@
         check.enable = false;
 
         settings.hooks = {
-          treefmt.enable = true;
+          # treefmt.enable = true;
           nix-fmt = {
             enable = true;
             entry = lib.getExe self'.formatter;

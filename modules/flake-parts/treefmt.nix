@@ -20,7 +20,7 @@
       formatter = config.treefmt.build.wrapper;
 
       treefmt = {
-        projectRootFile = "flake.nix";
+        inherit (config.flake-root) projectRootFile;
         enableDefaultExcludes = true;
 
         settings = {
@@ -71,6 +71,10 @@
             "retain_line_breaks=true"
           ];
           formatter = {
+            mdformat.options = [
+              "--wrap"
+              "80"
+            ];
             prettier = {
               options = [
                 "--tab-width"

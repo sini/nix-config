@@ -22,6 +22,7 @@
     {
       pkgs,
       lib,
+      config,
       ...
     }:
     {
@@ -46,31 +47,42 @@
                     };
                 };
               in
-              pkgs.runCommand "${name}-options.md" { buildInputs = [ pkgs.jq ]; } ''
-                jq -r 'to_entries | map(
-                  # Normalize description text
-                  .value.description = (
-                    .value.description
-                    | gsub("\\n+$"; "")                    # Remove trailing newlines
-                    | gsub(" +\\n"; "\\n")                 # Remove trailing spaces from lines
-                  ) |
-                  .value.isMultiline = (.value.description | contains("\n")) |
-                  if (.value.type == null or (.value.type | tostring | contains("submodule")) or (.value.type | tostring | contains("raw"))) then
-                    if .value.isMultiline then
-                      "- `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  ") | gsub("\n  \n"; "\n\n"))"
+              pkgs.runCommand "${name}-options.md"
+                {
+                  nativeBuildInputs = [
+                    pkgs.jq
+                    config.formatter
+                  ];
+                }
+                ''
+                  # Create a fake flake.nix so treefmt can find the tree root
+                  touch flake.nix
+                  jq -r 'to_entries | map(
+                    # Normalize description text
+                    .value.description = (
+                      .value.description
+                      | gsub("\\n+$"; "")                    # Remove trailing newlines
+                      | gsub(" +\\n"; "\\n")                 # Remove trailing spaces from lines
+                    ) |
+                    .value.isMultiline = (.value.description | contains("\n")) |
+                    if (.value.type == null or (.value.type | tostring | contains("submodule")) or (.value.type | tostring | contains("raw"))) then
+                      if .value.isMultiline then
+                        "- `\(.key)`: \\\n  \(.value.description | gsub("\n"; "\n  ") | gsub("\n  \n"; "\n\n"))"
+                      else
+                        "- `\(.key)`: \(.value.description)"
+                      end
                     else
-                      "- `\(.key)`: \(.value.description)"
+                      if .value.isMultiline then
+                        "- `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  ") | gsub("\n  \n"; "\n\n"))"
+                      else
+                        "- `\(.key)`: [\(.value.type)] \(.value.description)"
+                      end
                     end
-                  else
-                    if .value.isMultiline then
-                      "- `\(.key)`: [\(.value.type)] \\\n  \(.value.description | gsub("\n"; "\n  ") | gsub("\n  \n"; "\n\n"))"
-                    else
-                      "- `\(.key)`: [\(.value.type)] \(.value.description)"
-                    end
-                  end
-                ) | join("\n\n")' \
-                  ${doc.optionsJSON}/share/doc/nixos/options.json > $out
-              '';
+                  ) | join("\n\n")' \
+                    ${doc.optionsJSON}/share/doc/nixos/options.json > temp.md
+                  ${config.formatter}/bin/treefmt --no-cache temp.md
+                  cat temp.md > $out
+                '';
           };
         in
         lib.mapAttrsToList mkOptionDoc self.flakeOptions;

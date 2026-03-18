@@ -104,6 +104,8 @@
       inputs.nixpkgs-lib.follows = "nixpkgs-unstable";
     };
 
+    flake-root.url = "github:srid/flake-root";
+
     nix-flatpak.url = "github:gmodena/nix-flatpak"; # unstable branch. Use github:gmodena/nix-flatpak/?ref=<tag> to pin releases.
 
     # For use with nixhelm chart generation
