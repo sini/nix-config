@@ -235,11 +235,6 @@
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
 
-    pre-commit-hooks = {
-      url = "github:cachix/pre-commit-hooks.nix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
     razerdaemon = {
       url = "github:sini/razer-control-revived";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
