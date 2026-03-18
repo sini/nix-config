@@ -36,15 +36,16 @@
         "treefmt-nix": "treefmt-nix"
       },
       "locked": {
-        "lastModified": 1773107680,
-        "narHash": "sha256-4U2QV9SUhFYGFXxlDcBZSB6sF4jeSxUo91aU7TTJxKY=",
+        "lastModified": 1773856119,
+        "narHash": "sha256-2iUbzx7sA5xR+LvdOVqa/jUUZDdZh7wzHqKOsijkejM=",
         "owner": "sini",
         "repo": "agenix-rekey",
-        "rev": "8861c444041577e3daf70042071ccd4c8d0a3e70",
+        "rev": "0cfc1c31c7394307c983316f0ca610da2944e4ed",
         "type": "github"
       },
       "original": {
         "owner": "sini",
+        "ref": "feat/settings",
         "repo": "agenix-rekey",
         "type": "github"
       }
@@ -61,11 +62,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773803925,
-        "narHash": "sha256-Lf+ZU2usSdu1rOoNXDYgTmEUJkcGIMafD36gi+xlfLw=",
+        "lastModified": 1773856217,
+        "narHash": "sha256-+PANMCIJY/jX5V4+G/ws9sb9/P87Rmo0OljnQvdnSeM=",
         "owner": "sini",
         "repo": "agenix-rekey-to-sops",
-        "rev": "f304d91de7b225099990897178fa145d2931460d",
+        "rev": "54a11752a795b2382bfa93d6f268227924a75f24",
         "type": "github"
       },
       "original": {

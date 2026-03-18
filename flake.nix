@@ -60,7 +60,7 @@
 
     agenix-rekey = {
       # url = "github:oddlama/agenix-rekey";
-      url = "github:sini/agenix-rekey"; # Fork with support for alternate input types
+      url = "github:sini/agenix-rekey/feat/settings"; # Fork with support for alternate input types
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
