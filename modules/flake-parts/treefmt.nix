@@ -90,7 +90,33 @@
             package = pkgs.nixfmt;
           };
           nixf-diagnose.enable = true;
-          prettier.enable = true;
+          prettier = {
+            enable = true;
+            settings = {
+              arrowParens = "always";
+              bracketSameLine = false;
+              bracketSpacing = true;
+              editorconfig = true;
+              embeddedLanguageFormatting = "auto";
+              endOfLine = "lf";
+              # experimentalTernaries = false;
+              htmlWhitespaceSensitivity = "css";
+              insertPragma = false;
+              jsxSingleQuote = true;
+              printWidth = 80;
+              proseWrap = "always";
+              quoteProps = "consistent";
+              requirePragma = false;
+              semi = true;
+              singleAttributePerLine = true;
+              singleQuote = false;
+              trailingComma = "all";
+              useTabs = false;
+              vueIndentScriptAndStyle = false;
+
+              tabWidth = 2;
+            };
+          };
           taplo.enable = true;
           # Python formatting
           black.enable = true;

@@ -60,6 +60,8 @@
         }:
         let
           parsedCrdObjects = withSystem system ({ config, ... }: config.packages.parsed-crd-objects);
+          # Read directory once to avoid multiple IFD operations
+          allFiles = parsedCrdObjects;
         in
         lib.mapAttrs (
           name: service:
@@ -67,7 +69,7 @@
             [ ]
           else
             let
-              parsedFile = parsedCrdObjects + "/${name}.json";
+              parsedFile = allFiles + "/${name}.json";
             in
             if builtins.pathExists parsedFile then builtins.fromJSON (builtins.readFile parsedFile) else [ ]
         ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
@@ -101,10 +103,10 @@
         { system, enabledServices }:
         let
           generatedCrds = withSystem system ({ config, ... }: config.packages.generated-crds);
+          # Read directory and filter for .nix files
+          dirContents = builtins.readDir generatedCrds;
           allNixFiles = lib.attrNames (
-            lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) (
-              builtins.readDir generatedCrds
-            )
+            lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) dirContents
           );
           enabledNixFiles = lib.filter (
             name: lib.elem (lib.removeSuffix ".nix" name) enabledServices
@@ -273,19 +275,33 @@
               passAsFile = [ "helmValues" ];
               helmValues = builtins.toJSON (crdConfig.values or { });
 
+              # Don't check remote stores for this local IFD derivation
+              allowSubstitutes = false;
+              preferLocalBuild = true;
+
               phases = [ "installPhase" ];
               installPhase = ''
                 export HELM_CACHE_HOME="$TMP/.nix-helm-build-cache"
                 mkdir -p $out
 
-                ${pkgs.kubernetes-helm}/bin/helm template \
-                --include-crds \
-                --kube-version "v${pkgs.kubernetes.version}" \
-                --values "$helmValuesPath" \
-                "${name}" \
-                "${resolveChart crdConfig}" \
-                ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
-                > $out/crds.yaml
+                # First try to extract CRDs directly from chart without templating
+                chart="${resolveChart crdConfig}"
+                if [ -d "$chart/crds" ]; then
+                  cat "$chart/crds"/*.yaml > $out/crds.yaml 2>/dev/null || true
+                fi
+
+                # If no CRDs found in crds/ directory, fall back to helm template
+                if [ ! -s $out/crds.yaml ]; then
+                  ${pkgs.kubernetes-helm}/bin/helm template \
+                  --include-crds \
+                  --skip-tests \
+                  --kube-version "v${pkgs.kubernetes.version}" \
+                  --values "$helmValuesPath" \
+                  "${name}" \
+                  "$chart" \
+                  ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
+                  > $out/crds.yaml
+                fi
               '';
             };
 
@@ -333,10 +349,13 @@
                     pkgs.jq
                   ];
                   src = chartCrdYamls.${name};
+
+                  # Don't check remote stores for this local IFD derivation
+                  allowSubstitutes = false;
+                  preferLocalBuild = true;
                 }
                 ''
-                  ${pkgs.yq}/bin/yq -Ms '.' "$src/crds.yaml" \
-                  | ${pkgs.jq}/bin/jq '[.[] | select(. != null and .kind == "CustomResourceDefinition")]' \
+                  ${pkgs.yq}/bin/yq -Ms '[.[] | select(. != null and .kind == "CustomResourceDefinition")]' "$src/crds.yaml" \
                   > $out
                 ''
             else
@@ -349,18 +368,21 @@
                   ];
                   inherit (crdConfig) src;
                   crds = builtins.toJSON crdConfig.crds;
+
+                  # Don't check remote stores for this local IFD derivation
+                  allowSubstitutes = false;
+                  preferLocalBuild = true;
                 }
                 ''
                   tempFiles=()
                   i=0
-                  for crd in $(echo "$crds" | jq -r '.[]'); do
+                  for crd in $(echo "$crds" | ${pkgs.jq}/bin/jq -r '.[]'); do
                     tempFile="temp_$i.json"
-                    ${pkgs.yq}/bin/yq -Ms '.' "$src/$crd" | \
-                      jq '[.[] | select(type == "object" and .kind == "CustomResourceDefinition")]' > "$tempFile"
+                    ${pkgs.yq}/bin/yq -Ms '[.[] | select(type == "object" and .kind == "CustomResourceDefinition")]' "$src/$crd" > "$tempFile"
                     tempFiles+=("$tempFile")
                     i=$((i + 1))
                   done
-                  jq -s 'add' "''${tempFiles[@]}" > $out
+                  ${pkgs.jq}/bin/jq -s 'add' "''${tempFiles[@]}" > $out
                 '';
 
           # Build a nixidy CRD type generator derivation for a service.

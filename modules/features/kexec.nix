@@ -78,8 +78,8 @@
             # make it easier to debug boot failures
             systemd.emergencyAccess = true;
 
-            # Use xz compression for faster boot
-            compressor = "xz";
+            # Use zstd compression for faster boot (and no getExe warning)
+            compressor = "zstd";
 
             # Ensure kernel modules are available for common network interfaces
             availableKernelModules = [

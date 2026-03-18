@@ -63,12 +63,14 @@ in
         parsed-crd-objects =
           let
             parsedServices = lib.mapAttrs mkParsedServiceCrds servicesWithCrds;
+            # Ensure all derivations are evaluated upfront (shallow eval is sufficient)
+            serviceNames = builtins.seq parsedServices (lib.attrNames parsedServices);
           in
           pkgs.runCommand "parsed-crd-objects" { } ''
             mkdir -p $out
             ${lib.concatMapStringsSep "\n" (name: ''
               ln -s ${parsedServices.${name}} $out/${name}.json
-            '') (lib.attrNames parsedServices)}
+            '') serviceNames}
           '';
 
         # Combined build target for k8s-update-manifests: builds all environment
@@ -88,6 +90,8 @@ in
                 package = nixidyEnv.environmentPackage;
               }
             ) envs;
+            # No deepSeq needed - the runCommand script references all packages directly
+            envNames = lib.attrNames envData;
           in
           pkgs.runCommand "nixidy-all-envs" { } ''
             mkdir -p $out
@@ -99,7 +103,7 @@ in
               ''
                 ln -s ${data.package} $out/${env}
               ''
-            ) (lib.attrNames envData)}
+            ) envNames}
             cat > $out/manifest.json <<'MANIFEST'
             ${builtins.toJSON (
               lib.mapAttrs (_env: data: {
@@ -115,12 +119,14 @@ in
             generators = lib.mapAttrs (mkCrdGenerator {
               inherit (inputs'.nixidy.packages.generators) fromCRD;
             }) servicesWithCrds;
+            # Ensure all derivations are evaluated upfront (shallow eval is sufficient)
+            generatorNames = builtins.seq generators (lib.attrNames generators);
           in
           pkgs.runCommand "generated-crds" { } ''
             mkdir -p $out
             ${lib.concatMapStringsSep "\n" (name: ''
               cp ${generators.${name}} $out/${name}.nix
-            '') (lib.attrNames generators)}
+            '') generatorNames}
           '';
       };
     };

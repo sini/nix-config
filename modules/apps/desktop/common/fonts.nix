@@ -7,6 +7,8 @@
           enableDefaultPackages = true;
           fontDir.enable = true;
           packages = with pkgs; [
+            source-code-pro
+
             nerd-fonts.symbols-only
             noto-fonts
             noto-fonts-cjk-sans
@@ -18,6 +20,7 @@
             nerd-fonts.meslo-lg
             nerd-fonts.symbols-only
             nerd-fonts.ubuntu-mono
+            nerd-fonts.terminess-ttf
 
             dejavu_fonts
             jetbrains-mono

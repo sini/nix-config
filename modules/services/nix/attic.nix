@@ -28,17 +28,8 @@
 
       age.secrets.attic-server-env = {
         generator.dependencies = [ config.age.secrets.attic-server-token ];
-        generator.script =
-          {
-            lib,
-            decrypt,
-            deps,
-            ...
-          }:
-          ''
-            echo -n "ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64="
-            ${decrypt} ${lib.escapeShellArg (lib.head deps).file}
-          '';
+        settings.keys = [ "ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64" ];
+        generator.script = "environment-file";
       };
 
       environment.systemPackages = [ pkgs.attic-client ];
