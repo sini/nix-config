@@ -1,20 +1,14 @@
 {
   flake.features.nix = {
-    system =
-      {
-        pkgs,
-        ...
-      }:
-      let
-        users = [
-          "root"
-          "@wheel"
-        ];
-      in
-      {
-        nix = {
-          # package = pkgs.nixVersions.nix_2_31;
-          package = pkgs.nixVersions.latest;
+    system = {
+      nix =
+        let
+          users = [
+            "root"
+            "@wheel"
+          ];
+        in
+        {
           settings = {
             experimental-features = [
               "auto-allocate-uids"
@@ -100,7 +94,7 @@
             options = "--delete-older-than 8d";
           };
         };
-      };
+    };
 
     darwin = {
       nix.gc.interval = {

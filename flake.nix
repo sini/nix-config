@@ -6,7 +6,7 @@
 
   nixConfig = {
     abort-on-warn = false;
-    extra-experimental-features = [ "pipe-operators" ];
+    extra-experimental-features = [ "pipe-operator" ];
     # Stylix and Nixidy require this...
     allow-import-from-derivation = true; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
@@ -73,7 +73,11 @@
 
     colmena = {
       url = "github:zhaofengli/colmena";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs = {
+        nixpkgs.follows = "nixpkgs-unstable";
+        flake-compat.follows = "flake-compat";
+        flake-utils.follows = "flake-utils";
+      };
     };
 
     declarative-jellyfin = {
@@ -104,6 +108,11 @@
       inputs.nixpkgs-lib.follows = "nixpkgs-unstable";
     };
 
+    flake-utils = {
+      url = "github:numtide/flake-utils";
+      inputs.systems.follows = "systems";
+    };
+
     flake-root.url = "github:srid/flake-root";
 
     nix-flatpak.url = "github:gmodena/nix-flatpak"; # unstable branch. Use github:gmodena/nix-flatpak/?ref=<tag> to pin releases.
@@ -126,6 +135,23 @@
     };
 
     import-tree.url = "github:vic/import-tree";
+
+    lix = {
+      url = "github:lix-project/lix";
+      flake = false;
+    };
+
+    lix-module = {
+      url = "git+https://git.lix.systems/lix-project/nixos-module?ref=main";
+      inputs = {
+        nixpkgs.follows = "nixpkgs-unstable";
+        lix.follows = "lix";
+      };
+    };
+
+    flake-compat = {
+      url = "git+https://git.lix.systems/lix-project/flake-compat?ref=main";
+    };
 
     microvm = {
       url = "github:microvm-nix/microvm.nix";
