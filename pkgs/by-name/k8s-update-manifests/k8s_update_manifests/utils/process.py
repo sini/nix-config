@@ -1,8 +1,9 @@
 """Process execution utilities."""
 
+import os
 import subprocess
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 
 class ProcessUtils:
@@ -14,6 +15,7 @@ class ProcessUtils:
         *,
         cwd: Optional[Path] = None,
         input_text: Optional[str] = None,
+        env: Optional[Dict[str, str]] = None,
     ) -> str:
         """Run a command, return stdout, raise on failure.
 
@@ -21,6 +23,7 @@ class ProcessUtils:
             cmd: Command and arguments to execute
             cwd: Working directory for command execution
             input_text: Text to pass to stdin
+            env: Additional environment variables to set
 
         Returns:
             Command stdout as string
@@ -28,6 +31,11 @@ class ProcessUtils:
         Raises:
             RuntimeError: If command exits with non-zero status
         """
+        process_env = None
+        if env is not None:
+            process_env = os.environ.copy()
+            process_env.update(env)
+
         process = subprocess.run(
             cmd,
             cwd=str(cwd) if cwd else None,
@@ -35,6 +43,7 @@ class ProcessUtils:
             text=True,
             capture_output=True,
             check=False,
+            env=process_env,
         )
         if process.returncode != 0:
             raise RuntimeError(

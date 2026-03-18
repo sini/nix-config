@@ -83,6 +83,7 @@ class SecretProcessor:
             ],
             cwd=self.git_root,
             input_text=raw_yaml,
+            env={"SOPS_AGE_KEY_CMD": "age-plugin-yubikey -i"},
         )
         return yaml.safe_load(result)
 
