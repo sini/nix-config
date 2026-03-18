@@ -37,19 +37,11 @@
             config.age.secrets.oauth2-proxy-cookie-secret
             config.age.secrets.oauth2-proxy-oidc-secret
           ];
-          generator.script =
-            {
-              lib,
-              decrypt,
-              deps,
-              ...
-            }:
-            ''
-              echo -n "OAUTH2_PROXY_COOKIE_SECRET="
-              ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 0).file}
-              echo -n "OAUTH2_PROXY_CLIENT_SECRET="
-              ${decrypt} ${lib.escapeShellArg (lib.elemAt deps 1).file}
-            '';
+          settings.keys = [
+            "OAUTH2_PROXY_COOKIE_SECRET"
+            "OAUTH2_PROXY_CLIENT_SECRET"
+          ];
+          generator.script = "environment-file";
         };
       };
 

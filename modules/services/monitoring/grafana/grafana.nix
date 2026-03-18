@@ -24,7 +24,8 @@
 
       age.secrets.grafana-secret-key = {
         rekeyFile = rootPath + "/.secrets/env/${environment.name}/grafana-secret-key.age";
-        generator.script = "hex32";
+        settings.length = "32";
+        generator.script = "hex";
         owner = "grafana";
         group = "grafana";
       };

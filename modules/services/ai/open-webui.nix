@@ -36,17 +36,8 @@ in
 
       age.secrets.open-webui-env = {
         generator.dependencies = [ config.age.secrets.open-webui-oidc-secret ];
-        generator.script =
-          {
-            lib,
-            decrypt,
-            deps,
-            ...
-          }:
-          ''
-            echo -n "OAUTH_CLIENT_SECRET="
-            ${decrypt} ${lib.escapeShellArg (lib.head deps).file}
-          '';
+        settings.keys = [ "OAUTH_CLIENT_SECRET" ];
+        generator.script = "environment-file";
       };
 
       services = {
