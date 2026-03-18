@@ -106,6 +106,7 @@
     darwin =
       {
         environment,
+        pkgs,
         ...
       }:
       let
@@ -117,10 +118,12 @@
         # Build Darwin user configurations
         buildDarwinUserConfig = userName: envUser: {
           users.users.${userName} = {
-            inherit (envUser) uid;
+            #inherit (envUser) uid; # Unix users don't sync with macos users :(
             home = "/Users/${userName}";
+            createHome = true;
             description = envUser.displayName;
             openssh.authorizedKeys.keys = envUser.sshKeys;
+            shell = pkgs.zsh;
           };
 
           # nix-darwin requires knownUsers for declarative user management
