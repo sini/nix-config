@@ -39,6 +39,13 @@
       split-monitor-workspaces
       ;
 
+    # https://github.com/NixOS/nixpkgs/pull/500950
+    openimagedenoise = prev.openimagedenoise.overrideAttrs (old: {
+      patches = map (
+        p: if baseNameOf (toString p) == "cuda.patch" then ./openimagedenoise-cuda.patch else p
+      ) (old.patches or [ ]);
+    });
+
     kvmfr = prev.kvmfr.override { looking-glass-client = prev.local.looking-glass-client-vulkan; };
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;
     nixidy = inputs.nixidy.packages.${prev.stdenv.hostPlatform.system}.default;
