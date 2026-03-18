@@ -4,19 +4,22 @@
 
 - setup niri + locking
 
-- https://scvalex.net/posts/55/ https://gitlab.com/scvalex/generating-secrets-flake
+- https://scvalex.net/posts/55/
+  https://gitlab.com/scvalex/generating-secrets-flake
 
 - Setup kanidm ssh login
 
 - move kanidm to axon cluster, add redundancy
 
-- setup a keepalive vip for axon services (vault, kanidm) maybe look at https://github.com/geraldwuhoo/homelab-iac
+- setup a keepalive vip for axon services (vault, kanidm) maybe look at
+  https://github.com/geraldwuhoo/homelab-iac
 
 - longhorn zfs volume: https://scvalex.net/posts/49/
 
 - maybe do ceph instead...
 
-- setup distributed vault unlocking to remove local secrets, reference: https://gitlab.com/usmcamp0811/dotfiles/-/tree/nixos/modules/nixos/services/vault?ref_type=heads
+- setup distributed vault unlocking to remove local secrets, reference:
+  https://gitlab.com/usmcamp0811/dotfiles/-/tree/nixos/modules/nixos/services/vault?ref_type=heads
 
 - setup tailscale
 
@@ -28,7 +31,8 @@
 
 - setup snapshot backup
 
-- reference: https://yomaq.github.io/posts/zfs-encryption-backups-and-convenience/
+- reference:
+  https://yomaq.github.io/posts/zfs-encryption-backups-and-convenience/
 
 - rust: https://scvalex.net/posts/63/
 
@@ -48,6 +52,7 @@
 
 - audio resources: https://github.com/polygon/audio.nix/tree/master
 
-- sinden: https://www.sindenwiki.org/wiki/2_player https://sindenlightgun.com/drivers/
+- sinden: https://www.sindenwiki.org/wiki/2_player
+  https://sindenlightgun.com/drivers/
 
 - vault secrets - https://github.com/serokell/vault-secrets

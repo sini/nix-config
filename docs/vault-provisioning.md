@@ -1,6 +1,7 @@
 # Vault Provisioning Guide
 
-This guide covers how to provision a new HashiCorp Vault cluster in your NixOS homelab environment.
+This guide covers how to provision a new HashiCorp Vault cluster in your NixOS
+homelab environment.
 
 ## Overview
 
@@ -32,11 +33,13 @@ Add the `vault` role to hosts in your desired environment:
 }
 ```
 
-Ensure hosts are properly configured in `flake.nix` with correct IP addresses and domains.
+Ensure hosts are properly configured in `flake.nix` with correct IP addresses
+and domains.
 
 ## Step 2: Generate Certificates
 
-Use the certificate generation script to create TLS certificates for your vault cluster:
+Use the certificate generation script to create TLS certificates for your vault
+cluster:
 
 ```bash
 # Generate certificates for a specific environment
@@ -78,7 +81,8 @@ agenix-rekey edit .secrets/services/vault/dev/vault-[hostname]-key.age
 
 ## Step 4: Generate Unseal Keys
 
-After the initial deployment, you'll need to initialize vault and configure unseal keys:
+After the initial deployment, you'll need to initialize vault and configure
+unseal keys:
 
 ```bash
 # Initialize vault on one of the nodes
@@ -157,7 +161,8 @@ journalctl -u vault-auto-unseal -f
 
 ### Auto-Unseal Service
 
-The `vault-auto-unseal` systemd service automatically unseals vault when it starts:
+The `vault-auto-unseal` systemd service automatically unseals vault when it
+starts:
 
 - Waits for vault to be responsive
 - Applies stored unseal keys sequentially
@@ -216,4 +221,5 @@ To add vault to a new environment:
 1. Create secrets directory structure
 1. Follow deployment steps above
 
-The configuration automatically adapts to new environments based on host roles and environment settings.
+The configuration automatically adapts to new environments based on host roles
+and environment settings.

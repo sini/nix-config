@@ -134,7 +134,7 @@ They will be created automatically if they don't exist.
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/generated/uplink/attic-server-env.age`
-- **Generator**: custom-script
+- **Generator**: built-in: environment-file
 - **Has Dependencies**: Yes
 
 
@@ -174,7 +174,7 @@ They will be created automatically if they don't exist.
 - **Used by**: nixos:uplink
 - **Owner**: grafana:grafana (0400)
 - **Rekey File**: `.secrets/env/prod/grafana-secret-key.age`
-- **Generator**: built-in: hex32
+- **Generator**: built-in: hex
 
 
 
@@ -361,7 +361,7 @@ They will be created automatically if they don't exist.
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/generated/uplink/oauth2-proxy-keys.age`
-- **Generator**: custom-script
+- **Generator**: built-in: environment-file
 - **Has Dependencies**: Yes
 
 
@@ -385,7 +385,7 @@ They will be created automatically if they don't exist.
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/generated/uplink/open-webui-env.age`
-- **Generator**: custom-script
+- **Generator**: built-in: environment-file
 - **Has Dependencies**: Yes
 
 

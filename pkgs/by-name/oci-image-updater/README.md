@@ -1,13 +1,15 @@
 # oci-image-updater
 
-A Python tool for tracking and automatically updating OCI container image metadata in Nix flakes.
+A Python tool for tracking and automatically updating OCI container image
+metadata in Nix flakes.
 
 ## Overview
 
 This package automates the process of:
 
 - Initializing new image metadata files with current digest and hash
-- Checking remote registries for image updates using skopeo (efficient, no downloads)
+- Checking remote registries for image updates using skopeo (efficient, no
+  downloads)
 - Fetching and hashing updated images using nix-prefetch-docker
 - Updating image metadata files automatically
 - Optionally committing changes to git
@@ -59,7 +61,8 @@ oci-image-updater init \
   --pinned
 ```
 
-Pinned images are skipped during `update-all` and `check-all` operations. You can also manually set `pinned = true` in existing image metadata files.
+Pinned images are skipped during `update-all` and `check-all` operations. You
+can also manually set `pinned = true` in existing image metadata files.
 
 ### Update All Images
 
@@ -81,7 +84,8 @@ oci-image-updater update-all --verbose
 
 ### Check for Updates
 
-Check which images have updates available without applying them (skips pinned images):
+Check which images have updates available without applying them (skips pinned
+images):
 
 ```bash
 oci-image-updater check-all
@@ -158,7 +162,8 @@ oci_image_updater/
 
 #### Models (`models/`)
 
-- **`ImageMetadata`**: Represents image metadata (name, tag, digest, hash, platform)
+- **`ImageMetadata`**: Represents image metadata (name, tag, digest, hash,
+  platform)
 - **`UpdateOperation`**: Represents an update operation result
 
 #### Utilities (`utils/`)
@@ -170,7 +175,8 @@ oci_image_updater/
 #### Images (`images/`)
 
 - **`ImageDiscovery`**: Discovers images from flake metadata
-- **`ImageUpdater`**: Updates individual images (check digest, fetch, write file)
+- **`ImageUpdater`**: Updates individual images (check digest, fetch, write
+  file)
 - **`ImageManager`**: Orchestrates discovery and updates for all images
 
 #### Commands (`commands/`)
@@ -184,7 +190,8 @@ oci_image_updater/
 ## Workflow
 
 1. **Discovery**: Query flake for `imagesMetadata`
-1. **Check**: For each image, use skopeo to check remote digest (fast, no download)
+1. **Check**: For each image, use skopeo to check remote digest (fast, no
+   download)
 1. **Compare**: If digest differs, image needs updating
 1. **Fetch**: Use nix-prefetch-docker to download and hash the image
 1. **Update**: Write new metadata to `default.nix` file
@@ -230,7 +237,8 @@ nix eval .#imagesMetadata.linuxserver.radarr --json
 
 ### Project Structure
 
-Each class is in its own file, making it easy to locate and modify specific functionality:
+Each class is in its own file, making it easy to locate and modify specific
+functionality:
 
 - `models/` - Domain models
 - `utils/` - Cross-cutting utilities
@@ -259,7 +267,8 @@ This tool is designed to be run automatically via GitHub Actions or cron:
 oci-image-updater update-all --commit
 ```
 
-This will check all images, update any that have changed, and commit the results.
+This will check all images, update any that have changed, and commit the
+results.
 
 ## Comparison to nix-prefetch-docker
 

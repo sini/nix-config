@@ -1,25 +1,34 @@
 # clevis-minimal
 
-A minimal, cross-platform build of [Clevis](https://github.com/latchset/clevis) focused on Tang-based network encryption.
+A minimal, cross-platform build of [Clevis](https://github.com/latchset/clevis)
+focused on Tang-based network encryption.
 
 ## Why This Fork Exists
 
-The upstream Clevis package in nixpkgs has hard dependencies on Linux-only packages (cryptsetup, luksmeta, libpwquality, tpm2-tools), which prevents it from being used on Darwin (macOS) systems. This fork removes those dependencies to enable:
+The upstream Clevis package in nixpkgs has hard dependencies on Linux-only
+packages (cryptsetup, luksmeta, libpwquality, tpm2-tools), which prevents it
+from being used on Darwin (macOS) systems. This fork removes those dependencies
+to enable:
 
 - **Darwin systems to provision NixOS hosts** with Tang-based disk encryption
-- **Remote key management** from macOS workstations using `nix-flake-provision-keys` and `update-tang-disk-keys`
+- **Remote key management** from macOS workstations using
+  `nix-flake-provision-keys` and `update-tang-disk-keys`
 - **Cross-platform secret management** without requiring a Linux VM
 
 ## What We Changed
 
 ### Fork: [sini/clevis](https://github.com/sini/clevis) (`darwin-support` branch)
 
-The package sources from our fork which contains the following upstream-ready patches:
+The package sources from our fork which contains the following upstream-ready
+patches:
 
 1. **Remove unused `sys/epoll.h` include** from `clevis-encrypt-sss.c`
-1. **Replace Linux `epoll` with POSIX `poll`** in `clevis-decrypt-sss.c` - functionally equivalent for the small fd counts clevis uses
-1. **Replace `pipe2` with portable `pipe` + `fcntl`** in `sss.c` - safe because the program is single-threaded
-1. **Make `cryptsetup` optional in test suite** - uses `subdir_done()` to skip LUKS tests when cryptsetup is unavailable
+1. **Replace Linux `epoll` with POSIX `poll`** in `clevis-decrypt-sss.c` -
+   functionally equivalent for the small fd counts clevis uses
+1. **Replace `pipe2` with portable `pipe` + `fcntl`** in `sss.c` - safe because
+   the program is single-threaded
+1. **Make `cryptsetup` optional in test suite** - uses `subdir_done()` to skip
+   LUKS tests when cryptsetup is unavailable
 
 ### Removed Linux-Only Dependencies
 
@@ -33,9 +42,10 @@ Removed from `buildInputs`:
 ### jose Darwin Fix
 
 jose v14 is marked broken on Darwin in nixpkgs because its meson build passes
-`-export-symbols-regex=^jose_.*` (a GNU ld flag) which Apple's clang linker doesn't
-understand. We apply the upstream fix ([PR #163](https://github.com/latchset/jose/pull/163))
-via `fetchpatch` and unmark it as broken.
+`-export-symbols-regex=^jose_.*` (a GNU ld flag) which Apple's clang linker
+doesn't understand. We apply the upstream fix
+([PR #163](https://github.com/latchset/jose/pull/163)) via `fetchpatch` and
+unmark it as broken.
 
 ### Distribution-Specific Patch
 
@@ -48,24 +58,24 @@ via `fetchpatch` and unmark it as broken.
 
 ### Disabled Tests
 
-Tests are disabled because most require LUKS devices and cryptsetup, which aren't available in the Nix sandbox or on Darwin.
+Tests are disabled because most require LUKS devices and cryptsetup, which
+aren't available in the Nix sandbox or on Darwin.
 
 ## What Still Works
 
 This minimal build fully supports:
 
-✅ **Tang encryption** (`clevis encrypt tang`)
-✅ **SSS (Shamir Secret Sharing)** (`clevis encrypt sss`)
-✅ **JWE generation** for storing encrypted passphrases
-✅ **Threshold encryption** (e.g., "2 of 3 Tang servers")
+✅ **Tang encryption** (`clevis encrypt tang`) ✅ **SSS (Shamir Secret
+Sharing)** (`clevis encrypt sss`) ✅ **JWE generation** for storing encrypted
+passphrases ✅ **Threshold encryption** (e.g., "2 of 3 Tang servers")
 
 ## What Doesn't Work
 
 This minimal build excludes:
 
-❌ **LUKS binding** (`clevis luks bind`) - requires cryptsetup (Linux-only)
-❌ **TPM2 encryption** (`clevis encrypt tpm2`) - requires tpm2-tools (hardware-specific)
-❌ **Dracut/systemd integration** - requires LUKS support
+❌ **LUKS binding** (`clevis luks bind`) - requires cryptsetup (Linux-only) ❌
+**TPM2 encryption** (`clevis encrypt tpm2`) - requires tpm2-tools
+(hardware-specific) ❌ **Dracut/systemd integration** - requires LUKS support
 
 ## Usage in This Flake
 
@@ -103,7 +113,8 @@ boot.initrd.clevis = {
 - **Upstream**: https://github.com/latchset/clevis
 - **Fork**: https://github.com/sini/clevis (`darwin-support` branch)
 - **Nixpkgs**: `pkgs/by-name/cl/clevis/package.nix`
-- **Goal**: Merge Darwin patches upstream, at which point we can switch back to upstream source
+- **Goal**: Merge Darwin patches upstream, at which point we can switch back to
+  upstream source
 
 ## Maintenance Notes
 
@@ -117,6 +128,9 @@ When updating to new Clevis versions:
 
 ## Related Files
 
-- [nix-flake-provision-keys](../nix-flake-provision-keys/) - Uses this package to generate Tang JWE files
-- [update-tang-disk-keys](../update-tang-disk-keys/) - Uses this package to re-encrypt with TPM2+Tang
-- [modules/services/network-boot.nix](../../../modules/services/network-boot.nix) - Consumes JWE files at boot
+- [nix-flake-provision-keys](../nix-flake-provision-keys/) - Uses this package
+  to generate Tang JWE files
+- [update-tang-disk-keys](../update-tang-disk-keys/) - Uses this package to
+  re-encrypt with TPM2+Tang
+- [modules/services/network-boot.nix](../../../modules/services/network-boot.nix) -
+  Consumes JWE files at boot

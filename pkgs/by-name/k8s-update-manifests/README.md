@@ -1,6 +1,8 @@
 # k8s-update-manifests
 
-A Python tool for synchronizing Kubernetes manifests from nixidy environment builds to target directories, with support for secret conversion and encryption using SOPS.
+A Python tool for synchronizing Kubernetes manifests from nixidy environment
+builds to target directories, with support for secret conversion and encryption
+using SOPS.
 
 ## Overview
 
@@ -54,7 +56,8 @@ k8s-update-manifests --flake /path/to/flake
 
 ## Architecture
 
-The package is organized into focused modules, with each class in its own file for better maintainability:
+The package is organized into focused modules, with each class in its own file
+for better maintainability:
 
 ```
 k8s_update_manifests/
@@ -71,42 +74,56 @@ k8s_update_manifests/
 
 Data models and enumerations used throughout the application:
 
-- **`SecretOperation`** (`secret_operation.py`): Enum for secret operations (CREATE, UPDATE, DELETE, NOOP)
-- **`SecretWorkItem`** (`secret_work_item.py`): Represents a secret file operation to be performed
-- **`EnvironmentMetadata`** (`environment_metadata.py`): Metadata for nixidy environments (name, repository, branch, output path)
+- **`SecretOperation`** (`secret_operation.py`): Enum for secret operations
+  (CREATE, UPDATE, DELETE, NOOP)
+- **`SecretWorkItem`** (`secret_work_item.py`): Represents a secret file
+  operation to be performed
+- **`EnvironmentMetadata`** (`environment_metadata.py`): Metadata for nixidy
+  environments (name, repository, branch, output path)
 
 #### Utilities (`utils/`)
 
 General-purpose utility classes:
 
-- **`ProcessUtils`** (`process.py`): Subprocess execution wrapper with error handling
-- **`YAMLProcessor`** (`yaml_processor.py`): YAML parsing, serialization, and hashing utilities
+- **`ProcessUtils`** (`process.py`): Subprocess execution wrapper with error
+  handling
+- **`YAMLProcessor`** (`yaml_processor.py`): YAML parsing, serialization, and
+  hashing utilities
 - **`GitUtils`** (`git.py`): Git repository operations (get root directory)
-- **`NixUtils`** (`nix.py`): Nix operations (eval, build, environment discovery, metadata retrieval)
+- **`NixUtils`** (`nix.py`): Nix operations (eval, build, environment discovery,
+  metadata retrieval)
 
 #### Secrets (`secrets/`)
 
 Secret discovery, conversion, and encryption:
 
 - **`constants.py`**: Shared constants (PLAINTEXT_SHA_ANNOTATION)
-- **`SecretDiscovery`** (`discovery.py`): Discovers Secret/SopsSecret files and determines required operations
-- **`SecretProcessor`** (`processor.py`): Processes secret operations (vals resolution, SOPS encryption)
-- **`SecretConverter`** (`converter.py`): Converts Kubernetes Secrets to SopsSecrets format
-- **`SecretManager`** (`manager.py`): Orchestrates secret discovery and processing
+- **`SecretDiscovery`** (`discovery.py`): Discovers Secret/SopsSecret files and
+  determines required operations
+- **`SecretProcessor`** (`processor.py`): Processes secret operations (vals
+  resolution, SOPS encryption)
+- **`SecretConverter`** (`converter.py`): Converts Kubernetes Secrets to
+  SopsSecrets format
+- **`SecretManager`** (`manager.py`): Orchestrates secret discovery and
+  processing
 
 #### Environment (`environment/`)
 
 Environment synchronization management:
 
-- **`FileSystemScanner`** (`scanner.py`): Scans directories for files and subdirectories
-- **`PathConverter`** (`path_converter.py`): Converts between absolute and relative paths
-- **`EnvironmentManager`** (`manager.py`): Main orchestrator for environment synchronization
+- **`FileSystemScanner`** (`scanner.py`): Scans directories for files and
+  subdirectories
+- **`PathConverter`** (`path_converter.py`): Converts between absolute and
+  relative paths
+- **`EnvironmentManager`** (`manager.py`): Main orchestrator for environment
+  synchronization
 
 #### Sync (`sync/`)
 
 File and directory synchronization:
 
-- **`FileSync`** (`file_sync.py`): Handles file/directory operations (copy, update, delete, diff generation)
+- **`FileSync`** (`file_sync.py`): Handles file/directory operations (copy,
+  update, delete, diff generation)
 
 ## Workflow
 
@@ -114,7 +131,8 @@ File and directory synchronization:
 1. **Build**: Build the environment package using Nix
 1. **Scan**: Scan both source (built package) and target directories
 1. **Secret Discovery**: Identify secrets that need processing
-1. **Diff Calculation**: Determine which files need to be created, updated, or deleted
+1. **Diff Calculation**: Determine which files need to be created, updated, or
+   deleted
 1. **Synchronization**: Apply file changes in the correct order:
    - Delete obsolete files/directories
    - Create new directories
@@ -139,7 +157,9 @@ The tool converts Kubernetes `Secret` resources to `SopsSecret` resources:
 
 ### Smart Updates
 
-Secrets are only re-encrypted when the plaintext content changes, determined by comparing SHA256 hashes stored in annotations. This prevents unnecessary re-encryption and minimizes git churn.
+Secrets are only re-encrypted when the plaintext content changes, determined by
+comparing SHA256 hashes stored in annotations. This prevents unnecessary
+re-encryption and minimizes git churn.
 
 ## Dependencies
 
@@ -154,7 +174,8 @@ Secrets are only re-encrypted when the plaintext content changes, determined by 
 
 ### Project Structure
 
-Each class is in its own file, making it easy to locate and modify specific functionality. Subpackages group related classes:
+Each class is in its own file, making it easy to locate and modify specific
+functionality. Subpackages group related classes:
 
 - `models/` - Domain models
 - `utils/` - Cross-cutting utilities

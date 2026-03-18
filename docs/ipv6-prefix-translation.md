@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document outlines a plan to implement IPv6 Network Prefix Translation (NPTv6) to provide static internal IPv6 addressing while utilizing the dynamic /56 IPv6 prefix delegated by the ISP.
+This document outlines a plan to implement IPv6 Network Prefix Translation
+(NPTv6) to provide static internal IPv6 addressing while utilizing the dynamic
+/56 IPv6 prefix delegated by the ISP.
 
 ## Current State
 
@@ -209,4 +211,5 @@ If issues arise:
 
 ---
 
-_This plan provides a structured approach to implementing NPTv6 while maintaining service availability and enabling rollback if needed._
+_This plan provides a structured approach to implementing NPTv6 while
+maintaining service availability and enabling rollback if needed._

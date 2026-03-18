@@ -4,10 +4,14 @@
 
 ### Key Design Decisions
 
-1. **No separate `platform` field** - Platform is detected from `system` architecture suffix (`-linux` vs `-darwin`)
-1. **Rename `nixos` → `system` + `linux`** - Better semantic naming for cross-platform support
-1. **Keep backward compatibility** - Legacy `nixos` key and `nixosConfiguration` still work during migration
-1. **Unified `systemConfiguration`** - Replaces `nixosConfiguration` for both NixOS and Darwin
+1. **No separate `platform` field** - Platform is detected from `system`
+   architecture suffix (`-linux` vs `-darwin`)
+1. **Rename `nixos` → `system` + `linux`** - Better semantic naming for
+   cross-platform support
+1. **Keep backward compatibility** - Legacy `nixos` key and `nixosConfiguration`
+   still work during migration
+1. **Unified `systemConfiguration`** - Replaces `nixosConfiguration` for both
+   NixOS and Darwin
 
 ---
 

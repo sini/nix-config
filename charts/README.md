@@ -1,6 +1,10 @@
 # Local Helm Charts
 
-This directory contains helm chart definitions managed by [nixhelm's helmupdater](https://github.com/nix-community/nixhelm). These are charts not available in the upstream [nixhelm](https://github.com/nix-community/nixhelm) repository, pinned with reproducible hashes for use in our nixidy environments.
+This directory contains helm chart definitions managed by
+[nixhelm's helmupdater](https://github.com/nix-community/nixhelm). These are
+charts not available in the upstream
+[nixhelm](https://github.com/nix-community/nixhelm) repository, pinned with
+reproducible hashes for use in our nixidy environments.
 
 ## Structure
 
@@ -37,7 +41,8 @@ For example:
 helmupdater init "https://rocm.github.io/k8s-device-plugin/" "rocm/amd-gpu"
 ```
 
-Then `git add` the new chart so Nix flakes can see it, and reference it in your nixidy module:
+Then `git add` the new chart so Nix flakes can see it, and reference it in your
+nixidy module:
 
 ```nix
 { charts, ... }:
@@ -70,8 +75,13 @@ helmupdater rehash <repo-name>/<chart-name>
 
 ## How it works
 
-The flake-parts module in `modules/flake-parts/helm-charts.nix` uses [haumea](https://github.com/nix-community/haumea) to load all chart definitions from this directory and builds them into derivations via `nix-kube-generators`. These are merged with upstream nixhelm charts and made available to nixidy environments as the `charts` argument.
+The flake-parts module in `modules/flake-parts/helm-charts.nix` uses
+[haumea](https://github.com/nix-community/haumea) to load all chart definitions
+from this directory and builds them into derivations via `nix-kube-generators`.
+These are merged with upstream nixhelm charts and made available to nixidy
+environments as the `charts` argument.
 
 ## Automated updates
 
-A GitHub Action runs `helmupdater update-all` daily alongside `nix flake update`, creating a PR with any version bumps.
+A GitHub Action runs `helmupdater update-all` daily alongside
+`nix flake update`, creating a PR with any version bumps.

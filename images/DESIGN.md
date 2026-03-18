@@ -2,18 +2,26 @@
 
 ## Overview
 
-This document describes the design and implementation of an OCI container image auto-update system, similar to the existing helm chart auto-update functionality.
+This document describes the design and implementation of an OCI container image
+auto-update system, similar to the existing helm chart auto-update
+functionality.
 
-**Status**: ✅ **Phase 1 Complete and Working** - The core system is fully implemented, tested, and operational.
+**Status**: ✅ **Phase 1 Complete and Working** - The core system is fully
+implemented, tested, and operational.
 
 ## Objectives
 
-1. ✅ **Track OCI container images** - Store metadata about container images including name, tag, digest, and hash
-1. ✅ **Auto-update mechanism** - Periodically check for updates and update metadata files automatically
-1. ✅ **Efficient checking** - Use skopeo to check remote digests without pulling entire images
-1. ✅ **Store path management** - Query and build image store paths for cache publishing
+1. ✅ **Track OCI container images** - Store metadata about container images
+   including name, tag, digest, and hash
+1. ✅ **Auto-update mechanism** - Periodically check for updates and update
+   metadata files automatically
+1. ✅ **Efficient checking** - Use skopeo to check remote digests without
+   pulling entire images
+1. ✅ **Store path management** - Query and build image store paths for cache
+   publishing
 1. ✅ **Pinning support** - Prevent automatic updates for specific images
-1. **Future compatibility** - Design with NixNG container publishing in mind (to be implemented later)
+1. **Future compatibility** - Design with NixNG container publishing in mind (to
+   be implemented later)
 
 ## Architecture
 
@@ -42,7 +50,8 @@ pkgs/by-name/
         └── __main__.py         # CLI entry point
 ```
 
-**Note**: Directory structure follows image namespaces (e.g., `linuxserver/radarr`) rather than semantic categories.
+**Note**: Directory structure follows image namespaces (e.g.,
+`linuxserver/radarr`) rather than semantic categories.
 
 ### Comparison to Helm Charts System
 
@@ -75,23 +84,30 @@ Each image is defined in `images/<namespace>/<image-name>/default.nix`:
 
 ### Field Descriptions
 
-- **imageName**: Full image name including registry path (e.g., `linuxserver/radarr`, `docker.io/library/nginx`)
+- **imageName**: Full image name including registry path (e.g.,
+  `linuxserver/radarr`, `docker.io/library/nginx`)
 - **imageTag**: The tag to track (e.g., `nightly`, `latest`, `v1.2.3`)
 - **imageDigest**: SHA256 digest of the manifest (sha256:...)
 - **imageHash**: Nix SRI hash of the image tarball (sha256-...)
 - **arch**: CPU architecture (amd64, arm64, etc.)
 - **os**: Operating system (linux, darwin, etc.)
-- **pinned**: (Optional) Set to `true` to prevent automatic updates. Defaults to `false` if omitted.
+- **pinned**: (Optional) Set to `true` to prevent automatic updates. Defaults to
+  `false` if omitted.
 
 ### Design Decisions
 
-1. **Tag Tracking**: Users specify the exact tag to track (e.g., `nightly`, `latest`, `v1.2.3`). The updater checks if the digest for that tag has changed.
+1. **Tag Tracking**: Users specify the exact tag to track (e.g., `nightly`,
+   `latest`, `v1.2.3`). The updater checks if the digest for that tag has
+   changed.
 
-1. **Platform Specification**: Both `arch` and `os` are required to ensure we fetch the correct image variant for multi-platform images.
+1. **Platform Specification**: Both `arch` and `os` are required to ensure we
+   fetch the correct image variant for multi-platform images.
 
-1. **Registry Handling**: Registry is embedded in `imageName` following Docker convention (docker.io is implicit for library images).
+1. **Registry Handling**: Registry is embedded in `imageName` following Docker
+   convention (docker.io is implicit for library images).
 
-1. **Minimal Schema**: We keep the schema minimal for now. Future NixNG integration can extend this without breaking changes.
+1. **Minimal Schema**: We keep the schema minimal for now. Future NixNG
+   integration can extend this without breaking changes.
 
 ## Implementation Status
 
@@ -99,7 +115,8 @@ Each image is defined in `images/<namespace>/<image-name>/default.nix`:
 
 1. ✅ **Directory Structure**
    - Created `images/` directory at repo root
-   - Sample images: `linuxserver/radarr`, `linuxserver/lidarr`, `linuxserver/sonarr`
+   - Sample images: `linuxserver/radarr`, `linuxserver/lidarr`,
+     `linuxserver/sonarr`
 
 1. ✅ **Flake Integration**
    - Implemented `modules/flake-parts/oci-images.nix`
@@ -111,7 +128,8 @@ Each image is defined in `images/<namespace>/<image-name>/default.nix`:
 1. ✅ **Python Updater Tool**
    - Implemented in `pkgs/by-name/oci-image-updater/`
    - Modular architecture inspired by k8s-update-manifests
-   - Commands: init, update-all, check-all, list-path, list-paths, build-image, build-images
+   - Commands: init, update-all, check-all, list-path, list-paths, build-image,
+     build-images
    - Uses skopeo for efficient digest checking
    - Uses nix-prefetch-docker for hash calculation
    - Fixed Nix attribute set parsing for prefetch output
@@ -330,21 +348,29 @@ Future enhancements could include:
 
 ### Key Features Implemented
 
-1. **Pinning Support**: Images can be marked as `pinned = true` to prevent automatic updates
-1. **Efficient Checking**: Uses skopeo to check digests without downloading images
+1. **Pinning Support**: Images can be marked as `pinned = true` to prevent
+   automatic updates
+1. **Efficient Checking**: Uses skopeo to check digests without downloading
+   images
 1. **Two-Phase Updates**: Check with skopeo first, only download if changed
-1. **Store Path Queries**: Get Nix store paths without building (uses `nix eval .#image.outPath`)
+1. **Store Path Queries**: Get Nix store paths without building (uses
+   `nix eval .#image.outPath`)
 1. **JSON Output**: Machine-readable output for list-paths command
-1. **Modular Architecture**: Organized into models, utils, images, and command modules
+1. **Modular Architecture**: Organized into models, utils, images, and command
+   modules
 1. **Type Safety**: Full type hints throughout Python codebase
 1. **Git Integration**: Optional automatic commits with summary messages
 
 ### Technical Decisions
 
-1. **Parser Fix**: Fixed nix-prefetch-docker output parsing to extract Nix attribute set correctly
-1. **Command Refactoring**: Moved from monolithic `__main__.py` to command modules for maintainability
-1. **Default Values**: Pinned field is optional (defaults to false) to keep files clean
-1. **Namespace Structure**: Follows Docker image naming (linuxserver/radarr) rather than semantic categories
+1. **Parser Fix**: Fixed nix-prefetch-docker output parsing to extract Nix
+   attribute set correctly
+1. **Command Refactoring**: Moved from monolithic `__main__.py` to command
+   modules for maintainability
+1. **Default Values**: Pinned field is optional (defaults to false) to keep
+   files clean
+1. **Namespace Structure**: Follows Docker image naming (linuxserver/radarr)
+   rather than semantic categories
 
 ### Current Limitations
 

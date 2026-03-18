@@ -4,7 +4,8 @@
 
 ### Home Manager Integration Today
 
-Home-manager is currently **deeply integrated** into the NixOS configuration flow:
+Home-manager is currently **deeply integrated** into the NixOS configuration
+flow:
 
 ```nix
 # In nixos-configuration-helpers.nix
@@ -23,7 +24,8 @@ lib'.nixosSystem {
 
 1. Home-manager runs as a NixOS module
 1. User configurations are built within the system configuration
-1. Uses `osConfig` to access system settings (e.g., `osConfig.system.stateVersion`)
+1. Uses `osConfig` to access system settings (e.g.,
+   `osConfig.system.stateVersion`)
 1. Tight coupling to NixOS-specific options
 
 ### Current Feature System
@@ -694,21 +696,26 @@ modules/lib/
    - Features with only `linux` work on Linux/NixOS only
    - Features with only `darwin` work on Darwin/macOS only
    - Features with `home` work on all platforms
-   - Features with combined `system` + `linux` + `darwin` work correctly on respective platforms
+   - Features with combined `system` + `linux` + `darwin` work correctly on
+     respective platforms
 
 ## Open Questions
 
 1. **How to migrate existing features with `nixos` key?**
-   - **Answer**: Support both during migration. `nixos` treated as legacy fallback. New features use `system`/`linux`/`darwin`.
-   - **Migration strategy**: Create a deprecation warning helper that alerts when `nixos` key is used.
+   - **Answer**: Support both during migration. `nixos` treated as legacy
+     fallback. New features use `system`/`linux`/`darwin`.
+   - **Migration strategy**: Create a deprecation warning helper that alerts
+     when `nixos` key is used.
 
 1. **Should we automatically merge `nixos` modules into `system` + `linux`?**
-   - **Proposal**: During transition, `collectNixosModules` includes both legacy `nixos` and new `system`+`linux` modules.
+   - **Proposal**: During transition, `collectNixosModules` includes both legacy
+     `nixos` and new `system`+`linux` modules.
    - After migration, remove `nixos` support entirely.
 
 1. **How do darwin-specific options map to NixOS equivalents?**
    - Investigation needed: darwin module system structure
-   - May need platform-specific shims for common patterns (e.g., systemd vs launchd)
+   - May need platform-specific shims for common patterns (e.g., systemd vs
+     launchd)
    - Cross-platform features should use abstractions where possible
 
 1. **Should the home-manager core feature be split by platform?**
@@ -725,19 +732,24 @@ modules/lib/
 1. **How to handle features that don't make sense cross-platform?**
    - Use only `linux` or `darwin` keys (not `system`)
    - Examples: `gpu-nvidia` (Linux-only), `touchid` (Darwin-only)
-   - No runtime checks needed - module won't be collected for incompatible platforms
+   - No runtime checks needed - module won't be collected for incompatible
+     platforms
 
 ## Implementation Plan
 
 ### Phase 1: Add Module Type Support (No Breaking Changes)
 
-**Goal**: Add `system`, `linux`, `darwin` module types while maintaining backward compatibility.
+**Goal**: Add `system`, `linux`, `darwin` module types while maintaining
+backward compatibility.
 
 **Changes**:
 
-1. Add `collectSystemModules`, `collectLinuxModules`, `collectDarwinModules` to Section 1
-1. Add `collectPlatformSystemModules` that intelligently selects based on system architecture
-1. Keep `collectNixosModules` for backward compatibility (collects legacy `nixos` modules)
+1. Add `collectSystemModules`, `collectLinuxModules`, `collectDarwinModules` to
+   Section 1
+1. Add `collectPlatformSystemModules` that intelligently selects based on system
+   architecture
+1. Keep `collectNixosModules` for backward compatibility (collects legacy
+   `nixos` modules)
 1. Update documentation
 
 **Test**: All existing NixOS hosts build unchanged.
@@ -774,10 +786,13 @@ modules/lib/
 
 **Strategy**:
 
-- **Cross-platform features** (ssh, nix, home-manager): Migrate `nixos` → `system`
-- **Linux-only features** (gpu-nvidia, systemd services): Migrate `nixos` → `linux`
+- **Cross-platform features** (ssh, nix, home-manager): Migrate `nixos` →
+  `system`
+- **Linux-only features** (gpu-nvidia, systemd services): Migrate `nixos` →
+  `linux`
 - **New darwin features**: Add `darwin` modules as needed
-- **Platform-specific additions**: Use both `system` + `linux`/`darwin` where needed
+- **Platform-specific additions**: Use both `system` + `linux`/`darwin` where
+  needed
 
 **Test**: Each migrated feature builds on both NixOS and Darwin (if applicable).
 
@@ -803,12 +818,8 @@ modules/lib/
 1. Implement Phase 1 (module type support)
 1. Add `x86_64-darwin` to system enum (already done: `aarch64-darwin`)
 
-**Short-term**:
-5\. Implement Phase 2 (darwin builder)
-6\. Create a test darwin host to validate
-7\. Implement Phase 3 (rename systemConfiguration)
+**Short-term**: 5. Implement Phase 2 (darwin builder) 6. Create a test darwin
+host to validate 7. Implement Phase 3 (rename systemConfiguration)
 
-**Long-term**:
-8\. Gradually migrate features (Phase 4)
-9\. Update all documentation (Phase 5)
-10\. Consider standalone home-manager support (future)
+**Long-term**: 8. Gradually migrate features (Phase 4) 9. Update all
+documentation (Phase 5) 10. Consider standalone home-manager support (future)

@@ -1,16 +1,21 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with
+code in this repository.
 
 ## Repository Overview
 
-This is a NixOS configuration repository managing a homelab with Kubernetes nodes, workstations, and laptops. It uses a dendritic configuration pattern with automatic module imports and manages multiple hosts through Colmena and deploy-rs.
+This is a NixOS configuration repository managing a homelab with Kubernetes
+nodes, workstations, and laptops. It uses a dendritic configuration pattern with
+automatic module imports and manages multiple hosts through Colmena and
+deploy-rs.
 
 ## Key Architecture
 
 ### Hosts Configuration
 
-Hosts are defined in `modules/hosts/` with their own configuration modules. Each host has:
+Hosts are defined in `modules/hosts/` with their own configuration modules. Each
+host has:
 
 - System architecture (x86_64-linux, aarch64-darwin)
 - IP addresses configured in `flake.hosts.<hostname>.ipv4`
@@ -20,17 +25,21 @@ Hosts are defined in `modules/hosts/` with their own configuration modules. Each
 
 ### Module System
 
-- **Automatic imports**: All `.nix` files are automatically imported as flake-parts modules (files prefixed with `_` are ignored)
+- **Automatic imports**: All `.nix` files are automatically imported as
+  flake-parts modules (files prefixed with `_` are ignored)
 - **Core modules**: `modules/core/` - System essentials (SSH, boot, sudo, etc.)
-- **App modules**: `modules/apps/` - Applications organized by category (desktop, dev, gaming, media, productivity)
+- **App modules**: `modules/apps/` - Applications organized by category
+  (desktop, dev, gaming, media, productivity)
 - **Hardware modules**: `modules/hardware/` - Hardware-specific configurations
-- **Roles**: `modules/roles/` - High-level role configurations (kubernetes, media, laptop)
+- **Roles**: `modules/roles/` - High-level role configurations (kubernetes,
+  media, laptop)
 - **Features**: `modules/features/` - Optional features and capabilities
 - **Services**: `modules/services/` - System level services for server hosts
 
 ### Secrets Management
 
-Uses agenix and agenix-rekey for secret management. Secrets are stored encrypted in `.secrets/` directory.
+Uses agenix and agenix-rekey for secret management. Secrets are stored encrypted
+in `.secrets/` directory.
 
 ## Common Development Commands
 
@@ -82,7 +91,8 @@ kubectl get nodes
 
 ### Development Workflow
 
-1. Enter development shell: `direnv allow` (automatic with direnv) or `nix develop`
+1. Enter development shell: `direnv allow` (automatic with direnv) or
+   `nix develop`
 1. Make changes to configuration files
 1. Test locally: `build <hostname>` to verify build
 1. Deploy: `colmena apply --on <hostname>`
@@ -100,7 +110,8 @@ kubectl get nodes
 ### Module Development
 
 - Follow existing code conventions in neighboring files
-- Use deterministic UIDs/GIDs defined in `modules/core/deterministic-uids/users.nix`
+- Use deterministic UIDs/GIDs defined in
+  `modules/core/deterministic-uids/users.nix`
 - Prefer editing existing modules over creating new ones
 - Check imports and dependencies before adding libraries
 

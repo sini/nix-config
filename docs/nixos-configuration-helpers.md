@@ -2,7 +2,8 @@
 
 ## Overview
 
-This library provides the core functionality for building NixOS system configurations with a feature-based architecture. It manages:
+This library provides the core functionality for building NixOS system
+configurations with a feature-based architecture. It manages:
 
 - Feature aggregation from roles and direct assignments
 - Transitive dependency resolution with exclusion handling
@@ -39,7 +40,8 @@ collectHomeModules features   # => [ ./home-module.nix ]
 
 ### 2. Feature Dependency Resolution
 
-**Purpose**: Resolve transitive dependencies between features while respecting exclusions
+**Purpose**: Resolve transitive dependencies between features while respecting
+exclusions
 
 **Function**: `collectRequires`
 
@@ -366,9 +368,12 @@ When extending this library:
 
 ### Common Pitfalls
 
-1. **Exclusion ordering**: Exclusions must be collected and applied at each stage
-1. **Root removal**: Dependency resolution should not include root features in results
-1. **Library consistency**: Use lib' (versioned) instead of lib in host configurations
+1. **Exclusion ordering**: Exclusions must be collected and applied at each
+   stage
+1. **Root removal**: Dependency resolution should not include root features in
+   results
+1. **Library consistency**: Use lib' (versioned) instead of lib in host
+   configurations
 1. **Feature deduplication**: Always use lib.unique when merging feature lists
 
 ### Performance Considerations
