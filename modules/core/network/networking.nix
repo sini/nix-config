@@ -52,26 +52,25 @@
 # - TCP congestion window optimization
 {
   flake.features.networking.system =
-    { hostOptions, ... }:
+    { host, ... }:
     {
       networking = {
-        hostName = hostOptions.hostname;
+        hostName = host.hostname;
       };
     };
 
   flake.features.networking.linux =
     {
       config,
-      hostOptions,
+      host,
       environment,
-      activeFeatures,
       lib,
       ...
     }:
     with lib;
     let
-      # Use networking config from hostOptions
-      netCfg = hostOptions.networking;
+      # Use networking config from host
+      netCfg = host.networking;
 
       # Extract subnet mask from default network CIDR (e.g., "10.9.0.0/16" -> "/16")
       managementSubnet = "/${last (splitString "/" environment.networks.default.cidr)}";
@@ -127,7 +126,7 @@
         else
           netCfg.bridges;
 
-      # All interface names from hostOptions.networking.interfaces
+      # All interface names from host.networking.interfaces
       allInterfaceNames = attrNames netCfg.interfaces;
 
       # Convert bridge attrset to list with additional metadata
@@ -239,7 +238,7 @@
         ) bridgeConfig
       );
 
-      networkManagerEnabled = elem "network-manager" activeFeatures;
+      networkManagerEnabled = host.hasFeature "network-manager";
 
       # Effective list of interfaces to exclude from NetworkManager
       unmanagedInterfaces =

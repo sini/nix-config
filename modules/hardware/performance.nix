@@ -3,11 +3,11 @@
     {
       pkgs,
       lib,
-      activeFeatures,
+      host,
       ...
     }:
     let
-      isLaptop = lib.elem "laptop" activeFeatures;
+      isLaptop = host.hasFeature "laptop";
     in
     {
       # GPU overclocking/undervolting daemon

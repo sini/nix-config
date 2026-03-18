@@ -9,7 +9,7 @@
     system =
       {
         config,
-        hostOptions,
+        host,
         users,
         lib,
         ...
@@ -32,7 +32,7 @@
           rekey = {
             inherit (inputs.self.secretsConfig) masterIdentities;
             storageMode = "local";
-            hostPubkey = hostOptions.public_key;
+            hostPubkey = host.public_key;
             generatedSecretsDir = rootPath + "/.secrets/generated/${config.networking.hostName}";
             localStorageDir = rootPath + "/.secrets/rekeyed/${config.networking.hostName}";
           };
@@ -75,7 +75,7 @@
       {
         config,
         osConfig,
-        hostOptions,
+        host,
         lib,
         ...
       }:
@@ -100,7 +100,7 @@
               if (osConfig.age.secrets ? "user-identity-${config.home.username}") then
                 (rootPath + "/.secrets/users/${config.home.username}/id_agenix.pub")
               else
-                hostOptions.public_key;
+                host.public_key;
           };
         };
       };

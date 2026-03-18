@@ -7,7 +7,7 @@
         lib,
         pkgs,
         config,
-        hostOptions,
+        host,
         environment,
         ...
       }:
@@ -231,8 +231,8 @@
                 "--snapshotter=overlayfs"
                 "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 
-                "--node-ip=${builtins.head hostOptions.ipv4},${builtins.head hostOptions.ipv6}"
-                "--node-external-ip=${builtins.head hostOptions.ipv4},${builtins.head hostOptions.ipv6}"
+                "--node-ip=${builtins.head host.ipv4},${builtins.head host.ipv6}"
+                "--node-external-ip=${builtins.head host.ipv4},${builtins.head host.ipv6}"
                 "--node-name=${config.networking.hostName}"
                 # TODO: If longhorn disk enabled...
                 "--node-label=node.longhorn.io/create-default-disk=true"
@@ -246,7 +246,7 @@
               ];
               serverFlagList = [
                 "--bind-address=0.0.0.0"
-                "--advertise-address=${builtins.head hostOptions.ipv4}"
+                "--advertise-address=${builtins.head host.ipv4}"
                 "--cluster-cidr=${podNetwork.cidr},${podNetwork.ipv6_cidr}"
                 "--service-cidr=${serviceNetwork.cidr},${serviceNetwork.ipv6_cidr}"
                 "--kube-controller-manager-arg=--node-cidr-mask-size-ipv6=112"
@@ -277,7 +277,7 @@
                 "--tls-san=${config.networking.fqdn}"
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
-                "--tls-san=${builtins.head hostOptions.ipv4}"
+                "--tls-san=${builtins.head host.ipv4}"
                 "--tls-san=${environment.getAssignment "kube-apiserver-vip"}"
 
                 "--kube-apiserver-arg=oidc-issuer-url=https://${environment.getDomainFor "kanidm"}/oauth2/openid/kubernetes"

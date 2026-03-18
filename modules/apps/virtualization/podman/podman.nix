@@ -5,13 +5,13 @@
         config,
         lib,
         pkgs,
-        activeFeatures,
+        host,
         ...
       }:
       let
         # Check which filesystem is in use to configure appropriate storage driver
-        zfsEnabled = lib.elem "zfs-root" activeFeatures;
-        btrfsEnabled = lib.elem "btrfs-root" activeFeatures;
+        zfsEnabled = host.hasFeature "zfs-root";
+        btrfsEnabled = host.hasFeature "btrfs-root";
 
         # Get the correct persistent storage path for impermanence
         cacheRoot = config.environment.persistence."/cache".persistentStoragePath;

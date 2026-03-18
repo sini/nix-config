@@ -4,13 +4,12 @@
       {
         lib,
         pkgs,
-        activeFeatures,
+        host,
         ...
       }:
       let
         # Check if both gpu-nvidia-prime and laptop features are active
-        hasNvidiaPrimeOnLaptop =
-          lib.elem "gpu-nvidia-prime" activeFeatures && lib.elem "laptop" activeFeatures;
+        hasNvidiaPrimeOnLaptop = host.hasFeature "gpu-nvidia-prime" && host.hasFeature "laptop";
       in
       {
         # nixpkgs.overlays = [ inputs.millennium.overlays.default ];
@@ -144,10 +143,10 @@
           #   capSysNice = true;
           #   #capSysNice = false; # 'true' breaks gamescope for Steam https://github.com/NixOS/nixpkgs/issues/292620#issuecomment-2143529075
           #   args = [
-          #     #   # "-W ${toString hostOptions.primaryDisplay.width}"
-          #     #   # "-H ${toString hostOptions.primaryDisplay.height}"
-          #     #   # "-r ${toString hostOptions.primaryDisplay.refreshRate}"
-          #     #   # "-O ${hostOptions.primaryDisplay.name}"
+          #     #   # "-W ${toString host.primaryDisplay.width}"
+          #     #   # "-H ${toString host.primaryDisplay.height}"
+          #     #   # "-r ${toString host.primaryDisplay.refreshRate}"
+          #     #   # "-O ${host.primaryDisplay.name}"
           #     #   "-f"
           #     "--adaptive-sync"
           #     "--mangoapp"

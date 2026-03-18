@@ -1,13 +1,13 @@
 {
   flake.features.network-manager.linux =
     {
-      hostOptions,
+      host,
       pkgs,
       ...
     }:
     let
       unmanagedInterfaces =
-        hostOptions.networking.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
+        host.networking.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
     in
     {
       config = {

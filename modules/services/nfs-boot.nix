@@ -9,11 +9,11 @@
       config,
       lib,
       pkgs,
-      activeFeatures,
+      host,
       ...
     }:
     let
-      zfsEnabled = lib.elem "zfs-root" activeFeatures;
+      zfsEnabled = host.hasFeature "zfs-root";
       nfsServer = "10.10.10.10";
       hostname = config.networking.hostName;
     in

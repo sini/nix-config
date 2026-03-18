@@ -27,13 +27,13 @@ in
       {
         config,
         lib,
-        hostOptions,
+        host,
         environment,
         ...
       }:
       let
         cfg = config.services.bgp-hub;
-        currentHostEnvironment = hostOptions.environment;
+        currentHostEnvironment = host.environment;
 
         # Gateway neighbor (Unifi router)
         gatewayNeighbor =
@@ -119,8 +119,7 @@ in
           ) allNeighbors
         );
 
-        localAsn =
-          if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else cfg.localAsNumber;
+        localAsn = if host.tags ? "bgp-asn" then lib.toInt host.tags."bgp-asn" else cfg.localAsNumber;
       in
       {
         options.services.bgp-hub = {
@@ -221,7 +220,7 @@ in
           };
         };
 
-        config = lib.mkIf (builtins.elem "bgp-hub" (hostOptions.roles or [ ])) {
+        config = lib.mkIf (builtins.elem "bgp-hub" (host.roles or [ ])) {
           boot.kernel.sysctl = {
             "net.ipv4.ip_forward" = lib.mkDefault 1;
             "net.ipv6.conf.all.forwarding" = lib.mkDefault 1;
@@ -229,7 +228,7 @@ in
 
           services.bgp = {
             inherit localAsn;
-            routerId = builtins.head hostOptions.ipv4;
+            routerId = builtins.head host.ipv4;
             inherit (cfg) maximumPaths;
 
             neighbors = allNeighbors;

@@ -68,14 +68,14 @@ in
   flake.features.prometheus.linux =
     {
       config,
-      hostOptions,
+      host,
       environment,
       ...
     }:
     let
       domain = environment.getDomainFor "prometheus";
 
-      currentHostEnvironment = hostOptions.environment;
+      currentHostEnvironment = host.environment;
 
       # Determine which environments to scan for metrics
       # Include current environment plus any additional ones from monitoring config

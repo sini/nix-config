@@ -7,23 +7,23 @@
       {
         lib,
         environment,
-        hostOptions,
+        host,
         ...
       }:
       let
-        nodeLoopbackIp = builtins.head hostOptions.ipv4;
+        nodeLoopbackIp = builtins.head host.ipv4;
 
         # Get local ASN from host tags or use default
         localAsn =
-          if hostOptions.tags ? "bgp-asn" then
-            lib.toInt hostOptions.tags."bgp-asn"
+          if host.tags ? "bgp-asn" then
+            lib.toInt host.tags."bgp-asn"
           else
             # Default logic for nodes without specific ASN
             65001;
 
         ciliumAsn =
-          if hostOptions.tags ? "cilium-asn" then
-            lib.toInt hostOptions.tags."cilium-asn"
+          if host.tags ? "cilium-asn" then
+            lib.toInt host.tags."cilium-asn"
           else
             # Default logic for nodes without specific ASN
             65002;
@@ -74,7 +74,7 @@
               softReconfiguration = true;
               # ebgpMultihop = 4;
               # updateSource = lib.mkIf hasMeshConfig "dummy0";
-              listenRange = "${builtins.head hostOptions.ipv4}/32"; # "${podNetwork.cidr}"; # "127.0.0.1/32";
+              listenRange = "${builtins.head host.ipv4}/32"; # "${podNetwork.cidr}"; # "127.0.0.1/32";
             };
 
             neighbors = lib.optional (uplinkIp != null) {

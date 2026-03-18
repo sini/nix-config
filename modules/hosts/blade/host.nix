@@ -12,11 +12,11 @@
       "media"
     ];
 
-    exclude-features = [
+    excluded-features = [
       "wireless" # NetworkManager handles WiFi instead of wpa_supplicant
     ];
 
-    features = [
+    extra-features = [
       "cpu-intel"
       "gpu-intel"
       "gpu-nvidia"

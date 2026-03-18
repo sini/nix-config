@@ -3,8 +3,7 @@
     {
       inputs,
       environment,
-      hostOptions,
-      activeFeatures,
+      host,
       pkgs,
       ...
     }:
@@ -23,8 +22,7 @@
           inherit
             inputs
             environment
-            hostOptions
-            activeFeatures
+            host
             pkgs
             ;
           hasGlobalPkgs = true;

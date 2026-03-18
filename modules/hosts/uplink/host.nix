@@ -18,7 +18,7 @@
     tags = {
       "bgp-asn" = "65000";
     };
-    features = [
+    extra-features = [
       "cpu-amd"
       "gpu-intel"
       "zfs-disk-single"

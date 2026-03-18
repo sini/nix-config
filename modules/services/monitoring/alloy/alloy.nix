@@ -7,12 +7,12 @@
   flake.features.alloy.linux =
     {
       pkgs,
-      hostOptions,
+      host,
       environment,
       ...
     }:
     let
-      currentHostEnvironment = hostOptions.environment;
+      currentHostEnvironment = host.environment;
 
       # Determine target environment for log shipping (check for delegation)
       targetEnvironment =
@@ -41,7 +41,7 @@
             "\${gatewayIP}"
           ]
           [
-            hostOptions.hostname
+            host.hostname
             reportingHost
             environment.name
             environment.networks.default.gatewayIp

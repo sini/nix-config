@@ -2,11 +2,13 @@
   lib,
   self,
   rootPath,
+  config,
   ...
 }:
 let
   inherit (lib) mkOption types;
   inherit (self.lib.modules) mkDeferredModuleOpt mkUsersWithFeaturesOpt;
+  flakeConfig = config; # Capture flake-level config for use in submodules
 in
 {
   options.flake.hosts =
@@ -133,13 +135,13 @@ in
               description = "List of roles for the host.";
             };
 
-            features = mkOption {
+            extra-features = mkOption {
               type = types.listOf types.str;
               default = [ ];
-              description = "List of features for the host.";
+              description = "List of additional features to enable for the host (beyond those from roles).";
             };
 
-            exclude-features = mkOption {
+            excluded-features = mkOption {
               type = types.listOf types.str;
               default = [ ];
               description = "List of features to exclude for the host (prevents the feature and its requires from being added)";
@@ -228,7 +230,44 @@ in
                 Example: `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
               '';
             };
+
+            features = mkOption {
+              type = types.listOf types.str;
+              readOnly = true;
+              description = ''
+                Computed list of all enabled features for this host.
+                Includes features from roles, extra-features, and all transitive dependencies,
+                with excluded-features applied.
+              '';
+            };
+
+            hasFeature = mkOption {
+              type = types.functionTo types.bool;
+              readOnly = true;
+              description = ''
+                Helper function to check if a feature is enabled for this host.
+                Returns true if the feature is in the computed features list, false otherwise.
+                Example: host.hasFeature "podman" → true/false
+              '';
+            };
           };
+
+          config =
+            let
+              # Use centralized feature resolution from lib.modules
+              computedFeatures = self.lib.modules.computeActiveFeatures {
+                featuresConfig = flakeConfig.flake.features;
+                rolesConfig = flakeConfig.flake.roles;
+                hostRoles = config.roles;
+                hostFeatures = config.extra-features or [ ];
+                hostExclusions = config.excluded-features or [ ];
+              };
+            in
+            {
+              features = computedFeatures;
+
+              hasFeature = featureName: lib.elem featureName computedFeatures;
+            };
         }
       );
     in

@@ -2,15 +2,14 @@
 {
   flake.features.attic-server.linux =
     {
-      activeFeatures,
+      host,
       config,
       environment,
       pkgs,
-      lib,
       ...
     }:
     let
-      zfsEnabled = lib.elem "zfs-root" activeFeatures;
+      zfsEnabled = host.hasFeature "zfs-root";
       domain = environment.getDomainFor "attic";
     in
     {

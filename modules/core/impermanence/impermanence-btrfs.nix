@@ -11,11 +11,11 @@
       {
         lib,
         config,
-        activeFeatures,
+        host,
         ...
       }:
       {
-        config = lib.mkIf (lib.elem "btrfs-root" activeFeatures) {
+        config = lib.mkIf (host.hasFeature "btrfs-root") {
           # Boot Rollback Services
           # ======================
           # Early boot (initrd) services that restore root/home from blank snapshots.

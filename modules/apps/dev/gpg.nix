@@ -75,9 +75,9 @@
     };
 
     home =
-      { pkgs, activeFeatures, ... }:
+      { pkgs, host, ... }:
       let
-        isWorkstation = builtins.elem "xserver" activeFeatures;
+        isWorkstation = host.hasFeature "xserver";
       in
       {
         programs.gpg = {

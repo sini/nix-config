@@ -8,7 +8,7 @@
       # "dev"
     ];
 
-    features = [ ];
+    extra-features = [ ];
 
     users = {
       sini = { };

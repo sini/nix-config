@@ -2,11 +2,11 @@
   flake.features.systemd.linux =
     {
       lib,
-      activeFeatures,
+      host,
       ...
     }:
     let
-      legacyFs = lib.elem "disk-single" activeFeatures;
+      legacyFs = host.hasFeature "disk-single";
     in
     {
       systemd.tmpfiles.rules = [

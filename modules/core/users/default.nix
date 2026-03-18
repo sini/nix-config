@@ -5,7 +5,7 @@
       {
         config,
         users,
-        hostOptions,
+        host,
         environment,
         ...
       }:
@@ -27,7 +27,7 @@
             envConfig = envUser.configuration or { };
 
             # Get user from host
-            hostUser = hostOptions.users.${userName} or { };
+            hostUser = host.users.${userName} or { };
             hostConfig = hostUser.configuration or { };
 
             # Merge all configurations - later configs can override earlier ones

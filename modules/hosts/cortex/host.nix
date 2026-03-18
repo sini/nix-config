@@ -28,7 +28,7 @@
       "nix-builder"
     ];
 
-    features = [
+    extra-features = [
       "cpu-amd"
       "gpu-amd"
       "network-boot"
@@ -55,7 +55,7 @@
       #      "kde"
     ];
 
-    #    exclude-features = [
+    #    excluded-features = [
     #      "gdm" # these are included with workstation
     #      "gnome"
     #      "xdg-portal"

@@ -4,12 +4,12 @@
     {
       config,
       lib,
-      activeFeatures,
+      host,
       pkgs,
       ...
     }:
     let
-      zfsEnabled = lib.elem "zfs-root" activeFeatures;
+      zfsEnabled = host.hasFeature "zfs-root";
       jweToken = builtins.path {
         path = rootPath + "/.secrets/host-keys/${config.networking.hostName}/zroot-key.jwe";
         name = "zroot-key.jwe";

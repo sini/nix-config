@@ -78,7 +78,7 @@
         lib,
         config,
         environment,
-        hostOptions,
+        host,
         ...
       }:
       let
@@ -100,8 +100,8 @@
             peerHost = thunderboltPeers.${peerHostname};
 
             # Get our own interface IPs
-            ourInterface1 = hostOptions.tags."thunderbolt-interface-1";
-            ourInterface2 = hostOptions.tags."thunderbolt-interface-2";
+            ourInterface1 = host.tags."thunderbolt-interface-1";
+            ourInterface2 = host.tags."thunderbolt-interface-2";
 
             # Get peer's interface IPs
             peerInterface1 = peerHost.tags."thunderbolt-interface-1";
@@ -175,11 +175,11 @@
         # Current node configuration from tags
         nodeConfig = {
           loopback = {
-            ipv4 = builtins.head hostOptions.ipv4;
+            ipv4 = builtins.head host.ipv4;
           };
           interfaceIps = {
-            enp199s0f5 = hostOptions.tags."thunderbolt-interface-1";
-            enp199s0f6 = hostOptions.tags."thunderbolt-interface-2";
+            enp199s0f5 = host.tags."thunderbolt-interface-1";
+            enp199s0f6 = host.tags."thunderbolt-interface-2";
           };
           peers = peerConfigs;
         };
@@ -197,7 +197,7 @@
           };
 
           services.bgp = {
-            localAsn = if hostOptions.tags ? "bgp-asn" then lib.toInt hostOptions.tags."bgp-asn" else 65001;
+            localAsn = if host.tags ? "bgp-asn" then lib.toInt host.tags."bgp-asn" else 65001;
             routerId = lib.removeSuffix "/32" nodeConfig.loopback.ipv4;
 
             staticRoutes = lib.flatten (

@@ -1,14 +1,14 @@
 {
   flake.features.waybar.home =
     {
-      activeFeatures,
+      host,
       config,
       lib,
       pkgs,
       ...
     }:
     let
-      isLaptop = lib.elem "laptop" activeFeatures;
+      isLaptop = host.hasFeature "laptop";
     in
     {
       systemd.user.services.waybar = {

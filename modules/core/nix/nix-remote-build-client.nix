@@ -11,13 +11,13 @@ in
     {
       config,
       lib,
-      hostOptions,
+      host,
       ...
     }:
     let
       builders = findHostsWithRole "nix-builder";
       remoteBuilders = lib.filterAttrs (hostname: _: hostname != config.networking.hostName) builders;
-      localBuildSpeed = hostOptions.remoteBuildSpeed;
+      localBuildSpeed = host.remoteBuildSpeed;
     in
     {
       age.secrets.nix-remote-build-user-key = {

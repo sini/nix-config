@@ -2,14 +2,12 @@
   flake.features.ollama.linux =
     {
       pkgs,
-      lib,
-      activeFeatures,
+      host,
       ...
     }:
     let
-      amdEnabled = lib.elem "gpu-amd" activeFeatures;
-      nvidiaEnabled =
-        lib.elem "gpu-nvidia" activeFeatures && !(lib.elem "gpu-nvidia-vfio" activeFeatures);
+      amdEnabled = host.hasFeature "gpu-amd";
+      nvidiaEnabled = host.hasFeature "gpu-nvidia" && !(host.hasFeature "gpu-nvidia-vfio");
     in
     {
       services = {

@@ -15,7 +15,7 @@
       "server"
       "nix-builder"
     ];
-    features = [
+    extra-features = [
       "zfs-disk-single"
       "network-boot"
       "cpu-amd"

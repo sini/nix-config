@@ -1,8 +1,8 @@
 {
   flake.features.avahi.linux =
-    { hostOptions, ... }:
+    { host, ... }:
     let
-      interfaces = builtins.attrNames hostOptions.networking.interfaces;
+      interfaces = builtins.attrNames host.networking.interfaces;
     in
     {
       services.avahi = {

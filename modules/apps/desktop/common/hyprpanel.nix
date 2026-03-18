@@ -3,12 +3,12 @@
     {
       config,
       lib,
-      hostOptions,
+      host,
       pkgs,
       ...
     }:
     let
-      has_battery = builtins.elem "laptop" hostOptions.roles;
+      has_battery = builtins.elem "laptop" host.roles;
     in
     {
       # Override systemd unit settings for hyprpanel to only run with Hyprland (and not Gnome)

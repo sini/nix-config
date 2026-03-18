@@ -20,7 +20,7 @@
       "thunderbolt-mesh"
       # "vault"
     ];
-    features = [
+    extra-features = [
       "zfs-disk-single"
       "xfs-disk-longhorn"
       "cpu-amd"

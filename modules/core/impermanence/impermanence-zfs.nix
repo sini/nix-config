@@ -12,11 +12,11 @@
         lib,
         config,
         pkgs,
-        activeFeatures,
+        host,
         ...
       }:
       {
-        config = lib.mkIf (lib.elem "zfs-root" activeFeatures) {
+        config = lib.mkIf (host.hasFeature "zfs-root") {
           # Boot Rollback Services
           # ======================
           # Early boot (initrd) services that rollback root/home to @empty snapshots.

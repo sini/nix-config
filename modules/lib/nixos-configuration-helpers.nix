@@ -1,175 +1,23 @@
 {
   lib,
+  self,
   config,
   inputs,
   withSystem,
   ...
 }:
-let
-  inherit (lib)
-    elem
-    filter
-    head
-    tail
-    ;
-in
 {
   flake.lib.nixos-configuration-helpers =
     let
-      # ============================================================================
-      # SECTION 1: Module Collection Utilities
-      # ============================================================================
-      # These functions extract typed modules (nixos/home) from feature definitions
-
-      # Generic collector for modules of a specific type from feature list
-      # Skips features where the type key is missing or set to the default empty module
-      collectTypedModules =
-        type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
-
-      # Cross-platform system modules
-      collectSystemModules = collectTypedModules "system";
-
-      # Platform-specific system modules
-      collectLinuxModules = collectTypedModules "linux";
-      collectDarwinModules = collectTypedModules "darwin";
-
-      # Home-manager modules (all platforms)
-      collectHomeModules = collectTypedModules "home";
-
-      # Collect all applicable system modules for a given platform
-      # Includes: cross-platform (system) + platform-specific (linux/darwin)
-      collectPlatformSystemModules =
-        features: system:
-        let
-          isDarwin = lib.hasSuffix "-darwin" system;
-          isLinux = lib.hasSuffix "-linux" system;
-
-          # Cross-platform modules (always included)
-          sharedModules = collectSystemModules features;
-
-          # Platform-specific modules
-          platformModules =
-            if isLinux then
-              collectLinuxModules features
-            else if isDarwin then
-              collectDarwinModules features
-            else
-              throw "Unsupported system architecture: ${system}";
-        in
-        sharedModules ++ platformModules;
+      # Import shared utilities from lib.modules
+      inherit (self.lib.modules)
+        collectHomeModules
+        collectPlatformSystemModules
+        collectRequires
+        ;
 
       # ============================================================================
-      # SECTION 2: Feature Dependency Resolution
-      # ============================================================================
-      # Resolves transitive dependencies between features while respecting exclusions
-
-      # Recursively collect all dependencies for a set of root features
-      # Returns only the dependencies (not the roots themselves)
-      # Exclusions are propagated through the dependency tree
-      collectRequires =
-        features: roots:
-        let
-          rootNames = lib.catAttrs "name" roots;
-          initialExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" roots));
-
-          # Depth-first traversal of dependency tree
-          traverseDependencies =
-            visited: toVisit: exclusions:
-            if toVisit == [ ] then
-              visited
-            else
-              let
-                current = head toVisit;
-                remaining = tail toVisit;
-                isExcluded = elem current.name exclusions;
-                isVisited = elem current.name (map (v: v.name) visited);
-              in
-              # Skip if excluded or already visited
-              if isExcluded || isVisited then
-                traverseDependencies visited remaining exclusions
-              else
-                let
-                  # Accumulate exclusions from current feature
-                  updatedExclusions = lib.unique (exclusions ++ (current.excludes or [ ]));
-
-                  # Resolve dependencies, filtering out excluded ones
-                  dependencyNames = filter (name: !(elem name updatedExclusions)) (current.requires or [ ]);
-                  dependencies = map (name: features.${name}) dependencyNames;
-
-                  # Recursively process dependencies, then add current feature
-                  visitedWithDeps = traverseDependencies visited dependencies updatedExclusions;
-                in
-                traverseDependencies (visitedWithDeps ++ [ current ]) remaining updatedExclusions;
-
-          # Initial traversal (includes roots in result)
-          resultWithRoots = traverseDependencies [ ] roots initialExclusions;
-
-          # Collect ALL exclusions from entire tree for final filtering
-          allExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" (roots ++ resultWithRoots)));
-
-          # Filter out excluded features and remove roots (they're already included elsewhere)
-          dependenciesOnly = filter (
-            v: !(elem v.name allExclusions) && !(elem v.name rootNames)
-          ) resultWithRoots;
-        in
-        dependenciesOnly;
-
-      # ============================================================================
-      # SECTION 3: Feature Aggregation from Roles
-      # ============================================================================
-      # Builds the complete feature set from role definitions
-
-      # Aggregate feature names from core role and additional host-specific roles
-      getFeaturesForRoles =
-        hostRoles:
-        let
-          coreFeatures = config.flake.roles.core.features;
-
-          additionalFeatures = lib.optionals (hostRoles != null) (
-            lib.flatten (
-              map (roleName: config.flake.roles.${roleName}.features) (
-                lib.filter (roleName: lib.hasAttr roleName config.flake.roles) hostRoles
-              )
-            )
-          );
-
-          allFeatureNames = lib.unique (coreFeatures ++ additionalFeatures);
-        in
-        allFeatureNames;
-
-      # Resolve complete feature set for a host (roles + direct features + dependencies)
-      # Returns feature modules with all dependencies resolved and exclusions applied
-      getModulesForFeatures =
-        {
-          hostRoles,
-          hostFeatures ? [ ],
-          hostExclusions ? [ ],
-        }:
-        let
-          # Step 1: Aggregate feature names from all sources
-          roleFeatureNames = getFeaturesForRoles hostRoles;
-          allFeatureNames = lib.unique (roleFeatureNames ++ hostFeatures);
-
-          # Step 2: Convert names to feature modules
-          allFeatures = map (name: config.flake.features.${name}) allFeatureNames;
-
-          # Step 3: Collect and merge all exclusions
-          featureExclusions = lib.flatten (lib.catAttrs "excludes" allFeatures);
-          allExclusions = lib.unique (featureExclusions ++ hostExclusions);
-
-          # Step 4: Filter out excluded features
-          filteredFeatures = lib.filter (f: !(lib.elem f.name allExclusions)) allFeatures;
-
-          # Step 5: Resolve transitive dependencies
-          featureDeps = collectRequires config.flake.features filteredFeatures;
-
-          # Step 6: Combine roots and dependencies
-          allFeaturesWithDeps = filteredFeatures ++ featureDeps;
-        in
-        allFeaturesWithDeps;
-
-      # ============================================================================
-      # SECTION 4: Home Manager User Configuration
+      # SECTION 1: Home Manager User Configuration
       # ============================================================================
       # Builds home-manager configuration for individual users
 
@@ -211,7 +59,7 @@ in
           isCore = f: lib.elem f.name coreRoleFeatureNames;
           isNotExcluded = f: !(lib.elem f.name allExclusions);
 
-          # Process user features: filter and resolve dependencies
+          # Process user features: filter and resolve dependencies using lib.modules
           filteredUserFeatures = lib.filter isNotExcluded userFeatureModules;
           userFeatureDeps = collectRequires config.flake.features filteredUserFeatures;
           userFeatures = filteredUserFeatures ++ userFeatureDeps;
@@ -220,7 +68,7 @@ in
           coreHostFeatures = lib.filter (f: isCore f && isNotExcluded f) allHostFeatures;
           nonCoreHostFeatures = lib.filter (f: !(isCore f) && isNotExcluded f) allHostFeatures;
 
-          # Collect home modules from each source
+          # Collect home modules from each source using lib.modules
           coreHomeModules = collectHomeModules coreHostFeatures;
           nonCoreHostHomeModules =
             if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
@@ -257,18 +105,28 @@ in
           # Load environment configuration
           environment = config.flake.environments.${hostOptions.environment};
 
-          # Determine effective roles (allows override for specialized builds like kexec)
-          effectiveRoles = if overrideRoles != null then overrideRoles else hostOptions.roles;
+          # Feature resolution: use precomputed features when possible,
+          # or compute fresh when roles are overridden (e.g., for kexec builds)
+          usePrecomputed = overrideRoles == null;
 
-          # Resolve all features with dependencies
-          allHostFeatures = getModulesForFeatures {
-            hostRoles = effectiveRoles;
-            hostFeatures = hostOptions.features or [ ];
-            hostExclusions = hostOptions.exclude-features or [ ];
-          };
+          # Get active feature names
+          activeFeatures =
+            if usePrecomputed then
+              hostOptions.features
+            else
+              # Compute fresh for override scenarios using lib.modules
+              self.lib.modules.computeActiveFeatures {
+                featuresConfig = config.flake.features;
+                rolesConfig = config.flake.roles;
+                hostRoles = overrideRoles;
+                hostFeatures = hostOptions.extra-features or [ ];
+                hostExclusions = hostOptions.excluded-features or [ ];
+              };
 
-          # Extract feature names and collect platform-appropriate system modules
-          activeFeatures = lib.unique (map (f: f.name) allHostFeatures);
+          # Get feature modules for home-manager and system module collection
+          allHostFeatures = map (name: config.flake.features.${name}) activeFeatures;
+
+          # Collect platform-appropriate system modules using lib.modules
           systemModules = collectPlatformSystemModules allHostFeatures hostOptions.system;
 
           # Compute enabled users (only those with enableUnixAccount = true)
@@ -286,10 +144,9 @@ in
             inherit
               pkgs'
               inputs
-              hostOptions
               environment
-              activeFeatures
               ;
+            host = hostOptions;
             users = enabledUsers;
             lib = lib';
           };
@@ -423,11 +280,11 @@ in
             "ssd"
           ];
 
-          mergedExclusions = lib.unique ((hostOptions.exclude-features or [ ]) ++ kexecExclusions);
+          mergedExclusions = lib.unique ((hostOptions.excluded-features or [ ]) ++ kexecExclusions);
 
           modifiedHostOptions = hostOptions // {
-            exclude-features = mergedExclusions;
-            features = [ ];
+            excluded-features = mergedExclusions;
+            extra-features = [ ];
           };
         in
         mkNixosHost {
