@@ -24,17 +24,17 @@ spec:
             - -d
             - daemon
             - --engine-image
-            - docker.io/longhornio/longhorn-engine:v1.11.0
+            - docker.io/longhornio/longhorn-engine:v1.11.1
             - --instance-manager-image
-            - docker.io/longhornio/longhorn-instance-manager:v1.11.0
+            - docker.io/longhornio/longhorn-instance-manager:v1.11.1
             - --share-manager-image
-            - docker.io/longhornio/longhorn-share-manager:v1.11.0
+            - docker.io/longhornio/longhorn-share-manager:v1.11.1
             - --backing-image-manager-image
-            - docker.io/longhornio/backing-image-manager:v1.11.0
+            - docker.io/longhornio/backing-image-manager:v1.11.1
             - --support-bundle-manager-image
-            - docker.io/longhornio/support-bundle-kit:v0.0.79
+            - docker.io/longhornio/support-bundle-kit:v0.0.81
             - --manager-image
-            - docker.io/longhornio/longhorn-manager:v1.11.0
+            - docker.io/longhornio/longhorn-manager:v1.11.1
             - --service-account
             - longhorn-service-account
           env:
@@ -54,7 +54,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/longhornio/longhorn-manager:v1.11.0
+          image: docker.io/longhornio/longhorn-manager:v1.11.1
           imagePullPolicy: IfNotPresent
           name: longhorn-manager
           ports:
@@ -92,7 +92,7 @@ spec:
             - sh
             - -c
             - echo share-manager image pulled && sleep infinity
-          image: docker.io/longhornio/longhorn-share-manager:v1.11.0
+          image: docker.io/longhornio/longhorn-share-manager:v1.11.1
           imagePullPolicy: IfNotPresent
           name: pre-pull-share-manager-image
       priorityClassName: longhorn-critical

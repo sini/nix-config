@@ -18,8 +18,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: dd2526eec8ee28071b881d9cd4fd7c87dc0be6a006e82f523f3bdc24a0400a99
-        checksum/cmd-params: 9deec42d66ee79d8b95279e851639984c51f44b6ca00362dab4775bb96b08679
+        checksum/cm: 466d9f21c8cf87666ae35d90c7586ed264bf648983ebe21cec0e0ed664853056
+        checksum/cmd-params: 20a86574e66a595a2919f42b7fbe571dc3df35131b85c2ace6315b46a0ac0e43
       labels:
         app.kubernetes.io/component: server
         app.kubernetes.io/instance: argocd
@@ -350,7 +350,7 @@ spec:
                   key: server.sync.replace.allowed
                   name: argocd-cmd-params-cm
                   optional: true
-          image: quay.io/argoproj/argocd:v3.3.3
+          image: quay.io/argoproj/argocd:v3.3.4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3

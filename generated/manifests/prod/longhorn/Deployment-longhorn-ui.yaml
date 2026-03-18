@@ -37,7 +37,7 @@ spec:
               value: http://longhorn-backend:9500
             - name: LONGHORN_UI_PORT
               value: "8000"
-          image: docker.io/longhornio/longhorn-ui:v1.11.0
+          image: docker.io/longhornio/longhorn-ui:v1.11.1
           imagePullPolicy: IfNotPresent
           name: longhorn-ui
           ports:
