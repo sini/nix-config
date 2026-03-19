@@ -7,10 +7,6 @@
     }:
     {
       services.kanidm.provision = {
-        groups = {
-          "vpn.users".members = [ "admins" ];
-        };
-
         systems.oauth2.headscale =
           let
             domain = environment.getDomainFor "headscale";

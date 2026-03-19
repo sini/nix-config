@@ -4,15 +4,11 @@
       inputs,
       environment,
       host,
+      users,
       pkgs,
       ...
     }:
     {
-      # home-manager is defined in nixos-configurations for all machines
-      # which lets us switch the version used for stable, unstable, and
-      # darwin hosts.
-      # imports = [ inputs.home-manager.nixosModules.home-manager ];
-
       home-manager = {
         useGlobalPkgs = true;
         useUserPackages = true;
@@ -23,6 +19,7 @@
             inputs
             environment
             host
+            users
             pkgs
             ;
           hasGlobalPkgs = true;
@@ -42,11 +39,15 @@
               systemd.user.startServices = "sd-switch";
             }
           )
-        ];
 
-        # User configurations are handled in nixos-configurations.nix
-        # via the makeHome function which is feature-aware and handles
-        # host features, user features, and user configurations properly.
+          # Inject resolved user object as `user` specialArg per-user
+          (
+            { config, users, ... }:
+            {
+              _module.args.user = users.${config.home.username} or { };
+            }
+          )
+        ];
       };
     };
 }

@@ -7,7 +7,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) mkUsersWithFeaturesOpt;
+  inherit (self.lib.modules) mkEnvUsersOpt;
   inherit (self.lib.kubernetes-services) kubernetesConfigType;
   flakeConfig = config; # Capture the flake-level config for use in submodules
 in
@@ -308,10 +308,25 @@ in
               description = "Monitoring configuration including cross-environment scanning";
             };
 
-            users = mkUsersWithFeaturesOpt ''
-              Users in this environment with their identity, Unix account, and home configuration.
-              Set enableUnixAccount = true for users that should be created on hosts.
-            '';
+            users = mkEnvUsersOpt {
+              description = ''
+                Users in this environment with their behavior overrides.
+                Identity is derived from canonical users.<name>.identity.
+              '';
+              canonicalUsers = flakeConfig.users;
+            };
+
+            access = mkOption {
+              type = types.attrsOf (types.listOf types.str);
+              default = { };
+              description = ''
+                Maps usernames to lists of group names for this environment.
+                Groups can be from any scope (kanidm, unix, system).
+                A user appearing here with kanidm-scoped groups is provisioned as a Kanidm person.
+                A user with system-scoped groups matching a host's allow-logins-by gets a Unix account.
+                A user with unix-scoped groups gets those as extraGroups on their Unix account.
+              '';
+            };
 
             ipv6 = mkOption {
               type = types.submodule {
@@ -397,6 +412,16 @@ in
               '';
             };
 
+            groups = mkOption {
+              type = types.functionTo (types.attrsOf types.unspecified);
+              readOnly = true;
+              description = ''
+                Filter shared group definitions by scope.
+                Example: environment.groups "kanidm" returns all kanidm-scoped groups.
+                Pass null to get all groups.
+              '';
+            };
+
             secrets = mkOption {
               type = types.unspecified;
               readOnly = true;
@@ -459,13 +484,20 @@ in
             findHostsByRole =
               role:
               let
-                hosts = flakeConfig.hosts;
+                inherit (flakeConfig) hosts;
               in
               hosts
               |> lib.attrsets.filterAttrs (
                 _hostname: hostConfig:
                 (builtins.elem role (hostConfig.roles or [ ])) && (hostConfig.environment == config.name)
               );
+
+            groups =
+              scope:
+              let
+                allGroups = flakeConfig.groups;
+              in
+              if scope == null then allGroups else lib.filterAttrs (_: g: (g.scope or "") == scope) allGroups;
 
             secrets =
               let

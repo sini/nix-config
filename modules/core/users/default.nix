@@ -5,49 +5,17 @@
       {
         config,
         users,
-        host,
-        environment,
         ...
       }:
       let
-        # Users are already filtered in specialArgs (from environment.users)
-        enabledUsers = builtins.attrNames users;
-
-        # Filter for Unix account users from environment
-        unixAccountUsers = lib.filterAttrs (
-          _name: user: (user.enableUnixAccount or false)
-        ) environment.users;
-
-        # Function to build merged user configuration from all sources
-        buildUserConfig =
-          userName:
-          let
-            # Get user from environment
-            envUser = environment.users.${userName} or { };
-            envConfig = envUser.configuration or { };
-
-            # Get user from host
-            hostUser = host.users.${userName} or { };
-            hostConfig = hostUser.configuration or { };
-
-            # Merge all configurations - later configs can override earlier ones
-            mergedConfig = {
-              imports = [
-                envConfig
-                hostConfig
-              ];
-            };
-          in
-          mergedConfig;
-
-        userConfigs = map buildUserConfig enabledUsers;
+        enabledUsers = lib.filterAttrs (_: u: u.system.enable or false) users;
 
         # Build Unix account configurations
         buildUnixAccountConfig =
-          userName: envUser:
+          userName: user:
           let
-            inherit (envUser) uid;
-            gid = if envUser.gid != null then envUser.gid else uid;
+            inherit (user.system) uid;
+            gid = if user.system.gid != null then user.system.gid else uid;
 
             # Calculate subUid/subGid ranges: startUid = 100000 + ((uid - 1000) * 65536)
             subUidStart = 100000 + ((uid - 1000) * 65536);
@@ -87,19 +55,19 @@
                 isNormalUser = true;
                 home = "/home/${userName}";
                 group = userName;
-                openssh.authorizedKeys.keys = envUser.sshKeys;
-                extraGroups = envUser.systemGroups;
-                inherit (envUser) linger;
-                description = envUser.displayName;
+                openssh.authorizedKeys.keys = user.identity.sshKeys;
+                extraGroups = user.system.systemGroups;
+                inherit (user.system) linger;
+                description = user.identity.displayName;
                 hashedPasswordFile = lib.mkIf hasPasswordFile config.age.secrets."user-${userName}-password".path;
               };
             };
           };
 
-        unixAccountConfigs = lib.mapAttrsToList buildUnixAccountConfig unixAccountUsers;
+        unixAccountConfigs = lib.mapAttrsToList buildUnixAccountConfig enabledUsers;
       in
       {
-        imports = userConfigs ++ unixAccountConfigs;
+        imports = unixAccountConfigs;
         users.mutableUsers = false;
       };
 
@@ -110,17 +78,16 @@
         ...
       }:
       let
-        # Filter for Unix account users (users are already merged in specialArgs)
-        unixAccountUsers = lib.filterAttrs (_name: user: (user.enableUnixAccount or false)) users;
+        enabledUsers = lib.filterAttrs (_: u: u.system.enable or false) users;
 
         # Build Darwin user configurations
-        buildDarwinUserConfig = userName: envUser: {
+        buildDarwinUserConfig = userName: user: {
           users.users.${userName} = {
-            inherit (envUser) uid;
+            inherit (user.system) uid;
             home = "/Users/${userName}";
             createHome = true;
-            description = envUser.displayName;
-            openssh.authorizedKeys.keys = envUser.sshKeys;
+            description = user.identity.displayName;
+            openssh.authorizedKeys.keys = user.identity.sshKeys;
             shell = pkgs.zsh;
           };
 
@@ -128,7 +95,7 @@
           users.knownUsers = [ userName ];
         };
 
-        darwinUserConfigs = lib.mapAttrsToList buildDarwinUserConfig unixAccountUsers;
+        darwinUserConfigs = lib.mapAttrsToList buildDarwinUserConfig enabledUsers;
       in
       {
         imports = darwinUserConfigs;

@@ -48,7 +48,7 @@
                 mode = "600";
                 generator.script = "age-identity";
               };
-            }) users) # We create age identities for
+            }) (lib.filterAttrs (_: u: u.system.enable or false) users))
           ];
         };
 

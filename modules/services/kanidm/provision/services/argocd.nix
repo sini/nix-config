@@ -7,11 +7,6 @@
     }:
     {
       services.kanidm.provision = {
-        groups = {
-          "argocd.access".members = [ "users" ];
-          "argocd.admins".members = [ "admins" ];
-        };
-
         systems.oauth2.argocd =
           let
             domain = environment.getDomainFor "argocd";

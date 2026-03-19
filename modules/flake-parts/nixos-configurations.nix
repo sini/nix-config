@@ -15,24 +15,24 @@ let
 in
 {
   flake = {
-      # This is set due to a regression in agenix-rekey that checks for homeConfigurations.
-      homeConfigurations = { };
+    # This is set due to a regression in agenix-rekey that checks for homeConfigurations.
+    homeConfigurations = { };
 
-      # Build NixOS configurations for Linux hosts
-      nixosConfigurations = lib.mapAttrs mkHost linuxHosts;
+    # Build NixOS configurations for Linux hosts
+    nixosConfigurations = lib.mapAttrs mkHost linuxHosts;
 
-      # Build nix-darwin configurations for macOS hosts
-      darwinConfigurations = lib.mapAttrs mkHost darwinHosts;
+    # Build nix-darwin configurations for macOS hosts
+    darwinConfigurations = lib.mapAttrs mkHost darwinHosts;
 
-      # Kexec variants are Linux-only
-      kexecNixosConfigurations = lib.mapAttrs' (
-        name: hostOptions: lib.nameValuePair "${name}-kexec" (mkHostKexec name hostOptions)
-      ) linuxHosts;
+    # Kexec variants are Linux-only
+    kexecNixosConfigurations = lib.mapAttrs' (
+      name: hostOptions: lib.nameValuePair "${name}-kexec" (mkHostKexec name hostOptions)
+    ) linuxHosts;
 
-      # Allow systems to refer to each other via nodes.<name>
-      # Exclude installer ISOs and kexec variants from deployment nodes
-      nodes = lib.filterAttrs (
-        name: _: !(lib.hasPrefix "installer-" name) && !(lib.hasSuffix "-kexec" name)
-      ) self.outputs.nixosConfigurations;
-    };
+    # Allow systems to refer to each other via nodes.<name>
+    # Exclude installer ISOs and kexec variants from deployment nodes
+    nodes = lib.filterAttrs (
+      name: _: !(lib.hasPrefix "installer-" name) && !(lib.hasSuffix "-kexec" name)
+    ) self.outputs.nixosConfigurations;
+  };
 }

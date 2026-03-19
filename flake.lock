@@ -1320,6 +1320,47 @@
         "type": "github"
       }
     },
+    "home-manager-master": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-master"
+        ]
+      },
+      "locked": {
+        "lastModified": 1773935367,
+        "narHash": "sha256-+RjULqqbCYmOJG+99pNqEGRJV7bX8DYPbxKUhKWFKsI=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "a7ec5440474cdcc9939cc67c320f01aea0a2f195",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
+    "home-manager-stable-darwin": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-stable-darwin"
+        ]
+      },
+      "locked": {
+        "lastModified": 1773681845,
+        "narHash": "sha256-o8hrZrigP0JYcwnglCp8Zi8jQafWsxbDtRRPzuVwFxY=",
+        "owner": "nix-community",
+        "repo": "home-manager",
+        "rev": "0759e0e137305bc9d0c52c204c6d8dffe6f601a6",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "ref": "release-25.11",
+        "repo": "home-manager",
+        "type": "github"
+      }
+    },
     "home-manager-unstable": {
       "inputs": {
         "nixpkgs": [
@@ -2011,6 +2052,27 @@
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1772129556,
+        "narHash": "sha256-Utk0zd8STPsUJPyjabhzPc5BpPodLTXrwkpXBHYnpeg=",
+        "owner": "LnL7",
+        "repo": "nix-darwin",
+        "rev": "ebec37af18215214173c98cf6356d0aca24a2585",
+        "type": "github"
+      },
+      "original": {
+        "owner": "LnL7",
+        "ref": "nix-darwin-25.11",
+        "repo": "nix-darwin",
+        "type": "github"
+      }
+    },
+    "nix-darwin-unstable": {
+      "inputs": {
+        "nixpkgs": [
           "nixpkgs-unstable"
         ]
       },
@@ -2474,6 +2536,22 @@
         "type": "github"
       }
     },
+    "nixpkgs-master": {
+      "locked": {
+        "lastModified": 1773949080,
+        "narHash": "sha256-jVWTgMayPVpMlce+MBO4qfE5WD/jkNd7Zwdaw9LW3nw=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "db66145ca79f8ab14d8b766fa5610b62fce61957",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "master",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
     "nixpkgs-nixcord": {
       "locked": {
         "lastModified": 1773222311,
@@ -2506,18 +2584,34 @@
         "type": "github"
       }
     },
-    "nixpkgs-unstable": {
+    "nixpkgs-stable-darwin": {
       "locked": {
-        "lastModified": 1773939480,
-        "narHash": "sha256-KVmvDUj05CharsrX/hwa+qOwe2yVM9ruPG33P315q9w=",
+        "lastModified": 1773831496,
+        "narHash": "sha256-JW2/QPyCVzmouqEp1H9kNa8JXd7xEhlam9sy3TYfhDY=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "a6857e68f1f9427f098d2844c5e6817be1cfcf1f",
+        "rev": "826430a188181a750ffa5948daff334039c5d741",
         "type": "github"
       },
       "original": {
         "owner": "nixos",
-        "ref": "master",
+        "ref": "nixpkgs-25.11-darwin",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-unstable": {
+      "locked": {
+        "lastModified": 1773821835,
+        "narHash": "sha256-TJ3lSQtW0E2JrznGVm8hOQGVpXjJyXY2guAxku2O9A4=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "b40629efe5d6ec48dd1efba650c797ddbd39ace0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }
@@ -2982,6 +3076,8 @@
         "git-hooks-nix": "git-hooks-nix",
         "haumea": "haumea",
         "home-manager": "home-manager",
+        "home-manager-master": "home-manager-master",
+        "home-manager-stable-darwin": "home-manager-stable-darwin",
         "home-manager-unstable": "home-manager-unstable",
         "hyprland": "hyprland",
         "hyprland-plugins": "hyprland-plugins",
@@ -2996,6 +3092,7 @@
         "nix-ai-tools": "nix-ai-tools",
         "nix-cachyos-kernel": "nix-cachyos-kernel",
         "nix-darwin": "nix-darwin",
+        "nix-darwin-unstable": "nix-darwin-unstable",
         "nix-flatpak": "nix-flatpak",
         "nix-gaming": "nix-gaming",
         "nix-index-database": "nix-index-database",
@@ -3011,6 +3108,8 @@
         "nixos-facter-modules": "nixos-facter-modules",
         "nixos-hardware": "nixos-hardware",
         "nixpkgs": "nixpkgs_8",
+        "nixpkgs-master": "nixpkgs-master",
+        "nixpkgs-stable-darwin": "nixpkgs-stable-darwin",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nixpkgs-xr": "nixpkgs-xr",
         "nvf": "nvf",

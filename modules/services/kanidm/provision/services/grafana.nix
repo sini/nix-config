@@ -7,13 +7,6 @@
     }:
     {
       services.kanidm.provision = {
-        groups = {
-          "grafana.access".members = [ "users" ];
-          "grafana.editors".members = [ ];
-          "grafana.admins".members = [ ];
-          "grafana.server-admins".members = [ "admins" ];
-        };
-
         systems.oauth2.grafana =
           let
             domain = environment.getDomainFor "grafana";

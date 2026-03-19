@@ -8,11 +8,6 @@
     }:
     {
       services.kanidm.provision = {
-        groups = {
-          "open-webui.access".members = [ "admins" ];
-          "open-webui.admins".members = [ "admins" ];
-        };
-
         systems.oauth2.open-webui =
           let
             domain = environment.getDomainFor "open-webui";

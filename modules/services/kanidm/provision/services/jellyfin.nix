@@ -7,11 +7,6 @@
     }:
     {
       services.kanidm.provision = {
-        groups = {
-          "media.access".members = [ "users" ];
-          "media.admins".members = [ "admins" ];
-        };
-
         systems.oauth2.jellyfin =
           let
             domain = environment.getDomainFor "jellyfin";

@@ -16,10 +16,6 @@ in
         Prevents unnecessary rebuilds of derivations that embed secret references.
       '';
     };
-    sopsConfigPath = mkOption {
-      type = types.path;
-      description = "Content-addressed store path for the .sops.yaml config file.";
-    };
     rawSecretsPath = mkOption {
       type = types.path;
       description = ''
@@ -41,10 +37,6 @@ in
     secretsPath = builtins.path {
       path = rootPath + "/.secrets";
       name = "nix-config-secrets";
-    };
-    sopsConfigPath = builtins.path {
-      path = rootPath + "/.sops.yaml";
-      name = "sops-config";
     };
     rawSecretsPath = rootPath + "/.secrets";
     rawSopsConfigPath = rootPath + "/.sops.yaml";

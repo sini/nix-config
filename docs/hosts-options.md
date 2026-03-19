@@ -1,16 +1,26 @@
 - `hosts`: Per-host NixOS configurations.
 
-- `hosts.<name>.baseline`: Baseline configurations for repeatable
-  configuration types on this host
+- `hosts.<name>.allow-logins-by`: [list of string] \
+  System-scoped groups that grant Unix account creation on this host. Defaults
+  are derived from host roles (workstation → workstation-access, server →
+  server-access, fallback → system-access).
+
+- `hosts.<name>.baseline`: Baseline configurations for repeatable configuration
+  types on this host
 
 - `hosts.<name>.baseline.home`: [module] Host-specific home-manager
   configuration, applied to all users for host.
 
-- `hosts.<name>.environment`: [string] Environment name that this host
-  belongs to (references environments)
+- `hosts.<name>.channel`: \[one of "nix-darwin-unstable", "nixos-stable",
+  "nixos-unstable", "nixpkgs-master", "nixpkgs-stable-darwin"\] The nixpkgs
+  channel to use for this host, determining nixpkgs, home-manager, and
+  nix-darwin inputs.
 
-- `hosts.<name>.excluded-features`: [list of string] List of features to
-  exclude for the host (prevents the feature and its requires from being added)
+- `hosts.<name>.environment`: [string] Environment name that this host belongs
+  to (references environments)
+
+- `hosts.<name>.excluded-features`: [list of string] List of features to exclude
+  for the host (prevents the feature and its requires from being added)
 
 - `hosts.<name>.exporters`: \
   Prometheus exporters exposed by this host. Example:
@@ -18,20 +28,19 @@
 
 - `hosts.<name>.exporters.<name>.interval`: [string] Scrape interval
 
-- `hosts.<name>.exporters.<name>.path`: [string] HTTP path for metrics
-  endpoint
+- `hosts.<name>.exporters.<name>.path`: [string] HTTP path for metrics endpoint
 
-- `hosts.<name>.exporters.<name>.port`: [signed integer] Port number for
-  the exporter
+- `hosts.<name>.exporters.<name>.port`: [signed integer] Port number for the
+  exporter
 
-- `hosts.<name>.extra-features`: [list of string] List of additional
-  features to enable for the host (beyond those from roles).
+- `hosts.<name>.extra-features`: [list of string] List of additional features to
+  enable for the host (beyond those from roles).
 
-- `hosts.<name>.extra_modules`: [list of module] List of additional
-  modules to include for the host.
+- `hosts.<name>.extra_modules`: [list of module] List of additional modules to
+  include for the host.
 
-- `hosts.<name>.facts`: [null or absolute path] Path to the Facter JSON
-  file for the host.
+- `hosts.<name>.facts`: [null or absolute path] Path to the Facter JSON file for
+  the host.
 
 - `hosts.<name>.features`: [list of string] \
   Computed list of all enabled features for this host. Includes features from
@@ -45,19 +54,19 @@
 
 - `hosts.<name>.hostname`: [unspecified value] Hostname
 
-- `hosts.<name>.ipv4`: [list of string] The static IP addresses of this
-  host in its home vlan (derived from networking.interfaces)
+- `hosts.<name>.ipv4`: [list of string] The static IP addresses of this host in
+  its home vlan (derived from networking.interfaces)
 
-- `hosts.<name>.ipv6`: [list of string] The static IPv6 addresses of this
-  host (derived from networking.interfaces)
+- `hosts.<name>.ipv6`: [list of string] The static IPv6 addresses of this host
+  (derived from networking.interfaces)
 
 - `hosts.<name>.networking`: Network configuration for the host
 
-- `hosts.<name>.networking.autobridging`: [boolean] Enable automatic 1:1
-  bridge creation for each interface
+- `hosts.<name>.networking.autobridging`: [boolean] Enable automatic 1:1 bridge
+  creation for each interface
 
-- `hosts.<name>.networking.bridges`: [attribute set of list of string]
-  Attribute set mapping bridge names to lists of interfaces
+- `hosts.<name>.networking.bridges`: [attribute set of list of string] Attribute
+  set mapping bridge names to lists of interfaces
 
 - `hosts.<name>.networking.interfaces`: Network interfaces with their IP
   addresses
@@ -71,19 +80,18 @@
 - `hosts.<name>.networking.unmanagedInterfaces`: [list of string] List of
   interfaces to mark as unmanaged by NetworkManager
 
-- `hosts.<name>.public_key`: [absolute path] Path to or string value of
-  the public SSH key for the host.
+- `hosts.<name>.public_key`: [absolute path] Path to or string value of the
+  public SSH key for the host.
 
-- `hosts.<name>.remoteBuildJobs`: [signed integer] The number of build
-  jobs to be scheduled
+- `hosts.<name>.remoteBuildJobs`: [signed integer] The number of build jobs to
+  be scheduled
 
-- `hosts.<name>.remoteBuildSpeed`: [signed integer] The relative build
-  speed
+- `hosts.<name>.remoteBuildSpeed`: [signed integer] The relative build speed
 
 - `hosts.<name>.roles`: [list of string] List of roles for the host.
 
-- `hosts.<name>.secretPath`: [absolute path] Path to the directory
-  containing secret keys for the host.
+- `hosts.<name>.secretPath`: [absolute path] Path to the directory containing
+  secret keys for the host.
 
 - `hosts.<name>.system`: \[one of "aarch64-linux", "x86_64-linux",
   "aarch64-darwin"\] System string for the host
@@ -104,55 +112,16 @@
   - thunderbolt-interface-2: IPv4 address for second thunderbolt interface
     (e.g., "169.254.31.1/31")
 
-- `hosts.<name>.unstable`: [boolean] Whether to use nixpkgs-unstable for
-  this host.
+- `hosts.<name>.users`: Users on this host with their features and configuration
 
-- `hosts.<name>.users`: Users on this host with their features and
-  configuration
+- `hosts.<name>.users.<name>.excluded-features`: [null or (list of string)]
+  Excluded features override (null to inherit)
 
-- `hosts.<name>.users.<name>.baseline`: Baseline features and
-  configurations (leave fields null to inherit from environment)
+- `hosts.<name>.users.<name>.extra-features`: [null or (list of string)] Extra
+  home-manager features override (null to inherit)
 
-- `hosts.<name>.users.<name>.baseline.features`: \[null or (list of
-  string)\] List of baseline features (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.baseline.inheritHostFeatures`: \[null or
-  boolean\] Whether to inherit host features (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.configuration`: [module] User-specific home
-  configuration (leave empty to inherit from environment)
-
-- `hosts.<name>.users.<name>.displayName`: [null or string] Display name
-  for the user (null uses username or inherits from environment)
-
-- `hosts.<name>.users.<name>.email`: [null or string] Email address for
-  the user (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.enableUnixAccount`: [null or boolean] \
-  Whether to create a Unix user account on hosts. Set to null to inherit from
-  environment.
-
-- `hosts.<name>.users.<name>.features`: [null or (list of string)] \
-  List of features specific to the user. Set to null to inherit from
-  environment.
-
-- `hosts.<name>.users.<name>.gid`: [null or signed integer] Group ID for
-  the Unix account (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.gpgKey`: [null or string] GPG key ID for the
-  user (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.groups`: [null or (list of string)] List of
-  identity groups the user belongs to (null to inherit from environment)
+- `hosts.<name>.users.<name>.include-host-features`: [null or boolean] Whether
+  to inherit host features (null to inherit)
 
 - `hosts.<name>.users.<name>.linger`: [null or boolean] Enable lingering
-  for the user (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.sshKeys`: [null or (list of string)] SSH
-  public keys for the user (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.systemGroups`: [null or (list of string)]
-  System groups (extraGroups) for the user (null to inherit from environment)
-
-- `hosts.<name>.users.<name>.uid`: [null or signed integer] User ID for
-  the Unix account (null to inherit from environment)
+  override (null to inherit)

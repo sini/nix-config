@@ -13,6 +13,7 @@
     };
 
     environment = "dev";
+    channel = "nixpkgs-master";
 
     remoteBuildSpeed = 20;
     remoteBuildJobs = 16;
@@ -63,7 +64,7 @@
 
     users = {
       sini = {
-        features = [
+        extra-features = [
           "spotify-player"
           # TODO: properly feature flag these
           "waybar"
@@ -73,7 +74,7 @@
         ];
       };
       shuo = {
-        features = [
+        extra-features = [
           "firefox"
           "steam"
           "spicetify"

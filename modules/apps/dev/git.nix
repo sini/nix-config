@@ -4,6 +4,7 @@
       config,
       pkgs,
       lib,
+      user,
       environment,
       ...
     }:
@@ -12,9 +13,8 @@
 
       cfg = config.programs.git;
 
-      # Get current user's identity from environment
+      # Get current user's identity from resolved user specialArg
       username = config.home.username;
-      envUser = environment.users.${username} or null;
 
       makeGitConfig =
         {
@@ -38,14 +38,19 @@
           ''
         );
 
-      # Build default identity from environment user config
+      # Build default identity from resolved user
+      gpgKey = user.identity.gpgKey or null;
       defaultIdentity =
-        if envUser != null && envUser.gpgKey != null then
+        if gpgKey != null then
           {
-            email = if envUser.email != null then envUser.email else "${username}@${environment.email.domain}";
-            fullName = envUser.displayName;
+            email =
+              if user.identity.email or null != null then
+                user.identity.email
+              else
+                "${username}@${environment.email.domain}";
+            fullName = user.identity.displayName or username;
             githubUser = username;
-            signingKey = envUser.gpgKey;
+            signingKey = gpgKey;
             conditions = [
               "hasconfig:remote.*.url:git@github.com:${username}/**"
             ];
@@ -117,8 +122,6 @@
               merge.conflictstyle = "diff3";
               "url \"git@github.com:\"".pushInsteadOf = "https://github.com/";
               core.autocrlf = "input";
-              # Only on WSL
-              # core.fileMode = false;
 
               # Increase the size of post buffers to prevent hung ups of git-push.
               # https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning#6849424
@@ -133,7 +136,6 @@
               ".git-bak*"
               "*~"
               "*.swp"
-              "result"
               ".DS_Store"
               "/.helix"
               ".flake"

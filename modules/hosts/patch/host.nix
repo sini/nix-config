@@ -4,21 +4,22 @@
 
     environment = "dev";
 
+    channel = "nixos-stable";
+
     roles = [
-      # "dev"
+      "dev"
     ];
 
     extra-features = [ ];
 
-    users = {
-      sini.uid = 501;
-      shuo.enableUnixAccount = false;
-      will.enableUnixAccount = false;
-    };
+    allow-logins-by = [ "system-access" ];
 
     systemConfiguration =
-      { pkgs, ... }:
+      { lib, ... }:
       {
+        # Darwin uid override (macOS uses 501 instead of 1000)
+        users.users.sini.uid = lib.mkForce 501;
+
         # Touch ID for sudo
         security.pam.services.sudo_local.touchIdAuth = true;
 
@@ -67,16 +68,6 @@
           stateVersion = 6;
           # ======================== DO NOT CHANGE THIS ========================
         };
-
-        environment.systemPackages = with pkgs; [
-          mosh
-          age-plugin-yubikey
-          ssh-to-pgp
-          yj
-          sops
-          nix-fast-build
-          iperf3
-        ];
       };
   };
 }

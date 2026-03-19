@@ -45,10 +45,10 @@ in
               description = "The relative build speed";
             };
 
-            unstable = mkOption {
-              type = types.bool;
-              default = true;
-              description = "Whether to use nixpkgs-unstable for this host.";
+            channel = mkOption {
+              type = types.enum (builtins.attrNames flakeConfig.channels);
+              default = "nixos-unstable";
+              description = "The nixpkgs channel to use for this host, determining nixpkgs, home-manager, and nix-darwin inputs.";
             };
 
             networking = mkOption {
@@ -209,6 +209,15 @@ in
 
             users = mkHostUsersOpt "Users on this host with their features and configuration";
 
+            allow-logins-by = mkOption {
+              type = types.listOf types.str;
+              description = ''
+                System-scoped groups that grant Unix account creation on this host.
+                Defaults are derived from host roles (workstation → workstation-access,
+                server → server-access, fallback → system-access).
+              '';
+            };
+
             exporters = mkOption {
               type = types.attrsOf (
                 types.submodule {
@@ -273,6 +282,17 @@ in
               features = computedFeatures;
 
               hasFeature = featureName: lib.elem featureName computedFeatures;
+
+              allow-logins-by =
+                let
+                  roleDefaults = {
+                    workstation = [ "workstation-access" ];
+                    dev = [ "workstation-access" ];
+                    server = [ "server-access" ];
+                  };
+                  fromRoles = lib.unique (lib.flatten (map (role: roleDefaults.${role} or [ ]) config.roles));
+                in
+                lib.mkDefault (if fromRoles != [ ] then fromRoles else [ "system-access" ]);
             };
         }
       );

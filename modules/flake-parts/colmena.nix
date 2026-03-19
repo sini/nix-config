@@ -41,8 +41,8 @@
     let
       colmenaHosts = lib.filterAttrs (_: h: lib.hasSuffix "-linux" h.system) config.hosts;
 
-      stableHosts = lib.filterAttrs (_: h: !(h.unstable or false)) colmenaHosts;
-      unstableHosts = lib.filterAttrs (_: h: h.unstable or false) colmenaHosts;
+      # Group hosts by channel
+      hostsByChannel = lib.groupBy (name: colmenaHosts.${name}.channel) (lib.attrNames colmenaHosts);
 
       mkColmenaHive =
         {
@@ -73,41 +73,27 @@
           };
         };
 
-      colmena = mkColmenaHive {
-        hosts = stableHosts;
-        inherit (inputs) nixpkgs;
-      };
+      # Build a hive for each channel that has hosts
+      hivesPerChannel = lib.mapAttrs (
+        channel: hostNames:
+        let
+          hosts = lib.getAttrs hostNames colmenaHosts;
+          nixpkgs = config.channels.${channel}.nixpkgs;
+          hiveConfig = mkColmenaHive { inherit hosts nixpkgs; };
+        in
+        inputs.colmena.lib.makeHive hiveConfig
+      ) hostsByChannel;
 
-      colmenaUnstable = mkColmenaHive {
-        hosts = unstableHosts;
-        nixpkgs = inputs.nixpkgs-unstable;
-      };
+      hiveList = lib.attrValues hivesPerChannel;
 
-      hiveStable = if stableHosts == { } then null else inputs.colmena.lib.makeHive colmena;
-      hiveUnstable = if unstableHosts == { } then null else inputs.colmena.lib.makeHive colmenaUnstable;
-
-      mergeMap =
-        a: b:
-        if a == null && b == null then
-          { }
-        else if a == null then
-          b
-        else if b == null then
-          a
-        else if (builtins.isAttrs a && builtins.isAttrs b) then
-          a // b
-        else
-          throw "mergeMap: expected two attrsets or nulls";
+      # Merge attribute sets from all hives
+      mergeAttr = attr: lib.foldl' (acc: hive: acc // (hive.${attr} or { })) { } hiveList;
 
       # Final merged Hive
       colmenaHive =
         let
-          mergedNodes = mergeMap (if hiveStable != null then hiveStable.nodes else null) (
-            if hiveUnstable != null then hiveUnstable.nodes else null
-          );
-          mergedDeploymentConfig = mergeMap (
-            if hiveStable != null then hiveStable.deploymentConfig else null
-          ) (if hiveUnstable != null then hiveUnstable.deploymentConfig else null);
+          mergedNodes = mergeAttr "nodes";
+          mergedDeploymentConfig = mergeAttr "deploymentConfig";
           deploymentConfigSelected =
             names: lib.filterAttrs (name: _: builtins.elem name names) mergedDeploymentConfig;
           evalSelected = names: lib.filterAttrs (name: _: builtins.elem name names) toplevel;
@@ -120,26 +106,17 @@
               pkgs = import inputs.nixpkgs { system = "x86_64-linux"; };
               nodes = mergedNodes;
             };
-          toplevel = mergeMap (if hiveStable != null then hiveStable.toplevel else null) (
-            if hiveUnstable != null then hiveUnstable.toplevel else null
-          );
-          passthrough =
-            if hiveStable != null then
-              lib.filterAttrs (
-                name: _: lib.hasAttr name hiveStable && lib.isFunction hiveStable.${name}
-              ) hiveStable
-            else if hiveUnstable != null then
-              lib.filterAttrs (
-                name: _: lib.hasAttr name hiveUnstable && lib.isFunction hiveUnstable.${name}
-              ) hiveUnstable
-            else
-              { };
+          toplevel = mergeAttr "toplevel";
+          firstHive = lib.head hiveList;
+          passthrough = lib.filterAttrs (
+            name: _: lib.hasAttr name firstHive && lib.isFunction firstHive.${name}
+          ) firstHive;
         in
         passthrough
         // {
           __schema = "v0.5";
           nodes = mergedNodes;
-          metaConfig = if hiveStable != null then hiveStable.metaConfig else hiveUnstable.metaConfig;
+          inherit (firstHive) metaConfig;
           deploymentConfig = mergedDeploymentConfig;
           inherit
             evalSelected

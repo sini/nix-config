@@ -52,8 +52,8 @@ in
             builders-use-substitutes = true;
             substituters = lib.mapAttrsToList (hostname: _: "http://${hostname}:16893") remoteBuilders;
             trusted-public-keys = lib.mapAttrsToList (
-              hostname: _:
-              (builtins.readFile (rootPath + "/.secrets/generated/${hostname}/nix_store_signing_key.pub"))
+              _hostname: builderHost:
+              (builtins.readFile (builderHost.secretPath + "/generated/nix_store_signing_key.pub"))
             ) remoteBuilders;
           };
 

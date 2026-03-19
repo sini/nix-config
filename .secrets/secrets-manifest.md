@@ -68,13 +68,8 @@ repository and rekeyed for each host.
 ### user-shuo-password
 
 - **Used by**:
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
-  - nixos:bitstream
   - nixos:blade
   - nixos:cortex
-  - nixos:uplink
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/users/shuo/hashed-password.age`
 
@@ -94,13 +89,8 @@ repository and rekeyed for each host.
 ### user-will-password
 
 - **Used by**:
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
-  - nixos:bitstream
   - nixos:blade
   - nixos:cortex
-  - nixos:uplink
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/users/will/hashed-password.age`
 
@@ -377,13 +367,8 @@ functionality. They will be created automatically if they don't exist.
 ### user-identity-shuo
 
 - **Used by**:
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
-  - nixos:bitstream
   - nixos:blade
   - nixos:cortex
-  - nixos:uplink
 - **Owner**: shuo:shuo (600)
 - **Rekey File**: `.secrets/users/shuo/id_agenix.age`
 - **Generator**: built-in: age-identity
@@ -406,13 +391,8 @@ functionality. They will be created automatically if they don't exist.
 ### user-identity-will
 
 - **Used by**:
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
-  - nixos:bitstream
   - nixos:blade
   - nixos:cortex
-  - nixos:uplink
 - **Owner**: will:will (600)
 - **Rekey File**: `.secrets/users/will/id_agenix.age`
 - **Generator**: built-in: age-identity

@@ -1,7 +1,4 @@
 { config, ... }:
-let
-  inherit (config.flake.secretsPaths) rawSecretsPath;
-in
 {
   environments.dev = {
     id = 2;
@@ -16,7 +13,7 @@ in
       };
       issuers = {
         "json64-dev" = {
-          ageKeyFile = rawSecretsPath + "/env/dev/cloudflare-api-key.age";
+          ageKeyFile = config.environments.dev.secretPath + "/cloudflare-api-key.age";
         };
       };
     };
@@ -116,13 +113,6 @@ in
     tags = {
       environment = "dev";
       owner = "json64";
-    };
-
-    users = {
-      sini = { };
-      shuo = { };
-      will = { };
-      media = { };
     };
 
     delegation = {

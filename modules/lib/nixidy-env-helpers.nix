@@ -10,7 +10,6 @@
     let
       inherit (config.flake.meta) repo;
       inherit (config.flake.lib.kubernetes-services) nixidyKubernetesType;
-      inherit (config.flake.secretsPaths) rawSecretsPath;
 
       # Core infrastructure services required by every nixidy environment.
       # These are always included regardless of per-environment configuration.
@@ -78,21 +77,21 @@
         ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.kubernetes.services);
 
       # Produce the agenix-rekey-to-sops configuration module for a nixidy environment.
-      # Configures SOPS encryption paths and rekey identity based on environment name.
-      # string -> module
+      # Configures SOPS encryption paths and rekey identity based on environment.
+      # environmentConfig -> module
       mkAgeModule =
-        env:
+        environment:
         { inputs, ... }:
         {
           age = {
             sops = {
-              outputDir = rawSecretsPath + "/env/${env}/sops";
+              outputDir = environment.secretPath + "/sops";
             };
             rekey = {
-              recipientIdentifier = env;
+              recipientIdentifier = environment.name;
               storageMode = "local";
-              generatedSecretsDir = rawSecretsPath + "/env/${env}/generated";
-              localStorageDir = rawSecretsPath + "/env/${env}/rekeyed";
+              generatedSecretsDir = environment.secretPath + "/generated";
+              localStorageDir = environment.secretPath + "/rekeyed";
               inherit (inputs.self.secretsConfig) masterIdentities;
             };
           };
@@ -229,7 +228,7 @@
             # It provides our custom agenix generator types
             config.features.agenix-generators.system
 
-            (mkAgeModule env)
+            (mkAgeModule environment)
             (mkNixidyModule {
               inherit
                 env

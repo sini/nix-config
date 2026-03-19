@@ -19,82 +19,200 @@
       # ============================================================================
       # SECTION 1: Home Manager User Configuration
       # ============================================================================
-      # Builds home-manager configuration for individual users
 
-      # Create home-manager configuration for a specific user
-      # Combines: baseline features + environment features + host features + user-specific features
-      # Respects: host exclusions, user exclusions, and inheritHostFeatures setting
       makeHomeConfig =
         {
-          username,
-          environment,
-          hostOptions,
+          resolvedUser,
           allHostFeatures,
           ...
         }:
         let
-          # Get user specifications from environment and host
-          envUser = environment.users.${username} or { };
-          hostUser = hostOptions.users.${username} or { };
+          includeHostFeatures = resolvedUser.system.include-host-features or false;
+          userExtraFeatures = resolvedUser.system.extra-features or [ ];
+          userExclusions = resolvedUser.system.excluded-features or [ ];
 
-          # Helper to coalesce null to default value (for nullable host user fields)
-          orDefault = value: default: if value != null then value else default;
-
-          # Get inheritHostFeatures, handling null from host config
-          hostInheritFeatures = hostUser.baseline.inheritHostFeatures or null;
-          inheritHostFeatures = orDefault hostInheritFeatures (envUser.baseline.inheritHostFeatures or false);
-
-          # Aggregate exclusions from host features
-          hostExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allHostFeatures));
-
-          # Aggregate user feature names from all sources, handling nulls from host config
-          baselineFeatureNames = orDefault (envUser.baseline.features or null) [ ];
-          envFeatureNames = orDefault (envUser.features or null) [ ];
-          hostFeatureNames = orDefault (hostUser.features or null) [ ];
-          allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
-
-          # Convert to feature modules and collect user-specific exclusions
-          userFeatureModules = map (name: config.features.${name}) allUserFeatureNames;
-          userOnlyExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
-
-          # Merge all exclusions
-          allExclusions = lib.unique (hostExclusions ++ userOnlyExclusions);
-
-          # Helper predicates for filtering
           coreRoleFeatureNames = config.roles.core.features;
           isCore = f: lib.elem f.name coreRoleFeatureNames;
+
+          coreHostFeatures = lib.filter isCore allHostFeatures;
+          nonCoreHostFeatures = lib.filter (f: !(isCore f)) allHostFeatures;
+
+          baseFeatures = coreHostFeatures ++ (if includeHostFeatures then nonCoreHostFeatures else [ ]);
+
+          userFeatureModules = map (name: config.features.${name}) userExtraFeatures;
+
+          allFeatures = baseFeatures ++ userFeatureModules;
+
+          featureExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allFeatures));
+          allExclusions = lib.unique (featureExclusions ++ userExclusions);
+
           isNotExcluded = f: !(lib.elem f.name allExclusions);
+          filteredFeatures = lib.filter isNotExcluded allFeatures;
 
-          # Process user features: filter and resolve dependencies using lib.modules
-          filteredUserFeatures = lib.filter isNotExcluded userFeatureModules;
-          userFeatureDeps = collectRequires config.features filteredUserFeatures;
-          userFeatures = filteredUserFeatures ++ userFeatureDeps;
+          featureDeps = collectRequires config.features filteredFeatures;
+          resolvedFeatures = filteredFeatures ++ featureDeps;
 
-          # Split host features into core (always included) and non-core (conditional)
-          coreHostFeatures = lib.filter (f: isCore f && isNotExcluded f) allHostFeatures;
-          nonCoreHostFeatures = lib.filter (f: !(isCore f) && isNotExcluded f) allHostFeatures;
-
-          # Collect home modules from each source using lib.modules
-          coreHomeModules = collectHomeModules coreHostFeatures;
-          nonCoreHostHomeModules =
-            if inheritHostFeatures then collectHomeModules nonCoreHostFeatures else [ ];
-          userHomeModules = collectHomeModules userFeatures;
-
-          # User-specific configuration overrides
-          userConfigs = [
-            (envUser.configuration or { })
-            (hostUser.configuration or { })
-          ];
+          homeModules = collectHomeModules resolvedFeatures;
         in
         {
-          imports = coreHomeModules ++ nonCoreHostHomeModules ++ userHomeModules ++ userConfigs;
+          imports = homeModules;
         };
 
       # ============================================================================
-      # SECTION 5: Host Configuration Builders
+      # SECTION 2: ACL-Based User Resolution
+      # ============================================================================
+      # groups (shared) + environment.access + host.allow-logins-by → resolved users
+
+      # Helper: coalesce — first non-null value wins
+      coalesce = a: b: if a != null then a else b;
+
+      # Resolve transitive group membership for a set of direct groups
+      # Returns: all group names the user is a member of (including transitive)
+      resolveGroupMembership =
+        groupDefs: directGroups:
+        let
+          # For each group, find all groups that include it as a member (reverse lookup)
+          # i.e., if "users" has members = [ "admins" ], then being in "admins" means
+          # you're transitively in "users"
+          traverse =
+            visited: toVisit:
+            if toVisit == [ ] then
+              visited
+            else
+              let
+                current = lib.head toVisit;
+                remaining = lib.tail toVisit;
+              in
+              if lib.elem current visited then
+                traverse visited remaining
+              else
+                let
+                  # Find all groups that list `current` in their members
+                  parentGroups = lib.filterAttrs (_name: g: lib.elem current (g.members or [ ])) groupDefs;
+                  parentNames = lib.attrNames parentGroups;
+                in
+                traverse (visited ++ [ current ]) (remaining ++ parentNames);
+        in
+        traverse [ ] directGroups;
+
+      # Build resolved user from canonical user + ACL + env/host overrides
+      resolveUser =
+        {
+          userName,
+          canonicalUsers,
+          environment,
+          hostOptions,
+          groupDefs,
+        }:
+        let
+          cu = canonicalUsers.${userName} or null;
+          envUser = environment.users.${userName} or { };
+          hostUser = hostOptions.users.${userName} or { };
+
+          # Identity from canonical user
+          identity =
+            if cu != null then
+              {
+                inherit (cu.identity)
+                  displayName
+                  email
+                  sshKeys
+                  gpgKey
+                  ;
+              }
+            else
+              {
+                displayName = userName;
+                email = null;
+                sshKeys = [ ];
+                gpgKey = null;
+              };
+
+          # System fields: canonical base → env overrides → host overrides
+          sysBase =
+            if cu != null then
+              {
+                inherit (cu.system)
+                  uid
+                  gid
+                  linger
+                  extra-features
+                  excluded-features
+                  include-host-features
+                  ;
+              }
+            else
+              {
+                uid = null;
+                gid = null;
+                linger = false;
+                extra-features = [ ];
+                excluded-features = [ ];
+                include-host-features = false;
+              };
+
+          sys = {
+            inherit (sysBase) uid gid;
+            linger = coalesce (envUser.linger or null) (coalesce (hostUser.linger or null) sysBase.linger);
+            extra-features = coalesce (hostUser.extra-features or null) (
+              coalesce (envUser.extra-features or null) sysBase.extra-features
+            );
+            excluded-features = coalesce (hostUser.excluded-features or null) (
+              coalesce (envUser.excluded-features or null) sysBase.excluded-features
+            );
+            include-host-features = coalesce (hostUser.include-host-features or null) (
+              coalesce (envUser.include-host-features or null) sysBase.include-host-features
+            );
+          };
+
+          # ACL resolution
+          directGroups = environment.access.${userName} or [ ];
+          resolvedGroups = resolveGroupMembership groupDefs directGroups;
+
+          # Scope filter — returns group names matching a given scope
+          scopedGroups = scope: lib.filter (g: (groupDefs.${g}.scope or "") == scope) resolvedGroups;
+
+          # Derive enable from system-scoped groups ∩ host.allow-logins-by
+          enable = lib.any (g: lib.elem g (hostOptions.allow-logins-by or [ ])) (scopedGroups "system");
+        in
+        {
+          inherit identity;
+          system = sys // {
+            inherit enable;
+            systemGroups = scopedGroups "unix";
+          };
+          inherit directGroups resolvedGroups scopedGroups;
+        };
+
+      # Build all resolved users for a host context
+      resolveUsers =
+        lib': canonicalUsers: environment: hostOptions: groupDefs:
+        let
+          canonicalUserNames = builtins.attrNames canonicalUsers;
+          environmentAccessNames = builtins.attrNames (environment.access or { });
+          environmentUserNames = builtins.attrNames (environment.users or { });
+          hostUserNames = builtins.attrNames (hostOptions.users or { });
+          allUserNames = lib'.unique (
+            canonicalUserNames ++ environmentAccessNames ++ environmentUserNames ++ hostUserNames
+          );
+        in
+        lib'.genAttrs allUserNames (
+          userName:
+          resolveUser {
+            inherit
+              userName
+              canonicalUsers
+              environment
+              hostOptions
+              groupDefs
+              ;
+          }
+        );
+
+      # ============================================================================
+      # SECTION 3: Host Configuration Builders
       # ============================================================================
 
-      # Prepare platform-agnostic host context (shared between NixOS and Darwin builders)
       prepareHostContext =
         {
           hostOptions,
@@ -102,25 +220,20 @@
         }:
         _system:
         let
-          # Select package set (stable vs unstable)
-          useUnstable = hostOptions.unstable or false;
-          pkgs' = if useUnstable then inputs.nixpkgs-unstable else inputs.nixpkgs;
+          channel = config.channels.${hostOptions.channel};
+          pkgs' = channel.nixpkgs;
           lib' = pkgs'.lib;
-          home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
+          home-manager' = channel.home-manager;
+          nix-darwin' = channel.nix-darwin;
 
-          # Load environment configuration
           environment = config.environments.${hostOptions.environment};
 
-          # Feature resolution: use precomputed features when possible,
-          # or compute fresh when roles are overridden (e.g., for kexec builds)
           usePrecomputed = overrideRoles == null;
 
-          # Get active feature names
           activeFeatures =
             if usePrecomputed then
               hostOptions.features
             else
-              # Compute fresh for override scenarios using lib.modules
               self.lib.modules.computeActiveFeatures {
                 featuresConfig = config.features;
                 rolesConfig = config.roles;
@@ -129,82 +242,34 @@
                 hostExclusions = hostOptions.excluded-features or [ ];
               };
 
-          # Get feature modules for home-manager and system module collection
           allHostFeatures = map (name: config.features.${name}) activeFeatures;
 
-          # Collect platform-appropriate system modules using lib.modules
           systemModules = collectPlatformSystemModules allHostFeatures hostOptions.system;
 
-          # Compute enabled users (only those with enableUnixAccount = true)
-          enabledUsers =
-            let
-              environmentUserNames = builtins.attrNames (environment.users or { });
-              hostUserNames = builtins.attrNames (hostOptions.users or { });
-              enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
+          # Resolve all users via ACL
+          canonicalUsers = config.users or { };
+          groupDefs = config.groups or { };
+          users = resolveUsers lib' canonicalUsers environment hostOptions groupDefs;
 
-              # Deep merge environment and host user attributes (host overrides environment)
-              # Host user values are null by default, so we filter them out before merging
-              mergeUserAttrs =
-                userName:
-                let
-                  envUser = environment.users.${userName} or { };
-                  hostUser = hostOptions.users.${userName} or { };
-
-                  # Check if a value should be filtered (is considered "unset")
-                  isUnset =
-                    key: value:
-                    value == null
-                    || (
-                      # For module types (configuration), empty {} means "not set"
-                      key == "configuration" && lib'.isAttrs value && value == { }
-                    )
-                    || (
-                      # For baseline, filter if all sub-fields are null
-                      key == "baseline" && lib'.isAttrs value && lib'.all (v: v == null) (lib'.attrValues value)
-                    );
-
-                  # Recursively filter out unset values from host user config
-                  filterUnset =
-                    value:
-                    if lib'.isAttrs value && !lib'.isDerivation value then
-                      let
-                        filtered = lib'.filterAttrs (k: v: !isUnset k v) value;
-                      in
-                      lib'.mapAttrs (_: filterUnset) filtered
-                    else
-                      value;
-
-                  hostOverrides = filterUnset hostUser;
-                in
-                lib'.recursiveUpdate envUser hostOverrides;
-
-              allUsers = lib'.genAttrs enabledUserNames mergeUserAttrs;
-            in
-            lib'.filterAttrs (_userName: user: user.enableUnixAccount or false) allUsers;
-
-          # Common specialArgs passed to all system modules
           specialArgs = {
             inherit
               pkgs'
               inputs
               environment
+              users
               ;
             host = hostOptions;
-            users = enabledUsers;
             lib = lib';
           };
 
-          # Home-manager user configuration module (shared between platforms)
+          enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
           homeManagerUsersModule = {
             home-manager.users = lib'.mapAttrs (
-              username: _userSpec:
+              _username: resolvedUser:
               makeHomeConfig {
                 inherit
-                  username
-                  environment
-                  hostOptions
+                  resolvedUser
                   allHostFeatures
-                  lib'
                   ;
               }
             ) enabledUsers;
@@ -215,17 +280,17 @@
             pkgs'
             lib'
             home-manager'
+            nix-darwin'
             environment
             allHostFeatures
             activeFeatures
             systemModules
-            enabledUsers
+            users
             specialArgs
             homeManagerUsersModule
             ;
         };
 
-      # Build a NixOS host configuration
       mkNixosHost =
         {
           hostOptions,
@@ -256,7 +321,6 @@
           }
         );
 
-      # Build a Darwin (macOS) host configuration
       mkDarwinHost =
         {
           hostOptions,
@@ -270,7 +334,7 @@
           let
             ctx = prepareHostContext { inherit hostOptions overrideRoles; } system;
           in
-          inputs.nix-darwin.lib.darwinSystem {
+          ctx.nix-darwin'.lib.darwinSystem {
             inherit system;
             inherit (ctx) specialArgs;
 
@@ -287,14 +351,12 @@
         );
 
       # ============================================================================
-      # SECTION 6: Public API Functions
+      # SECTION 4: Public API Functions
       # ============================================================================
 
-      # Platform detection helpers
       isDarwin = lib.hasSuffix "-darwin";
       isLinux = lib.hasSuffix "-linux";
 
-      # Build a host configuration, dispatching to NixOS or Darwin based on system architecture
       mkHost =
         _name: hostOptions:
         let
@@ -310,7 +372,6 @@
           inherit hostOptions;
         };
 
-      # Build a minimal kexec installer variant (Linux/NixOS only)
       mkHostKexec =
         name: hostOptions:
         let

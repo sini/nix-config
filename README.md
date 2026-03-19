@@ -78,8 +78,8 @@ See the linked documentation files for complete option references.
 This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy
 NixOS configurations to remote hosts. Colmena supports both local and remote
 deployment, and hosts can be targeted by roles as well as their name. Remote
-connection properties are defined in the `flake.hosts.<hostname>.deployment`
-attribute set, and implementation can be found in the
+connection properties are defined in the `hosts.<hostname>.deployment` attribute
+set, and implementation can be found in the
 `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives
 in the [./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
 
@@ -137,6 +137,7 @@ The following files in this repository are generated and checked using
 - `.gitignore`
 - `LICENSE`
 - `docs/environments-options.md`
+- `docs/groups-options.md`
 - `docs/hosts-options.md`
 - `docs/kubernetes-options.md`
 - `docs/users-options.md`

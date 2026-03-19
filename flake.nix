@@ -125,7 +125,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    # Home Manager
+    # Home Manager (one per nixpkgs channel)
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -134,6 +134,16 @@
     home-manager-unstable = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    home-manager-master = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-master";
+    };
+
+    home-manager-stable-darwin = {
+      url = "github:nix-community/home-manager/release-25.11";
+      inputs.nixpkgs.follows = "nixpkgs-stable-darwin";
     };
 
     import-tree.url = "github:vic/import-tree";
@@ -273,13 +283,11 @@
     # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
 
-    # Nixpkgs:
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
-
-    # NixPkgs Unstable
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable"; # Has binary cache + tests
-    # nixpkgs-unstable.url = "github:nixos/nixpkgs/nixpkgs-unstable"; # Has binary cache
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/master"; # Bleeding edge...
+    # Nixpkgs channels:
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11"; # NixOS stable
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable"; # NixOS unstable (has binary cache + tests)
+    nixpkgs-master.url = "github:nixos/nixpkgs/master"; # Bleeding edge
+    nixpkgs-stable-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.11-darwin"; # macOS stable
 
     nvf.url = "github:notashelf/nvf";
 
@@ -365,16 +373,16 @@
     #   inputs.nixpkgs.follows = "nixpkgs-darwin";
     # };
 
-    # macOS Support (master)
+    # macOS Support
     nix-darwin = {
+      url = "github:LnL7/nix-darwin/nix-darwin-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
+    nix-darwin-unstable = {
       url = "github:LnL7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    # nix-darwin-stable = {
-    #   url = "github:LnL7/nix-darwin/nix-darwin-25.11";
-    #   inputs.nixpkgs.follows = "nixpkgs-unatable";
-    # };
 
     # Homebrew
     #nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";

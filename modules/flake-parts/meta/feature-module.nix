@@ -3,7 +3,8 @@ let
   inherit (lib) mkOption types;
 
   # Wraps a deferred module with metadata for better debugging
-  wrapModuleWithMetadata = featureName: modulePath: module:
+  wrapModuleWithMetadata =
+    featureName: modulePath: module:
     if module == { } then
       module
     else
@@ -38,11 +39,17 @@ let
         };
 
         # Cross-platform system module (included on both NixOS and Darwin)
-        system = mkDeferredModuleOptWithMetadata name "system" "A cross-platform system module for this feature (NixOS and Darwin)";
+        system =
+          mkDeferredModuleOptWithMetadata name "system"
+            "A cross-platform system module for this feature (NixOS and Darwin)";
 
         # Platform-specific system modules (for config that only applies to one platform)
-        linux = mkDeferredModuleOptWithMetadata name "linux" "A Linux-specific system module for this feature (NixOS only)";
-        darwin = mkDeferredModuleOptWithMetadata name "darwin" "A Darwin-specific system module for this feature (macOS only)";
+        linux =
+          mkDeferredModuleOptWithMetadata name "linux"
+            "A Linux-specific system module for this feature (NixOS only)";
+        darwin =
+          mkDeferredModuleOptWithMetadata name "darwin"
+            "A Darwin-specific system module for this feature (macOS only)";
 
         # Home-manager module (works on all platforms)
         home = mkDeferredModuleOptWithMetadata name "home" "A Home-Manager module for this feature";

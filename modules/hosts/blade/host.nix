@@ -31,7 +31,7 @@
     ];
     users = {
       sini = {
-        features = [
+        extra-features = [
           "spotify-player"
           "waybar"
           "swaync"
@@ -39,8 +39,8 @@
           "hyprland-split-monitors"
         ];
       };
-      "shuo" = {
-        "features" = [
+      shuo = {
+        extra-features = [
           "firefox"
           "steam"
           "spicetify"

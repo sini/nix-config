@@ -42,132 +42,80 @@ let
       internal = true;
     };
 
-  mkUsersWithFeaturesOpt =
-    description:
+  # Identity submodule type (shared between env users and canonical users)
+  identitySubmoduleType =
+    name:
+    types.submodule {
+      options = {
+        displayName = mkOption {
+          type = types.str;
+          default = name;
+          description = "Display name for the user (defaults to username)";
+        };
+
+        email = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "Email address for the user";
+        };
+
+        sshKeys = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "SSH public keys for the user";
+        };
+
+        gpgKey = mkOption {
+          type = types.nullOr types.str;
+          default = null;
+          description = "GPG key ID for the user (parent key ID)";
+        };
+      };
+    };
+
+  # Environment-level user option — nullable overrides only, plus derived identity
+  mkEnvUsersOpt =
+    {
+      description,
+      canonicalUsers ? { },
+    }:
     mkOption {
       type = types.lazyAttrsOf (
         types.submodule (
           { name, ... }:
           {
             options = {
-              # Home Manager / system user options
-              features = mkOption {
-                type = types.listOf types.str;
-                default = [ ];
-                description = ''
-                  List of features specific to the user.
-
-                  While a feature may specify NixOS modules in addition to home
-                  modules, only home modules will affect configuration. For this
-                  reason, users should be encouraged to avoid pointlessly specifying
-                  their own NixOS modules.
-                '';
-              };
-              configuration = mkDeferredModuleOpt "User-specific home configuration";
-
-              baseline = mkOption {
-                type = types.submodule {
-                  options = {
-                    features = mkOption {
-                      type = types.listOf types.str;
-                      default = [ ];
-                      description = ''
-                        List of baseline features shared by all of this user's configurations.
-                      '';
-                    };
-                    inheritHostFeatures = mkOption {
-                      type = types.bool;
-                      default = false;
-                      description = ''
-                        Whether to inherit all home-manager features from the host configuration.
-
-                        When true, this user will receive all home-manager modules from the host's
-                        enabled features. When false, only user-specific features and baseline features
-                        will be included.
-                      '';
-                    };
-                  };
-                };
-                description = "Baseline features and configurations shared by all of this user's configurations";
-                default = { };
+              # Derived identity — read-only, resolved from canonical users.<name>.identity
+              identity = mkOption {
+                type = identitySubmoduleType name;
+                readOnly = true;
+                default = if canonicalUsers ? ${name} then canonicalUsers.${name}.identity else { };
+                description = "Identity information (derived from canonical users.<name>.identity)";
               };
 
-              enableUnixAccount = mkOption {
-                type = types.bool;
-                default = false;
-                description = ''
-                  Whether to create a Unix user account on hosts.
-                  If false, this is an identity-only user (e.g., for Kanidm).
-                '';
-              };
-
-              # Unix account options
-              uid = mkOption {
-                type = types.nullOr types.int;
-                default = null;
-                description = "User ID for the Unix account";
-              };
-
-              gid = mkOption {
-                type = types.nullOr types.int;
-                default = null;
-                description = "Group ID for the Unix account (defaults to uid if not set)";
-              };
-
+              # Nullable overrides (null = inherit from users.<name>.system)
               linger = mkOption {
-                type = types.bool;
-                default = false;
-                description = "Enable lingering for the user (systemd user services start without login)";
-              };
-
-              systemGroups = mkOption {
-                type = types.listOf types.str;
-                default = [ ];
-                description = ''
-                  System groups (extraGroups) for the user.
-                  Example: ["wheel", "networkmanager", "podman"]
-                '';
-              };
-
-              # Identity options (used by Kanidm, Forgejo, etc.)
-              displayName = mkOption {
-                type = types.str;
-                default = name;
-                description = "Display name for the user (defaults to username)";
-              };
-
-              email = mkOption {
-                type = types.nullOr types.str;
+                type = types.nullOr types.bool;
                 default = null;
-                description = ''
-                  Email address for the user.
-                  If null, defaults to username@domain.
-                  If set, used as the full email address.
-                '';
+                description = "Enable lingering override (null inherits from users.<name>.system)";
               };
 
-              groups = mkOption {
-                type = types.listOf types.str;
-                default = [ "users" ];
-                description = "List of identity groups the user belongs to (defaults to ['users'])";
-              };
-
-              sshKeys = mkOption {
-                type = types.listOf types.str;
-                default = [ ];
-                description = ''
-                  SSH public keys for the user.
-                  Can be used by system user configuration, Forgejo, etc.
-                '';
-              };
-
-              gpgKey = mkOption {
-                type = types.nullOr types.str;
+              extra-features = mkOption {
+                type = types.nullOr (types.listOf types.str);
                 default = null;
-                description = ''
-                  GPG key ID for the user (parent key ID).
-                  Used for git commit signing, sops encryption, etc.
-                '';
+                description = "Extra home-manager features override (null inherits from users.<name>.system)";
+              };
+
+              excluded-features = mkOption {
+                type = types.nullOr (types.listOf types.str);
+                default = null;
+                description = "Excluded features override (null inherits from users.<name>.system)";
+              };
+
+              include-host-features = mkOption {
+                type = types.nullOr types.bool;
+                default = null;
+                description = "Whether to inherit host features (null inherits from users.<name>.system)";
               };
             };
           }
@@ -177,109 +125,36 @@ let
       inherit description;
     };
 
-  # Host-specific users option (no defaults except for displayName)
-  # This allows host.users to override environment.users without default values interfering
+  # Host-specific users option — all nullable for overriding env/canonical users
   mkHostUsersOpt =
     description:
     mkOption {
       type = types.lazyAttrsOf (
         types.submodule (_: {
           options = {
-            # Home Manager / system user options
-            features = mkOption {
-              type = types.nullOr (types.listOf types.str);
-              default = null;
-              description = ''
-                List of features specific to the user.
-                Set to null to inherit from environment.
-              '';
-            };
-            # Module type - must default to {} not null (module system limitation)
-            configuration = mkDeferredModuleOpt "User-specific home configuration (leave empty to inherit from environment)";
-
-            # Submodule with nullable fields inside
-            baseline = mkOption {
-              type = types.submodule {
-                options = {
-                  features = mkOption {
-                    type = types.nullOr (types.listOf types.str);
-                    default = null;
-                    description = "List of baseline features (null to inherit from environment)";
-                  };
-                  inheritHostFeatures = mkOption {
-                    type = types.nullOr types.bool;
-                    default = null;
-                    description = "Whether to inherit host features (null to inherit from environment)";
-                  };
-                };
-              };
-              default = { };
-              description = "Baseline features and configurations (leave fields null to inherit from environment)";
-            };
-
-            enableUnixAccount = mkOption {
-              type = types.nullOr types.bool;
-              default = null;
-              description = ''
-                Whether to create a Unix user account on hosts.
-                Set to null to inherit from environment.
-              '';
-            };
-
-            # Unix account options
-            uid = mkOption {
-              type = types.nullOr types.int;
-              default = null;
-              description = "User ID for the Unix account (null to inherit from environment)";
-            };
-
-            gid = mkOption {
-              type = types.nullOr types.int;
-              default = null;
-              description = "Group ID for the Unix account (null to inherit from environment)";
-            };
-
+            # Nullable overrides
             linger = mkOption {
               type = types.nullOr types.bool;
               default = null;
-              description = "Enable lingering for the user (null to inherit from environment)";
+              description = "Enable lingering override (null to inherit)";
             };
 
-            systemGroups = mkOption {
+            extra-features = mkOption {
               type = types.nullOr (types.listOf types.str);
               default = null;
-              description = "System groups (extraGroups) for the user (null to inherit from environment)";
+              description = "Extra home-manager features override (null to inherit)";
             };
 
-            # Identity options (used by Kanidm, Forgejo, etc.)
-            displayName = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = "Display name for the user (null uses username or inherits from environment)";
-            };
-
-            email = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = "Email address for the user (null to inherit from environment)";
-            };
-
-            groups = mkOption {
+            excluded-features = mkOption {
               type = types.nullOr (types.listOf types.str);
               default = null;
-              description = "List of identity groups the user belongs to (null to inherit from environment)";
+              description = "Excluded features override (null to inherit)";
             };
 
-            sshKeys = mkOption {
-              type = types.nullOr (types.listOf types.str);
+            include-host-features = mkOption {
+              type = types.nullOr types.bool;
               default = null;
-              description = "SSH public keys for the user (null to inherit from environment)";
-            };
-
-            gpgKey = mkOption {
-              type = types.nullOr types.str;
-              default = null;
-              description = "GPG key ID for the user (null to inherit from environment)";
+              description = "Whether to inherit host features (null to inherit)";
             };
           };
         })
@@ -453,7 +328,8 @@ in
       featureSubmoduleGenericOptions
       mkFeatureNameOpt
       mkDeferredModuleOpt
-      mkUsersWithFeaturesOpt
+      identitySubmoduleType
+      mkEnvUsersOpt
       mkHostUsersOpt
       collectTypedModules
       collectSystemModules

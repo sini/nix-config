@@ -115,11 +115,12 @@ kubectl get nodes
 - Prefer editing existing modules over creating new ones
 - Check imports and dependencies before adding libraries
 
-### Nixpkgs Versions
+### Nixpkgs Channels
 
-- Stable hosts use `nixpkgs` (25.05)
-- Unstable hosts use `nixpkgs-unstable`
-- Set via `hosts.<hostname>.unstable` option
+- Channel is set via `hosts.<hostname>.channel` option
+- Available channels: `nixos-stable`, `nixos-unstable`, `nixpkgs-master`,
+  `nixpkgs-stable-darwin`, `nix-darwin-unstable`
+- Default channel is `nixos-unstable`
 
 ## Repository Structure
 

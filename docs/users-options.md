@@ -1,51 +1,39 @@
-- `flake.users`: User specifications and configurations
+- `users`: User specifications — canonical identity, system defaults, and
+  feature configuration
 
-- `flake.users.<name>.baseline`: Baseline features and configurations shared by
-  all of this user's configurations
+- `users.<name>.identity`: User identity information (single source of truth)
 
-- `flake.users.<name>.baseline.features`: [list of string] \
-  List of baseline features shared by all of this user's configurations.
+- `users.<name>.identity.displayName`: [string] Display name for the user
+  (defaults to username)
 
-  Note that the "core" feature (`users.<username>.features.core`) will _always_
-  be included in all of the user's configurations. This follows the same
-  behavior as the "core" feature in the system scope, which is included in all
-  system configurations.
+- `users.<name>.identity.email`: [null or string] Email address for the user
 
-- `flake.users.<name>.baseline.inheritHostFeatures`: [boolean] \
-  Whether to inherit all home-manager features from the host configuration.
+- `users.<name>.identity.gpgKey`: [null or string] GPG key ID for the user
+  (parent key ID)
 
-  When true, this user will receive all home-manager modules from the host's
-  enabled features. When false, only user-specific features and baseline
-  features will be included.
+- `users.<name>.identity.sshKeys`: [list of string] SSH public keys for the user
 
-  This allows for more granular control over which users get which features on
-  shared systems.
+- `users.<name>.name`: [unspecified value] Username
 
-- `flake.users.<name>.configuration`: [module] NixOS configuration for this user
+- `users.<name>.system`: Unix account defaults and home-manager feature
+  configuration
 
-- `flake.users.<name>.features`: \
-  User-specific feature definitions.
+- `users.<name>.system.excluded-features`: [list of string] List of feature
+  names to exclude for this user
 
-  Note that due to these features' nature as user-specific, they may not define
-  NixOS modules, which would affect the entire system.
+- `users.<name>.system.extra-features`: [list of string] List of home-manager
+  feature names to enable for this user
 
-- `flake.users.<name>.features.<name>.darwin`: [module] A Darwin-specific system
-  module for this feature (macOS only)
+- `users.<name>.system.gid`: [null or signed integer] Group ID for the Unix
+  account (defaults to uid if not set)
 
-- `flake.users.<name>.features.<name>.excludes`: [list of string] List of names
-  of features to exclude from this feature (prevents the feature and its
-  requires from being added)
+- `users.<name>.system.include-host-features`: [boolean] \
+  Whether to inherit all home-manager features from the host configuration. When
+  true, the user receives home modules from all of the host's active features.
+  When false, only user-specific extra-features (and core) are included.
 
-- `flake.users.<name>.features.<name>.home`: [module] A Home-Manager module for
-  this feature
+- `users.<name>.system.linger`: [boolean] Enable lingering for the user (systemd
+  user services start without login)
 
-- `flake.users.<name>.features.<name>.linux`: [module] A Linux-specific system
-  module for this feature (NixOS only)
-
-- `flake.users.<name>.features.<name>.requires`: [list of string] List of names
-  of features required by this feature
-
-- `flake.users.<name>.features.<name>.system`: [module] A cross-platform system
-  module for this feature (NixOS and Darwin)
-
-- `flake.users.<name>.name`: [unspecified value] Username
+- `users.<name>.system.uid`: [null or signed integer] User ID for the Unix
+  account

@@ -16,19 +16,25 @@ in
   };
 
   # Populate it from the module argument, NOT from self
-  config.flake.flakeOptions =
-    {
-      # These are now top-level options, not flake sub-options
-      inherit (options)
-        hosts
-        environments
-        users
-        kubernetes
-        ;
-    };
+  config.flake.flakeOptions = {
+    # These are now top-level options, not flake sub-options
+    inherit (options)
+      hosts
+      environments
+      users
+      groups
+      kubernetes
+      ;
+  };
 
   # Explicitly re-expose internal resources as flake outputs
   config.flake = {
-    inherit (config) hosts environments roles;
+    inherit (config)
+      hosts
+      environments
+      roles
+      users
+      groups
+      ;
   };
 }
