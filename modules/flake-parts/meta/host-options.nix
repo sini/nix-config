@@ -7,7 +7,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) mkDeferredModuleOpt mkUsersWithFeaturesOpt;
+  inherit (self.lib.modules) mkDeferredModuleOpt mkHostUsersOpt;
   flakeConfig = config; # Capture flake-level config for use in submodules
 in
 {
@@ -201,7 +201,7 @@ in
               default = { };
             };
 
-            users = mkUsersWithFeaturesOpt "Users on this host with their features and configuration";
+            users = mkHostUsersOpt "Users on this host with their features and configuration";
 
             exporters = mkOption {
               type = types.attrsOf (

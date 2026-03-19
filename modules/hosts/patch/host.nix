@@ -12,6 +12,8 @@
 
     users = {
       sini.uid = 501;
+      shuo.enableUnixAccount = false;
+      will.enableUnixAccount = false;
     };
 
     systemConfiguration =

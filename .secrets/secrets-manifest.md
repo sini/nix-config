@@ -377,7 +377,6 @@ functionality. They will be created automatically if they don't exist.
   - nixos:blade
   - nixos:cortex
   - nixos:uplink
-  - darwin:patch
 - **Owner**: shuo:shuo (600)
 - **Rekey File**: `.secrets/users/shuo/id_agenix.age`
 - **Generator**: built-in: age-identity
@@ -407,7 +406,6 @@ functionality. They will be created automatically if they don't exist.
   - nixos:blade
   - nixos:cortex
   - nixos:uplink
-  - darwin:patch
 - **Owner**: will:will (600)
 - **Rekey File**: `.secrets/users/will/id_agenix.age`
 - **Generator**: built-in: age-identity

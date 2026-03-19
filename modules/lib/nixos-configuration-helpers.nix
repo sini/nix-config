@@ -36,15 +36,21 @@
           # Get user specifications from environment and host
           envUser = environment.users.${username} or { };
           hostUser = hostOptions.users.${username} or { };
-          inheritHostFeatures = envUser.baseline.inheritHostFeatures or false;
+
+          # Helper to coalesce null to default value (for nullable host user fields)
+          orDefault = value: default: if value != null then value else default;
+
+          # Get inheritHostFeatures, handling null from host config
+          hostInheritFeatures = hostUser.baseline.inheritHostFeatures or null;
+          inheritHostFeatures = orDefault hostInheritFeatures (envUser.baseline.inheritHostFeatures or false);
 
           # Aggregate exclusions from host features
           hostExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allHostFeatures));
 
-          # Aggregate user feature names from all sources
-          baselineFeatureNames = envUser.baseline.features or [ ];
-          envFeatureNames = envUser.features or [ ];
-          hostFeatureNames = hostUser.features or [ ];
+          # Aggregate user feature names from all sources, handling nulls from host config
+          baselineFeatureNames = orDefault (envUser.baseline.features or null) [ ];
+          envFeatureNames = orDefault (envUser.features or null) [ ];
+          hostFeatureNames = orDefault (hostUser.features or null) [ ];
           allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
 
           # Convert to feature modules and collect user-specific exclusions
@@ -137,32 +143,38 @@
               enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
 
               # Deep merge environment and host user attributes (host overrides environment)
-              # Filter out default-like values from host to avoid overriding environment
+              # Host user values are null by default, so we filter them out before merging
               mergeUserAttrs =
                 userName:
                 let
                   envUser = environment.users.${userName} or { };
                   hostUser = hostOptions.users.${userName} or { };
 
-                  # Recursively filter out values that look like defaults (null, false, empty lists/attrsets)
-                  filterDefaults =
+                  # Check if a value should be filtered (is considered "unset")
+                  isUnset =
+                    key: value:
+                    value == null
+                    || (
+                      # For module types (configuration), empty {} means "not set"
+                      key == "configuration" && lib'.isAttrs value && value == { }
+                    )
+                    || (
+                      # For baseline, filter if all sub-fields are null
+                      key == "baseline" && lib'.isAttrs value && lib'.all (v: v == null) (lib'.attrValues value)
+                    );
+
+                  # Recursively filter out unset values from host user config
+                  filterUnset =
                     value:
                     if lib'.isAttrs value && !lib'.isDerivation value then
                       let
-                        filtered = lib'.filterAttrs (_: v: !isDefaultValue v) value;
+                        filtered = lib'.filterAttrs (k: v: !isUnset k v) value;
                       in
-                      lib'.mapAttrs (_: filterDefaults) filtered
+                      lib'.mapAttrs (_: filterUnset) filtered
                     else
                       value;
 
-                  isDefaultValue =
-                    v:
-                    v == null
-                    || v == false
-                    || (lib'.isList v && v == [ ])
-                    || (lib'.isAttrs v && !lib'.isDerivation v && v == { });
-
-                  hostOverrides = filterDefaults hostUser;
+                  hostOverrides = filterUnset hostUser;
                 in
                 lib'.recursiveUpdate envUser hostOverrides;
 

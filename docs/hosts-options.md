@@ -108,59 +108,48 @@
   configuration
 
 - `flake.hosts.<name>.users.<name>.baseline`: Baseline features and
-  configurations shared by all of this user's configurations
+  configurations (leave fields null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.baseline.features`: [list of string] List of
-  baseline features shared by all of this user's configurations.
+- `flake.hosts.<name>.users.<name>.baseline.features`: \[null or (list of
+  string)\] List of baseline features (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.baseline.inheritHostFeatures`: [boolean] \
-  Whether to inherit all home-manager features from the host configuration.
-
-  When true, this user will receive all home-manager modules from the host's
-  enabled features. When false, only user-specific features and baseline
-  features will be included.
+- `flake.hosts.<name>.users.<name>.baseline.inheritHostFeatures`: \[null or
+  boolean\] Whether to inherit host features (null to inherit from environment)
 
 - `flake.hosts.<name>.users.<name>.configuration`: [module] User-specific home
-  configuration
+  configuration (leave empty to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.displayName`: [string] Display name for the
-  user (defaults to username)
+- `flake.hosts.<name>.users.<name>.displayName`: [null or string] Display name
+  for the user (null uses username or inherits from environment)
 
-- `flake.hosts.<name>.users.<name>.email`: [null or string] \
-  Email address for the user. If null, defaults to username@domain. If set, used
-  as the full email address.
+- `flake.hosts.<name>.users.<name>.email`: [null or string] Email address for
+  the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.enableUnixAccount`: [boolean] \
-  Whether to create a Unix user account on hosts. If false, this is an
-  identity-only user (e.g., for Kanidm).
+- `flake.hosts.<name>.users.<name>.enableUnixAccount`: [null or boolean] \
+  Whether to create a Unix user account on hosts. Set to null to inherit from
+  environment.
 
-- `flake.hosts.<name>.users.<name>.features`: [list of string] \
-  List of features specific to the user.
-
-  While a feature may specify NixOS modules in addition to home modules, only
-  home modules will affect configuration. For this reason, users should be
-  encouraged to avoid pointlessly specifying their own NixOS modules.
+- `flake.hosts.<name>.users.<name>.features`: [null or (list of string)] \
+  List of features specific to the user. Set to null to inherit from
+  environment.
 
 - `flake.hosts.<name>.users.<name>.gid`: [null or signed integer] Group ID for
-  the Unix account (defaults to uid if not set)
+  the Unix account (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.gpgKey`: [null or string] \
-  GPG key ID for the user (parent key ID). Used for git commit signing, sops
-  encryption, etc.
+- `flake.hosts.<name>.users.<name>.gpgKey`: [null or string] GPG key ID for the
+  user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.groups`: [list of string] List of identity
-  groups the user belongs to (defaults to ['users'])
+- `flake.hosts.<name>.users.<name>.groups`: [null or (list of string)] List of
+  identity groups the user belongs to (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.linger`: [boolean] Enable lingering for the
-  user (systemd user services start without login)
+- `flake.hosts.<name>.users.<name>.linger`: [null or boolean] Enable lingering
+  for the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.sshKeys`: [list of string] \
-  SSH public keys for the user. Can be used by system user configuration,
-  Forgejo, etc.
+- `flake.hosts.<name>.users.<name>.sshKeys`: [null or (list of string)] SSH
+  public keys for the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.systemGroups`: [list of string] \
-  System groups (extraGroups) for the user. Example: \["wheel",
-  "networkmanager", "podman"\]
+- `flake.hosts.<name>.users.<name>.systemGroups`: [null or (list of string)]
+  System groups (extraGroups) for the user (null to inherit from environment)
 
 - `flake.hosts.<name>.users.<name>.uid`: [null or signed integer] User ID for
-  the Unix account
+  the Unix account (null to inherit from environment)

@@ -177,6 +177,117 @@ let
       inherit description;
     };
 
+  # Host-specific users option (no defaults except for displayName)
+  # This allows host.users to override environment.users without default values interfering
+  mkHostUsersOpt =
+    description:
+    mkOption {
+      type = types.lazyAttrsOf (
+        types.submodule (_: {
+          options = {
+            # Home Manager / system user options
+            features = mkOption {
+              type = types.nullOr (types.listOf types.str);
+              default = null;
+              description = ''
+                List of features specific to the user.
+                Set to null to inherit from environment.
+              '';
+            };
+            # Module type - must default to {} not null (module system limitation)
+            configuration = mkDeferredModuleOpt "User-specific home configuration (leave empty to inherit from environment)";
+
+            # Submodule with nullable fields inside
+            baseline = mkOption {
+              type = types.submodule {
+                options = {
+                  features = mkOption {
+                    type = types.nullOr (types.listOf types.str);
+                    default = null;
+                    description = "List of baseline features (null to inherit from environment)";
+                  };
+                  inheritHostFeatures = mkOption {
+                    type = types.nullOr types.bool;
+                    default = null;
+                    description = "Whether to inherit host features (null to inherit from environment)";
+                  };
+                };
+              };
+              default = { };
+              description = "Baseline features and configurations (leave fields null to inherit from environment)";
+            };
+
+            enableUnixAccount = mkOption {
+              type = types.nullOr types.bool;
+              default = null;
+              description = ''
+                Whether to create a Unix user account on hosts.
+                Set to null to inherit from environment.
+              '';
+            };
+
+            # Unix account options
+            uid = mkOption {
+              type = types.nullOr types.int;
+              default = null;
+              description = "User ID for the Unix account (null to inherit from environment)";
+            };
+
+            gid = mkOption {
+              type = types.nullOr types.int;
+              default = null;
+              description = "Group ID for the Unix account (null to inherit from environment)";
+            };
+
+            linger = mkOption {
+              type = types.nullOr types.bool;
+              default = null;
+              description = "Enable lingering for the user (null to inherit from environment)";
+            };
+
+            systemGroups = mkOption {
+              type = types.nullOr (types.listOf types.str);
+              default = null;
+              description = "System groups (extraGroups) for the user (null to inherit from environment)";
+            };
+
+            # Identity options (used by Kanidm, Forgejo, etc.)
+            displayName = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Display name for the user (null uses username or inherits from environment)";
+            };
+
+            email = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "Email address for the user (null to inherit from environment)";
+            };
+
+            groups = mkOption {
+              type = types.nullOr (types.listOf types.str);
+              default = null;
+              description = "List of identity groups the user belongs to (null to inherit from environment)";
+            };
+
+            sshKeys = mkOption {
+              type = types.nullOr (types.listOf types.str);
+              default = null;
+              description = "SSH public keys for the user (null to inherit from environment)";
+            };
+
+            gpgKey = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "GPG key ID for the user (null to inherit from environment)";
+            };
+          };
+        })
+      );
+      default = { };
+      inherit description;
+    };
+
   # ============================================================================
   # Module Collection Utilities
   # ============================================================================
@@ -343,6 +454,7 @@ in
       mkFeatureNameOpt
       mkDeferredModuleOpt
       mkUsersWithFeaturesOpt
+      mkHostUsersOpt
       collectTypedModules
       collectSystemModules
       collectLinuxModules
