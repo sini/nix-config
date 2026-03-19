@@ -3,6 +3,7 @@
   environments.dev = {
     id = 2;
     domain = "json64.dev";
+    system-access-groups = [ "system-access" ];
 
     # Certificate management configuration
     certificates = {

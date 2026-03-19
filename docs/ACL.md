@@ -8,20 +8,22 @@ defined once in a shared top-level `groups` option and consumed by multiple
 provisioners — Kanidm OAuth2, Unix system accounts, Kubernetes RBAC.
 
 Access is environment-scoped: `environments.<env>.access` binds users to groups.
-Host login is gate-controlled: `hosts.<host>.allow-logins-by` declares which
-system-scoped groups grant Unix account creation. `system.enable` and
-`system.systemGroups` are fully derived — never set directly.
+Host login is gate-controlled: `environments.<env>.system-access-groups` and
+`hosts.<host>.system-access-groups` declare which system-scoped groups grant
+Unix account creation. Both lists are merged at resolution time. `system.enable`
+and `system.systemGroups` are fully derived — never set directly.
 
 ## Three-Level Resolution
 
 ```
-groups                        <- shared definitions (kanidm, unix, system scopes)
+groups                                    <- shared definitions (kanidm, unix, system scopes)
   |
-environments.<env>.access     <- user -> [group] bindings per environment
+environments.<env>.access                 <- user -> [group] bindings per environment
   |
-hosts.<host>.allow-logins-by  <- which system-scoped groups grant login
+environments.<env>.system-access-groups   <- env-wide baseline login gates
+  + hosts.<host>.system-access-groups     <- host-specific login gates (merged with env)
   |
-resolved user                 <- enable + systemGroups derived from above
+resolved user                             <- enable + systemGroups derived from above
 ```
 
 ## Group Schema
@@ -40,7 +42,7 @@ groups.<name> = {
 |----------|----------------------------------|------------------------------| |
 kanidm | Identity / OAuth2 access grants | Kanidm provisioner | | unix | Unix
 system groups (extraGroups) | NixOS user account setup | | system | Host login
-gates | allow-logins-by resolution |
+gates | system-access-groups resolution |
 
 ### Example Groups
 
@@ -92,27 +94,40 @@ A user appearing in `environment.access` with any kanidm-scoped group is
 provisioned as a Kanidm person. A user not in any environment's access has no
 access anywhere.
 
-## Host Login Gates
+## Login Gates
 
-`hosts.<host>.allow-logins-by` lists system-scoped groups that grant Unix
-account creation on that host.
+Login gates are defined at two levels and merged at resolution time:
+
+- **Environment-level**: `environments.<env>.system-access-groups` — baseline
+  gates for all hosts in the environment.
+- **Host-level**: `hosts.<host>.system-access-groups` — additional gates
+  specific to a host.
+
+The effective gate list is
+`unique(env.system-access-groups ++ host.system-access-groups)`.
 
 ```nix
-hosts.cortex.allow-logins-by  = [ "workstation-access" ];
-hosts.patch.allow-logins-by   = [ "system-access" ];
-hosts.axon-01.allow-logins-by = [ "server-access" ];
+# Environment baseline
+environments.prod.system-access-groups = [ "system-access" ];
+environments.dev.system-access-groups  = [ "system-access" ];
+
+# Host-specific additions
+hosts.cortex.system-access-groups  = [ "workstation-access" ];
+hosts.blade.system-access-groups   = [ "workstation-access" ];
+hosts.patch.system-access-groups   = [ "system-access" ];
+hosts.axon-01.system-access-groups = [ "server-access" ];
 ```
 
-### Role-Based Defaults
+### Role-Based Host Defaults
 
-The default is derived from the host's roles:
+Host-level defaults are derived from the host's roles:
 
-| Host Role | Default allow-logins-by |
+| Host Role | Default system-access-groups |
 |-------------|---------------------------| | workstation | \[
 "workstation-access" \] | | dev | [ "workstation-access" ] | | server | \[
 "server-access" \] | | (fallback) | [ "system-access" ] |
 
-Hosts can override via explicit `allow-logins-by`.
+Hosts can override via explicit `system-access-groups`.
 
 ## Resolution Algorithm
 
@@ -121,7 +136,7 @@ For a given host `H` in environment `E`:
 1. Read `E.access` to get `{ username -> [ direct-groups ] }`.
 1. For each user, resolve transitive memberships using `groups` definitions.
 1. **Login check** (derives `system.enable`):
-   `(resolved system-scoped groups) ∩ (H.allow-logins-by) != {}`
+   `(resolved system-scoped groups) ∩ (E.system-access-groups ++ H.system-access-groups) != {}`
 1. **Unix groups** (derives `system.systemGroups`): filter resolved groups to
    `scope = "unix"`, extract names.
 1. **Kanidm groups**: pass direct group list to Kanidm (Kanidm resolves
@@ -135,9 +150,11 @@ transitive       = [ "admins" "users" "system-access" "workstation-access"
                      "server-access" "grafana.access" "media.access" ... ]
                    ++ [ "wheel" "podman" "libvirtd" "audio" "video" "render" ]
 
-cortex.allow-logins-by = [ "workstation-access" ]
+dev.system-access-groups    = [ "system-access" ]
+cortex.system-access-groups = [ "workstation-access" ]
+merged gates                = [ "system-access" "workstation-access" ]
 system-scoped resolved = [ "system-access" "workstation-access" "server-access" ]
-intersection           = [ "workstation-access" ]  -> enable = true
+intersection           = [ "system-access" "workstation-access" ]  -> enable = true
 
 unix-scoped resolved   = [ "wheel" "podman" "libvirtd" "audio" "video" "render" ]
                        -> systemGroups = [ "wheel" "podman" "libvirtd" "audio" "video" "render" ]
@@ -151,7 +168,8 @@ transitive       = [ "admins" "users" "grafana.access" "media.access" ... ]
 
 unix-scoped      = []  -> no unix groups
 system-scoped    = []  -> no system groups (system-access is opt-in)
-intersection with cortex.allow-logins-by = []
+merged gates = [ "system-access" "workstation-access" ]
+intersection with merged gates = []
 
 enable = false  -- json does NOT get a Unix account
 ```
@@ -207,15 +225,20 @@ The Kanidm provisioner:
 
 ## Fields Removed
 
-| Field                                    | Replacement                               |                                          | ---------------------------------- |
-| ---------------------------------------- | ----------------------------------------- | ---------------------------------------- | ---------------------------------- | --- | --- |
-| ---------------------------------------- | -------                                   | ---                                      |                                    |
-| `users.<name>.groups`                    | `environments.<env>.access.<name>`        |                                          |                                    |
-| `users.<name>.system.systemGroups`       | Derived from unix-scoped group membership |
-| `users.<name>.system.enable`             | Derived from system-scoped groups ∩       |                                          |
-| allow-logins-by                          |                                           | `environments.<env>.users.<name>.enable` | Derived                            |     |     |
-| `hosts.<host>.users.<name>.enable`       | Use `allow-logins-by` instead             |                                          | Kanidm                             |
-| group defs in service files              | Top-level `groups`                        |
+| Field                                     | Replacement                               |                                          | ----------------------------------       |         |     |
+| ----------------------------------------- | ----------------------------------------- | ---------------------------------------- | ---------------------------------------- | ------- | --- | --- | --- | --- |
+| ----------------------------------------- |
+| ----------------------------------------  |
+| ----------------------------------------  | -------                                   | ---                                      | ---                                      | ---     |     |
+| ----------------------------------------- |                                           |
+| ----------------------------------------  | ----------------------------------        |
+| ---                                       | ---                                       |                                          | ---------------------------------------- | ------- | --- |     |     |     |
+| `users.<name>.groups`                     | `environments.<env>.access.<name>`        |                                          |                                          |         |     |
+| `users.<name>.system.systemGroups`        | Derived from unix-scoped group membership |
+| `users.<name>.system.enable`              | Derived from system-scoped groups ∩       |                                          |                                          |         |
+| system-access-groups                      |                                           | `environments.<env>.users.<name>.enable` | Derived                                  |         |
+|                                           |                                           | `hosts.<host>.users.<name>.enable`       | Use `system-access-groups` instead       |
+| Kanidm                                    |                                           | group defs in service files              | Top-level `groups`                       |
 
 ## Files to Change
 
@@ -228,8 +251,8 @@ The Kanidm provisioner:
 ### Modified
 
 - `modules/flake-parts/meta/user-options.nix` — remove `groups`
-- `modules/flake-parts/meta/host-options.nix` — add `allow-logins-by` with role
-  defaults
+- `modules/flake-parts/meta/host-options.nix` — add `system-access-groups` with
+  role defaults
 - `modules/flake-parts/meta/environment-options.nix` — add `access` option, slim
   env users
 - `modules/lib/feature-module-helpers.nix` — remove `groups` from env/host user
@@ -240,7 +263,7 @@ The Kanidm provisioner:
 - `modules/users/identity-only.nix` — remove `groups`, keep only identity
 - `modules/environments/*/users.nix` — remove `enable` overrides
 - `modules/hosts/patch/host.nix` — remove user enable overrides, add
-  `allow-logins-by`
+  `system-access-groups`
 - `modules/services/kanidm/provision/users.nix` — read from access + groups
 - `modules/services/kanidm/provision/services/*.nix` — remove group definitions
 - `modules/flake-parts/expose-options.nix` — expose `groups`
@@ -268,13 +291,13 @@ nix eval .#users.sini.identity.displayName
 # expect: "Jason Bowman"
 ```
 
-### 4. Host allow-logins-by defaults
+### 4. Host system-access-groups defaults
 
 ```bash
-nix eval .#hosts.cortex.allow-logins-by
+nix eval .#hosts.cortex.system-access-groups
 # expect: [ "workstation-access" ]  (from workstation role)
 
-nix eval .#hosts.axon-01.allow-logins-by
+nix eval .#hosts.axon-01.system-access-groups
 # expect: [ "server-access" ]  (from server role)
 ```
 

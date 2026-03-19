@@ -61,7 +61,7 @@
       # ============================================================================
       # SECTION 2: ACL-Based User Resolution
       # ============================================================================
-      # groups (shared) + environment.access + host.allow-logins-by → resolved users
+      # groups (shared) + environment.access + env/host system-access-groups → resolved users
 
       # Helper: coalesce — first non-null value wins
       coalesce = a: b: if a != null then a else b;
@@ -172,8 +172,11 @@
           # Scope filter — returns group names matching a given scope
           scopedGroups = scope: lib.filter (g: (groupDefs.${g}.scope or "") == scope) resolvedGroups;
 
-          # Derive enable from system-scoped groups ∩ host.allow-logins-by
-          enable = lib.any (g: lib.elem g (hostOptions.allow-logins-by or [ ])) (scopedGroups "system");
+          # Derive enable from system-scoped groups ∩ merged system-access-groups (env + host)
+          mergedAccessGroups = lib.unique (
+            (environment.system-access-groups or [ ]) ++ (hostOptions.system-access-groups or [ ])
+          );
+          enable = lib.any (g: lib.elem g mergedAccessGroups) (scopedGroups "system");
         in
         {
           inherit identity;

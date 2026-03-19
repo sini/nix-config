@@ -316,6 +316,15 @@ in
               canonicalUsers = flakeConfig.users;
             };
 
+            system-access-groups = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = ''
+                System-scoped groups that grant Unix account creation on all hosts in this environment.
+                Merged with host-level system-access-groups at resolution time.
+              '';
+            };
+
             access = mkOption {
               type = types.attrsOf (types.listOf types.str);
               default = { };
@@ -323,7 +332,7 @@ in
                 Maps usernames to lists of group names for this environment.
                 Groups can be from any scope (kanidm, unix, system).
                 A user appearing here with kanidm-scoped groups is provisioned as a Kanidm person.
-                A user with system-scoped groups matching a host's allow-logins-by gets a Unix account.
+                A user with system-scoped groups matching a host's system-access-groups gets a Unix account.
                 A user with unix-scoped groups gets those as extraGroups on their Unix account.
               '';
             };

@@ -1,10 +1,5 @@
 - `hosts`: Per-host NixOS configurations.
 
-- `hosts.<name>.allow-logins-by`: [list of string] \
-  System-scoped groups that grant Unix account creation on this host. Defaults
-  are derived from host roles (workstation → workstation-access, server →
-  server-access, fallback → system-access).
-
 - `hosts.<name>.baseline`: Baseline configurations for repeatable configuration
   types on this host
 
@@ -95,6 +90,12 @@
 
 - `hosts.<name>.system`: \[one of "aarch64-linux", "x86_64-linux",
   "aarch64-darwin"\] System string for the host
+
+- `hosts.<name>.system-access-groups`: [list of string] \
+  System-scoped groups that grant Unix account creation on this host. Merged
+  with environment-level system-access-groups at resolution time. Defaults are
+  derived from host roles (workstation → workstation-access, server →
+  server-access, fallback → system-access).
 
 - `hosts.<name>.systemConfiguration`: [module] Host-specific system module
   configuration.

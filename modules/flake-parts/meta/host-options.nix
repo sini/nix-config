@@ -209,10 +209,11 @@ in
 
             users = mkHostUsersOpt "Users on this host with their features and configuration";
 
-            allow-logins-by = mkOption {
+            system-access-groups = mkOption {
               type = types.listOf types.str;
               description = ''
                 System-scoped groups that grant Unix account creation on this host.
+                Merged with environment-level system-access-groups at resolution time.
                 Defaults are derived from host roles (workstation → workstation-access,
                 server → server-access, fallback → system-access).
               '';
@@ -283,7 +284,7 @@ in
 
               hasFeature = featureName: lib.elem featureName computedFeatures;
 
-              allow-logins-by =
+              system-access-groups =
                 let
                   roleDefaults = {
                     workstation = [ "workstation-access" ];

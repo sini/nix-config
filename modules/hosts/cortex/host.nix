@@ -18,6 +18,8 @@
     remoteBuildSpeed = 20;
     remoteBuildJobs = 16;
 
+    system-access-groups = [ "workstation-access" ];
+
     roles = [
       "workstation"
       "gaming"

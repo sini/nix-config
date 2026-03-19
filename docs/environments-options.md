@@ -4,8 +4,9 @@
   Maps usernames to lists of group names for this environment. Groups can be
   from any scope (kanidm, unix, system). A user appearing here with
   kanidm-scoped groups is provisioned as a Kanidm person. A user with
-  system-scoped groups matching a host's allow-logins-by gets a Unix account. A
-  user with unix-scoped groups gets those as extraGroups on their Unix account.
+  system-scoped groups matching a host's system-access-groups gets a Unix
+  account. A user with unix-scoped groups gets those as extraGroups on their
+  Unix account.
 
 - `environments.<name>.acme`: ACME certificate authority configuration
 
@@ -262,6 +263,10 @@
 - `environments.<name>.services.<name>.domain`: [null or string] \
   Override domain for this service. If null, defaults to
   \<service-name>.${environment.domain}
+
+- `environments.<name>.system-access-groups`: [list of string] \
+  System-scoped groups that grant Unix account creation on all hosts in this
+  environment. Merged with host-level system-access-groups at resolution time.
 
 - `environments.<name>.tags`: [attribute set of string] Environment-wide tags
   for metadata and organization

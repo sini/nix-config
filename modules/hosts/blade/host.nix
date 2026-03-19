@@ -3,6 +3,8 @@
     # No static networking config - NetworkManager handles DHCP dynamically
     # Accessed via Tailscale: blade.ts.json64.dev
     environment = "dev";
+    system-access-groups = [ "workstation-access" ];
+
     roles = [
       "workstation"
       "laptop"

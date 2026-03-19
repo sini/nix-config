@@ -12,7 +12,7 @@
 
     extra-features = [ ];
 
-    allow-logins-by = [ "system-access" ];
+    system-access-groups = [ "system-access" ];
 
     systemConfiguration =
       { lib, ... }:
