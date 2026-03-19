@@ -1,5 +1,5 @@
 {
-  flake.features.gamedev = {
+  features.gamedev = {
     home =
       { pkgs, ... }:
       {

@@ -1,5 +1,5 @@
 {
-  flake.features.tailscale.linux =
+  features.tailscale.linux =
     {
       config,
       environment,

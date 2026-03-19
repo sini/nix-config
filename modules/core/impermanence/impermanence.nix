@@ -16,7 +16,7 @@
   # - impermanence-zfs.nix: ZFS support (preferred)
   # - impermanence-btrfs.nix: BTRFS support (legacy)
 
-  flake.features.impermanence = {
+  features.impermanence = {
     # Options registered cross-platform for feature reference without platform splits.
     # Actual implementation (boot rollback, persistence mounts) is Linux-only.
     system =

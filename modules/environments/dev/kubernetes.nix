@@ -1,5 +1,5 @@
 {
-  flake.environments.dev.kubernetes = {
+  environments.dev.kubernetes = {
     tlsSanIps = [
       "10.9.1.1" # bitstream
       "10.9.1.2" # bitstream

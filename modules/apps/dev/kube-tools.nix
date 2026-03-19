@@ -1,5 +1,5 @@
 {
-  flake.features.kube-tools.home =
+  features.kube-tools.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

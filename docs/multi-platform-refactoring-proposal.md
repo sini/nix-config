@@ -34,7 +34,7 @@ Features can provide modules for different contexts:
 
 ```nix
 {
-  flake.features.example = {
+  features.example = {
     name = "example";
 
     # System-level module (NixOS-specific currently)
@@ -81,7 +81,7 @@ Features can provide modules for different contexts:
 
 ```nix
 {
-  flake.features.example = {
+  features.example = {
     name = "example";
 
     # Cross-platform system modules (works on both NixOS and darwin)
@@ -127,7 +127,7 @@ platform = if isPlatformDarwin hostOptions.system then "darwin"
 ```nix
 # modules/flake-parts/meta/host-options.nix
 {
-  options.flake.hosts = mkOption {
+  options.hosts = mkOption {
     type = types.attrsOf (types.submodule {
       options = {
         system = mkOption {
@@ -337,7 +337,7 @@ prepareHostContext = {
     home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
 
     # Environment and roles
-    environment = config.flake.environments.${hostOptions.environment};
+    environment = config.environments.${hostOptions.environment};
     effectiveRoles = if overrideRoles != null then overrideRoles else hostOptions.roles;
 
     # Feature resolution (platform-agnostic)
@@ -582,19 +582,19 @@ Features can be migrated from `nixos` → `system` + `linux`:
 
 ```nix
 # Before (NixOS only, legacy)
-flake.features.ssh = {
+features.ssh = {
   nixos = { ... };  # Works on NixOS only
   home = { ... };
 };
 
 # Option 1: Cross-platform migration (works on both NixOS and Darwin)
-flake.features.ssh = {
+features.ssh = {
   system = { ... };  # Works on both platforms!
   home = { ... };
 };
 
 # Option 2: Platform-specific migration
-flake.features.ssh = {
+features.ssh = {
   system = { ... };   # Shared config for both
   linux = { ... };    # Linux-specific additions
   darwin = { ... };   # Darwin-specific additions
@@ -602,7 +602,7 @@ flake.features.ssh = {
 };
 
 # Example: GPU feature (Linux-only)
-flake.features.gpu-nvidia = {
+features.gpu-nvidia = {
   linux = { ... };    # Only makes sense on Linux
   home = { ... };
 };
@@ -614,19 +614,19 @@ Hosts automatically detect platform from system architecture:
 
 ```nix
 # NixOS host (no changes needed!)
-flake.hosts.myhost = {
+hosts.myhost = {
   system = "x86_64-linux";  # Auto-detects Linux/NixOS
   nixosConfiguration = ./default.nix;  # Still works (deprecated)
 };
 
 # NixOS host (migrated)
-flake.hosts.myhost = {
+hosts.myhost = {
   system = "x86_64-linux";
   systemConfiguration = ./default.nix;  # New name
 };
 
 # Darwin host (new)
-flake.hosts.macbook = {
+hosts.macbook = {
   system = "aarch64-darwin";  # Auto-detects Darwin/macOS
   systemConfiguration = ./default.nix;
   roles = ["laptop" "dev"];
@@ -722,7 +722,7 @@ modules/lib/
    - Current: `modules/core/home-manager/default.nix` has NixOS-specific config
    - **Proposal**: Extract to platform-specific sections:
      ```nix
-     flake.features.home-manager = {
+     features.home-manager = {
        system = { /* shared config */ };
        linux = { /* systemd user services */ };
        darwin = { /* launchd user agents */ };

@@ -1,5 +1,5 @@
 {
-  flake.roles.kexec = {
+  roles.kexec = {
     features = [
       "agenix"
       "deterministic-uids"

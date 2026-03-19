@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.features.nginx.linux =
+  features.nginx.linux =
     {
       config,
       environment,

@@ -1,7 +1,7 @@
 # Base64URL (URL-safe, typically without padding), good for opaque client secrets.
 # settings.length = number of random BYTES.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     {
       age.generators.base64url = lib.mkForce (

@@ -1,5 +1,5 @@
 {
-  flake.features.kanidm.linux =
+  features.kanidm.linux =
     {
       config,
       pkgs,

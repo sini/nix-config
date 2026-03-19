@@ -1,5 +1,5 @@
 {
-  flake.features.kde = {
+  features.kde = {
     linux =
       # { pkgs, ... }:
       {

@@ -1,5 +1,5 @@
 {
-  flake.roles.dev-gui = {
+  roles.dev-gui = {
     features = [
       "gpg"
       "vscode"

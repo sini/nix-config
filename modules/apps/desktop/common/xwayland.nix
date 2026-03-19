@@ -1,5 +1,5 @@
 {
-  flake.features.xwayland.linux = {
+  features.xwayland.linux = {
     programs.xwayland.enable = true;
   };
 }

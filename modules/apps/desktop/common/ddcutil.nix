@@ -1,5 +1,5 @@
 {
-  flake.features.ddcutil.linux =
+  features.ddcutil.linux =
     {
       config,
       pkgs,

@@ -12,16 +12,16 @@ let
       (host.tags or { }) ? ${tag}
       && host.tags.${tag} == value
       && host.environment == currentHostEnvironment
-    ) config.flake.hosts;
+    ) config.hosts;
 
   getHostsByRole =
     role: currentHostEnvironment:
     lib.filterAttrs (
       _name: host: lib.elem role (host.roles or [ ]) && host.environment == currentHostEnvironment
-    ) config.flake.hosts;
+    ) config.hosts;
 in
 {
-  flake.features.bgp-hub = {
+  features.bgp-hub = {
     requires = [ "bgp-core" ];
     linux =
       {

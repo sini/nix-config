@@ -2,7 +2,7 @@
 # which serial numbers have been used (for auditing?) so openssl won't use the
 # same one twice.  This should be checked in.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     let
       helpers = import ./_helpers.nix { inherit lib; };

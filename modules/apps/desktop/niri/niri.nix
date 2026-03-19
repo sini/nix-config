@@ -1,5 +1,5 @@
 {
-  flake.features.niri = {
+  features.niri = {
     requires = [ "uwsm" ];
     linux = { };
   };

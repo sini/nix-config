@@ -1,5 +1,5 @@
 {
-  flake.features.zfs-root = {
+  features.zfs-root = {
     requires = [ "zfs-diff" ];
 
     linux =

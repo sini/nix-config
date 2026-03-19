@@ -1,5 +1,5 @@
 {
-  flake.features.prometheus-exporter.linux =
+  features.prometheus-exporter.linux =
     {
       pkgs,
       lib,

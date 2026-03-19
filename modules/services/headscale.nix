@@ -1,5 +1,5 @@
 {
-  flake.features.headscale.linux =
+  features.headscale.linux =
     {
       config,
       environment,

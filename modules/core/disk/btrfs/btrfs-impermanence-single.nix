@@ -1,7 +1,7 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
 { inputs, ... }:
 {
-  flake.features.btrfs-impermanence-single = {
+  features.btrfs-impermanence-single = {
     requires = [ "btrfs-root" ];
     linux =
       {

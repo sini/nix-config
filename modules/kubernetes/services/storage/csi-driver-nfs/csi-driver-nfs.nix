@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.kubernetes.services.csi-driver-nfs = {
+  kubernetes.services.csi-driver-nfs = {
     options = {
       volumes = lib.mkOption {
         type = lib.types.attrsOf (

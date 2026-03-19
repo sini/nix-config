@@ -1,5 +1,5 @@
 {
-  flake.features.firefox.home =
+  features.firefox.home =
     {
       inputs,
       pkgs,

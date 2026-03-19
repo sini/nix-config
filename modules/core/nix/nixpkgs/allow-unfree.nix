@@ -1,5 +1,5 @@
 {
-  flake.features.nixpkgs.system = {
+  features.nixpkgs.system = {
     nixpkgs.config.allowUnfree = true;
   };
 }

@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-nvidia-driver.linux =
+  features.gpu-nvidia-driver.linux =
     {
       config,
       pkgs,

@@ -1,6 +1,7 @@
 {
   lib,
   self,
+  config,
   ...
 }:
 let
@@ -8,15 +9,12 @@ let
 
   isLinux = lib.hasSuffix "-linux";
   isDarwin = lib.hasSuffix "-darwin";
+
+  linuxHosts = lib.filterAttrs (_: h: isLinux h.system) config.hosts;
+  darwinHosts = lib.filterAttrs (_: h: isDarwin h.system) config.hosts;
 in
 {
-  flake =
-    { config, ... }:
-    let
-      linuxHosts = lib.filterAttrs (_: h: isLinux h.system) config.hosts;
-      darwinHosts = lib.filterAttrs (_: h: isDarwin h.system) config.hosts;
-    in
-    {
+  flake = {
       # This is set due to a regression in agenix-rekey that checks for homeConfigurations.
       homeConfigurations = { };
 

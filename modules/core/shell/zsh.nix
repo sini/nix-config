@@ -1,5 +1,5 @@
 {
-  flake.features.shell = {
+  features.shell = {
     system = {
       programs.zsh = {
         enable = true;

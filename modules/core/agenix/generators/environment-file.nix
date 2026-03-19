@@ -1,7 +1,7 @@
 # Generate an environment file with multiple KEY=value pairs.
 # settings.keys: list of variable names that map to dependencies.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     {
       age.generators.environment-file =

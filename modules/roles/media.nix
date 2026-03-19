@@ -1,5 +1,5 @@
 {
-  flake.roles.media = {
+  roles.media = {
     features = [
       # "spotify-player"
       "jellyfin-client"

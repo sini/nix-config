@@ -4,7 +4,7 @@
   ...
 }:
 {
-  flake.features.agenix = {
+  features.agenix = {
     requires = [ "agenix-generators" ];
     system =
       {

@@ -1,5 +1,5 @@
 {
-  flake.features.mpv.home =
+  features.mpv.home =
     { pkgs, ... }:
     let
       shaders = "${pkgs.mpv-shim-default-shaders}/share/mpv-shim-default-shaders/shaders/";

@@ -1,5 +1,5 @@
 {
-  flake.features.nix = {
+  features.nix = {
     system = {
       nix = {
         settings = {

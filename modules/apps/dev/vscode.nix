@@ -1,5 +1,5 @@
 {
-  flake.features.vscode = {
+  features.vscode = {
     system =
       { inputs, ... }:
       {

@@ -1,5 +1,5 @@
 {
-  flake.features.ananicy.linux =
+  features.ananicy.linux =
     {
       lib,
       pkgs,

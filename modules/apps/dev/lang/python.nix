@@ -1,5 +1,5 @@
 {
-  flake.features.python.home =
+  features.python.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

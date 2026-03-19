@@ -4,7 +4,7 @@
   ...
 }:
 {
-  flake.features.alloy.linux =
+  features.alloy.linux =
     {
       pkgs,
       host,
@@ -26,7 +26,7 @@
         lib.attrsets.filterAttrs (
           _hostname: hostConfig:
           builtins.elem "metrics-ingester" hostConfig.roles && hostConfig.environment == targetEnvironment
-        ) config.flake.hosts
+        ) config.hosts
       );
 
       reportingHost = if reportingHosts != [ ] then lib.head reportingHosts else null;

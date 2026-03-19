@@ -1,5 +1,5 @@
 {
-  flake.features.alacritty.home = {
+  features.alacritty.home = {
     programs.alacritty = {
       enable = true;
       # https://alacritty.org/config-alacritty.html

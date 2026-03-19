@@ -1,5 +1,5 @@
 {
-  flake.features.gitkraken.home =
+  features.gitkraken.home =
     {
       inputs,
       config,

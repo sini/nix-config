@@ -1,5 +1,5 @@
 {
-  flake.features.ssd.linux = {
+  features.ssd.linux = {
     services.fstrim = {
       enable = true;
       interval = "weekly";

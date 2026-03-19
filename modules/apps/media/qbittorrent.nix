@@ -1,5 +1,5 @@
 {
-  flake.features.qbittorrent.home =
+  features.qbittorrent.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

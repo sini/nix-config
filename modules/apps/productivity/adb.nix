@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.features.adb.system =
+  features.adb.system =
     { pkgs, ... }:
     {
       environment.systemPackages = [
@@ -8,7 +8,7 @@
       ];
     };
 
-  flake.features.adb.linux =
+  features.adb.linux =
     { pkgs, ... }:
     {
       environment.systemPackages = [

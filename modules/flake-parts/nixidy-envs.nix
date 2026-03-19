@@ -23,7 +23,7 @@ in
               environment
               ;
           }
-        ) config.flake.environments
+        ) config.environments
       )
     );
   };

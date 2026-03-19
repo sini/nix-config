@@ -1,5 +1,5 @@
 {
-  flake.features.laptop.linux =
+  features.laptop.linux =
     {
       pkgs,
       lib,

@@ -4,7 +4,7 @@ let
   user = config.flake.meta.user.username;
 in
 {
-  flake.features.libvirt = {
+  features.libvirt = {
     linux =
       { pkgs, ... }:
       let

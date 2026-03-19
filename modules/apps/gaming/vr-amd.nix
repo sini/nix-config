@@ -1,5 +1,5 @@
 {
-  flake.features.vr-amd = {
+  features.vr-amd = {
     requires = [ "steam" ];
     linux =
       {

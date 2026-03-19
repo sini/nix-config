@@ -1,5 +1,5 @@
 {
-  flake.features.yt-dlp.home =
+  features.yt-dlp.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [ media-downloader ];

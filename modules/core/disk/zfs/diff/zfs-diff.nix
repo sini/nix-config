@@ -1,5 +1,5 @@
 {
-  flake.features.zfs-diff = {
+  features.zfs-diff = {
     requires = [ "impermanence" ];
     linux =
       {

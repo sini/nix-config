@@ -1,5 +1,5 @@
 {
-  flake.features.cad.home =
+  features.cad.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

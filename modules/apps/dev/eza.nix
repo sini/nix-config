@@ -1,5 +1,5 @@
 {
-  flake.features.eza.home = {
+  features.eza.home = {
     programs.eza = {
       enable = true;
       enableBashIntegration = true;

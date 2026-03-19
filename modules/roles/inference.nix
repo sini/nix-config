@@ -1,5 +1,5 @@
 {
-  flake.roles.inference = {
+  roles.inference = {
     features = [
       "ollama"
     ];

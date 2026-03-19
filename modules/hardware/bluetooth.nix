@@ -1,5 +1,5 @@
 {
-  flake.features.bluetooth = {
+  features.bluetooth = {
     linux =
       { pkgs, ... }:
       {

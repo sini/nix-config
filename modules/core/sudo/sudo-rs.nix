@@ -3,7 +3,7 @@ let
   user = config.flake.meta.user.username;
 in
 {
-  flake.features.sudo.linux = {
+  features.sudo.linux = {
     security = {
       # Enable sudo-rs instead of c-based sudo.
       sudo.enable = false;

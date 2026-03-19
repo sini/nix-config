@@ -1,5 +1,5 @@
 _flakeConfig: {
-  flake.features.microvm-cuda.linux =
+  features.microvm-cuda.linux =
     {
       lib,
       config,

@@ -236,7 +236,7 @@ Input: username, environment, hostOptions, allHostFeatures
    └─> Determines: pkgs', lib', home-manager'
 
 2. Load environment configuration
-   └─> From config.flake.environments.${hostOptions.environment}
+   └─> From config.environments.${hostOptions.environment}
 
 3. Determine effective roles
    └─> Use override if provided, else hostOptions.roles
@@ -423,7 +423,7 @@ mkHost "bleeding-edge" {
 ### Kexec Installer
 
 ```nix
-mkHostKexec "server-01-installer" config.flake.hosts.server-01
+mkHostKexec "server-01-installer" config.hosts.server-01
 # Creates minimal installer based on server-01 configuration
 ```
 

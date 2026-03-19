@@ -68,7 +68,7 @@
 #     lib.concatStringsSep "\n\n" readFiles;
 # in
 {
-  flake.features.gpg = {
+  features.gpg = {
     linux = {
       services.pcscd.enable = true;
       hardware.gpgSmartcards.enable = true;

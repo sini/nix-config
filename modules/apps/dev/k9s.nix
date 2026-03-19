@@ -1,5 +1,5 @@
 {
-  flake.features.k9s.home =
+  features.k9s.home =
     {
       pkgs,
       config,

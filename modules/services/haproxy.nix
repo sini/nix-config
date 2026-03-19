@@ -3,7 +3,7 @@ let
   inherit (self.lib.host-utils) findHostsWithRole;
 in
 {
-  flake.features.haproxy.linux =
+  features.haproxy.linux =
     {
       config,
       environment,

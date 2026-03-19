@@ -3,7 +3,7 @@
 # Registers dummy persistence options for Darwin (NixOS impermanence not loaded).
 # Prevents errors in modules referencing osConfig.environment.persistence.
 {
-  flake.features.impermanence.darwin =
+  features.impermanence.darwin =
     { lib, ... }:
     {
       # Dummy environment.persistence (prevents option reference errors)

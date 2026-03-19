@@ -11,7 +11,7 @@ let
   flakeConfig = config; # Capture flake-level config for use in submodules
 in
 {
-  options.flake.hosts =
+  options.hosts =
     let
       hostType = types.submodule (
         { name, config, ... }:
@@ -194,7 +194,7 @@ in
             environment = mkOption {
               type = types.str;
               default = "prod";
-              description = "Environment name that this host belongs to (references flake.environments)";
+              description = "Environment name that this host belongs to (references environments)";
             };
 
             baseline = mkOption {
@@ -262,8 +262,8 @@ in
             let
               # Use centralized feature resolution from lib.modules
               computedFeatures = self.lib.modules.computeActiveFeatures {
-                featuresConfig = flakeConfig.flake.features;
-                rolesConfig = flakeConfig.flake.roles;
+                featuresConfig = flakeConfig.features;
+                rolesConfig = flakeConfig.roles;
                 hostRoles = config.roles;
                 hostFeatures = config.extra-features or [ ];
                 hostExclusions = config.excluded-features or [ ];

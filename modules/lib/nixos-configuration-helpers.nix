@@ -54,20 +54,20 @@
           allUserFeatureNames = lib.unique (baselineFeatureNames ++ envFeatureNames ++ hostFeatureNames);
 
           # Convert to feature modules and collect user-specific exclusions
-          userFeatureModules = map (name: config.flake.features.${name}) allUserFeatureNames;
+          userFeatureModules = map (name: config.features.${name}) allUserFeatureNames;
           userOnlyExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" userFeatureModules));
 
           # Merge all exclusions
           allExclusions = lib.unique (hostExclusions ++ userOnlyExclusions);
 
           # Helper predicates for filtering
-          coreRoleFeatureNames = config.flake.roles.core.features;
+          coreRoleFeatureNames = config.roles.core.features;
           isCore = f: lib.elem f.name coreRoleFeatureNames;
           isNotExcluded = f: !(lib.elem f.name allExclusions);
 
           # Process user features: filter and resolve dependencies using lib.modules
           filteredUserFeatures = lib.filter isNotExcluded userFeatureModules;
-          userFeatureDeps = collectRequires config.flake.features filteredUserFeatures;
+          userFeatureDeps = collectRequires config.features filteredUserFeatures;
           userFeatures = filteredUserFeatures ++ userFeatureDeps;
 
           # Split host features into core (always included) and non-core (conditional)
@@ -109,7 +109,7 @@
           home-manager' = if useUnstable then inputs.home-manager-unstable else inputs.home-manager;
 
           # Load environment configuration
-          environment = config.flake.environments.${hostOptions.environment};
+          environment = config.environments.${hostOptions.environment};
 
           # Feature resolution: use precomputed features when possible,
           # or compute fresh when roles are overridden (e.g., for kexec builds)
@@ -122,15 +122,15 @@
             else
               # Compute fresh for override scenarios using lib.modules
               self.lib.modules.computeActiveFeatures {
-                featuresConfig = config.flake.features;
-                rolesConfig = config.flake.roles;
+                featuresConfig = config.features;
+                rolesConfig = config.roles;
                 hostRoles = overrideRoles;
                 hostFeatures = hostOptions.extra-features or [ ];
                 hostExclusions = hostOptions.excluded-features or [ ];
               };
 
           # Get feature modules for home-manager and system module collection
-          allHostFeatures = map (name: config.flake.features.${name}) activeFeatures;
+          allHostFeatures = map (name: config.features.${name}) activeFeatures;
 
           # Collect platform-appropriate system modules using lib.modules
           systemModules = collectPlatformSystemModules allHostFeatures hostOptions.system;

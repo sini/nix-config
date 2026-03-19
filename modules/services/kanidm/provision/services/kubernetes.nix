@@ -1,5 +1,5 @@
 {
-  flake.features.kanidm.linux = {
+  features.kanidm.linux = {
     services.kanidm.provision.systems.oauth2.kubernetes = {
       displayName = "kubernetes";
       originUrl = "http://localhost:8000";

@@ -39,13 +39,13 @@
         environment: lib.unique (defaultServices ++ (environment.kubernetes.services.enabled or [ ]));
 
       # Resolve enabled service names to their nixidy module definitions.
-      # Filters out service names that aren't defined in flake.kubernetes.services
+      # Filters out service names that aren't defined in kubernetes.services
       # (e.g. services enabled by the environment but not yet implemented).
       # [string] -> [module]
       getServiceModules =
         enabledServices:
-        lib.map (serviceName: config.flake.kubernetes.services.${serviceName}.nixidy) (
-          lib.filter (serviceName: config.flake.kubernetes.services ? ${serviceName}) enabledServices
+        lib.map (serviceName: config.kubernetes.services.${serviceName}.nixidy) (
+          lib.filter (serviceName: config.kubernetes.services ? ${serviceName}) enabledServices
         );
 
       # Resolve CRD objects for each enabled service at evaluation time.
@@ -75,7 +75,7 @@
               builtins.fromJSON (builtins.readFile (parsedCrdObjects + "/${jsonFile}"))
             else
               [ ]
-        ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
+        ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.kubernetes.services);
 
       # Produce the agenix-rekey-to-sops configuration module for a nixidy environment.
       # Configures SOPS encryption paths and rekey identity based on environment name.
@@ -227,7 +227,7 @@
 
             # This local feature system module is also compatible with nixidy envs
             # It provides our custom agenix generator types
-            config.flake.features.agenix-generators.system
+            config.features.agenix-generators.system
 
             (mkAgeModule env)
             (mkNixidyModule {
@@ -257,7 +257,7 @@
           # All services that define CRDs (either source-based or chart-based)
           servicesWithCrds = lib.filterAttrs (
             _name: service: service.crds != null
-          ) config.flake.kubernetes.services;
+          ) config.kubernetes.services;
 
           # Resolve chart derivation from crdConfig. Shared between
           # mkChartCrdYaml, mkParsedServiceCrds, and mkCrdGenerator.

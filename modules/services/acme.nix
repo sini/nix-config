@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.features.acme.linux =
+  features.acme.linux =
     {
       config,
       environment,

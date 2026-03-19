@@ -1,5 +1,5 @@
 {
-  flake.environments.prod.kubernetes = {
+  environments.prod.kubernetes = {
     tlsSanIps = [
       "10.10.10.2" # axon-01 external
       "10.10.10.3" # axon-02 external

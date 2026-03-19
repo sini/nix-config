@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.features.kanidm.linux =
+  features.kanidm.linux =
     { environment, ... }:
     {
       services.kanidm.provision = {

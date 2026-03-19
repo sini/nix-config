@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.features.nix = {
+  features.nix = {
     linux = {
       imports = [ inputs.lix-module.nixosModules.default ];
     };

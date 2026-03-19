@@ -1,6 +1,6 @@
 # Generate an SSH keypair with host-specific comment.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     {
       config,
       lib,

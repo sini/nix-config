@@ -1,5 +1,5 @@
 {
-  flake.features.zen-browser.home =
+  features.zen-browser.home =
     {
       inputs,
       ...

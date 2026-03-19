@@ -1,5 +1,5 @@
 {
-  flake.features.ollama.linux =
+  features.ollama.linux =
     {
       pkgs,
       host,

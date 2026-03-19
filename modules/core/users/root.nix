@@ -1,5 +1,5 @@
 {
-  flake.features.users.linux =
+  features.users.linux =
     { config, lib, ... }:
     {
       # Let all users with the "wheel" group have their keys in the authorized_keys for root.

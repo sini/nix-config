@@ -1,5 +1,5 @@
 {
-  flake.hosts.cortex = {
+  hosts.cortex = {
     networking = {
       interfaces = {
         enp8s0 = {

@@ -7,7 +7,7 @@
 # specifics on the features themselves, refer to some external documentation.
 # This applies to this generator as well as the other, related generators.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     let
       helpers = import ./_helpers.nix { inherit lib; };

@@ -1,6 +1,6 @@
 # Generate a shared SSH keypair (without host-specific comment).
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     {
       age.generators.shared-ssh-key =

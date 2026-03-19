@@ -1,6 +1,6 @@
 { lib, rootPath, ... }:
 {
-  flake.features.users = {
+  features.users = {
     linux =
       {
         config,

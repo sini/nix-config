@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.features.sysmon.home =
+  features.sysmon.home =
     {
       osConfig,
       pkgs,

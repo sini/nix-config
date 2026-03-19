@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.hubble-ui = {
+  kubernetes.services.hubble-ui = {
     nixidy =
       { config, environment, ... }:
       let

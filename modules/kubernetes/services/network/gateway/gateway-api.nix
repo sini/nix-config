@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.gateway-api = {
+  kubernetes.services.gateway-api = {
     crds =
       {
         pkgs,

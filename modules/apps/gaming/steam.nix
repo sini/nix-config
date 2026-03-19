@@ -1,5 +1,5 @@
 {
-  flake.features.steam = {
+  features.steam = {
     linux =
       {
         lib,

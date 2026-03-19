@@ -1,6 +1,6 @@
 # Generate htpasswd entries from secret dependencies.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     {
       age.generators.htpasswd =

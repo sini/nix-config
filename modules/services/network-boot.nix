@@ -1,5 +1,5 @@
 {
-  flake.features.network-boot.linux =
+  features.network-boot.linux =
     {
       config,
       lib,

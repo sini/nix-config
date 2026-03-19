@@ -1,5 +1,5 @@
 {
-  flake.features.grafana.linux =
+  features.grafana.linux =
     {
       config,
       environment,

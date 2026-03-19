@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.volume-snapshots = {
+  kubernetes.services.volume-snapshots = {
     crds =
       {
         pkgs,

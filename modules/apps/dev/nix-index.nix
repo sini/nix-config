@@ -1,5 +1,5 @@
 {
-  flake.features.nix-index = {
+  features.nix-index = {
     system =
       { inputs, ... }:
       {

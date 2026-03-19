@@ -1,5 +1,5 @@
 {
-  flake.features.spicetify = {
+  features.spicetify = {
     linux = {
       # Local Discovery and Google Cast ports
       networking.firewall.allowedTCPPorts = [ 57621 ];

@@ -3,7 +3,7 @@ let
   inherit (config.flake.meta.user) username;
 in
 {
-  flake.features.sunshine = {
+  features.sunshine = {
     linux =
       { pkgs, ... }:
       {

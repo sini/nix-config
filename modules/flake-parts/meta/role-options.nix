@@ -3,7 +3,7 @@ let
   inherit (lib) mkOption types;
 in
 {
-  options.flake.roles = mkOption {
+  options.roles = mkOption {
     type = types.attrsOf (
       types.submodule {
         options = {

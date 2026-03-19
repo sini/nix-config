@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-intel.linux =
+  features.gpu-intel.linux =
     { pkgs, ... }:
     {
       services.xserver.videoDrivers = [ "modesetting" ];

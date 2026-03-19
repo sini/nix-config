@@ -18,7 +18,7 @@ Hosts are defined in `modules/hosts/` with their own configuration modules. Each
 host has:
 
 - System architecture (x86_64-linux, aarch64-darwin)
-- IP addresses configured in `flake.hosts.<hostname>.ipv4`
+- IP addresses configured in `hosts.<hostname>.ipv4`
 - Roles (server, workstation, laptop)
 - Hardware configuration via Facter JSON files
 - Deployment settings for remote management
@@ -104,7 +104,7 @@ kubectl get nodes
 
 1. Create directory `modules/hosts/<hostname>/`
 1. Add `default.nix` with host configuration
-1. Configure in flake with `flake.hosts.<hostname>` options
+1. Configure in flake with `hosts.<hostname>` options
 1. Generate hardware config with nixos-facter if needed
 
 ### Module Development
@@ -119,7 +119,7 @@ kubectl get nodes
 
 - Stable hosts use `nixpkgs` (25.05)
 - Unstable hosts use `nixpkgs-unstable`
-- Set via `flake.hosts.<hostname>.unstable` option
+- Set via `hosts.<hostname>.unstable` option
 
 ## Repository Structure
 

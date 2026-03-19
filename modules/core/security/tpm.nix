@@ -1,5 +1,5 @@
 {
-  flake.features.security.linux =
+  features.security.linux =
     { pkgs, ... }:
     {
       security.tpm2 = {

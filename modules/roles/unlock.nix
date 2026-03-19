@@ -1,5 +1,5 @@
 {
-  flake.roles.unlock = {
+  roles.unlock = {
     features = [
       "tang"
     ];

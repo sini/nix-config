@@ -1,5 +1,5 @@
 {
-  flake.features.utils = {
+  features.utils = {
     system =
       { pkgs, ... }:
       {

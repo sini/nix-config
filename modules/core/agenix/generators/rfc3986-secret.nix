@@ -1,6 +1,6 @@
 # Generate an RFC3986 URL-safe secret.
 {
-  flake.features.agenix-generators.system = _: {
+  features.agenix-generators.system = _: {
     age.generators.rfc3986-secret =
       { pkgs, ... }:
       ''

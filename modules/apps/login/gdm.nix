@@ -1,5 +1,5 @@
 {
-  flake.features.gdm.linux =
+  features.gdm.linux =
     { pkgs, ... }:
     {
       services = {

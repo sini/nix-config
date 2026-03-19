@@ -1,5 +1,5 @@
 {
-  flake.features.misc-tools.home =
+  features.misc-tools.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [

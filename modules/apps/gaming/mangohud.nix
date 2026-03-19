@@ -1,5 +1,5 @@
 {
-  flake.features.mangohud.home =
+  features.mangohud.home =
     { pkgs, ... }:
     {
       programs.mangohud = {

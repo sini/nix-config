@@ -1,5 +1,5 @@
 {
-  flake.roles.dev = {
+  roles.dev = {
     features = [
       "adb"
       "direnv"

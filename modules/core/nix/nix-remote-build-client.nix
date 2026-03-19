@@ -7,7 +7,7 @@ let
   inherit (self.lib.host-utils) findHostsWithRole;
 in
 {
-  flake.features.nix.system =
+  features.nix.system =
     {
       config,
       lib,

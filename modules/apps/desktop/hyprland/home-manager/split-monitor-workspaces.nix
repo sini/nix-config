@@ -1,5 +1,5 @@
 {
-  flake.features.hyprland-split-monitors.home =
+  features.hyprland-split-monitors.home =
     { pkgs, ... }:
     {
       wayland.windowManager.hyprland = {

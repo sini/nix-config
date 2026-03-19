@@ -1,7 +1,7 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
 { inputs, ... }:
 {
-  flake.features.zfs-disk-single = {
+  features.zfs-disk-single = {
     requires = [ "zfs-root" ];
     linux =
       {

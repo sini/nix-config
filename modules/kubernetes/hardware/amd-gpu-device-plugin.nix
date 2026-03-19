@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.amd-gpu-device-plugin = {
+  kubernetes.services.amd-gpu-device-plugin = {
     nixidy =
       { charts, ... }:
       {

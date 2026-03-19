@@ -6,7 +6,7 @@
   #
   # Automatically enabled when 'btrfs-root' feature is active.
 
-  flake.features.impermanence-btrfs = {
+  features.impermanence-btrfs = {
     linux =
       {
         lib,

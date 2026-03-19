@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-nvidia-vfio.linux =
+  features.gpu-nvidia-vfio.linux =
     {
       config,
       lib,

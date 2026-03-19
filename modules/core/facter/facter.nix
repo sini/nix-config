@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.features.facter.linux =
+  features.facter.linux =
     { host, ... }:
     {
       imports = [ inputs.nixos-facter-modules.nixosModules.facter ];

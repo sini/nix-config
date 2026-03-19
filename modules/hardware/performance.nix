@@ -1,5 +1,5 @@
 {
-  flake.features.performance.linux =
+  features.performance.linux =
     {
       pkgs,
       lib,

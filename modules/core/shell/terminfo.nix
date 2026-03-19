@@ -1,5 +1,5 @@
 {
-  flake.features.shell.system = {
+  features.shell.system = {
     environment.enableAllTerminfo = true;
   };
 }

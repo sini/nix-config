@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.features.nvf.home = {
+  features.nvf.home = {
     imports = [ inputs.nvf.homeManagerModules.default ];
     programs.nvf = {
       enable = true;

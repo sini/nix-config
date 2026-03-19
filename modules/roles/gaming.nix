@@ -1,5 +1,5 @@
 {
-  flake.roles.gaming = {
+  roles.gaming = {
     features = [
       # "ananicy"
       "gamepad"

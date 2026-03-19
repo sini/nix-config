@@ -1,5 +1,5 @@
 {
-  flake.features.zoom.home =
+  features.zoom.home =
     { pkgs, ... }:
     {
       home.packages = [

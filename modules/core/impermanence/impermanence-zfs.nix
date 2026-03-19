@@ -6,7 +6,7 @@
   #
   # Automatically enabled when 'zfs-root' feature is active.
 
-  flake.features.impermanence-zfs = {
+  features.impermanence-zfs = {
     linux =
       {
         lib,

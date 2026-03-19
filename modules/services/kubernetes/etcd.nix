@@ -1,5 +1,5 @@
 # {
-#   flake.features.etcd.linux =
+#   features.etcd.linux =
 #     { pkgs, ... }:
 #     {
 #       age.secrets.kubernetes-ca-crt = {

@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-nvidia-kernel.linux = {
+  features.gpu-nvidia-kernel.linux = {
     boot.kernelModules = [
       "nvidia"
       "nvidia_modeset"

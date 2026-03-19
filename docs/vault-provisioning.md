@@ -25,7 +25,7 @@ Add the `vault` role to hosts in your desired environment:
 ```nix
 # modules/hosts/[hostname]/host.nix
 {
-  flake.hosts.[hostname] = {
+  hosts.[hostname] = {
     roles = [ "vault" "other-roles" ];
     environment = "prod"; # or "dev"
     # ... other config

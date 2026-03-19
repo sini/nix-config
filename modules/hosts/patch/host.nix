@@ -1,5 +1,5 @@
 {
-  flake.hosts.patch = {
+  hosts.patch = {
     system = "aarch64-darwin";
 
     environment = "dev";

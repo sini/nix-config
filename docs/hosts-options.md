@@ -1,97 +1,97 @@
-- `flake.hosts`: Per-host NixOS configurations.
+- `hosts`: Per-host NixOS configurations.
 
-- `flake.hosts.<name>.baseline`: Baseline configurations for repeatable
+- `hosts.<name>.baseline`: Baseline configurations for repeatable
   configuration types on this host
 
-- `flake.hosts.<name>.baseline.home`: [module] Host-specific home-manager
+- `hosts.<name>.baseline.home`: [module] Host-specific home-manager
   configuration, applied to all users for host.
 
-- `flake.hosts.<name>.environment`: [string] Environment name that this host
-  belongs to (references flake.environments)
+- `hosts.<name>.environment`: [string] Environment name that this host
+  belongs to (references environments)
 
-- `flake.hosts.<name>.excluded-features`: [list of string] List of features to
+- `hosts.<name>.excluded-features`: [list of string] List of features to
   exclude for the host (prevents the feature and its requires from being added)
 
-- `flake.hosts.<name>.exporters`: \
+- `hosts.<name>.exporters`: \
   Prometheus exporters exposed by this host. Example:
   `{ node = { port = 9100; }; k3s = { port = 10249; }; }`
 
-- `flake.hosts.<name>.exporters.<name>.interval`: [string] Scrape interval
+- `hosts.<name>.exporters.<name>.interval`: [string] Scrape interval
 
-- `flake.hosts.<name>.exporters.<name>.path`: [string] HTTP path for metrics
+- `hosts.<name>.exporters.<name>.path`: [string] HTTP path for metrics
   endpoint
 
-- `flake.hosts.<name>.exporters.<name>.port`: [signed integer] Port number for
+- `hosts.<name>.exporters.<name>.port`: [signed integer] Port number for
   the exporter
 
-- `flake.hosts.<name>.extra-features`: [list of string] List of additional
+- `hosts.<name>.extra-features`: [list of string] List of additional
   features to enable for the host (beyond those from roles).
 
-- `flake.hosts.<name>.extra_modules`: [list of module] List of additional
+- `hosts.<name>.extra_modules`: [list of module] List of additional
   modules to include for the host.
 
-- `flake.hosts.<name>.facts`: [null or absolute path] Path to the Facter JSON
+- `hosts.<name>.facts`: [null or absolute path] Path to the Facter JSON
   file for the host.
 
-- `flake.hosts.<name>.features`: [list of string] \
+- `hosts.<name>.features`: [list of string] \
   Computed list of all enabled features for this host. Includes features from
   roles, extra-features, and all transitive dependencies, with excluded-features
   applied.
 
-- `flake.hosts.<name>.hasFeature`: [function that evaluates to a(n) boolean] \
+- `hosts.<name>.hasFeature`: [function that evaluates to a(n) boolean] \
   Helper function to check if a feature is enabled for this host. Returns true
   if the feature is in the computed features list, false otherwise. Example:
   host.hasFeature "podman" → true/false
 
-- `flake.hosts.<name>.hostname`: [unspecified value] Hostname
+- `hosts.<name>.hostname`: [unspecified value] Hostname
 
-- `flake.hosts.<name>.ipv4`: [list of string] The static IP addresses of this
+- `hosts.<name>.ipv4`: [list of string] The static IP addresses of this
   host in its home vlan (derived from networking.interfaces)
 
-- `flake.hosts.<name>.ipv6`: [list of string] The static IPv6 addresses of this
+- `hosts.<name>.ipv6`: [list of string] The static IPv6 addresses of this
   host (derived from networking.interfaces)
 
-- `flake.hosts.<name>.networking`: Network configuration for the host
+- `hosts.<name>.networking`: Network configuration for the host
 
-- `flake.hosts.<name>.networking.autobridging`: [boolean] Enable automatic 1:1
+- `hosts.<name>.networking.autobridging`: [boolean] Enable automatic 1:1
   bridge creation for each interface
 
-- `flake.hosts.<name>.networking.bridges`: [attribute set of list of string]
+- `hosts.<name>.networking.bridges`: [attribute set of list of string]
   Attribute set mapping bridge names to lists of interfaces
 
-- `flake.hosts.<name>.networking.interfaces`: Network interfaces with their IP
+- `hosts.<name>.networking.interfaces`: Network interfaces with their IP
   addresses
 
-- `flake.hosts.<name>.networking.interfaces.<name>.ipv4`: [list of string] IPv4
+- `hosts.<name>.networking.interfaces.<name>.ipv4`: [list of string] IPv4
   addresses for this interface
 
-- `flake.hosts.<name>.networking.interfaces.<name>.ipv6`: [list of string] IPv6
+- `hosts.<name>.networking.interfaces.<name>.ipv6`: [list of string] IPv6
   addresses for this interface
 
-- `flake.hosts.<name>.networking.unmanagedInterfaces`: [list of string] List of
+- `hosts.<name>.networking.unmanagedInterfaces`: [list of string] List of
   interfaces to mark as unmanaged by NetworkManager
 
-- `flake.hosts.<name>.public_key`: [absolute path] Path to or string value of
+- `hosts.<name>.public_key`: [absolute path] Path to or string value of
   the public SSH key for the host.
 
-- `flake.hosts.<name>.remoteBuildJobs`: [signed integer] The number of build
+- `hosts.<name>.remoteBuildJobs`: [signed integer] The number of build
   jobs to be scheduled
 
-- `flake.hosts.<name>.remoteBuildSpeed`: [signed integer] The relative build
+- `hosts.<name>.remoteBuildSpeed`: [signed integer] The relative build
   speed
 
-- `flake.hosts.<name>.roles`: [list of string] List of roles for the host.
+- `hosts.<name>.roles`: [list of string] List of roles for the host.
 
-- `flake.hosts.<name>.secretPath`: [absolute path] Path to the directory
+- `hosts.<name>.secretPath`: [absolute path] Path to the directory
   containing secret keys for the host.
 
-- `flake.hosts.<name>.system`: \[one of "aarch64-linux", "x86_64-linux",
+- `hosts.<name>.system`: \[one of "aarch64-linux", "x86_64-linux",
   "aarch64-darwin"\] System string for the host
 
-- `flake.hosts.<name>.systemConfiguration`: [module] Host-specific system module
+- `hosts.<name>.systemConfiguration`: [module] Host-specific system module
   configuration.
 
-- `flake.hosts.<name>.tags`: [attribute set of string] \
+- `hosts.<name>.tags`: [attribute set of string] \
   An attribute set of string key-value pairs to tag the host with metadata.
   Example:
   `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
@@ -104,55 +104,55 @@
   - thunderbolt-interface-2: IPv4 address for second thunderbolt interface
     (e.g., "169.254.31.1/31")
 
-- `flake.hosts.<name>.unstable`: [boolean] Whether to use nixpkgs-unstable for
+- `hosts.<name>.unstable`: [boolean] Whether to use nixpkgs-unstable for
   this host.
 
-- `flake.hosts.<name>.users`: Users on this host with their features and
+- `hosts.<name>.users`: Users on this host with their features and
   configuration
 
-- `flake.hosts.<name>.users.<name>.baseline`: Baseline features and
+- `hosts.<name>.users.<name>.baseline`: Baseline features and
   configurations (leave fields null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.baseline.features`: \[null or (list of
+- `hosts.<name>.users.<name>.baseline.features`: \[null or (list of
   string)\] List of baseline features (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.baseline.inheritHostFeatures`: \[null or
+- `hosts.<name>.users.<name>.baseline.inheritHostFeatures`: \[null or
   boolean\] Whether to inherit host features (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.configuration`: [module] User-specific home
+- `hosts.<name>.users.<name>.configuration`: [module] User-specific home
   configuration (leave empty to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.displayName`: [null or string] Display name
+- `hosts.<name>.users.<name>.displayName`: [null or string] Display name
   for the user (null uses username or inherits from environment)
 
-- `flake.hosts.<name>.users.<name>.email`: [null or string] Email address for
+- `hosts.<name>.users.<name>.email`: [null or string] Email address for
   the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.enableUnixAccount`: [null or boolean] \
+- `hosts.<name>.users.<name>.enableUnixAccount`: [null or boolean] \
   Whether to create a Unix user account on hosts. Set to null to inherit from
   environment.
 
-- `flake.hosts.<name>.users.<name>.features`: [null or (list of string)] \
+- `hosts.<name>.users.<name>.features`: [null or (list of string)] \
   List of features specific to the user. Set to null to inherit from
   environment.
 
-- `flake.hosts.<name>.users.<name>.gid`: [null or signed integer] Group ID for
+- `hosts.<name>.users.<name>.gid`: [null or signed integer] Group ID for
   the Unix account (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.gpgKey`: [null or string] GPG key ID for the
+- `hosts.<name>.users.<name>.gpgKey`: [null or string] GPG key ID for the
   user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.groups`: [null or (list of string)] List of
+- `hosts.<name>.users.<name>.groups`: [null or (list of string)] List of
   identity groups the user belongs to (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.linger`: [null or boolean] Enable lingering
+- `hosts.<name>.users.<name>.linger`: [null or boolean] Enable lingering
   for the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.sshKeys`: [null or (list of string)] SSH
+- `hosts.<name>.users.<name>.sshKeys`: [null or (list of string)] SSH
   public keys for the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.systemGroups`: [null or (list of string)]
+- `hosts.<name>.users.<name>.systemGroups`: [null or (list of string)]
   System groups (extraGroups) for the user (null to inherit from environment)
 
-- `flake.hosts.<name>.users.<name>.uid`: [null or signed integer] User ID for
+- `hosts.<name>.users.<name>.uid`: [null or signed integer] User ID for
   the Unix account (null to inherit from environment)

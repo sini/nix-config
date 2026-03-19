@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.k3s = {
+  features.k3s = {
     requires = [ "k3s-containerd" ];
     linux =
       {

@@ -3,7 +3,7 @@ let
   inherit (config.flake.secretsPaths) rawSecretsPath;
 in
 {
-  flake.environments.dev = {
+  environments.dev = {
     id = 2;
     domain = "json64.dev";
 

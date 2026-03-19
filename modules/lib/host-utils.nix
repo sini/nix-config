@@ -9,7 +9,7 @@
       role:
       let
         matchingHosts =
-          config.flake.hosts
+          config.hosts
           |> lib.attrsets.filterAttrs (_hostname: hostConfig: builtins.elem role (hostConfig.roles or [ ]));
       in
       matchingHosts;

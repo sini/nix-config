@@ -7,7 +7,7 @@
 #
 # ### Simple interface configuration:
 # ```nix
-# flake.hosts.hostname = {
+# hosts.hostname = {
 #   networking = {
 #     interfaces = {
 #       enp1s0 = {
@@ -25,7 +25,7 @@
 #
 # ### Manual bridges with multiple interfaces:
 # ```nix
-# flake.hosts.hostname = {
+# hosts.hostname = {
 #   networking = {
 #     autobridging = false;
 #     interfaces = {
@@ -51,7 +51,7 @@
 # - DNS over TLS and DNSSEC
 # - TCP congestion window optimization
 {
-  flake.features.networking.system =
+  features.networking.system =
     { host, ... }:
     {
       networking = {
@@ -59,7 +59,7 @@
       };
     };
 
-  flake.features.networking.linux =
+  features.networking.linux =
     {
       config,
       host,

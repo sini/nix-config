@@ -1,5 +1,5 @@
 {
-  flake.features.easyeffects = {
+  features.easyeffects = {
     linux = {
       # Technically not easyeffects, but we want it on the same systems
       programs.noisetorch.enable = true;

@@ -1,5 +1,5 @@
 {
-  flake.hosts.blade = {
+  hosts.blade = {
     # No static networking config - NetworkManager handles DHCP dynamically
     # Accessed via Tailscale: blade.ts.json64.dev
     environment = "dev";

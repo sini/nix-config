@@ -1,5 +1,5 @@
 {
-  flake.features.wireshark = {
+  features.wireshark = {
     system =
       {
         pkgs,

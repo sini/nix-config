@@ -1,5 +1,5 @@
 {
-  flake.environments.prod.users = {
+  environments.prod.users = {
     # Unix account users (created on hosts)
     sini = {
       enableUnixAccount = true;

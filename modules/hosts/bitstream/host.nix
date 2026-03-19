@@ -1,5 +1,5 @@
 {
-  flake.hosts.bitstream = {
+  hosts.bitstream = {
     networking.interfaces = {
       eno1 = {
         ipv4 = [ "10.9.1.1" ];

@@ -1,5 +1,5 @@
 {
-  flake.features.obsidian.home =
+  features.obsidian.home =
     { pkgs, ... }:
     {
       home.packages = with pkgs; [ obsidian ];

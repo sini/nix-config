@@ -1,5 +1,5 @@
 {
-  flake.features.swaync.home =
+  features.swaync.home =
     {
       config,
       lib,

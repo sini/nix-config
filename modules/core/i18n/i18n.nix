@@ -1,5 +1,5 @@
 {
-  flake.features.i18n.linux =
+  features.i18n.linux =
     { lib, ... }:
     {
       # Select internationalisation properties.

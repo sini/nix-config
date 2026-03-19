@@ -1,5 +1,5 @@
 {
-  flake.features.starship.home = {
+  features.starship.home = {
     programs.starship = {
       enable = true;
       enableTransience = true;

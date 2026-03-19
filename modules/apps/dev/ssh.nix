@@ -6,11 +6,11 @@
 let
   # Generate SSH matchBlocks for each host with agent forwarding
   hostMatchBlocks =
-    config.flake.hosts
+    config.hosts
     |> lib.attrsets.mapAttrs' (
       hostname: hostConfig:
       let
-        targetEnv = config.flake.environments.${hostConfig.environment};
+        targetEnv = config.environments.${hostConfig.environment};
         fqdn = "${hostname}.${targetEnv.name}.${targetEnv.domain}";
       in
       lib.attrsets.nameValuePair hostname {
@@ -20,7 +20,7 @@ let
     );
 in
 {
-  flake.features.ssh.home = {
+  features.ssh.home = {
     programs.ssh = {
       enable = true;
       enableDefaultConfig = false;

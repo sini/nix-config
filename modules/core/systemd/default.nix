@@ -1,5 +1,5 @@
 {
-  flake.features.systemd.linux =
+  features.systemd.linux =
     {
       lib,
       host,

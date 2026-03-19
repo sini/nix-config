@@ -1,5 +1,5 @@
 {
-  flake.features.discord.home =
+  features.discord.home =
     {
       inputs,
       pkgs,

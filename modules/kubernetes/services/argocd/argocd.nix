@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.argocd = {
+  kubernetes.services.argocd = {
     nixidy =
       {
         config,

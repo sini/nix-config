@@ -1,6 +1,6 @@
 { moduleWithSystem, ... }:
 {
-  flake.features.claude.home = moduleWithSystem (
+  features.claude.home = moduleWithSystem (
     { inputs' }:
     {
       home.packages = with inputs'.nix-ai-tools.packages; [

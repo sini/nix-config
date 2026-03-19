@@ -1,5 +1,5 @@
 {
-  flake.features.stylix = {
+  features.stylix = {
     linux =
       {
         inputs,

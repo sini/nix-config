@@ -12,7 +12,7 @@ let
   flakeConfig = config; # Capture the flake-level config for use in submodules
 in
 {
-  options.flake.environments =
+  options.environments =
     let
       networkType = types.submodule {
         options = {
@@ -459,7 +459,7 @@ in
             findHostsByRole =
               role:
               let
-                hosts = flakeConfig.flake.hosts;
+                hosts = flakeConfig.hosts;
               in
               hosts
               |> lib.attrsets.filterAttrs (
@@ -485,7 +485,7 @@ in
                       else
                         let
                           # Look up credentials environment
-                          environments = config.flake.environments or { };
+                          environments = config.environments or { };
                           credEnv = environments.${credentialsEnv} or null;
                           domain = if credEnv != null then credEnv.domain else config.domain;
                         in

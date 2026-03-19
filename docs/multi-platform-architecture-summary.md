@@ -20,7 +20,7 @@
 ### New Module Type System
 
 ```nix
-flake.features.example = {
+features.example = {
   name = "example";
 
   # Cross-platform system modules (works on NixOS AND Darwin)
@@ -68,7 +68,7 @@ nixos = treated as (system + linux)
 ### Unified Host Definition
 
 ```nix
-flake.hosts.hostname = {
+hosts.hostname = {
   # Platform auto-detected from system architecture
   system = "x86_64-linux";      # → NixOS
   # OR
@@ -169,30 +169,30 @@ mkHost
 
 ```nix
 # Before
-flake.features.ssh.nixos = { services.openssh.enable = true; };
+features.ssh.nixos = { services.openssh.enable = true; };
 
 # After
-flake.features.ssh.system = { services.openssh.enable = true; };
+features.ssh.system = { services.openssh.enable = true; };
 ```
 
 ### Linux-Only Feature (GPU)
 
 ```nix
 # Before
-flake.features.gpu-nvidia.nixos = { hardware.nvidia... };
+features.gpu-nvidia.nixos = { hardware.nvidia... };
 
 # After
-flake.features.gpu-nvidia.linux = { hardware.nvidia... };
+features.gpu-nvidia.linux = { hardware.nvidia... };
 ```
 
 ### Platform-Specific Feature (Power Management)
 
 ```nix
 # Before
-flake.features.power-mgmt.nixos = { /* systemd-based */ };
+features.power-mgmt.nixos = { /* systemd-based */ };
 
 # After
-flake.features.power-mgmt = {
+features.power-mgmt = {
   system = { /* shared config */ };
   linux = { /* systemd-based */ };
   darwin = { /* macOS power management */ };

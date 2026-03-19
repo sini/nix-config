@@ -1,6 +1,6 @@
 # Generate a Nix binary cache signing keypair.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     {
       config,
       lib,

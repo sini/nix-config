@@ -1,6 +1,6 @@
 # { rootPath, ... }:
 {
-  flake.features.loki.linux =
+  features.loki.linux =
     { environment, ... }:
     let
       domain = environment.getDomainFor "loki";

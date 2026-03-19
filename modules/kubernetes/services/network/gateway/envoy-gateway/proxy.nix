@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.envoy-gateway = {
+  kubernetes.services.envoy-gateway = {
     nixidy =
       {
         lib,

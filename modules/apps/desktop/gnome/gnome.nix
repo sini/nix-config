@@ -1,5 +1,5 @@
 {
-  flake.features.gnome = {
+  features.gnome = {
     linux =
       {
         pkgs,

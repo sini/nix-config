@@ -31,7 +31,7 @@ let
       # Filter bgp-hub hosts for this environment
       envBgpHubHosts = lib.filterAttrs (
         _name: host: lib.elem "bgp-hub" (host.roles or [ ]) && host.environment == envName
-      ) config.flake.hosts;
+      ) config.hosts;
 
       routerId = getDefaultGateway env;
 

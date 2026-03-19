@@ -5,12 +5,12 @@
 }:
 let
   hosts =
-    config.flake.hosts
+    config.hosts
     |> lib.attrsets.filterAttrs (_: hostConfig: hostConfig.ipv4 != [ ])
     |> lib.attrsets.mapAttrs' (
       hostname: hostConfig:
       let
-        targetEnv = config.flake.environments.${hostConfig.environment};
+        targetEnv = config.environments.${hostConfig.environment};
         ipList = hostConfig.ipv4;
       in
       lib.attrsets.nameValuePair (builtins.head ipList) [
@@ -20,11 +20,11 @@ let
     );
 
   sshKnownHosts =
-    config.flake.hosts
+    config.hosts
     |> lib.attrsets.mapAttrs' (
       hostname: hostConfig:
       let
-        targetEnv = config.flake.environments.${hostConfig.environment};
+        targetEnv = config.environments.${hostConfig.environment};
         ipList = hostConfig.ipv4;
       in
       lib.attrsets.nameValuePair hostname {
@@ -39,7 +39,7 @@ let
     );
 in
 {
-  flake.features.hosts.linux =
+  features.hosts.linux =
     {
       config,
       lib,

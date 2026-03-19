@@ -8,12 +8,12 @@ let
     lib.mapAttrsToList (_hostname: hostConfig: builtins.head hostConfig.ipv4) (
       lib.attrsets.filterAttrs (
         _hostname: hostConfig: builtins.elem "inference" hostConfig.roles
-      ) config.flake.hosts
+      ) config.hosts
     )
   );
 in
 {
-  flake.features.open-webui.linux =
+  features.open-webui.linux =
     {
       config,
       environment,

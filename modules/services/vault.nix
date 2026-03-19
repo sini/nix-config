@@ -1,9 +1,9 @@
 { config, ... }:
 let
-  flakeHosts = config.flake.hosts;
+  flakeHosts = config.hosts;
 in
 {
-  flake.features.vault.linux =
+  features.vault.linux =
     {
       config,
       lib,

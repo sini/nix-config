@@ -9,7 +9,7 @@
 # - Namespaces required by applications and their resources
 # - CRDs extracted from application objects
 {
-  flake.kubernetes.services.bootstrap = {
+  kubernetes.services.bootstrap = {
     nixidy =
       {
         config,

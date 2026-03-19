@@ -1,5 +1,5 @@
 {
-  flake.features.microvm = {
+  features.microvm = {
     linux =
       { inputs, ... }:
       {

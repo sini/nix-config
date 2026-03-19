@@ -1,5 +1,5 @@
 {
-  flake.roles.nix-builder = {
+  roles.nix-builder = {
     features = [
       "nix-remote-build-server"
     ];

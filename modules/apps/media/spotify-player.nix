@@ -1,6 +1,6 @@
 { rootPath, ... }:
 {
-  flake.features.spotify-player = {
+  features.spotify-player = {
     home =
       { config, ... }:
       {

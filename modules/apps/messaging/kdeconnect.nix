@@ -1,5 +1,5 @@
 {
-  flake.features.kdeconnect = {
+  features.kdeconnect = {
     linux = {
       networking.firewall =
         let

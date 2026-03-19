@@ -1,5 +1,5 @@
 {
-  flake.features.minio.linux =
+  features.minio.linux =
     {
       config,
       environment,

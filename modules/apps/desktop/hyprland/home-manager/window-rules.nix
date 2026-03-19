@@ -1,5 +1,5 @@
 {
-  flake.features.hyprland.home = {
+  features.hyprland.home = {
     wayland.windowManager.hyprland.settings = {
       # windowrulev2 = [
       #   "float, class:^(pavucontrol|.*pwvucontrol.*)$"

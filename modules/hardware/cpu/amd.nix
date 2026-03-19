@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  flake.features.cpu-amd.linux =
+  features.cpu-amd.linux =
     {
       config,
       pkgs,

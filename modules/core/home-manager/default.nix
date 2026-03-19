@@ -1,5 +1,5 @@
 {
-  flake.features.home-manager.system =
+  features.home-manager.system =
     {
       inputs,
       environment,

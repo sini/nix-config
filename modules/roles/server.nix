@@ -1,6 +1,6 @@
 #
 {
-  flake.roles.server = {
+  roles.server = {
     features = [
       "acme"
       "media-data-share"
@@ -13,7 +13,7 @@
     ];
   };
 
-  flake.features.server.linux =
+  features.server.linux =
     { lib, ... }:
     {
       systemd.targets =

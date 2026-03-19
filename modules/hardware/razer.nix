@@ -1,6 +1,6 @@
 { config, ... }:
 {
-  flake.features.razer = {
+  features.razer = {
     linux =
       {
         inputs,

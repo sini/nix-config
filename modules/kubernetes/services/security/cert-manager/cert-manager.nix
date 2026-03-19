@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.kubernetes.services.cert-manager = {
+  kubernetes.services.cert-manager = {
     crds =
       {
         inputs,

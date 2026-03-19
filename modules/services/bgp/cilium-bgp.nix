@@ -1,7 +1,7 @@
 # Cilium BGP configuration for Kubernetes clusters
 # Handles BGP peering with Cilium for pod/service CIDR advertisement
 {
-  flake.features.cilium-bgp = {
+  features.cilium-bgp = {
     requires = [ "bgp-core" ];
     linux =
       {

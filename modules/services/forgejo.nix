@@ -1,6 +1,6 @@
 {
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
-  flake.features.forgejo.linux =
+  features.forgejo.linux =
     {
       config,
       # environment,

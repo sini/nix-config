@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.romm = {
+  kubernetes.services.romm = {
     nixidy =
       {
         lib,

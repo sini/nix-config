@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-nvidia-prime = {
+  features.gpu-nvidia-prime = {
     linux =
       {
         config,

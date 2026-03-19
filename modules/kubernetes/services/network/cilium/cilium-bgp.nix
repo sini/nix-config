@@ -1,5 +1,5 @@
 {
-  flake.kubernetes.services.cilium-bgp = {
+  kubernetes.services.cilium-bgp = {
     nixidy =
       {
         environment,

@@ -1,9 +1,9 @@
-- `flake.kubernetes`: Global Kubernetes configuration
+- `kubernetes`: Global Kubernetes configuration
 
-- `flake.kubernetes.services`: Kubernetes service definitions with their nixidy
+- `kubernetes.services`: Kubernetes service definitions with their nixidy
   modules
 
-- `flake.kubernetes.services.<name>.crds`: \
+- `kubernetes.services.<name>.crds`: \
   CRD generator configuration function for this service.
 
   Should be a function that receives perSystem module args ({ pkgs, lib, inputs,
@@ -41,19 +41,19 @@
   - attrNameOverrides: Custom attribute name mappings
   - skipCoerceToList: Control list coercion behavior
 
-- `flake.kubernetes.services.<name>.excludes`: [list of string] List of names of
+- `kubernetes.services.<name>.excludes`: [list of string] List of names of
   services to exclude from this service
 
-- `flake.kubernetes.services.<name>.nixidy`: [module] A nixidy module for this
+- `kubernetes.services.<name>.nixidy`: [module] A nixidy module for this
   Kubernetes service
 
-- `flake.kubernetes.services.<name>.options`: \
+- `kubernetes.services.<name>.options`: \
   Option declarations for environment-level configuration of this service. These
   options will be available at kubernetes.services.<name> in environment
   configs. Should contain ONLY option declarations, no config assignments.
 
-- `flake.kubernetes.services.<name>.requires`: [list of string] List of names of
+- `kubernetes.services.<name>.requires`: [list of string] List of names of
   services required by this service
 
-- `flake.kubernetes.tlsSanIps`: [list of string] Additional IPs to include in
+- `kubernetes.tlsSanIps`: [list of string] Additional IPs to include in
   Kubernetes API server TLS certificate SANs

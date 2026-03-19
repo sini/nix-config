@@ -1,5 +1,5 @@
 {
-  flake.features.hypridle.home =
+  features.hypridle.home =
     {
       lib,
       pkgs,

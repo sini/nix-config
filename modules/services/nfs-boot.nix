@@ -4,7 +4,7 @@
 # This has been replaced by shamir secret sharing with tpm+tang in the default
 # network-boot.nix feature
 {
-  flake.features.nfs-boot.linux =
+  features.nfs-boot.linux =
     {
       config,
       lib,

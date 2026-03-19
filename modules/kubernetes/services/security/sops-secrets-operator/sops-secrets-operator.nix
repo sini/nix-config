@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.kubernetes.services.sops-secrets-operator = {
+  kubernetes.services.sops-secrets-operator = {
     crds =
       {
         inputs,

@@ -24,7 +24,7 @@
 # Each thunderbolt mesh node requires these host tags:
 #
 # ```nix
-# flake.hosts.axon-01 = {
+# hosts.axon-01 = {
 #   roles = [ "server" "bgp-spoke" ];
 #   extra_modules = [ thunderbolt-mesh ];
 #   tags = {
@@ -70,8 +70,8 @@
 # This ensures the module works correctly with partial meshes, broken links,
 # or any arbitrary thunderbolt topology.
 {
-  flake.roles.thunderbolt-mesh.features = [ "thunderbolt-mesh" ];
-  flake.features.thunderbolt-mesh = {
+  roles.thunderbolt-mesh.features = [ "thunderbolt-mesh" ];
+  features.thunderbolt-mesh = {
     requires = [ "bgp-core" ];
     linux =
       {

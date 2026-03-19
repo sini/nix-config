@@ -1,5 +1,5 @@
 {
-  flake.features.waybar.home =
+  features.waybar.home =
     {
       host,
       config,

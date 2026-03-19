@@ -8,7 +8,7 @@ let
   inherit (self.lib.kubernetes-services) kubernetesType;
 in
 {
-  options.flake.kubernetes = mkOption {
+  options.kubernetes = mkOption {
     type = kubernetesType;
     default = { };
     description = "Global Kubernetes configuration";

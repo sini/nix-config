@@ -1,5 +1,5 @@
 {
-  flake.roles.bgp-hub = {
+  roles.bgp-hub = {
     features = [
       "bgp-hub"
     ];

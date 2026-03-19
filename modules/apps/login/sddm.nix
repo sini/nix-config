@@ -1,5 +1,5 @@
 {
-  flake.features.sddm.linux = {
+  features.sddm.linux = {
     services = {
       displayManager = {
         sddm = {

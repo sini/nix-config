@@ -1,5 +1,5 @@
 {
-  flake.features.telegram.home =
+  features.telegram.home =
     { pkgs, ... }:
     {
       home.packages = [

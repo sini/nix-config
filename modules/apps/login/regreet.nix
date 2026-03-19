@@ -1,5 +1,5 @@
 {
-  flake.features.regreet = {
+  features.regreet = {
     excludes = [ "gdm" ];
 
     linux = {

@@ -18,7 +18,7 @@
 # configurable.
 ################################################################################
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     {
       age.generators.template-file =

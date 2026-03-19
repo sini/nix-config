@@ -1,5 +1,5 @@
 {
-  flake.features.attic-server.linux =
+  features.attic-server.linux =
     {
       host,
       config,

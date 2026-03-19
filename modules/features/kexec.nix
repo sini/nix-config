@@ -1,5 +1,5 @@
 {
-  flake.features.kexec = {
+  features.kexec = {
     # Exclude features that don't make sense for kexec installers
     # These require host-specific configuration or secrets
     excludes = [

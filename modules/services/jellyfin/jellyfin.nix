@@ -1,5 +1,5 @@
 {
-  flake.features.jellyfin = {
+  features.jellyfin = {
     requires = [ "media-data-share" ];
 
     linux =

@@ -1,5 +1,5 @@
 {
-  flake.features.zellij.home =
+  features.zellij.home =
     {
       config,
       pkgs,

@@ -1,5 +1,5 @@
 {
-  flake.features.wireless = {
+  features.wireless = {
     linux =
       {
         config,

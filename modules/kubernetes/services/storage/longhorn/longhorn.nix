@@ -1,6 +1,6 @@
 # This module should work, but I'm not using it -- leaving for posterity
 {
-  flake.kubernetes.services.longhorn = {
+  kubernetes.services.longhorn = {
     crds =
       {
         inputs,

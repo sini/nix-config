@@ -1,5 +1,5 @@
 {
-  flake.features.xserver.linux = {
+  features.xserver.linux = {
     services = {
       libinput.enable = true;
       xserver = {

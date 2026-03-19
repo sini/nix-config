@@ -1,5 +1,5 @@
 {
-  flake.features.podman = {
+  features.podman = {
     linux =
       {
         config,

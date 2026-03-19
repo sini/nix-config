@@ -9,7 +9,7 @@ let
   # Generate scrape configs from all exporters on server hosts
   generateScrapeConfigs =
     targetEnvironments:
-    config.flake.hosts
+    config.hosts
     |> lib.attrsets.filterAttrs (
       _hostname: hostConfig:
       builtins.elem "server" hostConfig.roles && builtins.elem hostConfig.environment targetEnvironments
@@ -65,7 +65,7 @@ let
     ) grouped;
 in
 {
-  flake.features.prometheus.linux =
+  features.prometheus.linux =
     {
       config,
       host,

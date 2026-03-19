@@ -1,5 +1,5 @@
 {
-  flake.features.systemd-boot.linux = {
+  features.systemd-boot.linux = {
     zramSwap.enable = true;
 
     # Ensure a single individual task doesn't freeze the system, without trusting the random action of the kernel

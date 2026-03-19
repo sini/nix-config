@@ -5,7 +5,7 @@
   ...
 }:
 {
-  flake.features.nixpkgs.system = {
+  features.nixpkgs.system = {
     nixpkgs.overlays = [
       # This brings our custom packages from the 'pkgs' directory under `pkgs.local`
       # provided with inputs.pkgs-by-name-for-flake-parts.flakeModule

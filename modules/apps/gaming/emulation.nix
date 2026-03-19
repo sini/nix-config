@@ -1,5 +1,5 @@
 {
-  flake.features.emulation = {
+  features.emulation = {
     linux =
       {
         inputs,

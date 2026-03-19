@@ -1,5 +1,5 @@
 {
-  flake.roles.messaging = {
+  roles.messaging = {
     features = [
       "discord"
       "kdeconnect"

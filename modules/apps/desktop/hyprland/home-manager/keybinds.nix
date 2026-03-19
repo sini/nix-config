@@ -1,5 +1,5 @@
 {
-  flake.features.hyprland.home =
+  features.hyprland.home =
     {
       pkgs,
       osConfig,

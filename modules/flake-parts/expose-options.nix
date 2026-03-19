@@ -1,5 +1,6 @@
 {
   lib,
+  config,
   options,
   ...
 }:
@@ -16,19 +17,18 @@ in
 
   # Populate it from the module argument, NOT from self
   config.flake.flakeOptions =
-    let
-      # We reach into the 'flake' option's type to find the sub-options.
-      # For many flake-parts setups, the sub-options are nested inside
-      # the 'type' attribute of the option itself.
-      subOptions = options.flake.type.getSubOptions [ "flake" ];
-    in
     {
-      # This selects only your specific namespaces from the sub-module options
-      inherit (subOptions)
+      # These are now top-level options, not flake sub-options
+      inherit (options)
         hosts
         environments
         users
         kubernetes
         ;
     };
+
+  # Explicitly re-expose internal resources as flake outputs
+  config.flake = {
+    inherit (config) hosts environments roles;
+  };
 }

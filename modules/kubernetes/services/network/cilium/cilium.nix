@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  flake.kubernetes.services.cilium = {
+  kubernetes.services.cilium = {
     crds =
       {
         pkgs,

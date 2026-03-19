@@ -1,5 +1,5 @@
 {
-  flake.features.hyprland = {
+  features.hyprland = {
     requires = [
       "xdg-portal"
       "uwsm"

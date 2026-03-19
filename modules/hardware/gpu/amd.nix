@@ -1,5 +1,5 @@
 {
-  flake.features.gpu-amd.linux =
+  features.gpu-amd.linux =
     { pkgs, ... }:
     {
       # Allow for overclocking

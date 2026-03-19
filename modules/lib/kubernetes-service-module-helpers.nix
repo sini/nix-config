@@ -123,7 +123,7 @@ let
     };
   };
 
-  # Type for flake.kubernetes - service definitions with nixidy modules
+  # Type for kubernetes - service definitions with nixidy modules
   kubernetesType = types.submodule {
     options = kubernetesNetworkOptions // {
       services = mkOption {
@@ -147,16 +147,16 @@ let
           default = { };
           description = "Configuration for ${name} service";
         }
-      ) (config.flake.kubernetes.services or { });
+      ) (config.kubernetes.services or { });
     };
     default = { };
     description = ''
       Service-specific configurations for this environment.
-      Options are imported from flake.kubernetes.services.\<name>.options.
+      Options are imported from kubernetes.services.\<name>.options.
     '';
   };
 
-  # Type for flake.environments.<name>.kubernetes - split enabled/config structure
+  # Type for environments.<name>.kubernetes - split enabled/config structure
   kubernetesConfigType = types.submodule {
     options = baseKubernetesOptions // {
       services = mkOption {

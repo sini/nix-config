@@ -1,5 +1,5 @@
 {
-  flake.hosts.axon-01 = {
+  hosts.axon-01 = {
     environment = "prod";
     networking = {
       interfaces.enp2s0 = {

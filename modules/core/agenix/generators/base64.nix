@@ -1,7 +1,7 @@
 # Standard Base64 (with padding, no line breaks).
 # settings.length = number of random BYTES before encoding.
 {
-  flake.features.agenix-generators.system =
+  features.agenix-generators.system =
     { lib, ... }:
     {
       age.generators.base64 = lib.mkForce (

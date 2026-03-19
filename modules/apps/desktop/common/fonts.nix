@@ -1,5 +1,5 @@
 {
-  flake.features.fonts = {
+  features.fonts = {
     linux =
       { pkgs, ... }:
       {

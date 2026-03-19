@@ -1,5 +1,5 @@
 {
-  flake.features.audio = {
+  features.audio = {
     linux =
       {
         pkgs,

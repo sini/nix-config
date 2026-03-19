@@ -1,5 +1,5 @@
 {
-  flake.features.bgp-core.linux =
+  features.bgp-core.linux =
     {
       lib,
       config,

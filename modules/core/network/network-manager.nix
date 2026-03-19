@@ -1,5 +1,5 @@
 {
-  flake.features.network-manager.linux =
+  features.network-manager.linux =
     {
       host,
       pkgs,
