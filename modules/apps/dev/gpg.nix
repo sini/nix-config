@@ -133,8 +133,13 @@
             maxCacheTtl = 86400; # 24h
             maxCacheTtlSsh = 86400;
 
-            # TODO: If system is darwin, use pinentry-mac
-            pinentry.package = if isWorkstation then pkgs.pinentry-gnome3 else pkgs.pinentry-tty;
+            pinentry.package =
+              if host.isDarwin then
+                pkgs.pinentry_mac
+              else if isWorkstation then
+                pkgs.pinentry-gnome3
+              else
+                pkgs.pinentry-tty;
 
             extraConfig = ''
               ttyname $GPG_TTY

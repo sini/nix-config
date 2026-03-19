@@ -266,6 +266,16 @@ in
                 Example: host.hasFeature "podman" → true/false
               '';
             };
+
+            isDarwin = mkOption {
+              type = types.bool;
+              readOnly = true;
+              description = ''
+                Helper property to check if this host is running macOS (Darwin).
+                Returns true if the system is aarch64-darwin, false otherwise.
+                Example: host.isDarwin → true/false
+              '';
+            };
           };
 
           config =
@@ -283,6 +293,8 @@ in
               features = computedFeatures;
 
               hasFeature = featureName: lib.elem featureName computedFeatures;
+
+              isDarwin = lib.hasSuffix "darwin" config.system;
 
               system-access-groups =
                 let

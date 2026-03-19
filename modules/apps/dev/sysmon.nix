@@ -9,8 +9,8 @@
     {
       home.packages = with pkgs; [
         ctop
-        iotop-c
-        sysstat
+        # iotop-c #TODO: Darwin compat...
+        # sysstat #TODO: Darwin compat...
       ];
 
       programs = {
