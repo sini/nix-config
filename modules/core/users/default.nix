@@ -105,20 +105,18 @@
 
     darwin =
       {
-        environment,
+        users,
         pkgs,
         ...
       }:
       let
-        # Filter for Unix account users from environment
-        unixAccountUsers = lib.filterAttrs (
-          _name: user: (user.enableUnixAccount or false)
-        ) environment.users;
+        # Filter for Unix account users (users are already merged in specialArgs)
+        unixAccountUsers = lib.filterAttrs (_name: user: (user.enableUnixAccount or false)) users;
 
         # Build Darwin user configurations
         buildDarwinUserConfig = userName: envUser: {
           users.users.${userName} = {
-            #inherit (envUser) uid; # Unix users don't sync with macos users :(
+            inherit (envUser) uid;
             home = "/Users/${userName}";
             createHome = true;
             description = envUser.displayName;

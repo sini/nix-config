@@ -135,7 +135,38 @@
               environmentUserNames = builtins.attrNames (environment.users or { });
               hostUserNames = builtins.attrNames (hostOptions.users or { });
               enabledUserNames = lib'.unique (environmentUserNames ++ hostUserNames);
-              allUsers = lib'.filterAttrs (userName: _: lib'.elem userName enabledUserNames) environment.users;
+
+              # Deep merge environment and host user attributes (host overrides environment)
+              # Filter out default-like values from host to avoid overriding environment
+              mergeUserAttrs =
+                userName:
+                let
+                  envUser = environment.users.${userName} or { };
+                  hostUser = hostOptions.users.${userName} or { };
+
+                  # Recursively filter out values that look like defaults (null, false, empty lists/attrsets)
+                  filterDefaults =
+                    value:
+                    if lib'.isAttrs value && !lib'.isDerivation value then
+                      let
+                        filtered = lib'.filterAttrs (_: v: !isDefaultValue v) value;
+                      in
+                      lib'.mapAttrs (_: filterDefaults) filtered
+                    else
+                      value;
+
+                  isDefaultValue =
+                    v:
+                    v == null
+                    || v == false
+                    || (lib'.isList v && v == [ ])
+                    || (lib'.isAttrs v && !lib'.isDerivation v && v == { });
+
+                  hostOverrides = filterDefaults hostUser;
+                in
+                lib'.recursiveUpdate envUser hostOverrides;
+
+              allUsers = lib'.genAttrs enabledUserNames mergeUserAttrs;
             in
             lib'.filterAttrs (_userName: user: user.enableUnixAccount or false) allUsers;
 

@@ -11,7 +11,7 @@
     extra-features = [ ];
 
     users = {
-      sini = { };
+      sini.uid = 501;
     };
 
     systemConfiguration =
