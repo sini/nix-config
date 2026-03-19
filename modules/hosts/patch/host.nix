@@ -75,11 +75,6 @@
           nix-fast-build
           iperf3
         ];
-
-        users.users.sini = {
-          description = "Jason Bowman";
-          home = "/Users/sini";
-        };
       };
   };
 }
