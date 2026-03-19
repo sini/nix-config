@@ -60,8 +60,8 @@
         }:
         let
           parsedCrdObjects = withSystem system ({ config, ... }: config.packages.parsed-crd-objects);
-          # Read directory once to avoid multiple IFD operations
-          allFiles = parsedCrdObjects;
+          # Use builtins.readDir to discover available files.
+          availableFiles = builtins.readDir parsedCrdObjects;
         in
         lib.mapAttrs (
           name: service:
@@ -69,9 +69,12 @@
             [ ]
           else
             let
-              parsedFile = allFiles + "/${name}.json";
+              jsonFile = "${name}.json";
             in
-            if builtins.pathExists parsedFile then builtins.fromJSON (builtins.readFile parsedFile) else [ ]
+            if availableFiles ? ${jsonFile} then
+              builtins.fromJSON (builtins.readFile (parsedCrdObjects + "/${jsonFile}"))
+            else
+              [ ]
         ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.flake.kubernetes.services);
 
       # Produce the agenix-rekey-to-sops configuration module for a nixidy environment.
@@ -284,24 +287,14 @@
                 export HELM_CACHE_HOME="$TMP/.nix-helm-build-cache"
                 mkdir -p $out
 
-                # First try to extract CRDs directly from chart without templating
-                chart="${resolveChart crdConfig}"
-                if [ -d "$chart/crds" ]; then
-                  cat "$chart/crds"/*.yaml > $out/crds.yaml 2>/dev/null || true
-                fi
-
-                # If no CRDs found in crds/ directory, fall back to helm template
-                if [ ! -s $out/crds.yaml ]; then
-                  ${pkgs.kubernetes-helm}/bin/helm template \
-                  --include-crds \
-                  --skip-tests \
-                  --kube-version "v${pkgs.kubernetes.version}" \
-                  --values "$helmValuesPath" \
-                  "${name}" \
-                  "$chart" \
-                  ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
-                  > $out/crds.yaml
-                fi
+                ${pkgs.kubernetes-helm}/bin/helm template \
+                --include-crds \
+                --kube-version "v${pkgs.kubernetes.version}" \
+                --values "$helmValuesPath" \
+                "${name}" \
+                "${resolveChart crdConfig}" \
+                ${builtins.concatStringsSep " " (crdConfig.extraOpts or [ ])} \
+                > $out/crds.yaml
               '';
             };
 
@@ -355,7 +348,8 @@
                   preferLocalBuild = true;
                 }
                 ''
-                  ${pkgs.yq}/bin/yq -Ms '[.[] | select(. != null and .kind == "CustomResourceDefinition")]' "$src/crds.yaml" \
+                  ${pkgs.yq}/bin/yq -Ms '.' "$src/crds.yaml" \
+                  | ${pkgs.jq}/bin/jq '[.[] | select(. != null and .kind == "CustomResourceDefinition")]' \
                   > $out
                 ''
             else
@@ -378,7 +372,8 @@
                   i=0
                   for crd in $(echo "$crds" | ${pkgs.jq}/bin/jq -r '.[]'); do
                     tempFile="temp_$i.json"
-                    ${pkgs.yq}/bin/yq -Ms '[.[] | select(type == "object" and .kind == "CustomResourceDefinition")]' "$src/$crd" > "$tempFile"
+                    ${pkgs.yq}/bin/yq -Ms '.' "$src/$crd" | \
+                      jq '[.[] | select(type == "object" and .kind == "CustomResourceDefinition")]' > "$tempFile"
                     tempFiles+=("$tempFile")
                     i=$((i + 1))
                   done

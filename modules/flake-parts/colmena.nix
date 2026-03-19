@@ -160,12 +160,13 @@
     };
 
   perSystem =
-    { inputs', ... }:
+    { pkgs, ... }:
     {
-      devshells.default.packages = [ inputs'.colmena.packages.colmena ];
+      # Use colmena from pkgs, which now uses Lix via the overlay
+      devshells.default.packages = [ pkgs.colmena ];
       devshells.default.commands = [
         {
-          package = inputs'.colmena.packages.colmena;
+          package = pkgs.colmena;
           help = "Build and deploy this nix config to nodes";
         }
       ];

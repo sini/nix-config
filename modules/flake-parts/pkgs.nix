@@ -31,15 +31,18 @@
         config = {
           allowUnfreePredicate = _pkg: true;
         };
-        overlays =
-          builtins.attrValues (
-            import (rootPath + "/pkgs/overlays.nix") {
-              inherit inputs;
-            }
-          )
-          ++ [
-            inputs.nix-topology.overlays.default
-          ];
+        overlays = [
+          # Add lix-module overlay first to make lixPackageSets available
+          inputs.lix-module.overlays.default
+        ]
+        ++ builtins.attrValues (
+          import (rootPath + "/pkgs/overlays.nix") {
+            inherit inputs;
+          }
+        )
+        ++ [
+          inputs.nix-topology.overlays.default
+        ];
       };
       pkgsDirectory = rootPath + "/pkgs/by-name";
     };

@@ -9,7 +9,7 @@
 
       - **[environments](docs/environments-options.md)**: Environment settings including network and infrastructure configuration that can be shared across hosts. Each environment contains topology definitions for domains, networks, Kubernetes clusters, and ACME settings.
 
-      - **[hosts](docs/hosts-options.md)**: Host definitions for individual machines. Each host configuration includes system architecture, IP addresses, roles, hardware settings, and deployment configuration for Colmena/deploy-rs.
+      - **[hosts](docs/hosts-options.md)**: Host definitions for individual machines. Each host configuration includes system architecture, IP addresses, roles, hardware settings, and deployment configuration for Colmena.
 
       - **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration options for k3s deployments.
 

@@ -85,8 +85,6 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
-    deploy-rs.url = "github:serokell/deploy-rs";
-
     devshell = {
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -175,7 +173,13 @@
     };
 
     # Cachyos kernel
-    nix-cachyos-kernel.url = "github:xddxdd/nix-cachyos-kernel";
+    nix-cachyos-kernel = {
+      url = "github:xddxdd/nix-cachyos-kernel";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
     proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
 
     # Facter - an alternative to nixos-generate-config
@@ -186,7 +190,8 @@
 
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
-      url = "github:sini/nixidy";
+      # url = "github:sini/nixidy";
+      url = "path:/home/sini/Documents/repos/sini/nixidy";
       # url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
@@ -237,14 +242,29 @@
     # automatically generate infrastructure and network diagrams as SVGs directly from your NixOS configurations
     nix-topology = {
       url = "github:oddlama/nix-topology";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
     };
 
     # Discord extension for NixOS
-    nixcord.url = "github:kaylorben/nixcord";
+    nixcord = {
+      url = "github:kaylorben/nixcord";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
 
     # NixOS modules for gaming
-    nix-gaming.url = "github:fufexan/nix-gaming";
+    nix-gaming = {
+      url = "github:fufexan/nix-gaming";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
 
     # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
@@ -390,6 +410,10 @@
       type = "git";
       submodules = true;
       url = "https://github.com/ndfined-crp/ayugram-desktop/";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
     };
   };
 }

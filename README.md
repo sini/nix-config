@@ -63,7 +63,7 @@ This repository defines configuration options in the following attribute sets:
 
 - **[hosts](docs/hosts-options.md)**: Host definitions for individual machines.
   Each host configuration includes system architecture, IP addresses, roles,
-  hardware settings, and deployment configuration for Colmena/deploy-rs.
+  hardware settings, and deployment configuration for Colmena.
 
 - **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration
   options for k3s deployments.

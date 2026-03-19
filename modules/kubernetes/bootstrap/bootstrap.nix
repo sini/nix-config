@@ -42,7 +42,7 @@
         # objectCrds = globalObjects |> lib.filter (object: object.kind == "CustomResourceDefinition");
 
         # Get CRD objects from service definitions (helm charts, etc.)
-        serviceCrds = crdObjects |> builtins.attrValues |> lib.flatten;
+        serviceCrds = lib.flatten (builtins.attrValues crdObjects);
       in
       {
         applications.bootstrap = {

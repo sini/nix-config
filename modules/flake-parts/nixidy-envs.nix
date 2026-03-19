@@ -69,7 +69,7 @@ in
           pkgs.runCommand "parsed-crd-objects" { } ''
             mkdir -p $out
             ${lib.concatMapStringsSep "\n" (name: ''
-              ln -s ${parsedServices.${name}} $out/${name}.json
+              cp ${parsedServices.${name}} $out/${name}.json
             '') serviceNames}
           '';
 
