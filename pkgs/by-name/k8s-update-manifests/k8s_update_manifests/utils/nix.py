@@ -36,6 +36,8 @@ class NixUtils:
             "flakes",
             "--no-link",
             "--print-out-paths",
+            "--builders",
+            "",
             "--option",
             "accept-flake-config",
             "true",
