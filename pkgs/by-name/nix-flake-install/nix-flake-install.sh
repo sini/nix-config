@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(pwd)"
-KEYS_DIR="$REPO_ROOT/.secrets/host-keys"
+KEYS_DIR="$REPO_ROOT/.secrets/hosts"
 
 # Cleanup tracking
 CLEANUP_PATHS=()

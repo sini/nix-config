@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(pwd)"
-KEYS_DIR="$REPO_ROOT/.secrets/host-keys"
+KEYS_DIR="$REPO_ROOT/.secrets/hosts"
 
 # Cleanup tracking
 CLEANUP_PATHS=()
@@ -48,7 +48,7 @@ The script will:
   1. Decrypt the disk passphrase from the age-encrypted key (via YubiKey)
   2. Discover Tang servers from the flake configuration
   3. SSH to the target host and encrypt with Clevis (TPM2 + Tang SSS)
-  4. Write the JWE to .secrets/host-keys/<hostname>/zroot-key.jwe
+  4. Write the JWE to .secrets/hosts/<hostname>/zroot-key.jwe
   5. Commit the updated JWE to git
 EOF
     exit 1

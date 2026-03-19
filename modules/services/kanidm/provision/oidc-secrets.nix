@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.kanidm.linux =
     {
@@ -10,7 +9,7 @@
     let
       mkOidcSecrets = name: {
         "${name}-oidc-client-secret" = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/${name}-oidc-client-secret.age";
+          rekeyFile = environment.secretPath + "/oidc/${name}-oidc-client-secret.age";
           owner = "kanidm";
           group = "kanidm";
           generator = {

@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.grafana.linux =
     {
@@ -13,7 +12,7 @@
     in
     {
       age.secrets.grafana-oidc-secret = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/grafana-oidc-client-secret.age";
+        rekeyFile = environment.secretPath + "/oidc/grafana-oidc-client-secret.age";
         owner = "grafana";
         group = "grafana";
         generator = {
@@ -23,7 +22,7 @@
       };
 
       age.secrets.grafana-secret-key = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/grafana-secret-key.age";
+        rekeyFile = environment.secretPath + "/grafana-secret-key.age";
         settings.length = "32";
         generator.script = "hex";
         owner = "grafana";

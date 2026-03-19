@@ -1,8 +1,4 @@
-{
-  config,
-  rootPath,
-  ...
-}:
+{ config, ... }:
 let
   flakeHosts = config.flake.hosts;
 in
@@ -46,22 +42,19 @@ in
       # Age secrets for vault certificates (organized by environment)
       age.secrets = {
         vault-ca = {
-          rekeyFile = rootPath + "/.secrets/services/vault/${host.environment}/vault-ca.age";
+          rekeyFile = environment.secretPath + "/vault/vault-ca.age";
           owner = "vault";
           group = "vault";
         };
 
         "vault-${config.networking.hostName}" = {
-          rekeyFile =
-            rootPath + "/.secrets/services/vault/${host.environment}/vault-${config.networking.hostName}.age";
+          rekeyFile = environment.secretPath + "/vault/vault-${config.networking.hostName}.age";
           owner = "vault";
           group = "vault";
         };
 
         "vault-${config.networking.hostName}-key" = {
-          rekeyFile =
-            rootPath
-            + "/.secrets/services/vault/${host.environment}/vault-${config.networking.hostName}-key.age";
+          rekeyFile = environment.secretPath + "/vault/vault-${config.networking.hostName}-key.age";
           owner = "vault";
           group = "vault";
           mode = "0400";
@@ -69,21 +62,21 @@ in
 
         # Unseal keys for automatic unsealing (shared across all vault nodes in environment)
         vault-unseal-key-1 = {
-          rekeyFile = rootPath + "/.secrets/services/vault/${host.environment}/vault-unseal-key-1.age";
+          rekeyFile = environment.secretPath + "/vault/vault-unseal-key-1.age";
           owner = "vault";
           group = "vault";
           mode = "0400";
         };
 
         vault-unseal-key-2 = {
-          rekeyFile = rootPath + "/.secrets/services/vault/${host.environment}/vault-unseal-key-2.age";
+          rekeyFile = environment.secretPath + "/vault/vault-unseal-key-2.age";
           owner = "vault";
           group = "vault";
           mode = "0400";
         };
 
         vault-unseal-key-3 = {
-          rekeyFile = rootPath + "/.secrets/services/vault/${host.environment}/vault-unseal-key-3.age";
+          rekeyFile = environment.secretPath + "/vault/vault-unseal-key-3.age";
           owner = "vault";
           group = "vault";
           mode = "0400";

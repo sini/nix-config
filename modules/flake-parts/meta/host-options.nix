@@ -147,9 +147,15 @@ in
               description = "List of features to exclude for the host (prevents the feature and its requires from being added)";
             };
 
+            secretPath = mkOption {
+              type = types.path;
+              default = rootPath + "/.secrets/hosts/${name}";
+              description = "Path to the directory containing secret keys for the host.";
+            };
+
             public_key = mkOption {
               type = types.path;
-              default = rootPath + "/.secrets/host-keys/${name}/ssh_host_ed25519_key.pub";
+              default = config.secretPath + "/ssh_host_ed25519_key.pub";
               description = "Path to or string value of the public SSH key for the host.";
             };
 

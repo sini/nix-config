@@ -82,6 +82,9 @@
 
 - `flake.hosts.<name>.roles`: [list of string] List of roles for the host.
 
+- `flake.hosts.<name>.secretPath`: [absolute path] Path to the directory
+  containing secret keys for the host.
+
 - `flake.hosts.<name>.system`: \[one of "aarch64-linux", "x86_64-linux",
   "aarch64-darwin"\] System string for the host
 

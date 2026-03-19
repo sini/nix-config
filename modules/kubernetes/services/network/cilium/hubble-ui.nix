@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.kubernetes.services.hubble-ui = {
     nixidy =
@@ -8,7 +7,7 @@
       in
       {
         age.secrets.hubble-ui-oidc-client-secret = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/hubble-ui-oidc-client-secret.age";
+          rekeyFile = environment.secretPath + "/oidc/hubble-ui-oidc-client-secret.age";
           sopsOutput = {
             file = "oidc";
             key = "hubble-ui";

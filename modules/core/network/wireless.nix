@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.wireless = {
     linux =
@@ -16,7 +15,7 @@
         # };
 
         age.secrets.wpa-supplicant = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/wpa_supplicant-arcade.age";
+          rekeyFile = environment.secretPath + "/wpa_supplicant-arcade.age";
         };
 
         environment.persistence."/cache".directories = [

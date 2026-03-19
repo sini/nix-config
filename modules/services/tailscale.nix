@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.tailscale.linux =
     {
@@ -9,7 +8,7 @@
     {
       # sudo headscale preauthkeys create --user 1 --reusable -e 10y
       age.secrets.tailscale-auth-key = {
-        rekeyFile = rootPath + "/.secrets/services/tailscale.age";
+        rekeyFile = environment.secretPath + "/tailscale.age";
       };
 
       services.tailscale = {

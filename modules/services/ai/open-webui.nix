@@ -1,5 +1,4 @@
 {
-  rootPath,
   lib,
   config,
   ...
@@ -26,7 +25,7 @@ in
     in
     {
       age.secrets.open-webui-oidc-secret = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/open-webui-oidc-client-secret.age";
+        rekeyFile = environment.secretPath + "/oidc/open-webui-oidc-client-secret.age";
         generator = {
           tags = [ "oidc" ];
           script = "rfc3986-secret";

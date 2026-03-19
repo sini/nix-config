@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.headscale.linux =
     {
@@ -13,7 +12,7 @@
     in
     {
       age.secrets.headscale-oidc-secret = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/headscale-oidc-client-secret.age";
+        rekeyFile = environment.secretPath + "/oidc/headscale-oidc-client-secret.age";
         generator = {
           tags = [ "oidc" ];
           script = "rfc3986-secret";

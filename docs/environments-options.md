@@ -238,6 +238,9 @@
 - `flake.environments.<name>.networks.<name>.ipv6_cidr`: [null or string] IPv6
   network CIDR (e.g., fd64:0:1::/64)
 
+- `flake.environments.<name>.secretPath`: [absolute path] Path to the directory
+  containing secrets for the environment.
+
 - `flake.environments.<name>.secrets`: [unspecified value] \
   Secret helper functions for this environment. Provides: from, for,
   forInlineFor, forOidcService, oidcIssuerFor

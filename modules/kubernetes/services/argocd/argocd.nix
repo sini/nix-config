@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.kubernetes.services.argocd = {
     nixidy =
@@ -14,7 +13,7 @@
       {
         age.secrets = {
           argocd-oidc-client-secret = {
-            rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/argocd-oidc-client-secret.age";
+            rekeyFile = environment.secretPath + "/oidc/argocd-oidc-client-secret.age";
             generator = {
               tags = [ "oidc" ];
               script = "rfc3986-secret";

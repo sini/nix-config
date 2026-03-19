@@ -1,5 +1,4 @@
 # This module should work, but I'm not using it -- leaving for posterity
-{ rootPath, ... }:
 {
   flake.kubernetes.services.longhorn = {
     crds =
@@ -26,7 +25,7 @@
       {
 
         age.secrets.longhorn-oidc-client-secret = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/longhorn-oidc-client-secret.age";
+          rekeyFile = environment.secretPath + "/oidc/longhorn-oidc-client-secret.age";
           generator = {
             tags = [ "oidc" ];
             script = "rfc3986-secret";

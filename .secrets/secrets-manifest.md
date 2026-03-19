@@ -1,9 +1,9 @@
 # Agenix Secrets Manifest
 
-Generated on: 26.05 Total unique secrets: 45
+Generated on: 26.05 Total unique secrets: 46
 
 - Generated: 37
-- Manually set: 8
+- Manually set: 9
 
 ---
 
@@ -49,15 +49,21 @@ repository and rekeyed for each host.
 ### tailscale-auth-key
 
 - **Used by**:
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
   - nixos:bitstream
   - nixos:blade
   - nixos:cortex
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/env/dev/tailscale.age`
+
+### tailscale-auth-key
+
+- **Used by**:
+  - nixos:axon-01
+  - nixos:axon-02
+  - nixos:axon-03
   - nixos:uplink
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/services/tailscale.age`
+- **Rekey File**: `.secrets/env/prod/tailscale.age`
 
 ### user-shuo-password
 
@@ -116,7 +122,7 @@ functionality. They will be created automatically if they don't exist.
 
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/uplink/attic-server-env.age`
+- **Rekey File**: `.secrets/hosts/uplink/generated/attic-server-env.age`
 - **Generator**: built-in: environment-file
 - **Has Dependencies**: Yes
 
@@ -126,7 +132,7 @@ functionality. They will be created automatically if they don't exist.
 
 - **Owner**: 0:0 (0400)
 
-- **Rekey File**: `.secrets/services/attic/server-token.age`
+- **Rekey File**: `.secrets/env/prod/attic/server-token.age`
 
 - **Generator**: custom-script
 
@@ -185,42 +191,43 @@ functionality. They will be created automatically if they don't exist.
 
 - **Used by**: nixos:axon-01
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/axon-01/initrd_host_ed25519_key.age`
+- **Rekey File**: `.secrets/hosts/axon-01/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 ### initrd_host_ed25519_key
 
 - **Used by**: nixos:axon-02
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/axon-02/initrd_host_ed25519_key.age`
+- **Rekey File**: `.secrets/hosts/axon-02/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 ### initrd_host_ed25519_key
 
 - **Used by**: nixos:axon-03
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/axon-03/initrd_host_ed25519_key.age`
+- **Rekey File**: `.secrets/hosts/axon-03/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 ### initrd_host_ed25519_key
 
 - **Used by**: nixos:bitstream
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/bitstream/initrd_host_ed25519_key.age`
+- **Rekey File**:
+  `.secrets/hosts/bitstream/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 ### initrd_host_ed25519_key
 
 - **Used by**: nixos:cortex
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/cortex/initrd_host_ed25519_key.age`
+- **Rekey File**: `.secrets/hosts/cortex/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 ### initrd_host_ed25519_key
 
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/uplink/initrd_host_ed25519_key.age`
+- **Rekey File**: `.secrets/hosts/uplink/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 ### jellyfin-oidc-client-secret
@@ -273,42 +280,42 @@ functionality. They will be created automatically if they don't exist.
 
 - **Used by**: nixos:axon-01
 - **Owner**: nix-serve:0 (0400)
-- **Rekey File**: `.secrets/generated/axon-01/nix_store_signing_key.age`
+- **Rekey File**: `.secrets/hosts/axon-01/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
 ### nix_store_signing_key
 
 - **Used by**: nixos:axon-02
 - **Owner**: nix-serve:0 (0400)
-- **Rekey File**: `.secrets/generated/axon-02/nix_store_signing_key.age`
+- **Rekey File**: `.secrets/hosts/axon-02/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
 ### nix_store_signing_key
 
 - **Used by**: nixos:axon-03
 - **Owner**: nix-serve:0 (0400)
-- **Rekey File**: `.secrets/generated/axon-03/nix_store_signing_key.age`
+- **Rekey File**: `.secrets/hosts/axon-03/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
 ### nix_store_signing_key
 
 - **Used by**: nixos:bitstream
 - **Owner**: nix-serve:0 (0400)
-- **Rekey File**: `.secrets/generated/bitstream/nix_store_signing_key.age`
+- **Rekey File**: `.secrets/hosts/bitstream/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
 ### nix_store_signing_key
 
 - **Used by**: nixos:cortex
 - **Owner**: nix-serve:0 (0400)
-- **Rekey File**: `.secrets/generated/cortex/nix_store_signing_key.age`
+- **Rekey File**: `.secrets/hosts/cortex/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
 ### nix_store_signing_key
 
 - **Used by**: nixos:uplink
 - **Owner**: nix-serve:0 (0400)
-- **Rekey File**: `.secrets/generated/uplink/nix_store_signing_key.age`
+- **Rekey File**: `.secrets/hosts/uplink/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
 ### oauth2-proxy-cookie-secret
@@ -322,7 +329,7 @@ functionality. They will be created automatically if they don't exist.
 
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/uplink/oauth2-proxy-keys.age`
+- **Rekey File**: `.secrets/hosts/uplink/generated/oauth2-proxy-keys.age`
 - **Generator**: built-in: environment-file
 - **Has Dependencies**: Yes
 
@@ -344,7 +351,7 @@ functionality. They will be created automatically if they don't exist.
 
 - **Used by**: nixos:uplink
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/generated/uplink/open-webui-env.age`
+- **Rekey File**: `.secrets/hosts/uplink/generated/open-webui-env.age`
 - **Generator**: built-in: environment-file
 - **Has Dependencies**: Yes
 

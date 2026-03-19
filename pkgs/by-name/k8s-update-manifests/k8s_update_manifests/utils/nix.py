@@ -45,7 +45,7 @@ class NixUtils:
         ]
 
         logging.debug(f"Running: {' '.join(cmd)}")
-        output = ProcessUtils.run(cmd)
+        output = ProcessUtils.run(cmd, stream_output=True)
 
         store_path_str = output.strip().splitlines()[-1].strip()
         if not store_path_str.startswith("/nix/store/"):

@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.attic-server.linux =
     {
@@ -14,7 +13,7 @@
     in
     {
       age.secrets.attic-server-token = {
-        rekeyFile = rootPath + "/.secrets/services/attic/server-token.age";
+        rekeyFile = environment.secretPath + "/attic/server-token.age";
         intermediary = true;
         generator = {
           tags = [ "attic" ];

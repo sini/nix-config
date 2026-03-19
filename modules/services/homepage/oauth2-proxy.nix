@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   # We are having issues with the nixpkg socket... so lets stash our own service for now with fixed users.
   flake.features.oauth2-proxy.linux =
@@ -14,7 +13,7 @@
     {
       age.secrets = {
         oauth2-proxy-oidc-secret = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/oauth2-proxy-oidc-client-secret.age";
+          rekeyFile = environment.secretPath + "/oidc/oauth2-proxy-oidc-client-secret.age";
           generator = {
             tags = [ "oidc" ];
             script = "rfc3986-secret";
@@ -25,7 +24,7 @@
         };
 
         oauth2-proxy-cookie-secret = {
-          rekeyFile = rootPath + "/.secrets/env/${environment.name}/oauth2-proxy-cookie-secret.age";
+          rekeyFile = environment.secretPath + "/oauth2-proxy-cookie-secret.age";
           generator.script = "base64";
           mode = "440";
           owner = "oauth2-proxy";

@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Configuration
 REPO_ROOT="$(pwd)"
-KEYS_DIR="$REPO_ROOT/.secrets/host-keys"
+KEYS_DIR="$REPO_ROOT/.secrets/hosts"
 
 # SSH key types to generate
 KEY_TYPES=("ed25519" "rsa")

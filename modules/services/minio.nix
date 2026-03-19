@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.minio.linux =
     {
@@ -12,7 +11,7 @@
     in
     {
       age.secrets.minio-root-credentials = {
-        rekeyFile = rootPath + "/.secrets/env/${environment.name}/oidc/minio-root-credentials.age";
+        rekeyFile = environment.secretPath + "/oidc/minio-root-credentials.age";
         owner = "minio";
         group = "minio";
       };

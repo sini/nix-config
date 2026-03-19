@@ -1,4 +1,3 @@
-{ rootPath, ... }:
 {
   flake.features.network-boot.linux =
     {
@@ -11,7 +10,7 @@
     let
       zfsEnabled = host.hasFeature "zfs-root";
       jweToken = builtins.path {
-        path = rootPath + "/.secrets/host-keys/${config.networking.hostName}/zroot-key.jwe";
+        path = host.secretPath + "/zroot-key.jwe";
         name = "zroot-key.jwe";
       };
     in

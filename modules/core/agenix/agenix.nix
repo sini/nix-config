@@ -33,8 +33,8 @@
             inherit (inputs.self.secretsConfig) masterIdentities;
             storageMode = "local";
             hostPubkey = host.public_key;
-            generatedSecretsDir = rootPath + "/.secrets/generated/${config.networking.hostName}";
-            localStorageDir = rootPath + "/.secrets/rekeyed/${config.networking.hostName}";
+            generatedSecretsDir = host.secretPath + "/generated";
+            localStorageDir = host.secretPath + "/rekeyed";
           };
 
           # Create age secrets for each enabled user if their id_agenix.pub exists

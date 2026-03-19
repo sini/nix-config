@@ -1,6 +1,7 @@
 {
   lib,
   self,
+  rootPath,
   config,
   ...
 }:
@@ -117,6 +118,12 @@ in
               type = types.int;
               default = 1;
               description = "ID of the environment";
+            };
+
+            secretPath = mkOption {
+              type = types.path;
+              default = rootPath + "/.secrets/env/${name}";
+              description = "Path to the directory containing secrets for the environment.";
             };
 
             domain = mkOption {
