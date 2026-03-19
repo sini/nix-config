@@ -6,7 +6,11 @@
 
   nixConfig = {
     abort-on-warn = false;
-    extra-experimental-features = [ "pipe-operator" ];
+    extra-experimental-features = [ "pipe-operator" ]; # Lix name; Nix uses "pipe-operators"
+    extra-deprecated-features = [
+      "or-as-identifier"
+      "broken-string-escape"
+    ];
     # Stylix and Nixidy require this...
     allow-import-from-derivation = true; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
@@ -190,8 +194,8 @@
 
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
-      # url = "github:sini/nixidy";
-      url = "path:/home/sini/Documents/repos/sini/nixidy";
+      url = "github:sini/nixidy";
+      # url = "path:/home/sini/Documents/repos/sini/nixidy";
       # url = "github:arnarg/nixidy";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };

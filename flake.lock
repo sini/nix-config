@@ -2337,14 +2337,17 @@
         ]
       },
       "locked": {
-        "lastModified": 1773884286,
-        "narHash": "sha256-99OF2d5A96oVGFxm6Z6aXlqkLG3B4gihQKi8CQIqeEQ=",
-        "path": "/home/sini/Documents/repos/sini/nixidy",
-        "type": "path"
+        "lastModified": 1773613743,
+        "narHash": "sha256-HpMQBfn+GJXmkWFlucCXVBG6ZsER0SFBS9ZBHj0l+mE=",
+        "owner": "sini",
+        "repo": "nixidy",
+        "rev": "31bf26b6fbc19f258f1256f41bc1f3c114243ac0",
+        "type": "github"
       },
       "original": {
-        "path": "/home/sini/Documents/repos/sini/nixidy",
-        "type": "path"
+        "owner": "sini",
+        "repo": "nixidy",
+        "type": "github"
       }
     },
     "nixkraken": {
