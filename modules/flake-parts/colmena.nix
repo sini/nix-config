@@ -160,13 +160,18 @@
     };
 
   perSystem =
-    { pkgs, ... }:
+    { inputs', pkgs, ... }:
+    let
+      # Override the flake input's colmena to use Lix instead of stock Nix
+      colmena = inputs'.colmena.packages.colmena.override {
+        nix-eval-jobs = pkgs.lixPackageSets.stable.nix-eval-jobs;
+      };
+    in
     {
-      # Use colmena from pkgs, which now uses Lix via the overlay
-      devshells.default.packages = [ pkgs.colmena ];
+      devshells.default.packages = [ colmena ];
       devshells.default.commands = [
         {
-          package = pkgs.colmena;
+          package = colmena;
           help = "Build and deploy this nix config to nodes";
         }
       ];

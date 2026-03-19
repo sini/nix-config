@@ -67,12 +67,4 @@
   #     config.allowUnfree = true;
   #   };
   # };
-
-  # Overlay to make tools use Lix instead of Nix
-  # This ensures development tools like colmena, nix-direnv, etc. use the Lix evaluator
-  lix-tools = final: prev: {
-    colmena = prev.colmena.override {
-      nix = final.lixPackageSets.stable.lix;
-    };
-  };
 }
