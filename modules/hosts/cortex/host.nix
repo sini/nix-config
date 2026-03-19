@@ -41,15 +41,15 @@
       "microvm"
       "microvm-cuda"
       "windows-vfio"
-      "gamedev"
+      # "gamedev" # TODO: re-enable, temporarily disabled for build speed
       "easyeffects"
       "media-data-share"
-      "cad"
+      # "cad" # TODO: re-enable, temporarily disabled for build speed
       "podman"
       "vr-amd"
 
       "hyprland"
-      # "zen-browser"
+      # "zen-browser" # TODO: re-enable, temporarily disabled for build speed
 
       #      "sddm" # TODO: properly integrate KDE later
       #      "kde"
