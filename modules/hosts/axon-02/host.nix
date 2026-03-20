@@ -29,7 +29,7 @@
       "cilium-bgp"
     ];
     tags = {
-      "bgp-asn" = "65001";
+      "bgp-asn" = "65002";
       "cilium-asn" = "65010";
 
       "thunderbolt-interface-1" = "169.254.23.0/31";

@@ -216,7 +216,7 @@
             }) nodeConfig.peers;
 
             addressFamilies.ipv4-unicast = {
-              networks = [ nodeConfig.loopback.ipv4 ];
+              networks = [ "${nodeConfig.loopback.ipv4}/32" ];
               neighbors = lib.listToAttrs (
                 map (
                   peer:

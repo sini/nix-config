@@ -8,7 +8,7 @@ spec:
       name: local-frr-instance
       peers:
         - name: local-frr-daemon
-          peerASN: 65001
+          peerASN: 65002
           peerAddress: 10.10.10.3
           peerConfigRef:
             name: cilium-bgp
