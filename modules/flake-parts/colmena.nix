@@ -71,6 +71,7 @@
               tags = [ hostOptions.environment ] ++ hostOptions.roles;
               allowLocalDeployment = true;
               buildOnTarget = hostOptions.system != currentSystem;
+              targetUser = hostOptions.remote-deployment-user;
             };
           }
         ) hosts
@@ -103,7 +104,7 @@
               allowLocalDeployment = true;
               systemType = "darwin";
               buildOnTarget = hostOptions.system != currentSystem;
-              targetUser = "sini"; # TODO: remove this user-specific magic...
+              targetUser = hostOptions.remote-deployment-user;
             };
           }
         ) hosts

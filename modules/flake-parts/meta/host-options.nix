@@ -45,6 +45,12 @@ in
               description = "The relative build speed";
             };
 
+            remote-deployment-user = mkOption {
+              type = types.str;
+              default = "root";
+              description = "The user to use for remote deployments";
+            };
+
             channel = mkOption {
               type = types.enum (builtins.attrNames flakeConfig.channels);
               default = "nixos-unstable";

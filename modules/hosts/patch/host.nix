@@ -4,7 +4,7 @@
 
     environment = "dev";
 
-    ipv4 = ["10.9.3.2"];
+    remote-deployment-user = "sini";
 
     channel = "nixos-stable";
 
