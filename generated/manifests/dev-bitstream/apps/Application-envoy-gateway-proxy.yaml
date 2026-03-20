@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: envoy-gateway-proxy
+  namespace: argocd
+spec:
+  destination:
+    namespace: gateways
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./generated/manifests/dev-bitstream/envoy-gateway-proxy
+    repoURL: https://github.com/sini/nix-config.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ClientSideApplyMigration=false
+      - ServerSideApply=true

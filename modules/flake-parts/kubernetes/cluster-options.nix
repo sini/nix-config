@@ -105,10 +105,7 @@ let
             let
               pubFile = config.secretPath + "/cluster-sops-age-key.pub";
             in
-            if builtins.pathExists pubFile then
-              lib.trim (builtins.readFile pubFile)
-            else
-              null;
+            if builtins.pathExists pubFile then lib.trim (builtins.readFile pubFile) else null;
           description = "SOPS age public key for encrypting secrets destined for this cluster's sops-secrets-operator. Auto-derived from secretPath/k3s-sops-age-key.pub.";
         };
 

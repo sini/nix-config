@@ -11,7 +11,9 @@ let
     let
       contents = builtins.readFile pubFile;
       lines = lib.splitString "\n" contents;
-      recipientLines = builtins.filter (line: lib.hasPrefix "#" line && lib.hasInfix "Recipient:" line) lines;
+      recipientLines = builtins.filter (
+        line: lib.hasPrefix "#" line && lib.hasInfix "Recipient:" line
+      ) lines;
       # Extract the age1... key from "# Recipient: age1..."
       parseRecipient =
         line:
@@ -23,9 +25,7 @@ let
     if recipientLines != [ ] then parseRecipient (builtins.head recipientLines) else null;
 
   masterRecipients = lib.unique (
-    builtins.filter (r: r != null) (
-      map extractRecipient config.flake.secretsConfig.masterIdentities
-    )
+    builtins.filter (r: r != null) (map extractRecipient config.flake.secretsConfig.masterIdentities)
   );
 
   # Generate per-cluster creation rules from clusters with a sopsAgeRecipient
@@ -49,32 +49,34 @@ let
   ) config.clusters;
 
   sopsConfig = {
-    creation_rules =
-      [
-        # Master keys for manually encrypted files
-        {
-          path_regex = ".*\\.enc\\.ya?ml$";
-          key_groups = [
-            {
-              age = masterRecipients;
-            }
-          ];
-        }
-      ]
-      ++ (lib.mapAttrsToList (_: rule: rule) clusterRules);
+    creation_rules = [
+      # Master keys for manually encrypted files
+      {
+        path_regex = ".*\\.enc\\.ya?ml$";
+        key_groups = [
+          {
+            age = masterRecipients;
+          }
+        ];
+      }
+    ]
+    ++ (lib.mapAttrsToList (_: rule: rule) clusterRules);
   };
 in
 {
   perSystem =
     { pkgs, ... }:
     let
-      sopsYaml = pkgs.runCommand ".sops.yaml" {
-        nativeBuildInputs = [ pkgs.yq ];
-        json = builtins.toJSON sopsConfig;
-        passAsFile = [ "json" ];
-      } ''
-        yq -y '.' "$jsonPath" > $out
-      '';
+      sopsYaml =
+        pkgs.runCommand ".sops.yaml"
+          {
+            nativeBuildInputs = [ pkgs.yq ];
+            json = builtins.toJSON sopsConfig;
+            passAsFile = [ "json" ];
+          }
+          ''
+            yq -y '.' "$jsonPath" > $out
+          '';
     in
     {
       files.files = [

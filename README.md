@@ -24,50 +24,68 @@
 </div>
 <br>
 
-sini's [NixOS](https://nix.dev) homelab and workstation configuration repository.
+sini's [NixOS](https://nix.dev) homelab and workstation configuration
+repository.
 
-> [!NOTE]
-> If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.
+> [!NOTE] If you have any questions or suggestions, feel free to contact me via
+> e-mail `jason <at> json64 <dot> dev`.
 
 ## Hosts
 
-| Name                                  | Description                                                                                             |    Type     |      Arch      |
-| :------------------------------------ | :------------------------------------------------------------------------------------------------------ | :---------: | :------------: |
-| [uplink](modules/hosts/uplink/)       | Ryzen 5950X (16/32) - 128GB - 10gbe - Intel Arc A310 - AV1 Transcoding / Router / k8s control           |   Server    |  x86_64-linux  |
-| [axon-01](modules/hosts/axon-01/)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [axon-02](modules/hosts/axon-02/)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [axon-03](modules/hosts/axon-03/)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [bitstream](modules/hosts/bitstream/) | GMKtec M6 - Ryzen 5 6600H (8/16) - 64GB - 2.5gbe - Radeon 660M - k8s node                               |   Server    |  x86_64-linux  |
-| [cortex](modules/hosts/cortex/)       | Ryzen 9950X3D (16/32) - 128GB - 10gbe - 7900XTX + 3090TI - Hybrid ML Server/Workstation/VFIO Gaming Rig | Workstation |  x86_64-linux  |
-| [spike](modules/hosts/spike/)         | Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile)                                            |   Laptop    |  x86_64-linux  |
-| [patch](modules/hosts/patch/)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
-| [vault](modules/hosts/vault/)         | 1tb NVME + 80tb NFS - 2x1gbe + 2.5gbe                                                                   |     NAS     |  x86_64-linux  |
+| Name | Description | Type | Arch | | :------------------------------------ |
+:------------------------------------------------------------------------------------------------------
+| :---------: | :------------: | | [uplink](modules/hosts/uplink/) | Ryzen 5950X
+(16/32) - 128GB - 10gbe - Intel Arc A310 - AV1 Transcoding / Router / k8s
+control | Server | x86_64-linux | | [axon-01](modules/hosts/axon-01/) |
+MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M
+\- k8s node | Server | x86_64-linux | | [axon-02](modules/hosts/axon-02/) |
+MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M
+\- k8s node | Server | x86_64-linux | | [axon-03](modules/hosts/axon-03/) |
+MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M
+\- k8s node | Server | x86_64-linux | | [bitstream](modules/hosts/bitstream/) |
+GMKtec M6 - Ryzen 5 6600H (8/16) - 64GB - 2.5gbe - Radeon 660M - k8s node |
+Server | x86_64-linux | | [cortex](modules/hosts/cortex/) | Ryzen 9950X3D
+(16/32) - 128GB - 10gbe - 7900XTX + 3090TI - Hybrid ML Server/Workstation/VFIO
+Gaming Rig | Workstation | x86_64-linux | | [spike](modules/hosts/spike/) |
+Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile) | Laptop |
+x86_64-linux | | [patch](modules/hosts/patch/) | M1 Macbook Air - 16gb / 1tb -
+macOS Sequoia 15.2 | Laptop | aarch64-darwin | | [vault](modules/hosts/vault/) |
+1tb NVME + 80tb NFS - 2x1gbe + 2.5gbe | NAS | x86_64-linux |
 
 ## Flake Options
 
 This repository defines configuration options in the following attribute sets:
 
-- **[environments](docs/environments-options.md)**: Environment settings including network and infrastructure configuration that can be shared across hosts. Each environment contains topology definitions for domains, networks, Kubernetes clusters, and ACME settings.
+- **[environments](docs/environments-options.md)**: Environment settings
+  including network and infrastructure configuration that can be shared across
+  hosts. Each environment contains topology definitions for domains, networks,
+  Kubernetes clusters, and ACME settings.
 
-- **[hosts](docs/hosts-options.md)**: Host definitions for individual machines. Each host configuration includes system architecture, IP addresses, roles, hardware settings, and deployment configuration for Colmena.
+- **[hosts](docs/hosts-options.md)**: Host definitions for individual machines.
+  Each host configuration includes system architecture, IP addresses, roles,
+  hardware settings, and deployment configuration for Colmena.
 
-- **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration options for k3s deployments.
+- **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration
+  options for k3s deployments.
 
-- **[users](docs/users-options.md)**: User account definitions and configuration options.
+- **[users](docs/users-options.md)**: User account definitions and configuration
+  options.
 
 See the linked documentation files for complete option references.
 
 ## Remote deployment via Colmena
 
-This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
-Colmena supports both local and remote deployment, and hosts can be targeted by roles as well as their name.
-Remote connection properties are defined in the `hosts.<hostname>.deployment` attribute set, and implementation
-can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
-[./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
+This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy
+NixOS configurations to remote hosts. Colmena supports both local and remote
+deployment, and hosts can be targeted by roles as well as their name. Remote
+connection properties are defined in the `hosts.<hostname>.deployment` attribute
+set, and implementation can be found in the
+`modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives
+in the [./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
 
-> [!NOTE]
-> I've made some pretty ugly hacks to make Colmena work with this repository to support multiple nixpkg versions
-> for different hosts, and to support both stable and unstable packages.
+> [!NOTE] I've made some pretty ugly hacks to make Colmena work with this
+> repository to support multiple nixpkg versions for different hosts, and to
+> support both stable and unstable packages.
 
 ```bash
 # Deploy to all hosts
@@ -87,32 +105,34 @@ colmena apply-local --sudo
 
 Since this configuration is used across multiple systems, it is important to
 ensure that user and group IDs are consistent across all systems for services
-like NFS. This module provides a way to define deterministic UIDs and GIDs
-for users and groups, ensuring that they are assigned the same IDs on all systems.
+like NFS. This module provides a way to define deterministic UIDs and GIDs for
+users and groups, ensuring that they are assigned the same IDs on all systems.
 
-The configuration is defined in the `users.deterministicIds` option, where you can
-specify the expected UID and GID values for each user and group. If a user or
-group is used on the system without specifying a UID/GID, this module will assign
-the corresponding IDs defined here, or show an error if the definition is missing.
+The configuration is defined in the `users.deterministicIds` option, where you
+can specify the expected UID and GID values for each user and group. If a user
+or group is used on the system without specifying a UID/GID, this module will
+assign the corresponding IDs defined here, or show an error if the definition is
+missing.
 
-This pattern is based on oddlama's NixOS configuration, which can be found linked below.
+This pattern is based on oddlama's NixOS configuration, which can be found
+linked below.
 
-The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
+The definition file is located at:
+[./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
 
 ## Automatic import
 
-Nix files (they're all flake-parts modules) are automatically imported.
-Nix files prefixed with an underscore are ignored.
-No literal path imports are used.
+Nix files (they're all flake-parts modules) are automatically imported. Nix
+files prefixed with an underscore are ignored. No literal path imports are used.
 This means files can be moved around and nested in directories freely.
 
-> [!NOTE]
-> This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
+> [!NOTE] This pattern has been the inspiration of
+> [an auto-imports library, import-tree](https://github.com/vic/import-tree).
 
 ## Generated files
 
-The following files in this repository are generated and checked
-using [the _files_ flake-parts module](https://github.com/mightyiam/files):
+The following files in this repository are generated and checked using
+[the _files_ flake-parts module](https://github.com/mightyiam/files):
 
 - `.gitignore`
 - `LICENSE`
@@ -136,8 +156,8 @@ This at the top level of the `flake.nix` file:
 nixConfig.abort-on-warn = true;
 ```
 
-> [!NOTE]
-> It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
+> [!NOTE] It does not currently catch all warnings Nix can produce, but perhaps
+> only evaluation warnings.
 
 ## Notable Links
 
@@ -153,11 +173,13 @@ nixConfig.abort-on-warn = true;
 - [oddlama/nix-config](https://github.com/oddlama/nix-config/)
 - [JManch/nixos](https://github.com/JManch/nixos)
 - [akirak/homelab](https://github.com/akirak/nix-config/)
-- [pim/nix-config](https://git.kun.is/pim/nixos-configs) & [pim's kubernetes configs](https://git.kun.is/home/kubernetes-deployments)
+- [pim/nix-config](https://git.kun.is/pim/nixos-configs) &
+  [pim's kubernetes configs](https://git.kun.is/home/kubernetes-deployments)
 
 ### Notable References:
 
 - [Dendritic Configuration Pattern](https://github.com/mightyiam/dendritic)
 - [colmena](https://github.com/zhaofengli/colmena)
-- [agenix](https://github.com/ryantm/agenix) & [agenix-rekey](https://github.com/oddlama/agenix-rekey)
+- [agenix](https://github.com/ryantm/agenix) &
+  [agenix-rekey](https://github.com/oddlama/agenix-rekey)
 - [flake-parts](https://flake.parts/)

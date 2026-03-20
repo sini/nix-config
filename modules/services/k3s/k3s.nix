@@ -357,13 +357,17 @@
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/bootstrap/"} || true
+                    -f ${
+                      rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/bootstrap/"
+                    } || true
 
                   echo "Installing cilium..."
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/cilium/"} || true
+                    -f ${
+                      rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/cilium/"
+                    } || true
                   echo "Sleeping for 30 seconds for resources to settle..."
                   sleep 30;
 
@@ -371,7 +375,9 @@
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${rootPath + "/generated/manifests/${environment.name}/coredns/"} || true
+                    -f ${
+                      rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/coredns/"
+                    } || true
                   echo "Sleeping for 30 seconds for resources to settle..."
                   sleep 30;
                 '';
@@ -430,7 +436,10 @@
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                       --server-side \
                       --force-conflicts \
-                      -f ${rootPath + "/generated/manifests/${environment.name}/sops-secrets-operator/"}
+                      -f ${
+                        rootPath
+                        + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/sops-secrets-operator/"
+                      }
                     echo "Sleeping for 30 seconds..."
                     sleep 30
                   fi
@@ -441,7 +450,9 @@
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                       --server-side \
                       --force-conflicts \
-                      -f ${rootPath + "/generated/manifests/${environment.name}/cert-manager/"}
+                      -f ${
+                        rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/cert-manager/"
+                      }
                     echo "Sleeping for 30 seconds..."
                     sleep 30
                   fi
@@ -493,10 +504,14 @@
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                       --server-side \
                       --force-conflicts \
-                      -f ${rootPath + "/generated/manifests/${environment.name}/argocd/"}
+                      -f ${
+                        rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/argocd/"
+                      }
                     echo "Installing App bootstrap.yaml"
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                      -f ${rootPath + "/generated/manifests/${environment.name}/bootstrap.yaml"}
+                      -f ${
+                        rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/bootstrap.yaml"
+                      }
                   else
                     echo "ArgoCD is already installed."
                   fi
