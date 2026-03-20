@@ -103,6 +103,7 @@
               allowLocalDeployment = true;
               systemType = "darwin";
               buildOnTarget = hostOptions.system != currentSystem;
+              targetUser = "sini"; # TODO: remove this user-specific magic...
             };
           }
         ) hosts
