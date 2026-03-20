@@ -1,0 +1,49 @@
+{
+  features.tailscale = {
+    system =
+      {
+        config,
+        environment,
+        ...
+      }:
+      {
+        # sudo headscale preauthkeys create --user 1 --reusable -e 10y
+        age.secrets.tailscale-auth-key = {
+          rekeyFile = environment.secretPath + "/tailscale.age";
+        };
+
+        services.tailscale = {
+          enable = true;
+          openFirewall = true;
+          authKeyFile = config.age.secrets.tailscale-auth-key.path;
+          extraUpFlags = [ "--login-server=https://${environment.getDomainFor "headscale"}" ];
+          extraDaemonFlags = [ "--no-logs-no-support" ];
+        };
+      };
+
+    linux =
+      {
+        config,
+        ...
+      }:
+      {
+        networking = {
+          nftables.enable = true;
+          firewall = {
+            checkReversePath = "loose";
+            trustedInterfaces = [ config.services.tailscale.interfaceName ];
+            allowedUDPPorts = [ config.services.tailscale.port ];
+          };
+        };
+
+        # Force tailscaled to use nftables, avoiding "iptables-compat" translation layer.
+        systemd.services.tailscaled.serviceConfig.Environment = [
+          "TS_DEBUG_FIREWALL_MODE=nftables"
+        ];
+
+        environment.persistence."/persist".directories = [
+          "/var/lib/tailscale"
+        ];
+      };
+  };
+}
