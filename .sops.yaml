@@ -1,28 +1,17 @@
-# We use sops with kubernetes, agenix with Nix.
-keys:
-  - "admins": &admins
-      - &sini_yubikey age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0
-  # NOTE: For host keys: nix-shell -p ssh-to-age --run 'cat /etc/ssh/ssh_host_ed25519_key.pub | ssh-to-age'
-  - "envs": &envs
-      - &prod age1702hgudfz8y5ms3m4fukvvjhll7w9yeqk4tahewuv34t09rhd9sq756enl
-      - &dev age1v9fv8xdeektkl6uanpttlcw8qt4c37rhy4hkm63cyg4emzz5rfkqfdgffc
 creation_rules:
-  #path should be relative to location of this file (.sops.yaml)
-  # This is for our master kubernetes keys keys
-  - path_regex: .*\.enc\.ya?ml$
-    key_groups:
-      - pgp: *admins
-  # Secrets keyed for Production environments
-  - path_regex: .*prod.*/(SopsS|S)ecret-.*\.ya?ml$
-    encrypted_regex: ^(data|stringData)$
-    mac-only-encrypted: true
+  - key_groups:
+      - age:
+          - age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0
+    path_regex: .*\.enc\.ya?ml$
+  - encrypted_regex: ^(data|stringData)$
     key_groups:
       - age:
-          - *prod
-  # Secrets keyed for the dev environment
-  - path_regex: .*dev.*/(SopsS|S)ecret-.*\.ya?ml$
-    encrypted_regex: ^(data|stringData)$
+          - age1v9fv8xdeektkl6uanpttlcw8qt4c37rhy4hkm63cyg4emzz5rfkqfdgffc
     mac-only-encrypted: true
+    path_regex: .*dev-bitstream.*/(SopsS|S)ecret-.*\.ya?ml$
+  - encrypted_regex: ^(data|stringData)$
     key_groups:
       - age:
-          - *dev
+          - age1702hgudfz8y5ms3m4fukvvjhll7w9yeqk4tahewuv34t09rhd9sq756enl
+    mac-only-encrypted: true
+    path_regex: .*prod-axon.*/(SopsS|S)ecret-.*\.ya?ml$

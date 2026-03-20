@@ -2,6 +2,7 @@
   lib,
   self,
   config,
+  rootPath,
   ...
 }:
 let
@@ -89,6 +90,26 @@ let
           type = kubernetesConfigType;
           default = { };
           description = "Kubernetes configuration for this cluster";
+        };
+
+        secretPath = mkOption {
+          type = types.path;
+          default = rootPath + "/.secrets/clusters/${name}";
+          description = "Path to the directory containing secrets for this cluster.";
+        };
+
+        sopsAgeRecipient = mkOption {
+          type = types.nullOr types.str;
+          readOnly = true;
+          default =
+            let
+              pubFile = config.secretPath + "/cluster-sops-age-key.pub";
+            in
+            if builtins.pathExists pubFile then
+              lib.trim (builtins.readFile pubFile)
+            else
+              null;
+          description = "SOPS age public key for encrypting secrets destined for this cluster's sops-secrets-operator. Auto-derived from secretPath/k3s-sops-age-key.pub.";
         };
 
         networks = mkOption {

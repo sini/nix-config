@@ -13,6 +13,7 @@
     nixidy =
       {
         config,
+        cluster,
         crdObjects,
         lib,
         ...
@@ -45,6 +46,11 @@
         serviceCrds = lib.flatten (builtins.attrValues crdObjects);
       in
       {
+        age.secrets.cluster-sops-age-key = {
+          rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
+          generator.script = "age-identity";
+        };
+
         applications.bootstrap = {
           namespace = "kube-system";
 

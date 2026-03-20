@@ -247,7 +247,7 @@ They will be created automatically if they don't exist.
   - nixos:axon-02
   - nixos:axon-03
 - **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/env/prod/k3s-token.age`
+- **Rekey File**: `.secrets/clusters/axon/cluster-token.age`
 - **Generator**: built-in: passphrase
 
 

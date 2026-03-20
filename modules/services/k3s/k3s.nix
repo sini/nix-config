@@ -54,12 +54,12 @@
       in
       {
         age.secrets.kubernetes-cluster-token = {
-          rekeyFile = environment.secretPath + "/k3s-token.age";
+          rekeyFile = cluster.secretPath + "/cluster-token.age";
           generator.script = "passphrase";
         };
 
         age.secrets.kubernetes-sops-age-key = lib.mkIf shouldInit {
-          rekeyFile = environment.secretPath + "/k3s-sops-age-key.age";
+          rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
           path = "/var/lib/sops/age/key.txt";
         };
 

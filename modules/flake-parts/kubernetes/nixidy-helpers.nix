@@ -76,22 +76,22 @@
               [ ]
         ) (lib.filterAttrs (name: _: lib.elem name enabledServices) config.kubernetes.services);
 
-      # Produce the agenix-rekey-to-sops configuration module for a nixidy environment.
-      # Configures SOPS encryption paths and rekey identity based on environment.
-      # environmentConfig -> module
+      # Produce the agenix-rekey-to-sops configuration module for a nixidy cluster.
+      # Configures SOPS encryption paths and rekey identity based on cluster.
+      # { cluster, environment } -> module
       mkAgeModule =
-        environment:
+        { cluster, environment }:
         { inputs, ... }:
         {
           age = {
             sops = {
-              outputDir = environment.secretPath + "/sops";
+              outputDir = cluster.secretPath + "/sops";
             };
             rekey = {
-              recipientIdentifier = environment.name;
+              recipientIdentifier = "${environment.name}-${cluster.name}";
               storageMode = "local";
-              generatedSecretsDir = environment.secretPath + "/generated";
-              localStorageDir = environment.secretPath + "/rekeyed";
+              generatedSecretsDir = cluster.secretPath + "/generated";
+              localStorageDir = cluster.secretPath + "/rekeyed";
               inherit (inputs.self.secretsConfig) masterIdentities;
             };
           };
@@ -234,7 +234,7 @@
             # It provides our custom agenix generator types
             config.features.agenix-generators.system
 
-            (mkAgeModule environment)
+            (mkAgeModule { inherit cluster environment; })
             (mkNixidyModule {
               inherit
                 env
