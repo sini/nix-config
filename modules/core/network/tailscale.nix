@@ -2,16 +2,32 @@
   features.tailscale = {
     system =
       {
+        inputs,
+        lib,
         environment,
+        host,
         ...
       }:
       let
-        rekeyFile = environment.secretPath + "/tailscale.age";
+        rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
+        delegation = environment.services.headscale.delegateTo or null;
+        headscaleHosts =
+          if delegation != null then
+            inputs.self.lib.host-utils.findHostsWithRole "headscale"
+            |> lib.filterAttrs (_: h: h.environment == delegation)
+            |> lib.attrValues
+          else
+            environment.findHostsByRole "headscale" |> lib.attrValues;
+        headscaleHost = builtins.head headscaleHosts;
       in
       {
-        # sudo headscale preauthkeys create --user 1 --reusable -e 10y
         age.secrets.tailscale-auth-key = {
           inherit rekeyFile;
+          settings = {
+            headscaleHost = builtins.head headscaleHost.ipv4;
+            user = host.hostname;
+          };
+          generator.script = "tailscale-preauthkey";
         };
       };
 

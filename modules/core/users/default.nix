@@ -87,6 +87,7 @@
             home = "/Users/${userName}";
             createHome = true;
             description = user.identity.displayName;
+            isHidden = false;
             openssh.authorizedKeys.keys = user.identity.sshKeys;
             shell = pkgs.zsh;
           };

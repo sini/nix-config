@@ -1,0 +1,5 @@
+{
+  roles.headscale.features = [
+    "headscale"
+  ];
+}

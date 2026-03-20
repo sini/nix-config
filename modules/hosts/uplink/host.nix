@@ -14,6 +14,7 @@
       # "inference"
       "metrics-ingester"
       "nix-builder"
+      "headscale"
     ];
     tags = {
       "bgp-asn" = "65000";
@@ -35,7 +36,6 @@
       "homepage"
       "oauth2-proxy"
       "tailscale"
-      "headscale"
       "haproxy"
       "attic-server"
       # "minio"
