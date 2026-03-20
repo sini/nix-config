@@ -48,7 +48,7 @@ modules/flake-parts/
 | [1](phase-1-users-helpers.md) | 1, 2 | HIGH — establishes users as a proper domain | Medium | DONE |
 | [2](phase-2-kubernetes-decoupling.md) | 3, 4 | MEDIUM — removes hard coupling between kubernetes, environments, hosts | Low-Medium | |
 | [3](phase-3-domain-devshell.md) | 6, 7 | MEDIUM — each domain owns its tooling contributions | Low | |
-| [4](phase-4-environment-helpers.md) | 5 | MEDIUM — makes cross-domain queries explicit | Low | |
+| [4](phase-4-environment-helpers.md) | 5 | LOW — remove dead `groups` helper; `findHostsByRole` is acceptable | None | DECLINED |
 | [5](phase-5-minor-cleanups.md) | 8, 9, 10 | LOW — cleanup and consolidation | Low | |
 
 ## Validation

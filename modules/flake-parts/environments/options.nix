@@ -414,16 +414,6 @@ in
               '';
             };
 
-            groups = mkOption {
-              type = types.functionTo (types.attrsOf types.unspecified);
-              readOnly = true;
-              description = ''
-                Filter shared group definitions by label.
-                Example: environment.groups "oauth-grant" returns all oauth-grant groups.
-                Pass null to get all groups.
-              '';
-            };
-
             secrets = mkOption {
               type = types.unspecified;
               readOnly = true;
@@ -493,16 +483,6 @@ in
                 _hostname: hostConfig:
                 (builtins.elem role (hostConfig.roles or [ ])) && (hostConfig.environment == config.name)
               );
-
-            groups =
-              label:
-              let
-                allGroups = flakeConfig.groups;
-              in
-              if label == null then
-                allGroups
-              else
-                lib.filterAttrs (_: g: lib.elem label (g.labels or [ ])) allGroups;
 
             secrets =
               let

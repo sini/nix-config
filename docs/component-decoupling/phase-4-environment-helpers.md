@@ -1,28 +1,59 @@
-# Phase 4 — Extract environment cross-domain helpers (Issue 5)
+# Phase 4 — Environment cross-domain helpers (Issue 5)
 
-**Status**: TODO
+**Status**: DECLINED (downgraded to optional cleanup)
 
-**Goal**: Make domain boundary crossings in environments explicit.
+**Original goal**: Extract `findHostsByRole` and `groups` into standalone
+functions in `environments/helpers.nix` with explicit dependency parameters.
 
-## Issue 5 — Environment helpers cross domain boundaries
+## Analysis
 
-**File**: `environments/options.nix` lines ~444–539
+### Helper categorization
 
-Computed readOnly options `findHostsByRole` and `groups` query the hosts and
-users/groups domains respectively. While read-only, they embed cross-domain
-queries inside the environment type definition.
+The environment submodule's `config` block defines 7 computed readOnly options:
 
-## Steps
+| Helper | Cross-domain? | Consumers |
+|---|---|---|
+| `getDomainFor` | No — reads `config.services`, `config.domain` | Many (k8s services, kanidm, etc.) |
+| `domainToResourceName` | No — pure string transform | K8s certificate resources |
+| `getTopDomainFor` | No — calls `getDomainFor` | K8s certificate resources |
+| `getAssignment` | No — reads `config.networks` | K8s services, NixOS modules |
+| `findHostsByRole` | **Yes** — reads `flakeConfig.hosts` | 7 consumers across services/, kubernetes/, core/ |
+| `groups` | **Yes** — reads `flakeConfig.groups` | **0 consumers** |
+| `secrets.oidcIssuerFor` | Indirect — reads `config.kubernetes.sso.*` (injected by k8s) | K8s OIDC services |
 
-1. Create `environments/helpers.nix` exposing `flake.lib.environment-helpers`.
-2. Move `findHostsByRole` and `groups` from the `config` block of
-   `environments/options.nix` into `environments/helpers.nix` as standalone
-   functions that accept their dependencies as parameters.
-3. In `environments/options.nix`, define the readOnly computed options by calling
-   the extracted helpers with explicit inputs (`config.hosts`, `config.groups`).
-4. Verify: `nix eval .#environments`.
+### Why extraction doesn't help
+
+The original plan was to move `findHostsByRole` and `groups` to standalone
+functions that take their dependencies as explicit parameters. This would:
+
+1. **Not reduce coupling** — the cross-domain read still happens, just in a
+   different file.
+2. **Worsen ergonomics** — consumers currently call
+   `environment.findHostsByRole "k3s"` directly. With extraction, they'd need
+   access to a lib function plus the hosts config to pass as a parameter.
+3. **Break the submodule pattern** — readOnly computed options on a submodule are
+   the idiomatic NixOS way to expose derived data. Moving them out fights the
+   module system rather than working with it.
+
+### `findHostsByRole` is an acceptable cross-domain read
+
+It filters `flakeConfig.hosts` by role and environment name. This is a
+read-only query with clear semantics — it answers "which hosts in *this*
+environment have role X?" The data flows one direction (hosts → environment
+helper) and the helper is consumed by NixOS modules that already receive
+`environment` via `specialArgs`.
+
+### `groups` is dead code
+
+Zero consumers outside its own doc comment. It can be removed.
+
+## Recommended action
+
+1. **Remove `groups` helper** — dead code, no consumers.
+2. **Leave everything else as-is** — the remaining helpers are either
+   self-referential or acceptable cross-domain reads.
+3. No `environments/helpers.nix` file needed.
 
 ## Risk
 
-Low — the helpers are readOnly computed values. Extracting them does not change
-evaluation behavior.
+None — removing unused code only.
