@@ -5,30 +5,35 @@
         environment,
         ...
       }:
+      let
+        rekeyFile = environment.secretPath + "/tailscale.age";
+      in
       {
         # sudo headscale preauthkeys create --user 1 --reusable -e 10y
         age.secrets.tailscale-auth-key = {
-          rekeyFile = environment.secretPath + "/tailscale.age";
+          inherit rekeyFile;
         };
-
-        services.tailscale.enable = true;
       };
 
     darwin =
       {
         config,
+        lib,
         environment,
         host,
         pkgs,
         ...
       }:
       let
-        authKeyPath = config.age.secrets.tailscale-auth-key.path;
+        rekeyFile = environment.secretPath + "/tailscale.age";
+        secretExists = builtins.pathExists rekeyFile;
       in
-      {
+      lib.mkIf secretExists {
+        services.tailscale.enable = true;
+
         system.activationScripts.postActivation.text = ''
           # Tailscale auto-authentication
-          if [ -f "${authKeyPath}" ]; then
+          if [ -f "${config.age.secrets.tailscale-auth-key.path}" ]; then
             echo "Configuring Tailscale..."
 
             # Wait for tailscaled to be ready (max 10 seconds)
@@ -49,14 +54,14 @@
               # Use --reset to clear any conflicting non-default settings
               /run/current-system/sw/bin/tailscale up \
                 --login-server=https://${environment.getDomainFor "headscale"} \
-                --auth-key="$(cat ${authKeyPath})" \
+                --auth-key="$(cat ${config.age.secrets.tailscale-auth-key.path})" \
                 --hostname="${host.hostname}" \
                 --reset \
                 || echo "Tailscale auth failed (may need manual login)"
             fi
           else
-            echo "Warning: Tailscale auth key not found at ${authKeyPath}"
-            echo "Run: sops secrets/darwin.yaml to add tailscale-auth"
+            echo "Warning: Tailscale auth key not found at ${config.age.secrets.tailscale-auth-key.path}"
+            echo "Run: agenix generate to add tailscale-auth"
           fi
         '';
 
@@ -65,11 +70,17 @@
     linux =
       {
         config,
+        lib,
         environment,
         ...
       }:
-      {
+      let
+        rekeyFile = environment.secretPath + "/tailscale.age";
+        secretExists = builtins.pathExists rekeyFile;
+      in
+      lib.mkIf secretExists {
         services.tailscale = {
+          enable = true;
           openFirewall = true;
           authKeyFile = config.age.secrets.tailscale-auth-key.path;
           extraUpFlags = [ "--login-server=https://${environment.getDomainFor "headscale"}" ];
