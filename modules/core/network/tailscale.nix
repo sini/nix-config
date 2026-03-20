@@ -72,7 +72,6 @@
                 --login-server=https://${environment.getDomainFor "headscale"} \
                 --auth-key="$(cat ${config.age.secrets.tailscale-auth-key.path})" \
                 --hostname="${host.hostname}" \
-                --ssh \
                 --reset \
                 || echo "Tailscale auth failed (may need manual login)"
             fi
