@@ -21,9 +21,12 @@
           jq = "${pkgs.jq}/bin/jq";
           user = escapeShellArg settings.user;
         in
-        throwIfNot (isAttrs settings) "Secret '${name}' must have a `settings` attrset."
-          throwIfNot (isString settings.headscaleHost) "Secret '${name}' is missing a `headscaleHost` string."
-          throwIfNot (isString settings.user) "Secret '${name}' is missing a `user` string."
+        throwIfNot (isAttrs settings) "Secret '${name}' must have a `settings` attrset." throwIfNot
+          (isString settings.headscaleHost)
+          "Secret '${name}' is missing a `headscaleHost` string."
+          throwIfNot
+          (isString settings.user)
+          "Secret '${name}' is missing a `user` string."
           ''
             set -euo pipefail
 
