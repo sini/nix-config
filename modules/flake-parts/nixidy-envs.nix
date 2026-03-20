@@ -63,10 +63,17 @@ in
         parsed-crd-objects =
           let
             parsedServices = lib.mapAttrs mkParsedServiceCrds servicesWithCrds;
-            # Ensure all derivations are evaluated upfront (shallow eval is sufficient)
-            serviceNames = builtins.seq parsedServices (lib.attrNames parsedServices);
+            serviceNames = lib.attrNames parsedServices;
+            # Convert to list to force evaluation upfront, enabling parallel IFD builds
+            serviceDrvs = lib.attrValues parsedServices;
           in
+          # Force all derivations to be discovered by referencing them in the script.
+          # Using toString converts each derivation to a store path (forcing evaluation)
+          # without deep recursion (avoiding stack overflow).
           pkgs.runCommand "parsed-crd-objects" { } ''
+            # Force all derivations into scope for parallel dependency discovery
+            : ${toString serviceDrvs}
+
             mkdir -p $out
             ${lib.concatMapStringsSep "\n" (name: ''
               cp ${parsedServices.${name}} $out/${name}.json
@@ -119,10 +126,17 @@ in
             generators = lib.mapAttrs (mkCrdGenerator {
               inherit (inputs'.nixidy.packages.generators) fromCRD;
             }) servicesWithCrds;
-            # Ensure all derivations are evaluated upfront (shallow eval is sufficient)
-            generatorNames = builtins.seq generators (lib.attrNames generators);
+            generatorNames = lib.attrNames generators;
+            # Convert to list to force evaluation upfront, enabling parallel IFD builds
+            generatorDrvs = lib.attrValues generators;
           in
+          # Force all derivations to be discovered by referencing them in the script.
+          # Using toString converts each derivation to a store path (forcing evaluation)
+          # without deep recursion (avoiding stack overflow).
           pkgs.runCommand "generated-crds" { } ''
+            # Force all derivations into scope for parallel dependency discovery
+            : ${toString generatorDrvs}
+
             mkdir -p $out
             ${lib.concatMapStringsSep "\n" (name: ''
               cp ${generators.${name}} $out/${name}.nix
