@@ -6,6 +6,22 @@
 {
   features.agenix = {
     requires = [ "agenix-generators" ];
+
+    linux = {
+      imports = [
+        inputs.agenix.nixosModules.default
+        inputs.agenix-rekey.nixosModules.default
+      ];
+
+    };
+
+    darwin = {
+      imports = [
+        inputs.agenix.darwinModules.default
+        inputs.agenix-rekey.darwinModules.default
+      ];
+    };
+
     system =
       {
         config,
@@ -15,10 +31,6 @@
         ...
       }:
       {
-        imports = [
-          inputs.agenix.nixosModules.default
-          inputs.agenix-rekey.nixosModules.default
-        ];
 
         # Agenix decrypts before impermanence creates mounts so we have to get key
         # from persist

@@ -13,15 +13,18 @@
         description = "Dummy persistence option for Darwin (no-op).";
       };
 
-      config.home-manager.sharedModules = [
-        {
-          # Dummy home.persistence (supports impermanence home key without HM module)
-          options.home.persistence = lib.mkOption {
-            type = lib.types.anything;
-            default = { };
-            description = "Dummy persistence option for Darwin (no-op).";
-          };
-        }
-      ];
+      config = {
+        impermanence.enable = false; # Explicitly disable impermanence on Darwin (no-op)
+        home-manager.sharedModules = [
+          {
+            # Dummy home.persistence (supports impermanence home key without HM module)
+            options.home.persistence = lib.mkOption {
+              type = lib.types.anything;
+              default = { };
+              description = "Dummy persistence option for Darwin (no-op).";
+            };
+          }
+        ];
+      };
     };
 }

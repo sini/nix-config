@@ -51,7 +51,6 @@
                 --login-server=https://${environment.getDomainFor "headscale"} \
                 --auth-key="$(cat ${authKeyPath})" \
                 --hostname="${host.hostname}" \
-                --no-logs-no-support \
                 --reset \
                 || echo "Tailscale auth failed (may need manual login)"
             fi
@@ -70,7 +69,6 @@
         ...
       }:
       {
-
         services.tailscale = {
           openFirewall = true;
           authKeyFile = config.age.secrets.tailscale-auth-key.path;
