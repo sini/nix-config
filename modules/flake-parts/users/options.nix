@@ -5,7 +5,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) identitySubmoduleType;
+  inherit (self.lib.users) identitySubmoduleType;
 in
 {
   options.users = mkOption {

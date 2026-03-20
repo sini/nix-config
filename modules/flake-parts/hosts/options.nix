@@ -7,7 +7,8 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) mkDeferredModuleOpt mkHostUsersOpt;
+  inherit (self.lib.modules) mkDeferredModuleOpt;
+  inherit (self.lib.users) mkHostUsersOpt;
   flakeConfig = config; # Capture flake-level config for use in submodules
 in
 {

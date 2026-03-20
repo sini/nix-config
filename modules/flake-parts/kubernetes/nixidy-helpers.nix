@@ -205,6 +205,7 @@
           pkgs,
           env,
           environment,
+          hosts,
         }:
         let
           enabledServices = getEnabledServices environment;
@@ -216,8 +217,7 @@
           inherit pkgs;
           charts = (inputs.nixhelm.chartsDerivations.${system} or { }) // userCharts;
           extraSpecialArgs = {
-            inherit environment inputs;
-            inherit (config.flake) hosts;
+            inherit environment inputs hosts;
             crdObjects = serviceCrdObjects;
           };
           modules = [

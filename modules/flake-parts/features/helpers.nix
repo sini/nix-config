@@ -42,127 +42,6 @@ let
       internal = true;
     };
 
-  # Identity submodule type (shared between env users and canonical users)
-  identitySubmoduleType =
-    name:
-    types.submodule {
-      options = {
-        displayName = mkOption {
-          type = types.str;
-          default = name;
-          description = "Display name for the user (defaults to username)";
-        };
-
-        email = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "Email address for the user";
-        };
-
-        sshKeys = mkOption {
-          type = types.listOf types.str;
-          default = [ ];
-          description = "SSH public keys for the user";
-        };
-
-        gpgKey = mkOption {
-          type = types.nullOr types.str;
-          default = null;
-          description = "GPG key ID for the user (parent key ID)";
-        };
-      };
-    };
-
-  # Environment-level user option — nullable overrides only, plus derived identity
-  mkEnvUsersOpt =
-    {
-      description,
-      canonicalUsers ? { },
-    }:
-    mkOption {
-      type = types.lazyAttrsOf (
-        types.submodule (
-          { name, ... }:
-          {
-            options = {
-              # Derived identity — read-only, resolved from canonical users.<name>.identity
-              identity = mkOption {
-                type = identitySubmoduleType name;
-                readOnly = true;
-                default = if canonicalUsers ? ${name} then canonicalUsers.${name}.identity else { };
-                description = "Identity information (derived from canonical users.<name>.identity)";
-              };
-
-              # Nullable overrides (null = inherit from users.<name>.system)
-              linger = mkOption {
-                type = types.nullOr types.bool;
-                default = null;
-                description = "Enable lingering override (null inherits from users.<name>.system)";
-              };
-
-              extra-features = mkOption {
-                type = types.nullOr (types.listOf types.str);
-                default = null;
-                description = "Extra home-manager features override (null inherits from users.<name>.system)";
-              };
-
-              excluded-features = mkOption {
-                type = types.nullOr (types.listOf types.str);
-                default = null;
-                description = "Excluded features override (null inherits from users.<name>.system)";
-              };
-
-              include-host-features = mkOption {
-                type = types.nullOr types.bool;
-                default = null;
-                description = "Whether to inherit host features (null inherits from users.<name>.system)";
-              };
-            };
-          }
-        )
-      );
-      default = { };
-      inherit description;
-    };
-
-  # Host-specific users option — all nullable for overriding env/canonical users
-  mkHostUsersOpt =
-    description:
-    mkOption {
-      type = types.lazyAttrsOf (
-        types.submodule (_: {
-          options = {
-            # Nullable overrides
-            linger = mkOption {
-              type = types.nullOr types.bool;
-              default = null;
-              description = "Enable lingering override (null to inherit)";
-            };
-
-            extra-features = mkOption {
-              type = types.nullOr (types.listOf types.str);
-              default = null;
-              description = "Extra home-manager features override (null to inherit)";
-            };
-
-            excluded-features = mkOption {
-              type = types.nullOr (types.listOf types.str);
-              default = null;
-              description = "Excluded features override (null to inherit)";
-            };
-
-            include-host-features = mkOption {
-              type = types.nullOr types.bool;
-              default = null;
-              description = "Whether to inherit host features (null to inherit)";
-            };
-          };
-        })
-      );
-      default = { };
-      inherit description;
-    };
-
   # ============================================================================
   # Module Collection Utilities
   # ============================================================================
@@ -328,9 +207,6 @@ in
       featureSubmoduleGenericOptions
       mkFeatureNameOpt
       mkDeferredModuleOpt
-      identitySubmoduleType
-      mkEnvUsersOpt
-      mkHostUsersOpt
       collectTypedModules
       collectSystemModules
       collectLinuxModules

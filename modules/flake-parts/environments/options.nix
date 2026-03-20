@@ -7,8 +7,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) mkEnvUsersOpt;
-  inherit (self.lib.kubernetes-services) kubernetesConfigType;
+  inherit (self.lib.users) mkEnvUsersOpt;
   flakeConfig = config; # Capture the flake-level config for use in submodules
 in
 {
@@ -217,12 +216,6 @@ in
                 }
                 ```
               '';
-            };
-
-            kubernetes = mkOption {
-              type = kubernetesConfigType;
-              default = { };
-              description = "Kubernetes-specific network configuration";
             };
 
             email = mkOption {

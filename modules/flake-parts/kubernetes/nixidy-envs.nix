@@ -22,6 +22,7 @@ in
               env
               environment
               ;
+            hosts = config.hosts;
           }
         ) config.environments
       )
