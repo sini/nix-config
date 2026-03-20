@@ -81,7 +81,8 @@
         enabledUsers = lib.filterAttrs (_: u: u.system.enable or false) users;
 
         # Build Darwin user configurations
-        buildDarwinUserConfig = userName: user:
+        buildDarwinUserConfig =
+          userName: user:
           let
             isWheel = builtins.elem "wheel" user.system.systemGroups;
           in

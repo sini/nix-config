@@ -44,8 +44,12 @@
       colmenaDarwinHosts = lib.filterAttrs (_: h: h.isDarwin) allHosts;
 
       # Group hosts by channel
-      linuxHostsByChannel = lib.groupBy (name: colmenaLinuxHosts.${name}.channel) (lib.attrNames colmenaLinuxHosts);
-      darwinHostsByChannel = lib.groupBy (name: colmenaDarwinHosts.${name}.channel) (lib.attrNames colmenaDarwinHosts);
+      linuxHostsByChannel = lib.groupBy (name: colmenaLinuxHosts.${name}.channel) (
+        lib.attrNames colmenaLinuxHosts
+      );
+      darwinHostsByChannel = lib.groupBy (name: colmenaDarwinHosts.${name}.channel) (
+        lib.attrNames colmenaDarwinHosts
+      );
 
       currentSystem = builtins.currentSystem or "x86_64-linux";
 
