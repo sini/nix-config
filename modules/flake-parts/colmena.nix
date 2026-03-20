@@ -47,6 +47,8 @@
       linuxHostsByChannel = lib.groupBy (name: colmenaLinuxHosts.${name}.channel) (lib.attrNames colmenaLinuxHosts);
       darwinHostsByChannel = lib.groupBy (name: colmenaDarwinHosts.${name}.channel) (lib.attrNames colmenaDarwinHosts);
 
+      currentSystem = builtins.currentSystem or "x86_64-linux";
+
       mkColmenaLinuxHive =
         {
           hosts,
@@ -64,6 +66,7 @@
                 if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
               tags = [ hostOptions.environment ] ++ hostOptions.roles;
               allowLocalDeployment = true;
+              buildOnTarget = hostOptions.system != currentSystem;
             };
           }
         ) hosts
@@ -95,7 +98,7 @@
               tags = [ hostOptions.environment ] ++ hostOptions.roles;
               allowLocalDeployment = true;
               systemType = "darwin";
-              buildOnTarget = true;
+              buildOnTarget = hostOptions.system != currentSystem;
               targetUser = "sini"; # TODO: remove this user-specific magic...
             };
           }
