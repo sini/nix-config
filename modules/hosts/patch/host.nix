@@ -10,7 +10,7 @@
       "dev"
     ];
 
-    extra-features = [ ];
+    extra-features = [ "tailscale" ];
 
     system-access-groups = [ "system-access" ];
 
