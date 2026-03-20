@@ -425,8 +425,8 @@ in
               type = types.functionTo (types.attrsOf types.unspecified);
               readOnly = true;
               description = ''
-                Filter shared group definitions by scope.
-                Example: environment.groups "kanidm" returns all kanidm-scoped groups.
+                Filter shared group definitions by label.
+                Example: environment.groups "oauth-grant" returns all oauth-grant groups.
                 Pass null to get all groups.
               '';
             };
@@ -502,11 +502,14 @@ in
               );
 
             groups =
-              scope:
+              label:
               let
                 allGroups = flakeConfig.groups;
               in
-              if scope == null then allGroups else lib.filterAttrs (_: g: (g.scope or "") == scope) allGroups;
+              if label == null then
+                allGroups
+              else
+                lib.filterAttrs (_: g: lib.elem label (g.labels or [ ])) allGroups;
 
             secrets =
               let

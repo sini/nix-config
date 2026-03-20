@@ -80,8 +80,8 @@
 
 - `environments.<name>.groups`: \[function that evaluates to a(n) attribute set
   of unspecified value\] \
-  Filter shared group definitions by scope. Example: environment.groups "kanidm"
-  returns all kanidm-scoped groups. Pass null to get all groups.
+  Filter shared group definitions by label. Example: environment.groups
+  "oauth-grant" returns all oauth-grant groups. Pass null to get all groups.
 
 - `environments.<name>.id`: [signed integer] ID of the environment
 

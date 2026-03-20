@@ -169,22 +169,22 @@
           directGroups = environment.access.${userName} or [ ];
           resolvedGroups = resolveGroupMembership groupDefs directGroups;
 
-          # Scope filter — returns group names matching a given scope
-          scopedGroups = scope: lib.filter (g: (groupDefs.${g}.scope or "") == scope) resolvedGroups;
+          # Label filter — returns group names with a given label
+          groupsByLabel = label: lib.filter (g: lib.elem label (groupDefs.${g}.labels or [ ])) resolvedGroups;
 
-          # Derive enable from system-scoped groups ∩ merged system-access-groups (env + host)
+          # Derive enable from user-role groups ∩ merged system-access-groups (env + host)
           mergedAccessGroups = lib.unique (
             (environment.system-access-groups or [ ]) ++ (hostOptions.system-access-groups or [ ])
           );
-          enable = lib.any (g: lib.elem g mergedAccessGroups) (scopedGroups "system");
+          enable = lib.any (g: lib.elem g mergedAccessGroups) (groupsByLabel "user-role");
         in
         {
           inherit identity;
           system = sys // {
             inherit enable;
-            systemGroups = scopedGroups "unix";
+            systemGroups = groupsByLabel "posix";
           };
-          inherit directGroups resolvedGroups scopedGroups;
+          inherit directGroups resolvedGroups groupsByLabel;
         };
 
       # Build all resolved users for a host context
