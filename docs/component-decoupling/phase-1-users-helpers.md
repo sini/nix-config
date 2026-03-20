@@ -71,20 +71,21 @@ come only from canonical, never overridden.
 
 **Type builders** (from `features/helpers.nix`):
 
-| Function | Purpose | Consumers |
-| --- | --- | --- |
-| `identitySubmoduleType` | Submodule type for user identity (displayName, email, sshKeys, gpgKey) | `users/options.nix`, `mkEnvUsersOpt` |
-| `mkEnvUsersOpt` | Environment-level user options (nullable overrides + derived identity) | `environments/options.nix` |
-| `mkHostUsersOpt` | Host-level user options (all nullable overrides) | `hosts/options.nix` |
+| Function | Purpose | Consumers | | --- | --- | --- | | `identitySubmoduleType`
+| Submodule type for user identity (displayName, email, sshKeys, gpgKey) |
+`users/options.nix`, `mkEnvUsersOpt` | | `mkEnvUsersOpt` | Environment-level
+user options (nullable overrides + derived identity) |
+`environments/options.nix` | | `mkHostUsersOpt` | Host-level user options (all
+nullable overrides) | `hosts/options.nix` |
 
 **Resolution logic** (from `hosts/configuration-helpers.nix` Section 2):
 
-| Function | Purpose | Consumers |
-| --- | --- | --- |
-| `coalesce` | First non-null value helper | `resolveUser` |
-| `resolveGroupMembership` | Transitive group traversal via `group.members` reverse lookup | `resolveUser` |
-| `resolveUser` | Full 3-layer merge + ACL resolution for one user | `resolveUsers` |
-| `resolveUsers` | Batch resolution — union of canonical + env.access + env.users + host.users | `prepareHostContext` in hosts |
+| Function | Purpose | Consumers | | --- | --- | --- | | `coalesce` | First
+non-null value helper | `resolveUser` | | `resolveGroupMembership` | Transitive
+group traversal via `group.members` reverse lookup | `resolveUser` | |
+`resolveUser` | Full 3-layer merge + ACL resolution for one user |
+`resolveUsers` | | `resolveUsers` | Batch resolution — union of canonical +
+env.access + env.users + host.users | `prepareHostContext` in hosts |
 
 ## What stayed in place
 
@@ -98,11 +99,11 @@ come only from canonical, never overridden.
 
 ## Changes made
 
-| File | Action |
-|---|---|
-| `users/helpers.nix` | Created — `flake.lib.users` with 7 functions |
-| `features/helpers.nix` | Removed 3 user type builders from let block and exports |
-| `hosts/configuration-helpers.nix` | Removed Section 2 (~150 lines), added `inherit (self.lib.users) resolveUsers` |
-| `users/options.nix` | `self.lib.modules` → `self.lib.users` for `identitySubmoduleType` |
-| `environments/options.nix` | `self.lib.modules` → `self.lib.users` for `mkEnvUsersOpt` |
-| `hosts/options.nix` | Split inherit: `mkDeferredModuleOpt` from modules, `mkHostUsersOpt` from users |
+| File | Action | |---|---| | `users/helpers.nix` | Created — `flake.lib.users`
+with 7 functions | | `features/helpers.nix` | Removed 3 user type builders from
+let block and exports | | `hosts/configuration-helpers.nix` | Removed Section 2
+(~150 lines), added `inherit (self.lib.users) resolveUsers` | |
+`users/options.nix` | `self.lib.modules` → `self.lib.users` for
+`identitySubmoduleType` | | `environments/options.nix` | `self.lib.modules` →
+`self.lib.users` for `mkEnvUsersOpt` | | `hosts/options.nix` | Split inherit:
+`mkDeferredModuleOpt` from modules, `mkHostUsersOpt` from users |

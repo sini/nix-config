@@ -76,23 +76,23 @@ environments/options.nix
    `environments/options.nix`. The `kubernetes` option appears on every
    environment instance without `environments/options.nix` knowing about it.
 
-2. **Update `environments/options.nix`**:
-   - Remove `inherit (self.lib.kubernetes-services) kubernetesConfigType;`
-     (line 11).
+1. **Update `environments/options.nix`**:
+   - Remove `inherit (self.lib.kubernetes-services) kubernetesConfigType;` (line
+     11).
    - Remove the `kubernetes` option declaration (lines 222–226).
    - The `config.secrets.oidcIssuerFor` block (lines 514–539) references
      `config.kubernetes.sso.*`. After the move, this still works — the option is
      still present on the environment submodule, just declared by a different
      module.
 
-3. **Verify**: `nix eval .#environments` should return the same structure.
+1. **Verify**: `nix eval .#environments` should return the same structure.
 
 ### Risk
 
 **Low**. The module system's submodule merging is a standard pattern used
 throughout NixOS. The only requirement is that the `options.environments` option
-type is compatible — both declarations use `types.attrsOf (types.submodule ...)`,
-which merges cleanly.
+type is compatible — both declarations use
+`types.attrsOf (types.submodule ...)`, which merges cleanly.
 
 **Edge case**: If `environments/options.nix` uses a named `environmentType`
 variable (it does — `types.attrsOf environmentType`), the merge still works
@@ -119,6 +119,7 @@ extraSpecialArgs = {
 ```
 
 This means:
+
 - `mkEnv` cannot be tested without a fully evaluated hosts config.
 - The dependency is invisible from the function signature — `mkEnv` takes
   `{ system, pkgs, env, environment }` but secretly also needs `hosts`.
@@ -172,7 +173,7 @@ kubernetes/nixidy-envs.nix
 
    Remove `inherit (config.flake) hosts;` from `extraSpecialArgs`.
 
-2. **Update `kubernetes/nixidy-envs.nix`** — pass `hosts` from caller:
+1. **Update `kubernetes/nixidy-envs.nix`** — pass `hosts` from caller:
 
    ```nix
    mkEnv {
@@ -186,7 +187,7 @@ kubernetes/nixidy-envs.nix
    rather than `config.flake.hosts` is more direct — `config.flake.hosts` is
    just a re-export from `expose-options.nix`.
 
-3. **Verify**: `nix eval .#nixidyEnvs` should produce identical output.
+1. **Verify**: `nix eval .#nixidyEnvs` should produce identical output.
 
 ### Risk
 
@@ -196,14 +197,14 @@ risk is missing a call site, but `mkEnv` has exactly one caller
 
 ### Additional observation
 
-`kubernetes/nixidy-helpers.nix` also references `config.flake.meta.repo`
-(line 11) and `config.features.agenix-generators.system` (line 229). These are
+`kubernetes/nixidy-helpers.nix` also references `config.flake.meta.repo` (line
+11\) and `config.features.agenix-generators.system` (line 229). These are
 lower-priority cross-domain reads:
 
 - `meta.repo` is stable metadata unlikely to cause issues.
 - `agenix-generators` is a feature-domain reference used to inject secret
-  handling into nixidy modules. This could be parameterized in a future phase but
-  is not blocking.
+  handling into nixidy modules. This could be parameterized in a future phase
+  but is not blocking.
 
 ---
 
@@ -211,12 +212,12 @@ lower-priority cross-domain reads:
 
 1. Create `kubernetes/environment-extension.nix` — injects `kubernetes` option
    into environments.
-2. Update `environments/options.nix` — remove `kubernetesConfigType` import and
+1. Update `environments/options.nix` — remove `kubernetesConfigType` import and
    `kubernetes` option.
-3. Update `kubernetes/nixidy-helpers.nix` — add `hosts` param to `mkEnv`,
-   remove `config.flake.hosts` reference.
-4. Update `kubernetes/nixidy-envs.nix` — pass `hosts = config.hosts` to `mkEnv`.
-5. Verify:
+1. Update `kubernetes/nixidy-helpers.nix` — add `hosts` param to `mkEnv`, remove
+   `config.flake.hosts` reference.
+1. Update `kubernetes/nixidy-envs.nix` — pass `hosts = config.hosts` to `mkEnv`.
+1. Verify:
    ```bash
    nix eval .#environments --apply 'e: builtins.attrNames e'
    nix eval .#lib --apply 'lib: builtins.attrNames lib'
@@ -226,6 +227,6 @@ lower-priority cross-domain reads:
 
 ## Overall risk
 
-**Low-Medium**. Both changes are mechanical — no logic changes, just moving where
-types are declared and making implicit dependencies explicit. The module system
-submodule merging pattern is well-established in NixOS.
+**Low-Medium**. Both changes are mechanical — no logic changes, just moving
+where types are declared and making implicit dependencies explicit. The module
+system submodule merging pattern is well-established in NixOS.

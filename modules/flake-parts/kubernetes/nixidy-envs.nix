@@ -22,7 +22,7 @@ in
               env
               environment
               ;
-            hosts = config.hosts;
+            inherit (config) hosts;
           }
         ) config.environments
       )

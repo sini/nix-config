@@ -22,7 +22,6 @@
     {
       pkgs,
       lib,
-      config,
       ...
     }:
     {

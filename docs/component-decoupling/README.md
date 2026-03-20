@@ -29,27 +29,36 @@ modules/flake-parts/
 ## Issues
 
 | # | Issue | Severity | File(s) | Phase |
-|---|-------|----------|---------|-------|
-| 1 | User/ACL resolution logic in hosts domain | HIGH | `hosts/configuration-helpers.nix` | [1](phase-1-users-helpers.md) |
-| 2 | User type builders in features domain | HIGH | `features/helpers.nix` | [1](phase-1-users-helpers.md) |
-| 3 | Kubernetes config type coupled into environments | MEDIUM | `environments/options.nix` | [2](phase-2-kubernetes-decoupling.md) |
-| 4 | Nixidy helpers reach into hosts domain | MEDIUM | `kubernetes/nixidy-helpers.nix` | [2](phase-2-kubernetes-decoupling.md) |
-| 5 | Environment helpers cross domain boundaries | MEDIUM | `environments/options.nix` | [4](phase-4-environment-helpers.md) |
-| 6 | Kubernetes pre-commit hook in devtools | MEDIUM | `devtools/pre-commit.nix` | [3](phase-3-domain-devshell.md) |
-| 7 | Domain-specific commands in devshell | LOW-MEDIUM | `devtools/devshell.nix` | [3](phase-3-domain-devshell.md) |
-| 8 | Monitoring/exporter logic in hosts domain | LOW-MEDIUM | `hosts/utils.nix` | [5](phase-5-minor-cleanups.md) |
-| 9 | Duplicate feature submodule shape | LOW | `features/options.nix`, `features/helpers.nix` | [5](phase-5-minor-cleanups.md) |
-| 10 | expose-options.nix manually lists domains | LOW | `expose-options.nix` | [5](phase-5-minor-cleanups.md) |
+|---|-------|----------|---------|-------| | 1 | User/ACL resolution logic in
+hosts domain | HIGH | `hosts/configuration-helpers.nix` |
+[1](phase-1-users-helpers.md) | | 2 | User type builders in features domain |
+HIGH | `features/helpers.nix` | [1](phase-1-users-helpers.md) | | 3 | Kubernetes
+config type coupled into environments | MEDIUM | `environments/options.nix` |
+[2](phase-2-kubernetes-decoupling.md) | | 4 | Nixidy helpers reach into hosts
+domain | MEDIUM | `kubernetes/nixidy-helpers.nix` |
+[2](phase-2-kubernetes-decoupling.md) | | 5 | Environment helpers cross domain
+boundaries | MEDIUM | `environments/options.nix` |
+[4](phase-4-environment-helpers.md) | | 6 | Kubernetes pre-commit hook in
+devtools | MEDIUM | `devtools/pre-commit.nix` | [3](phase-3-domain-devshell.md)
+| | 7 | Domain-specific commands in devshell | LOW-MEDIUM |
+`devtools/devshell.nix` | [3](phase-3-domain-devshell.md) | | 8 |
+Monitoring/exporter logic in hosts domain | LOW-MEDIUM | `hosts/utils.nix` |
+[5](phase-5-minor-cleanups.md) | | 9 | Duplicate feature submodule shape | LOW |
+`features/options.nix`, `features/helpers.nix` | [5](phase-5-minor-cleanups.md)
+| | 10 | expose-options.nix manually lists domains | LOW | `expose-options.nix`
+| [5](phase-5-minor-cleanups.md) |
 
 ## Phase Summary
 
-| Phase | Issues | Impact | Risk | Status |
-| ----- | ------ | ------ | ---- | ------ |
-| [1](phase-1-users-helpers.md) | 1, 2 | HIGH — establishes users as a proper domain | Medium | DONE |
-| [2](phase-2-kubernetes-decoupling.md) | 3, 4 | MEDIUM — removes hard coupling between kubernetes, environments, hosts | Low-Medium | |
-| [3](phase-3-domain-devshell.md) | 6, 7 | MEDIUM — each domain owns its tooling contributions | Low | |
-| [4](phase-4-environment-helpers.md) | 5 | LOW — remove dead `groups` helper; `findHostsByRole` is acceptable | None | DECLINED |
-| [5](phase-5-minor-cleanups.md) | 8, 9, 10 | LOW — cleanup and consolidation | Low | |
+| Phase | Issues | Impact | Risk | Status | | ----- | ------ | ------ | ---- |
+------ | | [1](phase-1-users-helpers.md) | 1, 2 | HIGH — establishes users as a
+proper domain | Medium | DONE | | [2](phase-2-kubernetes-decoupling.md) | 3, 4 |
+MEDIUM — removes hard coupling between kubernetes, environments, hosts |
+Low-Medium | | | [3](phase-3-domain-devshell.md) | 6, 7 | MEDIUM — each domain
+owns its tooling contributions | Low | | | [4](phase-4-environment-helpers.md) |
+5 | LOW — remove dead `groups` helper; `findHostsByRole` is acceptable | None |
+DECLINED | | [5](phase-5-minor-cleanups.md) | 8, 9, 10 | LOW — cleanup and
+consolidation | Low | |
 
 ## Validation
 

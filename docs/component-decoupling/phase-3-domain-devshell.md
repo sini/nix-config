@@ -41,43 +41,32 @@ just registers them as named commands.
 
 ### Stays in `devtools/devshell.nix` — generic dev tools
 
-| Command | Reason |
-|---|---|
-| `nh` | Nix helper |
-| `treefmt` | Formatter |
-| `nix-tree` | Derivation browser |
-| `nvd` | Nix diff |
-| `nix-diff` | Explain derivation differences |
-| `nix-output-monitor` | Build monitoring |
-| `nix-flake-build` | Build any host config |
-| `nix-flake-update` | Update flake inputs |
-| `list-infra` | Cross-cutting overview tool |
+| Command | Reason | |---|---| | `nh` | Nix helper | | `treefmt` | Formatter | |
+`nix-tree` | Derivation browser | | `nvd` | Nix diff | | `nix-diff` | Explain
+derivation differences | | `nix-output-monitor` | Build monitoring | |
+`nix-flake-build` | Build any host config | | `nix-flake-update` | Update flake
+inputs | | `list-infra` | Cross-cutting overview tool |
 
 ### Moves to `kubernetes/devshell.nix` — kubernetes operations
 
-| Command | Current location | Reason |
-|---|---|---|
-| `toggle-axon-kubernetes` | `devtools/devshell.nix` | K8s cluster management |
-| `convert-oidc-secrets` | `devtools/devshell.nix` | OIDC is k8s service auth |
-| `k8s-update-manifests` (command) | `kubernetes/nixidy-envs.nix` | Consolidate k8s devshell |
-| `k8s-update-manifests` (pre-commit) | `devtools/pre-commit.nix` | K8s manifest regeneration |
+| Command | Current location | Reason | |---|---|---| | `toggle-axon-kubernetes`
+| `devtools/devshell.nix` | K8s cluster management | | `convert-oidc-secrets` |
+`devtools/devshell.nix` | OIDC is k8s service auth | | `k8s-update-manifests`
+(command) | `kubernetes/nixidy-envs.nix` | Consolidate k8s devshell | |
+`k8s-update-manifests` (pre-commit) | `devtools/pre-commit.nix` | K8s manifest
+regeneration |
 
 ### Moves to `hosts/devshell.nix` — host provisioning
 
-| Command | Reason |
-|---|---|
-| `update-host-keys` | Host SSH key management |
-| `nix-flake-provision-keys` | Host key provisioning |
-| `nix-flake-install` | Remote NixOS installation |
-| `impermanence-copy` | Host persistent storage |
-| `update-tang-disk-keys` | Host disk encryption |
+| Command | Reason | |---|---| | `update-host-keys` | Host SSH key management |
+| `nix-flake-provision-keys` | Host key provisioning | | `nix-flake-install` |
+Remote NixOS installation | | `impermanence-copy` | Host persistent storage | |
+`update-tang-disk-keys` | Host disk encryption |
 
 ### Moves to `secrets/devshell.nix` — secrets management
 
-| Command | Reason |
-|---|---|
-| `generate-vault-certs` | Vault certificate generation |
-| `generate-user-keys` | User SSH key generation + encryption |
+| Command | Reason | |---|---| | `generate-vault-certs` | Vault certificate
+generation | | `generate-user-keys` | User SSH key generation + encryption |
 
 ## Steps
 
@@ -185,6 +174,7 @@ just registers them as named commands.
 ### 4. Update `devtools/devshell.nix`
 
 Remove all domain-specific commands. Retain only:
+
 - Packages: git, gh, nix, nixos-rebuild, nix-output-monitor, nix-fast-build,
   nil, nixd, sops (+ coreutils on Darwin)
 - Commands: nh, treefmt, nix-tree, nvd, nix-diff, nix-output-monitor,
@@ -213,8 +203,8 @@ nix develop --command true
 ## Risk
 
 **Low**. All changes are additive list/attrset merges via the module system. The
-devshell command order may shift but has no functional impact. The pre-commit hook
-behavior is identical — only the declaring module changes.
+devshell command order may shift but has no functional impact. The pre-commit
+hook behavior is identical — only the declaring module changes.
 
 **Key invariant**: The `inputs.git-hooks-nix.flakeModule` import stays in
 `devtools/pre-commit.nix`. It only needs to be imported once — after that, any

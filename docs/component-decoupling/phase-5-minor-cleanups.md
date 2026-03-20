@@ -13,8 +13,8 @@
 concern, not a host configuration concern.
 
 **Action**: Move to a monitoring helper or let roles declare their exporters via
-the role submodule type. Evaluate whether a dedicated `monitoring/` domain folder
-is warranted or if this fits better as a role-level concern in
+the role submodule type. Evaluate whether a dedicated `monitoring/` domain
+folder is warranted or if this fits better as a role-level concern in
 `features/roles.nix`.
 
 ## Issue 9 — Duplicate feature submodule shape
