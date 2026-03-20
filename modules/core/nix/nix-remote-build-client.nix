@@ -16,7 +16,9 @@ in
     }:
     let
       builders = findHostsWithRole "nix-builder";
-      remoteBuilders = lib.filterAttrs (hostname: _: hostname != config.networking.hostName) builders;
+      remoteBuilders = lib.filterAttrs (
+        hostname: builder: (hostname != config.networking.hostName) && (host.system == builder.system)
+      ) builders;
       localBuildSpeed = host.remoteBuildSpeed;
     in
     {
