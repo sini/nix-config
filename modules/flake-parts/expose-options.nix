@@ -24,6 +24,7 @@ in
       users
       groups
       kubernetes
+      clusters
       ;
   };
 
@@ -35,6 +36,7 @@ in
       roles
       users
       groups
+      clusters
       ;
   };
 }

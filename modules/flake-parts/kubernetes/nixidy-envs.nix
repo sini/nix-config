@@ -13,18 +13,15 @@ in
       system:
       withSystem system (
         { pkgs, ... }:
-        lib.mapAttrs (
-          env: environment:
-          mkEnv {
-            inherit
-              system
-              pkgs
-              env
-              environment
-              ;
-            inherit (config) hosts;
-          }
-        ) config.environments
+        lib.mapAttrs' (clusterName: cluster: {
+          name = "${cluster.environment}-${clusterName}";
+          value = mkEnv {
+            inherit system pkgs cluster;
+            env = "${cluster.environment}-${clusterName}";
+            environment = cluster.resolvedEnvironment;
+            hosts = cluster.resolvedHosts;
+          };
+        }) config.clusters
       )
     );
   };

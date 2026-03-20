@@ -8,6 +8,7 @@
         pkgs,
         config,
         host,
+        cluster,
         environment,
         ...
       }:
@@ -43,7 +44,7 @@
         # masterIP = findClusterMaster environment;
         masterIP =
           if shouldInit then
-            environment.getAssignment "kube-apiserver-vip"
+            cluster.getAssignment "kube-apiserver-vip"
           else
             let
               otherNodes = lib.filter (node: node.hostname != config.networking.hostName) sortedKubernetesNodes;
@@ -214,7 +215,7 @@
               virtualRouterId = 51;
               priority = 100 - nodeId; # Higher number wins (e.g., 100 on MASTER)
               virtualIps = [
-                { addr = "${environment.getAssignment "kube-apiserver-vip"}/${managementSubnet}"; }
+                { addr = "${cluster.getAssignment "kube-apiserver-vip"}/${managementSubnet}"; }
               ];
               trackScripts = [ "check_k3s" ];
             };
@@ -223,8 +224,8 @@
           k3s =
             let
               # Access networks by name
-              podNetwork = environment.networks.kubernetes-pods;
-              serviceNetwork = environment.networks.kubernetes-services;
+              podNetwork = cluster.networks.kubernetes-pods;
+              serviceNetwork = cluster.networks.kubernetes-services;
 
               generalFlagList = [
                 "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
@@ -253,7 +254,7 @@
                 "--kubelet-arg=fail-swap-on=false"
 
                 "--write-kubeconfig-mode \"0644\""
-                "--kubelet-arg=--cluster-dns=${environment.getAssignment "coredns"}"
+                "--kubelet-arg=--cluster-dns=${cluster.getAssignment "coredns"}"
 
                 "--etcd-expose-metrics"
                 "--etcd-snapshot-schedule-cron='0 */12 * * *'"
@@ -278,7 +279,7 @@
                 "--tls-san=${config.networking.hostName}"
                 "--tls-san=${config.networking.hostName}.ts.${environment.domain}"
                 "--tls-san=${builtins.head host.ipv4}"
-                "--tls-san=${environment.getAssignment "kube-apiserver-vip"}"
+                "--tls-san=${cluster.getAssignment "kube-apiserver-vip"}"
 
                 "--kube-apiserver-arg=oidc-issuer-url=https://${environment.getDomainFor "kanidm"}/oauth2/openid/kubernetes"
                 "--kube-apiserver-arg=oidc-client-id=kubernetes"
@@ -286,7 +287,7 @@
                 "--kube-apiserver-arg=oidc-username-claim=email"
                 "--kube-apiserver-arg=oidc-groups-claim=groups"
               ]
-              ++ (lib.map (ip: "--tls-san=${ip}") environment.kubernetes.tlsSanIps);
+              ++ (lib.optionals (cluster != null) (lib.map (ip: "--tls-san=${ip}") cluster.kubernetes.tlsSanIps));
               serverFlags = builtins.concatStringsSep " " (generalFlagList ++ serverFlagList);
             in
             {

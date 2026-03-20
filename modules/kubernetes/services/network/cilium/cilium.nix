@@ -56,17 +56,18 @@
       {
         config,
         charts,
+        cluster,
         environment,
         ...
       }:
       let
         # Access networks by name
-        podNetwork = environment.networks.kubernetes-pods;
-        # serviceNetwork = environment.networks.kubernetes-services;
-        loadbalancerNetwork = environment.networks.kubernetes-loadbalancers;
+        podNetwork = cluster.networks.kubernetes-pods;
+        # serviceNetwork = cluster.networks.kubernetes-services;
+        loadbalancerNetwork = cluster.networks.kubernetes-loadbalancers;
 
         loadbalancer-cidr = loadbalancerNetwork.cidr;
-        # ingress-controller-address = environment.getAssignment "cilium-ingress-controller";
+        # ingress-controller-address = cluster.getAssignment "cilium-ingress-controller";
       in
       {
         applications.cilium = {

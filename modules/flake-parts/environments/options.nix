@@ -414,14 +414,6 @@ in
               '';
             };
 
-            secrets = mkOption {
-              type = types.unspecified;
-              readOnly = true;
-              description = ''
-                Secret helper functions for this environment.
-                Provides: from, for, forInlineFor, forOidcService, oidcIssuerFor
-              '';
-            };
           };
 
           config = {
@@ -484,32 +476,6 @@ in
                 (builtins.elem role (hostConfig.roles or [ ])) && (hostConfig.environment == config.name)
               );
 
-            secrets =
-              let
-                credentialsEnv =
-                  if config.kubernetes.sso.credentialsEnvironment != null then
-                    config.kubernetes.sso.credentialsEnvironment
-                  else
-                    config.name;
-              in
-              {
-                oidcIssuerFor =
-                  clientID:
-                  let
-                    pattern =
-                      if config.kubernetes.sso.issuerPattern != null then
-                        config.kubernetes.sso.issuerPattern
-                      else
-                        let
-                          # Look up credentials environment
-                          environments = config.environments or { };
-                          credEnv = environments.${credentialsEnv} or null;
-                          domain = if credEnv != null then credEnv.domain else config.domain;
-                        in
-                        "https://idm.${domain}/oauth2/openid/{clientID}";
-                  in
-                  lib.replaceStrings [ "{clientID}" ] [ clientID ] pattern;
-              };
           };
         }
       );

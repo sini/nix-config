@@ -16,13 +16,13 @@
       {
         charts,
         environment,
+        hosts,
         lib,
         ...
       }:
       let
-        hosts =
-          environment.findHostsByRole "k3s"
-          |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.tags ? "ceph-device");
+        cephHosts =
+          hosts |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.tags ? "ceph-device");
         rookDomain = environment.getDomainFor "rook-dashboard";
         radosDomain = environment.getDomainFor "rook-rados";
       in
@@ -147,7 +147,7 @@
                   allowDeviceClassUpdate = true;
                   allowOsdCrushWeightUpdate = true;
                   nodes =
-                    builtins.attrValues hosts
+                    builtins.attrValues cephHosts
                     |> map (hostConfig: {
                       name = hostConfig.hostname;
                       devices = [

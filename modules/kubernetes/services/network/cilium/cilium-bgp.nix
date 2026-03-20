@@ -2,13 +2,10 @@
   kubernetes.services.cilium-bgp = {
     nixidy =
       {
-        environment,
+        hosts,
         lib,
         ...
       }:
-      let
-        hosts = environment.findHostsByRole "k3s";
-      in
       {
         applications.cilium = {
           namespace = "kube-system";

@@ -16,6 +16,7 @@
       {
         config,
         charts,
+        cluster,
         environment,
         ...
       }:
@@ -131,7 +132,7 @@
               ];
 
               oidc = {
-                provider.issuer = environment.secrets.oidcIssuerFor "longhorn";
+                provider.issuer = cluster.secrets.oidcIssuerFor "longhorn";
                 clientID = "longhorn";
                 clientSecret.name = "longhorn-oidc-client-secret";
                 scopes = [

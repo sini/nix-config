@@ -136,6 +136,7 @@ The following files in this repository are generated and checked using
 
 - `.gitignore`
 - `LICENSE`
+- `docs/clusters-options.md`
 - `docs/environments-options.md`
 - `docs/groups-options.md`
 - `docs/hosts-options.md`

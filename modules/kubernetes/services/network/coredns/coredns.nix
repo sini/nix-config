@@ -3,6 +3,7 @@
     nixidy =
       {
         lib,
+        cluster,
         environment,
         charts,
         ...
@@ -17,7 +18,7 @@
             values = {
               service = {
                 k8sAppLabelOverride = "kube-dns";
-                clusterIP = environment.getAssignment "coredns";
+                clusterIP = cluster.getAssignment "coredns";
                 # TODO: clusterIPs: ipv6
                 ipFamilyPolicy = "RequireDualStack";
                 ipFamilies = [

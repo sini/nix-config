@@ -58,30 +58,6 @@
           "2a01:4f8:c2c:123f::1"
           "2a00:1098:2b::1"
         ];
-        assignments = {
-          kube-apiserver-vip = "10.9.0.100";
-        };
-      };
-      kubernetes-pods = {
-        cidr = "172.16.0.0/16";
-        ipv6_cidr = "fdfd:cafe:00:0002::/96";
-        description = "Kubernetes pod network";
-      };
-      kubernetes-services = {
-        cidr = "172.17.0.0/16";
-        ipv6_cidr = "fdfd:cafe:00:8002::/112";
-        description = "Kubernetes service network";
-        assignments = {
-          coredns = "172.17.0.10";
-        };
-      };
-      kubernetes-loadbalancers = {
-        cidr = "10.12.0.0/16";
-        description = "LoadBalancer service IP range";
-        assignments = {
-          cilium-ingress-controller = "10.12.0.2";
-          default-gateway = "10.12.0.1";
-        };
       };
     };
 

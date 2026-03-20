@@ -4,6 +4,7 @@
       {
         config,
         charts,
+        cluster,
         environment,
         ...
       }:
@@ -164,7 +165,7 @@
                   '';
                   "oidc.config" = builtins.toJSON {
                     name = "kanidm";
-                    issuer = environment.secrets.oidcIssuerFor "argocd";
+                    issuer = cluster.secrets.oidcIssuerFor "argocd";
                     clientID = "argocd";
                     clientSecret = "$oidc.clientSecret";
                     enablePKCEAuthentication = true;

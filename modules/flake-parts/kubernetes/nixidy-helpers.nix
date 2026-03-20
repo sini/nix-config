@@ -31,11 +31,11 @@
           builtins.intersectAttrs (lib.genAttrs keys (_: null)) attrs
         );
 
-      # Merge defaultServices with any additional services enabled in an
-      # environment's kubernetes.services.enabled list.
-      # environment -> [string]
+      # Merge defaultServices with any additional services enabled in a
+      # cluster's kubernetes.services.enabled list.
+      # cluster -> [string]
       getEnabledServices =
-        environment: lib.unique (defaultServices ++ (environment.kubernetes.services.enabled or [ ]));
+        cluster: lib.unique (defaultServices ++ (cluster.kubernetes.services.enabled or [ ]));
 
       # Resolve enabled service names to their nixidy module definitions.
       # Filters out service names that aren't defined in kubernetes.services
@@ -116,18 +116,18 @@
         in
         map (name: import (generatedCrds + "/${name}")) enabledNixFiles;
 
-      # Build the core nixidy configuration module for an environment.
+      # Build the core nixidy configuration module for a cluster.
       # This sets up:
       # - The kubernetes option type (flattened service access for nixidy modules)
-      # - Environment kubernetes config injection as mkDefault values
+      # - Cluster kubernetes config injection as mkDefault values
       # - CRD application imports for enabled services
       # - Git target repository and branch for rendered manifests
       # - ArgoCD sync policy and helm label stripping defaults
-      # { env, environment, enabledServices, system } -> module
+      # { env, cluster, environment, enabledServices, system } -> module
       mkNixidyModule =
         {
           env,
-          environment,
+          cluster,
           enabledServices,
           system,
         }:
@@ -140,16 +140,16 @@
           };
 
           config = {
-            # Inject environment-level kubernetes values as defaults.
+            # Inject cluster-level kubernetes values as defaults.
             # Services are flattened from the split enabled/config structure
             # into direct service access for nixidy modules.
             kubernetes = lib.mapAttrs (
               name: value:
               if name == "services" then
-                lib.mapAttrs (_: lib.mkDefault) environment.kubernetes.services.config
+                lib.mapAttrs (_: lib.mkDefault) cluster.kubernetes.services.config
               else
                 lib.mkDefault value
-            ) environment.kubernetes;
+            ) cluster.kubernetes;
 
             nixidy = {
               env = lib.mkDefault env;
@@ -198,17 +198,18 @@
       # This is the primary entry point — it resolves enabled services,
       # collects their modules and CRD objects, merges helm charts, and
       # produces a full nixidy environment via inputs.nixidy.lib.mkEnv.
-      # { system, pkgs, env, environment } -> nixidyEnv
+      # { system, pkgs, env, cluster, environment, hosts } -> nixidyEnv
       mkEnv =
         {
           system,
           pkgs,
           env,
+          cluster,
           environment,
           hosts,
         }:
         let
-          enabledServices = getEnabledServices environment;
+          enabledServices = getEnabledServices cluster;
           serviceModules = getServiceModules enabledServices;
           serviceCrdObjects = getServiceCrdObjects { inherit system enabledServices; };
           userCharts = config.flake.chartsDerivations.${system} or { };
@@ -217,7 +218,12 @@
           inherit pkgs;
           charts = (inputs.nixhelm.chartsDerivations.${system} or { }) // userCharts;
           extraSpecialArgs = {
-            inherit environment inputs hosts;
+            inherit
+              environment
+              cluster
+              inputs
+              hosts
+              ;
             crdObjects = serviceCrdObjects;
           };
           modules = [
@@ -232,6 +238,7 @@
             (mkNixidyModule {
               inherit
                 env
+                cluster
                 environment
                 enabledServices
                 system

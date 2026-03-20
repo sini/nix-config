@@ -1,7 +1,12 @@
 {
   kubernetes.services.hubble-ui = {
     nixidy =
-      { config, environment, ... }:
+      {
+        config,
+        cluster,
+        environment,
+        ...
+      }:
       let
         domain = environment.getDomainFor "hubble-ui";
       in
@@ -60,7 +65,7 @@
               ];
 
               oidc = {
-                provider.issuer = environment.secrets.oidcIssuerFor "hubble-ui";
+                provider.issuer = cluster.secrets.oidcIssuerFor "hubble-ui";
                 clientID = "hubble-ui";
                 clientSecret.name = "hubble-ui-oidc-client-secret";
                 # cookieDomain = "${environment.domain}";

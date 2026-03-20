@@ -103,11 +103,17 @@
           groupDefs = config.groups or { };
           users = resolveUsers lib' canonicalUsers environment hostOptions groupDefs;
 
+          # Resolve cluster for this host (null if host is not in any cluster)
+          cluster = lib.findFirst (c: c.resolvedHosts ? ${hostOptions.hostname}) null (
+            builtins.attrValues (config.clusters or { })
+          );
+
           specialArgs = {
             inherit
               pkgs'
               inputs
               environment
+              cluster
               users
               ;
             host = hostOptions;

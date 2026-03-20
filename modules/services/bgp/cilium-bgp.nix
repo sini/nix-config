@@ -6,6 +6,7 @@
     linux =
       {
         lib,
+        cluster,
         environment,
         host,
         ...
@@ -34,10 +35,10 @@
           in
           if bgpHubHosts == [ ] then null else lib.head (lib.head bgpHubHosts).ipv4;
 
-        # Access networks by name
-        podNetwork = environment.networks.kubernetes-pods;
-        serviceNetwork = environment.networks.kubernetes-services;
-        loadbalancerNetwork = environment.networks.kubernetes-loadbalancers;
+        # Access cluster networks by name
+        podNetwork = cluster.networks.kubernetes-pods;
+        serviceNetwork = cluster.networks.kubernetes-services;
+        loadbalancerNetwork = cluster.networks.kubernetes-loadbalancers;
       in
       {
         config = {

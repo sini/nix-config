@@ -78,11 +78,6 @@
   parts of the service domain as a string (e.g., "json64.dev" from
   "argocd.prod.json64.dev").
 
-- `environments.<name>.groups`: \[function that evaluates to a(n) attribute set
-  of unspecified value\] \
-  Filter shared group definitions by label. Example: environment.groups
-  "oauth-grant" returns all oauth-grant groups. Pass null to get all groups.
-
 - `environments.<name>.id`: [signed integer] ID of the environment
 
 - `environments.<name>.ipv6`: IPv6 ULA and prefix configuration for NPTv6
@@ -102,98 +97,6 @@
 
 - `environments.<name>.ipv6.ula_prefix`: [null or string] ULA prefix for the
   environment (e.g., fd64::/48)
-
-- `environments.<name>.kubernetes`: Kubernetes-specific network configuration
-
-- `environments.<name>.kubernetes.services`: \
-  Kubernetes service management for this environment. Use 'enabled' to enable
-  services and 'config' for service-specific options.
-
-- `environments.<name>.kubernetes.services.config`: \
-  Service-specific configurations for this environment. Options are imported
-  from kubernetes.services.\<name>.options.
-
-- `environments.<name>.kubernetes.services.config.amd-gpu-device-plugin`:
-  [attribute set] Configuration for amd-gpu-device-plugin service
-
-- `environments.<name>.kubernetes.services.config.argocd`: [attribute set]
-  Configuration for argocd service
-
-- `environments.<name>.kubernetes.services.config.bootstrap`: [attribute set]
-  Configuration for bootstrap service
-
-- `environments.<name>.kubernetes.services.config.cert-manager`: [attribute set]
-  Configuration for cert-manager service
-
-- `environments.<name>.kubernetes.services.config.cilium`: Configuration for
-  cilium service
-
-- `environments.<name>.kubernetes.services.config.cilium-bgp`: [attribute set]
-  Configuration for cilium-bgp service
-
-- `environments.<name>.kubernetes.services.config.cilium.devices`: \[null or
-  (list of string)\] List of devices
-
-- `environments.<name>.kubernetes.services.config.cilium.directRoutingDevice`:
-  [null or string] Default routing device
-
-- `environments.<name>.kubernetes.services.config.coredns`: [attribute set]
-  Configuration for coredns service
-
-- `environments.<name>.kubernetes.services.config.csi-driver-nfs`: Configuration
-  for csi-driver-nfs service
-
-- `environments.<name>.kubernetes.services.config.csi-driver-nfs.volumes`: NFS
-  volumes to create storage classes for
-
-- `environments.<name>.kubernetes.services.config.csi-driver-nfs.volumes.<name>.server`:
-  [string] NFS server address
-
-- `environments.<name>.kubernetes.services.config.csi-driver-nfs.volumes.<name>.share`:
-  [string] NFS share path
-
-- `environments.<name>.kubernetes.services.config.envoy-gateway`: \[attribute
-  set\] Configuration for envoy-gateway service
-
-- `environments.<name>.kubernetes.services.config.gateway-api`: [attribute set]
-  Configuration for gateway-api service
-
-- `environments.<name>.kubernetes.services.config.hubble-ui`: [attribute set]
-  Configuration for hubble-ui service
-
-- `environments.<name>.kubernetes.services.config.longhorn`: [attribute set]
-  Configuration for longhorn service
-
-- `environments.<name>.kubernetes.services.config.romm`: [attribute set]
-  Configuration for romm service
-
-- `environments.<name>.kubernetes.services.config.rook-ceph`: [attribute set]
-  Configuration for rook-ceph service
-
-- `environments.<name>.kubernetes.services.config.sops-secrets-operator`:
-  Configuration for sops-secrets-operator service
-
-- `environments.<name>.kubernetes.services.config.sops-secrets-operator.replicaCount`:
-  [signed integer] Number of replicas for the sops-secrets-operator
-
-- `environments.<name>.kubernetes.services.config.volume-snapshots`: \[attribute
-  set\] Configuration for volume-snapshots service
-
-- `environments.<name>.kubernetes.services.enabled`: [list of string] \
-  List of enabled services for this environment. Services without configuration
-  can be enabled by simply adding them to this list.
-
-- `environments.<name>.kubernetes.sso`: Single Sign-On configuration
-
-- `environments.<name>.kubernetes.sso.credentialsEnvironment`: [null or string]
-  Environment variable name containing SSO credentials
-
-- `environments.<name>.kubernetes.sso.issuerPattern`: [null or string] \
-  SSO issuer URL pattern for authentication. Use {clientID} as a placeholder for
-  the client ID. Example: "https://idm.example.com/oauth2/openid/{clientID}"
-
-- `environments.<name>.kubernetes.tlsSanIps`: [list of string] Additional IPs to
-  include in Kubernetes API server TLS certificate SANs
 
 - `environments.<name>.location`: Geographic location information
 
@@ -246,10 +149,6 @@
 
 - `environments.<name>.secretPath`: [absolute path] Path to the directory
   containing secrets for the environment.
-
-- `environments.<name>.secrets`: [unspecified value] \
-  Secret helper functions for this environment. Provides: from, for,
-  forInlineFor, forOidcService, oidcIssuerFor
 
 - `environments.<name>.services`: \
   Service-specific domain mappings for the environment. Used by OAuth2
