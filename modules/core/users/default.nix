@@ -81,20 +81,27 @@
         enabledUsers = lib.filterAttrs (_: u: u.system.enable or false) users;
 
         # Build Darwin user configurations
-        buildDarwinUserConfig = userName: user: {
-          users.users.${userName} = {
-            inherit (user.system) uid;
-            home = "/Users/${userName}";
-            createHome = true;
-            description = user.identity.displayName;
-            isHidden = false;
-            openssh.authorizedKeys.keys = user.identity.sshKeys;
-            shell = pkgs.zsh;
-          };
+        buildDarwinUserConfig = userName: user:
+          let
+            isWheel = builtins.elem "wheel" user.system.systemGroups;
+          in
+          {
+            users.users.${userName} = {
+              inherit (user.system) uid;
+              home = "/Users/${userName}";
+              createHome = true;
+              description = user.identity.displayName;
+              isHidden = false;
+              openssh.authorizedKeys.keys = user.identity.sshKeys;
+              shell = pkgs.zsh;
+            };
 
-          # nix-darwin requires knownUsers for declarative user management
-          users.knownUsers = [ userName ];
-        };
+            # Add SSH authorized keys to root for wheel users (needed for colmena deployment)
+            users.users.root.openssh.authorizedKeys.keys = lib.mkIf isWheel user.identity.sshKeys;
+
+            # nix-darwin requires knownUsers for declarative user management
+            users.knownUsers = [ userName ];
+          };
 
         darwinUserConfigs = lib.mapAttrsToList buildDarwinUserConfig enabledUsers;
       in
