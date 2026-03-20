@@ -41,7 +41,7 @@
         ...
       }:
       let
-        rekeyFile = environment.secretPath + "/tailscale.age";
+        rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
         secretExists = builtins.pathExists rekeyFile;
       in
       lib.mkIf secretExists {
@@ -88,10 +88,11 @@
         config,
         lib,
         environment,
+        host,
         ...
       }:
       let
-        rekeyFile = environment.secretPath + "/tailscale.age";
+        rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
         secretExists = builtins.pathExists rekeyFile;
       in
       lib.mkIf secretExists {
