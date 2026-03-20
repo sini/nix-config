@@ -1,9 +1,9 @@
 # Agenix Secrets Manifest
 
-Generated on: 26.05 Total unique secrets: 46
+Generated on: 26.05 Total unique secrets: 52
 
-- Generated: 37
-- Manually set: 9
+- Generated: 45
+- Manually set: 7
 
 ---
 
@@ -45,25 +45,6 @@ repository and rekeyed for each host.
   - home:sini@cortex
 - **Owner**: root:root (640)
 - **Rekey File**: `.secrets/users/sini/spotify-player-credentials.age`
-
-### tailscale-auth-key
-
-- **Used by**:
-  - nixos:bitstream
-  - nixos:blade
-  - nixos:cortex
-- **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/env/dev/tailscale.age`
-
-### tailscale-auth-key
-
-- **Used by**:
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
-  - nixos:uplink
-- **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/env/prod/tailscale.age`
 
 ### user-shuo-password
 
@@ -363,6 +344,62 @@ functionality. They will be created automatically if they don't exist.
 - **Generator**: built-in: rfc3986-secret
 
 - **Intermediary**: Yes (not exposed to services)
+
+### tailscale-auth-key
+
+- **Used by**: nixos:axon-01
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/axon-01/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: nixos:axon-02
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/axon-02/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: nixos:axon-03
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/axon-03/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: nixos:bitstream
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/bitstream/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: nixos:blade
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/blade/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: nixos:cortex
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/cortex/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: darwin:patch
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/patch/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
+
+### tailscale-auth-key
+
+- **Used by**: nixos:uplink
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/uplink/tailscale-preauthkey.age`
+- **Generator**: built-in: tailscale-preauthkey
 
 ### user-identity-shuo
 

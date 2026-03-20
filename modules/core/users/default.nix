@@ -87,21 +87,24 @@
             isWheel = builtins.elem "wheel" user.system.systemGroups;
           in
           {
-            users.users.${userName} = {
-              inherit (user.system) uid;
-              home = "/Users/${userName}";
-              createHome = true;
-              description = user.identity.displayName;
-              isHidden = false;
-              openssh.authorizedKeys.keys = user.identity.sshKeys;
-              shell = pkgs.zsh;
+            users = {
+              # nix-darwin requires knownUsers for declarative user management
+              knownUsers = [ userName ];
+              users = {
+                ${userName} = {
+                  inherit (user.system) uid;
+                  home = "/Users/${userName}";
+                  createHome = true;
+                  description = user.identity.displayName;
+                  isHidden = false;
+                  openssh.authorizedKeys.keys = user.identity.sshKeys;
+                  shell = pkgs.zsh;
+                };
+
+                # Add SSH authorized keys to root for wheel users (needed for colmena deployment)
+                root.openssh.authorizedKeys.keys = lib.mkIf isWheel user.identity.sshKeys;
+              };
             };
-
-            # Add SSH authorized keys to root for wheel users (needed for colmena deployment)
-            users.users.root.openssh.authorizedKeys.keys = lib.mkIf isWheel user.identity.sshKeys;
-
-            # nix-darwin requires knownUsers for declarative user management
-            users.knownUsers = [ userName ];
           };
 
         darwinUserConfigs = lib.mapAttrsToList buildDarwinUserConfig enabledUsers;

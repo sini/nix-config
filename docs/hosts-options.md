@@ -55,6 +55,11 @@
 - `hosts.<name>.ipv6`: [list of string] The static IPv6 addresses of this host
   (derived from networking.interfaces)
 
+- `hosts.<name>.isDarwin`: [boolean] \
+  Helper property to check if this host is running macOS (Darwin). Returns true
+  if the system is aarch64-darwin, false otherwise. Example: host.isDarwin →
+  true/false
+
 - `hosts.<name>.networking`: Network configuration for the host
 
 - `hosts.<name>.networking.autobridging`: [boolean] Enable automatic 1:1 bridge
@@ -77,6 +82,9 @@
 
 - `hosts.<name>.public_key`: [absolute path] Path to or string value of the
   public SSH key for the host.
+
+- `hosts.<name>.remote-deployment-user`: [string] The user to use for remote
+  deployments
 
 - `hosts.<name>.remoteBuildJobs`: [signed integer] The number of build jobs to
   be scheduled
