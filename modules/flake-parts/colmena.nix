@@ -39,12 +39,15 @@
 
   flake =
     let
-      colmenaHosts = lib.filterAttrs (_: h: lib.hasSuffix "-linux" h.system) config.hosts;
+      allHosts = config.hosts;
+      colmenaLinuxHosts = lib.filterAttrs (_: h: lib.hasSuffix "-linux" h.system) allHosts;
+      colmenaDarwinHosts = lib.filterAttrs (_: h: h.isDarwin) allHosts;
 
       # Group hosts by channel
-      hostsByChannel = lib.groupBy (name: colmenaHosts.${name}.channel) (lib.attrNames colmenaHosts);
+      linuxHostsByChannel = lib.groupBy (name: colmenaLinuxHosts.${name}.channel) (lib.attrNames colmenaLinuxHosts);
+      darwinHostsByChannel = lib.groupBy (name: colmenaDarwinHosts.${name}.channel) (lib.attrNames colmenaDarwinHosts);
 
-      mkColmenaHive =
+      mkColmenaLinuxHive =
         {
           hosts,
           nixpkgs,
@@ -73,18 +76,63 @@
           };
         };
 
-      # Build a hive for each channel that has hosts
-      hivesPerChannel = lib.mapAttrs (
+      mkColmenaDarwinHive =
+        {
+          hosts,
+          nixpkgs,
+          nix-darwin,
+        }:
+        lib.mapAttrs (
+          hostname: hostOptions:
+          let
+            darwinConfig = self.darwinConfigurations.${hostname};
+          in
+          {
+            imports = darwinConfig._module.args.modules;
+            deployment = {
+              targetHost =
+                if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
+              tags = [ hostOptions.environment ] ++ hostOptions.roles;
+              allowLocalDeployment = true;
+              systemType = "darwin";
+              buildOnTarget = true;
+              targetUser = "sini"; # TODO: remove this user-specific magic...
+            };
+          }
+        ) hosts
+        // {
+          meta = {
+            inherit nix-darwin;
+            nixpkgs = import nixpkgs { system = "aarch64-darwin"; };
+            nodeSpecialArgs = builtins.mapAttrs (
+              hostname: _: self.darwinConfigurations.${hostname}._module.specialArgs
+            ) hosts;
+          };
+        };
+
+      # Build a hive for each channel that has linux hosts
+      linuxHivesPerChannel = lib.mapAttrs (
         channel: hostNames:
         let
-          hosts = lib.getAttrs hostNames colmenaHosts;
+          hosts = lib.getAttrs hostNames colmenaLinuxHosts;
           nixpkgs = config.channels.${channel}.nixpkgs;
-          hiveConfig = mkColmenaHive { inherit hosts nixpkgs; };
+          hiveConfig = mkColmenaLinuxHive { inherit hosts nixpkgs; };
         in
         inputs.colmena.lib.makeHive hiveConfig
-      ) hostsByChannel;
+      ) linuxHostsByChannel;
 
-      hiveList = lib.attrValues hivesPerChannel;
+      # Build a hive for each channel that has darwin hosts
+      darwinHivesPerChannel = lib.mapAttrs (
+        channel: hostNames:
+        let
+          hosts = lib.getAttrs hostNames colmenaDarwinHosts;
+          inherit (config.channels.${channel}) nixpkgs nix-darwin;
+          hiveConfig = mkColmenaDarwinHive { inherit hosts nixpkgs nix-darwin; };
+        in
+        inputs.colmena.lib.makeHive hiveConfig
+      ) darwinHostsByChannel;
+
+      hiveList = (lib.attrValues linuxHivesPerChannel) ++ (lib.attrValues darwinHivesPerChannel);
 
       # Merge attribute sets from all hives
       mergeAttr = attr: lib.foldl' (acc: hive: acc // (hive.${attr} or { })) { } hiveList;

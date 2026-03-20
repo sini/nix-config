@@ -323,15 +323,16 @@
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1762034856,
-        "narHash": "sha256-QVey3iP3UEoiFVXgypyjTvCrsIlA4ecx6Acaz5C8/PQ=",
-        "owner": "zhaofengli",
+        "lastModified": 1768981101,
+        "narHash": "sha256-uGcGIvEvNJOAc1imunk47XODF1CTX2yE36fI9kFuKKE=",
+        "owner": "zw3rk",
         "repo": "colmena",
-        "rev": "349b035a5027f23d88eeb3bc41085d7ee29f18ed",
+        "rev": "bb6828ee5aa47a649693a930199a5d13dcad9960",
         "type": "github"
       },
       "original": {
-        "owner": "zhaofengli",
+        "owner": "zw3rk",
+        "ref": "darwin-support",
         "repo": "colmena",
         "type": "github"
       }

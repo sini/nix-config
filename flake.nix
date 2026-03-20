@@ -76,7 +76,7 @@
     };
 
     colmena = {
-      url = "github:zhaofengli/colmena";
+      url = "github:zw3rk/colmena/darwin-support";
       inputs = {
         nixpkgs.follows = "nixpkgs-unstable";
         flake-compat.follows = "flake-compat";
