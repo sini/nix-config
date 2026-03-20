@@ -40,7 +40,7 @@ def parse_arguments() -> argparse.Namespace:
         type=str,
         action="append",
         dest="environments",
-        help="Specific environment(s) to process (can be specified multiple times; processes all if not specified)",
+        help="Specific cluster(s) to process by composite key (e.g. prod-axon, dev-bitstream; can be specified multiple times; processes all if not specified)",
     )
     parser.add_argument(
         "--dry-run",
@@ -145,7 +145,7 @@ def main() -> int:
     logging.info(f"Git repository root: {git_root}")
     logging.info(f"Flake reference: {args.flake}")
 
-    # Build all environments, using cache to skip nix evaluation when
+    # Build all clusters, using cache to skip nix evaluation when
     # only non-k8s files have changed.
     cache = BuildCache(git_root)
     cached_manifest = None if args.no_cache else cache.get()
@@ -153,38 +153,38 @@ def main() -> int:
     if cached_manifest is not None:
         all_envs = NixUtils.parse_manifest(cached_manifest)
     else:
-        logging.info("Building all environments...")
+        logging.info("Building all clusters...")
         all_envs, manifest = NixUtils.build_all_environments(args.flake, args.system)
         cache.put(manifest)
 
     env_names = sorted(all_envs.keys())
 
-    # Filter to specific environments if requested
+    # Filter to specific clusters if requested
     if args.environments:
         requested_set = set(args.environments)
         available_set = set(env_names)
-        missing_envs = requested_set - available_set
-        if missing_envs:
+        missing = requested_set - available_set
+        if missing:
             logging.error(
-                f"Requested environments not found: {', '.join(sorted(missing_envs))}"
+                f"Requested clusters not found: {', '.join(sorted(missing))}"
             )
-            logging.error(f"Available environments: {', '.join(sorted(available_set))}")
+            logging.error(f"Available clusters: {', '.join(sorted(available_set))}")
             sys.exit(1)
         env_names = [e for e in env_names if e in requested_set]
 
     if not env_names:
-        logging.error("No environments found in flake")
+        logging.error("No clusters found in flake")
         sys.exit(1)
 
     logging.info(
-        f"Processing {len(env_names)} environment(s): {', '.join(env_names)}"
+        f"Processing {len(env_names)} cluster(s): {', '.join(env_names)}"
     )
     logging.info("")
 
-    # Process each environment using pre-built results
+    # Process each cluster using pre-built results
     for env in env_names:
         metadata, src_path = all_envs[env]
-        logging.info(f"Processing environment: {env}")
+        logging.info(f"Processing cluster: {env}")
 
         # Resolve output path to absolute path
         output_path = resolve_output_path(metadata, git_root)

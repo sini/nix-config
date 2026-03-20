@@ -123,7 +123,7 @@
       # - CRD application imports for enabled services
       # - Git target repository and branch for rendered manifests
       # - ArgoCD sync policy and helm label stripping defaults
-      # { env, cluster, environment, enabledServices, system } -> module
+      # { env, cluster, enabledServices, system } -> module
       mkNixidyModule =
         {
           env,
@@ -239,7 +239,6 @@
               inherit
                 env
                 cluster
-                environment
                 enabledServices
                 system
                 ;

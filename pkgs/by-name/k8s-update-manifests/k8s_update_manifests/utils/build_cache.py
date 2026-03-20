@@ -19,24 +19,20 @@ WATCHED_PATHS = [
     # Flake inputs
     "flake.lock",
     "flake.nix",
-    # Nixidy build infrastructure
-    "modules/flake-parts/nixidy-envs.nix",
-    "modules/flake-parts/helm-charts.nix",
-    "modules/flake-parts/meta/kubernetes-service-module.nix",
-    "modules/flake-parts/meta/environment-options.nix",
-    "modules/flake-parts/meta/secrets-paths.nix",
-    "modules/flake-parts/meta/host-options.nix",
-    "modules/flake-parts/meta/lib-module.nix",
-    # Libraries
-    "modules/lib/nixidy-env-helpers.nix",
-    "modules/lib/kubernetes-service-module-helpers.nix",
+    # Flake-parts kubernetes domain
+    "modules/flake-parts/kubernetes",
+    # Flake-parts types referenced by kubernetes
+    "modules/flake-parts/environments",
+    "modules/flake-parts/hosts/options.nix",
+    "modules/flake-parts/secrets/options.nix",
+    "modules/flake-parts/features/helpers.nix",
+    # Cluster definitions
+    "modules/clusters",
     # Kubernetes services and environments
     "modules/kubernetes",
     "modules/environments",
     # Host definitions (referenced by k8s modules)
     "modules/hosts",
-    # Repo metadata
-    "modules/meta/repo.nix",
     # Helm charts
     "charts",
     # Secrets

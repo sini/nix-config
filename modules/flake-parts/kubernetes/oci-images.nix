@@ -22,7 +22,7 @@ let
         };
     in
     inputs.haumea.lib.load {
-      src = ../../images;
+      src = ../../../images;
       loader = _: p: loadImage (import p);
       transformer = inputs.haumea.lib.transformers.liftDefault;
     };
@@ -30,7 +30,7 @@ in
 {
   flake = {
     imagesMetadata = inputs.haumea.lib.load {
-      src = ../../images;
+      src = ../../../images;
       transformer = inputs.haumea.lib.transformers.liftDefault;
     };
 

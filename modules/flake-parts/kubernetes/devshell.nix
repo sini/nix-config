@@ -1,5 +1,4 @@
-_:
-{
+_: {
   perSystem =
     { config, ... }:
     {
@@ -26,7 +25,7 @@ _:
         name = "k8s-update-manifests";
         description = "Run k8s-update-manifests to re-generate argocd config";
         entry = "${config.packages.k8s-update-manifests}/bin/k8s-update-manifests --skip-secrets";
-        files = "^(flake\\.lock|modules/(environments|flake-parts|lib|kubernetes)/.*\\.nix)$";
+        files = "^(flake\\.lock|modules/(environments|flake-parts|clusters|kubernetes)/.*\\.nix)$";
         pass_filenames = false;
       };
     };

@@ -12,7 +12,7 @@ let
       trimBogusVersion = attrs: removeAttrs attrs [ "bogusVersion" ];
     in
     inputs.haumea.lib.load {
-      src = ../../charts;
+      src = ../../../charts;
       loader = _: p: kubelib.downloadHelmChart (trimBogusVersion (import p));
       transformer = inputs.haumea.lib.transformers.liftDefault;
     };
@@ -20,7 +20,7 @@ in
 {
   flake = {
     chartsMetadata = inputs.haumea.lib.load {
-      src = ../../charts;
+      src = ../../../charts;
       transformer = inputs.haumea.lib.transformers.liftDefault;
     };
 
