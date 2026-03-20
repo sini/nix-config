@@ -53,14 +53,14 @@
             };
 
             # Custom hook: write-files
-            write-files = {
-              enable = true;
-              name = "write-files";
-              description = "Run write-files to re-generate documentation";
-              entry = "nix run .#write-files";
-              files = "\\.nix$";
-              pass_filenames = false;
-            };
+            # write-files = {
+            #   enable = true;
+            #   name = "write-files";
+            #   description = "Run write-files to re-generate documentation";
+            #   entry = "nix run .#write-files";
+            #   files = "\\.nix$";
+            #   pass_filenames = false;
+            # };
           };
         };
       };

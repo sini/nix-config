@@ -50,23 +50,12 @@ in
   };
 
   perSystem =
-    { pkgs, config, ... }:
+    { pkgs, ... }:
     {
       files.files = [
         {
           path_ = "README.md";
-          drv =
-            pkgs.runCommand "README.md"
-              {
-                nativeBuildInputs = [ config.formatter ];
-              }
-              ''
-                # Create a fake flake.nix so treefmt can find the tree root
-                touch flake.nix
-                echo ${pkgs.lib.escapeShellArg readmeText} > temp.md
-                ${config.formatter}/bin/treefmt --no-cache temp.md
-                cat temp.md > $out
-              '';
+          drv = pkgs.writeText "README.md" readmeText;
         }
       ];
     };

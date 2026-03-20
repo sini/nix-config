@@ -1,6 +1,6 @@
+/.pre-commit-config.yaml
 /result
 /result.*
 .direnv
 .cache
 .claude
-/.pre-commit-config.yaml

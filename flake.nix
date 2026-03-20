@@ -5,7 +5,7 @@
   '';
 
   nixConfig = {
-    abort-on-warn = false;
+    abort-on-warn = false; # Unfortuantely upstream flakes aren't always compatible...
     extra-experimental-features = [ "pipe-operator" ]; # Lix name; Nix uses "pipe-operators"
     extra-deprecated-features = [
       "or-as-identifier"
@@ -199,9 +199,6 @@
     # Facter - an alternative to nixos-generate-config
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
 
-    # Flatpak
-    # nix-flatpak.url = "github:gmodena/nix-flatpak";
-
     # Kubernetes GitOps with nix and Argo CD
     nixidy = {
       url = "github:sini/nixidy";
@@ -360,18 +357,6 @@
       url = "github:yokoffing/Betterfox";
       flake = false;
     };
-
-    # TODO: nix-darwin support if I ever use my macbook again...
-    # NixPkgs - Darwin
-    # NOTE: `darwin` indicates that this channel passes CI on macOS builders;
-    # this should increase the binary cache hit rate, but may result in it
-    # lagging behind the equivalent NixOS/Linux package set.
-    # nixpkgs-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.11-darwin";
-
-    # home-manager-darwin = {
-    #   url = "github:nix-community/home-manager/release-25.11";
-    #   inputs.nixpkgs.follows = "nixpkgs-darwin";
-    # };
 
     # macOS Support
     nix-darwin = {

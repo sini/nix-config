@@ -1,5 +1,14 @@
 { config, ... }:
 {
+  # Nix git-ignores
+  text.gitignore = ''
+    /result
+    /result.*
+    .direnv
+    .cache
+    .claude
+  '';
+
   perSystem =
     { pkgs, ... }:
     {
