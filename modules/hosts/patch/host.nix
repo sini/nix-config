@@ -4,13 +4,15 @@
 
     environment = "dev";
 
+    ipv4 = ["10.9.3.2"];
+
     channel = "nixos-stable";
 
     roles = [
       "dev"
     ];
 
-    extra-features = [ "tailscale" ];
+    extra-features = [ ];
 
     system-access-groups = [ "system-access" ];
 

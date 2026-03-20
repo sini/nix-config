@@ -9,7 +9,6 @@
       "server"
       "tang"
       #"alloy"
-      "tailscale"
     ];
   };
 

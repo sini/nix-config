@@ -31,8 +31,6 @@
       # TODO: Re-enable and configure
       "obsidian" # note-taking app
       "zathura" # PDF viewer
-
-      "tailscale"
     ];
   };
 }

@@ -22,6 +22,7 @@
       "sudo"
       "systemd"
       "systemd-boot"
+      "tailscale"
       "time"
       "users"
       "utils"
