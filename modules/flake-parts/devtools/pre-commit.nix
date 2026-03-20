@@ -42,16 +42,6 @@
               package = inputs'.statix.packages.default;
             };
 
-            # Custom hook: k8s-update-manifests
-            k8s-update-manifests = {
-              enable = true;
-              name = "k8s-update-manifests";
-              description = "Run k8s-update-manifests to re-generate argocd config";
-              entry = "${config.packages.k8s-update-manifests}/bin/k8s-update-manifests --skip-secrets";
-              files = "^(flake\\.lock|modules/(environments|flake-parts|lib|kubernetes)/.*\\.nix)$";
-              pass_filenames = false;
-            };
-
             # Custom hook: write-files
             # write-files = {
             #   enable = true;

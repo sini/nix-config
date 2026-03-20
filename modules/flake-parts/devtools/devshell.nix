@@ -64,54 +64,9 @@
             help = "Update flake inputs with GitHub access token";
           }
           {
-            package = config.packages.toggle-axon-kubernetes;
-            name = "toggle-axon-kubernetes";
-            help = "Toggle enable/disable Kubernetes on axon cluster nodes";
-          }
-          {
             package = config.packages.list-infra;
             name = "list-infra";
             help = "List all flake environments and hosts with details";
-          }
-          {
-            package = config.packages.update-host-keys;
-            name = "update-host-keys";
-            help = "Collect and encrypt SSH host keys from all configured hosts";
-          }
-          {
-            package = config.packages.generate-user-keys;
-            name = "generate-user-keys";
-            help = "Generate and encrypt ed25519 SSH keys for users";
-          }
-          {
-            package = config.packages.generate-vault-certs;
-            name = "generate-vault-certs";
-            help = "Generate certificates for Vault raft cluster";
-          }
-          {
-            package = config.packages.impermanence-copy;
-            name = "impermanence-copy";
-            help = "Copy existing data to impermanence persistent storage for a host";
-          }
-          {
-            package = config.packages.convert-oidc-secrets;
-            name = "convert-oidc-secrets";
-            help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
-          }
-          {
-            package = config.packages.update-tang-disk-keys;
-            name = "update-tang-disk-keys";
-            help = "Update disk encryption keys using Tang servers and TPM2";
-          }
-          {
-            package = config.packages.nix-flake-provision-keys;
-            name = "nix-flake-provision-keys";
-            help = "Provision SSH host keys and disk encryption secrets for a NixOS host";
-          }
-          {
-            package = config.packages.nix-flake-install;
-            name = "nix-flake-install";
-            help = "Install NixOS remotely using nixos-anywhere with SSH keys and disk encryption";
           }
         ];
 

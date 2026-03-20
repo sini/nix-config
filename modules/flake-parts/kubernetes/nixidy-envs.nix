@@ -45,19 +45,6 @@ in
         ;
     in
     {
-      # devshells.default.packages = [ inputs'.nixidy.packages.default ];
-      devshells.default.commands = [
-        {
-          package = sharedConfig.config.packages.k8s-update-manifests;
-          name = "k8s-update-manifests";
-          help = "Update Kubernetes manifests for nixidy environments";
-        }
-        # {
-        #   package = inputs'.nixidy.packages.default;
-        #   help = "[DEPRECATED] - use k8s-update-manifests instead as it has secret wrapping";
-        # }
-      ];
-
       # Pre-parse CRD objects (both source-based and chart-based) at build time.
       # Read back at eval time by getServiceCrdObjects to avoid IFD.
       packages = {
