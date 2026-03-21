@@ -1,13 +1,13 @@
-{ config, ... }:
-let
-  # TODO: can we make this more magic?
-  user = config.flake.meta.user.username;
-in
 {
   features.libvirt = {
     linux =
-      { pkgs, ... }:
+      {
+        host,
+        pkgs,
+        ...
+      }:
       let
+        user = host.system-owner;
         primaryNetwork = pkgs.writeText "default-network.xml" ''
           <network>
             <name>default</name>

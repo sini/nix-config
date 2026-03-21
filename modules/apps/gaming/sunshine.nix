@@ -1,11 +1,14 @@
-{ config, ... }:
-let
-  inherit (config.flake.meta.user) username;
-in
 {
   features.sunshine = {
     linux =
-      { pkgs, ... }:
+      {
+        host,
+        pkgs,
+        ...
+      }:
+      let
+        username = host.system-owner;
+      in
       {
         networking = {
           firewall = {

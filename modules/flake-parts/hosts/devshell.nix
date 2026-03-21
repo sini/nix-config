@@ -4,6 +4,11 @@
     {
       devshells.default.commands = [
         {
+          package = config.packages.nix-flake-build;
+          name = "nix-flake-build";
+          help = "Build a host configuration";
+        }
+        {
           package = config.packages.update-host-keys;
           name = "update-host-keys";
           help = "Collect and encrypt SSH host keys from all configured hosts";

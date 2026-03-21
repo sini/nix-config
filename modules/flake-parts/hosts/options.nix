@@ -226,6 +226,16 @@ in
               '';
             };
 
+            system-owner = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = ''
+                The primary user who owns this host. Used by features that require
+                a single user (e.g. libvirt QEMU process owner, sunshine game streaming).
+                When null, defaults to the first canonical user with system-access scope.
+              '';
+            };
+
             exporters = mkOption {
               type = types.attrsOf (
                 types.submodule {

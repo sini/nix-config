@@ -8,6 +8,21 @@ let
   # These define the shape of user options at each configuration level:
   # canonical (users/options.nix), environment, and host.
 
+  # Structured SSH key type — each key carries an optional tag for filtering
+  sshKeyType = types.submodule {
+    options = {
+      tag = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = "Tag to categorize the SSH key (e.g., 'laptop', 'workstation', 'yubikey')";
+      };
+      key = mkOption {
+        type = types.str;
+        description = "SSH public key string";
+      };
+    };
+  };
+
   # Identity submodule type (shared between env users and canonical users)
   identitySubmoduleType =
     name:
@@ -26,9 +41,9 @@ let
         };
 
         sshKeys = mkOption {
-          type = types.listOf types.str;
+          type = types.listOf sshKeyType;
           default = [ ];
-          description = "SSH public keys for the user";
+          description = "SSH public keys for the user, each with an optional tag";
         };
 
         gpgKey = mkOption {
@@ -204,6 +219,7 @@ let
         if cu != null then
           {
             inherit (cu.system)
+              enableUnixAccount
               uid
               gid
               linger
@@ -214,6 +230,7 @@ let
           }
         else
           {
+            enableUnixAccount = false;
             uid = null;
             gid = null;
             linger = false;
@@ -223,7 +240,7 @@ let
           };
 
       sys = {
-        inherit (sysBase) uid gid;
+        inherit (sysBase) enableUnixAccount uid gid;
         linger = coalesce (envUser.linger or null) (coalesce (hostUser.linger or null) sysBase.linger);
         extra-features = coalesce (hostUser.extra-features or null) (
           coalesce (envUser.extra-features or null) sysBase.extra-features
@@ -286,6 +303,7 @@ in
 {
   flake.lib.users = {
     inherit
+      sshKeyType
       identitySubmoduleType
       mkEnvUsersOpt
       mkHostUsersOpt

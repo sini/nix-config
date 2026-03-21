@@ -9,7 +9,7 @@
           drv = pkgs.writeText "LICENSE" ''
             MIT License
 
-            Copyright (c) 2025 ${config.flake.meta.user.name}
+            Copyright (c) 2025 ${config.users.sini.identity.displayName}
 
             Permission is hereby granted, free of charge, to any person obtaining a copy
             of this software and associated documentation files (the "Software"), to deal

@@ -56,12 +56,7 @@
     };
 
   inputs = {
-    agenix = {
-      url = "github:ryantm/agenix";
-      inputs.home-manager.follows = "home-manager";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
+    # Things we maintain forks of...
     agenix-rekey = {
       # url = "github:oddlama/agenix-rekey";
       url = "github:sini/agenix-rekey/feat/settings"; # Fork with support for alternate input types
@@ -73,6 +68,26 @@
       url = "github:sini/agenix-rekey-to-sops"; # Fork with support for alternate input types
       inputs.nixpkgs.follows = "nixpkgs-unstable";
       inputs.agenix-rekey.follows = "agenix-rekey";
+    };
+
+    # Kubernetes GitOps with nix and Argo CD
+    nixidy = {
+      url = "github:sini/nixidy";
+      # url = "path:/home/sini/Documents/repos/sini/nixidy";
+      # url = "github:arnarg/nixidy";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    razerdaemon = {
+      url = "github:sini/razer-control-revived";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    # End forks we maintain...
+
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.home-manager.follows = "home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
     colmena = {
@@ -199,14 +214,6 @@
     # Facter - an alternative to nixos-generate-config
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
 
-    # Kubernetes GitOps with nix and Argo CD
-    nixidy = {
-      url = "github:sini/nixidy";
-      # url = "path:/home/sini/Documents/repos/sini/nixidy";
-      # url = "github:arnarg/nixidy";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
     nixhelm.url = "github:nix-community/nixhelm";
 
     nix-kube-generators.url = "github:farcaller/nix-kube-generators";
@@ -289,11 +296,6 @@
     nvf.url = "github:notashelf/nvf";
 
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
-
-    razerdaemon = {
-      url = "github:sini/razer-control-revived";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
 
     systems.url = "github:nix-systems/default";
 

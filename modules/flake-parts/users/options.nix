@@ -31,6 +31,12 @@ in
             system = mkOption {
               type = types.submodule {
                 options = {
+                  enableUnixAccount = mkOption {
+                    type = types.bool;
+                    default = false;
+                    description = "Whether this user should be provisioned as a Kanidm posixAccount (enables Unix attributes in Kanidm)";
+                  };
+
                   uid = mkOption {
                     type = types.nullOr types.int;
                     default = null;

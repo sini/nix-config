@@ -18,6 +18,7 @@
     remoteBuildSpeed = 20;
     remoteBuildJobs = 16;
 
+    system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
 
     roles = [
@@ -72,7 +73,7 @@
           "waybar"
           "swaync"
           "hypridle"
-          # "hyprland-split-monitors" # TODO: restore
+          "hyprland-split-monitors"
         ];
       };
       shuo = {

@@ -6,6 +6,7 @@
 
     channel = "nixpkgs-master";
 
+    system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
 
     roles = [
@@ -41,7 +42,7 @@
           "waybar"
           "swaync"
           "hypridle"
-          # "hyprland-split-monitors" # TODO: Restore
+          "hyprland-split-monitors"
         ];
       };
       shuo = {

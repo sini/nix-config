@@ -55,7 +55,7 @@
                 isNormalUser = true;
                 home = "/home/${userName}";
                 group = userName;
-                openssh.authorizedKeys.keys = user.identity.sshKeys;
+                openssh.authorizedKeys.keys = map (k: k.key) user.identity.sshKeys;
                 extraGroups = user.system.systemGroups;
                 inherit (user.system) linger;
                 description = user.identity.displayName;
@@ -97,12 +97,12 @@
                   createHome = true;
                   description = user.identity.displayName;
                   isHidden = false;
-                  openssh.authorizedKeys.keys = user.identity.sshKeys;
+                  openssh.authorizedKeys.keys = map (k: k.key) user.identity.sshKeys;
                   shell = pkgs.zsh;
                 };
 
                 # Add SSH authorized keys to root for wheel users (needed for colmena deployment)
-                root.openssh.authorizedKeys.keys = lib.mkIf isWheel user.identity.sshKeys;
+                root.openssh.authorizedKeys.keys = lib.mkIf isWheel (map (k: k.key) user.identity.sshKeys);
               };
             };
           };

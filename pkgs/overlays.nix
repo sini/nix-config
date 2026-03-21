@@ -33,6 +33,20 @@
       doCheck = false;
     };
 
+    kanidm-provision = prev.kanidm-provision.overrideAttrs (_old: rec {
+      src = prev.fetchFromGitHub {
+        owner = "sini";
+        repo = "kanidm-provision";
+        rev = "576666aa70e045142665215a8d29ea2bbbb6bcf6";
+        hash = "sha256-12XZRrs71tcUVyFBm7rrAM6DdOz8+wY0MmB+yvwGrt0=";
+      };
+
+      cargoDeps = prev.rustPlatform.fetchCargoVendor {
+        inherit src;
+        hash = "sha256-dPTrIc/hTbMlFDXYMk/dTjqaNECazldfW43egDOwyLM=";
+      };
+    });
+
     inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
     inherit (inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system})

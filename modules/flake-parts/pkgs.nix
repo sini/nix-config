@@ -30,6 +30,7 @@
         inherit system;
         config = {
           allowUnfreePredicate = _pkg: true;
+          allowDeprecatedx86_64Darwin = true;
         };
         overlays = [
           # Add lix-module overlay first to make lixPackageSets available

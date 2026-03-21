@@ -1,12 +1,16 @@
-{ config, ... }:
 {
   features.razer = {
     linux =
       {
         inputs,
+        lib,
         pkgs,
+        users,
         ...
       }:
+      let
+        enabledUserNames = builtins.attrNames (lib.filterAttrs (_: u: u.system.enable or false) users);
+      in
       {
         imports = [ inputs.razerdaemon.nixosModules.default ];
 
@@ -17,7 +21,7 @@
           openrazer-daemon
           polychromatic
         ];
-        hardware.openrazer.users = [ config.flake.meta.user.username ];
+        hardware.openrazer.users = enabledUserNames;
 
         systemd.user.services.razerdaemon = {
           unitConfig.ConditionUser = "!media";

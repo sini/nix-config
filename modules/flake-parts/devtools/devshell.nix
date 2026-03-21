@@ -30,6 +30,11 @@
 
         commands = [
           {
+            package = config.packages.nix-flake-update;
+            name = "nix-flake-update";
+            help = "Update flake inputs with GitHub access token";
+          }
+          {
             package = pkgs.nh;
             help = "Nix helper for nixpkgs development";
           }
@@ -52,16 +57,6 @@
           {
             package = pkgs.nix-output-monitor;
             help = "Nix Output Monitor (a drop-in alternative for `nix` which shows a build graph)";
-          }
-          {
-            package = config.packages.nix-flake-build;
-            name = "nix-flake-build";
-            help = "Build a host configuration";
-          }
-          {
-            package = config.packages.nix-flake-update;
-            name = "nix-flake-update";
-            help = "Update flake inputs with GitHub access token";
           }
           {
             package = config.packages.list-infra;
