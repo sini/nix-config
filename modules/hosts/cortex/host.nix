@@ -72,7 +72,7 @@
           "waybar"
           "swaync"
           "hypridle"
-          "hyprland-split-monitors"
+          # "hyprland-split-monitors" # TODO: restore
         ];
       };
       shuo = {
