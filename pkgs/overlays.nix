@@ -43,6 +43,20 @@
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;
     nixidy = inputs.nixidy.packages.${prev.stdenv.hostPlatform.system}.default;
     agenix-rekey = inputs.agenix-rekey.packages.${prev.stdenv.hostPlatform.system}.default;
+
+    # Override default electron with the latest available non-EOL version.
+    # Picks the first version that exists in the channel's package set.
+    electron =
+      let
+        pick = names: builtins.head (builtins.filter (n: prev ? ${n}) names);
+      in
+      prev.${
+        pick [
+          "electron_41"
+          "electron_40"
+          "electron_39"
+        ]
+      };
   };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
