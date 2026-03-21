@@ -149,7 +149,7 @@
     import-tree.url = "github:vic/import-tree";
 
     lix = {
-      url = "github:lix-project/lix";
+      url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
       flake = false;
     };
 

@@ -1909,15 +1909,13 @@
       "locked": {
         "lastModified": 1774027344,
         "narHash": "sha256-tRg8zU/ZzWWWH+wnqW9o1NbgbgaquLR0shHUA5Sm+bg=",
-        "owner": "lix-project",
-        "repo": "lix",
         "rev": "daadfed9ae84d3126572ba3b2e7602cb21bf18a8",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://git.lix.systems/api/v1/repos/lix-project/lix/archive/daadfed9ae84d3126572ba3b2e7602cb21bf18a8.tar.gz?rev=daadfed9ae84d3126572ba3b2e7602cb21bf18a8"
       },
       "original": {
-        "owner": "lix-project",
-        "repo": "lix",
-        "type": "github"
+        "type": "tarball",
+        "url": "https://git.lix.systems/lix-project/lix/archive/main.tar.gz"
       }
     },
     "lix-module": {
