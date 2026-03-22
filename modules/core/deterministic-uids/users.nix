@@ -56,6 +56,17 @@
         pcscd = uidGid 954;
         atticd = uidGid 953;
         git = uidGid 952;
+
+        # System access groups (posix-enabled for Kanidm PAM/NSS)
+        system-access = {
+          gid = 951;
+        };
+        workstation-access = {
+          gid = 950;
+        };
+        server-access = {
+          gid = 949;
+        };
       };
   };
 }

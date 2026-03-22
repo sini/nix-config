@@ -3,6 +3,7 @@
   features.kanidm.linux =
     {
       environment,
+      pkgs,
       users,
       ...
     }:
@@ -11,7 +12,6 @@
       allGroups = config.groups;
 
       # Users with any oauth-grant or user-role groups get provisioned as persons
-      # This includes both identity users (oauth-grant) and system users (user-role login gates)
       kanidmUsers = lib.filterAttrs (
         _: user: (user.groupsByLabel "oauth-grant" != [ ]) || (user.groupsByLabel "user-role" != [ ])
       ) users;
@@ -19,16 +19,43 @@
       # Helper: get all group names for a user (oauth-grant + user-role)
       getUserGroups =
         user: lib.unique ((user.groupsByLabel "oauth-grant") ++ (user.groupsByLabel "user-role"));
+
+      # ========================================================================
+      # Extra JSON for kanidm-provision fork features not exposed by upstream
+      # NixOS options: enableUnix, gidNumber, loginShell, sshPublicKeys
+      # Deep-merged via services.kanidm.provision.extraJsonFile.
+      # ========================================================================
+
+      # Groups with "posix" label get enableUnix + gidNumber
+      posixGroups = lib.filterAttrs (_: g: lib.elem "posix" (g.labels or [ ])) allGroups;
+      extraGroupsJson = lib.mapAttrs (
+        _: g: { enableUnix = true; } // lib.optionalAttrs (g.gid != null) { gidNumber = g.gid; }
+      ) posixGroups;
+
+      # Persons with enableUnixAccount get enableUnix + uid/gid/sshKeys
+      unixPersons = lib.filterAttrs (_: user: user.system.enableUnixAccount or false) kanidmUsers;
+      extraPersonsJson = lib.mapAttrs (
+        _username: user:
+        {
+          enableUnix = true;
+          loginShell = "/run/current-system/sw/bin/zsh";
+        }
+        // lib.optionalAttrs (user.system.uid != null) { gidNumber = user.system.uid; }
+        // lib.optionalAttrs (user.identity.sshKeys != [ ]) {
+          sshPublicKeys = map (k: { inherit (k) tag key; }) user.identity.sshKeys;
+        }
+      ) unixPersons;
+
+      extraJson =
+        lib.optionalAttrs (extraGroupsJson != { }) { groups = extraGroupsJson; }
+        // lib.optionalAttrs (extraPersonsJson != { }) { persons = extraPersonsJson; };
+
+      extraJsonFile = pkgs.writeText "kanidm-provision-extra.json" (builtins.toJSON extraJson);
     in
     {
       services.kanidm.provision = {
-        # Provision all groups to Kanidm (identity, login gates, POSIX groups, OAuth grants)
+        # Provision all groups to Kanidm
         groups = lib.mapAttrs (_: g: { members = g.members or [ ]; }) allGroups;
-
-        # TODO: Set POSIX attributes for groups with "posix" label
-        # This requires Kanidm CLI commands after group creation:
-        #   kanidm group posix set --name <groupname> --gidnumber <gid>
-        # Implementation: Add to services.kanidm.provision.autoProvision or custom systemd service
 
         persons = lib.mapAttrs (username: user: {
           inherit (user.identity) displayName;
@@ -37,9 +64,11 @@
               [ user.identity.email ]
             else
               [ "${username}@${environment.email.domain}" ];
-          # Include both oauth-grant and user-role groups
           groups = getUserGroups user;
         }) kanidmUsers;
+
+        # Deep-merged with the above — adds enableUnix, gidNumber, sshPublicKeys
+        inherit extraJsonFile;
       };
     };
 }

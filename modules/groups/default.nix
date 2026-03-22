@@ -23,16 +23,28 @@
     # System login gates
     # =========================================================================
     system-access = {
-      labels = [ "user-role" ];
+      labels = [
+        "user-role"
+        "posix"
+      ];
+      gid = 951;
       description = "Login access to all hosts";
     };
     workstation-access = {
-      labels = [ "user-role" ];
+      labels = [
+        "user-role"
+        "posix"
+      ];
+      gid = 950;
       description = "Login access to workstation hosts";
       members = [ "system-access" ];
     };
     server-access = {
-      labels = [ "user-role" ];
+      labels = [
+        "user-role"
+        "posix"
+      ];
+      gid = 949;
       description = "Login access to server hosts";
       members = [ "system-access" ];
     };
