@@ -13,21 +13,31 @@
         path = host.secretPath + "/zroot-key.jwe";
         name = "zroot-key.jwe";
       };
+
+      # Automatically collect all network driver modules from facter hardware report
+      networkDriverModules = lib.unique (
+        lib.flatten (
+          lib.filter (x: x != null) (
+            map (iface: iface.driver_modules or null) config.facter.report.hardware.network_interface
+          )
+        )
+      );
+
+      initrdBootstrapKeys = host.hasFeature "initrd-bootstrap-keys";
     in
     {
-      boot = {
+      boot = lib.mkIf (!initrdBootstrapKeys) {
         initrd = {
           availableKernelModules = [
-            "r8169" # Host: surge, burst, pulse
-            "mlx4_core"
-            "mlx4_en" # Hosts: uplink
-            "atlantic" # Hosts: cortex
+            # Network utilities
             "bridge"
             "bonding"
             "8021q"
-            "tpm_crb" # TPM support
+            # TPM support
+            "tpm_crb"
             "tpm_tis"
-          ];
+          ]
+          ++ networkDriverModules;
 
           clevis = lib.mkIf zfsEnabled {
             enable = true;
@@ -37,7 +47,7 @@
 
           systemd = {
             inherit (config.systemd) network;
-            users.root.shell = "/bin/systemd-tty-ask-password-agent";
+            # users.root.shell = "/bin/systemd-tty-ask-password-agent";
 
             # Wait for clevis to do its thing...
             services.zfs-import-zroot.preStart = ''

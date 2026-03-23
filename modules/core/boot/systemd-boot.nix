@@ -1,7 +1,12 @@
 {
   features.systemd-boot.linux = {
     boot = {
-      initrd.systemd.enable = true;
+      initrd = {
+        compressor = "zstd";
+        compressorArgs = [ "-12" ];
+
+        systemd.enable = true;
+      };
 
       loader = {
         systemd-boot = {

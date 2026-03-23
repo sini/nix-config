@@ -18,6 +18,16 @@
         modulesPath,
         ...
       }:
+      let
+        # Automatically collect all network driver modules from facter hardware report
+        networkDriverModules = lib.unique (
+          lib.flatten (
+            lib.filter (x: x != null) (
+              map (iface: iface.driver_modules or null) config.facter.report.hardware.network_interface
+            )
+          )
+        );
+      in
       {
         imports = [
           (modulesPath + "/installer/netboot/netboot-minimal.nix")
@@ -80,19 +90,19 @@
 
             # Use zstd compression for faster boot (and no getExe warning)
             compressor = "zstd";
+            compressorArgs = [ "-12" ];
 
-            # Ensure kernel modules are available for common network interfaces
+            # Ensure kernel modules are available for network interfaces and TPM
             availableKernelModules = [
-              "r8169" # Host: surge, burst, pulse
-              "mlx4_core"
-              "mlx4_en" # Hosts: uplink
-              "atlantic" # Hosts: cortex
+              # Network utilities
               "bridge"
               "bonding"
               "8021q"
-              "tpm_crb" # TPM support
+              # TPM support
+              "tpm_crb"
               "tpm_tis"
-            ];
+            ]
+            ++ networkDriverModules;
           };
         };
         # Allow mutable users for the ephemeral installer

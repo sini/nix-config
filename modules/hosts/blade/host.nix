@@ -19,7 +19,7 @@
     ];
 
     excluded-features = [
-      "wireless" # NetworkManager handles WiFi instead of wpa_supplicant
+      # "wireless" # NetworkManager handles WiFi instead of wpa_supplicant
     ];
 
     extra-features = [
@@ -28,12 +28,15 @@
       "gpu-nvidia"
       "gpu-nvidia-prime"
       "zfs-disk-single"
-      "network-manager"
+      # "network-manager"
       "razer"
       # "gamedev"
       "performance"
       "tailscale"
       "discord"
+      "network-boot"
+      "wireless-initrd"
+      "initrd-bootstrap-keys" # Generate keys only
     ];
     users = {
       sini = {
