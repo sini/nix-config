@@ -7,19 +7,19 @@
     remoteBuildSpeed = 10;
     remoteBuildJobs = 16;
     environment = "prod";
-    roles = [
-      "server"
-      "unlock"
-      "bgp-hub"
-      # "inference"
-      "metrics-ingester"
-      "nix-builder"
-      "headscale"
-    ];
     tags = {
       "bgp-asn" = "65000";
     };
     extra-features = [
+      # Composite features (formerly roles)
+      "server"
+      "unlock"
+      "bgp-hub"
+      "metrics-ingester"
+      "nix-builder"
+      "headscale"
+
+      # Hardware and system features
       "cpu-amd"
       "gpu-intel"
       "zfs-disk-single"

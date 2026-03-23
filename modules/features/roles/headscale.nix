@@ -1,0 +1,7 @@
+{
+  features.headscale = {
+    requires = [
+      "headscale"
+    ];
+  };
+}

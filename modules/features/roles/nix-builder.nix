@@ -1,6 +1,6 @@
 {
-  roles.nix-builder = {
-    features = [
+  features.nix-builder = {
+    requires = [
       "nix-remote-build-server"
     ];
   };

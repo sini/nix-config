@@ -1,6 +1,6 @@
 {
-  roles.messaging = {
-    features = [
+  features.messaging = {
+    requires = [
       "discord"
       "kdeconnect"
       "telegram"

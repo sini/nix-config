@@ -153,9 +153,10 @@ let
               updatedExclusions = lib.unique (exclusions ++ (current.excludes or [ ]));
               dependencyNames = filter (name: !(elem name updatedExclusions)) (current.requires or [ ]);
               dependencies = map (name: features.${name}) dependencyNames;
-              visitedWithDeps = traverseDependencies visited dependencies updatedExclusions;
+              visitedWithCurrent = visited ++ [ current ];
+              visitedWithDeps = traverseDependencies visitedWithCurrent dependencies updatedExclusions;
             in
-            traverseDependencies (visitedWithDeps ++ [ current ]) remaining updatedExclusions;
+            traverseDependencies visitedWithDeps remaining updatedExclusions;
 
       resultWithRoots = traverseDependencies [ ] roots initialExclusions;
       allExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" (roots ++ resultWithRoots)));
@@ -165,38 +166,23 @@ let
     in
     dependenciesOnly;
 
-  # Get feature names from roles
-  # Takes: roles config, host roles list
-  # Returns: list of feature names
-  getFeaturesForRoles =
-    rolesConfig: hostRoles:
-    let
-      coreFeatures = rolesConfig.core.features;
-      additionalFeatures = lib.optionals (hostRoles != null) (
-        lib.flatten (
-          map (roleName: rolesConfig.${roleName}.features) (
-            lib.filter (roleName: lib.hasAttr roleName rolesConfig) hostRoles
-          )
-        )
-      );
-      allFeatureNames = lib.unique (coreFeatures ++ additionalFeatures);
-    in
-    allFeatureNames;
+  # Core features that are always enabled for every host
+  # This includes the "default" composite feature which bundles essential system features
+  coreFeatures = [
+    "default"
+  ];
 
-  # Resolve complete feature set for a host (roles + direct features + dependencies)
+  # Resolve complete feature set for a host (core + direct features + dependencies)
   # Returns feature modules with all dependencies resolved and exclusions applied
-  # Takes: features config, roles config, and host options
+  # Takes: features config and host options
   getModulesForFeatures =
     {
       featuresConfig,
-      rolesConfig,
-      hostRoles,
       hostFeatures ? [ ],
       hostExclusions ? [ ],
     }:
     let
-      roleFeatureNames = getFeaturesForRoles rolesConfig hostRoles;
-      allFeatureNames = lib.unique (roleFeatureNames ++ hostFeatures);
+      allFeatureNames = lib.unique (coreFeatures ++ hostFeatures);
       allFeatures = map (name: featuresConfig.${name}) allFeatureNames;
       featureExclusions = lib.flatten (lib.catAttrs "excludes" allFeatures);
       allExclusions = lib.unique (featureExclusions ++ hostExclusions);
@@ -212,8 +198,6 @@ let
   computeActiveFeatures =
     {
       featuresConfig,
-      rolesConfig,
-      hostRoles,
       hostFeatures ? [ ],
       hostExclusions ? [ ],
     }:
@@ -221,8 +205,6 @@ let
       allHostFeatures = getModulesForFeatures {
         inherit
           featuresConfig
-          rolesConfig
-          hostRoles
           hostFeatures
           hostExclusions
           ;
@@ -247,7 +229,7 @@ in
       collectHomeModules
       collectPlatformSystemModules
       collectRequires
-      getFeaturesForRoles
+      coreFeatures
       getModulesForFeatures
       computeActiveFeatures
       ;

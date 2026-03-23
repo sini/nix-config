@@ -57,10 +57,10 @@
 
 - `environments.<name>.email.domain`: [string] Email domain (e.g., json64.dev)
 
-- `environments.<name>.findHostsByRole`: \[function that evaluates to a(n)
+- `environments.<name>.findHostsByFeature`: \[function that evaluates to a(n)
   attribute set of unspecified value\] \
   Helper function to find all hosts in this environment that have a specific
-  role. Returns an attrset of hosts filtered by the specified role.
+  feature. Returns an attrset of hosts filtered by the specified feature.
 
 - `environments.<name>.getAssignment`: \[function that evaluates to a(n) (null
   or string)\] \
@@ -194,8 +194,14 @@
 - `environments.<name>.users.<name>.identity.gpgKey`: [null or string] GPG key
   ID for the user (parent key ID)
 
-- `environments.<name>.users.<name>.identity.sshKeys`: [list of string] SSH
-  public keys for the user
+- `environments.<name>.users.<name>.identity.sshKeys`: SSH public keys for the
+  user, each with an optional tag
+
+- `environments.<name>.users.<name>.identity.sshKeys.*.key`: [string] SSH public
+  key string
+
+- `environments.<name>.users.<name>.identity.sshKeys.*.tag`: [null or string]
+  Tag to categorize the SSH key (e.g., 'laptop', 'workstation', 'yubikey')
 
 - `environments.<name>.users.<name>.include-host-features`: [null or boolean]
   Whether to inherit host features (null inherits from users.<name>.system)

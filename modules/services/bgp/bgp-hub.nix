@@ -14,10 +14,10 @@ let
       && host.environment == currentHostEnvironment
     ) config.hosts;
 
-  getHostsByRole =
-    role: currentHostEnvironment:
+  getHostsByFeature =
+    feature: currentHostEnvironment:
     lib.filterAttrs (
-      _name: host: lib.elem role (host.roles or [ ]) && host.environment == currentHostEnvironment
+      _name: host: host.hasFeature feature && host.environment == currentHostEnvironment
     ) config.hosts;
 in
 {
@@ -57,7 +57,7 @@ in
                 if cfg.neighborSelector.tag != null then
                   getHostsByTag cfg.neighborSelector.tag cfg.neighborSelector.value currentHostEnvironment
                 else if cfg.neighborSelector.role != null then
-                  getHostsByRole cfg.neighborSelector.role currentHostEnvironment
+                  getHostsByFeature cfg.neighborSelector.role currentHostEnvironment
                 else
                   { };
 
@@ -220,7 +220,7 @@ in
           };
         };
 
-        config = lib.mkIf (builtins.elem "bgp-hub" (host.roles or [ ])) {
+        config = lib.mkIf (host.hasFeature "bgp-hub") {
           boot.kernel.sysctl = {
             "net.ipv4.ip_forward" = lib.mkDefault 1;
             "net.ipv6.conf.all.forwarding" = lib.mkDefault 1;

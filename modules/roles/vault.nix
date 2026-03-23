@@ -1,7 +1,0 @@
-{
-  roles.vault = {
-    features = [
-      "vault"
-    ];
-  };
-}

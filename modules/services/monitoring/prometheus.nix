@@ -4,12 +4,12 @@
   ...
 }:
 let
-  # Auto-discover exporters based on host roles
+  # Auto-discover exporters based on host features
   getAutoExporters =
     hostConfig:
     let
       serverExporters =
-        if builtins.elem "server" hostConfig.roles then
+        if hostConfig.hasFeature "server" then
           {
             node = {
               port = 9100;
@@ -20,7 +20,7 @@ let
         else
           { };
       k3sExporters =
-        if builtins.elem "kubernetes" hostConfig.roles then
+        if hostConfig.hasFeature "kubernetes" then
           {
             k3s-server = {
               port = 10249;
@@ -44,7 +44,7 @@ let
     config.hosts
     |> lib.attrsets.filterAttrs (
       _hostname: hostConfig:
-      builtins.elem "server" hostConfig.roles && builtins.elem hostConfig.environment targetEnvironments
+      hostConfig.hasFeature "server" && builtins.elem hostConfig.environment targetEnvironments
     )
     |> lib.mapAttrsToList (
       hostname: hostConfig:
@@ -63,10 +63,10 @@ let
               source_environment = hostConfig.environment;
             }
             // (builtins.listToAttrs (
-              map (role: {
-                name = role;
+              map (feature: {
+                name = feature;
                 value = "true";
-              }) hostConfig.roles
+              }) hostConfig.features
             ));
           }
         ];

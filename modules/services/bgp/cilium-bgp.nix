@@ -31,7 +31,7 @@
 
         uplinkIp =
           let
-            bgpHubHosts = environment.findHostsByRole "bgp-hub" |> lib.attrValues;
+            bgpHubHosts = environment.findHostsByFeature "bgp-hub" |> lib.attrValues;
           in
           if bgpHubHosts == [ ] then null else lib.head (lib.head bgpHubHosts).ipv4;
 

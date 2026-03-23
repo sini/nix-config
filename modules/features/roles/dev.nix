@@ -1,6 +1,6 @@
 {
-  roles.dev = {
-    features = [
+  features.dev = {
+    requires = [
       "adb"
       "direnv"
       "gpg"
@@ -17,8 +17,6 @@
 
       # Lang support
       "python"
-
-      #"zellij"
 
       # Admin tools
       "k9s"

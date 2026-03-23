@@ -33,7 +33,6 @@ in
     inherit (config)
       hosts
       environments
-      roles
       users
       groups
       clusters

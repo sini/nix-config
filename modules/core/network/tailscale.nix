@@ -13,11 +13,11 @@
         delegation = environment.services.headscale.delegateTo or null;
         headscaleHosts =
           if delegation != null then
-            inputs.self.lib.host-utils.findHostsWithRole "headscale"
+            inputs.self.lib.host-utils.findHostsWithFeature "headscale"
             |> lib.filterAttrs (_: h: h.environment == delegation)
             |> lib.attrValues
           else
-            environment.findHostsByRole "headscale" |> lib.attrValues;
+            environment.findHostsByFeature "headscale" |> lib.attrValues;
         headscaleHost = builtins.head headscaleHosts;
       in
       {

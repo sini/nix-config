@@ -1,7 +1,0 @@
-{
-  roles.unlock = {
-    features = [
-      "tang"
-    ];
-  };
-}

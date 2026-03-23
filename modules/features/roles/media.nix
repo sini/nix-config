@@ -1,7 +1,6 @@
 {
-  roles.media = {
-    features = [
-      # "spotify-player"
+  features.media = {
+    requires = [
       "jellyfin-client"
       "mpv"
       "spicetify"

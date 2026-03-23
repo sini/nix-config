@@ -136,16 +136,10 @@ in
               description = "The static IPv6 addresses of this host (derived from networking.interfaces)";
             };
 
-            roles = mkOption {
-              type = types.listOf types.str;
-              default = [ ];
-              description = "List of roles for the host.";
-            };
-
             extra-features = mkOption {
               type = types.listOf types.str;
               default = [ ];
-              description = "List of additional features to enable for the host (beyond those from roles).";
+              description = "List of features to enable for the host (beyond the core features).";
             };
 
             excluded-features = mkOption {
@@ -269,7 +263,7 @@ in
               readOnly = true;
               description = ''
                 Computed list of all enabled features for this host.
-                Includes features from roles, extra-features, and all transitive dependencies,
+                Includes core features, extra-features, and all transitive dependencies,
                 with excluded-features applied.
               '';
             };
@@ -300,11 +294,14 @@ in
               # Use centralized feature resolution from lib.modules
               computedFeatures = self.lib.modules.computeActiveFeatures {
                 featuresConfig = flakeConfig.features;
-                rolesConfig = flakeConfig.roles;
-                hostRoles = config.roles;
                 hostFeatures = config.extra-features or [ ];
                 hostExclusions = config.excluded-features or [ ];
               };
+
+              # Derive system access groups from enabled features
+              hasWorkstation = lib.elem "workstation" computedFeatures;
+              hasDev = lib.elem "dev" computedFeatures;
+              hasServer = lib.elem "server" computedFeatures;
             in
             {
               features = computedFeatures;
@@ -315,14 +312,15 @@ in
 
               system-access-groups =
                 let
-                  roleDefaults = {
-                    workstation = [ "workstation-access" ];
-                    dev = [ "workstation-access" ];
-                    server = [ "server-access" ];
-                  };
-                  fromRoles = lib.unique (lib.flatten (map (role: roleDefaults.${role} or [ ]) config.roles));
+                  defaultGroups =
+                    if hasWorkstation || hasDev then
+                      [ "workstation-access" ]
+                    else if hasServer then
+                      [ "server-access" ]
+                    else
+                      [ "system-access" ];
                 in
-                lib.mkDefault (if fromRoles != [ ] then fromRoles else [ "system-access" ]);
+                lib.mkDefault defaultGroups;
             };
         }
       );

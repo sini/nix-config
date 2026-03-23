@@ -11,16 +11,16 @@
         "enp199s0f6"
       ];
     };
-    roles = [
+    extra-features = [
+      # Composite features (formerly roles)
       "server"
       "unlock"
-      "k3s" # TOGGLE_ENABLE/DISABLE
+      "k3s"
       "bgp-spoke"
       "nix-builder"
       "thunderbolt-mesh"
-      # "vault"
-    ];
-    extra-features = [
+
+      # Hardware and system features
       "zfs-disk-single"
       "xfs-disk-longhorn"
       "cpu-amd"

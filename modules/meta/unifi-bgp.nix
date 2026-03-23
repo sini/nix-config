@@ -30,7 +30,7 @@ let
     let
       # Filter bgp-hub hosts for this environment
       envBgpHubHosts = lib.filterAttrs (
-        _name: host: lib.elem "bgp-hub" (host.roles or [ ]) && host.environment == envName
+        _name: host: host.hasFeature "bgp-hub" && host.environment == envName
       ) config.hosts;
 
       routerId = getDefaultGateway env;

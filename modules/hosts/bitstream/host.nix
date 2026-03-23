@@ -11,11 +11,12 @@
       };
     };
     environment = "dev";
-    roles = [
+    extra-features = [
+      # Composite features (formerly roles)
       "server"
       "nix-builder"
-    ];
-    extra-features = [
+
+      # Hardware and system features
       "zfs-disk-single"
       "network-boot"
       "cpu-amd"

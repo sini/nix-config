@@ -1,6 +1,8 @@
 {
-  roles.core = {
-    features = [
+  # Default features that provide essential system functionality
+  # This replaces the old "core" role and ensures every host has basic capabilities
+  features.default = {
+    requires = [
       "agenix"
       "avahi"
       "deterministic-uids"

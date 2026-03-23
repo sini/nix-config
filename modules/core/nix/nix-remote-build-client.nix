@@ -4,7 +4,7 @@
   ...
 }:
 let
-  inherit (self.lib.host-utils) findHostsWithRole;
+  inherit (self.lib.host-utils) findHostsWithFeature;
 in
 {
   features.nix.system =
@@ -15,7 +15,7 @@ in
       ...
     }:
     let
-      builders = findHostsWithRole "nix-builder";
+      builders = findHostsWithFeature "nix-builder";
       remoteBuilders = lib.filterAttrs (
         hostname: builder: (hostname != config.networking.hostName) && (host.system == builder.system)
       ) builders;

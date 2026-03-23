@@ -65,8 +65,8 @@ writeShellApplication {
     get_vault_hosts() {
         local env="$1"
 
-        (cd "$REPO_ROOT" && nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system roles environment ipv4; }) hosts' 2>/dev/null) |
-        jq -r "to_entries | map(select(.value.environment == \"$env\" and (.value.roles | contains([\"vault\"])))) | .[] | \"\(.key) \(.value.ipv4[0])\""
+        (cd "$REPO_ROOT" && nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system features environment ipv4; }) hosts' 2>/dev/null) |
+        jq -r "to_entries | map(select(.value.environment == \"$env\" and (.value.features | contains([\"vault\"])))) | .[] | \"\(.key) \(.value.ipv4[0])\""
     }
 
     # Get environment domain
@@ -155,7 +155,7 @@ writeShellApplication {
             environments=("$environment")
         else
             # Get all environments that have vault hosts
-            readarray -t environments < <((cd "$REPO_ROOT" && nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system roles environment ipv4; }) hosts' 2>/dev/null | jq -r 'to_entries | map(select(.value.roles | contains(["vault"]))) | map(.value.environment) | unique | .[]'))
+            readarray -t environments < <((cd "$REPO_ROOT" && nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system features environment ipv4; }) hosts' 2>/dev/null | jq -r 'to_entries | map(select(.value.features | contains(["vault"]))) | map(.value.environment) | unique | .[]'))
         fi
 
         if [[ ''${#environments[@]} -eq 0 ]]; then

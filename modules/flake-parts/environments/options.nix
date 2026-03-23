@@ -405,12 +405,12 @@ in
               '';
             };
 
-            findHostsByRole = mkOption {
+            findHostsByFeature = mkOption {
               type = types.functionTo (types.attrsOf types.unspecified);
               readOnly = true;
               description = ''
-                Helper function to find all hosts in this environment that have a specific role.
-                Returns an attrset of hosts filtered by the specified role.
+                Helper function to find all hosts in this environment that have a specific feature.
+                Returns an attrset of hosts filtered by the specified feature.
               '';
             };
 
@@ -465,15 +465,14 @@ in
               in
               if match != null then match.addr else null;
 
-            findHostsByRole =
-              role:
+            findHostsByFeature =
+              feature:
               let
                 inherit (flakeConfig) hosts;
               in
               hosts
               |> lib.attrsets.filterAttrs (
-                _hostname: hostConfig:
-                (builtins.elem role (hostConfig.roles or [ ])) && (hostConfig.environment == config.name)
+                _hostname: hostConfig: hostConfig.hasFeature feature && (hostConfig.environment == config.name)
               );
 
           };

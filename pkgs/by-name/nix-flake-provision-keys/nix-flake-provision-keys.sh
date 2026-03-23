@@ -215,8 +215,8 @@ generate_tang_jwe() {
     local tang_ips=()
     mapfile -t tang_ips < <(
         nix eval --json .#hosts \
-            --apply "hosts: builtins.mapAttrs (name: host: { inherit (host) roles ipv4; }) (builtins.removeAttrs hosts [\"$hostname\"])" 2>/dev/null |
-        jq -r 'to_entries[] | select(.value.roles | contains(["unlock"])) | .value.ipv4[0]' 2>/dev/null |
+            --apply "hosts: builtins.mapAttrs (name: host: { inherit (host) features ipv4; }) (builtins.removeAttrs hosts [\"$hostname\"])" 2>/dev/null |
+        jq -r 'to_entries[] | select(.value.features | contains(["unlock"])) | .value.ipv4[0]' 2>/dev/null |
         sort
     )
 

@@ -21,7 +21,8 @@
     system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
 
-    roles = [
+    extra-features = [
+      # Composite features (formerly roles)
       "workstation"
       "gaming"
       "dev"
@@ -30,9 +31,8 @@
       "inference"
       "messaging"
       "nix-builder"
-    ];
 
-    extra-features = [
+      # Hardware and system features
       "cpu-amd"
       "gpu-amd"
       "network-boot"

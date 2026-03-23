@@ -11,12 +11,21 @@
 - `users.<name>.identity.gpgKey`: [null or string] GPG key ID for the user
   (parent key ID)
 
-- `users.<name>.identity.sshKeys`: [list of string] SSH public keys for the user
+- `users.<name>.identity.sshKeys`: SSH public keys for the user, each with an
+  optional tag
+
+- `users.<name>.identity.sshKeys.*.key`: [string] SSH public key string
+
+- `users.<name>.identity.sshKeys.*.tag`: [null or string] Tag to categorize the
+  SSH key (e.g., 'laptop', 'workstation', 'yubikey')
 
 - `users.<name>.name`: [unspecified value] Username
 
 - `users.<name>.system`: Unix account defaults and home-manager feature
   configuration
+
+- `users.<name>.system.enableUnixAccount`: [boolean] Whether this user should be
+  provisioned as a Kanidm posixAccount (enables Unix attributes in Kanidm)
 
 - `users.<name>.system.excluded-features`: [list of string] List of feature
   names to exclude for this user

@@ -1,9 +1,9 @@
 # Agenix Secrets Manifest
 
 Generated on: 26.05
-Total unique secrets: 52
-- Generated: 45
-- Manually set: 7
+Total unique secrets: 55
+- Generated: 47
+- Manually set: 8
 
 ---
 
@@ -85,6 +85,14 @@ and rekeyed for each host.
   - nixos:cortex
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/users/will/hashed-password.age`
+
+
+
+
+### wpa-supplicant
+- **Used by**: nixos:blade
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/env/dev/wpa_supplicant-arcade.age`
 
 
 
@@ -205,6 +213,14 @@ They will be created automatically if they don't exist.
 - **Used by**: nixos:bitstream
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/hosts/bitstream/generated/initrd_host_ed25519_key.age`
+- **Generator**: built-in: ssh-key
+
+
+
+### initrd_host_ed25519_key
+- **Used by**: nixos:blade
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/blade/generated/initrd_host_ed25519_key.age`
 - **Generator**: built-in: ssh-key
 
 
@@ -478,6 +494,14 @@ They will be created automatically if they don't exist.
 - **Rekey File**: `.secrets/users/will/id_agenix.age`
 - **Generator**: built-in: age-identity
 
+
+
+### wpa-supplicant-initrd
+- **Used by**: nixos:blade
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/blade/wpa_supplicant_initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
 
 
 

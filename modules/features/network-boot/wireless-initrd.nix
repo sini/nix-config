@@ -37,6 +37,8 @@
             dependencies = [ config.age.secrets.wpa-supplicant ];
             script = "wpa-supplicant-config";
           };
+
+          owner = "wpa_supplicant";
           settings.networks = config.networking.wireless.networks;
           rekeyFile = host.secretPath + "/wpa_supplicant_initrd.age";
         };
@@ -53,6 +55,7 @@
             compressorArgs = [ "-12" ];
 
             # extraFirmwarePaths = [ "iwlwifi-ma-b0-gf-a0-89.ucode.zst" ];
+            extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
 
             systemd = {
               # users.root.shell = "/bin/systemd-tty-ask-password-agent";
@@ -82,6 +85,8 @@
                   wants = lib.mkForce [ ];
                   requires = lib.mkForce [ ];
                 };
+
+                zfs-import-zroot.after = [ "wpa_supplicant@${interface}.service" ];
                 resolved.enable = true;
               };
 

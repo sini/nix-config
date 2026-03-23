@@ -1,6 +1,6 @@
 {
-  roles.workstation = {
-    features = [
+  features.workstation = {
+    requires = [
       # Hardware modules
       "audio"
       "bluetooth"
@@ -17,20 +17,16 @@
       # Desktop GUI
       "xserver"
       "xwayland"
-      #"ananicy"
 
       "gdm"
       "gnome"
       "xdg-portal"
-      # "regreet"
-      # "hyprland"
       "alacritty"
       "kitty"
       "firefox"
       "obs-studio"
-      # TODO: Re-enable and configure
-      "obsidian" # note-taking app
-      "zathura" # PDF viewer
+      "obsidian"
+      "zathura"
     ];
   };
 }

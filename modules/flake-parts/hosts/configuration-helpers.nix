@@ -34,8 +34,8 @@
           userExtraFeatures = resolvedUser.system.extra-features or [ ];
           userExclusions = resolvedUser.system.excluded-features or [ ];
 
-          coreRoleFeatureNames = config.roles.core.features;
-          isCore = f: lib.elem f.name coreRoleFeatureNames;
+          coreFeatureNames = self.lib.modules.coreFeatures;
+          isCore = f: lib.elem f.name coreFeatureNames;
 
           coreHostFeatures = lib.filter isCore allHostFeatures;
           nonCoreHostFeatures = lib.filter (f: !(isCore f)) allHostFeatures;
@@ -68,7 +68,7 @@
       prepareHostContext =
         {
           hostOptions,
-          overrideRoles ? null,
+          overrideFeatures ? null,
         }:
         _system:
         let
@@ -80,7 +80,7 @@
 
           environment = config.environments.${hostOptions.environment};
 
-          usePrecomputed = overrideRoles == null;
+          usePrecomputed = overrideFeatures == null;
 
           activeFeatures =
             if usePrecomputed then
@@ -88,9 +88,7 @@
             else
               self.lib.modules.computeActiveFeatures {
                 featuresConfig = config.features;
-                rolesConfig = config.roles;
-                hostRoles = overrideRoles;
-                hostFeatures = hostOptions.extra-features or [ ];
+                hostFeatures = overrideFeatures;
                 hostExclusions = hostOptions.excluded-features or [ ];
               };
 
@@ -152,7 +150,7 @@
       mkNixosHost =
         {
           hostOptions,
-          overrideRoles ? null,
+          overrideFeatures ? null,
           skipHomeManager ? false,
           skipHostConfig ? false,
           extraModules ? [ ],
@@ -160,7 +158,7 @@
         withSystem hostOptions.system (
           { system, ... }:
           let
-            ctx = prepareHostContext { inherit hostOptions overrideRoles; } system;
+            ctx = prepareHostContext { inherit hostOptions overrideFeatures; } system;
           in
           ctx.lib'.nixosSystem {
             inherit system;
@@ -182,7 +180,7 @@
       mkDarwinHost =
         {
           hostOptions,
-          overrideRoles ? null,
+          overrideFeatures ? null,
           skipHomeManager ? false,
           skipHostConfig ? false,
           extraModules ? [ ],
@@ -190,7 +188,7 @@
         withSystem hostOptions.system (
           { system, ... }:
           let
-            ctx = prepareHostContext { inherit hostOptions overrideRoles; } system;
+            ctx = prepareHostContext { inherit hostOptions overrideFeatures; } system;
           in
           ctx.nix-darwin'.lib.darwinSystem {
             inherit system;
@@ -251,7 +249,7 @@
         in
         mkNixosHost {
           hostOptions = modifiedHostOptions;
-          overrideRoles = [ "kexec" ];
+          overrideFeatures = [ "kexec" ];
           skipHomeManager = true;
           skipHostConfig = true;
           extraModules = [

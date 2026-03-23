@@ -15,7 +15,7 @@
       let
         managementSubnet = "/${lib.last (lib.splitString "/" environment.networks.default.cidr)}";
 
-        kubernetesNodes = environment.findHostsByRole "k3s";
+        kubernetesNodes = environment.findHostsByFeature "k3s";
 
         # Sort kubernetes nodes by hostname for deterministic ordering
         sortedKubernetesNodes = builtins.sort (a: b: a.hostname < b.hostname) (

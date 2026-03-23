@@ -19,8 +19,8 @@ writeShellApplication {
 
     echo ""
     echo "=== Flake Hosts ==="
-    nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system roles environment ipv4; }) hosts' | \
-      jq -r 'to_entries[] | "\(.key) (\(.value.system)) - env:\(.value.environment) roles:\(.value.roles | join(",")) ip:\(.value.ipv4 | join(","))"' | \
+    nix eval --json .#hosts --apply 'hosts: builtins.mapAttrs (name: host: { inherit (host) system features environment ipv4; }) hosts' | \
+      jq -r 'to_entries[] | "\(.key) (\(.value.system)) - env:\(.value.environment) features:\(.value.features | join(",")) ip:\(.value.ipv4 | join(","))"' | \
       sort
   '';
 }

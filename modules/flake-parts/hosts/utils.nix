@@ -5,12 +5,11 @@
 }:
 {
   flake.lib.host-utils = {
-    findHostsWithRole =
-      role:
+    findHostsWithFeature =
+      feature:
       let
         matchingHosts =
-          config.hosts
-          |> lib.attrsets.filterAttrs (_hostname: hostConfig: builtins.elem role (hostConfig.roles or [ ]));
+          config.hosts |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.hasFeature feature);
       in
       matchingHosts;
   };

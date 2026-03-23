@@ -13,10 +13,9 @@ in
       ...
     }:
     let
-      # Find all hosts with vault role in the same environment (including ourselves)
+      # Find all hosts with vault feature in the same environment (including ourselves)
       allVaultHosts = lib.attrsets.filterAttrs (
-        _hostname: hostConfig:
-        builtins.elem "vault" hostConfig.roles && hostConfig.environment == host.environment
+        _hostname: hostConfig: hostConfig.hasFeature "vault" && hostConfig.environment == host.environment
       ) flakeHosts;
 
       # Raft peers excludes current host

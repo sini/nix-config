@@ -8,11 +8,10 @@
 
     channel = "nixos-stable";
 
-    roles = [
+    extra-features = [
+      # Composite features (formerly roles)
       "dev"
     ];
-
-    extra-features = [ ];
 
     system-access-groups = [ "system-access" ];
 

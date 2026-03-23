@@ -1,6 +1,6 @@
 { self, ... }:
 let
-  inherit (self.lib.host-utils) findHostsWithRole;
+  inherit (self.lib.host-utils) findHostsWithFeature;
 in
 {
   features.haproxy.linux =
@@ -12,7 +12,7 @@ in
     }:
     let
       hosts =
-        findHostsWithRole "k3s"
+        findHostsWithFeature "k3s"
         |> lib.attrsets.filterAttrs (_hostname: hostConfig: environment.name == hostConfig.environment)
         |> lib.attrValues;
     in

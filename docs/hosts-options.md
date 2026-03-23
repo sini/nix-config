@@ -28,8 +28,8 @@
 - `hosts.<name>.exporters.<name>.port`: [signed integer] Port number for the
   exporter
 
-- `hosts.<name>.extra-features`: [list of string] List of additional features to
-  enable for the host (beyond those from roles).
+- `hosts.<name>.extra-features`: [list of string] List of features to enable for
+  the host (beyond the core features).
 
 - `hosts.<name>.extra_modules`: [list of module] List of additional modules to
   include for the host.
@@ -38,8 +38,8 @@
   the host.
 
 - `hosts.<name>.features`: [list of string] \
-  Computed list of all enabled features for this host. Includes features from
-  roles, extra-features, and all transitive dependencies, with excluded-features
+  Computed list of all enabled features for this host. Includes core features,
+  extra-features, and all transitive dependencies, with excluded-features
   applied.
 
 - `hosts.<name>.hasFeature`: [function that evaluates to a(n) boolean] \
@@ -91,8 +91,6 @@
 
 - `hosts.<name>.remoteBuildSpeed`: [signed integer] The relative build speed
 
-- `hosts.<name>.roles`: [list of string] List of roles for the host.
-
 - `hosts.<name>.secretPath`: [absolute path] Path to the directory containing
   secret keys for the host.
 
@@ -104,6 +102,11 @@
   with environment-level system-access-groups at resolution time. Defaults are
   derived from host roles (workstation → workstation-access, server →
   server-access, fallback → system-access).
+
+- `hosts.<name>.system-owner`: [null or string] \
+  The primary user who owns this host. Used by features that require a single
+  user (e.g. libvirt QEMU process owner, sunshine game streaming). When null,
+  defaults to the first canonical user with system-access scope.
 
 - `hosts.<name>.systemConfiguration`: [module] Host-specific system module
   configuration.

@@ -1,6 +1,6 @@
 {
-  roles.dev-gui = {
-    features = [
+  features.dev-gui = {
+    requires = [
       "gpg"
       "vscode"
       "gitkraken"

@@ -1,0 +1,7 @@
+{
+  features.vault = {
+    requires = [
+      "vault"
+    ];
+  };
+}

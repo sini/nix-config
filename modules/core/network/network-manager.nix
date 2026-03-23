@@ -14,6 +14,7 @@
         networking.networkmanager = {
           enable = true;
           unmanaged = unmanagedInterfaces;
+          wifi.powersave = true;
           settings = {
             connectivity = {
               enabled = false;

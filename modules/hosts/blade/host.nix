@@ -9,26 +9,26 @@
     system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
 
-    roles = [
+    excluded-features = [
+      # "wireless" # NetworkManager handles WiFi instead of wpa_supplicant
+    ];
+
+    extra-features = [
+      # Composite features (formerly roles)
       "workstation"
       "laptop"
       "gaming"
       "dev"
       "dev-gui"
       "media"
-    ];
 
-    excluded-features = [
-      # "wireless" # NetworkManager handles WiFi instead of wpa_supplicant
-    ];
-
-    extra-features = [
+      # Hardware and system features
       "cpu-intel"
       "gpu-intel"
       "gpu-nvidia"
       "gpu-nvidia-prime"
       "zfs-disk-single"
-      # "network-manager"
+      "network-manager"
       "razer"
       # "gamedev"
       "performance"
@@ -36,8 +36,9 @@
       "discord"
       "network-boot"
       "wireless-initrd"
-      "initrd-bootstrap-keys" # Generate keys only
+      # "initrd-bootstrap-keys" # Generate keys only
     ];
+
     users = {
       sini = {
         extra-features = [
@@ -56,7 +57,9 @@
         ];
       };
     };
+
     facts = ./facter.json;
+
     systemConfiguration =
       { pkgs, ... }:
       {

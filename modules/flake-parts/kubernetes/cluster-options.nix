@@ -155,7 +155,7 @@ let
             if config.hosts != null then
               lib.filterAttrs (name: _: lib.elem name config.hosts) allHosts
             else
-              environment.findHostsByRole config.role;
+              environment.findHostsByFeature config.role;
 
           getAssignment =
             name:

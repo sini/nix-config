@@ -1,7 +1,0 @@
-{
-  roles.inference = {
-    features = [
-      "ollama"
-    ];
-  };
-}

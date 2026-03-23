@@ -68,7 +68,7 @@
             deployment = {
               targetHost =
                 if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
-              tags = [ hostOptions.environment ] ++ hostOptions.roles;
+              tags = [ hostOptions.environment ] ++ hostOptions.features;
               allowLocalDeployment = true;
               buildOnTarget = hostOptions.system != currentSystem;
               targetUser = hostOptions.remote-deployment-user;
@@ -100,7 +100,7 @@
             deployment = {
               targetHost =
                 if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
-              tags = [ hostOptions.environment ] ++ hostOptions.roles;
+              tags = [ hostOptions.environment ] ++ hostOptions.features;
               allowLocalDeployment = true;
               systemType = "darwin";
               buildOnTarget = hostOptions.system != currentSystem;

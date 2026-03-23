@@ -1,7 +1,6 @@
 {
-  roles.gaming = {
-    features = [
-      # "ananicy"
+  features.gaming = {
+    requires = [
       "gamepad"
       "nix-ld"
       "steam"

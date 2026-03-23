@@ -70,7 +70,6 @@
 # This ensures the module works correctly with partial meshes, broken links,
 # or any arbitrary thunderbolt topology.
 {
-  roles.thunderbolt-mesh.features = [ "thunderbolt-mesh" ];
   features.thunderbolt-mesh = {
     requires = [ "bgp-core" ];
     linux =
@@ -89,7 +88,7 @@
 
         # Auto-discover peer configuration from host settings
         thunderboltPeers = lib.filterAttrs (name: _host: name != config.networking.hostName) (
-          environment.findHostsByRole "thunderbolt-mesh"
+          environment.findHostsByFeature "thunderbolt-mesh"
         );
 
         # Derive gateway IPs from peer interface assignments
