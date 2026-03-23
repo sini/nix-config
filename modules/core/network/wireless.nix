@@ -5,7 +5,6 @@
         config,
         lib,
         environment,
-        host,
         ...
       }:
       let
