@@ -27,11 +27,9 @@
       in
       lib.mkIf hasWireless {
 
-        # NOTE: this does expose configured wireless passwords into the nix-store as part
-        # of the initrd. We don't consider this a problem; if the user has access to our
-        # local store then they likely also have access to our wireless config. We secure
-        # access to services that require actual security beyond just network isolation.
-
+        # NOTE: this does expose configured wireless passwords into the unencrypted
+        # initrd, but if you have access to the unbooted machine you probably have
+        # my wifi password...
         age.secrets.wpa-supplicant-initrd = {
           generator = {
             dependencies = [ config.age.secrets.wpa-supplicant ];
