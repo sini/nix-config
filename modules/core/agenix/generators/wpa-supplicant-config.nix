@@ -26,11 +26,13 @@
                 else
                   throw "pskRaw must be in format 'ext:keyname'";
 
-              priority = toString (networkConfig.priority or 1);
+              priority = toString (
+                if networkConfig ? priority && networkConfig.priority != null then networkConfig.priority else 1
+              );
             in
             ''
               psk_value=$(${decrypt} ${lib.escapeShellArg secretFile} | ${pkgs.gnugrep}/bin/grep -E "^${lib.escapeShellArg pskKey}=" | ${pkgs.coreutils}/bin/cut -d= -f2-)
-              printf 'network={\n  ssid=%s\n  key_mgmt=WPA-PSK WPA-EAP SAE FT-PSK FT-EAP FT-SAE\n  psk="%s"\n  priority=%s\n}\n\n' ${lib.escapeShellArg ssid} "$psk_value" ${lib.escapeShellArg priority}
+              printf 'network={\n  ssid="%s"\n  key_mgmt=WPA-PSK WPA-EAP SAE FT-PSK FT-EAP FT-SAE\n  psk="%s"\n  priority=%s\n}\n\n' ${lib.escapeShellArg ssid} "$psk_value" ${lib.escapeShellArg priority}
             '';
 
           # The secret file should be the first (and only) dependency

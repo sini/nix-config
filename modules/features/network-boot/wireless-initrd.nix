@@ -49,6 +49,8 @@
             availableKernelModules = [
               "ccm" # Cryptography libs for WPA
               "ctr"
+              "iwlmvm" # Intel wireless controllers
+              "iwlwifi"
             ];
 
             compressor = "zstd";
