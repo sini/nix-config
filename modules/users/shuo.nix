@@ -5,6 +5,7 @@
     };
 
     system = {
+      enableUnixAccount = true;
       uid = 1001;
       gid = 1001;
     };
