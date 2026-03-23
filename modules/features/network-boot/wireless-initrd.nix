@@ -90,20 +90,7 @@
                 resolved.enable = true;
               };
 
-              network = {
-                enable = true;
-                networks."10-wlan" = {
-                  matchConfig.Name = interface;
-                  networkConfig.DHCP = "yes";
-                  # address = [ "10.9.100.100/16" ];
-                  # gateway = [ "10.9.1.1" ];
-                  # dns = [ "1.1.1.1" ];
-                };
-              };
-
             };
-
-            network.enable = true;
 
             secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" =
               config.age.secrets.wpa-supplicant-initrd.path;
