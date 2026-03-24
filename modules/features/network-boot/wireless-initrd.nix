@@ -3,7 +3,6 @@
     requires = [
       "initrd-bootstrap-keys"
       "network-boot"
-      "wireless"
     ];
     linux =
       {
