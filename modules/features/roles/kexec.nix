@@ -20,13 +20,27 @@
       }:
       let
         # Automatically collect all network driver modules from facter hardware report
-        networkDriverModules = lib.unique (
+        baseNetworkDriverModules = lib.unique (
           lib.flatten (
             lib.filter (x: x != null) (
               map (iface: iface.driver_modules or null) config.facter.report.hardware.network_interface
             )
           )
         );
+
+        # Map of kernel modules to their required dependencies
+        moduleDependencies = {
+          "mlx4_core" = [ "mlx4_en" ];
+          "iwlwifi" = [ "iwlmvm" ];
+        };
+
+        # Expand modules to include their dependencies
+        additionalDriverModules = lib.unique (
+          lib.flatten (map (mod: moduleDependencies.${mod} or [ ]) baseNetworkDriverModules)
+        );
+
+        networkDriverModules = lib.unique (baseNetworkDriverModules ++ additionalDriverModules);
+
       in
       {
         imports = [
