@@ -153,7 +153,7 @@
                       name = hostConfig.hostname;
                       devices = [
                         {
-                          fullpath = hostConfig.feature-settings.ceph-device-allocation.device;
+                          fullpath = hostConfig.settings.ceph-device-allocation.device;
                         }
                       ];
                     });

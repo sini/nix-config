@@ -58,8 +58,8 @@
       };
     };
 
-    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
-    feature-settings.linux-kernel.optimization = "x86_64-v4";
+    settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
+    settings.linux-kernel.optimization = "x86_64-v4";
 
     facts = ./facter.json;
   };

@@ -8,7 +8,7 @@
 # OpenFabric handles east/west (host↔host), BGP handles north/south.
 #
 # Host config:
-#   feature-settings.thunderbolt-mesh-of = {
+#   settings.thunderbolt-mesh-of = {
 #     interfaces = [ "enp199s0f5" "enp199s0f6" ];
 #     loopback.ipv4 = "172.16.255.1/32";
 #     nsap = "49.0000.0000.0001.00";
@@ -16,13 +16,15 @@
 { lib, ... }:
 {
   features.thunderbolt-mesh-of = {
+    requires = [ "thunderbolt-network" ];
+
     settings = {
       interfaces = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        description = "Thunderbolt interface names to enable OpenFabric on";
+        description = "Thunderbolt interface names to enable OpenFabric on (tb0, tb1, ... from thunderbolt hardware feature)";
         example = [
-          "enp199s0f5"
-          "enp199s0f6"
+          "tb0"
+          "tb1"
         ];
       };
       loopback = lib.mkOption {
@@ -69,9 +71,7 @@
           peerHost:
           let
             mgmtIp = builtins.head peerHost.ipv4;
-            loopbackIp = lib.head (
-              lib.splitString "/" peerHost.feature-settings.thunderbolt-mesh-of.loopback.ipv4
-            );
+            loopbackIp = lib.head (lib.splitString "/" peerHost.settings.thunderbolt-mesh-of.loopback.ipv4);
           in
           "ip route ${mgmtIp}/32 ${loopbackIp}"
         ) (lib.attrValues peers);
@@ -88,14 +88,6 @@
       in
       {
         config = {
-          boot = {
-            kernelParams = [ "pcie=pcie_bus_perf" ];
-            kernelModules = [
-              "thunderbolt"
-              "thunderbolt-net"
-            ];
-          };
-
           # Loopback address for fabric routing
           networking.interfaces.lo.ipv4.addresses = [
             {

@@ -89,7 +89,7 @@
               gateway = getGatewayForPeer peerHostname peerLoopbackIp;
             in
             {
-              asn = peerHost.feature-settings.bgp.localAsn;
+              asn = peerHost.settings.bgp.localAsn;
               lanip = builtins.head peerHost.ipv4;
               ip = peerLoopbackIp;
               inherit gateway;

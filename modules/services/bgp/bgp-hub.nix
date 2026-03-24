@@ -112,7 +112,7 @@ in
               # Create neighbors using their bgp localAsn setting or fallback to index-based AS numbers
               sortedNeighbors = lib.imap0 (index: hostname: {
                 ip = builtins.head targetHosts.${hostname}.ipv4;
-                asn = targetHosts.${hostname}.feature-settings.bgp.localAsn or (cfg.neighborAsNumberBase + index);
+                asn = targetHosts.${hostname}.settings.bgp.localAsn or (cfg.neighborAsNumberBase + index);
               }) sortedHostnames;
             in
             sortedNeighbors

@@ -200,7 +200,7 @@ in
               description = "List of features to exclude for the host (prevents the feature and its requires from being added)";
             };
 
-            feature-settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features "Per-host feature settings (overrides environment defaults)";
+            settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features "Per-host feature settings (overrides environment defaults)";
 
             secretPath = mkOption {
               type = types.path;

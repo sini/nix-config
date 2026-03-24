@@ -77,8 +77,8 @@
         ];
       };
     };
-    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
-    feature-settings.linux-kernel.optimization = "zen4";
+    settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
+    settings.linux-kernel.optimization = "zen4";
 
     facts = ./facter.json;
     systemConfiguration = _: {

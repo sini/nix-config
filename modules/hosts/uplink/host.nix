@@ -38,9 +38,11 @@
       # "minio"
       # "vault"
     ];
-    feature-settings.bgp.localAsn = 65000;
-    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
-    feature-settings.impermanence.wipeHomeOnBoot = true;
+    settings = {
+      bgp.localAsn = 65000;
+      zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
+      impermanence.wipeHomeOnBoot = true;
+    };
 
     facts = ./facter.json;
   };

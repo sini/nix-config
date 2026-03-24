@@ -23,9 +23,9 @@ works in `modules/flake-parts/kubernetes/service-helpers.nix`.
 1. **Merging via NixOS module system**: Use `lib.evalModules` with native
    priority instead of manual coalesce:
    - Feature defaults: from `mkOption { default = ...; }` (lowest)
-   - Environment `feature-settings`: wrapped in `lib.mkDefault` (middle)
-   - Host `feature-settings`: plain values (high)
-   - User `feature-settings`: plain values, home modules only (highest)
+   - Environment `settings`: wrapped in `lib.mkDefault` (middle)
+   - Host `settings`: plain values (high)
+   - User `settings`: plain values, home modules only (highest)
    - `lib.mkForce` available at any level
 
 1. **Unified `settings` specialArg**: Passed as
@@ -152,7 +152,7 @@ Add `mkFeatureSettingsOpt` and `resolveFeatureSettings` to the existing
 Add to environment submodule options:
 
 ```nix
-feature-settings = self.lib.modules.mkFeatureSettingsOpt config.features
+settings = self.lib.modules.mkFeatureSettingsOpt config.features
   "Default feature settings for all hosts in this environment";
 ```
 
@@ -163,7 +163,7 @@ feature-settings = self.lib.modules.mkFeatureSettingsOpt config.features
 Add to host submodule options (near `extra-features`):
 
 ```nix
-feature-settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features
+settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features
   "Per-host feature settings (overrides environment defaults)";
 ```
 
@@ -171,29 +171,27 @@ feature-settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features
 
 **File:** `modules/flake-parts/users/helpers.nix`
 
-Add `feature-settings` to canonical user type, `mkEnvUsersOpt`, and
-`mkHostUsersOpt`. These require passing `featuresConfig` into the helper
-functions.
+Add `settings` to canonical user type, `mkEnvUsersOpt`, and `mkHostUsersOpt`.
+These require passing `featuresConfig` into the helper functions.
 
 For canonical users (`modules/flake-parts/users/options.nix`), add to the
 `system` submodule:
 
 ```nix
-feature-settings = mkOption {
+settings = mkOption {
   type = types.attrsOf types.attrs;
   default = { };
   description = "Per-feature settings defaults for this user's home modules";
 };
 ```
 
-### 2d. Thread `feature-settings` through user resolution
+### 2d. Thread `settings` through user resolution
 
 **File:** `modules/flake-parts/users/helpers.nix`
 
-In `resolveUser`, pass `feature-settings` through the coalesce chain to the
-resolved user object. The actual merge happens later via
-`resolveFeatureSettings` in `makeHomeConfig`, not here — we just preserve the
-raw values.
+In `resolveUser`, pass `settings` through the coalesce chain to the resolved
+user object. The actual merge happens later via `resolveFeatureSettings` in
+`makeHomeConfig`, not here — we just preserve the raw values.
 
 ## Phase 3: Resolve and Pass Settings
 
@@ -207,8 +205,8 @@ After `activeFeatures` is computed, resolve settings:
 settings = self.lib.modules.resolveFeatureSettings {
   activeFeatureNames = activeFeatures;
   featuresConfig = config.features;
-  envSettings = environment.feature-settings or { };
-  hostSettings = hostOptions.feature-settings or { };
+  envSettings = environment.settings or { };
+  hostSettings = hostOptions.settings or { };
 };
 ```
 
@@ -272,8 +270,8 @@ Replace hardcoded values with `settings.tailscale.*` references.
 
 ### 4c. Verify with overrides
 
-Test environment-level and host-level `feature-settings.tailscale.*` values
-merge correctly.
+Test environment-level and host-level `settings.tailscale.*` values merge
+correctly.
 
 ## Dependency Graph
 

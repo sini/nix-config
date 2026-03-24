@@ -229,7 +229,7 @@ let
   # Typed, per-feature settings with multi-layer merging via evalModules.
   # Analogous to serviceOptions in kubernetes/service-helpers.nix.
 
-  # Generate a feature-settings option type from all features that declare settings.
+  # Generate a settings option type from all features that declare settings.
   # Used by environments and hosts to provide typed configuration for features.
   mkFeatureSettingsOpt =
     featuresConfig: description:
@@ -254,9 +254,9 @@ let
   # Resolve feature settings by merging layers via evalModules.
   # Priority order (lowest to highest):
   #   1. Feature defaults (from mkOption default values)
-  #   2. Environment feature-settings (wrapped in mkDefault)
-  #   3. Host feature-settings (plain values)
-  #   4. User feature-settings (plain values, home modules only)
+  #   2. Environment settings (wrapped in mkDefault)
+  #   3. Host settings (plain values)
+  #   4. User settings (plain values, home modules only)
   resolveFeatureSettings =
     {
       activeFeatureNames,
@@ -286,17 +286,13 @@ let
           );
         };
 
-      hostModule =
-        _:
-        {
-          config = lib.intersectAttrs relevantFeatures hostSettings;
-        };
+      hostModule = _: {
+        config = lib.intersectAttrs relevantFeatures hostSettings;
+      };
 
-      userModule =
-        _:
-        {
-          config = lib.intersectAttrs relevantFeatures userSettings;
-        };
+      userModule = _: {
+        config = lib.intersectAttrs relevantFeatures userSettings;
+      };
 
       evaluated = lib.evalModules {
         modules = [

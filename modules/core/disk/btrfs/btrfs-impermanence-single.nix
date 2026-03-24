@@ -51,7 +51,7 @@
               (builtins.head disk-labels)
             else
               abort (
-                "Multiple disks found. Please set feature-settings.btrfs-impermanence-single.device_id. Found: "
+                "Multiple disks found. Please set settings.btrfs-impermanence-single.device_id. Found: "
                 + toString disk-labels
               );
 

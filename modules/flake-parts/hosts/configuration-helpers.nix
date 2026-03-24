@@ -65,9 +65,9 @@
           userSettings = resolveFeatureSettings {
             activeFeatureNames = map (f: f.name) resolvedFeatures;
             featuresConfig = config.features;
-            envSettings = environment.feature-settings or { };
-            hostSettings = hostOptions.feature-settings or { };
-            userSettings = resolvedUser.system.feature-settings or { };
+            envSettings = environment.settings or { };
+            hostSettings = hostOptions.settings or { };
+            userSettings = resolvedUser.system.settings or { };
           };
         in
         {
@@ -125,8 +125,8 @@
           settings = resolveFeatureSettings {
             activeFeatureNames = activeFeatures;
             featuresConfig = config.features;
-            envSettings = environment.feature-settings or { };
-            hostSettings = hostOptions.feature-settings or { };
+            envSettings = environment.settings or { };
+            hostSettings = hostOptions.settings or { };
           };
 
           enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;

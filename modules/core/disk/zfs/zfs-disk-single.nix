@@ -19,7 +19,6 @@
     linux =
       {
         config,
-        lib,
         settings,
         ...
       }:
@@ -49,14 +48,14 @@
             in
             if (builtins.length disk-labels == 0) then
               abort (
-                "No suitable disks found. Please set feature-settings.zfs-disk-single.device_id. "
+                "No suitable disks found. Please set settings.zfs-disk-single.device_id. "
                 + "Check that your disk has /dev/disk/by-id/ entries and is not USB."
               )
             else if (builtins.length disk-labels == 1) then
               (builtins.head disk-labels)
             else
               abort (
-                "Multiple disks found. Please set feature-settings.zfs-disk-single.device_id. Found: "
+                "Multiple disks found. Please set settings.zfs-disk-single.device_id. Found: "
                 + toString disk-labels
               );
 

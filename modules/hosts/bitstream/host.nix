@@ -26,7 +26,7 @@
       "cpu-amd"
       "gpu-amd"
     ];
-    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+    settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
 
     facts = ./facter.json;
   };

@@ -41,7 +41,7 @@ let
           let
             firstHost = builtins.head (builtins.attrValues envBgpHubHosts);
           in
-          firstHost.feature-settings.bgp.localAsn or 65000
+          firstHost.settings.bgp.localAsn or 65000
         else
           65000;
     in

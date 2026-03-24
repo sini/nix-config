@@ -42,7 +42,7 @@
           assertions = [
             {
               assertion = cfg.device_id != "";
-              message = "feature-settings.xfs-disk-longhorn.device_id must be set.";
+              message = "settings.xfs-disk-longhorn.device_id must be set.";
             }
           ];
 
