@@ -6,6 +6,7 @@
         lib,
         pkgs,
         host,
+        settings,
         ...
       }:
       let
@@ -59,7 +60,7 @@
             # Rootless storage path for impermanence setups
             # .local/share/containers is persistent mount with fuse bindfs
             # so we need to point to the underlying filesystem directly
-            (lib.mkIf config.impermanence.enable {
+            (lib.mkIf (settings.impermanence.enable or false) {
               rootless_storage_path = "${cacheRoot}$HOME/.local/share/containers/storage";
             })
 

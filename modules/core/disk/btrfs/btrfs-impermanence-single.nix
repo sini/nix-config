@@ -1,17 +1,38 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
-{ inputs, ... }:
+{ inputs, lib, ... }:
 {
   features.btrfs-impermanence-single = {
     requires = [ "btrfs-root" ];
+
+    settings = {
+      device_id = lib.mkOption {
+        type = lib.types.str;
+        default = "";
+        description = ''
+          Disk device id (e.g., "ata-..." or "/dev/disk/by-id/...").
+          If not set, the module attempts to find a single non-USB disk
+          via facter. Aborts if multiple or no disks are found.
+        '';
+      };
+      swap_size = lib.mkOption {
+        type = lib.types.int;
+        default = 0;
+        description = "Size of swap in MiB, 0 disables swap.";
+      };
+    };
+
     linux =
       {
         config,
         lib,
+        settings,
         ...
       }:
-      with lib;
+
       let
-        cfg = config.hardware.disk.btrfs-impermanence-single;
+        cfg = settings.btrfs-impermanence-single;
+
+        # Use setting if provided, otherwise auto-detect from facter
         disk-device =
           if cfg.device_id != "" then
             if lib.hasPrefix "/dev/" cfg.device_id then cfg.device_id else "/dev/disk/by-id/" + cfg.device_id
@@ -30,7 +51,7 @@
               (builtins.head disk-labels)
             else
               abort (
-                "Multiple disks found. Please specify hardware.disk.single.device_id. Found: "
+                "Multiple disks found. Please set feature-settings.btrfs-impermanence-single.device_id. Found: "
                 + toString disk-labels
               );
 
@@ -46,30 +67,11 @@
       {
         imports = [ inputs.disko.nixosModules.default ];
 
-        options.hardware.disk.btrfs-impermanence-single = with lib.types; {
-          device_id = mkOption {
-            type = types.str;
-            default = "";
-            description = ''
-              (Optional) Disk device id (e.g., "ata-...").
-              If not set, the module attempts to find a single non-USB disk.
-              If multiple disks are found or none are found, evaluation will abort
-              and this option must be set manually.
-            '';
-          };
-          swap_size = mkOption {
-            type = types.int;
-            default = 0; # Default to 0 MiB, disabling swap unless specified
-            description = "Size of swap in MiB, 0 disables swap.";
-          };
-        };
-
-        # config = mkIf cfg.enable { # Removed mkIf condition
         config = {
           disko.devices = {
             disk = {
               main = {
-                device = disk-device; # Uses the logic defined in the let block
+                device = disk-device;
                 type = "disk";
                 content = {
                   type = "gpt";

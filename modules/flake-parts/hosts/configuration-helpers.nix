@@ -19,6 +19,9 @@
       # Import user resolution from lib.users
       inherit (self.lib.users) resolveUsers;
 
+      # Import feature settings resolution from lib.modules
+      inherit (self.lib.modules) resolveFeatureSettings;
+
       # ============================================================================
       # SECTION 1: Home Manager User Configuration
       # ============================================================================
@@ -27,7 +30,8 @@
         {
           resolvedUser,
           allHostFeatures,
-          ...
+          environment,
+          hostOptions,
         }:
         let
           includeHostFeatures = resolvedUser.system.include-host-features or false;
@@ -56,9 +60,20 @@
           resolvedFeatures = filteredFeatures ++ featureDeps;
 
           homeModules = collectHomeModules resolvedFeatures;
+
+          # Resolve per-user settings (feature defaults → env → host → user)
+          userSettings = resolveFeatureSettings {
+            activeFeatureNames = map (f: f.name) resolvedFeatures;
+            featuresConfig = config.features;
+            envSettings = environment.feature-settings or { };
+            hostSettings = hostOptions.feature-settings or { };
+            userSettings = resolvedUser.system.feature-settings or { };
+          };
         in
         {
-          imports = homeModules;
+          imports = homeModules ++ [
+            { _module.args.settings = userSettings; }
+          ];
         };
 
       # ============================================================================
@@ -106,6 +121,16 @@
             builtins.attrValues (config.clusters or { })
           );
 
+          # Resolve feature settings (feature defaults → environment → host)
+          settings = resolveFeatureSettings {
+            activeFeatureNames = activeFeatures;
+            featuresConfig = config.features;
+            envSettings = environment.feature-settings or { };
+            hostSettings = hostOptions.feature-settings or { };
+          };
+
+          enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
+
           specialArgs = {
             inherit
               pkgs'
@@ -113,13 +138,18 @@
               environment
               cluster
               users
+              settings
               ;
-            host = hostOptions;
+            host = hostOptions // {
+              users = {
+                all = users;
+                enabled = enabledUsers;
+                enabledNames = builtins.attrNames enabledUsers;
+              };
+            };
             lib = lib';
             flakeLib = self.lib;
           };
-
-          enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
           homeManagerUsersModule = {
             home-manager.users = lib'.mapAttrs (
               _username: resolvedUser:
@@ -127,6 +157,8 @@
                 inherit
                   resolvedUser
                   allHostFeatures
+                  environment
+                  hostOptions
                   ;
               }
             ) enabledUsers;

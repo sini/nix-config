@@ -7,9 +7,6 @@
     remoteBuildSpeed = 10;
     remoteBuildJobs = 16;
     environment = "prod";
-    tags = {
-      "bgp-asn" = "65000";
-    };
     extra-features = [
       # Composite features (formerly roles)
       "server"
@@ -41,21 +38,15 @@
       # "minio"
       # "vault"
     ];
+    feature-settings.bgp.localAsn = 65000;
+    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
+    feature-settings.impermanence.wipeHomeOnBoot = true;
+
     facts = ./facter.json;
     systemConfiguration =
       { pkgs, ... }:
       {
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
-
-        hardware = {
-          disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
-        };
-
-        impermanence = {
-          enable = true;
-          wipeRootOnBoot = true;
-          wipeHomeOnBoot = true;
-        };
 
         system.stateVersion = "25.05";
       };

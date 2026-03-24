@@ -1,18 +1,15 @@
-{ self, ... }:
-let
-  inherit (self.lib.host-utils) findHostsWithFeature;
-in
 {
   features.haproxy.linux =
     {
       config,
       environment,
+      flakeLib,
       lib,
       ...
     }:
     let
       hosts =
-        findHostsWithFeature "k3s"
+        flakeLib.host-utils.findHostsWithFeature "k3s"
         |> lib.attrsets.filterAttrs (_hostname: hostConfig: environment.name == hostConfig.environment)
         |> lib.attrValues;
     in

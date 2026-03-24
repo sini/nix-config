@@ -148,6 +148,8 @@ in
               description = "List of features to exclude for the host (prevents the feature and its requires from being added)";
             };
 
+            feature-settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features "Per-host feature settings (overrides environment defaults)";
+
             secretPath = mkOption {
               type = types.path;
               default = rootPath + "/.secrets/hosts/${name}";
@@ -176,20 +178,6 @@ in
               type = types.listOf types.deferredModule;
               default = [ ];
               description = "List of additional modules to include for the host.";
-            };
-
-            tags = mkOption {
-              type = types.attrsOf types.str;
-              default = { };
-              description = ''
-                An attribute set of string key-value pairs to tag the host with metadata.
-                Example: `{ "kubernetes-cluster" = "prod"; "kubernetes-internal-ip" = "10.0.1.100"; }`
-
-                Special tags:
-                - bgp-asn: BGP AS number for this host (used by bgp-hub and thunderbolt-mesh modules)
-                - thunderbolt-interface-1: IPv4 address for first thunderbolt interface (e.g., "169.254.12.0/31")
-                - thunderbolt-interface-2: IPv4 address for second thunderbolt interface (e.g., "169.254.31.1/31")
-              '';
             };
 
             environment = mkOption {

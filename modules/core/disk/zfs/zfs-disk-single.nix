@@ -1,47 +1,64 @@
 # Luks2 encrypted disk with btrfs subvolumes, depends on facter report
-{ inputs, ... }:
+{ inputs, lib, ... }:
 {
   features.zfs-disk-single = {
     requires = [ "zfs-root" ];
+
+    settings = {
+      device_id = lib.mkOption {
+        type = lib.types.str;
+        default = "";
+        description = ''
+          Disk device path (e.g., "/dev/disk/by-id/nvme-...").
+          If not set, the module attempts to find a single non-USB disk
+          via facter. Aborts if multiple or no disks are found.
+        '';
+      };
+    };
+
     linux =
       {
         config,
         lib,
+        settings,
         ...
       }:
-      with lib;
-      let
-        cfg = config.hardware.disk.zfs-disk-single;
-        disk-device =
-          let
-            # Filter out USB storage devices as invalid candidates
-            native-disks = builtins.filter (f: f.driver != "usb-storage") config.facter.report.hardware.disk;
 
-            # Extract /dev/disk/by-id/ paths, with error handling
-            disk-labels = builtins.filter (label: label != null) (
-              map (
-                disk:
-                let
-                  by-id-paths = builtins.filter (
-                    f: builtins.substring 0 16 f == "/dev/disk/by-id/"
-                  ) disk.unix_device_names;
-                in
-                if builtins.length by-id-paths > 0 then builtins.head by-id-paths else null
-              ) native-disks
-            );
-          in
-          if (builtins.length disk-labels == 0) then
-            abort (
-              "No suitable disks found. Please specify hardware.disk.zfs-disk-single.device_id manually. "
-              + "Check that your disk has /dev/disk/by-id/ entries and is not USB."
-            )
-          else if (builtins.length disk-labels == 1) then
-            (builtins.head disk-labels)
+      let
+        # Use setting if provided, otherwise auto-detect from facter
+        disk-device =
+          if settings.zfs-disk-single.device_id != "" then
+            settings.zfs-disk-single.device_id
           else
-            abort (
-              "Multiple disks found. Please specify hardware.disk.zfs-disk-single.device_id. Found: "
-              + toString disk-labels
-            );
+            let
+              # Filter out USB storage devices as invalid candidates
+              native-disks = builtins.filter (f: f.driver != "usb-storage") config.facter.report.hardware.disk;
+
+              # Extract /dev/disk/by-id/ paths, with error handling
+              disk-labels = builtins.filter (label: label != null) (
+                map (
+                  disk:
+                  let
+                    by-id-paths = builtins.filter (
+                      f: builtins.substring 0 16 f == "/dev/disk/by-id/"
+                    ) disk.unix_device_names;
+                  in
+                  if builtins.length by-id-paths > 0 then builtins.head by-id-paths else null
+                ) native-disks
+              );
+            in
+            if (builtins.length disk-labels == 0) then
+              abort (
+                "No suitable disks found. Please set feature-settings.zfs-disk-single.device_id. "
+                + "Check that your disk has /dev/disk/by-id/ entries and is not USB."
+              )
+            else if (builtins.length disk-labels == 1) then
+              (builtins.head disk-labels)
+            else
+              abort (
+                "Multiple disks found. Please set feature-settings.zfs-disk-single.device_id. Found: "
+                + toString disk-labels
+              );
 
         emptySnapshot =
           name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";
@@ -49,25 +66,11 @@
       {
         imports = [ inputs.disko.nixosModules.default ];
 
-        options.hardware.disk.zfs-disk-single = with lib.types; {
-          device_id = mkOption {
-            type = str;
-            default = disk-device;
-            description = ''
-              (Optional) Disk device id (e.g., "ata-...").
-              If not set, the module attempts to find a single non-USB disk.
-              If multiple disks are found or none are found, evaluation will abort
-              and this option must be set manually.
-            '';
-          };
-        };
-
-        # config = mkIf cfg.enable { # Removed mkIf condition
         config = {
           disko.devices = {
             disk.disk0 = {
               type = "disk";
-              device = cfg.device_id;
+              device = disk-device;
               content = {
                 type = "gpt";
                 partitions = {

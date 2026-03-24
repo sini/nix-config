@@ -9,7 +9,6 @@
       {
         config,
         environment,
-        lib,
         pkgs,
         ...
       }:
@@ -18,9 +17,9 @@
           # Ensure there is an initrd host-key
           initrd_host_ed25519_key.generator.script = "ssh-key";
 
-          wpa-supplicant = {
+          wpa-supplicant-keys-for-initrd = {
+            intermediary = true;
             rekeyFile = environment.wirelessSecretsFile;
-            owner = "wpa_supplicant";
           };
 
           # NOTE: this does expose configured wireless passwords into the unencrypted
@@ -28,16 +27,20 @@
           # my wifi password...
           wpa-supplicant-initrd = {
             generator = {
-              dependencies = [ config.age.secrets.wpa-supplicant ];
+              dependencies = [ config.age.secrets.wpa-supplicant-keys-for-initrd ];
               script = "wpa-supplicant-config";
             };
 
             owner = "wpa_supplicant";
 
-            settings.networks = lib.mkIf (environment.networks.default.wireless != null) {
-              "${environment.networks.default.wireless.ssid}".pskRaw =
-                environment.networks.default.wireless.pskRef;
-            };
+            settings.networks =
+              if environment.networks.default.wireless != null then
+                {
+                  "${environment.networks.default.wireless.ssid}".pskRaw =
+                    environment.networks.default.wireless.pskRef;
+                }
+              else
+                { };
           };
         };
 

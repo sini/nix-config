@@ -1,4 +1,4 @@
-{ inputs, ... }:
+{ inputs, lib, ... }:
 {
   # Impermanence Module
   # ===================
@@ -17,58 +17,59 @@
   # - impermanence-btrfs.nix: BTRFS support (legacy)
 
   features.impermanence = {
-    # Options registered cross-platform for feature reference without platform splits.
-    # Actual implementation (boot rollback, persistence mounts) is Linux-only.
+    settings = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable impermanence features.";
+      };
+      wipeRootOnBoot = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Enable root rollback on boot. When enabled, the root filesystem
+          is reset to a blank snapshot on every boot, effectively wiping
+          all state not stored in /persist or /cache.
+        '';
+      };
+      wipeHomeOnBoot = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Enable home rollback on boot. When enabled, /home is reset to a
+          blank snapshot on every boot. Use with caution - ensure all
+          important user data is declared in persistence directories.
+        '';
+      };
+    };
+
+    # Cross-platform option for ignorePaths accumulator (other modules contribute to this)
     system =
       { lib, ... }:
       {
-        options.impermanence = {
-          enable = lib.mkOption {
-            type = lib.types.bool;
-            default = true;
-            description = "Enable impermanence features.";
-          };
-          wipeRootOnBoot = lib.mkOption {
-            type = lib.types.bool;
-            default = true;
-            description = ''
-              Enable root rollback on boot. When enabled, the root filesystem
-              is reset to a blank snapshot on every boot, effectively wiping
-              all state not stored in /persist or /cache.
-            '';
-          };
-          wipeHomeOnBoot = lib.mkOption {
-            type = lib.types.bool;
-            default = false;
-            description = ''
-              Enable home rollback on boot. When enabled, /home is reset to a
-              blank snapshot on every boot. Use with caution - ensure all
-              important user data is declared in persistence directories.
-            '';
-          };
-          ignorePaths = lib.mkOption {
-            type = lib.types.listOf lib.types.str;
-            default = [ ];
-            description = ''
-              A list of absolute paths that should be ignored by persistence tooling.
-              These paths are filtered out when using zfs-diff tools.
-            '';
-            example = [
-              "/etc/group"
-              "/etc/shadow"
-            ];
-          };
+        options.impermanence.ignorePaths = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          default = [ ];
+          description = ''
+            A list of absolute paths that should be ignored by persistence tooling.
+            These paths are filtered out when using zfs-diff tools.
+          '';
+          example = [
+            "/etc/group"
+            "/etc/shadow"
+          ];
         };
+
       };
 
     linux =
       {
         lib,
-        config,
+        settings,
         ...
       }:
       let
-        cfg = config.impermanence;
+        cfg = settings.impermanence;
       in
       {
         imports = [
@@ -80,7 +81,7 @@
         # Defines files and directories that persist across reboots via bind mounts.
         # hideMounts = true: Hides bind mounts from 'df' and 'mount' output.
 
-        system.activationScripts."var-lib-private-perms" = lib.mkIf config.impermanence.enable {
+        system.activationScripts."var-lib-private-perms" = lib.mkIf cfg.enable {
           # Fix /var/lib and /var/lib/private permissions after impermanence creates them.
           # Impermanence sets incorrect permissions on parent directories.
           deps = [

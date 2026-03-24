@@ -27,29 +27,21 @@
       "gpu-amd"
       "cilium-bgp"
     ];
-    tags = {
-      "bgp-asn" = "65003";
-      "cilium-asn" = "65010";
+    feature-settings.bgp.localAsn = 65003;
+    feature-settings.cilium-bgp.localAsn = 65010;
+    feature-settings.thunderbolt-mesh.interfaces = [
+      "169.254.31.0/31"
+      "169.254.23.1/31"
+    ];
+    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
+    feature-settings.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
+    feature-settings.impermanence.wipeHomeOnBoot = true;
 
-      "thunderbolt-interface-1" = "169.254.31.0/31";
-      "thunderbolt-interface-2" = "169.254.23.1/31";
-    };
     facts = ./facter.json;
     systemConfiguration =
       { pkgs, ... }:
       {
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
-
-        hardware = {
-          disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
-          disk.longhorn.device_id = "/dev/disk/by-id/nvme-Force_MP600_1925823000012856500E";
-        };
-
-        impermanence = {
-          enable = true;
-          wipeRootOnBoot = true;
-          wipeHomeOnBoot = true;
-        };
 
         system.stateVersion = "25.05";
       };

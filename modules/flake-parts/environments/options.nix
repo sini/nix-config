@@ -328,6 +328,8 @@ in
               description = "Monitoring configuration including cross-environment scanning";
             };
 
+            feature-settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features "Default feature settings for all hosts in this environment";
+
             users = mkEnvUsersOpt {
               description = ''
                 Users in this environment with their behavior overrides.

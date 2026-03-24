@@ -58,20 +58,14 @@
       };
     };
 
+    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
+
     facts = ./facter.json;
 
     systemConfiguration =
       { pkgs, ... }:
       {
         boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v4;
-
-        hardware.disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
-
-        impermanence = {
-          enable = true;
-          wipeRootOnBoot = true;
-          wipeHomeOnBoot = false;
-        };
 
         system.stateVersion = "25.05";
       };

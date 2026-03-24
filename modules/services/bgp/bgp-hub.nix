@@ -4,35 +4,87 @@
   ...
 }:
 let
-  # Helper to get hosts with a specific tag or role in the same environment
-  getHostsByTag =
-    tag: value: currentHostEnvironment:
-    lib.filterAttrs (
-      _name: host:
-      (host.tags or { }) ? ${tag}
-      && host.tags.${tag} == value
-      && host.environment == currentHostEnvironment
-    ) config.hosts;
-
   getHostsByFeature =
     feature: currentHostEnvironment:
     lib.filterAttrs (
       _name: host: host.hasFeature feature && host.environment == currentHostEnvironment
     ) config.hosts;
+
+  neighborType = lib.types.submodule {
+    options = {
+      address = lib.mkOption {
+        type = lib.types.str;
+        description = "Neighbor IP address";
+      };
+      asNumber = lib.mkOption {
+        type = lib.types.int;
+        description = "Neighbor AS number";
+      };
+      defaultOriginate = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Whether to originate default route to this neighbor";
+      };
+    };
+  };
 in
 {
   features.bgp-hub = {
-    requires = [ "bgp-core" ];
+    requires = [ "bgp" ];
+
+    settings = {
+      neighbors = lib.mkOption {
+        type = lib.types.listOf neighborType;
+        default = [ ];
+        description = "List of manually configured BGP neighbors";
+      };
+      autoDiscoverNeighbors = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Automatically discover neighbors from flake hosts";
+      };
+      neighborDiscoveryRole = lib.mkOption {
+        type = lib.types.str;
+        default = "bgp-spoke";
+        description = "Feature name to filter hosts for auto-discovery";
+      };
+      neighborAsNumberBase = lib.mkOption {
+        type = lib.types.int;
+        default = 65001;
+        description = "Base AS number for auto-discovered neighbors (fallback when host has no bgp.localAsn setting)";
+      };
+      defaultOriginateToNeighbors = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Whether to originate default route to auto-discovered neighbors";
+      };
+      maximumPaths = lib.mkOption {
+        type = lib.types.int;
+        default = 8;
+        description = "Maximum number of BGP paths";
+      };
+      peerWithGateway = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Whether to automatically peer with the environment gateway (Unifi router)";
+      };
+      gatewayAsNumber = lib.mkOption {
+        type = lib.types.int;
+        default = 65999;
+        description = "AS number of the gateway router";
+      };
+    };
+
     linux =
       {
-        config,
         lib,
         host,
         environment,
+        settings,
         ...
       }:
       let
-        cfg = config.services.bgp-hub;
+        cfg = settings.bgp-hub;
         currentHostEnvironment = host.environment;
 
         # Gateway neighbor (Unifi router)
@@ -47,31 +99,20 @@ in
           else
             [ ];
 
-        # Auto-generate neighbors from hosts with specific tags/roles
+        # Auto-generate neighbors from hosts with the configured feature
         shouldAutoDiscover = cfg.autoDiscoverNeighbors || (cfg.neighbors == [ ]);
         autoNeighbors =
           if shouldAutoDiscover then
             let
-              # Find hosts matching the target pattern
-              targetHosts =
-                if cfg.neighborSelector.tag != null then
-                  getHostsByTag cfg.neighborSelector.tag cfg.neighborSelector.value currentHostEnvironment
-                else if cfg.neighborSelector.role != null then
-                  getHostsByFeature cfg.neighborSelector.role currentHostEnvironment
-                else
-                  { };
+              targetHosts = getHostsByFeature cfg.neighborDiscoveryRole currentHostEnvironment;
 
               # Get sorted hostnames for consistent AS number assignment
               sortedHostnames = lib.sort (a: b: a < b) (lib.attrNames targetHosts);
 
-              # Create neighbors using their bgp-asn tags or fallback to index-based AS numbers
+              # Create neighbors using their bgp localAsn setting or fallback to index-based AS numbers
               sortedNeighbors = lib.imap0 (index: hostname: {
                 ip = builtins.head targetHosts.${hostname}.ipv4;
-                asn =
-                  if (targetHosts.${hostname}.tags or { }) ? "bgp-asn" then
-                    lib.toInt targetHosts.${hostname}.tags."bgp-asn"
-                  else
-                    cfg.neighborAsNumberBase + index;
+                asn = targetHosts.${hostname}.feature-settings.bgp.localAsn or (cfg.neighborAsNumberBase + index);
               }) sortedHostnames;
             in
             sortedNeighbors
@@ -118,108 +159,8 @@ in
             }
           ) allNeighbors
         );
-
-        localAsn = if host.tags ? "bgp-asn" then lib.toInt host.tags."bgp-asn" else cfg.localAsNumber;
       in
       {
-        options.services.bgp-hub = {
-          localAsNumber = lib.mkOption {
-            type = lib.types.int;
-            default = 65000;
-            description = "Local BGP AS number (fallback if no bgp-asn tag)";
-          };
-
-          neighbors = lib.mkOption {
-            type = lib.types.listOf (
-              lib.types.submodule {
-                options = {
-                  address = lib.mkOption {
-                    type = lib.types.str;
-                    description = "Neighbor IP address";
-                  };
-                  asNumber = lib.mkOption {
-                    type = lib.types.int;
-                    description = "Neighbor AS number";
-                  };
-                  defaultOriginate = lib.mkOption {
-                    type = lib.types.bool;
-                    default = false;
-                    description = "Whether to originate default route to this neighbor";
-                  };
-                };
-              }
-            );
-            default = [ ];
-            description = "List of manually configured BGP neighbors";
-          };
-
-          autoDiscoverNeighbors = lib.mkOption {
-            type = lib.types.bool;
-            default = false;
-            description = "Automatically discover neighbors from flake hosts";
-          };
-
-          neighborSelector = lib.mkOption {
-            type = lib.types.submodule {
-              options = {
-                tag = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = "Tag name to filter hosts";
-                };
-                value = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = null;
-                  description = "Tag value to match";
-                };
-                role = lib.mkOption {
-                  type = lib.types.nullOr lib.types.str;
-                  default = "bgp-spoke";
-                  description = "Role to filter hosts";
-                };
-              };
-            };
-            default = { };
-            description = "Selector for auto-discovering neighbors";
-          };
-
-          neighborAsNumberBase = lib.mkOption {
-            type = lib.types.int;
-            default = 65001;
-            description = "Base AS number for auto-discovered neighbors";
-          };
-
-          neighborAsNumberOffset = lib.mkOption {
-            type = lib.types.functionTo lib.types.int;
-            default = _hostname: 0;
-            description = "Function to calculate AS number offset from hostname based on sorted position";
-          };
-
-          defaultOriginateToNeighbors = lib.mkOption {
-            type = lib.types.bool;
-            default = true;
-            description = "Whether to originate default route to auto-discovered neighbors";
-          };
-
-          maximumPaths = lib.mkOption {
-            type = lib.types.int;
-            default = 8;
-            description = "Maximum number of BGP paths";
-          };
-
-          peerWithGateway = lib.mkOption {
-            type = lib.types.bool;
-            default = true;
-            description = "Whether to automatically peer with the environment gateway (Unifi router)";
-          };
-
-          gatewayAsNumber = lib.mkOption {
-            type = lib.types.int;
-            default = 65999;
-            description = "AS number of the gateway router";
-          };
-        };
-
         config = lib.mkIf (host.hasFeature "bgp-hub") {
           boot.kernel.sysctl = {
             "net.ipv4.ip_forward" = lib.mkDefault 1;
@@ -227,8 +168,6 @@ in
           };
 
           services.bgp = {
-            inherit localAsn;
-            routerId = builtins.head host.ipv4;
             inherit (cfg) maximumPaths;
 
             neighbors = allNeighbors;

@@ -13,6 +13,7 @@
         config,
         pkgs,
         host,
+        settings,
         ...
       }:
       {
@@ -23,7 +24,7 @@
           # ZFS advantages: Direct rollback with '-r', no manual nested dataset handling, atomic.
 
           boot.initrd.systemd.services = {
-            rollback-zfs-root = lib.mkIf config.impermanence.wipeRootOnBoot {
+            rollback-zfs-root = lib.mkIf settings.impermanence.wipeRootOnBoot {
               description = "Rollback ZFS root dataset to a pristine state";
               wantedBy = [ "initrd.target" ];
               after = [ "zfs-import-zroot.service" ]; # Wait for ZFS pool import
@@ -36,7 +37,7 @@
               '';
             };
 
-            rollback-zfs-home = lib.mkIf config.impermanence.wipeHomeOnBoot {
+            rollback-zfs-home = lib.mkIf settings.impermanence.wipeHomeOnBoot {
               description = "Rollback ZFS home dataset to a pristine state";
               wantedBy = [ "initrd.target" ];
               after = [ "zfs-import-zroot.service" ];
@@ -64,10 +65,10 @@
                 ${config.boot.zfs.package}/bin/zfs snapshot "zroot/local/home@lastboot"
 
                 # Rollback to @empty if wipe enabled (optimization)
-                ${lib.optionalString config.impermanence.wipeRootOnBoot ''
+                ${lib.optionalString settings.impermanence.wipeRootOnBoot ''
                   ${config.boot.zfs.package}/bin/zfs rollback -r "zroot/local/root@empty"
                 ''}
-                ${lib.optionalString config.impermanence.wipeHomeOnBoot ''
+                ${lib.optionalString settings.impermanence.wipeHomeOnBoot ''
                   ${config.boot.zfs.package}/bin/zfs rollback -r "zroot/local/home@empty"
                 ''}
 

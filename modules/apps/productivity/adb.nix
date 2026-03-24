@@ -9,14 +9,10 @@
 
   features.adb.linux =
     {
-      lib,
       pkgs,
-      users,
+      host,
       ...
     }:
-    let
-      enabledUserNames = builtins.attrNames (lib.filterAttrs (_: u: u.system.enable or false) users);
-    in
     {
       environment.systemPackages = [
         pkgs.android-file-transfer # => <https://github.com/whoozle/android-file-transfer-linux>
@@ -27,7 +23,7 @@
           value = {
             extraGroups = [ "adbusers" ];
           };
-        }) enabledUserNames
+        }) host.users.enabledNames
       );
     };
 }

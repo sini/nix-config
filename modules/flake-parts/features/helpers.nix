@@ -62,6 +62,17 @@ let
         # Home-manager module (works on all platforms)
         home = mkDeferredModuleOptWithMetadata name "home" "A Home-Manager module for this feature";
 
+        # Per-feature typed settings (option declarations only, not values)
+        settings = mkOption {
+          type = types.lazyAttrsOf types.raw;
+          default = { };
+          description = ''
+            Option declarations for per-feature configuration.
+            These options will be available at settings.<featureName> in feature modules.
+            Should contain ONLY option declarations (mkOption), no config assignments.
+          '';
+        };
+
         name = mkOption {
           type = types.str;
           default = name;
@@ -211,6 +222,92 @@ let
       };
     in
     lib.unique (map (f: f.name) allHostFeatures);
+
+  # ============================================================================
+  # Feature Settings
+  # ============================================================================
+  # Typed, per-feature settings with multi-layer merging via evalModules.
+  # Analogous to serviceOptions in kubernetes/service-helpers.nix.
+
+  # Generate a feature-settings option type from all features that declare settings.
+  # Used by environments and hosts to provide typed configuration for features.
+  mkFeatureSettingsOpt =
+    featuresConfig: description:
+    let
+      featuresWithSettings = lib.filterAttrs (_: f: f.settings or { } != { }) featuresConfig;
+    in
+    mkOption {
+      type = types.submodule {
+        options = lib.mapAttrs (
+          name: feature:
+          mkOption {
+            type = types.submodule { options = feature.settings; };
+            default = { };
+            description = "Settings for the ${name} feature";
+          }
+        ) featuresWithSettings;
+      };
+      default = { };
+      inherit description;
+    };
+
+  # Resolve feature settings by merging layers via evalModules.
+  # Priority order (lowest to highest):
+  #   1. Feature defaults (from mkOption default values)
+  #   2. Environment feature-settings (wrapped in mkDefault)
+  #   3. Host feature-settings (plain values)
+  #   4. User feature-settings (plain values, home modules only)
+  resolveFeatureSettings =
+    {
+      activeFeatureNames,
+      featuresConfig,
+      envSettings ? { },
+      hostSettings ? { },
+      userSettings ? { },
+    }:
+    let
+      relevantFeatures = lib.filterAttrs (
+        name: f: lib.elem name activeFeatureNames && f.settings or { } != { }
+      ) featuresConfig;
+
+      settingsOptions = lib.mapAttrs (
+        _name: feature:
+        mkOption {
+          type = types.submodule { options = feature.settings; };
+          default = { };
+        }
+      ) relevantFeatures;
+
+      envModule =
+        { lib, ... }:
+        {
+          config = lib.mapAttrs (_: value: lib.mapAttrs (_: lib.mkDefault) value) (
+            lib.intersectAttrs relevantFeatures envSettings
+          );
+        };
+
+      hostModule =
+        _:
+        {
+          config = lib.intersectAttrs relevantFeatures hostSettings;
+        };
+
+      userModule =
+        _:
+        {
+          config = lib.intersectAttrs relevantFeatures userSettings;
+        };
+
+      evaluated = lib.evalModules {
+        modules = [
+          { options = settingsOptions; }
+          envModule
+          hostModule
+          userModule
+        ];
+      };
+    in
+    evaluated.config;
 in
 {
   options.features = mkOption {
@@ -232,6 +329,8 @@ in
       coreFeatures
       getModulesForFeatures
       computeActiveFeatures
+      mkFeatureSettingsOpt
+      resolveFeatureSettings
       ;
   };
 }

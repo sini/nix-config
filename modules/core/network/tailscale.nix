@@ -1,8 +1,32 @@
+{ lib, ... }:
 {
   features.tailscale = {
+    settings = {
+      openFirewall = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Whether to open the firewall for Tailscale";
+      };
+      extraUpFlags = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        description = "Additional flags to pass to tailscale up (login-server is added automatically)";
+      };
+      extraDaemonFlags = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ "--no-logs-no-support" ];
+        description = "Additional flags for the tailscale daemon";
+      };
+      useNftables = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Force tailscaled to use nftables instead of iptables-compat";
+      };
+    };
+
     system =
       {
-        inputs,
+        flakeLib,
         lib,
         environment,
         host,
@@ -13,7 +37,7 @@
         delegation = environment.services.headscale.delegateTo or null;
         headscaleHosts =
           if delegation != null then
-            inputs.self.lib.host-utils.findHostsWithFeature "headscale"
+            flakeLib.host-utils.findHostsWithFeature "headscale"
             |> lib.filterAttrs (_: h: h.environment == delegation)
             |> lib.attrValues
           else
@@ -89,22 +113,27 @@
         lib,
         environment,
         host,
+        settings,
         ...
       }:
       let
         rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
         secretExists = builtins.pathExists rekeyFile;
+        ts = settings.tailscale;
       in
       lib.mkIf secretExists {
         services.tailscale = {
           enable = true;
-          openFirewall = true;
+          inherit (ts) openFirewall;
           authKeyFile = config.age.secrets.tailscale-auth-key.path;
-          extraUpFlags = [ "--login-server=https://${environment.getDomainFor "headscale"}" ];
-          extraDaemonFlags = [ "--no-logs-no-support" ];
+          extraUpFlags = [
+            "--login-server=https://${environment.getDomainFor "headscale"}"
+          ]
+          ++ ts.extraUpFlags;
+          inherit (ts) extraDaemonFlags;
         };
 
-        networking = {
+        networking = lib.mkIf ts.openFirewall {
           nftables.enable = true;
           firewall = {
             checkReversePath = "loose";
@@ -113,8 +142,7 @@
           };
         };
 
-        # Force tailscaled to use nftables, avoiding "iptables-compat" translation layer.
-        systemd.services.tailscaled.serviceConfig.Environment = [
+        systemd.services.tailscaled.serviceConfig.Environment = lib.mkIf ts.useNftables [
           "TS_DEBUG_FIREWALL_MODE=nftables"
         ];
 

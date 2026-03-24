@@ -1,5 +1,4 @@
 {
-  inputs,
   rootPath,
   ...
 }:
@@ -7,27 +6,33 @@
   features.agenix = {
     requires = [ "agenix-generators" ];
 
-    linux = {
-      imports = [
-        inputs.agenix.nixosModules.default
-        inputs.agenix-rekey.nixosModules.default
-      ];
+    linux =
+      { inputs, ... }:
+      {
+        imports = [
+          inputs.agenix.nixosModules.default
+          inputs.agenix-rekey.nixosModules.default
+        ];
 
-    };
+      };
 
-    darwin = {
-      imports = [
-        inputs.agenix.darwinModules.default
-        inputs.agenix-rekey.darwinModules.default
-      ];
-    };
+    darwin =
+      { inputs, ... }:
+      {
+        imports = [
+          inputs.agenix.darwinModules.default
+          inputs.agenix-rekey.darwinModules.default
+        ];
+      };
 
     system =
       {
+        inputs,
         config,
         host,
         users,
         lib,
+        settings,
         ...
       }:
       {
@@ -38,7 +43,9 @@
           # Agenix decrypts before impermanence creates mounts so we have to get key
           # from persist
           identityPaths = [
-            "${lib.optionalString config.impermanence.enable "/persist"}/etc/ssh/ssh_host_ed25519_key"
+            "${
+              lib.optionalString (settings.impermanence.enable or false) "/persist"
+            }/etc/ssh/ssh_host_ed25519_key"
           ];
 
           rekey = {
@@ -85,6 +92,7 @@
 
     home =
       {
+        inputs,
         config,
         osConfig,
         host,

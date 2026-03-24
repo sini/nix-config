@@ -1,21 +1,18 @@
 {
-  self,
   rootPath,
   ...
 }:
-let
-  inherit (self.lib.host-utils) findHostsWithFeature;
-in
 {
   features.nix.system =
     {
       config,
+      flakeLib,
       lib,
       host,
       ...
     }:
     let
-      builders = findHostsWithFeature "nix-builder";
+      builders = flakeLib.host-utils.findHostsWithFeature "nix-builder";
       remoteBuilders = lib.filterAttrs (
         hostname: builder: (hostname != config.networking.hostName) && (host.system == builder.system)
       ) builders;

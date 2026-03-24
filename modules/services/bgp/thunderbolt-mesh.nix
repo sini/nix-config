@@ -1,87 +1,44 @@
-# Thunderbolt mesh networking with dynamic BGP configuration
-# Auto-detects peers and configures topology from host tags
+# Thunderbolt mesh networking with BGP peering.
 #
-# This module provides dynamic thunderbolt mesh networking with BGP peering
-# for high-speed inter-node communication. It automatically discovers peer
-# nodes based on host tags and creates BGP sessions only for directly
-# connected thunderbolt interfaces.
+# Auto-discovers peers in the same environment and creates BGP sessions
+# for directly connected /31 point-to-point thunderbolt links.
+# Physical ports map in order: interfaces[0] → enp199s0f5, [1] → enp199s0f6.
 #
-# ## Topology
-#
-# The module supports any thunderbolt mesh topology where nodes are connected
-# via point-to-point /31 networks. Common topologies include:
-#
-# - **2-node**: axon-01 ↔ axon-02
-# - **3-node ring**: axon-01 ↔ axon-02 ↔ axon-03 ↔ axon-01
-# - **4-node partial mesh**: axon-01 ↔ axon-02 ↔ axon-03 ↔ axon-04
-# - **Star topology**: central-hub ↔ spoke-1/2/3
-#
-# The module automatically detects which peers have direct thunderbolt
-# connections and only creates BGP sessions for those pairs.
-#
-# ## Host Configuration
-#
-# Each thunderbolt mesh node requires these host tags:
-#
-# ```nix
-# hosts.axon-01 = {
-#   roles = [ "server" "bgp-spoke" ];
-#   extra_modules = [ thunderbolt-mesh ];
-#   tags = {
-#     # BGP AS number for this node
-#     "bgp-asn" = "65001";
-#
-#     # Thunderbolt interface IP assignments (/31 networks)
-#     "thunderbolt-interface-1" = "169.254.12.0/31";  # connects to axon-02
-#     "thunderbolt-interface-2" = "169.254.31.1/31";  # connects to axon-03
-#   };
-# };
-# ```
-#
-# ## Interface Mapping
-#
-# The module maps thunderbolt interfaces in a fixed order:
-# - `thunderbolt-interface-1` → `enp199s0f5`
-# - `thunderbolt-interface-2` → `enp199s0f6`
-#
-# ## Network Requirements
-#
-# - All thunderbolt links must use /31 networks for point-to-point connections
-# - Each /31 network should connect exactly two nodes
-# - Loopback addresses must be unique across the mesh
-# - BGP AS numbers should be unique per node
-#
-# ## BGP Configuration
-#
-# The module automatically creates:
-# - BGP peering sessions using loopback IPs as next-hops
-# - Static routes to peer loopback and LAN IPs via thunderbolt gateways
-# - eBGP multihop configuration for loopback-to-loopback peering
-# - Route advertisement for the local loopback network
-#
-# ## Peer Discovery Algorithm
-#
-# 1. Find all hosts in the same environment with `thunderbolt-mesh` role
-# 2. For each potential peer, check if any of our interfaces form a /31 pair
-#    with any of their interfaces
-# 3. Create BGP sessions only for directly connected peers
-# 4. Filter out peers with no direct thunderbolt connection
-#
-# This ensures the module works correctly with partial meshes, broken links,
-# or any arbitrary thunderbolt topology.
+# Settings:
+#   thunderbolt-mesh.interfaces - list of /31 CIDRs per physical port
+#   bgp.localAsn               - node's AS number (from bgp feature)
+{ lib, ... }:
 {
   features.thunderbolt-mesh = {
-    requires = [ "bgp-core" ];
+    requires = [ "bgp" ];
+
+    settings = {
+      interfaces = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        description = ''
+          Thunderbolt interface IP assignments (CIDR notation, /31 point-to-point).
+          Ordered by physical port: index 0 → enp199s0f5, index 1 → enp199s0f6.
+        '';
+        example = [
+          "169.254.12.0/31"
+          "169.254.31.1/31"
+        ];
+      };
+    };
+
     linux =
       {
         lib,
         config,
         environment,
         host,
+        settings,
         ...
       }:
       let
-        interfaces = [
+        cfg = settings.thunderbolt-mesh;
+
+        physicalInterfaces = [
           "enp199s0f5"
           "enp199s0f6"
         ];
@@ -99,12 +56,13 @@
             peerHost = thunderboltPeers.${peerHostname};
 
             # Get our own interface IPs
-            ourInterface1 = host.tags."thunderbolt-interface-1";
-            ourInterface2 = host.tags."thunderbolt-interface-2";
+            ourInterface1 = lib.elemAt cfg.interfaces 0;
+            ourInterface2 = lib.elemAt cfg.interfaces 1;
 
             # Get peer's interface IPs
-            peerInterface1 = peerHost.tags."thunderbolt-interface-1";
-            peerInterface2 = peerHost.tags."thunderbolt-interface-2";
+            peerCfg = peerHost.feature-settings.thunderbolt-mesh.interfaces;
+            peerInterface1 = lib.elemAt peerCfg 0;
+            peerInterface2 = lib.elemAt peerCfg 1;
 
             # Check if two IPs are in the same /31 network
             sameNetwork =
@@ -163,7 +121,7 @@
               gateway = getGatewayForPeer peerHostname peerLoopbackIp;
             in
             {
-              asn = lib.toInt peerHost.tags."bgp-asn";
+              asn = peerHost.feature-settings.bgp.localAsn;
               lanip = builtins.head peerHost.ipv4;
               ip = peerLoopbackIp;
               inherit gateway;
@@ -171,15 +129,14 @@
           ) (lib.attrNames thunderboltPeers)
         );
 
-        # Current node configuration from tags
+        # Current node configuration from settings
         nodeConfig = {
           loopback = {
             ipv4 = builtins.head host.ipv4;
           };
-          interfaceIps = {
-            enp199s0f5 = host.tags."thunderbolt-interface-1";
-            enp199s0f6 = host.tags."thunderbolt-interface-2";
-          };
+          interfaceIps = lib.listToAttrs (
+            lib.imap0 (i: dev: lib.nameValuePair dev (lib.elemAt cfg.interfaces i)) physicalInterfaces
+          );
           peers = peerConfigs;
         };
       in
@@ -196,9 +153,6 @@
           };
 
           services.bgp = {
-            localAsn = if host.tags ? "bgp-asn" then lib.toInt host.tags."bgp-asn" else 65001;
-            routerId = lib.removeSuffix "/32" nodeConfig.loopback.ipv4;
-
             staticRoutes = lib.flatten (
               map (peer: [
                 "ip route ${peer.lanip}/32 ${peer.gateway}"
@@ -231,8 +185,8 @@
           systemd = {
             services = {
               frr = {
-                requires = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
-                after = lib.lists.forEach interfaces (i: "sys-subsystem-net-devices-${i}.device");
+                requires = lib.lists.forEach physicalInterfaces (i: "sys-subsystem-net-devices-${i}.device");
+                after = lib.lists.forEach physicalInterfaces (i: "sys-subsystem-net-devices-${i}.device");
               };
             };
 

@@ -2,9 +2,8 @@
   features.wireshark = {
     system =
       {
-        lib,
         pkgs,
-        users,
+        host,
         ...
       }:
       {
@@ -22,7 +21,7 @@
             value = {
               extraGroups = [ "wireshark" ];
             };
-          }) (builtins.attrNames (lib.filterAttrs (_: u: u.system.enable or false) users))
+          }) host.users.enabledNames
         );
       };
 

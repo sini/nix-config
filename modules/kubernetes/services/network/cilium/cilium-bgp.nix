@@ -104,11 +104,11 @@
                       bgpInstances = [
                         {
                           name = "local-frr-instance";
-                          localASN = lib.toInt hostConfig.tags.cilium-asn;
+                          localASN = hostConfig.feature-settings.cilium-bgp.localAsn;
                           peers = [
                             {
                               name = "local-frr-daemon";
-                              peerASN = lib.toInt hostConfig.tags.bgp-asn;
+                              peerASN = hostConfig.feature-settings.bgp.localAsn;
                               peerAddress = builtins.head hostConfig.ipv4; # "127.0.0.1";
                               peerConfigRef.name = "cilium-bgp";
                             }

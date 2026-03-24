@@ -22,7 +22,8 @@
       }:
       let
         cephHosts =
-          hosts |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.tags ? "ceph-device");
+          hosts
+          |> lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.hasFeature "ceph-device-allocation");
         rookDomain = environment.getDomainFor "rook-dashboard";
         radosDomain = environment.getDomainFor "rook-rados";
       in
@@ -152,7 +153,7 @@
                       name = hostConfig.hostname;
                       devices = [
                         {
-                          fullpath = hostConfig.tags.ceph-device;
+                          fullpath = hostConfig.feature-settings.ceph-device-allocation.device;
                         }
                       ];
                     });

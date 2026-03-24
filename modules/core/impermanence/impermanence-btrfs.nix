@@ -10,8 +10,8 @@
     linux =
       {
         lib,
-        config,
         host,
+        settings,
         ...
       }:
       {
@@ -22,7 +22,7 @@
           # BTRFS complexity: Must mount volume, delete nested subvolumes first, then restore.
 
           boot.initrd.systemd.services = {
-            rollback-btrfs-root = lib.mkIf config.impermanence.wipeRootOnBoot {
+            rollback-btrfs-root = lib.mkIf settings.impermanence.wipeRootOnBoot {
               description = "Rollback BTRFS root subvolume to a pristine state";
               wantedBy = [ "initrd.target" ];
               # Wait for LUKS decryption (via TPM or passphrase)
@@ -56,7 +56,7 @@
               '';
             };
 
-            rollback-btrfs-home = lib.mkIf config.impermanence.wipeHomeOnBoot {
+            rollback-btrfs-home = lib.mkIf settings.impermanence.wipeHomeOnBoot {
               description = "Rollback BTRFS home subvolume to a pristine state";
               wantedBy = [ "initrd.target" ];
               after = [ "systemd-cryptsetup@cryptroot.service" ];

@@ -3,30 +3,10 @@
     {
       config,
       pkgs,
+      host,
       ...
     }:
     {
-      imports = [
-        (
-          { lib, ... }:
-          {
-            options.users.users = lib.mkOption {
-              type =
-                with lib.types;
-                attrsOf (
-                  submodule (
-                    { config, ... }:
-                    {
-                      options = { };
-                      config.extraGroups = lib.optionals config.isNormalUser [ "i2c" ];
-                    }
-                  )
-                );
-            };
-          }
-        )
-      ];
-
       boot = {
         kernelModules = [
           "i2c-dev"
@@ -46,5 +26,15 @@
       services.udev.packages = with pkgs; [
         ddcutil
       ];
+
+      # Add all enabled users to the i2c group
+      users.users = builtins.listToAttrs (
+        map (userName: {
+          name = userName;
+          value = {
+            extraGroups = [ "i2c" ];
+          };
+        }) host.users.enabledNames
+      );
     };
 }

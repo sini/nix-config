@@ -41,7 +41,7 @@ let
           let
             firstHost = builtins.head (builtins.attrValues envBgpHubHosts);
           in
-          if (firstHost.tags or { }) ? "bgp-asn" then lib.toInt firstHost.tags."bgp-asn" else 65000
+          firstHost.feature-settings.bgp.localAsn or 65000
         else
           65000;
     in

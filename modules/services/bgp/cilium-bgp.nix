@@ -1,33 +1,29 @@
 # Cilium BGP configuration for Kubernetes clusters
 # Handles BGP peering with Cilium for pod/service CIDR advertisement
+{ lib, ... }:
 {
   features.cilium-bgp = {
-    requires = [ "bgp-core" ];
+    requires = [ "bgp" ];
+
+    settings = {
+      localAsn = lib.mkOption {
+        type = lib.types.int;
+        default = 65002;
+        description = "Cilium BGP AS number for this node";
+      };
+    };
+
     linux =
       {
         lib,
         cluster,
         environment,
         host,
+        settings,
         ...
       }:
       let
-        nodeLoopbackIp = builtins.head host.ipv4;
-
-        # Get local ASN from host tags or use default
-        localAsn =
-          if host.tags ? "bgp-asn" then
-            lib.toInt host.tags."bgp-asn"
-          else
-            # Default logic for nodes without specific ASN
-            65001;
-
-        ciliumAsn =
-          if host.tags ? "cilium-asn" then
-            lib.toInt host.tags."cilium-asn"
-          else
-            # Default logic for nodes without specific ASN
-            65002;
+        ciliumAsn = settings.cilium-bgp.localAsn;
 
         uplinkIp =
           let
@@ -43,9 +39,6 @@
       {
         config = {
           services.bgp = {
-            inherit localAsn;
-            routerId = nodeLoopbackIp;
-
             prefixLists = {
               POD-ROUTES = [
                 "permit ${podNetwork.cidr} le 32"

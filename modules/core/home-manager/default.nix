@@ -3,6 +3,7 @@
     {
       inputs,
       environment,
+      flakeLib,
       host,
       users,
       pkgs,
@@ -18,6 +19,7 @@
           inherit
             inputs
             environment
+            flakeLib
             host
             users
             pkgs

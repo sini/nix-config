@@ -84,6 +84,8 @@
         ];
       };
     };
+    feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
+
     facts = ./facter.json;
     systemConfiguration =
       { pkgs, ... }:
@@ -103,8 +105,6 @@
         };
 
         hardware = {
-          disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
-
           # hardware.display.edid = {
           #   enable = true;
           #   packages = [
@@ -268,11 +268,6 @@
             };
           }
         ];
-
-        impermanence = {
-          wipeRootOnBoot = true;
-          wipeHomeOnBoot = false;
-        };
 
         system.stateVersion = "25.05";
       };

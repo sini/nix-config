@@ -51,6 +51,17 @@
               firstOtherNode = builtins.head otherNodes;
             in
             builtins.head firstOtherNode.ipv4;
+
+        # Isolate each manifest directory/file into its own store path so that
+        # unrelated repo changes don't invalidate the k3s bootstrap derivations.
+        manifestBase =
+          rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}";
+        manifestPath =
+          name:
+          builtins.path {
+            path = manifestBase + "/${name}";
+            name = "${cluster.name}-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
+          };
       in
       {
         age.secrets.kubernetes-cluster-token = {
@@ -357,17 +368,13 @@
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${
-                      rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/bootstrap/"
-                    } || true
+                    -f ${manifestPath "bootstrap"} || true
 
                   echo "Installing cilium..."
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${
-                      rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/cilium/"
-                    } || true
+                    -f ${manifestPath "cilium"} || true
                   echo "Sleeping for 30 seconds for resources to settle..."
                   sleep 30;
 
@@ -375,9 +382,7 @@
                   ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                     --server-side \
                     --force-conflicts \
-                    -f ${
-                      rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/coredns/"
-                    } || true
+                    -f ${manifestPath "coredns"} || true
                   echo "Sleeping for 30 seconds for resources to settle..."
                   sleep 30;
                 '';
@@ -436,10 +441,7 @@
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                       --server-side \
                       --force-conflicts \
-                      -f ${
-                        rootPath
-                        + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/sops-secrets-operator/"
-                      }
+                      -f ${manifestPath "sops-secrets-operator"}
                     echo "Sleeping for 30 seconds..."
                     sleep 30
                   fi
@@ -450,9 +452,7 @@
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                       --server-side \
                       --force-conflicts \
-                      -f ${
-                        rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/cert-manager/"
-                      }
+                      -f ${manifestPath "cert-manager"}
                     echo "Sleeping for 30 seconds..."
                     sleep 30
                   fi
@@ -504,14 +504,10 @@
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
                       --server-side \
                       --force-conflicts \
-                      -f ${
-                        rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/argocd/"
-                      }
+                      -f ${manifestPath "argocd"}
                     echo "Installing App bootstrap.yaml"
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                      -f ${
-                        rootPath + "/generated/manifests/${cluster.resolvedEnvironment.name}-${cluster.name}/bootstrap.yaml"
-                      }
+                      -f ${manifestPath "bootstrap.yaml"}
                   else
                     echo "ArgoCD is already installed."
                   fi
