@@ -97,10 +97,8 @@
           ];
 
           systemd = {
-            services.frr = {
-              requires = map (i: "sys-subsystem-net-devices-${i}.device") cfg.interfaces;
-              after = map (i: "sys-subsystem-net-devices-${i}.device") cfg.interfaces;
-            };
+            # FRR does not hard-depend on thunderbolt interfaces — OpenFabric
+            # forms adjacencies dynamically when interfaces appear.
 
             # Match all thunderbolt interfaces by driver — no per-device network config needed
             network = {
