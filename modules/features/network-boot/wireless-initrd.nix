@@ -41,6 +41,9 @@
           rekeyFile = host.secretPath + "/wpa_supplicant_initrd.age";
         };
 
+        # Debugging
+        systemd.enableEmergencyMode = true;
+
         boot = lib.mkIf (!initrdBootstrapKeys) {
           initrd = {
             # Wireless interface drivers are included by network-boot module
