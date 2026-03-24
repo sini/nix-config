@@ -19,7 +19,6 @@
     linux =
       {
         config,
-        lib,
         settings,
         ...
       }:
