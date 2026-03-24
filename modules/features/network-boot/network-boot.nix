@@ -47,8 +47,8 @@
 
           systemd = {
             inherit (config.systemd) network;
-            # users.root.shell = "/bin/systemd-tty-ask-password-agent";
-            emergencyAccess = true;
+            users.root.shell = "/bin/systemd-tty-ask-password-agent";
+            # emergencyAccess = true;
 
             # Wait for clevis to do its thing...
             services.zfs-import-zroot = {
