@@ -80,13 +80,15 @@
                   after = lib.mkForce [ "sys-subsystem-net-devices-%i.device" ];
                   requires = lib.mkForce [ "sys-subsystem-net-devices-%i.device" ];
                 };
+
+                systemd-networkd.after = [ "wpa_supplicant@${interface}.service" ];
+
                 sshd = {
                   after = lib.mkForce [ "network.target" ];
                   wants = lib.mkForce [ ];
                   requires = lib.mkForce [ ];
                 };
 
-                zfs-import-zroot.after = [ "wpa_supplicant@${interface}.service" ];
                 resolved.enable = true;
               };
 
