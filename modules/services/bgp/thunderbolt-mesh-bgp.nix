@@ -5,7 +5,7 @@
 # Interface IPs come from host.networking.interfaces (managed = false).
 # Link renaming (PCI path → device name) is handled here.
 {
-  features.thunderbolt-mesh = {
+  features.thunderbolt-mesh-bgp = {
     requires = [ "bgp" ];
 
     linux =
