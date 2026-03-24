@@ -47,13 +47,17 @@
 
           systemd = {
             inherit (config.systemd) network;
-            users.root.shell = "/bin/systemd-tty-ask-password-agent";
+            # users.root.shell = "/bin/systemd-tty-ask-password-agent";
+            enableEmergencyMode = true;
 
             # Wait for clevis to do its thing...
-            services.zfs-import-zroot.preStart = ''
-              /bin/sleep 10
-              ${lib.getExe config.boot.zfs.package} load-key -a
-            '';
+            services.zfs-import-zroot = {
+              after = lib.mkForce [ "network.target" ];
+              preStart = ''
+                /bin/sleep 10
+                ${lib.getExe config.boot.zfs.package} load-key -a
+              '';
+            };
           };
 
           network = {

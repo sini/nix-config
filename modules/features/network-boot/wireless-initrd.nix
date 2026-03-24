@@ -58,9 +58,6 @@
             extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
 
             systemd = {
-              # users.root.shell = "/bin/systemd-tty-ask-password-agent";
-              emergencyAccess = true;
-
               # Wireless unlock support
               packages = [ pkgs.wpa_supplicant ];
               initrdBin = [
