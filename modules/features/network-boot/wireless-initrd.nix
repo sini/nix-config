@@ -50,6 +50,7 @@
             availableKernelModules = [
               "ccm" # Cryptography libs for WPA
               "ctr"
+              "cmac" # Needed for WPA3
               "iwlmvm" # Intel wireless controllers
               "iwlwifi"
             ];
