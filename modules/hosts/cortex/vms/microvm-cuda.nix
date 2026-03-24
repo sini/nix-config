@@ -5,6 +5,8 @@ _flakeConfig: {
       config,
       pkgs,
       pkgs',
+      flakeLib,
+      users,
       ...
     }:
     with lib;
@@ -22,11 +24,7 @@ _flakeConfig: {
       nvidiaAudioDeviceID =
         if nvidiaAudioController != null then nvidiaAudioController.sysfs_bus_id else "0000:05:00.1";
 
-      pubkeys = concatLists (
-        mapAttrsToList (
-          _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
-        ) config.users.users
-      );
+      pubkeys = flakeLib.users.getSshKeysForGroup users "wheel";
 
       vfioStatusCheck = pkgs.writeScript "check_vfio_status.sh" ''
         #! ${pkgs.runtimeShell} -e

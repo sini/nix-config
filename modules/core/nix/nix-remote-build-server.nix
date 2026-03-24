@@ -5,6 +5,8 @@
       config,
       pkgs,
       lib,
+      flakeLib,
+      users,
       ...
     }:
     {
@@ -40,15 +42,11 @@
           useDefaultShell = true;
           description = "nix-remote-build";
           openssh.authorizedKeys.keys =
-            with lib;
-            map (key: ''command="nix-store --serve --write",restrict '' + key) (
-              [ (builtins.readFile (rootPath + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ]
-              ++ concatLists (
-                mapAttrsToList (
-                  _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
-                ) config.users.users
-              )
-            );
+            lib.map (key: ''command="nix-store --serve --write",restrict '' + key)
+              (
+                [ (builtins.readFile (rootPath + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ]
+                ++ flakeLib.users.getSshKeysForGroup users "wheel"
+              );
         };
       };
     };

@@ -27,7 +27,7 @@
         # };
 
         age.secrets.wpa-supplicant = {
-          rekeyFile = environment.secretPath + "/wpa_supplicant-arcade.age";
+          rekeyFile = environment.wirelessSecretsFile;
           owner = "wpa_supplicant";
         };
 
@@ -62,8 +62,9 @@
 
             secretsFile = config.age.secrets.wpa-supplicant.path;
 
-            networks = {
-              "The Arcade".pskRaw = "ext:psk_arcade";
+            networks = lib.mkIf (environment.networks.default.wireless != null) {
+              "${environment.networks.default.wireless.ssid}".pskRaw =
+                environment.networks.default.wireless.pskRef;
             };
 
             # extraConfig = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=wheel";

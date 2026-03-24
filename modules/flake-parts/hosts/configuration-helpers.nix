@@ -116,6 +116,7 @@
               ;
             host = hostOptions;
             lib = lib';
+            flakeLib = self.lib;
           };
 
           enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;

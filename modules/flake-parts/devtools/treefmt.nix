@@ -58,7 +58,9 @@
             # Underscore-prefixed files/dirs are ignored by the module auto-import system
             "**/_*/**"
             "**/_*"
-          ];
+          ]
+          # Exclude generated files from the files.files flake-parts module
+          ++ (map (file: file.path_) config.files.files);
           statix.options = [ "explain" ];
           mdformat.options = [ "--number" ];
           deadnix.options = [ "--no-lambda-pattern-names" ];

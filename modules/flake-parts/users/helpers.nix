@@ -299,6 +299,44 @@ let
           ;
       }
     );
+
+  # ============================================================================
+  # User Filtering Helpers
+  # ============================================================================
+  # Helper functions for common user filtering patterns
+
+  # Filter resolved users by group membership
+  # Returns: attrset of users who are members of the specified group
+  filterUsersByGroup =
+    users: groupName: lib.filterAttrs (_: user: lib.elem groupName user.system.systemGroups) users;
+
+  # Get all SSH keys for users in a specific group
+  # Returns: flat list of SSH key strings
+  getSshKeysForGroup =
+    users: groupName:
+    lib.flatten (
+      lib.mapAttrsToList (
+        _: user:
+        if lib.elem groupName user.system.systemGroups then map (k: k.key) user.identity.sshKeys else [ ]
+      ) users
+    );
+
+  # Get SSH keys with optional tag filtering
+  # Returns: flat list of SSH key strings matching the tag filter
+  # If tag is null, returns all keys for users in the group
+  getSshKeysForGroupWithTag =
+    users: groupName: tag:
+    lib.flatten (
+      lib.mapAttrsToList (
+        _: user:
+        if lib.elem groupName user.system.systemGroups then
+          map (k: k.key) (
+            if tag == null then user.identity.sshKeys else lib.filter (k: k.tag == tag) user.identity.sshKeys
+          )
+        else
+          [ ]
+      ) users
+    );
 in
 {
   flake.lib.users = {
@@ -311,6 +349,9 @@ in
       resolveGroupMembership
       resolveUser
       resolveUsers
+      filterUsersByGroup
+      getSshKeysForGroup
+      getSshKeysForGroupWithTag
       ;
   };
 }

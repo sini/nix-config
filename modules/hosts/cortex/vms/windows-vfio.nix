@@ -23,11 +23,7 @@ _flakeConfig: {
       #   ) null config.facter.report.hardware.sound;
       #   nvidiaAudioDeviceID =
       #     if nvidiaAudioController != null then nvidiaAudioController.sysfs_bus_id else "0000:05:00.1";
-      #   pubkeys = concatLists (
-      #     mapAttrsToList (
-      #       _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
-      #     ) config.users.users
-      #   );
+      #   pubkeys = flakeLib.users.getSshKeysForGroup users "wheel";
       # in
       {
         virtualisation = {

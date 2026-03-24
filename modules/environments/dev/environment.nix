@@ -58,15 +58,11 @@
           "2a01:4f8:c2c:123f::1"
           "2a00:1098:2b::1"
         ];
+        wireless = {
+          ssid = "The Arcade";
+          pskRef = "ext:psk_arcade";
+        };
       };
-    };
-
-    # IPv6 ULA configuration for dev environment
-    ipv6 = {
-      ula_prefix = "fd64:1::/48";
-      management_prefix = "fd64:1:1::/64";
-      kubernetes_prefix = "fd64:1:2::/64";
-      services_prefix = "fd64:1:3::/64";
     };
 
     email = {

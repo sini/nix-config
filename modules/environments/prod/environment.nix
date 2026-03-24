@@ -82,17 +82,11 @@
           "2a01:4f8:c2c:123f::1"
           "2a00:1098:2b::1"
         ];
+        wireless = {
+          ssid = "The Arcade";
+          pskRef = "ext:psk_arcade";
+        };
       };
-    };
-
-    # IPv6 ULA configuration
-    ipv6 = {
-      ula_prefix = "fd64::/48";
-      management_prefix = "fd64:0:1::/64";
-      kubernetes_prefix = "fd64:0:2::/64";
-      services_prefix = "fd64:0:3::/64";
-      # External ISP prefix for NPTv6 translation (placeholder)
-      external_prefix = "2001:5a8:608c:4a00::/64";
     };
 
     email = {

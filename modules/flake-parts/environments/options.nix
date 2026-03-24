@@ -59,6 +59,27 @@ in
               Example: { kube-apiserver-vip = "10.9.0.100"; }
             '';
           };
+
+          wireless = mkOption {
+            type = types.nullOr (
+              types.submodule {
+                options = {
+                  ssid = mkOption {
+                    type = types.str;
+                    default = "The Arcade";
+                    description = "SSID of the wireless network";
+                  };
+                  pskRef = mkOption {
+                    type = types.str;
+                    default = "ext:psk_arcade";
+                    description = "PSK reference for the wireless network (e.g., ext:psk_arcade)";
+                  };
+                };
+              }
+            );
+            default = null;
+            description = "Wireless network configuration (typically used for 'default' network)";
+          };
         };
       };
 
@@ -218,6 +239,12 @@ in
               '';
             };
 
+            wirelessSecretsFile = mkOption {
+              type = types.path;
+              default = config.secretPath + "/wpa_supplicant_psks.age";
+              description = "Path to the WPA supplicant secrets file (agenix)";
+            };
+
             email = mkOption {
               type = emailType;
               description = "Email configuration for the environment";
@@ -328,44 +355,6 @@ in
                 A user with system-scoped groups matching a host's system-access-groups gets a Unix account.
                 A user with unix-scoped groups gets those as extraGroups on their Unix account.
               '';
-            };
-
-            ipv6 = mkOption {
-              type = types.submodule {
-                options = {
-                  ula_prefix = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = "ULA prefix for the environment (e.g., fd64::/48)";
-                  };
-
-                  management_prefix = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = "IPv6 prefix for management network (e.g., fd64:0:1::/64)";
-                  };
-
-                  kubernetes_prefix = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = "IPv6 prefix for Kubernetes pods (e.g., fd64:0:2::/64)";
-                  };
-
-                  services_prefix = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = "IPv6 prefix for Kubernetes services (e.g., fd64:0:3::/64)";
-                  };
-
-                  external_prefix = mkOption {
-                    type = types.nullOr types.str;
-                    default = null;
-                    description = "External ISP prefix for NPTv6 translation (e.g., 2001:db8::/64)";
-                  };
-                };
-              };
-              default = { };
-              description = "IPv6 ULA and prefix configuration for NPTv6 translation";
             };
 
             getDomainFor = mkOption {

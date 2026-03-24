@@ -1,6 +1,7 @@
 {
   features.wireless-initrd = {
     requires = [
+      "initrd-bootstrap-keys"
       "network-boot"
       "wireless"
     ];
@@ -8,7 +9,6 @@
       {
         config,
         lib,
-        host,
         pkgs,
         ...
       }:
@@ -22,26 +22,9 @@
 
         hasWireless = wirelessInterface != null;
         interface = if hasWireless then wirelessInterface.unix_device_name else "";
-
-        initrdBootstrapKeys = host.hasFeature "initrd-bootstrap-keys";
       in
       lib.mkIf hasWireless {
-
-        # NOTE: this does expose configured wireless passwords into the unencrypted
-        # initrd, but if you have access to the unbooted machine you probably have
-        # my wifi password...
-        age.secrets.wpa-supplicant-initrd = {
-          generator = {
-            dependencies = [ config.age.secrets.wpa-supplicant ];
-            script = "wpa-supplicant-config";
-          };
-
-          owner = "wpa_supplicant";
-          settings.networks = config.networking.wireless.networks;
-          rekeyFile = host.secretPath + "/wpa_supplicant_initrd.age";
-        };
-
-        boot = lib.mkIf (!initrdBootstrapKeys) {
+        boot = {
           initrd = {
             # Wireless interface drivers are included by network-boot module
             availableKernelModules = [
@@ -94,32 +77,6 @@
               config.age.secrets.wpa-supplicant-initrd.path;
           };
         };
-
-        # Make sure that there is always a valid wpa_supplicant config available that can be
-        # installed into the initrd. When bootstrapping a system (or re-installing), agenix
-        # cannot succeed in decrypting whatever is given, since the correct hostkey doesn't
-        # even exist yet. We still require a valid config to be available so that the initrd
-        # can be generated successfully. The correct config will be installed with the next
-        # update after the host is booted for the first time, and the secrets were rekeyed.
-        system.activationScripts.agenixEnsureInitrdWpaSupplicantConfig = {
-          text = ''
-            if [[ ! -e ${config.age.secrets.wpa-supplicant-initrd.path} ]]; then
-              # Create a minimal valid wpa_supplicant.conf as placeholder
-              cat > ${config.age.secrets.wpa-supplicant-initrd.path} <<'EOF'
-            # Placeholder wpa_supplicant config for initial deployment
-            # This will be replaced with the real config after agenix rekey
-            ctrl_interface=/var/run/wpa_supplicant
-            update_config=1
-            EOF
-              chmod 600 ${config.age.secrets.wpa-supplicant-initrd.path}
-            fi
-          '';
-          deps = [
-            "agenixInstall"
-          ];
-        };
-
-        system.activationScripts.agenixChown.deps = [ "agenixEnsureInitrdWpaSupplicantConfig" ];
       };
   };
 }

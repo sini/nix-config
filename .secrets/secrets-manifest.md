@@ -91,8 +91,8 @@ and rekeyed for each host.
 
 ### wpa-supplicant
 - **Used by**: nixos:blade
-- **Owner**: 0:0 (0400)
-- **Rekey File**: `.secrets/env/dev/wpa_supplicant-arcade.age`
+- **Owner**: wpa_supplicant:wpa_supplicant (0400)
+- **Rekey File**: `.secrets/env/dev/wpa_supplicant_psks.age`
 
 
 
@@ -498,7 +498,7 @@ They will be created automatically if they don't exist.
 
 ### wpa-supplicant-initrd
 - **Used by**: nixos:blade
-- **Owner**: 0:0 (0400)
+- **Owner**: wpa_supplicant:wpa_supplicant (0400)
 - **Rekey File**: `.secrets/hosts/blade/wpa_supplicant_initrd.age`
 - **Generator**: built-in: wpa-supplicant-config
 - **Has Dependencies**: Yes

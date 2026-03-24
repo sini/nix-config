@@ -1,46 +1,46 @@
 {
-  features.network-boot.linux =
-    {
-      config,
-      lib,
-      host,
-      pkgs,
-      ...
-    }:
-    let
-      zfsEnabled = host.hasFeature "zfs-root";
-      jweToken = builtins.path {
-        path = host.secretPath + "/zroot-key.jwe";
-        name = "zroot-key.jwe";
-      };
+  features.network-boot = {
+    requires = [ "initrd-bootstrap-keys" ];
+    linux =
+      {
+        config,
+        lib,
+        host,
+        flakeLib,
+        users,
+        ...
+      }:
+      let
+        zfsEnabled = host.hasFeature "zfs-root";
+        jweToken = builtins.path {
+          path = host.secretPath + "/zroot-key.jwe";
+          name = "zroot-key.jwe";
+        };
 
-      # Automatically collect all network driver modules from facter hardware report
-      baseNetworkDriverModules = lib.unique (
-        lib.flatten (
-          lib.filter (x: x != null) (
-            map (iface: iface.driver_modules or null) config.facter.report.hardware.network_interface
+        # Automatically collect all network driver modules from facter hardware report
+        baseNetworkDriverModules = lib.unique (
+          lib.flatten (
+            lib.filter (x: x != null) (
+              map (iface: iface.driver_modules or null) config.facter.report.hardware.network_interface
+            )
           )
-        )
-      );
+        );
 
-      # Map of kernel modules to their required dependencies
-      moduleDependencies = {
-        "mlx4_core" = [ "mlx4_en" ];
-        "iwlwifi" = [ "iwlmvm" ];
-      };
+        # Map of kernel modules to their required dependencies
+        moduleDependencies = {
+          "mlx4_core" = [ "mlx4_en" ];
+          "iwlwifi" = [ "iwlmvm" ];
+        };
 
-      # Expand modules to include their dependencies
-      additionalDriverModules = lib.unique (
-        lib.flatten (map (mod: moduleDependencies.${mod} or [ ]) baseNetworkDriverModules)
-      );
+        # Expand modules to include their dependencies
+        additionalDriverModules = lib.unique (
+          lib.flatten (map (mod: moduleDependencies.${mod} or [ ]) baseNetworkDriverModules)
+        );
 
-      networkDriverModules = lib.unique (baseNetworkDriverModules ++ additionalDriverModules);
-
-      initrdBootstrapKeys = host.hasFeature "initrd-bootstrap-keys";
-    in
-    {
-      boot = lib.mkIf (!initrdBootstrapKeys) {
-        initrd = {
+        networkDriverModules = lib.unique (baseNetworkDriverModules ++ additionalDriverModules);
+      in
+      {
+        boot.initrd = {
           availableKernelModules = [
             # Network utilities
             "bridge"
@@ -74,13 +74,7 @@
             ssh = {
               enable = true;
               port = 22;
-              authorizedKeys =
-                with lib;
-                concatLists (
-                  mapAttrsToList (
-                    _name: user: if elem "wheel" user.extraGroups then user.openssh.authorizedKeys.keys else [ ]
-                  ) config.users.users
-                );
+              authorizedKeys = flakeLib.users.getSshKeysForGroup users "wheel";
               hostKeys = [
                 config.age.secrets.initrd_host_ed25519_key.path
               ];
@@ -88,25 +82,5 @@
           };
         };
       };
-
-      age.secrets.initrd_host_ed25519_key.generator.script = "ssh-key";
-
-      # Make sure that there is always a valid initrd hostkey available that can be installed into
-      # the initrd. When bootstrapping a system (or re-installing), agenix cannot succeed in decrypting
-      # whatever is given, since the correct hostkey doesn't even exist yet. We still require
-      # a valid hostkey to be available so that the initrd can be generated successfully.
-      # The correct initrd host-key will be installed with the next update after the host is booted
-      # for the first time, and the secrets were rekeyed for the the new host identity.
-      system.activationScripts.agenixEnsureInitrdHostkey = {
-        text = ''
-          [[ -e ${config.age.secrets.initrd_host_ed25519_key.path} ]] \
-            || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${config.age.secrets.initrd_host_ed25519_key.path}
-        '';
-        deps = [
-          "agenixInstall"
-          "users"
-        ];
-      };
-      system.activationScripts.agenixChown.deps = [ "agenixEnsureInitrdHostkey" ];
-    };
+  };
 }
