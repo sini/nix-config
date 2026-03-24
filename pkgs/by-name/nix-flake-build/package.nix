@@ -10,9 +10,6 @@ writeShellApplication {
 
   runtimeInputs = [ nix-output-monitor ];
   text = ''
-    [[ "$#" -ge 1 ]] \
-      || { echo "usage: nix-flake-build [OPTIONS...] <HOST>..." >&2; exit 1; }
-
     OPTIONS=()
     HOST_NAMES=()
 
@@ -37,7 +34,12 @@ writeShellApplication {
 
     HOSTS=()
     for h in "''${HOST_NAMES[@]}"; do
-      HOSTS+=(".#nixosConfigurations.$h.config.system.build.toplevel")
+      HOST_SYSTEM=$(nix eval --raw ".#hosts.$h.system" 2>/dev/null || echo "x86_64-linux")
+      if [[ "$HOST_SYSTEM" == *darwin* ]]; then
+        HOSTS+=(".#darwinConfigurations.$h.config.system.build.toplevel")
+      else
+        HOSTS+=(".#nixosConfigurations.$h.config.system.build.toplevel")
+      fi
     done
 
     nom build --keep-going --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}"
