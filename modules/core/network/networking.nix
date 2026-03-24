@@ -1,55 +1,7 @@
 # Networking Configuration Module
 #
-# This module manages network interfaces using systemd-networkd with support for
-# both automatic and manual bridge configurations.
-#
-# ## Usage Examples
-#
-# ### Simple interface configuration:
-# ```nix
-# hosts.hostname = {
-#   networking = {
-#     interfaces = {
-#       enp1s0 = {
-#         ipv4 = [ "10.10.10.1" ];
-#         ipv6 = [ "fe80::1" ];
-#       };
-#       enp2s0 = {
-#         ipv4 = [ "10.10.10.2" ];
-#       };
-#     };
-#   };
-# };
-# # With autobridging (default), creates: br0 bridging enp1s0, br1 bridging enp2s0
-# ```
-#
-# ### Manual bridges with multiple interfaces:
-# ```nix
-# hosts.hostname = {
-#   networking = {
-#     autobridging = false;
-#     interfaces = {
-#       enp1s0.ipv4 = [ "10.10.10.1" ];
-#       enp2s0.ipv4 = [ "10.10.10.2" ];
-#       enp3s0.ipv4 = [ "10.10.10.3" ];
-#       enp4s0.ipv4 = [ "10.10.10.4" ];
-#     };
-#     bridges = {
-#       "br0" = [ "enp1s0" "enp2s0" ];  # Multiple interfaces in one bridge (uses enp1s0's IPs)
-#       "br1" = [ "enp3s0" ];            # Single interface bridge
-#     };
-#     # enp4s0 will be configured as standalone
-#   };
-# };
-# ```
-#
-# ## Key Features
-# - Automatic 1:1 bridging per interface (default behavior)
-# - Manual bridge definitions with multiple interfaces
-# - Automatic interface detection from bridge definitions
-# - IPv6 support with DHCPv6 and SLAAC
-# - DNS over TLS and DNSSEC
-# - TCP congestion window optimization
+# Generates systemd-networkd config from host.networking options.
+# Supports static IPs, DHCP, bridges, bonds, and managed/unmanaged interfaces.
 {
   features.networking.system =
     { host, ... }:
@@ -69,11 +21,7 @@
     }:
     with lib;
     let
-      # Use networking config from host
       netCfg = host.networking;
-
-      # Extract subnet mask from default network CIDR (e.g., "10.9.0.0/16" -> "/16")
-      managementSubnet = "/${last (splitString "/" environment.networks.default.cidr)}";
 
       # Helper to create name-value pairs for listToAttrs
       mkNameValue = name: value: { inherit name value; };
@@ -88,83 +36,167 @@
         }
         // extra;
 
-      # Common network configuration (used for both bridges and standalone interfaces)
-      mkNetworkConfig = ipv4Addrs: ipv6Addrs: {
-        networkConfig = {
-          # Add subnet mask to IPv4 addresses if they don't have one
-          Address =
-            (map (
-              addr: if elem "/" (stringToCharacters addr) then addr else "${addr}${managementSubnet}"
-            ) ipv4Addrs)
-            ++ ipv6Addrs;
-          DHCP = if length ipv4Addrs > 0 then "ipv6" else "yes"; # enable DHCPv6 only if we have static IPv4, otherwise full DHCP
-          IPv6AcceptRA = true; # for Stateless IPv6 Autoconfiguration (SLAAC)
-          IPv6PrivacyExtensions = "yes";
-          LinkLocalAddressing = "ipv6";
-          DNS = environment.networks.default.dnsServers;
-          DNSOverTLS = true;
-          DNSSEC = "allow-downgrade";
-        };
-        dhcpV6Config = {
-          UseDelegatedPrefix = true; # Request a prefix for our LANs.
-          PrefixDelegationHint = "::/64";
-        };
-        routes = optionals (length ipv4Addrs > 0) [
-          (mkRoute environment.networks.default.gatewayIp { })
-          (mkRoute environment.networks.default.gatewayIpV6 {
-            Destination = "::/0";
-            GatewayOnLink = true; # it's a gateway on local link.
-          })
-        ];
-        linkConfig.RequiredForOnline = "routable";
-      };
+      # ======================================================================
+      # Network config generator
+      # ======================================================================
 
-      # The effective bridges configuration (auto-generate if autobridging is enabled)
+      # Resolve effective DHCP mode for an interface
+      effectiveDhcp =
+        ifCfg:
+        if ifCfg.dhcp != null then
+          ifCfg.dhcp
+        else if !(ifCfg.managed or true) then
+          "none"
+        else if length (ifCfg.ipv4 or [ ]) > 0 then
+          "ipv6"
+        else
+          "yes";
+
+      # Resolve effective link-local mode
+      effectiveLinkLocal =
+        ifCfg:
+        if ifCfg.linkLocal != null then
+          ifCfg.linkLocal
+        else if ifCfg.managed or true then
+          "ipv6"
+        else
+          "no";
+
+      # Resolve effective requiredForOnline
+      effectiveRequiredForOnline =
+        ifCfg: if ifCfg.requiredForOnline != null then ifCfg.requiredForOnline else "routable";
+
+      # Build network config for a managed interface (env gateway/DNS/subnet)
+      mkManagedNetworkConfig =
+        ifCfg:
+        let
+          ipv4Addrs = ifCfg.ipv4 or [ ];
+          ipv6Addrs = ifCfg.ipv6 or [ ];
+          dhcp = effectiveDhcp ifCfg;
+        in
+        {
+          networkConfig = {
+            Address = ipv4Addrs ++ ipv6Addrs;
+            DHCP = dhcp;
+            IPv6AcceptRA = true;
+            IPv6PrivacyExtensions = "yes";
+            LinkLocalAddressing = effectiveLinkLocal ifCfg;
+            DNS = environment.networks.default.dnsServers;
+            DNSOverTLS = true;
+            DNSSEC = "allow-downgrade";
+          };
+          dhcpV6Config = {
+            UseDelegatedPrefix = true;
+            PrefixDelegationHint = "::/64";
+          };
+          routes = optionals (length ipv4Addrs > 0) [
+            (mkRoute environment.networks.default.gatewayIp { })
+            (mkRoute environment.networks.default.gatewayIpV6 {
+              Destination = "::/0";
+              GatewayOnLink = true;
+            })
+          ];
+          linkConfig = {
+            RequiredForOnline = effectiveRequiredForOnline ifCfg;
+          }
+          // optionalAttrs (ifCfg.mtu != null) {
+            MTUBytes = toString ifCfg.mtu;
+          };
+        };
+
+      # Build network config for an unmanaged interface (no env gateway/DNS)
+      mkUnmanagedNetworkConfig =
+        ifCfg:
+        let
+          ipv4Addrs = ifCfg.ipv4 or [ ];
+          ipv6Addrs = ifCfg.ipv6 or [ ];
+          dhcp = effectiveDhcp ifCfg;
+        in
+        {
+          networkConfig = {
+            Address = ipv4Addrs ++ ipv6Addrs;
+            LinkLocalAddressing = effectiveLinkLocal ifCfg;
+          }
+          // optionalAttrs (dhcp != "none") {
+            DHCP = dhcp;
+          };
+          linkConfig = {
+            ActivationPolicy = "up";
+            RequiredForOnline = effectiveRequiredForOnline ifCfg;
+          }
+          // optionalAttrs (ifCfg.mtu != null) {
+            MTUBytes = toString ifCfg.mtu;
+          };
+        };
+
+      # Dispatch to managed or unmanaged config
+      mkNetworkConfig =
+        ifCfg:
+        if ifCfg.managed or true then mkManagedNetworkConfig ifCfg else mkUnmanagedNetworkConfig ifCfg;
+
+      # ======================================================================
+      # Interface classification
+      # ======================================================================
+
+      allInterfaceNames = attrNames netCfg.interfaces;
+
+      # Bridge configuration
       effectiveBridges =
         if netCfg.autobridging && netCfg.bridges == { } then
           listToAttrs (imap0 (idx: ifName: mkNameValue "br${toString idx}" [ ifName ]) allInterfaceNames)
         else
           netCfg.bridges;
 
-      # All interface names from host.networking.interfaces
-      allInterfaceNames = attrNames netCfg.interfaces;
-
-      # Convert bridge attrset to list with additional metadata
       bridgeConfig = map (brName: {
         name = brName;
         interfaces = effectiveBridges.${brName};
-        # Get IP addresses from the first interface in the bridge
-        ipv4Addrs =
+        ifCfg =
           if length effectiveBridges.${brName} > 0 then
-            (netCfg.interfaces.${head effectiveBridges.${brName}}.ipv4 or [ ])
+            (netCfg.interfaces.${head effectiveBridges.${brName}} or {
+              ipv4 = [ ];
+              ipv6 = [ ];
+            }
+            )
           else
-            [ ];
-        ipv6Addrs =
-          if length effectiveBridges.${brName} > 0 then
-            (netCfg.interfaces.${head effectiveBridges.${brName}}.ipv6 or [ ])
-          else
-            [ ];
+            {
+              ipv4 = [ ];
+              ipv6 = [ ];
+            };
       }) (attrNames effectiveBridges);
 
-      # List of all bridge names
       bridgeNames = map (br: br.name) bridgeConfig;
-
-      # Set of all interfaces that are part of bridges
       bridgedInterfaces = unique (concatMap (br: br.interfaces) bridgeConfig);
 
-      # All interfaces we know about
-      allInterfaces = unique (allInterfaceNames ++ bridgedInterfaces);
+      # Bond configuration
+      bondConfig = mapAttrsToList (bondName: bondCfg: {
+        name = bondName;
+        inherit (bondCfg) interfaces mode transmitHashPolicy;
+        ifCfg =
+          netCfg.interfaces.${bondName} or {
+            ipv4 = [ ];
+            ipv6 = [ ];
+          };
+      }) (netCfg.bonds or { });
 
-      # Interfaces that should be configured as standalone (not bridged)
-      standaloneInterfaces = subtractLists bridgedInterfaces allInterfaceNames;
+      bondNames = map (b: b.name) bondConfig;
+      bondedInterfaces = unique (concatMap (b: b.interfaces) bondConfig);
 
-      # Create netdev configurations for bridges
+      # Standalone: not bridged, not bonded, not a virtual device name
+      standaloneInterfaces = subtractLists (
+        bridgedInterfaces ++ bondedInterfaces ++ bridgeNames ++ bondNames
+      ) allInterfaceNames;
+
+      # All known interfaces (physical + virtual)
+      allInterfaces = unique (allInterfaceNames ++ bridgedInterfaces ++ bridgeNames ++ bondNames);
+
+      # ======================================================================
+      # Netdev generation
+      # ======================================================================
+
       bridgeNetdevs = listToAttrs (
         map (
           br:
           mkNameValue br.name {
-            # https://wiki.archlinux.org/title/Systemd-networkd#Inherit_MAC_address_(optional)
-            # Mac address should come from the bridged interface
             netdevConfig = {
               Name = br.name;
               Kind = "bridge";
@@ -184,7 +216,29 @@
         ) bridgeConfig
       );
 
-      # Network configurations for physical interfaces (bind to bridges)
+      bondNetdevs = listToAttrs (
+        map (
+          bond:
+          mkNameValue bond.name {
+            netdevConfig = {
+              Name = bond.name;
+              Kind = "bond";
+            };
+            bondConfig = {
+              Mode = bond.mode;
+            }
+            // optionalAttrs (bond.transmitHashPolicy != null) {
+              TransmitHashPolicy = bond.transmitHashPolicy;
+            };
+          }
+        ) bondConfig
+      );
+
+      # ======================================================================
+      # Network generation
+      # ======================================================================
+
+      # Physical interfaces enslaved to bridges
       bridgedInterfaceNetworks = listToAttrs (
         concatMap (
           br:
@@ -192,7 +246,6 @@
             ifName:
             mkNameValue ifName {
               enable = true;
-              # We attach microvm's to the primary bridge br0
               matchConfig.Name =
                 if br.name == "br0" then
                   [
@@ -208,23 +261,23 @@
         ) bridgeConfig
       );
 
-      # Network configuration for standalone interfaces (not bridged)
-      standaloneInterfaceNetworks = listToAttrs (
-        map (
-          ifName:
-          mkNameValue ifName (
-            {
+      # Physical interfaces enslaved to bonds
+      bondSlaveNetworks = listToAttrs (
+        concatMap (
+          bond:
+          map (
+            ifName:
+            mkNameValue ifName {
               enable = true;
               matchConfig.Name = ifName;
+              networkConfig.Bond = bond.name;
+              linkConfig.RequiredForOnline = "enslaved";
             }
-            // (mkNetworkConfig (netCfg.interfaces.${ifName}.ipv4 or [ ]) (
-              netCfg.interfaces.${ifName}.ipv6 or [ ]
-            ))
-          )
-        ) standaloneInterfaces
+          ) bond.interfaces
+        ) bondConfig
       );
 
-      # Network configurations for bridges (DHCP and IPv6)
+      # Bridge device networks (IP assignment)
       bridgeNetworks = listToAttrs (
         map (
           br:
@@ -233,27 +286,49 @@
               enable = true;
               matchConfig.Name = br.name;
             }
-            // (mkNetworkConfig br.ipv4Addrs br.ipv6Addrs)
+            // (mkNetworkConfig br.ifCfg)
           )
         ) bridgeConfig
       );
 
-      networkManagerEnabled = host.hasFeature "network-manager";
+      # Bond device networks (IP assignment)
+      bondDeviceNetworks = listToAttrs (
+        map (
+          bond:
+          mkNameValue bond.name (
+            {
+              enable = true;
+              matchConfig.Name = bond.name;
+            }
+            // (mkNetworkConfig bond.ifCfg)
+          )
+        ) bondConfig
+      );
 
-      # Effective list of interfaces to exclude from NetworkManager
-      unmanagedInterfaces =
-        if netCfg.unmanagedInterfaces != [ ] then
-          netCfg.unmanagedInterfaces
-        else
-          allInterfaces ++ bridgeNames;
+      # Standalone interface networks
+      standaloneInterfaceNetworks = listToAttrs (
+        map (
+          ifName:
+          mkNameValue ifName (
+            {
+              enable = true;
+              matchConfig.Name = ifName;
+            }
+            // (mkNetworkConfig netCfg.interfaces.${ifName})
+          )
+        ) standaloneInterfaces
+      );
+
+      networkManagerEnabled = host.hasFeature "network-manager";
     in
     {
       config = {
 
         boot.kernelModules = [
-          "tun" # TUN/TAP networking
-          "bridge" # Network bridging
-          "macvtap" # MacVTap networking
+          "tun"
+          "bridge"
+          "macvtap"
+          "bonding"
         ];
 
         networking = {
@@ -264,10 +339,10 @@
 
           networkmanager = {
             enable = lib.mkForce networkManagerEnabled;
-            unmanaged = unmanagedInterfaces;
+            unmanaged = allInterfaces ++ bridgeNames ++ bondNames;
           };
 
-          dhcpcd.enable = false; # We use systemd-networkd instead
+          dhcpcd.enable = false;
 
           firewall = {
             enable = true;
@@ -281,9 +356,14 @@
         systemd.network = {
           enable = true;
           wait-online.enable = false;
-          netdevs = bridgeNetdevs;
+          netdevs = bridgeNetdevs // bondNetdevs;
           links = bridgeLinks;
-          networks = bridgedInterfaceNetworks // standaloneInterfaceNetworks // bridgeNetworks;
+          networks =
+            bridgedInterfaceNetworks
+            // bondSlaveNetworks
+            // standaloneInterfaceNetworks
+            // bridgeNetworks
+            // bondDeviceNetworks;
         };
       };
     };

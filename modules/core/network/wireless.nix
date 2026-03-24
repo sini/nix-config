@@ -37,19 +37,8 @@
           options iwlmvm power_scheme=3
         ''; # TODO: if kernelModules contains these...
 
-        systemd.network.networks."80-wireless" = {
-          matchConfig.Name = interface;
-          networkConfig = {
-            DHCP = "yes";
-            IPv6AcceptRA = true;
-            IPv6PrivacyExtensions = "yes";
-          };
-          linkConfig.RequiredForOnline = "routable";
-        };
-
         networking = {
           networkmanager = {
-            unmanaged = [ interface ];
             wifi.backend = "wpa_supplicant";
           };
 

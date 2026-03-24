@@ -12,6 +12,7 @@
       "nvf"
       "git"
       "ssh"
+      "starship"
       "sysmon"
       "yazi"
 

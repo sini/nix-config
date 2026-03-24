@@ -2,8 +2,8 @@
   features.gitkraken.home =
     {
       inputs,
-      config,
       pkgs,
+      user,
       ...
     }:
     {
@@ -46,15 +46,15 @@
         };
 
         user = {
-          inherit (config.programs.git.defaultIdentity) email;
-          name = config.programs.git.defaultIdentity.fullName;
+          inherit (user.identity) email;
+          name = user.identity.displayName;
         };
 
         gpg = {
           package = pkgs.gnupg;
           signCommits = true;
           signTags = true;
-          inherit (config.programs.git.defaultIdentity) signingKey;
+          signingKey = user.identity.gpgKey;
         };
       };
 

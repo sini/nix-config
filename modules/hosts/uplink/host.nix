@@ -1,7 +1,7 @@
 {
   hosts.uplink = {
     networking.interfaces.enp4s0 = {
-      ipv4 = [ "10.10.10.1" ];
+      ipv4 = [ "10.10.10.1/16" ];
       ipv6 = [ "fe80::3c7a:6eff:fee5:d3a6" ];
     };
     remoteBuildSpeed = 10;
@@ -43,12 +43,5 @@
     feature-settings.impermanence.wipeHomeOnBoot = true;
 
     facts = ./facter.json;
-    systemConfiguration =
-      { pkgs, ... }:
-      {
-        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-server-lto;
-
-        system.stateVersion = "25.05";
-      };
   };
 }

@@ -1,7 +1,7 @@
 {
   hosts.blade = {
-    # No static networking config - NetworkManager handles DHCP dynamically
-    # Accessed via Tailscale: blade.ts.json64.dev
+    # Wireless DHCP — interface auto-detected by wireless feature via facter
+    networking.interfaces.wlp0s20f3.dhcp = "yes";
     environment = "dev";
 
     channel = "nixpkgs-master";
@@ -59,15 +59,8 @@
     };
 
     feature-settings.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-CT4000P3PSSD8_2431E8BD13D9";
+    feature-settings.linux-kernel.optimization = "x86_64-v4";
 
     facts = ./facter.json;
-
-    systemConfiguration =
-      { pkgs, ... }:
-      {
-        boot.kernelPackages = pkgs.cachyosKernels.linuxPackages-cachyos-latest-lto-x86_64-v4;
-
-        system.stateVersion = "25.05";
-      };
   };
 }

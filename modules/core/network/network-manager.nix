@@ -1,19 +1,14 @@
 {
   features.network-manager.linux =
     {
-      host,
       pkgs,
       ...
     }:
-    let
-      unmanagedInterfaces =
-        host.networking.unmanagedInterfaces |> map (ifName: "interface-name:${ifName}");
-    in
     {
       config = {
         networking.networkmanager = {
           enable = true;
-          unmanaged = unmanagedInterfaces;
+          # unmanaged list is set by networking.nix from all known interfaces
           wifi.powersave = true;
           settings = {
             connectivity = {

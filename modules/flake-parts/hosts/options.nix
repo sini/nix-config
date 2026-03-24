@@ -68,26 +68,57 @@ in
                           ipv4 = mkOption {
                             type = types.listOf types.str;
                             default = [ ];
-                            description = "IPv4 addresses for this interface";
+                            description = "IPv4 addresses in CIDR notation (e.g., '10.9.2.1/16')";
                           };
                           ipv6 = mkOption {
                             type = types.listOf types.str;
                             default = [ ];
-                            description = "IPv6 addresses for this interface";
+                            description = "IPv6 addresses in CIDR notation";
+                          };
+                          dhcp = mkOption {
+                            type = types.nullOr (
+                              types.enum [
+                                "none"
+                                "ipv4"
+                                "ipv6"
+                                "yes"
+                              ]
+                            );
+                            default = null;
+                            description = "DHCP mode. null = auto (ipv6 if static ipv4, yes if no static ipv4)";
+                          };
+                          managed = mkOption {
+                            type = types.bool;
+                            default = true;
+                            description = "Apply environment gateway/DNS/subnet. false for point-to-point or standalone links.";
+                          };
+                          mtu = mkOption {
+                            type = types.nullOr types.int;
+                            default = null;
+                            description = "MTU for this interface. null = system default.";
+                          };
+                          linkLocal = mkOption {
+                            type = types.nullOr (
+                              types.enum [
+                                "ipv4"
+                                "ipv6"
+                                "yes"
+                                "no"
+                              ]
+                            );
+                            default = null;
+                            description = "Link-local addressing. null = auto (ipv6 for managed, no for unmanaged).";
+                          };
+                          requiredForOnline = mkOption {
+                            type = types.nullOr types.str;
+                            default = null;
+                            description = "RequiredForOnline value. null = auto (routable).";
                           };
                         };
                       }
                     );
                     default = { };
-                    description = "Network interfaces with their IP addresses";
-                    example = lib.literalExpression ''
-                      {
-                        enp8s0 = {
-                          ipv4 = [ "10.9.2.1" ];
-                          ipv6 = [ "fd64:0:1::5/64" ];
-                        };
-                      }
-                    '';
+                    description = "Network interfaces with their IP addresses and properties";
                   };
 
                   autobridging = mkOption {
@@ -100,18 +131,31 @@ in
                     type = types.attrsOf (types.listOf types.str);
                     default = { };
                     description = "Attribute set mapping bridge names to lists of interfaces";
-                    example = lib.literalExpression ''
-                      {
-                        br0 = [ "enp2s0" "enp3s0" ];
-                        br1 = [ "enp4s0" ];
-                      }
-                    '';
                   };
 
-                  unmanagedInterfaces = mkOption {
-                    type = types.listOf types.str;
-                    default = [ ];
-                    description = "List of interfaces to mark as unmanaged by NetworkManager";
+                  bonds = mkOption {
+                    type = types.attrsOf (
+                      types.submodule {
+                        options = {
+                          interfaces = mkOption {
+                            type = types.listOf types.str;
+                            description = "Member interfaces for this bond";
+                          };
+                          mode = mkOption {
+                            type = types.str;
+                            default = "802.3ad";
+                            description = "Bond mode (802.3ad, balance-xor, balance-rr, etc.)";
+                          };
+                          transmitHashPolicy = mkOption {
+                            type = types.nullOr types.str;
+                            default = null;
+                            description = "Transmit hash policy for the bond";
+                          };
+                        };
+                      }
+                    );
+                    default = { };
+                    description = "Bond devices with their member interfaces and settings";
                   };
                 };
               };
@@ -119,21 +163,29 @@ in
               description = "Network configuration for the host";
             };
 
-            # Derived options for backward compatibility
+            # Derived options — only managed interfaces, CIDR stripped
             ipv4 = mkOption {
               type = types.listOf types.str;
               default = lib.flatten (
-                lib.mapAttrsToList (_: iface: iface.ipv4 or [ ]) config.networking.interfaces
+                lib.mapAttrsToList (
+                  _: iface:
+                  if iface.managed or true then
+                    map (addr: lib.head (lib.splitString "/" addr)) (iface.ipv4 or [ ])
+                  else
+                    [ ]
+                ) config.networking.interfaces
               );
-              description = "The static IP addresses of this host in its home vlan (derived from networking.interfaces)";
+              description = "Management IPv4 addresses (derived from managed interfaces, CIDR stripped)";
             };
 
             ipv6 = mkOption {
               type = types.listOf types.str;
               default = lib.flatten (
-                lib.mapAttrsToList (_: iface: iface.ipv6 or [ ]) config.networking.interfaces
+                lib.mapAttrsToList (
+                  _: iface: if iface.managed or true then iface.ipv6 or [ ] else [ ]
+                ) config.networking.interfaces
               );
-              description = "The static IPv6 addresses of this host (derived from networking.interfaces)";
+              description = "Management IPv6 addresses (derived from managed interfaces)";
             };
 
             extra-features = mkOption {

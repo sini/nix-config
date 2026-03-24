@@ -2,29 +2,11 @@
 #
 # Auto-discovers peers in the same environment and creates BGP sessions
 # for directly connected /31 point-to-point thunderbolt links.
-# Physical ports map in order: interfaces[0] → enp199s0f5, [1] → enp199s0f6.
-#
-# Settings:
-#   thunderbolt-mesh.interfaces - list of /31 CIDRs per physical port
-#   bgp.localAsn               - node's AS number (from bgp feature)
-{ lib, ... }:
+# Interface IPs come from host.networking.interfaces (managed = false).
+# Link renaming (PCI path → device name) is handled here.
 {
   features.thunderbolt-mesh = {
     requires = [ "bgp" ];
-
-    settings = {
-      interfaces = lib.mkOption {
-        type = lib.types.listOf lib.types.str;
-        description = ''
-          Thunderbolt interface IP assignments (CIDR notation, /31 point-to-point).
-          Ordered by physical port: index 0 → enp199s0f5, index 1 → enp199s0f6.
-        '';
-        example = [
-          "169.254.12.0/31"
-          "169.254.31.1/31"
-        ];
-      };
-    };
 
     linux =
       {
@@ -32,16 +14,16 @@
         config,
         environment,
         host,
-        settings,
         ...
       }:
       let
-        cfg = settings.thunderbolt-mesh;
-
         physicalInterfaces = [
           "enp199s0f5"
           "enp199s0f6"
         ];
+
+        # Read interface IPs from host networking
+        getIfaceIp = dev: lib.head (host.networking.interfaces.${dev}.ipv4 or [ ]);
 
         # Auto-discover peer configuration from host settings
         thunderboltPeers = lib.filterAttrs (name: _host: name != config.networking.hostName) (
@@ -49,30 +31,26 @@
         );
 
         # Derive gateway IPs from peer interface assignments
-        # This logic determines which interface connects to which peer by checking /31 network pairs
+        # Determines which interface connects to which peer by checking /31 network pairs
         getGatewayForPeer =
           peerHostname: _peerLoopbackIp:
           let
             peerHost = thunderboltPeers.${peerHostname};
 
             # Get our own interface IPs
-            ourInterface1 = lib.elemAt cfg.interfaces 0;
-            ourInterface2 = lib.elemAt cfg.interfaces 1;
+            ourInterface1 = getIfaceIp "enp199s0f5";
+            ourInterface2 = getIfaceIp "enp199s0f6";
 
             # Get peer's interface IPs
-            peerCfg = peerHost.feature-settings.thunderbolt-mesh.interfaces;
-            peerInterface1 = lib.elemAt peerCfg 0;
-            peerInterface2 = lib.elemAt peerCfg 1;
+            peerInterface1 = lib.head (peerHost.networking.interfaces.enp199s0f5.ipv4 or [ ]);
+            peerInterface2 = lib.head (peerHost.networking.interfaces.enp199s0f6.ipv4 or [ ]);
 
             # Check if two IPs are in the same /31 network
             sameNetwork =
               ip1: ip2:
               let
-                parts1 = lib.splitString "/" ip1;
-                parts2 = lib.splitString "/" ip2;
-                baseIp1 = lib.head parts1;
-                baseIp2 = lib.head parts2;
-                # For /31 networks, the base addresses should differ by exactly 1 in the last octet
+                baseIp1 = lib.head (lib.splitString "/" ip1);
+                baseIp2 = lib.head (lib.splitString "/" ip2);
                 ipParts1 = lib.splitString "." baseIp1;
                 ipParts2 = lib.splitString "." baseIp2;
                 prefix1 = lib.concatStringsSep "." (lib.init ipParts1);
@@ -89,17 +67,8 @@
                   if diff < 0 then -diff else diff
                 ) == 1;
 
-            # Extract the gateway IP from peer's interface that connects to us
-            extractGateway =
-              interfaceIp:
-              let
-                parts = lib.splitString "/" interfaceIp;
-                baseIp = lib.head parts;
-              in
-              baseIp;
+            extractGateway = interfaceIp: lib.head (lib.splitString "/" interfaceIp);
           in
-          # Find which peer interface is in the same /31 network as one of our interfaces
-          # Return null if no direct connection exists
           if sameNetwork ourInterface1 peerInterface1 then
             extractGateway peerInterface1
           else if sameNetwork ourInterface1 peerInterface2 then
@@ -109,9 +78,8 @@
           else if sameNetwork ourInterface2 peerInterface2 then
             extractGateway peerInterface2
           else
-            null; # No direct connection to this peer
+            null;
 
-        # Generate peer configurations from discovered hosts, only for directly connected peers
         peerConfigs = lib.filter (peer: peer.gateway != null) (
           map (
             peerHostname:
@@ -129,14 +97,8 @@
           ) (lib.attrNames thunderboltPeers)
         );
 
-        # Current node configuration from settings
         nodeConfig = {
-          loopback = {
-            ipv4 = builtins.head host.ipv4;
-          };
-          interfaceIps = lib.listToAttrs (
-            lib.imap0 (i: dev: lib.nameValuePair dev (lib.elemAt cfg.interfaces i)) physicalInterfaces
-          );
+          loopback.ipv4 = builtins.head host.ipv4;
           peers = peerConfigs;
         };
       in
@@ -160,7 +122,6 @@
             );
 
             neighbors = map (peer: {
-              # ip = peer.ip;
               ip = peer.gateway;
               inherit (peer) asn;
               ebgpMultihop = 4;
@@ -175,7 +136,6 @@
                   peer:
                   lib.nameValuePair peer.gateway {
                     activate = true;
-                    # nextHopSelf = true;
                   }
                 ) nodeConfig.peers
               );
@@ -183,11 +143,9 @@
           };
 
           systemd = {
-            services = {
-              frr = {
-                requires = lib.lists.forEach physicalInterfaces (i: "sys-subsystem-net-devices-${i}.device");
-                after = lib.lists.forEach physicalInterfaces (i: "sys-subsystem-net-devices-${i}.device");
-              };
+            services.frr = {
+              requires = lib.lists.forEach physicalInterfaces (i: "sys-subsystem-net-devices-${i}.device");
+              after = lib.lists.forEach physicalInterfaces (i: "sys-subsystem-net-devices-${i}.device");
             };
 
             network = {
@@ -196,6 +154,7 @@
                 IPv6Forwarding = true;
               };
 
+              # Link renaming: PCI path → stable device names
               links = {
                 "20-thunderbolt-port-1" = {
                   matchConfig = {
@@ -221,28 +180,7 @@
                 };
               };
 
-              networks = {
-                "21-thunderbolt-1" = {
-                  matchConfig.Name = "enp199s0f5";
-                  address = [ nodeConfig.interfaceIps.enp199s0f5 ];
-                  linkConfig = {
-                    ActivationPolicy = "up";
-                    # MTUBytes = "9000"; # Recommended for performance
-                    MTUBytes = 1500; # for compat
-                  };
-                  networkConfig.LinkLocalAddressing = "no";
-                };
-                "21-thunderbolt-2" = {
-                  matchConfig.Name = "enp199s0f6";
-                  address = [ nodeConfig.interfaceIps.enp199s0f6 ];
-                  linkConfig = {
-                    ActivationPolicy = "up";
-                    # MTUBytes = "9000"; # Recommended for performance
-                    MTUBytes = 1500; # for compat
-                  };
-                  networkConfig.LinkLocalAddressing = "no";
-                };
-              };
+              # Network config is now generated by networking.nix from host.networking.interfaces
             };
           };
         };

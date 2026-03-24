@@ -13,6 +13,7 @@
       "hosts"
       "i18n"
       "impermanence"
+      "linux-kernel"
       "networking"
       "nix"
       "nixpkgs"
@@ -21,6 +22,7 @@
       "security"
       "shell"
       "ssd"
+      "stateVersion"
       "sudo"
       "systemd"
       "systemd-boot"
@@ -29,7 +31,6 @@
       "users"
       "utils"
       "zsh"
-      "starship"
     ];
   };
 }
