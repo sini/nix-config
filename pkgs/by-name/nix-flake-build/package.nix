@@ -57,6 +57,12 @@ writeShellApplication {
     if [[ "$APPLY" == true ]]; then
       h="''${HOST_NAMES[0]}"
       HOST_SYSTEM="''${HOST_SYSTEMS[0]}"
+      LOCAL_HOSTNAME="$(hostname)"
+
+      if [[ "$h" != "$LOCAL_HOSTNAME" ]]; then
+        echo "error: --apply target '$h' does not match local hostname '$LOCAL_HOSTNAME'" >&2
+        exit 1
+      fi
 
       if [[ "$HOST_SYSTEM" == *darwin* ]]; then
         echo "Applying darwin configuration for $h..."
