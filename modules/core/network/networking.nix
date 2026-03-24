@@ -265,8 +265,7 @@
             unmanaged = unmanagedInterfaces;
           };
 
-          useDHCP = false;
-          dhcpcd.enable = false;
+          dhcpcd.enable = false; # We use systemd-networkd instead
 
           firewall = {
             enable = true;
