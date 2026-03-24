@@ -48,9 +48,33 @@
     };
 
     linux =
-      { lib, settings, ... }:
+      {
+        config,
+        lib,
+        environment,
+        settings,
+        ...
+      }:
       let
         cfg = settings.thunderbolt-mesh-of;
+
+        # Discover peers in the same environment for management IP routing
+        peers = lib.filterAttrs (name: _: name != config.networking.hostName) (
+          environment.findHostsByFeature "thunderbolt-mesh-of"
+        );
+
+        # Static routes: reach peer management IPs via their fabric loopback
+        # OpenFabric resolves the loopback next-hop to the correct thunderbolt link
+        peerStaticRoutes = lib.concatMapStringsSep "\n" (
+          peerHost:
+          let
+            mgmtIp = builtins.head peerHost.ipv4;
+            loopbackIp = lib.head (
+              lib.splitString "/" peerHost.feature-settings.thunderbolt-mesh-of.loopback.ipv4
+            );
+          in
+          "ip route ${mgmtIp}/32 ${loopbackIp}"
+        ) (lib.attrValues peers);
 
         fabricInterfaceConfig = lib.concatMapStringsSep "\n" (ifName: ''
           !
@@ -108,6 +132,9 @@
             fabricd.enable = true;
 
             config = lib.mkAfter ''
+              ! Route peer management IPs via fabric loopbacks
+              ${peerStaticRoutes}
+              !
               ! OpenFabric thunderbolt mesh
               ${fabricInterfaceConfig}
               !

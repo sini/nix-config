@@ -12,16 +12,16 @@
         };
       };
       kubernetes-pods = {
-        cidr = "172.16.0.0/16";
+        cidr = "172.18.0.0/16";
         ipv6_cidr = "fdfd:cafe:00:0002::/96";
         description = "Kubernetes pod network";
       };
       kubernetes-services = {
-        cidr = "172.17.0.0/16";
+        cidr = "172.19.0.0/16";
         ipv6_cidr = "fdfd:cafe:00:8002::/112";
         description = "Kubernetes service network";
         assignments = {
-          coredns = "172.17.0.10";
+          coredns = "172.19.0.10";
         };
       };
       kubernetes-loadbalancers = {
@@ -54,7 +54,7 @@
           "sops-secrets-operator"
         ];
         config = {
-          coredns.clusterIP = "172.17.0.10";
+          coredns.clusterIP = "172.19.0.10";
 
           sops-secrets-operator.replicaCount = 1; # High availability for prod
         };

@@ -26,8 +26,6 @@
               script = "wpa-supplicant-config";
             };
 
-            owner = "wpa_supplicant";
-
             settings.networks =
               if environment.networks.default.wireless != null then
                 {
