@@ -125,6 +125,16 @@ let
           '';
         };
 
+        # Whether the home module requires system modules to function.
+        # Defaults to true when system/linux/darwin modules are defined.
+        # Set to false for features where system modules are optional
+        # (e.g., spicetify firewall ports aren't needed for the app to work).
+        homeRequiresSystem = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Whether the home module depends on the system modules to function.";
+        };
+
         # Computed: argument names of the .home module function.
         # Introspected from raw definitions before deferredModule coercion.
         # Empty list for plain attrsets or features with no home module.
@@ -187,8 +197,9 @@ let
           let
             homeDefs = options.home.definitionsWithLocations;
             hasHome = builtins.any (d: d.value != { }) homeDefs;
+            systemBlocks = config.hasSystemModules && config.homeRequiresSystem;
           in
-          hasHome && config.contextRequirements == [ ] && !config.hasSystemModules;
+          hasHome && config.contextRequirements == [ ] && !systemBlocks;
 
         contextRequirements =
           let

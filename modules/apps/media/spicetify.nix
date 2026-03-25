@@ -1,5 +1,6 @@
 {
   features.spicetify = {
+    homeRequiresSystem = false; # Firewall ports are optional for spicetify to function
     linux = {
       # Local Discovery and Google Cast ports
       networking.firewall.allowedTCPPorts = [ 57621 ];

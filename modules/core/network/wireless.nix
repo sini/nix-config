@@ -1,5 +1,6 @@
 {
   features.wireless = {
+    homeRequiresSystem = false; # impala tool works standalone
     linux =
       {
         config,

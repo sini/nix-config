@@ -1,5 +1,6 @@
 {
   features.audio = {
+    homeRequiresSystem = false; # wiremix works standalone
     linux =
       {
         pkgs,
