@@ -336,6 +336,7 @@
           hostId = with builtins; substring 0 8 (hashString "md5" config.networking.hostName);
 
           useNetworkd = true;
+          useDHCP = false;
 
           networkmanager = {
             enable = lib.mkForce networkManagerEnabled;
