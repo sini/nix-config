@@ -76,15 +76,22 @@
           "ip route ${mgmtIp}/32 ${loopbackIp}"
         ) (lib.attrValues peers);
 
-        fabricInterfaceConfig = lib.concatMapStringsSep "\n" (ifName: ''
-          !
-          interface ${ifName}
-            ip router openfabric 1
-            ${lib.optionalString (cfg.loopback.ipv6 != null) "ipv6 router openfabric 1"}
-            openfabric csnp-interval 2
-            openfabric hello-interval 1
-            openfabric hello-multiplier 2
-        '') cfg.interfaces;
+        mkFabricInterface =
+          ifName:
+          lib.concatStringsSep "\n" (
+            [
+              "interface ${ifName}"
+              "  ip router openfabric 1"
+            ]
+            ++ lib.optional (cfg.loopback.ipv6 != null) "  ipv6 router openfabric 1"
+            ++ [
+              "  openfabric csnp-interval 2"
+              "  openfabric hello-interval 1"
+              "  openfabric hello-multiplier 2"
+            ]
+          );
+
+        fabricInterfaceConfig = lib.concatMapStringsSep "\n!\n" mkFabricInterface cfg.interfaces;
       in
       {
         config = {
@@ -121,22 +128,30 @@
           services.frr = {
             fabricd.enable = true;
 
-            config = lib.mkAfter ''
-              ! Route peer management IPs via fabric loopbacks
-              ${peerStaticRoutes}
-              !
-              ! OpenFabric thunderbolt mesh
-              ${fabricInterfaceConfig}
-              !
-              interface lo
-                ip router openfabric 1
-                ${lib.optionalString (cfg.loopback.ipv6 != null) "ipv6 router openfabric 1"}
-                openfabric passive
-              !
-              router openfabric 1
-                net ${cfg.nsap}
-                fabric-tier 0
-            '';
+            config =
+              let
+                loopbackConfig = lib.concatStringsSep "\n" (
+                  [
+                    "interface lo"
+                    "  ip router openfabric 1"
+                  ]
+                  ++ lib.optional (cfg.loopback.ipv6 != null) "  ipv6 router openfabric 1"
+                  ++ [ "  openfabric passive" ]
+                );
+              in
+              lib.mkAfter ''
+                ! Route peer management IPs via fabric loopbacks
+                ${peerStaticRoutes}
+                !
+                ! OpenFabric thunderbolt mesh
+                ${fabricInterfaceConfig}
+                !
+                ${loopbackConfig}
+                !
+                router openfabric 1
+                  net ${cfg.nsap}
+                  fabric-tier 0
+              '';
           };
         };
       };
