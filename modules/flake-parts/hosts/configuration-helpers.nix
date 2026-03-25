@@ -30,8 +30,6 @@
         {
           resolvedUser,
           allHostFeatures,
-          environment,
-          hostOptions,
         }:
         let
           includeHostFeatures = resolvedUser.system.include-host-features or false;
@@ -61,18 +59,24 @@
 
           homeModules = collectHomeModules resolvedFeatures;
 
-          # Resolve per-user settings (feature defaults → env → host → user)
-          userSettings = resolveFeatureSettings {
+          # Resolve per-user settings from feature user-settings defaults + user overrides
+          resolvedUserSettings = resolveFeatureSettings {
+            settingsKey = "user-settings";
             activeFeatureNames = map (f: f.name) resolvedFeatures;
             featuresConfig = config.features;
-            envSettings = environment.settings or { };
-            hostSettings = hostOptions.settings or { };
-            userSettings = resolvedUser.system.settings or { };
+            layers = [
+              (_: { config = resolvedUser.system.settings or { }; })
+            ];
+          };
+
+          # Augment user with resolved settings
+          augmentedUser = resolvedUser // {
+            settings = resolvedUserSettings;
           };
         in
         {
           imports = homeModules ++ [
-            { _module.args.settings = userSettings; }
+            { _module.args.user = augmentedUser; }
           ];
         };
 
@@ -125,8 +129,15 @@
           settings = resolveFeatureSettings {
             activeFeatureNames = activeFeatures;
             featuresConfig = config.features;
-            envSettings = environment.settings or { };
-            hostSettings = hostOptions.settings or { };
+            layers = [
+              (
+                { lib, ... }:
+                {
+                  config = lib.mapAttrs (_: v: lib.mapAttrs (_: lib.mkDefault) v) (environment.settings or { });
+                }
+              )
+              (_: { config = hostOptions.settings or { }; })
+            ];
           };
 
           enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
@@ -157,8 +168,6 @@
                 inherit
                   resolvedUser
                   allHostFeatures
-                  environment
-                  hostOptions
                   ;
               }
             ) enabledUsers;

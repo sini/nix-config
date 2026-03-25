@@ -10,7 +10,7 @@ metadata:
   name: coredns
   namespace: kube-system
 spec:
-  clusterIP: 172.17.0.10
+  clusterIP: 172.19.0.10
   ipFamilyPolicy: RequireDualStack
   ports:
     - name: udp-53

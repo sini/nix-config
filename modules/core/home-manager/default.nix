@@ -42,13 +42,7 @@
             }
           )
 
-          # Inject resolved user object as `user` specialArg per-user
-          (
-            { config, users, ... }:
-            {
-              _module.args.user = users.${config.home.username} or { };
-            }
-          )
+          # Note: `user` (with resolved settings) is injected per-user by makeHomeConfig
         ];
       };
     };

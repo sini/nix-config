@@ -29,7 +29,7 @@ let
 in
 {
   features.git = {
-    settings = {
+    user-settings = {
       extraIdentities = lib.mkOption {
         type = lib.types.listOf identityType;
         default = [ ];
@@ -44,7 +44,6 @@ in
         lib,
         user,
         environment,
-        settings,
         ...
       }:
       let
@@ -92,7 +91,7 @@ in
           else
             null;
 
-        allIdentities = [ defaultIdentity ] ++ settings.git.extraIdentities;
+        allIdentities = [ defaultIdentity ] ++ (user.settings.git.extraIdentities or [ ]);
       in
       {
         config = {

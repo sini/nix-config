@@ -22,12 +22,12 @@
       "cilium-bgp"
     ];
     settings = {
-      bgp.localAsn = 65003;
+      bgp.localAsn = 65001;
       cilium-bgp.localAsn = 65010;
       thunderbolt-mesh-of = {
         interfaces = [
-          "tb0"
-          "tb1"
+          "enp199s0f5"
+          "enp199s0f6"
         ];
         loopback.ipv4 = "172.16.255.3/32";
         nsap = "49.0000.0000.0003.00";

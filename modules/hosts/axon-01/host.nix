@@ -26,8 +26,8 @@
       cilium-bgp.localAsn = 65010;
       thunderbolt-mesh-of = {
         interfaces = [
-          "tb0"
-          "tb1"
+          "enp199s0f5"
+          "enp199s0f6"
         ];
         loopback.ipv4 = "172.16.255.1/32";
         nsap = "49.0000.0000.0001.00";

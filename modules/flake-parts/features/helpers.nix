@@ -67,9 +67,20 @@ let
           type = types.lazyAttrsOf types.raw;
           default = { };
           description = ''
-            Option declarations for per-feature configuration.
-            These options will be available at settings.<featureName> in feature modules.
-            Should contain ONLY option declarations (mkOption), no config assignments.
+            System-level option declarations for per-feature configuration.
+            Available at settings.<featureName> in all feature modules.
+            Settable at environment and host level.
+          '';
+        };
+
+        # Per-user typed settings for home-manager modules
+        user-settings = mkOption {
+          type = types.lazyAttrsOf types.raw;
+          default = { };
+          description = ''
+            User-level option declarations for per-feature configuration.
+            Available at user.settings.<featureName> in home modules.
+            Settable per-user at canonical, environment, and host level.
           '';
         };
 
@@ -229,78 +240,72 @@ let
   # Typed, per-feature settings with multi-layer merging via evalModules.
   # Analogous to serviceOptions in kubernetes/service-helpers.nix.
 
-  # Generate a settings option type from all features that declare settings.
-  # Used by environments and hosts to provide typed configuration for features.
-  mkFeatureSettingsOpt =
-    featuresConfig: description:
+  # Generate a typed settings option from features.
+  # settingsKey selects which field to read from features ("settings" or "user-settings").
+  mkSettingsOpt =
+    settingsKey: featuresConfig: description:
     let
-      featuresWithSettings = lib.filterAttrs (_: f: f.settings or { } != { }) featuresConfig;
+      relevant = lib.filterAttrs (_: f: f.${settingsKey} or { } != { }) featuresConfig;
     in
     mkOption {
       type = types.submodule {
         options = lib.mapAttrs (
           name: feature:
           mkOption {
-            type = types.submodule { options = feature.settings; };
+            type = types.submodule { options = feature.${settingsKey}; };
             default = { };
             description = "Settings for the ${name} feature";
           }
-        ) featuresWithSettings;
+        ) relevant;
       };
       default = { };
       inherit description;
     };
 
+  # System-level settings (hosts/environments)
+  mkFeatureSettingsOpt = mkSettingsOpt "settings";
+
+  # User-level settings (per-user on canonical/env/host users)
+  mkFeatureUserSettingsOpt = mkSettingsOpt "user-settings";
+
   # Resolve feature settings by merging layers via evalModules.
-  # Priority order (lowest to highest):
-  #   1. Feature defaults (from mkOption default values)
-  #   2. Environment settings (wrapped in mkDefault)
-  #   3. Host settings (plain values)
-  #   4. User settings (plain values, home modules only)
+  # settingsKey selects "settings" or "user-settings" from features.
+  # Priority (lowest to highest): feature defaults → envSettings (mkDefault) → hostSettings → userSettings
   resolveFeatureSettings =
     {
+      settingsKey ? "settings",
       activeFeatureNames,
       featuresConfig,
-      envSettings ? { },
-      hostSettings ? { },
-      userSettings ? { },
+      layers ? [ ],
     }:
     let
       relevantFeatures = lib.filterAttrs (
-        name: f: lib.elem name activeFeatureNames && f.settings or { } != { }
+        name: f: lib.elem name activeFeatureNames && f.${settingsKey} or { } != { }
       ) featuresConfig;
 
       settingsOptions = lib.mapAttrs (
         _name: feature:
         mkOption {
-          type = types.submodule { options = feature.settings; };
+          type = types.submodule { options = feature.${settingsKey}; };
           default = { };
         }
       ) relevantFeatures;
 
-      envModule =
-        { lib, ... }:
-        {
-          config = lib.mapAttrs (_: value: lib.mapAttrs (_: lib.mkDefault) value) (
-            lib.intersectAttrs relevantFeatures envSettings
-          );
-        };
-
-      hostModule = _: {
-        config = lib.intersectAttrs relevantFeatures hostSettings;
-      };
-
-      userModule = _: {
-        config = lib.intersectAttrs relevantFeatures userSettings;
-      };
+      # Filter each layer's config to only include relevant features
+      filteredLayers = map (
+        layer: args:
+        let
+          result = if lib.isFunction layer then layer args else layer;
+          filteredConfig = lib.intersectAttrs relevantFeatures (result.config or { });
+        in
+        result // { config = filteredConfig; }
+      ) layers;
 
       evaluated = lib.evalModules {
         modules = [
           { options = settingsOptions; }
-          envModule
-          hostModule
-          userModule
-        ];
+        ]
+        ++ filteredLayers;
       };
     in
     evaluated.config;
@@ -325,7 +330,9 @@ in
       coreFeatures
       getModulesForFeatures
       computeActiveFeatures
+      mkSettingsOpt
       mkFeatureSettingsOpt
+      mkFeatureUserSettingsOpt
       resolveFeatureSettings
       ;
   };
