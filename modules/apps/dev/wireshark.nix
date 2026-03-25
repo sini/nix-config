@@ -1,6 +1,5 @@
 {
   features.wireshark = {
-    homeRequiresSystem = false; # termshark works standalone (capture needs group membership)
     system =
       {
         pkgs,

@@ -1,6 +1,5 @@
 {
   features.bluetooth = {
-    homeRequiresSystem = false; # bluetui TUI works standalone
     linux =
       { pkgs, ... }:
       {
