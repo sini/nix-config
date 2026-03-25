@@ -31,8 +31,47 @@ let
       apply = wrapModuleWithMetadata featureName modulePath;
     };
 
+  # Extract function argument names from a module value.
+  # Returns [] for plain attrsets (no function args = no context needed).
+  extractModuleArgs =
+    module:
+    if builtins.isFunction module then
+      builtins.attrNames (builtins.functionArgs module)
+    else
+      [ ];
+
+  # Standard HM module args that don't require external context from our flake.
+  # `inputs` is included because we pass it via extraSpecialArgs in the wrapper.
+  # `osConfig` is NOT standard — it requires a real NixOS system evaluation.
+  standardHomeArgs = [
+    "config"
+    "lib"
+    "pkgs"
+    "options"
+    "modulesPath"
+    "inputs"
+  ];
+
+  # Non-standard args that require context beyond an isolated HM evaluation.
+  # Used to classify features by what context they need for wrapping.
+  contextArgTiers = {
+    osConfig = "osConfig"; # needs NixOS system configuration
+    user = "user"; # needs user identity
+    environment = "environment"; # needs environment config
+    host = "host"; # needs host topology
+    settings = "settings"; # needs system-level settings
+    users = "users"; # needs all resolved users
+    cluster = "cluster"; # needs cluster config
+    flakeLib = "flakeLib"; # internal: flake library functions
+  };
+
   featureSubmodule =
-    { name, ... }:
+    {
+      name,
+      config,
+      options,
+      ...
+    }:
     {
       options = {
         requires = mkOption {
@@ -40,6 +79,7 @@ let
           default = [ ];
           description = "List of names of features required by this feature";
         };
+
         excludes = mkOption {
           type = types.listOf types.str;
           default = [ ];
@@ -55,6 +95,7 @@ let
         linux =
           mkDeferredModuleOptWithMetadata name "linux"
             "A Linux-specific system module for this feature (NixOS only)";
+
         darwin =
           mkDeferredModuleOptWithMetadata name "darwin"
             "A Darwin-specific system module for this feature (macOS only)";
@@ -84,12 +125,65 @@ let
           '';
         };
 
+        # Computed: argument names of the .home module function.
+        # Introspected from raw definitions before deferredModule coercion.
+        # Empty list for plain attrsets or features with no home module.
+        homeArgs = mkOption {
+          type = types.listOf types.str;
+          readOnly = true;
+          internal = true;
+          description = "Function argument names of the home module (introspected).";
+        };
+
+        # Computed: whether this feature can be wrapped as a standalone package.
+        # True when .home exists and only uses standard HM args (no user/host/environment/settings).
+        wrappable = mkOption {
+          type = types.bool;
+          readOnly = true;
+          internal = true;
+          description = "Whether this feature can be wrapped as a standalone package (no user/host/environment context).";
+        };
+
+        # Computed: which custom context args this feature's .home module requires.
+        # Empty list = Tier 1 (wrappable). Non-empty = lists the specific context needed.
+        # e.g., ["user" "environment"] for git, ["host"] for gpg.
+        contextRequirements = mkOption {
+          type = types.listOf types.str;
+          readOnly = true;
+          internal = true;
+          description = "Custom flake context args required by this feature's home module.";
+        };
+
         name = mkOption {
           type = types.str;
           default = name;
           readOnly = true;
           internal = true;
         };
+      };
+
+      config = {
+        homeArgs =
+          let
+            defs = options.home.definitionsWithLocations;
+            rawModules = map (d: d.value) defs;
+          in
+          lib.unique (lib.concatMap extractModuleArgs rawModules);
+
+        wrappable =
+          let
+            # Check if .home has any meaningful definitions (not just the default {}).
+            # Multiple files can contribute to the same feature via merged modules.
+            homeDefs = options.home.definitionsWithLocations;
+            hasHome = builtins.any (d: d.value != { }) homeDefs;
+          in
+          hasHome && config.contextRequirements == [ ];
+
+        contextRequirements =
+          let
+            knownContextArgs = builtins.attrNames contextArgTiers;
+          in
+          builtins.filter (a: builtins.elem a knownContextArgs) config.homeArgs;
       };
     };
 

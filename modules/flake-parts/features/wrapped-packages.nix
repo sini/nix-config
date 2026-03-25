@@ -5,23 +5,19 @@
     let
       wlib = inputs.nix-wrapper-modules.lib;
 
-      # Static registry of features to wrap as standalone packages.
-      # Each entry maps a package output name to its wrapping config.
-      # Only Tier 1 features (no user/host/environment context) belong here.
-      wrappedFeatures = {
-        alacritty = {
-          homeModules = [ config.features.alacritty.home ];
-        };
-      };
+      # Automatically discover wrappable features (Tier 1: no user/host/environment context).
+      # Features are wrappable when their .home module only uses standard HM args.
+      wrappableFeatures = lib.filterAttrs (_: f: f.wrappable) config.features;
 
       mkWrapped =
-        name: cfg:
+        name: feature:
         let
           base = wlib.wrapHomeModule {
             inherit pkgs;
-            inherit (cfg) homeModules;
-            programName = cfg.programName or name;
+            homeModules = [ feature.home ];
+            programName = name;
             home-manager = inputs.home-manager-unstable;
+            extraSpecialArgs = { inherit inputs; };
           };
         in
         base.wrap {
@@ -31,6 +27,11 @@
         };
     in
     {
-      packages = builtins.mapAttrs mkWrapped wrappedFeatures;
+      packages = builtins.mapAttrs mkWrapped wrappableFeatures;
     };
+
+  # Expose wrappability metadata for introspection
+  flake.featureMeta = lib.mapAttrs (_: f: {
+    inherit (f) wrappable homeArgs contextRequirements;
+  }) config.features;
 }
