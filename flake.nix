@@ -82,6 +82,11 @@
       url = "github:sini/razer-control-revived";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    nix-wrapper-modules = {
+      url = "github:sini/nix-wrapper-modules";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     # End forks we maintain...
 
     agenix = {

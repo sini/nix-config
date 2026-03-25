@@ -1,0 +1,41 @@
+{
+  "planPath": "docs/superpowers/plans/2026-03-25-wrapped-packages.md",
+  "tasks": [
+    {
+      "id": 5,
+      "subject": "Task 1: Add nix-wrapper-modules flake input",
+      "status": "pending",
+      "description": "Add nix-wrapper-modules as a flake input pointing to github:sini/nix-wrapper-modules with nixpkgs.follows = nixpkgs-unstable",
+      "metadata": {
+        "files": ["flake.nix", "flake.lock"],
+        "verifyCommand": "nix flake metadata --json | jq '.locks.nodes[\"nix-wrapper-modules\"].locked.owner'",
+        "acceptanceCriteria": ["nix-wrapper-modules input exists", "nixpkgs.follows = nixpkgs-unstable", "flake lock succeeds"]
+      }
+    },
+    {
+      "id": 6,
+      "subject": "Task 2: Create wrapped-packages flake-parts module",
+      "status": "pending",
+      "blockedBy": [5],
+      "description": "Create modules/flake-parts/features/wrapped-packages.nix that wraps alacritty via wlib.wrapHomeModule",
+      "metadata": {
+        "files": ["modules/flake-parts/features/wrapped-packages.nix"],
+        "verifyCommand": "nix build .#alacritty && file result/bin/alacritty",
+        "acceptanceCriteria": ["nix eval returns derivation name", "nix build produces wrapper", "config embedded in derivation"]
+      }
+    },
+    {
+      "id": 7,
+      "subject": "Task 3: Verify flake integrity",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "Verify nix flake check passes, cortex build succeeds, and nix run .#alacritty launches",
+      "metadata": {
+        "files": [],
+        "verifyCommand": "nix flake check",
+        "acceptanceCriteria": ["flake check passes", "cortex build succeeds", "alacritty launches"]
+      }
+    }
+  ],
+  "lastUpdated": "2026-03-25T00:00:00Z"
+}

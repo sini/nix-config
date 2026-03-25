@@ -2399,6 +2399,26 @@
         "type": "github"
       }
     },
+    "nix-wrapper-modules": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1774469436,
+        "narHash": "sha256-fBlLN0uitMGERnQQcKhgBHrh/wJ4281EGKmvEvKvyw0=",
+        "owner": "sini",
+        "repo": "nix-wrapper-modules",
+        "rev": "f76469bd82bf28ed8db9f0886f7ef513d2fe1b40",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "nix-wrapper-modules",
+        "type": "github"
+      }
+    },
     "nixcord": {
       "inputs": {
         "flake-compat": "flake-compat_10",
@@ -3174,6 +3194,7 @@
         "nix-snapshotter": "nix-snapshotter",
         "nix-topology": "nix-topology",
         "nix-vscode-extensions": "nix-vscode-extensions",
+        "nix-wrapper-modules": "nix-wrapper-modules",
         "nixcord": "nixcord",
         "nixhelm": "nixhelm",
         "nixidy": "nixidy",
