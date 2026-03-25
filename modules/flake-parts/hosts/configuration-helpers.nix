@@ -32,7 +32,7 @@
           allHostFeatures,
         }:
         let
-          includeHostFeatures = resolvedUser.system.include-host-features or false;
+          includeHostFeatures = resolvedUser.system.include-host-features or true;
           userExtraFeatures = resolvedUser.system.extra-features or [ ];
           userExclusions = resolvedUser.system.excluded-features or [ ];
 
@@ -44,7 +44,19 @@
 
           baseFeatures = coreHostFeatures ++ (if includeHostFeatures then nonCoreHostFeatures else [ ]);
 
-          userFeatureModules = map (name: config.features.${name}) userExtraFeatures;
+          # Validate user extra-features only reference features with home modules
+          systemOnlyFeatures = lib.filter (
+            name:
+            let
+              f = config.features.${name};
+            in
+            f.home == { } && (f.system != { } || f.linux != { } || f.darwin != { })
+          ) userExtraFeatures;
+
+          userFeatureModules =
+            assert lib.assertMsg (systemOnlyFeatures == [ ])
+              "User extra-features must have home modules. System-only features should be added to the host: ${lib.concatStringsSep ", " systemOnlyFeatures}";
+            map (name: config.features.${name}) userExtraFeatures;
 
           allFeatures = baseFeatures ++ userFeatureModules;
 
@@ -55,17 +67,60 @@
           filteredFeatures = lib.filter isNotExcluded allFeatures;
 
           featureDeps = collectRequires config.features filteredFeatures;
-          resolvedFeatures = filteredFeatures ++ featureDeps;
+          # Deduplicate by feature name — a feature can appear both directly and as a dependency
+          resolvedFeatures =
+            let
+              all = filteredFeatures ++ featureDeps;
+              seen =
+                lib.foldl'
+                  (
+                    acc: f:
+                    if lib.elem f.name acc.names then
+                      acc
+                    else
+                      {
+                        names = acc.names ++ [ f.name ];
+                        features = acc.features ++ [ f ];
+                      }
+                  )
+                  {
+                    names = [ ];
+                    features = [ ];
+                  }
+                  all;
+            in
+            seen.features;
 
           homeModules = collectHomeModules resolvedFeatures;
 
-          # Resolve per-user settings from feature user-settings defaults + user overrides
+          # Resolve per-user settings (feature defaults → canonical → env → host user)
+          usl =
+            resolvedUser.system.userSettingsLayers or {
+              canonical = { };
+              env = { };
+              host = { };
+            };
           resolvedUserSettings = resolveFeatureSettings {
             settingsKey = "user-settings";
             activeFeatureNames = map (f: f.name) resolvedFeatures;
             featuresConfig = config.features;
             layers = [
-              (_: { config = resolvedUser.system.settings or { }; })
+              # Canonical user settings (lowest user priority)
+              (
+                { lib, ... }:
+                {
+                  config = lib.mapAttrs (_: v: lib.mapAttrs (_: lib.mkDefault) v) usl.canonical;
+                }
+              )
+              # Environment user settings (middle)
+              (
+                { lib, ... }:
+                {
+                  config = lib.mapAttrs (_: v: lib.mapAttrs (_: lib.mkDefault) v) usl.env;
+                }
+              )
+              # Host user settings (highest)
+              (_: { config = usl.host; })
             ];
           };
 

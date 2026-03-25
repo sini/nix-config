@@ -1,11 +1,13 @@
 {
   lib,
   self,
+  config,
   ...
 }:
 let
   inherit (lib) mkOption types;
   inherit (self.lib.users) identitySubmoduleType;
+  flakeConfig = config;
 in
 {
   options.users = mkOption {
@@ -70,13 +72,15 @@ in
 
                   include-host-features = mkOption {
                     type = types.bool;
-                    default = false;
+                    default = true;
                     description = ''
                       Whether to inherit all home-manager features from the host configuration.
                       When true, the user receives home modules from all of the host's active features.
                       When false, only user-specific extra-features (and core) are included.
                     '';
                   };
+
+                  settings = self.lib.modules.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings for home modules";
                 };
               };
               default = { };

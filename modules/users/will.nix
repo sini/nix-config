@@ -1,6 +1,7 @@
 {
   users.will = {
     identity = {
+      email = "will@json64.dev";
       sshKeys = [
         {
           tag = "best-laptop-ever";

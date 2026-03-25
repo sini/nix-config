@@ -21,7 +21,6 @@
       uid = 1000;
       gid = 1000;
       linger = true;
-      include-host-features = true;
     };
   };
 }

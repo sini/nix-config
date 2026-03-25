@@ -1,6 +1,7 @@
 {
   users.shuo = {
     identity = {
+      email = "shuo@json64.dev";
       sshKeys = [ ];
     };
 

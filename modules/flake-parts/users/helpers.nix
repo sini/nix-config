@@ -1,6 +1,12 @@
-{ lib, ... }:
+{
+  lib,
+  self,
+  config,
+  ...
+}:
 let
   inherit (lib) mkOption types;
+  flakeConfig = config;
 
   # ============================================================================
   # User Type Builders
@@ -98,6 +104,8 @@ let
                 default = null;
                 description = "Whether to inherit host features (null inherits from users.<name>.system)";
               };
+
+              settings = self.lib.modules.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
             };
           }
         )
@@ -137,6 +145,8 @@ let
               default = null;
               description = "Whether to inherit host features (null to inherit)";
             };
+
+            settings = self.lib.modules.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
           };
         })
       );
@@ -236,7 +246,7 @@ let
             linger = false;
             extra-features = [ ];
             excluded-features = [ ];
-            include-host-features = false;
+            include-host-features = true;
           };
 
       sys = {
@@ -265,11 +275,17 @@ let
         (environment.system-access-groups or [ ]) ++ (hostOptions.system-access-groups or [ ])
       );
       enable = lib.any (g: lib.elem g mergedAccessGroups) (groupsByLabel "user-role");
+      # User settings layers — kept separate for evalModules merge in makeHomeConfig
+      userSettingsLayers = {
+        canonical = if cu != null then cu.system.settings or { } else { };
+        env = envUser.settings or { };
+        host = hostUser.settings or { };
+      };
     in
     {
       inherit identity;
       system = sys // {
-        inherit enable;
+        inherit enable userSettingsLayers;
         systemGroups = groupsByLabel "posix";
       };
       inherit directGroups resolvedGroups groupsByLabel;

@@ -52,9 +52,9 @@
 
         gpg = {
           package = pkgs.gnupg;
-          signCommits = true;
-          signTags = true;
-          signingKey = user.identity.gpgKey;
+          signCommits = user.identity.gpgKey or null != null;
+          signTags = user.identity.gpgKey or null != null;
+          signingKey = user.identity.gpgKey or null;
         };
       };
 
