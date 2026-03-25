@@ -32,6 +32,6 @@
 
   # Expose wrappability metadata for introspection
   flake.featureMeta = lib.mapAttrs (_: f: {
-    inherit (f) wrappable homeArgs contextRequirements;
+    inherit (f) wrappable homeArgs contextRequirements hasSystemModules;
   }) config.features;
 }

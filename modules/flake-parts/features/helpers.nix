@@ -135,13 +135,20 @@ let
           description = "Function argument names of the home module (introspected).";
         };
 
+        # Computed: whether this feature defines system-level modules (system/linux/darwin).
+        hasSystemModules = mkOption {
+          type = types.bool;
+          readOnly = true;
+          internal = true;
+          description = "Whether this feature defines NixOS/Darwin system modules.";
+        };
+
         # Computed: whether this feature can be wrapped as a standalone package.
-        # True when .home exists and only uses standard HM args (no user/host/environment/settings).
         wrappable = mkOption {
           type = types.bool;
           readOnly = true;
           internal = true;
-          description = "Whether this feature can be wrapped as a standalone package (no user/host/environment context).";
+          description = "Whether this feature can be wrapped as a standalone package (home-only, no external context).";
         };
 
         # Computed: which custom context args this feature's .home module requires.
@@ -170,14 +177,18 @@ let
           in
           lib.unique (lib.concatMap extractModuleArgs rawModules);
 
+        hasSystemModules =
+          let
+            hasDefs = opt: builtins.any (d: d.value != { }) opt.definitionsWithLocations;
+          in
+          hasDefs options.system || hasDefs options.linux || hasDefs options.darwin;
+
         wrappable =
           let
-            # Check if .home has any meaningful definitions (not just the default {}).
-            # Multiple files can contribute to the same feature via merged modules.
             homeDefs = options.home.definitionsWithLocations;
             hasHome = builtins.any (d: d.value != { }) homeDefs;
           in
-          hasHome && config.contextRequirements == [ ];
+          hasHome && config.contextRequirements == [ ] && !config.hasSystemModules;
 
         contextRequirements =
           let
