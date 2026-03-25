@@ -126,6 +126,108 @@
   Override domain for this service.
   If null, defaults to \<service-name>.${environment.domain}
 
+- `environments.<name>.settings`: Default feature settings for all hosts in this environment
+
+- `environments.<name>.settings.bgp`: Settings for the bgp feature
+
+- `environments.<name>.settings.bgp-hub`: Settings for the bgp-hub feature
+
+- `environments.<name>.settings.bgp-hub.autoDiscoverNeighbors`: [boolean] Automatically discover neighbors from flake hosts
+
+- `environments.<name>.settings.bgp-hub.defaultOriginateToNeighbors`: [boolean] Whether to originate default route to auto-discovered neighbors
+
+- `environments.<name>.settings.bgp-hub.gatewayAsNumber`: [signed integer] AS number of the gateway router
+
+- `environments.<name>.settings.bgp-hub.maximumPaths`: [signed integer] Maximum number of BGP paths
+
+- `environments.<name>.settings.bgp-hub.neighborAsNumberBase`: [signed integer] Base AS number for auto-discovered neighbors (fallback when host has no bgp.localAsn setting)
+
+- `environments.<name>.settings.bgp-hub.neighborDiscoveryRole`: [string] Feature name to filter hosts for auto-discovery
+
+- `environments.<name>.settings.bgp-hub.neighbors`: List of manually configured BGP neighbors
+
+- `environments.<name>.settings.bgp-hub.neighbors.*.address`: [string] Neighbor IP address
+
+- `environments.<name>.settings.bgp-hub.neighbors.*.asNumber`: [signed integer] Neighbor AS number
+
+- `environments.<name>.settings.bgp-hub.neighbors.*.defaultOriginate`: [boolean] Whether to originate default route to this neighbor
+
+- `environments.<name>.settings.bgp-hub.peerWithGateway`: [boolean] Whether to automatically peer with the environment gateway (Unifi router)
+
+- `environments.<name>.settings.bgp.localAsn`: [signed integer] Local BGP AS number for this node
+
+- `environments.<name>.settings.btrfs-impermanence-single`: Settings for the btrfs-impermanence-single feature
+
+- `environments.<name>.settings.btrfs-impermanence-single.device_id`: [string] \
+  Disk device id (e.g., "ata-..." or "/dev/disk/by-id/...").
+  If not set, the module attempts to find a single non-USB disk
+  via facter. Aborts if multiple or no disks are found.
+
+- `environments.<name>.settings.btrfs-impermanence-single.swap_size`: [signed integer] Size of swap in MiB, 0 disables swap.
+
+- `environments.<name>.settings.ceph-device-allocation`: Settings for the ceph-device-allocation feature
+
+- `environments.<name>.settings.ceph-device-allocation.device`: [string] Full device path for Ceph OSD (e.g., /dev/disk/by-id/nvme-...).
+
+- `environments.<name>.settings.cilium-bgp`: Settings for the cilium-bgp feature
+
+- `environments.<name>.settings.cilium-bgp.localAsn`: [signed integer] Cilium BGP AS number for this node
+
+- `environments.<name>.settings.impermanence`: Settings for the impermanence feature
+
+- `environments.<name>.settings.impermanence.enable`: [boolean] Enable impermanence features.
+
+- `environments.<name>.settings.impermanence.wipeHomeOnBoot`: [boolean] \
+  Enable home rollback on boot. When enabled, /home is reset to a
+  blank snapshot on every boot. Use with caution - ensure all
+  important user data is declared in persistence directories.
+
+- `environments.<name>.settings.impermanence.wipeRootOnBoot`: [boolean] \
+  Enable root rollback on boot. When enabled, the root filesystem
+  is reset to a blank snapshot on every boot, effectively wiping
+  all state not stored in /persist or /cache.
+
+- `environments.<name>.settings.linux-kernel`: Settings for the linux-kernel feature
+
+- `environments.<name>.settings.linux-kernel.channel`: [one of "lts", "latest"] CachyOS kernel release channel
+
+- `environments.<name>.settings.linux-kernel.optimization`: [one of "server", "zen4", "x86_64-v4"] CachyOS kernel optimization target
+
+- `environments.<name>.settings.tailscale`: Settings for the tailscale feature
+
+- `environments.<name>.settings.tailscale.extraDaemonFlags`: [list of string] Additional flags for the tailscale daemon
+
+- `environments.<name>.settings.tailscale.extraUpFlags`: [list of string] Additional flags to pass to tailscale up (login-server is added automatically)
+
+- `environments.<name>.settings.tailscale.openFirewall`: [boolean] Whether to open the firewall for Tailscale
+
+- `environments.<name>.settings.tailscale.useNftables`: [boolean] Force tailscaled to use nftables instead of iptables-compat
+
+- `environments.<name>.settings.thunderbolt-mesh-of`: Settings for the thunderbolt-mesh-of feature
+
+- `environments.<name>.settings.thunderbolt-mesh-of.interfaces`: [list of string] Thunderbolt interface names to enable OpenFabric on (tb0, tb1, ... from thunderbolt hardware feature)
+
+- `environments.<name>.settings.thunderbolt-mesh-of.loopback`: Loopback addresses for this node in the OpenFabric fabric
+
+- `environments.<name>.settings.thunderbolt-mesh-of.loopback.ipv4`: [string] IPv4 loopback address in CIDR (e.g., '172.16.255.1/32')
+
+- `environments.<name>.settings.thunderbolt-mesh-of.loopback.ipv6`: [null or string] IPv6 loopback address in CIDR (e.g., 'fdb4:5edb:1b00::1/128')
+
+- `environments.<name>.settings.thunderbolt-mesh-of.nsap`: [string] ISO NSAP address for this node (e.g., '49.0000.0000.0001.00')
+
+- `environments.<name>.settings.xfs-disk-longhorn`: Settings for the xfs-disk-longhorn feature
+
+- `environments.<name>.settings.xfs-disk-longhorn.device_id`: [string] Longhorn data drive full device path (e.g., /dev/disk/by-id/nvme-...).
+
+- `environments.<name>.settings.xfs-disk-longhorn.mountPoint`: [string] Mount point for the Longhorn data drive.
+
+- `environments.<name>.settings.zfs-disk-single`: Settings for the zfs-disk-single feature
+
+- `environments.<name>.settings.zfs-disk-single.device_id`: [string] \
+  Disk device path (e.g., "/dev/disk/by-id/nvme-...").
+  If not set, the module attempts to find a single non-USB disk
+  via facter. Aborts if multiple or no disks are found.
+
 - `environments.<name>.system-access-groups`: [list of string] \
   System-scoped groups that grant Unix account creation on all hosts in this environment.
   Merged with host-level system-access-groups at resolution time.

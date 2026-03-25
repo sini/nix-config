@@ -1,9 +1,9 @@
 # Agenix Secrets Manifest
 
 Generated on: 26.05
-Total unique secrets: 55
-- Generated: 47
-- Manually set: 8
+Total unique secrets: 63
+- Generated: 53
+- Manually set: 10
 
 ---
 
@@ -96,6 +96,29 @@ and rekeyed for each host.
 
 
 
+
+### wpa-supplicant-keys-for-initrd
+- **Used by**: 
+  - nixos:bitstream
+  - nixos:blade
+  - nixos:cortex
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/env/dev/wpa_supplicant_psks.age`
+
+
+- **Intermediary**: Yes (not exposed to services)
+
+### wpa-supplicant-keys-for-initrd
+- **Used by**: 
+  - nixos:axon-01
+  - nixos:axon-02
+  - nixos:axon-03
+  - nixos:uplink
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/env/prod/wpa_supplicant_psks.age`
+
+
+- **Intermediary**: Yes (not exposed to services)
 
 
 ---
@@ -497,9 +520,57 @@ They will be created automatically if they don't exist.
 
 
 ### wpa-supplicant-initrd
+- **Used by**: nixos:axon-01
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/axon-01/generated/wpa-supplicant-initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
+
+
+### wpa-supplicant-initrd
+- **Used by**: nixos:axon-02
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/axon-02/generated/wpa-supplicant-initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
+
+
+### wpa-supplicant-initrd
+- **Used by**: nixos:axon-03
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/axon-03/generated/wpa-supplicant-initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
+
+
+### wpa-supplicant-initrd
+- **Used by**: nixos:bitstream
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/bitstream/generated/wpa-supplicant-initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
+
+
+### wpa-supplicant-initrd
 - **Used by**: nixos:blade
-- **Owner**: wpa_supplicant:wpa_supplicant (0400)
-- **Rekey File**: `.secrets/hosts/blade/wpa_supplicant_initrd.age`
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/blade/generated/wpa-supplicant-initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
+
+
+### wpa-supplicant-initrd
+- **Used by**: nixos:cortex
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/cortex/generated/wpa-supplicant-initrd.age`
+- **Generator**: built-in: wpa-supplicant-config
+- **Has Dependencies**: Yes
+
+
+### wpa-supplicant-initrd
+- **Used by**: nixos:uplink
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/hosts/uplink/generated/wpa-supplicant-initrd.age`
 - **Generator**: built-in: wpa-supplicant-config
 - **Has Dependencies**: Yes
 

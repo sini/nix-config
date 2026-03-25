@@ -14,7 +14,6 @@
       };
 
       config = {
-        impermanence.enable = false; # Explicitly disable impermanence on Darwin (no-op)
         home-manager.sharedModules = [
           {
             # Dummy home.persistence (supports impermanence home key without HM module)
