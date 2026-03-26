@@ -8,8 +8,9 @@
       # ── Tier 1: no context needed (auto-discovered) ──────────────────
       wrappableFeatures = lib.filterAttrs (_: f: f.wrappable) config.features;
 
-      # Stub HM options that features reference but don't exist in isolated eval.
-      # Same pattern as our Darwin impermanence compatibility shim.
+      # Base modules for isolated HM evaluation:
+      # - Persistence stub (same pattern as Darwin impermanence shim)
+      # - Stylix HM module (provides config.lib.stylix for themed features)
       hmBaseModules = [
         {
           options.home.persistence = lib.mkOption {
@@ -18,6 +19,7 @@
             description = "Stub persistence option for wrapper evaluation (no-op).";
           };
         }
+        inputs.stylix.homeModules.stylix
       ];
 
       mkWrapped =

@@ -1,5 +1,6 @@
 {
   features.stylix = {
+    homeRequiresSystem = false; # Home module has its own complete stylix config
     linux =
       {
         inputs,
@@ -80,8 +81,12 @@
       };
 
     home =
-      { pkgs, ... }:
+      { inputs, pkgs, ... }:
       {
+        imports = [
+          inputs.stylix.homeModules.stylix
+        ];
+
         gtk = {
           enable = true;
           gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
