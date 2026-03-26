@@ -5,6 +5,7 @@
       {
         inputs,
         pkgs,
+        lib,
         ...
       }:
       {
@@ -29,7 +30,7 @@
 
             polarity = "dark";
 
-            cursor = {
+            cursor = lib.mkIf pkgs.stdenv.isLinux {
               name = "catppuccin-mocha-peach-cursors";
               size = 32;
               package = pkgs.catppuccin-cursors.mochaPeach;
@@ -81,7 +82,12 @@
       };
 
     home =
-      { inputs, pkgs, ... }:
+      {
+        inputs,
+        pkgs,
+        lib,
+        ...
+      }:
       {
         imports = [
           inputs.stylix.homeModules.stylix
@@ -103,7 +109,7 @@
 
           polarity = "dark";
 
-          icons = {
+          icons = lib.mkIf pkgs.stdenv.isLinux {
             enable = true;
             package = pkgs.catppuccin-papirus-folders.override {
               flavor = "mocha";
@@ -113,7 +119,7 @@
           };
 
           targets = {
-            firefox = {
+            firefox = lib.mkIf pkgs.stdenv.isLinux {
               firefoxGnomeTheme.enable = true;
               profileNames = [ "default" ];
             };
@@ -122,7 +128,7 @@
             # qt.platform = "kde6";
           };
 
-          cursor = {
+          cursor = lib.mkIf pkgs.stdenv.isLinux {
             name = "catppuccin-mocha-peach-cursors";
             size = 32;
             package = pkgs.catppuccin-cursors.mochaPeach;
