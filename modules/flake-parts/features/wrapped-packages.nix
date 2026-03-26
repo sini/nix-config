@@ -11,7 +11,6 @@
       # Base modules for isolated HM evaluation:
       # - Persistence stub (same pattern as Darwin impermanence shim)
       # - Our stylix feature's home config (theme, fonts, colors, cursor, icons)
-      #   so features using config.lib.stylix get theming in wrapped packages
       hmBaseModules = [
         {
           options.home.persistence = lib.mkOption {
