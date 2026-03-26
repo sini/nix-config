@@ -84,8 +84,17 @@
     };
 
     nix-wrapper-modules = {
-      url = "github:sini/nix-wrapper-modules";
+      url = "github:BirdeeHub/nix-wrapper-modules";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    hm-wrapper-modules = {
+      url = "github:sini/hm-wrapper-modules";
+      inputs = {
+        nixpkgs.follows = "nixpkgs-unstable";
+        nix-wrapper-modules.follows = "nix-wrapper-modules";
+        home-manager.follows = "home-manager-unstable";
+      };
     };
     # End forks we maintain...
 

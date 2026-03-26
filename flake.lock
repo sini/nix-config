@@ -1359,6 +1359,32 @@
         "type": "github"
       }
     },
+    "hm-wrapper-modules": {
+      "inputs": {
+        "home-manager": [
+          "home-manager-unstable"
+        ],
+        "nix-wrapper-modules": [
+          "nix-wrapper-modules"
+        ],
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1774488951,
+        "narHash": "sha256-IzdqAOlgDw6LjKah36VHhc0pNOfrcnWek9YryNGazTg=",
+        "owner": "sini",
+        "repo": "hm-wrapper-modules",
+        "rev": "d8812a0daffc8176d65e25abfb5ec093134815fd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "hm-wrapper-modules",
+        "type": "github"
+      }
+    },
     "home-manager": {
       "inputs": {
         "nixpkgs": [
@@ -2406,15 +2432,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1774487180,
-        "narHash": "sha256-z6o7vgVwX7V1oocPvxn5j/0En4xirWjHcKUSkV/KMGo=",
-        "owner": "sini",
+        "lastModified": 1774400689,
+        "narHash": "sha256-hHABVYL0rxhVIzc7hZEpvE0eiCKPnevte73Tn6FRolo=",
+        "owner": "BirdeeHub",
         "repo": "nix-wrapper-modules",
-        "rev": "9626b4f6c8f27c7ea3ddb496839846c92999f3a2",
+        "rev": "54645978682ff99594a1d1666dde6fac6a8134f2",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
+        "owner": "BirdeeHub",
         "repo": "nix-wrapper-modules",
         "type": "github"
       }
@@ -3169,6 +3195,7 @@
         "flake-utils": "flake-utils",
         "git-hooks-nix": "git-hooks-nix",
         "haumea": "haumea",
+        "hm-wrapper-modules": "hm-wrapper-modules",
         "home-manager": "home-manager",
         "home-manager-master": "home-manager-master",
         "home-manager-stable-darwin": "home-manager-stable-darwin",

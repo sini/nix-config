@@ -1,9 +1,14 @@
-{ inputs, config, lib, ... }:
+{
+  inputs,
+  config,
+  lib,
+  ...
+}:
 {
   perSystem =
     { pkgs, ... }:
     let
-      wlib = inputs.nix-wrapper-modules.lib;
+      wlib = inputs.hm-wrapper-modules.lib;
 
       # ── Tier 1: no context needed (auto-discovered) ──────────────────
       wrappableFeatures = lib.filterAttrs (_: f: f.wrappable) config.features;
@@ -30,7 +35,10 @@
             homeModules = hmBaseModules ++ [ feature.home ];
             programName = name;
             home-manager = inputs.home-manager-unstable;
-            extraSpecialArgs = { inherit inputs; } // extraArgs;
+            extraSpecialArgs = {
+              inherit inputs;
+            }
+            // extraArgs;
           };
         in
         base.wrap {
@@ -43,17 +51,12 @@
 
       # ── Tier 2: user-scoped (needs user identity) ────────────────────
       userScopedFeatures = lib.filterAttrs (
-        _: f:
-        f.contextRequirements == [ "user" ]
-        && !f.hasSystemModules
+        _: f: f.contextRequirements == [ "user" ] && !f.hasSystemModules
       ) config.features;
 
       mkUserPackages =
-        userName: userConfig:
-        builtins.mapAttrs (
-          name: feature:
-          mkWrapped name feature { user = userConfig; }
-        ) userScopedFeatures;
+        _userName: userConfig:
+        builtins.mapAttrs (name: feature: mkWrapped name feature { user = userConfig; }) userScopedFeatures;
 
       # Generate per-user package sets: { sini = { gitkraken, git, ... }; ... }
       userPackages = lib.mapAttrs mkUserPackages config.users;
@@ -65,6 +68,11 @@
 
   # Expose wrappability metadata for introspection
   flake.featureMeta = lib.mapAttrs (_: f: {
-    inherit (f) wrappable homeArgs contextRequirements hasSystemModules;
+    inherit (f)
+      wrappable
+      homeArgs
+      contextRequirements
+      hasSystemModules
+      ;
   }) config.features;
 }
