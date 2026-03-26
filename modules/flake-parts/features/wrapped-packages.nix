@@ -41,11 +41,17 @@
             // extraArgs;
           };
         in
-        base.wrap {
-          imports = [ wlib.modules.bwrapConfig ];
-          bwrapConfig.binds.ro = wlib.mkBinds base.passthru.hmAdapter;
-          env.XDG_CONFIG_HOME = lib.mkForce null;
-        };
+        base.wrap (
+          { config, lib, ... }:
+          {
+            imports = [ wlib.modules.bwrapConfig ];
+            bwrapConfig.binds.ro = wlib.mkBinds base.passthru.hmAdapter;
+            # Only null XDG_CONFIG_HOME when bwrap is active (Linux).
+            # On darwin, bwrap is a no-op so the adapter's mkDefault
+            # XDG_CONFIG_HOME is the only way programs find their config.
+            env.XDG_CONFIG_HOME = lib.mkIf config.bwrapConfig.enable (lib.mkForce null);
+          }
+        );
 
       tier1Packages = builtins.mapAttrs (name: feature: mkWrapped name feature { }) wrappableFeatures;
 
