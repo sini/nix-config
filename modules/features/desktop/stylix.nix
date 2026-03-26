@@ -87,16 +87,6 @@
           inputs.stylix.homeModules.stylix
         ];
 
-        gtk = {
-          enable = true;
-          gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
-          gtk4.extraConfig.gtk-application-prefer-dark-theme = true;
-        };
-        dconf.settings = {
-          "org/gnome/desktop/interface" = {
-            color-scheme = "prefer-dark";
-          };
-        };
         stylix = {
           base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
 
