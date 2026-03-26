@@ -10,7 +10,8 @@
 
       # Base modules for isolated HM evaluation:
       # - Persistence stub (same pattern as Darwin impermanence shim)
-      # - Stylix HM module (provides config.lib.stylix for themed features)
+      # - Our stylix feature's home config (theme, fonts, colors, cursor, icons)
+      #   so features using config.lib.stylix get theming in wrapped packages
       hmBaseModules = [
         {
           options.home.persistence = lib.mkOption {
@@ -19,7 +20,7 @@
             description = "Stub persistence option for wrapper evaluation (no-op).";
           };
         }
-        inputs.stylix.homeModules.stylix
+        config.features.stylix.home
       ];
 
       mkWrapped =

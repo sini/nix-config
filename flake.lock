@@ -2406,11 +2406,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1774481322,
-        "narHash": "sha256-G1KWV+VLcuuurqO1dltYJumfIPiX9fk7NA9ScGdySsM=",
+        "lastModified": 1774487180,
+        "narHash": "sha256-z6o7vgVwX7V1oocPvxn5j/0En4xirWjHcKUSkV/KMGo=",
         "owner": "sini",
         "repo": "nix-wrapper-modules",
-        "rev": "1b5cf70b7b061fa429bf9cc6011034d011d8f103",
+        "rev": "9626b4f6c8f27c7ea3ddb496839846c92999f3a2",
         "type": "github"
       },
       "original": {
