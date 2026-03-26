@@ -50,11 +50,11 @@ in
         pkgs,
         lib,
         user,
-        environment,
         ...
       }:
       let
         username = config.home.username;
+        userEmail = user.identity.email or "${username}@users.noreply.github.com";
 
         makeGitConfig =
           {
@@ -82,11 +82,7 @@ in
         defaultIdentity =
           if gpgKey != null then
             {
-              email =
-                if user.identity.email or null != null then
-                  user.identity.email
-                else
-                  "${username}@${environment.email.domain}";
+              email = userEmail;
               fullName = user.identity.displayName or username;
               githubUser = username;
               signingKey = gpgKey;
@@ -111,11 +107,7 @@ in
           };
           settings = {
             user.name = user.identity.displayName or username;
-            user.email =
-              if user.identity.email or null != null then
-                user.identity.email
-              else
-                "${username}@${environment.email.domain}";
+            user.email = userEmail;
             pull.rebase = true;
             init.defaultBranch = "main";
             push.autoSetupRemote = true;
