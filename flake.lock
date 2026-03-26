@@ -1372,11 +1372,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1774488951,
-        "narHash": "sha256-IzdqAOlgDw6LjKah36VHhc0pNOfrcnWek9YryNGazTg=",
+        "lastModified": 1774554164,
+        "narHash": "sha256-HzYleaTR4n4wejE7nyTcq7F1Kp4Q5ow//k/y0fiHNs0=",
         "owner": "sini",
         "repo": "hm-wrapper-modules",
-        "rev": "d8812a0daffc8176d65e25abfb5ec093134815fd",
+        "rev": "b28ff211a8cce758a98e0db349c0f3dd77a13373",
         "type": "github"
       },
       "original": {

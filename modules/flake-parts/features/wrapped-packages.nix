@@ -4,73 +4,59 @@
   lib,
   ...
 }:
-{
-  perSystem =
-    { pkgs, ... }:
-    let
-      wlib = inputs.hm-wrapper-modules.lib;
+let
+  wrappableFeatures = lib.filterAttrs (_: f: f.wrappable) config.features;
 
-      # ── Tier 1: no context needed (auto-discovered) ──────────────────
-      wrappableFeatures = lib.filterAttrs (_: f: f.wrappable) config.features;
+  userScopedFeatures = lib.filterAttrs (
+    _: f: f.contextRequirements == [ "user" ] && !f.hasSystemModules
+  ) config.features;
 
-      # Base modules for isolated HM evaluation:
-      # - Persistence stub (same pattern as Darwin impermanence shim)
-      # - Our stylix feature's home config (theme, fonts, colors, cursor, icons)
-      hmBaseModules = [
-        {
-          options.home.persistence = lib.mkOption {
-            type = lib.types.anything;
-            default = { };
-            description = "Stub persistence option for wrapper evaluation (no-op).";
-          };
-        }
-        config.features.stylix.home
-      ];
-
-      mkWrapped =
-        name: feature: extraArgs:
-        let
-          base = wlib.wrapHomeModule {
-            inherit pkgs;
-            homeModules = hmBaseModules ++ [ feature.home ];
-            programName = name;
-            home-manager = inputs.home-manager-unstable;
-            extraSpecialArgs = {
-              inherit inputs;
-            }
-            // extraArgs;
-          };
-        in
-        base.wrap (
-          { config, lib, ... }:
-          {
-            imports = [ wlib.modules.bwrapConfig ];
-            bwrapConfig.binds.ro = wlib.mkBinds base.passthru.hmAdapter;
-            # Only null XDG_CONFIG_HOME when bwrap is active (Linux).
-            # On darwin, bwrap is a no-op so the adapter's mkDefault
-            # XDG_CONFIG_HOME is the only way programs find their config.
-            env.XDG_CONFIG_HOME = lib.mkIf config.bwrapConfig.enable (lib.mkForce null);
-          }
-        );
-
-      tier1Packages = builtins.mapAttrs (name: feature: mkWrapped name feature { }) wrappableFeatures;
-
-      # ── Tier 2: user-scoped (needs user identity) ────────────────────
-      userScopedFeatures = lib.filterAttrs (
-        _: f: f.contextRequirements == [ "user" ] && !f.hasSystemModules
-      ) config.features;
-
-      mkUserPackages =
-        _userName: userConfig:
-        builtins.mapAttrs (name: feature: mkWrapped name feature { user = userConfig; }) userScopedFeatures;
-
-      # Generate per-user package sets: { sini = { gitkraken, git, ... }; ... }
-      userPackages = lib.mapAttrs mkUserPackages config.users;
-    in
+  # Base modules for isolated HM evaluation:
+  # - Persistence stub (same pattern as Darwin impermanence shim)
+  # - Our stylix feature's home config (theme, fonts, colors, cursor, icons)
+  hmBaseModules = [
     {
-      packages = tier1Packages;
-      legacyPackages = userPackages;
-    };
+      options.home.persistence = lib.mkOption {
+        type = lib.types.anything;
+        default = { };
+        description = "Stub persistence option for wrapper evaluation (no-op).";
+      };
+    }
+    config.features.stylix.home
+  ];
+
+  # ── Tier 1: no context needed ────────────────────────────────────
+  tier1Programs = lib.mapAttrs (_name: feature: {
+    homeModules = [ feature.home ];
+  }) wrappableFeatures;
+
+  # ── Tier 2: user-scoped (needs user identity) ────────────────────
+  # Generates per-user entries: sini-gitkraken, sini-git, etc.
+  tier2Programs = lib.concatMapAttrs (
+    userName: userConfig:
+    lib.mapAttrs' (
+      name: feature:
+      lib.nameValuePair "${userName}-${name}" {
+        homeModules = [ feature.home ];
+        extraSpecialArgs = {
+          user = userConfig;
+        };
+      }
+    ) userScopedFeatures
+  ) config.users;
+in
+{
+  imports = [ inputs.hm-wrapper-modules.flakeModules.default ];
+
+  hmWrappers = {
+    home-manager = inputs.home-manager-unstable;
+    baseModules = hmBaseModules;
+    extraSpecialArgs = { inherit inputs; };
+  };
+
+  perSystem = _: {
+    hmWrappers.programs = tier1Programs // tier2Programs;
+  };
 
   # Expose wrappability metadata for introspection
   flake.featureMeta = lib.mapAttrs (_: f: {
