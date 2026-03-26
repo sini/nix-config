@@ -1,5 +1,7 @@
 {
   features.steam = {
+    homeRequiresSystem = false; # Configured steam package works standalone
+
     linux =
       {
         lib,
@@ -8,12 +10,9 @@
         ...
       }:
       let
-        # Check if both gpu-nvidia-prime and laptop features are active
         hasNvidiaPrimeOnLaptop = host.hasFeature "gpu-nvidia-prime" && host.hasFeature "laptop";
       in
       {
-        # nixpkgs.overlays = [ inputs.millennium.overlays.default ];
-
         nix.settings = {
           substituters = [ "https://nix-gaming.cachix.org" ];
           trusted-public-keys = [ "nix-gaming.cachix.org-1:nbjlureqMbRAxR1gJ/f3hxemL9svXaZF/Ees8vCUUs4=" ];
@@ -27,11 +26,10 @@
 
         hardware = {
           steam-hardware.enable = true;
-          graphics.enable32Bit = true; # 32-bit support for games
+          graphics.enable32Bit = true;
         };
 
         programs = {
-          # Some steam applications require AppImage support
           appimage.enable = true;
           appimage.binfmt = true;
 
@@ -136,61 +134,66 @@
               ];
             };
           };
-
-          # gamescope = {
-          #   enable = true;
-          #   package = pkgs.gamescope_git;
-          #   capSysNice = true;
-          #   #capSysNice = false; # 'true' breaks gamescope for Steam https://github.com/NixOS/nixpkgs/issues/292620#issuecomment-2143529075
-          #   args = [
-          #     #   # "-W ${toString host.primaryDisplay.width}"
-          #     #   # "-H ${toString host.primaryDisplay.height}"
-          #     #   # "-r ${toString host.primaryDisplay.refreshRate}"
-          #     #   # "-O ${host.primaryDisplay.name}"
-          #     #   "-f"
-          #     "--adaptive-sync"
-          #     "--mangoapp"
-          #     "--rt"
-          #     "--expose-wayland"
-          #     "--hdr-enabled"
-          #     "--hdr-itm-enabled"
-          #     "--hdr-debug-force-output"
-          #     "--xwayland-count 2"
-          #     "-W 3840"
-          #     "-H 2160"
-          #     "-r 120"
-          #   ];
-          # };
-
-          # gamemode = {
-          #   enable = true;
-          #   enableRenice = true;
-          #   settings = {
-          #     general = {
-          #       softrealtime = "auto";
-          #       renice = 15;
-          #     };
-
-          #     gpu = lib.mkIf (!hasNvidiaPrimeOnLaptop) {
-          #       apply_gpu_optimisations = "accept-responsibility";
-          #       gpu_device = 0;
-          #       amd_performance_level = "high";
-          #     };
-
-          #     custom = {
-          #       start = "${lib.getExe pkgs.libnotify} 'GameMode started'";
-          #       end = "${lib.getExe pkgs.libnotify} 'GameMode ended'";
-          #     };
-          #   };
-
-          # };
         };
       };
 
-    home = _: {
-      home.persistence."/cache".directories = [
-        ".local/share/Steam"
-      ];
-    };
+    home =
+      { pkgs, lib, ... }:
+      {
+        home.packages = [
+          # Standalone steam package with our env/libs/proton baked in.
+          # On NixOS hosts, programs.steam.package provides this instead.
+          (pkgs.steam.override {
+            extraEnv = {
+              MANGOHUD = true;
+              OBS_VKCAPTURE = true;
+              PROTON_ENABLE_WAYLAND = true;
+              PROTON_ENABLE_HDR = true;
+              PROTON_USE_NTSYNC = true;
+              PROTON_USE_WOW64 = true;
+              RADV_TEX_ANISO = 16;
+              PULSE_SINK = "Game";
+            };
+            extraPkgs =
+              pkgs':
+              with pkgs'; [
+                qt6.qtwayland
+                xdg-utils
+                libx11
+                libxext
+                libxrender
+                libxi
+                libxinerama
+                libxcursor
+                libxscrnsaver
+                libsm
+                libice
+                libxcb
+                libxrandr
+                libxkbcommon
+                freetype
+                fontconfig
+                glib
+                libpng
+                libpulseaudio
+                libvorbis
+                libkrb5
+                keyutils
+                libglvnd
+                libdrm
+                vulkan-tools
+                vulkan-loader
+                vulkan-validation-layers
+                vulkan-extension-layer
+                (lib.getLib stdenv.cc.cc)
+              ];
+            extraLibraries = p: with p; [ atk ];
+          })
+        ];
+
+        home.persistence."/cache".directories = [
+          ".local/share/Steam"
+        ];
+      };
   };
 }

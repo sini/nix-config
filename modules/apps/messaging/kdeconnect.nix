@@ -1,5 +1,6 @@
 {
   features.kdeconnect = {
+    homeRequiresSystem = false; # Firewall ports are optional for kdeconnect to function
     linux = {
       networking.firewall =
         let
