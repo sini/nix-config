@@ -37,19 +37,6 @@ let
     module:
     if builtins.isFunction module then builtins.attrNames (builtins.functionArgs module) else [ ];
 
-  # Non-standard args that require context beyond an isolated HM evaluation.
-  # Used to classify features by what context they need for wrapping.
-  contextArgTiers = {
-    osConfig = "osConfig"; # needs NixOS system configuration
-    user = "user"; # needs user identity
-    environment = "environment"; # needs environment config
-    host = "host"; # needs host topology
-    settings = "settings"; # needs system-level settings
-    users = "users"; # needs all resolved users
-    cluster = "cluster"; # needs cluster config
-    flakeLib = "flakeLib"; # internal: flake library functions
-  };
-
   # Base context names — always available in system context
   baseContextNames = [ "host" "environment" "users" "settings" "inputs" "flakeLib" ];
 

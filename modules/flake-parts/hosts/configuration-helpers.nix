@@ -195,7 +195,7 @@
           systemModules = collectPlatformSystemModulesNew {
             features = allHostFeatures;
             inherit activeProviders dispatchableArgs;
-            availableContext = fullContextWithCluster;
+            availableContext = fullContext;
             system = hostOptions.system;
           };
 
@@ -203,11 +203,6 @@
           canonicalUsers = config.users or { };
           groupDefs = config.groups or { };
           users = resolveUsers lib' canonicalUsers environment hostOptions groupDefs;
-
-          # Resolve cluster for this host (null if host is not in any cluster)
-          cluster = lib.findFirst (c: c.resolvedHosts ? ${hostOptions.hostname}) null (
-            builtins.attrValues (config.clusters or { })
-          );
 
           # Resolve feature settings (feature defaults → environment → host)
           settings = resolveFeatureSettings {
@@ -250,16 +245,12 @@
             (_name: fn: fn fullContext)
             featureContextFns;
 
-          # Keep cluster in fullContext for now (Task 4 moves it to contextProvides)
-          fullContextWithCluster = fullContext // { inherit cluster; };
-
-          # Context registry for parametric dispatch (Task 3 will use these)
+          # Context registry for parametric dispatch
           contextRegistry = self.lib.modules.baseContextNames
-            ++ lib.attrNames featureContextFns
-            ++ [ "cluster" ]; # temporary until Task 4
+            ++ lib.attrNames featureContextFns;
           dispatchableArgs = contextRegistry ++ self.lib.modules.stageDistinctArgs;
 
-          specialArgs = fullContextWithCluster // {
+          specialArgs = fullContext // {
             inherit pkgs' inputs;
             lib = lib';
           };

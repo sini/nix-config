@@ -1,7 +1,11 @@
-{ rootPath, ... }:
+{ rootPath, config, lib, ... }:
 {
   features.k3s = {
     requires = [ "k3s-containerd" ];
+
+    contextProvides.cluster = { host, ... }:
+      lib.findFirst (c: c.resolvedHosts ? ${host.hostname}) null
+        (builtins.attrValues (config.clusters or {}));
     linux =
       {
         lib,
