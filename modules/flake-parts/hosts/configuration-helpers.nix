@@ -36,6 +36,8 @@
           allHostFeatures,
           activeProviders ? [],
           system ? "x86_64-linux",
+          fullContext ? {},
+          dispatchableArgs ? [],
         }:
         let
           includeHostFeatures = resolvedUser.system.include-host-features or true;
@@ -214,15 +216,14 @@
 
           enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
 
-          specialArgs = {
-            inherit
-              pkgs'
-              inputs
-              environment
-              cluster
-              users
-              settings
-              ;
+          # Collect context contributions from active features
+          featureContextFns = lib.foldl'
+            (acc: f: acc // (f.contextProvides or {}))
+            {} allHostFeatures;
+
+          # Base context — always available
+          baseContext = {
+            inherit environment users settings inputs;
             host = hostOptions // {
               users = {
                 all = users;
@@ -230,8 +231,27 @@
                 enabledNames = builtins.attrNames enabledUsers;
               };
             };
-            lib = lib';
             flakeLib = self.lib;
+          };
+
+          # Full context — lazy recursive attrset
+          # Feature-contributed context values are functions that receive fullContext
+          fullContext = baseContext // lib.mapAttrs
+            (_name: fn: fn fullContext)
+            featureContextFns;
+
+          # Keep cluster in fullContext for now (Task 4 moves it to contextProvides)
+          fullContextWithCluster = fullContext // { inherit cluster; };
+
+          # Context registry for parametric dispatch (Task 3 will use these)
+          contextRegistry = self.lib.modules.baseContextNames
+            ++ lib.attrNames featureContextFns
+            ++ [ "cluster" ]; # temporary until Task 4
+          dispatchableArgs = contextRegistry ++ self.lib.modules.stageDistinctArgs;
+
+          specialArgs = fullContextWithCluster // {
+            inherit pkgs' inputs;
+            lib = lib';
           };
           homeManagerUsersModule = {
             home-manager.users = lib'.mapAttrs (
@@ -241,6 +261,8 @@
                   resolvedUser
                   allHostFeatures
                   activeProviders
+                  fullContext
+                  dispatchableArgs
                   ;
                 system = hostOptions.system;
               }
@@ -260,6 +282,9 @@
             users
             specialArgs
             homeManagerUsersModule
+            fullContext
+            dispatchableArgs
+            activeProviders
             ;
         };
 
