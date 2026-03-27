@@ -334,74 +334,6 @@ let
     };
 
   # ============================================================================
-  # Module Collection Utilities
-  # ============================================================================
-  # These functions extract typed modules (nixos/home) from feature definitions
-
-  # Generic collector for modules of a specific type from feature list
-  # Skips features where the type key is missing or set to the default empty module
-  collectTypedModules =
-    type: lib.foldr (v: acc: if v.${type} or null != null then acc ++ [ v.${type} ] else acc) [ ];
-
-  # Cross-platform system modules
-  collectSystemModules = collectTypedModules "system";
-
-  # Platform-specific system modules
-  collectLinuxModules = collectTypedModules "linux";
-  collectDarwinModules = collectTypedModules "darwin";
-
-  # Home-manager modules (all platforms)
-  collectHomeModules = collectTypedModules "home";
-
-  # Collect all applicable system modules for a given platform
-  # Includes: os + system (both forward to current platform) + platform-specific (linux/darwin)
-  # Collects from both features and their active providers
-  collectPlatformSystemModulesNew =
-    { features, activeProviders ? [], system }:
-    let
-      isDarwin = lib.hasSuffix "-darwin" system;
-      isLinux = lib.hasSuffix "-linux" system;
-
-      collectFromSources = sources:
-        let
-          osModules = collectTypedModules "os" sources;
-          systemModules = collectTypedModules "system" sources;
-          platformModules =
-            if isLinux then collectTypedModules "linux" sources
-            else if isDarwin then collectTypedModules "darwin" sources
-            else throw "Unsupported system architecture: ${system}";
-        in
-        osModules ++ systemModules ++ platformModules;
-    in
-    collectFromSources features ++ collectFromSources activeProviders;
-
-  # Backward-compatible wrapper: old (features, system) signature
-  collectPlatformSystemModules =
-    features: system:
-    collectPlatformSystemModulesNew { inherit features system; };
-
-  # Collect all applicable home modules for a given platform
-  # Includes: home (all platforms) + homeLinux/homeDarwin (platform-specific)
-  # Collects from both features and their active providers
-  collectPlatformHomeModules =
-    { features, activeProviders ? [], system }:
-    let
-      isDarwin = lib.hasSuffix "-darwin" system;
-      isLinux = lib.hasSuffix "-linux" system;
-
-      collectFromSources = sources:
-        let
-          homeModules = collectTypedModules "home" sources;
-          platformHome =
-            if isLinux then collectTypedModules "homeLinux" sources
-            else if isDarwin then collectTypedModules "homeDarwin" sources
-            else [];
-        in
-        homeModules ++ platformHome;
-    in
-    collectFromSources features ++ collectFromSources activeProviders;
-
-  # ============================================================================
   # Feature Resolution Functions
   # ============================================================================
   # These functions resolve feature dependencies and compute active features
@@ -590,14 +522,6 @@ in
       staticDispatchableArgs
       extractRequiredDispatchArgs
       mkDeferredModuleOpt
-      collectTypedModules
-      collectSystemModules
-      collectLinuxModules
-      collectDarwinModules
-      collectHomeModules
-      collectPlatformSystemModules
-      collectPlatformSystemModulesNew
-      collectPlatformHomeModules
       collectRequires
       coreFeatures
       getModulesForFeatures

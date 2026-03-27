@@ -9,11 +9,14 @@
 {
   flake.lib.nixos-configuration-helpers =
     let
-      # Import shared utilities from lib.modules
-      inherit (self.lib.modules)
+      # Import shared utilities from lib.modules and lib.collection
+      inherit (self.lib.collection)
         collectHomeModules
         collectPlatformSystemModulesNew
         collectPlatformHomeModules
+        ;
+
+      inherit (self.lib.modules)
         collectRequires
         ;
 
@@ -101,7 +104,13 @@
 
           homeModules = collectPlatformHomeModules {
             features = resolvedFeatures;
-            inherit activeProviders system;
+            inherit activeProviders system dispatchableArgs;
+            # user is always available in NixOS-managed home context.
+            # osConfig is provided by home-manager's NixOS integration — available
+            # here because makeHomeConfig is called from NixOS host building.
+            # In standalone/wrapper contexts (wrapped-packages.nix), dispatch is
+            # disabled (dispatchableArgs = []) so this doesn't apply.
+            availableContext = fullContext // { user = augmentedUser; osConfig = true; };
           };
 
           # Resolve per-user settings (feature defaults → canonical → env → host user)
@@ -185,7 +194,8 @@
 
           systemModules = collectPlatformSystemModulesNew {
             features = allHostFeatures;
-            inherit activeProviders;
+            inherit activeProviders dispatchableArgs;
+            availableContext = fullContextWithCluster;
             system = hostOptions.system;
           };
 
