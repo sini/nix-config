@@ -103,12 +103,12 @@ let
         # Check exclusion first
         if elem name state.exclusions then
           state
-        # Cycle detection: check in-progress chain
-        else if elem name chain then
-          throw "Circular include detected: ${lib.concatStringsSep " → " (chain ++ [ name ])}"
-        # Already visited — skip
+        # Already visited (fully resolved) — skip
         else if hasAttr name state.features then
           state
+        # Cycle detection: in chain but not yet fully resolved
+        else if elem name chain then
+          throw "Circular include detected: ${lib.concatStringsSep " → " (chain ++ [ name ])}"
         else
           let
             # Add feature and its excludes

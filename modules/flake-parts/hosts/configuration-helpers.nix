@@ -12,7 +12,7 @@
       # Import shared utilities from lib.modules
       inherit (self.lib.modules)
         collectHomeModules
-        collectPlatformSystemModules
+        collectPlatformSystemModulesNew
         collectRequires
         ;
 
@@ -21,6 +21,9 @@
 
       # Import feature settings resolution from lib.modules
       inherit (self.lib.modules) resolveFeatureSettings;
+
+      # Import resolver for provider resolution
+      inherit (self.lib.resolver) resolveFeatures;
 
       # ============================================================================
       # SECTION 1: Home Manager User Configuration
@@ -156,19 +159,27 @@
 
           usePrecomputed = overrideFeatures == null;
 
+          # Use the new resolver to get both features and providers
+          resolved = resolveFeatures {
+            featuresConfig = config.features;
+            hostFeatures = if usePrecomputed then hostOptions.features else overrideFeatures;
+            hostExclusions = hostOptions.excluded-features or [];
+          };
+
           activeFeatures =
             if usePrecomputed then
               hostOptions.features
             else
-              self.lib.modules.computeActiveFeatures {
-                featuresConfig = config.features;
-                hostFeatures = overrideFeatures;
-                hostExclusions = hostOptions.excluded-features or [ ];
-              };
+              lib.attrNames resolved.features;
 
           allHostFeatures = map (name: config.features.${name}) activeFeatures;
+          activeProviders = builtins.attrValues (resolved.providers or {});
 
-          systemModules = collectPlatformSystemModules allHostFeatures hostOptions.system;
+          systemModules = collectPlatformSystemModulesNew {
+            features = allHostFeatures;
+            inherit activeProviders;
+            system = hostOptions.system;
+          };
 
           # Resolve all users via ACL
           canonicalUsers = config.users or { };
