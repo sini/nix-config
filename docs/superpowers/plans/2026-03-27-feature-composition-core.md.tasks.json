@@ -1,0 +1,77 @@
+{
+  "planPath": "docs/superpowers/plans/2026-03-27-feature-composition-core.md",
+  "tasks": [
+    {
+      "id": 2,
+      "subject": "Task 1: Add Provider Submodule Type and New Options to Feature Submodule",
+      "status": "pending",
+      "description": "Extend featureSubmodule in helpers.nix with includes, provides, os, homeLinux, homeDarwin, and collectsProviders options while keeping full backward compatibility.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/helpers.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["includes option exists", "requires backward compat", "provides option exists", "provider submodule has all fields", "virtual class options exist", "collectsProviders option exists", "hasSystemModules includes os", "existing features build"]
+      }
+    },
+    {
+      "id": 3,
+      "subject": "Task 2: Implement Multi-Phase Resolver",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "Create the new resolver that handles hierarchical includes, excludes cascading, collected providers, and deduplication.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/resolver.nix", "modules/flake-parts/features/helpers.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["hierarchical includes work", "excludes cascade", "collectsProviders works", "circular detection", "deduplication", "backward compat"]
+      }
+    },
+    {
+      "id": 4,
+      "subject": "Task 3: Virtual Class Forwarding in Module Collection",
+      "status": "pending",
+      "blockedBy": [2, 3],
+      "description": "Update module collection utilities to handle os, homeLinux, homeDarwin forwarding from both features and providers.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/helpers.nix", "modules/flake-parts/hosts/configuration-helpers.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["os forwarding works", "system backward compat", "homeLinux/homeDarwin forwarding", "provider modules collected", "settings aggregation updated"]
+      }
+    },
+    {
+      "id": 5,
+      "subject": "Task 4: Smoke Test with Stylix Using Providers and Virtual Classes",
+      "status": "pending",
+      "blockedBy": [2, 3, 4],
+      "description": "Convert stylix to use provides.impermanence and homeLinux, validating the full pipeline end-to-end.",
+      "metadata": {
+        "files": ["modules/features/desktop/stylix.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["provides.impermanence works", "homeLinux works", "collectsProviders activates", "cortex builds"]
+      }
+    },
+    {
+      "id": 6,
+      "subject": "Task 5: Composition Chain (.wrap/.apply/.eval)",
+      "status": "pending",
+      "blockedBy": [2, 3],
+      "description": "Implement the composition chain factory that attaches .wrap/.apply/.eval to feature evaluation results.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/compose.nix", "modules/flake-parts/features/helpers.nix"],
+        "verifyCommand": "nix repl",
+        "acceptanceCriteria": ["mkFeatureEval works", ".eval works", ".apply works", "chain re-attachable", ".wrap stubbed"]
+      }
+    },
+    {
+      "id": 7,
+      "subject": "Task 6: Feature Extraction as Flake Outputs",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "Expose featureModules and featureSets as flake outputs with composition chains attached.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/exports.nix", "modules/flake-parts/expose-options.nix"],
+        "verifyCommand": "nix eval .#featureModules --json | jq 'keys[:5]'",
+        "acceptanceCriteria": ["featureModules output works", "featureSets output works", "featureMeta still works"]
+      }
+    }
+  ],
+  "lastUpdated": "2026-03-27T00:00:00Z"
+}

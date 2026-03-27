@@ -65,11 +65,6 @@
             };
           };
 
-          # Make stylix home-manager modules available to all users
-          home-manager.sharedModules = [
-            inputs.stylix.homeModules.stylix
-          ];
-
           environment.persistence."/persist".directories = [
             {
               directory = "/var/lib/colord";
