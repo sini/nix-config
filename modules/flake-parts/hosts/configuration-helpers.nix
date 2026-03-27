@@ -13,6 +13,7 @@
       inherit (self.lib.modules)
         collectHomeModules
         collectPlatformSystemModulesNew
+        collectPlatformHomeModules
         collectRequires
         ;
 
@@ -33,6 +34,8 @@
         {
           resolvedUser,
           allHostFeatures,
+          activeProviders ? [],
+          system ? "x86_64-linux",
         }:
         let
           includeHostFeatures = resolvedUser.system.include-host-features or true;
@@ -94,7 +97,10 @@
             in
             seen.features;
 
-          homeModules = collectHomeModules resolvedFeatures;
+          homeModules = collectPlatformHomeModules {
+            features = resolvedFeatures;
+            inherit activeProviders system;
+          };
 
           # Resolve per-user settings (feature defaults → canonical → env → host user)
           usl =
@@ -234,7 +240,9 @@
                 inherit
                   resolvedUser
                   allHostFeatures
+                  activeProviders
                   ;
+                system = hostOptions.system;
               }
             ) enabledUsers;
           };

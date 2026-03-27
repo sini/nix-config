@@ -17,6 +17,8 @@
   # - impermanence-btrfs.nix: BTRFS support (legacy)
 
   features.impermanence = {
+    collectsProviders = [ "impermanence" ];
+
     settings = {
       enable = lib.mkOption {
         type = lib.types.bool;

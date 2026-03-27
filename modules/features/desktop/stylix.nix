@@ -5,7 +5,6 @@
       {
         inputs,
         pkgs,
-        lib,
         ...
       }:
       {
@@ -29,12 +28,6 @@
             image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
 
             polarity = "dark";
-
-            cursor = lib.mkIf pkgs.stdenv.isLinux {
-              name = "catppuccin-mocha-peach-cursors";
-              size = 32;
-              package = pkgs.catppuccin-cursors.mochaPeach;
-            };
 
             fonts = {
               sizes = {
@@ -65,14 +58,45 @@
             };
           };
 
-          environment.persistence."/persist".directories = [
-            {
-              directory = "/var/lib/colord";
-              user = "colord";
-              group = "colord";
-              mode = "0755";
-            }
-          ];
+        };
+      };
+
+    provides.impermanence = {
+      linux = { ... }: {
+        environment.persistence."/persist".directories = [
+          {
+            directory = "/var/lib/colord";
+            user = "colord";
+            group = "colord";
+            mode = "0755";
+          }
+        ];
+      };
+    };
+
+    homeLinux =
+      { pkgs, ... }:
+      {
+        stylix = {
+          icons = {
+            enable = true;
+            package = pkgs.catppuccin-papirus-folders.override {
+              flavor = "mocha";
+              accent = "lavender";
+            };
+            dark = "Papirus-Dark";
+          };
+
+          targets.firefox = {
+            firefoxGnomeTheme.enable = true;
+            profileNames = [ "default" ];
+          };
+
+          cursor = {
+            name = "catppuccin-mocha-peach-cursors";
+            size = 32;
+            package = pkgs.catppuccin-cursors.mochaPeach;
+          };
         };
       };
 
@@ -80,7 +104,6 @@
       {
         inputs,
         pkgs,
-        lib,
         ...
       }:
       {
@@ -104,29 +127,9 @@
 
           polarity = "dark";
 
-          icons = lib.mkIf pkgs.stdenv.isLinux {
-            enable = true;
-            package = pkgs.catppuccin-papirus-folders.override {
-              flavor = "mocha";
-              accent = "lavender";
-            };
-            dark = "Papirus-Dark";
-          };
-
           targets = {
-            firefox = lib.mkIf pkgs.stdenv.isLinux {
-              firefoxGnomeTheme.enable = true;
-              profileNames = [ "default" ];
-            };
-
             qt.enable = false;
             # qt.platform = "kde6";
-          };
-
-          cursor = lib.mkIf pkgs.stdenv.isLinux {
-            name = "catppuccin-mocha-peach-cursors";
-            size = 32;
-            package = pkgs.catppuccin-cursors.mochaPeach;
           };
 
           fonts = {

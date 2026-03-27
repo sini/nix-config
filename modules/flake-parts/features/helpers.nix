@@ -176,7 +176,7 @@ let
 
         # Named sub-configurations (providers)
         provides = mkOption {
-          type = types.lazyAttrsOf (types.submodule (providerSubmodule name));
+          type = types.attrsOf (types.submodule (providerSubmodule name));
           default = { };
           description = "Named provider sub-configurations for this feature.";
         };
