@@ -11,6 +11,8 @@
             "pipe-operator"
           ];
 
+          allow-import-from-derivation = true;
+
           max-jobs = "auto";
 
           # Make legacy nix commands use the XDG base directories instead of creating directories in $HOME.
@@ -52,7 +54,6 @@
             "https://cache.nixos.org/"
             "https://nix-community.cachix.org"
             "https://numtide.cachix.org"
-            "https://attic.xuyh0120.win/lantian" # xddxdd/nix-cachyos-kernel/
             "https://cache.garnix.io"
           ];
 
@@ -60,7 +61,6 @@
             "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
             "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
             "numtide.cachix.org-1:2ps1kLBUWjxIneOy1Ik6cQjb41X0iXVXeHigGmycPPE="
-            "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" # xddxdd/nix-cachyos-kernel
             "cache.garnix.io:CTFPyKSLcx5RMJKfLo5EEPUObbA78b0YQ2DTCJXqr9g="
           ];
 
@@ -75,6 +75,7 @@
           # If set to true, Nix will fall back to building from source if a binary substitute
           # fails. This is equivalent to the –fallback flag. The default is false.
           fallback = true;
+
         };
 
         gc = {

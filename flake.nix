@@ -5,12 +5,28 @@
   '';
 
   nixConfig = {
-    abort-on-warn = false; # Unfortuantely upstream flakes aren't always compatible...
-    extra-experimental-features = [ "pipe-operator" ]; # Lix name; Nix uses "pipe-operators"
+    abort-on-warn = false;
+
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+      "https://install.determinate.systems"
+    ];
+
+    extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+    ];
+
+    extra-experimental-features = [
+      "pipe-operator" # Lix uses this name
+      "pipe-operators" # NixCpp uses this name -- why cant we have nice things?
+    ];
+
     extra-deprecated-features = [
       "or-as-identifier"
       "broken-string-escape"
     ];
+
     # Stylix and Nixidy require this...
     allow-import-from-derivation = true; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
   };
@@ -178,12 +194,13 @@
     import-tree.url = "github:vic/import-tree";
 
     lix = {
-      url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
+      # url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
+      url = "github:lix-project/lix"; # Github is more reliable :(
       flake = false;
     };
 
     lix-module = {
-      url = "git+https://git.lix.systems/lix-project/nixos-module?ref=main";
+      url = "git+https://git@git.lix.systems/lix-project/nixos-module";
       inputs = {
         nixpkgs.follows = "nixpkgs-unstable";
         lix.follows = "lix";
@@ -191,7 +208,8 @@
     };
 
     flake-compat = {
-      url = "git+https://git.lix.systems/lix-project/flake-compat?ref=main";
+      # url = "git+https://git.lix.systems/lix-project/flake-compat?ref=main";
+      url = "github:lix-project/flake-compat"; # Github is more reliable :(
     };
 
     microvm = {

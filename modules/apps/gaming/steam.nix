@@ -155,8 +155,7 @@
               PULSE_SINK = "Game";
             };
             extraPkgs =
-              pkgs':
-              with pkgs'; [
+              pkgs': with pkgs'; [
                 qt6.qtwayland
                 xdg-utils
                 libx11

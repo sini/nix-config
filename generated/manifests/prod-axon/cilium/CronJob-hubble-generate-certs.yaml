@@ -52,7 +52,7 @@ spec:
                       - key encipherment
                       - client auth
                       validity: 8760h
-              image: quay.io/cilium/certgen:v0.3.2@sha256:19921f48ee7e2295ea4dca955878a6cd8d70e6d4219d08f688e866ece9d95d4d
+              image: quay.io/cilium/certgen:v0.4.1@sha256:f0c656830e856d26b24b0e144df1f8b327d3b46748d76a630514111fc365b697
               imagePullPolicy: IfNotPresent
               name: certgen
               securityContext:

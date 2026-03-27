@@ -35,22 +35,7 @@ let
   # Returns [] for plain attrsets (no function args = no context needed).
   extractModuleArgs =
     module:
-    if builtins.isFunction module then
-      builtins.attrNames (builtins.functionArgs module)
-    else
-      [ ];
-
-  # Standard HM module args that don't require external context from our flake.
-  # `inputs` is included because we pass it via extraSpecialArgs in the wrapper.
-  # `osConfig` is NOT standard — it requires a real NixOS system evaluation.
-  standardHomeArgs = [
-    "config"
-    "lib"
-    "pkgs"
-    "options"
-    "modulesPath"
-    "inputs"
-  ];
+    if builtins.isFunction module then builtins.attrNames (builtins.functionArgs module) else [ ];
 
   # Non-standard args that require context beyond an isolated HM evaluation.
   # Used to classify features by what context they need for wrapping.
