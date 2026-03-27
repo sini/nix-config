@@ -50,6 +50,63 @@ let
     flakeLib = "flakeLib"; # internal: flake library functions
   };
 
+  providerSubmodule =
+    featureName:
+    { name, ... }:
+    {
+      options = {
+        _id = mkOption {
+          type = types.str;
+          readOnly = true;
+          internal = true;
+          default = "${featureName}/${name}";
+          description = "Compound identity for deduplication.";
+        };
+
+        os =
+          mkDeferredModuleOptWithMetadata featureName "provides.${name}.os"
+            "OS-class module for this provider (forwarded to linux/darwin).";
+
+        linux =
+          mkDeferredModuleOptWithMetadata featureName "provides.${name}.linux"
+            "Linux-specific system module for this provider.";
+
+        darwin =
+          mkDeferredModuleOptWithMetadata featureName "provides.${name}.darwin"
+            "Darwin-specific system module for this provider.";
+
+        home =
+          mkDeferredModuleOptWithMetadata featureName "provides.${name}.home"
+            "Home-manager module for this provider.";
+
+        homeLinux =
+          mkDeferredModuleOptWithMetadata featureName "provides.${name}.homeLinux"
+            "Linux-only home-manager module for this provider.";
+
+        homeDarwin =
+          mkDeferredModuleOptWithMetadata featureName "provides.${name}.homeDarwin"
+            "Darwin-only home-manager module for this provider.";
+
+        settings = mkOption {
+          type = types.lazyAttrsOf types.raw;
+          default = { };
+          description = "Settings declarations for this provider.";
+        };
+
+        user-settings = mkOption {
+          type = types.lazyAttrsOf types.raw;
+          default = { };
+          description = "User-settings declarations for this provider.";
+        };
+
+        includes = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "Additional feature dependencies for this provider.";
+        };
+      };
+    };
+
   featureSubmodule =
     {
       name,
@@ -108,6 +165,42 @@ let
             Available at user.settings.<featureName> in home modules.
             Settable per-user at canonical, environment, and host level.
           '';
+        };
+
+        # Unified includes (replaces requires, accepts "bat" and "bat/alias-as-cat" paths)
+        includes = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "Unified dependency list accepting feature names and provider paths (e.g. \"bat\" or \"bat/alias-as-cat\").";
+        };
+
+        # Named sub-configurations (providers)
+        provides = mkOption {
+          type = types.lazyAttrsOf (types.submodule (providerSubmodule name));
+          default = { };
+          description = "Named provider sub-configurations for this feature.";
+        };
+
+        # Virtual OS class (forwarded to linux/darwin)
+        os =
+          mkDeferredModuleOptWithMetadata name "os"
+            "Virtual OS-class module for this feature (forwarded to linux/darwin).";
+
+        # Linux-only home-manager module
+        homeLinux =
+          mkDeferredModuleOptWithMetadata name "homeLinux"
+            "Linux-only home-manager module for this feature.";
+
+        # Darwin-only home-manager module
+        homeDarwin =
+          mkDeferredModuleOptWithMetadata name "homeDarwin"
+            "Darwin-only home-manager module for this feature.";
+
+        # Provider names to auto-collect
+        collectsProviders = mkOption {
+          type = types.listOf types.str;
+          default = [ ];
+          description = "Provider names to automatically collect from all active features.";
         };
 
         # Whether the home module requires system modules to function.
@@ -176,7 +269,7 @@ let
           let
             hasDefs = opt: builtins.any (d: d.value != { }) opt.definitionsWithLocations;
           in
-          hasDefs options.system || hasDefs options.linux || hasDefs options.darwin;
+          hasDefs options.system || hasDefs options.linux || hasDefs options.darwin || hasDefs options.os;
 
         wrappable =
           let
