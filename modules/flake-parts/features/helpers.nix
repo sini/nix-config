@@ -50,6 +50,32 @@ let
     flakeLib = "flakeLib"; # internal: flake library functions
   };
 
+  # Base context names — always available in system context
+  baseContextNames = [ "host" "environment" "users" "settings" "inputs" "flakeLib" ];
+
+  # Stage-distinct args — not feature-contributed but dispatchable
+  stageDistinctArgs = [ "user" "osConfig" ];
+
+  # Static dispatchable set for feature submodule computed properties
+  # (The full dynamic set including feature contributions is computed per-host at build time)
+  staticDispatchableArgs = baseContextNames ++ stageDistinctArgs;
+
+  # Extract REQUIRED args from raw module definitions that are in the dispatchable set.
+  # Required = no default (builtins.functionArgs returns false).
+  extractRequiredDispatchArgs = dispatchable: defs:
+    let
+      rawModules = map (d: d.value) defs;
+      perModule = mod:
+        if builtins.isFunction mod then
+          let
+            fa = builtins.functionArgs mod;
+            required = lib.attrNames (lib.filterAttrs (_: hasDefault: !hasDefault) fa);
+          in
+          lib.filter (a: builtins.elem a dispatchable) required
+        else [];
+    in
+    lib.unique (lib.concatMap perModule rawModules);
+
   providerSubmodule =
     featureName:
     { name, ... }:
@@ -213,6 +239,19 @@ let
           description = "Whether the home module depends on the system modules to function.";
         };
 
+        contextProvides = mkOption {
+          type = types.attrsOf types.raw;
+          default = { };
+          description = "Context dimensions this feature contributes. Each value is a function from the current context attrset to the dimension's value.";
+        };
+
+        _requiredContextArgs = mkOption {
+          type = types.raw;
+          readOnly = true;
+          internal = true;
+          description = "Per-slot required context args computed from function signatures.";
+        };
+
         # Computed: argument names of the .home module function.
         # Introspected from raw definitions before deferredModule coercion.
         # Empty list for plain attrsets or features with no home module.
@@ -258,6 +297,16 @@ let
       };
 
       config = {
+        _requiredContextArgs = {
+          system = extractRequiredDispatchArgs staticDispatchableArgs options.system.definitionsWithLocations;
+          linux = extractRequiredDispatchArgs staticDispatchableArgs options.linux.definitionsWithLocations;
+          darwin = extractRequiredDispatchArgs staticDispatchableArgs options.darwin.definitionsWithLocations;
+          os = extractRequiredDispatchArgs staticDispatchableArgs options.os.definitionsWithLocations;
+          home = extractRequiredDispatchArgs staticDispatchableArgs options.home.definitionsWithLocations;
+          homeLinux = extractRequiredDispatchArgs staticDispatchableArgs options.homeLinux.definitionsWithLocations;
+          homeDarwin = extractRequiredDispatchArgs staticDispatchableArgs options.homeDarwin.definitionsWithLocations;
+        };
+
         homeArgs =
           let
             defs = options.home.definitionsWithLocations;
@@ -280,10 +329,7 @@ let
           hasHome && config.contextRequirements == [ ] && !systemBlocks;
 
         contextRequirements =
-          let
-            knownContextArgs = builtins.attrNames contextArgTiers;
-          in
-          builtins.filter (a: builtins.elem a knownContextArgs) config.homeArgs;
+          extractRequiredDispatchArgs staticDispatchableArgs options.home.definitionsWithLocations;
       };
     };
 
@@ -539,6 +585,10 @@ in
 
   config.flake.lib.modules = {
     inherit
+      baseContextNames
+      stageDistinctArgs
+      staticDispatchableArgs
+      extractRequiredDispatchArgs
       mkDeferredModuleOpt
       collectTypedModules
       collectSystemModules
