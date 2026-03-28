@@ -332,7 +332,7 @@ in
           config =
             let
               # Use centralized feature resolution from lib.modules
-              computedFeatures = self.lib.modules.computeActiveFeatures {
+              computedFeatures = self.lib.resolver.computeActiveFeatures {
                 featuresConfig = flakeConfig.features;
                 hostFeatures = config.extra-features or [ ];
                 hostExclusions = config.excluded-features or [ ];

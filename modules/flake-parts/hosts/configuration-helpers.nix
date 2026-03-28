@@ -15,10 +15,6 @@
         collectPlatformHomeModules
         ;
 
-      inherit (self.lib.modules)
-        collectRequires
-        ;
-
       # Import user resolution from lib.users
       inherit (self.lib.users) resolveUsers;
 
@@ -46,69 +42,43 @@
           userExtraFeatures = resolvedUser.system.extra-features or [ ];
           userExclusions = resolvedUser.system.excluded-features or [ ];
 
-          coreFeatureNames = self.lib.modules.coreFeatures;
-          isCore = f: lib.elem f.name coreFeatureNames;
+          # Combine host features with user-specific features
+          userExtraFeatureNames = map (name: name) userExtraFeatures;
 
-          coreHostFeatures = lib.filter isCore allHostFeatures;
-          nonCoreHostFeatures = lib.filter (f: !(isCore f)) allHostFeatures;
-
-          baseFeatures = coreHostFeatures ++ (if includeHostFeatures then nonCoreHostFeatures else [ ]);
-
-          # Validate user extra-features only reference features with home modules
+          # Validate user extra-features have home modules
           systemOnlyFeatures = lib.filter (
             name:
-            let
-              f = config.features.${name};
-            in
-            f.home == { } && (f.system != { } || f.linux != { } || f.darwin != { })
-          ) userExtraFeatures;
+            let f = config.features.${name};
+            in f.home == {} && (f.system or {} != {} || f.linux != {} || f.darwin != {} || f.os or {} != {})
+          ) userExtraFeatureNames;
 
-          userFeatureModules =
-            assert lib.assertMsg (systemOnlyFeatures == [ ])
-              "User extra-features must have home modules. System-only features should be added to the host: ${lib.concatStringsSep ", " systemOnlyFeatures}";
-            map (name: config.features.${name}) userExtraFeatures;
+          _validate = assert lib.assertMsg (systemOnlyFeatures == [])
+            "User extra-features must have home modules. System-only features should be added to the host: ${lib.concatStringsSep ", " systemOnlyFeatures}";
+            true;
 
-          allFeatures = baseFeatures ++ userFeatureModules;
+          # Build the feature list for this user
+          coreFeatureNames = self.lib.resolver.coreFeatures;
+          hostFeatureNames = map (f: f.name) (
+            if includeHostFeatures then allHostFeatures else
+            lib.filter (f: lib.elem f.name coreFeatureNames) allHostFeatures
+          );
 
-          featureExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" allFeatures));
-          allExclusions = lib.unique (featureExclusions ++ userExclusions);
+          allFeatureNames = lib.unique (hostFeatureNames ++ userExtraFeatureNames);
 
-          isNotExcluded = f: !(lib.elem f.name allExclusions);
-          filteredFeatures = lib.filter isNotExcluded allFeatures;
+          # Use the resolver for proper dependency resolution
+          resolved = builtins.seq _validate (resolveFeatures {
+            featuresConfig = config.features;
+            hostFeatures = allFeatureNames;
+            hostExclusions = userExclusions;
+          });
 
-          featureDeps = collectRequires config.features filteredFeatures;
-          # Deduplicate by feature name — a feature can appear both directly and as a dependency
-          resolvedFeatures =
-            let
-              all = filteredFeatures ++ featureDeps;
-              seen =
-                lib.foldl'
-                  (
-                    acc: f:
-                    if lib.elem f.name acc.names then
-                      acc
-                    else
-                      {
-                        names = acc.names ++ [ f.name ];
-                        features = acc.features ++ [ f ];
-                      }
-                  )
-                  {
-                    names = [ ];
-                    features = [ ];
-                  }
-                  all;
-            in
-            seen.features;
+          resolvedFeatures = builtins.attrValues resolved.features;
+          userActiveProviders = builtins.attrValues (resolved.providers or {});
 
           homeModules = collectPlatformHomeModules {
             features = resolvedFeatures;
-            inherit activeProviders system dispatchableArgs;
-            # user is always available in NixOS-managed home context.
-            # osConfig is provided by home-manager's NixOS integration — available
-            # here because makeHomeConfig is called from NixOS host building.
-            # In standalone/wrapper contexts (wrapped-packages.nix), dispatch is
-            # disabled (dispatchableArgs = []) so this doesn't apply.
+            activeProviders = userActiveProviders;
+            inherit system dispatchableArgs;
             availableContext = fullContext // {
               user = augmentedUser;
               osConfig = true;

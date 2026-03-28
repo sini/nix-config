@@ -333,105 +333,6 @@ let
     };
 
   # ============================================================================
-  # Feature Resolution Functions
-  # ============================================================================
-  # These functions resolve feature dependencies and compute active features
-
-  # Collect transitive dependencies for a set of root features
-  # Returns only the dependencies (not the roots themselves)
-  # Exclusions are propagated through the dependency tree
-  collectRequires =
-    features: roots:
-    let
-      inherit (lib)
-        elem
-        filter
-        head
-        tail
-        ;
-
-      rootNames = lib.catAttrs "name" roots;
-      initialExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" roots));
-
-      # Depth-first traversal of dependency tree
-      traverseDependencies =
-        visited: toVisit: exclusions:
-        if toVisit == [ ] then
-          visited
-        else
-          let
-            current = head toVisit;
-            remaining = tail toVisit;
-            isExcluded = elem current.name exclusions;
-            isVisited = elem current.name (map (v: v.name) visited);
-          in
-          if isExcluded || isVisited then
-            traverseDependencies visited remaining exclusions
-          else
-            let
-              updatedExclusions = lib.unique (exclusions ++ (current.excludes or [ ]));
-              dependencyNames = filter (name: !(elem name updatedExclusions)) (current.requires or [ ]);
-              dependencies = map (name: features.${name}) dependencyNames;
-              visitedWithCurrent = visited ++ [ current ];
-              visitedWithDeps = traverseDependencies visitedWithCurrent dependencies updatedExclusions;
-            in
-            traverseDependencies visitedWithDeps remaining updatedExclusions;
-
-      resultWithRoots = traverseDependencies [ ] roots initialExclusions;
-      allExclusions = lib.unique (lib.flatten (lib.catAttrs "excludes" (roots ++ resultWithRoots)));
-      dependenciesOnly = filter (
-        v: !(elem v.name allExclusions) && !(elem v.name rootNames)
-      ) resultWithRoots;
-    in
-    dependenciesOnly;
-
-  # Core features that are always enabled for every host
-  # This includes the "default" composite feature which bundles essential system features
-  coreFeatures = [
-    "default"
-  ];
-
-  # Resolve complete feature set for a host (core + direct features + dependencies)
-  # Returns feature modules with all dependencies resolved and exclusions applied
-  # Takes: features config and host options
-  getModulesForFeatures =
-    {
-      featuresConfig,
-      hostFeatures ? [ ],
-      hostExclusions ? [ ],
-    }:
-    let
-      allFeatureNames = lib.unique (coreFeatures ++ hostFeatures);
-      allFeatures = map (name: featuresConfig.${name}) allFeatureNames;
-      featureExclusions = lib.flatten (lib.catAttrs "excludes" allFeatures);
-      allExclusions = lib.unique (featureExclusions ++ hostExclusions);
-      filteredFeatures = lib.filter (f: !(lib.elem f.name allExclusions)) allFeatures;
-      featureDeps = collectRequires featuresConfig filteredFeatures;
-      allFeaturesWithDeps = filteredFeatures ++ featureDeps;
-    in
-    allFeaturesWithDeps;
-
-  # Compute active feature names for a host
-  # This is a convenience wrapper around getModulesForFeatures
-  # Returns: list of feature names (strings)
-  computeActiveFeatures =
-    {
-      featuresConfig,
-      hostFeatures ? [ ],
-      hostExclusions ? [ ],
-    }:
-    let
-      allHostFeatures = getModulesForFeatures {
-        inherit
-          featuresConfig
-          hostFeatures
-          hostExclusions
-          ;
-      };
-    in
-    lib.unique (map (f: f.name) allHostFeatures);
-
-  # ============================================================================
   # Feature Settings
   # ============================================================================
   # Typed, per-feature settings with multi-layer merging via evalModules.
@@ -518,14 +419,8 @@ in
     inherit
       baseContextNames
       stageDistinctArgs
-      staticDispatchableArgs
       extractRequiredDispatchArgs
       mkDeferredModuleOpt
-      collectRequires
-      coreFeatures
-      getModulesForFeatures
-      computeActiveFeatures
-      mkSettingsOpt
       mkFeatureSettingsOpt
       mkFeatureUserSettingsOpt
       resolveFeatureSettings
