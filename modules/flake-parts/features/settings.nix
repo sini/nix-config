@@ -1,3 +1,4 @@
+# Feature settings resolution with multi-layer merging.
 { lib, ... }:
 let
   inherit (lib) mkOption types;

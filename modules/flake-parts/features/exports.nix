@@ -1,3 +1,4 @@
+# Expose features as flake outputs with composition chains attached.
 { lib, config, inputs, ... }:
 let
   hmBaseModules = [

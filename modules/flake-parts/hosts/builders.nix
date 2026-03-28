@@ -1,3 +1,4 @@
+# Host configuration builders: context assembly, NixOS/Darwin system creation.
 {
   lib,
   self,
@@ -8,7 +9,7 @@
 }:
 {
   flake.lib.hosts = let
-    inherit (self.lib.features.collection) collectPlatformSystemModulesNew;
+    inherit (self.lib.features.collection) collectPlatformSystemModules;
     inherit (self.lib.users) resolveUsers;
     inherit (self.lib.features) resolveFeatureSettings;
     inherit (self.lib.features.resolver) resolveFeatures;
@@ -45,7 +46,7 @@
         allHostFeatures = map (name: config.features.${name}) activeFeatures;
         activeProviders = builtins.attrValues (resolved.providers or { });
 
-        systemModules = collectPlatformSystemModulesNew {
+        systemModules = collectPlatformSystemModules {
           features = allHostFeatures;
           inherit activeProviders dispatchableArgs;
           availableContext = fullContext;
@@ -75,7 +76,7 @@
         enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
 
         # Collect context contributions from active features
-        featureContextFns = lib.foldl' (acc: f: acc // (f.contextProvides or { })) { } allHostFeatures;
+        featureContextFns = lib.foldl' (acc: f: acc // f.contextProvides) { } allHostFeatures;
 
         # Base context — always available
         baseContext = {

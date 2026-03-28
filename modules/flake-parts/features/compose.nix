@@ -1,3 +1,4 @@
+# Composition chain factory for feature evaluation and packaging.
 { lib, ... }:
 let
   inherit (lib) mkOption types;
@@ -38,7 +39,7 @@ let
         };
       };
 
-      baseModules = [
+      coreModules = [
         {
           options = {
             settings = mkOption {
@@ -76,7 +77,7 @@ let
         }
       ];
 
-      result = lib.evalModules { modules = baseModules; };
+      result = lib.evalModules { modules = coreModules; };
 
       attachChain =
         evalResult:

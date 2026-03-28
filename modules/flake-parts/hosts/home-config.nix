@@ -1,3 +1,4 @@
+# Per-user home-manager configuration with feature resolution.
 {
   lib,
   self,
@@ -25,7 +26,7 @@
         userExclusions = resolvedUser.system.excluded-features or [ ];
 
         # Combine host features with user-specific features
-        userExtraFeatureNames = map (name: name) userExtraFeatures;
+        userExtraFeatureNames = userExtraFeatures;
 
         # Validate user extra-features have home modules
         systemOnlyFeatures = lib.filter (

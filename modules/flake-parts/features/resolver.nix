@@ -1,3 +1,4 @@
+# Two-phase feature resolver: explicit dependency traversal then provider collection.
 { lib, ... }:
 let
   inherit (lib)
@@ -46,14 +47,14 @@ let
       throw "Include references unknown feature '${parsed.feature}'"
     else if
       parsed.type == "provider"
-      && !hasAttr parsed.provider (featuresConfig.${parsed.feature}.provides or { })
+      && !hasAttr parsed.provider featuresConfig.${parsed.feature}.provides
     then
       throw "Include references unknown provider '${parsed.provider}' on feature '${parsed.feature}'"
     else
       parsed;
 
   # Merge includes and requires for backward compatibility.
-  getFeatureIncludes = feature: unique ((feature.includes or [ ]) ++ (feature.requires or [ ]));
+  getFeatureIncludes = feature: unique (feature.includes ++ feature.requires);
 
   # ============================================================================
   # Phase 1 — Explicit Resolution
@@ -110,7 +111,7 @@ let
         else
           let
             # Add feature and its excludes
-            newExclusions = unique (state.exclusions ++ (feature.excludes or [ ]));
+            newExclusions = unique (state.exclusions ++ feature.excludes);
             stateWithFeature = state // {
               features = state.features // {
                 ${name} = feature;
@@ -161,7 +162,7 @@ let
                 };
               };
               # Recurse into provider's includes
-              providerIncludes = provider.includes or [ ];
+              providerIncludes = provider.includes;
             in
             processIncludes (chain ++ [ providerId ]) stateWithProvider providerIncludes;
 
@@ -183,7 +184,7 @@ let
         name:
         let
           feature = activeFeatures.${name};
-          collectorNames = feature.collectsProviders or [ ];
+          collectorNames = feature.collectsProviders;
         in
         map (cn: {
           collectorFeature = name;
@@ -214,7 +215,7 @@ let
             featureName:
             let
               feature = state.features.${featureName};
-              provides = feature.provides or { };
+              provides = feature.provides;
             in
             if hasAttr providerName provides then
               let
@@ -252,7 +253,7 @@ let
                 };
               };
               # Resolve any includes the provider brings in
-              providerIncludes = match.provider.includes or [ ];
+              providerIncludes = match.provider.includes;
             in
             if providerIncludes == [ ] then
               withProvider
@@ -309,28 +310,12 @@ let
     in
     attrNames resolved.features;
 
-  # Returns { features = [ ... ]; providers = [ ... ]; } with full feature/provider attrsets.
-  getModulesForFeatures =
-    args:
-    let
-      resolved = resolveFeatures args;
-    in
-    {
-      features = attrValues resolved.features;
-      providers = attrValues resolved.providers;
-    };
 in
 {
   config.flake.lib.features.resolver = {
     inherit
-      parseIncludePath
-      validateInclude
-      getFeatureIncludes
-      resolveExplicit
-      collectProviders
       resolveFeatures
       computeActiveFeatures
-      getModulesForFeatures
       coreFeatures
       ;
   };

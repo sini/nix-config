@@ -1,3 +1,4 @@
+# Helpers for creating deferred module options with debug metadata.
 { lib, ... }:
 let
   inherit (lib) mkOption types;

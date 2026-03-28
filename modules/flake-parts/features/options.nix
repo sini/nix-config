@@ -1,12 +1,11 @@
+# Feature and provider submodule type definitions.
 { lib, config, ... }:
 let
   inherit (lib) mkOption types;
 
   inherit (config.flake.lib.features)
     mkDeferredModuleOptWithMetadata
-    wrapModuleWithMetadata
     extractModuleArgs
-    mkDeferredModuleOpt
     ;
 
   # Base context names — always available in system context

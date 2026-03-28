@@ -1,3 +1,4 @@
+# Generate standalone wrapped packages from wrappable features.
 {
   config,
   lib,
