@@ -213,10 +213,11 @@ in
         };
       };
 
-      networking.firewall.allowedTCPPorts = [
-        9090
-      ];
     };
+
+  features.prometheus.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [ 9090 ];
+  };
 
   features.prometheus.provides.impermanence.linux = {
     environment.persistence."/persist".directories = [

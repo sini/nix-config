@@ -75,15 +75,7 @@
           };
       in
       {
-        age.secrets.kubernetes-cluster-token = {
-          rekeyFile = cluster.secretPath + "/cluster-token.age";
-          generator.script = "passphrase";
-        };
-
-        age.secrets.kubernetes-sops-age-key = lib.mkIf shouldInit {
-          rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
-          path = "/var/lib/sops/age/key.txt";
-        };
+        # Secret definitions moved to provides.secrets
 
         environment.systemPackages = with pkgs; [
           k3s
@@ -529,6 +521,29 @@
           };
         };
 
+      };
+
+    provides.secrets.linux =
+      {
+        lib,
+        cluster,
+        environment,
+        ...
+      }:
+      let
+        kubernetesNodes = environment.findHostsByFeature "k3s";
+        shouldInit = (builtins.length (lib.attrValues kubernetesNodes)) == 1;
+      in
+      {
+        age.secrets.kubernetes-cluster-token = {
+          rekeyFile = cluster.secretPath + "/cluster-token.age";
+          generator.script = "passphrase";
+        };
+
+        age.secrets.kubernetes-sops-age-key = lib.mkIf shouldInit {
+          rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
+          path = "/var/lib/sops/age/key.txt";
+        };
       };
 
     provides.impermanence.linux = {

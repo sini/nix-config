@@ -105,12 +105,6 @@
         };
       };
 
-      # Open firewall for Loki ingestion from other nodes
-      networking.firewall.allowedTCPPorts = [
-        3100
-        9095
-      ];
-
       # Ensure loki data directories exist with proper permissions
       systemd.tmpfiles.rules = [
         "d /var/lib/loki 0755 loki loki -"
@@ -120,6 +114,14 @@
         "d /var/lib/loki/compactor 0755 loki loki -"
       ];
     };
+
+  features.loki.provides.firewall.linux = {
+    # Open firewall for Loki ingestion from other nodes
+    networking.firewall.allowedTCPPorts = [
+      3100
+      9095
+    ];
+  };
 
   features.loki.provides.impermanence.linux = {
     environment.persistence."/persist".directories = [

@@ -11,16 +11,7 @@
       kanidmDomain = environment.getDomainFor "kanidm";
     in
     {
-      age.secrets.headscale-oidc-secret = {
-        rekeyFile = environment.secretPath + "/oidc/headscale-oidc-client-secret.age";
-        generator = {
-          tags = [ "oidc" ];
-          script = "rfc3986-secret";
-        };
-        mode = "440";
-        owner = config.services.headscale.user;
-        inherit (config.services.headscale) group;
-      };
+      # Secret definitions moved to provides.secrets
 
       services = {
         headscale = {
@@ -110,16 +101,37 @@
         };
       };
 
-      networking.firewall.allowedUDPPorts = [
-        3478
-        41641
-      ];
-
       environment.systemPackages = [
         config.services.headscale.package
       ];
 
     };
+
+  features.headscale.provides.secrets.linux =
+    {
+      config,
+      environment,
+      ...
+    }:
+    {
+      age.secrets.headscale-oidc-secret = {
+        rekeyFile = environment.secretPath + "/oidc/headscale-oidc-client-secret.age";
+        generator = {
+          tags = [ "oidc" ];
+          script = "rfc3986-secret";
+        };
+        mode = "440";
+        owner = config.services.headscale.user;
+        inherit (config.services.headscale) group;
+      };
+    };
+
+  features.headscale.provides.firewall.linux = {
+    networking.firewall.allowedUDPPorts = [
+      3478
+      41641
+    ];
+  };
 
   features.headscale.provides.impermanence.linux = {
     environment.persistence."/persist".directories = [

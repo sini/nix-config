@@ -3,6 +3,8 @@
 # Generates systemd-networkd config from host.networking options.
 # Supports static IPs, DHCP, bridges, bonds, and managed/unmanaged interfaces.
 {
+  features.networking.collectsProviders = [ "firewall" ];
+
   features.networking.os =
     { host, ... }:
     {

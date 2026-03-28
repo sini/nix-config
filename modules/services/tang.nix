@@ -10,9 +10,11 @@
         ];
       };
 
-      networking.firewall.allowedTCPPorts = [ 7654 ];
-
     };
+
+  features.tang.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [ 7654 ];
+  };
 
   features.tang.provides.impermanence.linux = {
     environment.persistence."/persist".directories = [

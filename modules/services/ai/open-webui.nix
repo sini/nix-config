@@ -22,20 +22,7 @@ in
       kanidmDomain = environment.getDomainFor "kanidm";
     in
     {
-      age.secrets.open-webui-oidc-secret = {
-        rekeyFile = environment.secretPath + "/oidc/open-webui-oidc-client-secret.age";
-        generator = {
-          tags = [ "oidc" ];
-          script = "rfc3986-secret";
-        };
-        intermediary = true;
-      };
-
-      age.secrets.open-webui-env = {
-        generator.dependencies = [ config.age.secrets.open-webui-oidc-secret ];
-        settings.keys = [ "OAUTH_CLIENT_SECRET" ];
-        generator.script = "environment-file";
-      };
+      # Secret definitions moved to provides.secrets
 
       services = {
         open-webui = {
@@ -139,6 +126,29 @@ in
         Group = "open-webui";
       };
 
+    };
+
+  features.open-webui.provides.secrets.linux =
+    {
+      config,
+      environment,
+      ...
+    }:
+    {
+      age.secrets.open-webui-oidc-secret = {
+        rekeyFile = environment.secretPath + "/oidc/open-webui-oidc-client-secret.age";
+        generator = {
+          tags = [ "oidc" ];
+          script = "rfc3986-secret";
+        };
+        intermediary = true;
+      };
+
+      age.secrets.open-webui-env = {
+        generator.dependencies = [ config.age.secrets.open-webui-oidc-secret ];
+        settings.keys = [ "OAUTH_CLIENT_SECRET" ];
+        generator.script = "environment-file";
+      };
     };
 
   features.open-webui.provides.impermanence.linux = {

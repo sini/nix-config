@@ -19,11 +19,7 @@
       localBuildSpeed = host.remoteBuildSpeed;
     in
     {
-      age.secrets.nix-remote-build-user-key = {
-        rekeyFile = rootPath + "/.secrets/users/nix-remote-build/id_ed25519.age";
-        mode = "600";
-        generator.script = "shared-ssh-key";
-      };
+      # Secret definitions moved to provides.secrets
 
       nix = {
         buildMachines = lib.mapAttrsToList (hostname: buildHostConfig: {
@@ -59,4 +55,12 @@
         distributedBuilds = true;
       };
     };
+
+  features.nix.provides.secrets.os = {
+    age.secrets.nix-remote-build-user-key = {
+      rekeyFile = rootPath + "/.secrets/users/nix-remote-build/id_ed25519.age";
+      mode = "600";
+      generator.script = "shared-ssh-key";
+    };
+  };
 }

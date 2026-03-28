@@ -10,13 +10,7 @@
       ...
     }:
     {
-      age.secrets.nix_store_signing_key = {
-        generator.script = "binary-cache-key";
-        owner = "nix-serve";
-        mode = "0400";
-      };
-
-      networking.firewall.allowedTCPPorts = [ 16893 ];
+      # Secret definitions moved to provides.secrets
 
       services.nix-serve = {
         enable = true;
@@ -50,4 +44,16 @@
         };
       };
     };
+
+  features.nix-remote-build-server.provides.secrets.os = {
+    age.secrets.nix_store_signing_key = {
+      generator.script = "binary-cache-key";
+      owner = "nix-serve";
+      mode = "0400";
+    };
+  };
+
+  features.nix-remote-build-server.provides.firewall.os = {
+    networking.firewall.allowedTCPPorts = [ 16893 ];
+  };
 }

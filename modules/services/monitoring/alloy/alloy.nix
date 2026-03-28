@@ -81,8 +81,6 @@
         ];
       };
 
-      networking.firewall.allowedTCPPorts = [ 12345 ];
-
       systemd.services.alloy = {
         serviceConfig = {
           User = "root";
@@ -102,6 +100,10 @@
         "d /var/lib/alloy/data 0755 root root -"
       ];
     };
+
+  features.alloy.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [ 12345 ];
+  };
 
   features.alloy.provides.impermanence.linux = {
     environment.persistence."/persist".directories = [

@@ -210,10 +210,13 @@ in
         '';
       };
 
-      # Open firewall for Vault API
-      networking.firewall.allowedTCPPorts = [
-        8200
-        8201
-      ];
     };
+
+  features.vault.provides.firewall.linux = {
+    # Open firewall for Vault API
+    networking.firewall.allowedTCPPorts = [
+      8200
+      8201
+    ];
+  };
 }

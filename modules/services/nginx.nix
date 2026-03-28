@@ -108,11 +108,13 @@
         };
       };
 
-      networking.firewall.allowedTCPPorts = [
-        80
-        443
-      ];
-
       users.groups.acme.members = [ config.services.nginx.user ];
     };
+
+  features.nginx.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [
+      80
+      443
+    ];
+  };
 }

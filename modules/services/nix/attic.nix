@@ -12,24 +12,7 @@
       domain = environment.getDomainFor "attic";
     in
     {
-      age.secrets.attic-server-token = {
-        rekeyFile = environment.secretPath + "/attic/server-token.age";
-        intermediary = true;
-        generator = {
-          tags = [ "attic" ];
-          script =
-            { pkgs, ... }:
-            ''
-              ${pkgs.openssl}/bin/openssl genrsa -traditional 4096 | base64 -w0
-            '';
-        };
-      };
-
-      age.secrets.attic-server-env = {
-        generator.dependencies = [ config.age.secrets.attic-server-token ];
-        settings.keys = [ "ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64" ];
-        generator.script = "environment-file";
-      };
+      # Secret definitions moved to provides.secrets
 
       environment.systemPackages = [ pkgs.attic-client ];
 
@@ -83,6 +66,33 @@
         };
       };
 
+    };
+
+  features.attic-server.provides.secrets.linux =
+    {
+      config,
+      environment,
+      ...
+    }:
+    {
+      age.secrets.attic-server-token = {
+        rekeyFile = environment.secretPath + "/attic/server-token.age";
+        intermediary = true;
+        generator = {
+          tags = [ "attic" ];
+          script =
+            { pkgs, ... }:
+            ''
+              ${pkgs.openssl}/bin/openssl genrsa -traditional 4096 | base64 -w0
+            '';
+        };
+      };
+
+      age.secrets.attic-server-env = {
+        generator.dependencies = [ config.age.secrets.attic-server-token ];
+        settings.keys = [ "ATTIC_SERVER_TOKEN_RS256_SECRET_BASE64" ];
+        generator.script = "environment-file";
+      };
     };
 
   features.attic-server.provides.impermanence.linux = {

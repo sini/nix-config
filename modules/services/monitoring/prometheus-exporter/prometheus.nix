@@ -95,10 +95,6 @@
         };
       };
 
-      networking.firewall.allowedTCPPorts = [
-        9100
-      ];
-
       # System monitoring packages
       environment.systemPackages = with pkgs; [
         # System monitoring tools
@@ -118,4 +114,8 @@
         nethogs
       ];
     };
+
+  features.prometheus-exporter.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [ 9100 ];
+  };
 }

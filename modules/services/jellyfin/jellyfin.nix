@@ -18,12 +18,6 @@
           inputs.declarative-jellyfin.nixosModules.default
         ];
 
-        networking.firewall.allowedTCPPorts = [
-          7359
-          8096
-          8920
-        ];
-
         # TODO: This is a hack, revert it...
         users.deterministicIds.jellyfin =
           let
@@ -221,6 +215,14 @@
         };
 
       };
+
+    provides.firewall.linux = {
+      networking.firewall.allowedTCPPorts = [
+        7359
+        8096
+        8920
+      ];
+    };
 
     provides.impermanence.linux =
       { config, ... }:

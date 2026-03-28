@@ -11,12 +11,7 @@
       topDomain = environment.getTopDomainFor "kanidm";
     in
     {
-      age.secrets.kanidm-admin-password = {
-        rekeyFile = environment.secretPath + "/kanidm-admin-password.age";
-        generator.script = "passphrase";
-        owner = "kanidm";
-        group = "kanidm";
-      };
+      # Secret definitions moved to provides.secrets
 
       services = {
         kanidm = {
@@ -72,9 +67,6 @@
         };
       };
 
-      # Open firewall for LDAP
-      networking.firewall.allowedTCPPorts = [ 3636 ];
-
       # Ensure kanidm user can read the secret files and certificates
       systemd.services.kanidm.serviceConfig = {
         SupplementaryGroups = [ "keys" ];
@@ -86,6 +78,22 @@
         config.services.nginx.group
       ];
     };
+
+  features.kanidm.provides.secrets.linux =
+    { environment, ... }:
+    {
+      age.secrets.kanidm-admin-password = {
+        rekeyFile = environment.secretPath + "/kanidm-admin-password.age";
+        generator.script = "passphrase";
+        owner = "kanidm";
+        group = "kanidm";
+      };
+    };
+
+  features.kanidm.provides.firewall.linux = {
+    # Open firewall for LDAP
+    networking.firewall.allowedTCPPorts = [ 3636 ];
+  };
 
   features.kanidm.provides.impermanence.linux = {
     environment.persistence."/persist".directories = [

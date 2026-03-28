@@ -33,13 +33,16 @@
         #   };
         # };
 
-        # Allow inbound traffic for the DHCP server
-        networking.firewall.allowedUDPPorts = [ 67 ];
         users.users = {
           # allow microvm access to zvol
           microvm.extraGroups = [ "disk" ];
         };
       };
+
+    provides.firewall.linux = {
+      # Allow inbound traffic for the DHCP server
+      networking.firewall.allowedUDPPorts = [ 67 ];
+    };
 
     provides.impermanence = {
       linux =

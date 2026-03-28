@@ -16,10 +16,6 @@
     {
       # We fwd our public 443 to 12443 on this host since it has a 10gb link
 
-      networking.firewall.allowedTCPPorts = [
-        6443
-        12443
-      ];
       # TODO: Look into proxy protocol and socket based communication; this user config looks promising:
       # https://github.com/Bert-Proesmans/nix/blob/3da2d7d68617202d68e91575683ac4ba2ce718e7/flake/nixosConfigurations/freddy/tls-termination.nix#L126
       services = {
@@ -79,4 +75,11 @@
         };
       };
     };
+
+  features.haproxy.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [
+      6443
+      12443
+    ];
+  };
 }

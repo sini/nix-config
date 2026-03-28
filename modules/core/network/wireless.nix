@@ -19,17 +19,7 @@
         interface = if hasWireless then wirelessInterface.unix_device_name else "";
       in
       lib.mkIf hasWireless {
-        # # This is just a wpa_supplicant.conf for booting, it's super simple -- one ESSID + psk
-        # age.secrets.wpa-supplicant-config = {
-        #   rekeyFile = rootPath + "/.secrets/user/wpa_supplicant-config.age";
-        #   path = "/root/.wpa_supplicant/wpa_supplicant.conf";
-        #   symlink = false;
-        # };
-
-        age.secrets.wpa-supplicant = {
-          rekeyFile = environment.wirelessSecretsFile;
-          owner = "wpa_supplicant";
-        };
+        # Secret definitions moved to provides.secrets
 
         boot.extraModprobeConfig = ''
           options iwlwifi power_save=1
@@ -60,6 +50,27 @@
           };
         };
 
+      };
+
+    provides.secrets.linux =
+      {
+        config,
+        lib,
+        environment,
+        ...
+      }:
+      let
+        wirelessInterface = lib.findFirst (
+          iface:
+          iface ? unix_device_name && lib.hasPrefix "wl" iface.unix_device_name && iface ? driver_modules
+        ) null config.facter.report.hardware.network_interface;
+        hasWireless = wirelessInterface != null;
+      in
+      lib.mkIf hasWireless {
+        age.secrets.wpa-supplicant = {
+          rekeyFile = environment.wirelessSecretsFile;
+          owner = "wpa_supplicant";
+        };
       };
 
     provides.impermanence.linux =

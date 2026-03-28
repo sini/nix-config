@@ -5,6 +5,7 @@
 {
   features.agenix = {
     requires = [ "agenix-generators" ];
+    collectsProviders = [ "secrets" ];
 
     linux =
       { inputs, ... }:

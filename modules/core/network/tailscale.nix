@@ -24,36 +24,9 @@
       };
     };
 
-    system =
-      {
-        flakeLib,
-        lib,
-        environment,
-        host,
-        ...
-      }:
-      let
-        rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
-        delegation = environment.services.headscale.delegateTo or null;
-        headscaleHosts =
-          if delegation != null then
-            flakeLib.host-utils.findHostsWithFeature "headscale"
-            |> lib.filterAttrs (_: h: h.environment == delegation)
-            |> lib.attrValues
-          else
-            environment.findHostsByFeature "headscale" |> lib.attrValues;
-        headscaleHost = builtins.head headscaleHosts;
-      in
-      {
-        age.secrets.tailscale-auth-key = {
-          inherit rekeyFile;
-          settings = {
-            headscaleHost = builtins.head headscaleHost.ipv4;
-            user = host.hostname;
-          };
-          generator.script = "tailscale-preauthkey";
-        };
-      };
+    system = {
+      # Secret definitions moved to provides.secrets
+    };
 
     darwin =
       {
@@ -146,6 +119,37 @@
           "TS_DEBUG_FIREWALL_MODE=nftables"
         ];
 
+      };
+
+    provides.secrets.os =
+      {
+        flakeLib,
+        lib,
+        environment,
+        host,
+        ...
+      }:
+      let
+        rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
+        delegation = environment.services.headscale.delegateTo or null;
+        headscaleHosts =
+          if delegation != null then
+            flakeLib.host-utils.findHostsWithFeature "headscale"
+            |> lib.filterAttrs (_: h: h.environment == delegation)
+            |> lib.attrValues
+          else
+            environment.findHostsByFeature "headscale" |> lib.attrValues;
+        headscaleHost = builtins.head headscaleHosts;
+      in
+      {
+        age.secrets.tailscale-auth-key = {
+          inherit rekeyFile;
+          settings = {
+            headscaleHost = builtins.head headscaleHost.ipv4;
+            user = host.hostname;
+          };
+          generator.script = "tailscale-preauthkey";
+        };
       };
 
     provides.impermanence.linux =

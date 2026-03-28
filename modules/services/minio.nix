@@ -10,11 +10,7 @@
       minioConsoleDomain = environment.getDomainFor "minio-console";
     in
     {
-      age.secrets.minio-root-credentials = {
-        rekeyFile = environment.secretPath + "/oidc/minio-root-credentials.age";
-        owner = "minio";
-        group = "minio";
-      };
+      # Secret definitions moved to provides.secrets
 
       services = {
         minio = {
@@ -59,12 +55,6 @@
         };
       };
 
-      # Open firewall for MinIO API and console
-      networking.firewall.allowedTCPPorts = [
-        9000
-        9001
-      ];
-
       # Ensure MinIO data directory exists with proper permissions
       systemd.tmpfiles.rules = [
         "d /var/lib/minio 0755 minio minio -"
@@ -76,4 +66,22 @@
         SupplementaryGroups = [ "keys" ];
       };
     };
+
+  features.minio.provides.secrets.linux =
+    { environment, ... }:
+    {
+      age.secrets.minio-root-credentials = {
+        rekeyFile = environment.secretPath + "/oidc/minio-root-credentials.age";
+        owner = "minio";
+        group = "minio";
+      };
+    };
+
+  features.minio.provides.firewall.linux = {
+    # Open firewall for MinIO API and console
+    networking.firewall.allowedTCPPorts = [
+      9000
+      9001
+    ];
+  };
 }

@@ -16,8 +16,6 @@
         home = config.services.forgejo.stateDir;
       };
 
-      networking.firewall.allowedTCPPorts = [ 7654 ];
-
       services.openssh = {
         authorizedKeysFiles = lib.mkForce [
           "${config.services.forgejo.stateDir}/.ssh/authorized_keys"
@@ -27,6 +25,10 @@
       };
 
     };
+
+  features.forgejo.provides.firewall.linux = {
+    networking.firewall.allowedTCPPorts = [ 7654 ];
+  };
 
   features.forgejo.provides.impermanence.linux =
     { config, ... }:

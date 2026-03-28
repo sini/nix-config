@@ -11,23 +11,7 @@
       kanidmDomain = environment.getDomainFor "kanidm";
     in
     {
-      age.secrets.grafana-oidc-secret = {
-        rekeyFile = environment.secretPath + "/oidc/grafana-oidc-client-secret.age";
-        owner = "grafana";
-        group = "grafana";
-        generator = {
-          tags = [ "oidc" ];
-          script = "rfc3986-secret";
-        };
-      };
-
-      age.secrets.grafana-secret-key = {
-        rekeyFile = environment.secretPath + "/grafana-secret-key.age";
-        settings.length = "32";
-        generator.script = "hex";
-        owner = "grafana";
-        group = "grafana";
-      };
+      # Secret definitions moved to provides.secrets
 
       services = {
         grafana = {
@@ -285,6 +269,28 @@
       # Ensure grafana user can read the password file
       systemd.services.grafana.serviceConfig = {
         SupplementaryGroups = [ "keys" ];
+      };
+    };
+
+  features.grafana.provides.secrets.linux =
+    { environment, ... }:
+    {
+      age.secrets.grafana-oidc-secret = {
+        rekeyFile = environment.secretPath + "/oidc/grafana-oidc-client-secret.age";
+        owner = "grafana";
+        group = "grafana";
+        generator = {
+          tags = [ "oidc" ];
+          script = "rfc3986-secret";
+        };
+      };
+
+      age.secrets.grafana-secret-key = {
+        rekeyFile = environment.secretPath + "/grafana-secret-key.age";
+        settings.length = "32";
+        generator.script = "hex";
+        owner = "grafana";
+        group = "grafana";
       };
     };
 
