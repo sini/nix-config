@@ -321,7 +321,7 @@ let
     };
 in
 {
-  config.flake.lib.resolver = {
+  config.flake.lib.features.resolver = {
     inherit
       parseIncludePath
       validateInclude

@@ -105,7 +105,7 @@ let
                 description = "Whether to inherit host features (null inherits from users.<name>.system)";
               };
 
-              settings = self.lib.modules.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
+              settings = self.lib.features.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
             };
           }
         )
@@ -146,7 +146,7 @@ let
               description = "Whether to inherit host features (null to inherit)";
             };
 
-            settings = self.lib.modules.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
+            settings = self.lib.features.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
           };
         })
       );

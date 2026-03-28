@@ -7,7 +7,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) mkDeferredModuleOpt;
+  inherit (self.lib.features) mkDeferredModuleOpt;
   inherit (self.lib.users) mkHostUsersOpt;
   flakeConfig = config; # Capture flake-level config for use in submodules
 in
@@ -200,7 +200,7 @@ in
               description = "List of features to exclude for the host (prevents the feature and its requires from being added)";
             };
 
-            settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features "Per-host feature settings (overrides environment defaults)";
+            settings = self.lib.features.mkFeatureSettingsOpt flakeConfig.features "Per-host feature settings (overrides environment defaults)";
 
             secretPath = mkOption {
               type = types.path;
@@ -332,7 +332,7 @@ in
           config =
             let
               # Use centralized feature resolution from lib.modules
-              computedFeatures = self.lib.resolver.computeActiveFeatures {
+              computedFeatures = self.lib.features.resolver.computeActiveFeatures {
                 featuresConfig = flakeConfig.features;
                 hostFeatures = config.extra-features or [ ];
                 hostExclusions = config.excluded-features or [ ];

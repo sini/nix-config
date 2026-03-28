@@ -1,41 +1,13 @@
-{ lib, ... }:
+{ lib, config, ... }:
 let
   inherit (lib) mkOption types;
 
-  mkDeferredModuleOpt =
-    description:
-    mkOption {
-      inherit description;
-      type = types.deferredModule;
-      default = { };
-    };
-
-  # Wraps a deferred module with metadata for better debugging
-  wrapModuleWithMetadata =
-    featureName: modulePath: module:
-    if module == { } then
-      module
-    else
-      {
-        _file = "flake.nix#features.${featureName}.${modulePath}";
-        imports = [ module ];
-      };
-
-  # Create a deferred module option with metadata wrapping
-  mkDeferredModuleOptWithMetadata =
-    featureName: modulePath: description:
-    mkOption {
-      inherit description;
-      type = types.deferredModule;
-      default = { };
-      apply = wrapModuleWithMetadata featureName modulePath;
-    };
-
-  # Extract function argument names from a module value.
-  # Returns [] for plain attrsets (no function args = no context needed).
-  extractModuleArgs =
-    module:
-    if builtins.isFunction module then builtins.attrNames (builtins.functionArgs module) else [ ];
+  inherit (config.flake.lib.features)
+    mkDeferredModuleOptWithMetadata
+    wrapModuleWithMetadata
+    extractModuleArgs
+    mkDeferredModuleOpt
+    ;
 
   # Base context names — always available in system context
   baseContextNames = [
@@ -331,82 +303,6 @@ let
         contextRequirements = extractRequiredDispatchArgs staticDispatchableArgs options.home.definitionsWithLocations;
       };
     };
-
-  # ============================================================================
-  # Feature Settings
-  # ============================================================================
-  # Typed, per-feature settings with multi-layer merging via evalModules.
-  # Analogous to serviceOptions in kubernetes/service-helpers.nix.
-
-  # Generate a typed settings option from features.
-  # settingsKey selects which field to read from features ("settings" or "user-settings").
-  mkSettingsOpt =
-    settingsKey: featuresConfig: description:
-    let
-      relevant = lib.filterAttrs (_: f: f.${settingsKey} or { } != { }) featuresConfig;
-    in
-    mkOption {
-      type = types.submodule {
-        options = lib.mapAttrs (
-          name: feature:
-          mkOption {
-            type = types.submodule { options = feature.${settingsKey}; };
-            default = { };
-            description = "Settings for the ${name} feature";
-          }
-        ) relevant;
-      };
-      default = { };
-      inherit description;
-    };
-
-  # System-level settings (hosts/environments)
-  mkFeatureSettingsOpt = mkSettingsOpt "settings";
-
-  # User-level settings (per-user on canonical/env/host users)
-  mkFeatureUserSettingsOpt = mkSettingsOpt "user-settings";
-
-  # Resolve feature settings by merging layers via evalModules.
-  # settingsKey selects "settings" or "user-settings" from features.
-  # Priority (lowest to highest): feature defaults → envSettings (mkDefault) → hostSettings → userSettings
-  resolveFeatureSettings =
-    {
-      settingsKey ? "settings",
-      activeFeatureNames,
-      featuresConfig,
-      layers ? [ ],
-    }:
-    let
-      relevantFeatures = lib.filterAttrs (
-        name: f: lib.elem name activeFeatureNames && f.${settingsKey} or { } != { }
-      ) featuresConfig;
-
-      settingsOptions = lib.mapAttrs (
-        _name: feature:
-        mkOption {
-          type = types.submodule { options = feature.${settingsKey}; };
-          default = { };
-        }
-      ) relevantFeatures;
-
-      # Filter each layer's config to only include relevant features
-      filteredLayers = map (
-        layer: args:
-        let
-          result = if lib.isFunction layer then layer args else layer;
-          filteredConfig = lib.intersectAttrs relevantFeatures (result.config or { });
-        in
-        result // { config = filteredConfig; }
-      ) layers;
-
-      evaluated = lib.evalModules {
-        modules = [
-          { options = settingsOptions; }
-        ]
-        ++ filteredLayers;
-      };
-    in
-    evaluated.config;
 in
 {
   options.features = mkOption {
@@ -415,15 +311,11 @@ in
     description = "Feature definitions with NixOS and Home-Manager modules.";
   };
 
-  config.flake.lib.modules = {
+  config.flake.lib.features = {
     inherit
       baseContextNames
       stageDistinctArgs
       extractRequiredDispatchArgs
-      mkDeferredModuleOpt
-      mkFeatureSettingsOpt
-      mkFeatureUserSettingsOpt
-      resolveFeatureSettings
       ;
   };
 }

@@ -328,7 +328,7 @@ in
               description = "Monitoring configuration including cross-environment scanning";
             };
 
-            settings = self.lib.modules.mkFeatureSettingsOpt flakeConfig.features "Default feature settings for all hosts in this environment";
+            settings = self.lib.features.mkFeatureSettingsOpt flakeConfig.features "Default feature settings for all hosts in this environment";
 
             users = mkEnvUsersOpt {
               description = ''

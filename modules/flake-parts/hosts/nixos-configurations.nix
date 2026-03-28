@@ -5,7 +5,7 @@
   ...
 }:
 let
-  inherit (self.lib.nixos-configuration-helpers) mkHost mkHostKexec;
+  inherit (self.lib.hosts) mkHost mkHostKexec;
 
   isLinux = lib.hasSuffix "-linux";
   isDarwin = lib.hasSuffix "-darwin";

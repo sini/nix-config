@@ -6,7 +6,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.modules) mkDeferredModuleOpt;
+  inherit (self.lib.features) mkDeferredModuleOpt;
 
   serviceSubmodule =
     { name, ... }:

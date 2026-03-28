@@ -80,7 +80,7 @@ in
                     '';
                   };
 
-                  settings = self.lib.modules.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings for home modules";
+                  settings = self.lib.features.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings for home modules";
                 };
               };
               default = { };

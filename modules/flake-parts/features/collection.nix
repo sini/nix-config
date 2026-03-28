@@ -139,7 +139,7 @@ let
     collectFromSources features ++ collectFromSources activeProviders;
 in
 {
-  config.flake.lib.collection = {
+  config.flake.lib.features.collection = {
     inherit
       collectTypedModules
       collectSystemModules

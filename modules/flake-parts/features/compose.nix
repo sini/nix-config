@@ -140,7 +140,7 @@ let
     attachChain result;
 in
 {
-  config.flake.lib.compose = {
+  config.flake.lib.features.compose = {
     inherit mkFeatureEval;
   };
 }

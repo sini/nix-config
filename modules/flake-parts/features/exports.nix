@@ -14,7 +14,7 @@ in
 {
   flake.featureModules = lib.mapAttrs (
     _name: feature:
-    config.flake.lib.compose.mkFeatureEval {
+    config.flake.lib.features.compose.mkFeatureEval {
       inherit feature;
       wlib = inputs.hm-wrapper-modules.lib;
       home-manager = inputs.home-manager-unstable;
