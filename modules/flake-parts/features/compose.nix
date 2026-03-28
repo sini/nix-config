@@ -6,8 +6,15 @@ let
     {
       feature,
       providers ? [ ],
+      wlib ? throw "wlib not provided — cannot call .package without hm-wrapper-modules",
+      home-manager ? throw "home-manager not provided — cannot call .package",
+      baseModules ? [ ],
     }:
     let
+      defaults = {
+        inherit wlib home-manager baseModules;
+      };
+
       # Build settings options from feature + providers
       featureSettings = feature.settings or { };
       providerSettings = lib.foldl' (acc: p: acc // (p.settings or { })) { } providers;
@@ -78,13 +85,11 @@ let
         in
         cfg
         // {
-          # .eval returns the raw evalModules result
           eval =
             module:
             evalResult.extendModules {
               modules = lib.toList module;
             };
-          # .apply returns config with chain re-attached
           apply =
             module:
             attachChain (
@@ -92,9 +97,43 @@ let
                 modules = lib.toList module;
               }
             );
-          # .wrap stubbed for Phase 4
-          wrap =
-            _module: throw "feature.wrap is not yet implemented (Phase 4: hm-wrapper-modules integration)";
+          package =
+            {
+              pkgs,
+              home-manager ? defaults.home-manager,
+              baseModules ? defaults.baseModules,
+              extraSpecialArgs ? { },
+              mainPackage ? null,
+              programName ? cfg._meta.name,
+            }:
+            let
+              isDarwin = pkgs.stdenv.isDarwin;
+              isLinux = pkgs.stdenv.isLinux;
+
+              homeModules =
+                [ cfg._classModules.home ]
+                ++ lib.optional isLinux (cfg._classModules.homeLinux or { })
+                ++ lib.optional isDarwin (cfg._classModules.homeDarwin or { });
+
+              base = defaults.wlib.wrapHomeModule {
+                inherit
+                  pkgs
+                  home-manager
+                  mainPackage
+                  programName
+                  extraSpecialArgs
+                  ;
+                homeModules = baseModules ++ homeModules;
+              };
+            in
+            base.wrap (
+              { config, lib, ... }:
+              {
+                imports = [ defaults.wlib.modules.bwrapConfig ];
+                bwrapConfig.binds.ro = defaults.wlib.mkBinds base.passthru.hmAdapter;
+                env.XDG_CONFIG_HOME = lib.mkIf config.bwrapConfig.enable (lib.mkForce null);
+              }
+            );
           _evalResult = evalResult;
         };
     in

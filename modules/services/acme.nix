@@ -1,82 +1,65 @@
 { lib, ... }:
 {
-  features.acme.linux =
-    {
-      config,
-      secrets,
-      environment,
-      ...
-    }:
-    let
-      # Extract top-level domain from the host's FQDN
-      fqdnParts = lib.splitString "." config.networking.fqdn;
-      topDomain = lib.concatStringsSep "." (lib.reverseList (lib.take 2 (lib.reverseList fqdnParts)));
+  features.acme = {
+    linux =
+      {
+        config,
+        secrets,
+        environment,
+        ...
+      }:
+      let
+        # Extract top-level domain from the host's FQDN
+        fqdnParts = lib.splitString "." config.networking.fqdn;
+        topDomain = lib.concatStringsSep "." (lib.reverseList (lib.take 2 (lib.reverseList fqdnParts)));
 
-      # Look up the issuer for this domain
-      domainConfig = environment.certificates.domains.${topDomain} or null;
-      issuerName = if domainConfig != null then domainConfig.issuer else null;
+        # Look up the issuer for this domain
+        domainConfig = environment.certificates.domains.${topDomain} or null;
+        issuerName = if domainConfig != null then domainConfig.issuer else null;
+      in
+      {
+        security.acme = {
+          acceptTerms = true;
+          defaults = {
+            email = environment.email.adminEmail;
+            inherit (environment.acme) dnsProvider;
+            inherit (environment.acme) dnsResolver;
+            dnsPropagationCheck = true;
+            credentialFiles = {
+              CLOUDFLARE_DNS_API_TOKEN_FILE = secrets."${issuerName}-cloudflare-api-key";
+            };
+          };
 
-      # Get the issuer configuration
-      issuerConfig =
-        if issuerName != null then environment.certificates.issuers.${issuerName} or null else null;
-      rekeyFile =
-        if issuerConfig != null && issuerConfig.ageKeyFile != null then issuerConfig.ageKeyFile else null;
-
-      # Generate age secrets for ALL issuers (not just the ones used by this host)
-      # This allows the secrets to be used by nginx, cert-manager, and other services
-      issuerSecrets = lib.listToAttrs (
-        lib.flatten (
-          lib.mapAttrsToList (
-            issuerName: issuerConfig:
-            lib.optional (issuerConfig.ageKeyFile != null) {
-              name = "${issuerName}-cloudflare-api-key";
-              value = {
-                rekeyFile = issuerConfig.ageKeyFile;
-              };
-            }
-          ) environment.certificates.issuers
-        )
-      );
-    in
-    lib.mkIf (rekeyFile != null) {
-      age.secrets = issuerSecrets;
-
-      security.acme = {
-        acceptTerms = true;
-        defaults = {
-          email = environment.email.adminEmail;
-          inherit (environment.acme) dnsProvider;
-          inherit (environment.acme) dnsResolver;
-          dnsPropagationCheck = true;
-          credentialFiles = {
-            CLOUDFLARE_DNS_API_TOKEN_FILE = secrets."${issuerName}-cloudflare-api-key";
+          certs.${config.networking.fqdn} = {
+            extraDomainNames = [ "*.${config.networking.fqdn}" ];
           };
         };
-
-        certs.${config.networking.fqdn} = {
-          extraDomainNames = [ "*.${config.networking.fqdn}" ];
-        };
       };
-    };
 
-  features.acme.provides.impermanence.linux =
-    {
-      config,
-      lib,
-      environment,
-      ...
-    }:
-    let
-      fqdnParts = lib.splitString "." config.networking.fqdn;
-      topDomain = lib.concatStringsSep "." (lib.reverseList (lib.take 2 (lib.reverseList fqdnParts)));
-      domainConfig = environment.certificates.domains.${topDomain} or null;
-      issuerName = if domainConfig != null then domainConfig.issuer else null;
-      issuerConfig =
-        if issuerName != null then environment.certificates.issuers.${issuerName} or null else null;
-      rekeyFile =
-        if issuerConfig != null && issuerConfig.ageKeyFile != null then issuerConfig.ageKeyFile else null;
-    in
-    lib.mkIf (rekeyFile != null) {
+    provides.secrets.os =
+      {
+        environment,
+        ...
+      }:
+      {
+        # Generate age secrets for ALL issuers (not just the ones used by this host)
+        # This allows the secrets to be used by nginx, cert-manager, and other services
+        age.secrets = lib.listToAttrs (
+          lib.flatten (
+            lib.mapAttrsToList (
+              issuerName: issuerConfig:
+              lib.optional (issuerConfig.ageKeyFile != null) {
+                name = "${issuerName}-cloudflare-api-key";
+                value = {
+                  rekeyFile = issuerConfig.ageKeyFile;
+                };
+              }
+            ) environment.certificates.issuers
+          )
+        );
+      };
+
+    provides.impermanence.linux = {
       environment.persistence."/persist".directories = [
         {
           directory = "/var/lib/acme";
@@ -86,4 +69,5 @@
         }
       ];
     };
+  };
 }

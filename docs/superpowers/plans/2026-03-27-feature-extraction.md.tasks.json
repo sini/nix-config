@@ -1,0 +1,41 @@
+{
+  "planPath": "docs/superpowers/plans/2026-03-27-feature-extraction.md",
+  "tasks": [
+    {
+      "id": 13,
+      "subject": "Task 1: Implement .package on composition chain",
+      "status": "pending",
+      "description": "Implement .package method on mkFeatureEval that calls wlib.wrapHomeModule with bwrap integration.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/compose.nix"],
+        "verifyCommand": "nix-flake-build --dry-run cortex",
+        "acceptanceCriteria": [".package calls wrapHomeModule", "bwrap included", "extraSpecialArgs/mainPackage supported", "clear error on missing wlib"]
+      }
+    },
+    {
+      "id": 14,
+      "subject": "Task 2: Wire defaults into feature exports",
+      "status": "pending",
+      "blockedBy": [13],
+      "description": "Pass wlib, home-manager, baseModules to mkFeatureEval in exports.nix.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/exports.nix"],
+        "verifyCommand": "nix-flake-build --dry-run cortex",
+        "acceptanceCriteria": ["wlib passed", "home-manager passed", "baseModules with persistence stub and stylix"]
+      }
+    },
+    {
+      "id": 15,
+      "subject": "Task 3: Migrate wrapped-packages.nix to .package API",
+      "status": "pending",
+      "blockedBy": [13, 14],
+      "description": "Replace direct hm-wrapper-modules usage with .package calls from composition chain.",
+      "metadata": {
+        "files": ["modules/flake-parts/features/wrapped-packages.nix"],
+        "verifyCommand": "nix-flake-build --dry-run cortex",
+        "acceptanceCriteria": ["tier 1 uses .package", "tier 2 uses .package with extraSpecialArgs", "hm-wrapper-modules import removed", "featureMeta preserved"]
+      }
+    }
+  ],
+  "lastUpdated": "2026-03-27T00:00:00Z"
+}
