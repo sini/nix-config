@@ -3,6 +3,7 @@
   features.nix-remote-build-server.system =
     {
       config,
+      secrets,
       pkgs,
       lib,
       flakeLib,
@@ -15,7 +16,7 @@
       services.nix-serve = {
         enable = true;
         package = pkgs.nix-serve-ng;
-        secretKeyFile = config.age.secrets.nix_store_signing_key.path;
+        secretKeyFile = secrets.nix_store_signing_key;
         port = 16893;
         openFirewall = true;
       };

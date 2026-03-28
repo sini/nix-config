@@ -2,6 +2,7 @@
   features.grafana.linux =
     {
       config,
+      secrets,
       environment,
       pkgs,
       ...
@@ -31,7 +32,7 @@
               disable_gravatar = true;
               hide_version = true;
               # `openssl rand -hex 32
-              secret_key = "$__file{${config.age.secrets.grafana-secret-key.path}}";
+              secret_key = "$__file{${secrets.grafana-secret-key}}";
             };
 
             database = {
@@ -62,7 +63,7 @@
               allow_sign_up = true;
               auto_login = true;
               client_id = "grafana";
-              client_secret = "$__file{${config.age.secrets.grafana-oidc-secret.path}}";
+              client_secret = "$__file{${secrets.grafana-oidc-secret}}";
               scopes = "openid email profile";
               login_attribute_path = "preferred_username";
               auth_url = "https://${kanidmDomain}/ui/oauth2";

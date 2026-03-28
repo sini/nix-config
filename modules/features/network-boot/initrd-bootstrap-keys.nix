@@ -3,6 +3,7 @@
     linux =
       {
         config,
+        secrets,
         environment,
         pkgs,
         ...
@@ -22,7 +23,7 @@
           # my wifi password...
           wpa-supplicant-initrd = {
             generator = {
-              dependencies = [ config.age.secrets.wpa-supplicant-keys-for-initrd ];
+              dependencies = [ secrets.wpa-supplicant-keys-for-initrd ];
               script = "wpa-supplicant-config";
             };
 
@@ -46,8 +47,8 @@
           # for the first time, and the secrets were rekeyed for the the new host identity.
           agenixEnsureInitrdHostkey = {
             text = ''
-              [[ -e ${config.age.secrets.initrd_host_ed25519_key.path} ]] \
-                || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${config.age.secrets.initrd_host_ed25519_key.path}
+              [[ -e ${secrets.initrd_host_ed25519_key} ]] \
+                || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${secrets.initrd_host_ed25519_key}
             '';
             deps = [
               "agenixInstall"
@@ -57,15 +58,15 @@
 
           agenixEnsureInitrdWpaSupplicantConfig = {
             text = ''
-              if [[ ! -e ${config.age.secrets.wpa-supplicant-initrd.path} ]]; then
+              if [[ ! -e ${secrets.wpa-supplicant-initrd} ]]; then
                 # Create a minimal valid wpa_supplicant.conf as placeholder
-                cat > ${config.age.secrets.wpa-supplicant-initrd.path} <<'EOF'
+                cat > ${secrets.wpa-supplicant-initrd} <<'EOF'
               # Placeholder wpa_supplicant config for initial deployment
               # This will be replaced with the real config after agenix rekey
               ctrl_interface=/var/run/wpa_supplicant
               update_config=1
               EOF
-                chmod 600 ${config.age.secrets.wpa-supplicant-initrd.path}
+                chmod 600 ${secrets.wpa-supplicant-initrd}
               fi
             '';
             deps = [

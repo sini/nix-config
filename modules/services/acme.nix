@@ -3,6 +3,7 @@
   features.acme.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -48,7 +49,7 @@
           inherit (environment.acme) dnsResolver;
           dnsPropagationCheck = true;
           credentialFiles = {
-            CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets."${issuerName}-cloudflare-api-key".path;
+            CLOUDFLARE_DNS_API_TOKEN_FILE = secrets."${issuerName}-cloudflare-api-key";
           };
         };
 

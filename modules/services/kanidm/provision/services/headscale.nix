@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -18,7 +19,7 @@
               "https://${domain}/admin/oidc/callback"
             ];
             originLanding = "https://${domain}/admin";
-            basicSecretFile = config.age.secrets.headscale-oidc-client-secret.path;
+            basicSecretFile = secrets.headscale-oidc-client-secret;
             scopeMaps."vpn.users" = [
               "openid"
               "email"

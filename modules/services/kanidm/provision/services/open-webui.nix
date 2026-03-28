@@ -3,6 +3,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -17,7 +18,7 @@
             imageFile = builtins.path { path = rootPath + /assets/open-webui.svg; };
             originUrl = "https://${domain}/oauth/oidc/callback";
             originLanding = "https://${domain}/auth";
-            basicSecretFile = config.age.secrets.open-webui-oidc-client-secret.path;
+            basicSecretFile = secrets.open-webui-oidc-client-secret;
             scopeMaps."open-webui.access" = [
               "openid"
               "email"

@@ -31,6 +31,7 @@
     darwin =
       {
         config,
+        secrets,
         lib,
         environment,
         host,
@@ -46,7 +47,7 @@
 
         system.activationScripts.postActivation.text = ''
           # Tailscale auto-authentication
-          if [ -f "${config.age.secrets.tailscale-auth-key.path}" ]; then
+          if [ -f "${secrets.tailscale-auth-key}" ]; then
             echo "Configuring Tailscale..."
 
             # Wait for tailscaled to be ready (max 10 seconds)
@@ -67,13 +68,13 @@
               # Use --reset to clear any conflicting non-default settings
               /run/current-system/sw/bin/tailscale up \
                 --login-server=https://${environment.getDomainFor "headscale"} \
-                --auth-key="$(cat ${config.age.secrets.tailscale-auth-key.path})" \
+                --auth-key="$(cat ${secrets.tailscale-auth-key})" \
                 --hostname="${host.hostname}" \
                 --reset \
                 || echo "Tailscale auth failed (may need manual login)"
             fi
           else
-            echo "Warning: Tailscale auth key not found at ${config.age.secrets.tailscale-auth-key.path}"
+            echo "Warning: Tailscale auth key not found at ${secrets.tailscale-auth-key}"
             echo "Run: agenix generate to add tailscale-auth"
           fi
         '';
@@ -83,6 +84,7 @@
     linux =
       {
         config,
+        secrets,
         lib,
         environment,
         host,
@@ -98,7 +100,7 @@
         services.tailscale = {
           enable = true;
           inherit (ts) openFirewall;
-          authKeyFile = config.age.secrets.tailscale-auth-key.path;
+          authKeyFile = secrets.tailscale-auth-key;
           extraUpFlags = [
             "--login-server=https://${environment.getDomainFor "headscale"}"
           ]

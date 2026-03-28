@@ -2,7 +2,7 @@
 {
   features.spotify-player = {
     home =
-      { config, ... }:
+      { config, secrets, ... }:
       {
         age.secrets.spotify-player-credentials = {
           rekeyFile = rootPath + "/.secrets/users/${config.home.username}/spotify-player-credentials.age";
@@ -12,7 +12,7 @@
         programs.spotify-player = {
           enable = true;
           settings = {
-            client_id_command = "cat ${config.age.secrets.spotify-player-credentials.path}";
+            client_id_command = "cat ${secrets.spotify-player-credentials}";
             enable_media_control = true;
             enable_notify = false;
             enable_cover_image_cache = true;

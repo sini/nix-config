@@ -4,6 +4,7 @@
     linux =
       {
         config,
+        secrets,
         users,
         ...
       }:
@@ -59,7 +60,7 @@
                 extraGroups = user.system.systemGroups;
                 inherit (user.system) linger;
                 description = user.identity.displayName;
-                hashedPasswordFile = lib.mkIf hasPasswordFile config.age.secrets."user-${userName}-password".path;
+                hashedPasswordFile = lib.mkIf hasPasswordFile secrets."user-${userName}-password";
               };
             };
           };

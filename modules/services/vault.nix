@@ -6,6 +6,7 @@ in
   features.vault.linux =
     {
       config,
+      secrets,
       lib,
       pkgs,
       host,
@@ -31,9 +32,9 @@ in
         retry_join {
           leader_tls_servername = "${hostname}"
           leader_api_addr = "https://${hostname}:8200"
-          leader_ca_cert_file = "${config.age.secrets.vault-ca.path}"
-          leader_client_cert_file = "${config.age.secrets."vault-${config.networking.hostName}".path}"
-          leader_client_key_file = "${config.age.secrets."vault-${config.networking.hostName}-key".path}"
+          leader_ca_cert_file = "${secrets.vault-ca}"
+          leader_client_cert_file = "${secrets."vault-${config.networking.hostName}"}"
+          leader_client_key_file = "${secrets."vault-${config.networking.hostName}-key"}"
         }
       '';
     in
@@ -106,8 +107,8 @@ in
       services.vault = {
         enable = true;
         # Use internal certificates for vault-to-vault communication
-        tlsCertFile = config.age.secrets."vault-${config.networking.hostName}".path;
-        tlsKeyFile = config.age.secrets."vault-${config.networking.hostName}-key".path;
+        tlsCertFile = secrets."vault-${config.networking.hostName}";
+        tlsKeyFile = secrets."vault-${config.networking.hostName}-key";
         # Use the binary version of vault which contains the vendored
         # dependencies. This is required for the vault UI to work.
         package = pkgs.vault-bin;
@@ -148,7 +149,7 @@ in
 
         environment = {
           VAULT_ADDR = "https://${config.networking.fqdn}:8200";
-          VAULT_CACERT = config.age.secrets.vault-ca.path;
+          VAULT_CACERT = secrets.vault-ca;
         };
 
         script = ''
@@ -184,9 +185,9 @@ in
           echo "Vault is sealed, attempting to unseal..."
 
           # Try each unseal key
-          for key_file in "${config.age.secrets.vault-unseal-key-1.path}" \
-                          "${config.age.secrets.vault-unseal-key-2.path}" \
-                          "${config.age.secrets.vault-unseal-key-3.path}"; do
+          for key_file in "${secrets.vault-unseal-key-1}" \
+                          "${secrets.vault-unseal-key-2}" \
+                          "${secrets.vault-unseal-key-3}"; do
             if [ -f "$key_file" ]; then
               echo "Using unseal key: $key_file"
               if ${pkgs.vault}/bin/vault operator unseal -tls-skip-verify "$(cat "$key_file")"; then

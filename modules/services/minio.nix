@@ -2,6 +2,7 @@
   features.minio.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -18,7 +19,7 @@
           listenAddress = "127.0.0.1:9000";
           consoleAddress = "127.0.0.1:9001";
           dataDir = [ "/var/lib/minio/data" ];
-          rootCredentialsFile = config.age.secrets.minio-root-credentials.path;
+          rootCredentialsFile = secrets.minio-root-credentials;
         };
 
         nginx.virtualHosts = {

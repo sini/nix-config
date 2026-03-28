@@ -3,6 +3,7 @@
   features.nginx.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -52,7 +53,7 @@
               extraDomainNames = [ "*.${domain}" ];
               group = config.services.nginx.group;
               credentialFiles = lib.mkIf (issuerName != null) {
-                CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets."${issuerName}-cloudflare-api-key".path;
+                CLOUDFLARE_DNS_API_TOKEN_FILE = secrets."${issuerName}-cloudflare-api-key";
               };
             };
           }

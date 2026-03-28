@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -15,7 +16,7 @@
             displayName = "Grafana Dashboard";
             originLanding = "https://${domain}/login/generic_oauth";
             originUrl = "https://${domain}";
-            basicSecretFile = config.age.secrets.grafana-oidc-client-secret.path;
+            basicSecretFile = secrets.grafana-oidc-client-secret;
             scopeMaps."grafana.access" = [
               "openid"
               "email"

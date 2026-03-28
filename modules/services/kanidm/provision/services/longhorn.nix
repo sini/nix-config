@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -16,7 +17,7 @@
             "https://${domain}/oauth2/callback"
           ];
           originLanding = "https://${domain}/";
-          basicSecretFile = config.age.secrets.longhorn-oidc-client-secret.path;
+          basicSecretFile = secrets.longhorn-oidc-client-secret;
           scopeMaps."admins" = [
             "openid"
             "email"

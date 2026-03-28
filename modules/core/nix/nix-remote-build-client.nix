@@ -6,6 +6,7 @@
   features.nix.os =
     {
       config,
+      secrets,
       flakeLib,
       lib,
       host,
@@ -38,7 +39,7 @@
           # The server side user to login with
           sshUser = "nix-remote-build";
           # The client side private key for login as sshUser
-          sshKey = config.age.secrets.nix-remote-build-user-key.path;
+          sshKey = secrets.nix-remote-build-user-key;
         }) remoteBuilders;
 
         settings =

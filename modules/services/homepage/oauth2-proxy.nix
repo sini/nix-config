@@ -3,6 +3,7 @@
   features.oauth2-proxy.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -50,7 +51,7 @@
 
           provider = "oidc";
 
-          keyFile = config.age.secrets.oauth2-proxy-keys.path;
+          keyFile = secrets.oauth2-proxy-keys;
 
           # Email configuration - allow all authenticated users
           email.domains = [ "*" ];

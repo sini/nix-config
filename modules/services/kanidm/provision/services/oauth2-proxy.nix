@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -14,7 +15,7 @@
           displayName = "OAuth2-Proxy";
           originUrl = "https://${domain}/oauth2/callback";
           originLanding = "https://${domain}/";
-          basicSecretFile = config.age.secrets.oauth2-proxy-oidc-client-secret.path;
+          basicSecretFile = secrets.oauth2-proxy-oidc-client-secret;
           preferShortUsername = true;
           scopeMaps = {
             "media.access" = [

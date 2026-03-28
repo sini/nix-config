@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -15,7 +16,7 @@
             displayName = "Jellyfin";
             originUrl = "https://${domain}/sso/OID/redirect/kanidm";
             originLanding = "https://${domain}";
-            basicSecretFile = config.age.secrets.jellyfin-oidc-client-secret.path;
+            basicSecretFile = secrets.jellyfin-oidc-client-secret;
             preferShortUsername = true;
             scopeMaps = {
               "media.access" = [

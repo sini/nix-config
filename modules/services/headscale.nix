@@ -2,6 +2,7 @@
   features.headscale.linux =
     {
       config,
+      secrets,
       environment,
       pkgs,
       ...
@@ -60,7 +61,7 @@
               only_start_if_oidc_is_available = true;
               issuer = "https://${kanidmDomain}/oauth2/openid/headscale";
               client_id = "headscale";
-              client_secret_path = config.age.secrets.headscale-oidc-secret.path;
+              client_secret_path = secrets.headscale-oidc-secret;
               scope = [
                 "openid"
                 "profile"

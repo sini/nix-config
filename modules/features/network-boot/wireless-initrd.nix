@@ -7,6 +7,7 @@
     linux =
       {
         config,
+        secrets,
         lib,
         pkgs,
         ...
@@ -73,7 +74,7 @@
             };
 
             secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" =
-              config.age.secrets.wpa-supplicant-initrd.path;
+              secrets.wpa-supplicant-initrd;
           };
         };
       };

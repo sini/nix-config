@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -15,7 +16,7 @@
             displayName = "Forgejo";
             originUrl = "https://${domain}/user/oauth2/kanidm/callback";
             originLanding = "https://${domain}/";
-            basicSecretFile = config.age.secrets.forgejo-oidc-client-secret.path;
+            basicSecretFile = secrets.forgejo-oidc-client-secret;
             scopeMaps."forgejo.access" = [
               "openid"
               "email"

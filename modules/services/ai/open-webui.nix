@@ -14,6 +14,7 @@ in
   features.open-webui.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -94,7 +95,7 @@ in
           };
 
           # Set OAUTH_CLIENT_SECRET
-          environmentFile = config.age.secrets.open-webui-env.path;
+          environmentFile = secrets.open-webui-env;
         };
 
         nginx = {

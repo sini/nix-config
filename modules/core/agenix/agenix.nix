@@ -84,10 +84,18 @@
           agenixNewGeneration.deps = [ "removeAgenixLink" ];
         };
 
+        # Make secrets paths available as a module arg for all NixOS modules
+        # Features use { secrets, ... }: secrets.foo instead of config.age.secrets.foo.path
+        _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
+
         # Make agenix home-manager module available to all users
         home-manager.sharedModules = [
           inputs.agenix.homeManagerModules.default
           inputs.agenix-rekey.homeManagerModules.default
+          # Home-level secrets from the user's own HM age.secrets
+          ({ config, lib, ... }: {
+            _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
+          })
         ];
       };
 

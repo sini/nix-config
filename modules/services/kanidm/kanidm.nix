@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       pkgs,
       environment,
       ...
@@ -40,8 +41,8 @@
 
           provision = {
             enable = true;
-            adminPasswordFile = config.age.secrets.kanidm-admin-password.path;
-            idmAdminPasswordFile = config.age.secrets.kanidm-admin-password.path;
+            adminPasswordFile = secrets.kanidm-admin-password;
+            idmAdminPasswordFile = secrets.kanidm-admin-password;
           };
         };
 

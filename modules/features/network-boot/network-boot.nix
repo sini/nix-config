@@ -4,6 +4,7 @@
     linux =
       {
         config,
+        secrets,
         lib,
         host,
         flakeLib,
@@ -76,7 +77,7 @@
               port = 22;
               authorizedKeys = flakeLib.users.getSshKeysForGroup users "wheel";
               hostKeys = [
-                config.age.secrets.initrd_host_ed25519_key.path
+                secrets.initrd_host_ed25519_key
               ];
             };
           };

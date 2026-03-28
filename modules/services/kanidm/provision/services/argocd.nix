@@ -2,6 +2,7 @@
   features.kanidm.linux =
     {
       config,
+      secrets,
       environment,
       ...
     }:
@@ -17,7 +18,7 @@
               "https://${domain}/auth/callback"
             ];
             originLanding = "https://${domain}/applications";
-            basicSecretFile = config.age.secrets.argocd-oidc-client-secret.path;
+            basicSecretFile = secrets.argocd-oidc-client-secret;
             preferShortUsername = true;
 
             scopeMaps = {

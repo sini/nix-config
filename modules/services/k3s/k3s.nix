@@ -18,6 +18,7 @@
         lib,
         pkgs,
         config,
+        secrets,
         host,
         cluster,
         environment,
@@ -308,7 +309,7 @@
               clusterInit = shouldInit;
               enable = true;
               role = "server";
-              tokenFile = config.age.secrets.kubernetes-cluster-token.path;
+              tokenFile = secrets.kubernetes-cluster-token;
               gracefulNodeShutdown.enable = true;
               extraFlags = lib.mkForce serverFlags;
             }
@@ -435,7 +436,7 @@
                     echo "Creating SOPS age key secret..."
                     ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
                       --namespace sops-secrets-operator \
-                      --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
+                      --from-file=key=${secrets.kubernetes-sops-age-key}
                   fi
 
                   # Install sops-secrets-operator if deployment doesn't exist

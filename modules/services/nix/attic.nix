@@ -3,6 +3,7 @@
     {
       host,
       config,
+      secrets,
       environment,
       pkgs,
       ...
@@ -20,7 +21,7 @@
         atticd = {
           enable = true;
 
-          environmentFile = config.age.secrets.attic-server-env.path;
+          environmentFile = secrets.attic-server-env;
 
           settings = {
             listen = "[::1]:57448";

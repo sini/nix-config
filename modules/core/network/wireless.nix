@@ -3,6 +3,7 @@
     linux =
       {
         config,
+        secrets,
         lib,
         environment,
         ...
@@ -39,7 +40,7 @@
 
             interfaces = [ interface ];
 
-            secretsFile = config.age.secrets.wpa-supplicant.path;
+            secretsFile = secrets.wpa-supplicant;
 
             networks = lib.mkIf (environment.networks.default.wireless != null) {
               "${environment.networks.default.wireless.ssid}".pskRaw =
