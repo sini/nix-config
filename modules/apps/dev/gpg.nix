@@ -69,16 +69,15 @@
 # in
 {
   features.gpg = {
+    collectsProviders = [ "gpg" ];
+
     linux = {
       services.pcscd.enable = true;
       hardware.gpgSmartcards.enable = true;
     };
 
     home =
-      { pkgs, host, ... }:
-      let
-        isWorkstation = host.hasFeature "xserver";
-      in
+      { pkgs, lib, ... }:
       {
         programs.gpg = {
           enable = true;
@@ -133,13 +132,7 @@
             maxCacheTtl = 86400; # 24h
             maxCacheTtlSsh = 86400;
 
-            pinentry.package =
-              if host.isDarwin then
-                pkgs.pinentry_mac
-              else if isWorkstation then
-                pkgs.pinentry-gnome3
-              else
-                pkgs.pinentry-tty;
+            pinentry.package = lib.mkDefault pkgs.pinentry-tty;
 
             extraConfig = ''
               ttyname $GPG_TTY
@@ -147,6 +140,12 @@
           };
         };
 
+      };
+
+    homeDarwin =
+      { pkgs, ... }:
+      {
+        services.gpg-agent.pinentry.package = pkgs.pinentry_mac;
       };
 
     provides.impermanence = {

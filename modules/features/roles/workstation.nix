@@ -1,5 +1,11 @@
 {
   features.workstation = {
+    provides.gpg.home =
+      { pkgs, ... }:
+      {
+        services.gpg-agent.pinentry.package = pkgs.pinentry-gnome3;
+      };
+
     requires = [
       # Hardware modules
       "audio"
