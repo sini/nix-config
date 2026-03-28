@@ -111,10 +111,11 @@ let
               isDarwin = pkgs.stdenv.isDarwin;
               isLinux = pkgs.stdenv.isLinux;
 
-              homeModules =
-                [ cfg._classModules.home ]
-                ++ lib.optional isLinux (cfg._classModules.homeLinux or { })
-                ++ lib.optional isDarwin (cfg._classModules.homeDarwin or { });
+              homeModules = [
+                cfg._classModules.home
+              ]
+              ++ lib.optional isLinux (cfg._classModules.homeLinux or { })
+              ++ lib.optional isDarwin (cfg._classModules.homeDarwin or { });
 
               base = defaults.wlib.wrapHomeModule {
                 inherit

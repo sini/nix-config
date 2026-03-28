@@ -2,7 +2,6 @@
 {
   features.kanidm.linux =
     {
-      config,
       secrets,
       environment,
       ...

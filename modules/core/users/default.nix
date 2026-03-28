@@ -3,7 +3,6 @@
   features.users = {
     linux =
       {
-        config,
         secrets,
         users,
         ...

@@ -1,109 +1,112 @@
 {
-  features.kanidm.linux =
-    {
-      config,
-      secrets,
-      pkgs,
-      environment,
-      ...
-    }:
-    let
-      domain = environment.getDomainFor "kanidm";
-      topDomain = environment.getTopDomainFor "kanidm";
-    in
-    {
-      # Secret definitions moved to provides.secrets
-
-      services = {
-        kanidm = {
-          package = pkgs.kanidm_1_9.withSecretProvisioning;
-
-          server = {
-            enable = true;
-            settings = {
-              inherit (environment) domain;
-              origin = "https://${domain}";
-              bindaddress = "127.0.0.1:8443";
-              ldapbindaddress = "127.0.0.1:3636";
-
-              # TLS certificates from ACME
-              tls_chain = "${config.security.acme.certs.${topDomain}.directory}/fullchain.pem";
-              tls_key = "${config.security.acme.certs.${topDomain}.directory}/key.pem";
-            };
-          };
-
-          client = {
-            enable = true;
-            settings = {
-              uri = "https://${domain}";
-            };
-          };
-
-          provision = {
-            enable = true;
-            adminPasswordFile = secrets.kanidm-admin-password;
-            idmAdminPasswordFile = secrets.kanidm-admin-password;
-          };
-        };
-
-        nginx.virtualHosts."${domain}" = {
-          forceSSL = true;
-          useACMEHost = environment.getTopDomainFor "kanidm";
-          locations."/" = {
-            proxyPass = "https://127.0.0.1:8443";
-            proxyWebsockets = true;
-            extraConfig = ''
-              proxy_set_header Host $host;
-              proxy_set_header X-Real-IP $remote_addr;
-              proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-              proxy_set_header X-Forwarded-Proto $scheme;
-
-              proxy_ssl_server_name on;
-              proxy_ssl_name $host;
-              proxy_ssl_verify_depth 2;
-              proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-              proxy_ssl_session_reuse off;
-            '';
-          };
-        };
-      };
-
-      # Ensure kanidm user can read the secret files and certificates
-      systemd.services.kanidm.serviceConfig = {
-        SupplementaryGroups = [ "keys" ];
-      };
-
-      # Grant kanidm access to certificates
-      users.users.kanidm.extraGroups = [
-        config.security.acme.defaults.group
-        config.services.nginx.group
-      ];
-    };
-
-  features.kanidm.provides.secrets.linux =
-    { environment, ... }:
-    {
-      age.secrets.kanidm-admin-password = {
-        rekeyFile = environment.secretPath + "/kanidm-admin-password.age";
-        generator.script = "passphrase";
-        owner = "kanidm";
-        group = "kanidm";
-      };
-    };
-
-  features.kanidm.provides.firewall.linux = {
-    # Open firewall for LDAP
-    networking.firewall.allowedTCPPorts = [ 3636 ];
-  };
-
-  features.kanidm.provides.impermanence.linux = {
-    environment.persistence."/persist".directories = [
+  features.kanidm = {
+    linux =
       {
-        directory = "/var/lib/kanidm";
-        user = "kanidm";
-        group = "kanidm";
-        mode = "0700";
-      }
-    ];
+        config,
+        secrets,
+        pkgs,
+        environment,
+        ...
+      }:
+      let
+        domain = environment.getDomainFor "kanidm";
+        topDomain = environment.getTopDomainFor "kanidm";
+      in
+      {
+        # Secret definitions moved to provides.secrets
+
+        services = {
+          kanidm = {
+            package = pkgs.kanidm_1_9.withSecretProvisioning;
+
+            server = {
+              enable = true;
+              settings = {
+                inherit (environment) domain;
+                origin = "https://${domain}";
+                bindaddress = "127.0.0.1:8443";
+                ldapbindaddress = "127.0.0.1:3636";
+
+                # TLS certificates from ACME
+                tls_chain = "${config.security.acme.certs.${topDomain}.directory}/fullchain.pem";
+                tls_key = "${config.security.acme.certs.${topDomain}.directory}/key.pem";
+              };
+            };
+
+            client = {
+              enable = true;
+              settings = {
+                uri = "https://${domain}";
+              };
+            };
+
+            provision = {
+              enable = true;
+              adminPasswordFile = secrets.kanidm-admin-password;
+              idmAdminPasswordFile = secrets.kanidm-admin-password;
+            };
+          };
+
+          nginx.virtualHosts."${domain}" = {
+            forceSSL = true;
+            useACMEHost = environment.getTopDomainFor "kanidm";
+            locations."/" = {
+              proxyPass = "https://127.0.0.1:8443";
+              proxyWebsockets = true;
+              extraConfig = ''
+                proxy_set_header Host $host;
+                proxy_set_header X-Real-IP $remote_addr;
+                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                proxy_set_header X-Forwarded-Proto $scheme;
+
+                proxy_ssl_server_name on;
+                proxy_ssl_name $host;
+                proxy_ssl_verify_depth 2;
+                proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+                proxy_ssl_session_reuse off;
+              '';
+            };
+          };
+        };
+
+        # Ensure kanidm user can read the secret files and certificates
+        systemd.services.kanidm.serviceConfig = {
+          SupplementaryGroups = [ "keys" ];
+        };
+
+        # Grant kanidm access to certificates
+        users.users.kanidm.extraGroups = [
+          config.security.acme.defaults.group
+          config.services.nginx.group
+        ];
+      };
+
+    provides = {
+      secrets.linux =
+        { environment, ... }:
+        {
+          age.secrets.kanidm-admin-password = {
+            rekeyFile = environment.secretPath + "/kanidm-admin-password.age";
+            generator.script = "passphrase";
+            owner = "kanidm";
+            group = "kanidm";
+          };
+        };
+
+      firewall.linux = {
+        networking.firewall.allowedTCPPorts = [ 3636 ];
+      };
+
+      impermanence.linux = {
+        environment.persistence."/persist".directories = [
+          {
+            directory = "/var/lib/kanidm";
+            user = "kanidm";
+            group = "kanidm";
+            mode = "0700";
+          }
+        ];
+      };
+    };
   };
 }

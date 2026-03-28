@@ -30,7 +30,6 @@
 
     darwin =
       {
-        config,
         secrets,
         lib,
         environment,

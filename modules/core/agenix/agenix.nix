@@ -93,9 +93,12 @@
           inputs.agenix.homeManagerModules.default
           inputs.agenix-rekey.homeManagerModules.default
           # Home-level secrets from the user's own HM age.secrets
-          ({ config, lib, ... }: {
-            _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
-          })
+          (
+            { config, lib, ... }:
+            {
+              _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
+            }
+          )
         ];
       };
 

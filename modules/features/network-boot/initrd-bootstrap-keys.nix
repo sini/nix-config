@@ -2,7 +2,6 @@
   features.initrd-bootstrap-keys = {
     linux =
       {
-        config,
         secrets,
         environment,
         pkgs,

@@ -1,27 +1,22 @@
 {
   features.systemd = {
-    linux =
-      {
-        host,
-        ...
-      }:
-      {
-        systemd.tmpfiles.rules = [
-          # cleanup systemd coredumps once a week
-          "d /var/lib/systemd/coredump 0755 root root 7d"
-        ];
+    linux = _: {
+      systemd.tmpfiles.rules = [
+        # cleanup systemd coredumps once a week
+        "d /var/lib/systemd/coredump 0755 root root 7d"
+      ];
 
-        impermanence.ignorePaths = [
-          "/var/lib/systemd/linger/"
-          "/var/lib/systemd/random-seed"
-        ];
+      impermanence.ignorePaths = [
+        "/var/lib/systemd/linger/"
+        "/var/lib/systemd/random-seed"
+      ];
 
-        # Limit logging to 90 days or 2gb
-        services.journald.extraConfig = ''
-          MaxRetentionSec=3month
-          SystemMaxUse=2G
-        '';
-      };
+      # Limit logging to 90 days or 2gb
+      services.journald.extraConfig = ''
+        MaxRetentionSec=3month
+        SystemMaxUse=2G
+      '';
+    };
 
     provides.impermanence.linux =
       {

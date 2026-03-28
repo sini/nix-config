@@ -44,11 +44,9 @@
       };
 
     provides.impermanence = {
-      linux =
-        _:
-        {
-          environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
-        };
+      linux = _: {
+        environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
+      };
     };
 
     home =

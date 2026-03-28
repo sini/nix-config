@@ -3,7 +3,6 @@
 let
   inherit (lib)
     attrNames
-    attrValues
     elem
     filter
     hasAttr
@@ -46,8 +45,7 @@ let
     if !hasAttr parsed.feature featuresConfig then
       throw "Include references unknown feature '${parsed.feature}'"
     else if
-      parsed.type == "provider"
-      && !hasAttr parsed.provider featuresConfig.${parsed.feature}.provides
+      parsed.type == "provider" && !hasAttr parsed.provider featuresConfig.${parsed.feature}.provides
     then
       throw "Include references unknown provider '${parsed.provider}' on feature '${parsed.feature}'"
     else
@@ -215,7 +213,7 @@ let
             featureName:
             let
               feature = state.features.${featureName};
-              provides = feature.provides;
+              inherit (feature) provides;
             in
             if hasAttr providerName provides then
               let

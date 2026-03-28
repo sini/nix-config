@@ -64,14 +64,12 @@
       };
 
     provides.impermanence = {
-      linux =
-        _:
-        {
-          environment.persistence."/cache".directories = [
-            "/var/lib/upower"
-            "/var/lib/power-profiles-daemon"
-          ];
-        };
+      linux = _: {
+        environment.persistence."/cache".directories = [
+          "/var/lib/upower"
+          "/var/lib/power-profiles-daemon"
+        ];
+      };
     };
   };
 }

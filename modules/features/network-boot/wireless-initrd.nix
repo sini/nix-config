@@ -73,8 +73,7 @@
 
             };
 
-            secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" =
-              secrets.wpa-supplicant-initrd;
+            secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" = secrets.wpa-supplicant-initrd;
           };
         };
       };

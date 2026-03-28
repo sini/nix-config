@@ -30,11 +30,9 @@
       };
 
     provides.impermanence = {
-      linux =
-        _:
-        {
-          environment.persistence."/cache".directories = [ "/var/lib/bluetooth" ];
-        };
+      linux = _: {
+        environment.persistence."/cache".directories = [ "/var/lib/bluetooth" ];
+      };
     };
 
     home =

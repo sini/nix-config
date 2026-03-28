@@ -247,11 +247,9 @@
       };
 
     provides.impermanence = {
-      linux =
-        _:
-        {
-          environment.persistence."/persist".directories = [ "/var/lib/libvirt" ];
-        };
+      linux = _: {
+        environment.persistence."/persist".directories = [ "/var/lib/libvirt" ];
+      };
     };
 
     home =

@@ -99,14 +99,12 @@
       };
 
     provides.impermanence = {
-      linux =
-        _:
-        {
-          environment.persistence."/cache".directories = [
-            "/var/lib/cni"
-            "/var/lib/containers"
-          ];
-        };
+      linux = _: {
+        environment.persistence."/cache".directories = [
+          "/var/lib/cni"
+          "/var/lib/containers"
+        ];
+      };
       home = {
         home.persistence."/cache".directories = [
           ".local/share/containers"

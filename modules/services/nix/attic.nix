@@ -3,7 +3,6 @@
     linux =
       {
         host,
-        config,
         secrets,
         environment,
         pkgs,

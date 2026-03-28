@@ -11,155 +11,156 @@ let
   );
 in
 {
-  features.open-webui.linux =
-    {
-      config,
-      secrets,
-      environment,
-      ...
-    }:
-    let
-      domain = environment.getDomainFor "open-webui";
-      kanidmDomain = environment.getDomainFor "kanidm";
-    in
-    {
-      # Secret definitions moved to provides.secrets
+  features.open-webui = {
+    linux =
+      {
+        secrets,
+        environment,
+        ...
+      }:
+      let
+        domain = environment.getDomainFor "open-webui";
+        kanidmDomain = environment.getDomainFor "kanidm";
+      in
+      {
+        # Secret definitions moved to provides.secrets
 
-      services = {
-        open-webui = {
-          enable = true;
-          host = "127.0.0.1";
-          port = 10715; # Random port...
-          stateDir = "/var/lib/open-webui";
-          environment = {
-            WEBUI_NAME = "LLM @ Home";
-            WEBUI_URL = "https://${domain}";
+        services = {
+          open-webui = {
+            enable = true;
+            host = "127.0.0.1";
+            port = 10715; # Random port...
+            stateDir = "/var/lib/open-webui";
+            environment = {
+              WEBUI_NAME = "LLM @ Home";
+              WEBUI_URL = "https://${domain}";
 
-            OLLAMA_BASE_URLS = builtins.concatStringsSep ";" (
-              [ "http://10.9.2.2:11434" ] ++ (map (host: "http://${host}:11434") ollamaHosts)
-            );
+              OLLAMA_BASE_URLS = builtins.concatStringsSep ";" (
+                [ "http://10.9.2.2:11434" ] ++ (map (host: "http://${host}:11434") ollamaHosts)
+              );
 
-            SHOW_ADMIN_DETAILS = "False";
+              SHOW_ADMIN_DETAILS = "False";
 
-            ENABLE_SIGNUP_PASSWORD_CONFIRMATION = "True";
-            ENABLE_SIGNUP = "False";
-            ENABLE_LOGIN_FORM = "False";
-            DEFAULT_USER_ROLE = "user";
+              ENABLE_SIGNUP_PASSWORD_CONFIRMATION = "True";
+              ENABLE_SIGNUP = "False";
+              ENABLE_LOGIN_FORM = "False";
+              DEFAULT_USER_ROLE = "user";
 
-            ENABLE_OAUTH_SIGNUP = "True"; # Not the same as ENABLE_SIGNUP
-            OAUTH_UPDATE_PICTURE_ON_LOGIN = "True";
-            ENABLE_OAUTH_PERSISTENT_CONFIG = "False"; # That's why we are using NixOS ;)
-            OAUTH_MERGE_ACCOUNTS_BY_EMAIL = "True";
+              ENABLE_OAUTH_SIGNUP = "True"; # Not the same as ENABLE_SIGNUP
+              OAUTH_UPDATE_PICTURE_ON_LOGIN = "True";
+              ENABLE_OAUTH_PERSISTENT_CONFIG = "False"; # That's why we are using NixOS ;)
+              OAUTH_MERGE_ACCOUNTS_BY_EMAIL = "True";
 
-            OAUTH_CLIENT_ID = "open-webui";
-            OPENID_PROVIDER_URL = "https://${kanidmDomain}/oauth2/openid/open-webui/.well-known/openid-configuration";
-            OAUTH_CODE_CHALLENGE_METHOD = "S256";
-            OAUTH_PROVIDER_NAME = "idm";
-            OAUTH_ALLOWED_ROLES = "user";
-            OAUTH_ADMIN_ROLES = "admin";
-            ENABLE_OAUTH_ROLE_MANAGEMENT = "True";
-            ENABLE_OAUTH_GROUP_MANAGEMENT = "True";
+              OAUTH_CLIENT_ID = "open-webui";
+              OPENID_PROVIDER_URL = "https://${kanidmDomain}/oauth2/openid/open-webui/.well-known/openid-configuration";
+              OAUTH_CODE_CHALLENGE_METHOD = "S256";
+              OAUTH_PROVIDER_NAME = "idm";
+              OAUTH_ALLOWED_ROLES = "user";
+              OAUTH_ADMIN_ROLES = "admin";
+              ENABLE_OAUTH_ROLE_MANAGEMENT = "True";
+              ENABLE_OAUTH_GROUP_MANAGEMENT = "True";
 
-            RESET_CONFIG_ON_START = "True";
-            ENABLE_OPENAI_API = "False";
-            # OPENAI_API_KEY = "";
+              RESET_CONFIG_ON_START = "True";
+              ENABLE_OPENAI_API = "False";
+              # OPENAI_API_KEY = "";
 
-            # OLLAMA_BASE_URL = "http://127.0.0.1:11434";
-            # OLLAMA_API_BASE_URL = "http://127.0.0.1:11434/api";
-            # OPENAI_API_BASE_URL = "http://127.0.0.1:8888/v1";
+              # OLLAMA_BASE_URL = "http://127.0.0.1:11434";
+              # OLLAMA_API_BASE_URL = "http://127.0.0.1:11434/api";
+              # OPENAI_API_BASE_URL = "http://127.0.0.1:8888/v1";
 
-            ENABLE_VERSION_UPDATE_CHECK = "False";
+              ENABLE_VERSION_UPDATE_CHECK = "False";
 
-            ENABLE_CHANNELS = "True";
-            ENABLE_REALTIME_CHAT_SAVE = "True";
+              ENABLE_CHANNELS = "True";
+              ENABLE_REALTIME_CHAT_SAVE = "True";
 
-            ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = "True";
-            ENABLE_FORWARD_USER_INFO_HEADERS = "True";
+              ENABLE_API_KEY_ENDPOINT_RESTRICTIONS = "True";
+              ENABLE_FORWARD_USER_INFO_HEADERS = "True";
 
-            PDF_EXTRACT_IMAGES = "True";
+              PDF_EXTRACT_IMAGES = "True";
 
-            # TODO: Image Generation (Comfyui)
-            ENABLE_IMAGE_GENERATION = "True";
+              # TODO: Image Generation (Comfyui)
+              ENABLE_IMAGE_GENERATION = "True";
 
-            RAG_FULL_CONTEXT = "True";
-            ENABLE_RAG_LOCAL_WEB_FETCH = "True";
-            ENABLE_WEB_SEARCH = "True";
-            ENABLE_RAG_WEB_SEARCH = "True";
+              RAG_FULL_CONTEXT = "True";
+              ENABLE_RAG_LOCAL_WEB_FETCH = "True";
+              ENABLE_WEB_SEARCH = "True";
+              ENABLE_RAG_WEB_SEARCH = "True";
 
-            ANONYMIZED_TELEMETRY = "False";
-            DO_NOT_TRACK = "True";
-            SCARF_NO_ANALYTICS = "True";
+              ANONYMIZED_TELEMETRY = "False";
+              DO_NOT_TRACK = "True";
+              SCARF_NO_ANALYTICS = "True";
 
-            ENABLE_COMMUNITY_SHARING = "False";
-            ENABLE_ADMIN_EXPORT = "False";
+              ENABLE_COMMUNITY_SHARING = "False";
+              ENABLE_ADMIN_EXPORT = "False";
+            };
+
+            # Set OAUTH_CLIENT_SECRET
+            environmentFile = secrets.open-webui-env;
           };
 
-          # Set OAUTH_CLIENT_SECRET
-          environmentFile = secrets.open-webui-env;
-        };
-
-        nginx = {
-          virtualHosts = {
-            "${domain}" = {
-              forceSSL = true;
-              useACMEHost = environment.getTopDomainFor "open-webui";
-              locations."/" = {
-                proxyPass = "http://127.0.0.1:10715";
-                proxyWebsockets = true;
-                extraConfig = ''
-                  client_max_body_size 256m;
-                  proxy_buffering off;
-                '';
+          nginx = {
+            virtualHosts = {
+              "${domain}" = {
+                forceSSL = true;
+                useACMEHost = environment.getTopDomainFor "open-webui";
+                locations."/" = {
+                  proxyPass = "http://127.0.0.1:10715";
+                  proxyWebsockets = true;
+                  extraConfig = ''
+                    client_max_body_size 256m;
+                    proxy_buffering off;
+                  '';
+                };
               };
             };
           };
         };
-      };
 
-      users.groups.open-webui = { };
-      users.users.open-webui = {
-        group = "open-webui";
-        isSystemUser = true;
-      };
-
-      systemd.services.open-webui.serviceConfig = {
-        User = "open-webui";
-        Group = "open-webui";
-      };
-
-    };
-
-  features.open-webui.provides.secrets.linux =
-    {
-      config,
-      environment,
-      ...
-    }:
-    {
-      age.secrets.open-webui-oidc-secret = {
-        rekeyFile = environment.secretPath + "/oidc/open-webui-oidc-client-secret.age";
-        generator = {
-          tags = [ "oidc" ];
-          script = "rfc3986-secret";
+        users.groups.open-webui = { };
+        users.users.open-webui = {
+          group = "open-webui";
+          isSystemUser = true;
         };
-        intermediary = true;
+
+        systemd.services.open-webui.serviceConfig = {
+          User = "open-webui";
+          Group = "open-webui";
+        };
+
       };
 
-      age.secrets.open-webui-env = {
-        generator.dependencies = [ config.age.secrets.open-webui-oidc-secret ];
-        settings.keys = [ "OAUTH_CLIENT_SECRET" ];
-        generator.script = "environment-file";
-      };
-    };
-
-  features.open-webui.provides.impermanence.linux = {
-    environment.persistence."/persist".directories = [
+    provides.secrets.linux =
       {
-        directory = "/var/lib/private/open-webui";
-        user = "open-webui";
-        group = "open-webui";
-        mode = "0700";
-      }
-    ];
+        config,
+        environment,
+        ...
+      }:
+      {
+        age.secrets.open-webui-oidc-secret = {
+          rekeyFile = environment.secretPath + "/oidc/open-webui-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script = "rfc3986-secret";
+          };
+          intermediary = true;
+        };
+
+        age.secrets.open-webui-env = {
+          generator.dependencies = [ config.age.secrets.open-webui-oidc-secret ];
+          settings.keys = [ "OAUTH_CLIENT_SECRET" ];
+          generator.script = "environment-file";
+        };
+      };
+
+    provides.impermanence.linux = {
+      environment.persistence."/persist".directories = [
+        {
+          directory = "/var/lib/private/open-webui";
+          user = "open-webui";
+          group = "open-webui";
+          mode = "0700";
+        }
+      ];
+    };
   };
 }

@@ -21,32 +21,30 @@ in
           name: _: config.flake.featureModules.${name}.package { inherit pkgs; }
         ) wrappableFeatures)
         //
-        # Tier 2: user-scoped — inject user via extraSpecialArgs
-        (lib.concatMapAttrs (
-          userName: userConfig:
-          lib.mapAttrs' (
-            name: _:
-            lib.nameValuePair "${userName}-${name}" (
-              config.flake.featureModules.${name}.package {
-                inherit pkgs;
-                extraSpecialArgs = {
-                  user = userConfig;
-                };
-              }
-            )
-          ) userScopedFeatures
-        ) config.users);
+          # Tier 2: user-scoped — inject user via extraSpecialArgs
+          (lib.concatMapAttrs (
+            userName: userConfig:
+            lib.mapAttrs' (
+              name: _:
+              lib.nameValuePair "${userName}-${name}" (
+                config.flake.featureModules.${name}.package {
+                  inherit pkgs;
+                  extraSpecialArgs = {
+                    user = userConfig;
+                  };
+                }
+              )
+            ) userScopedFeatures
+          ) config.users);
     };
 
   # Expose wrappability metadata for introspection
-  flake.featureMeta = lib.mapAttrs (
-    _: f: {
-      inherit (f)
-        wrappable
-        homeArgs
-        contextRequirements
-        hasSystemModules
-        ;
-    }
-  ) config.features;
+  flake.featureMeta = lib.mapAttrs (_: f: {
+    inherit (f)
+      wrappable
+      homeArgs
+      contextRequirements
+      hasSystemModules
+      ;
+  }) config.features;
 }

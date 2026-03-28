@@ -45,18 +45,16 @@
     };
 
     provides.impermanence = {
-      linux =
-        _:
-        {
-          environment.persistence."/persist".directories = [
-            {
-              directory = "/var/lib/microvms";
-              user = "microvm";
-              group = "kvm";
-              mode = "0775";
-            }
-          ];
-        };
+      linux = _: {
+        environment.persistence."/persist".directories = [
+          {
+            directory = "/var/lib/microvms";
+            user = "microvm";
+            group = "kvm";
+            mode = "0775";
+          }
+        ];
+      };
     };
   };
 }
