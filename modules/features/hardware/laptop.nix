@@ -61,10 +61,17 @@
           thermald.enable = true;
         };
 
-        environment.persistence."/cache".directories = [
-          "/var/lib/upower"
-          "/var/lib/power-profiles-daemon"
-        ];
       };
+
+    provides.impermanence = {
+      linux =
+        _:
+        {
+          environment.persistence."/cache".directories = [
+            "/var/lib/upower"
+            "/var/lib/power-profiles-daemon"
+          ];
+        };
+    };
   };
 }

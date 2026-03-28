@@ -146,6 +146,19 @@
           "TS_DEBUG_FIREWALL_MODE=nftables"
         ];
 
+      };
+
+    provides.impermanence.linux =
+      {
+        lib,
+        host,
+        ...
+      }:
+      let
+        rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
+        secretExists = builtins.pathExists rekeyFile;
+      in
+      lib.mkIf secretExists {
         environment.persistence."/persist".directories = [
           "/var/lib/tailscale"
         ];

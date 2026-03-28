@@ -35,18 +35,25 @@
 
         # Allow inbound traffic for the DHCP server
         networking.firewall.allowedUDPPorts = [ 67 ];
-        environment.persistence."/persist".directories = [
-          {
-            directory = "/var/lib/microvms";
-            user = "microvm";
-            group = "kvm";
-            mode = "0775";
-          }
-        ];
         users.users = {
           # allow microvm access to zvol
           microvm.extraGroups = [ "disk" ];
         };
       };
+
+    provides.impermanence = {
+      linux =
+        _:
+        {
+          environment.persistence."/persist".directories = [
+            {
+              directory = "/var/lib/microvms";
+              user = "microvm";
+              group = "kvm";
+              mode = "0775";
+            }
+          ];
+        };
+    };
   };
 }

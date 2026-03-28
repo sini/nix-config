@@ -9,7 +9,6 @@
       };
     home =
       {
-        inputs,
         lib,
         pkgs,
         ...

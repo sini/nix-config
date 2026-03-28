@@ -204,14 +204,18 @@
         "x-scheme-handler/https" = [ "firefox.desktop" ];
       };
 
-      # TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=259356 once our version is takes this patch,
-      # update the paths to the XDG names
+    };
+
+  # TODO: https://bugzilla.mozilla.org/show_bug.cgi?id=259356 once our version is takes this patch,
+  # update the paths to the XDG names
+  features.firefox.provides.impermanence = {
+    home = {
       home.persistence."/cache".directories = [
         ".cache/mozilla"
       ];
-
       home.persistence."/persist".directories = [
         ".mozilla/firefox"
       ];
     };
+  };
 }

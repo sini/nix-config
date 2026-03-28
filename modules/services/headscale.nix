@@ -119,8 +119,11 @@
         config.services.headscale.package
       ];
 
-      environment.persistence."/persist".directories = [
-        "/var/lib/headscale"
-      ];
     };
+
+  features.headscale.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      "/var/lib/headscale"
+    ];
+  };
 }

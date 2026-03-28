@@ -26,6 +26,11 @@
         settings.AcceptEnv = [ "GIT_PROTOCOL" ];
       };
 
+    };
+
+  features.forgejo.provides.impermanence.linux =
+    { config, ... }:
+    {
       environment.persistence."/persist".directories = [
         {
           directory = config.services.forgejo.stateDir;

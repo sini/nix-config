@@ -1,11 +1,18 @@
-{ rootPath, config, lib, ... }:
+{
+  rootPath,
+  config,
+  lib,
+  ...
+}:
 {
   features.k3s = {
     requires = [ "k3s-containerd" ];
 
-    contextProvides.cluster = { host, ... }:
-      lib.findFirst (c: c.resolvedHosts ? ${host.hostname}) null
-        (builtins.attrValues (config.clusters or {}));
+    contextProvides.cluster =
+      { host, ... }:
+      lib.findFirst (c: c.resolvedHosts ? ${host.hostname}) null (
+        builtins.attrValues (config.clusters or { })
+      );
     linux =
       {
         lib,
@@ -522,11 +529,14 @@
           };
         };
 
-        environment.persistence."/persist".directories = [
-          "/var/lib/rancher"
-          "/var/lib/kubelet"
-          "/etc/rancher"
-        ];
       };
+
+    provides.impermanence.linux = {
+      environment.persistence."/persist".directories = [
+        "/var/lib/rancher"
+        "/var/lib/kubelet"
+        "/etc/rancher"
+      ];
+    };
   };
 }

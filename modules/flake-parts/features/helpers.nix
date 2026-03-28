@@ -38,10 +38,20 @@ let
     if builtins.isFunction module then builtins.attrNames (builtins.functionArgs module) else [ ];
 
   # Base context names — always available in system context
-  baseContextNames = [ "host" "environment" "users" "settings" "inputs" "flakeLib" ];
+  baseContextNames = [
+    "host"
+    "environment"
+    "users"
+    "settings"
+    "inputs"
+    "flakeLib"
+  ];
 
   # Stage-distinct args — not feature-contributed but dispatchable
-  stageDistinctArgs = [ "user" "osConfig" ];
+  stageDistinctArgs = [
+    "user"
+    "osConfig"
+  ];
 
   # Static dispatchable set for feature submodule computed properties
   # (The full dynamic set including feature contributions is computed per-host at build time)
@@ -49,17 +59,20 @@ let
 
   # Extract REQUIRED args from raw module definitions that are in the dispatchable set.
   # Required = no default (builtins.functionArgs returns false).
-  extractRequiredDispatchArgs = dispatchable: defs:
+  extractRequiredDispatchArgs =
+    dispatchable: defs:
     let
       rawModules = map (d: d.value) defs;
-      perModule = mod:
+      perModule =
+        mod:
         if builtins.isFunction mod then
           let
             fa = builtins.functionArgs mod;
             required = lib.attrNames (lib.filterAttrs (_: hasDefault: !hasDefault) fa);
           in
           lib.filter (a: builtins.elem a dispatchable) required
-        else [];
+        else
+          [ ];
     in
     lib.unique (lib.concatMap perModule rawModules);
 
@@ -315,8 +328,7 @@ let
           in
           hasHome && config.contextRequirements == [ ] && !systemBlocks;
 
-        contextRequirements =
-          extractRequiredDispatchArgs staticDispatchableArgs options.home.definitionsWithLocations;
+        contextRequirements = extractRequiredDispatchArgs staticDispatchableArgs options.home.definitionsWithLocations;
       };
     };
 

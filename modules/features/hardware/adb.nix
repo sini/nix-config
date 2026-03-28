@@ -1,5 +1,5 @@
 {
-  features.adb.system =
+  features.adb.os =
     { pkgs, ... }:
     {
       environment.systemPackages = [

@@ -41,8 +41,15 @@
         # dbus config setting that disables it from auto-starting
         systemd.user.services.orca.wantedBy = lib.mkForce [ ];
 
-        environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
       };
+
+    provides.impermanence = {
+      linux =
+        _:
+        {
+          environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
+        };
+    };
 
     home =
       {

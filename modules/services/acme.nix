@@ -40,15 +40,6 @@
     lib.mkIf (rekeyFile != null) {
       age.secrets = issuerSecrets;
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/acme";
-          user = "acme";
-          group = "acme";
-          mode = "0755";
-        }
-      ];
-
       security.acme = {
         acceptTerms = true;
         defaults = {
@@ -65,5 +56,33 @@
           extraDomainNames = [ "*.${config.networking.fqdn}" ];
         };
       };
+    };
+
+  features.acme.provides.impermanence.linux =
+    {
+      config,
+      lib,
+      environment,
+      ...
+    }:
+    let
+      fqdnParts = lib.splitString "." config.networking.fqdn;
+      topDomain = lib.concatStringsSep "." (lib.reverseList (lib.take 2 (lib.reverseList fqdnParts)));
+      domainConfig = environment.certificates.domains.${topDomain} or null;
+      issuerName = if domainConfig != null then domainConfig.issuer else null;
+      issuerConfig =
+        if issuerName != null then environment.certificates.issuers.${issuerName} or null else null;
+      rekeyFile =
+        if issuerConfig != null && issuerConfig.ageKeyFile != null then issuerConfig.ageKeyFile else null;
+    in
+    lib.mkIf (rekeyFile != null) {
+      environment.persistence."/persist".directories = [
+        {
+          directory = "/var/lib/acme";
+          user = "acme";
+          group = "acme";
+          mode = "0755";
+        }
+      ];
     };
 }

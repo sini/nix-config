@@ -12,13 +12,16 @@
 
       networking.firewall.allowedTCPPorts = [ 7654 ];
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/private/tang";
-          user = "nobody";
-          group = "nogroup";
-          mode = "0700";
-        }
-      ];
     };
+
+  features.tang.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/private/tang";
+        user = "nobody";
+        group = "nogroup";
+        mode = "0700";
+      }
+    ];
+  };
 }

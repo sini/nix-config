@@ -11,7 +11,6 @@
     let
       # Import shared utilities from lib.modules and lib.collection
       inherit (self.lib.collection)
-        collectHomeModules
         collectPlatformSystemModulesNew
         collectPlatformHomeModules
         ;
@@ -37,10 +36,10 @@
         {
           resolvedUser,
           allHostFeatures,
-          activeProviders ? [],
+          activeProviders ? [ ],
           system ? "x86_64-linux",
-          fullContext ? {},
-          dispatchableArgs ? [],
+          fullContext ? { },
+          dispatchableArgs ? [ ],
         }:
         let
           includeHostFeatures = resolvedUser.system.include-host-features or true;
@@ -110,7 +109,10 @@
             # here because makeHomeConfig is called from NixOS host building.
             # In standalone/wrapper contexts (wrapped-packages.nix), dispatch is
             # disabled (dispatchableArgs = []) so this doesn't apply.
-            availableContext = fullContext // { user = augmentedUser; osConfig = true; };
+            availableContext = fullContext // {
+              user = augmentedUser;
+              osConfig = true;
+            };
           };
 
           # Resolve per-user settings (feature defaults → canonical → env → host user)
@@ -180,23 +182,19 @@
           resolved = resolveFeatures {
             featuresConfig = config.features;
             hostFeatures = if usePrecomputed then hostOptions.features else overrideFeatures;
-            hostExclusions = hostOptions.excluded-features or [];
+            hostExclusions = hostOptions.excluded-features or [ ];
           };
 
-          activeFeatures =
-            if usePrecomputed then
-              hostOptions.features
-            else
-              lib.attrNames resolved.features;
+          activeFeatures = if usePrecomputed then hostOptions.features else lib.attrNames resolved.features;
 
           allHostFeatures = map (name: config.features.${name}) activeFeatures;
-          activeProviders = builtins.attrValues (resolved.providers or {});
+          activeProviders = builtins.attrValues (resolved.providers or { });
 
           systemModules = collectPlatformSystemModulesNew {
             features = allHostFeatures;
             inherit activeProviders dispatchableArgs;
             availableContext = fullContext;
-            system = hostOptions.system;
+            inherit (hostOptions) system;
           };
 
           # Resolve all users via ACL
@@ -222,13 +220,16 @@
           enabledUsers = lib'.filterAttrs (_: u: u.system.enable or false) users;
 
           # Collect context contributions from active features
-          featureContextFns = lib.foldl'
-            (acc: f: acc // (f.contextProvides or {}))
-            {} allHostFeatures;
+          featureContextFns = lib.foldl' (acc: f: acc // (f.contextProvides or { })) { } allHostFeatures;
 
           # Base context — always available
           baseContext = {
-            inherit environment users settings inputs;
+            inherit
+              environment
+              users
+              settings
+              inputs
+              ;
             host = hostOptions // {
               users = {
                 all = users;
@@ -241,13 +242,10 @@
 
           # Full context — lazy recursive attrset
           # Feature-contributed context values are functions that receive fullContext
-          fullContext = baseContext // lib.mapAttrs
-            (_name: fn: fn fullContext)
-            featureContextFns;
+          fullContext = baseContext // lib.mapAttrs (_name: fn: fn fullContext) featureContextFns;
 
           # Context registry for parametric dispatch
-          contextRegistry = self.lib.modules.baseContextNames
-            ++ lib.attrNames featureContextFns;
+          contextRegistry = self.lib.modules.baseContextNames ++ lib.attrNames featureContextFns;
           dispatchableArgs = contextRegistry ++ self.lib.modules.stageDistinctArgs;
 
           specialArgs = fullContext // {
@@ -265,7 +263,7 @@
                   fullContext
                   dispatchableArgs
                   ;
-                system = hostOptions.system;
+                inherit (hostOptions) system;
               }
             ) enabledUsers;
           };

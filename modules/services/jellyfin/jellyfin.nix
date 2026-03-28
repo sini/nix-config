@@ -5,7 +5,6 @@
     linux =
       {
         inputs,
-        config,
         pkgs,
         environment,
         ...
@@ -221,16 +220,19 @@
           };
         };
 
-        environment.persistence = {
-          "/persist".directories = [
-            {
-              directory = "/var/lib/jellyfin";
-              inherit (config.services.jellyfin) user;
-              inherit (config.services.jellyfin) group;
-              mode = "0700";
-            }
-          ];
-        };
+      };
+
+    provides.impermanence.linux =
+      { config, ... }:
+      {
+        environment.persistence."/persist".directories = [
+          {
+            directory = "/var/lib/jellyfin";
+            inherit (config.services.jellyfin) user;
+            inherit (config.services.jellyfin) group;
+            mode = "0700";
+          }
+        ];
       };
   };
 }

@@ -15,8 +15,11 @@
         "easyeffects/output/GalaxyBuds.json".source = ./presets/GalaxyBuds.json;
       };
 
-      home.persistence."/persist" = {
-        directories = [
+    };
+
+    provides.impermanence = {
+      home = {
+        home.persistence."/persist".directories = [
           ".local/share/easyeffects"
         ];
       };

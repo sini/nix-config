@@ -244,8 +244,15 @@
           '';
         };
 
-        environment.persistence."/persist".directories = [ "/var/lib/libvirt" ];
       };
+
+    provides.impermanence = {
+      linux =
+        _:
+        {
+          environment.persistence."/persist".directories = [ "/var/lib/libvirt" ];
+        };
+    };
 
     home =
       { pkgs, ... }:

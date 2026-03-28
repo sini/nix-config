@@ -23,9 +23,14 @@
         indicator = true;
       };
 
-      home.persistence."/persist".directories = [
-        ".config/kdeconnect"
-      ];
+    };
+
+    provides.impermanence = {
+      home = {
+        home.persistence."/persist".directories = [
+          ".config/kdeconnect"
+        ];
+      };
     };
   };
 }

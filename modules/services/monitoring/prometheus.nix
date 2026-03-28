@@ -216,8 +216,11 @@ in
       networking.firewall.allowedTCPPorts = [
         9090
       ];
-      environment.persistence."/persist".directories = [
-        "/var/lib/prometheus2/"
-      ];
     };
+
+  features.prometheus.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      "/var/lib/prometheus2/"
+    ];
+  };
 }

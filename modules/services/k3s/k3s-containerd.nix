@@ -93,11 +93,14 @@
         };
       };
 
-      environment.persistence."/persist".directories = [
-        "/var/lib/cni"
-        "/var/lib/containers"
-        "/var/lib/containerd"
-        "/var/lib/dockershim"
-      ];
     };
+
+  features.k3s-containerd.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      "/var/lib/cni"
+      "/var/lib/containers"
+      "/var/lib/containerd"
+      "/var/lib/dockershim"
+    ];
+  };
 }

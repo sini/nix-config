@@ -27,9 +27,15 @@
         boot.kernelParams = [ "btusb" ];
 
         services.blueman.enable = true;
-
-        environment.persistence."/cache".directories = [ "/var/lib/bluetooth" ];
       };
+
+    provides.impermanence = {
+      linux =
+        _:
+        {
+          environment.persistence."/cache".directories = [ "/var/lib/bluetooth" ];
+        };
+    };
 
     home =
       { pkgs, ... }:

@@ -96,16 +96,22 @@
         # Allow non-root containers to access lower port numbers
         boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
 
-        environment.persistence."/cache".directories = [
-          "/var/lib/cni"
-          "/var/lib/containers"
-        ];
       };
 
-    home = _: {
-      home.persistence."/cache".directories = [
-        ".local/share/containers"
-      ];
+    provides.impermanence = {
+      linux =
+        _:
+        {
+          environment.persistence."/cache".directories = [
+            "/var/lib/cni"
+            "/var/lib/containers"
+          ];
+        };
+      home = {
+        home.persistence."/cache".directories = [
+          ".local/share/containers"
+        ];
+      };
     };
   };
 }

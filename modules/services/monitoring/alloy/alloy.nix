@@ -96,19 +96,21 @@
         "/etc/alloy/"
       ];
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/alloy";
-          user = "root";
-          group = "root";
-          mode = "0755";
-        }
-      ];
-
       systemd.tmpfiles.rules = [
         "d /etc/alloy 0755 root root -"
         "d /var/lib/alloy 0755 root root -"
         "d /var/lib/alloy/data 0755 root root -"
       ];
     };
+
+  features.alloy.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/alloy";
+        user = "root";
+        group = "root";
+        mode = "0755";
+      }
+    ];
+  };
 }

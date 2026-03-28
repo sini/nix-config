@@ -282,18 +282,20 @@
         };
       };
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/grafana";
-          user = "grafana";
-          group = "grafana";
-          mode = "0700";
-        }
-      ];
-
       # Ensure grafana user can read the password file
       systemd.services.grafana.serviceConfig = {
         SupplementaryGroups = [ "keys" ];
       };
     };
+
+  features.grafana.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/grafana";
+        user = "grafana";
+        group = "grafana";
+        mode = "0700";
+      }
+    ];
+  };
 }

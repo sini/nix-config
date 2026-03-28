@@ -147,13 +147,16 @@
         home.packages = [
           pkgs.wiremix
         ];
-        home.persistence."/persist" = {
-          directories = [
-            ".local/state/wireplumber" # Wireplumber state
-            ".config/rncbc.org" # qpwgraph config file
-            ".config/pulse" # pulseaudio cookie
-          ];
-        };
       };
+
+    provides.impermanence = {
+      home = {
+        home.persistence."/persist".directories = [
+          ".local/state/wireplumber" # Wireplumber state
+          ".config/rncbc.org" # qpwgraph config file
+          ".config/pulse" # pulseaudio cookie
+        ];
+      };
+    };
   };
 }

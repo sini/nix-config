@@ -88,9 +88,14 @@
       {
         home.packages = with pkgs.local; [ moondeck-buddy ];
         xdg.autostart.entries = [ "${pkgs.local.moondeck-buddy}/share/applications/MoonDeckBuddy.desktop" ];
+      };
+
+    provides.impermanence = {
+      home = {
         home.persistence."/persist".directories = [
           ".config/sunshine/"
         ];
       };
+    };
   };
 }

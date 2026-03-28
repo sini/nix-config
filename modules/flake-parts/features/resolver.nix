@@ -1,4 +1,4 @@
-{ lib, config, ... }:
+{ lib, ... }:
 let
   inherit (lib)
     attrNames
@@ -53,9 +53,7 @@ let
       parsed;
 
   # Merge includes and requires for backward compatibility.
-  getFeatureIncludes =
-    feature:
-    unique ((feature.includes or [ ]) ++ (feature.requires or [ ]));
+  getFeatureIncludes = feature: unique ((feature.includes or [ ]) ++ (feature.requires or [ ]));
 
   # ============================================================================
   # Phase 1 — Explicit Resolution
@@ -120,7 +118,8 @@ let
               exclusions = newExclusions;
             };
             # Recurse into this feature's includes with updated chain
-            childIncludes = filter (p:
+            childIncludes = filter (
+              p:
               let
                 cp = parseIncludePath p;
               in
@@ -208,7 +207,7 @@ let
       processOneCollector =
         state: collector:
         let
-          providerName = collector.providerName;
+          inherit (collector) providerName;
 
           # Scan all active features for matching provides.<providerName>
           matchingProviders = lib.concatMap (
@@ -239,8 +238,7 @@ let
           # Warn if no providers matched
           _ =
             if matchingProviders == [ ] then
-              warn "collectsProviders '${providerName}' on feature '${collector.collectorFeature}' matched zero providers"
-                null
+              warn "collectsProviders '${providerName}' on feature '${collector.collectorFeature}' matched zero providers" null
             else
               null;
 

@@ -45,10 +45,13 @@
 
       networking.firewall.trustedInterfaces = [ "docker0" ];
 
-      environment.persistence."/persist".directories = [
-        "/var/lib/docker"
-        "/var/lib/cni"
-        "/var/lib/containers"
-      ];
     };
+
+  features.docker.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      "/var/lib/docker"
+      "/var/lib/cni"
+      "/var/lib/containers"
+    ];
+  };
 }

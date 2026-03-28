@@ -74,13 +74,16 @@
         };
       };
 
-      environment.persistence."/cache".directories = [
-        {
-          directory = "/var/lib/private/ollama";
-          user = "ollama";
-          group = "ollama";
-          mode = "0700";
-        }
-      ];
     };
+
+  features.ollama.provides.impermanence.linux = {
+    environment.persistence."/cache".directories = [
+      {
+        directory = "/var/lib/private/ollama";
+        user = "ollama";
+        group = "ollama";
+        mode = "0700";
+      }
+    ];
+  };
 }

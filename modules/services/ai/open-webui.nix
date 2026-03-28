@@ -139,13 +139,16 @@ in
         Group = "open-webui";
       };
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/private/open-webui";
-          user = "open-webui";
-          group = "open-webui";
-          mode = "0700";
-        }
-      ];
     };
+
+  features.open-webui.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/private/open-webui";
+        user = "open-webui";
+        group = "open-webui";
+        mode = "0700";
+      }
+    ];
+  };
 }

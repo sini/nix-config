@@ -62,16 +62,18 @@
       };
 
     provides.impermanence = {
-      linux = { ... }: {
-        environment.persistence."/persist".directories = [
-          {
-            directory = "/var/lib/colord";
-            user = "colord";
-            group = "colord";
-            mode = "0755";
-          }
-        ];
-      };
+      linux =
+        _:
+        {
+          environment.persistence."/persist".directories = [
+            {
+              directory = "/var/lib/colord";
+              user = "colord";
+              group = "colord";
+              mode = "0755";
+            }
+          ];
+        };
     };
 
     homeLinux =

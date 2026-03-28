@@ -58,10 +58,15 @@
         };
       };
 
+    };
+
+  features.gitkraken.provides.impermanence = {
+    home = {
       home.persistence."/persist".directories = [
         ".gitkraken/"
         ".gk/"
         ".config/GitKraken/"
       ];
     };
+  };
 }

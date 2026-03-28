@@ -1,11 +1,6 @@
 {
-  features.nix.system =
-    {
-      config,
-      inputs,
-      lib,
-      ...
-    }:
+  features.nix.os =
+    _:
     {
       nix = {
         # TODO: figure this out

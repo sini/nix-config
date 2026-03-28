@@ -60,6 +60,22 @@
           };
         };
 
+      };
+
+    provides.impermanence.linux =
+      {
+        config,
+        lib,
+        ...
+      }:
+      let
+        wirelessInterface = lib.findFirst (
+          iface:
+          iface ? unix_device_name && lib.hasPrefix "wl" iface.unix_device_name && iface ? driver_modules
+        ) null config.facter.report.hardware.network_interface;
+        hasWireless = wirelessInterface != null;
+      in
+      lib.mkIf hasWireless {
         environment.persistence."/cache".directories = [
           "/etc/wpa_supplicant"
           "/var/lib/iwd"

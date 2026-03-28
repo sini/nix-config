@@ -3,7 +3,7 @@
   ...
 }:
 {
-  features.nix.system =
+  features.nix.os =
     {
       config,
       flakeLib,

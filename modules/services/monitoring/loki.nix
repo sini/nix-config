@@ -111,15 +111,6 @@
         9095
       ];
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/loki";
-          user = "loki";
-          group = "loki";
-          mode = "0755";
-        }
-      ];
-
       # Ensure loki data directories exist with proper permissions
       systemd.tmpfiles.rules = [
         "d /var/lib/loki 0755 loki loki -"
@@ -129,4 +120,15 @@
         "d /var/lib/loki/compactor 0755 loki loki -"
       ];
     };
+
+  features.loki.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/loki";
+        user = "loki";
+        group = "loki";
+        mode = "0755";
+      }
+    ];
+  };
 }

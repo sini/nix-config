@@ -83,14 +83,17 @@
         };
       };
 
-      environment.persistence."/cache".directories = [
-        {
-          # NOTE: systemd Dynamic User requires /var/lib/private to be 0700. See impermanence module
-          directory = "/var/lib/private/atticd";
-          user = "nobody";
-          group = "nogroup";
-          mode = "0700";
-        }
-      ];
     };
+
+  features.attic-server.provides.impermanence.linux = {
+    environment.persistence."/cache".directories = [
+      {
+        # NOTE: systemd Dynamic User requires /var/lib/private to be 0700. See impermanence module
+        directory = "/var/lib/private/atticd";
+        user = "nobody";
+        group = "nogroup";
+        mode = "0700";
+      }
+    ];
+  };
 }

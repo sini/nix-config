@@ -80,19 +80,21 @@
         SupplementaryGroups = [ "keys" ];
       };
 
-      environment.persistence."/persist".directories = [
-        {
-          directory = "/var/lib/kanidm";
-          user = "kanidm";
-          group = "kanidm";
-          mode = "0700";
-        }
-      ];
-
       # Grant kanidm access to certificates
       users.users.kanidm.extraGroups = [
         config.security.acme.defaults.group
         config.services.nginx.group
       ];
     };
+
+  features.kanidm.provides.impermanence.linux = {
+    environment.persistence."/persist".directories = [
+      {
+        directory = "/var/lib/kanidm";
+        user = "kanidm";
+        group = "kanidm";
+        mode = "0700";
+      }
+    ];
+  };
 }

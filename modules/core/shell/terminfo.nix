@@ -1,5 +1,5 @@
 {
-  features.shell.system = {
+  features.shell.os = {
     environment.enableAllTerminfo = true;
   };
 }

@@ -1,5 +1,5 @@
 {
-  features.nixpkgs.system =
+  features.nixpkgs.os =
     { inputs, ... }:
     {
       nixpkgs.overlays = [

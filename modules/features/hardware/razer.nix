@@ -46,12 +46,14 @@
         };
       };
 
-    home = {
-      home.persistence."/persist".directories = [
-        ".config/openrazer/"
-        ".config/polychromatic/"
-        ".local/share/razercontrol"
-      ];
+    provides.impermanence = {
+      home = {
+        home.persistence."/persist".directories = [
+          ".config/openrazer/"
+          ".config/polychromatic/"
+          ".local/share/razercontrol"
+        ];
+      };
     };
   };
 }

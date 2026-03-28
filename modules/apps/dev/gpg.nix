@@ -147,6 +147,10 @@
           };
         };
 
+      };
+
+    provides.impermanence = {
+      home = {
         home.persistence."/persist".directories = [
           {
             directory = ".gnupg";
@@ -154,5 +158,6 @@
           }
         ];
       };
+    };
   };
 }
