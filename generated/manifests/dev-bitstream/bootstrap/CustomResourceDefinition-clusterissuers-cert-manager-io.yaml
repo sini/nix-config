@@ -9,8 +9,8 @@ metadata:
     app.kubernetes.io/instance: cert-manager
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: cert-manager
-    app.kubernetes.io/version: v1.20.0
-    helm.sh/chart: cert-manager-v1.20.0
+    app.kubernetes.io/version: v1.20.1
+    helm.sh/chart: cert-manager-v1.20.1
   name: clusterissuers.cert-manager.io
 spec:
   group: cert-manager.io
