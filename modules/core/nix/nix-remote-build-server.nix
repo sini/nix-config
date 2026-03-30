@@ -54,7 +54,7 @@
       };
     };
 
-    provides.firewall.os = {
+    provides.firewall.linux = {
       networking.firewall.allowedTCPPorts = [ 16893 ];
     };
   };

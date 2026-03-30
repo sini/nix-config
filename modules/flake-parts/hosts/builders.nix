@@ -40,6 +40,7 @@
             featuresConfig = config.features;
             hostFeatures = if usePrecomputed then hostOptions.features else overrideFeatures;
             hostExclusions = hostOptions.excluded-features or [ ];
+            label = hostOptions.hostname;
           };
 
           activeFeatures = if usePrecomputed then hostOptions.features else lib.attrNames resolved.features;

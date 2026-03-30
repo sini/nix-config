@@ -336,6 +336,7 @@ in
                 featuresConfig = flakeConfig.features;
                 hostFeatures = config.extra-features or [ ];
                 hostExclusions = config.excluded-features or [ ];
+                label = name;
               };
 
               # Derive system access groups from enabled features

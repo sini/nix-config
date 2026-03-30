@@ -173,7 +173,7 @@ let
 
   # Scan active features for collectsProviders and gather matching providers.
   collectProviders =
-    featuresConfig: phase1State:
+    featuresConfig: label: phase1State:
     let
       # Find all active features that have collectsProviders set
       activeFeatures = phase1State.features;
@@ -237,7 +237,19 @@ let
           # Warn if no providers matched
           _ =
             if matchingProviders == [ ] then
-              warn "collectsProviders '${providerName}' on feature '${collector.collectorFeature}' matched zero providers" null
+              let
+                totalScanned = lib.length (attrNames state.features);
+                definingFeatures = lib.filter (
+                  fn: hasAttr providerName state.features.${fn}.provides
+                ) (attrNames state.features);
+                defineCount = lib.length definingFeatures;
+                context =
+                  if defineCount == 0 then
+                    "none of ${toString totalScanned} active features define provides.${providerName}"
+                  else
+                    "${toString defineCount}/${toString totalScanned} features define provides.${providerName} but all were excluded or already collected";
+              in
+              warn "collectsProviders '${providerName}' on feature '${collector.collectorFeature}' matched zero providers in '${label}' (${context})" null
             else
               null;
 
@@ -285,6 +297,7 @@ let
       featuresConfig,
       hostFeatures ? [ ],
       hostExclusions ? [ ],
+      label ? "unknown",
     }:
     let
       allFeatureNames = unique (coreFeatures ++ hostFeatures);
@@ -292,7 +305,7 @@ let
         initialFeatureNames = allFeatureNames;
         initialExclusions = hostExclusions;
       };
-      phase2 = collectProviders featuresConfig phase1;
+      phase2 = collectProviders featuresConfig label phase1;
     in
     phase2;
 
@@ -301,12 +314,7 @@ let
   # ============================================================================
 
   # Returns list of active feature name strings.
-  computeActiveFeatures =
-    args:
-    let
-      resolved = resolveFeatures args;
-    in
-    attrNames resolved.features;
+  computeActiveFeatures = args: attrNames (resolveFeatures args).features;
 
 in
 {
