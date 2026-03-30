@@ -29,7 +29,7 @@
             lua-language-server
             nil
             nixfmt
-            nodePackages.prettier
+            prettier
             shellcheck
             shfmt
             stylua
