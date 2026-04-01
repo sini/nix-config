@@ -255,7 +255,7 @@
                 # TODO: all my nodes are amd, key off of facter facts...
                 "--node-label=node.kubernetes.io/amd-gpu=true"
                 # CoreDNS doesn't like systemd-resolved's /etc/resolv.conf
-                "--resolv-conf=/run/systemd/resolve/resolv.conf"
+                # "--resolv-conf=/run/systemd/resolve/resolv.conf"
 
                 "--node-label \"k3s-upgrade=false\""
                 "--kubelet-arg=register-with-taints=node.cilium.io/agent-not-ready:NoExecute"
