@@ -21,6 +21,11 @@
       "gpu-amd"
       "cilium-bgp"
     ];
+
+    excluded-features = [
+      "tailscale" # TODO: Fix with cilium...
+    ];
+
     settings = {
       bgp.localAsn = 65001;
       cilium-bgp.localAsn = 65010;
