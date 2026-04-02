@@ -16,7 +16,6 @@
         {
           resolvedUser,
           allHostFeatures,
-          activeProviders ? [ ],
           system ? "x86_64-linux",
           fullContext ? { },
           dispatchableArgs ? [ ],
