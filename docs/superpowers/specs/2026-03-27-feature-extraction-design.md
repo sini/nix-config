@@ -1,16 +1,15 @@
 # Feature Extraction Design (Phase 4)
 
-**Date:** 2026-03-27
-**Status:** Draft
-**Context:** Phase 4 of feature composition core. Phases 1-3 complete
-(providers, resolver, virtual classes, context pipeline, parametric dispatch).
+**Date:** 2026-03-27 **Status:** Draft **Context:** Phase 4 of feature
+composition core. Phases 1-3 complete (providers, resolver, virtual classes,
+context pipeline, parametric dispatch).
 
 ## Problem Statement
 
 The composition chain's `.wrap` is stubbed. Features are exported via
-`featureModules` with `.eval/.apply` but no way to produce standalone
-packages. The existing `wrapped-packages.nix` bypasses the composition
-chain entirely, calling hm-wrapper-modules directly with `feature.home`.
+`featureModules` with `.eval/.apply` but no way to produce standalone packages.
+The existing `wrapped-packages.nix` bypasses the composition chain entirely,
+calling hm-wrapper-modules directly with `feature.home`.
 
 ## Design
 
@@ -20,8 +19,8 @@ Two concerns separated cleanly:
 
 - **Feature-level composition** (`.apply`, `.eval`) — extend the feature's
   config before building
-- **Package building** (`.package`) — produce a nix-wrapper-modules config
-  from the feature's home modules
+- **Package building** (`.package`) — produce a nix-wrapper-modules config from
+  the feature's home modules
 
 ```nix
 # Build a wrapped package (returns nix-wrapper-modules config)
@@ -43,15 +42,15 @@ featureModules.alacritty.package { inherit pkgs; mainPackage = pkgs.alacritty; }
 featureModules.git.package { inherit pkgs; extraSpecialArgs = { user = ...; }; }
 ```
 
-`.wrap` is removed from the feature-level chain (it was identical to
-`.apply`). The nix-wrapper-modules `.wrap` is available on `.package`
-results for post-build customization.
+`.wrap` is removed from the feature-level chain (it was identical to `.apply`).
+The nix-wrapper-modules `.wrap` is available on `.package` results for
+post-build customization.
 
 ### `.package` Implementation
 
-Returns a nix-wrapper-modules config (with `.wrapper` derivation,
-`.wrap`, `.apply`, `.eval`, `.passthru`). Includes bwrap integration
-by default, matching current `wrapped-packages.nix` behavior.
+Returns a nix-wrapper-modules config (with `.wrapper` derivation, `.wrap`,
+`.apply`, `.eval`, `.passthru`). Includes bwrap integration by default, matching
+current `wrapped-packages.nix` behavior.
 
 ```nix
 package = {
@@ -85,11 +84,11 @@ package = {
   });
 ```
 
-Platform selection for `homeLinux`/`homeDarwin` uses `pkgs.stdenv`
-since `pkgs` is available at `.package` call time.
+Platform selection for `homeLinux`/`homeDarwin` uses `pkgs.stdenv` since `pkgs`
+is available at `.package` call time.
 
-Home modules are always included — empty modules (`{}`) are harmless
-in the NixOS module system.
+Home modules are always included — empty modules (`{}`) are harmless in the
+NixOS module system.
 
 ### Defaults
 
@@ -105,15 +104,15 @@ mkFeatureEval = {
 }:
 ```
 
-Throws with clear messages if `.package` is called without defaults
-or overrides — better than a null dereference.
+Throws with clear messages if `.package` is called without defaults or overrides
+— better than a null dereference.
 
 ### Base Modules
 
 Default base modules (captured at export time from our flake config):
 
-- Persistence stub — `home.persistence` option that accepts anything
-  (no-op, prevents errors from features with impermanence references)
+- Persistence stub — `home.persistence` option that accepts anything (no-op,
+  prevents errors from features with impermanence references)
 - Stylix home theme — provides consistent theming for wrapped packages
 
 External consumers override with `baseModules = []` or their own list.
@@ -149,8 +148,8 @@ in
 
 ### `wrapped-packages.nix` Migration
 
-Migrate to use `featureModules.*.package` instead of calling
-hm-wrapper-modules directly. This proves the `.package` API.
+Migrate to use `featureModules.*.package` instead of calling hm-wrapper-modules
+directly. This proves the `.package` API.
 
 **Tier 1 (no context needed):**
 
@@ -176,12 +175,12 @@ tier2Packages = lib.concatMapAttrs (userName: userConfig:
 ) config.users;
 ```
 
-`extraSpecialArgs` passes directly to `wrapHomeModule`, injecting `user`
-into the HM evaluation context — same mechanism as today but through
-the composition chain.
+`extraSpecialArgs` passes directly to `wrapHomeModule`, injecting `user` into
+the HM evaluation context — same mechanism as today but through the composition
+chain.
 
-The hm-wrapper-modules flakeModule import and `hmWrappers` config block
-are replaced by direct `.package` calls.
+The hm-wrapper-modules flakeModule import and `hmWrappers` config block are
+replaced by direct `.package` calls.
 
 `featureMeta` output is preserved unchanged.
 
@@ -189,12 +188,11 @@ are replaced by direct `.package` calls.
 
 ### What changes
 
-- `compose.nix` — implement `.package`, remove `.wrap` stub, accept
-  `wlib` and default args
-- `exports.nix` — pass `wlib`, `home-manager`, `baseModules` to
-  `mkFeatureEval`
-- `wrapped-packages.nix` — migrate from hm-wrapper-modules flakeModule
-  to `.package` API
+- `compose.nix` — implement `.package`, remove `.wrap` stub, accept `wlib` and
+  default args
+- `exports.nix` — pass `wlib`, `home-manager`, `baseModules` to `mkFeatureEval`
+- `wrapped-packages.nix` — migrate from hm-wrapper-modules flakeModule to
+  `.package` API
 
 ### What does NOT change
 

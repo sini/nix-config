@@ -19,11 +19,12 @@ context.
 
 ## Approach
 
-This implements what the observations doc (`docs/wrapper-modules/observations.md`)
-called "Strategy B: HM module evaluation adapter" — using `wrapHomeModule` to
-evaluate the existing `.home` module in a real HM context and extract the result
-into a wrapper derivation. We chose this over Strategy A (dual definition)
-because the HM adapter already exists and works, avoiding config duplication.
+This implements what the observations doc
+(`docs/wrapper-modules/observations.md`) called "Strategy B: HM module
+evaluation adapter" — using `wrapHomeModule` to evaluate the existing `.home`
+module in a real HM context and extract the result into a wrapper derivation. We
+chose this over Strategy A (dual definition) because the HM adapter already
+exists and works, avoiding config duplication.
 
 Note: `nix-wrapper-modules` does not carry its own `home-manager` dependency.
 The caller provides the HM input, which keeps the library decoupled.
@@ -78,13 +79,13 @@ New file: `modules/flake-parts/features/wrapped-packages.nix`
 This module:
 
 1. Defines a static list of feature names to wrap
-2. For each feature, calls `wrapHomeModule` with:
+1. For each feature, calls `wrapHomeModule` with:
    - `pkgs` from the perSystem context
    - `home-manager` from `inputs.home-manager-unstable` (matches the perSystem
      pkgs channel)
    - `homeModules` containing the feature's `.home` deferred module
    - `mainPackage` specified explicitly (until auto-discovery lands)
-3. Outputs the `.wrapper` derivation to `perSystem.packages.<name>`
+1. Outputs the `.wrapper` derivation to `perSystem.packages.<name>`
 
 ```nix
 { inputs, config, ... }:
@@ -119,8 +120,8 @@ This module:
 
 ### 3. Future shape (after upstream tasks land)
 
-Once `mainPackage` is optional with auto-discovery, the registry simplifies to
-a list of feature names:
+Once `mainPackage` is optional with auto-discovery, the registry simplifies to a
+list of feature names:
 
 ```nix
 wrappedFeatures = [ "alacritty" "kitty" "starship" "bat" "eza" ];
@@ -158,10 +159,10 @@ nix build .#alacritty         # builds the wrapper derivation
 
 ## Files changed
 
-| File | Change |
-| --- | --- |
-| `flake.nix` | Add `nix-wrapper-modules` input |
-| `modules/flake-parts/features/wrapped-packages.nix` | New module |
+| File                                                | Change                          |
+| --------------------------------------------------- | ------------------------------- |
+| `flake.nix`                                         | Add `nix-wrapper-modules` input |
+| `modules/flake-parts/features/wrapped-packages.nix` | New module                      |
 
 ## Verification
 
@@ -189,9 +190,9 @@ nix-flake-build cortex
 
 The `perSystem` block runs for all systems in the flake (including Darwin via
 the `systems` input). Wrapped packages should be guarded per-system if the
-underlying package doesn't exist on all platforms. For the pilot, `pkgs.alacritty`
-exists on both Linux and Darwin so no guard is needed. Future features may need
-`lib.optionalAttrs pkgs.stdenv.isLinux` or similar.
+underlying package doesn't exist on all platforms. For the pilot,
+`pkgs.alacritty` exists on both Linux and Darwin so no guard is needed. Future
+features may need `lib.optionalAttrs pkgs.stdenv.isLinux` or similar.
 
 ## Risks
 

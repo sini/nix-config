@@ -239,9 +239,9 @@ let
             if matchingProviders == [ ] then
               let
                 totalScanned = lib.length (attrNames state.features);
-                definingFeatures = lib.filter (
-                  fn: hasAttr providerName state.features.${fn}.provides
-                ) (attrNames state.features);
+                definingFeatures = lib.filter (fn: hasAttr providerName state.features.${fn}.provides) (
+                  attrNames state.features
+                );
                 defineCount = lib.length definingFeatures;
                 context =
                   if defineCount == 0 then

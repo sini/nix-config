@@ -16,10 +16,10 @@
         {
           resolvedUser,
           allHostFeatures,
-          activeProviders ? [ ],
           system ? "x86_64-linux",
           fullContext ? { },
           dispatchableArgs ? [ ],
+          ...
         }:
         let
           includeHostFeatures = resolvedUser.system.include-host-features or true;

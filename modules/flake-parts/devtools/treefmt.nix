@@ -1,5 +1,12 @@
 { inputs, ... }:
 {
+  flake-file.inputs = {
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      # inputs.nixpkgs.follows = "nixpkgs";
+    };
+  };
+
   imports = [
     inputs.treefmt-nix.flakeModule
   ];
@@ -20,11 +27,15 @@
       formatter = config.treefmt.build.wrapper;
 
       treefmt = {
-        inherit (config.flake-root) projectRootFile;
+        # inherit (config.flake-root) projectRootFile;
+        projectRootFile = ".git/config";
+
         enableDefaultExcludes = true;
 
         settings = {
-          on-unmatched = "fatal";
+          # on-unmatched = "fatal";
+          on-unmatched = "warn";
+
           global.excludes = [
             "generated/**"
             ".secrets/**"
@@ -61,6 +72,7 @@
           ]
           # Exclude generated files from the files.files flake-parts module
           ++ (map (file: file.path_) config.files.files);
+
           statix.options = [ "explain" ];
           mdformat.options = [ "--number" ];
           deadnix.options = [ "--no-lambda-pattern-names" ];
@@ -73,10 +85,12 @@
             "retain_line_breaks=true"
           ];
           formatter = {
-            mdformat.options = [
-              "--wrap"
-              "80"
-            ];
+            ruff-check.priority = 1;
+            ruff-format.priority = 2;
+            # mdformat.options = [
+            #   "--wrap"
+            #   "keep"
+            # ];
             prettier = {
               options = [
                 "--tab-width"
@@ -94,6 +108,15 @@
           nixfmt = {
             enable = true;
             package = pkgs.nixfmt;
+            includes = [ "**/*.nix" ];
+          };
+          statix = {
+            enable = true;
+            package = inputs'.statix.packages.default;
+          };
+          deadnix = {
+            enable = true;
+            package = pkgs.deadnix;
           };
           nixf-diagnose.enable = true;
           prettier = {
@@ -123,29 +146,25 @@
               tabWidth = 2;
             };
           };
-          taplo.enable = true;
+
           # Python formatting
-          black.enable = true;
+          ruff = {
+            check = true;
+            format = true;
+          };
+
+          taplo.enable = true;
+
           yamlfmt = {
             enable = true;
-            package = pkgs.yamlfmt;
           };
-          mdformat = {
-            enable = true;
-            package = pkgs.mdformat;
-          };
-          shellcheck = {
-            enable = true;
-            package = pkgs.shellcheck;
-          };
-          statix = {
-            enable = true;
-            package = inputs'.statix.packages.default;
-          };
-          deadnix = {
-            enable = true;
-            package = pkgs.deadnix;
-          };
+
+          toml-sort.enable = true;
+
+          # mdformat.enable = true;
+
+          shellcheck.enable = true;
+
         };
       };
     };

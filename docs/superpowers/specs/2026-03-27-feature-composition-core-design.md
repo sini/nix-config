@@ -1,9 +1,7 @@
 # Feature Composition Core Design
 
-**Date:** 2026-03-27
-**Status:** Draft
-**Context:** Closing gaps identified by comparing our feature system with
-flake-aspects, den, and nix-wrapper-modules.
+**Date:** 2026-03-27 **Status:** Draft **Context:** Closing gaps identified by
+comparing our feature system with flake-aspects, den, and nix-wrapper-modules.
 
 ## Problem Statement
 
@@ -12,17 +10,17 @@ frameworks:
 
 1. **Flat composition** — `requires` is all-or-nothing string-based dependency.
    Features can't expose named sub-configurations for selective inclusion.
-2. **Fixed context** — the set of context args (`host`, `user`, `settings`,
+1. **Fixed context** — the set of context args (`host`, `user`, `settings`,
    etc.) is hardcoded in `prepareHostContext`. Adding new dimensions requires
    plumbing changes. Features can't contribute context for their dependents.
-3. **Configuration plumbing through global state** — features that need
+1. **Configuration plumbing through global state** — features that need
    parameterization force new host/environment options (e.g.,
    `host.system-owner` exists solely to pass a value to libvirt).
-4. **Platform conditionals in home modules** — no virtual classes, so
+1. **Platform conditionals in home modules** — no virtual classes, so
    platform-specific home config requires `mkIf pkgs.stdenv.isLinux` patterns.
-5. **No feature extraction** — features are tightly coupled to our flake and
+1. **No feature extraction** — features are tightly coupled to our flake and
    can't be imported by external consumers.
-6. **No open-ended composition** — once a feature is resolved, consumers can't
+1. **No open-ended composition** — once a feature is resolved, consumers can't
    extend it further.
 
 ## Design Principles
@@ -57,6 +55,7 @@ features.workstation = {
 ```
 
 Resolution rules:
+
 - `"bat"` resolves to `config.features.bat`, validates existence, activates the
   feature and collects its class modules.
 - `"bat/alias-as-cat"` resolves to `config.features.bat.provides.alias-as-cat`,
@@ -123,6 +122,7 @@ providerSubmodule = { featureName }: { name, config, ... }: {
 ```
 
 Providers can:
+
 - Define class modules (system, home, platform-specific)
 - Extend the settings schema (add new options)
 - Set settings values
@@ -156,10 +156,10 @@ features.stylix = {
 };
 ```
 
-When `impermanence` is active, the resolver collects
-`*.provides.impermanence` from every active feature and includes them. When
-impermanence is not active (e.g., external consumer), the providers don't
-activate — the feature remains portable.
+When `impermanence` is active, the resolver collects `*.provides.impermanence`
+from every active feature and includes them. When impermanence is not active
+(e.g., external consumer), the providers don't activate — the feature remains
+portable.
 
 Applicable to cross-cutting concerns: impermanence, monitoring/prometheus,
 firewall rules, backup paths.
@@ -167,9 +167,9 @@ firewall rules, backup paths.
 `collectsProviders` is a list — a single collector can collect multiple provider
 names, and a provider can be collected by multiple collectors. When multiple
 collectors match the same provider, the provider is included once (deduped by
-`_id`). Multiple providers of the same feature that declare overlapping
-settings option names produce a module system type collision error — providers
-within a feature must use non-overlapping option names.
+`_id`). Multiple providers of the same feature that declare overlapping settings
+option names produce a module system type collision error — providers within a
+feature must use non-overlapping option names.
 
 ### 4. Extensible Context Pipeline
 
@@ -234,14 +234,14 @@ automatically extend what's available.
 New class slots that forward to platform-specific targets, eliminating
 `mkIf pkgs.stdenv.isLinux` patterns.
 
-| Class | Forwards to | When |
-|---|---|---|
-| `os` | `linux` or `darwin` | Based on host platform |
-| `linux` | NixOS modules | Linux hosts only |
-| `darwin` | nix-darwin modules | macOS hosts only |
-| `home` | home-manager modules | Always |
-| `homeLinux` | `home` | Linux hosts only |
-| `homeDarwin` | `home` | macOS hosts only |
+| Class        | Forwards to          | When                   |
+| ------------ | -------------------- | ---------------------- |
+| `os`         | `linux` or `darwin`  | Based on host platform |
+| `linux`      | NixOS modules        | Linux hosts only       |
+| `darwin`     | nix-darwin modules   | macOS hosts only       |
+| `home`       | home-manager modules | Always                 |
+| `homeLinux`  | `home`               | Linux hosts only       |
+| `homeDarwin` | `home`               | macOS hosts only       |
 
 `system` is kept as an alias for `os` during migration.
 
@@ -268,8 +268,8 @@ use cases (microVM guests, etc.).
 
 ### 6. Composition Chain
 
-`.wrap/.apply/.eval` attached to feature evaluation results, enabling
-open-ended composition both internally and for external consumers.
+`.wrap/.apply/.eval` attached to feature evaluation results, enabling open-ended
+composition both internally and for external consumers.
 
 Built on `lib.evalModules` re-evaluation (same pattern as nix-wrapper-modules):
 
@@ -371,6 +371,7 @@ handles hierarchical includes, collected providers, and deduplication.
 #### Path syntax
 
 Include paths use `/` as delimiter with exactly one level:
+
 - `"bat"` — feature reference
 - `"bat/alias-as-cat"` — provider reference (split on first `/`)
 - Deeper paths are not supported (no `"bat/provides/foo"`)
@@ -441,17 +442,17 @@ Phase 4: Settings aggregation
 
 ### `system` vs `os` Semantics
 
-Current `system` means "cross-platform, included on both NixOS and Darwin."
-New `os` means "forwarded to `linux` or `darwin` based on host platform."
+Current `system` means "cross-platform, included on both NixOS and Darwin." New
+`os` means "forwarded to `linux` or `darwin` based on host platform."
 
 These are semantically identical — a cross-platform module included on both
 platforms is the same as a module forwarded to the current platform. The
-difference is implementation: `system` modules are added to both platform
-module lists; `os` modules are added only to the current platform's list.
+difference is implementation: `system` modules are added to both platform module
+lists; `os` modules are added only to the current platform's list.
 
-In practice, the result is the same. `system` is kept as an alias for `os`
-with identical behavior. The provider submodule type declares only `os` (not
-both) to avoid confusion.
+In practice, the result is the same. `system` is kept as an alias for `os` with
+identical behavior. The provider submodule type declares only `os` (not both) to
+avoid confusion.
 
 ### Context Pipeline Mechanics
 
@@ -471,9 +472,9 @@ context to the dimension's value.
 
 #### Resolution order
 
-Context contributions form a dependency graph (a context function's args
-declare what it needs). Resolution uses lazy evaluation — Nix's native
-laziness handles this without explicit topological sorting:
+Context contributions form a dependency graph (a context function's args declare
+what it needs). Resolution uses lazy evaluation — Nix's native laziness handles
+this without explicit topological sorting:
 
 ```nix
 # All context contributions are merged into a single recursive attrset
@@ -504,8 +505,8 @@ homeSpecialArgs = fullContext // {
 
 #### Parametric dispatch mechanism
 
-Conditional import (den's approach): modules whose required `functionArgs`
-are not satisfied by the available context are excluded from the module list
+Conditional import (den's approach): modules whose required `functionArgs` are
+not satisfied by the available context are excluded from the module list
 entirely. They are not imported and produce no configuration.
 
 ```nix
@@ -520,18 +521,18 @@ filterByContext = context: modules:
   ) modules;
 ```
 
-This means a feature's `home` module with `{ user, ... }:` signature is
-simply not included when evaluating in a context without `user` (e.g.,
-standalone wrapping). The feature still contributes its other class modules.
+This means a feature's `home` module with `{ user, ... }:` signature is simply
+not included when evaluating in a context without `user` (e.g., standalone
+wrapping). The feature still contributes its other class modules.
 
-Important: `filterByContext` only checks against **context-specific args**
-(the extensible set: `host`, `user`, `environment`, `settings`, `cluster`,
-etc.), not standard module system args (`pkgs`, `lib`, `config`,
-`modulesPath`, `options`, `osConfig`). Standard args are always provided by
-the module system's `specialArgs` or `_module.args`. This matches the
-existing `contextArgTiers` pattern in helpers.nix — the filter maintains a
-known set of context arg names and only checks those. As features contribute
-new context dimensions, those names are added to the set automatically.
+Important: `filterByContext` only checks against **context-specific args** (the
+extensible set: `host`, `user`, `environment`, `settings`, `cluster`, etc.), not
+standard module system args (`pkgs`, `lib`, `config`, `modulesPath`, `options`,
+`osConfig`). Standard args are always provided by the module system's
+`specialArgs` or `_module.args`. This matches the existing `contextArgTiers`
+pattern in helpers.nix — the filter maintains a known set of context arg names
+and only checks those. As features contribute new context dimensions, those
+names are added to the set automatically.
 
 ### Composition Chain Implementation
 
@@ -564,8 +565,8 @@ evaluatedFeature = featureEval.config // {
 
 The `extendModules` function is provided by `lib.evalModules` and allows
 re-evaluation with additional modules — the same mechanism nix-wrapper-modules
-uses. Each call to `.apply` or `.wrap` returns a new result with the chain
-still attached, enabling arbitrary chaining.
+uses. Each call to `.apply` or `.wrap` returns a new result with the chain still
+attached, enabling arbitrary chaining.
 
 For features without a wrappable home module, `.wrap` is not available (or
 returns an error). `.apply` and `.eval` are always available.
@@ -580,15 +581,15 @@ current `specialArgs` consumers, and testing strategy.
 
 ## Relationship to Existing Systems
 
-| Concept | Inspired by | Our adaptation |
-|---|---|---|
-| Providers | den aspects `provides` | Structured submodules with `_id`, same shape as features |
-| Collected providers | den batteries / reverse wiring | `collectsProviders` list on collector features |
-| Parametric dispatch | den `builtins.functionArgs` | Generalizes existing `extractModuleArgs` mechanism |
-| Context pipeline | den `den.ctx` stages | Feature-contributable context, replaces fixed `specialArgs` |
-| Virtual classes | den `den._.forward` | Built-in `os`/`homeLinux`/`homeDarwin`, custom via providers |
-| Composition chain | nix-wrapper-modules `.wrap/.apply/.eval` | `evalModules`-based re-evaluation on feature results |
-| Unified includes | den single `includes` field | String-path-based with resolver validation and dedup |
-| Feature extraction | den namespaces | `featureModules`/`featureSets` flake outputs |
-| Settings extensibility | nix-wrapper-modules `.wrap` adding options | Providers can extend settings schema |
-| Excludes | Our invention (den lacks this) | Kept — mutual exclusion is valuable |
+| Concept                | Inspired by                                | Our adaptation                                               |
+| ---------------------- | ------------------------------------------ | ------------------------------------------------------------ |
+| Providers              | den aspects `provides`                     | Structured submodules with `_id`, same shape as features     |
+| Collected providers    | den batteries / reverse wiring             | `collectsProviders` list on collector features               |
+| Parametric dispatch    | den `builtins.functionArgs`                | Generalizes existing `extractModuleArgs` mechanism           |
+| Context pipeline       | den `den.ctx` stages                       | Feature-contributable context, replaces fixed `specialArgs`  |
+| Virtual classes        | den `den._.forward`                        | Built-in `os`/`homeLinux`/`homeDarwin`, custom via providers |
+| Composition chain      | nix-wrapper-modules `.wrap/.apply/.eval`   | `evalModules`-based re-evaluation on feature results         |
+| Unified includes       | den single `includes` field                | String-path-based with resolver validation and dedup         |
+| Feature extraction     | den namespaces                             | `featureModules`/`featureSets` flake outputs                 |
+| Settings extensibility | nix-wrapper-modules `.wrap` adding options | Providers can extend settings schema                         |
+| Excludes               | Our invention (den lacks this)             | Kept — mutual exclusion is valuable                          |
