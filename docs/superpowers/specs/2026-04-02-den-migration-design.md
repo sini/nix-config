@@ -23,9 +23,9 @@ den.ctx.environment { env }
 ```
 
 Environment is the entry point. It fans out into hosts (from its resolved host
-membership) and clusters (from its resolved cluster membership). Environment data
-propagates downstream via `host.environment` and `cluster.environment` — not as a
-separate context parameter.
+membership) and clusters (from its resolved cluster membership). Environment
+data propagates downstream via `host.environment` and `cluster.environment` —
+not as a separate context parameter.
 
 Host-to-user uses den's built-in transition. User-scoped aspects access
 environment data via `host.environment`.
@@ -122,15 +122,15 @@ resolved aspect includes.
 
 ### Type Mapping
 
-| Current Type    | Den Concept                | Rationale                                         |
-| --------------- | -------------------------- | ------------------------------------------------- |
-| Environment     | Context stage + schema     | Active query scope, fans out to hosts + clusters  |
-| Host            | Context stage + schema     | Produces nixosConfigurations/darwinConfigurations  |
-| User            | Context stage + schema     | Produces user accounts + home-manager config       |
-| Cluster         | Context stage + schema     | Produces k8s/nixidy configurations                |
-| K8s Service     | Context stage + schema     | Produces per-service nixidy modules               |
-| Feature         | Aspect (1:1)               | Composable config with includes/provides/settings |
-| Group           | Top-level option (ACL data)| Consumed during context transitions               |
+| Current Type | Den Concept                 | Rationale                                         |
+| ------------ | --------------------------- | ------------------------------------------------- |
+| Environment  | Context stage + schema      | Active query scope, fans out to hosts + clusters  |
+| Host         | Context stage + schema      | Produces nixosConfigurations/darwinConfigurations |
+| User         | Context stage + schema      | Produces user accounts + home-manager config      |
+| Cluster      | Context stage + schema      | Produces k8s/nixidy configurations                |
+| K8s Service  | Context stage + schema      | Produces per-service nixidy modules               |
+| Feature      | Aspect (1:1)                | Composable config with includes/provides/settings |
+| Group        | Top-level option (ACL data) | Consumed during context transitions               |
 
 ## Schemas
 
@@ -231,14 +231,14 @@ Features map 1:1 to den aspects.
 
 ### Platform Modules to Aspect Classes
 
-| Feature attribute | Den aspect class | Notes                                    |
-| ----------------- | ---------------- | ---------------------------------------- |
-| `linux`           | `nixos`          | Direct mapping                           |
-| `darwin`          | `darwin`         | Direct mapping                           |
-| `home`            | `homeManager`    | Direct mapping                           |
-| `homeLinux`       | `homeLinux`      | Custom forwarding class (see below)      |
-| `homeDarwin`      | `homeDarwin`     | Custom forwarding class (see below)      |
-| `os`              | `os`             | Uses den's built-in `os-class` provider  |
+| Feature attribute | Den aspect class | Notes                                       |
+| ----------------- | ---------------- | ------------------------------------------- |
+| `linux`           | `nixos`          | Direct mapping                              |
+| `darwin`          | `darwin`         | Direct mapping                              |
+| `home`            | `homeManager`    | Direct mapping                              |
+| `homeLinux`       | `homeLinux`      | Custom forwarding class (see below)         |
+| `homeDarwin`      | `homeDarwin`     | Custom forwarding class (see below)         |
+| `os`              | `os`             | Uses den's built-in `os-class` provider     |
 | `system`          | `os`             | Alias for `os`; deprecated during migration |
 
 ### Platform-Conditional Home Classes
@@ -272,31 +272,31 @@ without conditionals.
 
 ### Composition Primitives
 
-| Feature concept      | Den equivalent               | Notes                           |
-| -------------------- | ---------------------------- | ------------------------------- |
-| `requires`/`includes`| `includes`                   | Direct mapping                  |
-| `provides`           | `provides`                   | Direct mapping                  |
-| `settings`           | Schema options + `mkDefault` | Feature defaults via `mkDefault`|
-| `collectsProviders`  | Custom forwarding classes    | See below                       |
-| `contextProvides`    | Not directly supported       | See open questions              |
+| Feature concept       | Den equivalent               | Notes                            |
+| --------------------- | ---------------------------- | -------------------------------- |
+| `requires`/`includes` | `includes`                   | Direct mapping                   |
+| `provides`            | `provides`                   | Direct mapping                   |
+| `settings`            | Schema options + `mkDefault` | Feature defaults via `mkDefault` |
+| `collectsProviders`   | Custom forwarding classes    | See below                        |
+| `contextProvides`     | Not directly supported       | See open questions               |
 
 ### Settings Layering
 
-Feature settings become schema options on `den.schema.host` and `den.schema.user`.
-Precedence is managed via the module system:
+Feature settings become schema options on `den.schema.host` and
+`den.schema.user`. Precedence is managed via the module system:
 
 ```
 feature defaults (mkDefault) -> host.settings -> user.settings
 ```
 
-Environment-level settings are not currently in use. When needed, an
-environment aspect can set `mkDefault` values via `provides.host`.
+Environment-level settings are not currently in use. When needed, an environment
+aspect can set `mkDefault` values via `provides.host`.
 
 ### Collection Pattern (replaces `collectsProviders`)
 
-Instead of a two-phase resolver that scans active features for matching providers,
-den uses custom forwarding classes. Each aspect declares config in a custom class,
-and the forwarding class collects and routes all contributions.
+Instead of a two-phase resolver that scans active features for matching
+providers, den uses custom forwarding classes. Each aspect declares config in a
+custom class, and the forwarding class collects and routes all contributions.
 
 Example for impermanence/persist:
 
@@ -359,17 +359,18 @@ flake.nixidyConfigurations = clusterModule;
 
 ### Deployment Outputs
 
-Colmena and deploy-rs wire into the `nixosConfigurations` that den produces.
-No changes to deployment tooling needed.
+Colmena and deploy-rs wire into the `nixosConfigurations` that den produces. No
+changes to deployment tooling needed.
 
 ## Groups / ACL
 
 Groups remain a top-level option, not a den entity. They are consumed at two
 points in the pipeline:
 
-1. **`environment.into.host` -> `into.user` fan-out:** Three-level ACL resolution
-   (groups -> environment.access -> host.system-access-groups) determines which
-   users materialize on each host. This runs during the `into.user` transition.
+1. **`environment.into.host` -> `into.user` fan-out:** Three-level ACL
+   resolution (groups -> environment.access -> host.system-access-groups)
+   determines which users materialize on each host. This runs during the
+   `into.user` transition.
 
 2. **`cluster.into.k8s-service` evaluation:** Kanidm-scoped groups provide
    OAuth2 scope/claim maps consumed by k8s service aspects.
@@ -392,17 +393,17 @@ resolved user                          <- enable + systemGroups derived
 Current flake-parts option modules gradually replaced by den schemas and context
 stages:
 
-| Current module                      | Replaced by                              |
-| ----------------------------------- | ---------------------------------------- |
-| `flake-parts/hosts/options.nix`     | `den.schema.host` extensions             |
-| `flake-parts/environments/options.nix` | `den.schema.environment`              |
-| `flake-parts/users/options.nix`     | `den.schema.user` extensions             |
-| `flake-parts/features/options.nix`  | `den.aspects` definitions                |
-| `flake-parts/features/resolver.nix` | Den's include resolution + forwarding    |
-| `flake-parts/kubernetes/*.nix`      | `den.schema.cluster` + `den.schema.k8s-service` |
-| `flake-parts/hosts/utils.nix` (mkHost) | Den's `ctx.host` + output generation |
-| `flake-parts/users/helpers.nix`     | ACL resolution in `into.user` transition |
-| Feature `system`/`linux`/`darwin`/`home` modules | Aspect class declarations    |
+| Current module                                   | Replaced by                                     |
+| ------------------------------------------------ | ----------------------------------------------- |
+| `flake-parts/hosts/options.nix`                  | `den.schema.host` extensions                    |
+| `flake-parts/environments/options.nix`           | `den.schema.environment`                        |
+| `flake-parts/users/options.nix`                  | `den.schema.user` extensions                    |
+| `flake-parts/features/options.nix`               | `den.aspects` definitions                       |
+| `flake-parts/features/resolver.nix`              | Den's include resolution + forwarding           |
+| `flake-parts/kubernetes/*.nix`                   | `den.schema.cluster` + `den.schema.k8s-service` |
+| `flake-parts/hosts/utils.nix` (mkHost)           | Den's `ctx.host` + output generation            |
+| `flake-parts/users/helpers.nix`                  | ACL resolution in `into.user` transition        |
+| Feature `system`/`linux`/`darwin`/`home` modules | Aspect class declarations                       |
 
 ## Implementation Approach
 
@@ -423,8 +424,8 @@ cover all identified requirements.
 - Migration path for `contextProvides` — features that inject computed values
   into the dispatch context have no direct den equivalent; each usage needs
   case-by-case analysis
-- Migration path for `host.channel` (per-host nixpkgs channel selection) and
-  how it integrates with den's `host.instantiate`
+- Migration path for `host.channel` (per-host nixpkgs channel selection) and how
+  it integrates with den's `host.instantiate`
 - Migration path for `host.baseline.home` (host-specific home-manager config
   applied to all users on that host)
 - Migration path for `homeRequiresSystem` (guard preventing home module

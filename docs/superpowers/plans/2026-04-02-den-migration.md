@@ -1,14 +1,24 @@
 # Den Migration Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers-extended-cc:subagent-driven-development (if subagents available) or superpowers-extended-cc:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use
+> superpowers-extended-cc:subagent-driven-development (if subagents available)
+> or superpowers-extended-cc:executing-plans to implement this plan. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a parallel den-based configuration system under `modules/den/` that coexists with the current flake-parts system, starting with foundational wiring and one host as proof of concept.
+**Goal:** Build a parallel den-based configuration system under `modules/den/`
+that coexists with the current flake-parts system, starting with foundational
+wiring and one host as proof of concept.
 
-**Architecture:** Den is imported as a flake input alongside the existing system. Custom context stages (environment, cluster, k8s-service) and schemas are defined under `modules/den/`. Aspects (migrated features) live under `modules/den/aspects/`. Both systems coexist — den outputs are suffixed (e.g., `cortex-den`) to avoid conflicts.
+**Architecture:** Den is imported as a flake input alongside the existing
+system. Custom context stages (environment, cluster, k8s-service) and schemas
+are defined under `modules/den/`. Aspects (migrated features) live under
+`modules/den/aspects/`. Both systems coexist — den outputs are suffixed (e.g.,
+`cortex-den`) to avoid conflicts.
 
 **Tech Stack:** Nix, den, flake-parts, import-tree, home-manager
 
 **Reference repos:**
+
 - Den source: `/home/sini/Documents/repos/den-configs/den`
 - Gwenodai example: `/home/sini/Documents/repos/den-configs/gwenodai-nixos`
 - Design spec: `docs/superpowers/specs/2026-04-02-den-migration-design.md`
@@ -17,22 +27,29 @@
 
 ### Task 0: Add den flake input and bootstrap module
 
-**Goal:** Wire den into the flake so `den.aspects`, `den.hosts`, `den.ctx` are available in all modules under `modules/den/`.
+**Goal:** Wire den into the flake so `den.aspects`, `den.hosts`, `den.ctx` are
+available in all modules under `modules/den/`.
 
 **Files:**
-- Modify: `modules/flake-parts/devtools/flake-file.nix` (add den input + uncomment dendritic import)
 
-**Important:** Do NOT create a separate `modules/den/inputs.nix` that imports `den.flakeModule`.
-The dendritic flakeModule (`inputs.den.flakeModules.dendritic`) already imports `den.flakeModule`
-internally. Importing it twice causes option-already-declared errors. Gwenodai confirms this
-pattern — it only imports via the dendritic module in flake-file.
+- Modify: `modules/flake-parts/devtools/flake-file.nix` (add den input +
+  uncomment dendritic import)
+
+**Important:** Do NOT create a separate `modules/den/inputs.nix` that imports
+`den.flakeModule`. The dendritic flakeModule
+(`inputs.den.flakeModules.dendritic`) already imports `den.flakeModule`
+internally. Importing it twice causes option-already-declared errors. Gwenodai
+confirms this pattern — it only imports via the dendritic module in flake-file.
 
 **Acceptance Criteria:**
+
 - [ ] `den` appears in `flake.lock` after `nix-flake-update`
-- [ ] `den.aspects`, `den.hosts`, `den.ctx` are accessible in modules under `modules/den/`
+- [ ] `den.aspects`, `den.hosts`, `den.ctx` are accessible in modules under
+      `modules/den/`
 - [ ] Existing configuration still builds without errors
 
-**Verify:** `nix-flake-build cortex` → builds successfully (existing system unaffected)
+**Verify:** `nix-flake-build cortex` → builds successfully (existing system
+unaffected)
 
 **Steps:**
 
@@ -41,6 +58,7 @@ pattern — it only imports via the dendritic module in flake-file.
 In `modules/flake-parts/devtools/flake-file.nix`:
 
 1. Uncomment the den dendritic import (line 5):
+
 ```nix
 imports = [
   (inputs.flake-file.flakeModules.dendritic or { })
@@ -49,6 +67,7 @@ imports = [
 ```
 
 2. Add den to `flake-file.inputs`:
+
 ```nix
 den = {
   url = "github:vic/den";
@@ -85,26 +104,33 @@ nix-flake-build cortex
 
 ### Task 1: Define den defaults and custom forwarding classes
 
-**Goal:** Set up global den defaults (includes for all hosts/users) and the custom forwarding classes (`homeLinux`, `homeDarwin`, `os`) that aspects will use.
+**Goal:** Set up global den defaults (includes for all hosts/users) and the
+custom forwarding classes (`homeLinux`, `homeDarwin`, `os`) that aspects will
+use.
 
 **Files:**
+
 - Create: `modules/den/defaults.nix` (global includes and providers)
-- Create: `modules/den/classes/home-platform.nix` (homeLinux/homeDarwin forwarding)
+- Create: `modules/den/classes/home-platform.nix` (homeLinux/homeDarwin
+  forwarding)
 
 **Acceptance Criteria:**
+
 - [ ] `den.default.includes` contains mutual-provider, inputs', self'
 - [ ] `homeLinux` class forwards to `homeManager` only on nixos hosts
 - [ ] `homeDarwin` class forwards to `homeManager` only on darwin hosts
 - [ ] No eval errors when den modules are loaded
 
-**Verify:** `nix-flake-build cortex` → still builds (den modules loaded but no den hosts defined yet)
+**Verify:** `nix-flake-build cortex` → still builds (den modules loaded but no
+den hosts defined yet)
 
 **Steps:**
 
 - [ ] **Step 1: Create defaults module**
 
 Create `modules/den/defaults.nix` following gwenodai's pattern. Include global
-providers here, plus hostname and define-user so they don't need repeating per host/user:
+providers here, plus hostname and define-user so they don't need repeating per
+host/user:
 
 ```nix
 { den, ... }: {
@@ -131,9 +157,9 @@ providers here, plus hostname and define-user so they don't need repeating per h
 Create `modules/den/classes/home-platform.nix`.
 
 Forwarding classes are plain `{ class, aspect-chain }` functions (NOT wrapped in
-`den.lib.perHost` — that's for aspects with class keys). The `class` parameter IS
-the host class ("nixos"/"darwin"), so we use it directly for platform filtering.
-This follows the same pattern as den's built-in `os-class` provider.
+`den.lib.perHost` — that's for aspects with class keys). The `class` parameter
+IS the host class ("nixos"/"darwin"), so we use it directly for platform
+filtering. This follows the same pattern as den's built-in `os-class` provider.
 
 ```nix
 { den, lib, ... }:
@@ -175,13 +201,17 @@ nix-flake-build cortex
 
 ### Task 2: Define home-manager integration aspect
 
-**Goal:** Configure home-manager defaults for den hosts, following gwenodai's pattern.
+**Goal:** Configure home-manager defaults for den hosts, following gwenodai's
+pattern.
 
 **Files:**
+
 - Create: `modules/den/home-manager.nix`
 
 **Acceptance Criteria:**
-- [ ] home-manager useUserPackages, useGlobalPkgs, backupFileExtension configured
+
+- [ ] home-manager useUserPackages, useGlobalPkgs, backupFileExtension
+      configured
 - [ ] stateVersion set via mkDefault
 - [ ] Integration uses den's hm-host and hm-user context stages
 
@@ -225,13 +255,17 @@ nix-flake-build cortex
 
 ### Task 3: Migrate first simple aspect (shell/zsh)
 
-**Goal:** Migrate the `zsh` feature to a den aspect as proof that the aspect system works end-to-end.
+**Goal:** Migrate the `zsh` feature to a den aspect as proof that the aspect
+system works end-to-end.
 
 **Files:**
+
 - Create: `modules/den/aspects/shell/zsh.nix`
-- Reference: `modules/features/login/zsh.nix` and `modules/apps/shell/zsh.nix` (check both locations for zsh config)
+- Reference: `modules/features/login/zsh.nix` and `modules/apps/shell/zsh.nix`
+  (check both locations for zsh config)
 
 **Acceptance Criteria:**
+
 - [ ] `den.aspects.zsh` defines equivalent nixos and homeManager config
 - [ ] Aspect follows den patterns (den.lib.perHost/perUser where appropriate)
 - [ ] No eval errors
@@ -242,12 +276,17 @@ nix-flake-build cortex
 
 - [ ] **Step 1: Read current zsh feature**
 
-Find the zsh feature source. Check `modules/features/login/zsh.nix`, `modules/apps/shell/zsh.nix`,
-and `modules/core/shell/zsh.nix`. The feature may span multiple files. Read all relevant ones.
+Find the zsh feature source. Check `modules/features/login/zsh.nix`,
+`modules/apps/shell/zsh.nix`, and `modules/core/shell/zsh.nix`. The feature may
+span multiple files. Read all relevant ones.
 
 - [ ] **Step 2: Create den aspect**
 
-Create `modules/den/aspects/shell/zsh.nix` translating the feature's `linux`/`darwin`/`home` modules to den aspect classes (`nixos`/`darwin`/`homeManager`). Use `den.lib.perHost` for system-level config and `den.lib.perUser` for home-manager config where needed. Follow gwenodai's sub-aspect pattern:
+Create `modules/den/aspects/shell/zsh.nix` translating the feature's
+`linux`/`darwin`/`home` modules to den aspect classes
+(`nixos`/`darwin`/`homeManager`). Use `den.lib.perHost` for system-level config
+and `den.lib.perUser` for home-manager config where needed. Follow gwenodai's
+sub-aspect pattern:
 
 ```nix
 { den, lib, ... }: {
@@ -282,20 +321,26 @@ nix-flake-build cortex
 
 ### Task 4: Define first den host (cortex-den) and user (sini)
 
-**Goal:** Declare `cortex-den` as a den host with user `sini`, producing a `nixosConfigurations.cortex-den` output that evaluates successfully.
+**Goal:** Declare `cortex-den` as a den host with user `sini`, producing a
+`nixosConfigurations.cortex-den` output that evaluates successfully.
 
 **Files:**
+
 - Create: `modules/den/hosts/cortex-den.nix` (host declaration + aspect)
 - Create: `modules/den/users/sini.nix` (user aspect)
 
 **Acceptance Criteria:**
+
 - [ ] `den.hosts.x86_64-linux.cortex-den` is declared with user sini
 - [ ] `den.aspects.cortex-den` includes the zsh aspect and basic host config
 - [ ] `den.aspects.sini` defines user identity and home-manager basics
-- [ ] `nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version` returns a version string
+- [ ] `nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version`
+      returns a version string
 - [ ] Existing `nixosConfigurations.cortex` is unaffected
 
-**Verify:** `nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version` → version string
+**Verify:**
+`nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version` →
+version string
 
 **Steps:**
 
@@ -368,15 +413,20 @@ nix-flake-build cortex
 
 ### Task 5: Migrate a second aspect with providers (pipewire)
 
-**Goal:** Migrate pipewire feature to demonstrate the provider pattern and aspect composition with includes.
+**Goal:** Migrate pipewire feature to demonstrate the provider pattern and
+aspect composition with includes.
 
 **Files:**
+
 - Create: `modules/den/aspects/audio/pipewire.nix`
-- Reference: `modules/features/hardware/audio.nix` (the feature is named `audio`, not `pipewire`)
+- Reference: `modules/features/hardware/audio.nix` (the feature is named
+  `audio`, not `pipewire`)
 
 **Acceptance Criteria:**
+
 - [ ] `den.aspects.pipewire` defines nixos config for pipewire
-- [ ] If the current feature has providers (e.g., low-latency), they are migrated as `provides`
+- [ ] If the current feature has providers (e.g., low-latency), they are
+      migrated as `provides`
 - [ ] Aspect can be included by other aspects
 
 **Verify:** `nix-flake-build cortex` → no eval errors
@@ -385,11 +435,13 @@ nix-flake-build cortex
 
 - [ ] **Step 1: Read current pipewire feature**
 
-Read `modules/features/hardware/audio.nix` to understand system/home modules and any providers.
+Read `modules/features/hardware/audio.nix` to understand system/home modules and
+any providers.
 
 - [ ] **Step 2: Create den aspect**
 
-Create `modules/den/aspects/audio/pipewire.nix` translating the feature. If it has `provides.low-latency`, create:
+Create `modules/den/aspects/audio/pipewire.nix` translating the feature. If it
+has `provides.low-latency`, create:
 
 ```nix
 { den, lib, ... }: {
@@ -423,12 +475,16 @@ Add `den.aspects.pipewire` to `cortex-den`'s includes and verify eval.
 
 ### Task 6: Add cortex-den to cortex's facter hardware config
 
-**Goal:** Make cortex-den use the real hardware configuration from cortex so it can actually build (not just eval).
+**Goal:** Make cortex-den use the real hardware configuration from cortex so it
+can actually build (not just eval).
 
 **Files:**
-- Modify: `modules/den/hosts/cortex-den.nix` (add hardware config, real boot config)
+
+- Modify: `modules/den/hosts/cortex-den.nix` (add hardware config, real boot
+  config)
 
 **Acceptance Criteria:**
+
 - [ ] cortex-den imports cortex's facter.json or hardware configuration
 - [ ] `nix-flake-build cortex-den` succeeds (full build, not just eval)
 
@@ -461,10 +517,11 @@ den.aspects.cortex-den = {
 nix-flake-build cortex-den
 ```
 
-This will likely surface missing aspects (features cortex requires but we haven't migrated).
-**Strategy: create no-op stub aspects** for any missing dependencies rather than migrating them
-fully. The goal is to prove the pipeline works, not to migrate all features in this phase.
-For example, if `networking` is required:
+This will likely surface missing aspects (features cortex requires but we
+haven't migrated). **Strategy: create no-op stub aspects** for any missing
+dependencies rather than migrating them fully. The goal is to prove the pipeline
+works, not to migrate all features in this phase. For example, if `networking`
+is required:
 
 ```nix
 # modules/den/aspects/stubs.nix
@@ -482,9 +539,11 @@ For example, if `networking` is required:
 **Goal:** Commit all work with clear messages and document the migration status.
 
 **Files:**
+
 - All files created/modified in tasks 0-6
 
 **Acceptance Criteria:**
+
 - [ ] All changes committed with descriptive messages
 - [ ] `modules/den/` structure is clean and follows established patterns
 
@@ -538,6 +597,9 @@ modules/den/
 ## Notes
 
 - All den modules are auto-imported via import-tree (same as existing modules)
-- Den hosts output as `nixosConfigurations.cortex-den` to avoid conflicting with existing `cortex`
-- Once the parallel system is validated, migration continues by porting more features to aspects
-- The environment/cluster context stages are deferred to a later phase — this plan focuses on proving the host/user/aspect pipeline works end-to-end
+- Den hosts output as `nixosConfigurations.cortex-den` to avoid conflicting with
+  existing `cortex`
+- Once the parallel system is validated, migration continues by porting more
+  features to aspects
+- The environment/cluster context stages are deferred to a later phase — this
+  plan focuses on proving the host/user/aspect pipeline works end-to-end

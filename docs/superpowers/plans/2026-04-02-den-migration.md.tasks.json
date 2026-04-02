@@ -7,9 +7,16 @@
       "status": "pending",
       "description": "**Goal:** Wire den into the flake via flake-file dendritic import.\n\n**Files:**\n- Modify: modules/flake-parts/devtools/flake-file.nix\n- Create: modules/den/systems.nix\n\n**Verify:** nix-flake-build cortex",
       "metadata": {
-        "files": ["modules/flake-parts/devtools/flake-file.nix", "modules/den/systems.nix"],
+        "files": [
+          "modules/flake-parts/devtools/flake-file.nix",
+          "modules/den/systems.nix"
+        ],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["den in flake.lock", "den options accessible", "existing builds unaffected"]
+        "acceptanceCriteria": [
+          "den in flake.lock",
+          "den options accessible",
+          "existing builds unaffected"
+        ]
       }
     },
     {
@@ -19,9 +26,17 @@
       "blockedBy": [0],
       "description": "**Goal:** Set up global den defaults, ctx includes, and homeLinux/homeDarwin forwarding classes.\n\n**Files:**\n- Create: modules/den/defaults.nix\n- Create: modules/den/classes/home-platform.nix\n\n**Verify:** nix-flake-build cortex",
       "metadata": {
-        "files": ["modules/den/defaults.nix", "modules/den/classes/home-platform.nix"],
+        "files": [
+          "modules/den/defaults.nix",
+          "modules/den/classes/home-platform.nix"
+        ],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["global includes set", "homeLinux forwards correctly", "homeDarwin forwards correctly", "hostname and define-user in global ctx"]
+        "acceptanceCriteria": [
+          "global includes set",
+          "homeLinux forwards correctly",
+          "homeDarwin forwards correctly",
+          "hostname and define-user in global ctx"
+        ]
       }
     },
     {
@@ -33,7 +48,11 @@
       "metadata": {
         "files": ["modules/den/home-manager.nix"],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["HM defaults configured", "stateVersion set", "hm-host/hm-user ctx used"]
+        "acceptanceCriteria": [
+          "HM defaults configured",
+          "stateVersion set",
+          "hm-host/hm-user ctx used"
+        ]
       }
     },
     {
@@ -45,7 +64,11 @@
       "metadata": {
         "files": ["modules/den/aspects/shell/zsh.nix"],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["zsh aspect defines nixos+homeManager", "follows den patterns", "no eval errors"]
+        "acceptanceCriteria": [
+          "zsh aspect defines nixos+homeManager",
+          "follows den patterns",
+          "no eval errors"
+        ]
       }
     },
     {
@@ -55,9 +78,16 @@
       "blockedBy": [2, 3],
       "description": "**Goal:** Declare cortex-den as a den host with user sini, producing nixosConfigurations.cortex-den.\n\n**Files:**\n- Create: modules/den/hosts/cortex-den.nix\n- Create: modules/den/users/sini.nix\n\n**Verify:** nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version",
       "metadata": {
-        "files": ["modules/den/hosts/cortex-den.nix", "modules/den/users/sini.nix"],
+        "files": [
+          "modules/den/hosts/cortex-den.nix",
+          "modules/den/users/sini.nix"
+        ],
         "verifyCommand": "nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version",
-        "acceptanceCriteria": ["host declared", "eval returns version", "existing cortex unaffected"]
+        "acceptanceCriteria": [
+          "host declared",
+          "eval returns version",
+          "existing cortex unaffected"
+        ]
       }
     },
     {
@@ -69,7 +99,11 @@
       "metadata": {
         "files": ["modules/den/aspects/audio/pipewire.nix"],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["audio aspect defined", "providers migrated", "includable by others"]
+        "acceptanceCriteria": [
+          "audio aspect defined",
+          "providers migrated",
+          "includable by others"
+        ]
       }
     },
     {
@@ -79,9 +113,16 @@
       "blockedBy": [4],
       "description": "**Goal:** Make cortex-den use real hardware config. Create no-op stubs for unmigrated features.\n\n**Files:**\n- Modify: modules/den/hosts/cortex-den.nix\n- Create: modules/den/aspects/stubs.nix\n\n**Verify:** nix-flake-build cortex-den",
       "metadata": {
-        "files": ["modules/den/hosts/cortex-den.nix", "modules/den/aspects/stubs.nix"],
+        "files": [
+          "modules/den/hosts/cortex-den.nix",
+          "modules/den/aspects/stubs.nix"
+        ],
         "verifyCommand": "nix-flake-build cortex-den",
-        "acceptanceCriteria": ["facter.json imported", "stubs for missing features", "build succeeds"]
+        "acceptanceCriteria": [
+          "facter.json imported",
+          "stubs for missing features",
+          "build succeeds"
+        ]
       }
     },
     {
