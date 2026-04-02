@@ -1,10 +1,6 @@
 { inputs, ... }:
 {
+  flake-file.inputs.systems.url = "github:nix-systems/default";
+
   systems = import inputs.systems;
-  # systems = [
-  #   "x86_64-linux"
-  #   "aarch64-linux"
-  #   "aarch64-darwin"
-  #   # "x86_64-darwin"
-  # ];
 }
