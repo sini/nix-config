@@ -1,0 +1,101 @@
+{
+  "planPath": "docs/superpowers/plans/2026-04-02-den-migration.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 0: Add den flake input and bootstrap module",
+      "status": "pending",
+      "description": "**Goal:** Wire den into the flake via flake-file dendritic import.\n\n**Files:**\n- Modify: modules/flake-parts/devtools/flake-file.nix\n- Create: modules/den/systems.nix\n\n**Verify:** nix-flake-build cortex",
+      "metadata": {
+        "files": ["modules/flake-parts/devtools/flake-file.nix", "modules/den/systems.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["den in flake.lock", "den options accessible", "existing builds unaffected"]
+      }
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Define den defaults and custom forwarding classes",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "**Goal:** Set up global den defaults, ctx includes, and homeLinux/homeDarwin forwarding classes.\n\n**Files:**\n- Create: modules/den/defaults.nix\n- Create: modules/den/classes/home-platform.nix\n\n**Verify:** nix-flake-build cortex",
+      "metadata": {
+        "files": ["modules/den/defaults.nix", "modules/den/classes/home-platform.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["global includes set", "homeLinux forwards correctly", "homeDarwin forwards correctly", "hostname and define-user in global ctx"]
+      }
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Define home-manager integration aspect",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Configure home-manager defaults for den hosts.\n\n**Files:**\n- Create: modules/den/home-manager.nix\n\n**Verify:** nix-flake-build cortex",
+      "metadata": {
+        "files": ["modules/den/home-manager.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["HM defaults configured", "stateVersion set", "hm-host/hm-user ctx used"]
+      }
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Migrate first aspect (shell/zsh)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Migrate zsh feature to den aspect as proof of concept.\n\n**Files:**\n- Create: modules/den/aspects/shell/zsh.nix\n- Reference: modules/features/login/zsh.nix, modules/apps/shell/zsh.nix, modules/core/shell/zsh.nix\n\n**Verify:** nix-flake-build cortex",
+      "metadata": {
+        "files": ["modules/den/aspects/shell/zsh.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["zsh aspect defines nixos+homeManager", "follows den patterns", "no eval errors"]
+      }
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Define first den host (cortex-den) and user (sini)",
+      "status": "pending",
+      "blockedBy": [2, 3],
+      "description": "**Goal:** Declare cortex-den as a den host with user sini, producing nixosConfigurations.cortex-den.\n\n**Files:**\n- Create: modules/den/hosts/cortex-den.nix\n- Create: modules/den/users/sini.nix\n\n**Verify:** nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version",
+      "metadata": {
+        "files": ["modules/den/hosts/cortex-den.nix", "modules/den/users/sini.nix"],
+        "verifyCommand": "nix eval .#nixosConfigurations.cortex-den.config.system.nixos.version",
+        "acceptanceCriteria": ["host declared", "eval returns version", "existing cortex unaffected"]
+      }
+    },
+    {
+      "id": 5,
+      "subject": "Task 5: Migrate audio/pipewire aspect with providers",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "**Goal:** Migrate audio feature to demonstrate provider pattern.\n\n**Files:**\n- Create: modules/den/aspects/audio/pipewire.nix\n- Reference: modules/features/hardware/audio.nix\n\n**Verify:** nix-flake-build cortex",
+      "metadata": {
+        "files": ["modules/den/aspects/audio/pipewire.nix"],
+        "verifyCommand": "nix-flake-build cortex",
+        "acceptanceCriteria": ["audio aspect defined", "providers migrated", "includable by others"]
+      }
+    },
+    {
+      "id": 6,
+      "subject": "Task 6: Add hardware config for cortex-den build",
+      "status": "pending",
+      "blockedBy": [4],
+      "description": "**Goal:** Make cortex-den use real hardware config. Create no-op stubs for unmigrated features.\n\n**Files:**\n- Modify: modules/den/hosts/cortex-den.nix\n- Create: modules/den/aspects/stubs.nix\n\n**Verify:** nix-flake-build cortex-den",
+      "metadata": {
+        "files": ["modules/den/hosts/cortex-den.nix", "modules/den/aspects/stubs.nix"],
+        "verifyCommand": "nix-flake-build cortex-den",
+        "acceptanceCriteria": ["facter.json imported", "stubs for missing features", "build succeeds"]
+      }
+    },
+    {
+      "id": 7,
+      "subject": "Task 7: Commit and document progress",
+      "status": "pending",
+      "blockedBy": [6],
+      "description": "**Goal:** Commit all work with clear messages.\n\n**Verify:** git status → clean working tree",
+      "metadata": {
+        "files": [],
+        "verifyCommand": "git status",
+        "acceptanceCriteria": ["all committed", "clean structure"]
+      }
+    }
+  ],
+  "lastUpdated": "2026-04-02T12:00:00Z"
+}

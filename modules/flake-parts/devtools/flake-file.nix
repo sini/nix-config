@@ -2,7 +2,7 @@
 {
   imports = [
     (inputs.flake-file.flakeModules.dendritic or { })
-    # (inputs.den.flakeModules.dendritic or { })
+    (inputs.den.flakeModules.dendritic or { })
   ];
 
   flake-file = {
@@ -64,6 +64,8 @@
         url = "github:Sveske-Juice/declarative-jellyfin";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
+
+      den.url = "github:vic/den";
 
       devshell = {
         url = "github:numtide/devshell";

@@ -415,6 +415,21 @@
         "type": "github"
       }
     },
+    "den": {
+      "locked": {
+        "lastModified": 1775164471,
+        "narHash": "sha256-RTNX98N2dLe/C51hqPQwutwKEI1WL7cyAPuKLMT86Bs=",
+        "owner": "vic",
+        "repo": "den",
+        "rev": "6f2da36401ce851133e377a29712c0a7f382109c",
+        "type": "github"
+      },
+      "original": {
+        "owner": "vic",
+        "repo": "den",
+        "type": "github"
+      }
+    },
     "devshell": {
       "inputs": {
         "nixpkgs": [
@@ -3187,6 +3202,7 @@
         "betterfox": "betterfox",
         "colmena": "colmena",
         "declarative-jellyfin": "declarative-jellyfin",
+        "den": "den",
         "devshell": "devshell_3",
         "disko": "disko",
         "files": "files",
