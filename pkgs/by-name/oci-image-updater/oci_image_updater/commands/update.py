@@ -2,7 +2,6 @@
 
 import argparse
 import logging
-from pathlib import Path
 
 from ..images import ImageDiscovery, ImageManager, ImageUpdater
 from ..utils import NixUtils
@@ -75,7 +74,7 @@ def cmd_check_all(args: argparse.Namespace) -> int:
     for image in images:
         logging.info(f"Checking {image.path_str}...")
         if image.pinned:
-            logging.info(f"  Pinned (skipping)")
+            logging.info("  Pinned (skipping)")
         elif ImageUpdater.needs_update(image):
             remote_digest = ImageUpdater.check_remote_digest(
                 image.image_name,
@@ -83,12 +82,12 @@ def cmd_check_all(args: argparse.Namespace) -> int:
                 image.arch,
                 image.os,
             )
-            logging.info(f"  Update available!")
+            logging.info("  Update available!")
             logging.info(f"    Current: {image.image_digest}")
             logging.info(f"    Remote:  {remote_digest}")
             updates_available.append(image.path_str)
         else:
-            logging.info(f"  Up to date")
+            logging.info("  Up to date")
         logging.info("")
 
     if updates_available:

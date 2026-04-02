@@ -6,6 +6,15 @@
   ...
 }:
 {
+  flake-file.inputs.colmena = {
+    url = "github:zw3rk/colmena/darwin-support";
+    inputs = {
+      nixpkgs.follows = "nixpkgs-unstable";
+      flake-compat.follows = "flake-compat";
+      flake-utils.follows = "flake-utils";
+    };
+  };
+
   text.readme.parts.colmena =
     # markdown
     ''

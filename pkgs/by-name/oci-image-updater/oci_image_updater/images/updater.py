@@ -86,7 +86,7 @@ class ImageUpdater:
 
         # Check if image is pinned
         if image.pinned:
-            logging.info(f"  Pinned (skipping)")
+            logging.info("  Pinned (skipping)")
             return UpdateOperation(
                 path=image.path_str,
                 old_digest=image.image_digest,
@@ -104,7 +104,7 @@ class ImageUpdater:
         )
 
         if remote_digest is None:
-            logging.warning(f"  Skipping (failed to get remote digest)")
+            logging.warning("  Skipping (failed to get remote digest)")
             return UpdateOperation(
                 path=image.path_str,
                 old_digest=image.image_digest,
@@ -115,7 +115,7 @@ class ImageUpdater:
             )
 
         if remote_digest == image.image_digest:
-            logging.info(f"  Up to date")
+            logging.info("  Up to date")
             return UpdateOperation(
                 path=image.path_str,
                 old_digest=image.image_digest,
@@ -125,7 +125,7 @@ class ImageUpdater:
                 updated=False,
             )
 
-        logging.info(f"  Update available!")
+        logging.info("  Update available!")
         logging.info(f"    Old digest: {image.image_digest}")
         logging.info(f"    New digest: {remote_digest}")
 

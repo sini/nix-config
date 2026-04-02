@@ -9,7 +9,11 @@
       "metadata": {
         "files": ["flake.nix", "flake.lock"],
         "verifyCommand": "nix flake metadata --json | jq '.locks.nodes[\"nix-wrapper-modules\"].locked.owner'",
-        "acceptanceCriteria": ["nix-wrapper-modules input exists", "nixpkgs.follows = nixpkgs-unstable", "flake lock succeeds"]
+        "acceptanceCriteria": [
+          "nix-wrapper-modules input exists",
+          "nixpkgs.follows = nixpkgs-unstable",
+          "flake lock succeeds"
+        ]
       }
     },
     {
@@ -21,7 +25,11 @@
       "metadata": {
         "files": ["modules/flake-parts/features/wrapped-packages.nix"],
         "verifyCommand": "nix build .#alacritty && file result/bin/alacritty",
-        "acceptanceCriteria": ["nix eval returns derivation name", "nix build produces wrapper", "config embedded in derivation"]
+        "acceptanceCriteria": [
+          "nix eval returns derivation name",
+          "nix build produces wrapper",
+          "config embedded in derivation"
+        ]
       }
     },
     {
@@ -33,7 +41,11 @@
       "metadata": {
         "files": [],
         "verifyCommand": "nix flake check",
-        "acceptanceCriteria": ["flake check passes", "cortex build succeeds", "alacritty launches"]
+        "acceptanceCriteria": [
+          "flake check passes",
+          "cortex build succeeds",
+          "alacritty launches"
+        ]
       }
     }
   ],

@@ -38,23 +38,23 @@ legacyPackages.<system>/
 
 Each scope maps to existing resolution machinery:
 
-| Scope | Context source | What's available |
-|---|---|---|
-| `<user>` | `config.users.<name>` | `user.identity`, canonical `user.system.settings` |
-| `<env>/<user>` | `config.environments.<env>` + resolved user | + `environment.*`, env-level user settings |
-| `<host>` | `config.hosts.<host>` | `host.*`, `host.hasFeature`, resolved `settings` |
-| `<host>/<user>` | host + resolved user | Full resolution: host settings + env settings + user identity + per-host user settings |
+| Scope           | Context source                              | What's available                                                                       |
+| --------------- | ------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `<user>`        | `config.users.<name>`                       | `user.identity`, canonical `user.system.settings`                                      |
+| `<env>/<user>`  | `config.environments.<env>` + resolved user | + `environment.*`, env-level user settings                                             |
+| `<host>`        | `config.hosts.<host>`                       | `host.*`, `host.hasFeature`, resolved `settings`                                       |
+| `<host>/<user>` | host + resolved user                        | Full resolution: host settings + env settings + user identity + per-host user settings |
 
 ## Scope Selection
 
 The `contextRequirements` metadata determines the minimum scope:
 
-| contextRequirements | Minimum scope | Examples |
-|---|---|---|
-| `["user"]` | `<user>` | gitkraken, jujutsu |
-| `["user", "environment"]` | `<env>/<user>` | git |
-| `["host"]` | `<host>` | gpg, waybar, hyprpanel |
-| `["host", "user"]` | `<host>/<user>` | (future) |
+| contextRequirements       | Minimum scope   | Examples               |
+| ------------------------- | --------------- | ---------------------- |
+| `["user"]`                | `<user>`        | gitkraken, jujutsu     |
+| `["user", "environment"]` | `<env>/<user>`  | git                    |
+| `["host"]`                | `<host>`        | gpg, waybar, hyprpanel |
+| `["host", "user"]`        | `<host>/<user>` | (future)               |
 
 ## Context Injection
 
@@ -109,7 +109,8 @@ Same as host scope plus resolved user with full settings layers.
 - Tier 1 packages stay in `packages` (flat) for `nix flake check` compatibility.
 - The wrapper module iterates `config.users`, `config.environments`,
   `config.hosts` to generate all valid scope combinations.
-- Only generate outputs for scopes that have features needing that context level.
+- Only generate outputs for scopes that have features needing that context
+  level.
 
 ## Non-wrappable (osConfig)
 

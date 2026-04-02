@@ -1,12 +1,20 @@
 # Feature Extraction Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers-extended-cc:subagent-driven-development (if subagents available) or superpowers-extended-cc:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use
+> superpowers-extended-cc:subagent-driven-development (if subagents available)
+> or superpowers-extended-cc:executing-plans to implement this plan. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Implement `.package` on the composition chain so features can produce standalone wrapped packages, then migrate `wrapped-packages.nix` to use it.
+**Goal:** Implement `.package` on the composition chain so features can produce
+standalone wrapped packages, then migrate `wrapped-packages.nix` to use it.
 
-**Architecture:** Add `.package` to `mkFeatureEval` that calls `wlib.wrapHomeModule` with the feature's home modules and bwrap integration. Capture `wlib`, `home-manager`, and base modules at export time. Migrate `wrapped-packages.nix` from direct hm-wrapper-modules usage to `.package` calls.
+**Architecture:** Add `.package` to `mkFeatureEval` that calls
+`wlib.wrapHomeModule` with the feature's home modules and bwrap integration.
+Capture `wlib`, `home-manager`, and base modules at export time. Migrate
+`wrapped-packages.nix` from direct hm-wrapper-modules usage to `.package` calls.
 
-**Tech Stack:** nix-wrapper-modules (`wlib.wrapHomeModule`, `wlib.modules.bwrapConfig`), hm-wrapper-modules, flake-parts
+**Tech Stack:** nix-wrapper-modules (`wlib.wrapHomeModule`,
+`wlib.modules.bwrapConfig`), hm-wrapper-modules, flake-parts
 
 **Spec:** `docs/superpowers/specs/2026-03-27-feature-extraction-design.md`
 
@@ -14,32 +22,40 @@
 
 ## File Structure
 
-| File | Responsibility | Action |
-|---|---|---|
-| `modules/flake-parts/features/compose.nix` | Composition chain factory | Modify: implement `.package`, remove `.wrap` stub |
-| `modules/flake-parts/features/exports.nix` | Feature extraction as flake outputs | Modify: pass `wlib`, `home-manager`, `baseModules` to `mkFeatureEval` |
-| `modules/flake-parts/features/wrapped-packages.nix` | Standalone package generation | Modify: migrate from hm-wrapper-modules flakeModule to `.package` API |
+| File                                                | Responsibility                      | Action                                                                |
+| --------------------------------------------------- | ----------------------------------- | --------------------------------------------------------------------- |
+| `modules/flake-parts/features/compose.nix`          | Composition chain factory           | Modify: implement `.package`, remove `.wrap` stub                     |
+| `modules/flake-parts/features/exports.nix`          | Feature extraction as flake outputs | Modify: pass `wlib`, `home-manager`, `baseModules` to `mkFeatureEval` |
+| `modules/flake-parts/features/wrapped-packages.nix` | Standalone package generation       | Modify: migrate from hm-wrapper-modules flakeModule to `.package` API |
 
 ---
 
 ### Task 1: Implement `.package` on Composition Chain
 
-**Goal:** Add `.package` method to `mkFeatureEval` that produces nix-wrapper-modules configs from feature home modules.
+**Goal:** Add `.package` method to `mkFeatureEval` that produces
+nix-wrapper-modules configs from feature home modules.
 
 **Files:**
+
 - Modify: `modules/flake-parts/features/compose.nix`
 
 **Acceptance Criteria:**
+
 - [ ] `mkFeatureEval` accepts `wlib`, `home-manager`, `baseModules` args
-- [ ] `.package { pkgs }` calls `wlib.wrapHomeModule` with feature's home modules
+- [ ] `.package { pkgs }` calls `wlib.wrapHomeModule` with feature's home
+      modules
 - [ ] `.package` includes bwrap integration by default
-- [ ] `.package` accepts `extraSpecialArgs`, `mainPackage`, `programName` overrides
-- [ ] `.package` returns a nix-wrapper-modules config (`.wrapper` for derivation)
+- [ ] `.package` accepts `extraSpecialArgs`, `mainPackage`, `programName`
+      overrides
+- [ ] `.package` returns a nix-wrapper-modules config (`.wrapper` for
+      derivation)
 - [ ] `.package` selects `homeLinux`/`homeDarwin` based on `pkgs.stdenv`
-- [ ] `.wrap` stub removed (`.apply` handles extension, nix-wrapper-modules `.wrap` available on `.package` result)
+- [ ] `.wrap` stub removed (`.apply` handles extension, nix-wrapper-modules
+      `.wrap` available on `.package` result)
 - [ ] Missing `wlib`/`home-manager` throws clear error, not null deref
 
-**Verify:** `nix-flake-build --dry-run cortex` → builds (no features use .package yet)
+**Verify:** `nix-flake-build --dry-run cortex` → builds (no features use
+.package yet)
 
 **Steps:**
 
@@ -102,14 +118,15 @@ attachChain = evalResult:
 ```
 
 Where `defaults` is:
+
 ```nix
 defaults = { inherit wlib home-manager baseModules; };
 ```
 
 - [ ] **Step 3: Build and verify**
 
-Run: `nix-flake-build --dry-run cortex`
-Expected: Builds. No features use `.package` yet.
+Run: `nix-flake-build --dry-run cortex` Expected: Builds. No features use
+`.package` yet.
 
 - [ ] **Step 4: Commit**
 
@@ -122,12 +139,15 @@ git commit --no-verify -m "feat(compose): implement .package on composition chai
 
 ### Task 2: Wire Defaults into Feature Exports
 
-**Goal:** Pass `wlib`, `home-manager`, and `baseModules` to `mkFeatureEval` in `exports.nix` so `.package` works on exported features.
+**Goal:** Pass `wlib`, `home-manager`, and `baseModules` to `mkFeatureEval` in
+`exports.nix` so `.package` works on exported features.
 
 **Files:**
+
 - Modify: `modules/flake-parts/features/exports.nix`
 
 **Acceptance Criteria:**
+
 - [ ] `exports.nix` imports `inputs.hm-wrapper-modules.lib` as `wlib`
 - [ ] `exports.nix` captures `home-manager` from channel inputs
 - [ ] `exports.nix` defines `hmBaseModules` (persistence stub + stylix home)
@@ -168,8 +188,7 @@ in
 
 - [ ] **Step 2: Build and verify**
 
-Run: `nix-flake-build --dry-run cortex`
-Expected: Builds.
+Run: `nix-flake-build --dry-run cortex` Expected: Builds.
 
 - [ ] **Step 3: Commit**
 
@@ -182,14 +201,18 @@ git commit --no-verify -m "feat(exports): wire wlib and defaults into featureMod
 
 ### Task 3: Migrate `wrapped-packages.nix` to `.package` API
 
-**Goal:** Replace direct hm-wrapper-modules usage with `.package` calls from the composition chain, proving the API with our own builds.
+**Goal:** Replace direct hm-wrapper-modules usage with `.package` calls from the
+composition chain, proving the API with our own builds.
 
 **Files:**
+
 - Modify: `modules/flake-parts/features/wrapped-packages.nix`
 
 **Acceptance Criteria:**
+
 - [ ] Tier 1 packages use `featureModules.*.package { inherit pkgs; }.wrapper`
-- [ ] Tier 2 packages use `featureModules.*.package { inherit pkgs; extraSpecialArgs = { user = ...; }; }.wrapper`
+- [ ] Tier 2 packages use
+      `featureModules.*.package { inherit pkgs; extraSpecialArgs = { user = ...; }; }.wrapper`
 - [ ] hm-wrapper-modules flakeModule import removed
 - [ ] `hmWrappers` config block removed
 - [ ] `featureMeta` output preserved
@@ -249,11 +272,10 @@ in
 
 - [ ] **Step 2: Build and verify**
 
-Run: `nix-flake-build --dry-run cortex`
-Expected: Builds.
+Run: `nix-flake-build --dry-run cortex` Expected: Builds.
 
-Run: `nix build .#bat --dry-run`
-Expected: Dry run succeeds (bat is a wrappable feature).
+Run: `nix build .#bat --dry-run` Expected: Dry run succeeds (bat is a wrappable
+feature).
 
 - [ ] **Step 3: Commit**
 

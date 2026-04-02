@@ -8,14 +8,15 @@ library that produces wrapped package derivations using the NixOS module system.
 
 A working prototype has been implemented. Your job is to **review its design,
 validate it against real-world HM modules, harden edge cases, and plan the
-integration path** into the consuming NixOS config at `~/Documents/repos/sini/nix-config`.
+integration path** into the consuming NixOS config at
+`~/Documents/repos/sini/nix-config`.
 
 ## Repositories
 
-| Repo | Path | Branch | State |
-|------|------|--------|-------|
+| Repo                       | Path                                         | Branch | State                                   |
+| -------------------------- | -------------------------------------------- | ------ | --------------------------------------- |
 | nix-wrapper-modules (fork) | `~/Documents/repos/sini/nix-wrapper-modules` | `main` | Prototype committed, all CI checks pass |
-| nix-config (consumer) | `~/Documents/repos/sini/nix-config` | — | Design docs only, no integration yet |
+| nix-config (consumer)      | `~/Documents/repos/sini/nix-config`          | —      | Design docs only, no integration yet    |
 
 ## Required reading (in order)
 
@@ -24,19 +25,19 @@ Read these files before doing anything else:
 1. **Design context & tier classification:**
    `~/Documents/repos/sini/nix-config/docs/wrapper-modules/observations.md`
 
-2. **Motivating case study (GitKraken via nixkraken HM module):**
+1. **Motivating case study (GitKraken via nixkraken HM module):**
    `~/Documents/repos/sini/nix-config/docs/wrapper-modules/gitkraken-case-study.md`
 
-3. **Prototype implementation summary (gotchas, learnings, known limitations):**
+1. **Prototype implementation summary (gotchas, learnings, known limitations):**
    `~/Documents/repos/sini/nix-config/docs/wrapper-modules/prototype-summary.md`
 
-4. **The adapter implementation itself:**
+1. **The adapter implementation itself:**
    `~/Documents/repos/sini/nix-wrapper-modules/lib/hm-adapter.nix`
 
-5. **The passing test:**
+1. **The passing test:**
    `~/Documents/repos/sini/nix-wrapper-modules/ci/checks/hm-adapter.nix`
 
-6. **Existing wrapper-modules architecture (for context):**
+1. **Existing wrapper-modules architecture (for context):**
    `~/Documents/repos/sini/nix-wrapper-modules/CLAUDE.md`
    `~/Documents/repos/sini/nix-wrapper-modules/lib/lib.nix`
    `~/Documents/repos/sini/nix-wrapper-modules/lib/core.nix`
@@ -48,9 +49,11 @@ Read these files before doing anything else:
 maps them to wrapper-module primitives:
 
 - `home.packages` → `extraPackages` (minus caller-specified `mainPackage`)
-- `home.activation` → `runShell` (DAG-sorted, HM internals filtered, vars stubbed)
+- `home.activation` → `runShell` (DAG-sorted, HM internals filtered, vars
+  stubbed)
 - `home.file` (text) → `constructFiles` (embedded via `passAsFile`)
-- `home.file` (source) → `buildCommand` copy + explicit `drv` attrs for dep tracking
+- `home.file` (source) → `buildCommand` copy + explicit `drv` attrs for dep
+  tracking
 - `xdg.configFile` → same as above + `env.XDG_CONFIG_HOME` (with `mkDefault`)
 
 Returns a wrapper-module `.config` with `.wrap`/`.apply`/`.eval`/`.wrapper`.
@@ -68,25 +71,26 @@ existing CI checks continue to pass.
    by string context loss. Is there a cleaner way? Are the `drv` attr names
    (`hmSrc_*`) collision-safe? Will this scale to modules with many files?
 
-2. **Review the XDG_CONFIG_HOME strategy.** Setting it globally via `mkDefault`
+1. **Review the XDG_CONFIG_HOME strategy.** Setting it globally via `mkDefault`
    works but redirects ALL XDG lookups. Consider: should it be opt-in instead of
    opt-out? Should there be a per-app subdirectory strategy? What happens when a
    wrapped program also reads `~/.config/fontconfig/` or GTK themes?
 
-3. **Review activation script handling.** The hardcoded `hmInternalEntries` list
+1. **Review activation script handling.** The hardcoded `hmInternalEntries` list
    is fragile — new HM versions may add entries. Should we use a positive filter
    (only include entries that come after `writeBoundary`) instead of a negative
    one? How should we handle activation scripts that are NOT idempotent?
 
-4. **HM internal file leakage.** The wrapper currently includes `.cache/.keep`,
+1. **HM internal file leakage.** The wrapper currently includes `.cache/.keep`,
    `systemd/user/tray.target`, `environment.d/10-home-manager.conf` etc. These
    are harmless but wasteful. Should we filter them? By what criteria?
 
-5. **Source-only file dependency tracking.** The prototype hasn't been tested with
-   HM modules that set `home.file.*.source` directly (not via `text`). The `drv`
-   attribute approach for dependency tracking needs validation with a real module.
+1. **Source-only file dependency tracking.** The prototype hasn't been tested
+   with HM modules that set `home.file.*.source` directly (not via `text`). The
+   `drv` attribute approach for dependency tracking needs validation with a real
+   module.
 
-6. **Add more test cases:**
+1. **Add more test cases:**
    - A module that uses `source` (not `text`) for files
    - A module with multiple activation scripts in a DAG
    - A module that reads from `config.programs.git` (cross-module dependency)
@@ -101,12 +105,12 @@ existing CI checks continue to pass.
    - `home.activation` scripts that run `gk-configure` and `gk-theme`
    - Does NOT use `home.file` or `xdg.configFile`
 
-8. **Test with a simple programs.* module.** Try `programs.bat` or
+1. **Test with a simple programs.\* module.** Try `programs.bat` or
    `programs.starship` — these use `xdg.configFile` for their config and are
    Tier 1 (no external context needed). Verify that the wrapped program actually
    finds and uses the extracted config.
 
-9. **Test with programs.git.** This is a Tier 2 module — it reads
+1. **Test with programs.git.** This is a Tier 2 module — it reads
    `user.identity`, has conditional includes, generates gitconfig. Verify that
    `homeConfig` can supply all needed cross-option values and the resulting
    wrapper works.
@@ -119,11 +123,11 @@ existing CI checks continue to pass.
     - Parallel `wrappers.<name>` registry
     - Automatic scanning of features with `wrapper.enable = true`
 
-11. **Wire up a Tier 1 pilot.** Pick alacritty or starship. Add
+1.  **Wire up a Tier 1 pilot.** Pick alacritty or starship. Add
     `nix-wrapper-modules` as a flake input to nix-config, create the wrapper,
     verify `nix run .#alacritty` works.
 
-12. **Wire up a Tier 2 pilot.** GitKraken or git. Thread identity through
+1.  **Wire up a Tier 2 pilot.** GitKraken or git. Thread identity through
     `homeConfig`. Verify `nix run .#sini.gitkraken` works.
 
 ## Key design questions to resolve
@@ -135,10 +139,10 @@ existing CI checks continue to pass.
 - **Should `home.sessionVariables` be extracted?** They map cleanly to wrapper
   `env` but may conflict with existing env vars. Low-hanging fruit if desired.
 
-- **Activation script first-launch semantics.** For programs like gitkraken where
-  config is written to `~/.gitkraken/`, running `gk-configure` on every launch
-  resets user-made changes. Should the wrapper support a "first launch only"
-  guard (e.g., check for a sentinel file)?
+- **Activation script first-launch semantics.** For programs like gitkraken
+  where config is written to `~/.gitkraken/`, running `gk-configure` on every
+  launch resets user-made changes. Should the wrapper support a "first launch
+  only" guard (e.g., check for a sentinel file)?
 
 - **Should we filter HM internal home.file entries?** Candidates for filtering:
   files matching `.cache/.keep`, `.local/state/.keep`,

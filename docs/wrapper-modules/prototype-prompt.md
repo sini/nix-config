@@ -19,8 +19,8 @@ design context before starting implementation:
 
 - `~/Documents/repos/sini/nix-config/docs/wrapper-modules/observations.md` —
   Feature tier classification, adapter architecture overview, integration points
-- `~/Documents/repos/sini/nix-config/docs/wrapper-modules/gitkraken-case-study.md` —
-  Deep dive into the specific obstacles of wrapping an HM-dependent feature,
+- `~/Documents/repos/sini/nix-config/docs/wrapper-modules/gitkraken-case-study.md`
+  — Deep dive into the specific obstacles of wrapping an HM-dependent feature,
   three approaches analyzed (we are implementing Approach C)
 
 ## Goal
@@ -28,8 +28,8 @@ design context before starting implementation:
 Add a **generalized home-manager module evaluation adapter** to
 nix-wrapper-modules. The adapter takes an arbitrary home-manager module (like
 `inputs.nixkraken.homeManagerModules.nixkraken`), evaluates it in a real HM
-context, and extracts its side effects into wrapper-module equivalents — producing
-a standalone wrapped package derivation.
+context, and extracts its side effects into wrapper-module equivalents —
+producing a standalone wrapped package derivation.
 
 Target API:
 
@@ -103,20 +103,21 @@ You need to figure out the minimal viable HM evaluation. The full
 whether you can:
 
 1. Use `lib.evalModules` with just the HM module declarations imported
-2. Provide stub values for required HM options (`home.username = "wrapper-user"`,
+1. Provide stub values for required HM options
+   (`home.username = "wrapper-user"`,
    `home.homeDirectory = "/homeless-shelter"`, `home.stateVersion = "24.11"`)
-3. Or find a lighter-weight entry point in HM's source
+1. Or find a lighter-weight entry point in HM's source
 
 ### Step 2: Extract HM side effects
 
 After evaluation, read from the HM config and map to wrapper-module concepts:
 
-| HM output                    | Wrapper equivalent      | Notes                                              |
-| ---------------------------- | ----------------------- | -------------------------------------------------- |
-| `home.packages`              | `extraPackages`         | Direct — list of derivations to add to PATH        |
-| `home.file.<name>.source`    | `constructFiles`        | Store-path files to include in the wrapper          |
-| `xdg.configFile.<name>`      | `constructFiles`        | Same, under `$XDG_CONFIG_HOME`                     |
-| `home.activation.<name>`     | `buildCommand` or wrapper `runShell` | DAG entries containing shell scripts. These need linearization. Some run at activation time (impure — write to `$HOME`) and some generate store-path artifacts. The adapter should distinguish these. |
+| HM output                 | Wrapper equivalent                   | Notes                                                                                                                                                                                                 |
+| ------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `home.packages`           | `extraPackages`                      | Direct — list of derivations to add to PATH                                                                                                                                                           |
+| `home.file.<name>.source` | `constructFiles`                     | Store-path files to include in the wrapper                                                                                                                                                            |
+| `xdg.configFile.<name>`   | `constructFiles`                     | Same, under `$XDG_CONFIG_HOME`                                                                                                                                                                        |
+| `home.activation.<name>`  | `buildCommand` or wrapper `runShell` | DAG entries containing shell scripts. These need linearization. Some run at activation time (impure — write to `$HOME`) and some generate store-path artifacts. The adapter should distinguish these. |
 
 ### Step 3: Produce a wrapper-module config
 
@@ -139,9 +140,10 @@ Feed the extracted data into nix-wrapper-modules' existing primitives:
 
 ### Step 4: Expose as `wlib.wrapHomeModule`
 
-Add the function to `lib/lib.nix` alongside `wlib.evalModule`, `wlib.wrapModule`,
-etc. It should return a wrapper-module evaluation result with the standard
-`.wrap`/`.apply`/`.eval` interface, so consumers can further extend it.
+Add the function to `lib/lib.nix` alongside `wlib.evalModule`,
+`wlib.wrapModule`, etc. It should return a wrapper-module evaluation result with
+the standard `.wrap`/`.apply`/`.eval` interface, so consumers can further extend
+it.
 
 ## Key Challenges to Solve
 
@@ -150,6 +152,7 @@ etc. It should return a wrapper-module evaluation result with the standard
 `home.packages` is a flat list. For gitkraken, it contains the gitkraken binary,
 git, gnupg, alacritty, and a login helper. The adapter needs to know which one
 is the "main" package (the one to wrap). Options:
+
 - Require the caller to specify it (simplest, most reliable)
 - Heuristic: match by name against the module name
 - Let the caller filter `home.packages` into main vs extra
@@ -173,6 +176,7 @@ exec). This is correct for gitkraken and most apps. Build-time extraction can
 come later.
 
 HM activation scripts may reference these variables:
+
 - `$HOME` — user's home directory (available at runtime)
 - `$DRY_RUN_CMD` — empty string in real runs, `echo` in dry runs. Replace with
   empty string.
@@ -183,7 +187,9 @@ HM activation scripts may reference these variables:
 ### 3. HM module dependencies on other HM options
 
 Some HM modules read from other `programs.*` options as defaults:
-- nixkraken reads `config.programs.git.userEmail`, `config.programs.git.signing.key`
+
+- nixkraken reads `config.programs.git.userEmail`,
+  `config.programs.git.signing.key`
 - Some modules read `config.programs.ssh.enable`
 
 The `homeConfig` parameter lets callers set these. But if a module does a deep
@@ -198,6 +204,7 @@ accept `home-manager` as a parameter (the caller provides their HM input). The
 core library stays independent.
 
 Suggested file structure:
+
 ```
 lib/
   lib.nix           # existing — core wlib functions
@@ -208,14 +215,15 @@ modules/
 
 ## Test Case: GitKraken
 
-The nixkraken HM module (`nicolas-goudry/nixkraken`) is the motivating test case:
+The nixkraken HM module (`nicolas-goudry/nixkraken`) is the motivating test
+case:
 
 - Declares `programs.nixkraken` with typed submodule options (graph, git, gpg,
   ssh, tools, ui, user, notifications)
 - Installs packages via `home.packages` (gitkraken binary, git, gnupg, editor,
   terminal, a `gk-login` helper)
-- Applies config via `home.activation` scripts that run `gk-configure -c '<JSON>'`
-  and `gk-theme -i '<paths>'`
+- Applies config via `home.activation` scripts that run
+  `gk-configure -c '<JSON>'` and `gk-theme -i '<paths>'`
 - Reads defaults from `config.programs.git` and `config.programs.ssh`
 - Does **not** use `home.file` or `xdg.configFile`
 
@@ -225,9 +233,9 @@ from this module that, when run, applies the JSON config and launches gitkraken.
 ## Deliverables
 
 1. **`lib/hm-adapter.nix`** — the `wrapHomeModule` function
-2. **A test/example** — wrap the nixkraken HM module (or a simpler HM module you
+1. **A test/example** — wrap the nixkraken HM module (or a simpler HM module you
    create for testing) and verify the output derivation works
-3. **Documentation** — update the README or add a doc explaining the HM adapter
+1. **Documentation** — update the README or add a doc explaining the HM adapter
    API and its limitations
 
 ## What NOT to do
@@ -235,9 +243,9 @@ from this module that, when run, applies the JSON config and launches gitkraken.
 - Don't modify the core wrapper-module evaluation (`lib/core.nix`) unless
   necessary — extend, don't rewrite
 - Don't try to handle every HM feature. Start with `home.packages`,
-  `home.activation`, `home.file`, and `xdg.configFile`. Ignore `home.persistence`,
-  `home.sessionVariables`, `systemd.user.services`, and other system-integration
-  features — these don't have wrapper equivalents
+  `home.activation`, `home.file`, and `xdg.configFile`. Ignore
+  `home.persistence`, `home.sessionVariables`, `systemd.user.services`, and
+  other system-integration features — these don't have wrapper equivalents
 - Don't hard-code anything gitkraken-specific in the adapter — it should be
   generic enough that wrapping a simple HM module (e.g., one that just sets
   `programs.bat.enable = true` and `programs.bat.config.theme = "catppuccin"`)

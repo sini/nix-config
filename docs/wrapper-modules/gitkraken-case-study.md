@@ -74,7 +74,7 @@ activation-time approach means there's no store-path config file to point the
 binary at. We'd need to:
 
 1. Generate the same JSON that `gk-configure` would produce
-2. Either inject it into the wrapper (env var, XDG override, or pre-populated
+1. Either inject it into the wrapper (env var, XDG override, or pre-populated
    config dir) or run `gk-configure` as part of the wrapper's startup
 
 ### Obstacle 3: Identity injection
@@ -117,12 +117,10 @@ portion. The final JSON looks roughly like:
 Instead of importing the HM module, we build a wrapper-module that:
 
 1. Takes the gitkraken package as the base
-2. Generates the config JSON at build time
-3. Creates a wrapper script that:
-   a. Ensures `~/.gitkraken/` exists
-   b. Runs `gk-configure` with our JSON (or writes it directly)
-   c. Installs themes
-   d. Launches gitkraken
+1. Generates the config JSON at build time
+1. Creates a wrapper script that: a. Ensures `~/.gitkraken/` exists b. Runs
+   `gk-configure` with our JSON (or writes it directly) c. Installs themes d.
+   Launches gitkraken
 
 ```nix
 # Pseudocode for the wrapper module
@@ -194,17 +192,18 @@ in {
 };
 ```
 
-This gives us `packages.x86_64-linux."sini.gitkraken"`, which `nix run` resolves.
+This gives us `packages.x86_64-linux."sini.gitkraken"`, which `nix run`
+resolves.
 
 ## What we lose vs the HM path
 
-| Concern                    | HM module path                          | Wrapper path                              |
-| -------------------------- | --------------------------------------- | ----------------------------------------- |
-| Config application         | Activation script, survives reboots     | Applied on each launch (or first launch)  |
-| programs.git defaults      | Falls through from HM git config        | We supply values directly                 |
-| Persistence                | `home.persistence` manages state dirs   | Not applicable — user manages state       |
-| Package deduplication      | HM merges all `home.packages`           | Wrapper bundles its own closure           |
-| Theme installation         | Activation script, runs once            | Runs on each launch (fast, idempotent)    |
+| Concern               | HM module path                        | Wrapper path                             |
+| --------------------- | ------------------------------------- | ---------------------------------------- |
+| Config application    | Activation script, survives reboots   | Applied on each launch (or first launch) |
+| programs.git defaults | Falls through from HM git config      | We supply values directly                |
+| Persistence           | `home.persistence` manages state dirs | Not applicable — user manages state      |
+| Package deduplication | HM merges all `home.packages`         | Wrapper bundles its own closure          |
+| Theme installation    | Activation script, runs once          | Runs on each launch (fast, idempotent)   |
 
 The persistence loss is fine — `nix run` is for ad-hoc use, not managed state.
 The config re-application on each launch is acceptable for gitkraken since
@@ -217,11 +216,10 @@ The config re-application on each launch is acceptable for gitkraken since
 Write a wrapper-module from scratch that generates the JSON config and wraps the
 binary. Does not import `inputs.nixkraken.homeManagerModules` at all.
 
-**Pros**: Clean, no HM dependency, full control
-**Cons**: Duplicates the config shape knowledge from the nixkraken module.
-Changes to nixkraken's config format would need manual tracking. We lose the
-typed options that nixkraken provides (graph, ui, gpg submodules with
-validation).
+**Pros**: Clean, no HM dependency, full control **Cons**: Duplicates the config
+shape knowledge from the nixkraken module. Changes to nixkraken's config format
+would need manual tracking. We lose the typed options that nixkraken provides
+(graph, ui, gpg submodules with validation).
 
 ### Approach B: Evaluate the HM module in a shim (extract config)
 
@@ -304,22 +302,23 @@ wlib.wrapHomeModule {
 ```
 
 This adapter would:
+
 1. Import the full HM option declarations (from the home-manager input)
-2. Evaluate the target module within that context
-3. Extract `home.packages`, `home.activation`, `home.file`, `xdg.configFile`
-4. Map them onto wrapper-module equivalents:
+1. Evaluate the target module within that context
+1. Extract `home.packages`, `home.activation`, `home.file`, `xdg.configFile`
+1. Map them onto wrapper-module equivalents:
    - `home.packages` → `extraPackages`
    - `home.file` / `xdg.configFile` → `constructFiles`
    - `home.activation` → `runShell` (linearize the DAG)
 
 **Pros**: Generalized — works for any HM module, not just nixkraken. Single
 source of truth. Makes the entire class of "HM module → wrapped package"
-conversions mechanical.
-**Cons**: Highest implementation effort. Full HM evaluation is heavy (imports all
-option declarations). Activation scripts may reference HM internals
-(`$DRY_RUN_CMD`, `$VERBOSE_ARG`). Some HM features (persistence,
-`home.sessionVariables` via PAM) don't have wrapper equivalents. Needs
-home-manager as an input to nix-wrapper-modules (or provided by the consumer).
+conversions mechanical. **Cons**: Highest implementation effort. Full HM
+evaluation is heavy (imports all option declarations). Activation scripts may
+reference HM internals (`$DRY_RUN_CMD`, `$VERBOSE_ARG`). Some HM features
+(persistence, `home.sessionVariables` via PAM) don't have wrapper equivalents.
+Needs home-manager as an input to nix-wrapper-modules (or provided by the
+consumer).
 
 ## Recommendation
 
@@ -359,15 +358,15 @@ nix build .#sini.gitkraken     # build the wrapped derivation
    a store-path dir and set `XDG_CONFIG_HOME` in the wrapper, avoiding runtime
    `gk-configure` entirely. This would make the wrapper pure.
 
-2. **Are `gk-configure` and `gk-theme` exposed as packages from the nixkraken
-   flake?** If not, we'd need to build the JSON-writing logic ourselves or
-   fork nixkraken.
+1. **Are `gk-configure` and `gk-theme` exposed as packages from the nixkraken
+   flake?** If not, we'd need to build the JSON-writing logic ourselves or fork
+   nixkraken.
 
-3. **Config mutability**: GitKraken writes to its own config at runtime (e.g.,
+1. **Config mutability**: GitKraken writes to its own config at runtime (e.g.,
    window positions, recently opened repos). A wrapper that forces config on
    every launch would reset these. We may want a "first launch only" or "merge"
    strategy.
 
-4. **Closure size**: The wrapper bundles gitkraken + alacritty + gnupg + git +
+1. **Closure size**: The wrapper bundles gitkraken + alacritty + gnupg + git +
    theme. This is fine for `nix run` but worth noting for disk usage if building
    many user variants.

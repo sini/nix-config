@@ -9,7 +9,12 @@
       "metadata": {
         "files": ["modules/flake-parts/features/compose.nix"],
         "verifyCommand": "nix-flake-build --dry-run cortex",
-        "acceptanceCriteria": [".package calls wrapHomeModule", "bwrap included", "extraSpecialArgs/mainPackage supported", "clear error on missing wlib"]
+        "acceptanceCriteria": [
+          ".package calls wrapHomeModule",
+          "bwrap included",
+          "extraSpecialArgs/mainPackage supported",
+          "clear error on missing wlib"
+        ]
       }
     },
     {
@@ -21,7 +26,11 @@
       "metadata": {
         "files": ["modules/flake-parts/features/exports.nix"],
         "verifyCommand": "nix-flake-build --dry-run cortex",
-        "acceptanceCriteria": ["wlib passed", "home-manager passed", "baseModules with persistence stub and stylix"]
+        "acceptanceCriteria": [
+          "wlib passed",
+          "home-manager passed",
+          "baseModules with persistence stub and stylix"
+        ]
       }
     },
     {
@@ -33,7 +42,12 @@
       "metadata": {
         "files": ["modules/flake-parts/features/wrapped-packages.nix"],
         "verifyCommand": "nix-flake-build --dry-run cortex",
-        "acceptanceCriteria": ["tier 1 uses .package", "tier 2 uses .package with extraSpecialArgs", "hm-wrapper-modules import removed", "featureMeta preserved"]
+        "acceptanceCriteria": [
+          "tier 1 uses .package",
+          "tier 2 uses .package with extraSpecialArgs",
+          "hm-wrapper-modules import removed",
+          "featureMeta preserved"
+        ]
       }
     }
   ],
