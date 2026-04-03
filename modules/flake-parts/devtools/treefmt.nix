@@ -113,12 +113,38 @@
           statix = {
             enable = true;
             package = inputs'.statix.packages.default;
+            disabled-lints = [
+              # W01 bool_comparison
+              # W02 empty_let_in
+              # W03 manual_inherit
+              # W04 manual_inherit_from
+              # W05 legacy_let_syntax
+              # W06 collapsible_let_in
+              # W07 eta_reduction
+              # W08 useless_parens
+              # W10 empty_pattern
+              "empty_pattern"
+              # W11 redundant_pattern_bind
+              # W12 unquoted_uri
+              # W13 deprecated_is_null
+              # W14 empty_inherit
+              # W15 faster_groupby
+              # W16 faster_zipattrswith
+              # W17 deprecated_to_path
+              # W18 bool_simplification
+              # W19 useless_has_attr
+              "useless_has_attr"
+              # W20 repeated_keys
+              "repeated_keys"
+              # W23 empty_list_concat
+              "empty_list_concat"
+            ];
           };
           deadnix = {
             enable = true;
             package = pkgs.deadnix;
           };
-          nixf-diagnose.enable = true;
+          # nixf-diagnose.enable = true;
           prettier = {
             enable = true;
             settings = {

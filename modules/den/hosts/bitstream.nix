@@ -4,7 +4,7 @@
 
   den.aspects.bitstream = {
     includes = [
-      den.aspects.shell
+      den.aspects.default
     ];
 
     nixos =
