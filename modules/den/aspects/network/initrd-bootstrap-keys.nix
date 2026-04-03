@@ -4,13 +4,9 @@
 # which requires config.age.secrets to be in scope.
 {
   den,
-  config,
   lib,
   ...
 }:
-let
-  allEnvironments = config.environments or { };
-in
 {
   den.aspects.initrd-bootstrap-keys = {
     includes = lib.attrValues den.aspects.initrd-bootstrap-keys._;
@@ -19,10 +15,8 @@ in
       config = den.lib.perHost (
         { host }:
         let
-          envName = host.environment or "dev";
-          environment = allEnvironments.${envName} or { };
-          hasWireless = (environment.networks.default.wireless or null) != null;
-          wirelessSecretsFile = environment.wirelessSecretsFile or null;
+          hasWireless = (host.environment.networks.default.wireless or null) != null;
+          wirelessSecretsFile = host.environment.wirelessSecretsFile or null;
         in
         {
           nixos =
@@ -51,8 +45,8 @@ in
                     script = "wpa-supplicant-config";
                   };
                   settings.networks = {
-                    "${environment.networks.default.wireless.ssid}".pskRaw =
-                      environment.networks.default.wireless.pskRef;
+                    "${host.environment.networks.default.wireless.ssid}".pskRaw =
+                      host.environment.networks.default.wireless.pskRef;
                   };
                 };
               };

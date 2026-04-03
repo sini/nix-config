@@ -11,7 +11,6 @@
 let
   inherit (self.lib.users) resolveUsers getSshKeysForGroup;
   canonicalUsers = config.users or { };
-  allEnvironments = config.environments or { };
   groupDefs = config.groups or { };
 in
 {
@@ -25,14 +24,12 @@ in
       config = den.lib.perHost (
         { host }:
         let
-          envName = host.environment or "dev";
-          environment = allEnvironments.${envName} or { };
           hostOptions = {
             hostname = host.name;
             system-access-groups = host.system-access-groups or [ ];
             users = host.users or { };
           };
-          resolvedUsers = resolveUsers lib canonicalUsers environment hostOptions groupDefs;
+          resolvedUsers = resolveUsers lib canonicalUsers host.environment hostOptions groupDefs;
           secretPath = rootPath + "/.secrets/hosts/${host.name}";
           jweTokenPath = secretPath + "/zroot-key.jwe";
           hasJweToken = builtins.pathExists jweTokenPath;

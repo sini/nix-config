@@ -15,13 +15,11 @@
             let
               netCfg = host.networking or { };
               interfaces = netCfg.interfaces or { };
-              hostEnvironment = host.environment or { };
-              defaultNetwork = (hostEnvironment.networks or { }).default or { };
+              defaultNetwork = (host.environment.networks or { }).default or { };
               dnsServers = defaultNetwork.dnsServers or [ ];
               gatewayIp = defaultNetwork.gatewayIp or null;
               gatewayIpV6 = defaultNetwork.gatewayIpV6 or null;
-              envName = hostEnvironment.name or "local";
-              envDomain = hostEnvironment.domain or "local";
+              envDomain = host.environment.domain or "local";
 
               mkRoute =
                 gateway: extra:
@@ -304,7 +302,7 @@
                 ];
 
                 networking = {
-                  domain = "${envName}.${envDomain}";
+                  domain = "${host.environment.name}.${envDomain}";
                   hostId = with builtins; substring 0 8 (hashString "md5" config.networking.hostName);
 
                   useNetworkd = true;

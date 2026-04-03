@@ -15,7 +15,6 @@ let
 
   # Flake-level data (still defined in the old system alongside den)
   canonicalUsers = config.users or { };
-  allEnvironments = config.environments or { };
   groupDefs = config.groups or { };
 
   # Build Unix account config for a single resolved user
@@ -76,10 +75,6 @@ in
   den.aspects.users = den.lib.perHost (
     { host }:
     let
-      # Resolve the environment for this host
-      envName = host.environment or "dev";
-      environment = allEnvironments.${envName} or { };
-
       # Build a hostOptions-like object for resolveUsers
       hostOptions = {
         hostname = host.name;
@@ -88,7 +83,7 @@ in
       };
 
       # Run the full ACL resolution
-      resolvedUsers = resolveUsers lib canonicalUsers environment hostOptions groupDefs;
+      resolvedUsers = resolveUsers lib canonicalUsers host.environment hostOptions groupDefs;
       enabledUsers = lib.filterAttrs (_: u: u.system.enable or false) resolvedUsers;
 
       # Generate NixOS config for each enabled user

@@ -1,12 +1,8 @@
 {
   den,
-  config,
   lib,
   ...
 }:
-let
-  allEnvironments = config.environments or { };
-in
 {
   den.aspects.acme = {
     includes = lib.attrValues den.aspects.acme._;
@@ -14,29 +10,22 @@ in
     _ = {
       config = den.lib.perHost (
         { host }:
-        let
-          envName = host.environment or "dev";
-          environment = allEnvironments.${envName} or { };
-        in
         {
           nixos =
             { config, ... }:
             let
-              # Extract top-level domain from the host's FQDN
               fqdnParts = lib.splitString "." config.networking.fqdn;
               topDomain = lib.concatStringsSep "." (lib.reverseList (lib.take 2 (lib.reverseList fqdnParts)));
-
-              # Look up the issuer for this domain
-              domainConfig = (environment.certificates.domains or { }).${topDomain} or null;
+              domainConfig = (host.environment.certificates.domains or { }).${topDomain} or null;
               issuerName = if domainConfig != null then domainConfig.issuer else null;
             in
             {
               security.acme = {
                 acceptTerms = true;
                 defaults = {
-                  email = environment.email.adminEmail;
-                  inherit (environment.acme) dnsProvider;
-                  inherit (environment.acme) dnsResolver;
+                  email = host.environment.email.adminEmail;
+                  inherit (host.environment.acme) dnsProvider;
+                  inherit (host.environment.acme) dnsResolver;
                   dnsPropagationCheck = true;
                   credentialFiles = {
                     CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets."${issuerName}-cloudflare-api-key".path;
@@ -53,10 +42,6 @@ in
 
       secrets = den.lib.perHost (
         { host }:
-        let
-          envName = host.environment or "dev";
-          environment = allEnvironments.${envName} or { };
-        in
         {
           secrets = lib.listToAttrs (
             lib.flatten (
@@ -68,7 +53,7 @@ in
                     rekeyFile = issuerConfig.ageKeyFile;
                   };
                 }
-              ) (environment.certificates.issuers or { })
+              ) (host.environment.certificates.issuers or { })
             )
           );
         }

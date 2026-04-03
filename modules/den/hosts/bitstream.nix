@@ -1,7 +1,11 @@
-{ den, inputs, ... }:
+{
+  den,
+  inputs,
+  rootPath,
+  ...
+}:
 {
   den.hosts.x86_64-linux.bitstream = {
-    # Metadata needed for user resolution and networking
     environment = "dev";
     system-access-groups = [ "server-access" ];
     zfs-device = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
@@ -24,7 +28,7 @@
       };
     };
     facts = ../../hosts/bitstream/facter.json;
-    public_key = ../../.secrets/hosts/bitstream/ssh_host_ed25519_key.pub;
+    public_key = rootPath + "/.secrets/hosts/bitstream/ssh_host_ed25519_key.pub";
   };
 
   den.aspects.bitstream = {
