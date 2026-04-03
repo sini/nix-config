@@ -4,6 +4,15 @@
     # All sub-aspects are included when the generic 'shell' aspect is used
     includes = lib.attrValues den.aspects.shell._;
 
+    # Root keeps bash as shell (not zsh)
+    _.root-bash = den.lib.perHost {
+      os =
+        { pkgs, ... }:
+        {
+          users.users.root.shell = pkgs.bashInteractive;
+        };
+    };
+
     _.zsh = {
       # Bundles all zsh components when the complete 'zsh' sub-aspect is used
       includes = lib.attrValues den.aspects.shell._.zsh._;
