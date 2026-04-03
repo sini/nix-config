@@ -1,6 +1,26 @@
 { den, inputs, ... }:
 {
-  den.hosts.x86_64-linux.bitstream = { };
+  den.hosts.x86_64-linux.bitstream = {
+    # Metadata needed for user resolution and networking
+    environment = "dev";
+    system-access-groups = [ "server-access" ];
+    networking = {
+      bonds.bond0 = {
+        interfaces = [
+          "eno1"
+          "enp2s0"
+        ];
+        mode = "balance-xor";
+        transmitHashPolicy = "layer3+4";
+      };
+      interfaces.bond0 = {
+        ipv4 = [ "10.9.1.1/16" ];
+        ipv6 = [ "2001:5a8:608c:4a00::1/64" ];
+      };
+    };
+    facts = ../../hosts/bitstream/facter.json;
+    public_key = ../../.secrets/hosts/bitstream/ssh_host_ed25519_key.pub;
+  };
 
   den.aspects.bitstream = {
     includes = [
