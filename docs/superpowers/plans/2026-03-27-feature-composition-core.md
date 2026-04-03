@@ -1,12 +1,23 @@
 # Feature Composition Core Implementation Plan
 
-> **For agentic workers:** REQUIRED: Use superpowers-extended-cc:subagent-driven-development (if subagents available) or superpowers-extended-cc:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED: Use
+> superpowers-extended-cc:subagent-driven-development (if subagents available)
+> or superpowers-extended-cc:executing-plans to implement this plan. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add providers, unified `includes`, virtual classes, collected providers, and the composition chain to the existing feature system — Phases 1 and 2 of the migration strategy.
+**Goal:** Add providers, unified `includes`, virtual classes, collected
+providers, and the composition chain to the existing feature system — Phases 1
+and 2 of the migration strategy.
 
-**Architecture:** New composition primitives are added to the existing `featureSubmodule` in `helpers.nix` and a new `resolver.nix` alongside it. The old `requires` field and `collectRequires` function are kept as backward-compatible aliases. A new multi-phase resolver handles hierarchical includes, provider collection, and virtual class forwarding. Existing features are untouched; new capabilities are opt-in.
+**Architecture:** New composition primitives are added to the existing
+`featureSubmodule` in `helpers.nix` and a new `resolver.nix` alongside it. The
+old `requires` field and `collectRequires` function are kept as
+backward-compatible aliases. A new multi-phase resolver handles hierarchical
+includes, provider collection, and virtual class forwarding. Existing features
+are untouched; new capabilities are opt-in.
 
-**Tech Stack:** Nix module system (`lib.evalModules`, `types.submodule`, `types.deferredModule`), flake-parts
+**Tech Stack:** Nix module system (`lib.evalModules`, `types.submodule`,
+`types.deferredModule`), flake-parts
 
 **Spec:** `docs/superpowers/specs/2026-03-27-feature-composition-core-design.md`
 
@@ -14,36 +25,43 @@
 
 ## File Structure
 
-| File | Responsibility | Action |
-|---|---|---|
-| `modules/flake-parts/features/helpers.nix` | Feature submodule type, module collection utilities, settings | Modify: add `includes`, `provides`, `os`, `homeLinux`, `homeDarwin`, `collectsProviders` options; keep `requires` as alias |
-| `modules/flake-parts/features/resolver.nix` | New multi-phase resolver (replaces `collectRequires` internals) | Create |
-| `modules/flake-parts/features/compose.nix` | Composition chain (`.wrap/.apply/.eval`) factory | Create |
-| `modules/flake-parts/hosts/configuration-helpers.nix` | Host building, module collection, `prepareHostContext` | Modify: use new resolver and virtual class forwarding |
-| `modules/flake-parts/features/exports.nix` | Feature extraction as flake outputs | Create |
-| `checks/feature-resolver.nix` | Nix-based tests for the resolver | Create |
+| File                                                  | Responsibility                                                  | Action                                                                                                                     |
+| ----------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `modules/flake-parts/features/helpers.nix`            | Feature submodule type, module collection utilities, settings   | Modify: add `includes`, `provides`, `os`, `homeLinux`, `homeDarwin`, `collectsProviders` options; keep `requires` as alias |
+| `modules/flake-parts/features/resolver.nix`           | New multi-phase resolver (replaces `collectRequires` internals) | Create                                                                                                                     |
+| `modules/flake-parts/features/compose.nix`            | Composition chain (`.wrap/.apply/.eval`) factory                | Create                                                                                                                     |
+| `modules/flake-parts/hosts/configuration-helpers.nix` | Host building, module collection, `prepareHostContext`          | Modify: use new resolver and virtual class forwarding                                                                      |
+| `modules/flake-parts/features/exports.nix`            | Feature extraction as flake outputs                             | Create                                                                                                                     |
+| `checks/feature-resolver.nix`                         | Nix-based tests for the resolver                                | Create                                                                                                                     |
 
 ---
 
 ### Task 1: Add Provider Submodule Type and New Options to Feature Submodule
 
-**Goal:** Extend `featureSubmodule` in `helpers.nix` with `includes`, `provides`, `os`, `homeLinux`, `homeDarwin`, and `collectsProviders` options while keeping full backward compatibility.
+**Goal:** Extend `featureSubmodule` in `helpers.nix` with `includes`,
+`provides`, `os`, `homeLinux`, `homeDarwin`, and `collectsProviders` options
+while keeping full backward compatibility.
 
 **Files:**
+
 - Modify: `modules/flake-parts/features/helpers.nix`
 
 **Acceptance Criteria:**
+
 - [ ] `includes` option exists (list of strings, default `[]`)
-- [ ] `requires` still works and is treated as alias for `includes` in computed values
+- [ ] `requires` still works and is treated as alias for `includes` in computed
+      values
 - [ ] `provides` option exists as `lazyAttrsOf (submodule providerSubmodule)`
-- [ ] Provider submodule has `_id` (auto-injected), `os`, `linux`, `darwin`, `home`, `homeLinux`, `homeDarwin`, `settings`, `user-settings`, `includes`
+- [ ] Provider submodule has `_id` (auto-injected), `os`, `linux`, `darwin`,
+      `home`, `homeLinux`, `homeDarwin`, `settings`, `user-settings`, `includes`
 - [ ] `os` and `homeLinux`/`homeDarwin` class options exist on feature submodule
 - [ ] `system` still works (existing features don't break)
 - [ ] `collectsProviders` option exists (list of strings, default `[]`)
 - [ ] `hasSystemModules` computation includes `os` definitions
 - [ ] All existing features build without changes
 
-**Verify:** `nix-flake-build cortex` → builds successfully (no feature changes needed)
+**Verify:** `nix-flake-build cortex` → builds successfully (no feature changes
+needed)
 
 **Steps:**
 
@@ -133,9 +151,9 @@ collectsProviders = mkOption {
 
 - [ ] **Step 3: Merge `requires` into `includes` in computed config**
 
-The resolver treats `includes` as the canonical field. For backward compat,
-the resolver itself reads BOTH `includes` and `requires` from a feature and
-merges them:
+The resolver treats `includes` as the canonical field. For backward compat, the
+resolver itself reads BOTH `includes` and `requires` from a feature and merges
+them:
 
 ```nix
 # In the resolver (not in featureSubmodule config):
@@ -143,9 +161,9 @@ getFeatureIncludes = feature:
   lib.unique ((feature.includes or []) ++ (feature.requires or []));
 ```
 
-This approach avoids `mkDefault` priority interactions entirely. Features
-that set `requires` still work. Features that set `includes` use the new
-field. Features that set both get the union. No silent dropping of values.
+This approach avoids `mkDefault` priority interactions entirely. Features that
+set `requires` still work. Features that set `includes` use the new field.
+Features that set both get the union. No silent dropping of values.
 
 - [ ] **Step 4: Update `hasSystemModules` to include `os`**
 
@@ -161,8 +179,8 @@ hasSystemModules =
 
 - [ ] **Step 5: Build cortex to verify no regressions**
 
-Run: `nix-flake-build cortex`
-Expected: Successful build with no changes to any existing feature files.
+Run: `nix-flake-build cortex` Expected: Successful build with no changes to any
+existing feature files.
 
 - [ ] **Step 6: Commit**
 
@@ -175,13 +193,18 @@ git commit -m "feat(features): add provider submodule, includes, virtual classes
 
 ### Task 2: Implement Multi-Phase Resolver
 
-**Goal:** Create the new resolver that handles hierarchical includes (`"bat"` and `"bat/alias-as-cat"`), excludes cascading to providers, collected providers, and deduplication.
+**Goal:** Create the new resolver that handles hierarchical includes (`"bat"`
+and `"bat/alias-as-cat"`), excludes cascading to providers, collected providers,
+and deduplication.
 
 **Files:**
+
 - Create: `modules/flake-parts/features/resolver.nix`
-- Modify: `modules/flake-parts/features/helpers.nix` (export new resolver functions)
+- Modify: `modules/flake-parts/features/helpers.nix` (export new resolver
+  functions)
 
 **Acceptance Criteria:**
+
 - [ ] `resolveIncludes` handles plain feature names and `feature/provider` paths
 - [ ] Excludes cascade: excluding a feature excludes all its providers
 - [ ] Provider-specific excludes work (`"bat/alias-as-cat"`)
@@ -189,7 +212,8 @@ git commit -m "feat(features): add provider submodule, includes, virtual classes
 - [ ] Circular includes produce a clear error with the chain path
 - [ ] Invalid paths produce clear errors listing available providers
 - [ ] Results are deduplicated (features by name, providers by `_id`)
-- [ ] Old `computeActiveFeatures` API still works (calls new resolver internally)
+- [ ] Old `computeActiveFeatures` API still works (calls new resolver
+      internally)
 - [ ] `getModulesForFeatures` returns both features and active providers
 
 **Verify:** `nix-flake-build cortex` → builds successfully using new resolver
@@ -405,7 +429,8 @@ in
     collect state collectorsCompleted;
 ```
 
-Note: This step will likely need refinement during implementation. The key constraint is: each collector runs at most once.
+Note: This step will likely need refinement during implementation. The key
+constraint is: each collector runs at most once.
 
 Add a `lib.warn` for collector names that match zero providers:
 
@@ -449,6 +474,7 @@ _ = lib.forEach allCollectorNames (provName:
 - [ ] **Step 5: Export from helpers.nix and wire into lib.modules**
 
 Add to `helpers.nix`:
+
 ```nix
 resolver = import ./resolver.nix { inherit lib; };
 ```
@@ -477,10 +503,11 @@ iterate directly. New callers access `.features` and `.providers` explicitly.
 Replace the old `computeActiveFeatures`, `getModulesForFeatures`,
 `collectRequires` in the exports.
 
-- [ ] **Step 6: Build cortex to verify resolver produces same results as old code**
+- [ ] **Step 6: Build cortex to verify resolver produces same results as old
+      code**
 
-Run: `nix-flake-build cortex`
-Expected: Identical build output — new resolver activated but no features use new capabilities yet.
+Run: `nix-flake-build cortex` Expected: Identical build output — new resolver
+activated but no features use new capabilities yet.
 
 - [ ] **Step 7: Commit**
 
@@ -493,16 +520,22 @@ git commit -m "feat(features): implement multi-phase resolver with includes, pro
 
 ### Task 3: Virtual Class Forwarding in Module Collection
 
-**Goal:** Update module collection utilities to handle `os`, `homeLinux`, `homeDarwin` forwarding from both features and providers.
+**Goal:** Update module collection utilities to handle `os`, `homeLinux`,
+`homeDarwin` forwarding from both features and providers.
 
 **Files:**
-- Modify: `modules/flake-parts/features/helpers.nix` (module collection utilities)
-- Modify: `modules/flake-parts/hosts/configuration-helpers.nix` (use new collection)
+
+- Modify: `modules/flake-parts/features/helpers.nix` (module collection
+  utilities)
+- Modify: `modules/flake-parts/hosts/configuration-helpers.nix` (use new
+  collection)
 
 **Acceptance Criteria:**
+
 - [ ] `collectPlatformSystemModules` forwards `os` modules to current platform
 - [ ] `collectPlatformSystemModules` forwards `system` modules (backward compat)
-- [ ] `collectHomeModules` accepts a `system` parameter and forwards `homeLinux`/`homeDarwin`
+- [ ] `collectHomeModules` accepts a `system` parameter and forwards
+      `homeLinux`/`homeDarwin`
 - [ ] Provider modules are collected alongside feature modules
 - [ ] `prepareHostContext` uses updated collection functions
 - [ ] Build succeeds with no feature changes
@@ -511,7 +544,8 @@ git commit -m "feat(features): implement multi-phase resolver with includes, pro
 
 **Steps:**
 
-- [ ] **Step 1: Update module collection to handle virtual classes and providers**
+- [ ] **Step 1: Update module collection to handle virtual classes and
+      providers**
 
 In `helpers.nix`, update `collectPlatformSystemModules`:
 
@@ -587,9 +621,9 @@ Update `makeHomeConfig` similarly to use `collectPlatformHomeModules`.
 
 - [ ] **Step 3: Update settings aggregation to include provider settings**
 
-In `resolveFeatureSettings` (or its call site), aggregate provider settings
-into the parent feature's namespace. Update the `relevantFeatures` filtering
-to also collect provider settings:
+In `resolveFeatureSettings` (or its call site), aggregate provider settings into
+the parent feature's namespace. Update the `relevantFeatures` filtering to also
+collect provider settings:
 
 ```nix
 # Collect settings from feature AND its active providers
@@ -614,8 +648,8 @@ collectFeatureSettings = settingsKey: featuresConfig: activeProviders:
 ```
 
 Pass `activeProviders` to this function from `prepareHostContext` and
-`makeHomeConfig`. The resolved `settingsOptions` then use the merged
-settings, so provider-contributed options appear under
+`makeHomeConfig`. The resolved `settingsOptions` then use the merged settings,
+so provider-contributed options appear under
 `settings.<featureName>.<optionName>`.
 
 - [ ] **Step 4: Keep old `collectPlatformSystemModules` signature working**
@@ -632,8 +666,8 @@ Export both; update internal callers to new API.
 
 - [ ] **Step 5: Build and verify**
 
-Run: `nix-flake-build cortex`
-Expected: Successful build. No features use `os`/`homeLinux`/`homeDarwin` yet, so behavior is identical.
+Run: `nix-flake-build cortex` Expected: Successful build. No features use
+`os`/`homeLinux`/`homeDarwin` yet, so behavior is identical.
 
 - [ ] **Step 6: Commit**
 
@@ -646,24 +680,33 @@ git commit -m "feat(features): virtual class forwarding and provider module coll
 
 ### Task 4: Smoke Test with a Real Feature Using Providers
 
-**Goal:** Convert one existing feature (stylix) to use `provides.impermanence` and `homeLinux`, validating the full pipeline end-to-end.
+**Goal:** Convert one existing feature (stylix) to use `provides.impermanence`
+and `homeLinux`, validating the full pipeline end-to-end.
 
 **Files:**
+
 - Modify: `modules/features/desktop/stylix.nix`
-- Modify: `modules/core/impermanence.nix` (or whichever file defines the impermanence feature — add `collectsProviders`)
+- Modify: `modules/core/impermanence.nix` (or whichever file defines the
+  impermanence feature — add `collectsProviders`)
 
 **Acceptance Criteria:**
-- [ ] Stylix's persistence paths are in `provides.impermanence`, not inline
-- [ ] Stylix's platform-guarded home cursor/icons use `homeLinux` instead of `mkIf`
-- [ ] Impermanence feature declares `collectsProviders = [ "impermanence" ]`
-- [ ] Cortex builds successfully with impermanence collecting stylix's persistence paths
-- [ ] A hypothetical build WITHOUT impermanence would not error on stylix (the provider simply doesn't activate)
 
-**Verify:** `nix-flake-build cortex` → builds successfully with stylix using new patterns
+- [ ] Stylix's persistence paths are in `provides.impermanence`, not inline
+- [ ] Stylix's platform-guarded home cursor/icons use `homeLinux` instead of
+      `mkIf`
+- [ ] Impermanence feature declares `collectsProviders = [ "impermanence" ]`
+- [ ] Cortex builds successfully with impermanence collecting stylix's
+      persistence paths
+- [ ] A hypothetical build WITHOUT impermanence would not error on stylix (the
+      provider simply doesn't activate)
+
+**Verify:** `nix-flake-build cortex` → builds successfully with stylix using new
+patterns
 
 **Steps:**
 
-- [ ] **Step 1: Find and update impermanence feature to declare collectsProviders**
+- [ ] **Step 1: Find and update impermanence feature to declare
+      collectsProviders**
 
 Locate the impermanence feature definition. Add:
 
@@ -743,8 +786,9 @@ features.stylix = {
 
 - [ ] **Step 3: Build and verify**
 
-Run: `nix-flake-build cortex`
-Expected: Successful build. Stylix persistence paths should still appear in the impermanence configuration (now via collected provider instead of inline).
+Run: `nix-flake-build cortex` Expected: Successful build. Stylix persistence
+paths should still appear in the impermanence configuration (now via collected
+provider instead of inline).
 
 - [ ] **Step 4: Commit**
 
@@ -757,21 +801,27 @@ git commit -m "feat(stylix): migrate to providers and virtual classes as proof o
 
 ### Task 5: Composition Chain (`.wrap/.apply/.eval`)
 
-**Goal:** Implement the composition chain factory that attaches `.wrap/.apply/.eval` to feature evaluation results, enabling external consumers to extend features.
+**Goal:** Implement the composition chain factory that attaches
+`.wrap/.apply/.eval` to feature evaluation results, enabling external consumers
+to extend features.
 
 **Files:**
+
 - Create: `modules/flake-parts/features/compose.nix`
 - Modify: `modules/flake-parts/features/helpers.nix` (export compose functions)
 
 **Acceptance Criteria:**
+
 - [ ] `mkFeatureEval` creates a synthetic `evalModules` evaluation for a feature
 - [ ] `.eval(module)` re-evaluates with additional module, returns full result
 - [ ] `.apply(module)` re-evaluates, returns config with chain attached
-- [ ] `.wrap(module)` re-evaluates, returns package derivation (home-only features)
+- [ ] `.wrap(module)` re-evaluates, returns package derivation (home-only
+      features)
 - [ ] Chain is re-attachable: `feature.apply({ ... }).apply({ ... })` works
 - [ ] Features without wrappable home produce error from `.wrap`
 
-**Verify:** Manual `nix repl` test evaluating `config.features.bat.eval { }` returns expected structure
+**Verify:** Manual `nix repl` test evaluating `config.features.bat.eval { }`
+returns expected structure
 
 **Steps:**
 
@@ -850,7 +900,8 @@ in
 }
 ```
 
-Note: `.wrap` is stubbed for now — full integration with hm-wrapper-modules comes in Phase 4 (Extraction). `.eval` and `.apply` are functional.
+Note: `.wrap` is stubbed for now — full integration with hm-wrapper-modules
+comes in Phase 4 (Extraction). `.eval` and `.apply` are functional.
 
 - [ ] **Step 2: Wire into helpers.nix exports**
 
@@ -859,6 +910,7 @@ compose = import ./compose.nix { inherit lib; };
 ```
 
 Add to `config.flake.lib.modules`:
+
 ```nix
 inherit (compose) mkFeatureEval;
 ```
@@ -870,7 +922,8 @@ nix repl .
 :p self.lib.modules.mkFeatureEval { feature = self.config.features.bat; }
 ```
 
-Verify it returns an attrset with `.eval`, `.apply`, `._classModules`, `settings`.
+Verify it returns an attrset with `.eval`, `.apply`, `._classModules`,
+`settings`.
 
 - [ ] **Step 4: Commit**
 
@@ -883,19 +936,25 @@ git commit -m "feat(features): composition chain factory (.eval/.apply/.wrap)"
 
 ### Task 6: Feature Extraction as Flake Outputs
 
-**Goal:** Expose `featureModules` and `featureSets` as flake outputs with composition chains attached.
+**Goal:** Expose `featureModules` and `featureSets` as flake outputs with
+composition chains attached.
 
 **Files:**
-- Modify: `modules/flake-parts/features/helpers.nix` (or new `modules/flake-parts/features/exports.nix`)
-- Modify: `modules/flake-parts/expose-options.nix` (add featureModules to outputs)
+
+- Modify: `modules/flake-parts/features/helpers.nix` (or new
+  `modules/flake-parts/features/exports.nix`)
+- Modify: `modules/flake-parts/expose-options.nix` (add featureModules to
+  outputs)
 
 **Acceptance Criteria:**
+
 - [ ] `flake.featureModules.<name>` exposes each feature with `.eval/.apply`
 - [ ] `flake.featureSets.<roleName>` exposes role features as a collection
 - [ ] External consumer can `inputs.nix-config.featureModules.bat.apply { ... }`
 - [ ] `featureMeta` (existing) still works
 
-**Verify:** `nix eval .#featureModules.bat._classModules --json` → returns attrset
+**Verify:** `nix eval .#featureModules.bat._classModules --json` → returns
+attrset
 
 **Steps:**
 
@@ -925,8 +984,8 @@ in lib.mapAttrs (name: role: {
 
 - [ ] **Step 3: Verify**
 
-Run: `nix eval .#featureModules --json | jq 'keys[:5]'`
-Expected: List of feature names.
+Run: `nix eval .#featureModules --json | jq 'keys[:5]'` Expected: List of
+feature names.
 
 - [ ] **Step 4: Commit**
 
@@ -941,6 +1000,11 @@ git commit -m "feat(features): expose featureModules and featureSets as flake ou
 
 The following items are NOT in this plan — they need separate sub-specs:
 
-- **Phase 3: Context Pipeline** — Replace `prepareHostContext` with composable context, feature context contributions, parametric dispatch. Needs its own spec covering migration of all `specialArgs` consumers.
-- **Phase 4: Full Extraction** — `.wrap` integration with hm-wrapper-modules, cross-flake import documentation, namespace support.
-- **Incremental feature migration** — Converting remaining features to use `provides.impermanence`, `homeLinux`, etc. This is ongoing work after the core is in place, not a gated phase.
+- **Phase 3: Context Pipeline** — Replace `prepareHostContext` with composable
+  context, feature context contributions, parametric dispatch. Needs its own
+  spec covering migration of all `specialArgs` consumers.
+- **Phase 4: Full Extraction** — `.wrap` integration with hm-wrapper-modules,
+  cross-flake import documentation, namespace support.
+- **Incremental feature migration** — Converting remaining features to use
+  `provides.impermanence`, `homeLinux`, etc. This is ongoing work after the core
+  is in place, not a gated phase.

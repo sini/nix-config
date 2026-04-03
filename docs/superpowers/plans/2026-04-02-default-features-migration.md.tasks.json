@@ -1,0 +1,96 @@
+{
+  "planPath": "docs/superpowers/plans/2026-04-02-default-features-migration.md",
+  "tasks": [
+    {
+      "id": 0,
+      "subject": "Task 0: Migrate trivial features (9)",
+      "status": "pending",
+      "description": "Migrate avahi, disko, facter, i18n, power-mgmt, shell-enable, ssd, stateVersion, time",
+      "metadata": {
+        "files": ["modules/den/aspects/core/"],
+        "verifyCommand": "nix eval .#nixosConfigurations.bitstream.config.system.nixos.version",
+        "acceptanceCriteria": [
+          "9 aspects created",
+          "eval succeeds",
+          "no statix errors"
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "subject": "Task 1: Migrate simple features (10)",
+      "status": "pending",
+      "blockedBy": [0],
+      "description": "Migrate firmware, home-manager-feature, hosts, linux-kernel, nixpkgs, openssh, security, sudo, systemd, systemd-boot, utils",
+      "metadata": {
+        "files": ["modules/den/aspects/"],
+        "verifyCommand": "nix eval .#nixosConfigurations.bitstream.config.system.nixos.version",
+        "acceptanceCriteria": [
+          "10 aspects created",
+          "provides.impermanence as sub-aspects",
+          "eval succeeds"
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "subject": "Task 2: Migrate moderate features (4)",
+      "status": "pending",
+      "blockedBy": [1],
+      "description": "Migrate deterministic-uids, nix, tailscale, users",
+      "metadata": {
+        "files": [
+          "modules/den/aspects/users/",
+          "modules/den/aspects/nix/",
+          "modules/den/aspects/network/"
+        ],
+        "verifyCommand": "nix eval .#nixosConfigurations.bitstream.config.system.nixos.version",
+        "acceptanceCriteria": [
+          "4 aspects created",
+          "settings inlined",
+          "eval succeeds"
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "subject": "Task 3: Migrate complex features (3)",
+      "status": "pending",
+      "blockedBy": [2],
+      "description": "Migrate agenix, impermanence, networking with forwarding classes",
+      "metadata": {
+        "files": [
+          "modules/den/aspects/secrets/",
+          "modules/den/aspects/network/networking.nix",
+          "modules/den/classes/"
+        ],
+        "verifyCommand": "nix eval .#nixosConfigurations.bitstream.config.system.nixos.version",
+        "acceptanceCriteria": [
+          "3 aspects created",
+          "forwarding classes work",
+          "eval succeeds"
+        ]
+      }
+    },
+    {
+      "id": 4,
+      "subject": "Task 4: Wire default aspect and update bitstream",
+      "status": "pending",
+      "blockedBy": [3],
+      "description": "Create den.aspects.default including all features, update bitstream to use it",
+      "metadata": {
+        "files": [
+          "modules/den/aspects/default.nix",
+          "modules/den/hosts/bitstream.nix"
+        ],
+        "verifyCommand": "nix eval .#nixosConfigurations.bitstream.config.networking.hostName",
+        "acceptanceCriteria": [
+          "default includes all 30 features",
+          "bitstream uses default",
+          "eval succeeds"
+        ]
+      }
+    }
+  ],
+  "lastUpdated": "2026-04-02T17:15:00Z"
+}

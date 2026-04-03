@@ -1,227 +1,226 @@
+# DO-NOT-EDIT. This file was auto-generated using github:vic/flake-file.
+# Use `nix run .#write-flake` to regenerate it.
 {
-  description = ''
-    A NixOS flake describing homelab kubernetes nodes, kubernetes service deployments,
-    mac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.
-  '';
+  description = "A NixOS flake describing homelab kubernetes nodes, kubernetes service deployments,\nmac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.\n";
+
+  outputs = inputs: inputs.flake-parts.lib.mkFlake { inherit inputs; } (inputs.import-tree ./modules);
 
   nixConfig = {
     abort-on-warn = false;
-
-    extra-substituters = [
-      "https://nix-community.cachix.org"
-      "https://install.determinate.systems"
-    ];
-
-    extra-trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
-    ];
-
-    extra-experimental-features = [
-      "pipe-operator" # Lix uses this name
-      "pipe-operators" # NixCpp uses this name -- why cant we have nice things?
-    ];
-
+    accept-flake-config = true;
+    allow-import-from-derivation = true;
+    auto-optimise-store = true;
     extra-deprecated-features = [
       "or-as-identifier"
       "broken-string-escape"
     ];
-
-    # Stylix and Nixidy require this...
-    allow-import-from-derivation = true; # https://nix.dev/manual/nix/2.26/language/import-from-derivation
+    extra-experimental-features = [
+      "pipe-operator"
+      "pipe-operators"
+    ];
+    extra-substituters = [
+      "https://nix-community.cachix.org"
+      "https://install.determinate.systems"
+    ];
+    extra-trusted-public-keys = [
+      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+      "cache.flakehub.com-3:hJuILl5sVK4iKm86JzgdXW12Y2Hwd5G07qKtHTOcDCM="
+    ];
+    lazy-trees = true;
+    submodules = true;
+    use-xdg-base-directories = true;
   };
 
-  outputs =
-    inputs:
-    inputs.flake-parts.lib.mkFlake { inherit inputs; } {
-      text.readme.parts = {
-        disallow-warnings =
-          # markdown
-          ''
-            ## Trying to disallow warnings
-
-            This at the top level of the `flake.nix` file:
-
-            ```nix
-            nixConfig.abort-on-warn = true;
-            ```
-
-            > [!NOTE]
-            > It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
-
-          '';
-
-        automatic-import =
-          # markdown
-          ''
-            ## Automatic import
-
-            Nix files (they're all flake-parts modules) are automatically imported.
-            Nix files prefixed with an underscore are ignored.
-            No literal path imports are used.
-            This means files can be moved around and nested in directories freely.
-
-            > [!NOTE]
-            > This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
-
-          '';
-      };
-      imports = [ (inputs.import-tree ./modules) ];
-
-      _module.args.rootPath = ./.;
-    };
-
   inputs = {
-    # Things we maintain forks of...
-    agenix-rekey = {
-      # url = "github:oddlama/agenix-rekey";
-      url = "github:sini/agenix-rekey/feat/settings"; # Fork with support for alternate input types
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    agenix-rekey-to-sops = {
-      # url = "path:/home/sini/Documents/repos/sini/agenix-rekey-to-sops";
-      url = "github:sini/agenix-rekey-to-sops"; # Fork with support for alternate input types
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-      inputs.agenix-rekey.follows = "agenix-rekey";
-    };
-
-    # Kubernetes GitOps with nix and Argo CD
-    nixidy = {
-      url = "github:sini/nixidy";
-      # url = "path:/home/sini/Documents/repos/sini/nixidy";
-      # url = "github:arnarg/nixidy";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    razerdaemon = {
-      url = "github:sini/razer-control-revived";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    nix-wrapper-modules = {
-      url = "github:BirdeeHub/nix-wrapper-modules";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    hm-wrapper-modules = {
-      url = "github:sini/hm-wrapper-modules";
-      inputs = {
-        nixpkgs.follows = "nixpkgs-unstable";
-        nix-wrapper-modules.follows = "nix-wrapper-modules";
-        home-manager.follows = "home-manager-unstable";
-      };
-    };
-    # End forks we maintain...
-
     agenix = {
       url = "github:ryantm/agenix";
-      inputs.home-manager.follows = "home-manager";
+      inputs = {
+        home-manager.follows = "home-manager";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    agenix-rekey = {
+      url = "github:sini/agenix-rekey/feat/settings";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
+    agenix-rekey-to-sops = {
+      url = "github:sini/agenix-rekey-to-sops";
+      inputs = {
+        agenix-rekey.follows = "agenix-rekey";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    ayugram-desktop = {
+      type = "git";
+      url = "https://github.com/ndfined-crp/ayugram-desktop/";
+      submodules = true;
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    betterfox = {
+      url = "github:yokoffing/Betterfox";
+      flake = false;
+    };
     colmena = {
       url = "github:zw3rk/colmena/darwin-support";
       inputs = {
-        nixpkgs.follows = "nixpkgs-unstable";
         flake-compat.follows = "flake-compat";
         flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs-unstable";
       };
     };
-
     declarative-jellyfin = {
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
+    den.url = "github:vic/den";
     devshell = {
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    # disko - Declarative disk partitioning
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    git-hooks-nix.url = "github:cachix/git-hooks.nix";
-
     files.url = "github:mightyiam/files";
-
-    # Config is powered by this
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    flake-compat.url = "github:lix-project/flake-compat";
+    flake-file.url = "github:vic/flake-file";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
       inputs.nixpkgs-lib.follows = "nixpkgs-unstable";
     };
-
+    flake-root.url = "github:srid/flake-root";
     flake-utils = {
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
-
-    flake-root.url = "github:srid/flake-root";
-
-    nix-flatpak.url = "github:gmodena/nix-flatpak"; # unstable branch. Use github:gmodena/nix-flatpak/?ref=<tag> to pin releases.
-
-    # For use with nixhelm chart generation
+    git-hooks-nix.url = "github:cachix/git-hooks.nix";
     haumea = {
       url = "github:nix-community/haumea/v0.2.2";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    # Home Manager (one per nixpkgs channel)
+    hm-wrapper-modules = {
+      url = "github:sini/hm-wrapper-modules";
+      inputs = {
+        home-manager.follows = "home-manager-unstable";
+        nix-wrapper-modules.follows = "nix-wrapper-modules";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
     home-manager = {
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-
-    home-manager-unstable = {
-      url = "github:nix-community/home-manager";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
     home-manager-master = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-master";
     };
-
     home-manager-stable-darwin = {
       url = "github:nix-community/home-manager/release-25.11";
       inputs.nixpkgs.follows = "nixpkgs-stable-darwin";
     };
-
+    home-manager-unstable = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    hyprland.url = "github:hyprwm/Hyprland";
+    hyprland-plugins = {
+      url = "github:hyprwm/hyprland-plugins";
+      inputs.hyprland.follows = "hyprland";
+    };
+    hyprland-split-monitor-workspaces = {
+      url = "github:Duckonaut/split-monitor-workspaces";
+      inputs.hyprland.follows = "hyprland";
+    };
+    impermanence.url = "github:nix-community/impermanence";
     import-tree.url = "github:vic/import-tree";
-
+    kubenix = {
+      url = "github:pizzapim/kubenix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     lix = {
-      # url = "https://git.lix.systems/lix-project/lix/archive/main.tar.gz";
-      url = "github:lix-project/lix"; # Github is more reliable :(
+      url = "github:lix-project/lix";
       flake = false;
     };
-
     lix-module = {
       url = "git+https://git@git.lix.systems/lix-project/nixos-module";
       inputs = {
-        nixpkgs.follows = "nixpkgs-unstable";
         lix.follows = "lix";
+        nixpkgs.follows = "nixpkgs-unstable";
       };
     };
-
-    flake-compat = {
-      # url = "git+https://git.lix.systems/lix-project/flake-compat?ref=main";
-      url = "github:lix-project/flake-compat"; # Github is more reliable :(
-    };
-
     microvm = {
       url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
+    niri.url = "github:sodiboo/niri-flake";
     nix-ai-tools.url = "github:numtide/nix-ai-tools";
-
-    # GitKraken configuration
+    nix-cachyos-kernel = {
+      url = "github:xddxdd/nix-cachyos-kernel";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    nix-darwin = {
+      url = "github:LnL7/nix-darwin/nix-darwin-25.11";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    nix-darwin-unstable = {
+      url = "github:LnL7/nix-darwin";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    nix-flatpak.url = "github:gmodena/nix-flatpak";
+    nix-gaming = {
+      url = "github:fufexan/nix-gaming";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    nix-kube-generators.url = "github:farcaller/nix-kube-generators";
+    nix-snapshotter = {
+      url = "github:pdtpartners/nix-snapshotter";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    nix-topology = {
+      url = "github:oddlama/nix-topology";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    nix-vscode-extensions = {
+      url = "github:nix-community/nix-vscode-extensions";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    nix-wrapper-modules = {
+      url = "github:BirdeeHub/nix-wrapper-modules";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    nixcord = {
+      url = "github:kaylorben/nixcord";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
+    nixhelm.url = "github:nix-community/nixhelm";
+    nixidy = {
+      url = "github:sini/nixidy";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     nixkraken.url = "github:nicolas-goudry/nixkraken";
-
     nixos-anywhere = {
       url = "github:numtide/nixos-anywhere";
       inputs = {
@@ -232,111 +231,26 @@
         treefmt-nix.follows = "treefmt-nix";
       };
     };
-
-    # Cachyos kernel
-    nix-cachyos-kernel = {
-      url = "github:xddxdd/nix-cachyos-kernel";
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
-    };
-    proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
-
-    # Facter - an alternative to nixos-generate-config
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
-
-    nixhelm.url = "github:nix-community/nixhelm";
-
-    nix-kube-generators.url = "github:farcaller/nix-kube-generators";
-
-    hyprland.url = "github:hyprwm/Hyprland";
-
-    hyprland-plugins = {
-      url = "github:hyprwm/hyprland-plugins";
-      inputs.hyprland.follows = "hyprland"; # Prevents version mismatch.
-    };
-
-    hyprland-split-monitor-workspaces = {
-      url = "github:Duckonaut/split-monitor-workspaces";
-      inputs.hyprland.follows = "hyprland";
-    };
-
-    # hyprland-easymotion = {
-    #   url = "github:zakk4223/hyprland-easymotion";
-    #   inputs.hyprland.follows = "hyprland";
-    # };
-
-    impermanence.url = "github:nix-community/impermanence";
-
-    kubenix = {
-      url = "github:pizzapim/kubenix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    nix-index-database = {
-      url = "github:nix-community/nix-index-database";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    nix-snapshotter = {
-      url = "github:pdtpartners/nix-snapshotter";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    nix-vscode-extensions = {
-      url = "github:nix-community/nix-vscode-extensions";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    # automatically generate infrastructure and network diagrams as SVGs directly from your NixOS configurations
-    nix-topology = {
-      url = "github:oddlama/nix-topology";
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
-    };
-
-    # Discord extension for NixOS
-    nixcord = {
-      url = "github:kaylorben/nixcord";
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
-    };
-
-    # NixOS modules for gaming
-    nix-gaming = {
-      url = "github:fufexan/nix-gaming";
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
-    };
-
-    # Hardware Configuration
     nixos-hardware.url = "github:nixos/nixos-hardware";
-
-    # Nixpkgs channels:
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11"; # NixOS stable
-    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable"; # NixOS unstable (has binary cache + tests)
-    nixpkgs-master.url = "github:nixos/nixpkgs/master"; # Bleeding edge
-    nixpkgs-stable-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.11-darwin"; # macOS stable
-
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
+    nixpkgs-lib.follows = "nixpkgs";
+    nixpkgs-master.url = "github:nixos/nixpkgs/master";
+    nixpkgs-stable-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.11-darwin";
+    nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs-xr.url = "github:nix-community/nixpkgs-xr";
     nvf.url = "github:notashelf/nvf";
-
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
-
-    systems.url = "github:nix-systems/default";
-
-    # styling
+    proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
+    razerdaemon = {
+      url = "github:sini/razer-control-revived";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    shimmer = {
+      url = "github:nuclearcodecat/shimmer";
+      flake = false;
+    };
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
-
-    # Steam ricing
-    # millennium.url = "git+https://github.com/SteamClientHomebrew/Millennium";
-
     statix = {
       url = "github:molybdenumsoftware/statix";
       inputs = {
@@ -344,107 +258,27 @@
         nixpkgs.follows = "nixpkgs-unstable";
       };
     };
-
-    stylix = {
-      url = "github:nix-community/stylix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    treefmt-nix = {
-      url = "github:numtide/treefmt-nix";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    ucodenix = {
-      url = "github:e-tho/ucodenix";
-    };
-
-    # vscode-server = {
-    #   url = "github:nix-community/nixos-vscode-server";
-    #   inputs.nixpkgs.follows = "nixpkgs-unstable";
-    # };
-
-    zjstatus.url = "github:dj95/zjstatus";
-
-    zen-browser = {
-      url = "github:0xc000022070/zen-browser-flake";
-      inputs = {
-        # IMPORTANT: we're using "libgbm" and is only available in unstable so ensure
-        # to have it up-to-date or simply don't specify the nixpkgs input
-        nixpkgs.follows = "nixpkgs-unstable";
-        home-manager.follows = "home-manager-unstable";
-      };
-    };
-    # Firefox extensions
-
-    firefox-addons = {
-      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    shimmer = {
-      url = "github:nuclearcodecat/shimmer";
-      flake = false;
-    };
-
-    betterfox = {
-      url = "github:yokoffing/Betterfox";
-      flake = false;
-    };
-
-    # macOS Support
-    nix-darwin = {
-      url = "github:LnL7/nix-darwin/nix-darwin-25.11";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
-
-    nix-darwin-unstable = {
-      url = "github:LnL7/nix-darwin";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-
-    # Homebrew
-    #nix-homebrew.url = "github:zhaofengli-wip/nix-homebrew";
-
-    # homebrew-bundle = {
-    #   url = "github:homebrew/homebrew-bundle";
-    #   flake = false;
-    # };
-
-    # homebrew-core = {
-    #   url = "github:homebrew/homebrew-core";
-    #   flake = false;
-    # };
-
-    # homebrew-cask = {
-    #   url = "github:homebrew/homebrew-cask";
-    #   flake = false;
-    # };
-
-    niri.url = "github:sodiboo/niri-flake";
-
-    # XR & Gaming stuff...
-    # I know... I borrowed this from this cultured user and havent played with it: https://github.com/ToasterUwU/flake
-    # buttplug-lite = {
-    #   url = "github:runtime-shady-backroom/buttplug-lite";
-    #   inputs.nixpkgs.follows = "nixpkgs-unstable";
-    # };
-
-    nixpkgs-xr.url = "github:nix-community/nixpkgs-xr";
-
     steam-config-nix = {
       url = "github:different-name/steam-config-nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
-    ayugram-desktop = {
-      type = "git";
-      submodules = true;
-      url = "https://github.com/ndfined-crp/ayugram-desktop/";
+    stylix = {
+      url = "github:nix-community/stylix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    systems.url = "github:nix-systems/default";
+    treefmt-nix = {
+      url = "github:numtide/treefmt-nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    ucodenix.url = "github:e-tho/ucodenix";
+    zen-browser = {
+      url = "github:0xc000022070/zen-browser-flake";
       inputs = {
-        flake-parts.follows = "flake-parts";
+        home-manager.follows = "home-manager-unstable";
         nixpkgs.follows = "nixpkgs-unstable";
       };
     };
+    zjstatus.url = "github:dj95/zjstatus";
   };
 }

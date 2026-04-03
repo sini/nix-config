@@ -9,7 +9,16 @@
       "metadata": {
         "files": ["modules/flake-parts/features/helpers.nix"],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["includes option exists", "requires backward compat", "provides option exists", "provider submodule has all fields", "virtual class options exist", "collectsProviders option exists", "hasSystemModules includes os", "existing features build"]
+        "acceptanceCriteria": [
+          "includes option exists",
+          "requires backward compat",
+          "provides option exists",
+          "provider submodule has all fields",
+          "virtual class options exist",
+          "collectsProviders option exists",
+          "hasSystemModules includes os",
+          "existing features build"
+        ]
       }
     },
     {
@@ -19,9 +28,19 @@
       "blockedBy": [2],
       "description": "Create the new resolver that handles hierarchical includes, excludes cascading, collected providers, and deduplication.",
       "metadata": {
-        "files": ["modules/flake-parts/features/resolver.nix", "modules/flake-parts/features/helpers.nix"],
+        "files": [
+          "modules/flake-parts/features/resolver.nix",
+          "modules/flake-parts/features/helpers.nix"
+        ],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["hierarchical includes work", "excludes cascade", "collectsProviders works", "circular detection", "deduplication", "backward compat"]
+        "acceptanceCriteria": [
+          "hierarchical includes work",
+          "excludes cascade",
+          "collectsProviders works",
+          "circular detection",
+          "deduplication",
+          "backward compat"
+        ]
       }
     },
     {
@@ -31,9 +50,18 @@
       "blockedBy": [2, 3],
       "description": "Update module collection utilities to handle os, homeLinux, homeDarwin forwarding from both features and providers.",
       "metadata": {
-        "files": ["modules/flake-parts/features/helpers.nix", "modules/flake-parts/hosts/configuration-helpers.nix"],
+        "files": [
+          "modules/flake-parts/features/helpers.nix",
+          "modules/flake-parts/hosts/configuration-helpers.nix"
+        ],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["os forwarding works", "system backward compat", "homeLinux/homeDarwin forwarding", "provider modules collected", "settings aggregation updated"]
+        "acceptanceCriteria": [
+          "os forwarding works",
+          "system backward compat",
+          "homeLinux/homeDarwin forwarding",
+          "provider modules collected",
+          "settings aggregation updated"
+        ]
       }
     },
     {
@@ -45,7 +73,12 @@
       "metadata": {
         "files": ["modules/features/desktop/stylix.nix"],
         "verifyCommand": "nix-flake-build cortex",
-        "acceptanceCriteria": ["provides.impermanence works", "homeLinux works", "collectsProviders activates", "cortex builds"]
+        "acceptanceCriteria": [
+          "provides.impermanence works",
+          "homeLinux works",
+          "collectsProviders activates",
+          "cortex builds"
+        ]
       }
     },
     {
@@ -55,9 +88,18 @@
       "blockedBy": [2, 3],
       "description": "Implement the composition chain factory that attaches .wrap/.apply/.eval to feature evaluation results.",
       "metadata": {
-        "files": ["modules/flake-parts/features/compose.nix", "modules/flake-parts/features/helpers.nix"],
+        "files": [
+          "modules/flake-parts/features/compose.nix",
+          "modules/flake-parts/features/helpers.nix"
+        ],
         "verifyCommand": "nix repl",
-        "acceptanceCriteria": ["mkFeatureEval works", ".eval works", ".apply works", "chain re-attachable", ".wrap stubbed"]
+        "acceptanceCriteria": [
+          "mkFeatureEval works",
+          ".eval works",
+          ".apply works",
+          "chain re-attachable",
+          ".wrap stubbed"
+        ]
       }
     },
     {
@@ -67,9 +109,16 @@
       "blockedBy": [6],
       "description": "Expose featureModules and featureSets as flake outputs with composition chains attached.",
       "metadata": {
-        "files": ["modules/flake-parts/features/exports.nix", "modules/flake-parts/expose-options.nix"],
+        "files": [
+          "modules/flake-parts/features/exports.nix",
+          "modules/flake-parts/expose-options.nix"
+        ],
         "verifyCommand": "nix eval .#featureModules --json | jq 'keys[:5]'",
-        "acceptanceCriteria": ["featureModules output works", "featureSets output works", "featureMeta still works"]
+        "acceptanceCriteria": [
+          "featureModules output works",
+          "featureSets output works",
+          "featureMeta still works"
+        ]
       }
     }
   ],

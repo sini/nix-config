@@ -6,6 +6,28 @@
   ...
 }:
 {
+  flake-file.inputs = {
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.home-manager.follows = "home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    agenix-rekey = {
+      # Fork: alternate input types
+      url = "github:sini/agenix-rekey/feat/settings";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    agenix-rekey-to-sops = {
+      # Fork: alternate input types
+      url = "github:sini/agenix-rekey-to-sops";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.agenix-rekey.follows = "agenix-rekey";
+    };
+
+  };
+
   imports = [
     inputs.agenix-rekey.flakeModule
     inputs.agenix-rekey-to-sops.flakeModule

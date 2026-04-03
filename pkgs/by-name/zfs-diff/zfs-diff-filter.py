@@ -106,7 +106,7 @@ def main() -> int:
         if len(parts) < 3:
             continue
 
-        flag, timestamp, path = parts[0], parts[1], parts[2]
+        timestamp, path = parts[1], parts[2]
 
         # Skip @ and / entries
         if timestamp in ("@", "/"):
