@@ -1,0 +1,262 @@
+{ den, lib, ... }:
+{
+  den.aspects.gnome = {
+    includes = lib.attrValues den.aspects.gnome._;
+
+    _ = {
+      nixos = den.lib.perHost {
+        nixos =
+          {
+            pkgs,
+            lib,
+            ...
+          }:
+          {
+            environment = {
+              systemPackages = with pkgs; [
+                gnome-tweaks
+                dconf-editor
+                gnomeExtensions.pop-shell
+                gnomeExtensions.appindicator
+                gnomeExtensions.pip-on-top
+                gnomeExtensions.gamemode-shell-extension
+              ];
+              gnome.excludePackages = with pkgs; [
+                epiphany
+                geary
+                gnome-font-viewer
+                gnome-maps
+                gnome-system-monitor
+                gnome-tour
+              ];
+            };
+
+            services = {
+              desktopManager.gnome.enable = true;
+              udev.packages = with pkgs; [ gnome-settings-daemon ];
+            };
+
+            programs.nautilus-open-any-terminal = {
+              enable = true;
+              terminal = "kitty";
+            };
+
+            # We don't want to start orca automatically in non-gnome WM's which don't manage the
+            # dbus config setting that disables it from auto-starting
+            systemd.user.services.orca.wantedBy = lib.mkForce [ ];
+          };
+      };
+
+      impermanence = den.lib.perHost {
+        nixos = _: {
+          environment.persistence."/persist".directories = [ "/var/lib/AccountsService" ];
+        };
+      };
+
+      home = den.lib.perUser {
+        homeManager =
+          {
+            lib,
+            pkgs,
+            ...
+          }:
+          {
+            gtk = {
+              enable = true;
+              gtk3.extraConfig.gtk-application-prefer-dark-theme = true;
+              gtk4.extraConfig.gtk-application-prefer-dark-theme = true;
+            };
+
+            dconf.settings = {
+              "org/gnome/desktop/interface" = {
+                color-scheme = "prefer-dark";
+              };
+
+              "org/gnome/desktop/peripherals/mouse" = {
+                accel-profile = "flat";
+              };
+
+              "org/gnome/settings-daemon/plugins/power" = {
+                power-button-action = "interactive";
+                sleep-inactive-ac-type = "nothing";
+                sleep-inactive-ac-timeout = 1200;
+              };
+
+              "org/gnome/desktop/session" = {
+                idle-delay = lib.hm.gvariant.mkUint32 180;
+              };
+
+              "org/gnome/shell" = {
+                favorite-apps = [
+                  "firefox.desktop"
+                  "kitty.desktop"
+                  "steam.desktop"
+                  "org.gnome.Nautilus.desktop"
+                ];
+              };
+
+              "org/gnome/desktop/ally/applications" = {
+                "screen-reader-enabled" = false;
+              };
+
+              "org/gnome/mutter" = {
+                center-new-windows = true;
+                dynamic-workspaces = true;
+                edge-tiling = true;
+                experimental-features = [ "scale-monitor-framebuffer" ];
+                workspaces-only-on-primary = true;
+              };
+
+              "org/gnome/shell/app-switcher" = {
+                current-workspace-only = true;
+              };
+
+              "org/gnome/desktop/wm/preferences" = {
+                resize-with-right-button = true;
+                action-middle-click-titlebar = "toggle-maximize-vertically";
+                button-layout = "appmenu:minimize,maximize,close";
+                focus-mode = "sloppy";
+                dynamic-workspaces = false;
+                num-workspaces = 10;
+              };
+
+              "org/gtk/gtk4/settings/file-chooser" = {
+                show-hidden = true;
+                sort-directories-first = true;
+                view-type = "list";
+              };
+
+              "org/gnome/shell" = {
+                disable-user-extensions = false;
+                enabled-extensions = [
+                  "pip-on-top@rafostar.github.com"
+                  "appindicatorsupport@rgcjonas.gmail.com"
+                  "gamemodeshellextension@trsnaqe.com"
+                ];
+              };
+
+              "org/gnome/shell/extensions/pip-on-top" = {
+                stick = true;
+              };
+
+              "org/gnome/shell/extensions/gamemodeshellextension" = {
+                show-icon-only-when-active = true;
+              };
+
+              "org/gnome/settings-daemon/plugins/color" = {
+                night-light-enabled = false;
+                night-light-schedule-automatic = false;
+              };
+
+              "org/gnome/TextEditor".keybindings = "vim";
+
+              "org/gnome/desktop/wm/keybindings" = {
+                close = [ "<Super>q" ];
+                move-to-workspace-1 = [ "<Shift><Super>1" ];
+                move-to-workspace-2 = [ "<Shift><Super>2" ];
+                move-to-workspace-3 = [ "<Shift><Super>3" ];
+                move-to-workspace-4 = [ "<Shift><Super>4" ];
+                move-to-workspace-5 = [ "<Shift><Super>5" ];
+                move-to-workspace-6 = [ "<Shift><Super>6" ];
+                move-to-workspace-7 = [ "<Shift><Super>7" ];
+                move-to-workspace-8 = [ "<Shift><Super>8" ];
+                move-to-workspace-9 = [ "<Shift><Super>9" ];
+                move-to-workspace-10 = [ "<Shift><Super>0" ];
+                switch-to-workspace-1 = [ "<Super>1" ];
+                switch-to-workspace-2 = [ "<Super>2" ];
+                switch-to-workspace-3 = [ "<Super>3" ];
+                switch-to-workspace-4 = [ "<Super>4" ];
+                switch-to-workspace-5 = [ "<Super>5" ];
+                switch-to-workspace-6 = [ "<Super>6" ];
+                switch-to-workspace-7 = [ "<Super>7" ];
+                switch-to-workspace-8 = [ "<Super>8" ];
+                switch-to-workspace-9 = [ "<Super>9" ];
+                switch-to-workspace-10 = [ "<Super>10" ];
+                toggle-fullscreen = [ "<Super>f" ];
+              };
+
+              "org/gnome/shell/keybindings" = {
+                switch-to-application-1 = [ ];
+                switch-to-application-2 = [ ];
+                switch-to-application-3 = [ ];
+                switch-to-application-4 = [ ];
+                switch-to-application-5 = [ ];
+                switch-to-application-6 = [ ];
+                switch-to-application-7 = [ ];
+                switch-to-application-8 = [ ];
+                switch-to-application-9 = [ ];
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys" = {
+                next = [ "<Shift><Control>n" ];
+                previous = [ "<Shift><Control>p" ];
+                play = [ "<Shift><Control>space" ];
+                custom-keybindings = [
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/"
+                  "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/"
+                ];
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0" = {
+                binding = "<Super>Return";
+                command = "kitty";
+                name = "kitty";
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
+                binding = "<Shift><Super>h";
+                command = "kitty -e htop";
+                name = "htop";
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" =
+                let
+                  spotifyPlayerCMD = "kitty -o term=xterm-kitty -e spotify_player";
+                in
+                {
+                  binding = "<Shift><Super>s";
+                  command = spotifyPlayerCMD;
+                  name = "spotify-player";
+                };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
+                binding = "<Super>e";
+                command = "kitty -e yazi";
+                name = "File Manager";
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4" = {
+                binding = "<Shift><Super>n";
+                command = "kitty -e nvtop";
+                name = "nvtop";
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5" = {
+                binding = "<Super>Print";
+                command = "${pkgs.bash}/bin/bash -c '${pkgs.wl-clipboard}/bin/wl-paste | ${pkgs.swappy}/bin/swappy -f -'";
+                name = "Edit clipboard image";
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6" = {
+                binding = "<Super><Shift>Return";
+                command = "kitty -e vim";
+                name = "vim";
+              };
+
+              "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7" = {
+                binding = "<Super><Shift>B";
+                command = "firefox --new-window";
+                name = "Firefox new window";
+              };
+            };
+          };
+      };
+    };
+  };
+}
