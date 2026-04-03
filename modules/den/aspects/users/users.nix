@@ -32,6 +32,7 @@ let
       passwordPath = rootPath + "/.secrets/users/${userName}/hashed-password.age";
       hasPasswordFile = builtins.pathExists passwordPath;
     in
+    { config, ... }:
     {
       age.secrets = lib.mkIf hasPasswordFile {
         "user-${userName}-password" = {

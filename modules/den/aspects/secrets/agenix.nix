@@ -7,7 +7,9 @@
 }:
 {
   den.aspects.agenix = {
-    includes = lib.attrValues den.aspects.agenix._;
+    includes = lib.attrValues den.aspects.agenix._ ++ [
+      den.aspects.agenix-generators
+    ];
 
     _ = {
       # Import agenix NixOS modules

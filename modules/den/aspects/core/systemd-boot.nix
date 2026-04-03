@@ -1,3 +1,4 @@
+# Boot configuration: systemd-boot, tmpfs, zram swap, earlyoom
 { den, ... }:
 {
   den.aspects.systemd-boot = den.lib.perHost {
@@ -6,7 +7,6 @@
         initrd = {
           compressor = "zstd";
           compressorArgs = [ "-12" ];
-
           systemd.enable = true;
         };
 
@@ -16,7 +16,6 @@
             configurationLimit = 10;
             consoleMode = "0"; # increase font size
           };
-
           efi = {
             canTouchEfiVariables = true;
             efiSysMountPoint = "/boot";
@@ -24,9 +23,23 @@
         };
 
         kernelParams = [
-          # For AMD Zen 4 this is no longer needed: https://www.phoronix.com/news/AMD-Zen-4-Mitigations-Off
           "mitigations=off"
         ];
+
+        # tmpfs for /tmp
+        tmp = {
+          useTmpfs = true;
+          cleanOnBoot = true;
+        };
+      };
+
+      # zram swap
+      zramSwap.enable = true;
+
+      # OOM prevention - kill before freeze
+      services.earlyoom = {
+        enable = true;
+        freeMemThreshold = 2; # percentage of total RAM
       };
     };
   };
