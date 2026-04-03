@@ -8,7 +8,10 @@ let
       each = lib.optional (class == "nixos") true;
       fromClass = _: "secrets";
       intoClass = _: "nixos";
-      intoPath = _: [ "age" ];
+      intoPath = _: [
+        "age"
+        "secrets"
+      ];
       fromAspect = _: lib.head aspect-chain;
       guard = { options, ... }: _: lib.mkIf (options ? age && (options.age ? secrets));
     }

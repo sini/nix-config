@@ -30,9 +30,16 @@
   den.aspects.bitstream = {
     includes = [
       den.aspects.default
+      # Disk
       den.aspects.zfs-disk-single
       den.aspects.impermanence-zfs
       den.aspects.zfs-diff
+      # Roles
+      den.aspects.server
+      den.aspects.nix-builder
+      # Hardware
+      den.aspects.cpu-amd
+      den.aspects.gpu-amd
     ];
 
     nixos =
