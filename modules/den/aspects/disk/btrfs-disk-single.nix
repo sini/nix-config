@@ -14,9 +14,9 @@
           nixos =
             { config, lib, ... }:
             let
-              # Read device from host metadata; fall back to facter auto-detection
-              rawDevice = host.btrfs-device or null;
-              swapSize = host.btrfs-swap-size or 0;
+              # Read device from typed schema; null means auto-detect via facter
+              rawDevice = host.settings.btrfs-disk-single.device_id;
+              swapSize = host.settings.btrfs-disk-single.swap_size;
 
               disk-device =
                 if rawDevice != null then
@@ -39,7 +39,10 @@
                   if (builtins.length disk-labels == 1) then
                     (builtins.head disk-labels)
                   else
-                    abort ("Multiple or no disks found. Please set host.btrfs-device. Found: " + toString disk-labels);
+                    abort (
+                      "Multiple or no disks found. Please set host.settings.btrfs-disk-single.device_id. Found: "
+                      + toString disk-labels
+                    );
 
               defaultBtrfsOpts = [
                 "defaults"
@@ -125,10 +128,10 @@
                                   mountOptions = defaultBtrfsOpts;
                                 };
                               }
-                              // lib.optionalAttrs (swapSize > 0) {
+                              // lib.optionalAttrs (swapSize != "0") {
                                 "@swap" = {
                                   mountpoint = "/swap";
-                                  swap.swapfile.size = "${toString swapSize}M";
+                                  swap.swapfile.size = swapSize;
                                 };
                               };
                             };

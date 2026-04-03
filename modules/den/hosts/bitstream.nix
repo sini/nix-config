@@ -1,6 +1,5 @@
 {
   den,
-  inputs,
   rootPath,
   ...
 }:
@@ -8,11 +7,6 @@
   den.hosts.x86_64-linux.bitstream = {
     environment = "dev";
     system-access-groups = [ "server-access" ];
-    zfs-device = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
-    impermanence = {
-      wipeRootOnBoot = true;
-      wipeHomeOnBoot = false;
-    };
     networking = {
       bonds.bond0 = {
         interfaces = [
@@ -29,6 +23,15 @@
     };
     facts = ../../hosts/bitstream/facter.json;
     public_key = rootPath + "/.secrets/hosts/bitstream/ssh_host_ed25519_key.pub";
+
+    settings = {
+      zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+      impermanence = {
+        wipeRootOnBoot = true;
+        wipeHomeOnBoot = false;
+      };
+      linux-kernel.optimization = "server";
+    };
   };
 
   den.aspects.bitstream = {
@@ -45,20 +48,5 @@
       den.aspects.cpu-amd
       den.aspects.gpu-amd
     ];
-
-    nixos =
-      { ... }:
-      {
-        imports = [
-          inputs.nixos-facter-modules.nixosModules.facter
-        ];
-
-        facter.reportPath = ../../hosts/bitstream/facter.json;
-
-        nixpkgs.hostPlatform = "x86_64-linux";
-
-        boot.loader.systemd-boot.enable = true;
-        boot.loader.efi.canTouchEfiVariables = true;
-      };
   };
 }

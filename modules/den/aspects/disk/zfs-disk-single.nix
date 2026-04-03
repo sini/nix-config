@@ -14,10 +14,10 @@
           nixos =
             { config, ... }:
             let
-              # Read device from host metadata; fall back to facter auto-detection
+              # Read device from typed schema; null means auto-detect via facter
               disk-device =
-                if host ? zfs-device && host.zfs-device != null then
-                  host.zfs-device
+                if host.settings.zfs-disk-single.device_id != null then
+                  host.settings.zfs-disk-single.device_id
                 else
                   let
                     native-disks = builtins.filter (f: f.driver != "usb-storage") config.facter.report.hardware.disk;
@@ -36,13 +36,16 @@
                   in
                   if (builtins.length disk-labels == 0) then
                     abort (
-                      "No suitable disks found. Please set host.zfs-device. "
+                      "No suitable disks found. Please set host.settings.zfs-disk-single.device_id. "
                       + "Check that your disk has /dev/disk/by-id/ entries and is not USB."
                     )
                   else if (builtins.length disk-labels == 1) then
                     (builtins.head disk-labels)
                   else
-                    abort ("Multiple disks found. Please set host.zfs-device. Found: " + toString disk-labels);
+                    abort (
+                      "Multiple disks found. Please set host.settings.zfs-disk-single.device_id. Found: "
+                      + toString disk-labels
+                    );
 
               emptySnapshot =
                 name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";

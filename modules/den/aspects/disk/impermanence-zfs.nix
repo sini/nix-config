@@ -4,9 +4,8 @@
   den.aspects.impermanence-zfs = den.lib.perHost (
     { host }:
     let
-      impCfg = host.impermanence or { };
-      wipeRootOnBoot = impCfg.wipeRootOnBoot or true;
-      wipeHomeOnBoot = impCfg.wipeHomeOnBoot or false;
+      wipeRootOnBoot = host.settings.impermanence.wipeRootOnBoot;
+      wipeHomeOnBoot = host.settings.impermanence.wipeHomeOnBoot;
     in
     {
       nixos =

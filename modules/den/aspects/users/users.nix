@@ -78,7 +78,7 @@ in
       # Build a hostOptions-like object for resolveUsers
       hostOptions = {
         hostname = host.name;
-        system-access-groups = host.system-access-groups or [ ];
+        inherit (host) system-access-groups;
         users = host.users or { };
       };
 
