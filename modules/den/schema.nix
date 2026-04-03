@@ -95,6 +95,38 @@
             description = "Swap partition size (e.g., '8G'). '0' disables swap.";
           };
         };
+
+        network-manager = {
+          wifi-backend = lib.mkOption {
+            type = lib.types.enum [
+              "wpa_supplicant"
+              "iwd"
+            ];
+            default = "wpa_supplicant";
+            description = "WiFi backend for NetworkManager";
+          };
+        };
+
+        ceph-device-allocation = {
+          device = lib.mkOption {
+            type = lib.types.nullOr lib.types.str;
+            default = null;
+            description = "Full device path for Ceph OSD (e.g., /dev/disk/by-id/nvme-...).";
+          };
+        };
+
+        xfs-disk-longhorn = {
+          device_id = lib.mkOption {
+            type = lib.types.str;
+            default = "";
+            description = "Longhorn data drive full device path (e.g., /dev/disk/by-id/nvme-...).";
+          };
+          mountPoint = lib.mkOption {
+            type = lib.types.str;
+            default = "/var/lib/longhorn";
+            description = "Mount point for the Longhorn data drive.";
+          };
+        };
       };
     };
   };
