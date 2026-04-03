@@ -4,6 +4,11 @@
     # Metadata needed for user resolution and networking
     environment = "dev";
     system-access-groups = [ "server-access" ];
+    zfs-device = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+    impermanence = {
+      wipeRootOnBoot = true;
+      wipeHomeOnBoot = false;
+    };
     networking = {
       bonds.bond0 = {
         interfaces = [
@@ -25,6 +30,9 @@
   den.aspects.bitstream = {
     includes = [
       den.aspects.default
+      den.aspects.zfs-disk-single
+      den.aspects.impermanence-zfs
+      den.aspects.zfs-diff
     ];
 
     nixos =
