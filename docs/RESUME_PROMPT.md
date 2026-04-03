@@ -192,6 +192,31 @@ den.aspects.bitstream = {
 - Den source: `/home/sini/Documents/repos/den-configs/den`
 - Gwenodai example: `/home/sini/Documents/repos/den-configs/gwenodai-nixos`
 
+## Typed Settings Pattern
+
+Aspects declare typed settings on `den.schema.host` in `modules/den/schema.nix`.
+Hosts set them under `settings.<aspect-name>.<option>` with validation and
+defaults.
+
+```nix
+# In modules/den/schema.nix — declare settings
+den.schema.host = _: {
+  options.settings.my-aspect = {
+    myOption = lib.mkOption { type = lib.types.bool; default = true; };
+  };
+};
+
+# In the aspect — read typed settings (no `or` fallbacks needed)
+den.aspects.my-aspect = den.lib.perHost ({ host }: {
+  nixos = lib.mkIf host.settings.my-aspect.myOption { /* config */ };
+});
+
+# In the host — set typed settings
+den.hosts.x86_64-linux.myhost = {
+  settings.my-aspect.myOption = false;
+};
+```
+
 ## Key Patterns for New Aspects
 
 ```nix
@@ -205,7 +230,7 @@ den.aspects.bitstream = {
 # Aspect needing host data
 { den, ... }: {
   den.aspects.foo = den.lib.perHost ({ host }: {
-    nixos = { /* uses host.environment, host.networking, etc. */ };
+    nixos = { /* uses host.environment, host.networking, host.settings, etc. */ };
   });
 }
 
@@ -231,7 +256,7 @@ let
 in {
   den.aspects.foo = den.lib.perHost ({ host }: let
     resolvedUsers = resolveUsers lib canonicalUsers host.environment
-      { hostname = host.name; system-access-groups = host.system-access-groups or []; users = host.users or {}; }
+      { hostname = host.name; inherit (host) system-access-groups; users = host.users or {}; }
       groupDefs;
   in { nixos = { /* use resolvedUsers */ }; });
 }
