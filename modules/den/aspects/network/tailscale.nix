@@ -33,11 +33,9 @@
       };
 
       impermanence = den.lib.perHost {
-        nixos = {
-          environment.persistence."/persist".directories = [
-            "/var/lib/tailscale"
-          ];
-        };
+        persist.directories = [
+          "/var/lib/tailscale"
+        ];
       };
     };
   };

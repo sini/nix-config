@@ -20,12 +20,12 @@
       };
 
       impermanence = den.lib.perHost {
-        nixos = {
-          environment.persistence."/cache".files = [
+        cache = {
+          files = [
             "/var/lib/lastlog/lastlog2.db"
           ];
 
-          environment.persistence."/cache".directories = [
+          directories = [
             "/var/lib/systemd/coredump"
             "/var/lib/systemd/timers"
             "/var/lib/systemd/catalog"

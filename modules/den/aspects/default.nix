@@ -8,7 +8,7 @@
       den.aspects.disko
       den.aspects.facter
       den.aspects.firmware
-      den.aspects.home-manager-feature
+      den.aspects.home-manager
       den.aspects.hosts-file
       den.aspects.i18n
       den.aspects.impermanence

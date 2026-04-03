@@ -27,7 +27,7 @@ in
           nixos.home-manager = {
             useUserPackages = lib.mkDefault true;
             useGlobalPkgs = lib.mkDefault true;
-            backupFileExtension = lib.mkDefault "backup";
+            backupFileExtension = lib.mkDefault "hm-backup";
             overwriteBackup = lib.mkDefault true;
           };
         };

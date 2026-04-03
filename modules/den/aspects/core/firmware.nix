@@ -16,7 +16,7 @@
       };
 
       impermanence = den.lib.perHost {
-        nixos.environment.persistence."/persist".directories = [
+        persist.directories = [
           "/var/cache/fwupd"
           "/var/lib/fwupd"
         ];

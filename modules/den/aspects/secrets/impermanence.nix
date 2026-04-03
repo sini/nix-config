@@ -105,40 +105,30 @@
 
       # Home-manager persistence directories
       homePersistence = den.lib.perUser {
-        homeManager = {
-          home.persistence = {
-            # /persist: Long-term user data
-            "/persist" = {
-              directories = [
-                "Desktop"
-                "Documents"
-                "Music"
-                "Pictures"
-                "Public"
-                "Templates"
-                "Videos"
-                {
-                  directory = ".ssh";
-                  mode = "0700";
-                }
-                {
-                  directory = ".local/share/keyrings";
-                  mode = "0700";
-                }
-              ];
-            };
+        persistHome.directories = [
+          "Desktop"
+          "Documents"
+          "Music"
+          "Pictures"
+          "Public"
+          "Templates"
+          "Videos"
+          {
+            directory = ".ssh";
+            mode = "0700";
+          }
+          {
+            directory = ".local/share/keyrings";
+            mode = "0700";
+          }
+        ];
 
-            # /cache: Temporary user data (regenerable)
-            "/cache" = {
-              directories = [
-                "Downloads"
-                ".local/share/direnv"
-                ".local/share/nix"
-                ".cache"
-              ];
-            };
-          };
-        };
+        cacheHome.directories = [
+          "Downloads"
+          ".local/share/direnv"
+          ".local/share/nix"
+          ".cache"
+        ];
       };
     };
   };

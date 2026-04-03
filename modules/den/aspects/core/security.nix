@@ -25,7 +25,7 @@
       };
 
       impermanence = den.lib.perHost {
-        nixos.environment.persistence."/persist".directories = [
+        persist.directories = [
           {
             directory = "/var/lib/swtpm";
             user = "tss";
