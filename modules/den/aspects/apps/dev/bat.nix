@@ -1,0 +1,24 @@
+{ den, lib, ... }:
+{
+  den.aspects.bat = den.lib.perUser {
+    homeManager =
+      { pkgs, ... }:
+      {
+        programs.bat = {
+          enable = true;
+          config.style = "plain";
+          extraPackages = with pkgs.bat-extras; [
+            prettybat
+            batwatch
+            batpipe
+            batman
+            batgrep
+            batdiff
+          ];
+        };
+        home.shellAliases = {
+          cat = "${lib.getExe pkgs.bat} -pp";
+        };
+      };
+  };
+}
