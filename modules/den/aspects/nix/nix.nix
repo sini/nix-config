@@ -9,7 +9,7 @@
             "cgroups"
             "flakes"
             "nix-command"
-            "pipe-operator"
+            "pipe-operators"
           ];
 
           allow-import-from-derivation = true;
