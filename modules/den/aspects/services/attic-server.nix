@@ -10,7 +10,7 @@
         let
           inherit (host) environment;
           domain = environment.getDomainFor "attic";
-          zfsEnabled = host.hasFeature "zfs-root";
+          zfsEnabled = true; # TODO: detect from config.boot.supportedFilesystems.zfs
         in
         {
           nixos =

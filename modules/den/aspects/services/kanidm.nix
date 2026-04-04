@@ -174,39 +174,42 @@ in
       );
 
       # OIDC secret auto-generation for all non-public OAuth2 systems
-      provision-oidc-secrets = den.lib.perHost {
-        nixos =
-          {
-            config,
-            lib,
-            environment,
-            ...
-          }:
-          let
-            mkOidcSecrets = name: {
-              "${name}-oidc-client-secret" = {
-                rekeyFile = environment.secretPath + "/oidc/${name}-oidc-client-secret.age";
-                owner = "kanidm";
-                group = "kanidm";
-                generator = {
-                  tags = [ "oidc" ];
-                  script = "rfc3986-secret";
+      provision-oidc-secrets = den.lib.perHost (
+        { host }:
+        {
+          nixos =
+            {
+              config,
+              lib,
+              ...
+            }:
+            let
+              inherit (host) environment;
+              mkOidcSecrets = name: {
+                "${name}-oidc-client-secret" = {
+                  rekeyFile = environment.secretPath + "/oidc/${name}-oidc-client-secret.age";
+                  owner = "kanidm";
+                  group = "kanidm";
+                  generator = {
+                    tags = [ "oidc" ];
+                    script = "rfc3986-secret";
+                  };
                 };
               };
-            };
-          in
-          {
-            age.secrets = lib.mkMerge (
-              map mkOidcSecrets (
-                builtins.attrNames (
-                  lib.filterAttrs (
-                    _name: system: !(system.public or false)
-                  ) config.services.kanidm.provision.systems.oauth2
+            in
+            {
+              age.secrets = lib.mkMerge (
+                map mkOidcSecrets (
+                  builtins.attrNames (
+                    lib.filterAttrs (
+                      _name: system: !(system.public or false)
+                    ) config.services.kanidm.provision.systems.oauth2
+                  )
                 )
-              )
-            );
-          };
-      };
+              );
+            };
+        }
+      );
 
       # OIDC service provisioning: ArgoCD
       provision-argocd = den.lib.perHost (

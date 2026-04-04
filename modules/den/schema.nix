@@ -260,9 +260,19 @@
         };
       };
 
-      # Set instantiate from channel (overridable per-host)
-      config.instantiate = lib.mkDefault (
-        if config.class == "darwin" then resolvedChannel.darwinSystem else resolvedChannel.nixosSystem
-      );
+      # Set instantiate and home-manager module from channel (overridable per-host)
+      config = {
+        instantiate = lib.mkDefault (
+          if config.class == "darwin" then resolvedChannel.darwinSystem else resolvedChannel.nixosSystem
+        );
+
+        # Per-channel home-manager module — den's HM provider reads this
+        home-manager.module = lib.mkDefault (
+          if config.class == "darwin" then
+            resolvedChannel.home-manager-module.darwin
+          else
+            resolvedChannel.home-manager-module.nixos
+        );
+      };
     };
 }

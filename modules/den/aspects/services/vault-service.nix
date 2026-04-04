@@ -23,7 +23,7 @@
               # Find all hosts with vault feature in the same environment (including ourselves)
               allVaultHosts = lib.attrsets.filterAttrs (
                 _hostname: hostConfig: hostConfig.hasFeature "vault" && hostConfig.environment == host.environment
-              ) config.den.hosts;
+              ) host.environment.findHostsByFeature "server";
 
               # Raft peers excludes current host
               raftPeers = lib.attrNames (

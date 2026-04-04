@@ -3,6 +3,7 @@
   den.environments.dev = {
     id = 2;
     domain = "json64.dev";
+    secretPath = rootPath + "/.secrets/env/dev";
     timezone = "America/Los_Angeles";
 
     location = {

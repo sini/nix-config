@@ -22,7 +22,9 @@
             let
               ollamaHosts = builtins.sort (a: b: a < b) (
                 lib.mapAttrsToList (_hostname: hostConfig: builtins.head hostConfig.ipv4) (
-                  lib.attrsets.filterAttrs (_hostname: hostConfig: hostConfig.hasFeature "inference") config.den.hosts
+                  lib.attrsets.filterAttrs (
+                    _hostname: hostConfig: hostConfig.hasFeature "inference"
+                  ) host.environment.findHostsByFeature "server"
                 )
               );
             in

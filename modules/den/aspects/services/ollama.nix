@@ -5,15 +5,16 @@
     includes = lib.attrValues den.aspects.ollama._;
 
     _ = {
-      config = den.lib.perHost (_: {
+      config = den.lib.perHost {
         nixos =
-          { pkgs, ... }:
+          {
+            config,
+            pkgs,
+            ...
+          }:
           let
-            # TODO: proper GPU detection — hasFeature not available in den
-            # For now, detect via NixOS config
-            amdEnabled =
-              config.hardware.amdgpu.amdvlk.enable or false
-              || builtins.any (d: d == "amdgpu") (config.services.xserver.videoDrivers or [ ]);
+            # Detect GPU from NixOS config
+            amdEnabled = builtins.any (d: d == "amdgpu") config.services.xserver.videoDrivers;
             nvidiaEnabled = config.hardware.nvidia.modesetting.enable or false;
           in
           {
@@ -71,7 +72,7 @@
               ];
             };
           };
-      });
+      };
 
       impermanence = den.lib.perHost {
         cache.directories = [

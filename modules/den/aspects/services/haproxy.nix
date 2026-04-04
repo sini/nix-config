@@ -70,7 +70,7 @@
                       option tcp-check
                       ${
                         (lib.concatStringsSep "\n  " (
-                          map (h: "server ${h.hostname} ${builtins.head h.ipv4}:6443 check") k3sHosts
+                          map (h: "server ${h.name} ${builtins.head h.ipv4}:6443 check") k3sHosts
                         ))
                       }
                   '';

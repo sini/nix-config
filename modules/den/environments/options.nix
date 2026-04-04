@@ -90,7 +90,7 @@ let
         id = lib.mkOption { type = lib.types.int; };
         domain = lib.mkOption { type = lib.types.str; };
         secretPath = lib.mkOption {
-          type = lib.types.str;
+          type = lib.types.either lib.types.str lib.types.path;
           default = ".secrets/environments/${name}";
         };
         timezone = lib.mkOption {

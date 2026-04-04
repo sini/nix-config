@@ -23,7 +23,6 @@
         inherit (host) environment;
       in
       {
-        config,
         lib,
         ...
       }:
@@ -46,7 +45,7 @@
           feature:
           lib.filterAttrs (
             _name: h: h.hasFeature feature && h.environment == currentHostEnvironment
-          ) config.den.hosts;
+          ) host.environment.findHostsByFeature "server";
 
         # Gateway neighbor (Unifi router)
         gatewayNeighbor =

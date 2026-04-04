@@ -16,7 +16,6 @@
         {
           nixos =
             {
-              config,
               pkgs,
               lib,
               ...
@@ -36,7 +35,7 @@
                 lib.attrsets.filterAttrs (
                   _hostname: hostConfig:
                   hostConfig.hasFeature "metrics-ingester" && hostConfig.environment == targetEnvironment
-                ) config.den.hosts
+                ) host.environment.findHostsByFeature "server"
               );
 
               reportingHost = if reportingHosts != [ ] then lib.head reportingHosts else null;

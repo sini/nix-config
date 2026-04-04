@@ -26,7 +26,7 @@
                 hostConfig:
                 let
                   serverExporters =
-                    if hostConfig.hasFeature "server" then
+                    if true then # TODO: all monitored hosts are servers
                       {
                         node = {
                           port = 9100;
@@ -37,7 +37,7 @@
                     else
                       { };
                   k3sExporters =
-                    if hostConfig.hasFeature "kubernetes" then
+                    if (hostConfig.cluster or null) != null then # TODO: proper k8s check
                       {
                         k3s-server = {
                           port = 10249;
@@ -56,12 +56,12 @@
                 serverExporters // k3sExporters;
 
               # Generate scrape configs from all exporters on server hosts
+              # TODO: migrate to use den.hosts from flake-parts level
               generateScrapeConfigs =
                 envs:
-                config.den.hosts
+                (host.environment.findHostsByFeature "server")
                 |> lib.attrsets.filterAttrs (
-                  _hostname: hostConfig:
-                  hostConfig.hasFeature "server" && builtins.elem hostConfig.environment.name envs
+                  _hostname: hostConfig: builtins.elem (hostConfig.environment or "unknown") envs
                 )
                 |> lib.mapAttrsToList (
                   hostname: hostConfig:
@@ -76,7 +76,7 @@
                         labels = {
                           inherit hostname;
                           exporter = exporterName;
-                          source_environment = hostConfig.environment.name;
+                          source_environment = hostConfig.environment;
                         };
                       }
                     ];
