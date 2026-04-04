@@ -10,12 +10,33 @@
 let
   inherit (den.lib.parametric) fixedTo;
   allEnvironments = config.environments;
+  allClusters = config.clusters or { };
+
+  # Extract primary IPs from networking interfaces (matching old host type)
+  extractIps =
+    host:
+    let
+      interfaces = host.networking.interfaces or { };
+      ifNames = builtins.attrNames interfaces;
+      firstIf = if ifNames != [ ] then interfaces.${builtins.head ifNames} else { };
+      stripCidr = addr: builtins.head (lib.splitString "/" addr);
+    in
+    {
+      ipv4 = map stripCidr (firstIf.ipv4 or [ ]);
+      ipv6 = firstIf.ipv6 or [ ];
+    };
+
+  # Find the cluster this host belongs to (if any)
+  findCluster =
+    host: lib.findFirst (c: c.resolvedHosts ? ${host.name}) null (builtins.attrValues allClusters);
 
   enrichHost =
     host:
     host
+    // (extractIps host)
     // {
       environment = allEnvironments.${host.environment};
+      cluster = findCluster host;
     };
 in
 {

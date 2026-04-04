@@ -127,6 +127,63 @@
             description = "Mount point for the Longhorn data drive.";
           };
         };
+
+        bgp = {
+          localAsn = lib.mkOption {
+            type = lib.types.int;
+            default = 65000;
+            description = "Local BGP autonomous system number";
+          };
+        };
+
+        cilium-bgp = {
+          localAsn = lib.mkOption {
+            type = lib.types.int;
+            default = 65010;
+            description = "Cilium BGP autonomous system number";
+          };
+        };
+
+        thunderbolt-mesh-of = {
+          interfaces = lib.mkOption {
+            type = lib.types.listOf lib.types.str;
+            default = [ ];
+            description = "Thunderbolt network interfaces for OpenFabric mesh";
+          };
+          loopback = {
+            ipv4 = lib.mkOption {
+              type = lib.types.str;
+              default = "";
+              description = "Loopback IPv4 address with prefix (e.g., 172.16.255.1/32)";
+            };
+            ipv6 = lib.mkOption {
+              type = lib.types.nullOr lib.types.str;
+              default = null;
+              description = "Loopback IPv6 address with prefix (optional)";
+            };
+          };
+          nsap = lib.mkOption {
+            type = lib.types.str;
+            default = "";
+            description = "IS-IS NSAP address (e.g., 49.0000.0000.0001.00)";
+          };
+        };
+
+        k3s = {
+          role = lib.mkOption {
+            type = lib.types.enum [
+              "server"
+              "agent"
+            ];
+            default = "server";
+            description = "K3s node role";
+          };
+          clusterInit = lib.mkOption {
+            type = lib.types.bool;
+            default = false;
+            description = "Whether this node initializes the cluster";
+          };
+        };
       };
     };
   };

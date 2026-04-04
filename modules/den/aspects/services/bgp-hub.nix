@@ -14,121 +14,122 @@
 #   - bgp-hub.gatewayAsNumber (int)
 { den, ... }:
 {
-  den.aspects.bgp-hub = den.lib.perHost (
-    { host }:
-    let
-      inherit (host) environment;
-    in
-    {
-      nixos =
-        {
-          config,
-          lib,
-          ...
-        }:
-        let
-          # TODO: Wire these to den settings once schema is ready
-          cfg = {
-            neighbors = [ ];
-            autoDiscoverNeighbors = false;
-            neighborDiscoveryRole = "bgp-spoke";
-            neighborAsNumberBase = 65001;
-            defaultOriginateToNeighbors = true;
-            maximumPaths = 8;
-            peerWithGateway = true;
-            gatewayAsNumber = 65999;
-          };
+  den.aspects.bgp-hub = {
+    includes = [ den.aspects.bgp ];
 
-          currentHostEnvironment = host.environment;
+    nixos = den.lib.perHost (
+      { host }:
+      let
+        inherit (host) environment;
+      in
+      {
+        config,
+        lib,
+        ...
+      }:
+      let
+        # TODO: Wire these to den settings once schema is ready
+        cfg = {
+          neighbors = [ ];
+          autoDiscoverNeighbors = false;
+          neighborDiscoveryRole = "bgp-spoke";
+          neighborAsNumberBase = 65001;
+          defaultOriginateToNeighbors = true;
+          maximumPaths = 8;
+          peerWithGateway = true;
+          gatewayAsNumber = 65999;
+        };
 
-          getHostsByFeature =
-            feature:
-            lib.filterAttrs (
-              _name: h: h.hasFeature feature && h.environment == currentHostEnvironment
-            ) config.den.hosts;
+        currentHostEnvironment = host.environment;
 
-          # Gateway neighbor (Unifi router)
-          gatewayNeighbor =
-            if cfg.peerWithGateway then
-              [
-                {
-                  ip = environment.networks.default.gatewayIp;
-                  asn = cfg.gatewayAsNumber;
-                }
-              ]
-            else
-              [ ];
+        getHostsByFeature =
+          feature:
+          lib.filterAttrs (
+            _name: h: h.hasFeature feature && h.environment == currentHostEnvironment
+          ) config.den.hosts;
 
-          # Auto-generate neighbors from hosts with the configured feature
-          shouldAutoDiscover = cfg.autoDiscoverNeighbors || (cfg.neighbors == [ ]);
-          autoNeighbors =
-            if shouldAutoDiscover then
-              let
-                targetHosts = getHostsByFeature cfg.neighborDiscoveryRole;
-                sortedHostnames = lib.sort (a: b: a < b) (lib.attrNames targetHosts);
-                sortedNeighbors = lib.imap0 (index: hostname: {
-                  ip = builtins.head targetHosts.${hostname}.ipv4;
-                  asn = targetHosts.${hostname}.settings.bgp.localAsn or (cfg.neighborAsNumberBase + index);
-                }) sortedHostnames;
-              in
-              sortedNeighbors
-            else
-              [ ];
-
-          # Convert manual neighbors to BGP module format
-          manualNeighbors = map (neighbor: {
-            ip = neighbor.address;
-            asn = neighbor.asNumber;
-          }) cfg.neighbors;
-
-          # Combine gateway, manual, and auto-discovered neighbors
-          allNeighbors = gatewayNeighbor ++ manualNeighbors ++ autoNeighbors;
-
-          # Create address family configuration for all neighbors
-          addressFamilyNeighbors = lib.listToAttrs (
-            map (
-              neighbor:
-              let
-                isGateway = neighbor.ip == environment.networks.default.gatewayIp;
-
-                shouldOriginate =
-                  if isGateway then
-                    false
-                  else if cfg.neighbors != [ ] then
-                    let
-                      matchingManual = lib.findFirst (n: n.address == neighbor.ip) null cfg.neighbors;
-                    in
-                    if matchingManual != null then matchingManual.defaultOriginate else cfg.defaultOriginateToNeighbors
-                  else
-                    cfg.defaultOriginateToNeighbors;
-              in
+        # Gateway neighbor (Unifi router)
+        gatewayNeighbor =
+          if cfg.peerWithGateway then
+            [
               {
-                name = neighbor.ip;
-                value = {
-                  activate = true;
-                  nextHopSelf = false;
-                  defaultOriginate = shouldOriginate;
-                };
+                ip = environment.networks.default.gatewayIp;
+                asn = cfg.gatewayAsNumber;
               }
-            ) allNeighbors
-          );
-        in
-        {
-          boot.kernel.sysctl = {
-            "net.ipv4.ip_forward" = lib.mkDefault 1;
-            "net.ipv6.conf.all.forwarding" = lib.mkDefault 1;
-          };
+            ]
+          else
+            [ ];
 
-          services.bgp = {
-            inherit (cfg) maximumPaths;
+        # Auto-generate neighbors from hosts with the configured feature
+        shouldAutoDiscover = cfg.autoDiscoverNeighbors || (cfg.neighbors == [ ]);
+        autoNeighbors =
+          if shouldAutoDiscover then
+            let
+              targetHosts = getHostsByFeature cfg.neighborDiscoveryRole;
+              sortedHostnames = lib.sort (a: b: a < b) (lib.attrNames targetHosts);
+              sortedNeighbors = lib.imap0 (index: hostname: {
+                ip = builtins.head targetHosts.${hostname}.ipv4;
+                asn = targetHosts.${hostname}.settings.bgp.localAsn or (cfg.neighborAsNumberBase + index);
+              }) sortedHostnames;
+            in
+            sortedNeighbors
+          else
+            [ ];
 
-            neighbors = allNeighbors;
+        # Convert manual neighbors to BGP module format
+        manualNeighbors = map (neighbor: {
+          ip = neighbor.address;
+          asn = neighbor.asNumber;
+        }) cfg.neighbors;
 
-            addressFamilies.ipv4-unicast = {
-              neighbors = addressFamilyNeighbors;
-            };
+        # Combine gateway, manual, and auto-discovered neighbors
+        allNeighbors = gatewayNeighbor ++ manualNeighbors ++ autoNeighbors;
+
+        # Create address family configuration for all neighbors
+        addressFamilyNeighbors = lib.listToAttrs (
+          map (
+            neighbor:
+            let
+              isGateway = neighbor.ip == environment.networks.default.gatewayIp;
+
+              shouldOriginate =
+                if isGateway then
+                  false
+                else if cfg.neighbors != [ ] then
+                  let
+                    matchingManual = lib.findFirst (n: n.address == neighbor.ip) null cfg.neighbors;
+                  in
+                  if matchingManual != null then matchingManual.defaultOriginate else cfg.defaultOriginateToNeighbors
+                else
+                  cfg.defaultOriginateToNeighbors;
+            in
+            {
+              name = neighbor.ip;
+              value = {
+                activate = true;
+                nextHopSelf = false;
+                defaultOriginate = shouldOriginate;
+              };
+            }
+          ) allNeighbors
+        );
+      in
+      {
+        boot.kernel.sysctl = {
+          "net.ipv4.ip_forward" = lib.mkDefault 1;
+          "net.ipv6.conf.all.forwarding" = lib.mkDefault 1;
+        };
+
+        services.bgp = {
+          inherit (cfg) maximumPaths;
+
+          neighbors = allNeighbors;
+
+          addressFamilies.ipv4-unicast = {
+            neighbors = addressFamilyNeighbors;
           };
         };
-    }
-  );
+      }
+    );
+  };
 }
