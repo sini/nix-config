@@ -8,7 +8,7 @@
       config = den.lib.perHost (
         { host }:
         let
-          user = host.system-owner;
+          user = if host.system-owner != null then host.system-owner else "root";
         in
         {
           nixos =

@@ -21,7 +21,7 @@
           irqbalance.enable = true;
           scx = {
             enable = lib.mkDefault true;
-            package = lib.mkDefault pkgs.scx.full;
+            package = pkgs.scx.full;
             scheduler = lib.mkDefault "scx_bpfland";
             extraArgs = lib.mkDefault [
               "-m"

@@ -23,22 +23,19 @@
             config = {
               programs.dconf.enable = true;
 
-              # Import stylix HM module for ALL users (not just those in the aspect chain)
-              home-manager.sharedModules = [
-                inputs.stylix.homeModules.stylix
-              ];
-
               stylix = {
                 base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
+                image = pkgs.fetchurl {
+                  url = "https://w.wallhaven.cc/full/qr/wallhaven-qrd6xd.png";
+                  hash = "sha256-ZS/ALvkETellw2squBX7bRmx1VURGQ9SAvQIjTuP9FI=";
+                };
 
                 enable = true;
                 enableReleaseChecks = false;
                 autoEnable = true;
 
-                homeManagerIntegration.autoImport = false;
-                homeManagerIntegration.followSystem = false;
-
-                image = pkgs.nixos-artwork.wallpapers.stripes-logo.gnomeFilePath;
+                homeManagerIntegration.autoImport = true;
+                homeManagerIntegration.followSystem = true;
 
                 polarity = "dark";
 
@@ -115,62 +112,7 @@
           };
       };
 
-      home = den.lib.perUser {
-        homeManager =
-          {
-            pkgs,
-            ...
-          }:
-          {
-            # Module imported via home-manager.sharedModules in nixos sub-aspect
-            stylix = {
-              base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
-
-              enable = true;
-              enableReleaseChecks = false;
-              autoEnable = true;
-
-              image = pkgs.fetchurl {
-                url = "https://w.wallhaven.cc/full/qr/wallhaven-qrd6xd.png";
-                hash = "sha256-ZS/ALvkETellw2squBX7bRmx1VURGQ9SAvQIjTuP9FI=";
-              };
-
-              polarity = "dark";
-
-              targets = {
-                qt.enable = false;
-              };
-
-              fonts = {
-                sizes = {
-                  terminal = 12;
-                  applications = 12;
-                  popups = 12;
-                };
-
-                serif = {
-                  name = "Source Serif";
-                  package = pkgs.source-serif;
-                };
-
-                sansSerif = {
-                  name = "Noto Sans";
-                  package = pkgs.noto-fonts;
-                };
-
-                monospace = {
-                  package = pkgs.nerd-fonts.dejavu-sans-mono;
-                  name = "DejaVuSansM Nerd Font Mono";
-                };
-
-                emoji = {
-                  package = pkgs.noto-fonts-color-emoji;
-                  name = "Noto Color Emoji";
-                };
-              };
-            };
-          };
-      };
+      # home sub-aspect removed — followSystem propagates NixOS stylix config to all HM users
     };
   };
 }

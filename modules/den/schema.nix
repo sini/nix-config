@@ -71,6 +71,13 @@
           description = "Primary IPv6 addresses (derived from first networking interface)";
         };
 
+        # Primary user owning this host (for libvirt, etc.)
+        system-owner = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          description = "Primary user name for this host";
+        };
+
         # Host-level access control
         system-access-groups = lib.mkOption {
           type = lib.types.listOf lib.types.str;

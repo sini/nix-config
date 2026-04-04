@@ -8,6 +8,7 @@
   den.hosts.x86_64-linux.blade = {
     channel = "nixpkgs-master";
     environment = "dev";
+    system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
     networking.interfaces.wlp0s20f3.dhcp = "yes";
     users = {

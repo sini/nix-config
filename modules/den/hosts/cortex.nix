@@ -8,6 +8,7 @@
   den.hosts.x86_64-linux.cortex = {
     channel = "nixpkgs-master";
     environment = "dev";
+    system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
     networking.interfaces.enp8s0 = {
       ipv4 = [ "10.9.2.1/16" ];
