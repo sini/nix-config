@@ -1,12 +1,12 @@
 {
   den,
-  inputs,
+
   rootPath,
   ...
 }:
 {
   den.hosts.aarch64-darwin.patch = {
-    instantiate = inputs.nix-darwin.lib.darwinSystem;
+    channel = "nixos-stable";
     environment = "dev";
     system-access-groups = [ "system-access" ];
     public_key = rootPath + "/.secrets/hosts/patch/ssh_host_ed25519_key.pub";

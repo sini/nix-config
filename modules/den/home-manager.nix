@@ -5,16 +5,39 @@
   ...
 }:
 let
-  # Always import HM NixOS module on all hosts (matching old builder behavior)
-  hm-nixos-module = den.lib.perHost {
-    nixos.imports = [ inputs.home-manager-unstable.nixosModules.home-manager ];
+  # Channel → home-manager module mapping
+  hmModules = {
+    nixos-unstable = inputs.home-manager-unstable.nixosModules.home-manager;
+    nixpkgs-master = inputs.home-manager-master.nixosModules.home-manager;
+    nixos-stable = inputs.home-manager.nixosModules.home-manager;
+    nixpkgs-stable-darwin = inputs.home-manager-stable-darwin.nixosModules.home-manager;
   };
+
+  hmDarwinModules = {
+    nixos-unstable = inputs.home-manager-unstable.darwinModules.home-manager;
+    nixpkgs-master = inputs.home-manager-master.darwinModules.home-manager;
+    nixos-stable = inputs.home-manager.darwinModules.home-manager;
+    nixpkgs-stable-darwin = inputs.home-manager-stable-darwin.darwinModules.home-manager;
+  };
+
+  # Import the HM module matching the host's channel
+  hm-module = den.lib.perHost (
+    { host }:
+    let
+      channel = host.channel or "nixos-unstable";
+      mod = if host.class == "darwin" then hmDarwinModules.${channel} else hmModules.${channel};
+    in
+    {
+      nixos.imports = [ mod ];
+      darwin.imports = [ mod ];
+    }
+  );
 in
 {
   den = {
     ctx = {
-      # Import HM module on ALL hosts via host context (not just hosts with HM users)
-      host.includes = [ hm-nixos-module ];
+      # Import HM module on ALL hosts, matching their channel
+      host.includes = [ hm-module ];
 
       # HM config only for hosts/users that actually use HM
       hm-host.includes = [ den.aspects.home-manager._.nixConfig ];

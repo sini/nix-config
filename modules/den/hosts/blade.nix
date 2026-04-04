@@ -1,12 +1,12 @@
 {
   den,
-  inputs,
+
   rootPath,
   ...
 }:
 {
   den.hosts.x86_64-linux.blade = {
-    instantiate = inputs.nixpkgs-master.lib.nixosSystem;
+    channel = "nixpkgs-master";
     environment = "dev";
     system-access-groups = [ "workstation-access" ];
     networking.interfaces.wlp0s20f3.dhcp = "yes";
