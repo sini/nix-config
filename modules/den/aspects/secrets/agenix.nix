@@ -60,11 +60,30 @@
               # Make secrets paths available as a module arg
               _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
 
-              # HM agenix modules are injected by the home-manager-feature aspect when HM is active
-              # (deferred — requires HM module to be loaded first)
+              # HM agenix modules injected via hm-host context (see below)
             };
         }
       );
     };
   };
+
+  # Inject agenix HM modules via hm-host context (only for hosts with HM users)
+  den.ctx.hm-host.includes = [
+    {
+      nixos.home-manager.sharedModules = [
+        inputs.agenix.homeManagerModules.default
+        inputs.agenix-rekey.homeManagerModules.default
+        (
+          { config, lib, ... }:
+          {
+            _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
+            age.rekey = {
+              inherit (inputs.self.secretsConfig) masterIdentities;
+              storageMode = "local";
+            };
+          }
+        )
+      ];
+    }
+  ];
 }
