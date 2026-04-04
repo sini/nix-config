@@ -1,5 +1,10 @@
 # Jellyfin media server with declarative configuration and SSO.
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  inputs,
+  ...
+}:
 {
   den.aspects.jellyfin = {
     includes = lib.attrValues den.aspects.jellyfin._;
@@ -14,7 +19,7 @@
         in
         {
           nixos =
-            { inputs, pkgs, ... }:
+            { pkgs, ... }:
             {
               imports = [
                 inputs.declarative-jellyfin.nixosModules.default
