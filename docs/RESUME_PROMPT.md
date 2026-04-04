@@ -145,38 +145,41 @@ den.aspects.bitstream = {
 
 ## What's Next
 
-### Immediate
+### BLOCKER: Environment context migration
 
-1. **Full `nix build`** of bitstream (dry-run passes, real build not tested yet)
-2. **Deploy bitstream** with `colmena apply --on bitstream` or
-   `deploy .#bitstream`
+The immediate next step is migrating environments to a den-native type. This is
+required to unblock uplink and any host whose aspects call
+`environment.findHostsByFeature`. The current `config.environments` from the old
+flake-parts system creates an infinite recursion cycle when accessed from den's
+enrichHost:
 
-### Short-term
+```
+den.hosts → enrichHost → config.environments.prod → findHostsByFeature
+  → config.hosts → flake.nixosConfigurations → den.hosts (CYCLE)
+```
 
-3. **Migrate more hosts** — cortex (workstation), blade (workstation), axon-\*
-   (k8s nodes), patch (darwin laptop). Each needs its extra-features ported.
-4. **Migrate workstation features** — gaming, media, desktop environments
-   (hyprland, gnome, kde), dev tools, etc.
-5. **Migrate darwin features** — for patch (macOS laptop)
+**Fix:** Create `den.environments` as a den-native option with
+`den.schema.environment`. Move environment data from `modules/environments/`
+into den definitions. Implement `findHostsByFeature` reading from `den.hosts`
+instead of `config.hosts`. This also implements the environment context stage
+from the design spec.
 
-### Medium-term
+### After environment migration
 
-6. **Environment context stage** — implement `den.ctx.environment` as a proper
-   pipeline stage instead of the mkForce override in resolve-environment.nix
-7. **Cluster context stage** — implement `den.ctx.cluster → k8s-service` for
-   kubernetes/nixidy configuration
-8. **Upstream contributions:**
-   - `take.atLeast` on `ctx.user` (allow `{ env, host, user }` signatures)
-   - Host enrichment hook (replace mkForce override)
-   - homeLinux/homeDarwin forwarding classes as built-in batteries
-   - Two-phase collection mechanism (if forwarding classes prove insufficient)
+1. **Enable remaining hosts** — uplink (prod server), cortex (workstation),
+   blade (laptop), patch (darwin)
+2. **Implement channels** — per-host nixpkgs channel selection (nixpkgs-master,
+   nixos-stable, etc.) via den host instantiation or schema
+3. **Implement excluded-features** — den doesn't have this yet; needs design
+4. **Cluster context stage** — `den.ctx.cluster → k8s-service` for nixidy
+5. **Full build + deploy** of bitstream and axon hosts
+6. **Upstream contributions** to den
 
 ### Cleanup
 
-9. **Remove old feature system** once all hosts are migrated
-10. **Remove `_host.nix` disabled files** for migrated hosts
-11. **Consolidate duplicate code** — users/sudo/network-boot all call
-    resolveUsers independently; could be computed once in the context stage
+7. **Remove old feature system** once all hosts are migrated
+8. **Remove `_host.nix` disabled files** for migrated hosts
+9. **Consolidate resolveUsers** calls (users/sudo/network-boot all duplicate)
 
 ## Reference Documents
 
