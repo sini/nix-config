@@ -1,12 +1,9 @@
 {
   lib,
-  self,
-  config,
   ...
 }:
 let
   inherit (lib) mkOption types;
-  flakeConfig = config;
 
   # ============================================================================
   # User Type Builders
@@ -105,7 +102,11 @@ let
                 description = "Whether to inherit host features (null inherits from users.<name>.system)";
               };
 
-              settings = self.lib.features.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
+              settings = mkOption {
+                type = types.attrsOf types.anything;
+                default = { };
+                description = "Per-user feature settings (legacy stub)";
+              };
             };
           }
         )
@@ -146,7 +147,11 @@ let
               description = "Whether to inherit host features (null to inherit)";
             };
 
-            settings = self.lib.features.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings override for home modules";
+            settings = mkOption {
+              type = types.attrsOf types.anything;
+              default = { };
+              description = "Per-user feature settings (legacy stub)";
+            };
           };
         })
       );

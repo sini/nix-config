@@ -83,15 +83,13 @@
               peerHostname:
               let
                 peerHost = thunderboltPeers.${peerHostname};
-                peerIfs = peerHost.networking.interfaces or { };
-                peerFirstIf = if peerIfs != { } then peerIfs.${builtins.head (builtins.attrNames peerIfs)} else { };
-                peerMgmtIp = builtins.head (lib.splitString "/" (builtins.head peerFirstIf.ipv4));
+                peerMgmtIp = builtins.head peerHost.ipv4;
                 peerLoopbackIp = peerMgmtIp;
                 gateway = getGatewayForPeer peerHostname peerLoopbackIp;
               in
               {
                 asn = peerHost.settings.bgp.localAsn;
-                lanip = peerMgmtIp;
+                lanip = builtins.head peerHost.ipv4;
                 ip = peerLoopbackIp;
                 inherit gateway;
               }

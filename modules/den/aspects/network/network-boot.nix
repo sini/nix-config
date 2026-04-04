@@ -95,7 +95,7 @@ in
                   ssh = {
                     enable = true;
                     port = 22;
-                    authorizedKeys = getSshKeysForGroup host.users.enabled "wheel";
+                    authorizedKeys = getSshKeysForGroup host.resolvedUsers.enabled "wheel";
                     hostKeys = [
                       config.age.secrets.initrd_host_ed25519_key.path
                     ];

@@ -22,7 +22,7 @@
                   value = {
                     extraGroups = [ "wireshark" ];
                   };
-                }) host.users.enabledNames
+                }) host.resolvedUsers.enabledNames
               );
             };
         }

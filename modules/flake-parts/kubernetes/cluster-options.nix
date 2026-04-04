@@ -1,14 +1,17 @@
 {
   lib,
   self,
-  config,
+  den,
   rootPath,
   ...
 }:
 let
   inherit (lib) mkOption types;
   inherit (self.lib.kubernetes-services) kubernetesConfigType;
-  flakeConfig = config;
+  # Use den environments for cluster resolution
+  denEnvironments = den.environments or { };
+
+  # ipv4/ipv6 are now computed by den.schema.host — no enrichment needed
 
   networkType = types.submodule {
     options = {
@@ -145,8 +148,9 @@ let
 
       config =
         let
-          environment = flakeConfig.environments.${config.environment};
-          allHosts = flakeConfig.hosts;
+          environment = denEnvironments.${config.environment};
+          allDenHosts = lib.concatMapAttrs (_sys: hosts: hosts) (den.hosts or { });
+          allHosts = allDenHosts;
         in
         {
           resolvedEnvironment = environment;
@@ -189,7 +193,7 @@ let
                       config.kubernetes.sso.issuerPattern
                     else
                       let
-                        credEnv = flakeConfig.environments.${credentialsEnv} or null;
+                        credEnv = denEnvironments.${credentialsEnv} or null;
                         domain = if credEnv != null then credEnv.domain else environment.domain;
                       in
                       "https://idm.${domain}/oauth2/openid/{clientID}";

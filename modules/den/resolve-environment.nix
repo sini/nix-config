@@ -1,5 +1,6 @@
 # Enrich den host objects before aspects see them.
-# Resolves environment, ipv4/ipv6, cluster, and users (ACL-driven).
+# Resolves environment, cluster, and users (ACL-driven).
+# Note: ipv4/ipv6 are now computed by den.schema.host.
 {
   den,
   self,
@@ -11,32 +12,15 @@ let
   inherit (den.lib.parametric) fixedTo;
   inherit (self.lib.users) resolveUsers;
 
-  # Read from den-native environments (no cycle with config.hosts)
   denEnvironments = den.environments or { };
   allClusters = config.clusters or { };
   canonicalUsers = config.users or { };
   groupDefs = config.groups or { };
 
-  # Extract primary IPs from networking interfaces (matching old host type)
-  extractIps =
-    host:
-    let
-      interfaces = host.networking.interfaces or { };
-      ifNames = builtins.attrNames interfaces;
-      firstIf = if ifNames != [ ] then interfaces.${builtins.head ifNames} else { };
-      stripCidr = addr: builtins.head (lib.splitString "/" addr);
-    in
-    {
-      ipv4 = map stripCidr (firstIf.ipv4 or [ ]);
-      ipv6 = firstIf.ipv6 or [ ];
-    };
-
-  # Find the cluster this host belongs to (if any)
   findCluster =
     host:
     lib.findFirst (c: (c.resolvedHosts or { }) ? ${host.name}) null (builtins.attrValues allClusters);
 
-  # Resolve users for a host via ACL
   resolveHostUsers =
     host: env:
     let
@@ -60,11 +44,10 @@ let
       env = denEnvironments.${host.environment};
     in
     host
-    // (extractIps host)
     // {
       environment = env;
       cluster = findCluster host;
-      users = (host.users or { }) // (resolveHostUsers host env);
+      resolvedUsers = resolveHostUsers host env;
     };
 in
 {

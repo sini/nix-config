@@ -7,7 +7,13 @@
 }:
 let
   inherit (lib) mkOption types;
-  inherit (self.lib.features) mkDeferredModuleOpt;
+  # Legacy stub — mkDeferredModuleOpt was from old feature system
+  mkDeferredModuleOpt =
+    _desc:
+    lib.mkOption {
+      type = types.deferredModule;
+      default = { };
+    };
   inherit (self.lib.users) mkHostUsersOpt;
   flakeConfig = config; # Capture flake-level config for use in submodules
 in
@@ -200,7 +206,11 @@ in
               description = "List of features to exclude for the host (prevents the feature and its requires from being added)";
             };
 
-            settings = self.lib.features.mkFeatureSettingsOpt flakeConfig.features "Per-host feature settings (overrides environment defaults)";
+            settings = mkOption {
+              type = types.attrsOf types.anything;
+              default = { };
+              description = "Per-host feature settings (legacy stub)";
+            };
 
             secretPath = mkOption {
               type = types.path;
@@ -329,40 +339,13 @@ in
             };
           };
 
-          config =
-            let
-              # Use centralized feature resolution from lib.modules
-              computedFeatures = self.lib.features.resolver.computeActiveFeatures {
-                featuresConfig = flakeConfig.features;
-                hostFeatures = config.extra-features or [ ];
-                hostExclusions = config.excluded-features or [ ];
-                label = name;
-              };
-
-              # Derive system access groups from enabled features
-              hasWorkstation = lib.elem "workstation" computedFeatures;
-              hasDev = lib.elem "dev" computedFeatures;
-              hasServer = lib.elem "server" computedFeatures;
-            in
-            {
-              features = computedFeatures;
-
-              hasFeature = featureName: lib.elem featureName computedFeatures;
-
-              isDarwin = lib.hasSuffix "darwin" config.system;
-
-              system-access-groups =
-                let
-                  defaultGroups =
-                    if hasWorkstation || hasDev then
-                      [ "workstation-access" ]
-                    else if hasServer then
-                      [ "server-access" ]
-                    else
-                      [ "system-access" ];
-                in
-                lib.mkDefault defaultGroups;
-            };
+          config = {
+            # Legacy stubs — feature resolution moved to den aspects
+            features = [ ];
+            hasFeature = _: false;
+            isDarwin = lib.hasSuffix "darwin" config.system;
+            system-access-groups = lib.mkDefault [ "system-access" ];
+          };
         }
       );
     in

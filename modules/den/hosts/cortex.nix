@@ -13,6 +13,11 @@
       ipv4 = [ "10.9.2.1/16" ];
       ipv6 = [ "fd64:0:1::5/64" ];
     };
+    users = {
+      sini.classes = [ "homeManager" ];
+      shuo.classes = [ "homeManager" ];
+      will.classes = [ "homeManager" ];
+    };
     facts = ../../hosts/cortex/facter.json;
     public_key = rootPath + "/.secrets/hosts/cortex/ssh_host_ed25519_key.pub";
 
@@ -59,9 +64,24 @@
       den.aspects.media-data-share
     ];
 
-    # TODO: per-user feature overrides not in den yet
-    # sini: spotify-player, waybar, swaync, hypridle, hyprland-split-monitors
-    # shuo: firefox, steam, spicetify
+    # Per-user aspects via mutual-provider
+    provides.sini = {
+      includes = [
+        den.aspects.spotify-player
+        den.aspects.waybar
+        den.aspects.swaync
+        den.aspects.hypridle
+        den.aspects.hyprland-split-monitors
+      ];
+    };
+
+    provides.shuo = {
+      includes = [
+        den.aspects.firefox
+        den.aspects.steam
+        den.aspects.spicetify
+      ];
+    };
 
     # Host-specific NixOS config (from old systemConfiguration)
     nixos = {

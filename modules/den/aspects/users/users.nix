@@ -1,5 +1,5 @@
 # User provisioning for den hosts.
-# Reads resolved users from host.users.enabled (computed by enrichHost)
+# Reads resolved users from host.resolvedUsers.enabled (computed by enrichHost)
 # and generates NixOS user accounts.
 {
   den,
@@ -60,7 +60,7 @@ in
   den.aspects.users = den.lib.perHost (
     { host }:
     let
-      userConfigs = lib.mapAttrsToList buildUnixAccountConfig host.users.enabled;
+      userConfigs = lib.mapAttrsToList buildUnixAccountConfig host.resolvedUsers.enabled;
     in
     {
       nixos = {

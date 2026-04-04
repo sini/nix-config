@@ -18,7 +18,7 @@
             wheelNeedsPassword = false;
             extraRules = [
               {
-                users = host.users.enabledNames;
+                users = host.resolvedUsers.enabledNames;
                 noPass = true;
                 keepEnv = true;
               }

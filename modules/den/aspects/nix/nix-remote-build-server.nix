@@ -48,7 +48,7 @@ in
                     lib.map (key: ''command="nix-store --serve --write",restrict '' + key)
                       (
                         [ (builtins.readFile (rootPath + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ]
-                        ++ getSshKeysForGroup host.users.enabled "wheel"
+                        ++ getSshKeysForGroup host.resolvedUsers.enabled "wheel"
                       );
                 };
               };

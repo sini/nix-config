@@ -10,6 +10,11 @@
     environment = "dev";
     system-access-groups = [ "workstation-access" ];
     networking.interfaces.wlp0s20f3.dhcp = "yes";
+    users = {
+      sini.classes = [ "homeManager" ];
+      shuo.classes = [ "homeManager" ];
+      will.classes = [ "homeManager" ];
+    };
     facts = ../../hosts/blade/facter.json;
     public_key = rootPath + "/.secrets/hosts/blade/ssh_host_ed25519_key.pub";
 
@@ -49,8 +54,23 @@
       den.aspects.discord
     ];
 
-    # TODO: Per-user feature overrides not in den yet
-    # users.sini.extra-features = [ "spotify-player" "waybar" "swaync" "hypridle" "hyprland-split-monitors" ]
-    # users.shuo.extra-features = [ "firefox" "steam" "spicetify" ]
+    # Per-user aspects via mutual-provider
+    provides.sini = {
+      includes = [
+        den.aspects.spotify-player
+        den.aspects.waybar
+        den.aspects.swaync
+        den.aspects.hypridle
+        den.aspects.hyprland-split-monitors
+      ];
+    };
+
+    provides.shuo = {
+      includes = [
+        den.aspects.firefox
+        den.aspects.steam
+        den.aspects.spicetify
+      ];
+    };
   };
 }

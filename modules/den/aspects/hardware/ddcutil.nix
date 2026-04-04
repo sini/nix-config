@@ -37,7 +37,7 @@
               value = {
                 extraGroups = [ "i2c" ];
               };
-            }) host.users.enabledNames
+            }) host.resolvedUsers.enabledNames
           );
         };
     }

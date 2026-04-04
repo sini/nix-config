@@ -43,6 +43,34 @@
           description = "Nixpkgs channel — determines nixpkgs, home-manager, and nix-darwin versions";
         };
 
+        # Computed IPs from networking interfaces (matching old host type)
+        ipv4 = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          readOnly = true;
+          default =
+            let
+              interfaces = config.networking.interfaces or { };
+              ifNames = builtins.attrNames interfaces;
+              firstIf = if ifNames != [ ] then interfaces.${builtins.head ifNames} else { };
+              stripCidr = addr: builtins.head (lib.splitString "/" addr);
+            in
+            map stripCidr (firstIf.ipv4 or [ ]);
+          description = "Primary IPv4 addresses (derived from first networking interface, CIDR stripped)";
+        };
+
+        ipv6 = lib.mkOption {
+          type = lib.types.listOf lib.types.str;
+          readOnly = true;
+          default =
+            let
+              interfaces = config.networking.interfaces or { };
+              ifNames = builtins.attrNames interfaces;
+              firstIf = if ifNames != [ ] then interfaces.${builtins.head ifNames} else { };
+            in
+            firstIf.ipv6 or [ ];
+          description = "Primary IPv6 addresses (derived from first networking interface)";
+        };
+
         # Host-level access control
         system-access-groups = lib.mkOption {
           type = lib.types.listOf lib.types.str;

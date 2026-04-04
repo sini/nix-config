@@ -1,13 +1,11 @@
 {
   lib,
   self,
-  config,
   ...
 }:
 let
   inherit (lib) mkOption types;
   inherit (self.lib.users) identitySubmoduleType;
-  flakeConfig = config;
 in
 {
   options.users = mkOption {
@@ -80,7 +78,11 @@ in
                     '';
                   };
 
-                  settings = self.lib.features.mkFeatureUserSettingsOpt flakeConfig.features "Per-user feature settings for home modules";
+                  settings = lib.mkOption {
+                    type = lib.types.attrsOf lib.types.anything;
+                    default = { };
+                    description = "Per-user feature settings (legacy stub)";
+                  };
                 };
               };
               default = { };

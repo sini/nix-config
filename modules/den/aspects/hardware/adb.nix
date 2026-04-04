@@ -17,7 +17,7 @@
               value = {
                 extraGroups = [ "adbusers" ];
               };
-            }) host.users.enabledNames
+            }) host.resolvedUsers.enabledNames
           );
         };
     }

@@ -15,7 +15,7 @@
           nixos =
             { pkgs, ... }:
             let
-              enabledUserNames = host.users.enabledNames;
+              enabledUserNames = host.resolvedUsers.enabledNames;
             in
             {
               imports = [ inputs.razerdaemon.nixosModules.default ];
