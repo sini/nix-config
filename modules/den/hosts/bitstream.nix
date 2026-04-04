@@ -1,10 +1,12 @@
 {
   den,
+  inputs,
   rootPath,
   ...
 }:
 {
   den.hosts.x86_64-linux.bitstream = {
+    instantiate = inputs.nixpkgs-unstable.lib.nixosSystem;
     environment = "dev";
     system-access-groups = [ "server-access" ];
     networking = {

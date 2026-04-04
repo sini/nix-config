@@ -1,23 +1,26 @@
 # MicroVM: lightweight virtual machine host using microvm.nix.
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  inputs,
+  ...
+}:
 {
   den.aspects.microvm = {
     includes = lib.attrValues den.aspects.microvm._;
 
     _ = {
       config = den.lib.perHost {
-        nixos =
-          { inputs, ... }:
-          {
-            imports = [ inputs.microvm.nixosModules.host ];
+        nixos = {
+          imports = [ inputs.microvm.nixosModules.host ];
 
-            microvm.host.enable = true;
+          microvm.host.enable = true;
 
-            users.users = {
-              # allow microvm access to zvol
-              microvm.extraGroups = [ "disk" ];
-            };
+          users.users = {
+            # allow microvm access to zvol
+            microvm.extraGroups = [ "disk" ];
           };
+        };
       };
 
       firewall = den.lib.perHost {

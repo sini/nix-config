@@ -46,7 +46,14 @@
           peerStaticRoutes = lib.concatMapStringsSep "\n" (
             peerHost:
             let
-              mgmtIp = builtins.head peerHost.ipv4;
+              # Extract IP from raw den host (not enriched, so no peerHost.ipv4)
+              peerInterfaces = peerHost.networking.interfaces or { };
+              peerFirstIf =
+                if peerInterfaces != { } then
+                  peerInterfaces.${builtins.head (builtins.attrNames peerInterfaces)}
+                else
+                  { };
+              mgmtIp = builtins.head (lib.splitString "/" (builtins.head peerFirstIf.ipv4));
               loopbackIp = lib.head (lib.splitString "/" peerHost.settings.thunderbolt-mesh-of.loopback.ipv4);
             in
             "ip route ${mgmtIp}/32 ${loopbackIp}"

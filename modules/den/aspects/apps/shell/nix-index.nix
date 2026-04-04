@@ -1,13 +1,11 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.nix-index = {
     _ = {
       system = den.lib.perHost {
-        nixos =
-          { inputs, ... }:
-          {
-            home-manager.sharedModules = [ inputs.nix-index-database.homeModules.default ];
-          };
+        nixos = {
+          home-manager.sharedModules = [ inputs.nix-index-database.homeModules.default ];
+        };
       };
 
       home = den.lib.perUser {

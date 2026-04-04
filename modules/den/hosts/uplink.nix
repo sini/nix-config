@@ -1,10 +1,12 @@
 {
   den,
+  inputs,
   rootPath,
   ...
 }:
 {
   den.hosts.x86_64-linux.uplink = {
+    instantiate = inputs.nixpkgs-unstable.lib.nixosSystem;
     environment = "prod";
     system-access-groups = [ "server-access" ];
     networking.interfaces.enp4s0 = {

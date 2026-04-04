@@ -1,4 +1,9 @@
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  inputs,
+  ...
+}:
 {
   den.aspects.stylix = {
     includes = lib.attrValues den.aspects.stylix._;
@@ -7,7 +12,6 @@
       nixos = den.lib.perHost {
         nixos =
           {
-            inputs,
             pkgs,
             ...
           }:
@@ -109,7 +113,6 @@
       home = den.lib.perUser {
         homeManager =
           {
-            inputs,
             pkgs,
             ...
           }:

@@ -1,6 +1,12 @@
-{ den, rootPath, ... }:
+{
+  den,
+  inputs,
+  rootPath,
+  ...
+}:
 {
   den.hosts.x86_64-linux.axon-03 = {
+    instantiate = inputs.nixpkgs-unstable.lib.nixosSystem;
     environment = "prod";
     system-access-groups = [ "server-access" ];
     networking.interfaces.enp2s0 = {

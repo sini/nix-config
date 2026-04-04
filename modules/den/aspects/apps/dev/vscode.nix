@@ -1,15 +1,13 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.vscode = {
     _ = {
       system = den.lib.perHost {
-        nixos =
-          { inputs, ... }:
-          {
-            nixpkgs.overlays = [
-              inputs.nix-vscode-extensions.overlays.default
-            ];
-          };
+        nixos = {
+          nixpkgs.overlays = [
+            inputs.nix-vscode-extensions.overlays.default
+          ];
+        };
       };
 
       home = den.lib.perUser {
