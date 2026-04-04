@@ -1,8 +1,7 @@
-# Colmena deployment configuration — reads from den hosts
 {
   self,
   inputs,
-  den,
+  config,
   lib,
   ...
 }:
@@ -16,45 +15,72 @@
     };
   };
 
+  text.readme.parts.colmena =
+    # markdown
+    ''
+      ## Remote deployment via Colmena
+
+      This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
+      Colmena supports both local and remote deployment, and hosts can be targeted by roles as well as their name.
+      Remote connection properties are defined in the `hosts.<hostname>.deployment` attribute set, and implementation
+      can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
+      [./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
+
+      > [!NOTE]
+      > I've made some pretty ugly hacks to make Colmena work with this repository to support multiple nixpkg versions
+      > for different hosts, and to support both stable and unstable packages.
+
+      ```bash
+      # Deploy to all hosts
+      colmena apply
+
+      # Deploy to a specific host
+      colmena apply --on <hostname>
+
+      # Deploy to all hosts with the "server" tag
+      colmena apply --on @server
+
+      # Apply changes to the current host (useful for local development)
+      colmena apply-local --sudo
+      ```
+
+    '';
+
   flake =
     let
-      # Collect all den hosts across systems
-      allDenHosts = lib.concatMapAttrs (_sys: hosts: hosts) (den.hosts or { });
+      allHosts = config.hosts;
+      colmenaLinuxHosts = lib.filterAttrs (_: h: lib.hasSuffix "-linux" h.system) allHosts;
+      colmenaDarwinHosts = lib.filterAttrs (_: h: h.isDarwin) allHosts;
 
-      linuxHosts = lib.filterAttrs (_: h: h.class or "" == "nixos") allDenHosts;
-      darwinHosts = lib.filterAttrs (_: h: h.class or "" == "darwin") allDenHosts;
+      # Group hosts by channel
+      linuxHostsByChannel = lib.groupBy (name: colmenaLinuxHosts.${name}.channel) (
+        lib.attrNames colmenaLinuxHosts
+      );
+      darwinHostsByChannel = lib.groupBy (name: colmenaDarwinHosts.${name}.channel) (
+        lib.attrNames colmenaDarwinHosts
+      );
 
       currentSystem = builtins.currentSystem or "x86_64-linux";
 
-      # Extract primary IP from host networking (same as enrichHost)
-      getHostIp =
-        host:
-        let
-          interfaces = host.networking.interfaces or { };
-          ifNames = builtins.attrNames interfaces;
-          firstIf = if ifNames != [ ] then interfaces.${builtins.head ifNames} else { };
-          firstIpCidr = builtins.head (firstIf.ipv4 or [ ]);
-        in
-        if firstIf == { } || firstIf.ipv4 or [ ] == [ ] then
-          "${host.name}.ts.json64.dev"
-        else
-          builtins.head (lib.splitString "/" firstIpCidr);
-
       mkColmenaLinuxHive =
-        hosts: nixpkgs:
+        {
+          hosts,
+          nixpkgs,
+        }:
         lib.mapAttrs (
-          hostname: host:
+          hostname: hostOptions:
           let
             nixosConfig = self.nixosConfigurations.${hostname};
           in
           {
             imports = nixosConfig._module.args.modules;
             deployment = {
-              targetHost = getHostIp host;
-              tags = [ (host.environment or "unknown") ];
+              targetHost =
+                if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
+              tags = [ hostOptions.environment ] ++ hostOptions.features;
               allowLocalDeployment = true;
-              buildOnTarget = host.system != currentSystem;
-              targetUser = host.remote-deployment-user or "root";
+              buildOnTarget = hostOptions.system != currentSystem;
+              targetUser = hostOptions.remote-deployment-user;
             };
           }
         ) hosts
@@ -68,21 +94,26 @@
         };
 
       mkColmenaDarwinHive =
-        hosts: nixpkgs: nix-darwin:
+        {
+          hosts,
+          nixpkgs,
+          nix-darwin,
+        }:
         lib.mapAttrs (
-          hostname: host:
+          hostname: hostOptions:
           let
             darwinConfig = self.darwinConfigurations.${hostname};
           in
           {
             imports = darwinConfig._module.args.modules;
             deployment = {
-              targetHost = getHostIp host;
-              tags = [ (host.environment or "unknown") ];
+              targetHost =
+                if hostOptions.ipv4 == [ ] then "${hostname}.ts.json64.dev" else builtins.head hostOptions.ipv4;
+              tags = [ hostOptions.environment ] ++ hostOptions.features;
               allowLocalDeployment = true;
               systemType = "darwin";
-              buildOnTarget = host.system != currentSystem;
-              targetUser = host.remote-deployment-user or "root";
+              buildOnTarget = hostOptions.system != currentSystem;
+              targetUser = hostOptions.remote-deployment-user;
             };
           }
         ) hosts
@@ -96,44 +127,34 @@
           };
         };
 
-      # Group hosts by channel for correct nixpkgs in colmena meta
-      channelNixpkgs = {
-        "nixos-unstable" = inputs.nixpkgs-unstable;
-        "nixpkgs-master" = inputs.nixpkgs-master;
-        "nixos-stable" = inputs.nixpkgs;
-        "nixpkgs-stable-darwin" = inputs.nixpkgs-stable-darwin;
-      };
-
-      linuxHostsByChannel = lib.groupBy (name: linuxHosts.${name}.channel or "nixos-unstable") (
-        builtins.attrNames linuxHosts
-      );
-
+      # Build a hive for each channel that has linux hosts
       linuxHivesPerChannel = lib.mapAttrs (
         channel: hostNames:
         let
-          hosts = lib.getAttrs hostNames linuxHosts;
-          nixpkgs = channelNixpkgs.${channel} or inputs.nixpkgs-unstable;
+          hosts = lib.getAttrs hostNames colmenaLinuxHosts;
+          nixpkgs = config.channels.${channel}.nixpkgs;
+          hiveConfig = mkColmenaLinuxHive { inherit hosts nixpkgs; };
         in
-        inputs.colmena.lib.makeHive (mkColmenaLinuxHive hosts nixpkgs)
+        inputs.colmena.lib.makeHive hiveConfig
       ) linuxHostsByChannel;
 
-      darwinHostsByChannel = lib.groupBy (name: darwinHosts.${name}.channel or "nixos-stable") (
-        builtins.attrNames darwinHosts
-      );
-
+      # Build a hive for each channel that has darwin hosts
       darwinHivesPerChannel = lib.mapAttrs (
         channel: hostNames:
         let
-          hosts = lib.getAttrs hostNames darwinHosts;
-          nixpkgs = channelNixpkgs.${channel} or inputs.nixpkgs;
-          inherit (inputs) nix-darwin;
+          hosts = lib.getAttrs hostNames colmenaDarwinHosts;
+          inherit (config.channels.${channel}) nixpkgs nix-darwin;
+          hiveConfig = mkColmenaDarwinHive { inherit hosts nixpkgs nix-darwin; };
         in
-        inputs.colmena.lib.makeHive (mkColmenaDarwinHive hosts nixpkgs nix-darwin)
+        inputs.colmena.lib.makeHive hiveConfig
       ) darwinHostsByChannel;
 
       hiveList = (lib.attrValues linuxHivesPerChannel) ++ (lib.attrValues darwinHivesPerChannel);
+
+      # Merge attribute sets from all hives
       mergeAttr = attr: lib.foldl' (acc: hive: acc // (hive.${attr} or { })) { } hiveList;
 
+      # Final merged Hive
       colmenaHive =
         let
           mergedNodes = mergeAttr "nodes";
@@ -142,6 +163,7 @@
             names: lib.filterAttrs (name: _: builtins.elem name names) mergedDeploymentConfig;
           evalSelected = names: lib.filterAttrs (name: _: builtins.elem name names) toplevel;
           evalSelectedDrvPaths = names: lib.mapAttrs (_: v: v.drvPath) (evalSelected names);
+
           introspect =
             f:
             f {
@@ -171,12 +193,15 @@
         };
     in
     {
-      inherit colmenaHive;
+      inherit
+        colmenaHive
+        ;
     };
 
   perSystem =
     { inputs', pkgs, ... }:
     let
+      # Override the flake input's colmena to use Lix instead of stock Nix
       colmena = inputs'.colmena.packages.colmena.override {
         nix-eval-jobs = pkgs.lixPackageSets.stable.nix-eval-jobs;
       };

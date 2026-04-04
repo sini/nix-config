@@ -1,38 +1,18 @@
 {
   lib,
   config,
-  options,
+  den,
   ...
 }:
-let
-  inherit (lib) mkOption types;
-in
 {
-  # Declare a flake output so flake-parts can merge/typecheck it
-  options.flake.flakeOptions = mkOption {
-    type = types.raw; # option declarations are not "normal values"; keep it raw
-    readOnly = true;
-    description = "Option declarations for this flake-parts evaluation (for docs generation).";
-  };
-
-  # Populate it from the module argument, NOT from self
-  config.flake.flakeOptions = {
-    # These are now top-level options, not flake sub-options
-    inherit (options)
-      hosts
-      environments
-      users
-      groups
-      kubernetes
-      clusters
-      ;
-  };
-
-  # Explicitly re-expose internal resources as flake outputs
+  # Re-expose den and remaining legacy resources as flake outputs
   config.flake = {
+    # Den resources
+    den-hosts = lib.concatMapAttrs (_sys: hosts: hosts) (den.hosts or { });
+    den-environments = den.environments or { };
+
+    # Legacy resources still in use (users, groups, clusters for ACL + k8s)
     inherit (config)
-      hosts
-      environments
       users
       groups
       clusters
