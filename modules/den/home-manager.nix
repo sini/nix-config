@@ -1,43 +1,28 @@
 {
   den,
   lib,
-  inputs,
   ...
 }:
-let
-  # Channel → home-manager module mapping
-  hmModules = {
-    nixos-unstable = inputs.home-manager-unstable.nixosModules.home-manager;
-    nixpkgs-master = inputs.home-manager-master.nixosModules.home-manager;
-    nixos-stable = inputs.home-manager.nixosModules.home-manager;
-    nixpkgs-stable-darwin = inputs.home-manager-stable-darwin.nixosModules.home-manager;
-  };
-
-  hmDarwinModules = {
-    nixos-unstable = inputs.home-manager-unstable.darwinModules.home-manager;
-    nixpkgs-master = inputs.home-manager-master.darwinModules.home-manager;
-    nixos-stable = inputs.home-manager.darwinModules.home-manager;
-    nixpkgs-stable-darwin = inputs.home-manager-stable-darwin.darwinModules.home-manager;
-  };
-
-  # Import the HM module matching the host's channel
-  hm-module = den.lib.perHost (
-    { host }:
-    let
-      channel = host.channel or "nixos-unstable";
-      mod = if host.class == "darwin" then hmDarwinModules.${channel} else hmModules.${channel};
-    in
-    {
-      nixos.imports = [ mod ];
-      darwin.imports = [ mod ];
-    }
-  );
-in
 {
   den = {
     ctx = {
-      # Import HM module on ALL hosts, matching their channel
-      host.includes = [ hm-module ];
+      # TODO: Per-channel home-manager module import
+      # =============================================
+      # Den's built-in home-manager provider (den.provides.home-manager) imports
+      # its own HM module via inputs.home-manager. Since den recently moved away
+      # from being flake-based, it may not carry a home-manager input at all.
+      #
+      # Our repo has multiple HM versions (home-manager, home-manager-unstable,
+      # home-manager-master, home-manager-stable-darwin) paired with channels.
+      # We previously imported the channel-matched HM module here, but this
+      # conflicts with den's built-in import (double module declaration).
+      #
+      # Options to fix:
+      # 1. Override den's getModule in the home-manager provider to use our inputs
+      # 2. Make den's HM provider channel-aware
+      # 3. Add inputs.home-manager.follows to den so it uses our default
+      #
+      # For now, den's built-in handles the import. Config below still applies.
 
       # HM config only for hosts/users that actually use HM
       hm-host.includes = [ den.aspects.home-manager._.nixConfig ];
