@@ -44,7 +44,8 @@ let
       intoPath,
     }:
     den.lib.perUser (
-      { user }:
+      # deadnix: skip
+      { host, user }:
       # deadnix: skip
       { class, aspect-chain }:
       den._.forward {

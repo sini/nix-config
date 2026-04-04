@@ -1,4 +1,15 @@
 { den, ... }:
+let
+  # Inject host.environment as a NixOS/Darwin module arg
+  # so aspects can destructure { environment, ... }: in their modules
+  environmentArg = den.lib.perHost (
+    { host }:
+    {
+      nixos._module.args.environment = host.environment;
+      darwin._module.args.environment = host.environment;
+    }
+  );
+in
 {
   den = {
     default.includes = [
@@ -13,6 +24,7 @@
     # Global host-level includes (apply to all den hosts)
     ctx.host.includes = [
       den._.hostname
+      environmentArg
     ];
 
     # Global user-level includes (apply to all den users)

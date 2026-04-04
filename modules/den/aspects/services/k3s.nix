@@ -506,23 +506,27 @@
         { host }:
         let
           inherit (host) environment;
-          cluster = host.cluster or null;
-          kubernetesNodes = environment.findHostsByFeature "k3s";
-          shouldInit = (builtins.length (lib.attrValues kubernetesNodes)) == 1;
+          inherit (host) cluster;
         in
-        lib.mkIf (cluster != null) {
+        lib.optionalAttrs (cluster != null) {
           secrets = {
             kubernetes-cluster-token = {
               rekeyFile = cluster.secretPath + "/cluster-token.age";
               generator.script = "passphrase";
             };
           }
-          // lib.optionalAttrs shouldInit {
-            kubernetes-sops-age-key = {
-              rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
-              path = "/var/lib/sops/age/key.txt";
-            };
-          };
+          // (
+            let
+              kubernetesNodes = environment.findHostsByFeature "k3s";
+              shouldInit = (builtins.length (lib.attrValues kubernetesNodes)) == 1;
+            in
+            lib.optionalAttrs shouldInit {
+              kubernetes-sops-age-key = {
+                rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
+                path = "/var/lib/sops/age/key.txt";
+              };
+            }
+          );
         }
       );
 

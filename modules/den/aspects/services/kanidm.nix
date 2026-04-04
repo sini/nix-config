@@ -8,10 +8,14 @@
 #   - Auto-generated OIDC secrets per non-public OAuth2 system
 {
   den,
+  config,
   lib,
   rootPath,
   ...
 }:
+let
+  flakeGroups = config.groups or { };
+in
 {
   den.aspects.kanidm = {
     includes = lib.attrValues den.aspects.kanidm._;
@@ -106,14 +110,15 @@
           nixos =
             {
               lib,
-              config,
-              users,
               pkgs,
               ...
             }:
             let
               # All groups are provisioned to Kanidm
-              allGroups = config.groups;
+              allGroups = flakeGroups;
+
+              # Resolved users from enrichHost (includes identity-only users)
+              users = host.resolvedUsers.all;
 
               # Users with any oauth-grant or user-role groups get provisioned as persons
               kanidmUsers = lib.filterAttrs (
