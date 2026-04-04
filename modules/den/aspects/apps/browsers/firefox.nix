@@ -1,11 +1,10 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.firefox = {
     _ = {
       config = den.lib.perUser {
         homeManager =
           {
-            inputs,
             pkgs,
             ...
           }:

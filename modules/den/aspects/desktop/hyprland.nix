@@ -1,4 +1,9 @@
-{ den, lib, ... }:
+{
+  den,
+  inputs,
+  lib,
+  ...
+}:
 {
   # Note: hyprland requires xdg-portal and uwsm aspects to be included by the host
   den.aspects.hyprland = {
@@ -8,7 +13,6 @@
       nixos = den.lib.perHost {
         nixos =
           {
-            inputs,
             pkgs,
             lib,
             ...
@@ -72,7 +76,6 @@
         homeManager =
           {
             config,
-            inputs,
             lib,
             pkgs,
             ...

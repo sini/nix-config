@@ -1,5 +1,10 @@
 # K3s containerd configuration with nix-snapshotter and Cilium CNI.
-{ den, lib, ... }:
+{
+  den,
+  inputs,
+  lib,
+  ...
+}:
 {
   den.aspects.k3s-containerd = {
     includes = lib.attrValues den.aspects.k3s-containerd._;
@@ -8,7 +13,6 @@
       config = den.lib.perHost {
         nixos =
           {
-            inputs,
             lib,
             pkgs,
             ...

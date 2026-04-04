@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.zen-browser = den.lib.perUser {
     homeManager =
       {
-        inputs,
         ...
       }:
       {

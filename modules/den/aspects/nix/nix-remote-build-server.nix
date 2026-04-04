@@ -1,15 +1,12 @@
 {
   den,
   self,
-  config,
   lib,
   rootPath,
   ...
 }:
 let
-  inherit (self.lib.users) resolveUsers getSshKeysForGroup;
-  canonicalUsers = config.users or { };
-  groupDefs = config.groups or { };
+  inherit (self.lib.users) getSshKeysForGroup;
 in
 {
   den.aspects.nix-remote-build-server = {
@@ -18,14 +15,6 @@ in
     _ = {
       config = den.lib.perHost (
         { host }:
-        let
-          hostOptions = {
-            hostname = host.name;
-            inherit (host) system-access-groups;
-            users = host.users or { };
-          };
-          resolvedUsers = resolveUsers lib canonicalUsers host.environment hostOptions groupDefs;
-        in
         {
           nixos =
             {
@@ -59,7 +48,7 @@ in
                     lib.map (key: ''command="nix-store --serve --write",restrict '' + key)
                       (
                         [ (builtins.readFile (rootPath + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ]
-                        ++ getSshKeysForGroup resolvedUsers "wheel"
+                        ++ getSshKeysForGroup host.users.enabled "wheel"
                       );
                 };
               };

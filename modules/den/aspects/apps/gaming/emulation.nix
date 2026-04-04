@@ -1,11 +1,10 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.emulation = {
     _ = {
       system = den.lib.perHost {
         nixos =
           {
-            inputs,
             pkgs,
             ...
           }:

@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.xdg-portal = den.lib.perHost {
     nixos =
       {
-        inputs,
         pkgs,
         ...
       }:

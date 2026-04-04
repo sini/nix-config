@@ -1,4 +1,4 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.spicetify = {
     _ = {
@@ -14,7 +14,6 @@
         homeManager =
           {
             pkgs,
-            inputs,
             ...
           }:
           let

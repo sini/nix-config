@@ -108,7 +108,6 @@
         homeLinux =
           {
             config,
-            inputs,
             pkgs,
             ...
           }:

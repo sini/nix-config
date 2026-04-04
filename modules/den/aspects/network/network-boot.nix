@@ -3,15 +3,12 @@
 {
   den,
   self,
-  config,
   lib,
   rootPath,
   ...
 }:
 let
-  inherit (self.lib.users) resolveUsers getSshKeysForGroup;
-  canonicalUsers = config.users or { };
-  groupDefs = config.groups or { };
+  inherit (self.lib.users) getSshKeysForGroup;
 in
 {
   den.aspects.network-boot = {
@@ -24,12 +21,6 @@ in
       config = den.lib.perHost (
         { host }:
         let
-          hostOptions = {
-            hostname = host.name;
-            inherit (host) system-access-groups;
-            users = host.users or { };
-          };
-          resolvedUsers = resolveUsers lib canonicalUsers host.environment hostOptions groupDefs;
           secretPath = rootPath + "/.secrets/hosts/${host.name}";
           jweTokenPath = secretPath + "/zroot-key.jwe";
           hasJweToken = builtins.pathExists jweTokenPath;
@@ -104,7 +95,7 @@ in
                   ssh = {
                     enable = true;
                     port = 22;
-                    authorizedKeys = getSshKeysForGroup resolvedUsers "wheel";
+                    authorizedKeys = getSshKeysForGroup host.users.enabled "wheel";
                     hostKeys = [
                       config.age.secrets.initrd_host_ed25519_key.path
                     ];
