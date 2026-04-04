@@ -210,56 +210,76 @@ bgp, cilium-bgp, thunderbolt-mesh-of, k3s.
 This causes infinite recursion. Always get `inputs` from the flake-parts module
 level (top-level args) and close over it.
 
+## Dry-Run Build Status
+
+| Host          | Status    | Notes                                                          |
+| ------------- | --------- | -------------------------------------------------------------- |
+| bitstream     | OK        | Server, dry-run clean                                          |
+| axon-01/02/03 | OK        | K8s nodes, dry-run clean                                       |
+| blade         | OK        | Laptop workstation, dry-run clean                              |
+| uplink        | ERROR     | kanidm oidc-secrets gets "prod" string instead of resolved env |
+| cortex        | ERROR     | ollama GPU detection via config refs (NixOS eval order)        |
+| patch         | Eval only | Darwin, not dry-run tested                                     |
+
 ## Remaining TODOs
 
-### Build & Deploy
+### Immediate — Fix Remaining Dry-Run Failures
 
-- [ ] Full `nix build` (not just eval) for each host
-- [ ] `nix build --dry-run` for all hosts to catch missing derivations
-- [ ] Deploy bitstream as first real test (`colmena apply --on bitstream`)
+- [ ] **uplink**: kanidm `provision-oidc-secrets` gets `"prod"` string instead
+      of resolved environment attrset. The `environment` NixOS module arg
+      (injected via defaults.nix) should be the resolved attrset, but something
+      in kanidm's perHost chain isn't receiving it correctly.
+- [ ] **cortex**: ollama aspect GPU detection uses `config.hardware.*` which may
+      not be available at eval time. May need a settings-based approach instead.
+
+### Per-Channel Home-Manager
+
+- [ ] Den's built-in HM provider uses its own `inputs.home-manager`. Our repo
+      has 4 HM versions (unstable, master, stable, stable-darwin) paired with
+      channels. Currently all hosts use den's HM version regardless of channel.
+      Options: override den's getModule, make provider channel-aware, or add
+      `inputs.home-manager.follows` to den input.
+
+### Host-to-User Aspect Flow
+
+- [ ] `perUser` blocks from host-level aspects do NOT flow to users
+      automatically. The host's aspect chain includes stylix (with perUser home
+      config), but users only get their own aspect chain applied at the user
+      context stage. Workaround: use `homeManagerIntegration.followSystem` for
+      stylix, use `home-manager.sharedModules` for system-wide HM modules. Needs
+      investigation into den's context pipeline to understand if this is
+      expected behavior or a bug in our enrichHost override.
 
 ### Feature Gaps
 
-- [ ] `excluded-features` — den doesn't support excluding aspects from includes
-      chains. Needs design (possibly `mkIf` guards or a den upstream feature)
+- [ ] `excluded-features` — den doesn't support excluding aspects
 - [ ] `microvm-cuda` aspect — referenced by cortex but not created
-- [ ] `windows-vfio` aspect — exists but may be incomplete
-- [ ] Per-user feature overrides — cortex/blade have `users.sini.extra-features`
-      that need migrating to `provides.sini` / `provides.to-users` pattern
-- [ ] `findHostsByFeature` only filters by environment name, not by aspect
-      membership (needs aspect-chain checking for proper feature discovery)
-- [ ] Many service aspects have hardcoded settings that should be typed in
-      schema (noted as TODO comments in aspect files)
+- [ ] `hasFeature` equivalent — aspects that conditionally behave based on other
+      active aspects need a den-native solution (currently hardcoded/stubbed)
+- [ ] `findHostsByFeature` only filters by environment name, not by aspect chain
+- [ ] Many service aspects have hardcoded settings (noted as TODO in files)
+- [ ] k8s-update-manifests pre-commit hook broken (`config.features` removed)
 
 ### Environment / Context
 
 - [ ] `den.ctx.environment` as a proper pipeline stage (currently just data)
 - [ ] `den.ctx.cluster → k8s-service` for kubernetes/nixidy configuration
-- [ ] Environment `findHostsByFeature` needs proper aspect-chain checking
 
 ### Infrastructure
 
-- [ ] `resolve-environment.nix` uses `lib.mkForce` to override den.ctx.host —
-      fragile, should be upstreamed as a den extension point
-- [ ] `hosts.nix` and `ssh.nix` still read `config.environments`/`config.hosts`
-      (old system) for cross-host discovery — should migrate to den.environments
-- [ ] Darwin host (patch) needs validation beyond eval
-- [ ] Old host definitions (`_host.nix`) should be removed once den is validated
+- [ ] `resolve-environment.nix` uses `lib.mkForce` — upstream extension point
+- [ ] `hosts.nix` and `ssh.nix` still read old
+      `config.hosts`/`config.environments`
+- [ ] Darwin (patch) needs full validation
+- [ ] Legacy system in `modules/_legacy/` — can be deleted once fully validated
 
 ### Upstream Contributions to Den
 
-- [ ] `take.atLeast` on `ctx.user` (allow `{ env, host, user }` signatures)
-- [ ] Host enrichment hook (replace mkForce override in resolve-environment.nix)
-- [ ] homeLinux/homeDarwin forwarding classes as built-in batteries
-- [ ] Channel/instantiate integration pattern as documentation
-
-### Cleanup (after full validation)
-
-- [ ] Remove old feature system (`modules/flake-parts/features/`)
-- [ ] Remove old host builders (`modules/flake-parts/hosts/builders.nix`)
-- [ ] Remove `_host.nix` disabled files from `modules/hosts/*/`
-- [ ] Remove duplicate environment data (`modules/environments/*/`)
-- [ ] Consolidate `_namespaces.nix` (review den namespace/angle-bracket support)
+- [ ] Host enrichment hook (replace mkForce)
+- [ ] `take.atLeast` on `ctx.user`
+- [ ] homeLinux/homeDarwin as built-in batteries
+- [ ] Channel/instantiate pattern docs
+- [ ] Investigate perUser flow from host aspects to users
 
 ## Reference Documents
 
