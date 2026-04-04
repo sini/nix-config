@@ -9,216 +9,162 @@ old system.
 
 ## Branch: `feat/den`
 
-All work is on the `feat/den` branch. The old system remains fully functional
-for all hosts except `bitstream`, which has been migrated to den as a proof of
-concept.
+All work is on the `feat/den` branch.
 
-## Current State
+## Current State (2026-04-03)
 
-**Bitstream is fully migrated and dry-builds cleanly.** All of bitstream's
-features (default + server + nix-builder + ZFS + network-boot + cpu-amd +
-gpu-amd) have been translated to den aspects.
+**All 8 hosts eval successfully on den.** ~200 aspects migrated covering all
+features from core/, features/, services/, and apps/.
 
 ```bash
-# These all work:
-nix eval .#nixosConfigurations.bitstream.config.system.nixos.version  # "25.11..."
-nix eval .#nixosConfigurations.bitstream.config.networking.fqdn       # "bitstream.dev.json64.dev"
-nix build .#nixosConfigurations.bitstream.config.system.build.toplevel --dry-run  # passes
+# All hosts eval:
+for h in bitstream axon-01 axon-02 axon-03 uplink blade cortex; do
+  nix eval .#nixosConfigurations.$h.config.system.nixos.version
+done
+nix eval .#darwinConfigurations --apply 'x: builtins.attrNames x'  # [ "patch" ]
 ```
 
-Other hosts (cortex, blade, axon-\*, uplink, patch) still use the old feature
-system and are unaffected.
+| Host          | Channel        | Type              | Environment | Users            |
+| ------------- | -------------- | ----------------- | ----------- | ---------------- |
+| bitstream     | nixos-unstable | NixOS server      | dev         | sini             |
+| axon-01/02/03 | nixos-unstable | NixOS k8s         | prod        | sini             |
+| uplink        | nixos-unstable | NixOS server      | prod        | sini             |
+| blade         | nixpkgs-master | NixOS laptop      | dev         | sini, shuo, will |
+| cortex        | nixpkgs-master | NixOS workstation | dev         | sini, shuo, will |
+| patch         | nixos-stable   | Darwin laptop     | dev         | sini             |
 
 ## File Structure
 
 ```
 modules/den/
-├── systems.nix                         # Available systems declaration
+├── systems.nix                         # Available systems
 ├── defaults.nix                        # Global den.default + ctx.host/user includes
-├── home-manager.nix                    # HM module import + hm-host/hm-user config
-├── resolve-environment.nix             # Overrides den.ctx.host to enrich host.environment
-│                                       # (resolves env string → full attrset from config.environments)
+├── schema.nix                          # Typed host options (channel, settings.*)
+├── home-manager.nix                    # Per-channel HM module import + hm config
+├── resolve-environment.nix             # enrichHost: environment, ipv4/ipv6, cluster, users
+├── flake-outputs.nix                   # darwinConfigurations merge semantics
+├── environments/
+│   ├── options.nix                     # den.environments type + findHostsByFeature
+│   ├── prod.nix, prod-users.nix        # Production environment data + ACL
+│   └── dev.nix, dev-users.nix          # Development environment data + ACL
 ├── classes/
-│   ├── home-platform.nix               # homeLinux/homeDarwin/homeAarch64/home64bit forwarding
-│   ├── impermanence.nix                # persist/cache/persistHome/cacheHome forwarding
-│   ├── secrets.nix                     # secrets → age.secrets forwarding
-│   └── firewall.nix                    # firewall → networking.firewall forwarding
-├── aspects/
-│   ├── default.nix                     # den.aspects.default (includes all 27 base features)
-│   ├── core/                           # avahi, disko, facter, firmware, i18n, power-mgmt,
-│   │                                   # security, ssd, stateVersion, sudo, systemd,
-│   │                                   # systemd-boot, time, utils
-│   ├── network/                        # hosts, networking, openssh, tailscale,
-│   │                                   # network-boot, initrd-bootstrap-keys
-│   ├── nix/                            # nix, nixpkgs, nix-remote-build-server
-│   ├── secrets/                        # agenix, agenix-generators, impermanence
-│   ├── disk/                           # zfs-root, zfs-disk-single, zfs-diff,
-│   │                                   # impermanence-zfs, btrfs-root, btrfs-disk-single,
-│   │                                   # impermanence-btrfs
-│   ├── users/                          # deterministic-uids, users (full ACL resolution)
-│   ├── shell/                          # zsh (full HM config + plugins)
-│   ├── audio/                          # pipewire (with providers)
-│   ├── hardware/                       # cpu-amd, gpu-amd
-│   ├── services/                       # acme, media-data-share, tang
-│   ├── roles/                          # server, nix-builder
-│   └── kernel/                         # linux-kernel
+│   ├── home-platform.nix               # homeLinux/homeDarwin/homeAarch64/home64bit
+│   ├── impermanence.nix                # persist/cache/persistHome/cacheHome
+│   ├── secrets.nix                     # secrets → age.secrets
+│   └── firewall.nix                    # firewall → networking.firewall
+├── aspects/                            # ~200 aspect files organized by category
+│   ├── default.nix                     # includes all 27 base features
+│   ├── core/                           # 14 core system aspects
+│   ├── network/                        # 8 network aspects
+│   ├── nix/                            # 3 nix aspects
+│   ├── secrets/                        # 3 secrets/impermanence aspects
+│   ├── disk/                           # 7 ZFS/BTRFS/XFS/ceph aspects
+│   ├── users/                          # 2 user provisioning aspects
+│   ├── shell/                          # zsh (full HM config)
+│   ├── audio/                          # pipewire
+│   ├── hardware/                       # ~17 hardware aspects (cpu, gpu, peripherals)
+│   ├── desktop/                        # 12 desktop/WM aspects
+│   ├── login/                          # 3 login manager aspects
+│   ├── services/                       # ~30 service aspects (k8s, monitoring, web, media)
+│   ├── roles/                          # ~20 role aspects (workstation, gaming, dev, etc.)
+│   ├── apps/                           # ~60 app aspects (shell, dev, media, gaming, etc.)
+│   ├── virtualization/                 # libvirt, microvm, podman
+│   ├── runtime/                        # nix-ld
+│   └── system/                         # ananicy
 ├── hosts/
-│   └── bitstream.nix                   # First den-managed host
+│   ├── bitstream.nix, axon-{01,02,03}.nix, uplink.nix
+│   ├── blade.nix, cortex.nix, patch.nix
+│   └── _namespaces.nix                 # disabled (subagent artifact, needs review)
 └── users/
-    └── sini.nix                        # User aspect (for HM when users are added)
+    └── sini.nix                        # User aspect (for HM when den users added)
 ```
 
-## Key Design Decisions
+## Key Architecture
 
-### Context Pipeline (from design spec)
+### Channel Schema (`den.schema.host`)
 
+Hosts set `channel` which determines nixpkgs + home-manager + nix-darwin
+versions:
+
+```nix
+den.hosts.x86_64-linux.cortex = {
+  channel = "nixpkgs-master";  # or nixos-unstable, nixos-stable, nixpkgs-stable-darwin
+  environment = "dev";
+  # channel automatically sets host.instantiate and matching HM module
+};
 ```
-den.ctx.environment { env }
-  ├── into.host → { host }          # host.environment = resolved env
-  │   └── into.user → { host, user }
-  └── into.cluster → { cluster }
-      └── into.k8s-service → { cluster, service }
-```
 
-Only host → user is implemented so far. Environment and cluster context stages
-are deferred.
+Available channels: `nixos-unstable`, `nixpkgs-master`, `nixos-stable`,
+`nixpkgs-stable-darwin`. Each bundles matching nixpkgs lib.nixosSystem +
+home-manager module.
 
-### Environment Resolution
+### Environment Resolution (`resolve-environment.nix`)
 
-`host.environment` is a string ("dev") in `den.hosts` definitions. The
-`resolve-environment.nix` module overrides
-`den.ctx.host.{provides,into.user,into.default}` using `lib.mkForce` to enrich
-the host object with the resolved environment attrset before aspects see it.
-This avoids infinite recursion (putting `config.environments.dev` directly on
-den.hosts causes a cycle).
+`enrichHost` runs before aspects see the host. It adds:
 
-**TODO:** This mkForce override is fragile. Upstream a proper extension point to
-den for enriching host objects before aspect application.
+- `host.environment` — resolved from `den.environments.${host.environment}`
+- `host.ipv4` / `host.ipv6` — extracted from first networking interface
+- `host.cluster` — looked up from `config.clusters`
+- `host.users.{all, enabled, enabledNames}` — ACL-resolved users
 
-### Forwarding Classes (replaces collectsProviders)
+Environments are den-native (`den.environments`) with typed schema, breaking the
+cycle that existed with `config.environments`.
 
-Instead of the old two-phase resolver, den uses custom forwarding classes:
+### Forwarding Classes
+
+Custom classes that collect contributions from active aspects:
 
 - **persist/cache** → `environment.persistence."/persist"` / `"/cache"`
 - **persistHome/cacheHome** → `home.persistence."/persist"` / `"/cache"`
 - **secrets** → `age.secrets.*`
 - **firewall** → `networking.firewall.*`
-- **homeLinux/homeDarwin/etc.** → `homeManager` (platform-conditional)
-
-Aspects declare these as class attributes and forwarding classes collect them.
+- **homeLinux/homeDarwin/etc.** → `homeManager` (platform-conditional via guard)
 
 ### User Provisioning
 
-Full ACL-driven resolution using the existing `self.lib.users.resolveUsers`
-function. Reads `config.users`, `config.environments`, `config.groups` from
-flake-parts config. Den hosts need `environment` (string),
-`system-access-groups`, and optionally `users` (host-level overrides) on their
-definition.
+Centralized in `enrichHost` — calls `self.lib.users.resolveUsers` with canonical
+users, den environment, host metadata, and group definitions. Aspects access
+`host.users.enabled` (resolved user attrset) and `host.users.enabledNames`.
 
-### Host Definition Pattern
+### Per-User Feature Overrides
+
+Available via den's `mutual-provider` (already in `den.default.includes`):
 
 ```nix
-den.hosts.x86_64-linux.bitstream = {
-  environment = "dev";                    # string, resolved by resolve-environment.nix
-  system-access-groups = [ "server-access" ];
-  zfs-device = "/dev/...";               # freeform metadata for aspects
-  impermanence = { wipeRootOnBoot = true; wipeHomeOnBoot = false; };
-  networking = { bonds = ...; interfaces = ...; };
-  facts = ../../hosts/bitstream/facter.json;
-  public_key = rootPath + "/.secrets/hosts/bitstream/ssh_host_ed25519_key.pub";
-};
-
-den.aspects.bitstream = {
-  includes = [
-    den.aspects.default
-    den.aspects.zfs-disk-single
-    den.aspects.impermanence-zfs
-    den.aspects.zfs-diff
-    den.aspects.server
-    den.aspects.nix-builder
-    den.aspects.cpu-amd
-    den.aspects.gpu-amd
-  ];
-  nixos = { ... }: { /* host-specific NixOS config */ };
+den.aspects.cortex = {
+  provides.sini = {
+    homeManager = { ... };  # sini-specific config
+  };
+  provides.to-users = { user, ... }: {
+    homeManager = lib.mkIf (user.name == "sini") { ... };
+  };
 };
 ```
-
-## What's Next
-
-### BLOCKER: Environment context migration
-
-The immediate next step is migrating environments to a den-native type. This is
-required to unblock uplink and any host whose aspects call
-`environment.findHostsByFeature`. The current `config.environments` from the old
-flake-parts system creates an infinite recursion cycle when accessed from den's
-enrichHost:
-
-```
-den.hosts → enrichHost → config.environments.prod → findHostsByFeature
-  → config.hosts → flake.nixosConfigurations → den.hosts (CYCLE)
-```
-
-**Fix:** Create `den.environments` as a den-native option with
-`den.schema.environment`. Move environment data from `modules/environments/`
-into den definitions. Implement `findHostsByFeature` reading from `den.hosts`
-instead of `config.hosts`. This also implements the environment context stage
-from the design spec.
-
-### After environment migration
-
-1. **Enable remaining hosts** — uplink (prod server), cortex (workstation),
-   blade (laptop), patch (darwin)
-2. **Implement channels** — per-host nixpkgs channel selection (nixpkgs-master,
-   nixos-stable, etc.) via den host instantiation or schema
-3. **Implement excluded-features** — den doesn't have this yet; needs design
-4. **Cluster context stage** — `den.ctx.cluster → k8s-service` for nixidy
-5. **Full build + deploy** of bitstream and axon hosts
-6. **Upstream contributions** to den
-
-### Cleanup
-
-7. **Remove old feature system** once all hosts are migrated
-8. **Remove `_host.nix` disabled files** for migrated hosts
-9. **Consolidate resolveUsers** calls (users/sudo/network-boot all duplicate)
-
-## Reference Documents
-
-- Design spec: `docs/superpowers/specs/2026-04-02-den-migration-design.md`
-- Default features spec:
-  `docs/superpowers/specs/2026-04-02-default-features-migration-design.md`
-- Plans: `docs/superpowers/plans/2026-04-02-den-migration.md`
-- Plans: `docs/superpowers/plans/2026-04-02-default-features-migration.md`
-- ACL design: `docs/ACL.md`
-
-## Reference Repos
-
-- Den source: `/home/sini/Documents/repos/den-configs/den`
-- Gwenodai example: `/home/sini/Documents/repos/den-configs/gwenodai-nixos`
 
 ## Typed Settings Pattern
 
 Aspects declare typed settings on `den.schema.host` in `modules/den/schema.nix`.
-Hosts set them under `settings.<aspect-name>.<option>` with validation and
-defaults.
 
 ```nix
-# In modules/den/schema.nix — declare settings
+# Schema declares options with defaults
 den.schema.host = _: {
-  options.settings.my-aspect = {
-    myOption = lib.mkOption { type = lib.types.bool; default = true; };
+  options.settings.my-aspect.myOption = lib.mkOption {
+    type = lib.types.bool; default = true;
   };
 };
 
-# In the aspect — read typed settings (no `or` fallbacks needed)
+# Aspect reads typed settings
 den.aspects.my-aspect = den.lib.perHost ({ host }: {
-  nixos = lib.mkIf host.settings.my-aspect.myOption { /* config */ };
+  nixos = lib.mkIf host.settings.my-aspect.myOption { ... };
 });
 
-# In the host — set typed settings
-den.hosts.x86_64-linux.myhost = {
-  settings.my-aspect.myOption = false;
-};
+# Host sets values
+den.hosts.x86_64-linux.myhost.settings.my-aspect.myOption = false;
 ```
+
+Current schema settings: linux-kernel, impermanence, tailscale, zfs-disk-single,
+btrfs-disk-single, network-manager, ceph-device-allocation, xfs-disk-longhorn,
+bgp, cilium-bgp, thunderbolt-mesh-of, k3s.
 
 ## Key Patterns for New Aspects
 
@@ -226,23 +172,23 @@ den.hosts.x86_64-linux.myhost = {
 # Simple system aspect
 { den, ... }: {
   den.aspects.foo = den.lib.perHost {
-    nixos = { pkgs, ... }: { /* NixOS config */ };
+    nixos = { pkgs, ... }: { ... };
   };
 }
 
 # Aspect needing host data
 { den, ... }: {
   den.aspects.foo = den.lib.perHost ({ host }: {
-    nixos = { /* uses host.environment, host.networking, host.settings, etc. */ };
+    nixos = { ... }: { /* host.environment, host.settings, host.users.enabled */ };
   });
 }
 
-# Aspect with forwarding classes
+# Aspect with forwarding classes (impermanence, secrets, firewall)
 { den, lib, ... }: {
   den.aspects.foo = {
     includes = lib.attrValues den.aspects.foo._;
     _ = {
-      config = den.lib.perHost { nixos = { /* main config */ }; };
+      config = den.lib.perHost { nixos = { ... }; };
       impermanence = den.lib.perHost { persist.directories = [ "/var/lib/foo" ]; };
       secrets = den.lib.perHost { secrets.foo-key = { generator.script = "ssh-key"; }; };
       firewall = den.lib.perHost { firewall.allowedTCPPorts = [ 8080 ]; };
@@ -250,26 +196,87 @@ den.hosts.x86_64-linux.myhost = {
   };
 }
 
-# Aspect needing resolved users (for SSH keys, etc.)
-{ den, self, config, lib, ... }:
-let
-  inherit (self.lib.users) resolveUsers getSshKeysForGroup;
-  canonicalUsers = config.users;
-  groupDefs = config.groups;
-in {
-  den.aspects.foo = den.lib.perHost ({ host }: let
-    resolvedUsers = resolveUsers lib canonicalUsers host.environment
-      { hostname = host.name; inherit (host) system-access-groups; users = host.users or {}; }
-      groupDefs;
-  in { nixos = { /* use resolvedUsers */ }; });
+# Aspect using flake inputs (MUST be at top-level, NOT in NixOS module args)
+{ den, inputs, ... }: {
+  den.aspects.foo = den.lib.perHost {
+    nixos = {
+      imports = [ inputs.some-flake.nixosModules.default ];  # inputs from closure
+    };
+  };
 }
 ```
+
+**IMPORTANT:** Never use `{ inputs, ... }:` inside a NixOS/HM module function.
+This causes infinite recursion. Always get `inputs` from the flake-parts module
+level (top-level args) and close over it.
+
+## Remaining TODOs
+
+### Build & Deploy
+
+- [ ] Full `nix build` (not just eval) for each host
+- [ ] `nix build --dry-run` for all hosts to catch missing derivations
+- [ ] Deploy bitstream as first real test (`colmena apply --on bitstream`)
+
+### Feature Gaps
+
+- [ ] `excluded-features` — den doesn't support excluding aspects from includes
+      chains. Needs design (possibly `mkIf` guards or a den upstream feature)
+- [ ] `microvm-cuda` aspect — referenced by cortex but not created
+- [ ] `windows-vfio` aspect — exists but may be incomplete
+- [ ] Per-user feature overrides — cortex/blade have `users.sini.extra-features`
+      that need migrating to `provides.sini` / `provides.to-users` pattern
+- [ ] `findHostsByFeature` only filters by environment name, not by aspect
+      membership (needs aspect-chain checking for proper feature discovery)
+- [ ] Many service aspects have hardcoded settings that should be typed in
+      schema (noted as TODO comments in aspect files)
+
+### Environment / Context
+
+- [ ] `den.ctx.environment` as a proper pipeline stage (currently just data)
+- [ ] `den.ctx.cluster → k8s-service` for kubernetes/nixidy configuration
+- [ ] Environment `findHostsByFeature` needs proper aspect-chain checking
+
+### Infrastructure
+
+- [ ] `resolve-environment.nix` uses `lib.mkForce` to override den.ctx.host —
+      fragile, should be upstreamed as a den extension point
+- [ ] `hosts.nix` and `ssh.nix` still read `config.environments`/`config.hosts`
+      (old system) for cross-host discovery — should migrate to den.environments
+- [ ] Darwin host (patch) needs validation beyond eval
+- [ ] Old host definitions (`_host.nix`) should be removed once den is validated
+
+### Upstream Contributions to Den
+
+- [ ] `take.atLeast` on `ctx.user` (allow `{ env, host, user }` signatures)
+- [ ] Host enrichment hook (replace mkForce override in resolve-environment.nix)
+- [ ] homeLinux/homeDarwin forwarding classes as built-in batteries
+- [ ] Channel/instantiate integration pattern as documentation
+
+### Cleanup (after full validation)
+
+- [ ] Remove old feature system (`modules/flake-parts/features/`)
+- [ ] Remove old host builders (`modules/flake-parts/hosts/builders.nix`)
+- [ ] Remove `_host.nix` disabled files from `modules/hosts/*/`
+- [ ] Remove duplicate environment data (`modules/environments/*/`)
+- [ ] Consolidate `_namespaces.nix` (review den namespace/angle-bracket support)
+
+## Reference Documents
+
+- Design spec: `docs/superpowers/specs/2026-04-02-den-migration-design.md`
+- Default features spec:
+  `docs/superpowers/specs/2026-04-02-default-features-migration-design.md`
+- ACL design: `docs/ACL.md`
+
+## Reference Repos
+
+- Den source: `/home/sini/Documents/repos/den-configs/den`
+- Gwenodai example: `/home/sini/Documents/repos/den-configs/gwenodai-nixos`
 
 ## Statix/Treefmt Rules
 
 - Single `_ = { ... }` block for sub-aspects (no repeated `_.foo`, `_.bar`)
 - Single `den = { ... }` block for multiple den.\* attributes
-- Run `treefmt` before committing — it reformats nix files
+- Run `treefmt` before committing
 - Stage with `git add` before `nix eval` — nix only sees staged/committed files
-- `# deadnix: skip` above unused args that are actually used (like `class` in
-  forwarding)
+- `# deadnix: skip` above unused args that are actually used
