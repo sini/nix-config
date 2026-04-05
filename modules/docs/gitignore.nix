@@ -7,6 +7,8 @@
     .direnv
     .cache
     .claude
+    CLAUDE.md
+    docs/superpowers/
   '';
 
   perSystem =
