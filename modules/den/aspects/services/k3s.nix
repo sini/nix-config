@@ -20,6 +20,21 @@
 {
   den.aspects.k3s = {
     includes = lib.attrValues den.aspects.k3s._;
+    settings = {
+      role = lib.mkOption {
+        type = lib.types.enum [
+          "server"
+          "agent"
+        ];
+        default = "server";
+        description = "K3s node role";
+      };
+      clusterInit = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Whether this node initializes the cluster";
+      };
+    };
 
     _ = {
       config = den.lib.perHost (

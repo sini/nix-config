@@ -8,6 +8,32 @@
   den.aspects.impermanence = {
     includes = lib.attrValues den.aspects.impermanence._;
 
+    settings = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Enable impermanence features.";
+      };
+      wipeRootOnBoot = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Enable root rollback on boot. When enabled, the root filesystem
+          is reset to a blank snapshot on every boot, effectively wiping
+          all state not stored in /persist or /cache.
+        '';
+      };
+      wipeHomeOnBoot = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Enable home rollback on boot. When enabled, /home is reset to a
+          blank snapshot on every boot. Use with caution - ensure all
+          important user data is declared in persistence directories.
+        '';
+      };
+    };
+
     _ = {
       # Import the impermanence NixOS module
       nixosModule = den.lib.perHost {

@@ -7,6 +7,19 @@
     ]
     ++ lib.attrValues den.aspects.btrfs-disk-single._;
 
+    settings = {
+      device_id = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "Disk device path for BTRFS. If null, auto-detected from facter.";
+      };
+      swap_size = lib.mkOption {
+        type = lib.types.str;
+        default = "0";
+        description = "Swap partition size (e.g., '8G'). '0' disables swap.";
+      };
+    };
+
     _ = {
       layout = den.lib.perHost (
         { host }:

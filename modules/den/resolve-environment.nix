@@ -52,9 +52,7 @@ let
 in
 {
   den.ctx.host = {
-    provides.host = lib.mkForce (
-      { host }: fixedTo { host = enrichHost host; } den.aspects.${host.aspect}
-    );
+    provides.host = lib.mkForce ({ host }: fixedTo { host = enrichHost host; } host.aspect);
 
     into.user = lib.mkForce (
       { host }:
