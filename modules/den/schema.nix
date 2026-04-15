@@ -1,7 +1,22 @@
 # Typed host schema extensions for den aspects.
-# Aspects declare their settings here; hosts set them with proper types and defaults.
-# Accessed by aspects via host.settings.<aspect-name>.<option>.
-{ lib, inputs, ... }:
+{
+  lib,
+  inputs,
+  den,
+  ...
+}:
+let
+  aspectsWithSettings = lib.filterAttrs (_: a: a ? settings) den.aspects;
+
+  reshapeSettings = raw: {
+    imports = raw.imports or [ ];
+    config = raw.config or { };
+    options = builtins.removeAttrs raw [
+      "imports"
+      "config"
+    ];
+  };
+in
 {
   den.schema.host =
     { config, ... }:
@@ -85,8 +100,38 @@
           description = "Unix groups that grant login access to this host";
         };
 
+        #Dynamically generate the settings namespace
+        settings = lib.mkOption {
+          description = "Per-aspect settings namespace";
+          default = { };
+          type =
+            let
+              aspectsWithSettings = lib.filterAttrs (_: a: a ? settings) den.aspects;
+
+              reshapeSettings = raw: {
+                imports = raw.imports or [ ];
+                config = raw.config or { };
+                options = builtins.removeAttrs raw [
+                  "imports"
+                  "config"
+                ];
+              };
+            in
+            lib.types.submodule {
+              options = lib.mapAttrs (
+                name: aspect:
+                lib.mkOption {
+                  # Pass the dynamically reshaped settings into the submodule
+                  type = lib.types.submodule (reshapeSettings aspect.settings);
+                  default = { };
+                  description = "Settings for the ${name} aspect";
+                }
+              ) aspectsWithSettings;
+            };
+        };
+
         # Per-aspect settings namespace
-        settings = {
+        zsettings = {
           linux-kernel = {
             channel = lib.mkOption {
               type = lib.types.enum [

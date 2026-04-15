@@ -3,9 +3,22 @@
 {
   den.aspects.zfs-disk-single = {
     includes = [
+      den.aspects.facter
       den.aspects.zfs-root
     ]
     ++ lib.attrValues den.aspects.zfs-disk-single._;
+
+    settings = {
+      device_id = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = ''
+          Disk device path (e.g., "/dev/disk/by-id/nvme-...").
+          If not set, the module attempts to find a single non-USB disk
+          via facter. Aborts if multiple or no disks are found.
+        '';
+      };
+    };
 
     _ = {
       layout = den.lib.perHost (
