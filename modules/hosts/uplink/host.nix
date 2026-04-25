@@ -34,6 +34,7 @@
       "oauth2-proxy"
       "tailscale"
       "haproxy"
+      "den-docs-mirror"
       "attic-server"
       # "minio"
       # "vault"

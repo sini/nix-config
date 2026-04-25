@@ -62,6 +62,7 @@
       open-webui.domain = "open-webui.json64.dev";
       prometheus.domain = "prometheus.json64.dev";
       vault.domain = "vault.json64.dev";
+      den-docs-mirror.domain = "den.json64.dev";
     };
 
     networks = {
