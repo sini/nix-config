@@ -415,6 +415,22 @@
         "type": "github"
       }
     },
+    "den": {
+      "locked": {
+        "lastModified": 1779403060,
+        "narHash": "sha256-6hNDvXgFy9LiVTDwPZ56cFVioui8nmJL8O3kg0Ecl1A=",
+        "owner": "sini",
+        "repo": "den",
+        "rev": "a370d30d32256ac86f0c8baf8d6f49aeb2d050ff",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "ref": "feat/entity-gen-schema-port",
+        "repo": "den",
+        "type": "github"
+      }
+    },
     "devshell": {
       "inputs": {
         "nixpkgs": [
@@ -1115,6 +1131,26 @@
       "original": {
         "owner": "SenchoPens",
         "repo": "fromYaml",
+        "type": "github"
+      }
+    },
+    "gen-schema": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779386005,
+        "narHash": "sha256-KY33X6a6XSwgbtdUDf1TKgwzJxTTIW/IizpHWmEmfHQ=",
+        "owner": "sini",
+        "repo": "gen-schema",
+        "rev": "246ccaee53afe4abdd488f8ec5b66bd8ee90369a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "gen-schema",
         "type": "github"
       }
     },
@@ -3187,6 +3223,7 @@
         "betterfox": "betterfox",
         "colmena": "colmena",
         "declarative-jellyfin": "declarative-jellyfin",
+        "den": "den",
         "devshell": "devshell_3",
         "disko": "disko",
         "files": "files",
@@ -3196,6 +3233,7 @@
         "flake-parts": "flake-parts_4",
         "flake-root": "flake-root",
         "flake-utils": "flake-utils",
+        "gen-schema": "gen-schema",
         "git-hooks-nix": "git-hooks-nix",
         "haumea": "haumea",
         "hm-wrapper-modules": "hm-wrapper-modules",
@@ -3244,6 +3282,7 @@
         "pkgs-by-name-for-flake-parts": "pkgs-by-name-for-flake-parts",
         "proton-cachyos": "proton-cachyos",
         "razerdaemon": "razerdaemon",
+        "scope-engine": "scope-engine",
         "shimmer": "shimmer",
         "spicetify-nix": "spicetify-nix",
         "statix": "statix",
@@ -3274,6 +3313,21 @@
       "original": {
         "owner": "oxalica",
         "repo": "rust-overlay",
+        "type": "github"
+      }
+    },
+    "scope-engine": {
+      "locked": {
+        "lastModified": 1779345426,
+        "narHash": "sha256-/1tG4L/peDcpNwHuOnhNSIvrKo+CwZjGN5Vam2RL6xE=",
+        "owner": "sini",
+        "repo": "scope-engine",
+        "rev": "ccfc650751d5d83cdf5eb822de97e55df988a890",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "scope-engine",
         "type": "github"
       }
     },

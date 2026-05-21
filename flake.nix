@@ -75,6 +75,10 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    den = {
+      url = "github:sini/den/feat/entity-gen-schema-port";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     devshell = {
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -98,6 +102,10 @@
     flake-utils = {
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
+    };
+    gen-schema = {
+      url = "github:sini/gen-schema";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     haumea = {
@@ -243,6 +251,10 @@
     proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
     razerdaemon = {
       url = "github:sini/razer-control-revived";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    scope-engine = {
+      url = "github:sini/scope-engine";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     shimmer = {

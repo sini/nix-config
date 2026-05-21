@@ -60,6 +60,11 @@
         flake = false;
       };
 
+      den = {
+        url = "github:sini/den/feat/entity-gen-schema-port";
+        inputs.nixpkgs.follows = "nixpkgs-unstable";
+      };
+
       declarative-jellyfin = {
         url = "github:Sveske-Juice/declarative-jellyfin";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -79,6 +84,11 @@
 
       firefox-addons = {
         url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+        inputs.nixpkgs.follows = "nixpkgs-unstable";
+      };
+
+      gen-schema = {
+        url = "github:sini/gen-schema";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
@@ -294,6 +304,11 @@
       shimmer = {
         url = "github:nuclearcodecat/shimmer";
         flake = false;
+      };
+
+      scope-engine = {
+        url = "github:sini/scope-engine";
+        inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
       spicetify-nix.url = "github:Gerg-L/spicetify-nix";
