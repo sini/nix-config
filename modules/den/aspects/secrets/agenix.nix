@@ -18,7 +18,7 @@
           rekey = {
             inherit (inputs.self.secretsConfig) masterIdentities;
             storageMode = "local";
-            hostPubkey = host.public_key;
+            hostPubkey = builtins.readFile host.public_key;
             generatedSecretsDir = host.secretPath + "/generated";
             localStorageDir = host.secretPath + "/rekeyed";
           };
