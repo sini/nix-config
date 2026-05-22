@@ -7,7 +7,6 @@
         host,
         lib,
         pkgs,
-        settings,
         ...
       }:
       let
@@ -47,7 +46,7 @@
               graphroot = "/var/lib/containers/storage";
             }
 
-            (lib.mkIf (settings.impermanence.enable or false) {
+            (lib.mkIf (host.hasAspect den.aspects.disk.impermanence) {
               rootless_storage_path = "${cacheRoot}$HOME/.local/share/containers/storage";
             })
 
