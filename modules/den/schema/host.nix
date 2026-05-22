@@ -120,6 +120,38 @@ in
                   default = { };
                   description = "Network interfaces with their IP addresses and properties";
                 };
+                bonds = mkOption {
+                  type = types.attrsOf (types.submodule {
+                    options = {
+                      interfaces = mkOption {
+                        type = types.listOf types.str;
+                        description = "Physical interfaces to bond together";
+                      };
+                      mode = mkOption {
+                        type = types.str;
+                        default = "balance-rr";
+                        description = "Bond mode (balance-rr, active-backup, balance-xor, etc.)";
+                      };
+                      transmitHashPolicy = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "Transmit hash policy for load-balancing modes";
+                      };
+                    };
+                  });
+                  default = { };
+                  description = "Network bond definitions";
+                };
+                autobridging = mkOption {
+                  type = types.bool;
+                  default = false;
+                  description = "Auto-create bridges for each interface";
+                };
+                bridges = mkOption {
+                  type = types.attrsOf (types.listOf types.str);
+                  default = { };
+                  description = "Bridge definitions mapping bridge name to member interfaces";
+                };
               };
             };
             default = { };
