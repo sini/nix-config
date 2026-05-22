@@ -42,14 +42,15 @@ in
       let
         env = environments.${host.environment} or { };
         issuers = env.certificates.issuers or { };
-        secretPath = env.secretPath or null;
       in
       {
-        age.secrets = lib.optionalAttrs (secretPath != null) (
-          lib.mapAttrs' (
-            issuerName: _issuer:
-            lib.nameValuePair "${issuerName}-cloudflare-api-key" {
-              rekeyFile = secretPath + "/acme/${issuerName}-cloudflare-api-key.age";
+        age.secrets = lib.mkMerge (
+          lib.mapAttrsToList (
+            issuerName: issuer:
+            lib.optionalAttrs (issuer.ageKeyFile or null != null) {
+              "${issuerName}-cloudflare-api-key" = {
+                rekeyFile = issuer.ageKeyFile;
+              };
             }
           ) issuers
         );
