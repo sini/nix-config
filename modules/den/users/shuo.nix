@@ -1,6 +1,7 @@
 { ... }:
 {
   den.users.registry.shuo = {
+    system.uid = 1001;
     groups = [
       "users"
       "workstation-access"

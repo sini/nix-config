@@ -1,6 +1,7 @@
 { ... }:
 {
   den.users.registry.will = {
+    system.uid = 1002;
     groups = [
       "users"
       "workstation-access"
