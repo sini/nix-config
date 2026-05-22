@@ -1,0 +1,542 @@
+{ den, ... }:
+{
+  den.aspects.apps.mpv = {
+    homeManager =
+      { pkgs, ... }:
+      let
+        shaders = "${pkgs.mpv-shim-default-shaders}/share/mpv-shim-default-shaders/shaders/";
+        profiles = {
+          fsr = {
+            name = "AMD FidelityFX Super Resolution";
+            settings = {
+              glsl-shader = "${shaders}FSR.glsl";
+            };
+          };
+          cas = {
+            name = "AMD FidelityFX Contrast Adaptive Sharpening";
+            settings = {
+              glsl-shader = "${shaders}CAS-scaled.glsl";
+            };
+          };
+          fsr-cas = {
+            name = "AMD FidelityFX Super Resolution + Contrast Adaptive Sharpening";
+            settings = {
+              glsl-shaders = [
+                "${shaders}FSR.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}CAS-scaled.glsl"
+              ];
+            };
+          };
+          generic = {
+            name = "FSRCNNX";
+            settings = {
+              dscale = "mitchell";
+              cscale = "mitchell";
+              glsl-shaders = [
+                "${shaders}FSRCNNX_x2_16-0-4-1.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}SSimDownscaler.glsl"
+                "${shaders}KrigBilateral.glsl"
+              ];
+            };
+          };
+          generic-high = {
+            name = "FSRCNNX x16";
+            settings = {
+              dscale = "mitchell";
+              cscale = "mitchell";
+              glsl-shaders = [
+                "${shaders}FSRCNNX_x2_8-0-4-1.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}SSimDownscaler.glsl"
+                "${shaders}KrigBilateral.glsl"
+              ];
+            };
+          };
+          nnedi-high = {
+            name = "NNEDI3 (64 Neurons)";
+            settings = {
+              dscale = "mitchell";
+              cscale = "mitchell";
+              glsl-shaders = [
+                "${shaders}nnedi3-nns64-win8x6.hook"
+              ];
+              glsl-shaders-append = [
+                "${shaders}SSimDownscaler.glsl"
+                "${shaders}KrigBilateral.glsl"
+              ];
+            };
+          };
+          nnedi-very-high = {
+            name = "NNEDI3 High (128 Neurons)";
+            settings = {
+              dscale = "mitchell";
+              cscale = "mitchell";
+              glsl-shaders = [
+                "${shaders}nnedi3-nns128-win8x6.hook"
+              ];
+              glsl-shaders-append = [
+                "${shaders}SSimDownscaler.glsl"
+                "${shaders}KrigBilateral.glsl"
+              ];
+            };
+          };
+          anime4k-high-a = {
+            name = "Anime4K A (HQ) - For Very Blurry/Compressed";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Restore_CNN_VL.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_VL.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+              ];
+            };
+          };
+          anime4k-high-b = {
+            name = "Anime4K B (HQ) - For Blurry/Ringing";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}CAS-scaled.glsl"
+                "${shaders}Anime4K_Restore_CNN_Soft_VL.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_VL.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+              ];
+            };
+          };
+          anime4k-high-c = {
+            name = "Anime4K C (HQ) - For Crisp/Sharp";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Upscale_Denoise_CNN_x2_VL.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+              ];
+            };
+          };
+          anime4k-high-aa = {
+            name = "Anime4K AA (HQ) - For Very Blurry/Compressed";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}CAS-scaled.glsl"
+                "${shaders}Anime4K_Restore_CNN_VL.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_VL.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Restore_CNN_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+              ];
+            };
+          };
+          anime4k-high-bb = {
+            name = "Anime4K BB (HQ) - For Blurry/Ringing";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Restore_CNN_Soft_VL.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_VL.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Restore_CNN_Soft_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+              ];
+            };
+          };
+          anime4k-high-ca = {
+            name = "Anime4K CA (HQ) - For Crisp/Sharp";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Upscale_Denoise_CNN_x2_VL.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Restore_CNN_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+              ];
+            };
+          };
+          anime4k-fast-a = {
+            name = "Anime4K A (Fast) - For Very Blurry/Compressed";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Restore_CNN_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_S.glsl"
+              ];
+            };
+          };
+          anime4k-fast-b = {
+            name = "Anime4K B (Fast) - For Blurry/Ringing";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Restore_CNN_Soft_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_S.glsl"
+              ];
+            };
+          };
+          anime4k-fast-c = {
+            name = "Anime4K C (Fast) - For Crisp/Sharp";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Upscale_Denoise_CNN_x2_M.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_S.glsl"
+              ];
+            };
+          };
+          anime4k-fast-aa = {
+            name = "Anime4K AA (Fast) - For Very Blurry/Compressed";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Restore_CNN_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Restore_CNN_S.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_S.glsl"
+              ];
+            };
+          };
+          anime4k-fast-bb = {
+            name = "Anime4K BB (Fast) - For Blurry/Ringing";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Restore_CNN_Soft_M.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_M.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Restore_CNN_Soft_S.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_S.glsl"
+              ];
+            };
+          };
+          anime4k-fast-cc = {
+            name = "Anime4K CA (Fast) - For Crisp/Sharp";
+            settings = {
+              glsl-shaders = [
+                "${shaders}Anime4K_Clamp_Highlights.glsl"
+              ];
+              glsl-shaders-append = [
+                "${shaders}Anime4K_Upscale_Denoise_CNN_x2_M.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x2.glsl"
+                "${shaders}Anime4K_AutoDownscalePre_x4.glsl"
+                "${shaders}Anime4K_Restore_CNN_S.glsl"
+                "${shaders}Anime4K_Upscale_CNN_x2_S.glsl"
+              ];
+            };
+          };
+        };
+      in
+      {
+        home.packages = [
+          pkgs.vapoursynth-mvtools
+        ];
+
+        programs.mpv = {
+          enable = true;
+
+          config = {
+            autofit = "70%";
+            vo = "gpu-next";
+            gpu-api = "vulkan";
+            hwdec = "auto-safe";
+            ao = "pipewire";
+            alang = "jpn,jap,ja,jp,eng,en";
+            sub-auto = "fuzzy";
+            screenshot-directory = "~/Pictures";
+            screenshot-template = "mpv-%f-%wH.%wM.%wS.%wT-#%#00n";
+            ytdl-format = "bestvideo+bestaudio";
+            slang = "eng,en";
+            hwdec-codecs = "all";
+          };
+
+          bindings = {
+            "MOUSE_BTN2" = "script-binding uosc/menu-blurred";
+            "tab" = "script-binding uosc/toggle-ui";
+            "Shift+ENTER" = "script-binding uosc/download-subtitles";
+            a = "cycle audio";
+            s = "cycle sub";
+            WHEEL_UP = "add volume 2.5";
+            WHEEL_DOWN = "add volume -2.5";
+            UP = "add volume 2.5";
+            DOWN = "add volume -2.5";
+            ENTER = "ignore";
+            "=" = "add video-zoom 0.1";
+            "-" = "add video-zoom -0.1";
+            "alt+=" = "add video-rotate 90";
+            "alt+-" = "add video-rotate -90";
+          };
+
+          scripts = with pkgs.mpvScripts; [
+            inhibit-gnome
+            mpris
+            autoload
+            uosc
+            thumbfast
+            sponsorblock
+            quality-menu
+            autosubsync-mpv
+            chapterskip
+            evafast
+            youtube-upnext
+          ];
+
+          scriptOpts = {
+            uosc = {
+              controls = "subtitles,<has_chapter>chapters,<has_many_audio>audio,<has_many_video>video,<has_many_edition>editions,<stream>stream-quality,space,menu";
+            };
+            autoload = {
+              disabled = false;
+              images = false;
+              videos = true;
+              audio = true;
+              ignore_hidden = true;
+              same_type = true;
+              directory_mode = "ignore";
+            };
+          };
+
+          extraInput = ''
+            ` script-binding console/enable #! Console
+
+            g cycle interpolation #! Video > Interpolation
+            d cycle deinterlace #! Video > Toggle Deinterlace
+            [ add speed +0.1; script-binding uosc/flash-speed #! Video > Speed > Increase Speed
+            ] add speed -0.1; script-binding uosc/flash-speed #! Video > Speed > Decrease Speed
+            BS set speed 1; script-binding uosc/flash-speed #! Video > Speed > Reset Speed
+            b cycle-values deband "yes" "no" #! Video > Deband > Toggle Deband
+
+            F1 af toggle "lavfi=[loudnorm=I=-14:TP=-3:LRA=4]'"; show-text "''${af}" #! Audio > Dialogue
+            a cycle audio-normalize-downmix #! Audio > Toggle Normalize
+            Ctrl++ add audio-delay +0.10 #! Audio > Delay > Increase Audio Delay
+            Ctrl+- add audio-delay -0.10 #! Audio > Delay > Decrease Audio Delay
+
+            Shift+g add sub-scale +0.05 #! Subtitles > Scale > Increase Subtitle Scale
+            Shift+f add sub-scale -0.05 #! Subtitles > Scale > Decrease Subtitle Scale
+            : add sub-pos -1 #! Subtitles > Position > Move Subtitle Up
+            " add sub-pos +1 #! Subtitles > Position > Move Subtitle Down
+            z add sub-delay -0.1 #! Subtitles > Delay > Decrease Subtitles Delay
+            Z add sub-delay 0.1 #! Subtitles > Delay > Increase Subtitles Delay
+
+            CTRL+0 change-list glsl-shaders clr all; show-text "Shaders cleared" #! Profiles > Clear All Shaders
+            CTRL+1 apply-profile fsr-cas; show-text "Profile: ${profiles.fsr-cas.name}" #! Profiles > ${profiles.fsr-cas.name}
+            CTRL+2 apply-profile generic-high; show-text "Profile: ${profiles.generic-high.name}" #! Profiles > ${profiles.generic-high.name}
+            CTRL+3 apply-profile nnedi-very-high; show-text "Profile: ${profiles.nnedi-very-high.name}" #! Profiles > ${profiles.nnedi-very-high.name}
+            CTRL+4 apply-profile anime4k-high-a; show-text "Profile: ${profiles.anime4k-high-a.name}" #! Profiles > ${profiles.anime4k-high-a.name}
+            CTRL+5 apply-profile anime4k-high-b; show-text "Profile: ${profiles.anime4k-high-b.name}" #! Profiles > ${profiles.anime4k-high-b.name}
+            CTRL+6 apply-profile anime4k-high-c; show-text "Profile: ${profiles.anime4k-high-c.name}" #! Profiles > ${profiles.anime4k-high-c.name}
+            CTRL+7 apply-profile anime4k-high-aa; show-text "Profile: ${profiles.anime4k-high-aa.name}" #! Profiles > ${profiles.anime4k-high-aa.name}
+            CTRL+8 apply-profile anime4k-high-bb; show-text "Profile: ${profiles.anime4k-high-bb.name}" #! Profiles > ${profiles.anime4k-high-bb.name}
+            CTRL+9 apply-profile anime4k-high-ca; show-text "Profile: ${profiles.anime4k-high-ca.name}" #! Profiles > ${profiles.anime4k-high-ca.name}
+          '';
+
+          defaultProfiles = [ "high-quality" ];
+
+          profiles = {
+            fsr = profiles.fsr.settings;
+            cas = profiles.cas.settings;
+            fsr-cas = profiles.fsr-cas.settings;
+            anime4k-high-a = profiles.anime4k-high-a.settings;
+            anime4k-high-b = profiles.anime4k-high-b.settings;
+            anime4k-high-c = profiles.anime4k-high-c.settings;
+            anime4k-high-aa = profiles.anime4k-high-aa.settings;
+            anime4k-high-bb = profiles.anime4k-high-bb.settings;
+            anime4k-high-ca = profiles.anime4k-high-ca.settings;
+            anime4k-fast-a = profiles.anime4k-fast-a.settings;
+            anime4k-fast-b = profiles.anime4k-fast-b.settings;
+            anime4k-fast-c = profiles.anime4k-fast-c.settings;
+            anime4k-fast-aa = profiles.anime4k-fast-aa.settings;
+            anime4k-fast-bb = profiles.anime4k-fast-bb.settings;
+            anime4k-fast-cc = profiles.anime4k-fast-cc.settings;
+            genreric = profiles.generic.settings;
+            generic-high = profiles.generic-high.settings;
+            nnedi-high = profiles.nnedi-high.settings;
+            nnedi-very-high = profiles.nnedi-very-high.settings;
+          };
+        };
+
+        xdg.desktopEntries.mpv = {
+          type = "Application";
+          name = "mpvipc";
+          icon = "mpv";
+          exec = "mpv --player-operation-mode=pseudo-gui --input-ipc-server=/tmp/mpv-socket";
+          terminal = false;
+          categories = [
+            "AudioVideo"
+            "Audio"
+            "Video"
+            "Player"
+            "TV"
+          ];
+          mimeType = [
+            "application/ogg"
+            "application/x-ogg"
+            "application/mxf"
+            "application/sdp"
+            "application/smil"
+            "application/x-smil"
+            "application/streamingmedia"
+            "application/x-streamingmedia"
+            "application/vnd.rn-realmedia"
+            "application/vnd.rn-realmedia-vbr"
+            "audio/aac"
+            "audio/x-aac"
+            "audio/vnd.dolby.heaac.1"
+            "audio/vnd.dolby.heaac.2"
+            "audio/aiff"
+            "audio/x-aiff"
+            "audio/m4a"
+            "audio/x-m4a"
+            "application/x-extension-m4a"
+            "audio/mp1"
+            "audio/x-mp1"
+            "audio/mp2"
+            "audio/x-mp2"
+            "audio/mp3"
+            "audio/x-mp3"
+            "audio/mpeg"
+            "audio/mpeg2"
+            "audio/mpeg3"
+            "audio/mpegurl"
+            "audio/x-mpegurl"
+            "audio/mpg"
+            "audio/x-mpg"
+            "audio/rn-mpeg"
+            "audio/musepack"
+            "audio/x-musepack"
+            "audio/ogg"
+            "audio/scpls"
+            "audio/x-scpls"
+            "audio/vnd.rn-realaudio"
+            "audio/wav"
+            "audio/x-pn-wav"
+            "audio/x-pn-windows-pcm"
+            "audio/x-realaudio"
+            "audio/x-pn-realaudio"
+            "audio/x-ms-wma"
+            "audio/x-pls"
+            "audio/x-wav"
+            "video/mpeg"
+            "video/x-mpeg2"
+            "video/x-mpeg3"
+            "video/mp4v-es"
+            "video/x-m4v"
+            "video/mp4"
+            "application/x-extension-mp4"
+            "video/divx"
+            "video/vnd.divx"
+            "video/msvideo"
+            "video/x-msvideo"
+            "video/ogg"
+            "video/quicktime"
+            "video/vnd.rn-realvideo"
+            "video/x-ms-afs"
+            "video/x-ms-asf"
+            "audio/x-ms-asf"
+            "application/vnd.ms-asf"
+            "video/x-ms-wmv"
+            "video/x-ms-wmx"
+            "video/x-ms-wvxvideo"
+            "video/x-avi"
+            "video/avi"
+            "video/x-flic"
+            "video/fli"
+            "video/x-flc"
+            "video/flv"
+            "video/x-flv"
+            "video/x-theora"
+            "video/x-theora+ogg"
+            "video/x-matroska"
+            "video/mkv"
+            "audio/x-matroska"
+            "application/x-matroska"
+            "video/webm"
+            "audio/webm"
+            "audio/vorbis"
+            "audio/x-vorbis"
+            "audio/x-vorbis+ogg"
+            "video/x-ogm"
+            "video/x-ogm+ogg"
+            "application/x-ogm"
+            "application/x-ogm-audio"
+            "application/x-ogm-video"
+            "application/x-shorten"
+            "audio/x-shorten"
+            "audio/x-ape"
+            "audio/x-wavpack"
+            "audio/x-tta"
+            "audio/AMR"
+            "audio/ac3"
+            "audio/eac3"
+            "audio/amr-wb"
+            "video/mp2t"
+            "audio/flac"
+            "audio/mp4"
+            "application/x-mpegurl"
+            "video/vnd.mpegurl"
+            "application/vnd.apple.mpegurl"
+            "audio/x-pn-au"
+            "video/3gp"
+            "video/3gpp"
+            "video/3gpp2"
+            "audio/3gpp"
+            "audio/3gpp2"
+            "video/dv"
+            "audio/dv"
+            "audio/opus"
+            "audio/vnd.dts"
+            "audio/vnd.dts.hd"
+            "audio/x-adpcm"
+            "application/x-cue"
+            "audio/m3u"
+            "audio/vnd.wave"
+            "video/vnd.avi"
+          ];
+        };
+      };
+  };
+}

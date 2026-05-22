@@ -1,0 +1,37 @@
+{ den, ... }:
+{
+  den.aspects.apps.kitty = {
+    homeManager =
+      { config, ... }:
+      {
+        programs.kitty = {
+          enable = true;
+
+          shellIntegration = {
+            enableBashIntegration = config.programs.bash.enable;
+            enableFishIntegration = config.programs.fish.enable;
+            enableZshIntegration = config.programs.zsh.enable;
+          };
+
+          settings = {
+            repaint_delay = 8;
+            input_delay = 0;
+            sync_to_monitor = "no";
+            confirm_os_window_close = "2";
+            enable_audio_bell = "no";
+            copy_on_select = "yes";
+            cursor_trail = 3;
+            scrollback_lines = "20000";
+          };
+
+          keybindings = {
+            "ctrl+backspace" = "send_text all \\x17";
+            "ctrl+delete" = "send_text all \\ed";
+            "ctrl+v" = "paste_from_clipboard";
+            "ctrl+shift+left" = "none";
+            "ctrl+shift+right" = "none";
+          };
+        };
+      };
+  };
+}
