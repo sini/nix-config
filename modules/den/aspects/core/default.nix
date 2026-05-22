@@ -14,6 +14,11 @@
       security
       facter
       home-manager
+      deterministic-uids
+      sudo
+      time
+      ssd
+      linux-kernel
     ];
   };
 }
