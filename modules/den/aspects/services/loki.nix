@@ -99,7 +99,7 @@ in
 
           nginx.virtualHosts."${domain}" = {
             forceSSL = true;
-            useACMEHost = env.getTopDomainFor "loki";
+            useACMEHost = env.domain;
             locations."/" = {
               proxyPass = "http://127.0.0.1:3100";
               proxyWebsockets = true;

@@ -118,7 +118,7 @@ in
 
           nginx.virtualHosts."${domain}" = {
             forceSSL = true;
-            useACMEHost = env.getTopDomainFor "grafana";
+            useACMEHost = env.domain;
             locations."/" = {
               proxyPass = "http://127.0.0.1:3000";
               proxyWebsockets = true;

@@ -102,7 +102,7 @@ in
             virtualHosts = {
               "${domain}" = {
                 forceSSL = true;
-                useACMEHost = env.getTopDomainFor "open-webui";
+                useACMEHost = env.domain;
                 locations."/" = {
                   proxyPass = "http://127.0.0.1:10715";
                   proxyWebsockets = true;

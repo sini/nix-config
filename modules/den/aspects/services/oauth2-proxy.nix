@@ -82,7 +82,7 @@ in
           nginx = {
             virtualHosts."${domain}" = {
               forceSSL = true;
-              useACMEHost = env.getTopDomainFor "oauth2-proxy";
+              useACMEHost = env.domain;
               locations."/" = {
                 proxyPass = "http://127.0.0.1:4180";
                 recommendedProxySettings = true;

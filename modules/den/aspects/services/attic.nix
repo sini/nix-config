@@ -57,7 +57,7 @@ in
           nginx.virtualHosts = {
             "${domain}" = {
               forceSSL = true;
-              useACMEHost = env.getTopDomainFor "attic";
+              useACMEHost = env.domain;
               locations."/" = {
                 proxyPass = "http://[::1]:57448";
                 extraConfig = ''

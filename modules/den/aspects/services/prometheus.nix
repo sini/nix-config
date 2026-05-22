@@ -119,7 +119,7 @@ in
 
           nginx.virtualHosts."${domain}" = {
             forceSSL = true;
-            useACMEHost = env.getTopDomainFor "prometheus";
+            useACMEHost = env.domain;
             locations."/" = {
               proxyPass = "http://127.0.0.1:9090";
               proxyWebsockets = true;

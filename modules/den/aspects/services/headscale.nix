@@ -98,7 +98,7 @@ in
 
           nginx.virtualHosts."${domain}" = {
             forceSSL = true;
-            useACMEHost = env.getTopDomainFor "headscale";
+            useACMEHost = env.domain;
             locations = {
               "/" = {
                 proxyPass = "http://localhost:${toString config.services.headscale.port}";

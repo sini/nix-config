@@ -26,7 +26,7 @@ in
         services.nginx.virtualHosts = {
           "${domain}" = {
             forceSSL = true;
-            useACMEHost = env.getTopDomainFor "den-docs-mirror";
+            useACMEHost = env.domain;
             locations."/" = {
               root = docRoot;
               extraConfig = ''

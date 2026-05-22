@@ -39,7 +39,7 @@ in
 
         services.nginx.virtualHosts."${domain}" = {
           forceSSL = true;
-          useACMEHost = env.getTopDomainFor "forgejo";
+          useACMEHost = env.domain;
           locations."/" = {
             proxyPass = "http://127.0.0.1:3000";
             proxyWebsockets = true;

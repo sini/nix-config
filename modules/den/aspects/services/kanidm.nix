@@ -21,7 +21,7 @@ in
       let
         env = environments.${host.environment};
         domain = env.getDomainFor "kanidm";
-        topDomain = env.getTopDomainFor "kanidm";
+        topDomain = env.domain;
       in
       {
         services = {
