@@ -165,6 +165,12 @@ in
           description = "Path to the directory containing secrets for this environment";
         };
 
+        wirelessSecretsFile = mkOption {
+          type = types.path;
+          default = config.secretPath + "/wpa_supplicant_psks.age";
+          description = "Path to WPA supplicant secrets file (agenix encrypted)";
+        };
+
         settings =
           mkOption {
             type = types.attrsOf (types.attrsOf types.anything);

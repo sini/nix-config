@@ -1,9 +1,25 @@
-{ den, lib, ... }:
+# Network boot — Clevis+Tang LUKS/ZFS unlock, initrd SSH, wireless initrd.
+#
+# Ported from main:modules/features/network-boot/ (network-boot.nix + initrd-bootstrap-keys.nix).
+{ den, lib, config, ... }:
+let
+  environments = config.den.environments or { };
+  allUsers = config.den.users or { };
+
+  # Collect SSH keys from users in the "wheel" or "admins" groups
+  wheelSshKeys = lib.concatMap (
+    _name: u:
+    lib.optionals (builtins.any (g: g == "admins" || g == "wheel") (u.groups or [ ]))
+      (map (k: k.key) (u.identity.sshKeys or [ ]))
+  ) (lib.attrValues allUsers);
+in
 {
   den.aspects.network.network-boot = {
     nixos =
       { config, pkgs, host, ... }:
       let
+        env = environments.${host.environment};
+
         jweToken = builtins.path {
           path = host.secretPath + "/zroot-key.jwe";
           name = "zroot-key.jwe";
@@ -37,6 +53,8 @@
 
         hasWireless = wirelessInterface != null;
         interface = if hasWireless then wirelessInterface.unix_device_name else "";
+
+        inherit (config.age) secrets;
       in
       {
         boot.initrd = {
@@ -101,14 +119,57 @@
           network = {
             enable = true;
             ssh = {
-              enable = false; # TODO: enable once user SSH keys + initrd host key are wired
+              enable = true;
               port = 22;
+              authorizedKeys = wheelSshKeys;
+              hostKeys = [
+                secrets.initrd_host_ed25519_key.path
+              ];
             };
           };
         } // lib.optionalAttrs hasWireless {
           compressor = "zstd";
           compressorArgs = [ "-12" ];
           extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
+        };
+
+        # Wire generator dependency for wpa-supplicant-initrd (needs NixOS config context)
+        age.secrets.wpa-supplicant-initrd.generator.dependencies = [
+          config.age.secrets.wpa-supplicant-keys-for-initrd
+        ];
+
+        # Ensure valid initrd host key exists even on first boot
+        system.activationScripts = {
+          agenixEnsureInitrdHostkey = {
+            text = ''
+              [[ -e ${secrets.initrd_host_ed25519_key.path} ]] \
+                || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${secrets.initrd_host_ed25519_key.path}
+            '';
+            deps = [
+              "agenixInstall"
+              "users"
+            ];
+          };
+
+          agenixEnsureInitrdWpaSupplicantConfig = {
+            text = ''
+              if [[ ! -e ${secrets.wpa-supplicant-initrd.path} ]]; then
+                cat > ${secrets.wpa-supplicant-initrd.path} <<'EOF'
+              ctrl_interface=/var/run/wpa_supplicant
+              update_config=1
+              EOF
+                chmod 600 ${secrets.wpa-supplicant-initrd.path}
+              fi
+            '';
+            deps = [
+              "agenixInstall"
+            ];
+          };
+
+          agenixChown.deps = [
+            "agenixEnsureInitrdHostkey"
+            "agenixEnsureInitrdWpaSupplicantConfig"
+          ];
         };
       };
 
@@ -121,19 +182,25 @@
 
     age-secrets =
       { host, ... }:
+      let
+        env = environments.${host.environment};
+        wireless = (env.networks.default or { }).wireless or null;
+      in
       {
         age.secrets = {
           initrd_host_ed25519_key.generator.script = "ssh-key";
 
           wpa-supplicant-keys-for-initrd = {
             intermediary = true;
-            # TODO: wire environment.wirelessSecretsFile once environment ref lands
+            rekeyFile = env.wirelessSecretsFile;
           };
 
           wpa-supplicant-initrd = {
-            generator = {
-              script = "wpa-supplicant-config";
-            };
+            generator.script = "wpa-supplicant-config";
+            settings.networks =
+              if wireless != null
+              then { "${wireless.ssid}".pskRaw = wireless.pskRef; }
+              else { };
           };
         };
       };

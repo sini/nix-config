@@ -86,7 +86,7 @@ in
               IPv6AcceptRA = true;
               IPv6PrivacyExtensions = "yes";
               LinkLocalAddressing = effectiveLinkLocal ifCfg;
-              # TODO: wire environment.networks.default.dnsServers once environment ref lands
+              DNS = (env.networks.default or {}).dnsServers or [];
               DNSOverTLS = true;
               DNSSEC = "allow-downgrade";
             };
