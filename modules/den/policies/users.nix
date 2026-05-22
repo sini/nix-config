@@ -37,20 +37,6 @@ let
     };
   };
 
-  sshKeyType = types.submodule {
-    options = {
-      tag = mkOption {
-        type = types.nullOr types.str;
-        default = null;
-        description = "Tag to categorize the SSH key";
-      };
-      key = mkOption {
-        type = types.str;
-        description = "SSH public key string";
-      };
-    };
-  };
-
   # Registry entry type — mirrors the standard user entity shape so that
   # pipeline self-provide, define-user, and other batteries find the
   # expected attributes (userName, aspect, classes).
@@ -86,34 +72,6 @@ let
           type = types.listOf types.str;
           default = [ ];
           description = "Group memberships for access policy selection";
-        };
-        identity = mkOption {
-          type = types.submodule {
-            options = {
-              displayName = mkOption {
-                type = types.str;
-                default = "";
-                description = "Display name for the user";
-              };
-              email = mkOption {
-                type = types.nullOr types.str;
-                default = null;
-                description = "Email address for the user";
-              };
-              gpgKey = mkOption {
-                type = types.nullOr types.str;
-                default = null;
-                description = "GPG key ID for the user";
-              };
-              sshKeys = mkOption {
-                type = types.listOf sshKeyType;
-                default = [ ];
-                description = "SSH public keys for the user";
-              };
-            };
-          };
-          default = { };
-          description = "User identity information";
         };
       };
     }
