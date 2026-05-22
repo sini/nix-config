@@ -1,8 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.nix-index = {
     nixos =
-      { inputs, ... }:
+      { ... }:
       {
         home-manager.sharedModules = [ inputs.nix-index-database.homeModules.default ];
       };

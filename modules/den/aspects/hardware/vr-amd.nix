@@ -87,7 +87,6 @@
     homeManager =
       {
         config,
-        inputs,
         pkgs,
         ...
       }:

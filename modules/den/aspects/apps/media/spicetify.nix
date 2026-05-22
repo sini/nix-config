@@ -1,10 +1,9 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.spicetify = {
     homeManager =
       {
         pkgs,
-        inputs,
         ...
       }:
       let

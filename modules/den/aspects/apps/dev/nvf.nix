@@ -1,8 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.nvf = {
     homeManager =
-      { inputs, ... }:
+      { ... }:
       {
         imports = [ inputs.nvf.homeManagerModules.default ];
         programs.nvf = {

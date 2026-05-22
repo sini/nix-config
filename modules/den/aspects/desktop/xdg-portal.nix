@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.desktop.xdg-portal = {
     nixos =
       {
-        inputs,
         pkgs,
         ...
       }:

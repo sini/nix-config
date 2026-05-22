@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.desktop.hyprland = {
     nixos =
       {
-        inputs,
         pkgs,
         lib,
         ...
@@ -63,7 +62,6 @@
     homeManager =
       {
         config,
-        inputs,
         lib,
         pkgs,
         osConfig,

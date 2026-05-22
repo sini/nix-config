@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.gitkraken = {
     homeManager =
       {
-        inputs,
         pkgs,
         user,
         ...

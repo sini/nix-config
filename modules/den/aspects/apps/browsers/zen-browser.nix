@@ -1,11 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.zen-browser = {
     homeManager =
-      {
-        inputs,
-        ...
-      }:
+      { ... }:
       {
         imports = [
           inputs.zen-browser.homeModules.twilight

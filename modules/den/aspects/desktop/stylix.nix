@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.desktop.stylix = {
     nixos =
       {
-        inputs,
         pkgs,
         ...
       }:
@@ -99,7 +98,6 @@
 
     homeManager =
       {
-        inputs,
         pkgs,
         ...
       }:

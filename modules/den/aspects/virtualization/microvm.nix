@@ -1,8 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.virtualization.microvm = {
     nixos =
-      { inputs, ... }:
+      { ... }:
       {
         imports = [ inputs.microvm.nixosModules.host ];
 

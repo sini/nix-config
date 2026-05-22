@@ -1,8 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.vscode = {
     nixos =
-      { inputs, ... }:
+      { ... }:
       {
         nixpkgs.overlays = [
           inputs.nix-vscode-extensions.overlays.default

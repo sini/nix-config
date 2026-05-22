@@ -1,9 +1,8 @@
-{ den, ... }:
+{ den, inputs, ... }:
 {
   den.aspects.apps.discord = {
     homeManager =
       {
-        inputs,
         pkgs,
         ...
       }:
