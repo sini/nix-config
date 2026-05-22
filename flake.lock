@@ -417,12 +417,13 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1779403060,
-        "narHash": "sha256-6hNDvXgFy9LiVTDwPZ56cFVioui8nmJL8O3kg0Ecl1A=",
-        "owner": "sini",
-        "repo": "den",
-        "rev": "a370d30d32256ac86f0c8baf8d6f49aeb2d050ff",
-        "type": "github"
+        "lastModified": 1779430952,
+        "narHash": "sha256-7xd82KHO+66ihxx02aSevAl5e8RCVLhWmKB9zydKXnc=",
+        "ref": "refs/heads/feat/entity-gen-schema-port",
+        "rev": "5539eb2f8604bf52a2fee0d917947ef4c17ba546",
+        "revCount": 635,
+        "type": "git",
+        "url": "file:///home/sini/Documents/repos/den/.worktrees/entity-gen-schema-port"
       },
       "original": {
         "owner": "sini",
@@ -1156,12 +1157,13 @@
         ]
       },
       "locked": {
-        "lastModified": 1779386005,
-        "narHash": "sha256-KY33X6a6XSwgbtdUDf1TKgwzJxTTIW/IizpHWmEmfHQ=",
-        "owner": "sini",
-        "repo": "gen-schema",
-        "rev": "246ccaee53afe4abdd488f8ec5b66bd8ee90369a",
-        "type": "github"
+        "lastModified": 1779417936,
+        "narHash": "sha256-3S6PyiGjkTEUPqqqkElshOZZvedXguAkdIIrmvNCCU8=",
+        "ref": "refs/heads/main",
+        "rev": "25c0e4b6b91abcd22ac769c0e288de7cee008ec5",
+        "revCount": 58,
+        "type": "git",
+        "url": "file:///home/sini/Documents/repos/gen-schema"
       },
       "original": {
         "owner": "sini",

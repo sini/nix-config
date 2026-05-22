@@ -13,11 +13,9 @@
   ];
 
   # Wire den batteries that every host/user should have
+  # TODO: home-manager and os-class batteries fail to load — needs diagnosis
   den.default.includes = [
     den.batteries.define-user
     den.batteries.hostname
-    den.batteries.home-manager
-    den.batteries.primary-user
-    den.batteries.os-class
   ];
 }
