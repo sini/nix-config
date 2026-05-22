@@ -5,7 +5,7 @@
 #   kubernetes-pods — CNI pod overlay (Cilium, dual-stack)
 #   kubernetes-services — ClusterIP range (dual-stack), CoreDNS lives here
 #   kubernetes-loadbalancers — external LB pool advertised via BGP
-{ ... }:
+{ den, ... }:
 {
   den.clusters.axon = {
     environment = "prod";
@@ -45,5 +45,26 @@
         };
       };
     };
+  };
+
+  # Cluster aspect — k8s services included at cluster scope
+  den.aspects.axon = {
+    includes = with den.aspects.kubernetes; [
+      cilium
+      cilium-bgp-resources
+      coredns
+      cert-manager
+      sops-secrets-operator
+      argocd
+      envoy-gateway
+      gateway-api
+      longhorn
+      csi-driver-nfs
+      volume-snapshots
+      prometheus
+      loki
+      grafana
+      hubble-ui
+    ];
   };
 }
