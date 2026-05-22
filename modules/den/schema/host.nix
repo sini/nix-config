@@ -93,27 +93,25 @@ let
   channelNames = builtins.attrNames channels;
 
   # Dynamic settings type — recursively discovers aspects that declare .settings.
-  # Walks the nested aspect tree, collecting { "name" = settings-module } pairs.
+  # Walks the nested aspect tree, skipping registered class keys, quirk keys,
+  # and structural keys. Produces flat { "disk-zfs" = <settings-module>; ... }.
   settingsType =
     let
-      # Recursively collect aspects with .settings from the aspect tree.
-      # Produces a flat attrset: { "zfs-disk-single" = <settings>; "impermanence" = <settings>; ... }
+      # Keys that are NOT nested aspects — skip during recursion.
+      # Structural keys from den's pipeline, class keys, and quirk keys.
+      inherit (den.lib.aspects.fx.keyClassification) structuralKeysSet;
+      classKeys = den.classes or { };
+      quirkKeys = den.quirks or { };
+      skipKey = k: structuralKeysSet ? ${k} || classKeys ? ${k} || quirkKeys ? ${k};
+
       collectSettings = prefix: aspects:
         lib.foldlAttrs (acc: name: aspect:
           let
             fullName = if prefix == "" then name else "${prefix}-${name}";
             hasSelf = builtins.isAttrs aspect && aspect ? settings;
-            # Recurse into nested aspects (attrsets that contain further aspects)
             nested = if builtins.isAttrs aspect
-              then collectSettings fullName (lib.filterAttrs (k: v:
-                builtins.isAttrs v && k != "settings" && k != "nixos" && k != "darwin"
-                && k != "homeManager" && k != "includes" && k != "meta" && k != "name"
-                && k != "homeLinux" && k != "homeDarwin" && k != "homeAarch64"
-                && k != "firewall" && k != "persist" && k != "cache"
-                && k != "persistHome" && k != "cacheHome" && k != "age-secrets"
-                && k != "service-domains" && k != "k8s-manifests" && k != "prometheus-targets"
-                && k != "_"
-              ) aspect)
+              then collectSettings fullName
+                (lib.filterAttrs (k: v: builtins.isAttrs v && !(skipKey k)) aspect)
               else { };
           in
           acc
