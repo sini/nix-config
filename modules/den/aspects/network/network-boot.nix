@@ -4,7 +4,7 @@
 { den, lib, config, ... }:
 let
   environments = config.den.environments or { };
-  allUsers = config.den.users or { };
+  allUsers = config.den.users.registry or { };
 
   # Collect SSH keys from users in the "wheel" or "admins" groups
   wheelSshKeys = lib.concatMap (
