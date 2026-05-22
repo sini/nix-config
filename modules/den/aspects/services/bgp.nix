@@ -391,7 +391,12 @@ in
           sort
           ;
 
-        hubSettings = host.settings.services.bgp.hub;
+        hubSettings = (host.settings.services.bgp or { }).hub or {
+          maximumPaths = 8;
+          peerWithGateway = true;
+          gatewayAsNumber = 65999;
+          defaultOriginateToSpokes = true;
+        };
         env = environments.${host.environment};
 
         # Gateway neighbor (Unifi router)
