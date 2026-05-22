@@ -91,6 +91,8 @@ in
           description = "The nixpkgs channel to use for this host";
         };
 
+        # TODO: replace with schema.ref to den.environments once gen-schema
+        # registry wiring is complete.
         environment = mkOption {
           type = types.str;
           default = "prod";

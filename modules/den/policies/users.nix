@@ -1,8 +1,8 @@
 # User registry and access-driven user resolution policies.
 #
 # Users are resolved onto hosts via environment and host-level
-# access group intersection. The legacy users registry and
-# environment access mappings drive the resolution.
+# access group intersection. The fleet.user-access ACL mappings
+# and user registry drive the resolution (following fleet-demo pattern).
 {
   lib,
   den,
@@ -14,19 +14,8 @@ let
   inherit (lib) mkOption types;
 
   registry = config.den.users.registry;
-
-  # Resolve environment-level access: users whose groups intersect
-  # the environment's system-access-groups.
-  envAccessGroups =
-    envName:
-    let
-      env = config.environments.${envName} or { };
-    in
-    env.system-access-groups or [ ];
-
-  # Resolve per-host access: users granted access via host-level
-  # system-access-groups.
-  hostAccessGroups = hostCfg: hostCfg.system-access-groups or [ ];
+  accessByEnv = config.fleet.user-access.by-environment;
+  accessByHost = config.fleet.user-access.by-host;
 
   # Filter registry users whose groups intersect the granted set.
   matchRegistryUsers =
@@ -38,6 +27,15 @@ let
       in
       builtins.any (g: lib.elem g grantedGroups) userGroups
     ) (builtins.attrNames registry);
+
+  # Submodule for group-based access grants.
+  accessGrantType = types.submodule {
+    options.groups = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = "Groups granted access";
+    };
+  };
 
   sshKeyType = types.submodule {
     options = {
@@ -129,28 +127,42 @@ in
     description = "User registry with extended schema for fleet policy resolution";
   };
 
+  # Access mappings: under fleet (following fleet-demo pattern).
+  options.fleet.user-access = {
+    by-environment = mkOption {
+      type = types.attrsOf accessGrantType;
+      default = { };
+      description = "Grant user groups access to all hosts in an environment";
+    };
+    by-host = mkOption {
+      type = types.attrsOf accessGrantType;
+      default = { };
+      description = "Grant user groups access to a specific host";
+    };
+  };
+
   config = {
     # Promote users to real entities.
     den.schema.user.isEntity = true;
     den.schema.user.classes = lib.mkDefault [ "homeManager" ];
 
     # host -> users (by environment): resolve registry users whose groups
-    # intersect the environment's system-access-groups.
+    # intersect the fleet.user-access.by-environment grant for that env.
     den.policies.env-users =
       { host, ... }:
       let
-        granted = envAccessGroups (host.environment or "prod");
-        matched = matchRegistryUsers granted;
+        grant = accessByEnv.${host.environment or "prod"} or { groups = [ ]; };
+        matched = matchRegistryUsers grant.groups;
       in
       map (name: resolve.to "user" { user = registry.${name}; }) matched;
 
     # host -> users (by host): resolve registry users whose groups
-    # intersect the host's system-access-groups.
+    # intersect the fleet.user-access.by-host grant for that host.
     den.policies.host-users =
       { host, ... }:
       let
-        granted = hostAccessGroups host;
-        matched = matchRegistryUsers granted;
+        grant = accessByHost.${host.name} or { groups = [ ]; };
+        matched = matchRegistryUsers grant.groups;
       in
       map (name: resolve.to "user" { user = registry.${name}; }) matched;
   };

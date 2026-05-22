@@ -1,17 +1,28 @@
-# Group registry placeholder.
+# Group registry.
 #
 # Groups are data-only (no isEntity) — they don't get resolved into the
 # scope tree. Group data is consumed directly by user access policies
-# and will be fully wired in scope-engine (Task 7).
-#
-# This module declares the den.groups option for future use.
-{ lib, ... }:
+# and scope-engine ACL resolution.
+{ lib, den, ... }:
 let
   inherit (lib) mkOption types;
+
+  groupType = types.submodule (
+    { name, ... }:
+    {
+      freeformType = types.attrsOf types.anything;
+      imports = [ den.schema.group ];
+      options.name = mkOption {
+        type = types.str;
+        default = name;
+        description = "Group name (from attrset key)";
+      };
+    }
+  );
 in
 {
   options.den.groups = mkOption {
-    type = types.attrsOf (types.attrsOf types.anything);
+    type = types.attrsOf groupType;
     default = { };
     description = "Group definitions for access policy resolution";
   };

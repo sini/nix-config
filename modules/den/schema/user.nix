@@ -67,6 +67,26 @@ in
                 default = false;
                 description = "Enable lingering for the user (systemd user services start without login)";
               };
+              enableUnixAccount = mkOption {
+                type = types.bool;
+                default = true;
+                description = "Whether to create a Unix account for this user (kanidm posixAccount flag)";
+              };
+              extra-features = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Additional feature aspects to include for this user beyond defaults";
+              };
+              excluded-features = mkOption {
+                type = types.listOf types.str;
+                default = [ ];
+                description = "Feature aspects to exclude for this user";
+              };
+              include-host-features = mkOption {
+                type = types.bool;
+                default = false;
+                description = "Whether to inherit host-level aspect features for this user";
+              };
               settings = mkOption {
                 type = types.attrsOf (types.attrsOf types.anything);
                 default = { };

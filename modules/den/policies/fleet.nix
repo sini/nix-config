@@ -15,7 +15,7 @@ let
   inherit (config.den) environments;
 in
 {
-  # flake -> fleet: single fleet entity.
+  # flake -> fleet: single fleet entity (fires at flake scope).
   den.policies.to-fleet = _: [
     (resolve.to "fleet" {
       fleet = {
@@ -26,7 +26,7 @@ in
 
   # fleet -> environments: fan out per registered environment.
   den.policies.fleet-to-envs =
-    _:
+    { fleet, ... }:
     lib.mapAttrsToList (
       _: env:
       resolve.to "environment" {

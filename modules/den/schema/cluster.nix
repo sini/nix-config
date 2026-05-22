@@ -52,6 +52,8 @@ in
   den.schema.cluster.imports = [
     (_: {
       options = {
+        # TODO: replace with schema.ref to den.environments once gen-schema
+        # registry wiring is complete.
         environment = mkOption {
           type = types.str;
           description = "Name of the environment this cluster belongs to";

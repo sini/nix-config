@@ -58,7 +58,7 @@ let
       [ { name = "root"; value = { }; } ]
       ++ map (ename: {
         name = "env:${ename}";
-        value = environments.${ename}.tags or { };
+        value = environments.${ename}.settings or { };
       }) envNames
       ++ map (hname: {
         name = "host:${hname}";

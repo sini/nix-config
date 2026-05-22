@@ -133,6 +133,18 @@ in
           description = "Base domain for the environment";
         };
 
+        secretPath = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+          description = "Path to the directory containing secrets for this environment";
+        };
+
+        settings = mkOption {
+          type = types.attrsOf (types.attrsOf types.anything);
+          default = { };
+          description = "Environment-level default feature settings for scope-engine cascade";
+        };
+
         networks = mkOption {
           type = types.attrsOf networkType;
           default = { };
@@ -225,6 +237,8 @@ in
           description = "Environment-wide tags for metadata and organization";
         };
 
+        # TODO: delegation targets should become schema.ref to den.environments
+        # once gen-schema registry wiring is complete.
         delegation = mkOption {
           type = types.submodule {
             options = {

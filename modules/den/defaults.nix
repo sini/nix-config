@@ -1,8 +1,5 @@
-{ den, lib, ... }:
+{ den, ... }:
 {
-  # Default user class — home-manager for all users
-  den.schema.user.classes = lib.mkDefault [ "homeManager" ];
-
   # Default host includes — aggregator aspects for quirk collection
   den.schema.host.includes = [
     den.aspects.core.firewall-collector
