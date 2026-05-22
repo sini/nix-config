@@ -1,0 +1,78 @@
+{ den, ... }:
+{
+  den.aspects.hardware.gpu-nvidia-vfio = {
+    includes = [ den.aspects.hardware.gpu-nvidia ];
+
+    nixos =
+      { config, lib, ... }:
+      let
+        nvidiaCard = lib.lists.findFirst (
+          card: card.vendor.name == "nVidia Corporation"
+        ) null config.facter.report.hardware.graphics_card;
+
+        nvidiaGpuDeviceID =
+          if nvidiaCard != null then
+            "${nvidiaCard.vendor.hex}:${nvidiaCard.device.hex}"
+          else
+            "10de:2203";
+
+        nvidiaAudioController = lib.lists.findFirst (
+          card: card.vendor.name == "nVidia Corporation"
+        ) null config.facter.report.hardware.sound;
+
+        nvidiaAudioDeviceID =
+          if nvidiaAudioController != null then
+            "${nvidiaAudioController.vendor.hex}:${nvidiaAudioController.device.hex}"
+          else
+            "10de:1aef";
+      in
+      {
+        services.udev.extraRules = ''
+          SUBSYSTEM=="vfio", OWNER="root", GROUP="kvm"
+          SUBSYSTEM=="kvmfr", OWNER="root", GROUP="kvm", MODE="0660"
+        '';
+
+        systemd.services.nvidia-powerd.enable = false;
+
+        boot = {
+          kernelParams = [
+            "vfio-pci.ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}"
+            "vfio_iommu_type1.allow_unsafe_interrupts=1"
+            "kvm.ignore_msrs=1"
+            "kvm.report_ignored_msrs=0"
+            "pcie_acs_override=downstream,multifunction"
+          ];
+
+          initrd.kernelModules = [
+            "vfio_pci"
+            "vfio"
+            "vfio_iommu_type1"
+            "kvmfr"
+          ];
+
+          extraModulePackages = [
+            config.boot.kernelPackages.kvmfr
+          ];
+
+          blacklistedKernelModules = [
+            "nvidia"
+            "nvidia_modeset"
+            "nvidia_uvm"
+            "nvidia_drm"
+            "i2c_nvidia_gpu"
+            "nvidia-gpu"
+            "nouveau"
+          ];
+
+          extraModprobeConfig = ''
+            options vfio-pci ids=${nvidiaGpuDeviceID},${nvidiaAudioDeviceID}
+            options kvmfr static_size_mb=256
+            options kvm_amd nested=1 avic=1 npt=1 sev=0
+            options vfio_iommu_type1 allow_unsafe_interrupts=1
+            blacklist nouveau
+            options nouveau modeset=0
+          '';
+        };
+      };
+  };
+}
