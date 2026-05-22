@@ -33,14 +33,38 @@
         # Make secrets paths available as module arg
         _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
 
-        # Make agenix home-manager module available
+        # Make agenix home-manager module available + configure per-user rekey
         home-manager.sharedModules = [
           inputs.agenix.homeManagerModules.default
           inputs.agenix-rekey.homeManagerModules.default
           (
-            { config, lib, ... }:
+            { config, osConfig, lib, ... }:
             {
               _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
+
+              age = {
+                identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${config.home.username}") [
+                  osConfig.age.secrets."user-identity-${config.home.username}".path
+                ];
+
+                rekey = {
+                  masterIdentities = [
+                    (self + "/.secrets/pub/master.pub")
+                    (self + "/.secrets/pub/master-clone1.pub")
+                    (self + "/.secrets/pub/master-clone2.pub")
+                  ];
+                  storageMode = "local";
+                  generatedSecretsDir =
+                    self + "/.secrets/generated/${config.home.username}/${osConfig.networking.hostName}";
+                  localStorageDir =
+                    self + "/.secrets/rekeyed/${config.home.username}/${osConfig.networking.hostName}";
+                  hostPubkey =
+                    if (osConfig.age.secrets ? "user-identity-${config.home.username}") then
+                      (self + "/.secrets/users/${config.home.username}/id_agenix.pub")
+                    else
+                      osConfig.age.rekey.hostPubkey;
+                };
+              };
             }
           )
         ];
@@ -56,7 +80,11 @@
           ];
 
           rekey = {
-            inherit (self.secretsConfig) masterIdentities;
+            masterIdentities = [
+              (self + "/.secrets/pub/master.pub")
+              (self + "/.secrets/pub/master-clone1.pub")
+              (self + "/.secrets/pub/master-clone2.pub")
+            ];
             storageMode = "local";
             generatedSecretsDir =
               self + "/.secrets/generated/${config.home.username}/${osConfig.networking.hostName}";
