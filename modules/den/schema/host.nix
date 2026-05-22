@@ -1,4 +1,15 @@
-{ lib, inputs, self, ... }:
+# Host entity schema — channels, networking, settings, computed fields.
+#
+# Follows feat/den's approach: channels defined inline, instantiate/HM module
+# derived from config.channel, dynamic settings namespace from den.aspects,
+# computed ipv4/ipv6 from networking interfaces.
+{
+  lib,
+  inputs,
+  den,
+  self,
+  ...
+}:
 let
   inherit (lib) mkOption types;
   gen = inputs.gen { inherit lib; };
@@ -8,7 +19,7 @@ let
       ipv4 = mkOption {
         type = types.listOf types.str;
         default = [ ];
-        description = "IPv4 addresses in CIDR notation (e.g., '10.9.2.1/16')";
+        description = "IPv4 addresses in CIDR notation";
       };
       ipv6 = mkOption {
         type = types.listOf types.str;
@@ -16,214 +27,245 @@ let
         description = "IPv6 addresses in CIDR notation";
       };
       dhcp = mkOption {
-        type = types.nullOr (
-          types.enum [
-            "none"
-            "ipv4"
-            "ipv6"
-            "yes"
-          ]
-        );
+        type = types.nullOr (types.enum [ "none" "ipv4" "ipv6" "yes" ]);
         default = null;
-        description = "DHCP mode. null = auto (ipv6 if static ipv4, yes if no static ipv4)";
+        description = "DHCP mode. null = auto";
       };
       managed = mkOption {
         type = types.bool;
         default = true;
-        description = "Apply environment gateway/DNS/subnet. false for point-to-point or standalone links.";
+        description = "Apply environment gateway/DNS/subnet";
       };
       mtu = mkOption {
         type = types.nullOr types.int;
         default = null;
-        description = "MTU for this interface. null = system default.";
+        description = "MTU for this interface";
       };
       linkLocal = mkOption {
-        type = types.nullOr (
-          types.enum [
-            "ipv4"
-            "ipv6"
-            "yes"
-            "no"
-          ]
-        );
+        type = types.nullOr (types.enum [ "ipv4" "ipv6" "yes" "no" ]);
         default = null;
-        description = "Link-local addressing. null = auto (ipv6 for managed, no for unmanaged).";
+        description = "Link-local addressing";
       };
       requiredForOnline = mkOption {
         type = types.nullOr types.str;
         default = null;
-        description = "RequiredForOnline value. null = auto (routable).";
+        description = "RequiredForOnline value";
       };
     };
   };
 
   exporterType = types.submodule {
     options = {
-      port = mkOption {
-        type = types.int;
-        description = "Port number for the exporter";
-      };
-      path = mkOption {
-        type = types.str;
-        default = "/metrics";
-        description = "HTTP path for metrics endpoint";
-      };
-      interval = mkOption {
-        type = types.str;
-        default = "30s";
-        description = "Scrape interval";
-      };
+      port = mkOption { type = types.int; description = "Port number"; };
+      path = mkOption { type = types.str; default = "/metrics"; };
+      interval = mkOption { type = types.str; default = "30s"; };
     };
   };
+
+  # Channel definitions — maps channel name to nixpkgs/HM/darwin inputs
+  channels = {
+    nixos-unstable = {
+      nixosSystem = inputs.nixpkgs-unstable.lib.nixosSystem;
+      darwinSystem = inputs.nix-darwin-unstable.lib.darwinSystem;
+      home-manager-module.nixos = inputs.home-manager-unstable.nixosModules.home-manager;
+      home-manager-module.darwin = inputs.home-manager-unstable.darwinModules.home-manager;
+    };
+    nixpkgs-master = {
+      nixosSystem = inputs.nixpkgs-master.lib.nixosSystem;
+      darwinSystem = inputs.nix-darwin-unstable.lib.darwinSystem;
+      home-manager-module.nixos = inputs.home-manager-master.nixosModules.home-manager;
+      home-manager-module.darwin = inputs.home-manager-master.darwinModules.home-manager;
+    };
+    nixos-stable = {
+      nixosSystem = inputs.nixpkgs.lib.nixosSystem;
+      darwinSystem = inputs.nix-darwin.lib.darwinSystem;
+      home-manager-module.nixos = inputs.home-manager.nixosModules.home-manager;
+      home-manager-module.darwin = inputs.home-manager.darwinModules.home-manager;
+    };
+    nixpkgs-stable-darwin = {
+      nixosSystem = inputs.nixpkgs-stable-darwin.lib.nixosSystem;
+      darwinSystem = inputs.nix-darwin.lib.darwinSystem;
+      home-manager-module.nixos = inputs.home-manager-stable-darwin.nixosModules.home-manager;
+      home-manager-module.darwin = inputs.home-manager-stable-darwin.darwinModules.home-manager;
+    };
+  };
+
+  channelNames = builtins.attrNames channels;
+
+  # Dynamic settings type — recursively discovers aspects that declare .settings.
+  # Walks the nested aspect tree, collecting { "name" = settings-module } pairs.
+  settingsType =
+    let
+      # Recursively collect aspects with .settings from the aspect tree.
+      # Produces a flat attrset: { "zfs-disk-single" = <settings>; "impermanence" = <settings>; ... }
+      collectSettings = prefix: aspects:
+        lib.foldlAttrs (acc: name: aspect:
+          let
+            fullName = if prefix == "" then name else "${prefix}-${name}";
+            hasSelf = builtins.isAttrs aspect && aspect ? settings;
+            # Recurse into nested aspects (attrsets that contain further aspects)
+            nested = if builtins.isAttrs aspect
+              then collectSettings fullName (lib.filterAttrs (k: v:
+                builtins.isAttrs v && k != "settings" && k != "nixos" && k != "darwin"
+                && k != "homeManager" && k != "includes" && k != "meta" && k != "name"
+                && k != "homeLinux" && k != "homeDarwin" && k != "homeAarch64"
+                && k != "firewall" && k != "persist" && k != "cache"
+                && k != "persistHome" && k != "cacheHome" && k != "age-secrets"
+                && k != "service-domains" && k != "k8s-manifests" && k != "prometheus-targets"
+                && k != "_"
+              ) aspect)
+              else { };
+          in
+          acc
+          // lib.optionalAttrs hasSelf { ${fullName} = aspect.settings; }
+          // nested
+        ) { } aspects;
+
+      aspectsWithSettings = collectSettings "" (den.aspects or { });
+
+      reshapeSettings = raw: {
+        imports = raw.imports or [ ];
+        config = raw.config or { };
+        options = builtins.removeAttrs raw [ "imports" "config" ];
+      };
+    in
+    types.submodule {
+      options = lib.mapAttrs (
+        name: settings:
+        mkOption {
+          type = types.submodule (reshapeSettings settings);
+          default = { };
+          description = "Settings for the ${name} aspect";
+        }
+      ) aspectsWithSettings;
+    };
 in
 {
   den.schema.host.isEntity = true;
+
   den.schema.host.validators = [
-    (gen.mkValidator "valid-channel" (
-      { channel, ... }:
-      lib.elem channel [
-        "nixos-unstable"
-        "nixpkgs-master"
-        "nixos-stable"
-        "nixpkgs-stable-darwin"
-      ]
-    ) "channel must be one of: nixos-unstable, nixpkgs-master, nixos-stable, nixpkgs-stable-darwin")
+    (gen.mkValidator "valid-channel"
+      ({ channel, ... }: lib.elem channel channelNames)
+      "channel must be one of: ${lib.concatStringsSep ", " channelNames}")
   ];
+
   den.schema.host.imports = [
-    ({ config, ... }: {
+    ({ config, ... }:
+    let
+      resolvedChannel = channels.${config.channel};
+    in
+    {
       options = {
         channel = mkOption {
-          type = types.enum [
-            "nixos-unstable"
-            "nixpkgs-master"
-            "nixos-stable"
-            "nixpkgs-stable-darwin"
-          ];
+          type = types.enum channelNames;
           default = "nixos-unstable";
-          description = "The nixpkgs channel to use for this host";
+          description = "Nixpkgs channel — determines nixpkgs, home-manager, and nix-darwin versions";
         };
 
-        # TODO: replace with schema.ref to den.environments once gen-schema
-        # registry wiring is complete.
         environment = mkOption {
           type = types.str;
           default = "prod";
           description = "Environment name that this host belongs to";
         };
 
-        networking =
-          mkOption {
-            type = types.submodule {
-              options = {
-                interfaces = mkOption {
-                  type = types.attrsOf interfaceType;
-                  default = { };
-                  description = "Network interfaces with their IP addresses and properties";
-                };
-                bonds = mkOption {
-                  type = types.attrsOf (types.submodule {
-                    options = {
-                      interfaces = mkOption {
-                        type = types.listOf types.str;
-                        description = "Physical interfaces to bond together";
-                      };
-                      mode = mkOption {
-                        type = types.str;
-                        default = "balance-rr";
-                        description = "Bond mode (balance-rr, active-backup, balance-xor, etc.)";
-                      };
-                      transmitHashPolicy = mkOption {
-                        type = types.nullOr types.str;
-                        default = null;
-                        description = "Transmit hash policy for load-balancing modes";
-                      };
-                    };
-                  });
-                  default = { };
-                  description = "Network bond definitions";
-                };
-                autobridging = mkOption {
-                  type = types.bool;
-                  default = false;
-                  description = "Auto-create bridges for each interface";
-                };
-                bridges = mkOption {
-                  type = types.attrsOf (types.listOf types.str);
-                  default = { };
-                  description = "Bridge definitions mapping bridge name to member interfaces";
-                };
+        # Computed IPs from networking interfaces
+        ipv4 = mkOption {
+          type = types.listOf types.str;
+          readOnly = true;
+          default =
+            let
+              ifaces = config.networking.interfaces or { };
+              ifNames = builtins.attrNames ifaces;
+              firstIf = if ifNames != [ ] then ifaces.${builtins.head ifNames} else { };
+              stripCidr = addr: builtins.head (lib.splitString "/" addr);
+            in
+            map stripCidr (firstIf.ipv4 or [ ]);
+          description = "Primary IPv4 addresses (derived from first interface, CIDR stripped)";
+        };
+
+        ipv6 = mkOption {
+          type = types.listOf types.str;
+          readOnly = true;
+          default =
+            let
+              ifaces = config.networking.interfaces or { };
+              ifNames = builtins.attrNames ifaces;
+              firstIf = if ifNames != [ ] then ifaces.${builtins.head ifNames} else { };
+            in
+            firstIf.ipv6 or [ ];
+          description = "Primary IPv6 addresses (derived from first interface)";
+        };
+
+        networking = mkOption {
+          type = types.submodule {
+            options = {
+              interfaces = mkOption {
+                type = types.attrsOf interfaceType;
+                default = { };
+                description = "Network interfaces";
+              };
+              bonds = mkOption {
+                type = types.attrsOf (types.submodule {
+                  options = {
+                    interfaces = mkOption { type = types.listOf types.str; };
+                    mode = mkOption { type = types.str; default = "balance-rr"; };
+                    transmitHashPolicy = mkOption { type = types.nullOr types.str; default = null; };
+                  };
+                });
+                default = { };
+                description = "Bond definitions";
+              };
+              autobridging = mkOption { type = types.bool; default = false; };
+              bridges = mkOption {
+                type = types.attrsOf (types.listOf types.str);
+                default = { };
               };
             };
-            default = { };
-            description = "Network configuration for the host";
-          }
-          // {
-            identity = false;
           };
+          default = { };
+        } // { identity = false; };
 
         system-owner = mkOption {
           type = types.nullOr types.str;
           default = null;
-          description = "The primary user who owns this host";
+          description = "Primary user for this host";
         };
 
         system-access-groups = mkOption {
           type = types.listOf types.str;
           default = [ ];
-          description = "System-scoped groups that grant Unix account creation on this host";
+          description = "Groups granting Unix account creation on this host";
         };
 
-        facts =
-          mkOption {
-            type = types.nullOr types.path;
-            default = null;
-            description = "Path to the Facter JSON file for the host";
-          }
-          // {
-            identity = false;
-          };
+        facts = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+        } // { identity = false; };
 
-        secretPath =
-          mkOption {
-            type = types.nullOr types.path;
-            default = null;
-            description = "Path to the host's secrets directory";
-          }
-          // {
-            identity = false;
-          };
+        secretPath = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+        } // { identity = false; };
 
-        public_key =
-          mkOption {
-            type = types.nullOr types.path;
-            default = null;
-            description = "Path to the public SSH key for the host";
-          }
-          // {
-            identity = false;
-          };
+        public_key = mkOption {
+          type = types.nullOr types.path;
+          default = null;
+        } // { identity = false; };
 
-        exporters =
-          mkOption {
-            type = types.attrsOf exporterType;
-            default = { };
-            description = "Prometheus exporters exposed by this host";
-          }
-          // {
-            identity = false;
-          };
+        exporters = mkOption {
+          type = types.attrsOf exporterType;
+          default = { };
+        } // { identity = false; };
 
-        settings =
-          mkOption {
-            type = types.attrsOf (types.attrsOf types.anything);
-            default = { };
-            description = "Per-host feature settings (freeform nested namespace)";
-          }
-          // {
-            identity = false;
-          };
+        # Dynamic settings namespace — auto-discovers aspects with .settings
+        settings = mkOption {
+          type = settingsType;
+          default = { };
+          description = "Per-aspect typed settings";
+        } // { identity = false; };
       };
 
+      # Computed config — channel determines instantiate + HM module
       config = {
         secretPath = lib.mkDefault (self + "/.secrets/hosts/${config.name}");
         facts = lib.mkDefault (self + "/hosts/${config.name}/facter.json");
@@ -231,6 +273,18 @@ in
           if config.secretPath != null
           then config.secretPath + "/ssh_host_ed25519_key.pub"
           else null
+        );
+
+        instantiate = lib.mkDefault (
+          if config.class == "darwin"
+          then resolvedChannel.darwinSystem
+          else resolvedChannel.nixosSystem
+        );
+
+        home-manager.module = lib.mkDefault (
+          if config.class == "darwin"
+          then resolvedChannel.home-manager-module.darwin
+          else resolvedChannel.home-manager-module.nixos
         );
       };
     })

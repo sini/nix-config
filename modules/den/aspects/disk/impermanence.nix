@@ -6,11 +6,24 @@
       den.aspects.core.persist-home-collector
     ];
 
+    settings = {
+      wipeRootOnBoot = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Rollback ZFS root to @empty on boot";
+      };
+      wipeHomeOnBoot = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Rollback ZFS home to @empty on boot";
+      };
+    };
+
     nixos =
       { config, host, pkgs, ... }:
       let
-        wipeRoot = host.settings.impermanence.wipeRootOnBoot or true;
-        wipeHome = host.settings.impermanence.wipeHomeOnBoot or false;
+        wipeRoot = host.settings.disk-impermanence.wipeRootOnBoot;
+        wipeHome = host.settings.disk-impermanence.wipeHomeOnBoot;
       in
       {
         imports = [

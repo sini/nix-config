@@ -20,8 +20,8 @@
     };
 
     settings = {
-      zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
-      impermanence = {
+      disk-zfs.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+      disk-impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };

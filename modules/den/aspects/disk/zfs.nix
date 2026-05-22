@@ -45,10 +45,17 @@
   den.aspects.disk.zfs = {
     includes = [ den.aspects.disk.zfs.root ];
 
+    settings = {
+      device_id = lib.mkOption {
+        type = lib.types.str;
+        description = "Disk device path for ZFS pool (e.g., /dev/disk/by-id/nvme-...)";
+      };
+    };
+
     nixos =
       { host, ... }:
       let
-        disk-device = host.settings.zfs-disk-single.device_id;
+        disk-device = host.settings.disk-zfs.device_id;
 
         emptySnapshot =
           name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";
