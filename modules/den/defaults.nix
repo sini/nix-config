@@ -1,5 +1,8 @@
 { den, ... }:
 {
+  # Reserve 'settings' so aspects can declare typed settings without pipeline dispatch
+  den.reservedKeys = [ "settings" ];
+
   # Default host includes — aggregator aspects for quirk collection
   den.schema.host.includes = [
     den.aspects.core.firewall-collector
