@@ -11,8 +11,8 @@
         ...
       }:
       let
-        zfsEnabled = host.hasFeature "zfs-root";
-        btrfsEnabled = host.hasFeature "btrfs-root";
+        zfsEnabled = host.hasAspect den.aspects.disk.zfs-disk-single;
+        btrfsEnabled = false; # no btrfs aspect ported yet
         cacheRoot = config.environment.persistence."/cache".persistentStoragePath;
       in
       {

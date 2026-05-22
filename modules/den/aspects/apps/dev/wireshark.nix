@@ -13,14 +13,9 @@
           package = pkgs.wireshark;
         };
 
-        users.users = builtins.listToAttrs (
-          map (userName: {
-            name = userName;
-            value = {
-              extraGroups = [ "wireshark" ];
-            };
-          }) host.users.enabledNames
-        );
+        # TODO: restore per-user wireshark group assignment — needs host.users.enabledNames
+        # or equivalent from den's user resolution. For now, system-owner only.
+        users.users.${host.system-owner or "root"}.extraGroups = [ "wireshark" ];
       };
 
     homeManager =
