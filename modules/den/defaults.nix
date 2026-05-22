@@ -13,9 +13,11 @@
   ];
 
   # Wire den batteries that every host/user should have
-  # TODO: home-manager and os-class batteries fail to load — needs diagnosis
+  # home-manager and os-class are support modules (not battery aspects) —
+  # they auto-load via den's flakeModule and wire their own schema/policies.
   den.default.includes = [
     den.batteries.define-user
     den.batteries.hostname
+    den.batteries.primary-user
   ];
 }
