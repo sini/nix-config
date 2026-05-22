@@ -65,6 +65,11 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
+      gen = {
+        url = "github:sini/gen";
+        inputs.nixpkgs.follows = "nixpkgs-unstable";
+      };
+
       declarative-jellyfin = {
         url = "github:Sveske-Juice/declarative-jellyfin";
         inputs.nixpkgs.follows = "nixpkgs-unstable";

@@ -1134,6 +1134,21 @@
         "type": "github"
       }
     },
+    "gen": {
+      "locked": {
+        "lastModified": 1779386011,
+        "narHash": "sha256-BU4pNxqCT7eyI2SpExe6wXoy8mGUGwJ3+B9xM1ejDhw=",
+        "owner": "sini",
+        "repo": "gen",
+        "rev": "129ed5c8db220615c12ce17e8fe2f24eeecd2351",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "gen",
+        "type": "github"
+      }
+    },
     "gen-schema": {
       "inputs": {
         "nixpkgs": [
@@ -3233,6 +3248,7 @@
         "flake-parts": "flake-parts_4",
         "flake-root": "flake-root",
         "flake-utils": "flake-utils",
+        "gen": "gen",
         "gen-schema": "gen-schema",
         "git-hooks-nix": "git-hooks-nix",
         "haumea": "haumea",

@@ -103,6 +103,10 @@
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
+    gen = {
+      url = "github:sini/gen";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     gen-schema = {
       url = "github:sini/gen-schema";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

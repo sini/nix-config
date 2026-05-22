@@ -35,22 +35,24 @@ in
     description = "Cluster definitions for fleet topology and K8s service resolution";
   };
 
-  # environment -> clusters: resolve clusters whose environment matches.
-  den.policies.env-to-clusters =
-    { environment, ... }:
-    lib.concatMap (
-      clusterName:
-      let
-        cluster = clusters.${clusterName};
-      in
-      lib.optionals ((cluster.environment or "") == environment.name) [
-        (resolve.to "cluster" {
-          cluster = cluster // {
-            name = clusterName;
-          };
-        })
-      ]
-    ) (builtins.attrNames clusters);
+  config = {
+    # environment -> clusters: resolve clusters whose environment matches.
+    den.policies.env-to-clusters =
+      { environment, ... }:
+      lib.concatMap (
+        clusterName:
+        let
+          cluster = clusters.${clusterName};
+        in
+        lib.optionals ((cluster.environment or "") == environment.name) [
+          (resolve.to "cluster" {
+            cluster = cluster // {
+              name = clusterName;
+            };
+          })
+        ]
+      ) (builtins.attrNames clusters);
 
-  den.schema.environment.includes = [ den.policies.env-to-clusters ];
+    den.schema.environment.includes = [ den.policies.env-to-clusters ];
+  };
 }
