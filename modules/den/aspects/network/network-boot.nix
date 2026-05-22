@@ -101,12 +101,8 @@
           network = {
             enable = true;
             ssh = {
-              enable = true;
+              enable = false; # TODO: enable once user SSH keys + initrd host key are wired
               port = 22;
-              # TODO: wire flakeLib.users.getSshKeysForGroup once user registry is available
-              hostKeys = [
-                # secrets.initrd_host_ed25519_key — wired via secrets aspect
-              ];
             };
           };
         } // lib.optionalAttrs hasWireless {
@@ -116,7 +112,7 @@
         };
       };
 
-    secrets =
+    age-secrets =
       { host, ... }:
       {
         age.secrets = {

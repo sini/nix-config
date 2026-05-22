@@ -36,7 +36,7 @@
       networking.firewall.allowedTCPPorts = [ 16893 ];
     };
 
-    secrets = {
+    age-secrets = {
       age.secrets.nix_store_signing_key = {
         generator.script = "binary-cache-key";
         owner = "nix-serve";

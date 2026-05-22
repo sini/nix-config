@@ -12,6 +12,8 @@
       utils
       firmware
       security
+      facter
+      home-manager
     ];
   };
 }

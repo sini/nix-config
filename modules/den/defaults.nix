@@ -4,12 +4,6 @@
   den.schema.host.includes = [
     den.aspects.core.firewall-collector
     den.aspects.core.secrets-collector
-    den.aspects.core.persist-collector
-  ];
-
-  # Default user includes — home persistence aggregator
-  den.schema.user.includes = [
-    den.aspects.core.persist-home-collector
   ];
 
   # Wire den batteries that every host/user should have

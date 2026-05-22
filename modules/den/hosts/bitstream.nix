@@ -27,12 +27,12 @@
       };
     };
 
-    facts = self + "/modules/hosts/bitstream/facter.json";
+    facts = self + "/modules/_legacy/hosts/bitstream/facter.json";
     secretPath = self + "/.secrets/hosts/bitstream";
     public_key = self + "/.secrets/hosts/bitstream/ssh_host_ed25519_key.pub";
   };
 
-  den.aspects.hosts.bitstream = {
+  den.aspects.bitstream = {
     includes = with den.aspects; [
       core.default
       secrets.agenix

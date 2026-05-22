@@ -29,7 +29,7 @@
         };
       };
 
-    secrets =
+    age-secrets =
       { host, ... }:
       {
         # Secret declarations for ACME cloudflare API keys

@@ -10,6 +10,7 @@
         };
       in
       {
+        # impermanence NixOS module imported by disk.impermanence aspect
         environment.persistence."/persist" = mergePersist persist;
         environment.persistence."/cache" = mergePersist cache;
       };

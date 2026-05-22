@@ -223,6 +223,7 @@
 
         networking = {
           hostName = host.name;
+          domain = (host.environment or "dev") + ".json64.dev";
           hostId = builtins.substring 0 8 (builtins.hashString "md5" host.name);
 
           useNetworkd = true;

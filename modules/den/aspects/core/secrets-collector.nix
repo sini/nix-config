@@ -1,6 +1,6 @@
 { den, ... }:
 {
   den.aspects.core.secrets-collector = {
-    nixos = { secrets, lib, ... }: lib.mkMerge secrets;
+    nixos = { age-secrets, lib, ... }: lib.mkMerge age-secrets;
   };
 }
