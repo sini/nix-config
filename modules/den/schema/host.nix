@@ -1,6 +1,7 @@
-{ lib, ... }:
+{ lib, inputs, ... }:
 let
   inherit (lib) mkOption types;
+  gen = inputs.gen { inherit lib; };
 
   interfaceType = types.submodule {
     options = {
@@ -77,6 +78,17 @@ let
 in
 {
   den.schema.host.isEntity = true;
+  den.schema.host.validators = [
+    (gen.mkValidator "valid-channel" (
+      { channel, ... }:
+      lib.elem channel [
+        "nixos-unstable"
+        "nixpkgs-master"
+        "nixos-stable"
+        "nixpkgs-stable-darwin"
+      ]
+    ) "channel must be one of: nixos-unstable, nixpkgs-master, nixos-stable, nixpkgs-stable-darwin")
+  ];
   den.schema.host.imports = [
     (_: {
       options = {
@@ -99,19 +111,23 @@ in
           description = "Environment name that this host belongs to";
         };
 
-        networking = mkOption {
-          type = types.submodule {
-            options = {
-              interfaces = mkOption {
-                type = types.attrsOf interfaceType;
-                default = { };
-                description = "Network interfaces with their IP addresses and properties";
+        networking =
+          mkOption {
+            type = types.submodule {
+              options = {
+                interfaces = mkOption {
+                  type = types.attrsOf interfaceType;
+                  default = { };
+                  description = "Network interfaces with their IP addresses and properties";
+                };
               };
             };
+            default = { };
+            description = "Network configuration for the host";
+          }
+          // {
+            identity = false;
           };
-          default = { };
-          description = "Network configuration for the host";
-        };
 
         system-owner = mkOption {
           type = types.nullOr types.str;
@@ -125,29 +141,45 @@ in
           description = "System-scoped groups that grant Unix account creation on this host";
         };
 
-        facts = mkOption {
-          type = types.nullOr types.path;
-          default = null;
-          description = "Path to the Facter JSON file for the host";
-        };
+        facts =
+          mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Path to the Facter JSON file for the host";
+          }
+          // {
+            identity = false;
+          };
 
-        public_key = mkOption {
-          type = types.nullOr types.path;
-          default = null;
-          description = "Path to the public SSH key for the host";
-        };
+        public_key =
+          mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Path to the public SSH key for the host";
+          }
+          // {
+            identity = false;
+          };
 
-        exporters = mkOption {
-          type = types.attrsOf exporterType;
-          default = { };
-          description = "Prometheus exporters exposed by this host";
-        };
+        exporters =
+          mkOption {
+            type = types.attrsOf exporterType;
+            default = { };
+            description = "Prometheus exporters exposed by this host";
+          }
+          // {
+            identity = false;
+          };
 
-        settings = mkOption {
-          type = types.attrsOf (types.attrsOf types.anything);
-          default = { };
-          description = "Per-host feature settings (freeform nested namespace)";
-        };
+        settings =
+          mkOption {
+            type = types.attrsOf (types.attrsOf types.anything);
+            default = { };
+            description = "Per-host feature settings (freeform nested namespace)";
+          }
+          // {
+            identity = false;
+          };
       };
     })
   ];

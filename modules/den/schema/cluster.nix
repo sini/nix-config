@@ -1,6 +1,7 @@
-{ lib, ... }:
+{ lib, inputs, ... }:
 let
   inherit (lib) mkOption types;
+  schemaLib = inputs.gen-schema.lib;
 
   networkType = types.submodule {
     options = {
@@ -49,6 +50,23 @@ let
 in
 {
   den.schema.cluster.isEntity = true;
+
+  den.schema.cluster.methods.getAssignment =
+    schemaLib.schemaFn "Look up an IP assignment across cluster networks"
+      (lib.types.functionTo lib.types.str)
+      (
+        { networks, ... }:
+        assignmentName:
+        let
+          networkNames = builtins.attrNames networks;
+          found = lib.findFirst (nname: networks.${nname}.assignments ? ${assignmentName}) null networkNames;
+        in
+        if found != null then
+          networks.${found}.assignments.${assignmentName}
+        else
+          throw "den: cluster assignment '${assignmentName}' not found"
+      );
+
   den.schema.cluster.imports = [
     (_: {
       options = {

@@ -1,6 +1,7 @@
-{ lib, ... }:
+{ lib, inputs, ... }:
 let
   inherit (lib) mkOption types;
+  schemaLib = inputs.gen-schema.lib;
 
   networkType = types.submodule {
     options = {
@@ -119,6 +120,31 @@ let
 in
 {
   den.schema.environment.isEntity = true;
+
+  # Method: resolve the domain for a service, following delegation
+  den.schema.environment.methods.getDomainFor =
+    schemaLib.schemaFn "Get the domain for a service, following delegation"
+      (lib.types.functionTo lib.types.str)
+      (
+        {
+          name,
+          services,
+          domain,
+          ...
+        }:
+        serviceName:
+        let
+          svc = services.${serviceName} or { };
+          delegateTo = svc.delegateTo or null;
+        in
+        if svc ? domain && svc.domain != null then
+          svc.domain
+        else if delegateTo != null then
+          "${serviceName}.${delegateTo}.${domain}"
+        else
+          "${serviceName}.${domain}"
+      );
+
   den.schema.environment.imports = [
     (_: {
       options = {
@@ -139,11 +165,15 @@ in
           description = "Path to the directory containing secrets for this environment";
         };
 
-        settings = mkOption {
-          type = types.attrsOf (types.attrsOf types.anything);
-          default = { };
-          description = "Environment-level default feature settings for scope-engine cascade";
-        };
+        settings =
+          mkOption {
+            type = types.attrsOf (types.attrsOf types.anything);
+            default = { };
+            description = "Environment-level default feature settings for scope-engine cascade";
+          }
+          // {
+            identity = false;
+          };
 
         networks = mkOption {
           type = types.attrsOf networkType;

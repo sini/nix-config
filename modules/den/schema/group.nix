@@ -1,8 +1,14 @@
-{ lib, ... }:
+{ lib, inputs, ... }:
 let
   inherit (lib) mkOption types;
+  gen = inputs.gen { inherit lib; };
 in
 {
+  den.schema.group.validators = [
+    (gen.mkValidator "posix-needs-gid" (
+      { labels, gid, ... }: !(lib.elem "posix" labels) || gid != null
+    ) "groups with the 'posix' label must have a gid set")
+  ];
   den.schema.group.imports = [
     (_: {
       options = {
