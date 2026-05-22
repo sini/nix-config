@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.den-docs-mirror = {
     includes = [ den.aspects.services.nginx ];
@@ -15,7 +18,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "den-docs-mirror";
         docRoot = "/var/lib/den-docs";
       in

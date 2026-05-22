@@ -5,12 +5,11 @@
 #   kubernetes-pods — CNI pod overlay (Cilium, dual-stack)
 #   kubernetes-services — ClusterIP range (dual-stack), CoreDNS lives here
 #   kubernetes-loadbalancers — external LB pool advertised via BGP
-{ self, ... }:
+{ ... }:
 {
   den.clusters.axon = {
     environment = "prod";
     role = "k3s";
-    secretPath = self + "/.secrets/clusters/axon";
 
     networks = {
       control-plane = {

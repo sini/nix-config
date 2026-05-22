@@ -1,4 +1,12 @@
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  config,
+  ...
+}:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.acme = {
     nixos =
@@ -9,7 +17,7 @@
         topDomain = lib.concatStringsSep "." (lib.reverseList (lib.take 2 (lib.reverseList fqdnParts)));
 
         # Look up the issuer for this domain via environment certificates config
-        env = config.den.environments.${host.environment} or { };
+        env = environments.${host.environment} or { };
         domainConfig = (env.certificates.domains or { }).${topDomain} or null;
         issuerName = if domainConfig != null then domainConfig.issuer else null;
       in

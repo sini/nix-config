@@ -1,6 +1,12 @@
-{ den, lib, config, ... }:
+{
+  den,
+  lib,
+  config,
+  ...
+}:
 let
   environments = config.den.environments or { };
+  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   # BGP base aspect — FRR bgpd with configurable neighbors, prefix lists, route maps
@@ -32,9 +38,7 @@ in
           ++ lib.flatten (
             lib.mapAttrsToList (
               name: entries:
-              lib.imap0 (
-                i: entry: "ip prefix-list ${name} seq ${toString ((i + 1) * 10)} ${entry}"
-              ) entries
+              lib.imap0 (i: entry: "ip prefix-list ${name} seq ${toString ((i + 1) * 10)} ${entry}") entries
             ) cfg.prefixLists
           )
           ++ [ "!" ]
@@ -125,30 +129,28 @@ in
           lib.flatten (lib.mapAttrsToList mkAddressFamilyLines cfg.addressFamilies)
         );
 
-        bgpLines =
-          [
-            "!"
-            "router bgp ${toString localAsn}"
-            "${ind}bgp router-id ${routerId}"
-            "${ind}no bgp ebgp-requires-policy"
-            "${ind}bgp bestpath as-path multipath-relax"
-            "${ind}maximum-paths ${toString cfg.maximumPaths}"
-            "${ind}bgp allow-martian-nexthop"
-          ]
-          ++ peerGroupLines
-          ++ neighborLines
-          ++ addressFamilyLines;
+        bgpLines = [
+          "!"
+          "router bgp ${toString localAsn}"
+          "${ind}bgp router-id ${routerId}"
+          "${ind}no bgp ebgp-requires-policy"
+          "${ind}bgp bestpath as-path multipath-relax"
+          "${ind}maximum-paths ${toString cfg.maximumPaths}"
+          "${ind}bgp allow-martian-nexthop"
+        ]
+        ++ peerGroupLines
+        ++ neighborLines
+        ++ addressFamilyLines;
 
-        allLines =
-          [
-            "ip forwarding"
-            "!"
-          ]
-          ++ staticRouteLines
-          ++ prefixListLines
-          ++ routeMapLines
-          ++ bgpLines
-          ++ lib.optional (cfg.extraConfig != "") cfg.extraConfig;
+        allLines = [
+          "ip forwarding"
+          "!"
+        ]
+        ++ staticRouteLines
+        ++ prefixListLines
+        ++ routeMapLines
+        ++ bgpLines
+        ++ lib.optional (cfg.extraConfig != "") cfg.extraConfig;
       in
       {
         options.services.bgp = {
@@ -402,7 +404,6 @@ in
         # Auto-discover spoke hosts in the same environment.
         # All hosts in the axon cluster are spokes — filter by environment match
         # and presence of bgp settings (localAsn) to identify BGP participants.
-        allHosts = config.den.hosts.x86_64-linux or { };
         spokeHosts = filterAttrs (
           _name: h: h.environment == host.environment && h.name != host.name
         ) allHosts;

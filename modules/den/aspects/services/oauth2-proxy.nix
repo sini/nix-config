@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.oauth2-proxy = {
     includes = [ den.aspects.services.nginx ];
@@ -15,7 +18,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "oauth2-proxy";
         kanidmDomain = env.getDomainFor "kanidm";
       in
@@ -106,7 +109,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets = {

@@ -10,13 +10,14 @@
 }:
 let
   clusters = config.den.clusters or { };
+  environments = config.den.environments;
 in
 {
   den.aspects.kubernetes.cilium = {
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = config.den.environments.${cluster.environment};
+        environment = environments.${cluster.environment};
         podNetwork = cluster.networks.kubernetes-pods;
         loadbalancerNetwork = cluster.networks.kubernetes-loadbalancers;
         loadbalancer-cidr = loadbalancerNetwork.cidr;

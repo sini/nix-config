@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.attic = {
     includes = [ den.aspects.services.nginx ];
@@ -16,7 +19,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "attic";
         zfsEnabled = builtins.elem "zfs-root" (host.aspects or [ ]);
       in
@@ -69,7 +72,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets = {

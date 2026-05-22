@@ -8,6 +8,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.grafana = {
     nixos =
@@ -18,7 +21,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "grafana";
         kanidmDomain = env.getDomainFor "kanidm";
       in
@@ -132,7 +135,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets = {

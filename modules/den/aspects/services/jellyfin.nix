@@ -2,8 +2,12 @@
   den,
   lib,
   config,
+  inputs,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.jellyfin = {
     includes = [ den.aspects.services.nginx ];
@@ -13,11 +17,10 @@
         config,
         host,
         pkgs,
-        inputs,
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "jellyfin";
         mediaRoot = "/mnt/data/media";
       in

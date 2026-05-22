@@ -4,6 +4,10 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+  allHosts = config.den.hosts.x86_64-linux or { };
+in
 {
   den.aspects.services.open-webui = {
     includes = [ den.aspects.services.nginx ];
@@ -16,12 +20,9 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "open-webui";
         kanidmDomain = env.getDomainFor "kanidm";
-
-        # Discover ollama hosts in the same environment
-        allHosts = config.den.hosts.x86_64-linux or { };
         ollamaHosts = builtins.sort (a: b: a < b) (
           lib.mapAttrsToList (_: h: builtins.head h.ipv4) (
             lib.filterAttrs (
@@ -130,7 +131,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets = {

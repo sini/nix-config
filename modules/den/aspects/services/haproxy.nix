@@ -4,6 +4,10 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+  allHosts = config.den.hosts.x86_64-linux or { };
+in
 {
   den.aspects.services.haproxy = {
     nixos =
@@ -13,10 +17,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
-
-        # Find k3s hosts in the same environment for backend servers
-        allHosts = config.den.hosts.x86_64-linux or { };
+        env = environments.${host.environment};
         k3sHosts = lib.filterAttrs (
           _: h: h.environment == env.name && (h.settings.services.k3s or { }) != { }
         ) allHosts;

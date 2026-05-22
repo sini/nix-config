@@ -7,6 +7,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.kubernetes.hubble-ui = {
     k8s-manifests =
@@ -16,7 +19,7 @@
         ...
       }:
       let
-        environment = config.den.environments.${cluster.environment};
+        environment = environments.${cluster.environment};
         domain = environment.getDomainFor "hubble-ui";
       in
       {
@@ -179,7 +182,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets.hubble-ui-oidc-client-secret = {

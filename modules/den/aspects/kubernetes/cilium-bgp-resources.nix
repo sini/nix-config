@@ -17,16 +17,15 @@ let
     ;
 
   clusters = config.den.clusters or { };
+  environments = config.den.environments;
+  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.kubernetes.cilium-bgp-resources = {
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = config.den.environments.${cluster.environment};
-
-        # Resolve hosts in this cluster's environment with k3s role
-        allHosts = config.den.hosts.x86_64-linux or { };
+        environment = environments.${cluster.environment};
         clusterHosts = filterAttrs (
           _: h: h.environment == cluster.environment && (h.settings.services.k3s or { }) != { }
         ) allHosts;

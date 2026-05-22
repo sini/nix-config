@@ -1,4 +1,9 @@
-{ den, lib, config, ... }:
+{
+  den,
+  lib,
+  config,
+  ...
+}:
 let
   environments = config.den.environments or { };
 in
@@ -145,9 +150,7 @@ in
         bondNames = map (b: b.name) bondConfig;
         bondedInterfaces = unique (concatMap (b: b.interfaces) bondConfig);
 
-        standaloneInterfaces = subtractLists (
-          bondedInterfaces ++ bondNames
-        ) allInterfaceNames;
+        standaloneInterfaces = subtractLists (bondedInterfaces ++ bondNames) allInterfaceNames;
 
         allInterfaces = unique (allInterfaceNames ++ bondedInterfaces ++ bondNames);
 
@@ -254,10 +257,7 @@ in
           enable = true;
           wait-online.enable = false;
           netdevs = bondNetdevs;
-          networks =
-            bondSlaveNetworks
-            // standaloneInterfaceNetworks
-            // bondDeviceNetworks;
+          networks = bondSlaveNetworks // standaloneInterfaceNetworks // bondDeviceNetworks;
         };
       };
   };

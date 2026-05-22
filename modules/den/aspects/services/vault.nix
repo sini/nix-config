@@ -4,6 +4,10 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+  allHosts = config.den.hosts.x86_64-linux or { };
+in
 {
   den.aspects.services.vault = {
     nixos =
@@ -14,10 +18,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
-
-        # Find all hosts with vault aspect in the same environment
-        allHosts = config.den.hosts.x86_64-linux or { };
+        env = environments.${host.environment};
         allVaultHosts = lib.filterAttrs (
           _: h: h.environment == env.name && builtins.elem "vault" (h.aspects or [ ])
         ) allHosts;
@@ -157,7 +158,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets = {

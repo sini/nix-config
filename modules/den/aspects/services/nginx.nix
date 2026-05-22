@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.nginx = {
     includes = [ den.aspects.services.acme ];
@@ -11,7 +14,7 @@
     nixos =
       { config, host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
 
         # Extract top-level domain from a full domain name
         extractTopDomain =

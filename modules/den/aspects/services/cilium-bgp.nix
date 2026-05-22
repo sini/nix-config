@@ -1,7 +1,13 @@
-{ den, lib, config, ... }:
+{
+  den,
+  lib,
+  config,
+  ...
+}:
 let
   environments = config.den.environments or { };
   clusters = config.den.clusters or { };
+  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   # Cilium BGP — FRR peering with cilium for pod/service/LB route advertisement
@@ -33,15 +39,14 @@ in
         ciliumAsn = host.settings.services.cilium-bgp.localAsn;
 
         # Find the bgp-hub host in the same environment for uplink peering
-        allHosts = config.den.hosts.x86_64-linux or { };
         hubHost =
           let
             candidates = filterAttrs (
               _name: h: h.environment == host.environment && h.name != host.name
             ) allHosts;
-            hubName = findFirst (
-              name: (candidates.${name}.settings.services.bgp or { }) ? hub
-            ) null (attrNames candidates);
+            hubName = findFirst (name: (candidates.${name}.settings.services.bgp or { }) ? hub) null (
+              attrNames candidates
+            );
           in
           if hubName != null then candidates.${hubName} else null;
 
@@ -56,20 +61,11 @@ in
           if names != [ ] then matching.${head names} else null;
 
         podCidr =
-          if hostCluster != null then
-            hostCluster.networks.kubernetes-pods.cidr
-          else
-            "172.20.0.0/16";
+          if hostCluster != null then hostCluster.networks.kubernetes-pods.cidr else "172.20.0.0/16";
         serviceCidr =
-          if hostCluster != null then
-            hostCluster.networks.kubernetes-services.cidr
-          else
-            "172.21.0.0/16";
+          if hostCluster != null then hostCluster.networks.kubernetes-services.cidr else "172.21.0.0/16";
         loadbalancerCidr =
-          if hostCluster != null then
-            hostCluster.networks.kubernetes-loadbalancers.cidr
-          else
-            "172.22.0.0/16";
+          if hostCluster != null then hostCluster.networks.kubernetes-loadbalancers.cidr else "172.22.0.0/16";
       in
       {
         config.services.bgp = {

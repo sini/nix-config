@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.kanidm = {
     includes = [ den.aspects.services.nginx ];
@@ -16,7 +19,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "kanidm";
         topDomain = env.getTopDomainFor "kanidm";
       in
@@ -88,7 +91,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets.kanidm-admin-password = {

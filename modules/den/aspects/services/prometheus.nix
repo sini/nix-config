@@ -8,6 +8,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.prometheus = {
     nixos =
@@ -17,7 +20,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "prometheus";
 
         # Collect prometheus-targets quirk data from all aspects on this host.
@@ -63,22 +66,21 @@
               "--web.enable-lifecycle"
             ];
 
-            scrapeConfigs =
-              [
-                {
-                  job_name = "prometheus";
-                  static_configs = [
-                    {
-                      targets = [ "127.0.0.1:9090" ];
-                      labels = {
-                        hostname = config.networking.hostName;
-                        exporter = "prometheus";
-                      };
-                    }
-                  ];
-                }
-              ]
-              ++ targetScrapeConfigs;
+            scrapeConfigs = [
+              {
+                job_name = "prometheus";
+                static_configs = [
+                  {
+                    targets = [ "127.0.0.1:9090" ];
+                    labels = {
+                      hostname = config.networking.hostName;
+                      exporter = "prometheus";
+                    };
+                  }
+                ];
+              }
+            ]
+            ++ targetScrapeConfigs;
 
             rules = [
               ''

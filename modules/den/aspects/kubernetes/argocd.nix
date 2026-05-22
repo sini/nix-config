@@ -14,6 +14,8 @@ let
     take
     ;
 
+  environments = config.den.environments;
+
   # Convert domain to k8s-safe resource name (last 2 parts, hyphenated)
   domainToResourceName =
     domain:
@@ -30,7 +32,7 @@ in
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = config.den.environments.${cluster.environment};
+        environment = environments.${cluster.environment};
         domain = environment.getDomainFor "argocd";
 
         # OIDC issuer URL via Kanidm

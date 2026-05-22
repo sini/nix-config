@@ -9,12 +9,15 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.kubernetes.csi-driver-nfs = {
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = config.den.environments.${cluster.environment};
+        environment = environments.${cluster.environment};
         nfsVolumes = environment.nfsVolumes or { };
       in
       {

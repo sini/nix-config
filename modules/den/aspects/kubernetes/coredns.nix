@@ -7,12 +7,15 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.kubernetes.coredns = {
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = config.den.environments.${cluster.environment};
+        environment = environments.${cluster.environment};
         defaultNetwork =
           environment.networks.default or {
             dnsServers = [

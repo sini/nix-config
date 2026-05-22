@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.tailscale = {
     nixos =
@@ -13,7 +16,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
         secretExists = builtins.pathExists rekeyFile;
       in
@@ -45,7 +48,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
       in
       {

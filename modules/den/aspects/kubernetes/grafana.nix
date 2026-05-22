@@ -5,12 +5,15 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.kubernetes.grafana = {
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = config.den.environments.${cluster.environment};
+        environment = environments.${cluster.environment};
         domain = environment.getDomainFor "grafana-k8s";
       in
       {

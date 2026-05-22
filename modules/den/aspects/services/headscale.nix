@@ -4,6 +4,9 @@
   config,
   ...
 }:
+let
+  environments = config.den.environments;
+in
 {
   den.aspects.services.headscale = {
     includes = [ den.aspects.services.nginx ];
@@ -16,7 +19,7 @@
         ...
       }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
         domain = env.getDomainFor "headscale";
         kanidmDomain = env.getDomainFor "kanidm";
       in
@@ -116,7 +119,7 @@
     age-secrets =
       { host, ... }:
       let
-        env = config.den.environments.${host.environment};
+        env = environments.${host.environment};
       in
       {
         age.secrets.headscale-oidc-secret = {
