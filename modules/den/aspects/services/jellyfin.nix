@@ -29,14 +29,12 @@ in
           inputs.declarative-jellyfin.nixosModules.default
         ];
 
-        users.deterministicIds.jellyfin =
-          let
-            uidGid = id: {
-              uid = id;
-              gid = id;
-            };
-          in
-          uidGid 1027;
+        users.users.jellyfin = {
+          uid = 1027;
+          group = "jellyfin";
+          isSystemUser = true;
+        };
+        users.groups.jellyfin.gid = 1027;
 
         services = {
           declarative-jellyfin = {

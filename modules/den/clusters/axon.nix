@@ -10,6 +10,7 @@
   den.clusters.axon = {
     environment = "prod";
     role = "k3s";
+    secretPath = ./. + "/../../../.secrets/clusters/axon";
 
     networks = {
       control-plane = {

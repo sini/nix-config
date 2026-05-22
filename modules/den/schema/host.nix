@@ -179,12 +179,12 @@ in
           default =
             let
               ifaces = config.networking.interfaces or { };
-              ifNames = builtins.attrNames ifaces;
-              firstIf = if ifNames != [ ] then ifaces.${builtins.head ifNames} else { };
+              ifaceList = lib.attrValues ifaces;
+              withIps = lib.findFirst (i: (i.ipv4 or [ ]) != [ ]) null ifaceList;
               stripCidr = addr: builtins.head (lib.splitString "/" addr);
             in
-            map stripCidr (firstIf.ipv4 or [ ]);
-          description = "Primary IPv4 addresses (derived from first interface, CIDR stripped)";
+            if withIps != null then map stripCidr withIps.ipv4 else [ ];
+          description = "Primary IPv4 addresses (derived from first interface with IPs, CIDR stripped)";
         };
 
         ipv6 = mkOption {
@@ -193,11 +193,11 @@ in
           default =
             let
               ifaces = config.networking.interfaces or { };
-              ifNames = builtins.attrNames ifaces;
-              firstIf = if ifNames != [ ] then ifaces.${builtins.head ifNames} else { };
+              ifaceList = lib.attrValues ifaces;
+              withIps = lib.findFirst (i: (i.ipv6 or [ ]) != [ ]) null ifaceList;
             in
-            firstIf.ipv6 or [ ];
-          description = "Primary IPv6 addresses (derived from first interface)";
+            if withIps != null then withIps.ipv6 else [ ];
+          description = "Primary IPv6 addresses (derived from first interface with IPs)";
         };
 
         networking = mkOption {
