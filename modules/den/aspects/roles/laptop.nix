@@ -32,8 +32,8 @@
 
           scx = {
             enable = true;
-            package = lib.mkDefault pkgs.scx.full;
-            scheduler = "scx_lavd";
+            package = lib.mkForce pkgs.scx.full;
+            scheduler = lib.mkForce "scx_lavd";
             extraArgs = [
               "--autopower"
             ];
