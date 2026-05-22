@@ -39,10 +39,20 @@ in
 
     age-secrets =
       { host, ... }:
+      let
+        env = environments.${host.environment} or { };
+        issuers = env.certificates.issuers or { };
+        secretPath = env.secretPath or null;
+      in
       {
-        # Secret declarations for ACME cloudflare API keys
-        # Wired per-issuer once environment ref + certificates config is available
-        age.secrets = { };
+        age.secrets = lib.optionalAttrs (secretPath != null) (
+          lib.mapAttrs' (
+            issuerName: _issuer:
+            lib.nameValuePair "${issuerName}-cloudflare-api-key" {
+              rekeyFile = secretPath + "/acme/${issuerName}-cloudflare-api-key.age";
+            }
+          ) issuers
+        );
       };
 
     persist = {
