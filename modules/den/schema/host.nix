@@ -183,6 +183,16 @@ in
             identity = false;
           };
 
+        secretPath =
+          mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Path to the host's secrets directory";
+          }
+          // {
+            identity = false;
+          };
+
         public_key =
           mkOption {
             type = types.nullOr types.path;
