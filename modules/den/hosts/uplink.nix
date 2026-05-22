@@ -45,8 +45,6 @@
       services.oauth2-proxy
       services.ollama
       services.open-webui
-      services.vault
-      services.forgejo
       services.attic
       services.tailscale
       services.den-docs-mirror
