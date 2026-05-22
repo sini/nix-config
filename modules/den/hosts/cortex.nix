@@ -47,7 +47,7 @@
       virtualization.windows-vfio
       virtualization.podman
       services.media-data-share
-      apps.media.easyeffects
+      apps.easyeffects
       secrets.agenix
       core.default
     ];
@@ -157,13 +157,12 @@
                   device-profile = "[Out] Headphones";
                   preset-name = "HD650-Harmon";
                 };
-            "easyeffects/autoload/output/bluez_output.38_8F_30_F0_D1_9D.1.json".text =
-              builtins.toJSON {
-                device = "bluez_output.38_8F_30_F0_D1_9D.1";
-                device-description = "Created by Home Manager";
-                device-profile = "headset-output";
-                preset-name = "GalaxyBuds";
-              };
+            "easyeffects/autoload/output/bluez_output.38_8F_30_F0_D1_9D.1.json".text = builtins.toJSON {
+              device = "bluez_output.38_8F_30_F0_D1_9D.1";
+              device-description = "Created by Home Manager";
+              device-profile = "headset-output";
+              preset-name = "GalaxyBuds";
+            };
           };
         }
       ];
@@ -171,19 +170,19 @@
 
     sini = {
       includes = with den.aspects; [
-        apps.wayland.waybar
-        apps.wayland.swaync
-        apps.wayland.hypridle
-        apps.wayland.hyprland-split-monitors
-        apps.media.spotify-player
+        apps.waybar
+        apps.swaync
+        apps.hypridle
+        apps.hyprland-split-monitors
+        apps.spotify-player
       ];
     };
 
     shuo = {
       includes = with den.aspects; [
-        apps.browsers.firefox
-        apps.gaming.steam
-        apps.media.spicetify
+        apps.firefox
+        apps.steam
+        apps.spicetify
       ];
     };
   };

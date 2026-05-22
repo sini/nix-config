@@ -42,26 +42,26 @@
       network.openssh
       network.network-manager
       services.tailscale
-      apps.messaging.discord
+      apps.discord
       secrets.agenix
       core.default
     ];
 
     sini = {
       includes = with den.aspects; [
-        apps.wayland.waybar
-        apps.wayland.swaync
-        apps.wayland.hypridle
-        apps.wayland.hyprland-split-monitors
-        apps.media.spotify-player
+        apps.waybar
+        apps.swaync
+        apps.hypridle
+        apps.hyprland-split-monitors
+        apps.spotify-player
       ];
     };
 
     shuo = {
       includes = with den.aspects; [
-        apps.browsers.firefox
-        apps.gaming.steam
-        apps.media.spicetify
+        apps.firefox
+        apps.steam
+        apps.spicetify
       ];
     };
   };
