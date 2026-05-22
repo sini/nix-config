@@ -8,7 +8,7 @@ let
 
   # Collect SSH keys from users in the "wheel" or "admins" groups
   wheelSshKeys = lib.concatMap (
-    _name: u:
+    u:
     lib.optionals (builtins.any (g: g == "admins" || g == "wheel") (u.groups or [ ]))
       (map (k: k.key) (u.identity.sshKeys or [ ]))
   ) (lib.attrValues allUsers);
