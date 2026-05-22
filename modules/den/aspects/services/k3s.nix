@@ -179,28 +179,28 @@ in
         serverFlags = concatStringsSep " " (generalFlagList ++ serverFlagList);
       in
       {
-        environment.systemPackages = with pkgs; [
-          k3s
-          k9s
-          kubectl
-          istioctl
-          kubernetes-helm
-          cilium-cli
+        environment.systemPackages = [
+          pkgs.k3s
+          pkgs.k9s
+          pkgs.kubectl
+          pkgs.istioctl
+          pkgs.kubernetes-helm
+          pkgs.cilium-cli
 
-          clusterctl
-          nerdctl
+          pkgs.clusterctl
+          pkgs.nerdctl
 
-          skopeo
-          go-containerregistry
-          dive
+          pkgs.skopeo
+          pkgs.go-containerregistry
+          pkgs.dive
 
-          openiscsi
-          nfs-utils
+          pkgs.openiscsi
+          pkgs.nfs-utils
 
-          util-linux
-          parted
-          gptfdisk
-          lvm2
+          pkgs.util-linux
+          pkgs.parted
+          pkgs.gptfdisk
+          pkgs.lvm2
         ];
 
         boot = {
@@ -335,9 +335,9 @@ in
               description = "Bootstrap Cilium CNI and CoreDNS";
               after = [ "k3s.service" ];
               requires = [ "k3s.service" ];
-              path = with pkgs; [
-                kubectl
-                cilium-cli
+              path = [
+                pkgs.kubectl
+                pkgs.cilium-cli
               ];
               environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
               serviceConfig = {

@@ -21,7 +21,7 @@ in
       let
         env = environments.${host.environment};
         domain = env.getDomainFor "attic";
-        zfsEnabled = builtins.elem "zfs-root" (host.aspects or [ ]);
+        zfsEnabled = config.boot.supportedFilesystems.zfs or false;
       in
       {
         environment.systemPackages = [ pkgs.attic-client ];

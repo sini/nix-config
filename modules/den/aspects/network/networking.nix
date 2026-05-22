@@ -5,7 +5,7 @@
   ...
 }:
 let
-  environments = config.den.environments or { };
+  environments = config.den.environments;
 in
 {
   den.aspects.networking = {
@@ -86,7 +86,7 @@ in
               IPv6AcceptRA = true;
               IPv6PrivacyExtensions = "yes";
               LinkLocalAddressing = effectiveLinkLocal ifCfg;
-              DNS = (env.networks.default or {}).dnsServers or [];
+              DNS = (env.networks.default or { }).dnsServers or [ ];
               DNSOverTLS = true;
               DNSSEC = "allow-downgrade";
             };

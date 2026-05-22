@@ -5,7 +5,7 @@
   ...
 }:
 let
-  environments = config.den.environments or { };
+  environments = config.den.environments;
   allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
@@ -391,12 +391,13 @@ in
           sort
           ;
 
-        hubSettings = (host.settings.services.bgp or { }).hub or {
-          maximumPaths = 8;
-          peerWithGateway = true;
-          gatewayAsNumber = 65999;
-          defaultOriginateToSpokes = true;
-        };
+        hubSettings =
+          (host.settings.services.bgp or { }).hub or {
+            maximumPaths = 8;
+            peerWithGateway = true;
+            gatewayAsNumber = 65999;
+            defaultOriginateToSpokes = true;
+          };
         env = environments.${host.environment};
 
         # Gateway neighbor (Unifi router)
@@ -406,11 +407,10 @@ in
           asn = hubSettings.gatewayAsNumber;
         };
 
-        # Auto-discover spoke hosts in the same environment.
-        # All hosts in the axon cluster are spokes — filter by environment match
-        # and presence of bgp settings (localAsn) to identify BGP participants.
+        # Auto-discover spoke hosts: same environment, not self, and has BGP settings
         spokeHosts = filterAttrs (
-          _name: h: h.environment == host.environment && h.name != host.name
+          _name: h:
+          h.environment == host.environment && h.name != host.name && (h.settings.services.bgp or { }) != { }
         ) allHosts;
 
         sortedSpokeNames = sort (a: b: a < b) (attrNames spokeHosts);

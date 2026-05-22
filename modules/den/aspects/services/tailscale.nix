@@ -56,7 +56,7 @@ in
           inherit rekeyFile;
           settings = {
             headscaleHost = builtins.head host.ipv4;
-            user = host.hostname;
+            user = host.name;
           };
           generator.script = "tailscale-preauthkey";
         };

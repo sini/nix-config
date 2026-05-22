@@ -1,7 +1,12 @@
 # k3s-containerd — containerd runtime with nix-snapshotter and Cilium CNI.
 #
 # Ported from main:modules/services/k3s/k3s-containerd.nix.
-{ den, lib, inputs, ... }:
+{
+  den,
+  lib,
+  inputs,
+  ...
+}:
 {
   den.aspects.services.k3s-containerd = {
     nixos =
@@ -9,9 +14,9 @@
       let
         k3s-cni-plugins = pkgs.buildEnv {
           name = "k3s-cni-plugins";
-          paths = with pkgs; [
-            cni-plugins
-            cni-plugin-flannel
+          paths = [
+            pkgs.cni-plugins
+            pkgs.cni-plugin-flannel
           ];
         };
       in

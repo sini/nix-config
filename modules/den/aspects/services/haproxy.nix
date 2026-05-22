@@ -6,6 +6,7 @@
 }:
 let
   environments = config.den.environments;
+  clusters = config.den.clusters or { };
   allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
@@ -22,6 +23,20 @@ in
           _: h: h.environment == env.name && (h.settings.services.k3s or { }) != { }
         ) allHosts;
         k3sHostList = lib.attrValues k3sHosts;
+
+        # Resolve k8s ingress VIP from the cluster's loadbalancer network
+        envCluster =
+          let
+            matching = lib.filterAttrs (_: c: c.environment == host.environment) clusters;
+            names = lib.attrNames matching;
+          in
+          if names != [ ] then matching.${lib.head names} else null;
+
+        k8sIngressVip =
+          if envCluster != null then
+            envCluster.networks.kubernetes-loadbalancers.assignments.default-gateway
+          else
+            "10.11.0.1";
       in
       {
         # Port 12443 receives the public 443 (forwarded upstream) and splits
@@ -64,7 +79,7 @@ in
             backend be_k8s_ingress_443
               balance roundrobin
               option tcp-check
-              server kube-vip 10.11.0.1:443 check
+              server kube-vip ${k8sIngressVip}:443 check
 
             frontend kubernetes-api
               bind *:6443

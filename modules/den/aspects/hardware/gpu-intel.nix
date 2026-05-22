@@ -8,13 +8,13 @@
 
         hardware.graphics = {
           enable = true;
-          extraPackages = with pkgs; [
-            intel-media-driver
-            intel-ocl
-            vpl-gpu-rt
-            intel-compute-runtime
-            intel-vaapi-driver
-            libvdpau-va-gl
+          extraPackages = [
+            pkgs.intel-media-driver
+            pkgs.intel-ocl
+            pkgs.vpl-gpu-rt
+            pkgs.intel-compute-runtime
+            pkgs.intel-vaapi-driver
+            pkgs.libvdpau-va-gl
           ];
         };
 
@@ -28,15 +28,15 @@
           LIBVA_DRIVERS_PATH = "${pkgs.intel-media-driver}/lib/dri";
         };
 
-        environment.systemPackages = with pkgs; [
-          pciutils
-          intel-gpu-tools
-          nvtopPackages.intel
-          mesa-demos
-          vulkan-loader
-          vulkan-validation-layers
-          vulkan-tools
-          libva-utils
+        environment.systemPackages = [
+          pkgs.pciutils
+          pkgs.intel-gpu-tools
+          pkgs.nvtopPackages.intel
+          pkgs.mesa-demos
+          pkgs.vulkan-loader
+          pkgs.vulkan-validation-layers
+          pkgs.vulkan-tools
+          pkgs.libva-utils
         ];
       };
   };

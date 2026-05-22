@@ -19,8 +19,10 @@ in
       }:
       let
         env = environments.${host.environment};
+        # TODO: refine vault peer discovery — currently uses environment match
+        # which may include non-vault hosts once more services share the env
         allVaultHosts = lib.filterAttrs (
-          _: h: h.environment == env.name && builtins.elem "vault" (h.aspects or [ ])
+          _: h: h.environment == host.environment && h.name != host.name
         ) allHosts;
 
         # Raft peers exclude current host
@@ -42,9 +44,9 @@ in
       in
       {
         environment = {
-          systemPackages = with pkgs; [
-            vault
-            openssl
+          systemPackages = [
+            pkgs.vault
+            pkgs.openssl
           ];
 
           sessionVariables = {

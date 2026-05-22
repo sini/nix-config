@@ -2,30 +2,33 @@
 {
   den.aspects.core.utils = {
     nixos =
-      { config, pkgs, lib, ... }:
       {
-        environment.systemPackages =
-          with pkgs;
-          [
-            btop
-            coreutils
-            curl
-            fd
-            file
-            findutils
-            killall
-            unzip
-            wget
-            netcat
-            tcpdump
-            lm_sensors
-            lsof
-            pciutils
-            usbutils
-            psmisc
-            traceroute
-          ]
-          ++ lib.optional config.hardware.nvidia.modesetting.enable pkgs.btop-cuda;
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      {
+        environment.systemPackages = [
+          pkgs.btop
+          pkgs.coreutils
+          pkgs.curl
+          pkgs.fd
+          pkgs.file
+          pkgs.findutils
+          pkgs.killall
+          pkgs.unzip
+          pkgs.wget
+          pkgs.netcat
+          pkgs.tcpdump
+          pkgs.lm_sensors
+          pkgs.lsof
+          pkgs.pciutils
+          pkgs.usbutils
+          pkgs.psmisc
+          pkgs.traceroute
+        ]
+        ++ lib.optional config.hardware.nvidia.modesetting.enable pkgs.btop-cuda;
 
         # Log diff when system update is applied
         system.activationScripts.diff = {

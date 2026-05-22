@@ -28,38 +28,38 @@
           graphics = {
             enable = true;
             enable32Bit = true;
-            extraPackages = with pkgs; [
-              libva-vdpau-driver
-              libva
-              libvdpau-va-gl
-              vulkan-tools
-              vulkan-loader
-              vulkan-validation-layers
-              vulkan-extension-layer
-              rocmPackages.clr.icd
+            extraPackages = [
+              pkgs.libva-vdpau-driver
+              pkgs.libva
+              pkgs.libvdpau-va-gl
+              pkgs.vulkan-tools
+              pkgs.vulkan-loader
+              pkgs.vulkan-validation-layers
+              pkgs.vulkan-extension-layer
+              pkgs.rocmPackages.clr.icd
             ];
           };
         };
 
         nixpkgs.config.rocmSupport = true;
 
-        environment.systemPackages = with pkgs; [
-          lact
-          pciutils
-          rocmPackages.rocminfo
-          clinfo
-          nvtopPackages.amd
-          amdgpu_top
-          vulkan-tools
-          vulkan-loader
-          vulkan-validation-layers
-          vulkan-extension-layer
-          libva-utils
-          mesa-demos
+        environment.systemPackages = [
+          pkgs.lact
+          pkgs.pciutils
+          pkgs.rocmPackages.rocminfo
+          pkgs.clinfo
+          pkgs.nvtopPackages.amd
+          pkgs.amdgpu_top
+          pkgs.vulkan-tools
+          pkgs.vulkan-loader
+          pkgs.vulkan-validation-layers
+          pkgs.vulkan-extension-layer
+          pkgs.libva-utils
+          pkgs.mesa-demos
         ];
 
         # GPU overclocking/undervolting daemon
-        systemd.packages = with pkgs; [ lact ];
+        systemd.packages = [ pkgs.lact ];
         systemd.services.lactd.wantedBy = [ "multi-user.target" ];
       };
   };

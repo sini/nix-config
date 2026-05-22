@@ -3,6 +3,8 @@
   den.hosts.x86_64-linux.uplink = {
     channel = "nixos-unstable";
     environment = "prod";
+    system-owner = "sini";
+    system-access-groups = [ "server-access" ];
 
     networking.interfaces.enp4s0 = {
       ipv4 = [ "10.10.10.1/16" ];
@@ -43,6 +45,8 @@
       services.oauth2-proxy
       services.ollama
       services.open-webui
+      services.vault
+      services.forgejo
       services.attic
       services.tailscale
       services.den-docs-mirror

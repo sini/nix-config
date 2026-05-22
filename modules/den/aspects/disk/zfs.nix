@@ -1,4 +1,9 @@
-{ den, lib, inputs, ... }:
+{
+  den,
+  lib,
+  inputs,
+  ...
+}:
 {
   # ZFS root support aspect (packages, kernel params, services)
   den.aspects.disk.zfs-disk-single.root = {
@@ -7,10 +12,10 @@
     nixos =
       { pkgs, ... }:
       {
-        environment.systemPackages = with pkgs; [
-          lzop
-          mbuffer
-          pv
+        environment.systemPackages = [
+          pkgs.lzop
+          pkgs.mbuffer
+          pkgs.pv
         ];
 
         boot = {

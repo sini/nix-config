@@ -3,6 +3,8 @@
   den.hosts.x86_64-linux.axon-02 = {
     channel = "nixos-unstable";
     environment = "prod";
+    system-owner = "sini";
+    system-access-groups = [ "server-access" ];
 
     networking.interfaces = {
       enp2s0 = {

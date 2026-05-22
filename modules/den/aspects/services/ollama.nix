@@ -6,6 +6,18 @@
 }:
 {
   den.aspects.services.ollama = {
+    settings = {
+      acceleration = lib.mkOption {
+        type = lib.types.enum [
+          "rocm"
+          "cuda"
+          "cpu"
+        ];
+        default = "cpu";
+        description = "GPU acceleration backend";
+      };
+    };
+
     nixos =
       {
         config,
@@ -14,10 +26,7 @@
         ...
       }:
       let
-        amdEnabled = builtins.elem "gpu-amd" (host.aspects or [ ]);
-        nvidiaEnabled =
-          builtins.elem "gpu-nvidia" (host.aspects or [ ])
-          && !(builtins.elem "gpu-nvidia-vfio" (host.aspects or [ ]));
+        acceleration = host.settings.services.ollama.acceleration;
       in
       {
         services = {
@@ -34,9 +43,9 @@
             models = "/cache/var/lib/private/ollama/models";
 
             package =
-              if amdEnabled then
+              if acceleration == "rocm" then
                 pkgs.ollama-rocm
-              else if nvidiaEnabled then
+              else if acceleration == "cuda" then
                 pkgs.ollama-cuda
               else
                 pkgs.ollama-cpu;
@@ -59,7 +68,6 @@
               "codellama:7b-instruct-q2_K"
               "qwen2.5-coder:14b"
               "qwen2.5-coder:32b"
-              "qwen2.5-coder:14b"
               "qwen3-coder:30b"
               "qwen3:1.7b"
               "qwen3:8b"

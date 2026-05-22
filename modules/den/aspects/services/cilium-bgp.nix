@@ -5,7 +5,7 @@
   ...
 }:
 let
-  environments = config.den.environments or { };
+  environments = config.den.environments;
   clusters = config.den.clusters or { };
   allHosts = config.den.hosts.x86_64-linux or { };
 in
@@ -101,7 +101,7 @@ in
 
           neighbors = optional (uplinkIp != null) {
             ip = uplinkIp;
-            asn = 65000;
+            asn = hubHost.settings.services.bgp.localAsn or 65000;
             routeMapIn = "FROM-UPLINK-IN";
             routeMapOut = "TO-UPLINK-OUT";
           };

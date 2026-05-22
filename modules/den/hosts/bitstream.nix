@@ -3,6 +3,8 @@
   den.hosts.x86_64-linux.bitstream = {
     channel = "nixos-unstable";
     environment = "dev";
+    system-owner = "sini";
+    system-access-groups = [ "server-access" ];
 
     networking = {
       bonds.bond0 = {

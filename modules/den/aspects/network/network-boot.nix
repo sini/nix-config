@@ -1,22 +1,33 @@
 # Network boot — Clevis+Tang LUKS/ZFS unlock, initrd SSH, wireless initrd.
 #
 # Ported from main:modules/features/network-boot/ (network-boot.nix + initrd-bootstrap-keys.nix).
-{ den, lib, config, ... }:
+{
+  den,
+  lib,
+  config,
+  ...
+}:
 let
-  environments = config.den.environments or { };
+  environments = config.den.environments;
   allUsers = config.den.users.registry or { };
 
   # Collect SSH keys from users in the "wheel" or "admins" groups
   wheelSshKeys = lib.concatMap (
     u:
-    lib.optionals (builtins.any (g: g == "admins" || g == "wheel") (u.groups or [ ]))
-      (map (k: k.key) (u.identity.sshKeys or [ ]))
+    lib.optionals (builtins.any (g: g == "admins" || g == "wheel") (u.groups or [ ])) (
+      map (k: k.key) (u.identity.sshKeys or [ ])
+    )
   ) (lib.attrValues allUsers);
 in
 {
   den.aspects.network.network-boot = {
     nixos =
-      { config, pkgs, host, ... }:
+      {
+        config,
+        pkgs,
+        host,
+        ...
+      }:
       let
         env = environments.${host.environment};
 
@@ -64,7 +75,8 @@ in
             "8021q"
             "tpm_crb"
             "tpm_tis"
-          ] ++ networkDriverModules
+          ]
+          ++ networkDriverModules
           ++ lib.optionals hasWireless [
             "ccm"
             "ctr"
@@ -84,7 +96,8 @@ in
               /bin/sleep 10
               ${lib.getExe config.boot.zfs.package} load-key -a
             '';
-          } // lib.optionalAttrs hasWireless {
+          }
+          // lib.optionalAttrs hasWireless {
             packages = [ pkgs.wpa_supplicant ];
             initrdBin = [
               pkgs.wpa_supplicant
@@ -127,7 +140,8 @@ in
               ];
             };
           };
-        } // lib.optionalAttrs hasWireless {
+        }
+        // lib.optionalAttrs hasWireless {
           compressor = "zstd";
           compressorArgs = [ "-12" ];
           extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
@@ -198,9 +212,7 @@ in
           wpa-supplicant-initrd = {
             generator.script = "wpa-supplicant-config";
             settings.networks =
-              if wireless != null
-              then { "${wireless.ssid}".pskRaw = wireless.pskRef; }
-              else { };
+              if wireless != null then { "${wireless.ssid}".pskRaw = wireless.pskRef; } else { };
           };
         };
       };
