@@ -112,6 +112,13 @@
         };
       };
 
+    persist = {
+      files = [
+        "/etc/ssh/initrd_host_ed25519_key"
+        "/etc/ssh/initrd_host_ed25519_key.pub"
+      ];
+    };
+
     age-secrets =
       { host, ... }:
       {
