@@ -3,14 +3,16 @@
 # Exposes:
 #   config.fleet.acl      — evaluated ACL graph (effectiveGates, resolveUser)
 #   config.fleet.settings — evaluated settings cascade graph (resolvedSettings, setting)
-{ lib, inputs, config, den, ... }:
+{
+  lib,
+  config,
+  den,
+  aclGraph,
+  settingsGraph,
+  ...
+}:
 let
   inherit (lib) mkOption types;
-
-  engine = inputs.scope-engine { inherit lib; };
-
-  acl = import ./acl.nix { inherit engine lib; };
-  settings = import ./settings.nix { inherit engine lib; };
 
   # Flatten den.hosts across all systems into a single attrset for graph construction.
   flatHosts = lib.foldl' (
@@ -31,16 +33,15 @@ in
     readOnly = true;
   };
 
-  config.fleet.acl = acl.build {
+  config.fleet.acl = aclGraph.build {
     groups = config.den.groups or { };
     environments = config.den.environments or { };
     hosts = flatHosts;
   };
 
-  config.fleet.settings = settings.build {
+  config.fleet.settings = settingsGraph.build {
     environments = config.den.environments or { };
     hosts = flatHosts;
-    # Users not populated yet (Task 9) — pass empty for Phase 1.
     users = { };
   };
 }

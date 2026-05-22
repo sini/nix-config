@@ -8,12 +8,14 @@
 # Evaluated attributes:
 #   effectiveGates — merged env+host system-access-groups (union)
 #   resolveUser    — paramAttr (hostId, userName) → access record
-{ engine, lib }:
+{ inputs, lib, ... }:
 let
+  engine = inputs.scope-engine { inherit lib; };
+
   # Build the ACL graph from registry data.
   # Arguments:
-  #   groups       — attrset of group definitions (from den.groups)
-  #   environments — attrset of environment configs (from config.environments)
+  #   groups       ��� attrset of group definitions (from den.groups)
+  #   environments — attrset of environment configs (from den.environments)
   #   hosts        — attrset of host configs (from den.hosts, flattened across systems)
   build =
     {
@@ -46,7 +48,6 @@ let
         );
 
         # M edges: group-to-group membership (transitive).
-        # members field lists groups whose members inherit THIS group.
         edgeGraphs = {
           M = engine.overlays (
             (lib.concatMap (
@@ -162,5 +163,5 @@ let
     };
 in
 {
-  inherit build;
+  _module.args.aclGraph = { inherit build; };
 }

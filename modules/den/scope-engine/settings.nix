@@ -10,13 +10,11 @@
 #   setting          — paramAttr for per-key demand-driven lookup
 #   settingSources   — provenance per key (local/import/inherited)
 #   overriddenKeys   — keys that shadow a parent value
-{ engine, lib }:
+{ inputs, lib, ... }:
 let
+  engine = inputs.scope-engine { inherit lib; };
+
   # Build the settings cascade graph.
-  # Arguments:
-  #   environments — attrset of environment configs
-  #   hosts        — attrset of host configs (flattened, with .settings)
-  #   users        — attrset of user configs (flattened, with .system.settings)
   build =
     {
       environments ? { },
@@ -28,7 +26,6 @@ let
       hostNames = builtins.attrNames hosts;
       userNames = builtins.attrNames users;
 
-      # Build parent edges: root → envs → hosts → users.
       parentEdges = engine.overlays (
         [ (engine.star "root" (map (e: "env:${e}") envNames)) ]
         ++ map (
@@ -39,7 +36,6 @@ let
           user:
           let
             userCfg = users.${user};
-            # Users attach to their host if specified, otherwise to root.
             parentId =
               if userCfg ? host && userCfg.host != null then
                 "host:${userCfg.host}"
@@ -50,14 +46,12 @@ let
         ) userNames
       );
 
-      # Import edges: environment delegation (e.g., dev delegates auth settings to prod).
       importEdges = engine.overlays (
         lib.concatMap (
           ename:
           let
             env = environments.${ename};
             delegation = env.delegation or { };
-            # Collect all delegation targets as import sources.
             targets = lib.filter (t: t != null) [
               (delegation.metricsTo or null)
               (delegation.authTo or null)
@@ -97,13 +91,11 @@ let
       };
 
       attributes = {
-        # Per-key demand-driven lookup following the cascade.
         setting = engine.paramAttr (
           self: id: key:
           engine.query { dataFilter = node: node.decls.${key} or null; } self id
         );
 
-        # Full resolved settings: local shadows imported, imported shadows parent.
         resolvedSettings =
           self: id:
           let
@@ -121,7 +113,6 @@ let
           in
           engine.shadow local (engine.shadow importedSettings parentSettings);
 
-        # Which local keys shadow a parent/imported value.
         overriddenKeys =
           self: id:
           let
@@ -130,7 +121,6 @@ let
           in
           builtins.filter (key: builtins.length (allResults key) > 1) localKeys;
 
-        # Provenance for each resolved key.
         settingSources =
           self: id:
           let
@@ -159,5 +149,5 @@ let
     };
 in
 {
-  inherit build;
+  _module.args.settingsGraph = { inherit build; };
 }
