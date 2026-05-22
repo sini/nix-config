@@ -19,7 +19,7 @@
     };
   };
 
-  den.aspects.hosts.uplink = {
+  den.aspects.uplink = {
     includes = with den.aspects; [
       core.default
       secrets.agenix

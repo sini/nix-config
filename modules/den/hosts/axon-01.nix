@@ -26,7 +26,7 @@
     };
   };
 
-  den.aspects.hosts.axon-01 = {
+  den.aspects.axon-01 = {
     includes = with den.aspects; [
       core.default
       secrets.agenix
