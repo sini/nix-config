@@ -1,4 +1,4 @@
-{ den, self, ... }:
+{ den, ... }:
 {
   den.hosts.x86_64-linux.bitstream = {
     channel = "nixos-unstable";
@@ -26,10 +26,6 @@
         wipeHomeOnBoot = false;
       };
     };
-
-    facts = self + "/modules/_legacy/hosts/bitstream/facter.json";
-    secretPath = self + "/.secrets/hosts/bitstream";
-    public_key = self + "/.secrets/hosts/bitstream/ssh_host_ed25519_key.pub";
   };
 
   den.aspects.bitstream = {

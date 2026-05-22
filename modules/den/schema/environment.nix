@@ -1,4 +1,4 @@
-{ lib, inputs, ... }:
+{ lib, inputs, self, ... }:
 let
   inherit (lib) mkOption types;
   schemaLib = inputs.gen-schema.lib;
@@ -146,7 +146,7 @@ in
       );
 
   den.schema.environment.imports = [
-    (_: {
+    ({ config, ... }: {
       options = {
         id = mkOption {
           type = types.int;
@@ -318,6 +318,10 @@ in
           default = { };
           description = "Maps usernames to lists of group names for this environment";
         };
+      };
+
+      config = {
+        secretPath = lib.mkDefault (self + "/.secrets/env/${config.name}");
       };
     })
   ];

@@ -1,9 +1,14 @@
-{ den, lib, ... }:
+{ den, lib, config, ... }:
+let
+  environments = config.den.environments or { };
+in
 {
   den.aspects.network.networking = {
     nixos =
       { config, host, ... }:
       let
+        env = environments.${host.environment};
+
         inherit (lib)
           attrNames
           attrValues
@@ -223,7 +228,7 @@
 
         networking = {
           hostName = host.name;
-          domain = (host.environment or "dev") + ".json64.dev";
+          domain = "${host.environment}.${env.domain}";
           hostId = builtins.substring 0 8 (builtins.hashString "md5" host.name);
 
           useNetworkd = true;

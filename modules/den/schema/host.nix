@@ -1,4 +1,4 @@
-{ lib, inputs, ... }:
+{ lib, inputs, self, ... }:
 let
   inherit (lib) mkOption types;
   gen = inputs.gen { inherit lib; };
@@ -90,7 +90,7 @@ in
     ) "channel must be one of: nixos-unstable, nixpkgs-master, nixos-stable, nixpkgs-stable-darwin")
   ];
   den.schema.host.imports = [
-    (_: {
+    ({ config, ... }: {
       options = {
         channel = mkOption {
           type = types.enum [
@@ -222,6 +222,16 @@ in
           // {
             identity = false;
           };
+      };
+
+      config = {
+        secretPath = lib.mkDefault (self + "/.secrets/hosts/${config.name}");
+        facts = lib.mkDefault (self + "/hosts/${config.name}/facter.json");
+        public_key = lib.mkDefault (
+          if config.secretPath != null
+          then config.secretPath + "/ssh_host_ed25519_key.pub"
+          else null
+        );
       };
     })
   ];
