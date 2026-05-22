@@ -4,6 +4,7 @@
   den,
   lib,
   config,
+  inputs,
   ...
 }:
 let
@@ -24,7 +25,6 @@ in
     nixos =
       {
         config,
-        inputs,
         pkgs,
         ...
       }:
