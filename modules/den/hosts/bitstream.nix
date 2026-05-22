@@ -20,8 +20,8 @@
     };
 
     settings = {
-      zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
-      impermanence = {
+      disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+      disk.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
@@ -32,9 +32,9 @@
     includes = with den.aspects; [
       core.default
       secrets.agenix
-      network.networking
+      networking
       network.openssh
-      disk.zfs
+      disk.zfs-disk-single
       disk.impermanence
       roles.server
       roles.nix-builder

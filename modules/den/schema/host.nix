@@ -93,60 +93,56 @@ let
   channelNames = builtins.attrNames channels;
 
   # Dynamic settings type — recursively discovers aspects that declare .settings.
-  # Walks the nested aspect tree, skipping registered class keys, quirk keys,
-  # and structural keys. Produces flat { "disk-zfs" = <settings-module>; ... }.
+  # Mirrors the aspect tree: den.aspects.disk.zfs-disk-single.settings →
+  # host.settings.disk.zfs-disk-single.*
   settingsType =
     let
-      # Keys that are NOT nested aspects — skip during recursion.
-      # Structural keys from den's pipeline, class keys, and quirk keys.
       inherit (den.lib.aspects.fx.keyClassification) structuralKeysSet;
       classKeys = den.classes or { };
       quirkKeys = den.quirks or { };
       skipKey = k: structuralKeysSet ? ${k} || classKeys ? ${k} || quirkKeys ? ${k};
-
-      collectSettings = prefix: aspects:
-        lib.foldlAttrs (acc: name: aspect:
-          let
-            fullName = if prefix == "" then name else "${prefix}-${name}";
-            hasSelf = builtins.isAttrs aspect && aspect ? settings;
-            # Aspect can declare _key on settings to override the auto-derived name
-            settingsKey =
-              if hasSelf && builtins.isAttrs aspect.settings && aspect.settings ? _key
-              then aspect.settings._key
-              else fullName;
-            cleanSettings =
-              if hasSelf && builtins.isAttrs aspect.settings
-              then builtins.removeAttrs aspect.settings [ "_key" ]
-              else if hasSelf then aspect.settings
-              else { };
-            nested = if builtins.isAttrs aspect
-              then collectSettings fullName
-                (lib.filterAttrs (k: v: builtins.isAttrs v && !(skipKey k)) aspect)
-              else { };
-          in
-          acc
-          // lib.optionalAttrs hasSelf { ${settingsKey} = cleanSettings; }
-          // nested
-        ) { } aspects;
-
-      aspectsWithSettings = collectSettings "" (den.aspects or { });
 
       reshapeSettings = raw: {
         imports = raw.imports or [ ];
         config = raw.config or { };
         options = builtins.removeAttrs raw [ "imports" "config" ];
       };
+
+      # Recursively build a nested submodule type mirroring the aspect tree.
+      # At each level: if the aspect has .settings, declare those options.
+      # If it has children, recurse into them as nested submodule options.
+      buildSettingsModule = aspects:
+        let
+          children = lib.filterAttrs (k: v: builtins.isAttrs v && !(skipKey k)) aspects;
+          withSettings = lib.filterAttrs (_: a: builtins.isAttrs a && a ? settings) aspects;
+        in
+        types.submodule {
+          options =
+            # Leaf settings: aspect has .settings → declare those options here
+            lib.mapAttrs (name: aspect:
+              mkOption {
+                type = types.submodule (reshapeSettings aspect.settings);
+                default = { };
+                description = "Settings for the ${name} aspect";
+              }
+            ) withSettings
+            # Nested categories: recurse into children that have further aspects
+            // lib.mapAttrs (name: child:
+              mkOption {
+                type = buildSettingsModule child;
+                default = { };
+                description = "Settings under ${name}";
+              }
+            ) (lib.filterAttrs (k: v:
+              !(withSettings ? ${k})
+              && builtins.isAttrs v
+              && !(skipKey k)
+              && lib.any (ck: builtins.isAttrs (v.${ck} or null) && (v.${ck} ? settings))
+                (builtins.attrNames v)
+            ) children);
+        };
     in
-    types.submodule {
-      options = lib.mapAttrs (
-        name: settings:
-        mkOption {
-          type = types.submodule (reshapeSettings settings);
-          default = { };
-          description = "Settings for the ${name} aspect";
-        }
-      ) aspectsWithSettings;
-    };
+    buildSettingsModule (den.aspects or { });
 in
 {
   den.schema.host.isEntity = true;

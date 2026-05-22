@@ -3,7 +3,7 @@ let
   environments = config.den.environments or { };
 in
 {
-  den.aspects.network.networking = {
+  den.aspects.networking = {
     nixos =
       { config, host, ... }:
       let

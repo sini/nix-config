@@ -1,7 +1,7 @@
 { den, lib, inputs, ... }:
 {
   # ZFS root support aspect (packages, kernel params, services)
-  den.aspects.disk.zfs.root = {
+  den.aspects.disk.zfs-disk-single.root = {
     includes = [ den.aspects.disk.zfs-diff ];
 
     nixos =
@@ -42,11 +42,10 @@
   };
 
   # ZFS single-disk disko layout
-  den.aspects.disk.zfs = {
-    includes = [ den.aspects.disk.zfs.root ];
+  den.aspects.disk.zfs-disk-single = {
+    includes = [ den.aspects.disk.zfs-disk-single.root ];
 
     settings = {
-      _key = "zfs-disk-single";
       device_id = lib.mkOption {
         type = lib.types.str;
         description = "Disk device path for ZFS pool (e.g., /dev/disk/by-id/nvme-...)";
@@ -56,7 +55,7 @@
     nixos =
       { host, ... }:
       let
-        disk-device = host.settings.zfs-disk-single.device_id;
+        disk-device = host.settings.disk.zfs-disk-single.device_id;
 
         emptySnapshot =
           name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";

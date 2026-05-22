@@ -7,7 +7,6 @@
     ];
 
     settings = {
-      _key = "impermanence";
       wipeRootOnBoot = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -23,8 +22,8 @@
     nixos =
       { config, host, pkgs, ... }:
       let
-        wipeRoot = host.settings.impermanence.wipeRootOnBoot;
-        wipeHome = host.settings.impermanence.wipeHomeOnBoot;
+        wipeRoot = host.settings.disk.impermanence.wipeRootOnBoot;
+        wipeHome = host.settings.disk.impermanence.wipeHomeOnBoot;
       in
       {
         imports = [
