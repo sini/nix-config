@@ -48,7 +48,7 @@
 
     # HM-level agenix config
     homeManager =
-      { inputs, config, osConfig, host, lib, ... }:
+      { config, osConfig, host, lib, ... }:
       {
         age = {
           identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${config.home.username}") [
@@ -56,7 +56,7 @@
           ];
 
           rekey = {
-            inherit (inputs.self.secretsConfig) masterIdentities;
+            inherit (self.secretsConfig) masterIdentities;
             storageMode = "local";
             generatedSecretsDir =
               self + "/.secrets/generated/${config.home.username}/${osConfig.networking.hostName}";
