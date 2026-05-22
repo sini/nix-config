@@ -109,13 +109,23 @@ let
           let
             fullName = if prefix == "" then name else "${prefix}-${name}";
             hasSelf = builtins.isAttrs aspect && aspect ? settings;
+            # Aspect can declare _key on settings to override the auto-derived name
+            settingsKey =
+              if hasSelf && builtins.isAttrs aspect.settings && aspect.settings ? _key
+              then aspect.settings._key
+              else fullName;
+            cleanSettings =
+              if hasSelf && builtins.isAttrs aspect.settings
+              then builtins.removeAttrs aspect.settings [ "_key" ]
+              else if hasSelf then aspect.settings
+              else { };
             nested = if builtins.isAttrs aspect
               then collectSettings fullName
                 (lib.filterAttrs (k: v: builtins.isAttrs v && !(skipKey k)) aspect)
               else { };
           in
           acc
-          // lib.optionalAttrs hasSelf { ${fullName} = aspect.settings; }
+          // lib.optionalAttrs hasSelf { ${settingsKey} = cleanSettings; }
           // nested
         ) { } aspects;
 
