@@ -5,14 +5,17 @@
 #   config.fleet.settings — evaluated settings cascade graph (resolvedSettings, setting)
 {
   lib,
+  inputs,
   config,
   den,
-  aclGraph,
-  settingsGraph,
   ...
 }:
 let
   inherit (lib) mkOption types;
+
+  engine = inputs.scope-engine { inherit lib; };
+  acl = import ./_acl.nix { inherit engine lib; };
+  settings = import ./_settings.nix { inherit engine lib; };
 
   # Flatten den.hosts across all systems into a single attrset for graph construction.
   flatHosts = lib.foldl' (
@@ -33,13 +36,13 @@ in
     readOnly = true;
   };
 
-  config.fleet.acl = aclGraph.build {
+  config.fleet.acl = acl.build {
     groups = config.den.groups or { };
     environments = config.den.environments or { };
     hosts = flatHosts;
   };
 
-  config.fleet.settings = settingsGraph.build {
+  config.fleet.settings = settings.build {
     environments = config.den.environments or { };
     hosts = flatHosts;
     users = { };

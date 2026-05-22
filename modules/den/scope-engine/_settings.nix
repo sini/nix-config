@@ -10,10 +10,8 @@
 #   setting          — paramAttr for per-key demand-driven lookup
 #   settingSources   — provenance per key (local/import/inherited)
 #   overriddenKeys   — keys that shadow a parent value
-{ inputs, lib, ... }:
+{ engine, lib }:
 let
-  engine = inputs.scope-engine { inherit lib; };
-
   # Build the settings cascade graph.
   build =
     {
@@ -149,5 +147,5 @@ let
     };
 in
 {
-  _module.args.settingsGraph = { inherit build; };
+  inherit build;
 }
