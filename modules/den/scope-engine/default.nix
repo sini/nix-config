@@ -33,12 +33,12 @@ in
 
   config.fleet.acl = acl.build {
     groups = config.den.groups or { };
-    environments = config.environments or { };
+    environments = config.den.environments or { };
     hosts = flatHosts;
   };
 
   config.fleet.settings = settings.build {
-    environments = config.environments or { };
+    environments = config.den.environments or { };
     hosts = flatHosts;
     # Users not populated yet (Task 9) — pass empty for Phase 1.
     users = { };

@@ -12,7 +12,7 @@
 let
   inherit (den.lib.policy) resolve;
 
-  inherit (config) environments;
+  inherit (config.den) environments;
 in
 {
   # flake -> fleet: single fleet entity.
