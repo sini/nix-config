@@ -104,24 +104,16 @@ in
     den.schema.user.isEntity = true;
     den.schema.user.classes = lib.mkDefault [ "homeManager" ];
 
-    # host -> users (by environment): resolve registry users whose groups
-    # intersect the fleet.user-access.by-environment grant for that env.
+    # host -> users: resolve registry users whose groups intersect the
+    # effective access groups (merged env + host, propagated via scope context).
     den.policies.env-users =
-      { host, ... }:
+      { host, accessGroups ? [ ], ... }:
       let
-        grant = accessByEnv.${host.environment or "prod"} or { groups = [ ]; };
-        matched = matchRegistryUsers grant.groups;
+        matched = matchRegistryUsers accessGroups;
       in
       map (name: resolve.to "user" { user = registry.${name}; }) matched;
 
-    # host -> users (by host): resolve registry users whose groups
-    # intersect the fleet.user-access.by-host grant for that host.
-    den.policies.host-users =
-      { host, ... }:
-      let
-        grant = accessByHost.${host.name} or { groups = [ ]; };
-        matched = matchRegistryUsers grant.groups;
-      in
-      map (name: resolve.to "user" { user = registry.${name}; }) matched;
+    # host-users policy removed — by-host grants are now merged into
+    # accessGroups in the fleet policy's env-to-hosts resolver.
   };
 }

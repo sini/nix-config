@@ -17,4 +17,5 @@
     den.batteries.hostname
     den.batteries.primary-user
   ];
+
 }

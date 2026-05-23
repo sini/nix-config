@@ -2,12 +2,14 @@
 {
   den.hosts.aarch64-darwin.patch = {
     environment = "dev";
+    system-access-groups = [ "system-access" ];
 
     users.sini = { };
   };
 
   den.aspects.patch = {
     includes = with den.aspects; [
+      core.default
       roles.dev
     ];
 
