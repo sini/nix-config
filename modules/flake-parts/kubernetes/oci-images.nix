@@ -42,7 +42,7 @@ in
   };
 
   perSystem =
-    { config, ... }:
+    { ... }:
     {
     };
 

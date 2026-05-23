@@ -32,7 +32,7 @@ in
   };
 
   perSystem =
-    { inputs', ... }:
+    { ... }:
     {
     };
 }
