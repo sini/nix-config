@@ -28,6 +28,15 @@ let
 in
 {
   den.aspects.kubernetes.cert-manager = {
+    crds =
+      { inputs, system, ... }:
+      {
+        chart = inputs.nixhelm.chartsDerivations.${system}.jetstack.cert-manager;
+        extraOpts = [
+          "--set crds.enabled=true"
+        ];
+      };
+
     k8s-manifests =
       { cluster, ... }:
       let

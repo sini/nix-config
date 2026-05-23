@@ -31,6 +31,17 @@ let
 in
 {
   den.aspects.kubernetes.envoy-gateway = {
+    crds =
+      { inputs, system, ... }:
+      {
+        chart = inputs.nixhelm.chartsDerivations.${system}.envoyproxy.gateway-crds-helm;
+        extraOpts = [
+          "--set crds.gatewayAPI.enabled=true"
+          "--set crds.gatewayAPI.channel=experimental"
+          "--set crds.envoyGateway.enabled=true"
+        ];
+      };
+
     k8s-manifests =
       { cluster, ... }:
       let

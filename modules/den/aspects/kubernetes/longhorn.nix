@@ -30,6 +30,13 @@ in
   den.aspects.kubernetes.longhorn = {
     service-domains = [ "longhorn" ];
 
+    crds =
+      { inputs, system, ... }:
+      {
+        chart = inputs.nixhelm.chartsDerivations.${system}.longhorn.longhorn;
+        namePrefix = "longhorn";
+      };
+
     k8s-manifests =
       { cluster, ... }:
       let

@@ -4,6 +4,12 @@
 _:
 {
   den.aspects.kubernetes.sops-secrets-operator = {
+    crds =
+      { inputs, system, ... }:
+      {
+        chart = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
+      };
+
     k8s-manifests =
       _:
       {

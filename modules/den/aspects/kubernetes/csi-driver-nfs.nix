@@ -13,6 +13,12 @@ let
 in
 {
   den.aspects.kubernetes.csi-driver-nfs = {
+    crds =
+      { inputs, system, ... }:
+      {
+        chart = inputs.nixhelm.chartsDerivations.${system}.kubernetes-csi.csi-driver-nfs;
+      };
+
     k8s-manifests =
       { cluster, ... }:
       let

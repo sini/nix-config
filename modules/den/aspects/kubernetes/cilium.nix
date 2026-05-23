@@ -11,6 +11,38 @@ let
 in
 {
   den.aspects.kubernetes.cilium = {
+    crds =
+      { pkgs, lib, ... }:
+      let
+        src = pkgs.fetchFromGitHub {
+          owner = "cilium";
+          repo = "cilium";
+          rev = "v1.19.1";
+          hash = "sha256-wswY4u2Z7Z8hvGVnLONxSD1Mu1RV1AglC4ijUHsCCW4=";
+        };
+        crds =
+          lib.concatMap
+            (
+              version:
+              let
+                path = "pkg/k8s/apis/cilium.io/client/crds/${version}";
+              in
+              lib.pipe (builtins.readDir "${src}/${path}") [
+                (lib.filterAttrs (_name: type: type == "regular"))
+                (lib.filterAttrs (name: _type: lib.hasSuffix ".yaml" name))
+                builtins.attrNames
+                (map (file: "${path}/${file}"))
+              ]
+            )
+            [
+              "v2"
+              "v2alpha1"
+            ];
+      in
+      {
+        inherit src crds;
+      };
+
     k8s-manifests =
       { cluster, ... }:
       let
