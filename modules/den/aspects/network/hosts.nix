@@ -1,58 +1,67 @@
-# Builds /etc/hosts and SSH known_hosts from den host declarations.
+# Builds /etc/hosts and SSH known_hosts via pipe.collect.
+#
+# Emits host-addrs quirk with this host's address info; consumes
+# collected entries from all peers to populate networking.hosts
+# and services.openssh.knownHosts.
 {
-  lib,
   config,
   ...
 }:
 let
   environments = config.den.environments;
-
-  hosts =
-    config.den.hosts.x86_64-linux or { }
-    |> lib.filterAttrs (_: hostCfg: (hostCfg.ipv4 or [ ]) != [ ])
-    |> lib.mapAttrs' (
-      hostname: hostCfg:
-      let
-        targetEnv = environments.${hostCfg.environment};
-        ipList = hostCfg.ipv4;
-      in
-      lib.nameValuePair (builtins.head ipList) [
-        hostname
-        "${hostname}.${targetEnv.name}.${targetEnv.domain}"
-      ]
-    );
-
-  sshKnownHosts =
-    config.den.hosts.x86_64-linux or { }
-    |> lib.mapAttrs' (
-      hostname: hostCfg:
-      let
-        targetEnv = environments.${hostCfg.environment};
-        ipList = hostCfg.ipv4 or [ ];
-      in
-      lib.nameValuePair hostname {
-        hostNames = [
-          hostname
-          "${hostname}.${targetEnv.name}.${targetEnv.domain}"
-        ]
-        ++ ipList
-        ++ (if ipList == [ ] then [ "${hostname}.ts.json64.dev" ] else [ ]);
-        publicKeyFile = hostCfg.public_key;
-      }
-    );
 in
 {
   den.aspects.network.hosts = {
-    nixos =
-      { config, ... }:
+    host-addrs =
+      { host, ... }:
+      let
+        env = environments.${host.environment};
+      in
       {
-        networking.hosts = lib.filterAttrs (
-          _ip: hostnames: !(builtins.elem config.networking.hostName hostnames)
-        ) hosts;
+        hostname = host.name;
+        domain = "${env.name}.${env.domain}";
+        ipv4 = host.ipv4 or [ ];
+        publicKeyFile = host.public_key;
+      };
 
-        services.openssh.knownHosts = lib.filterAttrs (
-          hostname: _: hostname != config.networking.hostName
-        ) sshKnownHosts;
+    nixos =
+      {
+        host-addrs,
+        config,
+        lib,
+        ...
+      }:
+      let
+        peers = lib.filter (e: e.hostname != config.networking.hostName) host-addrs;
+
+        hosts = lib.listToAttrs (
+          map (
+            entry:
+            lib.nameValuePair (builtins.head entry.ipv4) [
+              entry.hostname
+              "${entry.hostname}.${entry.domain}"
+            ]
+          ) (lib.filter (e: e.ipv4 != [ ]) peers)
+        );
+
+        knownHosts = lib.listToAttrs (
+          map (
+            entry:
+            lib.nameValuePair entry.hostname {
+              hostNames = [
+                entry.hostname
+                "${entry.hostname}.${entry.domain}"
+              ]
+              ++ entry.ipv4
+              ++ (if entry.ipv4 == [ ] then [ "${entry.hostname}.ts.json64.dev" ] else [ ]);
+              inherit (entry) publicKeyFile;
+            }
+          ) peers
+        );
+      in
+      {
+        networking.hosts = hosts;
+        services.openssh.knownHosts = knownHosts;
       };
   };
 }

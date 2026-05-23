@@ -6,7 +6,6 @@
 }:
 let
   environments = config.den.environments;
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   # BGP base aspect — FRR bgpd with configurable neighbors, prefix lists, route maps
@@ -18,6 +17,16 @@ in
         description = "Local BGP AS number for this node";
       };
     };
+
+    # Emit peer info for hub auto-discovery via pipe.collect
+    bgp-peers =
+      { host, ... }:
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        asn = host.settings.services.bgp.localAsn;
+        inherit (host) environment;
+      };
 
     nixos =
       { config, host, ... }:
@@ -374,17 +383,13 @@ in
     };
 
     nixos =
-      { host, ... }:
+      { host, bgp-peers, ... }:
       let
         inherit (lib)
-          attrNames
-          filterAttrs
-          head
-          imap0
+          filter
           listToAttrs
           mkDefault
           optional
-          sort
           ;
 
         hubSettings =
@@ -403,24 +408,10 @@ in
           asn = hubSettings.gatewayAsNumber;
         };
 
-        # Auto-discover spoke hosts: same environment, not self, and has BGP settings
-        spokeHosts = filterAttrs (
-          _name: h:
-          h.environment == host.environment && h.name != host.name && (h.settings.services.bgp or { }) != { }
-        ) allHosts;
-
-        sortedSpokeNames = sort (a: b: a < b) (attrNames spokeHosts);
-        spokeNeighbors = imap0 (
-          index: hostname:
-          let
-            spokeHost = spokeHosts.${hostname};
-            spokeAsn = (spokeHost.settings.services.bgp or { }).localAsn or (65001 + index);
-          in
-          {
-            ip = head spokeHost.ipv4;
-            asn = spokeAsn;
-          }
-        ) sortedSpokeNames;
+        # Auto-discover spoke peers: same environment, not self
+        spokeNeighbors = map (p: {
+          inherit (p) ip asn;
+        }) (filter (p: p.environment == host.environment && p.hostname != host.name) bgp-peers);
 
         allNeighbors = gatewayNeighbor ++ spokeNeighbors;
 
