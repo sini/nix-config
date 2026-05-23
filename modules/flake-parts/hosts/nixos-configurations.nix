@@ -8,10 +8,8 @@ let
   inherit (self.lib.hosts) mkHost mkHostKexec;
 
   isLinux = lib.hasSuffix "-linux";
-  isDarwin = lib.hasSuffix "-darwin";
 
   linuxHosts = lib.filterAttrs (_: h: isLinux h.system) config.hosts;
-  darwinHosts = lib.filterAttrs (_: h: isDarwin h.system) config.hosts;
 in
 {
   flake = {
@@ -20,9 +18,6 @@ in
 
     # Build NixOS configurations for Linux hosts
     nixosConfigurations = lib.mapAttrs mkHost linuxHosts;
-
-    # Build nix-darwin configurations for macOS hosts
-    darwinConfigurations = lib.mapAttrs mkHost darwinHosts;
 
     # Kexec variants are Linux-only
     kexecNixosConfigurations = lib.mapAttrs' (
