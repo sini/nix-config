@@ -40,6 +40,15 @@ in
           "--set crds.gatewayAPI.channel=experimental"
           "--set crds.envoyGateway.enabled=true"
         ];
+        # Only generate Envoy-specific CRDs — Gateway API types are provided by gateway-api aspect
+        crds = [
+          "BackendTrafficPolicy"
+          "ClientTrafficPolicy"
+          "EnvoyExtensionPolicy"
+          "EnvoyPatchPolicy"
+          "EnvoyProxy"
+          "SecurityPolicy"
+        ];
       };
 
     k8s-manifests =
