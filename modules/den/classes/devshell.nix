@@ -38,7 +38,9 @@ in
     map (
       clusterName:
       resolve.to "cluster" {
-        cluster = den.clusters.${clusterName} // { name = clusterName; };
+        cluster = den.clusters.${clusterName} // {
+          name = clusterName;
+        };
       }
     ) (builtins.attrNames (den.clusters or { }));
 

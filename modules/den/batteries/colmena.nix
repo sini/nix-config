@@ -11,10 +11,9 @@
 let
   currentSystem = builtins.currentSystem or "x86_64-linux";
 
-  allHosts = lib.foldl' (
-    acc: system:
-    acc // (config.den.hosts.${system} or { })
-  ) { } (builtins.attrNames (config.den.hosts or { }));
+  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
+    builtins.attrNames (config.den.hosts or { })
+  );
 
   colmenaNodes = lib.mapAttrs (
     name: _modules:
@@ -42,7 +41,8 @@ let
         allowLocalDeployment = true;
         buildOnTarget = (host.system or currentSystem) != currentSystem;
         targetUser = host.remote-deployment-user or "sini";
-      } // lib.optionalAttrs isDarwin { systemType = "darwin"; };
+      }
+      // lib.optionalAttrs isDarwin { systemType = "darwin"; };
     }
   ) (config.flake.colmenaNodes or { });
 
@@ -52,10 +52,7 @@ let
       nodeSpecialArgs = lib.mapAttrs (
         name: _:
         let
-          osConfig =
-            self.nixosConfigurations.${name}
-              or self.darwinConfigurations.${name}
-              or null;
+          osConfig = self.nixosConfigurations.${name} or self.darwinConfigurations.${name} or null;
         in
         if osConfig != null then osConfig._module.specialArgs else { }
       ) colmenaNodes;

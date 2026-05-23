@@ -41,9 +41,7 @@ in
     );
   };
 
-  perSystem =
-    { config, ... }:
-    {
-    };
+  perSystem = _: {
+  };
 
 }
