@@ -46,7 +46,7 @@ let
         ];
       };
     }
-  ) config.clusters;
+  ) config.den.clusters;
 
   sopsConfig = {
     creation_rules = [
