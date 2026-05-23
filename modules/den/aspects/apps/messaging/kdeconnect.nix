@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.apps.kdeconnect = {
     nixos = {
       networking.firewall =

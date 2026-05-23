@@ -1,8 +1,7 @@
 # Volume Snapshots — VolumeSnapshotClass CRDs for CSI snapshot support.
 #
 # Ported from main:modules/kubernetes/services/storage/volume-snapshots.nix
-_:
-{
+_: {
   den.aspects.kubernetes.volume-snapshots = {
     crds =
       { pkgs, lib, ... }:

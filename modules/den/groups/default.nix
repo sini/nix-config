@@ -1,6 +1,5 @@
 # Group definitions — user roles, system gates, service access, and POSIX groups.
-_:
-{
+_: {
   den.groups = {
     # User role groups (identity & login gates)
     admins = {

@@ -1,7 +1,0 @@
-{
-  features.inference = {
-    requires = [
-      "ollama"
-    ];
-  };
-}

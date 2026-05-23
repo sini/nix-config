@@ -49,7 +49,6 @@ in
 
     nixos =
       {
-        config,
         lib,
         host,
         ...
@@ -65,7 +64,8 @@ in
           splitString
           ;
 
-        cfg = host.settings.services.thunderbolt-mesh-of or {
+        cfg =
+          host.settings.services.thunderbolt-mesh-of or {
             interfaces = [ ];
             loopback.ipv4 = "0.0.0.0/32";
             nsap = "";

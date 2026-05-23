@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.desktop.xwayland = {
     nixos = {
       programs.xwayland.enable = true;

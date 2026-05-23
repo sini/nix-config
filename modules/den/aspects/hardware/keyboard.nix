@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.keyboard = {
     nixos = {
       boot.kernelModules = [ "hid_apple" ];

@@ -10,7 +10,6 @@
   inputs,
   withSystem,
   lib,
-  self,
   ...
 }:
 let
@@ -44,7 +43,7 @@ let
       lib.filterAttrs (name: _: lib.elem name cluster.hosts) nixosConfigs
     else
       lib.filterAttrs (
-        name: _:
+        _name: _:
         # Host belongs to cluster if it's in the same environment.
         # Role-based filtering happens at the den policy level;
         # here we pass all environment hosts since the nixidy modules
@@ -107,7 +106,6 @@ let
   mkNixidyModule =
     {
       envName,
-      cluster,
       enabledAspects,
       system,
     }:
@@ -175,8 +173,8 @@ let
       serviceCrdObjects = getServiceCrdObjects { inherit system enabledAspects; };
       userCharts = config.flake.chartsDerivations.${system} or { };
 
-      # Legacy feature system provides custom agenix generator types
-      agenixGeneratorsModule = config.features.agenix-generators.system or { };
+      # Custom agenix-rekey generator types (standalone NixOS module)
+      agenixGeneratorsModule = import ../../agenix/_generators.nix;
     in
     inputs.nixidy.lib.mkEnv {
       inherit pkgs;

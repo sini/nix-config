@@ -24,25 +24,21 @@ in
       lib.mapAttrs (
         _: c:
         lib.optionalAttrs
-          (c.secretPath != null
-            && builtins.pathExists "${c.secretPath}/cluster-sops-age-key.pub")
+          (c.secretPath != null && builtins.pathExists "${c.secretPath}/cluster-sops-age-key.pub")
           {
             sopsAgeRecipient = builtins.readFile "${c.secretPath}/cluster-sops-age-key.pub";
           }
       ) clusters;
     extraModules = [
-      (
-        _:
-        {
-          options.sopsAgeRecipient = lib.mkOption {
-            type = lib.types.nullOr lib.types.str;
-            default = null;
-            readOnly = true;
-            internal = true;
-            description = "Derived SOPS age recipient public key from cluster secretPath";
-          };
-        }
-      )
+      (_: {
+        options.sopsAgeRecipient = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
+          default = null;
+          readOnly = true;
+          internal = true;
+          description = "Derived SOPS age recipient public key from cluster secretPath";
+        };
+      })
     ];
   };
 
@@ -72,10 +68,9 @@ in
       let
         allHosts = lib.concatMap (
           system:
-          lib.map (
-            hostName:
-            den.hosts.${system}.${hostName}
-          ) (builtins.attrNames (den.hosts.${system} or { }))
+          lib.map (hostName: den.hosts.${system}.${hostName}) (
+            builtins.attrNames (den.hosts.${system} or { })
+          )
         ) (builtins.attrNames (den.hosts or { }));
 
         matchesCluster =

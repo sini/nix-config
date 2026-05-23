@@ -13,7 +13,6 @@ let
     nameValuePair
     elem
     unique
-    optional
     optionalAttrs
     mkMerge
     ;
@@ -23,8 +22,7 @@ let
   registry = config.den.users.registry;
 
   # Groups by label for provisioning classification
-  groupsWithLabel =
-    label: filterAttrs (_: g: elem label (g.labels or [ ])) groups;
+  groupsWithLabel = label: filterAttrs (_: g: elem label (g.labels or [ ])) groups;
 
   # Users who belong to any group carrying the target label
   usersWithLabel =
@@ -32,9 +30,7 @@ let
     let
       labelGroupNames = builtins.attrNames (groupsWithLabel label);
     in
-    filterAttrs (
-      _: user: builtins.any (g: elem g labelGroupNames) (user.groups or [ ])
-    ) registry;
+    filterAttrs (_: user: builtins.any (g: elem g labelGroupNames) (user.groups or [ ])) registry;
 
   # Users provisioned as kanidm persons (have oauth-grant or user-role groups)
   kanidmUsers =
@@ -63,7 +59,7 @@ let
 
   unixUsers = filterAttrs (_: u: u.system.enableUnixAccount or false) kanidmUsers;
   extraPersonsJson = mapAttrs (
-    username: user:
+    _username: user:
     {
       enableUnix = true;
       loginShell = "/run/current-system/sw/bin/zsh";
@@ -342,17 +338,15 @@ in
               groups = mapAttrs (_: g: { inherit (g) members; }) groups;
 
               # Users with oauth-grant or user-role groups provisioned as persons
-              persons = mapAttrs (
-                username: user: {
-                  inherit (user.identity) displayName;
-                  mailAddresses =
-                    if user.identity.email != null then
-                      [ user.identity.email ]
-                    else
-                      [ "${username}@${env.email.domain}" ];
-                  groups = getUserGroups user;
-                }
-              ) kanidmUsers;
+              persons = mapAttrs (username: user: {
+                inherit (user.identity) displayName;
+                mailAddresses =
+                  if user.identity.email != null then
+                    [ user.identity.email ]
+                  else
+                    [ "${username}@${env.email.domain}" ];
+                groups = getUserGroups user;
+              }) kanidmUsers;
 
               # OAuth2 client definitions
               systems.oauth2 = oauth2Services;

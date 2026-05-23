@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.gpu-amd = {
     nixos =
       { pkgs, ... }:

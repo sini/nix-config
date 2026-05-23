@@ -2,8 +2,7 @@
 #
 # Auto-discovers thunderbolt controllers from facter and creates systemd.network.links
 # with predictable interface names derived from PCI topology plus tb<N> aliases.
-_:
-{
+_: {
   den.aspects.hardware.thunderbolt-network = {
     nixos =
       { config, lib, ... }:

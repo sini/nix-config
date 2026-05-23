@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.network.network-manager = {
     nixos =
       {

@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.core.registry = {
     os = _: {
       nix = {

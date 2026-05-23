@@ -1,8 +1,7 @@
 # ssd — SSD fstrim service.
 #
 # Ported from main:modules/_legacy/core/ssd.nix.
-_:
-{
+_: {
   den.aspects.core.ssd = {
     nixos = {
       services.fstrim = {

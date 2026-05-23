@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.services.tang = {
     nixos = {
       services.tang = {

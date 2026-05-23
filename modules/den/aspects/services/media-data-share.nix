@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.services.media-data-share = {
     nixos = {
       boot.supportedFilesystems = [

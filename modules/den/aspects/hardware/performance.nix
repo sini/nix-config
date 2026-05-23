@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.performance = {
     nixos =
       { pkgs, lib, ... }:

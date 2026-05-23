@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.core.systemd-boot = {
     nixos = {
       boot = {

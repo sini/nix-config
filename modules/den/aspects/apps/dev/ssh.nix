@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.apps.ssh = {
     homeManager = {
       programs.ssh = {

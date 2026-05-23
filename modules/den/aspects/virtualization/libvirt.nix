@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.virtualization.libvirt = {
     nixos =
       {

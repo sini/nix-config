@@ -8,9 +8,6 @@ in
       "logo"
       "header"
       "hosts"
-      "flake-options"
-      "colmena"
-      "users"
       "automatic-import"
       "files"
       "disallow-warnings"
@@ -42,7 +39,7 @@ in
           </div>
           <br>
 
-          ${config.users.sini.name}'s [NixOS](https://nix.dev) homelab and workstation configuration repository.
+          sini's [NixOS](https://nix.dev) homelab and workstation configuration repository.
 
           > [!NOTE]
           > If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.

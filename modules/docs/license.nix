@@ -1,5 +1,4 @@
-{ config, ... }:
-{
+_: {
   perSystem =
     { pkgs, ... }:
     {
@@ -9,7 +8,7 @@
           drv = pkgs.writeText "LICENSE" ''
             MIT License
 
-            Copyright (c) 2025 ${config.users.sini.identity.displayName}
+            Copyright (c) 2025 Jason Bowman
 
             Permission is hereby granted, free of charge, to any person obtaining a copy
             of this software and associated documentation files (the "Software"), to deal

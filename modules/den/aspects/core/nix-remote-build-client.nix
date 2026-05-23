@@ -5,14 +5,12 @@
 { self, ... }:
 {
   den.aspects.core.nix-remote-build-client = {
-    os =
-      _:
-      {
-        nix = {
-          distributedBuilds = true;
-          settings.builders-use-substitutes = true;
-        };
+    os = _: {
+      nix = {
+        distributedBuilds = true;
+        settings.builders-use-substitutes = true;
       };
+    };
 
     # Secret for the SSH key used to connect to builders
     nixos = {

@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.apps.alacritty = {
     homeManager = {
       programs.alacritty = {

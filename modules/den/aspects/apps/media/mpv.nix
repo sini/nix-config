@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.apps.mpv = {
     homeManager =
       { pkgs, ... }:

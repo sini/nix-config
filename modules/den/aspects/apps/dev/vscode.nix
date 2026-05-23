@@ -1,13 +1,11 @@
 { inputs, ... }:
 {
   den.aspects.apps.vscode = {
-    os =
-      _:
-      {
-        nixpkgs.overlays = [
-          inputs.nix-vscode-extensions.overlays.default
-        ];
-      };
+    os = _: {
+      nixpkgs.overlays = [
+        inputs.nix-vscode-extensions.overlays.default
+      ];
+    };
 
     homeManager =
       {

@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.adb = {
     os =
       { pkgs, ... }:
@@ -10,7 +9,12 @@ _:
       };
 
     nixos =
-      { pkgs, host, lib, ... }:
+      {
+        pkgs,
+        host,
+        lib,
+        ...
+      }:
       {
         environment.systemPackages = [
           pkgs.android-file-transfer

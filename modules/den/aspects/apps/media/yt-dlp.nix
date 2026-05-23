@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.apps.yt-dlp = {
     homeManager =
       { pkgs, ... }:

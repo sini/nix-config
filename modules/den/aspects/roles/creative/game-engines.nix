@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.roles.creative.game-engines = {
     homeManager =
       { pkgs, ... }:

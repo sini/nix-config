@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.cpu-intel = {
     nixos = {
       hardware.cpu.intel.updateMicrocode = true;

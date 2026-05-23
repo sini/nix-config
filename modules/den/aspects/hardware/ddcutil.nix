@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.ddcutil = {
     nixos =
       { config, pkgs, ... }:

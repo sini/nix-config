@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.users.registry.sini = {
     system.uid = 1000;
     groups = [

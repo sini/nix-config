@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.hardware.power-mgmt = {
     nixos = {
       powerManagement = {

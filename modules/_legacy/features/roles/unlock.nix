@@ -1,7 +1,0 @@
-{
-  features.unlock = {
-    requires = [
-      "tang"
-    ];
-  };
-}

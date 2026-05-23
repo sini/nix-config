@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.apps.gpg = {
     nixos = {
       services.pcscd.enable = true;

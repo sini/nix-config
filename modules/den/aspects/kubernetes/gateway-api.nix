@@ -1,8 +1,7 @@
 # Gateway API — Gateway resource definitions, GatewayClass for Cilium.
 #
 # Ported from main:modules/kubernetes/services/network/gateway/gateway-api.nix
-_:
-{
+_: {
   den.aspects.kubernetes.gateway-api = {
     crds =
       { pkgs, lib, ... }:
@@ -28,16 +27,14 @@ _:
         inherit src crds;
       };
 
-    k8s-manifests =
-      _:
-      {
-        applications.gateway-api = {
-          namespace = "kube-system";
+    k8s-manifests = _: {
+      applications.gateway-api = {
+        namespace = "kube-system";
 
-          resources = {
-            gatewayClasses.cilium.spec.controllerName = "io.cilium/gateway-controller";
-          };
+        resources = {
+          gatewayClasses.cilium.spec.controllerName = "io.cilium/gateway-controller";
         };
       };
+    };
   };
 }

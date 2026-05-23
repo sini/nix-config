@@ -1,5 +1,4 @@
-_:
-{
+_: {
   den.aspects.system.nix-ld = {
     nixos =
       { pkgs, ... }:

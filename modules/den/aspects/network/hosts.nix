@@ -1,6 +1,4 @@
 # Builds /etc/hosts and SSH known_hosts from den host declarations.
-# TODO: uses top-level config.hosts/config.environments from legacy module --
-# will need reworking once den exposes cross-host discovery natively.
 {
   lib,
   config,

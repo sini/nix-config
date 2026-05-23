@@ -1,6 +1,5 @@
 # Identity-only users (Kanidm/SSO — no Unix accounts, no system-access groups)
-_:
-{
+_: {
   den.users.registry = {
     json = {
       groups = [ "admins" ];

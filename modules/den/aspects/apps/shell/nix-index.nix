@@ -1,11 +1,9 @@
 { inputs, ... }:
 {
   den.aspects.apps.nix-index = {
-    os =
-      _:
-      {
-        home-manager.sharedModules = [ inputs.nix-index-database.homeModules.default ];
-      };
+    os = _: {
+      home-manager.sharedModules = [ inputs.nix-index-database.homeModules.default ];
+    };
 
     homeManager = {
       programs.command-not-found.enable = false;
