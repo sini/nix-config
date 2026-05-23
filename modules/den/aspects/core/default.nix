@@ -3,6 +3,7 @@
   den.aspects.core.default = {
     includes = with den.aspects; [
       core.nix
+      core.lix
       core.nixpkgs
       core.systemd-boot
       core.i18n
