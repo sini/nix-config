@@ -1,7 +1,7 @@
 { den, inputs, withSystem, self, ... }:
 {
   den.aspects.core.nixpkgs = {
-    nixos =
+    os =
       { ... }:
       {
         nixpkgs.config.allowUnfree = true;

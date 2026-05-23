@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.apps.direnv = {
-    nixos = {
+    os = {
       nix.settings = {
         keep-outputs = true;
         keep-derivations = true;

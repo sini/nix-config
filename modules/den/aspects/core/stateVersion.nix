@@ -1,6 +1,10 @@
 { den, ... }:
 {
   den.aspects.core.stateVersion = {
+    darwin = {
+      system.stateVersion = "6";
+    };
+
     nixos = {
       system.stateVersion = "26.05";
       home-manager.sharedModules = [

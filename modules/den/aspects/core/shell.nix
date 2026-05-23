@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.core.shell = {
-    nixos =
+    os =
       { pkgs, ... }:
       {
         programs.zsh = {
@@ -9,10 +9,15 @@
           enableCompletion = true;
         };
 
-        users.defaultUserShell = pkgs.zsh;
         users.users.root.shell = pkgs.bashInteractive;
 
         environment.enableAllTerminfo = true;
+      };
+
+    nixos =
+      { pkgs, ... }:
+      {
+        users.defaultUserShell = pkgs.zsh;
       };
   };
 }

@@ -7,7 +7,7 @@ let
 in
 {
   den.aspects.core.time = {
-    nixos =
+    os =
       { host, ... }:
       let
         env = environments.${host.environment};

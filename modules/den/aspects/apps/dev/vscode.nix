@@ -1,7 +1,7 @@
 { den, inputs, ... }:
 {
   den.aspects.apps.vscode = {
-    nixos =
+    os =
       { ... }:
       {
         nixpkgs.overlays = [

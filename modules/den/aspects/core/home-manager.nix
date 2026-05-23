@@ -4,7 +4,7 @@
 { den, ... }:
 {
   den.aspects.core.home-manager = {
-    nixos = {
+    os = {
       home-manager.useGlobalPkgs = true;
       home-manager.useUserPackages = true;
     };

@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.apps.wireshark = {
-    nixos =
+    os =
       {
         pkgs,
         host,
