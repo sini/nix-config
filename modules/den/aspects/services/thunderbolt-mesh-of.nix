@@ -71,13 +71,7 @@ in
             nsap = "";
           };
 
-        # Check for actual mesh configuration, not just default option values
-        hasMeshSettings =
-          h:
-          let
-            meshCfg = (h.settings.services or { }).thunderbolt-mesh-of or { };
-          in
-          (meshCfg.loopback or { }) ? ipv4;
+        hasMeshSettings = h: h.hasAspect den.aspects.services.thunderbolt-mesh-of;
 
         # Discover peers: same environment, configured for thunderbolt mesh, not self
         peers = filterAttrs (
