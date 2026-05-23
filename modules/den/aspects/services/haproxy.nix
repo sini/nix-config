@@ -6,22 +6,21 @@
 let
   environments = config.den.environments;
   clusters = config.den.clusters or { };
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.services.haproxy = {
     nixos =
       {
+        k3s-nodes,
         config,
         host,
         ...
       }:
       let
         env = environments.${host.environment};
-        k3sHosts = lib.filterAttrs (
-          _: h: h.environment == env.name && (h.settings.services.k3s or { }) != { }
-        ) allHosts;
-        k3sHostList = lib.attrValues k3sHosts;
+
+        # k3s hosts in same environment from collected pipe data
+        k3sHostList = lib.filter (n: n.environment == env.name) k3s-nodes;
 
         # Resolve k8s ingress VIP from the cluster's loadbalancer network
         envCluster =
@@ -87,9 +86,7 @@ in
             backend kubernetes-nodes
               balance roundrobin
               option tcp-check
-              ${lib.concatStringsSep "\n  " (
-                map (h: "server ${h.name} ${builtins.head h.ipv4}:6443 check") k3sHostList
-              )}
+              ${lib.concatStringsSep "\n  " (map (n: "server ${n.hostname} ${n.ip}:6443 check") k3sHostList)}
           '';
         };
       };

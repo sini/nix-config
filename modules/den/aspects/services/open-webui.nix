@@ -6,7 +6,6 @@
 }:
 let
   environments = config.den.environments;
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.services.open-webui = {
@@ -14,6 +13,7 @@ in
 
     nixos =
       {
+        ollama-endpoints,
         config,
         host,
         ...
@@ -22,12 +22,10 @@ in
         env = environments.${host.environment};
         domain = env.getDomainFor "open-webui";
         kanidmDomain = env.getDomainFor "kanidm";
+
+        # Collect ollama IPs from same environment via pipe data
         ollamaHosts = builtins.sort (a: b: a < b) (
-          lib.mapAttrsToList (_: h: builtins.head h.ipv4) (
-            lib.filterAttrs (
-              _: h: h.environment == env.name && builtins.elem "ollama" (h.aspects or [ ])
-            ) allHosts
-          )
+          map (e: e.ip) (lib.filter (e: e.environment == env.name) ollama-endpoints)
         );
       in
       {

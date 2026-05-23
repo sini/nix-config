@@ -1,3 +1,6 @@
+# Vault — HashiCorp Vault with raft storage, TLS, and auto-unseal.
+#
+# Emits vault-peers quirk; consumes collected peers for raft join config.
 {
   lib,
   config,
@@ -5,12 +8,20 @@
 }:
 let
   environments = config.den.environments;
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.services.vault = {
+    # Emit peer info for raft cluster formation
+    vault-peers =
+      { host, ... }:
+      {
+        hostname = host.name;
+        inherit (host) environment;
+      };
+
     nixos =
       {
+        vault-peers,
         config,
         host,
         pkgs,
@@ -18,15 +29,10 @@ in
       }:
       let
         env = environments.${host.environment};
-        # TODO: refine vault peer discovery — currently uses environment match
-        # which may include non-vault hosts once more services share the env
-        allVaultHosts = lib.filterAttrs (
-          _: h: h.environment == host.environment && h.name != host.name
-        ) allHosts;
 
-        # Raft peers exclude current host
-        raftPeers = lib.attrNames (
-          lib.filterAttrs (hostname: _: hostname != config.networking.hostName) allVaultHosts
+        # Raft peers: same environment, not self
+        raftPeers = map (p: p.hostname) (
+          lib.filter (p: p.environment == host.environment && p.hostname != host.name) vault-peers
         );
 
         vaultServiceHostname = env.getDomainFor "vault";

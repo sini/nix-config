@@ -1,3 +1,7 @@
+# Ollama — local LLM inference server.
+#
+# Emits ollama-endpoints quirk so consumers (open-webui) can
+# discover all ollama instances without cross-host scanning.
 {
   lib,
   ...
@@ -15,6 +19,16 @@
         description = "GPU acceleration backend";
       };
     };
+
+    # Emit endpoint info for consumer discovery
+    ollama-endpoints =
+      { host, ... }:
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit (host) environment;
+        port = 11434;
+      };
 
     nixos =
       {

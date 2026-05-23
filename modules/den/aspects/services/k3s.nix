@@ -2,9 +2,8 @@
 # Cilium CNI (flannel disabled), OIDC via Kanidm, etcd snapshots,
 # and bootstrap services (Cilium -> CoreDNS -> SOPS -> ArgoCD).
 #
-# Cluster membership and network CIDRs are resolved from den.clusters.
-# Bootstrap services are oneshot systemd units that apply manifests in
-# dependency order during initial cluster formation.
+# Emits k3s-nodes quirk; consumes collected nodes for peer discovery,
+# bootstrap ordering, keepalived, and TLS SANs.
 {
   den,
   lib,
@@ -14,9 +13,7 @@
 }:
 let
   inherit (lib)
-    attrValues
     concatStringsSep
-    filterAttrs
     flatten
     head
     mkForce
@@ -27,7 +24,6 @@ let
 
   clusters = config.den.clusters or { };
   environments = config.den.environments;
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.services.k3s = {
@@ -41,8 +37,23 @@ in
       };
     };
 
+    # Emit node info for peer discovery
+    k3s-nodes =
+      { host, ... }:
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        ipv6 = builtins.head host.ipv6;
+        inherit (host) environment;
+        clusterName = host.settings.services.k3s.clusterName;
+        # BGP and cilium-bgp settings needed by cilium-bgp-resources
+        bgpLocalAsn = host.settings.services.bgp.localAsn or null;
+        ciliumBgpLocalAsn = (host.settings.services.cilium-bgp or { }).localAsn or null;
+      };
+
     nixos =
       {
+        k3s-nodes,
         config,
         pkgs,
         host,
@@ -52,47 +63,43 @@ in
         clusterName = host.settings.services.k3s.clusterName;
         cluster = clusters.${clusterName};
 
-        # Resolve environment for domain/OIDC lookups
         environment = environments.${cluster.environment};
 
-        # Network CIDRs from cluster definition
         podNetwork = cluster.networks.kubernetes-pods;
         serviceNetwork = cluster.networks.kubernetes-services;
         vip = cluster.getAssignment "kube-apiserver-vip";
         managementCidr = cluster.networks.control-plane.cidr;
         managementSubnet = lib.last (lib.splitString "/" managementCidr);
-        k3sHosts = filterAttrs (
-          _: h: h.environment == cluster.environment && (h.settings.services.k3s or { }) != { }
-        ) allHosts;
 
-        # Deterministic ordering by hostname
-        sortedNodes = builtins.sort (a: b: a.name < b.name) (attrValues k3sHosts);
+        # Filter collected nodes to same cluster
+        clusterNodes = lib.filter (
+          n: n.environment == cluster.environment && n.clusterName == clusterName
+        ) k3s-nodes;
+
+        sortedNodes = builtins.sort (a: b: a.hostname < b.hostname) clusterNodes;
 
         nodeId =
           let
-            result = lib.lists.findFirstIndex (node: node.name == host.name) null sortedNodes;
+            result = lib.lists.findFirstIndex (node: node.hostname == host.name) null sortedNodes;
           in
           assert lib.assertMsg (result != null) ''
             den: k3s aspect failed to find host "${host.name}" in cluster peers.
-            Available: ${concatStringsSep ", " (map (n: n.name) sortedNodes)}
+            Available: ${concatStringsSep ", " (map (n: n.hostname) sortedNodes)}
           '';
           result;
 
         # Bootstrap when only one node is declared (initial cluster formation)
         shouldInit = (builtins.length sortedNodes) == 1;
 
-        # Join address: VIP when bootstrapping, otherwise first other node
         masterIP =
           if shouldInit then
             vip
           else
             let
-              otherNodes = lib.filter (node: node.name != host.name) sortedNodes;
+              otherNodes = lib.filter (node: node.hostname != host.name) sortedNodes;
             in
-            head (head otherNodes).ipv4;
+            (head otherNodes).ip;
 
-        # Manifest paths — each directory isolated into its own store path so
-        # unrelated repo changes don't invalidate bootstrap derivations
         manifestBase = self + "/generated/manifests/${cluster.environment}-${clusterName}";
         manifestPath =
           name:
@@ -104,9 +111,9 @@ in
         # TLS SANs: VIP + all peer node IPs + hostnames + tailscale names
         peerTlsSans = flatten (
           map (node: [
-            "--tls-san=${head node.ipv4}"
-            "--tls-san=${node.name}"
-            "--tls-san=${node.name}.ts.${environment.domain}"
+            "--tls-san=${node.ip}"
+            "--tls-san=${node.hostname}"
+            "--tls-san=${node.hostname}.ts.${environment.domain}"
           ]) sortedNodes
         );
 
@@ -467,16 +474,13 @@ in
         };
       };
 
-    # Secrets: cluster token (all nodes) + SOPS age key (bootstrap only)
+    # Secrets: cluster token (all nodes) + SOPS age key (always provisioned,
+    # but only used by bootstrap services which are guarded by shouldInit)
     age-secrets =
       { host, ... }:
       let
         clusterName = host.settings.services.k3s.clusterName;
         cluster = clusters.${clusterName};
-        k3sHosts = filterAttrs (
-          _: h: h.environment == cluster.environment && (h.settings.services.k3s or { }) != { }
-        ) allHosts;
-        shouldInit = (builtins.length (attrValues k3sHosts)) == 1;
       in
       {
         age.secrets.kubernetes-cluster-token = {
@@ -484,7 +488,7 @@ in
           generator.script = "passphrase";
         };
 
-        age.secrets.kubernetes-sops-age-key = mkIf shouldInit {
+        age.secrets.kubernetes-sops-age-key = {
           rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
           path = "/var/lib/sops/age/key.txt";
         };

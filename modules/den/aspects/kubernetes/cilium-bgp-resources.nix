@@ -1,6 +1,10 @@
 # Cilium BGP CRDs — BGPAdvertisements (Service ExternalIP + LoadBalancerIP),
 # BGPPeerConfigs (EBGP multihop 4, timers), BGPClusterConfigs per host.
 #
+# TODO: convert to k3s-nodes pipe.collect once cluster-scoped aspects
+# can receive host-scoped pipe data. Currently uses config.den.hosts
+# because k8s-manifests runs in cluster scope, not host scope.
+#
 # Ported from main:modules/kubernetes/services/network/cilium/cilium-bgp.nix
 {
   lib,

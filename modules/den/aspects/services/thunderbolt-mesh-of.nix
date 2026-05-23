@@ -3,15 +3,14 @@
 # Uses FRR's fabricd for automatic adjacency discovery and route distribution
 # across thunderbolt links. Coexists with BGP in the same FRR instance —
 # OpenFabric handles east/west (host-to-host), BGP handles north/south.
+#
+# Emits thunderbolt-mesh-peers quirk; consumes collected peers for
+# static route generation to reach management IPs via fabric loopbacks.
 {
   den,
   lib,
-  config,
   ...
 }:
-let
-  allHosts = config.den.hosts.x86_64-linux or { };
-in
 {
   den.aspects.services.thunderbolt-mesh-of = {
     includes = [ den.aspects.hardware.thunderbolt-network ];
@@ -47,18 +46,31 @@ in
       };
     };
 
+    # Emit peer info for cross-host static route generation
+    thunderbolt-mesh-peers =
+      { host, ... }:
+      let
+        cfg = host.settings.services.thunderbolt-mesh-of;
+      in
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit (host) environment;
+        loopbackIpv4 = cfg.loopback.ipv4;
+        inherit (cfg) nsap;
+      };
+
     nixos =
       {
+        thunderbolt-mesh-peers,
         lib,
         host,
         ...
       }:
       let
         inherit (lib)
-          attrValues
           concatMapStringsSep
           concatStringsSep
-          filterAttrs
           head
           optional
           splitString
@@ -71,23 +83,19 @@ in
             nsap = "";
           };
 
-        hasMeshSettings = h: h.hasAspect den.aspects.services.thunderbolt-mesh-of;
-
-        # Discover peers: same environment, configured for thunderbolt mesh, not self
-        peers = filterAttrs (
-          name: h: h.environment == host.environment && name != host.name && hasMeshSettings h
-        ) allHosts;
+        # Filter collected peers: same environment, not self
+        peers = lib.filter (
+          p: p.environment == host.environment && p.hostname != host.name
+        ) thunderbolt-mesh-peers;
 
         # Static routes: reach peer management IPs via their fabric loopback
         peerStaticRoutes = concatMapStringsSep "\n" (
-          peerHost:
+          peer:
           let
-            peerCfg = peerHost.settings.services.thunderbolt-mesh-of;
-            mgmtIp = head peerHost.ipv4;
-            loopbackIp = head (splitString "/" peerCfg.loopback.ipv4);
+            loopbackIp = head (splitString "/" peer.loopbackIpv4);
           in
-          "ip route ${mgmtIp}/32 ${loopbackIp}"
-        ) (attrValues peers);
+          "ip route ${peer.ip}/32 ${loopbackIp}"
+        ) peers;
 
         mkFabricInterface =
           ifName:

@@ -1,7 +1,8 @@
 # Prometheus — time-series monitoring with static exporter discovery,
 # alert rules, 30d retention, nginx proxy, remote-write receiver.
 #
-# Ported from main:modules/services/monitoring/prometheus.nix
+# Emits prometheus-targets quirk; consumes collected targets from all
+# peers to build scrape configs.
 {
   lib,
   config,
@@ -9,61 +10,65 @@
 }:
 let
   environments = config.den.environments;
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.services.prometheus = {
+    # Emit scrape targets for this host
+    prometheus-targets =
+      { host, ... }:
+      let
+        hasK3s = (host.settings.services.k3s or { }) != { };
+      in
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit (host) environment;
+        exporters = [
+          {
+            job = "node";
+            port = 9100;
+          }
+        ]
+        ++ lib.optionals hasK3s [
+          {
+            job = "k3s-server";
+            port = 10249;
+          }
+          {
+            job = "etcd";
+            port = 2381;
+          }
+        ];
+      };
+
     nixos =
       {
+        prometheus-targets,
         config,
         host,
+        lib,
         ...
       }:
       let
         env = environments.${host.environment};
         domain = env.getDomainFor "prometheus";
 
-        # Static exporter discovery from allHosts in the same environment.
-        # Mirrors main's approach: node-exporter (9100) on all servers,
-        # k3s metrics (10249) + etcd (2381) on k3s hosts.
-        envHosts = lib.filterAttrs (_: h: h.environment == host.environment) allHosts;
+        # Build scrape entries from collected targets in the same environment
+        envTargets = lib.filter (t: t.environment == host.environment) prometheus-targets;
 
-        mkHostScrapes =
-          hostname: h:
-          let
-            ip = builtins.head h.ipv4;
-            hasK3s = (h.settings.services.k3s or { }) != { };
-          in
-          [
-            {
-              job_name = "node";
-              target = "${ip}:9100";
+        allScrapes = lib.flatten (
+          map (
+            target:
+            map (exp: {
+              job_name = exp.job;
+              target = "${target.ip}:${toString exp.port}";
               labels = {
-                inherit hostname;
-                exporter = "node";
+                inherit (target) hostname;
+                exporter = exp.job;
               };
-            }
-          ]
-          ++ lib.optionals hasK3s [
-            {
-              job_name = "k3s-server";
-              target = "${ip}:10249";
-              labels = {
-                inherit hostname;
-                exporter = "k3s-server";
-              };
-            }
-            {
-              job_name = "etcd";
-              target = "${ip}:2381";
-              labels = {
-                inherit hostname;
-                exporter = "etcd";
-              };
-            }
-          ];
-
-        allScrapes = lib.flatten (lib.mapAttrsToList mkHostScrapes envHosts);
+            }) target.exporters
+          ) envTargets
+        );
 
         # Group by job_name and merge targets
         targetScrapeConfigs = lib.pipe allScrapes [
