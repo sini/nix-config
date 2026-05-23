@@ -1,11 +1,11 @@
 # Gateway API — Gateway resource definitions, GatewayClass for Cilium.
 #
 # Ported from main:modules/kubernetes/services/network/gateway/gateway-api.nix
-{ den, ... }:
+_:
 {
   den.aspects.kubernetes.gateway-api = {
     k8s-manifests =
-      { cluster, ... }:
+      _:
       {
         applications.gateway-api = {
           namespace = "kube-system";

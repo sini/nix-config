@@ -37,7 +37,6 @@
                   bash = getExe pkgs.bash;
                   renice = "${pkgs.util-linux}/bin/renice";
                   sponge = "${pkgs.moreutils}/bin/sponge";
-                  sysctl = getExe pkgs.sysctl;
                   systemctl = "${config.systemd.package}/bin/systemctl";
                   virsh = "${pkgs.libvirt}/bin/virsh";
                 in

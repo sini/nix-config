@@ -1,17 +1,24 @@
 # linux-kernel — CachyOS kernel selection.
 #
 # Ported from main:modules/_legacy/core/linux-kernel.nix.
-{ den, lib, inputs, ... }:
+{ lib, inputs, ... }:
 {
   den.aspects.core.linux-kernel = {
     settings = {
       channel = lib.mkOption {
-        type = lib.types.enum [ "lts" "latest" ];
+        type = lib.types.enum [
+          "lts"
+          "latest"
+        ];
         default = "latest";
         description = "CachyOS kernel release channel";
       };
       optimization = lib.mkOption {
-        type = lib.types.enum [ "server" "zen4" "x86_64-v4" ];
+        type = lib.types.enum [
+          "server"
+          "zen4"
+          "x86_64-v4"
+        ];
         default = "server";
         description = "CachyOS kernel optimization target";
       };
@@ -22,9 +29,10 @@
       let
         cfg = host.settings.core.linux-kernel;
         kernelName =
-          if cfg.optimization == "server"
-          then "linuxPackages-cachyos-server-lto"
-          else "linuxPackages-cachyos-${cfg.channel}-lto-${cfg.optimization}";
+          if cfg.optimization == "server" then
+            "linuxPackages-cachyos-server-lto"
+          else
+            "linuxPackages-cachyos-${cfg.channel}-lto-${cfg.optimization}";
       in
       {
         nixpkgs.overlays = [

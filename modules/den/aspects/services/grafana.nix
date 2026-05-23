@@ -3,8 +3,6 @@
 #
 # Ported from main:modules/services/monitoring/grafana/grafana.nix
 {
-  den,
-  lib,
   config,
   ...
 }:
@@ -17,7 +15,6 @@ in
       {
         config,
         host,
-        pkgs,
         ...
       }:
       let

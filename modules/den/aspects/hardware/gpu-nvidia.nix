@@ -1,8 +1,13 @@
-{ den, ... }:
+_:
 {
   den.aspects.hardware.gpu-nvidia = {
     nixos =
-      { config, pkgs, lib, ... }:
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
       {
         boot = {
           kernelModules = [

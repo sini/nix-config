@@ -6,7 +6,7 @@
 # Included via den.schema.user.includes so it fires for every resolved user.
 #
 # Ported from main:modules/core/users/default.nix
-{ den, lib, self, ... }:
+{ lib, self, ... }:
 let
   userEnrich =
     { host, user }:
@@ -42,7 +42,8 @@ let
           extraGroups = user.system.systemGroups or [ ];
           linger = user.system.linger or false;
           description = lib.mkDefault (user.identity.displayName or "");
-        } // lib.optionalAttrs hasPasswordFile {
+        }
+        // lib.optionalAttrs hasPasswordFile {
           hashedPasswordFile = "/run/agenix/user-${userName}-password";
         };
 

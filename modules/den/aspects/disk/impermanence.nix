@@ -1,4 +1,9 @@
-{ den, lib, inputs, ... }:
+{
+  den,
+  lib,
+  inputs,
+  ...
+}:
 {
   den.aspects.disk.impermanence = {
     includes = [
@@ -20,7 +25,12 @@
     };
 
     nixos =
-      { config, host, pkgs, ... }:
+      {
+        config,
+        host,
+        pkgs,
+        ...
+      }:
       let
         wipeRoot = host.settings.disk.impermanence.wipeRootOnBoot;
         wipeHome = host.settings.disk.impermanence.wipeHomeOnBoot;

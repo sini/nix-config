@@ -11,10 +11,7 @@
         ) null config.facter.report.hardware.graphics_card;
 
         nvidiaGpuDeviceID =
-          if nvidiaCard != null then
-            "${nvidiaCard.vendor.hex}:${nvidiaCard.device.hex}"
-          else
-            "10de:2203";
+          if nvidiaCard != null then "${nvidiaCard.vendor.hex}:${nvidiaCard.device.hex}" else "10de:2203";
 
         nvidiaAudioController = lib.lists.findFirst (
           card: card.vendor.name == "nVidia Corporation"

@@ -1,11 +1,11 @@
 # sudo — sudo-rs + doas configuration.
 #
 # Ported from main:modules/_legacy/core/sudo.nix.
-{ den, lib, ... }:
+_:
 {
   den.aspects.core.sudo = {
     nixos =
-      { lib, ... }:
+      _:
       {
         security = {
           sudo.enable = false;

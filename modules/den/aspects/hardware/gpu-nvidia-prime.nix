@@ -4,12 +4,15 @@
     includes = [ den.aspects.hardware.gpu-nvidia ];
 
     nixos =
-      { config, lib, pkgs, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       let
         formatPciId =
-          id:
-          "PCI:"
-          + (lib.strings.replaceStrings [ "." ] [ ":" ] (lib.strings.removePrefix "0000:" id));
+          id: "PCI:" + (lib.strings.replaceStrings [ "." ] [ ":" ] (lib.strings.removePrefix "0000:" id));
 
         nvidiaCard = lib.lists.findFirst (
           card: card.vendor.name == "nVidia Corporation"

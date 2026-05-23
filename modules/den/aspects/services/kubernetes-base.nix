@@ -1,8 +1,4 @@
-{
-  den,
-  lib,
-  ...
-}:
+_:
 {
   den.aspects.services.kubernetes-base = {
     nixos = {

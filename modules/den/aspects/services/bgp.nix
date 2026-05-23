@@ -374,20 +374,16 @@ in
     };
 
     nixos =
-      { config, host, ... }:
+      { host, ... }:
       let
         inherit (lib)
           attrNames
-          attrValues
-          concatMap
           filterAttrs
           head
           imap0
           listToAttrs
-          mapAttrsToList
           mkDefault
           optional
-          optionalAttrs
           sort
           ;
 
@@ -454,7 +450,7 @@ in
           };
 
           services.bgp = {
-            maximumPaths = hubSettings.maximumPaths;
+            inherit (hubSettings) maximumPaths;
             neighbors = allNeighbors;
             addressFamilies.ipv4-unicast = {
               neighbors = addressFamilyNeighbors;

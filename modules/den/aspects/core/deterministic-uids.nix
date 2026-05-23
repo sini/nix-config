@@ -3,7 +3,7 @@
 # Ported from main:modules/_legacy/core/deterministic-uids/
 # The option module defines `users.deterministicIds` which auto-assigns uid/gid
 # to users/groups via mkDefault. The data module provides the central ID registry.
-{ den, lib, ... }:
+_:
 {
   den.aspects.core.deterministic-uids = {
     nixos =
@@ -43,21 +43,25 @@
                     default = null;
                   };
                   subUidRanges = mkOption {
-                    type = types.listOf (types.submodule {
-                      options = {
-                        startUid = mkOption { type = types.int; };
-                        count = mkOption { type = types.int; };
-                      };
-                    });
+                    type = types.listOf (
+                      types.submodule {
+                        options = {
+                          startUid = mkOption { type = types.int; };
+                          count = mkOption { type = types.int; };
+                        };
+                      }
+                    );
                     default = [ ];
                   };
                   subGidRanges = mkOption {
-                    type = types.listOf (types.submodule {
-                      options = {
-                        startGid = mkOption { type = types.int; };
-                        count = mkOption { type = types.int; };
-                      };
-                    });
+                    type = types.listOf (
+                      types.submodule {
+                        options = {
+                          startGid = mkOption { type = types.int; };
+                          count = mkOption { type = types.int; };
+                        };
+                      }
+                    );
                     default = [ ];
                   };
                 };
@@ -66,27 +70,45 @@
           };
 
           users = mkOption {
-            type = types.attrsOf (types.submodule ({ name, ... }: {
-              config = {
-                uid =
-                  let v = cfg.${name}.uid or null;
-                  in mkIf (v != null) (mkDefault v);
-                subUidRanges =
-                  let v = cfg.${name}.subUidRanges or [ ];
-                  in mkIf (v != [ ]) (mkDefault v);
-                subGidRanges =
-                  let v = cfg.${name}.subGidRanges or [ ];
-                  in mkIf (v != [ ]) (mkDefault v);
-              };
-            }));
+            type = types.attrsOf (
+              types.submodule (
+                { name, ... }:
+                {
+                  config = {
+                    uid =
+                      let
+                        v = cfg.${name}.uid or null;
+                      in
+                      mkIf (v != null) (mkDefault v);
+                    subUidRanges =
+                      let
+                        v = cfg.${name}.subUidRanges or [ ];
+                      in
+                      mkIf (v != [ ]) (mkDefault v);
+                    subGidRanges =
+                      let
+                        v = cfg.${name}.subGidRanges or [ ];
+                      in
+                      mkIf (v != [ ]) (mkDefault v);
+                  };
+                }
+              )
+            );
           };
 
           groups = mkOption {
-            type = types.attrsOf (types.submodule ({ name, ... }: {
-              config.gid =
-                let v = cfg.${name}.gid or null;
-                in mkIf (v != null) (mkDefault v);
-            }));
+            type = types.attrsOf (
+              types.submodule (
+                { name, ... }:
+                {
+                  config.gid =
+                    let
+                      v = cfg.${name}.gid or null;
+                    in
+                    mkIf (v != null) (mkDefault v);
+                }
+              )
+            );
           };
         };
 
@@ -141,9 +163,15 @@
           git = uidGid 952;
           jellyfin = uidGid 1027;
 
-          system-access = { gid = 951; };
-          workstation-access = { gid = 950; };
-          server-access = { gid = 949; };
+          system-access = {
+            gid = 951;
+          };
+          workstation-access = {
+            gid = 950;
+          };
+          server-access = {
+            gid = 949;
+          };
         };
 
         config.assertions =

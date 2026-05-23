@@ -65,14 +65,11 @@ in
           splitString
           ;
 
-        cfg = (
-          host.settings.services.thunderbolt-mesh-of or {
+        cfg = host.settings.services.thunderbolt-mesh-of or {
             interfaces = [ ];
             loopback.ipv4 = "0.0.0.0/32";
             nsap = "";
-          }
-        );
-        environments = config.den.environments or { };
+          };
 
         # Check for actual mesh configuration, not just default option values
         hasMeshSettings =

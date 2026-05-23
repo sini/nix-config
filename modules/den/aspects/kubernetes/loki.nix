@@ -1,20 +1,12 @@
 # Loki — Helm chart for in-cluster log aggregation.
 {
-  den,
-  lib,
   config,
   ...
 }:
-let
-  environments = config.den.environments;
-in
 {
   den.aspects.kubernetes.loki = {
     k8s-manifests =
       { cluster, ... }:
-      let
-        environment = environments.${cluster.environment};
-      in
       {
         applications.loki = {
           namespace = "monitoring";

@@ -1,4 +1,4 @@
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.core.nix = {
     os = {
@@ -71,7 +71,7 @@
     };
 
     nixos =
-      { ... }:
+      _:
       {
         nix = {
           settings =

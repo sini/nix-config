@@ -1,9 +1,5 @@
 # Stub — original on main is entirely commented out
-{
-  den,
-  lib,
-  ...
-}:
+_:
 {
   den.aspects.services.etcd = {
     nixos = { };

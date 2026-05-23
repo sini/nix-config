@@ -3,7 +3,6 @@
 #
 # Ported from main:modules/services/monitoring/prometheus.nix
 {
-  den,
   lib,
   config,
   ...
@@ -74,7 +73,7 @@ in
               inherit job_name;
               static_configs = map (e: {
                 targets = [ e.target ];
-                labels = e.labels;
+                inherit (e) labels;
               }) entries;
               metrics_path = "/metrics";
               scrape_interval = if job_name == "node" then "15s" else "30s";
@@ -106,6 +105,18 @@ in
                     labels = {
                       hostname = config.networking.hostName;
                       exporter = "prometheus";
+                    };
+                  }
+                ];
+              }
+              {
+                job_name = "nginx-exporter";
+                static_configs = [
+                  {
+                    targets = [ "127.0.0.1:9113" ];
+                    labels = {
+                      hostname = config.networking.hostName;
+                      exporter = "nginx";
                     };
                   }
                 ];

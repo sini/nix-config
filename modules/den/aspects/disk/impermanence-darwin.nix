@@ -1,10 +1,10 @@
 # Dummy persistence options for Darwin so modules that reference
 # osConfig.environment.persistence don't error out.
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.disk.impermanence-darwin = {
     darwin =
-      { ... }:
+      _:
       {
         options.environment.persistence = lib.mkOption {
           type = lib.types.anything;

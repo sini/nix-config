@@ -1,4 +1,4 @@
-{ ... }:
+_:
 {
   den.users.registry.sini = {
     system.uid = 1000;

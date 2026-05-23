@@ -1,4 +1,4 @@
-{ den, lib, inputs, ... }:
+{ lib, inputs, ... }:
 {
   den.aspects.disk.xfs-disk-longhorn = {
     settings = {

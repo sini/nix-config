@@ -26,7 +26,7 @@ in
 
   # fleet -> environments: fan out per registered environment.
   den.policies.fleet-to-envs =
-    { fleet, ... }:
+    _:
     lib.mapAttrsToList (
       _: env:
       resolve.to "environment" {

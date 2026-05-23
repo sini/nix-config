@@ -17,10 +17,9 @@ let
 
   engine = inputs.scope-engine { inherit lib; };
 
-  flatHosts = lib.foldl' (
-    acc: system:
-    acc // (den.hosts.${system} or { })
-  ) { } (builtins.attrNames (den.hosts or { }));
+  flatHosts = lib.foldl' (acc: system: acc // (den.hosts.${system} or { })) { } (
+    builtins.attrNames (den.hosts or { })
+  );
 
   environments = config.den.environments or { };
   hosts = flatHosts;
@@ -30,9 +29,7 @@ let
 
   parentEdges = engine.overlays (
     [ (engine.star "root" (map (e: "env:${e}") envNames)) ]
-    ++ map (
-      host: engine.edge "host:${host}" "env:${hosts.${host}.environment or "prod"}"
-    ) hostNames
+    ++ map (host: engine.edge "host:${host}" "env:${hosts.${host}.environment or "prod"}") hostNames
   );
 
   importEdges = engine.overlays (
@@ -55,7 +52,12 @@ let
     importGraph = importEdges;
 
     decls = lib.listToAttrs (
-      [ { name = "root"; value = { }; } ]
+      [
+        {
+          name = "root";
+          value = { };
+        }
+      ]
       ++ map (ename: {
         name = "env:${ename}";
         value = environments.${ename}.settings or { };
@@ -67,9 +69,20 @@ let
     );
 
     types = lib.listToAttrs (
-      [ { name = "root"; value = "root"; } ]
-      ++ map (e: { name = "env:${e}"; value = "environment"; }) envNames
-      ++ map (h: { name = "host:${h}"; value = "host"; }) hostNames
+      [
+        {
+          name = "root";
+          value = "root";
+        }
+      ]
+      ++ map (e: {
+        name = "env:${e}";
+        value = "environment";
+      }) envNames
+      ++ map (h: {
+        name = "host:${h}";
+        value = "host";
+      }) hostNames
     );
   };
 
@@ -85,14 +98,10 @@ let
         node = self.nodes.${id};
         local = node.decls;
         importedSettings = lib.foldl' (
-          acc: iid:
-          engine.shadow (self.evaluated.${iid}.get "resolvedSettings") acc
+          acc: iid: engine.shadow (self.evaluated.${iid}.get "resolvedSettings") acc
         ) { } node.imports;
         parentSettings =
-          if node.parent != null then
-            self.evaluated.${node.parent}.get "resolvedSettings"
-          else
-            { };
+          if node.parent != null then self.evaluated.${node.parent}.get "resolvedSettings" else { };
       in
       engine.shadow local (engine.shadow importedSettings parentSettings);
 
@@ -118,9 +127,12 @@ let
             iid: (self.evaluated.${iid}.get "resolvedSettings") ? ${key}
           ) node.imports;
         in
-        if isLocal then "local"
-        else if isImported then "import"
-        else "inherited"
+        if isLocal then
+          "local"
+        else if isImported then
+          "import"
+        else
+          "inherited"
       ) resolved;
   };
 in

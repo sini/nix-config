@@ -1,20 +1,12 @@
 # kube-prometheus-stack — Helm chart for in-cluster Prometheus monitoring.
 {
-  den,
-  lib,
   config,
   ...
 }:
-let
-  environments = config.den.environments;
-in
 {
   den.aspects.kubernetes.prometheus = {
     k8s-manifests =
       { cluster, ... }:
-      let
-        environment = environments.${cluster.environment};
-      in
       {
         applications.kube-prometheus-stack = {
           namespace = "monitoring";

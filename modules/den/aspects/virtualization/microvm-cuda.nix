@@ -33,18 +33,14 @@ in
           card: card.vendor.name == "nVidia Corporation"
         ) null config.facter.report.hardware.graphics_card;
 
-        nvidiaGpuDeviceID =
-          if nvidiaCard != null then nvidiaCard.sysfs_bus_id else "0000:05:00.0";
+        nvidiaGpuDeviceID = if nvidiaCard != null then nvidiaCard.sysfs_bus_id else "0000:05:00.0";
 
         nvidiaAudioController = lib.lists.findFirst (
           card: card.vendor.name == "nVidia Corporation"
         ) null config.facter.report.hardware.sound;
 
         nvidiaAudioDeviceID =
-          if nvidiaAudioController != null then
-            nvidiaAudioController.sysfs_bus_id
-          else
-            "0000:05:00.1";
+          if nvidiaAudioController != null then nvidiaAudioController.sysfs_bus_id else "0000:05:00.1";
 
         vfioStatusCheck = pkgs.writeScript "check_vfio_status.sh" ''
           #! ${pkgs.runtimeShell} -e

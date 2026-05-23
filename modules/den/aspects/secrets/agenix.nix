@@ -1,4 +1,9 @@
-{ den, lib, inputs, self, ... }:
+{
+  lib,
+  inputs,
+  self,
+  ...
+}:
 {
   den.aspects.secrets.agenix = {
     nixos =
@@ -38,7 +43,12 @@
           inputs.agenix.homeManagerModules.default
           inputs.agenix-rekey.homeManagerModules.default
           (
-            { config, osConfig, lib, ... }:
+            {
+              config,
+              osConfig,
+              lib,
+              ...
+            }:
             {
               _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
 
@@ -72,7 +82,13 @@
 
     # HM-level agenix config
     homeManager =
-      { config, osConfig, host, lib, ... }:
+      {
+        config,
+        osConfig,
+        host,
+        lib,
+        ...
+      }:
       {
         age = {
           identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${config.home.username}") [

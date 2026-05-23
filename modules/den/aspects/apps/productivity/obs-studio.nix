@@ -1,4 +1,4 @@
-{ den, ... }:
+_:
 {
   den.aspects.apps.obs-studio = {
     homeManager =

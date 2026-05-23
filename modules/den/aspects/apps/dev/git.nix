@@ -1,4 +1,4 @@
-{ den, lib, ... }:
+_:
 {
   den.aspects.apps.git = {
     homeManager =
@@ -57,14 +57,13 @@
           # git core
           git = {
             enable = true;
-            signing =
-              {
-                signByDefault = gpgKey != null;
-              }
-              // lib.optionalAttrs (gpgKey != null) {
-                format = "openpgp";
-                key = gpgKey;
-              };
+            signing = {
+              signByDefault = gpgKey != null;
+            }
+            // lib.optionalAttrs (gpgKey != null) {
+              format = "openpgp";
+              key = gpgKey;
+            };
             settings = {
               user.name = user.identity.displayName or username;
               user.email = userEmail;
@@ -155,14 +154,13 @@
           # jujutsu
           jujutsu = {
             enable = true;
-            settings.signing =
-              {
-                sign-all = gpgKey != null;
-              }
-              // lib.optionalAttrs (gpgKey != null) {
-                backend = "gpg";
-                key = gpgKey;
-              };
+            settings.signing = {
+              sign-all = gpgKey != null;
+            }
+            // lib.optionalAttrs (gpgKey != null) {
+              backend = "gpg";
+              key = gpgKey;
+            };
           };
         };
 

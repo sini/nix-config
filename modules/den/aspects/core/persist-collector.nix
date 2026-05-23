@@ -1,8 +1,13 @@
-{ den, ... }:
+_:
 {
   den.aspects.core.persist-collector = {
     nixos =
-      { persist, cache, lib, ... }:
+      {
+        persist,
+        cache,
+        lib,
+        ...
+      }:
       let
         mergePersist = entries: {
           directories = lib.unique (lib.concatMap (e: e.directories or [ ]) entries);

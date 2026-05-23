@@ -3,13 +3,10 @@
 #
 # Ported from main:modules/kubernetes/services/network/cilium/cilium.nix
 {
-  den,
-  lib,
   config,
   ...
 }:
 let
-  clusters = config.den.clusters or { };
   environments = config.den.environments;
 in
 {

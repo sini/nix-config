@@ -1,6 +1,5 @@
 {
   den,
-  lib,
   config,
   ...
 }:
@@ -13,7 +12,6 @@ in
 
     nixos =
       {
-        config,
         host,
         ...
       }:

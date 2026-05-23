@@ -1,5 +1,5 @@
 # Declares the Ceph OSD device path for this host, consumed by rook-ceph.
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.disk.ceph-device-allocation = {
     settings = {

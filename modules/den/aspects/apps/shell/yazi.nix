@@ -1,4 +1,4 @@
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.apps.yazi = {
     homeManager =

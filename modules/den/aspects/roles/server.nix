@@ -9,7 +9,7 @@
     ];
 
     nixos =
-      { ... }:
+      _:
       {
         systemd.targets =
           lib.genAttrs

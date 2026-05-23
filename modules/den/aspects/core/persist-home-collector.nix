@@ -1,8 +1,13 @@
-{ den, ... }:
+_:
 {
   den.aspects.core.persist-home-collector = {
     homeManager =
-      { persistHome, cacheHome, lib, ... }:
+      {
+        persistHome,
+        cacheHome,
+        lib,
+        ...
+      }:
       let
         mergePersist = entries: {
           directories = lib.unique (lib.concatMap (e: e.directories or [ ]) entries);

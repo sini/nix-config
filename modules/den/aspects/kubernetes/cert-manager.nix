@@ -3,7 +3,6 @@
 #
 # Ported from main:modules/kubernetes/services/security/cert-manager/cert-manager.nix
 {
-  den,
   lib,
   config,
   ...
@@ -12,7 +11,6 @@ let
   inherit (lib)
     concatStringsSep
     mapAttrs'
-    optional
     splitString
     take
     ;

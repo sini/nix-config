@@ -14,8 +14,6 @@ let
   inherit (lib) mkOption types;
 
   registry = config.den.users.registry;
-  accessByEnv = config.fleet.user-access.by-environment;
-  accessByHost = config.fleet.user-access.by-host;
 
   # Filter registry users whose groups intersect the granted set.
   matchRegistryUsers =
@@ -107,7 +105,10 @@ in
     # host -> users: resolve registry users whose groups intersect the
     # effective access groups (merged env + host, propagated via scope context).
     den.policies.env-users =
-      { host, accessGroups ? [ ], ... }:
+      {
+        accessGroups ? [ ],
+        ...
+      }:
       let
         matched = matchRegistryUsers accessGroups;
       in

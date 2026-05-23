@@ -1,8 +1,8 @@
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.core.i18n = {
     nixos =
-      { ... }:
+      _:
       {
         i18n.defaultLocale = "en_US.UTF-8";
 

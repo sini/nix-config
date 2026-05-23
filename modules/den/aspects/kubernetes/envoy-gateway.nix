@@ -4,7 +4,6 @@
 #
 # Ported from main:modules/kubernetes/services/network/gateway/envoy-gateway/
 {
-  den,
   lib,
   config,
   ...

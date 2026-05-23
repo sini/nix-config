@@ -11,7 +11,7 @@
     { cluster, ... }:
     [
       (den.lib.policy.instantiate {
-        name = cluster.name;
+        inherit (cluster) name;
         class = "kubernetes";
         instantiate = { modules, ... }: modules;
         intoAttr = [

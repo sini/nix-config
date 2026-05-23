@@ -1,7 +1,7 @@
 # time — timezone from environment entity.
 #
 # Ported from main:modules/_legacy/core/time.nix.
-{ den, lib, config, ... }:
+{ config, ... }:
 let
   environments = config.den.environments;
 in

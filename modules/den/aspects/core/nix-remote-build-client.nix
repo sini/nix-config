@@ -2,11 +2,11 @@
 # TODO: cross-host discovery (findHostsWithFeature "nix-builder") has no den
 # equivalent yet. This is a stub that enables the distributed-builds plumbing;
 # the actual builder list must be wired once den supports cross-host queries.
-{ den, self, ... }:
+{ self, ... }:
 {
   den.aspects.core.nix-remote-build-client = {
     os =
-      { ... }:
+      _:
       {
         nix = {
           distributedBuilds = true;

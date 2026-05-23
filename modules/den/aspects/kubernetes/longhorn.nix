@@ -4,7 +4,6 @@
 #
 # Ported from main:modules/kubernetes/services/storage/longhorn/longhorn.nix
 {
-  den,
   lib,
   config,
   ...

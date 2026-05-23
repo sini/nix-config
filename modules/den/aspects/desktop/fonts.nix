@@ -1,4 +1,4 @@
-{ den, ... }:
+_:
 {
   den.aspects.desktop.fonts = {
     nixos =

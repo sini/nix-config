@@ -3,7 +3,6 @@
 #
 # Ported from main:modules/services/monitoring/alloy/
 {
-  den,
   lib,
   config,
   ...

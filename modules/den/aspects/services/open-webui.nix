@@ -16,7 +16,6 @@ in
       {
         config,
         host,
-        pkgs,
         ...
       }:
       let

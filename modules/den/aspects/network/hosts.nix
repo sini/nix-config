@@ -2,7 +2,6 @@
 # TODO: uses top-level config.hosts/config.environments from legacy module --
 # will need reworking once den exposes cross-host discovery natively.
 {
-  den,
   lib,
   config,
   ...

@@ -1,4 +1,4 @@
-{ den, inputs, ... }:
+{ inputs, ... }:
 {
   den.aspects.desktop.hyprland = {
     nixos =
@@ -323,88 +323,87 @@
             ];
 
             # Keybinds — main
-            bind =
-              [
-                "ALT, Tab, cyclenext, next"
-                "SUPER, Tab, focusmonitor, +1"
-                "ALT SHIFT, Tab, cyclenext, prev"
-                "SUPER SHIFT, Tab, focusmonitor, -1"
+            bind = [
+              "ALT, Tab, cyclenext, next"
+              "SUPER, Tab, focusmonitor, +1"
+              "ALT SHIFT, Tab, cyclenext, prev"
+              "SUPER SHIFT, Tab, focusmonitor, -1"
 
-                # Apps
-                "${PRIMARY}, Return, exec, ${term}"
-                "${PRIMARY} ${SECONDARY}, Return, exec, ${term} -e ${editor}"
-                "${PRIMARY}, Space, exec, ${wofi}/bin/wofi --allow-images --show drun"
-                "${PRIMARY}, E, exec, ${term} -e yazi"
-                "${PRIMARY} ${SECONDARY}, H, exec, ${term} -e btop"
-                "${PRIMARY} ${SECONDARY}, N, exec, ${term} -e nvtop"
-                "${PRIMARY} ${SECONDARY}, S, exec, ${term} -o term=xterm-kitty --class spotify_player -e spotify_player"
-                "${PRIMARY} ${SECONDARY}, B, exec, ${prefix} firefox --new-window"
+              # Apps
+              "${PRIMARY}, Return, exec, ${term}"
+              "${PRIMARY} ${SECONDARY}, Return, exec, ${term} -e ${editor}"
+              "${PRIMARY}, Space, exec, ${wofi}/bin/wofi --allow-images --show drun"
+              "${PRIMARY}, E, exec, ${term} -e yazi"
+              "${PRIMARY} ${SECONDARY}, H, exec, ${term} -e btop"
+              "${PRIMARY} ${SECONDARY}, N, exec, ${term} -e nvtop"
+              "${PRIMARY} ${SECONDARY}, S, exec, ${term} -o term=xterm-kitty --class spotify_player -e spotify_player"
+              "${PRIMARY} ${SECONDARY}, B, exec, ${prefix} firefox --new-window"
 
-                # Screenshots
-                ", Print, exec, ${hyprshotBin} -m region --clipboard-only --freeze"
-                "ALT, Print, exec, ${hyprshotBin} -m window --clipboard-only --freeze"
-                "${SECONDARY}, Print, exec, ${hyprshotBin} -m output --clipboard-only --freeze"
-                ", xf86Cut, exec, ${hyprshotBin} -m region --raw --freeze | ${swappyBin} -f -"
-                "${PRIMARY}, Print, exec, ${wl-paste} | ${swappyBin} -f -"
+              # Screenshots
+              ", Print, exec, ${hyprshotBin} -m region --clipboard-only --freeze"
+              "ALT, Print, exec, ${hyprshotBin} -m window --clipboard-only --freeze"
+              "${SECONDARY}, Print, exec, ${hyprshotBin} -m output --clipboard-only --freeze"
+              ", xf86Cut, exec, ${hyprshotBin} -m region --raw --freeze | ${swappyBin} -f -"
+              "${PRIMARY}, Print, exec, ${wl-paste} | ${swappyBin} -f -"
 
-                # Window management
-                "${PRIMARY}, Q, killactive"
-                "${PRIMARY}, F, fullscreen"
-                "${PRIMARY} ${SECONDARY}, F, togglefloating"
-                "${PRIMARY}, P, pseudo"
-                "${PRIMARY}, S, togglesplit"
-                "${PRIMARY} ${SECONDARY}, L, exec, ${loginctl}  lock-session"
-                "${PRIMARY} ${SECONDARY}, C, exec, ${uwsm} stop"
+              # Window management
+              "${PRIMARY}, Q, killactive"
+              "${PRIMARY}, F, fullscreen"
+              "${PRIMARY} ${SECONDARY}, F, togglefloating"
+              "${PRIMARY}, P, pseudo"
+              "${PRIMARY}, S, togglesplit"
+              "${PRIMARY} ${SECONDARY}, L, exec, ${loginctl}  lock-session"
+              "${PRIMARY} ${SECONDARY}, C, exec, ${uwsm} stop"
 
-                # Move focus
-                "${PRIMARY}, h, movefocus, l"
-                "${PRIMARY}, j, movefocus, d"
-                "${PRIMARY}, k, movefocus, u"
-                "${PRIMARY}, l, movefocus, r"
-                "${PRIMARY}, left, movefocus, l"
-                "${PRIMARY}, down, movefocus, d"
-                "${PRIMARY}, up, movefocus, u"
-                "${PRIMARY}, right, movefocus, r"
+              # Move focus
+              "${PRIMARY}, h, movefocus, l"
+              "${PRIMARY}, j, movefocus, d"
+              "${PRIMARY}, k, movefocus, u"
+              "${PRIMARY}, l, movefocus, r"
+              "${PRIMARY}, left, movefocus, l"
+              "${PRIMARY}, down, movefocus, d"
+              "${PRIMARY}, up, movefocus, u"
+              "${PRIMARY}, right, movefocus, r"
 
-                # Move windows
-                "${PRIMARY} ${TERTIARY}, h, movewindow, l"
-                "${PRIMARY} ${TERTIARY}, j, movewindow, d"
-                "${PRIMARY} ${TERTIARY}, k, movewindow, u"
-                "${PRIMARY} ${TERTIARY}, l, movewindow, r"
-                "${PRIMARY} ${TERTIARY}, left, movewindow, l"
-                "${PRIMARY} ${TERTIARY}, down, movewindow, d"
-                "${PRIMARY} ${TERTIARY}, up, movewindow, u"
-                "${PRIMARY} ${TERTIARY}, right, movewindow, r"
+              # Move windows
+              "${PRIMARY} ${TERTIARY}, h, movewindow, l"
+              "${PRIMARY} ${TERTIARY}, j, movewindow, d"
+              "${PRIMARY} ${TERTIARY}, k, movewindow, u"
+              "${PRIMARY} ${TERTIARY}, l, movewindow, r"
+              "${PRIMARY} ${TERTIARY}, left, movewindow, l"
+              "${PRIMARY} ${TERTIARY}, down, movewindow, d"
+              "${PRIMARY} ${TERTIARY}, up, movewindow, u"
+              "${PRIMARY} ${TERTIARY}, right, movewindow, r"
 
-                # Split-monitor workspaces
-                "${PRIMARY}, page_up, split-workspace, m-1"
-                "${PRIMARY}, page_down, split-workspace, m+1"
-                "${PRIMARY}, bracketleft, split-workspace, -1"
-                "${PRIMARY}, bracketright, split-workspace, +1"
-                "${PRIMARY}, mouse_up, split-workspace, m+1"
-                "${PRIMARY}, mouse_down, split-workspace, m-1"
-                "${PRIMARY} ${SECONDARY}, U, movetoworkspace, special"
-                "${PRIMARY}, U, togglespecialworkspace,"
-                "${PRIMARY} ${TERTIARY}, page_up, split-movetoworkspace, -1"
-                "${PRIMARY} ${TERTIARY}, page_down, split-movetoworkspace, +1"
-                "${PRIMARY} ${SECONDARY}, page_up, split-movetoworkspacesilent, -1"
-                "${PRIMARY} ${SECONDARY}, page_down, split-movetoworkspacesilent, +1"
-                "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
-                "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
-              ]
-              ++ (builtins.concatLists (
-                builtins.genList (
-                  x:
-                  let
-                    ws = toString (x + 1);
-                  in
-                  [
-                    "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
-                    "${PRIMARY} ${TERTIARY}, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
-                    "${PRIMARY} ${SECONDARY}, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
-                  ]
-                ) 5
-              ));
+              # Split-monitor workspaces
+              "${PRIMARY}, page_up, split-workspace, m-1"
+              "${PRIMARY}, page_down, split-workspace, m+1"
+              "${PRIMARY}, bracketleft, split-workspace, -1"
+              "${PRIMARY}, bracketright, split-workspace, +1"
+              "${PRIMARY}, mouse_up, split-workspace, m+1"
+              "${PRIMARY}, mouse_down, split-workspace, m-1"
+              "${PRIMARY} ${SECONDARY}, U, movetoworkspace, special"
+              "${PRIMARY}, U, togglespecialworkspace,"
+              "${PRIMARY} ${TERTIARY}, page_up, split-movetoworkspace, -1"
+              "${PRIMARY} ${TERTIARY}, page_down, split-movetoworkspace, +1"
+              "${PRIMARY} ${SECONDARY}, page_up, split-movetoworkspacesilent, -1"
+              "${PRIMARY} ${SECONDARY}, page_down, split-movetoworkspacesilent, +1"
+              "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
+              "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
+            ]
+            ++ (builtins.concatLists (
+              builtins.genList (
+                x:
+                let
+                  ws = toString (x + 1);
+                in
+                [
+                  "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
+                  "${PRIMARY} ${TERTIARY}, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
+                  "${PRIMARY} ${SECONDARY}, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
+                ]
+              ) 5
+            ));
           };
         };
       };

@@ -12,7 +12,7 @@
 
   den.policies.host-to-colmena =
     { host, ... }:
-    lib.optional (host.class == "nixos")
+    [
       (den.lib.policy.instantiate {
         inherit (host) name;
         class = "colmena";
@@ -21,7 +21,8 @@
           "colmenaNodes"
           host.name
         ];
-      });
+      })
+    ];
 
   den.schema.host.includes = [ den.policies.host-to-colmena ];
 

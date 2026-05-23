@@ -29,7 +29,7 @@ in
       ) clusters;
     extraModules = [
       (
-        { ... }:
+        _:
         {
           options.sopsAgeRecipient = lib.mkOption {
             type = lib.types.nullOr lib.types.str;

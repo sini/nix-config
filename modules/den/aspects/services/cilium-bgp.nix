@@ -5,7 +5,6 @@
   ...
 }:
 let
-  environments = config.den.environments;
   clusters = config.den.clusters or { };
   allHosts = config.den.hosts.x86_64-linux or { };
 in
@@ -23,12 +22,10 @@ in
     };
 
     nixos =
-      { config, host, ... }:
+      { host, ... }:
       let
         inherit (lib)
           attrNames
-          attrValues
-          concatMap
           filterAttrs
           findFirst
           head

@@ -1,5 +1,4 @@
 {
-  den,
   lib,
   config,
   ...
@@ -18,8 +17,6 @@ in
 
         # Look up the issuer for this domain via environment certificates config
         env = environments.${host.environment} or { };
-        domainConfig = (env.certificates.domains or { }).${topDomain} or null;
-        issuerName = if domainConfig != null then domainConfig.issuer else null;
       in
       {
         security.acme = {

@@ -1,5 +1,4 @@
 {
-  den,
   lib,
   config,
   ...
@@ -48,7 +47,6 @@ in
     age-secrets =
       { host, ... }:
       let
-        env = environments.${host.environment};
         rekeyFile = host.secretPath + "/tailscale-preauthkey.age";
       in
       {

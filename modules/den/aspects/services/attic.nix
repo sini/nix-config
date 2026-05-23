@@ -1,6 +1,5 @@
 {
   den,
-  lib,
   config,
   ...
 }:

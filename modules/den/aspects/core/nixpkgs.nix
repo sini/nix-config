@@ -1,5 +1,4 @@
 {
-  den,
   inputs,
   withSystem,
   self,
@@ -8,7 +7,7 @@
 {
   den.aspects.core.nixpkgs = {
     os =
-      { ... }:
+      _:
       {
         nixpkgs.config.allowUnfree = true;
         nixpkgs.config.allowDeprecatedx86_64Darwin = true;

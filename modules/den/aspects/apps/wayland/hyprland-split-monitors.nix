@@ -1,4 +1,4 @@
-{ den, ... }:
+_:
 {
   den.aspects.apps.hyprland-split-monitors = {
     homeManager =

@@ -1,4 +1,4 @@
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.apps.sysmon = {
     homeManager =
@@ -35,9 +35,9 @@
                 let
                   excludeDirectories =
                     (lib.flatten (
-                      map
-                        (persistenceConfig: map (dir: dir.dirPath) persistenceConfig.directories)
-                        (builtins.attrValues osConfig.environment.persistence)
+                      map (persistenceConfig: map (dir: dir.dirPath) persistenceConfig.directories) (
+                        builtins.attrValues osConfig.environment.persistence
+                      )
                     ))
                     ++ (lib.flatten (
                       map (persistenceConfig: map (f: f.file) persistenceConfig.files) (

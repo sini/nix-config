@@ -1,6 +1,5 @@
 {
   den,
-  lib,
   config,
   inputs,
   ...
@@ -14,7 +13,6 @@ in
 
     nixos =
       {
-        config,
         host,
         pkgs,
         ...

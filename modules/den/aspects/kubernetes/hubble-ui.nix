@@ -2,8 +2,6 @@
 #
 # Ported from main:modules/kubernetes/services/network/cilium/hubble-ui.nix
 {
-  den,
-  lib,
   config,
   ...
 }:

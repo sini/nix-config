@@ -3,8 +3,6 @@
 #
 # Ported from main:modules/services/monitoring/loki.nix
 {
-  den,
-  lib,
   config,
   ...
 }:
@@ -15,7 +13,6 @@ in
   den.aspects.services.loki = {
     nixos =
       {
-        config,
         host,
         ...
       }:

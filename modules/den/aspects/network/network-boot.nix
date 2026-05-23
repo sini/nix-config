@@ -2,7 +2,6 @@
 #
 # Ported from main:modules/features/network-boot/ (network-boot.nix + initrd-bootstrap-keys.nix).
 {
-  den,
   lib,
   config,
   ...
@@ -29,7 +28,6 @@ in
         ...
       }:
       let
-        env = environments.${host.environment};
 
         jweToken = builtins.path {
           path = host.secretPath + "/zroot-key.jwe";

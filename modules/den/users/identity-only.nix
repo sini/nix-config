@@ -1,5 +1,5 @@
 # Identity-only users (Kanidm/SSO — no Unix accounts, no system-access groups)
-{ ... }:
+_:
 {
   den.users.registry = {
     json = {

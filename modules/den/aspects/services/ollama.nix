@@ -1,7 +1,5 @@
 {
-  den,
   lib,
-  config,
   ...
 }:
 {
@@ -20,7 +18,6 @@
 
     nixos =
       {
-        config,
         host,
         pkgs,
         ...

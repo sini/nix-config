@@ -2,7 +2,6 @@
 #
 # Ported from main:modules/kubernetes/services/network/coredns/coredns.nix
 {
-  den,
   lib,
   config,
   ...

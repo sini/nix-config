@@ -1,4 +1,4 @@
-{ den, inputs, ... }:
+{ inputs, ... }:
 {
   den.aspects.apps.zen-browser = {
     homeManager =

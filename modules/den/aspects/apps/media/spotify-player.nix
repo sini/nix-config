@@ -1,4 +1,4 @@
-{ den, rootPath, ... }:
+{ rootPath, ... }:
 {
   den.aspects.apps.spotify-player = {
     homeManager =

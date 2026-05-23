@@ -15,10 +15,9 @@ let
 
   engine = inputs.scope-engine { inherit lib; };
 
-  flatHosts = lib.foldl' (
-    acc: system:
-    acc // (den.hosts.${system} or { })
-  ) { } (builtins.attrNames (den.hosts or { }));
+  flatHosts = lib.foldl' (acc: system: acc // (den.hosts.${system} or { })) { } (
+    builtins.attrNames (den.hosts or { })
+  );
 
   groups = config.den.groups or { };
   environments = config.den.environments or { };
@@ -39,30 +38,36 @@ let
   baseNodes = engine.buildNodes {
     parentGraph = engine.overlays (
       [ (engine.star "root" (map (e: "env:${e}") envNames)) ]
-      ++ map (
-        host: engine.edge "host:${host}" "env:${hosts.${host}.environment or "prod"}"
-      ) hostNames
+      ++ map (host: engine.edge "host:${host}" "env:${hosts.${host}.environment or "prod"}") hostNames
     );
 
     edgeGraphs.M = engine.overlays (
       (lib.concatMap (
-        gname:
-        map (member: engine.edge "group:${member}" "group:${gname}")
-          (groups.${gname}.members or [ ])
+        gname: map (member: engine.edge "group:${member}" "group:${gname}") (groups.${gname}.members or [ ])
       ) groupNames)
       ++ [ (engine.vertices (map (g: "group:${g}") groupNames)) ]
     );
 
     decls = lib.listToAttrs (
-      [ { name = "root"; value = { }; } ]
+      [
+        {
+          name = "root";
+          value = { };
+        }
+      ]
       ++ map (gname: {
         name = "group:${gname}";
         value = {
           scope =
-            let labels = groups.${gname}.labels or [ ];
-            in if builtins.elem "posix" labels then "system"
-            else if builtins.elem "oauth-grant" labels then "kanidm"
-            else "system";
+            let
+              labels = groups.${gname}.labels or [ ];
+            in
+            if builtins.elem "posix" labels then
+              "system"
+            else if builtins.elem "oauth-grant" labels then
+              "kanidm"
+            else
+              "system";
           description = groups.${gname}.description or "";
           name = gname;
         };
@@ -85,10 +90,24 @@ let
     );
 
     types = lib.listToAttrs (
-      [ { name = "root"; value = "root"; } ]
-      ++ map (g: { name = "group:${g}"; value = "group"; }) groupNames
-      ++ map (e: { name = "env:${e}"; value = "environment"; }) envNames
-      ++ map (h: { name = "host:${h}"; value = "host"; }) hostNames
+      [
+        {
+          name = "root";
+          value = "root";
+        }
+      ]
+      ++ map (g: {
+        name = "group:${g}";
+        value = "group";
+      }) groupNames
+      ++ map (e: {
+        name = "env:${e}";
+        value = "environment";
+      }) envNames
+      ++ map (h: {
+        name = "host:${h}";
+        value = "host";
+      }) hostNames
     );
   };
 
@@ -99,10 +118,7 @@ let
         node = self.nodes.${id};
         hostGates = node.decls.system-access-groups or [ ];
         envGates =
-          if node.parent != null then
-            self.nodes.${node.parent}.decls.system-access-groups or [ ]
-          else
-            [ ];
+          if node.parent != null then self.nodes.${node.parent}.decls.system-access-groups or [ ] else [ ];
       in
       lib.unique (envGates ++ hostGates);
 
@@ -117,11 +133,11 @@ let
         allGroupIds = lib.unique (
           lib.concatMap (gname: transitiveGroups self "group:${gname}") directGroups
         );
-        allGroupNames = map (gid: self.nodes.${gid}.decls.name)
-          (builtins.filter (gid: self.nodes ? ${gid}) allGroupIds);
+        allGroupNames = map (gid: self.nodes.${gid}.decls.name) (
+          builtins.filter (gid: self.nodes ? ${gid}) allGroupIds
+        );
 
-        byScope = scope:
-          builtins.filter (gid: (self.nodes.${gid}.decls.scope or "") == scope) allGroupIds;
+        byScope = scope: builtins.filter (gid: (self.nodes.${gid}.decls.scope or "") == scope) allGroupIds;
         namesForScope = scope: map (gid: self.nodes.${gid}.decls.name) (byScope scope);
 
         systemGroups = namesForScope "system";

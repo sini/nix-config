@@ -2,7 +2,6 @@
 #
 # Ported from main:modules/kubernetes/services/argocd/argocd.nix
 {
-  den,
   lib,
   config,
   ...

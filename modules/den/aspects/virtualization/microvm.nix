@@ -1,4 +1,4 @@
-{ den, inputs, ... }:
+{ inputs, ... }:
 {
   den.aspects.virtualization.microvm = {
     nixos =

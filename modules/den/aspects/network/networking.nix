@@ -1,5 +1,4 @@
 {
-  den,
   lib,
   config,
   ...
@@ -10,24 +9,19 @@ in
 {
   den.aspects.networking = {
     nixos =
-      { config, host, ... }:
+      { host, ... }:
       let
         env = environments.${host.environment};
 
         inherit (lib)
           attrNames
-          attrValues
           concatMap
-          filter
-          head
-          imap0
           length
           listToAttrs
           map
           mapAttrsToList
           mkForce
           optionalAttrs
-          optionals
           subtractLists
           unique
           ;
@@ -35,15 +29,6 @@ in
         netCfg = host.networking;
 
         mkNameValue = name: value: { inherit name value; };
-
-        mkRoute =
-          gateway: extra:
-          {
-            Gateway = gateway;
-            InitialCongestionWindow = 50;
-            InitialAdvertisedReceiveWindow = 50;
-          }
-          // extra;
 
         # ======================================================================
         # Network config generator

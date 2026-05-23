@@ -1,21 +1,21 @@
-{ den, ... }:
+_:
 {
   den.aspects.apps.wireshark = {
     os =
-      {
-        pkgs,
-        host,
-        ...
-      }:
+      { pkgs, ... }:
       {
         programs.wireshark = {
           enable = true;
           package = pkgs.wireshark;
         };
+      };
 
-        # TODO: restore per-user wireshark group assignment — needs host.users.enabledNames
-        # or equivalent from den's user resolution. For now, system-owner only.
-        users.users.${host.system-owner or "root"}.extraGroups = [ "wireshark" ];
+    nixos =
+      { host, ... }:
+      {
+        # den host schema exposes system-owner, not user lists;
+        # grant wireshark group to system-owner (covers primary user)
+        users.users.${host.system-owner}.extraGroups = [ "wireshark" ];
       };
 
     homeManager =

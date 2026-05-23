@@ -1,8 +1,13 @@
-{ den, ... }:
+_:
 {
   den.aspects.disk.zfs-diff = {
     nixos =
-      { config, pkgs, lib, ... }:
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
       let
         ignoreFilesPkg = pkgs.writeText "ignore_root_paths" (
           lib.concatStringsSep "\n" config.impermanence.ignorePaths

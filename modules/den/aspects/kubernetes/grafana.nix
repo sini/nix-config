@@ -1,7 +1,5 @@
 # Grafana — Helm chart for in-cluster dashboards.
 {
-  den,
-  lib,
   config,
   ...
 }:

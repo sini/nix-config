@@ -1,4 +1,4 @@
-{ den, self, ... }:
+{ self, ... }:
 {
   den.aspects.services.nix-remote-build-server = {
     nixos =
@@ -25,9 +25,9 @@
             isSystemUser = true;
             useDefaultShell = true;
             description = "nix-remote-build";
-            openssh.authorizedKeys.keys =
-              lib.map (key: ''command="nix-store --serve --write",restrict '' + key)
-                [ (builtins.readFile (self + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ];
+            openssh.authorizedKeys.keys = lib.map (
+              key: ''command="nix-store --serve --write",restrict '' + key
+            ) [ (builtins.readFile (self + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ];
           };
         };
       };

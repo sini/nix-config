@@ -1,4 +1,4 @@
-{ den, ... }:
+_:
 {
   den.aspects.hardware.adb = {
     os =
@@ -15,14 +15,9 @@
         environment.systemPackages = [
           pkgs.android-file-transfer
         ];
-        users.users = builtins.listToAttrs (
-          map (userName: {
-            name = userName;
-            value = {
-              extraGroups = [ "adbusers" ];
-            };
-          }) host.users.enabledNames
-        );
+        # den host schema exposes system-owner, not user lists;
+        # grant adbusers group to system-owner (covers primary user)
+        users.users.${host.system-owner}.extraGroups = [ "adbusers" ];
       };
   };
 }

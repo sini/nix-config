@@ -2,7 +2,6 @@
 #
 # Ported from main:modules/services/k3s/k3s-containerd.nix.
 {
-  den,
   lib,
   inputs,
   ...

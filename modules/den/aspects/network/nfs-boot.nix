@@ -1,7 +1,6 @@
 # Legacy NFS-based ZFS key loading — replaced by shamir secret sharing
 # with TPM+tang in network-boot.nix. Kept for reference.
 {
-  den,
   lib,
   ...
 }:

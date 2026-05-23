@@ -1,4 +1,4 @@
-{ ... }:
+_:
 {
   den.users.registry.shuo = {
     system.uid = 1001;

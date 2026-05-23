@@ -1,5 +1,5 @@
 # Copies SSH authorized_keys from all wheel-group users to root.
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.core.root-user = {
     nixos =

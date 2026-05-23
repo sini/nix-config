@@ -14,18 +14,14 @@
 }:
 let
   inherit (lib)
-    attrNames
     attrValues
     concatStringsSep
     filterAttrs
-    findFirst
     flatten
     head
-    mapAttrsToList
     mkForce
     mkIf
     mkOption
-    optionals
     types
     ;
 

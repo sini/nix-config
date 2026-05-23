@@ -1,4 +1,4 @@
-{ den, ... }:
+_:
 {
   den.aspects.core.utils = {
     os =
@@ -27,16 +27,15 @@
         ...
       }:
       {
-        environment.systemPackages =
-          [
-            pkgs.lm_sensors
-            pkgs.lsof
-            pkgs.pciutils
-            pkgs.usbutils
-            pkgs.psmisc
-            pkgs.traceroute
-          ]
-          ++ lib.optional config.hardware.nvidia.modesetting.enable pkgs.btop-cuda;
+        environment.systemPackages = [
+          pkgs.lm_sensors
+          pkgs.lsof
+          pkgs.pciutils
+          pkgs.usbutils
+          pkgs.psmisc
+          pkgs.traceroute
+        ]
+        ++ lib.optional config.hardware.nvidia.modesetting.enable pkgs.btop-cuda;
 
         # Log diff when system update is applied
         system.activationScripts.diff = {

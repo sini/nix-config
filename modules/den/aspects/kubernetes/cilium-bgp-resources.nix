@@ -3,21 +3,17 @@
 #
 # Ported from main:modules/kubernetes/services/network/cilium/cilium-bgp.nix
 {
-  den,
   lib,
   config,
   ...
 }:
 let
   inherit (lib)
-    attrNames
     filterAttrs
     head
     mapAttrs'
     ;
 
-  clusters = config.den.clusters or { };
-  environments = config.den.environments;
   allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
@@ -25,7 +21,6 @@ in
     k8s-manifests =
       { cluster, ... }:
       let
-        environment = environments.${cluster.environment};
         clusterHosts = filterAttrs (
           _: h: h.environment == cluster.environment && (h.settings.services.k3s or { }) != { }
         ) allHosts;
