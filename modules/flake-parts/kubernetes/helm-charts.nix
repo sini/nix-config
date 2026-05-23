@@ -34,12 +34,5 @@ in
   perSystem =
     { inputs', ... }:
     {
-      devshells.default.commands = [
-        {
-          name = "helmupdater";
-          command = ''${inputs'.nixhelm.packages.helmupdater}/bin/helmupdater "$@"'';
-          help = "Update helm chart versions and hashes";
-        }
-      ];
     };
 }

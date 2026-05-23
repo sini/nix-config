@@ -7,6 +7,7 @@
 #   modules/flake-parts/kubernetes/service-helpers.nix
 {
   config,
+  den,
   inputs,
   withSystem,
   lib,
@@ -388,6 +389,7 @@ in
 
   perSystem =
     {
+      config,
       inputs',
       pkgs,
       system,
@@ -470,5 +472,50 @@ in
             MANIFEST
           '';
       };
+
+      pre-commit.settings.hooks.k8s-update-manifests = {
+        enable = true;
+        name = "k8s-update-manifests";
+        description = "Run k8s-update-manifests to re-generate argocd config";
+        entry = "${config.packages.k8s-update-manifests}/bin/k8s-update-manifests --skip-secrets";
+        files = "^(flake\\.lock|modules/(den/clusters|den/aspects/kubernetes|den/kubernetes)/.*\\.nix)$";
+        pass_filenames = false;
+      };
     };
+
+  # Kubernetes devshell commands emitted via class routing
+  den.aspects.kubernetes-devshell = {
+    devshell =
+      { self', inputs', ... }:
+      {
+        commands = [
+          {
+            package = self'.packages.k8s-update-manifests;
+            name = "k8s-update-manifests";
+            help = "Update Kubernetes manifests for nixidy environments";
+          }
+          {
+            package = self'.packages.toggle-axon-kubernetes;
+            name = "toggle-axon-kubernetes";
+            help = "Toggle enable/disable Kubernetes on axon cluster nodes";
+          }
+          {
+            package = self'.packages.convert-oidc-secrets;
+            name = "convert-oidc-secrets";
+            help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
+          }
+          {
+            name = "helmupdater";
+            command = ''${inputs'.nixhelm.packages.helmupdater}/bin/helmupdater "$@"'';
+            help = "Update helm chart versions and hashes";
+          }
+          {
+            package = self'.packages.oci-image-updater;
+            name = "oci-image-updater";
+            help = "Update OCI container image versions and hashes";
+          }
+        ];
+      };
+  };
+  den.schema.flake-parts.includes = [ den.aspects.kubernetes-devshell ];
 }

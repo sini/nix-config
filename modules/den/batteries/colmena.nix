@@ -83,20 +83,24 @@ in
 
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
 
-  perSystem =
-    { inputs', pkgs, ... }:
-    let
-      colmena = inputs'.colmena.packages.colmena.override {
-        nix-eval-jobs = pkgs.lixPackageSets.stable.nix-eval-jobs;
+  # Emit colmena CLI into devshell via class routing
+  den.aspects.colmena-devshell = {
+    devshell =
+      { inputs', pkgs, ... }:
+      let
+        colmena = inputs'.colmena.packages.colmena.override {
+          nix-eval-jobs = pkgs.lixPackageSets.stable.nix-eval-jobs;
+        };
+      in
+      {
+        packages = [ colmena ];
+        commands = [
+          {
+            package = colmena;
+            help = "Build and deploy this nix config to nodes";
+          }
+        ];
       };
-    in
-    {
-      devshells.default.packages = [ colmena ];
-      devshells.default.commands = [
-        {
-          package = colmena;
-          help = "Build and deploy this nix config to nodes";
-        }
-      ];
-    };
+  };
+  den.schema.flake-parts.includes = [ den.aspects.colmena-devshell ];
 }

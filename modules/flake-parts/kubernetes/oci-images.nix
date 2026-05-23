@@ -44,13 +44,6 @@ in
   perSystem =
     { config, ... }:
     {
-      devshells.default.commands = [
-        {
-          package = config.packages.oci-image-updater;
-          name = "oci-image-updater";
-          help = "Update OCI container image versions and hashes";
-        }
-      ];
     };
 
 }
