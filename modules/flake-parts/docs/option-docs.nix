@@ -11,8 +11,6 @@
 
       - **[hosts](docs/hosts-options.md)**: Host definitions for individual machines. Each host configuration includes system architecture, IP addresses, roles, hardware settings, and deployment configuration for Colmena.
 
-      - **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration options for k3s deployments.
-
       - **[users](docs/users-options.md)**: User account definitions and configuration options.
 
       See the linked documentation files for complete option references.

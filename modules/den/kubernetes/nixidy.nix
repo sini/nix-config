@@ -190,24 +190,27 @@ let
           ;
         crdObjects = serviceCrdObjects;
       };
-      modules =
-        [
-          inputs.agenix-rekey-to-sops.sopsModules.default
-          agenixGeneratorsModule
-          (mkAgeModule {
-            inherit environment;
-            cluster = cluster // { name = clusterName; };
-          })
-          (mkNixidyModule {
-            inherit
-              envName
-              system
-              enabledAspects
-              ;
-            cluster = cluster // { name = clusterName; };
-          })
-        ]
-        ++ denModules;
+      modules = [
+        inputs.agenix-rekey-to-sops.sopsModules.default
+        agenixGeneratorsModule
+        (mkAgeModule {
+          inherit environment;
+          cluster = cluster // {
+            name = clusterName;
+          };
+        })
+        (mkNixidyModule {
+          inherit
+            envName
+            system
+            enabledAspects
+            ;
+          cluster = cluster // {
+            name = clusterName;
+          };
+        })
+      ]
+      ++ denModules;
     };
 
   # Build helpers for CRD packages, scoped to a system's pkgs.
@@ -220,7 +223,16 @@ let
       klib = inputs.nix-kube-generators.lib { inherit pkgs; };
 
       # Evaluate each aspect's CRD function with perSystem args
-      callAspectCrds = aspect: aspect.crds { inherit pkgs lib inputs system; };
+      callAspectCrds =
+        aspect:
+        aspect.crds {
+          inherit
+            pkgs
+            lib
+            inputs
+            system
+            ;
+        };
 
       resolveChart =
         crdConfig:
@@ -257,21 +269,24 @@ let
         };
 
       # Pre-compute chart CRD YAML for reuse
-      chartCrdYamls = lib.mapAttrs (
-        name: aspect:
-        let
-          crdConfig = callAspectCrds aspect;
-        in
-        mkChartCrdYaml name crdConfig
-      ) (
-        lib.filterAttrs (
-          _: aspect:
-          let
-            c = callAspectCrds aspect;
-          in
-          c.chart or null != null || c.chartAttrs or { } != { }
-        ) aspectsWithCrds
-      );
+      chartCrdYamls =
+        lib.mapAttrs
+          (
+            name: aspect:
+            let
+              crdConfig = callAspectCrds aspect;
+            in
+            mkChartCrdYaml name crdConfig
+          )
+          (
+            lib.filterAttrs (
+              _: aspect:
+              let
+                c = callAspectCrds aspect;
+              in
+              c.chart or null != null || c.chartAttrs or { } != { }
+            ) aspectsWithCrds
+          );
     in
     {
       # Parse CRD objects to JSON for eval-time consumption
@@ -354,9 +369,7 @@ let
     };
 in
 {
-  # mkForce: legacy nixidy-envs.nix also defines this output; once the
-  # legacy files are removed (Task 5), this force can be dropped.
-  flake.nixidyEnvs = lib.mkForce (lib.genAttrs config.systems (
+  flake.nixidyEnvs = lib.genAttrs config.systems (
     system:
     withSystem system (
       { pkgs, ... }:
@@ -372,7 +385,7 @@ in
         };
       }) clusters
     )
-  ));
+  );
 
   perSystem =
     {
@@ -386,10 +399,8 @@ in
       inherit (helpers) mkParsedServiceCrds mkCrdGenerator;
     in
     {
-      # mkForce: legacy nixidy-envs.nix also defines these packages; once
-      # the legacy files are removed (Task 5), these forces can be dropped.
       packages = {
-        parsed-crd-objects = lib.mkForce (
+        parsed-crd-objects =
           let
             parsedServices = lib.mapAttrs mkParsedServiceCrds aspectsWithCrds;
             serviceNames = lib.attrNames parsedServices;
@@ -403,9 +414,9 @@ in
             ${lib.concatMapStringsSep "\n" (name: ''
               cp ${parsedServices.${name}} $out/${name}.json
             '') serviceNames}
-          '');
+          '';
 
-        generated-crds = lib.mkForce (
+        generated-crds =
           let
             generators = lib.mapAttrs (mkCrdGenerator {
               inherit (inputs'.nixidy.packages.generators) fromCRD;
@@ -421,10 +432,10 @@ in
             ${lib.concatMapStringsSep "\n" (name: ''
               cp ${generators.${name}} $out/${name}.nix
             '') generatorNames}
-          '');
+          '';
 
         # Combined build target: all environments + manifest.json metadata
-        nixidy-all-envs = lib.mkForce (
+        nixidy-all-envs =
           let
             envs = config.flake.nixidyEnvs.${system} or { };
             envData = lib.mapAttrs (
@@ -458,7 +469,7 @@ in
               }) envData
             )}
             MANIFEST
-          '');
+          '';
       };
     };
 }

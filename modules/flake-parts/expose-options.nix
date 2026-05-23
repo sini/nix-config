@@ -23,8 +23,6 @@ in
       environments
       users
       groups
-      kubernetes
-      clusters
       ;
   };
 
@@ -35,7 +33,6 @@ in
       environments
       users
       groups
-      clusters
       ;
   };
 }
