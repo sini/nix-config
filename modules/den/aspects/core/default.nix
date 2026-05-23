@@ -20,6 +20,7 @@
       core.ssd
       core.linux-kernel
       core.users
+      apps.zsh
       networking
       network.openssh
     ];
