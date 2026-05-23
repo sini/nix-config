@@ -23,9 +23,12 @@ in
       clusters:
       lib.mapAttrs (
         _: c:
-        lib.optionalAttrs (c.secretPath != null) {
-          sopsAgeRecipient = builtins.readFile "${c.secretPath}/cluster-sops-age-key.pub";
-        }
+        lib.optionalAttrs
+          (c.secretPath != null
+            && builtins.pathExists "${c.secretPath}/cluster-sops-age-key.pub")
+          {
+            sopsAgeRecipient = builtins.readFile "${c.secretPath}/cluster-sops-age-key.pub";
+          }
       ) clusters;
     extraModules = [
       (
@@ -61,6 +64,38 @@ in
         ]
       ) (builtins.attrNames clusters);
 
+    # cluster -> hosts: resolve hosts into cluster scope for kubernetes aspects.
+    # Uses explicit cluster.hosts list when provided, otherwise discovers hosts
+    # by environment + role aspect matching.
+    den.policies.cluster-to-hosts =
+      { cluster, ... }:
+      let
+        allHosts = lib.concatMap (
+          system:
+          lib.map (
+            hostName:
+            den.hosts.${system}.${hostName}
+          ) (builtins.attrNames (den.hosts.${system} or { }))
+        ) (builtins.attrNames (den.hosts or { }));
+
+        matchesCluster =
+          h:
+          let
+            inEnv = (h.environment or "prod") == cluster.environment;
+            roleAspect = den.aspects.services.${cluster.role} or null;
+            hasRole = cluster.role != null && roleAspect != null && h.hasAspect roleAspect;
+          in
+          inEnv && hasRole;
+
+        matchedHosts =
+          if cluster.hosts != null then
+            builtins.filter (h: builtins.elem h.name cluster.hosts) allHosts
+          else
+            builtins.filter matchesCluster allHosts;
+      in
+      lib.map (h: resolve.to "host" { host = h; }) matchedHosts;
+
     den.schema.environment.includes = [ den.policies.env-to-clusters ];
+    den.schema.cluster.includes = [ den.policies.cluster-to-hosts ];
   };
 }
