@@ -6,6 +6,15 @@
       {
         imports = [ inputs.ucodenix.nixosModules.default ];
 
+        # ucodenix's package is missing jql from nativeBuildInputs
+        nixpkgs.overlays = [
+          (_final: prev: {
+            ucodenix = prev.ucodenix.overrideAttrs (old: {
+              nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ prev.jql ];
+            });
+          })
+        ];
+
         environment.systemPackages = [ pkgs.amdctl ];
 
         boot = {
