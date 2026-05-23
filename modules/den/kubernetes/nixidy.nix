@@ -20,6 +20,8 @@ let
   environments = config.den.environments;
   aspects = config.den.aspects.kubernetes or { };
 
+  secretsConfig = config.den.secretsConfig;
+
   # Aspects that declare a crds function
   aspectsWithCrds = lib.filterAttrs (_: aspect: aspect ? crds) aspects;
 
@@ -55,8 +57,7 @@ let
   # SOPS encryption module for a nixidy cluster.
   mkAgeModule =
     { cluster, environment }:
-    { inputs, ... }:
-    {
+    _: {
       age = {
         sops.outputDir = cluster.secretPath + "/sops";
         rekey = {
@@ -64,7 +65,7 @@ let
           storageMode = "local";
           generatedSecretsDir = cluster.secretPath + "/generated";
           localStorageDir = cluster.secretPath + "/rekeyed";
-          inherit (inputs.self.secretsConfig) masterIdentities;
+          inherit (secretsConfig) masterIdentities;
         };
       };
     };
@@ -109,7 +110,6 @@ let
       envName,
       enabledAspects,
       system,
-      cluster,
     }:
     { lib, ... }:
     {

@@ -2,7 +2,6 @@
 {
   self,
   inputs,
-  rootPath,
   ...
 }:
 {
@@ -32,15 +31,6 @@
     inputs.agenix-rekey.flakeModule
     inputs.agenix-rekey-to-sops.flakeModule
   ];
-
-  flake.secretsConfig = {
-    masterIdentities = [
-      (rootPath + "/.secrets/pub/master.pub")
-      (rootPath + "/.secrets/pub/master-clone1.pub")
-      (rootPath + "/.secrets/pub/master-clone2.pub")
-    ];
-    extraEncryptionPubkeys = [ ];
-  };
 
   perSystem =
     {

@@ -16,11 +16,13 @@ let
 in
 {
   # flake -> fleet: single fleet entity (fires at flake scope).
+  # secretsConfig propagates through scope inheritance to all descendants.
   den.policies.to-fleet = _: [
     (resolve.to "fleet" {
       fleet = {
         name = "fleet";
       };
+      inherit (config.den) secretsConfig;
     })
   ];
 

@@ -4,6 +4,8 @@
   ...
 }:
 let
+  inherit (config.den) secretsConfig;
+
   # Extract age recipients from master identity .pub files.
   # These files contain a comment line: #    Recipient: age1...
   extractRecipient =
@@ -25,7 +27,7 @@ let
     if recipientLines != [ ] then parseRecipient (builtins.head recipientLines) else null;
 
   masterRecipients = lib.unique (
-    builtins.filter (r: r != null) (map extractRecipient config.flake.secretsConfig.masterIdentities)
+    builtins.filter (r: r != null) (map extractRecipient secretsConfig.masterIdentities)
   );
 
   # Generate per-cluster creation rules from clusters with a sopsAgeRecipient
