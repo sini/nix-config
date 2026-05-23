@@ -11,11 +11,11 @@ _:
       };
 
     nixos =
-      { host, ... }:
+      { host, lib, ... }:
       {
-        # den host schema exposes system-owner, not user lists;
-        # grant wireshark group to system-owner (covers primary user)
-        users.users.${host.system-owner}.extraGroups = [ "wireshark" ];
+        users.users = lib.genAttrs (builtins.attrNames host.users) (_: {
+          extraGroups = [ "wireshark" ];
+        });
       };
 
     homeManager =
