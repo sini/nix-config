@@ -19,6 +19,14 @@
       services.bgp.localAsn = 65001;
       services.cilium-bgp.localAsn = 65010;
       services.k3s.clusterName = "axon";
+      services.thunderbolt-mesh-of = {
+        interfaces = [
+          "enp199s0f5"
+          "enp199s0f6"
+        ];
+        loopback.ipv4 = "172.16.255.1/32";
+        nsap = "49.0000.0000.0001.00";
+      };
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
       disk.impermanence = {
@@ -44,6 +52,7 @@
       services.k3s
       hardware.cpu-amd
       hardware.gpu-amd
+      services.thunderbolt-mesh-of
     ];
   };
 }
