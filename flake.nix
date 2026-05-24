@@ -249,7 +249,6 @@
     nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
     nixos-hardware.url = "github:nixos/nixos-hardware";
     nixpkgs.url = "github:nixos/nixpkgs/nixos-25.11";
-    nixpkgs-lib.follows = "nixpkgs";
     nixpkgs-master.url = "github:nixos/nixpkgs/master";
     nixpkgs-stable-darwin.url = "github:nixos/nixpkgs/nixpkgs-25.11-darwin";
     nixpkgs-unstable.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -271,7 +270,7 @@
     };
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
     statix = {
-      url = "github:molybdenumsoftware/statix";
+      url = "github:oppiliappan/statix";
       inputs = {
         flake-parts.follows = "flake-parts";
         nixpkgs.follows = "nixpkgs-unstable";
@@ -282,7 +281,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     stylix = {
-      url = "github:nix-community/stylix";
+      url = "github:sini/stylix/fix/useGlobalPkgs-autoImport-guard";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     systems.url = "github:nix-systems/default";

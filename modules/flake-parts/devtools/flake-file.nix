@@ -319,7 +319,7 @@
       spicetify-nix.url = "github:Gerg-L/spicetify-nix";
 
       statix = {
-        url = "github:molybdenumsoftware/statix";
+        url = "github:oppiliappan/statix";
         inputs = {
           flake-parts.follows = "flake-parts";
           nixpkgs.follows = "nixpkgs-unstable";
@@ -332,7 +332,7 @@
       };
 
       stylix = {
-        url = "github:nix-community/stylix";
+        url = "github:sini/stylix/fix/useGlobalPkgs-autoImport-guard";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
