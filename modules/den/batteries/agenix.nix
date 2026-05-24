@@ -5,6 +5,7 @@
 # Fires at host scope via den.schema.host.includes. Receives secretsConfig
 # from fleet scope context (propagated through scope inheritance).
 {
+  den,
   inputs,
   self,
   lib,
@@ -16,7 +17,7 @@ let
   agenixHostAspect =
     { host, secretsConfig, ... }:
     let
-      hasImpermanence = ((host.settings.disk or { }).impermanence or { }) != { };
+      hasImpermanence = host.hasAspect den.aspects.disk.impermanence;
       persistPrefix = lib.optionalString hasImpermanence "/persist";
     in
     {

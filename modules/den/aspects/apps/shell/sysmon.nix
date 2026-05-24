@@ -36,12 +36,12 @@
                   excludeDirectories =
                     (lib.flatten (
                       map (persistenceConfig: map (dir: dir.dirPath) persistenceConfig.directories) (
-                        builtins.attrValues osConfig.environment.persistence
+                        builtins.attrValues (osConfig.environment.persistence or { })
                       )
                     ))
                     ++ (lib.flatten (
                       map (persistenceConfig: map (f: f.file) persistenceConfig.files) (
-                        builtins.attrValues osConfig.environment.persistence
+                        builtins.attrValues (osConfig.environment.persistence or { })
                       )
                     ))
                     ++ [
