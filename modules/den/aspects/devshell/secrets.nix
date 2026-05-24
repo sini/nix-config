@@ -1,7 +1,7 @@
 # Secrets devshell commands emitted via class routing.
 { den, ... }:
 {
-  den.aspects.secrets.devshell = {
+  den.aspects.devshell.secrets = {
     devshell =
       { self', ... }:
       {
@@ -19,5 +19,5 @@
         ];
       };
   };
-  den.schema.flake-parts.includes = [ den.aspects.secrets.devshell ];
+  den.schema.flake-parts.includes = [ den.aspects.devshell.secrets ];
 }

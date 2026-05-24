@@ -10,7 +10,7 @@
   ...
 }:
 let
-  agenixGeneratorsModule = import ../../agenix/_generators.nix;
+  agenixGeneratorsModule = import ../aspects/secrets/_generators-module.nix;
 
   agenixHostAspect =
     { host, secretsConfig, ... }:

@@ -81,7 +81,7 @@ in
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
 
   # Emit colmena CLI into devshell via class routing
-  den.aspects.colmena-devshell = {
+  den.aspects.devshell.colmena = {
     devshell =
       { inputs', pkgs, ... }:
       let
@@ -99,5 +99,5 @@ in
         ];
       };
   };
-  den.schema.flake-parts.includes = [ den.aspects.colmena-devshell ];
+  den.schema.flake-parts.includes = [ den.aspects.devshell.colmena ];
 }

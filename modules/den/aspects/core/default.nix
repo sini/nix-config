@@ -22,7 +22,7 @@
       core.linux-kernel
       core.users
       apps.zsh
-      networking
+      network.networking
       network.openssh
     ];
   };

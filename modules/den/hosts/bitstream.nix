@@ -34,7 +34,7 @@
     includes = with den.aspects; [
       core.default
       secrets.agenix
-      networking
+      network.networking
       network.openssh
       disk.zfs-disk-single
       disk.impermanence

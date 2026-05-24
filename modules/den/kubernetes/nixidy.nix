@@ -176,7 +176,7 @@ let
       userCharts = config.flake.chartsDerivations.${system} or { };
 
       # Custom agenix-rekey generator types (standalone NixOS module)
-      agenixGeneratorsModule = import ../../agenix/_generators.nix;
+      agenixGeneratorsModule = import ../aspects/secrets/_generators-module.nix;
     in
     inputs.nixidy.lib.mkEnv {
       inherit pkgs;
@@ -484,7 +484,7 @@ in
     };
 
   # Kubernetes devshell commands emitted via class routing
-  den.aspects.kubernetes-devshell = {
+  den.aspects.devshell.kubernetes = {
     devshell =
       { self', inputs', ... }:
       {
@@ -517,5 +517,5 @@ in
         ];
       };
   };
-  den.schema.flake-parts.includes = [ den.aspects.kubernetes-devshell ];
+  den.schema.flake-parts.includes = [ den.aspects.devshell.kubernetes ];
 }

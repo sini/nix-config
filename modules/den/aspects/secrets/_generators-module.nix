@@ -3,7 +3,7 @@
 # the nixidy assembly (for kubernetes secret generation).
 #
 # This file is NOT a flake-parts module — it's a plain NixOS module.
-# import-tree will skip it because it's consumed explicitly.
+# Underscore prefix prevents import-tree from auto-importing it.
 { config, lib, ... }:
 let
   # Helper functions for TLS generators

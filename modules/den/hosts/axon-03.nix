@@ -40,7 +40,7 @@
     includes = with den.aspects; [
       core.default
       secrets.agenix
-      networking
+      network.networking
       network.openssh
       network.network-boot
       disk.zfs-disk-single
