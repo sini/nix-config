@@ -38,6 +38,7 @@
       network.openssh
       disk.zfs-disk-single
       disk.impermanence
+      network.network-boot
       roles.server
       roles.nix-builder
       hardware.cpu-amd
