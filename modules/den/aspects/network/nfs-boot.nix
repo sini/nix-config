@@ -17,7 +17,7 @@
         # TODO: cross-host discovery — hardcoded NFS server address
         nfsServer = "10.10.10.10";
         hostname = config.networking.hostName;
-        zfsEnabled = builtins.elem "zfs-root" (host.features or [ ]);
+        zfsEnabled = config.boot.supportedFilesystems.zfs or false;
       in
       {
         boot = {
