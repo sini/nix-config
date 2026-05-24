@@ -7,7 +7,6 @@
       ### Other dendritic users:
 
       - [GaetanLepage/nix-config](https://github.com/GaetanLepage/nix-config/)
-      - [mightyiam/infra](https://github.com/mightyiam/infra)
       - [vic/vix](https://github.com/vic/vix)
       - [drupol/infra](https://github.com/drupol/infra/tree/master)
 
@@ -20,7 +19,6 @@
 
       ### Notable References:
 
-      - [Dendritic Configuration Pattern](https://github.com/mightyiam/dendritic)
       - [colmena](https://github.com/zhaofengli/colmena)
       - [agenix](https://github.com/ryantm/agenix) & [agenix-rekey](https://github.com/oddlama/agenix-rekey)
       - [flake-parts](https://flake.parts/)

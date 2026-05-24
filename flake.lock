@@ -309,35 +309,6 @@
         "type": "github"
       }
     },
-    "colmena": {
-      "inputs": {
-        "flake-compat": [
-          "flake-compat"
-        ],
-        "flake-utils": [
-          "flake-utils"
-        ],
-        "nix-github-actions": "nix-github-actions",
-        "nixpkgs": [
-          "nixpkgs-unstable"
-        ],
-        "stable": "stable"
-      },
-      "locked": {
-        "lastModified": 1768981101,
-        "narHash": "sha256-uGcGIvEvNJOAc1imunk47XODF1CTX2yE36fI9kFuKKE=",
-        "owner": "zw3rk",
-        "repo": "colmena",
-        "rev": "bb6828ee5aa47a649693a930199a5d13dcad9960",
-        "type": "github"
-      },
-      "original": {
-        "owner": "zw3rk",
-        "ref": "darwin-support",
-        "repo": "colmena",
-        "type": "github"
-      }
-    },
     "cpu-microcodes": {
       "flake": false,
       "locked": {
@@ -535,15 +506,15 @@
     },
     "files": {
       "locked": {
-        "lastModified": 1762767848,
-        "narHash": "sha256-trF2WXzH57uSkA1zeI8FTz8tU6vPYrklkTjh/7DZy/M=",
-        "owner": "mightyiam",
+        "lastModified": 1779498638,
+        "narHash": "sha256-XdBP/MIDhFU3JSLHJ04b4mroxXxuVd8BhaIYTAXM2a4=",
+        "owner": "sini",
         "repo": "files",
-        "rev": "2d9d4937e94006ad8f165dfab9dff87cfab7eb2b",
+        "rev": "e5f2091406a73814d4b55e804b57f15fbaed4a8a",
         "type": "github"
       },
       "original": {
-        "owner": "mightyiam",
+        "owner": "sini",
         "repo": "files",
         "type": "github"
       }
@@ -2341,27 +2312,6 @@
         "type": "github"
       }
     },
-    "nix-github-actions": {
-      "inputs": {
-        "nixpkgs": [
-          "colmena",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1729742964,
-        "narHash": "sha256-B4mzTcQ0FZHdpeWcpDYPERtyjJd/NIuaQ9+BV1h+MpA=",
-        "owner": "nix-community",
-        "repo": "nix-github-actions",
-        "rev": "e04df33f62cdcf93d73e9a04142464753a16db67",
-        "type": "github"
-      },
-      "original": {
-        "owner": "nix-community",
-        "repo": "nix-github-actions",
-        "type": "github"
-      }
-    },
     "nix-index-database": {
       "inputs": {
         "nixpkgs": [
@@ -3257,7 +3207,6 @@
         "agenix-rekey-to-sops": "agenix-rekey-to-sops",
         "ayugram-desktop": "ayugram-desktop",
         "betterfox": "betterfox",
-        "colmena": "colmena",
         "declarative-jellyfin": "declarative-jellyfin",
         "den": "den",
         "den-diagram": "den-diagram",
@@ -3417,22 +3366,6 @@
       "original": {
         "owner": "Gerg-L",
         "repo": "spicetify-nix",
-        "type": "github"
-      }
-    },
-    "stable": {
-      "locked": {
-        "lastModified": 1750133334,
-        "narHash": "sha256-urV51uWH7fVnhIvsZIELIYalMYsyr2FCalvlRTzqWRw=",
-        "owner": "NixOS",
-        "repo": "nixpkgs",
-        "rev": "36ab78dab7da2e4e27911007033713bab534187b",
-        "type": "github"
-      },
-      "original": {
-        "owner": "NixOS",
-        "ref": "nixos-25.05",
-        "repo": "nixpkgs",
         "type": "github"
       }
     },

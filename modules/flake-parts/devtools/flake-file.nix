@@ -85,7 +85,7 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
-      files.url = "github:mightyiam/files";
+      files.url = "github:sini/files";
 
       firefox-addons = {
         url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";

@@ -17,7 +17,7 @@
         ## Generated files
 
         The following files in this repository are generated and checked
-        using [the _files_ flake-parts module](https://github.com/mightyiam/files):
+        using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
       ''
     ]
     |> lib.concatLines
