@@ -91,7 +91,8 @@ let
   groupedSecrets =
     let
       # Create a unique key based on rekeyFile and secretName
-      getKey = s: "${s.secretName}|${s.rekeyPath or "no-rekey"}";
+      # Strip string context so store-path-bearing rekeyPaths can be used as attr keys
+      getKey = s: builtins.unsafeDiscardStringContext "${s.secretName}|${s.rekeyPath or "no-rekey"}";
 
       # Fold secrets into groups
       grouped = lib.foldl' (
