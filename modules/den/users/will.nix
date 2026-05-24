@@ -1,4 +1,4 @@
-_: {
+{
   den.users.registry.will = {
     system.uid = 1002;
     groups = [

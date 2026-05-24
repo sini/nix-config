@@ -1,4 +1,9 @@
-_: {
+{ den, ... }:
+{
+  den.aspects.shuo = {
+    includes = [ den.batteries.host-aspects ];
+  };
+
   den.users.registry.shuo = {
     system.uid = 1001;
     groups = [

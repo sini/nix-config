@@ -1,4 +1,9 @@
-_: {
+{ den, ... }:
+{
+  den.aspects.sini = {
+    includes = [ den.batteries.host-aspects ];
+  };
+
   den.users.registry.sini = {
     system.uid = 1000;
     groups = [

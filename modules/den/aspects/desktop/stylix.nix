@@ -14,11 +14,6 @@
         config = {
           programs.dconf.enable = true;
 
-          # Import stylix HM module for ALL users (not just those in aspect chain)
-          home-manager.sharedModules = [
-            inputs.stylix.homeModules.stylix
-          ];
-
           stylix = {
             base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
 
