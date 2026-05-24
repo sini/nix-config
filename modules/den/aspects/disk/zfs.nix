@@ -24,6 +24,7 @@
           zfs = {
             package = pkgs.zfs_2_4;
             devNodes = "/dev/disk/by-id/";
+            forceImportRoot = true;
             forceImportAll = true;
             requestEncryptionCredentials = [ "zroot" ];
           };
