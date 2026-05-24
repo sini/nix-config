@@ -431,6 +431,26 @@
         "type": "github"
       }
     },
+    "den-diagram": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1779393078,
+        "narHash": "sha256-rZgNtCwRtP7HnJL676pyuLCop52Tu56XiyaZxCPRHrA=",
+        "owner": "denful",
+        "repo": "den-diagram",
+        "rev": "016243aadb1a0ca530df29c916df61db02a1dfa0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "denful",
+        "repo": "den-diagram",
+        "type": "github"
+      }
+    },
     "devshell": {
       "inputs": {
         "nixpkgs": [
@@ -3240,6 +3260,7 @@
         "colmena": "colmena",
         "declarative-jellyfin": "declarative-jellyfin",
         "den": "den",
+        "den-diagram": "den-diagram",
         "devshell": "devshell_3",
         "disko": "disko",
         "files": "files",

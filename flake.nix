@@ -32,6 +32,10 @@
   };
 
   inputs = {
+    den-diagram = {
+      url = "github:denful/den-diagram";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     agenix = {
       url = "github:ryantm/agenix";
       inputs = {
