@@ -5,7 +5,13 @@
       { host, ... }:
       {
         imports = [ inputs.nixos-facter-modules.nixosModules.facter ];
-        facter.reportPath = host.facts or null;
+        facter = {
+          reportPath = host.facts or null;
+          detected = {
+            dhcp.enable = false;
+            graphics.enable = false;
+          };
+        };
       };
   };
 }
