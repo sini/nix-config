@@ -1,13 +1,25 @@
-_: {
+{ den, ... }:
+{
   den.aspects.hardware.performance = {
     nixos =
-      { pkgs, lib, ... }:
       {
+        pkgs,
+        lib,
+        host,
+        ...
+      }:
+      let
+        isLaptop = host.hasAspect den.aspects.roles.laptop;
+      in
+      {
+        systemd.packages = [ pkgs.lact ];
+        systemd.services.lactd.wantedBy = [ "multi-user.target" ];
+
         powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
 
         services = {
           irqbalance.enable = true;
-          scx = {
+          scx = lib.mkIf (!isLaptop) {
             enable = true;
             package = lib.mkDefault pkgs.scx.full;
             scheduler = "scx_bpfland";

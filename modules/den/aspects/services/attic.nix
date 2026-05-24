@@ -98,7 +98,7 @@ in
 
     service-domains = [ "attic" ];
 
-    persist = {
+    cache = {
       directories = [
         {
           directory = "/var/lib/private/atticd";

@@ -5,6 +5,7 @@
       services.acme
       services.tang
       services.media-data-share
+      services.prometheus-exporter
       network.network-boot
     ];
 

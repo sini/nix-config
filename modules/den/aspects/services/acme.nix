@@ -26,6 +26,13 @@ in
             dnsProvider = (env.acme or { }).dnsProvider or "cloudflare";
             dnsResolver = (env.acme or { }).dnsResolver or "1.1.1.1:53";
             dnsPropagationCheck = true;
+            credentialFiles = let
+              domainConfig = (env.certificates.domains or { }).${topDomain} or null;
+              issuerName = if domainConfig != null then domainConfig.issuer else null;
+            in
+            lib.optionalAttrs (issuerName != null) {
+              CLOUDFLARE_DNS_API_TOKEN_FILE = config.age.secrets."${issuerName}-cloudflare-api-key".path;
+            };
           };
 
           certs.${config.networking.fqdn} = {

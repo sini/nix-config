@@ -81,7 +81,7 @@ in
             "cmac"
           ];
 
-          clevis = {
+          clevis = lib.mkIf (config.boot.supportedFilesystems.zfs or false) {
             enable = true;
             useTang = true;
             devices.zroot.secretFile = jweToken;
@@ -143,6 +143,7 @@ in
           compressor = "zstd";
           compressorArgs = [ "-12" ];
           extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
+          secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" = secrets.wpa-supplicant-initrd.path;
         };
 
         # Wire generator dependency for wpa-supplicant-initrd (needs NixOS config context)

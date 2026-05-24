@@ -1,4 +1,5 @@
 {
+  den,
   lib,
   config,
   ...
@@ -16,12 +17,14 @@ in
         inherit (lib)
           attrNames
           concatMap
+          imap0
           length
           listToAttrs
           map
           mapAttrsToList
-          mkForce
+          mkDefault
           optionalAttrs
+          optionals
           subtractLists
           unique
           ;
@@ -29,6 +32,16 @@ in
         netCfg = host.networking;
 
         mkNameValue = name: value: { inherit name value; };
+
+        # Common route configuration for TCP optimization
+        mkRoute =
+          gateway: extra:
+          {
+            Gateway = gateway;
+            InitialCongestionWindow = 50;
+            InitialAdvertisedReceiveWindow = 50;
+          }
+          // extra;
 
         # ======================================================================
         # Network config generator
@@ -79,6 +92,17 @@ in
               UseDelegatedPrefix = true;
               PrefixDelegationHint = "::/64";
             };
+            routes =
+              let
+                defaultNet = env.networks.default or { };
+              in
+              optionals (length ipv4Addrs > 0) [
+                (mkRoute (defaultNet.gatewayIp or null) { })
+                (mkRoute (defaultNet.gatewayIpV6 or null) {
+                  Destination = "::/0";
+                  GatewayOnLink = true;
+                })
+              ];
             linkConfig = {
               RequiredForOnline = effectiveRequiredForOnline ifCfg;
             }
@@ -121,6 +145,32 @@ in
 
         allInterfaceNames = attrNames netCfg.interfaces;
 
+        # Bridge configuration
+        effectiveBridges =
+          if netCfg.autobridging && netCfg.bridges == { } then
+            listToAttrs (imap0 (idx: ifName: mkNameValue "br${toString idx}" [ ifName ]) allInterfaceNames)
+          else
+            netCfg.bridges;
+
+        bridgeConfig = map (brName: {
+          name = brName;
+          interfaces = effectiveBridges.${brName};
+          ifCfg =
+            if length effectiveBridges.${brName} > 0 then
+              (netCfg.interfaces.${builtins.head effectiveBridges.${brName}} or {
+                ipv4 = [ ];
+                ipv6 = [ ];
+              })
+            else
+              {
+                ipv4 = [ ];
+                ipv6 = [ ];
+              };
+        }) (attrNames effectiveBridges);
+
+        bridgeNames = map (br: br.name) bridgeConfig;
+        bridgedInterfaces = unique (concatMap (br: br.interfaces) bridgeConfig);
+
         # Bond configuration
         bondConfig = mapAttrsToList (bondName: bondCfg: {
           name = bondName;
@@ -135,13 +185,39 @@ in
         bondNames = map (b: b.name) bondConfig;
         bondedInterfaces = unique (concatMap (b: b.interfaces) bondConfig);
 
-        standaloneInterfaces = subtractLists (bondedInterfaces ++ bondNames) allInterfaceNames;
+        # Standalone: not bridged, not bonded, not a virtual device name
+        standaloneInterfaces = subtractLists (
+          bridgedInterfaces ++ bondedInterfaces ++ bridgeNames ++ bondNames
+        ) allInterfaceNames;
 
-        allInterfaces = unique (allInterfaceNames ++ bondedInterfaces ++ bondNames);
+        allInterfaces = unique (allInterfaceNames ++ bridgedInterfaces ++ bridgeNames ++ bondNames);
 
         # ======================================================================
         # Netdev generation
         # ======================================================================
+
+        bridgeNetdevs = listToAttrs (
+          map (
+            br:
+            mkNameValue br.name {
+              netdevConfig = {
+                Name = br.name;
+                Kind = "bridge";
+                MACAddress = "none";
+              };
+            }
+          ) bridgeConfig
+        );
+
+        bridgeLinks = listToAttrs (
+          map (
+            br:
+            mkNameValue br.name {
+              matchConfig.Name = br.name;
+              linkConfig.MACAddressPolicy = "none";
+            }
+          ) bridgeConfig
+        );
 
         bondNetdevs = listToAttrs (
           map (
@@ -165,6 +241,30 @@ in
         # Network generation
         # ======================================================================
 
+        # Physical interfaces enslaved to bridges
+        bridgedInterfaceNetworks = listToAttrs (
+          concatMap (
+            br:
+            map (
+              ifName:
+              mkNameValue ifName {
+                enable = true;
+                matchConfig.Name =
+                  if br.name == "br0" then
+                    [
+                      ifName
+                      "vm-*"
+                    ]
+                  else
+                    ifName;
+                networkConfig.Bridge = br.name;
+                linkConfig.RequiredForOnline = "enslaved";
+              }
+            ) br.interfaces
+          ) bridgeConfig
+        );
+
+        # Physical interfaces enslaved to bonds
         bondSlaveNetworks = listToAttrs (
           concatMap (
             bond:
@@ -180,6 +280,21 @@ in
           ) bondConfig
         );
 
+        # Bridge device networks (IP assignment)
+        bridgeNetworks = listToAttrs (
+          map (
+            br:
+            mkNameValue br.name (
+              {
+                enable = true;
+                matchConfig.Name = br.name;
+              }
+              // (mkNetworkConfig br.ifCfg)
+            )
+          ) bridgeConfig
+        );
+
+        # Bond device networks (IP assignment)
         bondDeviceNetworks = listToAttrs (
           map (
             bond:
@@ -223,8 +338,8 @@ in
           useDHCP = false;
 
           networkmanager = {
-            enable = mkForce false;
-            unmanaged = allInterfaces;
+            enable = lib.mkForce (host.hasAspect den.aspects.network.network-manager);
+            unmanaged = allInterfaces ++ bridgeNames ++ bondNames;
           };
 
           dhcpcd.enable = false;
@@ -241,8 +356,14 @@ in
         systemd.network = {
           enable = true;
           wait-online.enable = false;
-          netdevs = bondNetdevs;
-          networks = bondSlaveNetworks // standaloneInterfaceNetworks // bondDeviceNetworks;
+          netdevs = bridgeNetdevs // bondNetdevs;
+          links = bridgeLinks;
+          networks =
+            bridgedInterfaceNetworks
+            // bondSlaveNetworks
+            // standaloneInterfaceNetworks
+            // bridgeNetworks
+            // bondDeviceNetworks;
         };
       };
   };

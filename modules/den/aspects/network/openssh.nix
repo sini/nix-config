@@ -23,6 +23,22 @@ _: {
       };
     };
 
+    darwin = {
+      services.openssh = {
+        enable = true;
+
+        extraConfig = ''
+          PermitRootLogin prohibit-password
+          PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          AllowTcpForwarding yes
+          AllowAgentForwarding yes
+          AllowStreamLocalForwarding yes
+          AuthenticationMethods publickey
+        '';
+      };
+    };
+
     persist = {
       files = [
         "/etc/ssh/ssh_host_ed25519_key"

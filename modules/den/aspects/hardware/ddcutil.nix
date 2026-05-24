@@ -1,7 +1,13 @@
-_: {
+{ lib, ... }:
+{
   den.aspects.hardware.ddcutil = {
     nixos =
-      { config, pkgs, ... }:
+      {
+        config,
+        pkgs,
+        host,
+        ...
+      }:
       {
         boot = {
           kernelModules = [
@@ -24,6 +30,10 @@ _: {
         ];
 
         users.groups.i2c = { };
+
+        users.users = lib.genAttrs (builtins.attrNames host.users) (_: {
+          extraGroups = [ "i2c" ];
+        });
       };
   };
 }

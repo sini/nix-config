@@ -161,6 +161,7 @@ _: {
           atticd = uidGid 953;
           git = uidGid 952;
           jellyfin = uidGid 1027;
+          process-exporter = uidGid 948;
 
           system-access = {
             gid = 951;

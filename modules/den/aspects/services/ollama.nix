@@ -94,7 +94,7 @@
         };
       };
 
-    persist = {
+    cache = {
       directories = [
         {
           directory = "/var/lib/private/ollama";

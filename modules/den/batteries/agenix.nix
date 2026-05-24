@@ -7,6 +7,7 @@
 {
   inputs,
   self,
+  lib,
   ...
 }:
 let
@@ -14,6 +15,10 @@ let
 
   agenixHostAspect =
     { host, secretsConfig, ... }:
+    let
+      hasImpermanence = ((host.settings.disk or { }).impermanence or { }) != { };
+      persistPrefix = lib.optionalString hasImpermanence "/persist";
+    in
     {
       name = "agenix/${host.name}";
       ${host.class} =
@@ -28,7 +33,7 @@ let
           age = {
             # Agenix decrypts before impermanence creates mounts
             identityPaths = [
-              "/persist/etc/ssh/ssh_host_ed25519_key"
+              "${persistPrefix}/etc/ssh/ssh_host_ed25519_key"
             ];
 
             rekey = {
@@ -38,6 +43,20 @@ let
               generatedSecretsDir = host.secretPath + "/generated";
               localStorageDir = host.secretPath + "/rekeyed";
             };
+
+            # Per-user identity secrets
+            secrets = lib.mkMerge [
+              (lib.mapAttrs' (username: _: {
+                name = "user-identity-${username}";
+                value = {
+                  rekeyFile = self + "/.secrets/users/${username}/id_agenix.age";
+                  owner = username;
+                  group = username;
+                  mode = "600";
+                  generator.script = "age-identity";
+                };
+              }) (host.users or { }))
+            ];
           };
 
           # Remove agenix directory before switching if it's a dir instead of link

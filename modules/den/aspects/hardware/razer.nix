@@ -2,13 +2,14 @@
 {
   den.aspects.hardware.razer = {
     nixos =
-      { pkgs, ... }:
+      { pkgs, host, ... }:
       {
         imports = [ inputs.razerdaemon.nixosModules.default ];
 
         services.razer-laptop-control.enable = true;
 
         hardware.openrazer.enable = true;
+        hardware.openrazer.users = builtins.attrNames host.users;
         environment.systemPackages = [
           pkgs.openrazer-daemon
           pkgs.polychromatic

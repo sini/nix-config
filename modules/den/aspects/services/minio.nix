@@ -75,9 +75,12 @@ in
 
     age-secrets =
       { host, ... }:
+      let
+        env = environments.${host.environment};
+      in
       {
         age.secrets.minio-root-credentials = {
-          rekeyFile = host.secretPath + "/oidc/minio-root-credentials.age";
+          rekeyFile = env.secretPath + "/oidc/minio-root-credentials.age";
           owner = "minio";
           group = "minio";
         };

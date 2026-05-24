@@ -15,6 +15,7 @@ in
       {
         config,
         host,
+        pkgs,
         ...
       }:
       let
@@ -107,6 +108,20 @@ in
                   url = "http://127.0.0.1:3100";
                   jsonData = {
                     maxLines = 1000;
+                  };
+                }
+              ];
+
+              dashboards.settings.providers = [
+                {
+                  name = "default";
+                  options.path = pkgs.stdenv.mkDerivation {
+                    name = "grafana-dashboards";
+                    src = ./grafana-dashboards;
+                    installPhase = ''
+                      mkdir -p $out/
+                      install -D -m755 $src/*.json $out/
+                    '';
                   };
                 }
               ];

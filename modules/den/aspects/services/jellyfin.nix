@@ -9,7 +9,10 @@ let
 in
 {
   den.aspects.services.jellyfin = {
-    includes = [ den.aspects.services.nginx ];
+    includes = [
+      den.aspects.services.nginx
+      den.aspects.services.media-data-share
+    ];
 
     nixos =
       {

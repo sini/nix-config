@@ -16,6 +16,7 @@
           paths = [
             pkgs.cni-plugins
             pkgs.cni-plugin-flannel
+            pkgs.local.cni-plugin-cilium
           ];
         };
       in

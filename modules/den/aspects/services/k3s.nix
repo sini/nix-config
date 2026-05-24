@@ -497,7 +497,7 @@ in
     # Persist k3s and kubeconfig state across reboots
     persist = {
       directories = [
-        "/var/lib/rancher/k3s"
+        "/var/lib/rancher"
         "/var/lib/kubelet"
         "/etc/rancher"
       ];

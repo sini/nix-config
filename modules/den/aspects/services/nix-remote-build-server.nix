@@ -2,12 +2,18 @@
 {
   den.aspects.services.nix-remote-build-server = {
     nixos =
-      { pkgs, lib, ... }:
+      {
+        config,
+        pkgs,
+        lib,
+        host,
+        ...
+      }:
       {
         services.nix-serve = {
           enable = true;
           package = pkgs.nix-serve-ng;
-          # secretKeyFile wired via secrets quirk
+          secretKeyFile = config.age.secrets.nix_store_signing_key.path;
           port = 16893;
           openFirewall = true;
         };
@@ -25,9 +31,16 @@
             isSystemUser = true;
             useDefaultShell = true;
             description = "nix-remote-build";
-            openssh.authorizedKeys.keys = lib.map (
-              key: ''command="nix-store --serve --write",restrict '' + key
-            ) [ (builtins.readFile (self + "/.secrets/users/nix-remote-build/id_ed25519.pub")) ];
+            openssh.authorizedKeys.keys =
+              let
+                buildKey = builtins.readFile (self + "/.secrets/users/nix-remote-build/id_ed25519.pub");
+                userSshKeys = lib.concatMap (
+                  u: map (k: k.key) (u.identity.sshKeys or [ ])
+                ) (lib.attrValues host.users);
+              in
+              lib.map (key: ''command="nix-store --serve --write",restrict '' + key) (
+                [ buildKey ] ++ userSshKeys
+              );
           };
         };
       };

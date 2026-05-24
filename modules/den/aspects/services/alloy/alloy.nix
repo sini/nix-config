@@ -16,14 +16,27 @@ in
       {
         pkgs,
         host,
+        prometheus-targets,
         ...
       }:
       let
         env = environments.${host.environment};
 
-        # TODO: cross-host discovery — find metrics-ingester host in target environment
-        # Original used config.hosts filtering + environment.delegation.logsTo
-        reportingHost = null;
+        # Resolve target environment following delegation (logsTo → metricsTo → self)
+        delegation = env.delegation or { };
+        targetEnvironment =
+          if delegation.logsTo or null != null then delegation.logsTo
+          else if delegation.metricsTo or null != null then delegation.metricsTo
+          else host.environment;
+
+        # Find the metrics-ingester host via prometheus-targets pipe:
+        # the host running prometheus in the target environment is the ingester.
+        targetIps = lib.unique (
+          map (t: t.ip) (
+            lib.filter (t: t.environment == targetEnvironment) prometheus-targets
+          )
+        );
+        reportingHost = if targetIps != [ ] then lib.head targetIps else null;
 
         alloyConfig = pkgs.writeText "config.alloy" (
           builtins.replaceStrings
