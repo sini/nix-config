@@ -1,6 +1,17 @@
-{ lib, ... }:
+{ den, lib, ... }:
 {
   den.aspects.roles.laptop = {
+    includes = with den.aspects; [
+      network.wireless
+    ];
+
+    persist = {
+      directories = [
+        "/var/lib/upower"
+        "/var/lib/power-profiles-daemon"
+      ];
+    };
+
     nixos =
       { pkgs, ... }:
       {

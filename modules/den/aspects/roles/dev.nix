@@ -2,6 +2,7 @@
 {
   den.aspects.roles.dev = {
     includes = with den.aspects; [
+      hardware.adb
       apps.direnv
       apps.gpg
       apps.bat
