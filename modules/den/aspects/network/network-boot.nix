@@ -65,6 +65,7 @@ in
 
         inherit (config.age) secrets;
       in
+      lib.mkMerge [
       {
         boot.initrd = {
           availableKernelModules = [
@@ -89,13 +90,23 @@ in
 
           systemd = {
             inherit (config.systemd) network;
+          };
 
-            services.zfs-import-zroot.preStart = ''
-              /bin/sleep 10
-              ${lib.getExe config.boot.zfs.package} load-key -a
-            '';
-          }
-          // lib.optionalAttrs hasWireless {
+
+          network = {
+            enable = true;
+            ssh = {
+              enable = true;
+              port = 22;
+              authorizedKeys = wheelSshKeys;
+              hostKeys = [
+                secrets.initrd_host_ed25519_key.path
+              ];
+            };
+          };
+        }
+        // lib.optionalAttrs hasWireless {
+          systemd = {
             packages = [ pkgs.wpa_supplicant ];
             initrdBin = [
               pkgs.wpa_supplicant
@@ -127,19 +138,6 @@ in
             };
           };
 
-          network = {
-            enable = true;
-            ssh = {
-              enable = true;
-              port = 22;
-              authorizedKeys = wheelSshKeys;
-              hostKeys = [
-                secrets.initrd_host_ed25519_key.path
-              ];
-            };
-          };
-        }
-        // lib.optionalAttrs hasWireless {
           compressor = "zstd";
           compressorArgs = [ "-12" ];
           extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
@@ -184,7 +182,17 @@ in
             "agenixEnsureInitrdWpaSupplicantConfig"
           ];
         };
-      };
+      }
+      # Separate mkMerge entry: boot.initrd.systemd.services can't coexist
+      # with boot.initrd = { systemd = { inherit network; }; } in the same
+      # attrset — the inherit clobbers sibling keys.
+      {
+        boot.initrd.systemd.services.zfs-import-zroot.preStart = ''
+          /bin/sleep 10
+          ${lib.getExe config.boot.zfs.package} load-key -a
+        '';
+      }
+      ];
 
     persist = {
       files = [
