@@ -64,6 +64,15 @@ in
       ])
     ];
 
+  # Cluster-scoped: collect k3s node data from hosts across all environments
+  den.policies.cluster-collect-k3s-nodes =
+    { cluster, ... }:
+    [
+      (pipe.from "k3s-nodes" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   den.schema.host.includes = [
     den.policies.collect-host-addrs
     den.policies.collect-bgp-peers
@@ -72,5 +81,9 @@ in
     den.policies.collect-thunderbolt-mesh-peers
     den.policies.collect-vault-peers
     den.policies.collect-ollama-endpoints
+  ];
+
+  den.schema.cluster.includes = [
+    den.policies.cluster-collect-k3s-nodes
   ];
 }

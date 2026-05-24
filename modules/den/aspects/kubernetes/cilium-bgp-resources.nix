@@ -1,33 +1,19 @@
 # Cilium BGP CRDs — BGPAdvertisements (Service ExternalIP + LoadBalancerIP),
 # BGPPeerConfigs (EBGP multihop 4, timers), BGPClusterConfigs per host.
 #
-# TODO: convert to k3s-nodes pipe.collect once cluster-scoped aspects
-# can receive host-scoped pipe data. Currently uses config.den.hosts
-# because k8s-manifests runs in cluster scope, not host scope.
-#
-# Ported from main:modules/kubernetes/services/network/cilium/cilium-bgp.nix
-{
-  lib,
-  config,
-  ...
-}:
+# Consumes k3s-nodes pipe data collected at cluster scope via pipe.collectAll.
+{ lib, ... }:
 let
   inherit (lib)
-    filterAttrs
-    head
-    mapAttrs'
+    listToAttrs
     ;
-
-  allHosts = config.den.hosts.x86_64-linux or { };
 in
 {
   den.aspects.kubernetes.cilium-bgp-resources = {
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, k3s-nodes, ... }:
       let
-        clusterHosts = filterAttrs (
-          _: h: h.environment == cluster.environment && (h.settings.services.k3s or { }) != { }
-        ) allHosts;
+        clusterNodes = lib.filter (n: n.environment == cluster.environment) k3s-nodes;
       in
       {
         applications.cilium = {
@@ -77,47 +63,39 @@ in
               };
             };
 
-            ciliumBGPNodeConfigOverrides =
-              clusterHosts
-              |> mapAttrs' (
-                hostname: _hostConfig: {
-                  name = hostname;
-                  value = {
-                    spec.bgpInstances = [
-                      { name = "local-frr-instance"; }
-                    ];
-                  };
-                }
-              );
+            ciliumBGPNodeConfigOverrides = listToAttrs (
+              map (node: {
+                name = node.hostname;
+                value.spec.bgpInstances = [
+                  { name = "local-frr-instance"; }
+                ];
+              }) clusterNodes
+            );
 
-            ciliumBGPClusterConfigs =
-              clusterHosts
-              |> mapAttrs' (
-                hostname: hostConfig: {
-                  name = "cilium-bgp-${hostname}";
-                  value = {
-                    spec = {
-                      nodeSelector.matchLabels = {
-                        "kubernetes.io/hostname" = hostname;
-                      };
-                      bgpInstances = [
+            ciliumBGPClusterConfigs = listToAttrs (
+              map (node: {
+                name = "cilium-bgp-${node.hostname}";
+                value.spec = {
+                  nodeSelector.matchLabels = {
+                    "kubernetes.io/hostname" = node.hostname;
+                  };
+                  bgpInstances = [
+                    {
+                      name = "local-frr-instance";
+                      localASN = node.ciliumBgpLocalAsn;
+                      peers = [
                         {
-                          name = "local-frr-instance";
-                          localASN = hostConfig.settings.services.cilium-bgp.localAsn;
-                          peers = [
-                            {
-                              name = "local-frr-daemon";
-                              peerASN = hostConfig.settings.services.bgp.localAsn;
-                              peerAddress = head hostConfig.ipv4;
-                              peerConfigRef.name = "cilium-bgp";
-                            }
-                          ];
+                          name = "local-frr-daemon";
+                          peerASN = node.bgpLocalAsn;
+                          peerAddress = node.ip;
+                          peerConfigRef.name = "cilium-bgp";
                         }
                       ];
-                    };
-                  };
-                }
-              );
+                    }
+                  ];
+                };
+              }) clusterNodes
+            );
           };
         };
       };
