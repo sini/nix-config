@@ -1,4 +1,9 @@
+{ den, ... }:
 {
+  den.aspects.will = {
+    includes = [ den.batteries.host-aspects ];
+  };
+
   den.users.registry.will = {
     system.uid = 1002;
     groups = [

@@ -417,10 +417,12 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1779485518,
-        "narHash": "sha256-e2zhxeJpk+L0Kwde7hg1j/aPiFqG4sQ3tp6ywM/oK+E=",
-        "path": "/home/sini/Documents/repos/den/.worktrees/entity-gen-schema-port",
-        "type": "path"
+        "lastModified": 1779584310,
+        "narHash": "sha256-p7wNw10XoMksw8RoE1HvOLaK8fHF315FZkhT4x8XfGk=",
+        "owner": "sini",
+        "repo": "den",
+        "rev": "3040d769d0833f44ff245d2715acfb55f012d779",
+        "type": "github"
       },
       "original": {
         "owner": "sini",
