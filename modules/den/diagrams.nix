@@ -144,6 +144,12 @@ in
         drv = pkgs.writeText "${name}.md" content;
       };
 
+      fleetIrDrv = pkgs.runCommand "fleet-ir.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
+        echo ${
+          lib.escapeShellArg (diagram.fleetGraph.toJSON { inherit fleetCapture; })
+        } | jq . > $out
+      '';
+
       everyEntry = [
         (mkViewFile "scope-topology" scopeTopologySection)
         (mkViewFile "policy-resolution" policyResolutionSection)
@@ -151,6 +157,14 @@ in
         (mkViewFile "pipe-sequence" pipeSequenceSection)
         (mkViewFile "namespace" namespaceSection)
         (mkViewFile "summary" fleetSummarySection)
+        {
+          name = "fleet";
+          view = "fleet-ir";
+          dir = "fleet";
+          ext = "json";
+          tool = null;
+          drv = fleetIrDrv;
+        }
       ];
 
       topologyDrv = pkgs.writeText "TOPOLOGY.md" (
@@ -176,7 +190,11 @@ in
           dest="$(${pkgs.git}/bin/git rev-parse --show-toplevel)"
           cp ${topologyDrv} "$dest/TOPOLOGY.md"
           chmod 644 "$dest/TOPOLOGY.md"
+          mkdir -p "$dest/diagrams/fleet"
+          cp ${fleetIrDrv} "$dest/diagrams/fleet/fleet-ir.json"
+          chmod 644 "$dest/diagrams/fleet/fleet-ir.json"
           echo "Wrote $dest/TOPOLOGY.md"
+          echo "Wrote $dest/diagrams/fleet/fleet-ir.json"
         '';
       };
     };
