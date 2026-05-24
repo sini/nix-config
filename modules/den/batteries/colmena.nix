@@ -5,7 +5,6 @@
   lib,
   config,
   inputs,
-  self,
   ...
 }:
 let
@@ -16,21 +15,13 @@ let
   );
 
   colmenaNodes = lib.mapAttrs (
-    name: _modules:
+    name: modules:
     let
       host = allHosts.${name} or { };
-      isNixos = (host.class or "") == "nixos";
       isDarwin = (host.class or "") == "darwin";
-      osConfig =
-        if isNixos then
-          self.nixosConfigurations.${name} or null
-        else if isDarwin then
-          self.darwinConfigurations.${name} or null
-        else
-          null;
     in
     {
-      imports = if osConfig != null then osConfig._module.args.modules else [ ];
+      imports = modules;
       deployment = {
         targetHost =
           let
@@ -49,13 +40,6 @@ let
   hiveConfig = colmenaNodes // {
     meta = {
       nixpkgs = import inputs.nixpkgs-unstable { system = "x86_64-linux"; };
-      nodeSpecialArgs = lib.mapAttrs (
-        name: _:
-        let
-          osConfig = self.nixosConfigurations.${name} or self.darwinConfigurations.${name} or null;
-        in
-        if osConfig != null then osConfig._module.specialArgs else { }
-      ) colmenaNodes;
     };
   };
 in
