@@ -69,7 +69,7 @@ in
       };
 
     age-secrets =
-      { host, ... }:
+      { host, config, ... }:
       let
         env = environments.${host.environment};
       in

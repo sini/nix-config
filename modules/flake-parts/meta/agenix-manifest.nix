@@ -56,7 +56,7 @@ let
 
   # Collect from NixOS configurations
   nixosSecrets = lib.flatten (
-    lib.mapAttrsToList (hostName: host: collectSecrets "nixos:${hostName}" host) (self.nodes or { })
+    lib.mapAttrsToList (hostName: host: collectSecrets "nixos:${hostName}" host) (self.outputs.nixosConfigurations or { })
   );
 
   # Collect from Darwin configurations
@@ -81,7 +81,7 @@ let
         );
     in
     lib.flatten (
-      lib.mapAttrsToList (hostName: host: collectFromHost hostName host) (self.nodes or { })
+      lib.mapAttrsToList (hostName: host: collectFromHost hostName host) (self.outputs.nixosConfigurations or { })
     );
 
   # Combine all secrets

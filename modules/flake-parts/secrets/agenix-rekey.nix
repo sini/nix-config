@@ -41,7 +41,7 @@
     }:
     {
       agenix-rekey = {
-        nixosConfigurations = self.nodes;
+        nixosConfigurations = self.outputs.nixosConfigurations;
         darwinConfigurations = self.outputs.darwinConfigurations;
         collectHomeManagerConfigurations = true;
         extraConfigurations = self.nixidyEnvs.${system} or { };
