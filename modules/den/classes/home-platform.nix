@@ -10,6 +10,7 @@
       den.lib.policy.route {
         fromClass = "homeLinux";
         intoClass = "homeManager";
+        path = [ ];
       }
     );
 
@@ -19,6 +20,7 @@
       den.lib.policy.route {
         fromClass = "homeDarwin";
         intoClass = "homeManager";
+        path = [ ];
       }
     );
 
@@ -28,6 +30,7 @@
       den.lib.policy.route {
         fromClass = "homeAarch64";
         intoClass = "homeManager";
+        path = [ ];
       }
     );
 
