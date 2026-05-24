@@ -45,35 +45,9 @@ graph TD
   cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_["host: axon-02"]
   cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_["host: axon-03"]
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_["cluster: axon"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin["host: axon-01"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin["host: axon-02"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin["host: axon-03"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin["cluster: axon"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux["host: axon-01"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux["host: axon-02"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux["host: axon-03"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux["cluster: axon"]
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_[["environment: dev"]]
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_[["environment: prod"]]
-  flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin["host: axon-01"]
-  flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin["host: axon-02"]
-  flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin["host: axon-03"]
-  flake_parts_flake_parts_aarch64_darwin_host_bitstream_system_aarch64_darwin["host: bitstream"]
-  flake_parts_flake_parts_aarch64_darwin_host_blade_system_aarch64_darwin["host: blade"]
-  flake_parts_flake_parts_aarch64_darwin_host_cortex_system_aarch64_darwin["host: cortex"]
-  flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin["host: patch"]
-  flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin_user_sini(["user: sini"])
-  flake_parts_flake_parts_aarch64_darwin_host_uplink_system_aarch64_darwin["host: uplink"]
   flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin["flake-parts: flake-parts-aarch64-darwin"]
-  flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux["host: axon-01"]
-  flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux["host: axon-02"]
-  flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux["host: axon-03"]
-  flake_parts_flake_parts_x86_64_linux_host_bitstream_system_x86_64_linux["host: bitstream"]
-  flake_parts_flake_parts_x86_64_linux_host_blade_system_x86_64_linux["host: blade"]
-  flake_parts_flake_parts_x86_64_linux_host_cortex_system_x86_64_linux["host: cortex"]
-  flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux["host: patch"]
-  flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux_user_sini(["user: sini"])
-  flake_parts_flake_parts_x86_64_linux_host_uplink_system_x86_64_linux["host: uplink"]
   flake_parts_flake_parts_x86_64_linux_system_x86_64_linux["flake-parts: flake-parts-x86_64-linux"]
   fleet_fleet_secretsConfig__set_secretsConfig_(["fleet: fleet"])
   system_aarch64_darwin["flake-system: system=aarch64-darwin"]
@@ -103,35 +77,9 @@ graph TD
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux
   fleet_fleet_secretsConfig__set_secretsConfig_ --> environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_
   fleet_fleet_secretsConfig__set_secretsConfig_ --> environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_bitstream_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_blade_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_cortex_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin_user_sini
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_host_uplink_system_aarch64_darwin
   system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_bitstream_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_blade_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_cortex_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux_user_sini
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_host_uplink_system_x86_64_linux
   system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_system_x86_64_linux
 
   style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ fill:#2da44e,stroke:#2da44e,color:#1f2328
@@ -158,35 +106,9 @@ graph TD
   style cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ fill:#2da44e,stroke:#2da44e,color:#1f2328
   style cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ fill:#2da44e,stroke:#2da44e,color:#1f2328
   style cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#d0d7de,stroke:#d0d7de,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin fill:#d0d7de,stroke:#d0d7de,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux fill:#d0d7de,stroke:#d0d7de,color:#1f2328
   style environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#a475f9,stroke:#a475f9,color:#1f2328
   style environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#a475f9,stroke:#a475f9,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_bitstream_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_blade_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_cortex_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin_user_sini fill:#e16f24,stroke:#e16f24,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_uplink_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
   style flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin fill:#d0d7de,stroke:#d0d7de,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_bitstream_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_blade_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_cortex_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux_user_sini fill:#e16f24,stroke:#e16f24,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_uplink_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
   style flake_parts_flake_parts_x86_64_linux_system_x86_64_linux fill:#d0d7de,stroke:#d0d7de,color:#1f2328
   style fleet_fleet_secretsConfig__set_secretsConfig_ fill:#218bff,stroke:#218bff,color:#1f2328
   style system_aarch64_darwin fill:#339D9B,stroke:#339D9B,color:#1f2328
@@ -224,93 +146,41 @@ graph TD
   cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_["host: axon-02"]
   cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_["host: axon-03"]
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_["cluster: axon"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin["host: axon-01"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin["host: axon-02"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin["host: axon-03"]
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin["cluster: axon"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux["host: axon-01"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux["host: axon-02"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux["host: axon-03"]
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux["cluster: axon"]
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_{{"environment: dev"}}
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_{{"environment: prod"}}
-  flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin["host: axon-01"]
-  flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin["host: axon-02"]
-  flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin["host: axon-03"]
-  flake_parts_flake_parts_aarch64_darwin_host_bitstream_system_aarch64_darwin["host: bitstream"]
-  flake_parts_flake_parts_aarch64_darwin_host_blade_system_aarch64_darwin["host: blade"]
-  flake_parts_flake_parts_aarch64_darwin_host_cortex_system_aarch64_darwin["host: cortex"]
-  flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin["host: patch"]
-  flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin_user_sini(["user: sini"])
-  flake_parts_flake_parts_aarch64_darwin_host_uplink_system_aarch64_darwin["host: uplink"]
   flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin["flake-parts: flake-parts-aarch64-darwin"]
-  flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux["host: axon-01"]
-  flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux["host: axon-02"]
-  flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux["host: axon-03"]
-  flake_parts_flake_parts_x86_64_linux_host_bitstream_system_x86_64_linux["host: bitstream"]
-  flake_parts_flake_parts_x86_64_linux_host_blade_system_x86_64_linux["host: blade"]
-  flake_parts_flake_parts_x86_64_linux_host_cortex_system_x86_64_linux["host: cortex"]
-  flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux["host: patch"]
-  flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux_user_sini(["user: sini"])
-  flake_parts_flake_parts_x86_64_linux_host_uplink_system_x86_64_linux["host: uplink"]
   flake_parts_flake_parts_x86_64_linux_system_x86_64_linux["flake-parts: flake-parts-x86_64-linux"]
   fleet_fleet_secretsConfig__set_secretsConfig_(["fleet: fleet"])
   system_aarch64_darwin["flake-system: system=aarch64-darwin"]
   system_x86_64_linux["flake-system: system=x86_64-linux"]
 
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini
-  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
-  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
-  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini
+  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-collect-k3s-nodes, cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
+  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-collect-k3s-nodes, cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
+  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-collect-k3s-nodes, cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin
-  cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux
-  cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|cluster-to-hosts, cluster-to-nixidy| cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux
   fleet_fleet_secretsConfig__set_secretsConfig_ -->|fleet-to-envs| environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_
   fleet_fleet_secretsConfig__set_secretsConfig_ -->|fleet-to-envs| environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_bitstream_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_blade_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_cortex_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin
-  flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin_user_sini
-  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_aarch64_darwin_host_uplink_system_aarch64_darwin
   system_aarch64_darwin -->|apps-to-flake, checks-to-flake, devShells-to-flake, legacyPackages-to-flake, packages-to-flake, system-to-flake-parts| flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_bitstream_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_blade_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_cortex_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux
-  flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, host-to-colmena, os-to-host, host-to-hm-users, env-users| flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux_user_sini
-  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux -->|devshell-to-flake-parts, flake-parts-to-clusters, flake-parts-to-hosts| flake_parts_flake_parts_x86_64_linux_host_uplink_system_x86_64_linux
   system_x86_64_linux -->|apps-to-flake, checks-to-flake, devShells-to-flake, legacyPackages-to-flake, packages-to-flake, system-to-flake-parts| flake_parts_flake_parts_x86_64_linux_system_x86_64_linux
 
   style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ fill:#2da44e,stroke:#2da44e,color:#1f2328
@@ -337,35 +207,9 @@ graph TD
   style cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ fill:#2da44e,stroke:#2da44e,color:#1f2328
   style cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ fill:#2da44e,stroke:#2da44e,color:#1f2328
   style cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#d0d7de,stroke:#d0d7de,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin fill:#d0d7de,stroke:#d0d7de,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cluster_axon_flake_parts_flake_parts_x86_64_linux_system_x86_64_linux fill:#d0d7de,stroke:#d0d7de,color:#1f2328
   style environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#a475f9,stroke:#a475f9,color:#1f2328
   style environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#a475f9,stroke:#a475f9,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_axon_01_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_axon_02_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_axon_03_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_bitstream_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_blade_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_cortex_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_patch_system_aarch64_darwin_user_sini fill:#e16f24,stroke:#e16f24,color:#1f2328
-  style flake_parts_flake_parts_aarch64_darwin_host_uplink_system_aarch64_darwin fill:#2da44e,stroke:#2da44e,color:#1f2328
   style flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin fill:#d0d7de,stroke:#d0d7de,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_axon_01_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_axon_02_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_axon_03_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_bitstream_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_blade_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_cortex_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_patch_system_x86_64_linux_user_sini fill:#e16f24,stroke:#e16f24,color:#1f2328
-  style flake_parts_flake_parts_x86_64_linux_host_uplink_system_x86_64_linux fill:#2da44e,stroke:#2da44e,color:#1f2328
   style flake_parts_flake_parts_x86_64_linux_system_x86_64_linux fill:#d0d7de,stroke:#d0d7de,color:#1f2328
   style fleet_fleet_secretsConfig__set_secretsConfig_ fill:#218bff,stroke:#218bff,color:#1f2328
   style system_aarch64_darwin fill:#339D9B,stroke:#339D9B,color:#1f2328
@@ -530,6 +374,15 @@ sequenceDiagram
     Note over cortex: services/nix-remote-build-server → firewall
     Note over uplink: services/tang, services/nix-remote-build-server, services/prometheus, services/loki, services/bgp, services/headscale, services/nginx, services/kanidm, services/haproxy, services/jellyfin → firewall
 
+    Note over cortex: services/ollama → ollama-endpoints
+    Note over uplink: services/ollama → ollama-endpoints
+    cortex -->> bitstream: ollama-endpoints
+    cortex -->> blade: ollama-endpoints
+    cortex -->> patch: ollama-endpoints
+    uplink -->> axon_01: ollama-endpoints
+    uplink -->> axon_02: ollama-endpoints
+    uplink -->> axon_03: ollama-endpoints
+
     Note over axon_01: services/bgp → bgp-peers
     Note over axon_02: services/bgp → bgp-peers
     Note over axon_03: services/bgp → bgp-peers
@@ -560,15 +413,6 @@ sequenceDiagram
     axon_01 -->> uplink: thunderbolt-mesh-peers
     axon_02 -->> uplink: thunderbolt-mesh-peers
     axon_03 -->> uplink: thunderbolt-mesh-peers
-
-    Note over cortex: services/ollama → ollama-endpoints
-    Note over uplink: services/ollama → ollama-endpoints
-    cortex -->> bitstream: ollama-endpoints
-    cortex -->> blade: ollama-endpoints
-    cortex -->> patch: ollama-endpoints
-    uplink -->> axon_01: ollama-endpoints
-    uplink -->> axon_02: ollama-endpoints
-    uplink -->> axon_03: ollama-endpoints
 
     Note over uplink: services/prometheus, services/headscale, services/nginx → prometheus-targets
     uplink -->> axon_01: prometheus-targets
@@ -674,9 +518,9 @@ aspect distribution, pipe relationships, and policy execution.
 
 ## Topology
 
-- **2** environments, **33** hosts, **14** users
-- Scope chain: flake → fleet → environment → flake-system → user → host → cluster → flake-parts
-- Trace entries: 3547
+- **2** environments, **11** hosts, **12** users
+- Scope chain: flake → fleet → cluster → user → host → environment → flake-system → flake-parts
+- Trace entries: 1454
 
 ## Environments
 
@@ -700,149 +544,59 @@ aspect distribution, pipe relationships, and policy execution.
 | axon-01 | 4 | agenix/axon-01, axon-01, insecure-predicate/os, unfree-predicate/os |
 | axon-02 | 4 | agenix/axon-02, axon-02, insecure-predicate/os, unfree-predicate/os |
 | axon-03 | 4 | agenix/axon-03, axon-03, insecure-predicate/os, unfree-predicate/os |
-| axon-01 | 4 | agenix/axon-01, axon-01, insecure-predicate/os, unfree-predicate/os |
-| axon-02 | 4 | agenix/axon-02, axon-02, insecure-predicate/os, unfree-predicate/os |
-| axon-03 | 4 | agenix/axon-03, axon-03, insecure-predicate/os, unfree-predicate/os |
-| axon-01 | 4 | agenix/axon-01, axon-01, insecure-predicate/os, unfree-predicate/os |
-| axon-02 | 4 | agenix/axon-02, axon-02, insecure-predicate/os, unfree-predicate/os |
-| axon-03 | 4 | agenix/axon-03, axon-03, insecure-predicate/os, unfree-predicate/os |
-| axon-01 | 4 | agenix/axon-01, axon-01, insecure-predicate/os, unfree-predicate/os |
-| axon-02 | 4 | agenix/axon-02, axon-02, insecure-predicate/os, unfree-predicate/os |
-| axon-03 | 4 | agenix/axon-03, axon-03, insecure-predicate/os, unfree-predicate/os |
-| bitstream | 4 | agenix/bitstream, bitstream, insecure-predicate/os, unfree-predicate/os |
-| blade | 4 | agenix/blade, blade, insecure-predicate/os, unfree-predicate/os |
-| cortex | 4 | agenix/cortex, cortex, insecure-predicate/os, unfree-predicate/os |
-| patch | 0 |  |
-| uplink | 4 | agenix/uplink, insecure-predicate/os, unfree-predicate/os, uplink |
-| axon-01 | 4 | agenix/axon-01, axon-01, insecure-predicate/os, unfree-predicate/os |
-| axon-02 | 4 | agenix/axon-02, axon-02, insecure-predicate/os, unfree-predicate/os |
-| axon-03 | 4 | agenix/axon-03, axon-03, insecure-predicate/os, unfree-predicate/os |
-| bitstream | 4 | agenix/bitstream, bitstream, insecure-predicate/os, unfree-predicate/os |
-| blade | 4 | agenix/blade, blade, insecure-predicate/os, unfree-predicate/os |
-| cortex | 4 | agenix/cortex, cortex, insecure-predicate/os, unfree-predicate/os |
-| patch | 0 |  |
-| uplink | 4 | agenix/uplink, insecure-predicate/os, unfree-predicate/os, uplink |
 
 ## Pipes
 
 | Pipe | Scope Boundary | Producers | Collectors |
 | ------ | ---------------- | ----------- | ------------ |
-| age-secrets | environment: dev | bitstream, blade, cortex, bitstream, blade, cortex, bitstream, blade, cortex |  |
-| age-secrets | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| age-secrets | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| age-secrets | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| age-secrets | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| age-secrets | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, uplink |  |
-| age-secrets | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, uplink |  |
-| cache | environment: dev | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |  |
-| cache | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| cache | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| cache | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| cache | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| cache | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| cache | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| firewall | environment: dev | bitstream, cortex, bitstream, cortex, bitstream, cortex |  |
-| firewall | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| firewall | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| firewall | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| firewall | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| firewall | flake-parts: flake-parts-aarch64-darwin | bitstream, cortex, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, cortex, uplink, axon-01, axon-02, axon-03, bitstream, cortex, uplink |  |
-| firewall | flake-parts: flake-parts-x86_64-linux | bitstream, cortex, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, cortex, uplink, axon-01, axon-02, axon-03, bitstream, cortex, uplink |  |
-| homeLinux | environment: dev | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |  |
-| homeLinux | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| homeLinux | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| homeLinux | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| homeLinux | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| homeLinux | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| homeLinux | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| host-addrs | environment: dev | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |  |
-| host-addrs | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| host-addrs | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| host-addrs | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| host-addrs | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| host-addrs | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| host-addrs | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| os | environment: dev | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |  |
-| os | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| os | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| os | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| os | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| os | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| os | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| persist | environment: dev | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |  |
-| persist | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| persist | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| persist | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| persist | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| persist | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| persist | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| persistHome | environment: dev | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |  |
-| persistHome | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| persistHome | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| persistHome | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| persistHome | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| persistHome | flake-parts: flake-parts-aarch64-darwin | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| persistHome | flake-parts: flake-parts-x86_64-linux | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |  |
-| bgp-peers | environment: dev |  | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| bgp-peers | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |
-| bgp-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| bgp-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| bgp-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| bgp-peers | flake-parts: flake-parts-aarch64-darwin | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| bgp-peers | flake-parts: flake-parts-x86_64-linux | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| k3s-nodes | environment: dev |  | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| k3s-nodes | environment: prod | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | uplink, uplink, uplink |
-| k3s-nodes | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| k3s-nodes | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| k3s-nodes | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| k3s-nodes | flake-parts: flake-parts-aarch64-darwin | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink |
-| k3s-nodes | flake-parts: flake-parts-x86_64-linux | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink |
-| ollama-endpoints | environment: dev | cortex, cortex, cortex | bitstream, blade, patch, bitstream, blade, patch, bitstream, blade, patch |
-| ollama-endpoints | environment: prod | uplink, uplink, uplink | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| ollama-endpoints | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| ollama-endpoints | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| ollama-endpoints | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| ollama-endpoints | flake-parts: flake-parts-aarch64-darwin | cortex, uplink, cortex, uplink, cortex, uplink | bitstream, blade, patch, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, patch, axon-01, axon-02, axon-03, bitstream, blade, patch |
-| ollama-endpoints | flake-parts: flake-parts-x86_64-linux | cortex, uplink, cortex, uplink, cortex, uplink | bitstream, blade, patch, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, patch, axon-01, axon-02, axon-03, bitstream, blade, patch |
-| prometheus-targets | environment: dev |  | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| prometheus-targets | environment: prod | uplink, uplink, uplink | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| prometheus-targets | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| prometheus-targets | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| prometheus-targets | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| prometheus-targets | flake-parts: flake-parts-aarch64-darwin | uplink, uplink, uplink | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch |
-| prometheus-targets | flake-parts: flake-parts-x86_64-linux | uplink, uplink, uplink | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch |
-| thunderbolt-mesh-peers | environment: dev |  | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| thunderbolt-mesh-peers | environment: prod | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | uplink, uplink, uplink |
-| thunderbolt-mesh-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| thunderbolt-mesh-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| thunderbolt-mesh-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| thunderbolt-mesh-peers | flake-parts: flake-parts-aarch64-darwin | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink |
-| thunderbolt-mesh-peers | flake-parts: flake-parts-x86_64-linux | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink, bitstream, blade, cortex, patch, uplink |
-| vault-peers | environment: dev |  | bitstream, blade, cortex, patch, bitstream, blade, cortex, patch, bitstream, blade, cortex, patch |
-| vault-peers | environment: prod |  | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |
-| vault-peers | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| vault-peers | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| vault-peers | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
-| vault-peers | flake-parts: flake-parts-aarch64-darwin |  | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |
-| vault-peers | flake-parts: flake-parts-x86_64-linux |  | bitstream, blade, cortex, patch, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink, axon-01, axon-02, axon-03, bitstream, blade, cortex, patch, uplink |
-| homeDarwin | environment: dev | blade, cortex, patch, blade, cortex, patch, blade, cortex, patch |  |
-| homeDarwin | flake-parts: flake-parts-aarch64-darwin | blade, cortex, patch, blade, cortex, patch, blade, cortex, patch |  |
-| homeDarwin | flake-parts: flake-parts-x86_64-linux | blade, cortex, patch, blade, cortex, patch, blade, cortex, patch |  |
-| shuo | environment: dev | blade, cortex, blade, cortex, blade, cortex |  |
-| shuo | flake-parts: flake-parts-aarch64-darwin | blade, cortex, blade, cortex, blade, cortex |  |
-| shuo | flake-parts: flake-parts-x86_64-linux | blade, cortex, blade, cortex, blade, cortex |  |
-| sini | environment: dev | blade, cortex, blade, cortex, blade, cortex |  |
-| sini | flake-parts: flake-parts-aarch64-darwin | blade, cortex, blade, cortex, blade, cortex |  |
-| sini | flake-parts: flake-parts-x86_64-linux | blade, cortex, blade, cortex, blade, cortex |  |
-| spoke | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| spoke | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| spoke | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| spoke | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
-| spoke | flake-parts: flake-parts-aarch64-darwin | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| spoke | flake-parts: flake-parts-x86_64-linux | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03, uplink |  |
-| service-domains | environment: prod | uplink, uplink, uplink |  |
-| service-domains | flake-parts: flake-parts-aarch64-darwin | uplink, uplink, uplink |  |
-| service-domains | flake-parts: flake-parts-x86_64-linux | uplink, uplink, uplink |  |
+| age-secrets | environment: dev | bitstream, blade, cortex |  |
+| age-secrets | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| age-secrets | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| cache | environment: dev | bitstream, blade, cortex, patch |  |
+| cache | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| cache | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| firewall | environment: dev | bitstream, cortex |  |
+| firewall | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| firewall | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| homeLinux | environment: dev | bitstream, blade, cortex, patch |  |
+| homeLinux | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| homeLinux | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| host-addrs | environment: dev | bitstream, blade, cortex, patch |  |
+| host-addrs | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| host-addrs | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| os | environment: dev | bitstream, blade, cortex, patch |  |
+| os | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| os | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| persist | environment: dev | bitstream, blade, cortex, patch |  |
+| persist | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| persist | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| persistHome | environment: dev | bitstream, blade, cortex, patch |  |
+| persistHome | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| persistHome | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| bgp-peers | environment: dev |  | bitstream, blade, cortex, patch |
+| bgp-peers | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |
+| bgp-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| k3s-nodes | environment: dev |  | bitstream, blade, cortex, patch |
+| k3s-nodes | environment: prod | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | uplink |
+| k3s-nodes | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| ollama-endpoints | environment: dev | cortex | bitstream, blade, patch |
+| ollama-endpoints | environment: prod | uplink | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| ollama-endpoints | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| prometheus-targets | environment: dev |  | bitstream, blade, cortex, patch |
+| prometheus-targets | environment: prod | uplink | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| prometheus-targets | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| thunderbolt-mesh-peers | environment: dev |  | bitstream, blade, cortex, patch |
+| thunderbolt-mesh-peers | environment: prod | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | uplink |
+| thunderbolt-mesh-peers | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| vault-peers | environment: dev |  | bitstream, blade, cortex, patch |
+| vault-peers | environment: prod |  | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |
+| vault-peers | cluster: axon |  | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |
+| homeDarwin | environment: dev | blade, cortex, patch |  |
+| shuo | environment: dev | blade, cortex |  |
+| sini | environment: dev | blade, cortex |  |
+| spoke | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| spoke | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| service-domains | environment: prod | uplink |  |
 
 ## Policies
 
@@ -857,10 +611,8 @@ aspect distribution, pipe relationships, and policy execution.
 | packages-to-flake | flake-system |
 | system-to-flake-parts | flake-system |
 | devshell-to-flake-parts | flake-parts |
-| flake-parts-to-clusters | flake-parts |
-| flake-parts-to-hosts | flake-parts |
-| cluster-to-hosts | cluster |
-| cluster-to-nixidy | cluster |
+| fleet-to-envs | fleet |
+| env-to-hosts | environment |
 | collect-bgp-peers | host |
 | collect-host-addrs | host |
 | collect-k3s-nodes | host |
@@ -868,15 +620,16 @@ aspect distribution, pipe relationships, and policy execution.
 | collect-prometheus-targets | host |
 | collect-thunderbolt-mesh-peers | host |
 | collect-vault-peers | host |
+| env-users | host |
 | host-to-colmena | host |
-| os-to-host | host |
 | host-to-hm-users | host |
+| os-to-host | host |
 | hm-user-detect | user |
 | homeAarch64-to-hm | user |
 | homeDarwin-to-hm | user |
 | user-to-host | user |
-| fleet-to-envs | fleet |
-| env-to-hosts | environment |
-| env-users | host |
 | homeLinux-to-hm | user |
 | env-to-clusters | environment |
+| cluster-collect-k3s-nodes | cluster |
+| cluster-to-hosts | cluster |
+| cluster-to-nixidy | cluster |
