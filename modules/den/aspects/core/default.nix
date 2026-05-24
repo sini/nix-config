@@ -16,6 +16,7 @@
       core.facter
       core.home-manager
       core.deterministic-uids
+      core.nix-remote-build-client
       core.sudo
       core.time
       core.ssd
@@ -25,6 +26,7 @@
       network.networking
       network.openssh
       network.hosts
+      services.tailscale
     ];
   };
 }

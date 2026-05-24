@@ -45,19 +45,7 @@ let
               localStorageDir = host.secretPath + "/rekeyed";
             };
 
-            # Per-user identity secrets
-            secrets = lib.mkMerge [
-              (lib.mapAttrs' (username: _: {
-                name = "user-identity-${username}";
-                value = {
-                  rekeyFile = self + "/.secrets/users/${username}/id_agenix.age";
-                  owner = username;
-                  group = username;
-                  mode = "600";
-                  generator.script = "age-identity";
-                };
-              }) (host.users or { }))
-            ];
+            # Per-user identity secrets are emitted by agenixUserAspect at user scope
           };
 
           # Remove agenix directory before switching if it's a dir instead of link
@@ -107,7 +95,24 @@ let
           ];
         };
     };
+  agenixUserAspect =
+    { user, host, ... }:
+    {
+      name = "agenix-identity/${user.name}@${host.name}";
+      ${host.class} =
+        { ... }:
+        {
+          age.secrets."user-identity-${user.name}" = {
+            rekeyFile = self + "/.secrets/users/${user.name}/id_agenix.age";
+            owner = user.name;
+            group = user.name;
+            mode = "600";
+            generator.script = "age-identity";
+          };
+        };
+    };
 in
 {
   den.schema.host.includes = [ agenixHostAspect ];
+  den.schema.user.includes = [ agenixUserAspect ];
 }
