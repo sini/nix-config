@@ -1,11 +1,28 @@
-_: {
+{ inputs, ... }:
+let
+  inherit (inputs) betterfox shimmer;
+in
+{
   den.aspects.apps.firefox = {
     homeManager =
       {
-        inputs,
         pkgs,
         ...
       }:
+      let
+        inherit (inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system})
+          bitwarden
+          ublock-origin
+          sponsorblock
+          darkreader
+          ghostery
+          return-youtube-dislikes
+          firefox-color
+          duckduckgo-privacy-essentials
+          mal-sync
+          sidebery
+          ;
+      in
       {
         programs.firefox = {
           enable = true;
@@ -15,7 +32,7 @@ _: {
               id = 0;
               isDefault = true;
 
-              extensions.packages = with inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system}; [
+              extensions.packages = [
                 bitwarden
                 ublock-origin
                 sponsorblock
@@ -28,14 +45,14 @@ _: {
                 sidebery
               ];
 
-              preConfig = builtins.readFile "${inputs.betterfox.outPath}/user.js";
-              userChrome = builtins.readFile "${inputs.shimmer.outPath}/userChrome.css";
-              userContent = builtins.readFile "${inputs.shimmer.outPath}/userContent.css";
+              preConfig = builtins.readFile "${betterfox.outPath}/user.js";
+              userChrome = builtins.readFile "${shimmer.outPath}/userChrome.css";
+              userContent = builtins.readFile "${shimmer.outPath}/userContent.css";
 
               extraConfig = builtins.concatStringsSep "\n" [
-                (builtins.readFile "${inputs.betterfox.outPath}/Securefox.js")
-                (builtins.readFile "${inputs.betterfox.outPath}/Fastfox.js")
-                (builtins.readFile "${inputs.betterfox.outPath}/Peskyfox.js")
+                (builtins.readFile "${betterfox.outPath}/Securefox.js")
+                (builtins.readFile "${betterfox.outPath}/Fastfox.js")
+                (builtins.readFile "${betterfox.outPath}/Peskyfox.js")
               ];
 
               settings = {
