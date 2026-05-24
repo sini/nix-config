@@ -1,11 +1,11 @@
-# Colmena battery: adds a second policy.instantiate per host that
-# collects the full module set (including mainModule) into colmenaNodes,
-# then builds the hive with deployment metadata from host entities.
+# Colmena battery: builds a colmena hive from host entities with lazy
+# access to nixos/darwinConfigurations for the full module set.
 {
   den,
   lib,
   config,
   inputs,
+  self,
   ...
 }:
 let
@@ -15,14 +15,19 @@ let
     builtins.attrNames (config.den.hosts or { })
   );
 
+  # lib.mapAttrs is lazy per-key — only the targeted host is forced.
   colmenaNodes = lib.mapAttrs (
-    name: modules:
+    name: host:
     let
-      host = allHosts.${name} or { };
-      isDarwin = (host.class or "") == "darwin";
+      isDarwin = host.class == "darwin";
+      osConfig =
+        if isDarwin then
+          self.darwinConfigurations.${name}
+        else
+          self.nixosConfigurations.${name};
     in
     {
-      imports = modules;
+      imports = osConfig._module.args.modules;
       deployment = {
         targetHost =
           let
@@ -36,34 +41,19 @@ let
       }
       // lib.optionalAttrs isDarwin { systemType = "darwin"; };
     }
-  ) (config.flake.colmenaNodes or { });
+  ) allHosts;
 
   hiveConfig = colmenaNodes // {
     meta = {
       nixpkgs = import inputs.nixpkgs-unstable { system = "x86_64-linux"; };
+      nodeSpecialArgs = lib.mapAttrs (
+        name: _:
+        (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
+      ) colmenaNodes;
     };
   };
 in
 {
-  # Second instantiate per host — same hostCfg (includes mainModule),
-  # but collects into colmenaNodes instead of nixos/darwinConfigurations.
-  den.policies.host-to-colmena =
-    { host, ... }:
-    [
-      (den.lib.policy.instantiate (
-        host
-        // {
-          intoAttr = [
-            "colmenaNodes"
-            host.name
-          ];
-          instantiate = { modules, ... }: modules;
-        }
-      ))
-    ];
-
-  den.schema.host.includes = [ den.policies.host-to-colmena ];
-
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
 
   # Emit colmena CLI into devshell via class routing
