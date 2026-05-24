@@ -5,7 +5,7 @@
       {
         config,
         pkgs,
-        host,
+        resolved-users,
         ...
       }:
       {
@@ -31,7 +31,7 @@
 
         users.groups.i2c = { };
 
-        users.users = lib.genAttrs (builtins.attrNames host.users) (_: {
+        users.users = lib.genAttrs (map (u: u.name) resolved-users) (_: {
           extraGroups = [ "i2c" ];
         });
       };

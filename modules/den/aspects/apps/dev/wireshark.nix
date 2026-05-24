@@ -10,9 +10,9 @@ _: {
       };
 
     nixos =
-      { host, lib, ... }:
+      { resolved-users, lib, ... }:
       {
-        users.users = lib.genAttrs (builtins.attrNames host.users) (_: {
+        users.users = lib.genAttrs (map (u: u.name) resolved-users) (_: {
           extraGroups = [ "wireshark" ];
         });
       };

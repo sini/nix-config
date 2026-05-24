@@ -11,7 +11,7 @@ _: {
     nixos =
       {
         pkgs,
-        host,
+        resolved-users,
         lib,
         ...
       }:
@@ -19,7 +19,7 @@ _: {
         environment.systemPackages = [
           pkgs.android-file-transfer
         ];
-        users.users = lib.genAttrs (builtins.attrNames host.users) (_: {
+        users.users = lib.genAttrs (map (u: u.name) resolved-users) (_: {
           extraGroups = [ "adbusers" ];
         });
       };

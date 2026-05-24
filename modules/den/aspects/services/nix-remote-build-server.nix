@@ -6,7 +6,7 @@
         config,
         pkgs,
         lib,
-        host,
+        resolved-users,
         ...
       }:
       {
@@ -34,9 +34,7 @@
             openssh.authorizedKeys.keys =
               let
                 buildKey = builtins.readFile (self + "/.secrets/users/nix-remote-build/id_ed25519.pub");
-                userSshKeys = lib.concatMap (
-                  u: map (k: k.key) (u.identity.sshKeys or [ ])
-                ) (lib.attrValues host.users);
+                userSshKeys = lib.concatMap (u: u.sshKeys or [ ]) resolved-users;
               in
               lib.map (key: ''command="nix-store --serve --write",restrict '' + key) (
                 [ buildKey ] ++ userSshKeys

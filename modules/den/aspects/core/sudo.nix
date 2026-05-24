@@ -4,7 +4,10 @@
 _: {
   den.aspects.core.sudo = {
     nixos =
-      { host, ... }:
+      { resolved-users, ... }:
+      let
+        userNames = map (u: u.name) resolved-users;
+      in
       {
         security = {
           sudo.enable = false;
@@ -18,7 +21,7 @@ _: {
             wheelNeedsPassword = false;
             extraRules = [
               {
-                users = builtins.attrNames (host.users or { });
+                users = userNames;
                 noPass = true;
                 keepEnv = true;
               }

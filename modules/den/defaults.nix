@@ -9,6 +9,11 @@
     den.aspects.core.secrets-collector
   ];
 
+  # Default user includes — per-user data emission
+  den.schema.user.includes = [
+    den.aspects.core.resolved-user-emitter
+  ];
+
   # Wire den batteries that every host/user should have
   # home-manager and os-class are support modules (not battery aspects) —
   # they auto-load via den's flakeModule and wire their own schema/policies.
