@@ -1,4 +1,4 @@
-{ den, ... }:
+{ den, lib, ... }:
 {
   # Reserve 'settings' so aspects can declare typed settings without pipeline dispatch
   den.reservedKeys = [ "settings" ];
@@ -9,9 +9,18 @@
     den.aspects.core.secrets-collector
   ];
 
-  # Default user includes — per-user data emission
+  # Default user includes — per-user data emission + entity-named aspect auto-include
   den.schema.user.includes = [
     den.aspects.core.resolved-user-emitter
+
+    # Include den.aspects.<hostname>.<username> if it exists
+    (den.lib.policy.mkPolicy "user-aspect-auto-include"
+      ({ host, user, ... }:
+        lib.optional
+          (den.aspects ? ${host.name} && den.aspects.${host.name} ? ${user.name})
+          (den.lib.policy.include den.aspects.${host.name}.${user.name})
+      )
+    )
   ];
 
   # Wire den batteries that every host/user should have
