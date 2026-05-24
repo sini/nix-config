@@ -63,6 +63,14 @@
       url = "github:yokoffing/Betterfox";
       flake = false;
     };
+    colmena = {
+      url = "github:zw3rk/colmena/darwin-support";
+      inputs = {
+        flake-compat.follows = "flake-compat";
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
     declarative-jellyfin = {
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
