@@ -1,5 +1,6 @@
-# Colmena battery: registers the colmena class, wires host modules into
-# a colmena hive via policy.instantiate, and adds the CLI to devshell.
+# Colmena battery: adds a second policy.instantiate per host that
+# collects the full module set (including mainModule) into colmenaNodes,
+# then builds the hive with deployment metadata from host entities.
 {
   den,
   lib,
@@ -44,20 +45,21 @@ let
   };
 in
 {
-  den.classes.colmena = { };
-
+  # Second instantiate per host — same hostCfg (includes mainModule),
+  # but collects into colmenaNodes instead of nixos/darwinConfigurations.
   den.policies.host-to-colmena =
     { host, ... }:
     [
-      (den.lib.policy.instantiate {
-        inherit (host) name;
-        class = "colmena";
-        instantiate = { modules, ... }: modules;
-        intoAttr = [
-          "colmenaNodes"
-          host.name
-        ];
-      })
+      (den.lib.policy.instantiate (
+        host
+        // {
+          intoAttr = [
+            "colmenaNodes"
+            host.name
+          ];
+          instantiate = { modules, ... }: modules;
+        }
+      ))
     ];
 
   den.schema.host.includes = [ den.policies.host-to-colmena ];
