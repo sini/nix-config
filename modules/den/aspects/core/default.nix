@@ -24,6 +24,7 @@
       apps.zsh
       network.networking
       network.openssh
+      network.hosts
     ];
   };
 }

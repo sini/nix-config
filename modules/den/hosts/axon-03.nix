@@ -47,6 +47,8 @@
       disk.xfs-disk-longhorn
       disk.impermanence
       roles.server
+      roles.unlock
+      roles.nix-builder
       services.bgp.spoke
       services.cilium-bgp
       services.k3s

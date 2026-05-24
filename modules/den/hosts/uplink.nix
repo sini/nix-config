@@ -48,6 +48,8 @@
       services.attic
       services.tailscale
       services.den-docs-mirror
+      services.grafana
+      virtualization.podman
       hardware.cpu-amd
       hardware.gpu-intel
     ];

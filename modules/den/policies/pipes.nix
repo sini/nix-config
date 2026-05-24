@@ -8,47 +8,61 @@ let
   inherit (den.lib.policy) pipe;
 in
 {
-  den.policies.collect-host-addrs = _: [
-    (pipe.from "host-addrs" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-host-addrs =
+    { host, ... }:
+    [
+      (pipe.from "host-addrs" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
 
-  den.policies.collect-bgp-peers = _: [
-    (pipe.from "bgp-peers" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-bgp-peers =
+    { host, ... }:
+    [
+      (pipe.from "bgp-peers" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
 
-  den.policies.collect-prometheus-targets = _: [
-    (pipe.from "prometheus-targets" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-prometheus-targets =
+    { host, ... }:
+    [
+      (pipe.from "prometheus-targets" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
 
-  den.policies.collect-k3s-nodes = _: [
-    (pipe.from "k3s-nodes" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-k3s-nodes =
+    { host, ... }:
+    [
+      (pipe.from "k3s-nodes" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
 
-  den.policies.collect-thunderbolt-mesh-peers = _: [
-    (pipe.from "thunderbolt-mesh-peers" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-thunderbolt-mesh-peers =
+    { host, ... }:
+    [
+      (pipe.from "thunderbolt-mesh-peers" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
 
-  den.policies.collect-vault-peers = _: [
-    (pipe.from "vault-peers" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-vault-peers =
+    { host, ... }:
+    [
+      (pipe.from "vault-peers" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
 
-  den.policies.collect-ollama-endpoints = _: [
-    (pipe.from "ollama-endpoints" [
-      (pipe.collect (_: true))
-    ])
-  ];
+  den.policies.collect-ollama-endpoints =
+    { host, ... }:
+    [
+      (pipe.from "ollama-endpoints" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
 
   den.schema.host.includes = [
     den.policies.collect-host-addrs
