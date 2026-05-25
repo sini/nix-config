@@ -22,7 +22,6 @@ in
           listToAttrs
           map
           mapAttrsToList
-          mkDefault
           optionalAttrs
           optionals
           subtractLists

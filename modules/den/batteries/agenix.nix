@@ -75,7 +75,7 @@ let
     {
       name = "agenix-identity/${user.name}@${host.name}";
       ${host.class} =
-        { config, ... }:
+        { ... }:
         {
           age.secrets."user-identity-${user.name}" = {
             rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";

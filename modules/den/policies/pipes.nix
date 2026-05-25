@@ -9,67 +9,67 @@ let
 in
 {
   den.policies.collect-host-addrs =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "host-addrs" [
-        (pipe.collectAll ({ host, ... }: true))
+        (pipe.collectAll ({ ... }: true))
       ])
     ];
 
   den.policies.collect-bgp-peers =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "bgp-peers" [
-        (pipe.collect ({ host, ... }: true))
+        (pipe.collect ({ ... }: true))
       ])
     ];
 
   den.policies.collect-prometheus-targets =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "prometheus-targets" [
-        (pipe.collect ({ host, ... }: true))
+        (pipe.collect ({ ... }: true))
       ])
     ];
 
   den.policies.collect-k3s-nodes =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "k3s-nodes" [
-        (pipe.collect ({ host, ... }: true))
+        (pipe.collect ({ ... }: true))
       ])
     ];
 
   den.policies.collect-thunderbolt-mesh-peers =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "thunderbolt-mesh-peers" [
-        (pipe.collect ({ host, ... }: true))
+        (pipe.collect ({ ... }: true))
       ])
     ];
 
   den.policies.collect-vault-peers =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "vault-peers" [
-        (pipe.collect ({ host, ... }: true))
+        (pipe.collect ({ ... }: true))
       ])
     ];
 
   den.policies.collect-ollama-endpoints =
-    { host, ... }:
+    { ... }:
     [
       (pipe.from "ollama-endpoints" [
-        (pipe.collect ({ host, ... }: true))
+        (pipe.collect ({ ... }: true))
       ])
     ];
 
   # Cluster-scoped: collect k3s node data from hosts across all environments
   den.policies.cluster-collect-k3s-nodes =
-    { cluster, ... }:
+    { ... }:
     [
       (pipe.from "k3s-nodes" [
-        (pipe.collectAll ({ host, ... }: true))
+        (pipe.collectAll ({ ... }: true))
       ])
     ];
 

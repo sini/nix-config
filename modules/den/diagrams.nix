@@ -6,7 +6,6 @@
   den,
   lib,
   inputs,
-  self,
   ...
 }:
 let
