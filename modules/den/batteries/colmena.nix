@@ -1,8 +1,8 @@
 # Colmena battery: policy-driven hive from host entities.
 #
-# Aspects emit colmena-tags quirk entries. A pipe.collectAll gathers
-# them with provenance, groups by host, and a sink aspect routes the
-# per-host tag map into the flake class.
+# Aspects emit colmena-tags quirk entries. pipe.collect gathers them
+# per-host scope, pipe.to delivers to a sink aspect that emits the
+# tags into the flake class keyed by host name.
 {
   den,
   lib,
@@ -71,26 +71,12 @@ in
     };
   };
 
-  # Collect all colmena-tags with provenance, group by host, route to flake.
+  # Per-host: collect colmena-tags and route to sink.
   den.policies.collect-colmena-tags =
     _:
     [
       (pipe.from "colmena-tags" [
-        (pipe.collectAll (_: true))
-        pipe.withProvenance
-        (pipe.transform (entries:
-          lib.foldl' (
-            acc: entry:
-            let
-              hostName = entry.source.host.name or null;
-              tags = if builtins.isList entry.value then entry.value else [ entry.value ];
-            in
-            if hostName != null then
-              acc // { ${hostName} = (acc.${hostName} or [ ]) ++ tags; }
-            else
-              acc
-          ) { } entries
-        ))
+        (pipe.collect (_: true))
         (pipe.to [ den.aspects.colmena-tag-sink ])
       ])
     ];
@@ -99,12 +85,12 @@ in
     den.policies.collect-colmena-tags
   ];
 
-  # Sink: receives grouped tags and emits into flake class.
+  # Sink: receives per-host collected tags and emits into flake class.
   den.aspects.colmena-tag-sink = {
     flake =
-      { colmena-tags, ... }:
+      { host, colmena-tags, ... }:
       {
-        colmenaDeployment = colmena-tags;
+        colmenaDeployment.${host.name} = lib.flatten colmena-tags;
       };
   };
 
