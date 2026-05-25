@@ -449,16 +449,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1779677237,
-        "narHash": "sha256-ypUyht4Fw3yr2J/UWGF4Id3sbWv+0P6pmRKUqtXADbA=",
+        "lastModified": 1779680820,
+        "narHash": "sha256-haGCYE7mpBT8c7NW92WCv/CDbb0HJQsWbMG/j4wHiW4=",
         "owner": "denful",
         "repo": "den-diagram",
-        "rev": "d7600e00a128a538fab6457d71ffd3c4821163a4",
+        "rev": "18fe17c21343a49524644749324bf7904c51605a",
         "type": "github"
       },
       "original": {
         "owner": "denful",
-        "ref": "feat/fleet-subtree-context",
         "repo": "den-diagram",
         "type": "github"
       }

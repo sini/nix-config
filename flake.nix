@@ -81,7 +81,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     den-diagram = {
-      url = "github:denful/den-diagram/feat/fleet-subtree-context";
+      url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     devshell = {
