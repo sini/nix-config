@@ -148,11 +148,18 @@ in
       ];
     };
 
-    prometheus-targets = [
+    prometheus-targets =
+      { host, ... }:
       {
-        job_name = "headscale";
-        port = 8090;
-      }
-    ];
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit (host) environment;
+        exporters = [
+          {
+            job = "headscale";
+            port = 8090;
+          }
+        ];
+      };
   };
 }

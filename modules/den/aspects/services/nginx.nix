@@ -121,12 +121,19 @@ in
       ];
     };
 
-    prometheus-targets = [
+    prometheus-targets =
+      { host, ... }:
       {
-        job_name = "nginx";
-        port = 9113;
-      }
-    ];
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit (host) environment;
+        exporters = [
+          {
+            job = "nginx";
+            port = 9113;
+          }
+        ];
+      };
 
     persist = {
       directories = [
