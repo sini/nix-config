@@ -58,6 +58,18 @@
         '';
     });
     openldap = prev.openldap.overrideAttrs { doCheck = false; };
+    # bits-ui requires @internationalized/date which is missing from npmDeps
+    open-webui = prev.open-webui.overrideAttrs (old: {
+      frontend = old.frontend.overrideAttrs (fe: {
+        preBuild = (fe.preBuild or "") + ''
+          # Symlink missing transitive dep from bits-ui's own node_modules
+          if [ ! -d node_modules/@internationalized/date ] && [ -d node_modules/bits-ui/node_modules/@internationalized/date ]; then
+            mkdir -p node_modules/@internationalized
+            ln -s ../../bits-ui/node_modules/@internationalized/date node_modules/@internationalized/date
+          fi
+        '';
+      });
+    });
 
     inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
