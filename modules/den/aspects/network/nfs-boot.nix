@@ -10,7 +10,6 @@
       {
         config,
         pkgs,
-        host,
         ...
       }:
       let

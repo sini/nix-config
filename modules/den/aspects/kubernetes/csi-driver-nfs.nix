@@ -23,7 +23,7 @@ in
       { cluster, ... }:
       let
         environment = environments.${cluster.environment};
-        nfsVolumes = environment.nfsVolumes or { };
+        inherit (environment) nfsVolumes;
       in
       {
         applications.csi-driver-nfs = {

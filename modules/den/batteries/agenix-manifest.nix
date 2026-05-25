@@ -32,7 +32,7 @@ let
           else
             "unknown";
 
-        rekeyFile = secretConfig.rekeyFile or null;
+        inherit (secretConfig) rekeyFile;
         rekeyPath =
           if rekeyFile != null then lib.removePrefix "${toString self}/" (toString rekeyFile) else null;
 
@@ -47,16 +47,18 @@ let
           rekeyPath
           isIntermediary
           ;
-        owner = secretConfig.owner or "root";
-        group = secretConfig.group or "root";
-        mode = secretConfig.mode or "0400";
+        inherit (secretConfig) owner;
+        inherit (secretConfig) group;
+        inherit (secretConfig) mode;
         hasDependencies = hasGeneratorScript && (secretConfig.generator.dependencies or [ ]) != [ ];
       }
     ) secrets;
 
   # Collect from NixOS configurations
   nixosSecrets = lib.flatten (
-    lib.mapAttrsToList (hostName: host: collectSecrets "nixos:${hostName}" host) (self.outputs.nixosConfigurations or { })
+    lib.mapAttrsToList (hostName: host: collectSecrets "nixos:${hostName}" host) (
+      self.outputs.nixosConfigurations or { }
+    )
   );
 
   # Collect from Darwin configurations
@@ -81,7 +83,9 @@ let
         );
     in
     lib.flatten (
-      lib.mapAttrsToList (hostName: host: collectFromHost hostName host) (self.outputs.nixosConfigurations or { })
+      lib.mapAttrsToList (hostName: host: collectFromHost hostName host) (
+        self.outputs.nixosConfigurations or { }
+      )
     );
 
   # Combine all secrets

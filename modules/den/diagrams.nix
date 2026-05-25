@@ -6,7 +6,6 @@
   den,
   lib,
   inputs,
-  self,
   ...
 }:
 let
@@ -71,7 +70,6 @@ in
 
       inherit (diagram.export)
         entityEntries
-        filterByRender
         mkGallery
         mkWriteScript
         entriesToPackages
@@ -83,11 +81,11 @@ in
 
       hostGraphs = lib.listToAttrs (
         map (host: {
-          name = host.name;
+          inherit (host) name;
           value = diagram.projectScope {
             inherit fleetCapture;
             kind = "host";
-            name = host.name;
+            inherit (host) name;
           };
         }) allHosts
       );
@@ -103,7 +101,7 @@ in
         in
         entityEntries { inherit pkgs rc; } {
           inherit entity;
-          name = host.name;
+          inherit (host) name;
           dir = "hosts/${host.name}";
           viewDefs = hostViewDefs (graphClasses entity);
         }
@@ -128,16 +126,14 @@ in
         ) allHosts
       );
 
-      hostSummaryEntries = map (
-        host: {
-          name = host.name;
-          view = "summary";
-          dir = "hosts/${host.name}";
-          ext = "md";
-          tool = null;
-          drv = hostSummaryDrvs."${host.name}-summary";
-        }
-      ) allHosts;
+      hostSummaryEntries = map (host: {
+        inherit (host) name;
+        view = "summary";
+        dir = "hosts/${host.name}";
+        ext = "md";
+        tool = null;
+        drv = hostSummaryDrvs."${host.name}-summary";
+      }) allHosts;
 
       # --- Per-user entries ---
       # Discover users from fleet capture scope data (not host.users)
@@ -149,13 +145,13 @@ in
           inherit (fleetCapture) scopeEntityKind scopeParent;
           allScopeIds = builtins.attrNames scopeParent;
           userScopes = builtins.filter (s: (scopeEntityKind.${s} or null) == "user") allScopeIds;
-          extractName = kind: scopeId:
+          extractName =
+            kind: scopeId:
             let
               parts = lib.splitString "," scopeId;
               matching = builtins.filter (p: lib.hasPrefix "${kind}=" p) parts;
             in
-            if matching == [ ] then null
-            else lib.removePrefix "${kind}=" (builtins.head matching);
+            if matching == [ ] then null else lib.removePrefix "${kind}=" (builtins.head matching);
         in
         lib.concatMap (
           s:
@@ -188,13 +184,18 @@ in
 
       # --- TOPOLOGY.md sections (inline mermaid for GitHub rendering) ---
 
-      mkInlineSection = title: renderFn: let source = stripFrontmatter (renderFn fleetCapture); in ''
-        ## ${title}
+      mkInlineSection =
+        title: renderFn:
+        let
+          source = stripFrontmatter (renderFn fleetCapture);
+        in
+        ''
+          ## ${title}
 
-        ```mermaid
-        ${source}
-        ```
-      '';
+          ```mermaid
+          ${source}
+          ```
+        '';
 
       fleetSummaryText = diagram.text.fleetSummary fleetCapture;
 
@@ -207,7 +208,9 @@ in
           md = pkgs.writeText "${name}.md" "# ${title}\n\n![${title}](./${name}.mmd.svg)\n\n```mermaid\n${source}\n```\n";
           svg = rc.mmdSourceToSvg name source;
         in
-        { inherit md svg; };
+        {
+          inherit md svg;
+        };
 
       mkFleetEntries = viewName: view: [
         {
@@ -230,7 +233,9 @@ in
 
       pipeFlowView = mkFleetView "pipe-flow" "Pipe Flow" rc.render.toPipeFlowMermaid;
       scopeTopoView = mkFleetView "scope-topology" "Scope Topology" rc.render.toScopeTopologyMermaid;
-      policyMapView = mkFleetView "policy-resolution" "Policy Resolution Map" rc.render.toPolicyResolutionMapMermaid;
+      policyMapView =
+        mkFleetView "policy-resolution" "Policy Resolution Map"
+          rc.render.toPolicyResolutionMapMermaid;
       pipeSeqView = mkFleetView "pipe-sequence" "Pipe Sequence" rc.render.toPipeSequenceMermaid;
 
       fleetDagSource = rc.render.toFleetDagMermaid { inherit fleetCapture hostGraphs; };
@@ -240,7 +245,7 @@ in
       };
 
       namespaceGraph = diagram.graph.ofNamespace {
-        aspects = den.aspects;
+        inherit (den) aspects;
         filter = v: v.name != "wsl-host-aspect";
       };
       namespaceSource = rc.renderDense.toMermaid namespaceGraph;
@@ -289,17 +294,15 @@ in
 
       # --- Galleries ---
 
-      hostGalleries = map (
-        host: {
-          path = "diagrams/hosts/${host.name}.md";
-          drv = mkGallery pkgs {
-            name = host.name;
-            dir = "hosts/${host.name}";
-            title = "Gallery: ${host.name}";
-            entries = everyEntry;
-          };
-        }
-      ) allHosts;
+      hostGalleries = map (host: {
+        path = "diagrams/hosts/${host.name}.md";
+        drv = mkGallery pkgs {
+          inherit (host) name;
+          dir = "hosts/${host.name}";
+          title = "Gallery: ${host.name}";
+          entries = everyEntry;
+        };
+      }) allHosts;
 
       fleetGallery = {
         path = "diagrams/fleet.md";
@@ -311,17 +314,15 @@ in
         };
       };
 
-      userGalleries = map (
-        u: {
-          path = "diagrams/hosts/${u.hostName}/users/${u.userName}.md";
-          drv = mkGallery pkgs {
-            name = u.userName;
-            dir = "hosts/${u.hostName}/users/${u.userName}";
-            title = "Gallery: ${u.userName} @ ${u.hostName}";
-            entries = everyEntry;
-          };
-        }
-      ) allUsers;
+      userGalleries = map (u: {
+        path = "diagrams/hosts/${u.hostName}/users/${u.userName}.md";
+        drv = mkGallery pkgs {
+          name = u.userName;
+          dir = "hosts/${u.hostName}/users/${u.userName}";
+          title = "Gallery: ${u.userName} @ ${u.hostName}";
+          entries = everyEntry;
+        };
+      }) allUsers;
 
       galleries = hostGalleries ++ userGalleries ++ [ fleetGallery ];
 
@@ -347,22 +348,25 @@ in
       );
     in
     {
-      packages = entriesToPackages everyEntry // hostSummaryDrvs // {
-        fleet-summary = fleetSummaryDrv;
+      packages =
+        entriesToPackages everyEntry
+        // hostSummaryDrvs
+        // {
+          fleet-summary = fleetSummaryDrv;
 
-        write-topology = pkgs.writeShellScriptBin "write-topology" ''
-          dest="$(${pkgs.git}/bin/git rev-parse --show-toplevel)"
-          cp ${topologyDrv} "$dest/TOPOLOGY.md"
-          chmod 644 "$dest/TOPOLOGY.md"
-          echo "Wrote $dest/TOPOLOGY.md"
-        '';
+          write-topology = pkgs.writeShellScriptBin "write-topology" ''
+            dest="$(${pkgs.git}/bin/git rev-parse --show-toplevel)"
+            cp ${topologyDrv} "$dest/TOPOLOGY.md"
+            chmod 644 "$dest/TOPOLOGY.md"
+            echo "Wrote $dest/TOPOLOGY.md"
+          '';
 
-        write-diagrams = mkWriteScript pkgs {
-          entries = everyEntry;
-          inherit galleries;
-          readmeDrv = topologyDrv;
-          destExpr = ''"$(${pkgs.git}/bin/git rev-parse --show-toplevel)"'';
+          write-diagrams = mkWriteScript pkgs {
+            entries = everyEntry;
+            inherit galleries;
+            readmeDrv = topologyDrv;
+            destExpr = ''"$(${pkgs.git}/bin/git rev-parse --show-toplevel)"'';
+          };
         };
-      };
     };
 }

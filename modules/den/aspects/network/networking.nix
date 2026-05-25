@@ -22,7 +22,6 @@ in
           listToAttrs
           map
           mapAttrsToList
-          mkDefault
           optionalAttrs
           optionals
           subtractLists
@@ -160,7 +159,8 @@ in
               (netCfg.interfaces.${builtins.head effectiveBridges.${brName}} or {
                 ipv4 = [ ];
                 ipv6 = [ ];
-              })
+              }
+              )
             else
               {
                 ipv4 = [ ];

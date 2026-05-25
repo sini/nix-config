@@ -20,7 +20,7 @@ in
       {
         hostname = host.name;
         domain = "${env.name}.${env.domain}";
-        ipv4 = host.ipv4 or [ ];
+        inherit (host) ipv4;
         publicKeyFile = host.public_key;
       };
 

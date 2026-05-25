@@ -55,7 +55,7 @@ in
       { cluster, ... }:
       let
         environment = environments.${cluster.environment};
-        hosts = cluster.hosts or { };
+        inherit (cluster) hosts;
         numReplicas = builtins.length (builtins.attrNames hosts);
         domains = environment.certificates.domains;
         default-gateway-address = cluster.getAssignment "default-gateway";

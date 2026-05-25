@@ -126,8 +126,8 @@ let
       skipKey = k: structuralKeysSet ? ${k} || classKeys ? ${k} || quirkKeys ? ${k};
 
       reshapeSettings = raw: {
-        imports = raw.imports or [ ];
-        config = raw.config or { };
+        inherit (raw) imports;
+        inherit (raw) config;
         options = removeAttrs raw [
           "imports"
           "config"

@@ -11,7 +11,7 @@ let
   userEnrich =
     { host, user }:
     let
-      userName = user.userName or user.name;
+      inherit (user) userName;
       uid = user.system.uid or null;
       gid = if user.system.gid or null != null then user.system.gid else uid;
       subUidStart = if uid != null then 100000 + ((uid - 1000) * 65536) else null;

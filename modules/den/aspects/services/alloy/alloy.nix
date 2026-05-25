@@ -23,18 +23,19 @@ in
         env = environments.${host.environment};
 
         # Resolve target environment following delegation (logsTo → metricsTo → self)
-        delegation = env.delegation or { };
+        inherit (env) delegation;
         targetEnvironment =
-          if delegation.logsTo or null != null then delegation.logsTo
-          else if delegation.metricsTo or null != null then delegation.metricsTo
-          else host.environment;
+          if delegation.logsTo or null != null then
+            delegation.logsTo
+          else if delegation.metricsTo or null != null then
+            delegation.metricsTo
+          else
+            host.environment;
 
         # Find the metrics-ingester host via prometheus-targets pipe:
         # the host running prometheus in the target environment is the ingester.
         targetIps = lib.unique (
-          map (t: t.ip) (
-            lib.filter (t: t.environment == targetEnvironment) prometheus-targets
-          )
+          map (t: t.ip) (lib.filter (t: t.environment == targetEnvironment) prometheus-targets)
         );
         reportingHost = if targetIps != [ ] then lib.head targetIps else null;
 

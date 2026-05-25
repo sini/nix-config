@@ -1,13 +1,13 @@
 { dag, ... }:
 {
-  flake.readme.logo = dag.entryBefore [ "header" ] (
-    # markdown
-    ''
-      <div align="center">
-        <img src="https://raw.githubusercontent.com/sini/nix-config/main/modules/docs/logo/logo.png" width="120px" />
-      </div>
+  flake.readme.logo =
+    dag.entryBefore [ "header" ]
+      # markdown
+      ''
+        <div align="center">
+          <img src="https://raw.githubusercontent.com/sini/nix-config/main/modules/docs/logo/logo.png" width="120px" />
+        </div>
 
-      <br />
-    ''
-  );
+        <br />
+      '';
 }

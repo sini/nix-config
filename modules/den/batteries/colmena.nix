@@ -9,7 +9,7 @@
   ...
 }:
 let
-  currentSystem = builtins.currentSystem or "x86_64-linux";
+  inherit (builtins) currentSystem;
 
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
     builtins.attrNames (config.den.hosts or { })
@@ -20,18 +20,14 @@ let
     name: host:
     let
       isDarwin = host.class == "darwin";
-      osConfig =
-        if isDarwin then
-          self.darwinConfigurations.${name}
-        else
-          self.nixosConfigurations.${name};
+      osConfig = if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
     in
     {
       imports = osConfig._module.args.modules;
       deployment = {
         targetHost =
           let
-            ipv4 = host.ipv4 or [ ];
+            inherit (host) ipv4;
           in
           if ipv4 == [ ] then "${name}.ts.json64.dev" else builtins.head ipv4;
         tags = [ (host.environment or "prod") ];
@@ -47,8 +43,7 @@ let
     meta = {
       nixpkgs = import inputs.nixpkgs-unstable { system = "x86_64-linux"; };
       nodeSpecialArgs = lib.mapAttrs (
-        name: _:
-        (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
+        name: _: (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
       ) colmenaNodes;
     };
   };

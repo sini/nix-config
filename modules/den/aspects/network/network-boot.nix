@@ -66,132 +66,131 @@ in
         inherit (config.age) secrets;
       in
       lib.mkMerge [
-      {
-        boot.initrd = {
-          availableKernelModules = [
-            "bridge"
-            "bonding"
-            "8021q"
-            "tpm_crb"
-            "tpm_tis"
-          ]
-          ++ networkDriverModules
-          ++ lib.optionals hasWireless [
-            "ccm"
-            "ctr"
-            "cmac"
+        {
+          boot.initrd = {
+            availableKernelModules = [
+              "bridge"
+              "bonding"
+              "8021q"
+              "tpm_crb"
+              "tpm_tis"
+            ]
+            ++ networkDriverModules
+            ++ lib.optionals hasWireless [
+              "ccm"
+              "ctr"
+              "cmac"
+            ];
+
+            clevis = lib.mkIf (config.boot.supportedFilesystems.zfs or false) {
+              enable = true;
+              useTang = true;
+              devices.zroot.secretFile = jweToken;
+            };
+
+            systemd = {
+              inherit (config.systemd) network;
+            };
+
+            network = {
+              enable = true;
+              ssh = {
+                enable = true;
+                port = 22;
+                authorizedKeys = wheelSshKeys;
+                hostKeys = [
+                  secrets.initrd_host_ed25519_key.path
+                ];
+              };
+            };
+          }
+          // lib.optionalAttrs hasWireless {
+            systemd = {
+              packages = [ pkgs.wpa_supplicant ];
+              initrdBin = [
+                pkgs.wpa_supplicant
+                pkgs.coreutils
+                pkgs.systemd
+                pkgs.iproute2
+              ];
+
+              targets.initrd.wants = [
+                "wpa_supplicant@${interface}.service"
+                "systemd-resolved.service"
+              ];
+              services = {
+                "wpa_supplicant@" = {
+                  unitConfig.DefaultDependencies = false;
+                  after = lib.mkForce [ "sys-subsystem-net-devices-%i.device" ];
+                  requires = lib.mkForce [ "sys-subsystem-net-devices-%i.device" ];
+                };
+
+                systemd-networkd.after = [ "wpa_supplicant@${interface}.service" ];
+
+                sshd = {
+                  after = lib.mkForce [ "network.target" ];
+                  wants = lib.mkForce [ ];
+                  requires = lib.mkForce [ ];
+                };
+
+                resolved.enable = true;
+              };
+            };
+
+            compressor = "zstd";
+            compressorArgs = [ "-12" ];
+            extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
+            secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" = secrets.wpa-supplicant-initrd.path;
+          };
+
+          # Wire generator dependency for wpa-supplicant-initrd (needs NixOS config context)
+          age.secrets.wpa-supplicant-initrd.generator.dependencies = [
+            config.age.secrets.wpa-supplicant-keys-for-initrd
           ];
 
-          clevis = lib.mkIf (config.boot.supportedFilesystems.zfs or false) {
-            enable = true;
-            useTang = true;
-            devices.zroot.secretFile = jweToken;
-          };
-
-          systemd = {
-            inherit (config.systemd) network;
-          };
-
-
-          network = {
-            enable = true;
-            ssh = {
-              enable = true;
-              port = 22;
-              authorizedKeys = wheelSshKeys;
-              hostKeys = [
-                secrets.initrd_host_ed25519_key.path
+          # Ensure valid initrd host key exists even on first boot
+          system.activationScripts = {
+            agenixEnsureInitrdHostkey = {
+              text = ''
+                [[ -e ${secrets.initrd_host_ed25519_key.path} ]] \
+                  || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${secrets.initrd_host_ed25519_key.path}
+              '';
+              deps = [
+                "agenixInstall"
+                "users"
               ];
             };
+
+            agenixEnsureInitrdWpaSupplicantConfig = {
+              text = ''
+                if [[ ! -e ${secrets.wpa-supplicant-initrd.path} ]]; then
+                  cat > ${secrets.wpa-supplicant-initrd.path} <<'EOF'
+                ctrl_interface=/var/run/wpa_supplicant
+                update_config=1
+                EOF
+                  chmod 600 ${secrets.wpa-supplicant-initrd.path}
+                fi
+              '';
+              deps = [
+                "agenixInstall"
+              ];
+            };
+
+            agenixChown.deps = [
+              "agenixEnsureInitrdHostkey"
+              "agenixEnsureInitrdWpaSupplicantConfig"
+            ];
           };
         }
-        // lib.optionalAttrs hasWireless {
-          systemd = {
-            packages = [ pkgs.wpa_supplicant ];
-            initrdBin = [
-              pkgs.wpa_supplicant
-              pkgs.coreutils
-              pkgs.systemd
-              pkgs.iproute2
-            ];
-
-            targets.initrd.wants = [
-              "wpa_supplicant@${interface}.service"
-              "systemd-resolved.service"
-            ];
-            services = {
-              "wpa_supplicant@" = {
-                unitConfig.DefaultDependencies = false;
-                after = lib.mkForce [ "sys-subsystem-net-devices-%i.device" ];
-                requires = lib.mkForce [ "sys-subsystem-net-devices-%i.device" ];
-              };
-
-              systemd-networkd.after = [ "wpa_supplicant@${interface}.service" ];
-
-              sshd = {
-                after = lib.mkForce [ "network.target" ];
-                wants = lib.mkForce [ ];
-                requires = lib.mkForce [ ];
-              };
-
-              resolved.enable = true;
-            };
-          };
-
-          compressor = "zstd";
-          compressorArgs = [ "-12" ];
-          extraFirmwarePaths = [ "iwlwifi-so-a0-gf-a0-89.ucode.zst" ];
-          secrets."/etc/wpa_supplicant/wpa_supplicant-${interface}.conf" = secrets.wpa-supplicant-initrd.path;
-        };
-
-        # Wire generator dependency for wpa-supplicant-initrd (needs NixOS config context)
-        age.secrets.wpa-supplicant-initrd.generator.dependencies = [
-          config.age.secrets.wpa-supplicant-keys-for-initrd
-        ];
-
-        # Ensure valid initrd host key exists even on first boot
-        system.activationScripts = {
-          agenixEnsureInitrdHostkey = {
-            text = ''
-              [[ -e ${secrets.initrd_host_ed25519_key.path} ]] \
-                || ${pkgs.openssh}/bin/ssh-keygen -t ed25519 -N "" -f ${secrets.initrd_host_ed25519_key.path}
-            '';
-            deps = [
-              "agenixInstall"
-              "users"
-            ];
-          };
-
-          agenixEnsureInitrdWpaSupplicantConfig = {
-            text = ''
-              if [[ ! -e ${secrets.wpa-supplicant-initrd.path} ]]; then
-                cat > ${secrets.wpa-supplicant-initrd.path} <<'EOF'
-              ctrl_interface=/var/run/wpa_supplicant
-              update_config=1
-              EOF
-                chmod 600 ${secrets.wpa-supplicant-initrd.path}
-              fi
-            '';
-            deps = [
-              "agenixInstall"
-            ];
-          };
-
-          agenixChown.deps = [
-            "agenixEnsureInitrdHostkey"
-            "agenixEnsureInitrdWpaSupplicantConfig"
-          ];
-        };
-      }
-      # Separate mkMerge entry: boot.initrd.systemd.services can't coexist
-      # with boot.initrd = { systemd = { inherit network; }; } in the same
-      # attrset — the inherit clobbers sibling keys.
-      {
-        boot.initrd.systemd.services.zfs-import-zroot.preStart = ''
-          /bin/sleep 10
-          ${lib.getExe config.boot.zfs.package} load-key -a
-        '';
-      }
+        # Separate mkMerge entry: boot.initrd.systemd.services can't coexist
+        # with boot.initrd = { systemd = { inherit network; }; } in the same
+        # attrset — the inherit clobbers sibling keys.
+        {
+          boot.initrd.systemd.services.zfs-import-zroot.preStart = ''
+            /bin/sleep 10
+            ${lib.getExe config.boot.zfs.package} load-key -a
+          '';
+        }
       ];
 
     persist = {
@@ -205,7 +204,7 @@ in
       { host, ... }:
       let
         env = environments.${host.environment};
-        wireless = (env.networks.default or { }).wireless or null;
+        inherit ((env.networks.default or { })) wireless;
       in
       {
         age.secrets = {

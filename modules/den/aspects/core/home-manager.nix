@@ -10,7 +10,7 @@ _: {
 
       home-manager.sharedModules = [
         (
-          { osConfig, lib, ... }:
+          { osConfig, ... }:
           {
             home.stateVersion = osConfig.system.stateVersion;
             programs.home-manager.enable = true;

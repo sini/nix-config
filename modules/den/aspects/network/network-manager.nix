@@ -3,7 +3,6 @@ _: {
     nixos =
       {
         pkgs,
-        lib,
         ...
       }:
       {

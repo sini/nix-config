@@ -14,7 +14,8 @@ _: {
         # drops termite from the list (already removed on master).
         environment.enableAllTerminfo = false;
         environment.systemPackages = map (x: x.terminfo) (
-          with pkgs; [
+          with pkgs;
+          [
             alacritty
             contour
             foot

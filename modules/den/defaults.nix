@@ -14,13 +14,12 @@
     den.aspects.core.resolved-user-emitter
 
     # Include den.aspects.<hostname>.<username> if it exists
-    (den.lib.policy.mkPolicy "user-aspect-auto-include"
-      ({ host, user, ... }:
-        lib.optional
-          (den.aspects ? ${host.name} && den.aspects.${host.name} ? ${user.name})
-          (den.lib.policy.include den.aspects.${host.name}.${user.name})
+    (den.lib.policy.mkPolicy "user-aspect-auto-include" (
+      { host, user, ... }:
+      lib.optional (den.aspects ? ${host.name} && den.aspects.${host.name} ? ${user.name}) (
+        den.lib.policy.include den.aspects.${host.name}.${user.name}
       )
-    )
+    ))
   ];
 
   # Wire den batteries that every host/user should have

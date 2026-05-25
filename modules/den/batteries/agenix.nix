@@ -71,11 +71,16 @@ let
         };
     };
   agenixUserAspect =
-    { user, host, secretsConfig, ... }:
+    {
+      user,
+      host,
+      secretsConfig,
+      ...
+    }:
     {
       name = "agenix-identity/${user.name}@${host.name}";
       ${host.class} =
-        { config, ... }:
+        _:
         {
           age.secrets."user-identity-${user.name}" = {
             rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
@@ -96,10 +101,8 @@ let
             rekey = {
               inherit (secretsConfig) masterIdentities;
               storageMode = "local";
-              generatedSecretsDir =
-                rootPath + "/.secrets/generated/${user.name}/${host.name}";
-              localStorageDir =
-                rootPath + "/.secrets/rekeyed/${user.name}/${host.name}";
+              generatedSecretsDir = rootPath + "/.secrets/generated/${user.name}/${host.name}";
+              localStorageDir = rootPath + "/.secrets/rekeyed/${user.name}/${host.name}";
               hostPubkey =
                 if (osConfig.age.secrets ? "user-identity-${user.name}") then
                   (rootPath + "/.secrets/users/${user.name}/id_agenix.pub")
