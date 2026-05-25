@@ -79,7 +79,9 @@ in
       (den.lib.policy.instantiate {
         name = "${host.name}-colmena";
         class = "colmena";
-        instantiate = { modules, ... }: lib.flatten modules;
+        instantiate =
+          { modules, ... }:
+          lib.concatMap (m: if m ? imports then lib.flatten m.imports else lib.toList m) modules;
         intoAttr = [
           "colmenaDeployment"
           host.name
