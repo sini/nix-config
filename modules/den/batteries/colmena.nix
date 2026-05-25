@@ -52,6 +52,7 @@ let
     // {
       meta = {
         nixpkgs = withSystem localSystem ({ pkgs, ... }: pkgs);
+        nix-darwin = inputs.nix-darwin-unstable;
         nodeSpecialArgs = lib.mapAttrs (
           name: _:
           (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
