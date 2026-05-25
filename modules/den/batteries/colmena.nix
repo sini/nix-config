@@ -1,9 +1,8 @@
 # Colmena battery: policy-driven hive from host entities.
 #
-# Each host's colmena-tags quirk is piped and routed into the colmena
-# class.  policy.route + instantiate collects the tags per-host into
-# flake.colmenaDeployment.<host>, then the hive is assembled from host
-# entities + collected deployment data.
+# Each host's colmena-tags quirk is piped and collected. A default
+# colmena class aspect captures the pipe data, and policy.instantiate
+# evaluates it per-host into flake.colmenaDeployment.<host>.
 {
   den,
   lib,
@@ -75,31 +74,27 @@ in
   # Colmena class — receives collected colmena-tags pipe data.
   den.classes.colmena.description = "Colmena deployment metadata";
 
-  # Per-host: route colmena class into flake.colmenaDeployment.<host>.
-  # The colmena class module receives colmena-tags as a function arg
-  # (from pipe collection) and produces a tag list.
+  # Per-host: instantiate colmena class into flake.colmenaDeployment.<host>.
   den.policies.host-to-colmena =
     { host, ... }:
     [
-      (den.lib.policy.route {
-        fromClass = "colmena";
-        intoClass = "flake";
-        path = [
-          "colmenaDeployment"
-          host.name
-        ];
+      (den.lib.policy.instantiate {
+        name = "${host.name}-colmena";
+        class = "colmena";
         instantiate =
           { modules, ... }:
           let
             evaluated = lib.evalModules {
               modules = modules ++ [
-                {
-                  config._module.freeformType = lib.types.lazyAttrsOf lib.types.unspecified;
-                }
+                { config._module.freeformType = lib.types.lazyAttrsOf lib.types.unspecified; }
               ];
             };
           in
           evaluated.config.tags or [ ];
+        intoAttr = [
+          "colmenaDeployment"
+          host.name
+        ];
       })
     ];
 
@@ -117,7 +112,7 @@ in
     den.policies.collect-colmena-tags
   ];
 
-  # Default colmena class aspect — captures pipe data into config.
+  # Default colmena class aspect — captures colmena-tags pipe data.
   den.aspects.colmena-tag-collector = {
     colmena =
       { colmena-tags, ... }:
