@@ -71,6 +71,7 @@ in
 
       inherit (diagram.export)
         entityEntries
+        filterByRender
         mkGallery
         mkWriteScript
         entriesToPackages
@@ -150,6 +151,48 @@ in
           drv = hostSummaryDrvs."${host.name}-summary";
         }
       ) allHosts;
+
+      # --- Per-user entries ---
+
+      mkUserEntity =
+        u:
+        let
+          captured = den.lib.capture.captureWithPathsWith {
+            classes = lib.unique (
+              [ "homeManager" "user" ]
+              ++ (u.user.classes or [ "homeManager" ])
+            );
+            root = den.lib.resolveEntity "user" { inherit (u) host user; };
+            ctx = { inherit (u) host user; };
+          };
+        in
+        diagram.context {
+          inherit (captured) entries ctxTrace pathsByClass;
+          name = u.userName;
+        };
+
+      userViewDefs = classes: rc.views.user ++ rc.views.classViews classes;
+
+      allUsers = lib.concatMap (
+        host:
+        lib.mapAttrsToList (userName: user: {
+          inherit host user userName;
+          name = "${host.name}-${userName}";
+        }) (host.users or { })
+      ) allHosts;
+
+      userEntries = lib.concatMap (
+        u:
+        let
+          entity = mkUserEntity u;
+        in
+        entityEntries { inherit pkgs rc; } {
+          inherit entity;
+          name = u.userName;
+          dir = "hosts/${u.host.name}/users/${u.userName}";
+          viewDefs = userViewDefs (graphClasses entity);
+        }
+      ) allUsers;
 
       # --- TOPOLOGY.md sections (inline mermaid for GitHub rendering) ---
 
@@ -250,7 +293,7 @@ in
 
       # --- Assembly ---
 
-      everyEntry = hostEntries ++ hostSummaryEntries ++ fleetViewEntries;
+      everyEntry = hostEntries ++ hostSummaryEntries ++ userEntries ++ fleetViewEntries;
 
       # --- Galleries ---
 
@@ -276,7 +319,19 @@ in
         };
       };
 
-      galleries = hostGalleries ++ [ fleetGallery ];
+      userGalleries = map (
+        u: {
+          path = "diagrams/hosts/${u.host.name}/users/${u.userName}.md";
+          drv = mkGallery pkgs {
+            name = u.userName;
+            dir = "hosts/${u.host.name}/users/${u.userName}";
+            title = "Gallery: ${u.userName} @ ${u.host.name}";
+            entries = everyEntry;
+          };
+        }
+      ) allUsers;
+
+      galleries = hostGalleries ++ userGalleries ++ [ fleetGallery ];
 
       # --- TOPOLOGY.md ---
 
