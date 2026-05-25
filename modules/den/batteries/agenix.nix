@@ -7,7 +7,7 @@
 {
   den,
   inputs,
-  self,
+  rootPath,
   lib,
   ...
 }:
@@ -57,57 +57,55 @@ let
           # Make secrets paths available as module arg
           _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
 
-          # Make agenix home-manager module available + configure per-user rekey
+          # Make agenix home-manager module available
           home-manager.sharedModules = [
             inputs.agenix.homeManagerModules.default
             inputs.agenix-rekey.homeManagerModules.default
             (
-              {
-                config,
-                osConfig,
-                lib,
-                ...
-              }:
+              { config, lib, ... }:
               {
                 _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
-
-                age = {
-                  identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${config.home.username}") [
-                    osConfig.age.secrets."user-identity-${config.home.username}".path
-                  ];
-
-                  rekey = {
-                    inherit (secretsConfig) masterIdentities;
-                    storageMode = "local";
-                    generatedSecretsDir =
-                      self + "/.secrets/generated/${config.home.username}/${osConfig.networking.hostName}";
-                    localStorageDir =
-                      self + "/.secrets/rekeyed/${config.home.username}/${osConfig.networking.hostName}";
-                    hostPubkey =
-                      if (osConfig.age.secrets ? "user-identity-${config.home.username}") then
-                        (self + "/.secrets/users/${config.home.username}/id_agenix.pub")
-                      else
-                        osConfig.age.rekey.hostPubkey;
-                  };
-                };
               }
             )
           ];
         };
     };
   agenixUserAspect =
-    { user, host, ... }:
+    { user, host, secretsConfig, ... }:
     {
       name = "agenix-identity/${user.name}@${host.name}";
       ${host.class} =
-        { ... }:
+        { config, ... }:
         {
           age.secrets."user-identity-${user.name}" = {
-            rekeyFile = self + "/.secrets/users/${user.name}/id_agenix.age";
+            rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
             owner = user.name;
             group = user.name;
             mode = "600";
             generator.script = "age-identity";
+          };
+        };
+      homeManager =
+        { osConfig, ... }:
+        {
+          age = {
+            identityPaths = lib.optionals (osConfig.age.secrets ? "user-identity-${user.name}") [
+              osConfig.age.secrets."user-identity-${user.name}".path
+            ];
+
+            rekey = {
+              inherit (secretsConfig) masterIdentities;
+              storageMode = "local";
+              generatedSecretsDir =
+                rootPath + "/.secrets/generated/${user.name}/${host.name}";
+              localStorageDir =
+                rootPath + "/.secrets/rekeyed/${user.name}/${host.name}";
+              hostPubkey =
+                if (osConfig.age.secrets ? "user-identity-${user.name}") then
+                  (rootPath + "/.secrets/users/${user.name}/id_agenix.pub")
+                else
+                  osConfig.age.rekey.hostPubkey;
+            };
           };
         };
     };

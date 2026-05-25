@@ -1,11 +1,11 @@
-{ self, ... }:
+{ rootPath, ... }:
 {
   den.aspects.apps.spotify-player = {
     homeManager =
-      { config, secrets, ... }:
+      { host, user, config, secrets, ... }:
       {
         age.secrets.spotify-player-credentials = {
-          rekeyFile = self + "/.secrets/users/${config.home.username}/spotify-player-credentials.age";
+          rekeyFile = rootPath + "/.secrets/users/${user.name}/spotify-player-credentials.age";
           mode = "640";
         };
 
