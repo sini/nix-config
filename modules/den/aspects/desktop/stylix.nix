@@ -101,13 +101,11 @@
         ...
       }:
       {
-        stylix = lib.mkMerge stylix-hm;
-
         imports = [
           inputs.stylix.homeModules.stylix
         ];
 
-        stylix = {
+        stylix = lib.mkMerge (stylix-hm ++ [{
           base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
 
           enable = true;
@@ -152,7 +150,7 @@
               name = "Noto Color Emoji";
             };
           };
-        };
+        }]);
       };
   };
 }
