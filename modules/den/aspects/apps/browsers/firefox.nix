@@ -205,6 +205,8 @@ in
           };
         };
 
+        stylix.targets.firefox.profileNames = [ "default" ];
+
         xdg.mimeApps.defaultApplications = {
           "text/html" = [ "firefox.desktop" ];
           "text/xml" = [ "firefox.desktop" ];

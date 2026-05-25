@@ -5,8 +5,8 @@
       { pkgs, ... }:
       {
         home.packages = [
-          inputs.nix-ai-tools.packages.${pkgs.system}.claude-code
-          inputs.nix-ai-tools.packages.${pkgs.system}.crush
+          inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.claude-code
+          inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.crush
         ];
       };
 

@@ -13,6 +13,8 @@ _: {
           { osConfig, ... }:
           {
             home.stateVersion = osConfig.system.stateVersion;
+            # HM master is 26.05 while nixpkgs-unstable bumped to 26.11
+            home.enableNixpkgsReleaseCheck = false;
             programs.home-manager.enable = true;
             systemd.user.startServices = "sd-switch";
           }
@@ -30,6 +32,7 @@ _: {
           { lib, ... }:
           {
             home.stateVersion = lib.trivial.release;
+            home.enableNixpkgsReleaseCheck = false;
             programs.home-manager.enable = true;
           }
         )

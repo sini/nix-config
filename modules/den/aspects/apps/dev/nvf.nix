@@ -90,7 +90,6 @@
               haskell.enable = false;
               ruby.enable = false;
 
-              tailwind.enable = false;
               svelte.enable = false;
             };
 
