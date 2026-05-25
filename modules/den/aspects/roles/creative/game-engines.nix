@@ -1,6 +1,6 @@
 _: {
   den.aspects.roles.creative.game-engines = {
-    colmena-tags = [ "creative" ];
+    colmena = [ "creative" ];
     homeManager =
       { pkgs, ... }:
       {

@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.vault = {
-    colmena-tags = [ "vault" ];
+    colmena = [ "vault" ];
     includes = [ den.aspects.services.vault ];
   };
 }

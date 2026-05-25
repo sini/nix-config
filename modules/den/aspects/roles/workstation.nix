@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.workstation = {
-    colmena-tags = [ "workstation" ];
+    colmena = [ "workstation" ];
     includes = with den.aspects; [
       # Hardware
       hardware.audio

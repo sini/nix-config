@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.bgp-hub = {
-    colmena-tags = [ "bgp-hub" ];
+    colmena = [ "bgp-hub" ];
     includes = [ den.aspects.services.bgp.hub ];
   };
 }

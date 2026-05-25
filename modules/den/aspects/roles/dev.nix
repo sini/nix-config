@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.dev = {
-    colmena-tags = [ "dev" ];
+    colmena = [ "dev" ];
     includes = with den.aspects; [
       hardware.adb
       apps.direnv

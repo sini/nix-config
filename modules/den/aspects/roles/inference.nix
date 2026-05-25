@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.inference = {
-    colmena-tags = [ "inference" ];
+    colmena = [ "inference" ];
     includes = with den.aspects; [
       services.ollama
     ];

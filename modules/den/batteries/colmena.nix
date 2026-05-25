@@ -1,8 +1,8 @@
 # Colmena battery: policy-driven hive from host entities.
 #
-# Aspects emit colmena-tags quirk entries. pipe.collect gathers them
-# per-host scope, pipe.to delivers to a sink aspect that emits the
-# tags into the flake class keyed by host name.
+# Aspects emit tag lists into the colmena class (e.g. colmena = [ "server" ]).
+# policy.instantiate collects and flattens them per-host into
+# flake.colmenaDeployment.<host>, then the hive reads them as tags.
 {
   den,
   lib,
@@ -13,8 +13,6 @@
   ...
 }:
 let
-  inherit (den.lib.policy) pipe;
-
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
     builtins.attrNames (config.den.hosts or { })
   );
@@ -62,14 +60,6 @@ let
     };
 in
 {
-  options.flake.colmenaDeployment = lib.mkOption {
-    type = lib.types.attrsOf (lib.types.listOf lib.types.str);
-    default = { };
-    description = "Per-host colmena tags collected from aspects";
-  };
-
-  config = {
-
   flake-file.inputs.colmena = {
     url = "github:sini/colmena/feat/local-system-detection";
     inputs = {
@@ -79,31 +69,26 @@ in
     };
   };
 
-  # Per-host: collect colmena-tags and route to sink.
-  den.policies.collect-colmena-tags =
-    _:
+  # Colmena class — aspects emit static tag lists into this.
+  den.classes.colmena.description = "Colmena deployment tags";
+
+  # Per-host: instantiate colmena class, flatten tag lists.
+  den.policies.host-to-colmena =
+    { host, ... }:
     [
-      (pipe.from "colmena-tags" [
-        (pipe.collect (_: true))
-        (pipe.to [ den.aspects.colmena-tag-sink ])
-      ])
+      (den.lib.policy.instantiate {
+        name = "${host.name}-colmena";
+        class = "colmena";
+        instantiate = { modules, ... }: lib.flatten modules;
+        intoAttr = [
+          "colmenaDeployment"
+          host.name
+        ];
+      })
     ];
 
   den.schema.host.includes = [
-    den.policies.collect-colmena-tags
-  ];
-
-  # Sink: receives per-host collected tags and emits into flake class.
-  den.aspects.colmena-tag-sink = {
-    flake =
-      { host, colmena-tags, ... }:
-      {
-        colmenaDeployment.${host.name} = lib.flatten colmena-tags;
-      };
-  };
-
-  den.default.includes = [
-    den.aspects.colmena-tag-sink
+    den.policies.host-to-colmena
   ];
 
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
@@ -128,6 +113,4 @@ in
       };
   };
   den.schema.flake-parts.includes = [ den.aspects.devshell.colmena ];
-
-  }; # config
 }

@@ -1,6 +1,6 @@
 _: {
   den.aspects.roles.cad = {
-    colmena-tags = [ "cad" ];
+    colmena = [ "cad" ];
     homeManager =
       { pkgs, ... }:
       {

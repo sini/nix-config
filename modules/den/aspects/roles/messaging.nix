@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.messaging = {
-    colmena-tags = [ "messaging" ];
+    colmena = [ "messaging" ];
     includes = with den.aspects; [
       apps.discord
       apps.kdeconnect
