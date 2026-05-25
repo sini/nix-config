@@ -155,25 +155,25 @@ graph TD
   system_x86_64_linux["flake-system: system=x86_64-linux"]
 
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will
   environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini
   environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_
-  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-colmena, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-to-hm-users, os-to-host| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-collect-k3s-nodes, cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-collect-k3s-nodes, cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
   cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|cluster-collect-k3s-nodes, cluster-to-hosts, cluster-to-nixidy| cluster_axon_environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
@@ -224,16 +224,16 @@ contributes to a collected dataset available to peers.
 ```mermaid
 graph LR
   subgraph env_dev["dev"]
-    bitstream(["bitstream (core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall)"])
-    blade(["blade (hardware/audio→persistHome, hardware/bluetooth→persist, desktop/stylix→persist, desktop/gnome→persist, roles/laptop→persist, network/wireless→persist, apps/gpg→persistHome, apps/claude→persistHome, apps/ssh→persistHome, apps/vscode→persistHome, apps/gitkraken→persistHome, hardware/razer→persistHome, network/network-boot→age-secrets, network/network-boot→persist, network/openssh→persist, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/hosts→host-addrs)"])
-    cortex(["cortex (hardware/audio→persistHome, hardware/bluetooth→persist, desktop/stylix→persist, desktop/gnome→persist, apps/gpg→persistHome, apps/claude→persistHome, apps/ssh→persistHome, apps/vscode→persistHome, apps/gitkraken→persistHome, services/ollama→ollama-endpoints, services/ollama→persist, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, network/network-boot→age-secrets, network/network-boot→persist, network/openssh→persist, secrets/agenix→persist, core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/hosts→host-addrs)"])
-    patch(["patch (core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, apps/gpg→persistHome, apps/claude→persistHome, apps/ssh→persistHome)"])
+    bitstream(["bitstream (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall)"])
+    blade(["blade (hardware/audio→persistHome, hardware/bluetooth→persist, desktop/stylix→persist, desktop/gnome→persist, roles/laptop→persist, network/wireless→persist, apps/gpg→persistHome, apps/claude→persistHome, apps/vscode→persistHome, apps/gitkraken→persistHome, hardware/razer→persistHome, network/network-boot→age-secrets, network/network-boot→persist, network/openssh→persist, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/hosts→host-addrs)"])
+    cortex(["cortex (hardware/audio→persistHome, hardware/bluetooth→persist, desktop/stylix→persist, desktop/gnome→persist, apps/gpg→persistHome, apps/claude→persistHome, apps/vscode→persistHome, apps/gitkraken→persistHome, services/ollama→cache, services/ollama→ollama-endpoints, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, network/network-boot→age-secrets, network/network-boot→persist, network/openssh→persist, secrets/agenix→persist, core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist)"])
+    patch(["patch (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, apps/gpg→persistHome, apps/claude→persistHome)"])
   end
   subgraph env_prod["prod"]
-    axon_01(["axon-01 (core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s-containerd→persist, services/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
-    axon_02(["axon-02 (core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s-containerd→persist, services/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
-    axon_03(["axon-03 (core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s-containerd→persist, services/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
-    uplink(["uplink (core/systemd→cache, core/firmware→persist, core/security→persist, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/prometheus→firewall, services/prometheus→persist, services/prometheus→prometheus-targets, services/prometheus→service-domains, services/loki→firewall, services/loki→persist, services/loki→service-domains, services/grafana→age-secrets, services/grafana→persist, services/grafana→service-domains, services/bgp→bgp-peers, services/bgp→firewall, services/headscale→age-secrets, services/headscale→firewall, services/headscale→persist, services/headscale→prometheus-targets, services/headscale→service-domains, services/nginx→firewall, services/nginx→persist, services/nginx→prometheus-targets, services/kanidm→age-secrets, services/kanidm→firewall, services/kanidm→persist, services/kanidm→service-domains, services/haproxy→firewall, services/jellyfin→firewall, services/jellyfin→persist, services/jellyfin→service-domains, services/homepage→service-domains, services/oauth2-proxy→age-secrets, services/oauth2-proxy→service-domains, services/ollama→ollama-endpoints, services/ollama→persist, services/open-webui→age-secrets, services/open-webui→persist, services/open-webui→service-domains, services/attic→age-secrets, services/attic→persist, services/attic→service-domains, services/tailscale→age-secrets, services/tailscale→persist, services/den-docs-mirror→persist, services/den-docs-mirror→service-domains)"])
+    axon_01(["axon-01 (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s-containerd→persist, services/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
+    axon_02(["axon-02 (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s-containerd→persist, services/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
+    axon_03(["axon-03 (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s-containerd→persist, services/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
+    uplink(["uplink (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall, services/prometheus→firewall, services/prometheus→persist, services/prometheus→prometheus-targets, services/prometheus→service-domains, services/loki→firewall, services/loki→persist, services/loki→service-domains, services/grafana→age-secrets, services/grafana→persist, services/grafana→service-domains, services/bgp→bgp-peers, services/bgp→firewall, services/headscale→age-secrets, services/headscale→firewall, services/headscale→persist, services/headscale→prometheus-targets, services/headscale→service-domains, services/nginx→firewall, services/nginx→persist, services/nginx→prometheus-targets, services/kanidm→age-secrets, services/kanidm→firewall, services/kanidm→persist, services/kanidm→service-domains, services/haproxy→firewall, services/jellyfin→firewall, services/jellyfin→persist, services/jellyfin→service-domains, services/homepage→service-domains, services/oauth2-proxy→age-secrets, services/oauth2-proxy→service-domains, services/ollama→cache, services/ollama→ollama-endpoints, services/open-webui→age-secrets, services/open-webui→persist, services/open-webui→service-domains, services/attic→age-secrets, services/attic→cache, services/attic→service-domains, services/den-docs-mirror→persist, services/den-docs-mirror→service-domains)"])
   end
 
   cortex -->|ollama-endpoints| bitstream
@@ -328,26 +328,35 @@ sequenceDiagram
     Note over axon_03: core/systemd → cache
     Note over bitstream: core/systemd → cache
     Note over blade: core/systemd → cache
-    Note over cortex: core/systemd → cache
+    Note over cortex: services/ollama, core/systemd → cache
     Note over patch: core/systemd → cache
-    Note over uplink: core/systemd → cache
+    Note over uplink: core/systemd, services/ollama, services/attic → cache
 
-    Note over axon_01: core/firmware, core/security, network/openssh, secrets/agenix, network/network-boot, services/acme, services/tang, services/k3s, services/k3s-containerd → persist
-    Note over axon_02: core/firmware, core/security, network/openssh, secrets/agenix, network/network-boot, services/acme, services/tang, services/k3s, services/k3s-containerd → persist
-    Note over axon_03: core/firmware, core/security, network/openssh, secrets/agenix, network/network-boot, services/acme, services/tang, services/k3s, services/k3s-containerd → persist
-    Note over bitstream: core/firmware, core/security, network/openssh, secrets/agenix, network/network-boot, services/acme, services/tang → persist
+    Note over axon_01: core/firmware, core/security, network/openssh, services/tailscale, secrets/agenix, network/network-boot, services/acme, services/tang, services/k3s, services/k3s-containerd → persist
+    Note over axon_02: core/firmware, core/security, network/openssh, services/tailscale, secrets/agenix, network/network-boot, services/acme, services/tang, services/k3s, services/k3s-containerd → persist
+    Note over axon_03: core/firmware, core/security, network/openssh, services/tailscale, secrets/agenix, network/network-boot, services/acme, services/tang, services/k3s, services/k3s-containerd → persist
+    Note over bitstream: core/firmware, core/security, network/openssh, services/tailscale, secrets/agenix, network/network-boot, services/acme, services/tang → persist
     Note over blade: hardware/bluetooth, desktop/stylix, desktop/gnome, roles/laptop, network/wireless, network/network-boot, network/openssh, services/tailscale, secrets/agenix, core/firmware, core/security → persist
-    Note over cortex: hardware/bluetooth, desktop/stylix, desktop/gnome, services/ollama, network/network-boot, network/openssh, secrets/agenix, core/firmware, core/security → persist
-    Note over patch: core/firmware, core/security, network/openssh → persist
-    Note over uplink: core/firmware, core/security, network/openssh, secrets/agenix, network/network-boot, services/acme, services/tang, services/prometheus, services/loki, services/grafana, services/headscale, services/nginx, services/kanidm, services/jellyfin, services/ollama, services/open-webui, services/attic, services/tailscale, services/den-docs-mirror → persist
+    Note over cortex: hardware/bluetooth, desktop/stylix, desktop/gnome, network/network-boot, network/openssh, secrets/agenix, core/firmware, core/security, services/tailscale → persist
+    Note over patch: core/firmware, core/security, network/openssh, services/tailscale → persist
+    Note over uplink: core/firmware, core/security, network/openssh, services/tailscale, secrets/agenix, network/network-boot, services/acme, services/tang, services/prometheus, services/loki, services/grafana, services/headscale, services/nginx, services/kanidm, services/jellyfin, services/open-webui, services/den-docs-mirror → persist
+
+    Note over axon_01: core/nix-remote-build-client, services/tailscale, network/network-boot, services/acme, services/nix-remote-build-server, services/k3s → age-secrets
+    Note over axon_02: core/nix-remote-build-client, services/tailscale, network/network-boot, services/acme, services/nix-remote-build-server, services/k3s → age-secrets
+    Note over axon_03: core/nix-remote-build-client, services/tailscale, network/network-boot, services/acme, services/nix-remote-build-server, services/k3s → age-secrets
+    Note over bitstream: core/nix-remote-build-client, services/tailscale, network/network-boot, services/acme, services/nix-remote-build-server → age-secrets
+    Note over blade: network/network-boot, services/tailscale, core/nix-remote-build-client → age-secrets
+    Note over cortex: services/nix-remote-build-server, network/network-boot, core/nix-remote-build-client, services/tailscale → age-secrets
+    Note over patch: core/nix-remote-build-client, services/tailscale → age-secrets
+    Note over uplink: core/nix-remote-build-client, services/tailscale, network/network-boot, services/acme, services/nix-remote-build-server, services/grafana, services/headscale, services/kanidm, services/oauth2-proxy, services/open-webui, services/attic → age-secrets
 
     Note over axon_01: apps/zsh → persistHome
     Note over axon_02: apps/zsh → persistHome
     Note over axon_03: apps/zsh → persistHome
     Note over bitstream: apps/zsh → persistHome
-    Note over blade: hardware/audio, apps/gpg, apps/claude, apps/ssh, apps/vscode, apps/gitkraken, hardware/razer, apps/zsh → persistHome
-    Note over cortex: hardware/audio, apps/gpg, apps/claude, apps/ssh, apps/vscode, apps/gitkraken, apps/zsh → persistHome
-    Note over patch: apps/zsh, apps/gpg, apps/claude, apps/ssh → persistHome
+    Note over blade: hardware/audio, apps/gpg, apps/claude, apps/vscode, apps/gitkraken, hardware/razer, apps/zsh → persistHome
+    Note over cortex: hardware/audio, apps/gpg, apps/claude, apps/vscode, apps/gitkraken, apps/zsh → persistHome
+    Note over patch: apps/zsh, apps/gpg, apps/claude → persistHome
     Note over uplink: apps/zsh → persistHome
 
     Note over axon_01: network/hosts → host-addrs
@@ -359,13 +368,14 @@ sequenceDiagram
     Note over patch: network/hosts → host-addrs
     Note over uplink: network/hosts → host-addrs
 
-    Note over axon_01: network/network-boot, services/acme, services/nix-remote-build-server, services/k3s → age-secrets
-    Note over axon_02: network/network-boot, services/acme, services/nix-remote-build-server, services/k3s → age-secrets
-    Note over axon_03: network/network-boot, services/acme, services/nix-remote-build-server, services/k3s → age-secrets
-    Note over bitstream: network/network-boot, services/acme, services/nix-remote-build-server → age-secrets
-    Note over blade: network/network-boot, services/tailscale → age-secrets
-    Note over cortex: services/nix-remote-build-server, network/network-boot → age-secrets
-    Note over uplink: network/network-boot, services/acme, services/nix-remote-build-server, services/grafana, services/headscale, services/kanidm, services/oauth2-proxy, services/open-webui, services/attic, services/tailscale → age-secrets
+    Note over axon_01: core/resolved-user-emitter → resolved-users
+    Note over axon_02: core/resolved-user-emitter → resolved-users
+    Note over axon_03: core/resolved-user-emitter → resolved-users
+    Note over bitstream: core/resolved-user-emitter → resolved-users
+    Note over blade: core/resolved-user-emitter → resolved-users
+    Note over cortex: core/resolved-user-emitter → resolved-users
+    Note over patch: core/resolved-user-emitter → resolved-users
+    Note over uplink: core/resolved-user-emitter → resolved-users
 
     Note over axon_01: services/tang, services/nix-remote-build-server, services/bgp → firewall
     Note over axon_02: services/tang, services/nix-remote-build-server, services/bgp → firewall
@@ -373,6 +383,13 @@ sequenceDiagram
     Note over bitstream: services/tang, services/nix-remote-build-server → firewall
     Note over cortex: services/nix-remote-build-server → firewall
     Note over uplink: services/tang, services/nix-remote-build-server, services/prometheus, services/loki, services/bgp, services/headscale, services/nginx, services/kanidm, services/haproxy, services/jellyfin → firewall
+
+    Note over axon_01: roles/nix-builder → nix-builders
+    Note over axon_02: roles/nix-builder → nix-builders
+    Note over axon_03: roles/nix-builder → nix-builders
+    Note over bitstream: roles/nix-builder → nix-builders
+    Note over cortex: roles/nix-builder → nix-builders
+    Note over uplink: roles/nix-builder → nix-builders
 
     Note over cortex: services/ollama → ollama-endpoints
     Note over uplink: services/ollama → ollama-endpoints
@@ -520,7 +537,7 @@ aspect distribution, pipe relationships, and policy execution.
 
 - **2** environments, **11** hosts, **12** users
 - Scope chain: flake → fleet → cluster → user → host → environment → flake-system → flake-parts
-- Trace entries: 1454
+- Trace entries: 1615
 
 ## Environments
 
@@ -549,7 +566,7 @@ aspect distribution, pipe relationships, and policy execution.
 
 | Pipe | Scope Boundary | Producers | Collectors |
 | ------ | ---------------- | ----------- | ------------ |
-| age-secrets | environment: dev | bitstream, blade, cortex |  |
+| age-secrets | environment: dev | bitstream, blade, cortex, patch |  |
 | age-secrets | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
 | age-secrets | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
 | cache | environment: dev | bitstream, blade, cortex, patch |  |
@@ -564,6 +581,9 @@ aspect distribution, pipe relationships, and policy execution.
 | host-addrs | environment: dev | bitstream, blade, cortex, patch |  |
 | host-addrs | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
 | host-addrs | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
+| nix-builders | environment: dev | bitstream, cortex |  |
+| nix-builders | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
+| nix-builders | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
 | os | environment: dev | bitstream, blade, cortex, patch |  |
 | os | environment: prod | axon-01, axon-02, axon-03, uplink, axon-01, axon-02, axon-03 |  |
 | os | cluster: axon | axon-01, axon-02, axon-03, axon-01, axon-02, axon-03 |  |
@@ -621,7 +641,6 @@ aspect distribution, pipe relationships, and policy execution.
 | collect-thunderbolt-mesh-peers | host |
 | collect-vault-peers | host |
 | env-users | host |
-| host-to-colmena | host |
 | host-to-hm-users | host |
 | os-to-host | host |
 | hm-user-detect | user |
@@ -629,6 +648,7 @@ aspect distribution, pipe relationships, and policy execution.
 | homeDarwin-to-hm | user |
 | user-to-host | user |
 | homeLinux-to-hm | user |
+| user-aspect-auto-include | user |
 | env-to-clusters | environment |
 | cluster-collect-k3s-nodes | cluster |
 | cluster-to-hosts | cluster |
