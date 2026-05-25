@@ -44,7 +44,7 @@ let
     ) allHosts;
 
   hiveConfig =
-    args@{ localSystem ? "x86_64-linux", ... }:
+    { localSystem ? "x86_64-linux", ... }:
     let
       nodes = colmenaNodes { inherit localSystem; };
     in
