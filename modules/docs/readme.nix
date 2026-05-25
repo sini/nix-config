@@ -8,6 +8,7 @@ in
       "logo"
       "header"
       "hosts"
+      "den"
       "automatic-import"
       "files"
       "disallow-warnings"
