@@ -10,6 +10,7 @@
 }:
 let
   diagram = inputs.den-diagram.lib;
+  allHosts = lib.concatMap builtins.attrValues (builtins.attrValues (den.hosts or { }));
 
   stripFrontmatter =
     source:
@@ -144,9 +145,32 @@ in
         drv = pkgs.writeText "${name}.md" content;
       };
 
+      hostGraphs = lib.listToAttrs (
+        map (
+          host:
+          let
+            captured = den.lib.capture.captureWithPathsWith {
+              classes = lib.unique (
+                [ "nixos" "homeManager" "user" ]
+                ++ lib.concatMap (u: u.classes or [ ]) (lib.attrValues (host.users or { }))
+              );
+              root = den.lib.resolveEntity "host" { inherit host; };
+              ctx = { inherit host; };
+            };
+          in
+          {
+            name = host.name;
+            value = diagram.context {
+              inherit (captured) entries ctxTrace pathsByClass;
+              name = host.name;
+            };
+          }
+        ) allHosts
+      );
+
       fleetIrDrv = pkgs.runCommand "fleet-ir.json" { nativeBuildInputs = [ pkgs.jq ]; } ''
         echo ${
-          lib.escapeShellArg (diagram.fleetGraph.toJSON { inherit fleetCapture; })
+          lib.escapeShellArg (diagram.fleetGraph.toJSON { inherit fleetCapture hostGraphs; })
         } | jq . > $out
       '';
 
