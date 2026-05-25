@@ -1,6 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.media = {
+    colmena-tags = [ "media" ];
     includes = with den.aspects; [
       apps.jellyfin-client
       apps.mpv

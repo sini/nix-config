@@ -1,6 +1,7 @@
 { den, lib, ... }:
 {
   den.aspects.roles.laptop = {
+    colmena-tags = [ "laptop" ];
     includes = with den.aspects; [
       network.wireless
     ];

@@ -1,5 +1,6 @@
 _: {
   den.aspects.roles.creative.daw = {
+    colmena-tags = [ "creative" ];
     homeManager =
       { pkgs, ... }:
       {

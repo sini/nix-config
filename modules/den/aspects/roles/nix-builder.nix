@@ -1,6 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.nix-builder = {
+    colmena-tags = [ "nix-builder" ];
     includes = [
       den.aspects.services.nix-remote-build-server
     ];
