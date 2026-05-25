@@ -6,7 +6,6 @@ _: {
         services.displayManager.gdm = {
           enable = true;
           autoSuspend = false;
-          wayland = true;
         };
 
         security.pam.services = {
