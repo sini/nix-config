@@ -1,27 +1,14 @@
 {
   inputs,
   config,
-  withSystem,
-  lib,
   ...
 }:
 {
   imports = [ inputs.files.flakeModules.default ];
 
-  text.readme.parts.files =
-    withSystem (builtins.head config.systems) (psArgs: psArgs.config.files.files)
-    |> map (file: "- `${file.path_}`")
-    |> lib.concat [
-      # markdown
-      ''
-        ## Generated files
+  _module.args.dag = inputs.dag.lib { lib = inputs.nixpkgs-unstable.lib; };
 
-        The following files in this repository are generated and checked
-        using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
-      ''
-    ]
-    |> lib.concatLines
-    |> (s: s + "\n");
+  flake-file.inputs.dag.url = "github:denful/dag";
 
   perSystem =
     {

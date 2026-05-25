@@ -1,5 +1,6 @@
+{ dag, ... }:
 {
-  text.readme.parts.den =
+  flake.readme.den = dag.entryBetween [ "automatic-import" ] [ "hosts" ] (
     # markdown
     ''
       ## Architecture
@@ -101,5 +102,6 @@
       +-- defaults.nix     Default includes, quirk collectors, user-aspect auto-include
       ```
 
-    '';
+    ''
+  );
 }

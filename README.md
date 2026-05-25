@@ -3,6 +3,7 @@
 </div>
 
 <br />
+
 <br>
 
 # sini/nix-config
@@ -29,19 +30,20 @@ sini's [NixOS](https://nix.dev) homelab and workstation configuration repository
 > [!NOTE]
 > If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.
 
+
 ## Hosts
 
 | Name                                  | Description                                                                                             |    Type     |      Arch      |
 | :------------------------------------ | :------------------------------------------------------------------------------------------------------ | :---------: | :------------: |
-| [uplink](modules/hosts/uplink/)       | Ryzen 5950X (16/32) - 128GB - 10gbe - Intel Arc A310 - AV1 Transcoding / Router / k8s control           |   Server    |  x86_64-linux  |
-| [axon-01](modules/hosts/axon-01/)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [axon-02](modules/hosts/axon-02/)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [axon-03](modules/hosts/axon-03/)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [bitstream](modules/hosts/bitstream/) | GMKtec M6 - Ryzen 5 6600H (8/16) - 64GB - 2.5gbe - Radeon 660M - k8s node                               |   Server    |  x86_64-linux  |
-| [cortex](modules/hosts/cortex/)       | Ryzen 9950X3D (16/32) - 128GB - 10gbe - 7900XTX + 3090TI - Hybrid ML Server/Workstation/VFIO Gaming Rig | Workstation |  x86_64-linux  |
-| [spike](modules/hosts/spike/)         | Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile)                                            |   Laptop    |  x86_64-linux  |
-| [patch](modules/hosts/patch/)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
-| [vault](modules/hosts/vault/)         | 1tb NVME + 80tb NFS - 2x1gbe + 2.5gbe                                                                   |     NAS     |  x86_64-linux  |
+| [uplink](modules/den/hosts/uplink.nix)       | Ryzen 5950X (16/32) - 128GB - 10gbe - Intel Arc A310 - AV1 Transcoding / Router / k8s control           |   Server    |  x86_64-linux  |
+| [axon-01](modules/den/hosts/axon-01.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
+| [axon-02](modules/den/hosts/axon-02.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
+| [axon-03](modules/den/hosts/axon-03.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
+| [bitstream](modules/den/hosts/bitstream.nix) | GMKtec M6 - Ryzen 5 6600H (8/16) - 64GB - 2.5gbe - Radeon 660M - k8s node                               |   Server    |  x86_64-linux  |
+| [cortex](modules/den/hosts/cortex.nix)       | Ryzen 9950X3D (16/32) - 128GB - 10gbe - 7900XTX + 3090TI - Hybrid ML Server/Workstation/VFIO Gaming Rig | Workstation |  x86_64-linux  |
+| [spike](modules/den/hosts/spike.nix)         | Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile)                                            |   Laptop    |  x86_64-linux  |
+| [patch](modules/den/hosts/patch.nix)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
+
 
 ## Architecture
 
@@ -142,6 +144,7 @@ modules/den/
 +-- defaults.nix     Default includes, quirk collectors, user-aspect auto-include
 ```
 
+
 ## Automatic import
 
 Nix files (they're all flake-parts modules) are automatically imported.
@@ -151,6 +154,7 @@ This means files can be moved around and nested in directories freely.
 
 > [!NOTE]
 > This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
+
 
 ## Generated files
 
@@ -163,6 +167,7 @@ using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
 - `.sops.yaml`
 - `.secrets/secrets-manifest.md`
 
+
 ## Trying to disallow warnings
 
 This at the top level of the `flake.nix` file:
@@ -173,6 +178,7 @@ nixConfig.abort-on-warn = true;
 
 > [!NOTE]
 > It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
+
 
 ## Notable Links
 

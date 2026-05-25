@@ -71,6 +71,7 @@
         nixpkgs.follows = "nixpkgs-unstable";
       };
     };
+    dag.url = "github:denful/dag";
     declarative-jellyfin = {
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

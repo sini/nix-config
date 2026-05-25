@@ -1,5 +1,6 @@
+{ dag, ... }:
 {
-  text.readme.parts.logo =
+  flake.readme.logo = dag.entryBefore [ "header" ] (
     # markdown
     ''
       <div align="center">
@@ -7,5 +8,6 @@
       </div>
 
       <br />
-    '';
+    ''
+  );
 }

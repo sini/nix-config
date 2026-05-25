@@ -366,6 +366,21 @@
         "type": "github"
       }
     },
+    "dag": {
+      "locked": {
+        "lastModified": 1776409857,
+        "narHash": "sha256-Oe2lNRE1RyjVu1xZ3PK5uYEFszIEWEpch7c/NLKvjvM=",
+        "owner": "denful",
+        "repo": "dag",
+        "rev": "c85fa5c7b6970ff90f79a3f2b645696195609930",
+        "type": "github"
+      },
+      "original": {
+        "owner": "denful",
+        "repo": "dag",
+        "type": "github"
+      }
+    },
     "darwin": {
       "inputs": {
         "nixpkgs": [
@@ -3175,6 +3190,7 @@
         "ayugram-desktop": "ayugram-desktop",
         "betterfox": "betterfox",
         "colmena": "colmena",
+        "dag": "dag",
         "declarative-jellyfin": "declarative-jellyfin",
         "den": "den",
         "den-diagram": "den-diagram",

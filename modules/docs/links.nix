@@ -1,5 +1,6 @@
+{ dag, ... }:
 {
-  text.readme.parts.links =
+  flake.readme.links = dag.entryAfter [ "disallow-warnings" ] (
     # markdown
     ''
       ## Notable Links
@@ -22,5 +23,6 @@
       - [colmena](https://github.com/zhaofengli/colmena)
       - [agenix](https://github.com/ryantm/agenix) & [agenix-rekey](https://github.com/oddlama/agenix-rekey)
       - [flake-parts](https://flake.parts/)
-    '';
+    ''
+  );
 }
