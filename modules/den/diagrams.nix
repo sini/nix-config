@@ -23,7 +23,7 @@ let
 in
 {
   flake-file.inputs.den-diagram = {
-    url = "github:denful/den-diagram";
+    url = "github:denful/den-diagram/feat/fleet-subtree-context";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
@@ -79,29 +79,16 @@ in
 
       graphClasses = entity: lib.unique (lib.concatMap (n: n.classes or [ ]) entity.nodes);
 
-      # --- Capture helpers ---
-
-      mkHostEntity =
-        host:
-        let
-          captured = den.lib.capture.captureWithPathsWith {
-            classes = lib.unique (
-              [ "nixos" "homeManager" "user" ]
-              ++ lib.concatMap (u: u.classes or [ ]) (lib.attrValues (host.users or { }))
-            );
-            root = den.lib.resolveEntity "host" { inherit host; };
-            ctx = { inherit host; };
-          };
-        in
-        diagram.context {
-          inherit (captured) entries ctxTrace pathsByClass;
-          name = host.name;
-        };
+      # --- Scope projection ---
 
       hostGraphs = lib.listToAttrs (
         map (host: {
           name = host.name;
-          value = mkHostEntity host;
+          value = diagram.projectScope {
+            inherit fleetCapture;
+            kind = "host";
+            name = host.name;
+          };
         }) allHosts
       );
 
@@ -153,43 +140,48 @@ in
       ) allHosts;
 
       # --- Per-user entries ---
-
-      mkUserEntity =
-        u:
-        let
-          captured = den.lib.capture.captureWithPathsWith {
-            classes = lib.unique (
-              [ "homeManager" "user" ]
-              ++ (u.user.classes or [ "homeManager" ])
-            );
-            root = den.lib.resolveEntity "user" { inherit (u) host user; };
-            ctx = { inherit (u) host user; };
-          };
-        in
-        diagram.context {
-          inherit (captured) entries ctxTrace pathsByClass;
-          name = u.userName;
-        };
+      # Discover users from fleet capture scope data (not host.users)
 
       userViewDefs = classes: rc.views.user ++ rc.views.classViews classes;
 
-      allUsers = lib.concatMap (
-        host:
-        lib.mapAttrsToList (userName: user: {
-          inherit host user userName;
-          name = "${host.name}-${userName}";
-        }) (host.users or { })
-      ) allHosts;
+      allUsers =
+        let
+          inherit (fleetCapture) scopeEntityKind scopeParent;
+          allScopeIds = builtins.attrNames scopeParent;
+          userScopes = builtins.filter (s: (scopeEntityKind.${s} or null) == "user") allScopeIds;
+          extractName = kind: scopeId:
+            let
+              parts = lib.splitString "," scopeId;
+              matching = builtins.filter (p: lib.hasPrefix "${kind}=" p) parts;
+            in
+            if matching == [ ] then null
+            else lib.removePrefix "${kind}=" (builtins.head matching);
+        in
+        lib.concatMap (
+          s:
+          let
+            userName = extractName "user" s;
+            hostName = extractName "host" s;
+          in
+          lib.optional (userName != null && hostName != null) {
+            inherit userName hostName;
+            name = "${hostName}-${userName}";
+          }
+        ) userScopes;
 
       userEntries = lib.concatMap (
         u:
         let
-          entity = mkUserEntity u;
+          entity = diagram.projectScope {
+            inherit fleetCapture;
+            kind = "user";
+            name = u.userName;
+          };
         in
         entityEntries { inherit pkgs rc; } {
           inherit entity;
           name = u.userName;
-          dir = "hosts/${u.host.name}/users/${u.userName}";
+          dir = "hosts/${u.hostName}/users/${u.userName}";
           viewDefs = userViewDefs (graphClasses entity);
         }
       ) allUsers;
@@ -321,11 +313,11 @@ in
 
       userGalleries = map (
         u: {
-          path = "diagrams/hosts/${u.host.name}/users/${u.userName}.md";
+          path = "diagrams/hosts/${u.hostName}/users/${u.userName}.md";
           drv = mkGallery pkgs {
             name = u.userName;
-            dir = "hosts/${u.host.name}/users/${u.userName}";
-            title = "Gallery: ${u.userName} @ ${u.host.name}";
+            dir = "hosts/${u.hostName}/users/${u.userName}";
+            title = "Gallery: ${u.userName} @ ${u.hostName}";
             entries = everyEntry;
           };
         }

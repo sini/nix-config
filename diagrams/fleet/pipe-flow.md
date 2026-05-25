@@ -3,7 +3,7 @@
 ![Pipe Flow](./pipe-flow.mmd.svg)
 
 ```mermaid
-%%{init: {"theme":"base","themeVariables":{"activationBkgColor":"#d0d7de","activationBorderColor":"#8c959f","actorBkg":"#d0d7de","actorBorder":"#6e7781","actorLineColor":"#6e7781","actorTextColor":"#424a53","background":"#eaeef2","classText":"#424a53","clusterBkg":"#d0d7de","clusterBorder":"#8c959f","edgeLabelBackground":"#eaeef2","labelBoxBkgColor":"#d0d7de","labelBoxBorderColor":"#6e7781","labelTextColor":"#424a53","lineColor":"#6e7781","loopTextColor":"#424a53","mainBkg":"#d0d7de","nodeBkg":"#d0d7de","nodeBorder":"#6e7781","nodeTextColor":"#424a53","noteBkgColor":"#d0d7de","noteBorderColor":"#8c959f","noteTextColor":"#424a53","pie1":"#fa4549","pie2":"#e16f24","pie3":"#bf8700","pie4":"#2da44e","pie5":"#339D9B","pie6":"#218bff","pie7":"#a475f9","pie8":"#4d2d00","pieLegendTextColor":"#424a53","pieOuterStrokeColor":"#8c959f","pieSectionTextColor":"#424a53","pieStrokeColor":"#8c959f","pieTitleTextColor":"#424a53","primaryBorderColor":"#6e7781","primaryColor":"#d0d7de","primaryTextColor":"#424a53","secondBkg":"#d0d7de","secondaryBorderColor":"#8c959f","secondaryColor":"#d0d7de","secondaryTextColor":"#424a53","sequenceNumberColor":"#eaeef2","signalColor":"#6e7781","signalTextColor":"#424a53","tertiaryBorderColor":"#8c959f","tertiaryColor":"#d0d7de","tertiaryTextColor":"#424a53","textColor":"#424a53","titleColor":"#424a53"}}}%%
+%%{init: {"theme":"base","themeVariables":{"activationBkgColor":"#313244","activationBorderColor":"#6c7086","actorBkg":"#313244","actorBorder":"#a6adc8","actorLineColor":"#a6adc8","actorTextColor":"#cdd6f4","background":"#1e1e2e","classText":"#cdd6f4","clusterBkg":"#313244","clusterBorder":"#6c7086","edgeLabelBackground":"#1e1e2e","labelBoxBkgColor":"#313244","labelBoxBorderColor":"#a6adc8","labelTextColor":"#cdd6f4","lineColor":"#a6adc8","loopTextColor":"#cdd6f4","mainBkg":"#313244","nodeBkg":"#313244","nodeBorder":"#a6adc8","nodeTextColor":"#cdd6f4","noteBkgColor":"#313244","noteBorderColor":"#6c7086","noteTextColor":"#cdd6f4","pie1":"#f38ba8","pie2":"#fab387","pie3":"#f9e2af","pie4":"#a6e3a1","pie5":"#94e2d5","pie6":"#89b4fa","pie7":"#cba6f7","pie8":"#f2cdcd","pieLegendTextColor":"#cdd6f4","pieOuterStrokeColor":"#6c7086","pieSectionTextColor":"#cdd6f4","pieStrokeColor":"#6c7086","pieTitleTextColor":"#cdd6f4","primaryBorderColor":"#a6adc8","primaryColor":"#313244","primaryTextColor":"#cdd6f4","secondBkg":"#313244","secondaryBorderColor":"#6c7086","secondaryColor":"#313244","secondaryTextColor":"#cdd6f4","sequenceNumberColor":"#1e1e2e","signalColor":"#a6adc8","signalTextColor":"#cdd6f4","tertiaryBorderColor":"#6c7086","tertiaryColor":"#313244","tertiaryTextColor":"#cdd6f4","textColor":"#cdd6f4","titleColor":"#cdd6f4"}}}%%
 graph LR
   subgraph env_dev["dev"]
     bitstream(["bitstream (core/systemd→cache, core/firmware→persist, core/security→persist, core/nix-remote-build-client→age-secrets, apps/zsh→persistHome, network/openssh→persist, network/hosts→host-addrs, services/tailscale→age-secrets, services/tailscale→persist, secrets/agenix→persist, network/network-boot→age-secrets, network/network-boot→persist, services/acme→age-secrets, services/acme→persist, services/tang→firewall, services/tang→persist, roles/nix-builder→nix-builders, services/nix-remote-build-server→age-secrets, services/nix-remote-build-server→firewall)"])
@@ -46,42 +46,42 @@ graph LR
   axon_02 -->|thunderbolt-mesh-peers| uplink
   axon_03 -->|thunderbolt-mesh-peers| uplink
 
-  linkStyle 0 stroke:#fa4549,stroke-width:2px
-  linkStyle 1 stroke:#fa4549,stroke-width:2px
-  linkStyle 2 stroke:#fa4549,stroke-width:2px
-  linkStyle 3 stroke:#fa4549,stroke-width:2px
-  linkStyle 4 stroke:#fa4549,stroke-width:2px
-  linkStyle 5 stroke:#fa4549,stroke-width:2px
-  linkStyle 6 stroke:#2da44e,stroke-width:2px
-  linkStyle 7 stroke:#2da44e,stroke-width:2px
-  linkStyle 8 stroke:#2da44e,stroke-width:2px
-  linkStyle 9 stroke:#2da44e,stroke-width:2px
-  linkStyle 10 stroke:#2da44e,stroke-width:2px
-  linkStyle 11 stroke:#2da44e,stroke-width:2px
-  linkStyle 12 stroke:#2da44e,stroke-width:2px
-  linkStyle 13 stroke:#2da44e,stroke-width:2px
-  linkStyle 14 stroke:#2da44e,stroke-width:2px
-  linkStyle 15 stroke:#2da44e,stroke-width:2px
-  linkStyle 16 stroke:#2da44e,stroke-width:2px
-  linkStyle 17 stroke:#2da44e,stroke-width:2px
-  linkStyle 18 stroke:#a475f9,stroke-width:2px
-  linkStyle 19 stroke:#a475f9,stroke-width:2px
-  linkStyle 20 stroke:#a475f9,stroke-width:2px
-  linkStyle 21 stroke:#e16f24,stroke-width:2px
-  linkStyle 22 stroke:#e16f24,stroke-width:2px
-  linkStyle 23 stroke:#e16f24,stroke-width:2px
-  linkStyle 24 stroke:#339D9B,stroke-width:2px
-  linkStyle 25 stroke:#339D9B,stroke-width:2px
-  linkStyle 26 stroke:#339D9B,stroke-width:2px
+  linkStyle 0 stroke:#f38ba8,stroke-width:2px
+  linkStyle 1 stroke:#f38ba8,stroke-width:2px
+  linkStyle 2 stroke:#f38ba8,stroke-width:2px
+  linkStyle 3 stroke:#f38ba8,stroke-width:2px
+  linkStyle 4 stroke:#f38ba8,stroke-width:2px
+  linkStyle 5 stroke:#f38ba8,stroke-width:2px
+  linkStyle 6 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 7 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 8 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 9 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 10 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 11 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 12 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 13 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 14 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 15 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 16 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 17 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 18 stroke:#cba6f7,stroke-width:2px
+  linkStyle 19 stroke:#cba6f7,stroke-width:2px
+  linkStyle 20 stroke:#cba6f7,stroke-width:2px
+  linkStyle 21 stroke:#fab387,stroke-width:2px
+  linkStyle 22 stroke:#fab387,stroke-width:2px
+  linkStyle 23 stroke:#fab387,stroke-width:2px
+  linkStyle 24 stroke:#94e2d5,stroke-width:2px
+  linkStyle 25 stroke:#94e2d5,stroke-width:2px
+  linkStyle 26 stroke:#94e2d5,stroke-width:2px
 
-  style bitstream fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style blade fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style cortex fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style patch fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style axon_01 fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style axon_02 fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style axon_03 fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style uplink fill:#2da44e,stroke:#2da44e,color:#1f2328
-  style env_dev fill:transparent,stroke:#8c959f,stroke-width:1px
-  style env_prod fill:transparent,stroke:#8c959f,stroke-width:1px
+  style bitstream fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style blade fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style cortex fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style patch fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style axon_01 fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style axon_02 fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style axon_03 fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style uplink fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style env_dev fill:transparent,stroke:#6c7086,stroke-width:1px
+  style env_prod fill:transparent,stroke:#6c7086,stroke-width:1px
 ```
