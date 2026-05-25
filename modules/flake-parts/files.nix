@@ -11,12 +11,7 @@
 
   _module.args.dag = inputs.dag.lib { lib = inputs.nixpkgs-unstable.lib; };
 
-  flake-file.inputs = {
-    dag.url = "github:denful/dag";
-    systems.url = "github:nix-systems/default";
-  };
-
-  systems = import inputs.systems;
+  flake-file.inputs.dag.url = "github:denful/dag";
 
   perSystem =
     {
