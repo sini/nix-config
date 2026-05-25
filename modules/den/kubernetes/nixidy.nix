@@ -110,6 +110,7 @@ let
       envName,
       enabledAspects,
       system,
+      cluster,
     }:
     { lib, ... }:
     {
