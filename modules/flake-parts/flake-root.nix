@@ -6,7 +6,7 @@
     inputs.flake-root.flakeModule
   ];
 
-  _module.args.rootPath = ../../..;
+  _module.args.rootPath = ../..;
 
   perSystem =
     {
