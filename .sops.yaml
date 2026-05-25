@@ -6,12 +6,8 @@ creation_rules:
   - encrypted_regex: ^(data|stringData)$
     key_groups:
       - age:
-          - age1v9fv8xdeektkl6uanpttlcw8qt4c37rhy4hkm63cyg4emzz5rfkqfdgffc
-    mac-only-encrypted: true
-    path_regex: .*dev-bitstream.*/(SopsS|S)ecret-.*\.ya?ml$
-  - encrypted_regex: ^(data|stringData)$
-    key_groups:
-      - age:
-          - age1702hgudfz8y5ms3m4fukvvjhll7w9yeqk4tahewuv34t09rhd9sq756enl
+          - 'age1702hgudfz8y5ms3m4fukvvjhll7w9yeqk4tahewuv34t09rhd9sq756enl
+
+            '
     mac-only-encrypted: true
     path_regex: .*prod-axon.*/(SopsS|S)ecret-.*\.ya?ml$

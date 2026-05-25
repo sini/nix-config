@@ -104,7 +104,7 @@
 
             extraCompatPackages = [
               pkgs.proton-ge-bin
-              pkgs.proton-cachyos-x86_64_v4
+              pkgs.proton-cachyos-x86_64_v3
             ];
 
             gamescopeSession = {

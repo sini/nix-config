@@ -1,9 +1,9 @@
 # Agenix Secrets Manifest
 
 Generated on: 26.05
-Total unique secrets: 63
+Total unique secrets: 64
 - Generated: 53
-- Manually set: 10
+- Manually set: 11
 
 ---
 
@@ -40,6 +40,17 @@ and rekeyed for each host.
   - nixos:uplink
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/env/prod/cloudflare-api-key.age`
+
+
+
+
+### kubernetes-sops-age-key
+- **Used by**: 
+  - nixos:axon-01
+  - nixos:axon-02
+  - nixos:axon-03
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/clusters/axon/cluster-sops-age-key.age`
 
 
 

@@ -4,4 +4,5 @@
 .direnv
 .cache
 .claude
-.worktrees
+CLAUDE.md
+docs/superpowers/

@@ -43,62 +43,6 @@ sini's [NixOS](https://nix.dev) homelab and workstation configuration repository
 | [patch](modules/hosts/patch/)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
 | [vault](modules/hosts/vault/)         | 1tb NVME + 80tb NFS - 2x1gbe + 2.5gbe                                                                   |     NAS     |  x86_64-linux  |
 
-## Flake Options
-
-This repository defines configuration options in the following attribute sets:
-
-- **[environments](docs/environments-options.md)**: Environment settings including network and infrastructure configuration that can be shared across hosts. Each environment contains topology definitions for domains, networks, Kubernetes clusters, and ACME settings.
-
-- **[hosts](docs/hosts-options.md)**: Host definitions for individual machines. Each host configuration includes system architecture, IP addresses, roles, hardware settings, and deployment configuration for Colmena.
-
-- **[kubernetes](docs/kubernetes-options.md)**: Kubernetes cluster configuration options for k3s deployments.
-
-- **[users](docs/users-options.md)**: User account definitions and configuration options.
-
-See the linked documentation files for complete option references.
-
-## Remote deployment via Colmena
-
-This repository uses [Colmena](https://github.com/zhaofengli/colmena) to deploy NixOS configurations to remote hosts.
-Colmena supports both local and remote deployment, and hosts can be targeted by roles as well as their name.
-Remote connection properties are defined in the `hosts.<hostname>.deployment` attribute set, and implementation
-can be found in the `modules/hosts/<hostname>/default.nix` file. This magic deployment logic lives in the
-[./m/f-p/colmena.nix](modules/flake-parts/colmena.nix) file.
-
-> [!NOTE]
-> I've made some pretty ugly hacks to make Colmena work with this repository to support multiple nixpkg versions
-> for different hosts, and to support both stable and unstable packages.
-
-```bash
-# Deploy to all hosts
-colmena apply
-
-# Deploy to a specific host
-colmena apply --on <hostname>
-
-# Deploy to all hosts with the "server" tag
-colmena apply --on @server
-
-# Apply changes to the current host (useful for local development)
-colmena apply-local --sudo
-```
-
-## Deterministic UIDs and GIDs
-
-Since this configuration is used across multiple systems, it is important to
-ensure that user and group IDs are consistent across all systems for services
-like NFS. This module provides a way to define deterministic UIDs and GIDs
-for users and groups, ensuring that they are assigned the same IDs on all systems.
-
-The configuration is defined in the `users.deterministicIds` option, where you can
-specify the expected UID and GID values for each user and group. If a user or
-group is used on the system without specifying a UID/GID, this module will assign
-the corresponding IDs defined here, or show an error if the definition is missing.
-
-This pattern is based on oddlama's NixOS configuration, which can be found linked below.
-
-The definition file is located at: [./modules/core/deterministic-uids/users.nix](./modules/core/deterministic-uids/users.nix)
-
 ## Automatic import
 
 Nix files (they're all flake-parts modules) are automatically imported.
@@ -112,21 +56,13 @@ This means files can be moved around and nested in directories freely.
 ## Generated files
 
 The following files in this repository are generated and checked
-using [the _files_ flake-parts module](https://github.com/mightyiam/files):
+using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
 
 - `.gitignore`
 - `LICENSE`
 - `README.md`
-- `docs/clusters-options.md`
-- `docs/environments-options.md`
-- `docs/groups-options.md`
-- `docs/hosts-options.md`
-- `docs/kubernetes-options.md`
-- `docs/users-options.md`
 - `.sops.yaml`
 - `.secrets/secrets-manifest.md`
-- `generated/bgp/unifi-frr-bgp-dev.conf`
-- `generated/bgp/unifi-frr-bgp-prod.conf`
 
 ## Trying to disallow warnings
 
@@ -144,7 +80,6 @@ nixConfig.abort-on-warn = true;
 ### Other dendritic users:
 
 - [GaetanLepage/nix-config](https://github.com/GaetanLepage/nix-config/)
-- [mightyiam/infra](https://github.com/mightyiam/infra)
 - [vic/vix](https://github.com/vic/vix)
 - [drupol/infra](https://github.com/drupol/infra/tree/master)
 
@@ -157,7 +92,6 @@ nixConfig.abort-on-warn = true;
 
 ### Notable References:
 
-- [Dendritic Configuration Pattern](https://github.com/mightyiam/dendritic)
 - [colmena](https://github.com/zhaofengli/colmena)
 - [agenix](https://github.com/ryantm/agenix) & [agenix-rekey](https://github.com/oddlama/agenix-rekey)
 - [flake-parts](https://flake.parts/)

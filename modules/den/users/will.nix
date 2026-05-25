@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.will = {
-    includes = [ den.batteries.host-aspects ];
+    includes = [ den.aspects.core.default ];
   };
 
   den.users.registry.will = {
