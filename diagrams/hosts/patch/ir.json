@@ -1,0 +1,4478 @@
+{
+  "direction": "LR",
+  "edges": [
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__deterministic_uids"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__facter"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__firmware"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__home_manager"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "network__hosts"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__i18n"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__linux_kernel"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__lix"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "network__networking"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__nix"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__nix_remote_build_client"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__nixpkgs"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "network__openssh"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__security"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__shell"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__ssd"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__stateVersion"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__sudo"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__systemd"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__systemd_boot"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "services__tailscale"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__time"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__users"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "core__utils"
+    },
+    {
+      "from": "core__default",
+      "label": null,
+      "style": "normal",
+      "to": "apps__zsh"
+    },
+    {
+      "from": "default_host_patch",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__define_user"
+    },
+    {
+      "from": "default_host_patch",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__hostname"
+    },
+    {
+      "from": "default_host_patch",
+      "label": null,
+      "style": "normal",
+      "to": "insecure_predicate"
+    },
+    {
+      "from": "default_host_patch",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user"
+    },
+    {
+      "from": "default_host_patch",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_patch_"
+    },
+    {
+      "from": "default_host_patch",
+      "label": null,
+      "style": "normal",
+      "to": "unfree_predicate"
+    },
+    {
+      "from": "den__batteries__define_user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__define_user__sini_patch"
+    },
+    {
+      "from": "den__batteries__define_user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__host__resolve_define_user__den__batteries"
+    },
+    {
+      "from": "den__batteries__host_aspects",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__host_aspects__sini_patch"
+    },
+    {
+      "from": "den__batteries__hostname",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__hostname__os"
+    },
+    {
+      "from": "host",
+      "label": null,
+      "style": "normal",
+      "to": "default_host_patch"
+    },
+    {
+      "from": "host",
+      "label": null,
+      "style": "normal",
+      "to": "core__firewall_collector"
+    },
+    {
+      "from": "host",
+      "label": null,
+      "style": "normal",
+      "to": "host__resolve_host_"
+    },
+    {
+      "from": "host",
+      "label": null,
+      "style": "normal",
+      "to": "patch"
+    },
+    {
+      "from": "host",
+      "label": null,
+      "style": "normal",
+      "to": "core__secrets_collector"
+    },
+    {
+      "from": "insecure_predicate",
+      "label": null,
+      "style": "normal",
+      "to": "host__resolve_insecure_predicate_"
+    },
+    {
+      "from": "insecure_predicate",
+      "label": null,
+      "style": "normal",
+      "to": "insecure_predicate__os"
+    },
+    {
+      "from": "insecure_predicate",
+      "label": null,
+      "style": "normal",
+      "to": "insecure_predicate__user"
+    },
+    {
+      "from": "patch",
+      "label": null,
+      "style": "normal",
+      "to": "core__default"
+    },
+    {
+      "from": "patch",
+      "label": null,
+      "style": "normal",
+      "to": "roles__dev"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "hardware__adb"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__bat"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__claude"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__direnv"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__eza"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__git"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__gpg"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__k9s"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__misc_tools"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__nix_index"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__nvf"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__python"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__ssh"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__starship"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__sysmon"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__yazi"
+    },
+    {
+      "from": "roles__dev",
+      "label": null,
+      "style": "normal",
+      "to": "apps__zoxide"
+    },
+    {
+      "from": "sini",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__host_aspects"
+    },
+    {
+      "from": "unfree_predicate",
+      "label": null,
+      "style": "normal",
+      "to": "host__resolve_unfree_predicate_"
+    },
+    {
+      "from": "unfree_predicate",
+      "label": null,
+      "style": "normal",
+      "to": "unfree_predicate__os"
+    },
+    {
+      "from": "unfree_predicate",
+      "label": null,
+      "style": "normal",
+      "to": "unfree_predicate__user"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "_policy_hm_user_detect__0_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "default_user_sini"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "core__resolved_user_emitter"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "sini"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_patch"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user__resolve_user_"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__nix"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__lix"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__nixpkgs"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__systemd_boot"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__i18n"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__stateVersion"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__systemd"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__shell"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__utils"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__firmware"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__security"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__facter"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__home_manager"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__deterministic_uids"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__nix_remote_build_client"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__sudo"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__time"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__ssd"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__linux_kernel"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__users"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__zsh"
+    },
+    {
+      "from": "network",
+      "label": "provides",
+      "style": "provide",
+      "to": "network__networking"
+    },
+    {
+      "from": "network",
+      "label": "provides",
+      "style": "provide",
+      "to": "network__openssh"
+    },
+    {
+      "from": "network",
+      "label": "provides",
+      "style": "provide",
+      "to": "network__hosts"
+    },
+    {
+      "from": "services",
+      "label": "provides",
+      "style": "provide",
+      "to": "services__tailscale"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__default"
+    },
+    {
+      "from": "hardware",
+      "label": "provides",
+      "style": "provide",
+      "to": "hardware__adb"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__direnv"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__gpg"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__bat"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__claude"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__eza"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__nix_index"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__nvf"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__ssh"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__starship"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__sysmon"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__yazi"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__misc_tools"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__zoxide"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__git"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__python"
+    },
+    {
+      "from": "apps",
+      "label": "provides",
+      "style": "provide",
+      "to": "apps__k9s"
+    },
+    {
+      "from": "roles",
+      "label": "provides",
+      "style": "provide",
+      "to": "roles__dev"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__firewall_collector"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__secrets_collector"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__resolved_user_emitter"
+    }
+  ],
+  "entityEdges": [],
+  "entityInstances": [
+    {
+      "id": "ctx_user_sini",
+      "kind": "user",
+      "label": "user: sini",
+      "name": "sini"
+    },
+    {
+      "id": "ctx_host_patch",
+      "kind": "host",
+      "label": "host: patch",
+      "name": "patch"
+    }
+  ],
+  "entityKinds": [
+    {
+      "ctxKeys": [
+        "host"
+      ],
+      "id": "ctx_host",
+      "name": "host"
+    },
+    {
+      "ctxKeys": [
+        "host",
+        "user"
+      ],
+      "id": "ctx_user",
+      "name": "user"
+    }
+  ],
+  "nodes": [
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "<policy:hm-user-detect>[0]",
+      "hasClass": false,
+      "id": "_policy_hm_user_detect__0_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "<policy:hm-user-detect>[0]",
+      "pathKey": "<policy:hm-user-detect>[0]",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "hardware/adb",
+      "hasClass": true,
+      "id": "hardware__adb",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "hardware/adb",
+      "pathKey": "hardware/adb",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "hardware"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps",
+      "hasClass": false,
+      "id": "apps",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "apps",
+      "pathKey": "apps",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/bat",
+      "hasClass": false,
+      "id": "apps__bat",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/bat",
+      "pathKey": "apps/bat",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/claude",
+      "hasClass": false,
+      "id": "apps__claude",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/claude",
+      "pathKey": "apps/claude",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-bgp-peers",
+      "hasClass": false,
+      "id": "collect_bgp_peers",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-bgp-peers",
+      "pathKey": "collect-bgp-peers",
+      "perClass": {},
+      "policyName": "collect-bgp-peers",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-host-addrs",
+      "hasClass": false,
+      "id": "collect_host_addrs",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-host-addrs",
+      "pathKey": "collect-host-addrs",
+      "perClass": {},
+      "policyName": "collect-host-addrs",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-k3s-nodes",
+      "hasClass": false,
+      "id": "collect_k3s_nodes",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-k3s-nodes",
+      "pathKey": "collect-k3s-nodes",
+      "perClass": {},
+      "policyName": "collect-k3s-nodes",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-ollama-endpoints",
+      "hasClass": false,
+      "id": "collect_ollama_endpoints",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-ollama-endpoints",
+      "pathKey": "collect-ollama-endpoints",
+      "perClass": {},
+      "policyName": "collect-ollama-endpoints",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-prometheus-targets",
+      "hasClass": false,
+      "id": "collect_prometheus_targets",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-prometheus-targets",
+      "pathKey": "collect-prometheus-targets",
+      "perClass": {},
+      "policyName": "collect-prometheus-targets",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-thunderbolt-mesh-peers",
+      "hasClass": false,
+      "id": "collect_thunderbolt_mesh_peers",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-thunderbolt-mesh-peers",
+      "pathKey": "collect-thunderbolt-mesh-peers",
+      "perClass": {},
+      "policyName": "collect-thunderbolt-mesh-peers",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "collect-vault-peers",
+      "hasClass": false,
+      "id": "collect_vault_peers",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "collect-vault-peers",
+      "pathKey": "collect-vault-peers",
+      "perClass": {},
+      "policyName": "collect-vault-peers",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core",
+      "hasClass": false,
+      "id": "core",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "core",
+      "pathKey": "core",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/default",
+      "hasClass": false,
+      "id": "core__default",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/default",
+      "pathKey": "core/default",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "default",
+      "hasClass": false,
+      "id": "default_host_patch",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "default",
+      "pathKey": "default",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "default",
+      "hasClass": false,
+      "id": "default_user_sini",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "default",
+      "pathKey": "default",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "den/batteries/define-user",
+      "hasClass": false,
+      "id": "den__batteries__define_user",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/define-user",
+      "pathKey": "den/batteries/define-user",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager+nixos",
+      "classes": [
+        "nixos",
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/define-user/sini@patch",
+      "hasClass": true,
+      "id": "den__batteries__define_user__sini_patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/define-user/sini@patch",
+      "pathKey": "den/batteries/define-user/sini@patch",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/deterministic-uids",
+      "hasClass": true,
+      "id": "core__deterministic_uids",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/deterministic-uids",
+      "pathKey": "core/deterministic-uids",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "roles/dev",
+      "hasClass": false,
+      "id": "roles__dev",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "roles/dev",
+      "pathKey": "roles/dev",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "roles"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/direnv",
+      "hasClass": false,
+      "id": "apps__direnv",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/direnv",
+      "pathKey": "apps/direnv",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/eza",
+      "hasClass": false,
+      "id": "apps__eza",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/eza",
+      "pathKey": "apps/eza",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/facter",
+      "hasClass": true,
+      "id": "core__facter",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/facter",
+      "pathKey": "core/facter",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/firewall-collector",
+      "hasClass": true,
+      "id": "core__firewall_collector",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/firewall-collector",
+      "pathKey": "core/firewall-collector",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/firmware",
+      "hasClass": true,
+      "id": "core__firmware",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/firmware",
+      "pathKey": "core/firmware",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/git",
+      "hasClass": false,
+      "id": "apps__git",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/git",
+      "pathKey": "apps/git",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager+nixos",
+      "classes": [
+        "nixos",
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/gpg",
+      "hasClass": true,
+      "id": "apps__gpg",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/gpg",
+      "pathKey": "apps/gpg",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "hardware",
+      "hasClass": false,
+      "id": "hardware",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "hardware",
+      "pathKey": "hardware",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "hm-user-detect",
+      "hasClass": false,
+      "id": "hm_user_detect",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "hm-user-detect",
+      "pathKey": "hm-user-detect",
+      "perClass": {},
+      "policyName": "hm-user-detect",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/home-manager",
+      "hasClass": true,
+      "id": "core__home_manager",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/home-manager",
+      "pathKey": "core/home-manager",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "homeAarch64-to-hm",
+      "hasClass": false,
+      "id": "homeAarch64_to_hm",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "homeAarch64-to-hm",
+      "pathKey": "homeAarch64-to-hm",
+      "perClass": {},
+      "policyName": "homeAarch64-to-hm",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "homeDarwin-to-hm",
+      "hasClass": false,
+      "id": "homeDarwin_to_hm",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "homeDarwin-to-hm",
+      "pathKey": "homeDarwin-to-hm",
+      "perClass": {},
+      "policyName": "homeDarwin-to-hm",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "host",
+      "hasClass": false,
+      "id": "host",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "host",
+      "pathKey": "host",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "den/batteries/host-aspects",
+      "hasClass": false,
+      "id": "den__batteries__host_aspects",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/host-aspects",
+      "pathKey": "den/batteries/host-aspects",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/host-aspects/sini@patch",
+      "hasClass": false,
+      "id": "den__batteries__host_aspects__sini_patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/host-aspects/sini@patch",
+      "pathKey": "den/batteries/host-aspects/sini@patch",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "host-to-hm-users",
+      "hasClass": false,
+      "id": "host_to_hm_users",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "host-to-hm-users",
+      "pathKey": "host-to-hm-users",
+      "perClass": {},
+      "policyName": "host-to-hm-users",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "den/batteries/host/resolve(define-user):den/batteries",
+      "hasClass": false,
+      "id": "den__batteries__host__resolve_define_user__den__batteries",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/host/resolve(define-user):den/batteries",
+      "pathKey": "den/batteries/host/resolve(define-user):den/batteries",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "trapezoid",
+      "style": "terminal",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "host/resolve(host)",
+      "hasClass": false,
+      "id": "host__resolve_host_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "host/resolve(host)",
+      "pathKey": "host/resolve(host)",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "terminal",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "host/resolve(insecure-predicate)",
+      "hasClass": false,
+      "id": "host__resolve_insecure_predicate_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "host/resolve(insecure-predicate)",
+      "pathKey": "host/resolve(insecure-predicate)",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "terminal",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "host/resolve(unfree-predicate)",
+      "hasClass": false,
+      "id": "host__resolve_unfree_predicate_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "host/resolve(unfree-predicate)",
+      "pathKey": "host/resolve(unfree-predicate)",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "terminal",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "den/batteries/hostname",
+      "hasClass": false,
+      "id": "den__batteries__hostname",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/hostname",
+      "pathKey": "den/batteries/hostname",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/hostname/os",
+      "hasClass": false,
+      "id": "den__batteries__hostname__os",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/hostname/os",
+      "pathKey": "den/batteries/hostname/os",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "network/hosts",
+      "hasClass": true,
+      "id": "network__hosts",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "network/hosts",
+      "pathKey": "network/hosts",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "network"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/i18n",
+      "hasClass": true,
+      "id": "core__i18n",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/i18n",
+      "pathKey": "core/i18n",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "insecure-predicate",
+      "hasClass": false,
+      "id": "insecure_predicate",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "insecure-predicate",
+      "pathKey": "insecure-predicate",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host"
+      ],
+      "from": null,
+      "fullLabel": "insecure-predicate/os",
+      "hasClass": false,
+      "id": "insecure_predicate__os",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "insecure-predicate/os",
+      "pathKey": "insecure-predicate/os",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "insecure-predicate/user",
+      "hasClass": false,
+      "id": "insecure_predicate__user",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "insecure-predicate/user",
+      "pathKey": "insecure-predicate/user",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/k9s",
+      "hasClass": false,
+      "id": "apps__k9s",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/k9s",
+      "pathKey": "apps/k9s",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/linux-kernel",
+      "hasClass": true,
+      "id": "core__linux_kernel",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/linux-kernel",
+      "pathKey": "core/linux-kernel",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/lix",
+      "hasClass": true,
+      "id": "core__lix",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/lix",
+      "pathKey": "core/lix",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/misc-tools",
+      "hasClass": false,
+      "id": "apps__misc_tools",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/misc-tools",
+      "pathKey": "apps/misc-tools",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "network",
+      "hasClass": false,
+      "id": "network",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "network",
+      "pathKey": "network",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "network/networking",
+      "hasClass": true,
+      "id": "network__networking",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "network/networking",
+      "pathKey": "network/networking",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "network"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/nix",
+      "hasClass": true,
+      "id": "core__nix",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/nix",
+      "pathKey": "core/nix",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/nix-index",
+      "hasClass": false,
+      "id": "apps__nix_index",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/nix-index",
+      "pathKey": "apps/nix-index",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/nix-remote-build-client",
+      "hasClass": true,
+      "id": "core__nix_remote_build_client",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/nix-remote-build-client",
+      "pathKey": "core/nix-remote-build-client",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/nixpkgs",
+      "hasClass": false,
+      "id": "core__nixpkgs",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/nixpkgs",
+      "pathKey": "core/nixpkgs",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/nvf",
+      "hasClass": false,
+      "id": "apps__nvf",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/nvf",
+      "pathKey": "apps/nvf",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "network/openssh",
+      "hasClass": true,
+      "id": "network__openssh",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "network/openssh",
+      "pathKey": "network/openssh",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "network"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": "host",
+      "fullLabel": "os-to-host",
+      "hasClass": false,
+      "id": "os_to_host_host_patch",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "os-to-host",
+      "pathKey": "os-to-host",
+      "perClass": {},
+      "policyName": "os-to-host",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "os-to-host",
+      "hasClass": false,
+      "id": "os_to_host_user_sini",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "os-to-host",
+      "pathKey": "os-to-host",
+      "perClass": {},
+      "policyName": "os-to-host",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host"
+      ],
+      "from": null,
+      "fullLabel": "patch",
+      "hasClass": false,
+      "id": "patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "patch",
+      "pathKey": "patch",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user",
+      "hasClass": false,
+      "id": "den__batteries__primary_user",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user",
+      "pathKey": "den/batteries/primary-user",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@patch)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_patch_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@patch)",
+      "pathKey": "den/batteries/primary-user(sini@patch)",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/python",
+      "hasClass": false,
+      "id": "apps__python",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/python",
+      "pathKey": "apps/python",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/resolved-user-emitter",
+      "hasClass": false,
+      "id": "core__resolved_user_emitter",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/resolved-user-emitter",
+      "pathKey": "core/resolved-user-emitter",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "roles",
+      "hasClass": false,
+      "id": "roles",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "roles",
+      "pathKey": "roles",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/secrets-collector",
+      "hasClass": true,
+      "id": "core__secrets_collector",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/secrets-collector",
+      "pathKey": "core/secrets-collector",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/security",
+      "hasClass": true,
+      "id": "core__security",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/security",
+      "pathKey": "core/security",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "services",
+      "hasClass": false,
+      "id": "services",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "services",
+      "pathKey": "services",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/shell",
+      "hasClass": true,
+      "id": "core__shell",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/shell",
+      "pathKey": "core/shell",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "sini",
+      "hasClass": false,
+      "id": "sini",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "sini",
+      "pathKey": "sini",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/ssd",
+      "hasClass": true,
+      "id": "core__ssd",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/ssd",
+      "pathKey": "core/ssd",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/ssh",
+      "hasClass": false,
+      "id": "apps__ssh",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/ssh",
+      "pathKey": "apps/ssh",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/starship",
+      "hasClass": false,
+      "id": "apps__starship",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/starship",
+      "pathKey": "apps/starship",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/stateVersion",
+      "hasClass": true,
+      "id": "core__stateVersion",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/stateVersion",
+      "pathKey": "core/stateVersion",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/sudo",
+      "hasClass": true,
+      "id": "core__sudo",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/sudo",
+      "pathKey": "core/sudo",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/sysmon",
+      "hasClass": false,
+      "id": "apps__sysmon",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/sysmon",
+      "pathKey": "apps/sysmon",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/systemd",
+      "hasClass": true,
+      "id": "core__systemd",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/systemd",
+      "pathKey": "core/systemd",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/systemd-boot",
+      "hasClass": true,
+      "id": "core__systemd_boot",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/systemd-boot",
+      "pathKey": "core/systemd-boot",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "services/tailscale",
+      "hasClass": true,
+      "id": "services__tailscale",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "services/tailscale",
+      "pathKey": "services/tailscale",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "services"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/time",
+      "hasClass": false,
+      "id": "core__time",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/time",
+      "pathKey": "core/time",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "unfree-predicate",
+      "hasClass": false,
+      "id": "unfree_predicate",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "unfree-predicate",
+      "pathKey": "unfree-predicate",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host"
+      ],
+      "from": null,
+      "fullLabel": "unfree-predicate/os",
+      "hasClass": false,
+      "id": "unfree_predicate__os",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "unfree-predicate/os",
+      "pathKey": "unfree-predicate/os",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "unfree-predicate/user",
+      "hasClass": false,
+      "id": "unfree_predicate__user",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "unfree-predicate/user",
+      "pathKey": "unfree-predicate/user",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "user",
+      "hasClass": false,
+      "id": "user",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user",
+      "pathKey": "user",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@patch",
+      "hasClass": true,
+      "id": "user_enrich__sini_patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@patch",
+      "pathKey": "user-enrich/sini@patch",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "user-to-host",
+      "hasClass": false,
+      "id": "user_to_host",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "user-to-host",
+      "pathKey": "user-to-host",
+      "perClass": {},
+      "policyName": "user-to-host",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "user/resolve(user)",
+      "hasClass": false,
+      "id": "user__resolve_user_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user/resolve(user)",
+      "pathKey": "user/resolve(user)",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "terminal",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/users",
+      "hasClass": true,
+      "id": "core__users",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/users",
+      "pathKey": "core/users",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/utils",
+      "hasClass": true,
+      "id": "core__utils",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "core/utils",
+      "pathKey": "core/utils",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/yazi",
+      "hasClass": false,
+      "id": "apps__yazi",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/yazi",
+      "pathKey": "apps/yazi",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/zoxide",
+      "hasClass": false,
+      "id": "apps__zoxide",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/zoxide",
+      "pathKey": "apps/zoxide",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "homeManager",
+      "classes": [
+        "homeManager"
+      ],
+      "entityInstance": "host:patch",
+      "entityKind": "host",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "apps/zsh",
+      "hasClass": false,
+      "id": "apps__zsh",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "apps/zsh",
+      "pathKey": "apps/zsh",
+      "perClass": {
+        "homeManager": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        },
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        },
+        "user": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "apps"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    }
+  ],
+  "rootId": "patch",
+  "rootName": "patch"
+}

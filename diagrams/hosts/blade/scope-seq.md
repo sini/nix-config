@@ -1,0 +1,18 @@
+# Scope Sequence: blade
+
+![Scope sequence](./scope-seq.mmd.svg)
+
+```mermaid
+%%{init: {"theme":"base","themeVariables":{"activationBkgColor":"#d0d7de","activationBorderColor":"#8c959f","actorBkg":"#d0d7de","actorBorder":"#6e7781","actorLineColor":"#6e7781","actorTextColor":"#424a53","background":"#eaeef2","classText":"#424a53","clusterBkg":"#d0d7de","clusterBorder":"#8c959f","edgeLabelBackground":"#eaeef2","labelBoxBkgColor":"#d0d7de","labelBoxBorderColor":"#6e7781","labelTextColor":"#424a53","lineColor":"#6e7781","loopTextColor":"#424a53","mainBkg":"#d0d7de","nodeBkg":"#d0d7de","nodeBorder":"#6e7781","nodeTextColor":"#424a53","noteBkgColor":"#d0d7de","noteBorderColor":"#8c959f","noteTextColor":"#424a53","pie1":"#fa4549","pie2":"#e16f24","pie3":"#bf8700","pie4":"#2da44e","pie5":"#339D9B","pie6":"#218bff","pie7":"#a475f9","pie8":"#4d2d00","pieLegendTextColor":"#424a53","pieOuterStrokeColor":"#8c959f","pieSectionTextColor":"#424a53","pieStrokeColor":"#8c959f","pieTitleTextColor":"#424a53","primaryBorderColor":"#6e7781","primaryColor":"#d0d7de","primaryTextColor":"#424a53","secondBkg":"#d0d7de","secondaryBorderColor":"#8c959f","secondaryColor":"#d0d7de","secondaryTextColor":"#424a53","sequenceNumberColor":"#eaeef2","signalColor":"#6e7781","signalTextColor":"#424a53","tertiaryBorderColor":"#8c959f","tertiaryColor":"#d0d7de","tertiaryTextColor":"#424a53","textColor":"#424a53","titleColor":"#424a53"}}}%%
+sequenceDiagram
+    participant host as host { host }
+
+
+    activate host
+    host ->> host: blade(host)
+    host ->> host: batteries/hostname/os(host)
+    host ->> host: insecure-predicate/os(host)
+    host ->> host: unfree-predicate/os(host)
+    deactivate host
+    Note over host: hardware/adb, secrets/agenix, apps/alacritty, hardware/audio<br/>apps/bat, hardware/bluetooth, apps/claude, hardware/coolercontrol<br/>hardware/cpu-intel, hardware/ddcutil, core/default, default<br/>batteries/define-user, core/deterministic-uids, roles/dev, roles/dev-gui<br/>apps/direnv, apps/discord, apps/emulation, apps/eza<br/>core/facter, apps/firefox, core/firewall-collector, core/firmware<br/>desktop/fonts, hardware/gamepad, roles/gaming, desktop/gdm<br/>apps/git, apps/gitkraken, desktop/gnome, apps/gpg<br/>hardware/gpu-intel, hardware/gpu-nvidia, hardware/gpu-nvidia-prime, core/home-manager<br/>host, batteries/host/resolve(define-user):den/batteries, host/resolve(host), host/resolve(insecure-predicate)<br/>host/resolve(unfree-predicate), batteries/hostname, network/hosts, desktop/hyprland<br/>core/i18n, disk/impermanence, insecure-predicate, apps/jellyfin-client<br/>apps/k9s, hardware/keyboard, apps/kitty, apps/kube-tools<br/>roles/laptop, virtualization/libvirt, core/linux-kernel, core/lix<br/>apps/mangohud, roles/media, apps/misc-tools, apps/mpv<br/>network/network-boot, network/network-manager, network/networking, core/nix<br/>apps/nix-index, system/nix-ld, core/nix-remote-build-client, core/nixpkgs<br/>apps/nvf, apps/obs-studio, apps/obsidian, network/openssh<br/>hardware/performance, core/persist-collector, core/persist-home-collector, batteries/primary-user<br/>apps/python, apps/qbittorrent, hardware/razer, zfs-disk-single/root<br/>core/secrets-collector, core/security, core/shell, apps/spicetify<br/>core/ssd, apps/ssh, apps/starship, core/stateVersion<br/>apps/steam, desktop/stylix, core/sudo, apps/sunshine<br/>apps/sysmon, core/systemd, core/systemd-boot, services/tailscale<br/>core/time, unfree-predicate, core/users, core/utils<br/>desktop/uwsm, apps/vscode, network/wireless, apps/wireshark<br/>roles/workstation, desktop/xdg-portal, desktop/xserver, desktop/xwayland<br/>apps/yazi, apps/youtube-music, apps/yt-dlp, apps/zathura<br/>apps/zellij, disk/zfs-diff, disk/zfs-disk-single, apps/zoxide<br/>apps/zsh
+```
