@@ -1,56 +1,67 @@
 # Colmena battery: builds a colmena hive from host entities with lazy
 # access to nixos/darwinConfigurations for the full module set.
+#
+# meta.localSystem is provided by colmena from the deployer's architecture.
+# buildOnTarget and meta.nixpkgs derive from it automatically.
 {
   den,
   lib,
   config,
   inputs,
   self,
+  withSystem,
   ...
 }:
 let
-  inherit (builtins) currentSystem;
-
   allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
     builtins.attrNames (config.den.hosts or { })
   );
 
-  # lib.mapAttrs is lazy per-key — only the targeted host is forced.
-  colmenaNodes = lib.mapAttrs (
-    name: host:
-    let
-      isDarwin = host.class == "darwin";
-      osConfig = if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
-    in
-    {
-      imports = osConfig._module.args.modules;
-      deployment = {
-        targetHost =
-          let
-            inherit (host) ipv4;
-          in
-          if ipv4 == [ ] then "${name}.ts.json64.dev" else builtins.head ipv4;
-        tags = [ (host.environment or "prod") ];
-        allowLocalDeployment = true;
-        buildOnTarget = (host.system or currentSystem) != currentSystem;
-        targetUser = host.remote-deployment-user or "sini";
+  colmenaNodes =
+    { localSystem }:
+    lib.mapAttrs (
+      name: host:
+      let
+        isDarwin = host.class == "darwin";
+        osConfig =
+          if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
+      in
+      {
+        imports = osConfig._module.args.modules;
+        deployment = {
+          targetHost =
+            let
+              inherit (host) ipv4;
+            in
+            if ipv4 == [ ] then "${name}.ts.json64.dev" else builtins.head ipv4;
+          tags = [ (host.environment or "prod") ];
+          allowLocalDeployment = true;
+          buildOnTarget = (host.system or localSystem) != localSystem;
+          targetUser = host.remote-deployment-user or "sini";
+        }
+        // lib.optionalAttrs isDarwin { systemType = "darwin"; };
       }
-      // lib.optionalAttrs isDarwin { systemType = "darwin"; };
-    }
-  ) allHosts;
+    ) allHosts;
 
-  hiveConfig = colmenaNodes // {
-    meta = {
-      nixpkgs = import inputs.nixpkgs-unstable { system = "x86_64-linux"; };
-      nodeSpecialArgs = lib.mapAttrs (
-        name: _: (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
-      ) colmenaNodes;
+  hiveConfig =
+    args@{ localSystem ? "x86_64-linux", ... }:
+    let
+      nodes = colmenaNodes { inherit localSystem; };
+    in
+    nodes
+    // {
+      meta = {
+        nixpkgs = withSystem localSystem ({ pkgs, ... }: pkgs);
+        nodeSpecialArgs = lib.mapAttrs (
+          name: _:
+          (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
+        ) nodes;
+      };
     };
-  };
 in
 {
   flake-file.inputs.colmena = {
-    url = "github:zw3rk/colmena/darwin-support";
+    url = "github:sini/colmena/feat/local-system-detection";
     inputs = {
       nixpkgs.follows = "nixpkgs-unstable";
       flake-compat.follows = "flake-compat";

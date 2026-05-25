@@ -320,16 +320,16 @@
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1768981101,
-        "narHash": "sha256-uGcGIvEvNJOAc1imunk47XODF1CTX2yE36fI9kFuKKE=",
-        "owner": "zw3rk",
+        "lastModified": 1779726434,
+        "narHash": "sha256-lTpBgcDwEJ7T7+ux5mV3rJVWjOtcSujow0WSL5nUpAw=",
+        "owner": "sini",
         "repo": "colmena",
-        "rev": "bb6828ee5aa47a649693a930199a5d13dcad9960",
+        "rev": "7988ea2ba3431f0d367901cd2b3c2db7bd5a5d9d",
         "type": "github"
       },
       "original": {
-        "owner": "zw3rk",
-        "ref": "darwin-support",
+        "owner": "sini",
+        "ref": "feat/local-system-detection",
         "repo": "colmena",
         "type": "github"
       }

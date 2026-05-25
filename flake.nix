@@ -64,7 +64,7 @@
       flake = false;
     };
     colmena = {
-      url = "github:zw3rk/colmena/darwin-support";
+      url = "github:sini/colmena/feat/local-system-detection";
       inputs = {
         flake-compat.follows = "flake-compat";
         flake-utils.follows = "flake-utils";
