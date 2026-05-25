@@ -83,10 +83,7 @@
             dark = "Papirus-Dark";
           };
 
-          targets.firefox = {
-            firefoxGnomeTheme.enable = true;
-            profileNames = [ "default" ];
-          };
+          targets.firefox.firefoxGnomeTheme.enable = true;
 
           cursor = {
             name = "catppuccin-mocha-peach-cursors";
@@ -99,9 +96,13 @@
     homeManager =
       {
         pkgs,
+        stylix-hm,
+        lib,
         ...
       }:
       {
+        stylix = lib.mkMerge stylix-hm;
+
         imports = [
           inputs.stylix.homeModules.stylix
         ];

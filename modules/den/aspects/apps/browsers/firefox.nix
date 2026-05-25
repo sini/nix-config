@@ -205,8 +205,6 @@ in
           };
         };
 
-        stylix.targets.firefox.profileNames = [ "default" ];
-
         xdg.mimeApps.defaultApplications = {
           "text/html" = [ "firefox.desktop" ];
           "text/xml" = [ "firefox.desktop" ];
@@ -214,6 +212,10 @@ in
           "x-scheme-handler/https" = [ "firefox.desktop" ];
         };
       };
+
+    stylix-hm = {
+      targets.firefox.profileNames = [ "default" ];
+    };
 
     provides.impermanence = {
       homeManager = {
