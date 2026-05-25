@@ -1,9 +1,9 @@
 # Colmena battery: policy-driven hive from host entities.
 #
-# Each host's colmena-tags quirk is piped into a colmena class.
-# policy.instantiate collects the class per-host into
-# flake.colmenaDeployment.<host>, then the hive is assembled
-# from host entities + collected deployment data.
+# Each host's colmena-tags quirk is piped and routed into the colmena
+# class.  policy.route + instantiate collects the tags per-host into
+# flake.colmenaDeployment.<host>, then the hive is assembled from host
+# entities + collected deployment data.
 {
   den,
   lib,
@@ -31,7 +31,7 @@ let
           isDarwin = host.class == "darwin";
           osConfig =
             if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
-          hostTags = deploymentData.${name}.tags or [ ];
+          hostTags = deploymentData.${name} or [ ];
         in
         {
           imports = osConfig._module.args.modules;
@@ -72,29 +72,38 @@ in
     };
   };
 
-  # Colmena class — aspects emit colmena-tags into this class via pipe routing.
+  # Colmena class — receives collected colmena-tags pipe data.
   den.classes.colmena.description = "Colmena deployment metadata";
 
-  # Per-host: instantiate colmena class modules into flake.colmenaDeployment.<host>.
+  # Per-host: route colmena class into flake.colmenaDeployment.<host>.
+  # The colmena class module receives colmena-tags as a function arg
+  # (from pipe collection) and produces a tag list.
   den.policies.host-to-colmena =
     { host, ... }:
     [
-      (den.lib.policy.instantiate {
-        name = "${host.name}-colmena";
-        class = "colmena";
-        instantiate =
-          { colmena-tags, ... }:
-          {
-            tags = lib.flatten colmena-tags;
-          };
-        intoAttr = [
+      (den.lib.policy.route {
+        fromClass = "colmena";
+        intoClass = "flake";
+        path = [
           "colmenaDeployment"
           host.name
         ];
+        instantiate =
+          { modules, ... }:
+          let
+            evaluated = lib.evalModules {
+              modules = modules ++ [
+                {
+                  config._module.freeformType = lib.types.lazyAttrsOf lib.types.unspecified;
+                }
+              ];
+            };
+          in
+          evaluated.config.tags or [ ];
       })
     ];
 
-  # Pipe colmena-tags quirk into the colmena class.
+  # Pipe colmena-tags quirk into the colmena class as a collected arg.
   den.policies.collect-colmena-tags =
     _:
     [
@@ -106,6 +115,19 @@ in
   den.schema.host.includes = [
     den.policies.host-to-colmena
     den.policies.collect-colmena-tags
+  ];
+
+  # Default colmena class aspect — captures pipe data into config.
+  den.aspects.colmena-tag-collector = {
+    colmena =
+      { colmena-tags, ... }:
+      {
+        tags = lib.flatten colmena-tags;
+      };
+  };
+
+  den.default.includes = [
+    den.aspects.colmena-tag-collector
   ];
 
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
