@@ -51,8 +51,13 @@ in
         '';
       });
 
-      rc = diagram.renderContext {
+      theme = diagram.themeFromBase16 {
         inherit pkgs;
+        scheme = "catppuccin-mocha";
+      };
+
+      rc = diagram.renderContext {
+        inherit pkgs theme;
         mermaidCli = mermaidCliPatched;
         mermaidConfig = {
           layout = "elk";
