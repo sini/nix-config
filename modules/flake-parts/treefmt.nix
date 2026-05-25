@@ -75,7 +75,6 @@
 
           statix.options = [ "explain" ];
           mdformat.options = [ "--number" ];
-          deadnix.options = [ "--no-lambda-pattern-names" ];
           shellcheck.options = [
             "--shell=bash"
             "--check-sourced"
@@ -113,10 +112,6 @@
           statix = {
             enable = true;
             package = inputs'.statix.packages.default;
-          };
-          deadnix = {
-            enable = true;
-            package = pkgs.deadnix;
           };
           nixf-diagnose.enable = true;
           prettier = {
