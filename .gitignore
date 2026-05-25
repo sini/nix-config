@@ -1,4 +1,3 @@
-/.pre-commit-config.yaml
 /result
 /result.*
 .direnv
@@ -6,3 +5,4 @@
 .claude
 CLAUDE.md
 docs/superpowers/
+.pre-commit-config.yaml

@@ -1,24 +1,14 @@
-{ config, ... }:
-{
-  # Nix git-ignores
-  text.gitignore = ''
-    /result
-    /result.*
-    .direnv
-    .cache
-    .claude
-    CLAUDE.md
-    docs/superpowers/
-  '';
-
-  perSystem =
-    { pkgs, ... }:
-    {
-      files.files = [
-        {
-          path_ = ".gitignore";
-          drv = pkgs.writeText ".gitignore" config.text.gitignore;
-        }
-      ];
-    };
+_: {
+  perSystem = {
+    files.file.".gitignore".text = ''
+      /result
+      /result.*
+      .direnv
+      .cache
+      .claude
+      CLAUDE.md
+      docs/superpowers/
+      .pre-commit-config.yaml
+    '';
+  };
 }

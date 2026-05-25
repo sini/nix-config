@@ -111,6 +111,69 @@ let
     };
 in
 {
+  flake-file.inputs = {
+    agenix = {
+      url = "github:ryantm/agenix";
+      inputs.home-manager.follows = "home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    agenix-rekey = {
+      url = "github:sini/agenix-rekey/feat/settings";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+
+    agenix-rekey-to-sops = {
+      url = "github:sini/agenix-rekey-to-sops";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+      inputs.agenix-rekey.follows = "agenix-rekey";
+    };
+  };
+
+  imports = [
+    inputs.agenix-rekey.flakeModule
+    inputs.agenix-rekey-to-sops.flakeModule
+  ];
+
   den.schema.host.includes = [ agenixHostAspect ];
   den.schema.user.includes = [ agenixUserAspect ];
+
+  perSystem =
+    {
+      config,
+      pkgs,
+      system,
+      ...
+    }:
+    {
+      agenix-rekey = {
+        nixosConfigurations = inputs.self.outputs.nixosConfigurations;
+        darwinConfigurations = inputs.self.outputs.darwinConfigurations;
+        collectHomeManagerConfigurations = true;
+        extraConfigurations = inputs.self.nixidyEnvs.${system} or { };
+      };
+
+      devshells.default = {
+        packages = [
+          pkgs.age
+          pkgs.age-plugin-yubikey
+        ];
+        commands = [
+          {
+            inherit (config.agenix-rekey-sops) package;
+            help = "Edit, generate, rekey secrets, and generate SOPS files";
+          }
+        ];
+        env = [
+          {
+            name = "AGENIX_REKEY_ADD_TO_GIT";
+            value = "true";
+          }
+          {
+            name = "SOPS_AGE_KEY_CMD";
+            value = "age-plugin-yubikey -i";
+          }
+        ];
+      };
+    };
 }

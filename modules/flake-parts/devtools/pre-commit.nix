@@ -7,10 +7,6 @@
     inputs.git-hooks-nix.flakeModule
   ];
 
-  text.gitignore = ''
-    /.pre-commit-config.yaml
-  '';
-
   perSystem =
     {
       self',
