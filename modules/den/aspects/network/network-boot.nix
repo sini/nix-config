@@ -60,7 +60,7 @@ in
           iface ? unix_device_name && lib.hasPrefix "wl" iface.unix_device_name && iface ? driver_modules
         ) null config.facter.report.hardware.network_interface;
 
-        hasWireless = wirelessInterface != null;
+        hasWireless = host.settings.network.wireless-initrd or false;
         interface = if hasWireless then wirelessInterface.unix_device_name else "";
 
         inherit (config.age) secrets;
