@@ -4,11 +4,19 @@
   ...
 }:
 {
-  imports = [ inputs.files.flakeModules.default ];
+  imports = [
+    inputs.files.flakeModules.default
+    inputs.flake-parts.flakeModules.modules
+  ];
 
   _module.args.dag = inputs.dag.lib { lib = inputs.nixpkgs-unstable.lib; };
 
-  flake-file.inputs.dag.url = "github:denful/dag";
+  flake-file.inputs = {
+    dag.url = "github:denful/dag";
+    systems.url = "github:nix-systems/default";
+  };
+
+  systems = import inputs.systems;
 
   perSystem =
     {
