@@ -320,11 +320,11 @@
         "stable": "stable"
       },
       "locked": {
-        "lastModified": 1779726980,
-        "narHash": "sha256-416Sm4iKWz93l8N5pg5uA8ACVOrBy9qGE1fhVDTnXx4=",
+        "lastModified": 1779727443,
+        "narHash": "sha256-Vr6kxtESbvyzFjxp2TTrFZ5tBGVhPheTWn/bF5PnP5E=",
         "owner": "sini",
         "repo": "colmena",
-        "rev": "bf37f3466b1ea7fd6557c2620a1c9c0ba4cbd9f9",
+        "rev": "535de55be5fbb94eb93a7e12c9656e7062931b7f",
         "type": "github"
       },
       "original": {
