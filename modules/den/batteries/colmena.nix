@@ -62,6 +62,14 @@ let
     };
 in
 {
+  options.flake.colmenaDeployment = lib.mkOption {
+    type = lib.types.attrsOf (lib.types.listOf lib.types.str);
+    default = { };
+    description = "Per-host colmena tags collected from aspects";
+  };
+
+  config = {
+
   flake-file.inputs.colmena = {
     url = "github:sini/colmena/feat/local-system-detection";
     inputs = {
@@ -98,12 +106,6 @@ in
     den.aspects.colmena-tag-sink
   ];
 
-  options.flake.colmenaDeployment = lib.mkOption {
-    type = lib.types.attrsOf (lib.types.listOf lib.types.str);
-    default = { };
-    description = "Per-host colmena tags collected from aspects";
-  };
-
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
 
   # Emit colmena CLI into devshell via class routing
@@ -126,4 +128,6 @@ in
       };
   };
   den.schema.flake-parts.includes = [ den.aspects.devshell.colmena ];
+
+  }; # config
 }
