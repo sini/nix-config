@@ -98,6 +98,12 @@ in
     den.aspects.colmena-tag-sink
   ];
 
+  options.flake.colmenaDeployment = lib.mkOption {
+    type = lib.types.attrsOf (lib.types.listOf lib.types.str);
+    default = { };
+    description = "Per-host colmena tags collected from aspects";
+  };
+
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;
 
   # Emit colmena CLI into devshell via class routing
