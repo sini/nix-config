@@ -1,4 +1,4 @@
-# Entity topology via parent sidecars.
+# Entity topology via parent collections.
 # Declares parent-child nesting between kinds for scope-engine graph generation.
 # gen-schema derives _meta.topology from these declarations.
 _: {
