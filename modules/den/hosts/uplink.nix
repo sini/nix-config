@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.hosts.x86_64-linux.uplink = {
-    channel = "nixos-unstable";
+    channel = "nixpkgs-master";
     environment = "prod";
     system-owner = "sini";
     system-access-groups = [ "server-access" ];
