@@ -66,8 +66,8 @@ _: {
 
         nixpkgs.config = {
           nvidia.acceptLicense = true;
-          cudaSupport = true;
-          cudnnSupport = true;
+          # cudaSupport = true; # TODO: Enable CUDA
+          # cudnnSupport = true;
         };
 
         environment = {

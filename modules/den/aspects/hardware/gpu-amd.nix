@@ -40,7 +40,7 @@ _: {
           };
         };
 
-        nixpkgs.config.rocmSupport = true;
+        # nixpkgs.config.rocmSupport = true; # TODO: Restore ROCM
 
         environment.systemPackages = [
           pkgs.lact
