@@ -12,7 +12,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  gen = inputs.gen { inherit lib; };
+  gen-algebra = inputs.gen-algebra { inherit lib; };
 
   interfaceType = types.submodule {
     options = {
@@ -182,7 +182,7 @@ in
   den.schema.host.isEntity = true;
 
   den.schema.host.validators = [
-    (gen.mkValidator "valid-channel" (
+    (gen-algebra.mkValidator "valid-channel" (
       { channel, ... }: lib.elem channel channelNames
     ) "channel must be one of: ${lib.concatStringsSep ", " channelNames}")
   ];

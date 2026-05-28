@@ -108,7 +108,7 @@
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
-    gen = {
+    gen-algebra = {
       url = "github:sini/gen-algebra";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };

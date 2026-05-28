@@ -65,8 +65,8 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
-      gen = {
-        url = "github:sini/gen";
+      gen-algebra = {
+        url = "github:sini/gen-algebra";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
