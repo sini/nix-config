@@ -11,7 +11,7 @@ let
   schemaLib = inputs.gen-schema.lib;
 in
 {
-  options.den.environments = schemaLib.mkInstanceRegistry den.schema "environment" {
+  options.den.environments = schemaLib.mkInstanceRegistry den.schema.environment {
     description = "Environment definitions for fleet topology and service resolution";
   };
 }

@@ -17,7 +17,7 @@ let
   clusters = config.den.clusters;
 in
 {
-  options.den.clusters = schemaLib.mkInstanceRegistry den.schema "cluster" {
+  options.den.clusters = schemaLib.mkInstanceRegistry den.schema.cluster {
     description = "Cluster definitions for fleet topology and K8s service resolution";
     derive =
       clusters:
