@@ -109,7 +109,7 @@
       inputs.systems.follows = "systems";
     };
     gen = {
-      url = "github:sini/gen";
+      url = "github:sini/gen-algebra";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     gen-schema = {
