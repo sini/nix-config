@@ -428,11 +428,11 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1779900236,
-        "narHash": "sha256-dis0VCCRvDuKwbhSzOEIGuEtzwfYQtchhC8qkgqWzDo=",
+        "lastModified": 1779997593,
+        "narHash": "sha256-475cjakCejBW3mlFGLfkVdqtt9TZPpAUYjkbECezaoY=",
         "owner": "sini",
         "repo": "den",
-        "rev": "26d94fc12543d96d7951578d8850dbcbea776b94",
+        "rev": "34c6c46e9aacde2d1b0baf81d5fc481fdc3b3a26",
         "type": "github"
       },
       "original": {
@@ -546,11 +546,11 @@
     },
     "files": {
       "locked": {
-        "lastModified": 1779498638,
-        "narHash": "sha256-XdBP/MIDhFU3JSLHJ04b4mroxXxuVd8BhaIYTAXM2a4=",
+        "lastModified": 1780084175,
+        "narHash": "sha256-hmXRqcp+rWLW8GEYgrBDFHPGziP1R59oQbG+Imji2kE=",
         "owner": "sini",
         "repo": "files",
-        "rev": "e5f2091406a73814d4b55e804b57f15fbaed4a8a",
+        "rev": "b79ab01ba5394ddf3c1d0fadafbcc1ccb9536c5f",
         "type": "github"
       },
       "original": {
@@ -1149,13 +1149,13 @@
         "type": "github"
       }
     },
-    "gen": {
+    "gen-algebra": {
       "locked": {
-        "lastModified": 1779845745,
-        "narHash": "sha256-YRa0i1W4y69sST50uDSlB7V/YJNF4rx9hMr4/8IcYUk=",
+        "lastModified": 1779949157,
+        "narHash": "sha256-Lus/dMa/CjERJMySG12RDArQKW4G3A6X/UQUi7KNWfA=",
         "owner": "sini",
         "repo": "gen-algebra",
-        "rev": "5d3ad52eeb869645eb7ff1f4d99d192755f5fd0c",
+        "rev": "dd682674edad388c439c6f2b08f84c31feec1b68",
         "type": "github"
       },
       "original": {
@@ -1171,11 +1171,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1779960080,
-        "narHash": "sha256-HOMl7e5p8JKuI6TKC7+GWXoBYDiQYxbVvG/BiZKn69g=",
+        "lastModified": 1779986641,
+        "narHash": "sha256-KcZuS+hpaloICFcepNXNLpbehh6XoPjWPBteYpTqMRw=",
         "owner": "sini",
         "repo": "gen-schema",
-        "rev": "a988a7114037b04702462f97faeacbd9e894f522",
+        "rev": "4bd0f6eb1799bf3c38eb3707419157b1f70eb1f5",
         "type": "github"
       },
       "original": {
@@ -3199,7 +3199,7 @@
         "flake-parts": "flake-parts_4",
         "flake-root": "flake-root",
         "flake-utils": "flake-utils",
-        "gen": "gen",
+        "gen-algebra": "gen-algebra",
         "gen-schema": "gen-schema",
         "git-hooks-nix": "git-hooks-nix",
         "haumea": "haumea",

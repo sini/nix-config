@@ -17,8 +17,20 @@ let
     builtins.attrNames (config.den.hosts or { })
   );
 
+  # Channel → nixpkgs input mapping.  Duplicates the table in host.nix but
+  # avoids touching self.nixosConfigurations (which forces full host eval).
+  channelNixpkgs = {
+    nixos-unstable = inputs.nixpkgs-unstable;
+    inherit (inputs) nixpkgs-master;
+    nixos-stable = inputs.nixpkgs;
+    inherit (inputs) nixpkgs-stable-darwin;
+  };
+
   hiveConfig =
-    { localSystem ? "x86_64-linux", ... }:
+    {
+      localSystem ? "x86_64-linux",
+      ...
+    }:
     let
       deploymentData = config.flake.colmenaDeployment or { };
 
@@ -26,8 +38,7 @@ let
         name: host:
         let
           isDarwin = host.class == "darwin";
-          osConfig =
-            if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
+          osConfig = if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
           hostTags = deploymentData.${name} or [ ];
         in
         {
@@ -52,10 +63,16 @@ let
       meta = {
         nixpkgs = withSystem localSystem ({ pkgs, ... }: pkgs);
         nix-darwin = inputs.nix-darwin-unstable;
-        nodeSpecialArgs = lib.mapAttrs (
-          name: _:
-          (self.nixosConfigurations.${name} or self.darwinConfigurations.${name})._module.specialArgs
-        ) nodes;
+        # Per-node nixpkgs: colmena uses npkgs.path to find eval-config.nix.
+        # Derived from host entity channel (cheap) rather than the evaluated
+        # nixosConfiguration (expensive).  Bare import avoids colmena's
+        # nixpkgsModule double-applying overlays/config.
+        nodeNixpkgs = lib.mapAttrs (
+          _: host:
+          import channelNixpkgs.${host.channel or "nixos-unstable"} {
+            inherit (host) system;
+          }
+        ) allHosts;
       };
     };
 in

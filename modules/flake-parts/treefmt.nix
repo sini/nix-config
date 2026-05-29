@@ -71,7 +71,7 @@
             "**/_*"
           ]
           # Exclude generated files from the files.files flake-parts module
-          ++ (map (file: file.path_) config.files.files);
+          ++ config.files.paths;
 
           statix.options = [ "explain" ];
           mdformat.options = [ "--number" ];

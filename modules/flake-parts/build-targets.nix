@@ -1,6 +1,18 @@
 # Exports host configurations for CI builds
 # Merges with nixos-unified's packages (activate, update) via config.packages
-{ self, ... }:
+{
+  self,
+  config,
+  lib,
+  ...
+}:
+let
+  # Get host system from den entity data (cheap) instead of evaluating
+  # nixosConfigurations.${name}.pkgs.stdenv.hostPlatform.system (expensive).
+  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
+    builtins.attrNames (config.den.hosts or { })
+  );
+in
 {
   perSystem =
     {
@@ -10,34 +22,13 @@
       ...
     }:
     let
-      # Get derivations from all configuration types
-      nixosDrvs = lib.mapAttrs (_: nixos: nixos.config.system.build.toplevel) (
-        self.nixosConfigurations or { }
-      );
-      # homeDrvs = lib.mapAttrs (_: home: home.activationPackage) (self.homeConfigurations or { });
-      # darwinDrvs = lib.mapAttrs (_: darwin: darwin.system) (self.darwinConfigurations or { });
-      hostDrvs = nixosDrvs; # // homeDrvs // darwinDrvs;
+      # Only include hosts matching this system, using den entity metadata.
+      compatHostNames = lib.filterAttrs (_: host: (host.system or null) == system) allHosts;
 
-      # Filter to hosts compatible with current system
-      compatHostDrvs = lib.filterAttrs (
-        name: _:
-        let
-          isNixos = (self.nixosConfigurations or { }) ? ${name};
-          isDarwin = (self.darwinConfigurations or { }) ? ${name};
-          isHome = (self.homeConfigurations or { }) ? ${name};
-
-          hostSystem =
-            if isNixos then
-              self.nixosConfigurations.${name}.pkgs.stdenv.hostPlatform.system
-            else if isDarwin then
-              self.darwinConfigurations.${name}.pkgs.stdenv.hostPlatform.system
-            else if isHome then
-              self.homeConfigurations.${name}.pkgs.stdenv.hostPlatform.system
-            else
-              null;
-        in
-        hostSystem == system
-      ) hostDrvs;
+      # Lazily map to toplevel derivations — only evaluated hosts are forced.
+      compatHostDrvs = lib.mapAttrs (
+        name: _: self.nixosConfigurations.${name}.config.system.build.toplevel
+      ) compatHostNames;
 
       # Create a linkFarm containing all compatible hosts
       compatHostsFarm = pkgs.linkFarm "hosts-${system}" (
