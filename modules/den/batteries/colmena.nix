@@ -8,7 +8,6 @@
   lib,
   config,
   inputs,
-  self,
   withSystem,
   ...
 }:
@@ -34,15 +33,15 @@ let
     let
       deploymentData = config.flake.colmenaDeployment or { };
 
+      colmenaModules = config.flake.colmenaModules or { };
+
       nodes = lib.mapAttrs (
         name: host:
         let
-          isDarwin = host.class == "darwin";
-          osConfig = if isDarwin then self.darwinConfigurations.${name} else self.nixosConfigurations.${name};
           hostTags = deploymentData.${name} or [ ];
         in
         {
-          imports = osConfig._module.args.modules;
+          imports = colmenaModules.${name};
           deployment = {
             targetHost =
               let
@@ -54,7 +53,7 @@ let
             buildOnTarget = (host.system or localSystem) != localSystem;
             targetUser = host.remote-deployment-user or "sini";
           }
-          // lib.optionalAttrs isDarwin { systemType = "darwin"; };
+          // lib.optionalAttrs (host.class == "darwin") { systemType = "darwin"; };
         }
       ) allHosts;
     in
@@ -106,8 +105,26 @@ in
       })
     ];
 
+  # Per-host: capture the raw OS module list without calling nixosSystem.
+  # Colmena uses this as node imports — avoids forcing nixosConfigurations
+  # just to read the module list back out.
+  den.policies.host-modules-capture =
+    { host, ... }:
+    [
+      (den.lib.policy.instantiate {
+        name = "${host.name}-modules";
+        class = host.class;
+        instantiate = { modules, ... }: modules;
+        intoAttr = [
+          "colmenaModules"
+          host.name
+        ];
+      })
+    ];
+
   den.schema.host.includes = [
     den.policies.host-to-colmena
+    den.policies.host-modules-capture
   ];
 
   flake.colmenaHive = inputs.colmena.lib.makeHive hiveConfig;

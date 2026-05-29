@@ -348,7 +348,9 @@ in
       );
     in
     {
-      packages =
+      # Diagram packages live in legacyPackages to avoid forcing the expensive
+      # fleet capture + graph rendering when the eval cache walks packages.*.
+      legacyPackages.diagrams =
         entriesToPackages everyEntry
         // hostSummaryDrvs
         // {

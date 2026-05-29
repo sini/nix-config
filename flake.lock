@@ -428,11 +428,11 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1779997593,
-        "narHash": "sha256-475cjakCejBW3mlFGLfkVdqtt9TZPpAUYjkbECezaoY=",
+        "lastModified": 1780093535,
+        "narHash": "sha256-032AiftBa+02J7AOhExgVfPHtOXmlKvoLdEfdbVvilk=",
         "owner": "sini",
         "repo": "den",
-        "rev": "34c6c46e9aacde2d1b0baf81d5fc481fdc3b3a26",
+        "rev": "c0029848583715de840a842e2ff3ad6b956b3cda",
         "type": "github"
       },
       "original": {
@@ -3428,16 +3428,15 @@
         "tinted-zed": "tinted-zed"
       },
       "locked": {
-        "lastModified": 1779664081,
-        "narHash": "sha256-glV4wcBH6fWub101jWj3c577T5Af8jOg6CdZPKKi4N8=",
-        "owner": "sini",
+        "lastModified": 1780079634,
+        "narHash": "sha256-VVyCrzwLitvxZGx48FgzvlbLYGQU99GsaQnZmwqZoUo=",
+        "owner": "nix-community",
         "repo": "stylix",
-        "rev": "bb86d92226b163fb0aeaa7081c4781de42acd598",
+        "rev": "ca07e0644716a7c13e91c6d92d169fc81889c589",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
-        "ref": "fix/useGlobalPkgs-autoImport-guard",
+        "owner": "nix-community",
         "repo": "stylix",
         "type": "github"
       }
