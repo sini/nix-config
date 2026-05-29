@@ -32,11 +32,11 @@
               package = self'.formatter;
             };
 
-            # Use built-in statix hook with custom package
-            statix = {
-              enable = true;
-              package = inputs'.statix.packages.default;
-            };
+            # TODO: re-enable after addressing pre-existing warnings
+            # statix = {
+            #   enable = true;
+            #   package = inputs'.statix.packages.default;
+            # };
 
             # Custom hook: write-files
             # write-files = {
