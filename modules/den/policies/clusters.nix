@@ -60,37 +60,40 @@ in
         ]
       ) (builtins.attrNames clusters);
 
-    # cluster -> hosts: resolve hosts into cluster scope for kubernetes aspects.
-    # Uses explicit cluster.hosts list when provided, otherwise discovers hosts
-    # by environment + role aspect matching.
-    den.policies.cluster-to-hosts =
-      { cluster, ... }:
-      let
-        allHosts = lib.concatMap (
-          system:
-          lib.map (hostName: den.hosts.${system}.${hostName}) (
-            builtins.attrNames (den.hosts.${system} or { })
-          )
-        ) (builtins.attrNames (den.hosts or { }));
-
-        matchesCluster =
-          h:
-          let
-            inEnv = (h.environment or "prod") == cluster.environment;
-            roleAspect = den.aspects.services.${cluster.role} or null;
-            hasRole = cluster.role != null && roleAspect != null && h.hasAspect roleAspect;
-          in
-          inEnv && hasRole;
-
-        matchedHosts =
-          if cluster.hosts != null then
-            builtins.filter (h: builtins.elem h.name cluster.hosts) allHosts
-          else
-            builtins.filter matchesCluster allHosts;
-      in
-      lib.map (h: resolve.to "host" { host = h; }) matchedHosts;
+    # TODO(den-ag): cluster-to-hosts causes duplicate instantiate specs because
+    # resolve.to "host" re-resolves the host entity (triggering schema includes
+    # like host-to-colmena a second time). den-ag's graph-native `edge` primitive
+    # will link existing host nodes into the cluster scope without re-resolution.
+    # Until then, hosts use config.den.clusters registry lookup for cluster data.
+    #
+    # den.policies.cluster-to-hosts =
+    #   { cluster, ... }:
+    #   let
+    #     allHosts = lib.concatMap (
+    #       system:
+    #       lib.map (hostName: den.hosts.${system}.${hostName}) (
+    #         builtins.attrNames (den.hosts.${system} or { })
+    #       )
+    #     ) (builtins.attrNames (den.hosts or { }));
+    #
+    #     matchesCluster =
+    #       h:
+    #       let
+    #         inEnv = (h.environment or "prod") == cluster.environment;
+    #         roleAspect = den.aspects.services.${cluster.role} or null;
+    #         hasRole = cluster.role != null && roleAspect != null && h.hasAspect roleAspect;
+    #       in
+    #       inEnv && hasRole;
+    #
+    #     matchedHosts =
+    #       if cluster.hosts != null then
+    #         builtins.filter (h: builtins.elem h.name cluster.hosts) allHosts
+    #       else
+    #         builtins.filter matchesCluster allHosts;
+    #   in
+    #   lib.map (h: resolve.to "host" { host = h; }) matchedHosts;
 
     den.schema.environment.includes = [ den.policies.env-to-clusters ];
-    den.schema.cluster.includes = [ den.policies.cluster-to-hosts ];
+    # den.schema.cluster.includes = [ den.policies.cluster-to-hosts ];
   };
 }
