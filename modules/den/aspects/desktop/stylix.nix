@@ -105,52 +105,57 @@
           inputs.stylix.homeModules.stylix
         ];
 
-        stylix = lib.mkMerge (stylix-hm ++ [{
-          base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
+        stylix = lib.mkMerge (
+          stylix-hm
+          ++ [
+            {
+              base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
 
-          enable = true;
-          enableReleaseChecks = false;
-          autoEnable = true;
+              enable = true;
+              enableReleaseChecks = false;
+              autoEnable = true;
 
-          image = pkgs.fetchurl {
-            url = "https://w.wallhaven.cc/full/qr/wallhaven-qrd6xd.png";
-            hash = "sha256-ZS/ALvkETellw2squBX7bRmx1VURGQ9SAvQIjTuP9FI=";
-          };
+              image = pkgs.fetchurl {
+                url = "https://w.wallhaven.cc/full/qr/wallhaven-qrd6xd.png";
+                hash = "sha256-ZS/ALvkETellw2squBX7bRmx1VURGQ9SAvQIjTuP9FI=";
+              };
 
-          polarity = "dark";
+              polarity = "dark";
 
-          targets = {
-            qt.enable = false;
-          };
+              targets = {
+                qt.enable = false;
+              };
 
-          fonts = {
-            sizes = {
-              terminal = 12;
-              applications = 12;
-              popups = 12;
-            };
+              fonts = {
+                sizes = {
+                  terminal = 12;
+                  applications = 12;
+                  popups = 12;
+                };
 
-            serif = {
-              name = "Source Serif";
-              package = pkgs.source-serif;
-            };
+                serif = {
+                  name = "Source Serif";
+                  package = pkgs.source-serif;
+                };
 
-            sansSerif = {
-              name = "Noto Sans";
-              package = pkgs.noto-fonts;
-            };
+                sansSerif = {
+                  name = "Noto Sans";
+                  package = pkgs.noto-fonts;
+                };
 
-            monospace = {
-              package = pkgs.nerd-fonts.dejavu-sans-mono;
-              name = "DejaVuSansM Nerd Font Mono";
-            };
+                monospace = {
+                  package = pkgs.nerd-fonts.dejavu-sans-mono;
+                  name = "DejaVuSansM Nerd Font Mono";
+                };
 
-            emoji = {
-              package = pkgs.noto-fonts-color-emoji;
-              name = "Noto Color Emoji";
-            };
-          };
-        }]);
+                emoji = {
+                  package = pkgs.noto-fonts-color-emoji;
+                  name = "Noto Color Emoji";
+                };
+              };
+            }
+          ]
+        );
       };
   };
 }

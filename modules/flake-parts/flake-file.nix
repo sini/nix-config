@@ -332,7 +332,7 @@
       };
 
       stylix = {
-        url = "github:sini/stylix/fix/useGlobalPkgs-autoImport-guard";
+        url = "github:nix-community/stylix";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
