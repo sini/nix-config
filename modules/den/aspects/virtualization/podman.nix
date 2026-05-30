@@ -77,18 +77,13 @@
         boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
       };
 
-    provides.impermanence = {
-      nixos = _: {
-        environment.persistence."/cache".directories = [
-          "/var/lib/cni"
-          "/var/lib/containers"
-        ];
-      };
-      homeManager = {
-        home.persistence."/cache".directories = [
-          ".local/share/containers"
-        ];
-      };
-    };
+    cache.directories = [
+      "/var/lib/cni"
+      "/var/lib/containers"
+    ];
+
+    cacheHome.directories = [
+      ".local/share/containers"
+    ];
   };
 }

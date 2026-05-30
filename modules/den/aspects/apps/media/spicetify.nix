@@ -41,7 +41,7 @@
         };
       };
 
-    provides.firewall.nixos = {
+    firewall = {
       # Local Discovery and Google Cast ports
       networking.firewall.allowedTCPPorts = [ 57621 ];
       networking.firewall.allowedUDPPorts = [ 5353 ];

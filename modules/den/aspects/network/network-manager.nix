@@ -22,11 +22,9 @@ _: {
         systemd.services.NetworkManager-wait-online.enable = false;
       };
 
-    provides.impermanence.nixos = {
-      environment.persistence."/cache".directories = [
-        "/etc/NetworkManager/system-connections"
-        "/var/lib/NetworkManager"
-      ];
-    };
+    cache.directories = [
+      "/etc/NetworkManager/system-connections"
+      "/var/lib/NetworkManager"
+    ];
   };
 }

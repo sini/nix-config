@@ -11,21 +11,17 @@
         users.users.microvm.extraGroups = [ "disk" ];
       };
 
-    provides.firewall.nixos = {
+    firewall = {
       networking.firewall.allowedUDPPorts = [ 67 ];
     };
 
-    provides.impermanence = {
-      nixos = _: {
-        environment.persistence."/persist".directories = [
-          {
-            directory = "/var/lib/microvms";
-            user = "microvm";
-            group = "kvm";
-            mode = "0775";
-          }
-        ];
-      };
-    };
+    persist.directories = [
+      {
+        directory = "/var/lib/microvms";
+        user = "microvm";
+        group = "kvm";
+        mode = "0775";
+      }
+    ];
   };
 }

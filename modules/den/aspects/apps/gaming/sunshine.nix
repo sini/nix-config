@@ -79,12 +79,8 @@ _: {
         xdg.autostart.entries = [ "${pkgs.local.moondeck-buddy}/share/applications/MoonDeckBuddy.desktop" ];
       };
 
-    provides.impermanence = {
-      homeManager = {
-        home.persistence."/persist".directories = [
-          ".config/sunshine/"
-        ];
-      };
-    };
+    persistHome.directories = [
+      ".config/sunshine/"
+    ];
   };
 }

@@ -23,12 +23,8 @@ _: {
       };
     };
 
-    provides.impermanence = {
-      homeManager = {
-        home.persistence."/persist".directories = [
-          ".config/kdeconnect"
-        ];
-      };
-    };
+    persistHome.directories = [
+      ".config/kdeconnect"
+    ];
   };
 }

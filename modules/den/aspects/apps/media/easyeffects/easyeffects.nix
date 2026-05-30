@@ -15,12 +15,8 @@ _: {
       };
     };
 
-    provides.impermanence = {
-      homeManager = {
-        home.persistence."/persist".directories = [
-          ".local/share/easyeffects"
-        ];
-      };
-    };
+    persistHome.directories = [
+      ".local/share/easyeffects"
+    ];
   };
 }

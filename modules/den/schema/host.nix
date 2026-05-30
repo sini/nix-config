@@ -125,6 +125,9 @@ let
       quirkKeys = den.quirks or { };
       skipKey = k: structuralKeysSet ? ${k} || classKeys ? ${k} || quirkKeys ? ${k};
 
+      # Settings declarations may be plain option attrsets
+      # (`{ foo = mkOption {...}; }`) or module-shaped with explicit
+      # imports/config. Default the module keys so plain attrsets work.
       reshapeSettings = raw: {
         imports = raw.imports or [ ];
         config = raw.config or { };

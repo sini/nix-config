@@ -181,12 +181,8 @@
         ];
       };
 
-    provides.impermanence = {
-      homeManager = {
-        home.persistence."/cache".directories = [
-          ".local/share/Steam"
-        ];
-      };
-    };
+    cacheHome.directories = [
+      ".local/share/Steam"
+    ];
   };
 }

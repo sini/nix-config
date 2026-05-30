@@ -262,10 +262,6 @@ _: {
         '';
       };
 
-    provides.impermanence = {
-      nixos = _: {
-        environment.persistence."/persist".directories = [ "/var/lib/libvirt" ];
-      };
-    };
+    persist.directories = [ "/var/lib/libvirt" ];
   };
 }

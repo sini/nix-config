@@ -217,15 +217,12 @@ in
       targets.firefox.profileNames = [ "default" ];
     };
 
-    provides.impermanence = {
-      homeManager = {
-        home.persistence."/cache".directories = [
-          ".cache/mozilla"
-        ];
-        home.persistence."/persist".directories = [
-          ".mozilla/firefox"
-        ];
-      };
-    };
+    cacheHome.directories = [
+      ".cache/mozilla"
+    ];
+
+    persistHome.directories = [
+      ".mozilla/firefox"
+    ];
   };
 }
