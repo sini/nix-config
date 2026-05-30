@@ -3,10 +3,19 @@
 # Ported from main:modules/kubernetes/services/network/cilium/hubble-ui.nix
 {
   config,
+  lib,
   ...
 }:
 let
+  inherit (lib) concatStringsSep splitString take;
   environments = config.den.environments;
+  domainToResourceName =
+    domain:
+    let
+      parts = splitString "." domain;
+      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
+    in
+    concatStringsSep "-" topDomain;
 in
 {
   den.aspects.kubernetes.hubble-ui = {
@@ -42,7 +51,7 @@ in
                 {
                   name = "default-gateway";
                   namespace = "gateways";
-                  sectionName = "${environment.domainToResourceName domain}-https";
+                  sectionName = "${domainToResourceName domain}-https";
                 }
               ];
               hostnames = [ domain ];
@@ -178,9 +187,9 @@ in
       };
 
     age-secrets =
-      { host, ... }:
+      { cluster, ... }:
       let
-        env = environments.${host.environment};
+        env = environments.${cluster.environment};
       in
       {
         age.secrets.hubble-ui-oidc-client-secret = {

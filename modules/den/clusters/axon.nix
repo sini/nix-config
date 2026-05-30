@@ -5,7 +5,7 @@
 #   kubernetes-pods — CNI pod overlay (Cilium, dual-stack)
 #   kubernetes-services — ClusterIP range (dual-stack), CoreDNS lives here
 #   kubernetes-loadbalancers — external LB pool advertised via BGP
-{ den, lib, ... }:
+{ den, ... }:
 {
   den.clusters.axon = {
     environment = "prod";
@@ -47,32 +47,24 @@
     };
   };
 
-  # Cluster aspect — extract only k8s-manifests from kubernetes aspects.
-  # Full aspects have host/system-level keys (age-secrets, crds, settings)
-  # that can't bind at cluster scope. Extract the k8s-manifests key only.
+  # Cluster aspect — k8s services included at cluster scope
   den.aspects.axon = {
-    includes =
-      let
-        k8sAspects = with den.aspects.kubernetes; [
-          cilium
-          cilium-bgp-resources
-          coredns
-          cert-manager
-          sops-secrets-operator
-          argocd
-          envoy-gateway
-          gateway-api
-          longhorn
-          csi-driver-nfs
-          volume-snapshots
-          prometheus
-          loki
-          grafana
-          hubble-ui
-        ];
-      in
-      map (a: { k8s-manifests = a.k8s-manifests; }) (
-        builtins.filter (a: a ? k8s-manifests) k8sAspects
-      );
+    includes = with den.aspects.kubernetes; [
+      cilium
+      cilium-bgp-resources
+      coredns
+      cert-manager
+      sops-secrets-operator
+      argocd
+      envoy-gateway
+      gateway-api
+      longhorn
+      csi-driver-nfs
+      volume-snapshots
+      prometheus
+      loki
+      grafana
+      hubble-ui
+    ];
   };
 }

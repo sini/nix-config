@@ -6,6 +6,7 @@
 }:
 {
   den.classes.k8s-manifests.description = "Kubernetes manifests collected for nixidy";
+  den.classes.k8s-age-secrets.description = "Kubernetes age secret declarations routed into nixidy";
 
   den.policies.cluster-to-nixidy =
     { cluster, ... }:

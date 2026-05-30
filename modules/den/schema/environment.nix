@@ -139,7 +139,7 @@ in
         serviceName:
         let
           svc = services.${serviceName} or { };
-          inherit (svc) delegateTo;
+          delegateTo = svc.delegateTo or null;
         in
         if svc ? domain && svc.domain != null then
           svc.domain

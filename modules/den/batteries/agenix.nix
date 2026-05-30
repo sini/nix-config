@@ -70,6 +70,15 @@ let
           ];
         };
     };
+  # At cluster scope, bridge age-secrets quirk data into the k8s-manifests
+  # class. Den's wrapClassModule binds the age-secrets pipe data (post-
+  # assemblePipes) into this function, which returns it as a nixidy module.
+  # This mirrors how agenixHostAspect bridges agenix into the host's class.
+  agenixClusterAspect = {
+    name = "agenix/cluster";
+    k8s-manifests = { age-secrets ? [ ], ... }: { imports = age-secrets; };
+  };
+
   agenixUserAspect =
     {
       user,
@@ -140,6 +149,7 @@ in
 
   den.schema.host.includes = [ agenixHostAspect ];
   den.schema.user.includes = [ agenixUserAspect ];
+  den.schema.cluster.includes = [ agenixClusterAspect ];
 
   perSystem =
     {

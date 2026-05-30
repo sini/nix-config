@@ -428,12 +428,10 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1780096031,
-        "narHash": "sha256-p03RPBvnMX68XMU36r9P12mCHvNbzLyuUsKVNBdA+9E=",
-        "owner": "sini",
-        "repo": "den",
-        "rev": "c068e21bde6ae8b8a1b4f3f4efb2794ccd36f3a6",
-        "type": "github"
+        "lastModified": 1780167426,
+        "narHash": "sha256-C+Lm6KzrUFsgjk+bvMLyNkX4amEDLCkbe/DMQWRT8L4=",
+        "path": "/home/sini/Documents/repos/den-lazy",
+        "type": "path"
       },
       "original": {
         "owner": "sini",
