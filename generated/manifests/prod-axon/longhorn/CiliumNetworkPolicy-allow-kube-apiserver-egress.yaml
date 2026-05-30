@@ -6,7 +6,7 @@ metadata:
   name: allow-kube-apiserver-egress
   namespace: longhorn-system
 spec:
-  description: Allow snapshot controller to talk to kube-apiserver.
+  description: Allow Longhorn pods to talk to kube-apiserver.
   egress:
     - toEntities:
         - kube-apiserver

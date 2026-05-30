@@ -1,0 +1,36 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  labels:
+    app: kube-prometheus-stack-admission
+    app.kubernetes.io/component: prometheus-operator-webhook
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-86.0.1
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-admission
+webhooks:
+  - admissionReviewVersions:
+      - v1
+      - v1beta1
+    clientConfig:
+      service:
+        name: kube-prometheus-stack-operator
+        namespace: monitoring
+        path: /admission-prometheusrules/mutate
+    failurePolicy: Ignore
+    name: prometheusrulemutate.monitoring.coreos.com
+    rules:
+      - apiGroups:
+          - monitoring.coreos.com
+        apiVersions:
+          - '*'
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - prometheusrules
+    sideEffects: None
+    timeoutSeconds: 10

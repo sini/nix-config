@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+  labels:
+    app.kubernetes.io/component: helm-test
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/name: loki
+  name: loki-helm-test
+  namespace: monitoring
+spec:
+  containers:
+    - args:
+        - -test.v
+      env:
+        - name: CANARY_SERVICE_ADDRESS
+          value: http://loki-canary.monitoring.svc.cluster.local:3500/metrics
+        - name: CANARY_PROMETHEUS_ADDRESS
+          value: ""
+        - name: CANARY_TEST_TIMEOUT
+          value: 1m
+      image: docker.io/grafana/loki-helm-test:latest
+      name: loki-helm-test
+  restartPolicy: Never

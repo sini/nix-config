@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kube-prometheus-stack-alertmanager
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-86.0.1
+    heritage: Helm
+    release: kube-prometheus-stack
+    self-monitor: "true"
+  name: kube-prometheus-stack-alertmanager
+  namespace: monitoring
+spec:
+  ports:
+    - name: http-web
+      port: 9093
+      protocol: TCP
+      targetPort: 9093
+    - appProtocol: http
+      name: reloader-web
+      port: 8080
+      targetPort: reloader-web
+  selector:
+    alertmanager: kube-prometheus-stack-alertmanager
+    app.kubernetes.io/name: alertmanager
+  sessionAffinity: None
+  type: ClusterIP

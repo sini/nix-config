@@ -1,7 +1,7 @@
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
-  name: allow-kubesystem-gateway-to-cert-manager-tls
+  name: allow-gateway-to-cert-tls
   namespace: certs
 spec:
   from:

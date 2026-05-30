@@ -40,8 +40,6 @@ data:
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
-  devices: lo enp2s0 enp199s0f5 enp199s0f6
-  direct-routing-device: '*'
   direct-routing-skip-unreachable: "false"
   disable-external-ip-mitigation: "true"
   dnsproxy-enable-transparent-mode: "true"
@@ -53,6 +51,8 @@ data:
   enable-bgp-legacy-origin-attribute: "false"
   enable-bpf-clock-probe: "false"
   enable-bpf-masquerade: "true"
+  enable-drift-checker: "true"
+  enable-dynamic-config: "true"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-health-check-loadbalancer-ip: "false"
@@ -82,7 +82,6 @@ data:
   enable-service-topology: "false"
   enable-source-ip-verification: "true"
   enable-tcx: "true"
-  enable-tunnel-big-tcp: "false"
   enable-vtep: "false"
   enable-well-known-identities: "false"
   enable-xt-socket-fallback: "true"

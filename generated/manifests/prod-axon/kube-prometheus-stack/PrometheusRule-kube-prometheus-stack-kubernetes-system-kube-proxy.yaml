@@ -1,0 +1,34 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-86.0.1
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-kubernetes-system-kube-proxy
+  namespace: monitoring
+spec:
+  groups:
+    - name: kubernetes-system-kube-proxy
+      rules:
+        - alert: KubeProxyDown
+          annotations:
+            description: KubeProxy has disappeared from Prometheus target discovery.
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeproxydown
+            summary: Target disappeared from Prometheus target discovery.
+          expr: absent(up{job="kube-proxy"})
+          for: 15m
+          labels:
+            severity: critical
+        - alert: KubeProxyInstanceUnreachable
+          annotations:
+            description: A KubeProxy instance has been unreachable for more than 15 minutes.
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/kubernetes/kubeproxyinstanceunreachable
+            summary: KubeProxy instance is unreachable.
+          expr: up{job="kube-proxy"} == 0
+          for: 15m
+          labels:
+            severity: warning
