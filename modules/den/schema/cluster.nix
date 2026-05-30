@@ -1,7 +1,8 @@
-{ lib, inputs, ... }:
+{ lib, inputs, config, ... }:
 let
   inherit (lib) mkOption types;
   schemaLib = inputs.gen-schema.lib;
+  environments = config.den.environments;
 
   networkType = types.submodule {
     options = {
@@ -65,6 +66,22 @@ in
           networks.${found}.assignments.${assignmentName}
         else
           throw "den: cluster assignment '${assignmentName}' not found"
+      );
+
+  den.schema.cluster.methods.secrets =
+    schemaLib.schemaFn "OIDC secret helpers for cluster services"
+      (lib.types.attrsOf lib.types.anything)
+      (
+        { environment, ... }:
+        let
+          env = environments.${environment};
+          kanidmDomain = env.getDomainFor "kanidm";
+        in
+        {
+          oidcIssuerFor =
+            clientID:
+            "https://${kanidmDomain}/oauth2/openid/${clientID}";
+        }
       );
 
   den.schema.cluster.imports = [
