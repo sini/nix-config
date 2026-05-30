@@ -388,6 +388,51 @@ in
     )
   );
 
+  # nixidy-all-envs at flake level — perSystem cannot access config.flake
+  # den pipeline outputs (nixidyModules) without circular dependency.
+  flake.packages = lib.genAttrs config.systems (
+    system:
+    withSystem system (
+      { pkgs, ... }:
+      let
+        envs = config.flake.nixidyEnvs.${system} or { };
+        envData = lib.mapAttrs (
+          _env: nixidyEnv:
+          let
+            target = nixidyEnv.config.nixidy.target;
+          in
+          {
+            inherit (target) repository branch rootPath;
+            package = nixidyEnv.environmentPackage;
+          }
+        ) envs;
+        envNames = lib.attrNames envData;
+      in
+      {
+        nixidy-all-envs = pkgs.runCommand "nixidy-all-envs" { } ''
+          mkdir -p $out
+          ${lib.concatMapStringsSep "\n" (
+            env:
+            let
+              data = envData.${env};
+            in
+            ''
+              ln -s ${data.package} $out/${env}
+            ''
+          ) envNames}
+          cat > $out/manifest.json <<'MANIFEST'
+          ${builtins.toJSON (
+            lib.mapAttrs (_env: data: {
+              inherit (data) repository branch rootPath;
+              packagePath = "${data.package}";
+            }) envData
+          )}
+          MANIFEST
+        '';
+      }
+    )
+  );
+
   perSystem =
     {
       config,
@@ -436,56 +481,9 @@ in
             '') generatorNames}
           '';
 
-        # Combined build target: all environments + manifest.json metadata
-        # Note: cannot use config.flake.nixidyEnvs here — that would create a
-        # circular dependency (flake.nixidyEnvs uses withSystem which enters
-        # this perSystem, and the `or {}` fallback silently swallows it).
-        # Instead, compute envs directly from the module-level clusters binding.
-        nixidy-all-envs =
-          let
-            envs = lib.mapAttrs' (clusterName: cluster: {
-              name = "${cluster.environment}-${clusterName}";
-              value = mkEnv {
-                inherit
-                  system
-                  pkgs
-                  clusterName
-                  cluster
-                  ;
-              };
-            }) clusters;
-            envData = lib.mapAttrs (
-              _env: nixidyEnv:
-              let
-                target = nixidyEnv.config.nixidy.target;
-              in
-              {
-                inherit (target) repository branch rootPath;
-                package = nixidyEnv.environmentPackage;
-              }
-            ) envs;
-            envNames = lib.attrNames envData;
-          in
-          pkgs.runCommand "nixidy-all-envs" { } ''
-            mkdir -p $out
-            ${lib.concatMapStringsSep "\n" (
-              env:
-              let
-                data = envData.${env};
-              in
-              ''
-                ln -s ${data.package} $out/${env}
-              ''
-            ) envNames}
-            cat > $out/manifest.json <<'MANIFEST'
-            ${builtins.toJSON (
-              lib.mapAttrs (_env: data: {
-                inherit (data) repository branch rootPath;
-                packagePath = "${data.package}";
-              }) envData
-            )}
-            MANIFEST
-          '';
+        # nixidy-all-envs is defined at flake level (flake.packages) to avoid
+        # circular dependency — perSystem cannot access config.flake den
+        # pipeline outputs (nixidyModules).
       };
 
       pre-commit.settings.hooks.k8s-update-manifests = {

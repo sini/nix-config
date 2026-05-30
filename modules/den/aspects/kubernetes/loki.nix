@@ -1,12 +1,12 @@
 # Loki — Helm chart for in-cluster log aggregation.
 _: {
   den.aspects.kubernetes.loki = {
-    k8s-manifests = _: {
+    k8s-manifests = { charts, ... }: {
       applications.loki = {
         namespace = "monitoring";
 
         helm.releases.loki = {
-          chart = "grafana/loki";
+          chart = charts.grafana.loki;
 
           values = {
             loki = {

@@ -5,14 +5,14 @@
   ...
 }:
 {
-  den.classes.kubernetes = { };
+  den.classes.k8s-manifests.description = "Kubernetes manifests collected for nixidy";
 
   den.policies.cluster-to-nixidy =
     { cluster, ... }:
     [
       (den.lib.policy.instantiate {
         inherit (cluster) name;
-        class = "kubernetes";
+        class = "k8s-manifests";
         instantiate = { modules, ... }: modules;
         intoAttr = [
           "nixidyModules"

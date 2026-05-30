@@ -38,7 +38,7 @@ in
       };
 
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         longhornDomain = environment.getDomainFor "longhorn";
@@ -56,7 +56,7 @@ in
           compareOptions.serverSideDiff = true;
 
           helm.releases.longhorn = {
-            chart = "longhorn/longhorn";
+            chart = charts.longhorn.longhorn;
             values = {
               longhorn.preUpgradeChecker.jobEnabled = false;
 

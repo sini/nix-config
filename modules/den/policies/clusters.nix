@@ -93,7 +93,18 @@ in
     #   in
     #   lib.map (h: resolve.to "host" { host = h; }) matchedHosts;
 
+    # Auto-include the entity-named aspect for each cluster (mirrors host
+    # entity behaviour where host.aspect defaults to den.aspects.<name>).
+    den.policies.cluster-aspect =
+      { cluster, ... }:
+      let
+        aspect = den.aspects.${cluster.name} or null;
+      in
+      lib.optionals (aspect != null) [
+        (den.lib.policy.include aspect)
+      ];
+
     den.schema.environment.includes = [ den.policies.env-to-clusters ];
-    # den.schema.cluster.includes = [ den.policies.cluster-to-hosts ];
+    den.schema.cluster.includes = [ den.policies.cluster-aspect ];
   };
 }

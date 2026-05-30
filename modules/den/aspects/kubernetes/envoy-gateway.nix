@@ -52,7 +52,7 @@ in
       };
 
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         inherit (cluster) hosts;
@@ -73,7 +73,7 @@ in
           };
 
           helm.releases.envoy = {
-            chart = "envoyproxy/gateway-helm";
+            chart = charts.envoyproxy.gateway-helm;
 
             values = {
               deployment.replicas = 1;

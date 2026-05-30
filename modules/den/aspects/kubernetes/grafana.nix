@@ -9,7 +9,7 @@ in
 {
   den.aspects.kubernetes.grafana = {
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         domain = environment.getDomainFor "grafana-k8s";
@@ -19,7 +19,7 @@ in
           namespace = "monitoring";
 
           helm.releases.grafana = {
-            chart = "grafana/grafana";
+            chart = charts.grafana.grafana;
 
             values = {
               persistence = {

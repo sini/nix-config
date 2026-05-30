@@ -9,12 +9,12 @@ _: {
         chart = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
       };
 
-    k8s-manifests = _: {
+    k8s-manifests = { charts, ... }: {
       applications.sops-secrets-operator = {
         namespace = "sops-secrets-operator";
 
         helm.releases.sops = {
-          chart = "isindir/sops-secrets-operator";
+          chart = charts.isindir.sops-secrets-operator;
 
           values = {
             replicaCount = 1;

@@ -44,7 +44,7 @@ in
       };
 
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         podNetwork = cluster.networks.kubernetes-pods;
@@ -67,7 +67,7 @@ in
           compareOptions.serverSideDiff = true;
 
           helm.releases.cilium = {
-            chart = "cilium/cilium";
+            chart = charts.cilium.cilium;
 
             values = {
               namespaceOverride = "kube-system";

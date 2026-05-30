@@ -12,7 +12,7 @@ in
 {
   den.aspects.kubernetes.coredns = {
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         defaultNetwork =
@@ -29,7 +29,7 @@ in
           annotations."argocd.argoproj.io/sync-wave" = "-2";
 
           helm.releases.coredns = {
-            chart = "coredns/coredns";
+            chart = charts.coredns.coredns;
             values = {
               service = {
                 k8sAppLabelOverride = "kube-dns";

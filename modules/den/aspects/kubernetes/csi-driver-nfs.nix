@@ -20,7 +20,7 @@ in
       };
 
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         inherit (environment) nfsVolumes;
@@ -30,7 +30,7 @@ in
           namespace = "csi-nfs";
 
           helm.releases.csi-driver-nfs = {
-            chart = "kubernetes-csi/csi-driver-nfs";
+            chart = charts.kubernetes-csi.csi-driver-nfs;
           };
 
           resources = {

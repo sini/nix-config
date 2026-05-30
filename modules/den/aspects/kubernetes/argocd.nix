@@ -29,7 +29,7 @@ in
     service-domains = [ "argocd" ];
 
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         domain = environment.getDomainFor "argocd";
@@ -57,7 +57,7 @@ in
           compareOptions.serverSideDiff = true;
 
           helm.releases.argocd = {
-            chart = "argoproj/argo-cd";
+            chart = charts.argoproj.argo-cd;
 
             values = {
               global = {

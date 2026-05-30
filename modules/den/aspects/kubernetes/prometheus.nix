@@ -1,12 +1,12 @@
 # kube-prometheus-stack — Helm chart for in-cluster Prometheus monitoring.
 _: {
   den.aspects.kubernetes.prometheus = {
-    k8s-manifests = _: {
+    k8s-manifests = { charts, ... }: {
       applications.kube-prometheus-stack = {
         namespace = "monitoring";
 
         helm.releases.kube-prometheus-stack = {
-          chart = "prometheus-community/kube-prometheus-stack";
+          chart = charts.prometheus-community.kube-prometheus-stack;
 
           values = {
             prometheus = {

@@ -38,7 +38,7 @@ in
       };
 
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
         inherit (environment.certificates) domains issuers;
@@ -48,7 +48,7 @@ in
           namespace = "cert-manager";
 
           helm.releases.cert-manager = {
-            chart = "jetstack/cert-manager";
+            chart = charts.jetstack.cert-manager;
             values = {
               global.leaderElection.namespace = "cert-manager";
               extraArgs = [
