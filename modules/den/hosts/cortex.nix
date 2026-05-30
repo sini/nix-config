@@ -16,7 +16,7 @@
       core.linux-kernel.optimization = "zen4";
       disk.impermanence = {
         wipeRootOnBoot = true;
-        wipeHomeOnBoot = true;
+        wipeHomeOnBoot = false;
       };
     };
   };
