@@ -437,9 +437,23 @@ in
           '';
 
         # Combined build target: all environments + manifest.json metadata
+        # Note: cannot use config.flake.nixidyEnvs here — that would create a
+        # circular dependency (flake.nixidyEnvs uses withSystem which enters
+        # this perSystem, and the `or {}` fallback silently swallows it).
+        # Instead, compute envs directly from the module-level clusters binding.
         nixidy-all-envs =
           let
-            envs = config.flake.nixidyEnvs.${system} or { };
+            envs = lib.mapAttrs' (clusterName: cluster: {
+              name = "${cluster.environment}-${clusterName}";
+              value = mkEnv {
+                inherit
+                  system
+                  pkgs
+                  clusterName
+                  cluster
+                  ;
+              };
+            }) clusters;
             envData = lib.mapAttrs (
               _env: nixidyEnv:
               let
