@@ -22,8 +22,11 @@
         }
         {
           tag = "b";
-          key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCinYKlfRgeENAcDBxSlvsp7FMUWexYiOaY3hx3jbV947d+UGsufNvdmqMUbHg2f57ywaOY01uWAGd3tzpVnr2+OrjprXfEymvJBxBUSiK5ks6Jst2fs2LqQmr3bNVt0yWNEv/WQtGEj7eEjIY2cnJ8lmMaebv+WMg+Kb/Tw5hdaGeit2nPwQJGS4nQ+XBtPlqzaGmlm1/JRcBFkReoODRWPD7WrGTq4IpKl8k27Dui8LOS5pwIJm8L/k6G7f7eKt+GvtNkqN8TvArck86AYfHWWfy5rYNylbfk2djkVDKDnV65zUUo7ztnNEGdAOb3wV3KZOzJrgZ4ojfgMSwKh8D
-ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnGjEjo6YGg4cGEHi+GpZuL3nKbrCln4IfRzsoPOnhv b@github.com";
+          key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDCinYKlfRgeENAcDBxSlvsp7FMUWexYiOaY3hx3jbV947d+UGsufNvdmqMUbHg2f57ywaOY01uWAGd3tzpVnr2+OrjprXfEymvJBxBUSiK5ks6Jst2fs2LqQmr3bNVt0yWNEv/WQtGEj7eEjIY2cnJ8lmMaebv+WMg+Kb/Tw5hdaGeit2nPwQJGS4nQ+XBtPlqzaGmlm1/JRcBFkReoODRWPD7WrGTq4IpKl8k27Dui8LOS5pwIJm8L/k6G7f7eKt+GvtNkqN8TvArck86AYfHWWfy5rYNylbfk2djkVDKDnV65zUUo7ztnNEGdAOb3wV3KZOzJrgZ4ojfgMSwKh8D b@github.com";
+        }
+        {
+          tag = "c";
+          key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAnGjEjo6YGg4cGEHi+GpZuL3nKbrCln4IfRzsoPOnhv c@github.com";
         }
       ];
     };
