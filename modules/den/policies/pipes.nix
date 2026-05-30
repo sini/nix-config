@@ -12,7 +12,7 @@ in
     _:
     [
       (pipe.from "host-addrs" [
-        (pipe.collectAll (_: true))
+        (pipe.collectAll ({ host, ... }: true))
       ])
     ];
 
@@ -64,12 +64,15 @@ in
       ])
     ];
 
-  # Cluster-scoped: collect k3s node data from hosts across all environments
+  # Cluster-scoped: collect k3s node data from host scopes across all environments.
+  # The predicate must require `host` so findMatchingAll's entity kind filter
+  # includes host scopes (a bare `_: true` has no entity args and rejects
+  # all entity-typed scopes).
   den.policies.cluster-collect-k3s-nodes =
     _:
     [
       (pipe.from "k3s-nodes" [
-        (pipe.collectAll (_: true))
+        (pipe.collectAll ({ host, ... }: true))
       ])
     ];
 
