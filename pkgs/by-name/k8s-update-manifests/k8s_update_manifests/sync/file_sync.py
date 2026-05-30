@@ -152,5 +152,5 @@ class FileSync:
                 if self.dry_run:
                     logging.debug(f"[DRY RUN] Would remove: ./{dir_path}")
                 else:
-                    shutil.rmtree(target_dir)
+                    target_dir.rmdir()
                     logging.debug(f"Removed: ./{dir_path}")
