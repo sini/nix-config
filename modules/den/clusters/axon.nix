@@ -55,6 +55,8 @@
   # Cluster aspect — k8s services included at cluster scope
   den.aspects.axon = {
     includes = with den.aspects.kubernetes; [
+      amd-gpu-device-plugin
+      bootstrap
       cilium
       cilium-bgp-resources
       coredns
