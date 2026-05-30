@@ -17,6 +17,7 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
+      network.network-boot.wireless-initrd = true;
     };
   };
 

@@ -20,6 +20,12 @@ let
 in
 {
   den.aspects.network.network-boot = {
+    settings.wireless-initrd = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Enable wireless (wpa_supplicant) support in initrd for remote LUKS/ZFS unlock over WiFi.";
+    };
+
     nixos =
       {
         config,
@@ -60,7 +66,7 @@ in
           iface ? unix_device_name && lib.hasPrefix "wl" iface.unix_device_name && iface ? driver_modules
         ) null config.facter.report.hardware.network_interface;
 
-        hasWireless = host.settings.network.wireless-initrd or false;
+        hasWireless = host.settings.network.network-boot.wireless-initrd or false;
         interface = if hasWireless then wirelessInterface.unix_device_name else "";
 
         inherit (config.age) secrets;

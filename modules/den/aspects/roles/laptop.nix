@@ -2,9 +2,10 @@
 {
   den.aspects.roles.laptop = {
     colmena = [ "laptop" ];
-    includes = with den.aspects; [
-      network.wireless
-    ];
+
+    # Laptops use NetworkManager for userspace WiFi (roaming, multiple
+    # networks). Standalone wpa_supplicant (network.wireless) is opt-in
+    # per-host and conflicts with NM over the interface if both manage it.
 
     persist = {
       directories = [
