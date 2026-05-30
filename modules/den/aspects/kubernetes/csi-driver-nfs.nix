@@ -8,9 +8,6 @@
   config,
   ...
 }:
-let
-  environments = config.den.environments;
-in
 {
   den.aspects.kubernetes.csi-driver-nfs = {
     crds =

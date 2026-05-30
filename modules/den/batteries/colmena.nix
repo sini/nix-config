@@ -113,7 +113,7 @@ in
     [
       (den.lib.policy.instantiate {
         name = "${host.name}-modules";
-        class = host.class;
+        inherit (host) class;
         instantiate = { modules, ... }: modules;
         intoAttr = [
           "colmenaModules"
