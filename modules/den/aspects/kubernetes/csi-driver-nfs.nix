@@ -22,8 +22,7 @@ in
     k8s-manifests =
       { cluster, charts, ... }:
       let
-        environment = environments.${cluster.environment};
-        inherit (environment) nfsVolumes;
+        inherit (cluster) nfsVolumes;
       in
       {
         applications.csi-driver-nfs = {

@@ -45,6 +45,11 @@
         };
       };
     };
+
+    nfsVolumes.vault-nfs = {
+      server = "10.10.10.10";
+      share = "/volume2/data";
+    };
   };
 
   # Cluster aspect — k8s services included at cluster scope

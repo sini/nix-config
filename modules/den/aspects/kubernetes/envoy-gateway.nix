@@ -55,8 +55,7 @@ in
       { cluster, charts, ... }:
       let
         environment = environments.${cluster.environment};
-        inherit (cluster) hosts;
-        numReplicas = builtins.length (builtins.attrNames hosts);
+        numReplicas = if cluster.hosts != null then builtins.length cluster.hosts else 3;
         domains = environment.certificates.domains;
         default-gateway-address = cluster.getAssignment "default-gateway";
       in

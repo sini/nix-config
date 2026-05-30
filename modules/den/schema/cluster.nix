@@ -117,6 +117,23 @@ in
           default = { };
           description = "Cluster network definitions (pods, services, loadbalancers)";
         };
+
+        nfsVolumes = mkOption {
+          type = types.attrsOf (types.submodule {
+            options = {
+              server = mkOption {
+                type = types.str;
+                description = "NFS server address";
+              };
+              share = mkOption {
+                type = types.str;
+                description = "NFS share path";
+              };
+            };
+          });
+          default = { };
+          description = "NFS volumes for CSI driver StorageClass generation";
+        };
       };
     })
   ];
