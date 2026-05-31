@@ -154,6 +154,10 @@
                 "/etc/zfs/zpool.cache"
                 "/etc/adjtime"
                 "/root/.bash_history"
+                # Host key for systemd LoadCredentialEncrypted. Must persist so
+                # blobs encrypted against it (e.g. libvirt's secrets-encryption-key
+                # under the persisted /var/lib/libvirt) stay decryptable across boots.
+                "/var/lib/systemd/credential.secret"
               ];
             };
           };
