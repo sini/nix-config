@@ -6,12 +6,21 @@
 # Included via den.schema.user.includes so it fires for every resolved user.
 #
 # Ported from main:modules/core/users/default.nix
-{ lib, self, ... }:
+{
+  lib,
+  self,
+  config,
+  ...
+}:
 let
   userEnrich =
     { host, user }:
     let
       inherit (user) userName;
+      # POSIX group membership is resolved by the scope-engine ACL graph
+      # (config.fleet.acl): transitive closure of the user's registry groups
+      # over the den.groups membership graph, filtered to posix-scoped groups.
+      aclUser = config.fleet.acl.get "host:${host.name}" "resolveUser" userName;
       uid = user.system.uid or null;
       gid = if user.system.gid or null != null then user.system.gid else uid;
       subUidStart = if uid != null then 100000 + ((uid - 1000) * 65536) else null;
@@ -39,7 +48,7 @@ let
 
         users.users.${userName} = {
           openssh.authorizedKeys.keys = map (k: k.key) (user.identity.sshKeys or [ ]);
-          extraGroups = user.system.systemGroups or [ ];
+          extraGroups = aclUser.systemGroups;
           linger = user.system.linger or false;
           description = lib.mkDefault (user.identity.displayName or "");
         }

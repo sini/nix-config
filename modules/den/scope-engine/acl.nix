@@ -1,8 +1,14 @@
 # ACL scope graph: group membership + system-access gating.
 #
+# Three-level resolution (groups -> environments -> hosts), evaluated via
+# gen-scope (HOAG). A user's POSIX/kanidm group membership is the transitive
+# closure of their registry groups over the group-membership graph (M edges),
+# partitioned by group scope.
+#
 # Evaluated attributes:
 #   effectiveGates — merged env+host system-access-groups (union)
-#   resolveUser    — paramAttr (hostId, userName) → access record
+#   resolveUser    — paramAttr (hostId) (userName) → access record
+#                    { enable, systemGroups, kanidmGroups, allGroups, ... }
 {
   inputs,
   lib,
@@ -21,30 +27,41 @@ let
 
   groups = config.den.groups or { };
   environments = config.den.environments or { };
+  registry = config.den.users.registry or { };
   hosts = flatHosts;
 
   groupNames = builtins.attrNames groups;
   envNames = builtins.attrNames environments;
   hostNames = builtins.attrNames hosts;
 
-  transitiveGroups =
-    self: groupId:
+  # Group scope is derived from den.groups labels: posix groups land in the
+  # "system" scope (→ NixOS extraGroups), oauth-grant groups in "kanidm".
+  scopeOf =
+    gname:
     let
-      direct = engine.followEdge "M" self groupId;
-      transitive = lib.concatMap (gid: transitiveGroups self gid) direct;
+      labels = groups.${gname}.labels or [ ];
     in
-    lib.unique ([ groupId ] ++ direct ++ transitive);
+    if builtins.elem "posix" labels then
+      "system"
+    else if builtins.elem "oauth-grant" labels then
+      "kanidm"
+    else
+      "system";
 
-  baseNodes = engine.buildNodes {
+  roots = engine.buildNodes {
+    # Parent edges: hosts → environments → root.
     parentGraph = engine.overlays (
       [ (engine.star "root" (map (e: "env:${e}") envNames)) ]
       ++ map (host: engine.edge "host:${host}" "env:${hosts.${host}.environment or "prod"}") hostNames
     );
 
+    # M edges: group-to-group membership. An edge FROM member TO group means
+    # the member inherits the group's privileges (members = [...] on the group).
     edgeGraphs.M = engine.overlays (
       (lib.concatMap (
         gname: map (member: engine.edge "group:${member}" "group:${gname}") (groups.${gname}.members or [ ])
       ) groupNames)
+      # Ensure every group exists as a vertex even with no membership edges.
       ++ [ (engine.vertices (map (g: "group:${g}") groupNames)) ]
     );
 
@@ -58,16 +75,7 @@ let
       ++ map (gname: {
         name = "group:${gname}";
         value = {
-          scope =
-            let
-              labels = groups.${gname}.labels or [ ];
-            in
-            if builtins.elem "posix" labels then
-              "system"
-            else if builtins.elem "oauth-grant" labels then
-              "kanidm"
-            else
-              "system";
+          scope = scopeOf gname;
           description = groups.${gname}.description or "";
           name = gname;
         };
@@ -77,7 +85,6 @@ let
         value = {
           name = ename;
           system-access-groups = environments.${ename}.system-access-groups or [ ];
-          access = environments.${ename}.access or { };
         };
       }) envNames
       ++ map (hname: {
@@ -111,39 +118,55 @@ let
     );
   };
 
+  # Transitive group closure over M edges: if you're in X, you're in everything
+  # X is a member of.
+  transitiveGroups =
+    self: groupId:
+    let
+      direct = engine.followEdge "M" self groupId;
+      transitive = lib.concatMap (gid: transitiveGroups self gid) direct;
+    in
+    lib.unique ([ groupId ] ++ direct ++ transitive);
+
   attributes = {
+    # Structural attributes required by the evaluator / followEdge.
+    children = _self: id: lib.filterAttrs (_: n: n.parent == id) roots;
+    imports = _self: _id: [ ];
+    "edges-M" = _self: id: (_self.node id).decls.__edges.M or [ ];
+
+    # Merged login gates for a host: unique(env ++ host system-access-groups).
     effectiveGates =
       self: id:
       let
-        node = self.nodes.${id};
+        node = self.node id;
         hostGates = node.decls.system-access-groups or [ ];
         envGates =
-          if node.parent != null then self.nodes.${node.parent}.decls.system-access-groups or [ ] else [ ];
+          if node.parent != null then (self.node node.parent).decls.system-access-groups or [ ] else [ ];
       in
       lib.unique (envGates ++ hostGates);
 
+    # Resolve a user's full access on a host. Group membership is sourced from
+    # the user registry (den-v2 single source of truth), expanded transitively
+    # through the membership graph, and partitioned by group scope.
     resolveUser = engine.paramAttr (
       self: hostId: userName:
       let
-        hostNode = self.nodes.${hostId};
-        envId = hostNode.parent;
-        envAccess = self.nodes.${envId}.decls.access or { };
-        directGroups = envAccess.${userName} or [ ];
+        directGroups = registry.${userName}.groups or [ ];
 
         allGroupIds = lib.unique (
           lib.concatMap (gname: transitiveGroups self "group:${gname}") directGroups
         );
-        allGroupNames = map (gid: self.nodes.${gid}.decls.name) (
-          builtins.filter (gid: self.nodes ? ${gid}) allGroupIds
+        allGroupNames = map (gid: (self.node gid).decls.name) (
+          builtins.filter (gid: roots ? ${gid}) allGroupIds
         );
 
-        byScope = scope: builtins.filter (gid: (self.nodes.${gid}.decls.scope or "") == scope) allGroupIds;
-        namesForScope = scope: map (gid: self.nodes.${gid}.decls.name) (byScope scope);
+        byScope = scope: builtins.filter (gid: ((self.node gid).decls.scope or "") == scope) allGroupIds;
+        namesForScope = scope: map (gid: (self.node gid).decls.name) (byScope scope);
 
         systemGroups = namesForScope "system";
         kanidmGroups = namesForScope "kanidm";
 
-        gates = self.evaluated.${hostId}.get "effectiveGates";
+        gates = self.get hostId "effectiveGates";
         gateGroupIds = map (g: "group:${g}") gates;
         gateIntersection = builtins.filter (gid: builtins.elem gid gateGroupIds) (byScope "system");
         enable = gateIntersection != [ ];
@@ -160,9 +183,9 @@ in
 {
   options.fleet.acl = mkOption {
     type = types.raw;
-    description = "Evaluated ACL scope graph from scope-engine";
+    description = "Evaluated ACL scope graph from gen-scope";
     readOnly = true;
   };
 
-  config.fleet.acl = engine.eval { inherit baseNodes attributes; };
+  config.fleet.acl = engine.eval { inherit roots attributes; };
 }
