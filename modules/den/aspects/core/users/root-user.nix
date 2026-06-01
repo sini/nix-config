@@ -1,9 +1,8 @@
 # Copies SSH authorized_keys from all wheel-group users to root.
-{ lib, ... }:
 {
   den.aspects.core.root-user = {
     nixos =
-      { config, ... }:
+      { config, lib, ... }:
       let
         inherit (config) users;
         wheelUsers = lib.filterAttrs (_name: u: builtins.elem "wheel" (u.extraGroups or [ ])) users.users;

@@ -62,16 +62,6 @@ _: {
       classes = [ ];
     };
 
-    jess = {
-      groups = [ "users" ];
-      classes = [ ];
-    };
-
-    leo = {
-      groups = [ "users" ];
-      classes = [ ];
-    };
-
     vincentpierre = {
       groups = [ "users" ];
       classes = [ ];

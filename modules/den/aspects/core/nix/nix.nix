@@ -1,4 +1,3 @@
-{ lib, ... }:
 {
   den.aspects.core.nix = {
     os = {
@@ -70,42 +69,44 @@
       };
     };
 
-    nixos = _: {
-      nix = {
-        settings =
-          let
-            users = [
-              "root"
-              "@wheel"
-            ];
-          in
-          {
-            trusted-users = users;
-            allowed-users = users;
+    nixos =
+      { lib, ... }:
+      {
+        nix = {
+          settings =
+            let
+              users = [
+                "root"
+                "@wheel"
+              ];
+            in
+            {
+              trusted-users = users;
+              allowed-users = users;
+            };
+
+          gc.dates = "05:00";
+          daemonCPUSchedPolicy = lib.mkDefault "batch";
+          daemonIOSchedClass = lib.mkDefault "idle";
+          daemonIOSchedPriority = lib.mkDefault 7;
+        };
+
+        # OOM prevention: separate slice for nix-daemon
+        systemd = {
+          slices."nix-daemon".sliceConfig = {
+            ManagedOOMMemoryPressure = "kill";
+            ManagedOOMMemoryPressureLimit = "50%";
           };
-
-        gc.dates = "05:00";
-        daemonCPUSchedPolicy = lib.mkDefault "batch";
-        daemonIOSchedClass = lib.mkDefault "idle";
-        daemonIOSchedPriority = lib.mkDefault 7;
-      };
-
-      # OOM prevention: separate slice for nix-daemon
-      systemd = {
-        slices."nix-daemon".sliceConfig = {
-          ManagedOOMMemoryPressure = "kill";
-          ManagedOOMMemoryPressureLimit = "50%";
-        };
-        services."nix-daemon".serviceConfig = {
-          Slice = "nix-daemon.slice";
-          OOMScoreAdjust = lib.mkDefault 250;
-        };
-        services.nix-gc.serviceConfig = {
-          CPUSchedulingPolicy = "batch";
-          IOSchedulingClass = "idle";
-          IOSchedulingPriority = 7;
+          services."nix-daemon".serviceConfig = {
+            Slice = "nix-daemon.slice";
+            OOMScoreAdjust = lib.mkDefault 250;
+          };
+          services.nix-gc.serviceConfig = {
+            CPUSchedulingPolicy = "batch";
+            IOSchedulingClass = "idle";
+            IOSchedulingPriority = 7;
+          };
         };
       };
-    };
   };
 }
