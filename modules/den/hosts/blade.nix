@@ -23,29 +23,30 @@
 
   den.aspects.blade = {
     includes = with den.aspects; [
+      roles.default
       roles.workstation
       roles.laptop
       roles.gaming
       roles.dev
       roles.dev-gui
       roles.media
+
       hardware.cpu-intel
       hardware.gpu-intel
       hardware.gpu-nvidia
       hardware.gpu-nvidia-prime
       hardware.razer
       hardware.performance
+
       desktop.hyprland
       desktop.uwsm
+
       disk.zfs-disk-single
-      disk.impermanence
+
       network.network-boot
-      network.openssh
       network.network-manager
       services.tailscale
       apps.discord
-      secrets.agenix
-      core.default
     ];
 
     sini = {

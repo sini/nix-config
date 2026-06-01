@@ -1,6 +1,6 @@
 { den, ... }:
 {
-  den.aspects.core.default = {
+  den.aspects.roles.default = {
     includes = with den.aspects; [
       core.nix
       core.lix
@@ -22,10 +22,17 @@
       core.ssd
       core.linux-kernel
       core.users
+
+      disk.impermanence
+
       apps.zsh
+
       network.networking
       network.openssh
       network.hosts
+
+      secrets.agenix
+
       services.tailscale
     ];
   };

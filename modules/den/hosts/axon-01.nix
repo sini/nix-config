@@ -38,14 +38,10 @@
 
   den.aspects.axon-01 = {
     includes = with den.aspects; [
-      core.default
-      secrets.agenix
-      network.networking
-      network.openssh
+      roles.default
       network.network-boot
       disk.zfs-disk-single
       disk.xfs-disk-longhorn
-      disk.impermanence
       roles.server
       roles.unlock
       roles.nix-builder

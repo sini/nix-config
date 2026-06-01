@@ -9,7 +9,7 @@
 
   den.aspects.patch = {
     includes = with den.aspects; [
-      core.default
+      roles.default
       roles.dev
     ];
 

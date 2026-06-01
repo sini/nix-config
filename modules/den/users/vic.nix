@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.vic = {
-    includes = [ den.aspects.core.default ];
+    includes = [ den.aspects.roles.default ];
   };
 
   den.users.registry.vic = {

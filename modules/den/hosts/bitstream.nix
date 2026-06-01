@@ -32,15 +32,12 @@
 
   den.aspects.bitstream = {
     includes = with den.aspects; [
-      core.default
-      secrets.agenix
-      network.networking
-      network.openssh
-      disk.zfs-disk-single
-      disk.impermanence
-      network.network-boot
+      roles.default
       roles.server
       roles.nix-builder
+
+      disk.zfs-disk-single
+      network.network-boot
       hardware.cpu-amd
       hardware.gpu-amd
     ];

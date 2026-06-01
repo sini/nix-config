@@ -23,6 +23,7 @@
 
   den.aspects.cortex = {
     includes = with den.aspects; [
+      roles.default
       roles.workstation
       roles.gaming
       roles.dev
@@ -31,25 +32,27 @@
       roles.inference
       roles.messaging
       roles.nix-builder
+
       hardware.cpu-amd
       hardware.gpu-amd
       hardware.gpu-nvidia-vfio
       hardware.performance
       hardware.vr-amd
+
       desktop.hyprland
       desktop.uwsm
+
       disk.zfs-disk-single
-      disk.impermanence
       network.network-boot
-      network.openssh
+
       virtualization.microvm
       virtualization.microvm-cuda
       virtualization.windows-vfio
       virtualization.podman
+
       services.media-data-share
+
       apps.easyeffects
-      secrets.agenix
-      core.default
     ];
 
     nixos = {

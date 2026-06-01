@@ -23,13 +23,9 @@
 
   den.aspects.uplink = {
     includes = with den.aspects; [
-      core.default
-      secrets.agenix
-      network.networking
-      network.openssh
+      roles.default
       network.network-boot
       disk.zfs-disk-single
-      disk.impermanence
       roles.server
       roles.unlock
       roles.nix-builder
