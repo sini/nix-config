@@ -6,7 +6,6 @@ _: {
     k8s-manifests =
       {
         config,
-        cluster,
         crdObjects,
         lib,
         ...

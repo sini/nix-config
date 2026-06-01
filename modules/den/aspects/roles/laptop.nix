@@ -1,4 +1,4 @@
-{ den, lib, ... }:
+{ lib, ... }:
 {
   den.aspects.roles.laptop = {
     colmena = [ "laptop" ];

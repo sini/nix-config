@@ -12,7 +12,7 @@ in
     _:
     [
       (pipe.from "host-addrs" [
-        (pipe.collectAll ({ host, ... }: true))
+        (pipe.collectAll ({ ... }: true))
       ])
     ];
 
@@ -72,7 +72,7 @@ in
     _:
     [
       (pipe.from "k3s-nodes" [
-        (pipe.collectAll ({ host, ... }: true))
+        (pipe.collectAll ({ ... }: true))
       ])
     ];
 

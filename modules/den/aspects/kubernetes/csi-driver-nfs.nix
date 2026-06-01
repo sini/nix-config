@@ -5,7 +5,6 @@
 # Ported from main:modules/kubernetes/services/storage/csi-driver-nfs/csi-driver-nfs.nix
 {
   lib,
-  config,
   ...
 }:
 {
