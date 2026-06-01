@@ -6,13 +6,35 @@
 }:
 {
   den.aspects.core.nixpkgs = {
-    os = _: {
+    os = {
       nixpkgs.config.allowUnfree = true;
       nixpkgs.config.allowDeprecatedx86_64Darwin = true;
-
       nixpkgs.overlays = [
         inputs.proton-cachyos.overlays.default
 
+        # local packages under pkgs.local
+        (
+          _final: prev:
+          withSystem prev.stdenv.hostPlatform.system (
+            { config, ... }:
+            {
+              local = config.packages;
+            }
+          )
+        )
+      ]
+      ++ builtins.attrValues (
+        import (self + "/pkgs/overlays.nix") {
+          inherit inputs;
+        }
+      );
+    };
+
+    homeManager = {
+      # We're no longer using global pkgs with home-manager; share overlays
+      nixpkgs.config.allowUnfree = true;
+      nixpkgs.config.allowDeprecatedx86_64Darwin = true;
+      nixpkgs.overlays = [
         # local packages under pkgs.local
         (
           _final: prev:

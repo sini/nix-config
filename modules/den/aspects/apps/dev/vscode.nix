@@ -1,12 +1,6 @@
 { inputs, ... }:
 {
   den.aspects.apps.vscode = {
-    os = _: {
-      nixpkgs.overlays = [
-        inputs.nix-vscode-extensions.overlays.default
-      ];
-    };
-
     homeManager =
       {
         lib,
@@ -17,6 +11,9 @@
         inherit (pkgs.stdenv) isLinux;
       in
       {
+        nixpkgs.overlays = [
+          inputs.nix-vscode-extensions.overlays.default
+        ];
         home.packages = [
           pkgs.bash-language-server
           pkgs.go
@@ -32,7 +29,7 @@
           pkgs.stylua
         ];
 
-        programs.vscodium = {
+        programs.vscode = {
           enable = true;
           mutableExtensionsDir = true;
           profiles.default = {
@@ -288,6 +285,10 @@
     persistHome = {
       directories = [
         ".config/VSCodium"
+        ".config/Code"
+        ".vscode"
+        ".vscode-oss"
+        ".vscode-shared"
       ];
     };
   };
