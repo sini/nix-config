@@ -221,8 +221,11 @@ in
       ".cache/mozilla"
     ];
 
+    # home-manager ≥ the nixpkgs bump migrated firefox to the XDG path
+    # (~/.config/mozilla/firefox). Firefox prefers legacy ~/.mozilla when it
+    # exists, so persist the XDG path and let ~/.mozilla get wiped on boot.
     persistHome.directories = [
-      ".mozilla/firefox"
+      ".config/mozilla/firefox"
     ];
   };
 }
