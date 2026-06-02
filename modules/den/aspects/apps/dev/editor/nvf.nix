@@ -1,9 +1,10 @@
+{ inputs, ... }:
 {
   den.aspects.apps.dev.editor.nvf = {
     homeManager =
-      { inputs', ... }:
+      { ... }:
       {
-        imports = [ inputs'.nvf.homeManagerModules.default ];
+        imports = [ inputs.nvf.homeManagerModules.default ];
         programs.nvf = {
           enable = true;
           settings.vim = {

@@ -13,7 +13,7 @@
           # pkgs.markitdown
         ];
 
-        git.ignores = [
+        programs.git.ignores = [
           ".claude"
         ];
       };

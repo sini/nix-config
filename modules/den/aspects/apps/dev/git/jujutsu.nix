@@ -5,11 +5,12 @@
       {
         programs.jujutsu = {
           enable = true;
-          settings.signing.sign-all = true;
-          backend = "gpg";
-          key = user.identity.gpgKey;
+          settings.signing = {
+            sign-all = true;
+            backend = "gpg";
+            key = user.identity.gpgKey;
+          };
         };
-
       };
   };
 }

@@ -1,9 +1,10 @@
+{ inputs, ... }:
 {
   den.aspects.apps.dev.lang.rust = {
     homeManager =
-      { inputs', pkgs, ... }:
+      { pkgs, ... }:
       {
-        nixpkgs.overlays = [ inputs'.fenix.overlays.default ];
+        nixpkgs.overlays = [ inputs.fenix.overlays.default ];
         home.packages = [
           (pkgs.fenix.complete.withComponents [
             "cargo"
