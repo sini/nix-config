@@ -76,6 +76,21 @@ in
       ])
     ];
 
+  # Bottom-up dual of the collect policies. `resolved-users` is emitted per user
+  # at user scope (core/users/resolved-user-emitter.nix) and must bubble up the
+  # P edge to the host so host aspects (wireshark, adb, ddcutil, razer,
+  # remote-build-server, initrd-SSH) can enumerate the users resolved onto that
+  # host. Exposed (not collected): the emit lives below the consumer, not beside
+  # it. The emit is pipeline-parametric (`{ user, ... }:`), resolved to a concrete
+  # record at the emitting user node before it crosses upward.
+  den.policies.expose-resolved-users =
+    _:
+    [
+      (pipe.from "resolved-users" [
+        pipe.expose
+      ])
+    ];
+
   den.schema.host.includes = [
     den.policies.collect-host-addrs
     den.policies.collect-bgp-peers
@@ -84,6 +99,10 @@ in
     den.policies.collect-thunderbolt-mesh-peers
     den.policies.collect-vault-peers
     den.policies.collect-ollama-endpoints
+  ];
+
+  den.schema.user.includes = [
+    den.policies.expose-resolved-users
   ];
 
   den.schema.cluster.includes = [
