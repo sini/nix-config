@@ -1,7 +1,7 @@
 # Emits one resolved-users entry per user at user scope.
 # Collected at host scope so host-level aspects can enumerate all users.
 _: {
-  den.aspects.core.resolved-user-emitter = {
+  den.aspects.core.users.resolved-user-emitter = {
     resolved-users =
       { user, ... }:
       {

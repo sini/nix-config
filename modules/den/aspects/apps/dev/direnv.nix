@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.direnv = {
+  den.aspects.apps.dev.direnv = {
     os = {
       nix.settings = {
         keep-outputs = true;

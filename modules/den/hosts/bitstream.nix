@@ -23,7 +23,7 @@
 
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
-      disk.impermanence = {
+      core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
@@ -37,9 +37,9 @@
       roles.nix-builder
 
       disk.zfs-disk-single
-      network.network-boot
-      hardware.cpu-amd
-      hardware.gpu-amd
+      core.network.boot
+      hardware.cpu.amd
+      hardware.gpu.amd
     ];
   };
 }

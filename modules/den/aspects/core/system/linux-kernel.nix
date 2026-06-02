@@ -3,7 +3,7 @@
 # Ported from main:modules/_legacy/core/linux-kernel.nix.
 { lib, inputs, ... }:
 {
-  den.aspects.core.linux-kernel = {
+  den.aspects.core.system.linux-kernel = {
     settings = {
       channel = lib.mkOption {
         type = lib.types.enum [
@@ -27,7 +27,7 @@
     nixos =
       { host, pkgs, ... }:
       let
-        cfg = host.settings.core.linux-kernel;
+        cfg = host.settings.core.system.linux-kernel;
         kernelName =
           if cfg.optimization == "server" then
             "linuxPackages-cachyos-server-lto"

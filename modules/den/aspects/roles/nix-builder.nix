@@ -3,7 +3,7 @@
   den.aspects.roles.nix-builder = {
     colmena = [ "nix-builder" ];
     includes = [
-      den.aspects.services.nix-remote-build-server
+      den.aspects.services.nix.remote-build-server
     ];
 
     nix-builders =

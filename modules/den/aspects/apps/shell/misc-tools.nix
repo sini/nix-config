@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.misc-tools = {
+  den.aspects.apps.shell.misc-tools = {
     homeManager =
       { pkgs, ... }:
       {

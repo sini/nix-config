@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.core.facter = {
+  den.aspects.core.system.facter = {
     nixos =
       { host, ... }:
       {

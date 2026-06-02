@@ -4,7 +4,7 @@
 # The option module defines `users.deterministicIds` which auto-assigns uid/gid
 # to users/groups via mkDefault. The data module provides the central ID registry.
 _: {
-  den.aspects.core.deterministic-uids = {
+  den.aspects.core.users.deterministic-uids = {
     nixos =
       { config, lib, ... }:
       let

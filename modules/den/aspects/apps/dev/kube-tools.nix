@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.kube-tools = {
+  den.aspects.apps.dev.kube-tools = {
     homeManager =
       { pkgs, ... }:
       {

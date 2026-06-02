@@ -3,10 +3,10 @@
   den.aspects.roles.messaging = {
     colmena = [ "messaging" ];
     includes = with den.aspects; [
-      apps.discord
-      apps.kdeconnect
-      apps.telegram
-      apps.zoom
+      apps.messaging.discord
+      apps.messaging.kdeconnect
+      apps.messaging.telegram
+      apps.messaging.zoom
     ];
   };
 }

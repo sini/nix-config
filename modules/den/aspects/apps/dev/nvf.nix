@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.nvf = {
+  den.aspects.apps.dev.nvf = {
     homeManager =
       { ... }:
       {

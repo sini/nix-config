@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.discord = {
+  den.aspects.apps.messaging.discord = {
     homeManager =
       {
         pkgs,

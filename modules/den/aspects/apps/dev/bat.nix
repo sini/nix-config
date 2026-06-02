@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  den.aspects.apps.bat = {
+  den.aspects.apps.dev.bat = {
     homeManager =
       { pkgs, ... }:
       {

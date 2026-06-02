@@ -1,5 +1,5 @@
 _: {
-  den.aspects.core.plymouth = {
+  den.aspects.core.system.plymouth = {
     nixos = {
       boot = {
         plymouth.enable = true;

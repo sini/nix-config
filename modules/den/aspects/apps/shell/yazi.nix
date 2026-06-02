@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  den.aspects.apps.yazi = {
+  den.aspects.apps.shell.yazi = {
     homeManager =
       {
         config,

@@ -17,9 +17,9 @@
 
     settings = {
       services.bgp.localAsn = 65001;
-      services.cilium-bgp.localAsn = 65010;
+      services.bgp.cilium-bgp.localAsn = 65010;
       services.k3s.clusterName = "axon";
-      services.thunderbolt-mesh-of = {
+      services.networking.thunderbolt-mesh-of = {
         interfaces = [
           "enp199s0f5"
           "enp199s0f6"
@@ -29,7 +29,7 @@
       };
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_00230650035M";
       disk.xfs-disk-longhorn.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_2TB_S73WNJ0W310395L";
-      disk.impermanence = {
+      core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
@@ -39,18 +39,18 @@
   den.aspects.axon-01 = {
     includes = with den.aspects; [
       roles.default
-      network.network-boot
+      core.network.boot
       disk.zfs-disk-single
       disk.xfs-disk-longhorn
       roles.server
       roles.unlock
       roles.nix-builder
       services.bgp.spoke
-      services.cilium-bgp
+      services.bgp.cilium-bgp
       services.k3s
-      hardware.cpu-amd
-      hardware.gpu-amd
-      services.thunderbolt-mesh-of
+      hardware.cpu.amd
+      hardware.gpu.amd
+      services.networking.thunderbolt-mesh-of
     ];
   };
 }

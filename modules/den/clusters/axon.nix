@@ -55,23 +55,23 @@
   # Cluster aspect — k8s services included at cluster scope
   den.aspects.axon = {
     includes = with den.aspects.kubernetes; [
-      amd-gpu-device-plugin
+      hardware.amd-gpu-device-plugin
       bootstrap
-      cilium
-      cilium-bgp-resources
-      coredns
-      cert-manager
-      sops-secrets-operator
-      argocd
-      envoy-gateway
-      gateway-api
-      longhorn
-      csi-driver-nfs
-      volume-snapshots
-      prometheus
-      loki
-      grafana
-      hubble-ui
+      services.network.cilium
+      services.network.cilium.cilium-bgp-resources
+      services.network.coredns
+      services.security.cert-manager
+      services.security.sops-secrets-operator
+      services.argocd
+      services.network.gateway.envoy-gateway
+      services.network.gateway.gateway-api
+      services.storage.longhorn
+      services.storage.csi-driver-nfs
+      services.storage.volume-snapshots
+      services.monitoring.prometheus
+      services.monitoring.loki
+      services.monitoring.grafana
+      services.network.cilium.hubble-ui
     ];
   };
 }

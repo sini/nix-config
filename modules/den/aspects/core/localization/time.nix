@@ -1,19 +1,12 @@
 # time — timezone from environment entity.
 #
 # Ported from main:modules/_legacy/core/time.nix.
-{ config, ... }:
-let
-  environments = config.den.environments;
-in
 {
-  den.aspects.core.time = {
+  den.aspects.core.localization.time = {
     os =
-      { host, ... }:
-      let
-        env = environments.${host.environment};
-      in
+      { environment, ... }:
       {
-        time.timeZone = env.timezone or "UTC";
+        time.timeZone = environment.timezone or "UTC";
       };
   };
 }

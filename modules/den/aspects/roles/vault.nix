@@ -2,6 +2,6 @@
 {
   den.aspects.roles.vault = {
     colmena = [ "vault" ];
-    includes = [ den.aspects.services.vault ];
+    includes = [ den.aspects.services.security.vault ];
   };
 }

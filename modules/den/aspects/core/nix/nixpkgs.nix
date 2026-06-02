@@ -18,7 +18,7 @@ let
   ++ builtins.attrValues (import (self + "/pkgs/overlays.nix") { inherit inputs; });
 in
 {
-  den.aspects.core.nixpkgs = {
+  den.aspects.core.nix.nixpkgs = {
     os.nixpkgs = {
       inherit config;
       overlays = [ inputs.proton-cachyos.overlays.default ] ++ sharedOverlays;

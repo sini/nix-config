@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.obsidian = {
+  den.aspects.apps.productivity.obsidian = {
     homeManager =
       { pkgs, ... }:
       {

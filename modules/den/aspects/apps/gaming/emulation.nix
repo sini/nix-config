@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.emulation = {
+  den.aspects.apps.gaming.emulation = {
     nixos =
       {
         pkgs,

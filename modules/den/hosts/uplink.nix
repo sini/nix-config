@@ -14,7 +14,7 @@
     settings = {
       services.bgp.localAsn = 65000;
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
-      disk.impermanence = {
+      core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
@@ -24,30 +24,30 @@
   den.aspects.uplink = {
     includes = with den.aspects; [
       roles.default
-      network.network-boot
+      core.network.boot
       disk.zfs-disk-single
       roles.server
       roles.unlock
       roles.nix-builder
       roles.metrics-ingester
       services.bgp.hub
-      services.headscale
-      services.acme
-      services.nginx
-      services.kanidm
-      services.haproxy
-      services.jellyfin
-      services.homepage
-      services.oauth2-proxy
-      services.ollama
-      services.open-webui
-      services.attic
-      services.tailscale
-      services.den-docs-mirror
-      services.grafana
+      services.networking.headscale
+      services.security.acme
+      services.networking.nginx
+      services.security.kanidm
+      services.networking.haproxy
+      services.media.jellyfin
+      services.web.homepage
+      services.security.oauth2-proxy
+      services.ai.ollama
+      services.ai.open-webui
+      services.nix.attic
+      services.networking.tailscale
+      services.web.den-docs-mirror
+      services.monitoring.grafana
       virtualization.podman
-      hardware.cpu-amd
-      hardware.gpu-intel
+      hardware.cpu.amd
+      hardware.gpu.intel
     ];
   };
 }

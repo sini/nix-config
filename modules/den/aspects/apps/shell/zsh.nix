@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.zsh = {
+  den.aspects.apps.shell.zsh = {
     homeManager =
       {
         config,

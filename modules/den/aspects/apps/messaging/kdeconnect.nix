@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.kdeconnect = {
+  den.aspects.apps.messaging.kdeconnect = {
     nixos = {
       networking.firewall =
         let

@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.mpv = {
+  den.aspects.apps.media.mpv = {
     homeManager =
       { pkgs, ... }:
       let

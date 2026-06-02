@@ -7,9 +7,9 @@
   den.aspects.roles.metrics-ingester = {
     colmena = [ "metrics-ingester" ];
     includes = with den.aspects; [
-      services.prometheus
-      services.loki
-      services.grafana
+      services.monitoring.prometheus
+      services.monitoring.loki
+      services.monitoring.grafana
     ];
   };
 }

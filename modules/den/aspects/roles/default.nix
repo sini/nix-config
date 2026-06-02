@@ -3,37 +3,37 @@
   den.aspects.roles.default = {
     includes = with den.aspects; [
       core.nix
-      core.lix
-      core.nixpkgs
-      core.systemd-boot
-      core.i18n
-      core.stateVersion
+      core.nix.lix
+      core.nix.nixpkgs
+      core.systemd.boot
+      core.localization.i18n
+      core.nix.stateVersion
       core.systemd
-      core.shell
+      core.users.shell
       core.utils
-      core.firmware
+      core.system.firmware
       core.security
-      core.facter
-      core.home-manager
-      core.deterministic-uids
-      core.nix-remote-build-client
-      core.sudo
-      core.time
-      core.ssd
-      core.linux-kernel
+      core.system.facter
+      core.users.home-manager
+      core.users.deterministic-uids
+      core.nix.remote-build-client
+      core.security.sudo
+      core.localization.time
+      core.perf.ssd
+      core.system.linux-kernel
       core.users
 
-      disk.impermanence
+      core.impermanence
 
-      apps.zsh
+      apps.shell.zsh
 
-      network.networking
-      network.openssh
-      network.hosts
+      core.network.networking
+      core.network.openssh
+      core.network.hosts
 
       secrets.agenix
 
-      services.tailscale
+      services.networking.tailscale
     ];
   };
 }

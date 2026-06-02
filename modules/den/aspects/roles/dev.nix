@@ -4,22 +4,22 @@
     colmena = [ "dev" ];
     includes = with den.aspects; [
       hardware.adb
-      apps.direnv
-      apps.gpg
-      apps.bat
-      apps.claude
-      apps.eza
-      apps.nix-index
-      apps.nvf
-      apps.ssh
-      apps.starship
-      apps.sysmon
-      apps.yazi
-      apps.misc-tools
-      apps.zoxide
-      apps.git
-      apps.python
-      apps.k9s
+      apps.dev.direnv
+      apps.dev.gpg
+      apps.dev.bat
+      apps.dev.claude
+      apps.dev.eza
+      apps.shell.nix-index
+      apps.dev.nvf
+      apps.dev.ssh
+      apps.dev.starship
+      apps.shell.sysmon
+      apps.shell.yazi
+      apps.shell.misc-tools
+      apps.shell.zoxide
+      apps.dev.git
+      apps.shell.python
+      apps.shell.k9s
     ];
   };
 }

@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.zoxide = {
+  den.aspects.apps.shell.zoxide = {
     homeManager = {
       programs.zoxide = {
         enable = true;

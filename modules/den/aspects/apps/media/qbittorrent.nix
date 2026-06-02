@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.qbittorrent = {
+  den.aspects.apps.media.qbittorrent = {
     homeManager =
       { pkgs, ... }:
       {

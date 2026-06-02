@@ -1,5 +1,5 @@
 _: {
-  den.aspects.core.shell = {
+  den.aspects.core.users.shell = {
     os =
       { pkgs, ... }:
       {

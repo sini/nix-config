@@ -2,7 +2,7 @@
 #
 # Ported from main:modules/_legacy/core/sudo.nix.
 _: {
-  den.aspects.core.sudo = {
+  den.aspects.core.security.sudo = {
     nixos = {
       security = {
         sudo.enable = false;

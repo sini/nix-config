@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  den.aspects.apps.sysmon = {
+  den.aspects.apps.shell.sysmon = {
     homeManager =
       {
         osConfig,

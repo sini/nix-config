@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.gitkraken = {
+  den.aspects.apps.dev.gitkraken = {
     homeManager =
       {
         pkgs,

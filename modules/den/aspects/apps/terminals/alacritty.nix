@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.alacritty = {
+  den.aspects.apps.terminals.alacritty = {
     homeManager = {
       programs.alacritty = {
         enable = true;

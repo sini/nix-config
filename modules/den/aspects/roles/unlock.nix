@@ -3,8 +3,8 @@
   den.aspects.roles.unlock = {
     colmena = [ "unlock" ];
     includes = with den.aspects; [
-      network.network-boot
-      services.tang
+      core.network.boot
+      services.security.tang
     ];
   };
 }

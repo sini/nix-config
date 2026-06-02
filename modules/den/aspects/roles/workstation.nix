@@ -25,12 +25,12 @@
       desktop.xdg-portal
 
       # Apps
-      apps.alacritty
-      apps.kitty
-      apps.firefox
-      apps.obs-studio
-      apps.obsidian
-      apps.zathura
+      apps.terminals.alacritty
+      apps.terminals.kitty
+      apps.browsers.firefox
+      apps.productivity.obs-studio
+      apps.productivity.obsidian
+      apps.productivity.zathura
     ];
 
     homeManager =

@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.spicetify = {
+  den.aspects.apps.media.spicetify = {
     homeManager =
       {
         pkgs,
