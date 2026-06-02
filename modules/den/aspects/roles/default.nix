@@ -19,7 +19,9 @@
       core.nix.remote-build-client
       core.security.sudo
       core.localization.time
+      core.perf.disable-docs
       core.perf.ssd
+      core.perf.zram-swap
       core.system.linux-kernel
       core.users
 
@@ -28,7 +30,7 @@
       apps.shell.zsh
 
       core.network.networking
-      core.network.openssh
+      core.security.openssh
       core.network.hosts
 
       secrets.agenix

@@ -1,5 +1,5 @@
-_: {
-  den.aspects.apps.shell.python = {
+{
+  den.aspects.apps.dev.lang.python = {
     homeManager =
       { pkgs, ... }:
       {

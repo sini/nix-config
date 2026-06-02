@@ -17,7 +17,6 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
-      core.network.boot.wireless-initrd = true;
     };
   };
 
@@ -43,7 +42,7 @@
 
       disk.zfs-disk-single
 
-      core.network.boot
+      core.boot.wireless-initrd
       core.network.manager
       services.networking.tailscale
       apps.messaging.discord

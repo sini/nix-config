@@ -97,6 +97,11 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
+      fenix = {
+        url = "github:nix-community/fenix";
+        inputs.nixpkgs.follows = "nixpkgs-unstable";
+      };
+
       flake-compat = {
         url = "github:lix-project/flake-compat";
       };

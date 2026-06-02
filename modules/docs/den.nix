@@ -42,7 +42,7 @@
         | Category | Examples |
         | :--- | :--- |
         | `core/` | nix, nixpkgs, boot, i18n, systemd, shell, security, impermanence |
-        | `network/` | networking (systemd-networkd), openssh, tailscale, network-boot |
+        | `network/` | networking (systemd-networkd), manager, hosts, wireless, avahi |
         | `disk/` | ZFS (root + disko layout), impermanence, btrfs, xfs |
         | `hardware/` | cpu-amd/intel, gpu-amd/nvidia, laptop, razer, performance |
         | `desktop/` | hyprland, kde, gnome, stylix, fonts |

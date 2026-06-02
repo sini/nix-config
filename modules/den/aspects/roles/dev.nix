@@ -10,16 +10,26 @@
       apps.dev.claude
       apps.dev.eza
       apps.shell.nix-index
-      apps.dev.nvf
+      apps.dev.editor.nvf
       apps.dev.ssh
       apps.dev.starship
-      apps.shell.sysmon
+      apps.shell.btop
+      apps.shell.bottom
       apps.shell.yazi
-      apps.shell.misc-tools
+      apps.shell.archive
+      apps.shell.data
+      apps.shell.disk
+      apps.shell.process
+      apps.shell.search
       apps.shell.zoxide
       apps.dev.git
-      apps.shell.python
-      apps.shell.k9s
+      apps.dev.git.delta
+      apps.dev.git.github
+      apps.dev.git.jujutsu
+      apps.dev.git.lazygit
+      apps.dev.git.mergiraf
+      apps.dev.lang.python
+      apps.dev.k8s.k9s
     ];
   };
 }

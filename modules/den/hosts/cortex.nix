@@ -43,7 +43,7 @@
       desktop.uwsm
 
       disk.zfs-disk-single
-      core.network.boot
+      core.boot.network-initrd
 
       virtualization.microvm
       virtualization.microvm-cuda

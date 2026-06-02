@@ -7,7 +7,7 @@
       services.security.tang
       services.storage.media-data-share
       services.monitoring.prometheus-exporter
-      core.network.boot
+      core.boot.network-initrd
     ];
 
     nixos = _: {

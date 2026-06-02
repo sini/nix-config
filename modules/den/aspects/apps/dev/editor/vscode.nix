@@ -1,8 +1,8 @@
-{ inputs, ... }:
 {
   den.aspects.apps.dev.vscode = {
     homeManager =
       {
+        inputs',
         lib,
         pkgs,
         ...
@@ -12,7 +12,7 @@
       in
       {
         nixpkgs.overlays = [
-          inputs.nix-vscode-extensions.overlays.default
+          inputs'.nix-vscode-extensions.overlays.default
         ];
         home.packages = [
           pkgs.bash-language-server

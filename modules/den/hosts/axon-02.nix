@@ -39,7 +39,7 @@
   den.aspects.axon-02 = {
     includes = with den.aspects; [
       roles.default
-      core.network.boot
+      core.boot.network-initrd
       disk.zfs-disk-single
       disk.xfs-disk-longhorn
       roles.server

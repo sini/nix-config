@@ -12,6 +12,10 @@
           pkgs.bubblewrap
           # pkgs.markitdown
         ];
+
+        git.ignores = [
+          ".claude"
+        ];
       };
 
     persistHome = {

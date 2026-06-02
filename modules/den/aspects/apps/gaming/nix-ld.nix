@@ -1,5 +1,5 @@
 _: {
-  den.aspects.core.system.nix-ld = {
+  den.aspects.apps.gaming.nix-ld = {
     nixos =
       { pkgs, ... }:
       {

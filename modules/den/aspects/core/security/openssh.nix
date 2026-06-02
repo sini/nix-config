@@ -1,5 +1,5 @@
 _: {
-  den.aspects.core.network.openssh = {
+  den.aspects.core.security.openssh = {
     nixos = {
       services.openssh = {
         enable = true;

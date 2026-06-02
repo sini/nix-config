@@ -2,6 +2,15 @@
 {
   den.aspects.roles.kube-tools = {
     colmena = [ "kube-tools" ];
-    includes = [ den.aspects.apps.dev.kube-tools ];
+    includes = with den.aspects.apps.dev.k8s; [
+      core
+      dev
+      helm
+      observability
+      plugins
+      security
+      tui
+      utils
+    ];
   };
 }

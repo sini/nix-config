@@ -37,7 +37,7 @@
       roles.nix-builder
 
       disk.zfs-disk-single
-      core.network.boot
+      core.boot.network-initrd
       hardware.cpu.amd
       hardware.gpu.amd
     ];

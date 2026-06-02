@@ -24,7 +24,7 @@
   den.aspects.uplink = {
     includes = with den.aspects; [
       roles.default
-      core.network.boot
+      core.boot.network-initrd
       disk.zfs-disk-single
       roles.server
       roles.unlock

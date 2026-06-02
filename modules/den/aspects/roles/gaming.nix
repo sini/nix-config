@@ -4,7 +4,7 @@
     colmena = [ "gaming" ];
     includes = with den.aspects; [
       hardware.gamepad
-      core.system.nix-ld
+      apps.gaming.nix-ld
       apps.gaming.steam
       apps.gaming.sunshine
       apps.gaming.mangohud

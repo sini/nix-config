@@ -5,7 +5,7 @@
   ...
 }:
 {
-  den.aspects.core.network.nfs-boot = {
+  den.aspects.core.boot.nfs-initrd-unlock = {
     nixos =
       {
         config,

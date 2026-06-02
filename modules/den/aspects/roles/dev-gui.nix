@@ -5,9 +5,9 @@
     includes = with den.aspects; [
       apps.dev.gpg
       apps.dev.vscode
-      apps.dev.gitkraken
+      apps.dev.git.gitkraken
       apps.dev.wireshark
-      apps.dev.kube-tools
+      roles.kube-tools
       apps.dev.zellij
     ];
   };
