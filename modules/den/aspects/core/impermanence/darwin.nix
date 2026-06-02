@@ -3,7 +3,7 @@
 { lib, ... }:
 {
   den.aspects.core.impermanence = {
-    darwin = {
+    darwin = _: {
       options.environment.persistence = lib.mkOption {
         type = lib.types.anything;
         default = { };
