@@ -47,9 +47,9 @@ let
           rekeyPath
           isIntermediary
           ;
-        inherit (secretConfig) owner;
-        inherit (secretConfig) group;
-        inherit (secretConfig) mode;
+        owner = secretConfig.owner or "root";
+        group = secretConfig.group or "root";
+        mode = secretConfig.mode or "0400";
         hasDependencies = hasGeneratorScript && (secretConfig.generator.dependencies or [ ]) != [ ];
       }
     ) secrets;
