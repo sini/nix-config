@@ -5,13 +5,13 @@
 
   # Default host includes — aggregator aspects for quirk collection
   den.schema.host.includes = [
-    den.aspects.core.firewall-collector
-    den.aspects.core.secrets-collector
+    den.aspects.core.network.firewall-collector
+    den.aspects.core.secrets.collector
   ];
 
   # Default user includes — per-user data emission + entity-named aspect auto-include
   den.schema.user.includes = [
-    den.aspects.core.resolved-user-emitter
+    den.aspects.core.users.resolved-user-emitter
 
     # Include den.aspects.<hostname>.<username> if it exists
     (den.lib.policy.mkPolicy "user-aspect-auto-include" (

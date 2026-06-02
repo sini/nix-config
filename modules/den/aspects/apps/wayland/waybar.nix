@@ -1,6 +1,6 @@
 { den, ... }:
 {
-  den.aspects.apps.waybar = {
+  den.aspects.apps.wayland.waybar = {
     homeManager =
       {
         host,

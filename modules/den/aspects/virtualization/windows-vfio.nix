@@ -5,7 +5,7 @@
   den.aspects.virtualization.windows-vfio = {
     includes = [
       den.aspects.virtualization.microvm-cuda
-      den.aspects.hardware.gpu-nvidia-vfio
+      den.aspects.hardware.gpu.nvidia-vfio
     ];
 
     nixos =

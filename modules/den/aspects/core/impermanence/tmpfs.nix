@@ -1,5 +1,5 @@
 _: {
-  den.aspects.core.tmpfs = {
+  den.aspects.core.impermanence.tmpfs = {
     nixos = {
       boot.tmp = {
         useTmpfs = true;

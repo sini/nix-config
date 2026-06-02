@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.k9s = {
+  den.aspects.apps.shell.k9s = {
     homeManager =
       {
         pkgs,

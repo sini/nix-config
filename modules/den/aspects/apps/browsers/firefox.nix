@@ -3,7 +3,7 @@ let
   inherit (inputs) betterfox shimmer;
 in
 {
-  den.aspects.apps.firefox = {
+  den.aspects.apps.browsers.firefox = {
     homeManager =
       {
         pkgs,

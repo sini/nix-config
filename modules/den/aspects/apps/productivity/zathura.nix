@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.zathura = {
+  den.aspects.apps.productivity.zathura = {
     homeManager = {
       programs.zathura = {
         enable = true;

@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.telegram = {
+  den.aspects.apps.messaging.telegram = {
     homeManager =
       { pkgs, ... }:
       {

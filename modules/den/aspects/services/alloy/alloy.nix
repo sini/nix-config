@@ -2,28 +2,20 @@
 # metrics scraping, network probing, and SNMP monitoring.
 #
 # Ported from main:modules/services/monitoring/alloy/
-{
-  lib,
-  config,
-  ...
-}:
-let
-  environments = config.den.environments;
-in
+{ lib, ... }:
 {
   den.aspects.services.alloy = {
     nixos =
       {
         pkgs,
+        environment,
         host,
         prometheus-targets,
         ...
       }:
       let
-        env = environments.${host.environment};
-
         # Resolve target environment following delegation (logsTo → metricsTo → self)
-        inherit (env) delegation;
+        inherit (environment) delegation;
         targetEnvironment =
           if delegation.logsTo or null != null then
             delegation.logsTo
@@ -34,8 +26,9 @@ in
 
         # Find the metrics-ingester host via prometheus-targets pipe:
         # the host running prometheus in the target environment is the ingester.
+        # (Delegation may target another environment, so filter explicitly.)
         targetIps = lib.unique (
-          map (t: t.ip) (lib.filter (t: t.environment == targetEnvironment) prometheus-targets)
+          map (t: t.ip) (lib.filter (t: t.environment.name == targetEnvironment) prometheus-targets)
         );
         reportingHost = if targetIps != [ ] then lib.head targetIps else null;
 
@@ -50,8 +43,8 @@ in
             [
               host.name
               (if reportingHost != null then reportingHost else "localhost")
-              env.name
-              (env.networks.default.gatewayIp or "10.10.0.1")
+              environment.name
+              (environment.networks.default.gatewayIp or "10.10.0.1")
             ]
             (builtins.readFile ./configs/config.alloy.tmpl)
         );

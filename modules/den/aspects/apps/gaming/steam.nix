@@ -1,6 +1,6 @@
 { den, ... }:
 {
-  den.aspects.apps.steam = {
+  den.aspects.apps.gaming.steam = {
     nixos =
       {
         lib,
@@ -10,7 +10,7 @@
       }:
       let
         hasNvidiaPrimeOnLaptop =
-          host.hasAspect den.aspects.hardware.gpu-nvidia-prime && host.hasAspect den.aspects.roles.laptop;
+          host.hasAspect den.aspects.hardware.gpu.nvidia-prime && host.hasAspect den.aspects.roles.laptop;
       in
       {
         nix.settings = {

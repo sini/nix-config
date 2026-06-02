@@ -1,5 +1,5 @@
 _: {
-  den.aspects.core.persist-home-collector = {
+  den.aspects.core.impermanence.persist-home-collector = {
     homeManager =
       {
         persistHome,

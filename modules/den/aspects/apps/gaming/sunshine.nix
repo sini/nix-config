@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.sunshine = {
+  den.aspects.apps.gaming.sunshine = {
     nixos =
       {
         host,

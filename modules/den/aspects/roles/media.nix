@@ -3,12 +3,12 @@
   den.aspects.roles.media = {
     colmena = [ "media" ];
     includes = with den.aspects; [
-      apps.jellyfin-client
-      apps.mpv
-      apps.spicetify
-      apps.qbittorrent
-      apps.youtube-music
-      apps.yt-dlp
+      apps.media.jellyfin-client
+      apps.media.mpv
+      apps.media.spicetify
+      apps.media.qbittorrent
+      apps.media.youtube-music
+      apps.media.yt-dlp
     ];
   };
 }

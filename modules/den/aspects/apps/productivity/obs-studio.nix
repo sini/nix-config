@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.obs-studio = {
+  den.aspects.apps.productivity.obs-studio = {
     homeManager =
       { pkgs, ... }:
       {

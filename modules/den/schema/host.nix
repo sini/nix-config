@@ -137,49 +137,51 @@ let
         ];
       };
 
-      # Recursively build a nested submodule type mirroring the aspect tree.
-      # At each level: if the aspect has .settings, declare those options.
-      # If it has children, recurse into them as nested submodule options.
-      buildSettingsModule =
-        aspects:
+      # True if a node has .settings anywhere in its aspect subtree.
+      hasSettingsDeep =
+        node:
+        builtins.isAttrs node
+        && (
+          (node ? settings)
+          || lib.any (k: !(skipKey k) && hasSettingsDeep (node.${k} or null)) (builtins.attrNames node)
+        );
+
+      # Build the submodule for one aspect-tree node, mirroring the tree.
+      # A node may be BOTH an aspect with .settings AND a parent of child
+      # aspects that have settings (e.g. services.bgp has localAsn settings and
+      # also parents services.bgp.cilium-bgp). Merge the node's own settings
+      # options with recursion into its settings-bearing children.
+      nodeModule =
+        node:
         let
-          children = lib.filterAttrs (k: v: builtins.isAttrs v && !(skipKey k)) aspects;
-          withSettings = lib.filterAttrs (_: a: builtins.isAttrs a && a ? settings) aspects;
+          ownSettings =
+            if node ? settings then
+              reshapeSettings node.settings
+            else
+              {
+                imports = [ ];
+                config = { };
+                options = { };
+              };
+          settingChildren = lib.filterAttrs (
+            k: v: !(skipKey k) && builtins.isAttrs v && hasSettingsDeep v
+          ) node;
+          childOptions = lib.mapAttrs (
+            name: child:
+            mkOption {
+              type = types.submodule (nodeModule child);
+              default = { };
+              description = "Settings under ${name}";
+            }
+          ) settingChildren;
         in
-        types.submodule {
-          options =
-            # Leaf settings: aspect has .settings → declare those options here
-            lib.mapAttrs (
-              name: aspect:
-              mkOption {
-                type = types.submodule (reshapeSettings aspect.settings);
-                default = { };
-                description = "Settings for the ${name} aspect";
-              }
-            ) withSettings
-            # Nested categories: recurse into children that have further aspects
-            //
-              lib.mapAttrs
-                (
-                  name: child:
-                  mkOption {
-                    type = buildSettingsModule child;
-                    default = { };
-                    description = "Settings under ${name}";
-                  }
-                )
-                (
-                  lib.filterAttrs (
-                    k: v:
-                    !(withSettings ? ${k})
-                    && builtins.isAttrs v
-                    && !(skipKey k)
-                    && lib.any (ck: builtins.isAttrs (v.${ck} or null) && (v.${ck} ? settings)) (builtins.attrNames v)
-                  ) children
-                );
+        {
+          imports = ownSettings.imports or [ ];
+          config = ownSettings.config or { };
+          options = (ownSettings.options or { }) // childOptions;
         };
     in
-    buildSettingsModule (den.aspects or { });
+    types.submodule (nodeModule (den.aspects or { }));
 in
 {
   den.schema.host.isEntity = true;

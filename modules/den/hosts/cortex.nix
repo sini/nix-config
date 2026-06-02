@@ -13,8 +13,8 @@
 
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
-      core.linux-kernel.optimization = "zen4";
-      disk.impermanence = {
+      core.system.linux-kernel.optimization = "zen4";
+      core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
@@ -33,9 +33,9 @@
       roles.messaging
       roles.nix-builder
 
-      hardware.cpu-amd
-      hardware.gpu-amd
-      hardware.gpu-nvidia-vfio
+      hardware.cpu.amd
+      hardware.gpu.amd
+      hardware.gpu.nvidia-vfio
       hardware.performance
       hardware.vr-amd
 
@@ -43,16 +43,16 @@
       desktop.uwsm
 
       disk.zfs-disk-single
-      network.network-boot
+      core.network.boot
 
       virtualization.microvm
       virtualization.microvm-cuda
       virtualization.windows-vfio
       virtualization.podman
 
-      services.media-data-share
+      services.storage.media-data-share
 
-      apps.easyeffects
+      apps.media.easyeffects
     ];
 
     nixos = {
@@ -173,19 +173,19 @@
 
     sini = {
       includes = with den.aspects; [
-        apps.waybar
-        apps.swaync
-        apps.hypridle
-        apps.hyprland-split-monitors
-        apps.spotify-player
+        apps.wayland.waybar
+        apps.wayland.swaync
+        apps.wayland.hypridle
+        apps.wayland.hyprland-split-monitors
+        apps.media.spotify-player
       ];
     };
 
     shuo = {
       includes = with den.aspects; [
-        apps.firefox
-        apps.steam
-        apps.spicetify
+        apps.browsers.firefox
+        apps.gaming.steam
+        apps.media.spicetify
       ];
     };
   };

@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.zellij = {
+  den.aspects.apps.dev.zellij = {
     homeManager =
       {
         config,

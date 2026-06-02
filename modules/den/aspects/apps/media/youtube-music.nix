@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.youtube-music = {
+  den.aspects.apps.media.youtube-music = {
     homeManager =
       { pkgs, ... }:
       {

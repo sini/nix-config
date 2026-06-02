@@ -5,12 +5,12 @@
   ...
 }:
 {
-  den.aspects.disk.impermanence = {
+  den.aspects.core.impermanence = {
     includes = [
-      den.aspects.core.persist-collector
-      den.aspects.core.persist-home-collector
-      den.aspects.disk.impermanence-btrfs
-      den.aspects.disk.impermanence-zfs
+      den.aspects.core.impermanence.persist-collector
+      den.aspects.core.impermanence.persist-home-collector
+      den.aspects.core.impermanence.btrfs
+      den.aspects.core.impermanence.zfs
     ];
 
     settings = {

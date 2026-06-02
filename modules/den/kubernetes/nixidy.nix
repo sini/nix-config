@@ -22,8 +22,25 @@ let
 
   secretsConfig = config.den.secretsConfig;
 
-  # Aspects that declare a crds function
-  aspectsWithCrds = lib.filterAttrs (_: aspect: aspect ? crds) aspects;
+  # The kubernetes aspect tree is nested (services/network/cilium, etc.), and a
+  # node may be both an aspect (with crds) AND a parent of child aspects
+  # (e.g. cilium parents hubble-ui + cilium-bgp-resources). Recurse the tree —
+  # skipping structural/class/quirk keys — and collect every node that declares
+  # a `crds` function, keyed by its leaf name. (Mirrors host.nix's nodeModule.)
+  inherit (den.lib.aspects.fx.keyClassification) structuralKeysSet;
+  skipKey = k: structuralKeysSet ? ${k} || (den.classes or { }) ? ${k} || (den.quirks or { }) ? ${k};
+  collectAspectsWithCrds =
+    node:
+    lib.foldlAttrs (
+      acc: name: v:
+      if !(builtins.isAttrs v) || skipKey name then
+        acc
+      else
+        acc // (lib.optionalAttrs (v ? crds) { ${name} = v; }) // (collectAspectsWithCrds v)
+    ) { } node;
+
+  # Aspects that declare a crds function (flattened from the nested tree)
+  aspectsWithCrds = collectAspectsWithCrds aspects;
 
   # Given a subset of keys from an attrset, return only those that are
   # present and whose values are non-empty. Used to forward optional

@@ -4,11 +4,11 @@
     colmena = [ "gaming" ];
     includes = with den.aspects; [
       hardware.gamepad
-      system.nix-ld
-      apps.steam
-      apps.sunshine
-      apps.mangohud
-      apps.emulation
+      core.system.nix-ld
+      apps.gaming.steam
+      apps.gaming.sunshine
+      apps.gaming.mangohud
+      apps.gaming.emulation
     ];
   };
 }

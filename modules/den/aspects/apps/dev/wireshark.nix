@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.wireshark = {
+  den.aspects.apps.dev.wireshark = {
     os =
       { pkgs, ... }:
       {

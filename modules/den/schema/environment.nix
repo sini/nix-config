@@ -141,7 +141,7 @@ in
           svc = services.${serviceName} or { };
           # svc may be {} (unknown service) — delegateTo must default, not
           # `inherit`, or it crashes. Do NOT let statix rewrite this.
-          delegateTo = svc.delegateTo or null;
+          inherit (svc) delegateTo;
         in
         if svc ? domain && svc.domain != null then
           svc.domain

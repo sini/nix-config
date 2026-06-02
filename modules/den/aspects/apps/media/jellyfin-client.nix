@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.jellyfin-client = {
+  den.aspects.apps.media.jellyfin-client = {
     homeManager =
       { pkgs, ... }:
       {

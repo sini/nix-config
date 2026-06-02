@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.swaync = {
+  den.aspects.apps.wayland.swaync = {
     homeManager =
       {
         config,

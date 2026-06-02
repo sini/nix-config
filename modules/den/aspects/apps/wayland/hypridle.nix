@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.hypridle = {
+  den.aspects.apps.wayland.hypridle = {
     homeManager =
       {
         lib,

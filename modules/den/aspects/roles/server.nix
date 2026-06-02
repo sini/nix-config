@@ -3,11 +3,11 @@
   den.aspects.roles.server = {
     colmena = [ "server" ];
     includes = with den.aspects; [
-      services.acme
-      services.tang
-      services.media-data-share
-      services.prometheus-exporter
-      network.network-boot
+      services.security.acme
+      services.security.tang
+      services.storage.media-data-share
+      services.monitoring.prometheus-exporter
+      core.network.boot
     ];
 
     nixos = _: {

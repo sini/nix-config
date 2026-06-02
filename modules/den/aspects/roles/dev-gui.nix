@@ -3,12 +3,12 @@
   den.aspects.roles.dev-gui = {
     colmena = [ "dev-gui" ];
     includes = with den.aspects; [
-      apps.gpg
-      apps.vscode
-      apps.gitkraken
-      apps.wireshark
-      apps.kube-tools
-      apps.zellij
+      apps.dev.gpg
+      apps.dev.vscode
+      apps.dev.gitkraken
+      apps.dev.wireshark
+      apps.dev.kube-tools
+      apps.dev.zellij
     ];
   };
 }

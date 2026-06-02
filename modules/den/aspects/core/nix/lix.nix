@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.core.lix = {
+  den.aspects.core.nix.lix = {
     nixos = {
       imports = [ inputs.lix-module.nixosModules.default ];
     };

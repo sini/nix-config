@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.mangohud = {
+  den.aspects.apps.gaming.mangohud = {
     homeManager =
       { pkgs, ... }:
       {

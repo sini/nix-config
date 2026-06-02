@@ -17,7 +17,7 @@ let
   agenixHostAspect =
     { host, secretsConfig, ... }:
     let
-      hasImpermanence = host.hasAspect den.aspects.disk.impermanence;
+      hasImpermanence = host.hasAspect den.aspects.core.impermanence;
       persistPrefix = lib.optionalString hasImpermanence "/persist";
     in
     {

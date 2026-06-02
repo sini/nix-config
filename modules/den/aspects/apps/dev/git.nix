@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.git = {
+  den.aspects.apps.dev.git = {
     homeManager =
       {
         config,

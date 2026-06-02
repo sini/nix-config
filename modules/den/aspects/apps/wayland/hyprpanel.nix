@@ -1,6 +1,6 @@
 { den, ... }:
 {
-  den.aspects.apps.hyprpanel = {
+  den.aspects.apps.wayland.hyprpanel = {
     homeManager =
       {
         config,

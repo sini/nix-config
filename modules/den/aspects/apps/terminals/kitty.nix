@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.kitty = {
+  den.aspects.apps.terminals.kitty = {
     homeManager =
       { config, ... }:
       {

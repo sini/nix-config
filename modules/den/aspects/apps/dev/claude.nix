@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.claude = {
+  den.aspects.apps.dev.claude = {
     homeManager =
       { pkgs, ... }:
       {
