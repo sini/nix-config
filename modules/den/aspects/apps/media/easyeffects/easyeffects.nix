@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.media.easyeffects = {
     nixos = {
       programs.noisetorch.enable = true;

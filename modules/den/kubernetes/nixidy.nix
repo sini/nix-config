@@ -105,36 +105,18 @@ let
         [ ]
     ) enabledAspects;
 
-  # Generated CRD type definitions as nixidy applicationImports.
-  getCrdApplicationImports =
-    { system, enabledAspects }:
-    let
-      generatedCrds = withSystem system ({ config, ... }: config.packages.generated-crds);
-      dirContents = builtins.readDir generatedCrds;
-      allNixFiles = lib.attrNames (
-        lib.filterAttrs (name: type: type == "regular" && lib.hasSuffix ".nix" name) dirContents
-      );
-      enabledNames = builtins.attrNames enabledAspects;
-      enabledNixFiles = lib.filter (
-        name: lib.elem (lib.removeSuffix ".nix" name) enabledNames
-      ) allNixFiles;
-    in
-    map (name: import (generatedCrds + "/${name}")) enabledNixFiles;
-
   # Core nixidy configuration module for a cluster.
   mkNixidyModule =
     {
       envName,
-      enabledAspects,
-      system,
-      cluster,
+      crdModules,
     }:
     { lib, ... }:
     {
       config = {
         nixidy = {
           env = lib.mkDefault envName;
-          applicationImports = getCrdApplicationImports { inherit system enabledAspects; };
+          applicationImports = crdModules;
 
           target = {
             repository = lib.mkDefault "https://github.com/${repo.owner}/${repo.name}.git";
@@ -190,6 +172,11 @@ let
       # Aspects with CRDs that are relevant to this cluster
       enabledAspects = aspectsWithCrds;
 
+      # CRD type modules built directly as values via nixidy's fromCRDModule —
+      # no generated .nix files and no import-from-derivation round-trip.
+      helpers = mkPerSystemHelpers { inherit pkgs system; };
+      crdModules = lib.mapAttrsToList helpers.mkCrdModule enabledAspects;
+
       serviceCrdObjects = getServiceCrdObjects { inherit system enabledAspects; };
       userCharts = config.flake.chartsDerivations.${system} or { };
 
@@ -217,16 +204,7 @@ let
             name = clusterName;
           };
         })
-        (mkNixidyModule {
-          inherit
-            envName
-            system
-            enabledAspects
-            ;
-          cluster = cluster // {
-            name = clusterName;
-          };
-        })
+        (mkNixidyModule { inherit envName crdModules; })
       ]
       ++ denModules;
     };
@@ -239,6 +217,7 @@ let
     }:
     let
       klib = inputs.nix-kube-generators.lib { inherit pkgs; };
+      generators = inputs.nixidy.packages.${system}.generators;
 
       # Evaluate each aspect's CRD function with perSystem args
       callAspectCrds =
@@ -355,9 +334,11 @@ let
               ${pkgs.jq}/bin/jq -s 'add' "''${tempFiles[@]}" > $out
             '';
 
-      # Generate nixidy CRD type .nix files
-      mkCrdGenerator =
-        { fromCRD }:
+      # Build nixidy CRD type definitions as module values via fromCRDModule —
+      # returns a `{ lib, options, config, ... }: { ... }` module that drops
+      # straight into nixidy.applicationImports (no generated file, no IFD
+      # import). Only the crd2jsonschema parse remains, shared by fromCRDModule.
+      mkCrdModule =
         name: aspect:
         let
           crdConfig = callAspectCrds aspect;
@@ -365,7 +346,7 @@ let
           useSrc = crdConfig.src or null != null;
         in
         if useChart then
-          fromCRD (
+          generators.fromCRDModule (
             {
               inherit name;
               src = chartCrdYamls.${name};
@@ -375,7 +356,7 @@ let
             // pickNonEmpty [ "namePrefix" "attrNameOverrides" "skipCoerceToList" ] crdConfig
           )
         else if useSrc then
-          fromCRD (
+          generators.fromCRDModule (
             {
               inherit name;
               inherit (crdConfig) src crds;
@@ -453,14 +434,13 @@ in
   perSystem =
     {
       config,
-      inputs',
       pkgs,
       system,
       ...
     }:
     let
       helpers = mkPerSystemHelpers { inherit pkgs system; };
-      inherit (helpers) mkParsedServiceCrds mkCrdGenerator;
+      inherit (helpers) mkParsedServiceCrds;
     in
     {
       packages = {
@@ -480,24 +460,6 @@ in
             '') serviceNames}
           '';
 
-        generated-crds =
-          let
-            generators = lib.mapAttrs (mkCrdGenerator {
-              inherit (inputs'.nixidy.packages.generators) fromCRD;
-            }) aspectsWithCrds;
-            generatorNames = lib.attrNames generators;
-            generatorDrvs = lib.attrValues generators;
-          in
-          pkgs.runCommand "generated-crds" { } ''
-            # Force all derivations into scope for parallel dependency discovery
-            : ${toString generatorDrvs}
-
-            mkdir -p $out
-            ${lib.concatMapStringsSep "\n" (name: ''
-              cp ${generators.${name}} $out/${name}.nix
-            '') generatorNames}
-          '';
-
         # nixidy-all-envs is defined at flake level (flake.packages) to avoid
         # circular dependency — perSystem cannot access config.flake den
         # pipeline outputs (nixidyModules).
@@ -512,40 +474,4 @@ in
         pass_filenames = false;
       };
     };
-
-  # Kubernetes devshell commands emitted via class routing
-  den.aspects.devshell.kubernetes = {
-    devshell =
-      { self', inputs', ... }:
-      {
-        commands = [
-          {
-            package = self'.packages.k8s-update-manifests;
-            name = "k8s-update-manifests";
-            help = "Update Kubernetes manifests for nixidy environments";
-          }
-          {
-            package = self'.packages.toggle-axon-kubernetes;
-            name = "toggle-axon-kubernetes";
-            help = "Toggle enable/disable Kubernetes on axon cluster nodes";
-          }
-          {
-            package = self'.packages.convert-oidc-secrets;
-            name = "convert-oidc-secrets";
-            help = "Convert age-encrypted OIDC secrets to SOPS-encrypted YAML format";
-          }
-          {
-            name = "helmupdater";
-            command = ''${inputs'.nixhelm.packages.helmupdater}/bin/helmupdater "$@"'';
-            help = "Update helm chart versions and hashes";
-          }
-          {
-            package = self'.packages.oci-image-updater;
-            name = "oci-image-updater";
-            help = "Update OCI container image versions and hashes";
-          }
-        ];
-      };
-  };
-  den.schema.flake-parts.includes = [ den.aspects.devshell.kubernetes ];
 }

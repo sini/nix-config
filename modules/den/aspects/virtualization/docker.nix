@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.virtualization.docker = {
     nixos =
       { pkgs, ... }:

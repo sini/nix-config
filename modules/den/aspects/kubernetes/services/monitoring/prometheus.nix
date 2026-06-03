@@ -1,5 +1,5 @@
 # kube-prometheus-stack — Helm chart for in-cluster Prometheus monitoring.
-_: {
+{
   den.aspects.kubernetes.services.monitoring.prometheus = {
     k8s-manifests =
       { charts, ... }:

@@ -1,7 +1,7 @@
 # AMD GPU device plugin — ROCm k8s device plugin DaemonSet.
 #
 # Ported from main:modules/kubernetes/hardware/amd-gpu-device-plugin.nix
-_: {
+{
   den.aspects.kubernetes.hardware.amd-gpu-device-plugin = {
     k8s-manifests =
       { charts, ... }:

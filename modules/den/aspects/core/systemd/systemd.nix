@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.systemd = {
     nixos = {
       systemd.tmpfiles.rules = [

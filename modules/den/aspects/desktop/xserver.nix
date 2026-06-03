@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.desktop.xserver = {
     nixos = {
       services = {

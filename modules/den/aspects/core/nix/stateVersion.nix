@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.nix.stateVersion = {
     darwin = {
       system.stateVersion = 6;

@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.messaging.zoom = {
     homeManager =
       { pkgs, ... }:

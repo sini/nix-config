@@ -6,7 +6,7 @@
 #
 # This aspect remains as an inclusion target for hosts and provides
 # the persist key for impermanence integration.
-_: {
+{
   den.aspects.secrets.agenix = {
     persist = {
       # Agenix-rekey generators state

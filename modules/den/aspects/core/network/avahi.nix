@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.network.avahi = {
     nixos =
       { host, ... }:

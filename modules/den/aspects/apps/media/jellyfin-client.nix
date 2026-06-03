@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.media.jellyfin-client = {
     homeManager =
       { pkgs, ... }:

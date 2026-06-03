@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.dev.k8s.core = {
     homeManager =
       { pkgs, ... }:

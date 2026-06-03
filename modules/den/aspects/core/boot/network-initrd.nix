@@ -2,7 +2,7 @@
 #
 # Ported from main:modules/features/network-boot/ (network-boot.nix + initrd-bootstrap-keys.nix).
 # Wireless (wpa_supplicant) support lives in the separate core.boot.wireless-initrd aspect.
-_: {
+{
   den.aspects.core.boot.network-initrd = {
     nixos =
       {

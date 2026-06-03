@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.productivity.zathura = {
     homeManager = {
       programs.zathura = {

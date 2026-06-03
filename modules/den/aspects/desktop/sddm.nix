@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.desktop.sddm = {
     nixos = {
       services.displayManager.sddm = {

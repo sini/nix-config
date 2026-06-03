@@ -1,7 +1,7 @@
 # SOPS Secrets Operator — cluster-wide, age key at /var/lib/sops/age/key.
 #
 # Ported from main:modules/kubernetes/services/security/sops-secrets-operator/sops-secrets-operator.nix
-_: {
+{
   den.aspects.kubernetes.services.security.sops-secrets-operator = {
     crds =
       { inputs, system, ... }:

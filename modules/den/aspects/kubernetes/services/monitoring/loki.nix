@@ -1,5 +1,5 @@
 # Loki — Helm chart for in-cluster log aggregation.
-_: {
+{
   den.aspects.kubernetes.services.monitoring.loki = {
     k8s-manifests =
       { charts, ... }:

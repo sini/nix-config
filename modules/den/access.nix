@@ -2,7 +2,7 @@
 #
 # Users in the registry whose groups intersect these grants get resolved
 # onto hosts via den's env-users and host-users policies.
-_: {
+{
   fleet.user-access = {
     by-environment = {
       prod.groups = [

@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.system.firmware = {
     nixos = {
       hardware.enableRedistributableFirmware = true;

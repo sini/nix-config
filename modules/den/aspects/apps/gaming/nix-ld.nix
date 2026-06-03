@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.gaming.nix-ld = {
     nixos =
       { pkgs, ... }:

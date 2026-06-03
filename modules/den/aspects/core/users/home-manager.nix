@@ -1,7 +1,7 @@
 # Home-manager NixOS module configuration.
 # Den's home-manager battery handles importing the HM NixOS module itself.
 # This aspect sets shared config (useGlobalPkgs, useUserPackages, sharedModules).
-_: {
+{
   den.aspects.core.users.home-manager = {
     os = {
       home-manager.useGlobalPkgs = false;

@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.hardware.gamepad = {
     nixos =
       { pkgs, config, ... }:

@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.disk.zfs-diff = {
     nixos =
       {

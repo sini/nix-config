@@ -1,7 +1,7 @@
 # Bootstrap Application — deploys CRDs and namespaces before other apps.
 #
 # Ported from main:modules/kubernetes/bootstrap/bootstrap.nix
-_: {
+{
   den.aspects.kubernetes.bootstrap = {
     k8s-manifests =
       {

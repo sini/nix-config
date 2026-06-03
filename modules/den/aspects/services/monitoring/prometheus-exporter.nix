@@ -1,7 +1,7 @@
 # Prometheus exporters for system monitoring.
 #
 # Ported from main:modules/services/monitoring/prometheus-exporter/prometheus.nix.
-_: {
+{
   den.aspects.services.monitoring.prometheus-exporter = {
     nixos =
       { pkgs, lib, ... }:

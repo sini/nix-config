@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.wayland.hyprland-split-monitors = {
     homeManager =
       { pkgs, ... }:

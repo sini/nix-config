@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.roles.creative.graphics = {
     homeManager =
       { pkgs, ... }:

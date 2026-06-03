@@ -3,7 +3,7 @@
 # Emits host-addrs quirk with this host's address info; consumes
 # collected entries from all peers to populate networking.hosts
 # and services.openssh.knownHosts.
-_: {
+{
   den.aspects.core.network.hosts = {
     host-addrs =
       { environment, host, ... }:

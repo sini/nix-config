@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.users.shell = {
     os = {
       programs.zsh = {

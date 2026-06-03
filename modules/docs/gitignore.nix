@@ -1,4 +1,4 @@
-_: {
+{
   perSystem = {
     files.file.".gitignore".text = ''
       /result

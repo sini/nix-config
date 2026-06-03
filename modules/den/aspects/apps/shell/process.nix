@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.apps.shell.process = {
     homeManager =
       { pkgs, ... }:

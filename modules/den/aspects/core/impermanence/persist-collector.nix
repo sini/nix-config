@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.impermanence.persist-collector = {
     nixos =
       {

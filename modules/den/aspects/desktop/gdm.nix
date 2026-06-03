@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.desktop.gdm = {
     nixos =
       { pkgs, ... }:

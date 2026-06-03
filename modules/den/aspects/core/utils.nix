@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.core.utils = {
     os =
       { pkgs, ... }:

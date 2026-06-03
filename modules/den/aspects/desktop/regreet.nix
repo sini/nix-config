@@ -1,4 +1,4 @@
-_: {
+{
   den.aspects.desktop.regreet = {
     nixos = {
       services.greetd.enable = true;
