@@ -139,14 +139,17 @@ in
         serviceName:
         let
           svc = services.${serviceName} or { };
-          # svc may be {} (unknown service) — delegateTo must default, not
-          # `inherit`, or it crashes. Do NOT let statix rewrite this.
-          inherit (svc) delegateTo;
+          # svc may be {} for an unknown service, so this must default rather
+          # than `inherit (svc) delegateTo` (inherit has no fallback and would
+          # crash with "attribute missing"). Bound as `delegate` (≠ the attr
+          # name) so statix's W04 manual-inherit autofix can't rewrite it and
+          # silently drop the `or null`.
+          delegate = svc.delegateTo or null;
         in
         if svc ? domain && svc.domain != null then
           svc.domain
-        else if delegateTo != null then
-          "${serviceName}.${delegateTo}.${domain}"
+        else if delegate != null then
+          "${serviceName}.${delegate}.${domain}"
         else
           "${serviceName}.${domain}"
       );
