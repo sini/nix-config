@@ -1,6 +1,16 @@
 { inputs, ... }:
 {
   den.aspects.apps.dev.claude = {
+
+    homeLinux =
+      { pkgs, ... }:
+      {
+        home.packages = [
+          pkgs.socat
+          pkgs.bubblewrap
+        ];
+    };
+
     homeManager =
       { pkgs, ... }:
       {
@@ -8,8 +18,6 @@
           inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.claude-code
           inputs.nix-ai-tools.packages.${pkgs.stdenv.hostPlatform.system}.crush
           pkgs.nodejs_22
-          pkgs.socat
-          pkgs.bubblewrap
           # pkgs.markitdown
         ];
 
