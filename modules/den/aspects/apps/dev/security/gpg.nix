@@ -1,5 +1,5 @@
 _: {
-  den.aspects.apps.dev.gpg = {
+  den.aspects.apps.dev.security.gpg = {
     nixos = {
       services.pcscd.enable = true;
       hardware.gpgSmartcards.enable = true;

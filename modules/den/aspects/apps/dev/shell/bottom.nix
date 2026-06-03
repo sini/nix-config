@@ -1,5 +1,5 @@
 {
-  den.aspects.apps.shell.bottom = {
+  den.aspects.apps.dev.shell.bottom = {
     homeManager =
       { pkgs, ... }:
       {

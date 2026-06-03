@@ -1,5 +1,5 @@
-_: {
-  den.aspects.apps.dev.starship = {
+{
+  den.aspects.apps.dev.shell.starship = {
     homeManager = {
       programs.starship = {
         enable = true;

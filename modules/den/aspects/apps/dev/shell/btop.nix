@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  den.aspects.apps.shell.btop = {
+  den.aspects.apps.dev.shell.btop = {
     homeManager =
       { osConfig, ... }:
       {
