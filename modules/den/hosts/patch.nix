@@ -3,7 +3,7 @@
   den.hosts.patch = {
     environment = "dev";
     system = "aarch64-darwin";
-    channel = "nixos-master";
+    channel = "nixpkgs-master";
     system-access-groups = [ "system-access" ];
     system-owner = "sini";
 
