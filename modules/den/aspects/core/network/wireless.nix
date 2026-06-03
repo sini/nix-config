@@ -38,7 +38,8 @@
             secretsFile = config.age.secrets.wpa-supplicant.path;
 
             networks = lib.mkIf (environment.networks.default.wireless or null != null) {
-              "${environment.networks.default.wireless.ssid}".pskRaw = environment.networks.default.wireless.pskRef;
+              "${environment.networks.default.wireless.ssid}".pskRaw =
+                environment.networks.default.wireless.pskRef;
             };
           };
         };

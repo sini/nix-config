@@ -1,6 +1,5 @@
 _: {
   den.aspects.roles.kexec = {
-    colmena = [ "kexec" ];
     nixos =
       {
         config,

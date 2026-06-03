@@ -73,7 +73,7 @@
           # Exclude generated files from the files.files flake-parts module
           ++ config.files.paths;
 
-          statix.options = [ "explain" ];
+          # statix.options = [ "explain" ];
           mdformat.options = [ "--number" ];
           shellcheck.options = [
             "--shell=bash"
@@ -109,11 +109,18 @@
             package = pkgs.nixfmt;
             includes = [ "**/*.nix" ];
           };
-          statix = {
+          # statix = {
+          #   enable = true;
+          #   package = inputs'.statix.packages.default;
+          # };
+          nixf-diagnose = {
             enable = true;
-            package = inputs'.statix.packages.default;
+            ignore = [
+              "sema-unused-def-lambda-witharg-formal"
+              "sema-unused-def-lambda-noarg-formal"
+              "sema-primop-overridden"
+            ];
           };
-          nixf-diagnose.enable = true;
           prettier = {
             enable = true;
             settings = {

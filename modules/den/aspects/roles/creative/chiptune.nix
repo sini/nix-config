@@ -1,6 +1,5 @@
 _: {
   den.aspects.roles.creative.chiptune = {
-    colmena = [ "creative" ];
     homeManager =
       { pkgs, ... }:
       {

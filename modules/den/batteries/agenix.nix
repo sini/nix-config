@@ -76,7 +76,14 @@ let
   # This mirrors how agenixHostAspect bridges agenix into the host's class.
   agenixClusterAspect = {
     name = "agenix/cluster";
-    k8s-manifests = { age-secrets ? [ ], ... }: { imports = age-secrets; };
+    k8s-manifests =
+      {
+        age-secrets ? [ ],
+        ...
+      }:
+      {
+        imports = age-secrets;
+      };
   };
 
   agenixUserAspect =
@@ -88,17 +95,15 @@ let
     }:
     {
       name = "agenix-identity/${user.name}@${host.name}";
-      ${host.class} =
-        _:
-        {
-          age.secrets."user-identity-${user.name}" = {
-            rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
-            owner = user.name;
-            group = user.name;
-            mode = "600";
-            generator.script = "age-identity";
-          };
+      ${host.class} = _: {
+        age.secrets."user-identity-${user.name}" = {
+          rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
+          owner = user.name;
+          group = user.name;
+          mode = "600";
+          generator.script = "age-identity";
         };
+      };
       homeManager =
         { osConfig, ... }:
         {

@@ -1,4 +1,9 @@
-{ lib, inputs, config, ... }:
+{
+  lib,
+  inputs,
+  config,
+  ...
+}:
 let
   inherit (lib) mkOption types;
   schemaLib = inputs.gen-schema.lib;
@@ -69,8 +74,7 @@ in
       );
 
   den.schema.cluster.methods.secrets =
-    schemaLib.schemaFn "OIDC secret helpers for cluster services"
-      (lib.types.attrsOf lib.types.anything)
+    schemaLib.schemaFn "OIDC secret helpers for cluster services" (lib.types.attrsOf lib.types.anything)
       (
         { environment, ... }:
         let
@@ -78,9 +82,7 @@ in
           kanidmDomain = env.getDomainFor "kanidm";
         in
         {
-          oidcIssuerFor =
-            clientID:
-            "https://${kanidmDomain}/oauth2/openid/${clientID}";
+          oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
         }
       );
 
@@ -119,18 +121,20 @@ in
         };
 
         nfsVolumes = mkOption {
-          type = types.attrsOf (types.submodule {
-            options = {
-              server = mkOption {
-                type = types.str;
-                description = "NFS server address";
+          type = types.attrsOf (
+            types.submodule {
+              options = {
+                server = mkOption {
+                  type = types.str;
+                  description = "NFS server address";
+                };
+                share = mkOption {
+                  type = types.str;
+                  description = "NFS share path";
+                };
               };
-              share = mkOption {
-                type = types.str;
-                description = "NFS share path";
-              };
-            };
-          });
+            }
+          );
           default = { };
           description = "NFS volumes for CSI driver StorageClass generation";
         };

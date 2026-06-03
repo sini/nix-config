@@ -428,11 +428,11 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1780448160,
-        "narHash": "sha256-jzN3irLrpz1qSoSQL1HhIo7I0XOXjwwcHPgWYMrS1Yg=",
+        "lastModified": 1780519066,
+        "narHash": "sha256-pvL+MdH/ArG6Bcq/osyBEc1GByPu8Keqp5R89msxK44=",
         "owner": "sini",
         "repo": "den",
-        "rev": "4200f372e72721b2c8fc657a2296a9e21adc5ca6",
+        "rev": "f3721af3134bbef44d785e3b0d4bf4a941959a62",
         "type": "github"
       },
       "original": {
@@ -541,6 +541,27 @@
       "original": {
         "owner": "nix-community",
         "repo": "disko",
+        "type": "github"
+      }
+    },
+    "fenix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ],
+        "rust-analyzer-src": "rust-analyzer-src"
+      },
+      "locked": {
+        "lastModified": 1780485330,
+        "narHash": "sha256-7JhNLs5O+FgXmU8FFP9DMug5xv3y4no+n4Kn94pkFGU=",
+        "owner": "nix-community",
+        "repo": "fenix",
+        "rev": "26ddad7ab014ac49bf02fc52e76f801963d684ae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-community",
+        "repo": "fenix",
         "type": "github"
       }
     },
@@ -2524,11 +2545,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1773613743,
-        "narHash": "sha256-HpMQBfn+GJXmkWFlucCXVBG6ZsER0SFBS9ZBHj0l+mE=",
+        "lastModified": 1780517175,
+        "narHash": "sha256-ZRwqZHjAMSDAVbLvjaZHdEZ8gTxKC047JJFUH7Kz5Xs=",
         "owner": "sini",
         "repo": "nixidy",
-        "rev": "31bf26b6fbc19f258f1256f41bc1f3c114243ac0",
+        "rev": "f5437b9a7bd51edbca432f12db1399bc021758d9",
         "type": "github"
       },
       "original": {
@@ -3208,6 +3229,7 @@
         "den-diagram": "den-diagram",
         "devshell": "devshell_3",
         "disko": "disko",
+        "fenix": "fenix",
         "files": "files",
         "firefox-addons": "firefox-addons",
         "flake-compat": "flake-compat_2",
@@ -3273,6 +3295,23 @@
         "ucodenix": "ucodenix",
         "zen-browser": "zen-browser",
         "zjstatus": "zjstatus"
+      }
+    },
+    "rust-analyzer-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1780337665,
+        "narHash": "sha256-RS3F+/6dtBIwd5+47GVen3jAk62/KumFZ4q3RVYafDk=",
+        "owner": "rust-lang",
+        "repo": "rust-analyzer",
+        "rev": "55af1774e9e840d3b28d12fcfaa72d2e2caa8ac9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rust-lang",
+        "ref": "nightly",
+        "repo": "rust-analyzer",
+        "type": "github"
       }
     },
     "rust-overlay": {

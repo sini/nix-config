@@ -1,7 +1,6 @@
 { den, lib, ... }:
 {
   den.aspects.roles.server = {
-    colmena = [ "server" ];
     includes = with den.aspects; [
       services.security.acme
       services.security.tang

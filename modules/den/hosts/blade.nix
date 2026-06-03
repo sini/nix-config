@@ -24,7 +24,6 @@
     includes = with den.aspects; [
       roles.default
       roles.workstation
-      roles.laptop
       roles.gaming
       roles.dev
       roles.dev-gui
@@ -34,6 +33,7 @@
       hardware.gpu.intel
       hardware.gpu.nvidia
       hardware.gpu.nvidia-prime
+      hardware.laptop
       hardware.razer
       hardware.performance
 

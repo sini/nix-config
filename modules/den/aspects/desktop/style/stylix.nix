@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.desktop.stylix = {
+  den.aspects.desktop.style.stylix = {
     nixos =
       {
         pkgs,

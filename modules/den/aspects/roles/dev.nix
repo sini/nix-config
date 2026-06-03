@@ -1,7 +1,6 @@
 { den, ... }:
 {
   den.aspects.roles.dev = {
-    colmena = [ "dev" ];
     includes = with den.aspects; [
       hardware.adb
       apps.dev.ai.claude

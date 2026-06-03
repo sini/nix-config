@@ -9,7 +9,7 @@ let
 in
 {
   den.policies.collect-host-addrs =
-    _:
+    { host, ... }:
     [
       (pipe.from "host-addrs" [
         (pipe.collectAll ({ host, ... }: true))
@@ -17,50 +17,50 @@ in
     ];
 
   den.policies.collect-bgp-peers =
-    _:
+    { host, ... }:
     [
       (pipe.from "bgp-peers" [
-        (pipe.collect (_: true))
+        (pipe.collect ({ host, ... }: true))
       ])
     ];
 
   den.policies.collect-prometheus-targets =
-    _:
+    { host, ... }:
     [
       (pipe.from "prometheus-targets" [
-        (pipe.collect (_: true))
+        (pipe.collect ({ host, ... }: true))
       ])
     ];
 
   den.policies.collect-k3s-nodes =
-    _:
+    { host, ... }:
     [
       (pipe.from "k3s-nodes" [
-        (pipe.collect (_: true))
+        (pipe.collect ({ host, ... }: true))
       ])
     ];
 
   den.policies.collect-thunderbolt-mesh-peers =
-    _:
+    { host, ... }:
     [
       (pipe.from "thunderbolt-mesh-peers" [
-        (pipe.collect (_: true))
+        (pipe.collect ({ host, ... }: true))
       ])
     ];
 
   den.policies.collect-vault-peers =
-    _:
+    { host, ... }:
     [
       (pipe.from "vault-peers" [
-        (pipe.collect (_: true))
+        (pipe.collect ({ host, ... }: true))
       ])
     ];
 
   den.policies.collect-ollama-endpoints =
-    _:
+    { host, ... }:
     [
       (pipe.from "ollama-endpoints" [
-        (pipe.collect (_: true))
+        (pipe.collect ({ host, ... }: true))
       ])
     ];
 
@@ -69,7 +69,7 @@ in
   # includes host scopes (a bare `_: true` has no entity args and rejects
   # all entity-typed scopes).
   den.policies.cluster-collect-k3s-nodes =
-    _:
+    { cluster, ... }:
     [
       (pipe.from "k3s-nodes" [
         (pipe.collectAll ({ host, ... }: true))
@@ -84,7 +84,7 @@ in
   # it. The emit is pipeline-parametric (`{ user, ... }:`), resolved to a concrete
   # record at the emitting user node before it crosses upward.
   den.policies.expose-resolved-users =
-    _:
+    { user, ... }:
     [
       (pipe.from "resolved-users" [
         pipe.expose

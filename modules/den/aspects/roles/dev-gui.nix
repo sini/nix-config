@@ -1,7 +1,6 @@
 { den, ... }:
 {
   den.aspects.roles.dev-gui = {
-    colmena = [ "dev-gui" ];
     includes = with den.aspects; [
       apps.dev.security.gpg
       apps.dev.editor.vscode

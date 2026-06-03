@@ -152,7 +152,7 @@ let
 
           defaults = {
             syncPolicy.autoSync = {
-              enabled = true;
+              enable = true;
               prune = true;
               selfHeal = true;
             };

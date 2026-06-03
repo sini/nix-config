@@ -1,65 +1,67 @@
 # Loki — Helm chart for in-cluster log aggregation.
 _: {
   den.aspects.kubernetes.services.monitoring.loki = {
-    k8s-manifests = { charts, ... }: {
-      applications.loki = {
-        namespace = "monitoring";
+    k8s-manifests =
+      { charts, ... }:
+      {
+        applications.loki = {
+          namespace = "monitoring";
 
-        helm.releases.loki = {
-          chart = charts.grafana.loki;
+          helm.releases.loki = {
+            chart = charts.grafana.loki;
 
-          values = {
-            loki = {
-              auth_enabled = false;
+            values = {
+              loki = {
+                auth_enabled = false;
 
-              storage = {
-                type = "filesystem";
+                storage = {
+                  type = "filesystem";
+                };
+
+                schemaConfig.configs = [
+                  {
+                    from = "2020-10-24";
+                    store = "boltdb-shipper";
+                    object_store = "filesystem";
+                    schema = "v11";
+                    index = {
+                      prefix = "index_";
+                      period = "24h";
+                    };
+                  }
+                ];
+
+                limits_config = {
+                  retention_period = "30d";
+                  allow_structured_metadata = false;
+                };
+
+                compactor = {
+                  retention_enabled = true;
+                  retention_delete_delay = "2h";
+                };
               };
 
-              schemaConfig.configs = [
-                {
-                  from = "2020-10-24";
-                  store = "boltdb-shipper";
-                  object_store = "filesystem";
-                  schema = "v11";
-                  index = {
-                    prefix = "index_";
-                    period = "24h";
-                  };
-                }
-              ];
-
-              limits_config = {
-                retention_period = "30d";
-                allow_structured_metadata = false;
+              # Single-binary mode for simplicity
+              singleBinary = {
+                replicas = 1;
+                persistence = {
+                  enabled = true;
+                  storageClass = "longhorn";
+                  size = "50Gi";
+                };
               };
 
-              compactor = {
-                retention_enabled = true;
-                retention_delete_delay = "2h";
-              };
+              # Disable distributed components
+              read.replicas = 0;
+              write.replicas = 0;
+              backend.replicas = 0;
+
+              # Deploy promtail for log collection
+              promtail.enabled = true;
             };
-
-            # Single-binary mode for simplicity
-            singleBinary = {
-              replicas = 1;
-              persistence = {
-                enabled = true;
-                storageClass = "longhorn";
-                size = "50Gi";
-              };
-            };
-
-            # Disable distributed components
-            read.replicas = 0;
-            write.replicas = 0;
-            backend.replicas = 0;
-
-            # Deploy promtail for log collection
-            promtail.enabled = true;
           };
         };
       };
-    };
   };
 }

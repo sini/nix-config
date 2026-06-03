@@ -40,14 +40,19 @@ writeShellApplication {
       exit 1
     fi
 
+    # Darwin hosts live under darwinConfigurations; everything else is NixOS.
+    # attrNames is lazy, so this does not evaluate any host configuration.
+    DARWIN_HOSTS=" $(nix eval --raw ".#darwinConfigurations" --apply \
+      'cfgs: builtins.concatStringsSep " " (builtins.attrNames cfgs)' 2>/dev/null) "
+
     HOSTS=()
-    HOST_SYSTEMS=()
+    HOST_IS_DARWIN=()
     for h in "''${HOST_NAMES[@]}"; do
-      HOST_SYSTEM=$(nix eval --raw ".#hosts.$h.system" 2>/dev/null || echo "x86_64-linux")
-      HOST_SYSTEMS+=("$HOST_SYSTEM")
-      if [[ "$HOST_SYSTEM" == *darwin* ]]; then
+      if [[ "$DARWIN_HOSTS" == *" $h "* ]]; then
+        HOST_IS_DARWIN+=("true")
         HOSTS+=(".#darwinConfigurations.$h.config.system.build.toplevel")
       else
+        HOST_IS_DARWIN+=("false")
         HOSTS+=(".#nixosConfigurations.$h.config.system.build.toplevel")
       fi
     done
@@ -56,7 +61,7 @@ writeShellApplication {
 
     if [[ "$APPLY" == true ]]; then
       h="''${HOST_NAMES[0]}"
-      HOST_SYSTEM="''${HOST_SYSTEMS[0]}"
+      IS_DARWIN="''${HOST_IS_DARWIN[0]}"
       LOCAL_HOSTNAME="$(hostname)"
 
       if [[ "$h" != "$LOCAL_HOSTNAME" ]]; then
@@ -64,7 +69,7 @@ writeShellApplication {
         exit 1
       fi
 
-      if [[ "$HOST_SYSTEM" == *darwin* ]]; then
+      if [[ "$IS_DARWIN" == true ]]; then
         echo "Applying darwin configuration for $h..."
         sudo -E darwin-rebuild switch --flake ".#$h"
       else

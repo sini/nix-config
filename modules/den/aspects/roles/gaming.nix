@@ -1,7 +1,6 @@
 { den, ... }:
 {
   den.aspects.roles.gaming = {
-    colmena = [ "gaming" ];
     includes = with den.aspects; [
       hardware.gamepad
       apps.gaming.nix-ld

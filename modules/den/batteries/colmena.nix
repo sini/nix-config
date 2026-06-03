@@ -1,8 +1,9 @@
 # Colmena battery: policy-driven hive from host entities.
 #
-# Aspects emit tag lists into the colmena class (e.g. colmena = [ "server" ]).
-# policy.instantiate collects and flattens them per-host into
-# flake.colmenaDeployment.<host>, then the hive reads them as tags.
+# Deployment tags are derived from each host's resolved aspects
+# (host.aspects) — every named aspect becomes a tag by its full identity path
+# (e.g. roles/workstation, hardware/audio). host-modules-capture captures the
+# raw OS module list without forcing nixosConfigurations.
 {
   den,
   lib,
@@ -31,31 +32,30 @@ let
       ...
     }:
     let
-      deploymentData = config.flake.colmenaDeployment or { };
-
       colmenaModules = config.flake.colmenaModules or { };
 
-      nodes = lib.mapAttrs (
-        name: host:
-        let
-          hostTags = deploymentData.${name} or [ ];
-        in
-        {
-          imports = colmenaModules.${name};
-          deployment = {
-            targetHost =
-              let
-                inherit (host) ipv4;
-              in
-              if ipv4 == [ ] then "${name}.ts.json64.dev" else builtins.head ipv4;
-            tags = [ (host.environment or "prod") ] ++ hostTags;
-            allowLocalDeployment = true;
-            buildOnTarget = (host.system or localSystem) != localSystem;
-            targetUser = host.remote-deployment-user or "sini";
-          }
-          // lib.optionalAttrs (host.class == "darwin") { systemType = "darwin"; };
+      # Deployment tags = every resolved (named) aspect on the host, by full
+      # identity path (e.g. "roles/workstation", "hardware/audio"). Anonymous
+      # nodes are dropped; deduped + sorted for stable tags.
+      aspectTags =
+        host:
+        lib.sort (a: b: a < b) (lib.unique (map (a: a.identity) (lib.filter (a: a.isNamed) host.aspects)));
+
+      nodes = lib.mapAttrs (name: host: {
+        imports = colmenaModules.${name};
+        deployment = {
+          targetHost =
+            let
+              inherit (host) ipv4;
+            in
+            if ipv4 == [ ] then "${name}.ts.json64.dev" else builtins.head ipv4;
+          tags = [ (host.environment or "prod") ] ++ aspectTags host;
+          allowLocalDeployment = true;
+          buildOnTarget = (host.system or localSystem) != localSystem;
+          targetUser = host.remote-deployment-user or "sini";
         }
-      ) allHosts;
+        // lib.optionalAttrs (host.class == "darwin") { systemType = "darwin"; };
+      }) allHosts;
     in
     nodes
     // {
@@ -85,26 +85,6 @@ in
     };
   };
 
-  # Colmena class — aspects emit static tag lists into this.
-  den.classes.colmena.description = "Colmena deployment tags";
-
-  # Per-host: instantiate colmena class, flatten tag lists.
-  den.policies.host-to-colmena =
-    { host, ... }:
-    [
-      (den.lib.policy.instantiate {
-        name = "${host.name}-colmena";
-        class = "colmena";
-        instantiate =
-          { modules, ... }:
-          lib.concatMap (m: if m ? imports then lib.flatten m.imports else lib.toList m) modules;
-        intoAttr = [
-          "colmenaDeployment"
-          host.name
-        ];
-      })
-    ];
-
   # Per-host: capture the raw OS module list without calling nixosSystem.
   # Colmena uses this as node imports — avoids forcing nixosConfigurations
   # just to read the module list back out.
@@ -123,7 +103,6 @@ in
     ];
 
   den.schema.host.includes = [
-    den.policies.host-to-colmena
     den.policies.host-modules-capture
   ];
 

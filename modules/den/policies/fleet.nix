@@ -17,18 +17,20 @@ in
 {
   # flake -> fleet: single fleet entity (fires at flake scope).
   # secretsConfig propagates through scope inheritance to all descendants.
-  den.policies.to-fleet = _: [
-    (resolve.to "fleet" {
-      fleet = {
-        name = "fleet";
-      };
-      inherit (config.den) secretsConfig;
-    })
-  ];
+  den.policies.to-fleet =
+    { flake-system, ... }:
+    [
+      (resolve.to "fleet" {
+        fleet = {
+          name = "fleet";
+        };
+        inherit (config.den) secretsConfig;
+      })
+    ];
 
   # fleet -> environments: fan out per registered environment.
   den.policies.fleet-to-envs =
-    _:
+    { fleet, ... }:
     lib.mapAttrsToList (
       _: env:
       resolve.to "environment" {

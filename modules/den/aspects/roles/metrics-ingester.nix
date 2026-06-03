@@ -5,7 +5,6 @@
   # declared on the same config, so these includes will resolve once the
   # monitoring aspects land.
   den.aspects.roles.metrics-ingester = {
-    colmena = [ "metrics-ingester" ];
     includes = with den.aspects; [
       services.monitoring.prometheus
       services.monitoring.loki

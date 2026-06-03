@@ -37,6 +37,13 @@ let
           if rekeyFile != null then lib.removePrefix "${toString self}/" (toString rekeyFile) else null;
 
         isIntermediary = secretConfig.intermediary or false;
+
+        # Bound under distinct names so statix W04 can't rewrite these to
+        # `inherit (secretConfig) owner;` etc. — that drops the `or` default
+        # and throws when a secret omits owner/group/mode.
+        secretOwner = secretConfig.owner or "root";
+        secretGroup = secretConfig.group or "root";
+        secretMode = secretConfig.mode or "0400";
       in
       {
         inherit
@@ -47,9 +54,9 @@ let
           rekeyPath
           isIntermediary
           ;
-        owner = secretConfig.owner or "root";
-        group = secretConfig.group or "root";
-        mode = secretConfig.mode or "0400";
+        owner = secretOwner;
+        group = secretGroup;
+        mode = secretMode;
         hasDependencies = hasGeneratorScript && (secretConfig.generator.dependencies or [ ]) != [ ];
       }
     ) secrets;

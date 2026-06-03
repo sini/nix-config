@@ -1,7 +1,6 @@
 { den, ... }:
 {
   den.aspects.roles.workstation = {
-    colmena = [ "workstation" ];
     includes = with den.aspects; [
       # Hardware
       hardware.audio
@@ -11,8 +10,8 @@
       hardware.keyboard
 
       # Theming
-      desktop.stylix
-      desktop.fonts
+      desktop.style.stylix
+      desktop.style.fonts
 
       # Virtualization
       virtualization.libvirt
@@ -28,15 +27,12 @@
       apps.terminals.alacritty
       apps.terminals.kitty
       apps.browsers.firefox
+
+      apps.mail.protonmail
+
       apps.productivity.obs-studio
       apps.productivity.obsidian
       apps.productivity.zathura
     ];
-
-    homeManager =
-      { pkgs, ... }:
-      {
-        services.gpg-agent.pinentry.package = pkgs.pinentry-gnome3;
-      };
   };
 }

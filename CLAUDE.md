@@ -68,8 +68,9 @@ colmena apply
 # Deploy to a specific host
 colmena apply --on <hostname>
 
-# Deploy to hosts with a specific role
-colmena apply --on @server
+# Deploy to hosts with a specific aspect (tags are aspect identity paths
+# derived from host.aspects, e.g. @roles/server, @hardware/audio)
+colmena apply --on @roles/server
 
 # Apply changes to current host
 colmena apply-local --sudo

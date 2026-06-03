@@ -1,7 +1,6 @@
 { den, ... }:
 {
   den.aspects.roles.kube-tools = {
-    colmena = [ "kube-tools" ];
     includes = with den.aspects.apps.dev.k8s; [
       core
       dev

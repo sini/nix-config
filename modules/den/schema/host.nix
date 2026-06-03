@@ -128,14 +128,25 @@ let
       # Settings declarations may be plain option attrsets
       # (`{ foo = mkOption {...}; }`) or module-shaped with explicit
       # imports/config. Default the module keys so plain attrsets work.
-      reshapeSettings = raw: {
-        imports = raw.imports or [ ];
-        config = raw.config or { };
-        options = removeAttrs raw [
-          "imports"
-          "config"
-        ];
-      };
+      #
+      # imports'/config' are bound under distinct names on purpose: writing
+      # `imports = raw.imports or [ ]` here gets rewritten by statix (W04) to
+      # `inherit (raw) imports`, which DROPS the `or` default and throws when
+      # raw is a plain options attrset with no imports/config key.
+      reshapeSettings =
+        raw:
+        let
+          imports' = raw.imports or [ ];
+          config' = raw.config or { };
+        in
+        {
+          imports = imports';
+          config = config';
+          options = removeAttrs raw [
+            "imports"
+            "config"
+          ];
+        };
 
       # True if a node has .settings anywhere in its aspect subtree.
       hasSettingsDeep =
@@ -174,10 +185,14 @@ let
               description = "Settings under ${name}";
             }
           ) settingChildren;
+          # Distinct names so statix (W04) can't rewrite to
+          # `inherit (ownSettings) imports`, which would drop the `or` default.
+          ownImports = ownSettings.imports or [ ];
+          ownConfig = ownSettings.config or { };
         in
         {
-          imports = ownSettings.imports or [ ];
-          config = ownSettings.config or { };
+          imports = ownImports;
+          config = ownConfig;
           options = (ownSettings.options or { }) // childOptions;
         };
     in

@@ -1,7 +1,5 @@
-{ den, lib, ... }:
 {
-  den.aspects.roles.laptop = {
-    colmena = [ "laptop" ];
+  den.aspects.hardware.laptop = {
 
     # Laptops use NetworkManager for userspace WiFi (roaming, multiple
     # networks). Standalone wpa_supplicant (network.wireless) is opt-in
@@ -15,7 +13,7 @@
     };
 
     nixos =
-      { pkgs, ... }:
+      { pkgs, lib, ... }:
       {
         environment.systemPackages = [
           pkgs.brightnessctl
