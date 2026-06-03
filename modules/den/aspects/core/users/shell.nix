@@ -1,21 +1,17 @@
 _: {
   den.aspects.core.users.shell = {
-    os =
-      { pkgs, ... }:
-      {
-        programs.zsh = {
-          enable = true;
-          enableCompletion = true;
-        };
-
-        users.users.root.shell = pkgs.bashInteractive;
-
-        environment.enableAllTerminfo = true;
+    os = {
+      programs.zsh = {
+        enable = true;
+        enableCompletion = true;
       };
+    };
 
     nixos =
       { pkgs, ... }:
       {
+        environment.enableAllTerminfo = true;
+        users.users.root.shell = pkgs.bashInteractive;
         users.defaultUserShell = pkgs.zsh;
       };
   };

@@ -1,8 +1,11 @@
 { den, lib, ... }:
 {
-  den.hosts.aarch64-darwin.patch = {
+  den.hosts.patch = {
     environment = "dev";
+    system = "aarch64-darwin";
+    channel = "nixos-master";
     system-access-groups = [ "system-access" ];
+    system-owner = "sini";
 
     users.sini = { };
   };
