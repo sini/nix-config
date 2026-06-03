@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.dev.vscode = {
+  den.aspects.apps.dev.editor.vscode = {
     homeManager =
       {
         lib,

@@ -1,6 +1,6 @@
 { inputs, ... }:
 {
-  den.aspects.apps.dev.claude = {
+  den.aspects.apps.dev.ai.claude = {
 
     homeLinux =
       { pkgs, ... }:
@@ -9,7 +9,7 @@
           pkgs.socat
           pkgs.bubblewrap
         ];
-    };
+      };
 
     homeManager =
       { pkgs, ... }:

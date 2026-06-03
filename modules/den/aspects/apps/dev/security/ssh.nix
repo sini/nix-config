@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-  den.aspects.apps.dev.ssh = {
+  den.aspects.apps.dev.security.ssh = {
     homeManager =
       { host-addrs, ... }:
       let
