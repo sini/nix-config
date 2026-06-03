@@ -113,6 +113,8 @@ rules:
     resources:
       - volumes
       - volumes/status
+      - enginefrontends
+      - enginefrontends/status
       - engines
       - engines/status
       - replicas

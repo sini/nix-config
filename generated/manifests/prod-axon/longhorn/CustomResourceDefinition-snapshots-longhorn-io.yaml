@@ -90,6 +90,11 @@ spec:
               properties:
                 checksum:
                   type: string
+                checksumCalculatedAt:
+                  description: |-
+                    ChecksumCalculatedAt is the RFC3339 timestamp indicating when the checksum
+                    for this snapshot was last calculated or updated.
+                  type: string
                 children:
                   additionalProperties:
                     type: boolean
@@ -112,6 +117,8 @@ spec:
                   type: string
                 readyToUse:
                   type: boolean
+                requestedTime:
+                  type: string
                 restoreSize:
                   format: int64
                   type: integer

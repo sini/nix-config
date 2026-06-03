@@ -15,7 +15,7 @@
           programs.dconf.enable = true;
 
           stylix = {
-            base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
+            base16Scheme = "${inputs.base16-schemes}/base16/tokyo-night-moon.yaml";
 
             enable = true;
             enableReleaseChecks = false;
@@ -109,7 +109,7 @@
           stylix-hm
           ++ [
             {
-              base16Scheme = "${pkgs.base16-schemes}/share/themes/tokyo-night-moon.yaml";
+              base16Scheme = "${inputs.base16-schemes}/base16/tokyo-night-moon.yaml";
 
               enable = true;
               enableReleaseChecks = false;

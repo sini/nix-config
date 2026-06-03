@@ -10,7 +10,7 @@
         ...
       }:
       let
-        isLaptop = host.hasAspect den.aspects.roles.laptop;
+        isLaptop = host.hasAspect den.aspects.hardware.laptop;
       in
       {
         systemd.user.services.waybar = {

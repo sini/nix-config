@@ -44,6 +44,11 @@ spec:
           jsonPath: .status.currentNodeID
           name: Node
           type: string
+        - description: The engine switchover state
+          jsonPath: .status.switchoverState
+          name: Switchover
+          priority: 1
+          type: string
         - jsonPath: .metadata.creationTimestamp
           name: Age
           type: date
@@ -131,6 +136,11 @@ spec:
                   x-kubernetes-validations:
                     - message: Encrypted is immutable
                       rule: self == oldSelf
+                engineNodeID:
+                  description: |-
+                    engineNodeID defines the node where the backend engine (target) runs.
+                    If empty, falls back to NodeID.
+                  type: string
                 freezeFilesystemForSnapshot:
                   description: Setting that freezes the filesystem on the root partition before a snapshot is created.
                   enum:
@@ -157,6 +167,7 @@ spec:
                 migrationNodeID:
                   type: string
                 nodeID:
+                  description: nodeID defines the node where the volume is attached (where the frontend initiator runs).
                   type: string
                 nodeSelector:
                   items:
@@ -234,6 +245,15 @@ spec:
                     - enabled
                     - fast-check
                   type: string
+                snapshotHashingRequestedAt:
+                  description: |-
+                    SnapshotHashingRequestedAt is the RFC3339 timestamp (e.g., "2026-03-16T10:30:00Z") when an on-demand snapshot checksum calculation is requested.
+                    When this value is set and is later than LastOnDemandSnapshotHashingCompleteAt, the system will calculate checksums
+                    for all user snapshots.
+
+                    If SnapshotHashingRequestedAt differs from LastOnDemandSnapshotHashingCompleteAt, it indicates that a hashing request
+                    is still in progress, and a new request will be rejected.
+                  type: string
                 snapshotMaxCount:
                   type: integer
                 snapshotMaxSize:
@@ -299,6 +319,9 @@ spec:
                     type: object
                   nullable: true
                   type: array
+                currentEngineNodeID:
+                  description: the node that the engine (target) is currently running on.
+                  type: string
                 currentImage:
                   type: string
                 currentMigrationNodeID:
@@ -343,11 +366,19 @@ spec:
                       nullable: true
                       type: array
                   type: object
+                lastAutoSalvagedAt:
+                  type: string
                 lastBackup:
                   type: string
                 lastBackupAt:
                   type: string
                 lastDegradedAt:
+                  type: string
+                lastOnDemandSnapshotHashingCompleteAt:
+                  description: |-
+                    LastOnDemandSnapshotHashingCompleteAt is the RFC3339 timestamp (e.g., "2026-03-16T10:30:00Z") when the
+                    most recent on-demand snapshot checksum calculation completed.
+                    When this value matches SnapshotHashingRequestedAt, the requested on-demand checksum calculation is considered complete.
                   type: string
                 ownerID:
                   type: string
@@ -364,6 +395,11 @@ spec:
                 shareState:
                   type: string
                 state:
+                  type: string
+                switchoverState:
+                  description: |-
+                    SwitchoverState describes the current progress of a v2 engine live switchover.
+                    Empty when no switchover is in progress.
                   type: string
               type: object
           type: object

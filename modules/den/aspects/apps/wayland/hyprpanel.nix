@@ -16,7 +16,7 @@
           blueman
           networkmanagerapplet
           ;
-        has_battery = host.hasAspect den.aspects.roles.laptop;
+        has_battery = host.hasAspect den.aspects.hardware.laptop;
       in
       {
         programs.hyprpanel = {

@@ -18,7 +18,7 @@ in
   # flake -> fleet: single fleet entity (fires at flake scope).
   # secretsConfig propagates through scope inheritance to all descendants.
   den.policies.to-fleet =
-    { flake-system, ... }:
+    { ... }:
     [
       (resolve.to "fleet" {
         fleet = {

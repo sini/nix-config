@@ -7,8 +7,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.11.2
-    helm.sh/chart: longhorn-1.11.2
+    app.kubernetes.io/version: v1.12.0
+    helm.sh/chart: longhorn-1.12.0
     longhorn-manager: ""
   name: systemrestores.longhorn.io
 spec:

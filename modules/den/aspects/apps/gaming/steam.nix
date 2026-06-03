@@ -10,7 +10,7 @@
       }:
       let
         hasNvidiaPrimeOnLaptop =
-          host.hasAspect den.aspects.hardware.gpu.nvidia-prime && host.hasAspect den.aspects.roles.laptop;
+          host.hasAspect den.aspects.hardware.gpu.nvidia-prime && host.hasAspect den.aspects.hardware.laptop;
       in
       {
         nix.settings = {

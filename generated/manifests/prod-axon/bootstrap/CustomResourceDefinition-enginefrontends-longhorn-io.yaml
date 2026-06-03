@@ -10,42 +10,34 @@ metadata:
     app.kubernetes.io/version: v1.12.0
     helm.sh/chart: longhorn-1.12.0
     longhorn-manager: ""
-  name: replicas.longhorn.io
+  name: enginefrontends.longhorn.io
 spec:
   group: longhorn.io
   names:
-    kind: Replica
-    listKind: ReplicaList
-    plural: replicas
+    kind: EngineFrontend
+    listKind: EngineFrontendList
+    plural: enginefrontends
     shortNames:
-      - lhr
-    singular: replica
+      - lhef
+    singular: enginefrontend
   scope: Namespaced
   versions:
     - additionalPrinterColumns:
-        - description: The data engine of the replica
+        - description: The data engine of the engine frontend
           jsonPath: .spec.dataEngine
           name: Data Engine
           type: string
-        - description: The current state of the replica
+        - description: The current state of the engine frontend
           jsonPath: .status.currentState
           name: State
           type: string
-        - description: The node that the replica is on
+        - description: The node that the engine frontend is on
           jsonPath: .spec.nodeID
           name: Node
           type: string
-        - description: The disk that the replica is on
-          jsonPath: .spec.diskID
-          name: Disk
-          type: string
-        - description: The instance manager of the replica
+        - description: The instance manager of the engine frontend
           jsonPath: .status.instanceManagerName
           name: InstanceManager
-          type: string
-        - description: The current image of the replica
-          jsonPath: .status.currentImage
-          name: Image
           type: string
         - jsonPath: .metadata.creationTimestamp
           name: Age
@@ -53,7 +45,7 @@ spec:
       name: v1beta2
       schema:
         openAPIV3Schema:
-          description: Replica is where Longhorn stores replica object.
+          description: EngineFrontend is where Longhorn stores engine frontend object for v2 data engine initiator.
           properties:
             apiVersion:
               description: |-
@@ -73,14 +65,10 @@ spec:
             metadata:
               type: object
             spec:
-              description: ReplicaSpec defines the desired state of the Longhorn replica
+              description: EngineFrontendSpec defines the desired state of the Longhorn engine frontend (v2 initiator)
               properties:
                 active:
                   type: boolean
-                backingImage:
-                  type: string
-                dataDirectoryName:
-                  type: string
                 dataEngine:
                   enum:
                     - v1
@@ -88,75 +76,46 @@ spec:
                   type: string
                 desireState:
                   type: string
-                diskID:
-                  type: string
-                diskPath:
-                  type: string
-                engineName:
-                  type: string
-                evictionRequested:
+                disableFrontend:
                   type: boolean
-                failedAt:
-                  description: |-
-                    FailedAt is set when a running replica fails or when a running engine is unable to use a replica for any reason.
-                    FailedAt indicates the time the failure occurred. When FailedAt is set, a replica is likely to have useful
-                    (though possibly stale) data. A replica with FailedAt set must be rebuilt from a non-failed replica (or it can
-                    be used in a salvage if all replicas are failed). FailedAt is cleared before a rebuild or salvage. FailedAt may
-                    be later than the corresponding entry in an engine's replicaTransitionTimeMap because it is set when the volume
-                    controller acknowledges the change.
+                engineName:
+                  description: EngineName is the name of the v2 engine target (required for EngineFrontend instance creation)
                   type: string
-                hardNodeAffinity:
-                  type: string
-                healthyAt:
-                  description: |-
-                    HealthyAt is set the first time a replica becomes read/write in an engine after creation or rebuild. HealthyAt
-                    indicates the time the last successful rebuild occurred. When HealthyAt is set, a replica is likely to have
-                    useful (though possibly stale) data. HealthyAt is cleared before a rebuild. HealthyAt may be later than the
-                    corresponding entry in an engine's replicaTransitionTimeMap because it is set when the volume controller
-                    acknowledges the change.
+                frontend:
+                  enum:
+                    - blockdev
+                    - iscsi
+                    - nvmf
+                    - ublk
+                    - ""
                   type: string
                 image:
                   type: string
-                lastFailedAt:
-                  description: |-
-                    LastFailedAt is always set at the same time as FailedAt. Unlike FailedAt, LastFailedAt is never cleared.
-                    LastFailedAt is not a reliable indicator of the state of a replica's data. For example, a replica with
-                    LastFailedAt may already be healthy and in use again. However, because it is never cleared, it can be compared to
-                    LastHealthyAt to help prevent dangerous replica deletion in some corner cases. LastFailedAt may be later than the
-                    corresponding entry in an engine's replicaTransitionTimeMap because it is set when the volume controller
-                    acknowledges the change.
-                  type: string
-                lastHealthyAt:
-                  description: |-
-                    LastHealthyAt is set every time a replica becomes read/write in an engine. Unlike HealthyAt, LastHealthyAt is
-                    never cleared. LastHealthyAt is not a reliable indicator of the state of a replica's data. For example, a
-                    replica with LastHealthyAt set may be in the middle of a rebuild. However, because it is never cleared, it can be
-                    compared to LastFailedAt to help prevent dangerous replica deletion in some corner cases. LastHealthyAt may be
-                    later than the corresponding entry in an engine's replicaTransitionTimeMap because it is set when the volume
-                    controller acknowledges the change.
-                  type: string
                 logRequested:
                   type: boolean
-                migrationEngineName:
-                  description: |-
-                    MigrationEngineName is indicating the migrating engine which current connected to this replica. This is only
-                    used for live migration of v2 data engine
-                  type: string
                 nodeID:
                   type: string
-                rebuildRetryCount:
-                  type: integer
-                revisionCounterDisabled:
-                  type: boolean
                 salvageRequested:
                   type: boolean
-                snapshotMaxCount:
-                  type: integer
-                snapshotMaxSize:
+                size:
+                  description: |-
+                    Size is the desired size of the frontend device in bytes, as requested
+                    by the volume owner. The EngineFrontend controller drives the frontend
+                    device toward this size independently of the engine's target size.
                   format: int64
                   type: string
-                unmapMarkDiskChainRemovedEnabled:
-                  type: boolean
+                targetIP:
+                  description: TargetIP is the IP address of the v2 engine target
+                  type: string
+                targetPort:
+                  description: TargetPort is the port of the v2 engine target
+                  type: integer
+                ublkNumberOfQueue:
+                  description: ublkNumberOfQueue controls the number of queues for ublk frontend.
+                  type: integer
+                ublkQueueDepth:
+                  description: ublkQueueDepth controls the depth of each queue for ublk frontend.
+                  type: integer
                 volumeName:
                   type: string
                 volumeSize:
@@ -164,8 +123,11 @@ spec:
                   type: string
               type: object
             status:
-              description: ReplicaStatus defines the observed state of the Longhorn replica
+              description: EngineFrontendStatus defines the observed state of the Longhorn engine frontend
               properties:
+                activePath:
+                  description: ActivePath is the currently active frontend path address.
+                  type: string
                 conditions:
                   items:
                     properties:
@@ -194,7 +156,17 @@ spec:
                   type: array
                 currentImage:
                   type: string
+                currentSize:
+                  description: |-
+                    CurrentSize is the current size of the frontend device in bytes, as
+                    observed from the data plane. It is 0 while the engine frontend is not
+                    running.
+                  format: int64
+                  type: string
                 currentState:
+                  type: string
+                endpoint:
+                  description: Endpoint is the initiator endpoint (e.g., /dev/longhorn/vol-name)
                   type: string
                 instanceManagerName:
                   type: string
@@ -204,8 +176,29 @@ spec:
                   type: boolean
                 ownerID:
                   type: string
+                paths:
+                  description: Paths describes the currently known frontend multipath state.
+                  items:
+                    properties:
+                      anaState:
+                        type: string
+                      engineName:
+                        type: string
+                      nguid:
+                        type: string
+                      nqn:
+                        type: string
+                      targetIP:
+                        type: string
+                      targetPort:
+                        type: integer
+                    type: object
+                  type: array
                 port:
                   type: integer
+                preferredPath:
+                  description: PreferredPath is the preferred frontend path address.
+                  type: string
                 salvageExecuted:
                   type: boolean
                 started:
@@ -214,6 +207,15 @@ spec:
                   type: boolean
                 storageIP:
                   type: string
+                switchoverPhase:
+                  description: SwitchoverPhase is the last completed switchover phase reported by the data plane.
+                  type: string
+                targetIP:
+                  description: TargetIP is the currently connected IP address of the v2 engine target
+                  type: string
+                targetPort:
+                  description: TargetPort is the currently connected port of the v2 engine target
+                  type: integer
                 ublkID:
                   format: int32
                   type: integer

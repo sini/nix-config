@@ -49,13 +49,11 @@
 
     # upstream build failures in nixpkgs-unstable
     onnxruntime = prev.onnxruntime.overrideAttrs (old: {
-      postPatch =
-        (old.postPatch or "")
-        + ''
-          # Fix duplicate arena_extend_strategy when USE_CUDA and USE_MIGRAPHX both enabled
-          sed -i 's/#if defined(USE_MIGRAPHX)/#if defined(USE_MIGRAPHX) \&\& !defined(USE_CUDA) \&\& !defined(USE_CUDA_PROVIDER_INTERFACE)/' \
-            onnxruntime/python/onnxruntime_pybind_state_common.cc
-        '';
+      postPatch = (old.postPatch or "") + ''
+        # Fix duplicate arena_extend_strategy when USE_CUDA and USE_MIGRAPHX both enabled
+        sed -i 's/#if defined(USE_MIGRAPHX)/#if defined(USE_MIGRAPHX) \&\& !defined(USE_CUDA) \&\& !defined(USE_CUDA_PROVIDER_INTERFACE)/' \
+          onnxruntime/python/onnxruntime_pybind_state_common.cc
+      '';
     });
     openldap = prev.openldap.overrideAttrs { doCheck = false; };
 

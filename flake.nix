@@ -54,10 +54,11 @@
       type = "git";
       url = "https://github.com/ndfined-crp/ayugram-desktop/";
       submodules = true;
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    base16-schemes = {
+      url = "github:tinted-theming/schemes";
+      flake = false;
     };
     betterfox = {
       url = "github:yokoffing/Betterfox";
@@ -76,10 +77,7 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    den = {
-      url = "github:sini/den/feat/entity-gen-schema-port";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
+    den.url = "github:sini/den/feat/entity-gen-schema-port";
     den-diagram = {
       url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -112,10 +110,7 @@
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
-    gen-algebra = {
-      url = "github:sini/gen-algebra";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
+    gen-algebra.url = "github:sini/gen-algebra";
     gen-schema = {
       url = "github:sini/gen-schema";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -237,7 +232,7 @@
     };
     nixhelm.url = "github:nix-community/nixhelm";
     nixidy = {
-      url = "github:sini/nixidy";
+      url = "github:sini/nixidy/feat/crd-native-module";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nixkraken.url = "github:nicolas-goudry/nixkraken";
@@ -286,7 +281,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     stylix = {
-      url = "github:nix-community/stylix";
+      url = "github:0xda157/stylix/kmscon-config";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     systems.url = "github:nix-systems/default";
