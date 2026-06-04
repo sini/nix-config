@@ -1,13 +1,15 @@
 # Bootstrap Application — deploys CRDs and namespaces before other apps.
 #
+# The CRD objects (`applications.bootstrap.objects`) are injected by the nixidy
+# assembly module (modules/den/kubernetes/nixidy.nix), where they're computed;
+# this aspect owns the rest of the app: namespaces, sync policy, sync-wave.
+#
 # Ported from main:modules/kubernetes/bootstrap/bootstrap.nix
 {
   den.aspects.kubernetes.bootstrap = {
     k8s-manifests =
       {
         config,
-        cluster,
-        crdObjects,
         lib,
         ...
       }:
@@ -27,8 +29,6 @@
           |> lib.unique;
 
         namespaces = appNamespaces ++ resourceNamespaces |> lib.unique;
-
-        serviceCrds = lib.flatten (builtins.attrValues crdObjects);
       in
       {
         applications.bootstrap = {
@@ -50,7 +50,6 @@
           compareOptions.serverSideDiff = true;
 
           annotations."argocd.argoproj.io/sync-wave" = "-3";
-          objects = serviceCrds;
           resources.namespaces =
             namespaces
             |> lib.filter (name: name != "kube-system" && name != "default")
