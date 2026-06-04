@@ -6,6 +6,7 @@
     crds =
       { inputs, system, ... }:
       {
+        name = "sops-secrets-operator";
         chart = inputs.nixhelm.chartsDerivations.${system}.isindir.sops-secrets-operator;
       };
 

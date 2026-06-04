@@ -31,6 +31,7 @@ in
     crds =
       { inputs, system, ... }:
       {
+        name = "cert-manager";
         chart = inputs.nixhelm.chartsDerivations.${system}.jetstack.cert-manager;
         extraOpts = [
           "--set crds.enabled=true"

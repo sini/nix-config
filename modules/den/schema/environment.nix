@@ -2,6 +2,7 @@
   lib,
   inputs,
   self,
+  den,
   ...
 }:
 let
@@ -124,223 +125,229 @@ let
   };
 in
 {
-  den.schema.environment.isEntity = true;
+  options.den.environments = schemaLib.mkInstanceRegistry den.schema.environment {
+    description = "Environment definitions for fleet topology and service resolution";
+  };
 
-  # Method: resolve the domain for a service, following delegation
-  den.schema.environment.methods.getDomainFor =
-    schemaLib.schemaFn "Get the domain for a service, following delegation"
-      (lib.types.functionTo lib.types.str)
+  config = {
+    den.schema.environment.isEntity = true;
+
+    # Method: resolve the domain for a service, following delegation
+    den.schema.environment.methods.getDomainFor =
+      schemaLib.schemaFn "Get the domain for a service, following delegation"
+        (lib.types.functionTo lib.types.str)
+        (
+          {
+            services,
+            domain,
+            ...
+          }:
+          serviceName:
+          let
+            svc = services.${serviceName} or { };
+            # svc may be {} for an unknown service, so this must default rather
+            # than `inherit (svc) delegateTo` (inherit has no fallback and would
+            # crash with "attribute missing"). Bound as `delegate` (≠ the attr
+            # name) so statix's W04 manual-inherit autofix can't rewrite it and
+            # silently drop the `or null`.
+            delegate = svc.delegateTo or null;
+          in
+          if svc ? domain && svc.domain != null then
+            svc.domain
+          else if delegate != null then
+            "${serviceName}.${delegate}.${domain}"
+          else
+            "${serviceName}.${domain}"
+        );
+
+    den.schema.environment.imports = [
       (
+        { config, ... }:
         {
-          services,
-          domain,
-          ...
-        }:
-        serviceName:
-        let
-          svc = services.${serviceName} or { };
-          # svc may be {} for an unknown service, so this must default rather
-          # than `inherit (svc) delegateTo` (inherit has no fallback and would
-          # crash with "attribute missing"). Bound as `delegate` (≠ the attr
-          # name) so statix's W04 manual-inherit autofix can't rewrite it and
-          # silently drop the `or null`.
-          delegate = svc.delegateTo or null;
-        in
-        if svc ? domain && svc.domain != null then
-          svc.domain
-        else if delegate != null then
-          "${serviceName}.${delegate}.${domain}"
-        else
-          "${serviceName}.${domain}"
-      );
+          options = {
+            id = mkOption {
+              type = types.int;
+              default = 0;
+              description = "Numeric ID of the environment";
+            };
 
-  den.schema.environment.imports = [
-    (
-      { config, ... }:
-      {
-        options = {
-          id = mkOption {
-            type = types.int;
-            default = 0;
-            description = "Numeric ID of the environment";
-          };
+            domain = mkOption {
+              type = types.str;
+              description = "Base domain for the environment";
+            };
 
-          domain = mkOption {
-            type = types.str;
-            description = "Base domain for the environment";
-          };
+            secretPath = mkOption {
+              type = types.nullOr types.path;
+              default = null;
+              description = "Path to the directory containing secrets for this environment";
+            };
 
-          secretPath = mkOption {
-            type = types.nullOr types.path;
-            default = null;
-            description = "Path to the directory containing secrets for this environment";
-          };
+            wirelessSecretsFile = mkOption {
+              type = types.path;
+              default = config.secretPath + "/wpa_supplicant_psks.age";
+              description = "Path to WPA supplicant secrets file (agenix encrypted)";
+            };
 
-          wirelessSecretsFile = mkOption {
-            type = types.path;
-            default = config.secretPath + "/wpa_supplicant_psks.age";
-            description = "Path to WPA supplicant secrets file (agenix encrypted)";
-          };
+            settings =
+              mkOption {
+                type = types.attrsOf (types.attrsOf types.anything);
+                default = { };
+                description = "Environment-level default feature settings for scope-engine cascade";
+              }
+              // {
+                identity = false;
+              };
 
-          settings =
-            mkOption {
-              type = types.attrsOf (types.attrsOf types.anything);
+            networks = mkOption {
+              type = types.attrsOf networkType;
               default = { };
-              description = "Environment-level default feature settings for scope-engine cascade";
-            }
-            // {
-              identity = false;
+              description = "Network definitions for the environment";
             };
 
-          networks = mkOption {
-            type = types.attrsOf networkType;
-            default = { };
-            description = "Network definitions for the environment";
-          };
+            services = mkOption {
+              type = types.attrsOf serviceType;
+              default = { };
+              description = "Service-specific domain mappings for the environment";
+            };
 
-          services = mkOption {
-            type = types.attrsOf serviceType;
-            default = { };
-            description = "Service-specific domain mappings for the environment";
-          };
+            certificates = mkOption {
+              type = certificatesType;
+              default = { };
+              description = "Certificate management configuration";
+            };
 
-          certificates = mkOption {
-            type = certificatesType;
-            default = { };
-            description = "Certificate management configuration";
-          };
-
-          email = mkOption {
-            type = types.submodule {
-              options = {
-                domain = mkOption {
-                  type = types.str;
-                  default = "";
-                  description = "Email domain";
-                };
-                adminEmail = mkOption {
-                  type = types.str;
-                  default = "";
-                  description = "Default admin email address";
+            email = mkOption {
+              type = types.submodule {
+                options = {
+                  domain = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Email domain";
+                  };
+                  adminEmail = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Default admin email address";
+                  };
                 };
               };
+              default = { };
+              description = "Email configuration for the environment";
             };
-            default = { };
-            description = "Email configuration for the environment";
-          };
 
-          acme = mkOption {
-            type = types.submodule {
-              options = {
-                server = mkOption {
-                  type = types.str;
-                  default = "https://acme-v02.api.letsencrypt.org/directory";
-                  description = "ACME server URL";
-                };
-                dnsProvider = mkOption {
-                  type = types.str;
-                  default = "cloudflare";
-                  description = "DNS provider for ACME challenges";
-                };
-                dnsResolver = mkOption {
-                  type = types.str;
-                  default = "1.1.1.1:53";
-                  description = "DNS resolver for ACME validation";
+            acme = mkOption {
+              type = types.submodule {
+                options = {
+                  server = mkOption {
+                    type = types.str;
+                    default = "https://acme-v02.api.letsencrypt.org/directory";
+                    description = "ACME server URL";
+                  };
+                  dnsProvider = mkOption {
+                    type = types.str;
+                    default = "cloudflare";
+                    description = "DNS provider for ACME challenges";
+                  };
+                  dnsResolver = mkOption {
+                    type = types.str;
+                    default = "1.1.1.1:53";
+                    description = "DNS resolver for ACME validation";
+                  };
                 };
               };
+              default = { };
+              description = "ACME certificate authority configuration";
             };
-            default = { };
-            description = "ACME certificate authority configuration";
-          };
 
-          timezone = mkOption {
-            type = types.str;
-            default = "UTC";
-            description = "Default timezone for the environment";
-          };
+            timezone = mkOption {
+              type = types.str;
+              default = "UTC";
+              description = "Default timezone for the environment";
+            };
 
-          location = mkOption {
-            type = types.submodule {
-              options = {
-                country = mkOption {
-                  type = types.str;
-                  default = "US";
-                  description = "ISO country code";
-                };
-                region = mkOption {
-                  type = types.str;
-                  default = "";
-                  description = "Geographic region or datacenter";
+            location = mkOption {
+              type = types.submodule {
+                options = {
+                  country = mkOption {
+                    type = types.str;
+                    default = "US";
+                    description = "ISO country code";
+                  };
+                  region = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Geographic region or datacenter";
+                  };
                 };
               };
+              default = { };
+              description = "Geographic location information";
             };
-            default = { };
-            description = "Geographic location information";
-          };
 
-          tags = mkOption {
-            type = types.attrsOf types.str;
-            default = { };
-            description = "Environment-wide tags for metadata and organization";
-          };
+            tags = mkOption {
+              type = types.attrsOf types.str;
+              default = { };
+              description = "Environment-wide tags for metadata and organization";
+            };
 
-          # TODO: delegation targets should become schema.ref to den.environments
-          # once gen-schema registry wiring is complete.
-          delegation = mkOption {
-            type = types.submodule {
-              options = {
-                metricsTo = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Environment to delegate metrics reporting to";
-                };
-                authTo = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Environment to delegate authentication to";
-                };
-                logsTo = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Environment to delegate log shipping to";
+            # TODO: delegation targets should become schema.ref to den.environments
+            # once gen-schema registry wiring is complete.
+            delegation = mkOption {
+              type = types.submodule {
+                options = {
+                  metricsTo = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Environment to delegate metrics reporting to";
+                  };
+                  authTo = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Environment to delegate authentication to";
+                  };
+                  logsTo = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Environment to delegate log shipping to";
+                  };
                 };
               };
+              default = { };
+              description = "Cross-environment delegation configuration";
             };
-            default = { };
-            description = "Cross-environment delegation configuration";
-          };
 
-          monitoring = mkOption {
-            type = types.submodule {
-              options = {
-                scanEnvironments = mkOption {
-                  type = types.listOf types.str;
-                  default = [ ];
-                  description = "Additional environments to scan for metrics";
+            monitoring = mkOption {
+              type = types.submodule {
+                options = {
+                  scanEnvironments = mkOption {
+                    type = types.listOf types.str;
+                    default = [ ];
+                    description = "Additional environments to scan for metrics";
+                  };
                 };
               };
+              default = { };
+              description = "Monitoring configuration including cross-environment scanning";
             };
-            default = { };
-            description = "Monitoring configuration including cross-environment scanning";
+
+            system-access-groups = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "System-scoped groups that grant Unix account creation on all hosts in this environment";
+            };
+
+            access = mkOption {
+              type = types.attrsOf (types.listOf types.str);
+              default = { };
+              description = "Maps usernames to lists of group names for this environment";
+            };
           };
 
-          system-access-groups = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            description = "System-scoped groups that grant Unix account creation on all hosts in this environment";
+          config = {
+            secretPath = lib.mkDefault (self + "/.secrets/env/${config.name}");
           };
-
-          access = mkOption {
-            type = types.attrsOf (types.listOf types.str);
-            default = { };
-            description = "Maps usernames to lists of group names for this environment";
-          };
-        };
-
-        config = {
-          secretPath = lib.mkDefault (self + "/.secrets/env/${config.name}");
-        };
-      }
-    )
-  ];
+        }
+      )
+    ];
+  };
 }

@@ -40,6 +40,7 @@ in
             ];
       in
       {
+        name = "cilium";
         inherit src crds;
       };
 

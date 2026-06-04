@@ -10,6 +10,7 @@
   den.clusters.axon = {
     environment = "prod";
     role = "k3s";
+    kubeVersion = "1.36.1";
     secretPath = ./. + "/../../../.secrets/clusters/axon";
 
     networks = {

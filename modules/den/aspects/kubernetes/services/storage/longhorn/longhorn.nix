@@ -33,6 +33,7 @@ in
     crds =
       { inputs, system, ... }:
       {
+        name = "longhorn";
         chart = inputs.nixhelm.chartsDerivations.${system}.longhorn.longhorn;
         namePrefix = "longhorn";
       };

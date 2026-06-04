@@ -13,6 +13,7 @@
     crds =
       { inputs, system, ... }:
       {
+        name = "csi-driver-nfs";
         chart = inputs.nixhelm.chartsDerivations.${system}.kubernetes-csi.csi-driver-nfs;
       };
 

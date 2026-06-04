@@ -2,6 +2,7 @@
   lib,
   inputs,
   config,
+  den,
   ...
 }:
 let
@@ -55,90 +56,129 @@ let
   };
 in
 {
-  den.schema.cluster.isEntity = true;
-
-  den.schema.cluster.methods.getAssignment =
-    schemaLib.schemaFn "Look up an IP assignment across cluster networks"
-      (lib.types.functionTo lib.types.str)
-      (
-        { networks, ... }:
-        assignmentName:
-        let
-          networkNames = builtins.attrNames networks;
-          found = lib.findFirst (nname: networks.${nname}.assignments ? ${assignmentName}) null networkNames;
-        in
-        if found != null then
-          networks.${found}.assignments.${assignmentName}
-        else
-          throw "den: cluster assignment '${assignmentName}' not found"
-      );
-
-  den.schema.cluster.methods.secrets =
-    schemaLib.schemaFn "OIDC secret helpers for cluster services" (lib.types.attrsOf lib.types.anything)
-      (
-        { environment, ... }:
-        let
-          env = environments.${environment};
-          kanidmDomain = env.getDomainFor "kanidm";
-        in
-        {
-          oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
-        }
-      );
-
-  den.schema.cluster.imports = [
-    (_: {
-      options = {
-        # TODO: replace with schema.ref to den.environments once gen-schema
-        # registry wiring is complete.
-        environment = mkOption {
-          type = types.str;
-          description = "Name of the environment this cluster belongs to";
-        };
-
-        role = mkOption {
-          type = types.nullOr types.str;
-          default = "k3s";
-          description = "Host role for auto-discovery. Hosts in the cluster's environment with this role are included.";
-        };
-
-        hosts = mkOption {
-          type = types.nullOr (types.listOf types.str);
+  options.den.clusters = schemaLib.mkInstanceRegistry den.schema.cluster {
+    description = "Cluster definitions for fleet topology and K8s service resolution";
+    derive =
+      clusters:
+      lib.mapAttrs (
+        _: c:
+        lib.optionalAttrs
+          (c.secretPath != null && builtins.pathExists "${c.secretPath}/cluster-sops-age-key.pub")
+          {
+            sopsAgeRecipient = builtins.readFile "${c.secretPath}/cluster-sops-age-key.pub";
+          }
+      ) clusters;
+    extraModules = [
+      (_: {
+        options.sopsAgeRecipient = lib.mkOption {
+          type = lib.types.nullOr lib.types.str;
           default = null;
-          description = "Explicit list of host names in this cluster. When null, hosts are discovered via role.";
+          readOnly = true;
+          internal = true;
+          description = "Derived SOPS age recipient public key from cluster secretPath";
         };
+      })
+    ];
+  };
 
-        secretPath = mkOption {
-          type = types.nullOr types.path;
-          default = null;
-          description = "Path to the directory containing secrets for this cluster";
-        };
+  config = {
+    den.schema.cluster.isEntity = true;
 
-        networks = mkOption {
-          type = types.attrsOf networkType;
-          default = { };
-          description = "Cluster network definitions (pods, services, loadbalancers)";
-        };
+    den.schema.cluster.methods.getAssignment =
+      schemaLib.schemaFn "Look up an IP assignment across cluster networks"
+        (lib.types.functionTo lib.types.str)
+        (
+          { networks, ... }:
+          assignmentName:
+          let
+            networkNames = builtins.attrNames networks;
+            found = lib.findFirst (nname: networks.${nname}.assignments ? ${assignmentName}) null networkNames;
+          in
+          if found != null then
+            networks.${found}.assignments.${assignmentName}
+          else
+            throw "den: cluster assignment '${assignmentName}' not found"
+        );
 
-        nfsVolumes = mkOption {
-          type = types.attrsOf (
-            types.submodule {
-              options = {
-                server = mkOption {
-                  type = types.str;
-                  description = "NFS server address";
+    den.schema.cluster.methods.secrets =
+      schemaLib.schemaFn "OIDC secret helpers for cluster services" (lib.types.attrsOf lib.types.anything)
+        (
+          { environment, ... }:
+          let
+            env = environments.${environment};
+            kanidmDomain = env.getDomainFor "kanidm";
+          in
+          {
+            oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
+          }
+        );
+
+    den.schema.cluster.imports = [
+      (_: {
+        options = {
+          # TODO: replace with schema.ref to den.environments once gen-schema
+          # registry wiring is complete.
+          environment = mkOption {
+            type = types.str;
+            description = "Name of the environment this cluster belongs to";
+          };
+
+          role = mkOption {
+            type = types.nullOr types.str;
+            default = "k3s";
+            description = "Host role for auto-discovery. Hosts in the cluster's environment with this role are included.";
+          };
+
+          kubeVersion = mkOption {
+            type = types.nullOr types.str;
+            default = null;
+            example = "1.36.1";
+            description = ''
+              Kubernetes version this cluster targets, used when generating CRD
+              resource types (e.g. "1.36.1", no leading "v"). Should match the
+              cluster's actual k8s/k3s version. When null, the crds bridge falls
+              back to the nixpkgs kubernetes package version.
+            '';
+          };
+
+          hosts = mkOption {
+            type = types.nullOr (types.listOf types.str);
+            default = null;
+            description = "Explicit list of host names in this cluster. When null, hosts are discovered via role.";
+          };
+
+          secretPath = mkOption {
+            type = types.nullOr types.path;
+            default = null;
+            description = "Path to the directory containing secrets for this cluster";
+          };
+
+          networks = mkOption {
+            type = types.attrsOf networkType;
+            default = { };
+            description = "Cluster network definitions (pods, services, loadbalancers)";
+          };
+
+          nfsVolumes = mkOption {
+            type = types.attrsOf (
+              types.submodule {
+                options = {
+                  server = mkOption {
+                    type = types.str;
+                    description = "NFS server address";
+                  };
+                  share = mkOption {
+                    type = types.str;
+                    description = "NFS share path";
+                  };
                 };
-                share = mkOption {
-                  type = types.str;
-                  description = "NFS share path";
-                };
-              };
-            }
-          );
-          default = { };
-          description = "NFS volumes for CSI driver StorageClass generation";
+              }
+            );
+            default = { };
+            description = "NFS volumes for CSI driver StorageClass generation";
+          };
         };
-      };
-    })
-  ];
+      })
+    ];
+  };
 }

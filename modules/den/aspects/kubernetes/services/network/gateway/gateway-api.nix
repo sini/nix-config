@@ -24,6 +24,7 @@
           ];
       in
       {
+        name = "gateway-api";
         inherit src crds;
       };
 

@@ -24,6 +24,7 @@
           ];
       in
       {
+        name = "volume-snapshots";
         inherit src crds;
       };
 

@@ -8,40 +8,15 @@
   den,
   config,
   inputs,
+  withSystem,
   ...
 }:
 let
   inherit (den.lib.policy) resolve;
-  schemaLib = inputs.gen-schema.lib;
 
   clusters = config.den.clusters;
 in
 {
-  options.den.clusters = schemaLib.mkInstanceRegistry den.schema.cluster {
-    description = "Cluster definitions for fleet topology and K8s service resolution";
-    derive =
-      clusters:
-      lib.mapAttrs (
-        _: c:
-        lib.optionalAttrs
-          (c.secretPath != null && builtins.pathExists "${c.secretPath}/cluster-sops-age-key.pub")
-          {
-            sopsAgeRecipient = builtins.readFile "${c.secretPath}/cluster-sops-age-key.pub";
-          }
-      ) clusters;
-    extraModules = [
-      (_: {
-        options.sopsAgeRecipient = lib.mkOption {
-          type = lib.types.nullOr lib.types.str;
-          default = null;
-          readOnly = true;
-          internal = true;
-          description = "Derived SOPS age recipient public key from cluster secretPath";
-        };
-      })
-    ];
-  };
-
   config = {
     # environment -> clusters: resolve clusters whose environment matches.
     den.policies.env-to-clusters =
@@ -104,7 +79,60 @@ in
         (den.lib.policy.include aspect)
       ];
 
+    # ===========================================================================
+    # Environment
+    #
+    # cluster-to-nixidy: one nixidy environment per cluster, per system. Fires for
+    # every cluster via den.schema.cluster.includes. The instantiate closure
+    # collects the den-walked k8s-manifests modules for the cluster — every
+    # cluster aspect, including nixidy-defaults (env/target/defaults), cluster-age
+    # (sops/rekey), and the crds bridge (CRD types + bootstrap objects, built
+    # from the `crds` quirk in the nixidy battery) — and assembles the nixidy env.
+    #
+    # Looping config.systems keeps the per-system keying that flake.packages and
+    # the agenix battery rely on (nixidyEnvs.<system>.<env>); the instantiate
+    # handler recomputes `modules` per spec from the cluster scope.
+    # ===========================================================================
+    den.policies.cluster-to-nixidy =
+      { cluster, environment, ... }:
+      # lib.unique: config.systems carries duplicates inside the den pipeline
+      # (hosts append their systems to the flake-parts list). The old genAttrs
+      # deduped via attr keys; map must dedupe explicitly or applyInstantiates
+      # warns on colliding nixidyEnvs.<system>.<env> specs.
+      map (
+        system:
+        den.lib.policy.instantiate {
+          inherit (cluster) name;
+          class = "k8s-manifests";
+          # Note: `system` is deliberately NOT set on the spec. The closure below
+          # captures it via withSystem, and the path is already system-qualified
+          # via intoAttr. Setting spec.system would make den inject a
+          # { nixpkgs.hostPlatform = system; } module, which nixidy rejects.
+          intoAttr = [
+            "nixidyEnvs"
+            system
+            cluster.name
+          ];
+          instantiate =
+            { modules, ... }:
+            withSystem system (
+              { pkgs, ... }:
+              inputs.nixidy.lib.mkEnv {
+                inherit pkgs;
+                charts =
+                  (inputs.nixhelm.chartsDerivations.${system} or { })
+                  // (config.flake.chartsDerivations.${system} or { });
+                # den-collected kubernetes-class modules for this cluster
+                inherit modules;
+              }
+            );
+        }
+      ) (lib.unique config.systems);
+
     den.schema.environment.includes = [ den.policies.env-to-clusters ];
-    den.schema.cluster.includes = [ den.policies.cluster-aspect ];
+    den.schema.cluster.includes = [
+      den.policies.cluster-to-nixidy
+      den.policies.cluster-aspect
+    ];
   };
 }

@@ -34,6 +34,7 @@ in
     crds =
       { inputs, system, ... }:
       {
+        name = "envoy-gateway";
         chart = inputs.nixhelm.chartsDerivations.${system}.envoyproxy.gateway-crds-helm;
         extraOpts = [
           "--set crds.gatewayAPI.enabled=true"
