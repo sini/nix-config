@@ -28,6 +28,7 @@
         # overlayfs is the fallback for non-zfs hosts. The dataset backing
         # /var/lib/containerd is provisioned by the zfs-disk-single aspect.
         useZfs = host.hasAspect den.aspects.disk.zfs-disk-single;
+        snapshotter = if useZfs then "zfs" else "overlayfs";
       in
       {
         systemd.services.k3s.requires = [ "containerd.service" ];
@@ -62,13 +63,23 @@
                 disable_cgroup = true;
                 restrict_oom_score_adj = true;
                 sandbox_image = "rancher/mirrored-pause:3.6";
-                containerd.snapshotter = if useZfs then "zfs" else "overlayfs";
+                containerd.snapshotter = snapshotter;
 
                 cni = {
                   bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
                   conf_dir = "/etc/cni/net.d";
                 };
               };
+
+              # Unpack pulled images into the same snapshotter CRI runs on,
+              # otherwise images land in the default (overlayfs) and CRI — set
+              # to zfs — reports the sandbox image "not found".
+              "io.containerd.transfer.v1.local".unpack_config = [
+                {
+                  platform = "linux/amd64";
+                  snapshotter = snapshotter;
+                }
+              ];
             };
           };
         };
