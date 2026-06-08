@@ -33,19 +33,14 @@ in
           ;
 
         ciliumAsn = host.settings.services.bgp.cilium-bgp.localAsn;
+        localAsn = host.settings.services.bgp.localAsn;
 
-        # Find the BGP hub from collected peers — hub is identified by
-        # having a hub settings block in the bgp aspect
-        hubPeer =
-          let
-            candidates = lib.filter (p: p.hostname != host.name) bgp-peers;
-          in
-          # The hub is the peer that isn't this host in the same environment.
-          # bgp-peers only contains hosts running the bgp aspect, so the hub
-          # is the one with the distinct ASN (hub uses 65001, spokes use 65002+).
-          # Since we can't inspect settings from pipe data alone, we rely on
-          # the hub being the only non-self peer with a different ASN.
-          findFirst (p: p.asn != ciliumAsn) null candidates;
+        # Find the BGP hub (uplink) from collected peers. In this hub/spoke
+        # design spokes share one AS (65001) and the hub sits in a distinct AS
+        # (65000), so the hub is the unique peer whose base ASN differs from
+        # ours. Spokes peer north/south with the hub only; east/west
+        # axon-to-axon routing is handled by OpenFabric.
+        hubPeer = findFirst (p: p.asn != localAsn) null (lib.filter (p: p.hostname != host.name) bgp-peers);
 
         uplinkIp = if hubPeer != null then hubPeer.ip else null;
 
