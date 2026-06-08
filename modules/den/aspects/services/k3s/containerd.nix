@@ -13,7 +13,7 @@
 {
   den.aspects.services.k3s.containerd = {
     nixos =
-      { host, pkgs, ... }:
+      { pkgs, ... }:
       let
         k3s-cni-plugins = pkgs.buildEnv {
           name = "k3s-cni-plugins";
@@ -23,12 +23,6 @@
             pkgs.local.cni-plugin-cilium
           ];
         };
-
-        # The zfs snapshotter stores layers as CoW datasets (immune to nix GC);
-        # overlayfs is the fallback for non-zfs hosts. The dataset backing
-        # /var/lib/containerd is provisioned by the zfs-disk-single aspect.
-        useZfs = host.hasAspect den.aspects.disk.zfs-disk-single;
-        snapshotter = if useZfs then "zfs" else "overlayfs";
       in
       {
         systemd.services.k3s.requires = [ "containerd.service" ];
@@ -63,23 +57,18 @@
                 disable_cgroup = true;
                 restrict_oom_score_adj = true;
                 sandbox_image = "rancher/mirrored-pause:3.6";
-                containerd.snapshotter = snapshotter;
+                # containerd 2.x ships only overlayfs/native/btrfs built in; the
+                # zfs snapshotter is an out-of-tree proxy plugin we don't run.
+                # overlayfs works on the ZFS dataset (2.4, posixacl+xattr=sa)
+                # that backs /var/lib/containerd — that dataset is what keeps
+                # images off the nix store and safe from nix-collect-garbage.
+                containerd.snapshotter = "overlayfs";
 
                 cni = {
                   bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
                   conf_dir = "/etc/cni/net.d";
                 };
               };
-
-              # Unpack pulled images into the same snapshotter CRI runs on,
-              # otherwise images land in the default (overlayfs) and CRI — set
-              # to zfs — reports the sandbox image "not found".
-              "io.containerd.transfer.v1.local".unpack_config = [
-                {
-                  platform = "linux/amd64";
-                  snapshotter = snapshotter;
-                }
-              ];
             };
           };
         };
@@ -100,8 +89,8 @@
       };
 
     # /var/lib/containerd is intentionally absent: on zfs hosts it is its own
-    # dataset (see containerd-zfs-dataset above); the zfs snapshotter manages
-    # persistence and a bind-mount would shadow the dataset mountpoint.
+    # dataset (provisioned by zfs-disk-single), so it persists itself and a
+    # bind-mount here would shadow the dataset mountpoint.
     persist.directories = [
       "/var/lib/cni"
       "/var/lib/containers"
