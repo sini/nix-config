@@ -11,6 +11,7 @@
       "workstation-access"
     ];
     identity = {
+      displayName = "Will Bryant";
       email = "will@json64.dev";
       sshKeys = [
         {

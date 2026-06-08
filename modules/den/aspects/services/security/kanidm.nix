@@ -337,7 +337,9 @@ in
 
               # Users with oauth-grant or user-role groups provisioned as persons
               persons = mapAttrs (username: user: {
-                inherit (user.identity) displayName;
+                # kanidm rejects an empty displayname (InvalidAttributeSyntax),
+                # so fall back to the username when none is set.
+                displayName = if user.identity.displayName != "" then user.identity.displayName else username;
                 mailAddresses =
                   if user.identity.email != null then
                     [ user.identity.email ]
