@@ -104,8 +104,14 @@
         # before its mount runs. Idempotent — a no-op once the dataset exists.
         systemd.services.provision-zfs-datasets = {
           description = "Create declared zfs datasets missing on pre-existing pools";
+          # Runs in the early pre-local-fs phase. DefaultDependencies must be off:
+          # default deps add After=basic.target, which (being after local-fs.target)
+          # forms a cycle with Before=<dataset>.mount and makes systemd delete mount
+          # jobs nondeterministically — datasets then mount on some boots, not others.
+          unitConfig.DefaultDependencies = false;
           after = [ "zfs-import-zroot.service" ];
-          before = provisionMounts;
+          before = provisionMounts ++ [ "shutdown.target" ];
+          conflicts = [ "shutdown.target" ];
           requiredBy = provisionMounts;
           path = [ config.boot.zfs.package ];
           serviceConfig = {
