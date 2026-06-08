@@ -53,7 +53,10 @@
             (lib.mkIf zfsEnabled {
               driver = "zfs";
               options.zfs = {
-                fsname = "zroot/containers";
+                # The disko-provisioned, tuned dataset backing the graphroot
+                # (mounted at /cache/var/lib/containers, bind-exposed at
+                # /var/lib/containers). Was the phantom "zroot/containers".
+                fsname = "zroot/local/containers";
                 mountopt = "nodev";
               };
             })
