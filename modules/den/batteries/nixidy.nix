@@ -83,7 +83,7 @@ let
             in
             {
               module = generators.fromChartCRDModule (
-                chartArgs // lib.optionalAttrs (spec ? crds) { inherit (spec) crds; } // typeOpts
+                chartArgs // lib.optionalAttrs (spec ? crds) { kindFilter = spec.crds; } // typeOpts
               );
               objects = generators.crdObjectsFromChart chartArgs;
             }
@@ -93,11 +93,15 @@ let
               module = generators.fromCRDModule (
                 {
                   inherit name;
-                  inherit (spec) src crds;
+                  inherit (spec) src;
+                  crdFiles = spec.crds;
                 }
                 // typeOpts
               );
-              objects = generators.crdObjects { inherit (spec) src crds; };
+              objects = generators.crdObjects {
+                inherit (spec) src;
+                crdFiles = spec.crds;
+              };
             }
           else
             throw "den: a crds emission has neither 'src' nor 'chart'/'chartAttrs' set";
