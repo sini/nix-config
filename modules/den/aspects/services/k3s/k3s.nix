@@ -130,7 +130,6 @@ in
         );
 
         generalFlagList = [
-          "--image-service-endpoint=unix:///run/nix-snapshotter/nix-snapshotter.sock"
           "--snapshotter=overlayfs"
           "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
 

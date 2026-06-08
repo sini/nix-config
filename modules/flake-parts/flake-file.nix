@@ -229,11 +229,6 @@
 
       nix-kube-generators.url = "github:farcaller/nix-kube-generators";
 
-      nix-snapshotter = {
-        url = "github:pdtpartners/nix-snapshotter";
-        inputs.nixpkgs.follows = "nixpkgs-unstable";
-      };
-
       nix-topology = {
         url = "github:oddlama/nix-topology";
         inputs = {

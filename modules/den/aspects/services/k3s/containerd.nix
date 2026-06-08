@@ -1,15 +1,19 @@
-# k3s-containerd — containerd runtime with nix-snapshotter and Cilium CNI.
+# k3s-containerd — containerd runtime with overlayfs snapshotter and Cilium CNI.
 #
-# Ported from main:modules/services/k3s/k3s-containerd.nix.
+# Uses containerd's built-in overlayfs snapshotter so image layers live in
+# /var/lib/containerd (persisted, outside the nix store) and are never reaped
+# by nix-collect-garbage. nix-snapshotter was retired (no workload used
+# nix-backed images and its store-path layers were GC-vulnerable); a future
+# nix-in-pods need will be served by nix-csi as an additive volume driver.
 {
+  den,
   lib,
-  inputs,
   ...
 }:
 {
   den.aspects.services.k3s.containerd = {
     nixos =
-      { pkgs, ... }:
+      { host, pkgs, ... }:
       let
         k3s-cni-plugins = pkgs.buildEnv {
           name = "k3s-cni-plugins";
@@ -19,12 +23,13 @@
             pkgs.local.cni-plugin-cilium
           ];
         };
+
+        # The zfs snapshotter stores layers as CoW datasets (immune to nix GC);
+        # overlayfs is the fallback for non-zfs hosts. The dataset backing
+        # /var/lib/containerd is provisioned by the zfs-disk-single aspect.
+        useZfs = host.hasAspect den.aspects.disk.zfs-disk-single;
       in
       {
-        imports = [ inputs.nix-snapshotter.nixosModules.default ];
-
-        services.nix-snapshotter.enable = true;
-
         systemd.services.k3s.requires = [ "containerd.service" ];
 
         systemd.services.containerd.serviceConfig = {
@@ -46,11 +51,6 @@
               address = "/run/containerd/containerd.sock";
             };
 
-            proxy_plugins.nix = {
-              type = "snapshot";
-              address = "/run/nix-snapshotter/nix-snapshotter.sock";
-            };
-
             plugins = {
               "io.containerd.grpc.v1.cri" = {
                 stream_server_address = "127.0.0.1";
@@ -62,20 +62,13 @@
                 disable_cgroup = true;
                 restrict_oom_score_adj = true;
                 sandbox_image = "rancher/mirrored-pause:3.6";
-                containerd.snapshotter = "nix";
+                containerd.snapshotter = if useZfs then "zfs" else "overlayfs";
 
                 cni = {
                   bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
                   conf_dir = "/etc/cni/net.d";
                 };
               };
-
-              "io.containerd.transfer.v1.local".unpack_config = [
-                {
-                  platform = "linux/amd64";
-                  snapshotter = "nix";
-                }
-              ];
             };
           };
         };
@@ -95,10 +88,12 @@
         };
       };
 
+    # /var/lib/containerd is intentionally absent: on zfs hosts it is its own
+    # dataset (see containerd-zfs-dataset above); the zfs snapshotter manages
+    # persistence and a bind-mount would shadow the dataset mountpoint.
     persist.directories = [
       "/var/lib/cni"
       "/var/lib/containers"
-      "/var/lib/containerd"
       "/var/lib/dockershim"
     ];
   };

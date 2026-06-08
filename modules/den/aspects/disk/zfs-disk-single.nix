@@ -59,15 +59,66 @@
     };
 
     nixos =
-      { host, ... }:
+      {
+        config,
+        host,
+        ...
+      }:
       let
         disk-device = host.settings.disk.zfs-disk-single.device_id;
 
         emptySnapshot =
           name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";
+
+        # Datasets are read back from the disko declaration below so the
+        # provisioner stays in lockstep with the layout (single source of truth).
+        zfsDatasets = config.disko.devices.zpool.zroot.datasets;
+
+        # Foundational mounts always exist on a booted host and come up early;
+        # never reorder around them. Every other dataset with a mountpoint is a
+        # data dataset that may be newly introduced on an already-deployed pool.
+        foundationalMounts = [
+          "/"
+          "/nix"
+          "/home"
+          "/persist"
+          "/cache"
+          "/boot"
+        ];
+        provisionable = lib.filterAttrs (
+          _name: ds: ds.mountpoint != null && !(lib.elem ds.mountpoint foundationalMounts)
+        ) zfsDatasets;
+
+        mountUnit = path: "${lib.replaceStrings [ "/" ] [ "-" ] (lib.removePrefix "/" path)}.mount";
+        mkOpts =
+          ds: lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "-o ${k}=${toString v}") ds.options);
+        provisionMounts = lib.mapAttrsToList (_name: ds: mountUnit ds.mountpoint) provisionable;
       in
       {
         imports = [ inputs.disko.nixosModules.default ];
+
+        # Rollout provisioner: disko only creates datasets at install, yet it
+        # emits a *required* fileSystems mount for each at every switch. Adding a
+        # dataset to the layout would therefore fail to boot on pools created
+        # earlier. Create any missing data dataset after the pool imports and
+        # before its mount runs. Idempotent — a no-op once the dataset exists.
+        systemd.services.provision-zfs-datasets = {
+          description = "Create declared zfs datasets missing on pre-existing pools";
+          after = [ "zfs-import-zroot.service" ];
+          before = provisionMounts;
+          requiredBy = provisionMounts;
+          path = [ config.boot.zfs.package ];
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+          script = lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (
+              name: ds:
+              "zfs list -H -o name zroot/${name} >/dev/null 2>&1 || zfs create ${mkOpts ds} zroot/${name}"
+            ) provisionable
+          );
+        };
 
         disko.devices = {
           disk.disk0 = {
@@ -191,6 +242,20 @@
                   "com.sun:auto-snapshot" = "true";
                 };
                 postCreateHook = emptySnapshot "zroot/local/containers";
+              };
+              # Root for the containerd zfs snapshotter (k3s nodes). Same tuned
+              # settings as local/containers. New on already-deployed pools, so
+              # provision-zfs-datasets (above) creates it before the mount.
+              "local/containerd" = {
+                type = "zfs_fs";
+                mountpoint = "/var/lib/containerd";
+                options = {
+                  mountpoint = "legacy";
+                  atime = "off";
+                  recordsize = "128K";
+                  "com.sun:auto-snapshot" = "true";
+                };
+                postCreateHook = emptySnapshot "zroot/local/containerd";
               };
               "local/libvirt-images" = {
                 type = "zfs_fs";
