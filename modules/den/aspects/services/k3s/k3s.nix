@@ -49,6 +49,14 @@ in
         # BGP and cilium-bgp settings needed by cilium-bgp-resources
         bgpLocalAsn = host.settings.services.bgp.localAsn or null;
         ciliumBgpLocalAsn = (host.settings.services.bgp.cilium-bgp or { }).localAsn or null;
+        # OpenFabric loopback (if on the thunderbolt mesh). Inter-node etcd/k3s
+        # traffic to peer mgmt IPs is routed over the fabric and sourced from
+        # this loopback, so it must be a TLS SAN or peer-cert checks reject it.
+        fabricLoopback =
+          let
+            lo = (host.settings.services.networking.thunderbolt-mesh-of or { }).loopback or null;
+          in
+          if lo != null then builtins.head (lib.splitString "/" lo.ipv4) else null;
       };
 
     nixos =
@@ -107,13 +115,18 @@ in
             name = "${clusterName}-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
           };
 
-        # TLS SANs: VIP + all peer node IPs + hostnames + tailscale names
+        # TLS SANs: VIP + all peer node IPs + hostnames + tailscale names +
+        # fabric loopbacks (etcd peer traffic is sourced from these over the mesh)
         peerTlsSans = flatten (
-          map (node: [
-            "--tls-san=${node.ip}"
-            "--tls-san=${node.hostname}"
-            "--tls-san=${node.hostname}.ts.${environment.domain}"
-          ]) sortedNodes
+          map (
+            node:
+            [
+              "--tls-san=${node.ip}"
+              "--tls-san=${node.hostname}"
+              "--tls-san=${node.hostname}.ts.${environment.domain}"
+            ]
+            ++ lib.optional (node.fabricLoopback or null != null) "--tls-san=${node.fabricLoopback}"
+          ) sortedNodes
         );
 
         generalFlagList = [
