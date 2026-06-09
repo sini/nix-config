@@ -6,7 +6,8 @@
 # bootstrap ordering, keepalived, and TLS SANs.
 #
 # Static node plumbing (kernel modules, firewall, tooling) lives in the
-# `node` sub-aspect; the bootstrap systemd units live in ./_bootstrap.nix.
+# `node` sub-aspect; the bootstrap systemd units live in the `bootstrap`
+# sub-aspect (./bootstrap.nix).
 {
   den,
   lib,

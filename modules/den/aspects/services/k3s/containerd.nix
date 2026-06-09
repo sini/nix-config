@@ -3,8 +3,9 @@
 # Stock nixpkgs containerd ships the zfs snapshotter compiled in (gated only by
 # `!no_zfs`, which nixpkgs never sets). It just needs the `zfs` binary on the
 # service PATH, since the snapshotter shells out to it. Layers become per-image
-# CoW datasets under /var/lib/containerd (its own zfs dataset), so they live
-# outside the nix store and are never reaped by nix-collect-garbage. overlayfs
+# CoW datasets under the dedicated child dataset mounted at
+# /var/lib/containerd/io.containerd.snapshotter.v1.zfs, so they live outside the
+# nix store and are never reaped by nix-collect-garbage. overlayfs
 # is the fallback on non-zfs hosts. (nix-snapshotter was retired: no workload
 # used nix-backed images and its store-path layers were GC-vulnerable.)
 {
@@ -93,13 +94,18 @@
               # "rancher/mirrored-pause:3.6" therefore never matches → "failed
               # to get sandbox image ... not found".
               "io.containerd.cri.v1.images" = {
-                snapshotter = snapshotter;
+                inherit snapshotter;
                 use_local_image_pull = true;
                 pinned_images.sandbox = "docker.io/rancher/mirrored-pause:3.6";
               };
 
               # Runtime service. cni intentionally omitted here — it arrives via
-              # the grpc.v1.cri migration above.
+              # the grpc.v1.cri migration above. The old v2 config's
+              # stream_server_address/port and disable_cgroup are intentionally
+              # not carried over: disable_cgroup was removed in containerd 2.x,
+              # and the streaming server defaults to 127.0.0.1 on an ephemeral
+              # port (localhost-only, so the previously-pinned 10010 served no
+              # purpose with the firewall disabled).
               "io.containerd.cri.v1.runtime" = {
                 enable_selinux = false;
                 enable_unprivileged_ports = true;
@@ -114,7 +120,7 @@
                 # value does NOT inherit the image-service snapshotter.
                 containerd.runtimes.runc = {
                   runtime_type = "io.containerd.runc.v2";
-                  snapshotter = snapshotter;
+                  inherit snapshotter;
                 };
               };
 
@@ -123,7 +129,7 @@
               "io.containerd.transfer.v1.local".unpack_config = [
                 {
                   platform = "linux/amd64";
-                  snapshotter = snapshotter;
+                  inherit snapshotter;
                 }
               ];
             };
