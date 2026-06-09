@@ -182,7 +182,8 @@ in
           if [ "''${1:-}" = "--skip-secrets" ] || [ "''${1:-}" = "-s" ]; then
             export NIXIDY_SKIP_RENDER=1
           fi
-          cd "$(git rev-parse --show-toplevel)"
+          root="$(git rev-parse --show-toplevel)" || { echo "nixidy-sync: not in a git repo" >&2; exit 1; }
+          cd "$root"
           ${lib.concatStringsSep "\n" (
             lib.mapAttrsToList (env: nixidyEnv: ''
               echo "==> Syncing nixidy env: ${env}"
@@ -200,5 +201,119 @@ in
         files = "^(flake\\.lock|modules/(den/clusters|den/aspects/kubernetes|den/kubernetes)/.*\\.nix)$";
         pass_filenames = false;
       };
+
+      # secret-render-idempotency: exercise the SHARED SopsSecret render command
+      # (../aspects/kubernetes/_secret-render-command.nix — the same string wired
+      # into the objectTransforms render rule) with stubbed vals/sops so it runs
+      # hermetically (no yubikey, no network). Importing the shared string here
+      # is what keeps the test from drifting from the real command. Three cases:
+      #   1. matching plaintext-sha256 annotation -> output byte-identical to the
+      #      target, no re-encrypt (idempotent);
+      #   2. mutated plaintext -> hash differs -> re-encrypt with the new hash;
+      #   3. target with unreadable/encrypted annotation (yq read -> "") ->
+      #      fail-closed re-encrypt.
+      checks.secret-render-idempotency =
+        let
+          renderCommand = import ../aspects/kubernetes/_secret-render-command.nix;
+        in
+        pkgs.runCommand "secret-render-idempotency"
+          {
+            nativeBuildInputs = [
+              pkgs.yq-go
+              pkgs.coreutils
+            ];
+          }
+          ''
+            set -euo pipefail
+            export HOME="$PWD"
+
+            # --- Stub PATH tools (vals, sops); real yq-go + coreutils on PATH ---
+            mkdir -p stub-bin
+            cat > stub-bin/vals <<'EOF'
+            #!/bin/sh
+            # `vals eval` resolves refs; model it as identity over the staged
+            # SopsSecret fed on stdin.
+            cat
+            EOF
+            cat > stub-bin/sops <<'EOF'
+            #!/bin/sh
+            # Deterministic fake-encrypt: ignore all flags/--config (no yubikey),
+            # read the body on stdin, wrap it so output != plaintext but stable.
+            printf 'SOPS-ENC['
+            cat /dev/stdin
+            printf ']'
+            EOF
+            chmod +x stub-bin/*
+            export PATH="$PWD/stub-bin:$PATH"
+
+            # Dummy .sops.yaml in $PWD so the command's --config "$PWD/.sops.yaml"
+            # has a path (the sops stub ignores it anyway).
+            : > .sops.yaml
+
+            # Write the SHARED render command to a script under test.
+            cat > render.sh <<'RENDER_EOF'
+            ${renderCommand}
+            RENDER_EOF
+
+            fail() { echo "FAIL: $1" >&2; exit 1; }
+
+            PLAINTEXT='apiVersion: isindir.github.com/v1alpha3
+            kind: SopsSecret
+            metadata:
+              name: demo
+              annotations: {}
+            stringData:
+              password: hunter2'
+
+            SHA="$(printf '%s' "$PLAINTEXT" | sha256sum | cut -d' ' -f1)"
+
+            # --- Case 1: matching hash -> byte-identical, no re-encrypt --------
+            TARGET="$PWD/target.yaml"
+            printf '%s' "$PLAINTEXT" \
+              | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$SHA"'"' \
+              > "$TARGET"
+            EXPECTED="$(cat "$TARGET")"
+            OUT1="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$TARGET" sh render.sh)"
+            [ "$OUT1" = "$EXPECTED" ] || fail "case1: expected byte-identical target, got re-encrypt"
+            case "$OUT1" in
+              SOPS-ENC*) fail "case1: re-encrypted despite matching hash" ;;
+            esac
+            echo "case1 PASS: matching hash -> identical, no re-encrypt"
+
+            # --- Case 2: mutated plaintext -> hash differs -> re-encrypt -------
+            MUTATED='apiVersion: isindir.github.com/v1alpha3
+            kind: SopsSecret
+            metadata:
+              name: demo
+              annotations: {}
+            stringData:
+              password: changed-password'
+            NEWSHA="$(printf '%s' "$MUTATED" | sha256sum | cut -d' ' -f1)"
+            OUT2="$(printf '%s' "$MUTATED" | TARGET_PATH="$TARGET" sh render.sh)"
+            [ "$OUT2" != "$EXPECTED" ] || fail "case2: output unchanged despite mutated plaintext"
+            case "$OUT2" in
+              SOPS-ENC*) : ;;
+              *) fail "case2: expected re-encrypted output" ;;
+            esac
+            [[ "$OUT2" == *"$NEWSHA"* ]] || fail "case2: re-encrypted body missing new hash"
+            echo "case2 PASS: mutated plaintext -> re-encrypt with new hash"
+
+            # --- Case 3: unreadable annotation -> "" -> fail-closed re-encrypt -
+            ENC_TARGET="$PWD/enc-target.yaml"
+            # A YAML doc with no readable plaintext-sha256 annotation: yq read -> "".
+            printf 'fully: encrypted\n' > "$ENC_TARGET"
+            PREV="$(yq -r '.metadata.annotations["secrets.json64.dev/plaintext-sha256"] // ""' "$ENC_TARGET")"
+            [ "$PREV" = "" ] || fail "case3: expected empty annotation read on encrypted target"
+            OUT3="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$ENC_TARGET" sh render.sh)"
+            case "$OUT3" in
+              SOPS-ENC*) : ;;
+              *) fail "case3: expected fail-closed re-encrypt" ;;
+            esac
+            [ "$OUT3" != "$(cat "$ENC_TARGET")" ] || fail "case3: did not re-encrypt"
+            echo "case3 PASS: unreadable annotation -> fail-closed re-encrypt"
+
+            echo "PASS: all 3 cases"
+            touch "$out"
+          '';
     };
 }
