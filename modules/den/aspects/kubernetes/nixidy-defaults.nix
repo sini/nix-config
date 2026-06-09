@@ -61,8 +61,9 @@ let
             # Rule 1 — eval map: k8s Secret -> isindir SopsSecret (replaces converter.py).
             # Mirrors converter.py's conditional emission (omit empty/absent keys) for fixture parity.
             {
+              name = "secret-to-sopssecret";
               match.kind = "Secret";
-              map =
+              rewrite =
                 secret:
                 let
                   m = secret.metadata;
@@ -100,6 +101,7 @@ let
             # Rule 2 — runtime render: resolve vals + sops-encrypt (replaces processor.py).
             # Idempotent: skips re-encrypt when resolved-plaintext hash unchanged (avoids git churn).
             {
+              name = "sops-encrypt";
               match.kind = "SopsSecret";
               render = {
                 runtimeInputs = with pkgs; [
