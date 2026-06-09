@@ -14,11 +14,14 @@ in
     crds =
       { pkgs, lib, ... }:
       let
+        # Cilium version is pinned once in charts/cilium/cilium (the source of
+        # truth, surfaced as chartsMetadata); the CRDs track it via srcHash.
+        cilium = config.flake.chartsMetadata.cilium.cilium;
         src = pkgs.fetchFromGitHub {
           owner = "cilium";
           repo = "cilium";
-          rev = "v1.20.0-pre.3";
-          hash = "sha256-btHPdHHSFtKkfXrd9vVKlrOjWiCUM0dw9a5RbfJlyPg=";
+          rev = "v${cilium.version}";
+          hash = cilium.srcHash;
         };
         crds =
           lib.concatMap

@@ -9,7 +9,14 @@ let
     { pkgs }:
     let
       kubelib = inputs.nix-kube-generators.lib { inherit pkgs; };
-      trimBogusVersion = attrs: removeAttrs attrs [ "bogusVersion" ];
+      # srcHash is consumed by chartsMetadata (CRD/cni source pin); it is not a
+      # downloadHelmChart argument, so strip it before building the chart.
+      trimBogusVersion =
+        attrs:
+        removeAttrs attrs [
+          "bogusVersion"
+          "srcHash"
+        ];
     in
     inputs.haumea.lib.load {
       src = ../../charts;

@@ -3,15 +3,19 @@
   buildGoModule,
   fetchFromGitHub,
 }:
+let
+  # Single source of truth for the cilium version (see the comment there).
+  cilium = import ../../../charts/cilium/cilium/default.nix;
+in
 buildGoModule rec {
   pname = "cilium-cni";
-  version = "1.20.0-pre.3";
+  inherit (cilium) version;
 
   src = fetchFromGitHub {
     owner = "cilium";
     repo = "cilium";
     rev = "v${version}";
-    hash = "sha256-btHPdHHSFtKkfXrd9vVKlrOjWiCUM0dw9a5RbfJlyPg=";
+    hash = cilium.srcHash;
   };
 
   vendorHash = null;
