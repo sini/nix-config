@@ -122,7 +122,10 @@ writeShellApplication {
       echo ""
       echo "==> Updating Kubernetes manifests..."
       cd "$REPO_ROOT"
-      nix run .#k8s-update-manifests -- --skip-secrets
+      # Full render (real encryption): toggle commits + pushes the manifests,
+      # so it must produce freshly encrypted SopsSecrets, not reuse on-disk
+      # files. No --skip-secrets here.
+      nix run .#nixidy-sync
     }
 
     commit_and_push() {

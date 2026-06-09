@@ -154,13 +154,49 @@ in
   );
 
   perSystem =
-    { config, ... }:
     {
-      pre-commit.settings.hooks.k8s-update-manifests = {
+      config,
+      pkgs,
+      system,
+      ...
+    }:
+    {
+      # nixidy-sync: run every env's activationPackage. Each activate script
+      # writes its rendered manifests to a repo-relative `dest` (e.g.
+      # ./generated/manifests/prod-axon), so we cd to the git root first. The
+      # activate entrypoint is `<activationPackage>/activate` (not under bin/);
+      # it bakes its own target and references rsync by store path, so the only
+      # runtime input we need is git. `--skip-secrets` / `-s` sets
+      # NIXIDY_SKIP_RENDER=1, preserving the existing encrypted target files
+      # instead of re-rendering (no vals/sops/yubikey required).
+      #
+      # nixidyEnvs is read from the *flake-level* config (inputs.self), not the
+      # perSystem config: the cluster-to-nixidy policy builds each env with an
+      # overlay that exposes `local = config.packages`, so reading the
+      # perSystem config.flake here would risk the package set referencing
+      # itself through that overlay.
+      packages.nixidy-sync = pkgs.writeShellApplication {
+        name = "nixidy-sync";
+        runtimeInputs = [ pkgs.git ];
+        text = ''
+          if [ "''${1:-}" = "--skip-secrets" ] || [ "''${1:-}" = "-s" ]; then
+            export NIXIDY_SKIP_RENDER=1
+          fi
+          cd "$(git rev-parse --show-toplevel)"
+          ${lib.concatStringsSep "\n" (
+            lib.mapAttrsToList (env: nixidyEnv: ''
+              echo "==> Syncing nixidy env: ${env}"
+              ${nixidyEnv.activationPackage}/activate
+            '') (inputs.self.nixidyEnvs.${system} or { })
+          )}
+        '';
+      };
+
+      pre-commit.settings.hooks.nixidy-sync = {
         enable = true;
-        name = "k8s-update-manifests";
-        description = "Run k8s-update-manifests to re-generate argocd config";
-        entry = "${config.packages.k8s-update-manifests}/bin/k8s-update-manifests --skip-secrets";
+        name = "nixidy-sync";
+        description = "Run nixidy-sync to re-generate argocd manifests";
+        entry = "${config.packages.nixidy-sync}/bin/nixidy-sync --skip-secrets";
         files = "^(flake\\.lock|modules/(den/clusters|den/aspects/kubernetes|den/kubernetes)/.*\\.nix)$";
         pass_filenames = false;
       };

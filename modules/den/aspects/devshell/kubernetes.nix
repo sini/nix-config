@@ -7,9 +7,9 @@
       {
         commands = [
           {
-            package = self'.packages.k8s-update-manifests;
-            name = "k8s-update-manifests";
-            help = "Update Kubernetes manifests for nixidy environments";
+            package = self'.packages.nixidy-sync;
+            name = "nixidy-sync";
+            help = "Sync nixidy environment manifests into the repo";
           }
           {
             package = self'.packages.toggle-axon-kubernetes;
