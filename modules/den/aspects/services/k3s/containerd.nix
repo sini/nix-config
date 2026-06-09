@@ -81,6 +81,13 @@
                 };
               };
 
+              # CRI's pull via the transfer service doesn't pass unpack
+              # platforms, so it fails with "no unpack platforms defined"
+              # regardless of the transfer plugin's unpack_config. Use the
+              # legacy local image pull, which unpacks into the CRI snapshotter
+              # directly.
+              "io.containerd.cri.v1.images".use_local_image_pull = true;
+
               # Unpack pulled images into the same snapshotter CRI runs on, or
               # CRI can't find the sandbox image's snapshot ("not found").
               "io.containerd.transfer.v1.local".unpack_config = [
