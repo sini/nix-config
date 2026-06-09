@@ -51,7 +51,13 @@
           enable = true;
 
           settings = {
-            version = 2;
+            # version 3 is REQUIRED for the split CRI plugin ids below
+            # (io.containerd.cri.v1.images / .runtime). Under a version 2 config
+            # containerd reads only the legacy io.containerd.grpc.v1.cri block
+            # and silently ignores any v3 plugin keys — so the image-service
+            # snapshotter/use_local_image_pull settings never took effect and
+            # images kept unpacking into overlayfs (sandbox "image not found").
+            version = lib.mkForce 3;
 
             root = "/var/lib/containerd";
             state = "/run/containerd";
@@ -63,39 +69,57 @@
             };
 
             plugins = {
-              "io.containerd.grpc.v1.cri" = {
-                stream_server_address = "127.0.0.1";
-                stream_server_port = "10010";
+              # CNI stays under the *legacy* grpc.v1.cri id (the only place the
+              # nixpkgs module wires it). containerd's version-3 migration folds
+              # this block into io.containerd.cri.v1.runtime, converting the
+              # singular `bin_dir` into the v3 `bin_dirs` list. Defining cni here
+              # rather than directly under cri.v1.runtime avoids the fatal
+              # "bin_dir and bin_dirs cannot be set at the same time" — which is
+              # what you get if both the migrated and the native key are present.
+              "io.containerd.grpc.v1.cri".cni = {
+                bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
+                conf_dir = "/etc/cni/net.d";
+              };
+
+              # Image service. snapshotter selects where layers unpack; this is
+              # the authoritative snapshotter for CRI in 2.x. use_local_image_pull
+              # bypasses the transfer service, whose CRI pull doesn't pass unpack
+              # platforms ("no unpack platforms defined"); the local pull unpacks
+              # straight into this snapshotter.
+              # The sandbox image MUST be fully qualified. The podsandbox
+              # controller resolves it via client.GetImage, a raw metadata
+              # lookup with no docker.io normalization, while the image is
+              # stored under its normalized key (docker.io/...). An unqualified
+              # "rancher/mirrored-pause:3.6" therefore never matches → "failed
+              # to get sandbox image ... not found".
+              "io.containerd.cri.v1.images" = {
+                snapshotter = snapshotter;
+                use_local_image_pull = true;
+                pinned_images.sandbox = "docker.io/rancher/mirrored-pause:3.6";
+              };
+
+              # Runtime service. cni intentionally omitted here — it arrives via
+              # the grpc.v1.cri migration above.
+              "io.containerd.cri.v1.runtime" = {
                 enable_selinux = false;
                 enable_unprivileged_ports = true;
                 enable_unprivileged_icmp = true;
                 disable_apparmor = true;
-                disable_cgroup = true;
                 restrict_oom_score_adj = true;
-                sandbox_image = "rancher/mirrored-pause:3.6";
-                containerd.snapshotter = snapshotter;
 
-                cni = {
-                  bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
-                  conf_dir = "/etc/cni/net.d";
+                # The runc runtime's snapshotter must match the image service's,
+                # or the sandbox controller looks for the pause snapshot in the
+                # default snapshotter (overlayfs) while images were unpacked into
+                # zfs → "failed to get sandbox image ... not found". An empty
+                # value does NOT inherit the image-service snapshotter.
+                containerd.runtimes.runc = {
+                  runtime_type = "io.containerd.runc.v2";
+                  snapshotter = snapshotter;
                 };
               };
 
-              # In containerd 2.x the CRI plugin is split: snapshotter set under
-              # the legacy grpc.v1.cri id migrates to the *runtime* plugin only,
-              # leaving the *image* service on the default (overlayfs). Images
-              # then unpack into overlayfs while the runtime wants zfs → sandbox
-              # "image not found". Set the image service snapshotter explicitly.
-              # use_local_image_pull: CRI's transfer-service pull doesn't pass
-              # unpack platforms ("no unpack platforms defined"); the local pull
-              # unpacks into the CRI snapshotter directly.
-              "io.containerd.cri.v1.images" = {
-                use_local_image_pull = true;
-                snapshotter = snapshotter;
-              };
-
-              # Unpack pulled images into the same snapshotter CRI runs on, or
-              # CRI can't find the sandbox image's snapshot ("not found").
+              # Belt-and-suspenders for any transfer-service path: unpack into
+              # the same snapshotter CRI runs on.
               "io.containerd.transfer.v1.local".unpack_config = [
                 {
                   platform = "linux/amd64";
