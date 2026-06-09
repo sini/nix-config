@@ -14,15 +14,11 @@ in
     crds =
       { pkgs, lib, ... }:
       let
-        # Cilium version is pinned once in charts/cilium/cilium (the source of
-        # truth, surfaced as chartsMetadata); the CRDs track it via srcHash.
-        cilium = config.flake.chartsMetadata.cilium.cilium;
-        src = pkgs.fetchFromGitHub {
-          owner = "cilium";
-          repo = "cilium";
-          rev = "v${cilium.version}";
-          hash = cilium.srcHash;
-        };
+        # Reuse the cni plugin's pinned cilium checkout so the CRDs track the
+        # same version as the agent, with the GitHub source declared once (in
+        # pkgs/by-name/cni-plugin-cilium, bumped via `update-pkgs`). pkgs.local
+        # is provided by the flake's default overlay (see policies/clusters.nix).
+        src = pkgs.local.cni-plugin-cilium.src;
         crds =
           lib.concatMap
             (

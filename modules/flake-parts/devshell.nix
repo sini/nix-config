@@ -40,6 +40,11 @@
             help = "Update flake inputs with GitHub access token";
           }
           {
+            package = config.packages.update-pkgs;
+            name = "update-pkgs";
+            help = "Update custom package sources via nix-update";
+          }
+          {
             package = pkgs.nh;
             help = "Nix helper for nixpkgs development";
           }

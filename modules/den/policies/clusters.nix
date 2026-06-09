@@ -118,7 +118,10 @@ in
             withSystem system (
               { pkgs, ... }:
               inputs.nixidy.lib.mkEnv {
-                inherit pkgs;
+                # Extend with the flake's default overlay so manifest aspects can
+                # reach the repo's own packages via pkgs.local (e.g. the cilium
+                # CRD aspect reusing pkgs.local.cni-plugin-cilium.src).
+                pkgs = pkgs.extend config.flake.overlays.default;
                 charts =
                   (inputs.nixhelm.chartsDerivations.${system} or { })
                   // (config.flake.chartsDerivations.${system} or { });
