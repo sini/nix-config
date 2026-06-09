@@ -57,6 +57,35 @@
     });
     openldap = prev.openldap.overrideAttrs { doCheck = false; };
 
+    # Bump containerd to 2.3.1: the channel's 2.3.0 has a transfer-plugin bug
+    # where a failed EROFS differ (no mkfs.erofs) leaves "no unpack platforms
+    # defined", so CRI can't unpack the sandbox image. Fixed in 2.3.1 (#13364).
+    # Vendored build (vendorHash=null), so a src bump is sufficient; makeFlags
+    # are recomputed for the new version/revision.
+    containerd = prev.containerd.overrideAttrs (
+      old:
+      let
+        version = "2.3.1";
+        src = prev.fetchFromGitHub {
+          owner = "containerd";
+          repo = "containerd";
+          rev = "v${version}";
+          hash = "sha256-BpKBrMluU5MmojJp/9Og5UrkUBLHav5qx6Re1SFhlhY=";
+        };
+      in
+      {
+        inherit version src;
+        makeFlags =
+          builtins.filter (
+            x: !(prev.lib.hasPrefix "VERSION=" x) && !(prev.lib.hasPrefix "REVISION=" x)
+          ) old.makeFlags
+          ++ [
+            "REVISION=${src.rev}"
+            "VERSION=v${version}"
+          ];
+      }
+    );
+
     inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
     inherit (inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system})

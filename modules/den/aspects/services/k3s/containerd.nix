@@ -34,9 +34,17 @@
 
         systemd.services.containerd = {
           serviceConfig.LimitNOFILE = lib.mkForce null;
+          path = [
+            # mkfs.erofs so the EROFS differ initializes instead of failing —
+            # on containerd <2.3.1 a failed EROFS differ breaks the transfer
+            # plugin's unpacker ("no unpack platforms defined"), so CRI can't
+            # unpack the sandbox image. Fixed upstream in 2.3.1 (#13364); kept
+            # here as belt-and-suspenders alongside the version override.
+            pkgs.erofs-utils
+          ]
           # The zfs snapshotter execs the `zfs` CLI; without it on PATH the
           # plugin fails to init and CRI reports the snapshotter "not found".
-          path = lib.optional useZfs pkgs.zfs;
+          ++ lib.optional useZfs pkgs.zfs;
         };
 
         virtualisation.containerd = {
