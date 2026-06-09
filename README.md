@@ -41,7 +41,7 @@ sini's [NixOS](https://nix.dev) homelab and workstation configuration repository
 | [axon-03](modules/den/hosts/axon-03.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
 | [bitstream](modules/den/hosts/bitstream.nix) | GMKtec M6 - Ryzen 5 6600H (8/16) - 64GB - 2.5gbe - Radeon 660M - k8s node                               |   Server    |  x86_64-linux  |
 | [cortex](modules/den/hosts/cortex.nix)       | Ryzen 9950X3D (16/32) - 128GB - 10gbe - 7900XTX + 3090TI - Hybrid ML Server/Workstation/VFIO Gaming Rig | Workstation |  x86_64-linux  |
-| [spike](modules/den/hosts/spike.nix)         | Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile)                                            |   Laptop    |  x86_64-linux  |
+| [blade](modules/den/hosts/blade.nix)         | Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile)                                            |   Laptop    |  x86_64-linux  |
 | [patch](modules/den/hosts/patch.nix)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
 
 
@@ -83,7 +83,7 @@ Configuration is organized into 216 aspects across 13 categories:
 | Category | Examples |
 | :--- | :--- |
 | `core/` | nix, nixpkgs, boot, i18n, systemd, shell, security, impermanence |
-| `network/` | networking (systemd-networkd), openssh, tailscale, network-boot |
+| `network/` | networking (systemd-networkd), manager, hosts, wireless, avahi |
 | `disk/` | ZFS (root + disko layout), impermanence, btrfs, xfs |
 | `hardware/` | cpu-amd/intel, gpu-amd/nvidia, laptop, razer, performance |
 | `desktop/` | hyprland, kde, gnome, stylix, fonts |
