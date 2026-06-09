@@ -1,10 +1,12 @@
-# k3s-containerd — containerd runtime with overlayfs snapshotter and Cilium CNI.
+# k3s-containerd — containerd runtime with the zfs snapshotter and Cilium CNI.
 #
-# Uses containerd's built-in overlayfs snapshotter so image layers live in
-# /var/lib/containerd (persisted, outside the nix store) and are never reaped
-# by nix-collect-garbage. nix-snapshotter was retired (no workload used
-# nix-backed images and its store-path layers were GC-vulnerable); a future
-# nix-in-pods need will be served by nix-csi as an additive volume driver.
+# Stock nixpkgs containerd ships the zfs snapshotter compiled in (gated only by
+# `!no_zfs`, which nixpkgs never sets). It just needs the `zfs` binary on the
+# service PATH, since the snapshotter shells out to it. Layers become per-image
+# CoW datasets under /var/lib/containerd (its own zfs dataset), so they live
+# outside the nix store and are never reaped by nix-collect-garbage. overlayfs
+# is the fallback on non-zfs hosts. (nix-snapshotter was retired: no workload
+# used nix-backed images and its store-path layers were GC-vulnerable.)
 {
   den,
   lib,
@@ -13,7 +15,7 @@
 {
   den.aspects.services.k3s.containerd = {
     nixos =
-      { pkgs, ... }:
+      { host, pkgs, ... }:
       let
         k3s-cni-plugins = pkgs.buildEnv {
           name = "k3s-cni-plugins";
@@ -23,12 +25,18 @@
             pkgs.local.cni-plugin-cilium
           ];
         };
+
+        useZfs = host.hasAspect den.aspects.disk.zfs-disk-single;
+        snapshotter = if useZfs then "zfs" else "overlayfs";
       in
       {
         systemd.services.k3s.requires = [ "containerd.service" ];
 
-        systemd.services.containerd.serviceConfig = {
-          LimitNOFILE = lib.mkForce null;
+        systemd.services.containerd = {
+          serviceConfig.LimitNOFILE = lib.mkForce null;
+          # The zfs snapshotter execs the `zfs` CLI; without it on PATH the
+          # plugin fails to init and CRI reports the snapshotter "not found".
+          path = lib.optional useZfs pkgs.zfs;
         };
 
         virtualisation.containerd = {
@@ -57,18 +65,22 @@
                 disable_cgroup = true;
                 restrict_oom_score_adj = true;
                 sandbox_image = "rancher/mirrored-pause:3.6";
-                # containerd 2.x ships only overlayfs/native/btrfs built in; the
-                # zfs snapshotter is an out-of-tree proxy plugin we don't run.
-                # overlayfs works on the ZFS dataset (2.4, posixacl+xattr=sa)
-                # that backs /var/lib/containerd — that dataset is what keeps
-                # images off the nix store and safe from nix-collect-garbage.
-                containerd.snapshotter = "overlayfs";
+                containerd.snapshotter = snapshotter;
 
                 cni = {
                   bin_dir = lib.mkForce "${k3s-cni-plugins}/bin/";
                   conf_dir = "/etc/cni/net.d";
                 };
               };
+
+              # Unpack pulled images into the same snapshotter CRI runs on, or
+              # CRI can't find the sandbox image's snapshot ("not found").
+              "io.containerd.transfer.v1.local".unpack_config = [
+                {
+                  platform = "linux/amd64";
+                  snapshotter = snapshotter;
+                }
+              ];
             };
           };
         };
