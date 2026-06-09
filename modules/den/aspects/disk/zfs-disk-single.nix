@@ -249,9 +249,9 @@
                 };
                 postCreateHook = emptySnapshot "zroot/local/containers";
               };
-              # Root for the containerd zfs snapshotter (k3s nodes). Same tuned
-              # settings as local/containers. New on already-deployed pools, so
-              # provision-zfs-datasets (above) creates it before the mount.
+              # containerd data root (k3s nodes): content store + metadata,
+              # persisted across the impermanence wipe. New on already-deployed
+              # pools, so provision-zfs-datasets (above) creates it pre-mount.
               "local/containerd" = {
                 type = "zfs_fs";
                 mountpoint = "/var/lib/containerd";
@@ -262,6 +262,21 @@
                   "com.sun:auto-snapshot" = "true";
                 };
                 postCreateHook = emptySnapshot "zroot/local/containerd";
+              };
+              # The zfs snapshotter requires its root to BE a zfs dataset
+              # mountpoint (not merely on a zfs fs), so it gets a dedicated child
+              # dataset at exactly the plugin path. The snapshotter creates a CoW
+              # child dataset per image layer under it — don't auto-snapshot that
+              # churn.
+              "local/containerd/snapshotter" = {
+                type = "zfs_fs";
+                mountpoint = "/var/lib/containerd/io.containerd.snapshotter.v1.zfs";
+                options = {
+                  mountpoint = "legacy";
+                  atime = "off";
+                  recordsize = "128K";
+                  "com.sun:auto-snapshot" = "false";
+                };
               };
               "local/libvirt-images" = {
                 type = "zfs_fs";
