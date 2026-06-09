@@ -32,10 +32,9 @@
       core.network.networking
       core.security.openssh
       core.network.hosts
+      core.network.tailscale
 
       secrets.agenix
-
-      services.networking.tailscale
     ];
   };
 }

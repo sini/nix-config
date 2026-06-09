@@ -42,7 +42,7 @@
       services.ai.ollama
       services.ai.open-webui
       services.nix.attic
-      services.networking.tailscale
+      core.network.tailscale
       services.web.den-docs-mirror
       services.monitoring.grafana
       virtualization.podman

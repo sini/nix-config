@@ -44,7 +44,7 @@
 
       core.boot.wireless-initrd
       core.network.manager
-      services.networking.tailscale
+      core.network.tailscale
       apps.messaging.discord
     ];
 
