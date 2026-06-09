@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.20.1
   name: ciliumgatewayclassconfigs.cilium.io
 spec:
   group: cilium.io
@@ -59,6 +59,18 @@ spec:
                   description: Description helps describe a GatewayClass configuration with more details.
                   maxLength: 64
                   type: string
+                httpOptions:
+                  description: HTTPOptions specifies HTTP connection manager options.
+                  properties:
+                    grpcWebTranslation:
+                      description: GRPCWebTranslation controls Envoy's gRPC-web to gRPC request translation.
+                      properties:
+                        enabled:
+                          default: true
+                          description: Enabled controls Envoy's gRPC-web to gRPC request translation.
+                          type: boolean
+                      type: object
+                  type: object
                 service:
                   description: |-
                     Service specifies the configuration for the generated Service.

@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.20.1
   name: ciliumegressgatewaypolicies.cilium.io
 spec:
   group: cilium.io
@@ -69,11 +69,18 @@ spec:
                         redirected to the node matching the NodeSelector field and SNATed
                         with IP address 192.168.1.100.
 
+                        When set to "2001:db8::1", matching egress traffic will be
+                        redirected to the node matching the NodeSelector field and SNATed
+                        with IPv6 address 2001:db8::1.
+
                         When none of the Interface or EgressIP fields is specified, the
                         policy will use the first IPv4 assigned to the interface with the
                         default route.
-                      format: ipv4
+                      maxLength: 39
                       type: string
+                      x-kubernetes-validations:
+                        - message: egressIP must be a valid IP address
+                          rule: self == '' || isIP(self)
                     interface:
                       description: |-
                         Interface is the network interface to which the egress IP address
@@ -172,11 +179,18 @@ spec:
                           redirected to the node matching the NodeSelector field and SNATed
                           with IP address 192.168.1.100.
 
+                          When set to "2001:db8::1", matching egress traffic will be
+                          redirected to the node matching the NodeSelector field and SNATed
+                          with IPv6 address 2001:db8::1.
+
                           When none of the Interface or EgressIP fields is specified, the
                           policy will use the first IPv4 assigned to the interface with the
                           default route.
-                        format: ipv4
+                        maxLength: 39
                         type: string
+                        x-kubernetes-validations:
+                          - message: egressIP must be a valid IP address
+                            rule: self == '' || isIP(self)
                       interface:
                         description: |-
                           Interface is the network interface to which the egress IP address
@@ -251,6 +265,7 @@ spec:
                     required:
                       - nodeSelector
                     type: object
+                  maxItems: 64
                   type: array
                 excludedCIDRs:
                   description: |-

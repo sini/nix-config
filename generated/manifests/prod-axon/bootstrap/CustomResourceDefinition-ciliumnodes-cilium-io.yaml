@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.19.0
+    controller-gen.kubebuilder.io/version: v0.20.1
   name: ciliumnodes.cilium.io
 spec:
   group: cilium.io
@@ -82,6 +82,7 @@ spec:
                       type: string
                     cidr-block:
                       description: CIDRBlock is vpc ipv4 CIDR
+                      format: cidr
                       type: string
                     instance-type:
                       description: InstanceType is the ECS instance type, e.g. "ecs.g6.2xlarge"
@@ -172,54 +173,14 @@ spec:
                         used for IP allocation, eth0 will be ignored for PodIP allocation.
                       minimum: 0
                       type: integer
-                    instance-id:
-                      description: |-
-                        InstanceID is the AWS InstanceId of the node. The InstanceID is used
-                        to retrieve AWS metadata for the node.
-
-                        OBSOLETE: This field is obsolete, please use Spec.InstanceID
-                      type: string
                     instance-type:
                       description: InstanceType is the AWS EC2 instance type, e.g. "m5.large"
                       type: string
-                    max-above-watermark:
-                      description: |-
-                        MaxAboveWatermark is the maximum number of addresses to allocate
-                        beyond the addresses needed to reach the PreAllocate watermark.
-                        Going above the watermark can help reduce the number of API calls to
-                        allocate IPs, e.g. when a new ENI is allocated, as many secondary
-                        IPs as possible are allocated. Limiting the amount can help reduce
-                        waste of IPs.
-
-                        OBSOLETE: This field is obsolete, please use Spec.IPAM.MaxAboveWatermark
-                      minimum: 0
-                      type: integer
-                    min-allocate:
-                      description: |-
-                        MinAllocate is the minimum number of IPs that must be allocated when
-                        the node is first bootstrapped. It defines the minimum base socket
-                        of addresses that must be available. After reaching this watermark,
-                        the PreAllocate and MaxAboveWatermark logic takes over to continue
-                        allocating IPs.
-
-                        OBSOLETE: This field is obsolete, please use Spec.IPAM.MinAllocate
-                      minimum: 0
-                      type: integer
                     node-subnet-id:
                       description: |-
                         NodeSubnetID is the subnet of the primary ENI the instance was brought up
                         with. It is used as a sensible default subnet to create ENIs in.
                       type: string
-                    pre-allocate:
-                      description: |-
-                        PreAllocate defines the number of IP addresses that must be
-                        available for allocation in the IPAMspec. It defines the buffer of
-                        addresses available immediately without requiring cilium-operator to
-                        get involved.
-
-                        OBSOLETE: This field is obsolete, please use Spec.IPAM.PreAllocate
-                      minimum: 0
-                      type: integer
                     security-group-tags:
                       additionalProperties:
                         type: string
@@ -394,7 +355,7 @@ spec:
                               cidrs:
                                 description: CIDRs contains a list of pod CIDRs currently allocated from this pool
                                 items:
-                                  description: IPAMPodCIDR is a pod CIDR
+                                  description: IPAMCIDR is a CIDR used for IPAM
                                   format: cidr
                                   type: string
                                 type: array
@@ -457,10 +418,6 @@ spec:
                         filter Elastic IP Addresses.
                       type: object
                   type: object
-                nodeidentity:
-                  description: NodeIdentity is the Cilium numeric identity allocated for the node, if any.
-                  format: int64
-                  type: integer
               type: object
             status:
               description: |-
@@ -515,13 +472,16 @@ spec:
                             properties:
                               cidr:
                                 description: CIDRBlock is the VPC IPv4 CIDR
+                                format: cidr
                                 type: string
                               ipv6-cidr:
                                 description: IPv6CIDRBlock is the VPC IPv6 CIDR
+                                format: cidr
                                 type: string
                               secondary-cidrs:
                                 description: SecondaryCIDRs is the list of Secondary CIDRs associated with the VPC
                                 items:
+                                  format: cidr
                                   type: string
                                 type: array
                               vpc-id:
@@ -533,9 +493,11 @@ spec:
                             properties:
                               cidr:
                                 description: CIDRBlock is the vSwitch IPv4 CIDR
+                                format: cidr
                                 type: string
                               ipv6-cidr:
                                 description: IPv6CIDRBlock is the vSwitch IPv6 CIDR
+                                format: cidr
                                 type: string
                               vswitch-id:
                                 description: VSwitchID is the vSwitch to which the ENI belongs
@@ -556,16 +518,12 @@ spec:
                       items:
                         description: AzureInterface represents an Azure Interface
                         properties:
-                          GatewayIP:
-                            description: |-
-                              GatewayIP is the interface's subnet's default route
-
-                              OBSOLETE: This field is obsolete, please use Gateway field instead.
-                            type: string
                           addresses:
                             description: |-
-                              Addresses is the list of all IPs associated with the interface,
-                              including all secondary addresses
+                              Addresses is the list of secondary IPs associated with the interface.
+                              The primary IP is tracked separately in the IP field, but is also
+                              included here when the operator is configured to expose it for
+                              allocation.
                             items:
                               description: AzureAddress is an IP address assigned to an AzureInterface
                               properties:
@@ -576,18 +534,30 @@ spec:
                                   description: State is the provisioning state of the address
                                   type: string
                                 subnet:
-                                  description: Subnet is the subnet the address belongs to
+                                  description: |-
+                                    Subnet is the subnet the address belongs to.
+
+                                    Deprecated: use AzureInterface.Subnet.ID. Populated as a mirror for one
+                                    release so external consumers of CiliumNode.Status.Azure can migrate.
                                   type: string
                               type: object
                             type: array
                           cidr:
-                            description: CIDR is the range that the interface belongs to.
+                            description: |-
+                              CIDR is the range that the interface belongs to.
+
+                              Deprecated: use Subnet.CIDR. Retained for one release so agent/operator
+                              rolling upgrades work in either order.
+                            format: cidr
                             type: string
                           gateway:
                             description: Gateway is the interface's subnet's default route
                             type: string
                           id:
                             description: ID is the identifier
+                            type: string
+                          ip:
+                            description: IP is the primary IP of the interface
                             type: string
                           mac:
                             description: MAC is the mac address
@@ -601,6 +571,17 @@ spec:
                           state:
                             description: State is the provisioning state
                             type: string
+                          subnet:
+                            description: Subnet is the subnet the interface is attached to.
+                            properties:
+                              cidr:
+                                description: CIDR is the CIDR range associated with the subnet
+                                format: cidr
+                                type: string
+                              id:
+                                description: ID is the resource ID of the subnet
+                                type: string
+                            type: object
                         type: object
                       type: array
                   type: object
@@ -643,6 +624,7 @@ spec:
                           prefixes:
                             description: Prefixes is the list of all /28 prefixes associated with the ENI
                             items:
+                              format: cidr
                               type: string
                             type: array
                           public-ip:
@@ -658,6 +640,7 @@ spec:
                             properties:
                               cidr:
                                 description: CIDR is the CIDR range associated with the subnet
+                                format: cidr
                                 type: string
                               id:
                                 description: ID is the ID of the subnet
@@ -676,6 +659,7 @@ spec:
                               cidrs:
                                 description: CIDRs is the list of CIDR ranges associated with the VPC
                                 items:
+                                  format: cidr
                                   type: string
                                 type: array
                               id:
@@ -683,6 +667,7 @@ spec:
                                 type: string
                               primary-cidr:
                                 description: PrimaryCIDR is the primary CIDR of the VPC
+                                format: cidr
                                 type: string
                             type: object
                         type: object

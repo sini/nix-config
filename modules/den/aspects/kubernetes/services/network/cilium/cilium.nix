@@ -17,8 +17,8 @@ in
         src = pkgs.fetchFromGitHub {
           owner = "cilium";
           repo = "cilium";
-          rev = "v1.19.1";
-          hash = "sha256-wswY4u2Z7Z8hvGVnLONxSD1Mu1RV1AglC4ijUHsCCW4=";
+          rev = "v1.20.0-pre.3";
+          hash = "sha256-btHPdHHSFtKkfXrd9vVKlrOjWiCUM0dw9a5RbfJlyPg=";
         };
         crds =
           lib.concatMap

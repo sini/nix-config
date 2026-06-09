@@ -215,6 +215,16 @@ in
           pkgs.parted
           pkgs.gptfdisk
           pkgs.lvm2
+
+          # Host iptables/nftables on PATH. networking.nftables is enabled but
+          # with the firewall disabled NixOS installs no iptables wrapper, so
+          # k3s falls back to its bundled binaries for kubelet's iptables
+          # canaries — leaving tables on a backend Cilium's nft iptables-wrapper
+          # then rejects ("table `mangle' is incompatible, use 'nft' tool"),
+          # crashing the agent. Providing the host iptables-nft + nft keeps the
+          # whole stack (k3s, kubelet, Cilium) on one compatible nft backend.
+          pkgs.iptables
+          pkgs.nftables
         ];
 
         boot = {

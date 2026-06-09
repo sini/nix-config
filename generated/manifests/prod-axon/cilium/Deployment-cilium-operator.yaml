@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: 21bd3dd4b1e3ef16109989aade1d742b8965bc6ab2b2a148875baf444292b59c
+        cilium.io/cilium-configmap-checksum: 526cccd4fb84a42e5d1599d2fdb1ee81be2c44a5782dd32a71781dc71be98564
         prometheus.io/port: "9963"
         prometheus.io/scrape: "true"
       labels:
@@ -66,7 +66,7 @@ spec:
               value: localhost
             - name: KUBERNETES_SERVICE_PORT
               value: "6443"
-          image: quay.io/cilium/operator-generic:v1.19.4@sha256:1aa2b62735e7d8ab49ee840ae59c346932024c88901579121395c1271b435f71
+          image: quay.io/cilium/operator-generic:v1.20.0-pre.3@sha256:5be513260832401fa50d2e112396130ac17585c8e30a2e6e4529282c7fc39fd9
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
@@ -107,6 +107,7 @@ spec:
               name: cilium-config-path
               readOnly: true
       hostNetwork: true
+      hostUsers: true
       nodeSelector:
         kubernetes.io/os: linux
       priorityClassName: system-cluster-critical

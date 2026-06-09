@@ -30,6 +30,7 @@ data:
   cluster-pool-ipv6-cidr: fdfd:cafe:00:0001::/96
   cluster-pool-ipv6-mask-size: "112"
   clustermesh-cache-ttl: 0s
+  clustermesh-default-global-namespace: "true"
   clustermesh-enable-endpoint-sync: "false"
   clustermesh-enable-mcs-api: "false"
   clustermesh-mcs-api-install-crds: "true"
@@ -37,9 +38,11 @@ data:
   cni-log-file: /var/run/cilium/cilium-cni.log
   custom-cni-conf: "false"
   datapath-mode: veth
+  datapath-plugins-state-dir: /var/run/cilium/plugins
   debug: "false"
   debug-verbose: ""
   default-lb-service-ipam: lbipam
+  devices: ""
   direct-routing-skip-unreachable: "false"
   disable-external-ip-mitigation: "true"
   dnsproxy-enable-transparent-mode: "true"
@@ -51,13 +54,16 @@ data:
   enable-bgp-legacy-origin-attribute: "false"
   enable-bpf-clock-probe: "false"
   enable-bpf-masquerade: "true"
+  enable-datapath-plugins: "false"
   enable-drift-checker: "true"
   enable-dynamic-config: "true"
+  enable-dynamic-source-lookup-nodeport: "false"
   enable-endpoint-health-checking: "true"
   enable-endpoint-lockdown-on-policy-overflow: "false"
   enable-health-check-loadbalancer-ip: "false"
   enable-health-check-nodeport: "true"
   enable-health-checking: "true"
+  enable-host-firewall: "false"
   enable-host-legacy-routing: "true"
   enable-hubble: "true"
   enable-ipv4: "true"
@@ -86,8 +92,10 @@ data:
   enable-well-known-identities: "false"
   enable-xt-socket-fallback: "true"
   envoy-access-log-buffer-size: "4096"
+  envoy-access-log-enabled: "true"
   envoy-base-id: "0"
   envoy-keep-cap-netbindservice: "false"
+  envoy-node-locality-enabled: "false"
   external-envoy-proxy: "false"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"

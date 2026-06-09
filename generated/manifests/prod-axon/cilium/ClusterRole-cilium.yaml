@@ -27,7 +27,6 @@ rules:
       - namespaces
       - services
       - pods
-      - endpoints
       - nodes
     verbs:
       - get
@@ -45,7 +44,6 @@ rules:
       - cilium.io
     resources:
       - ciliumloadbalancerippools
-      - ciliumbgppeeringpolicies
       - ciliumbgpnodeconfigs
       - ciliumbgpadvertisements
       - ciliumbgppeerconfigs
@@ -63,6 +61,7 @@ rules:
       - ciliumcidrgroups
       - ciliuml2announcementpolicies
       - ciliumpodippools
+      - ciliumdatapathplugins
     verbs:
       - list
       - watch

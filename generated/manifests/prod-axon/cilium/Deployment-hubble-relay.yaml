@@ -38,7 +38,7 @@ spec:
             - serve
           command:
             - hubble-relay
-          image: quay.io/cilium/hubble-relay:v1.19.4@sha256:59af8c0d561e560c2a042e7600a3496bc0367df8fbf868aa68d5834c8ec1a431
+          image: quay.io/cilium/hubble-relay:v1.20.0-pre.3@sha256:d9fa9e132a9bcd5fa554995d708e152bd4b0282ac131984536d260b4c8c3abc3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 12
@@ -60,6 +60,7 @@ spec:
             capabilities:
               drop:
                 - ALL
+            readOnlyRootFilesystem: true
             runAsGroup: 65532
             runAsNonRoot: true
             runAsUser: 65532
@@ -73,6 +74,8 @@ spec:
             periodSeconds: 3
           terminationMessagePolicy: FallbackToLogsOnError
           volumeMounts:
+            - mountPath: /tmp
+              name: tmp-volume
             - mountPath: /etc/hubble-relay
               name: config
               readOnly: true
@@ -89,6 +92,8 @@ spec:
       serviceAccountName: hubble-relay
       terminationGracePeriodSeconds: 1
       volumes:
+        - emptyDir: {}
+          name: tmp-volume
         - configMap:
             items:
               - key: config.yaml
