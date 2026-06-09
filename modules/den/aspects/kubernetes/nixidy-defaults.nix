@@ -67,18 +67,13 @@ let
                 let
                   m = secret.metadata;
                   isArgo = n: lib.match ".*(argocd\\.argoproj\\.io|app\\.kubernetes\\.io).*" n != null;
-                  partition =
-                    attrs':
-                    let
-                      attrs = if attrs' == null then { } else attrs';
-                    in
-                    {
-                      argo = lib.filterAttrs (n: _: isArgo n) attrs;
-                      rest = lib.filterAttrs (n: _: !isArgo n) attrs;
-                    };
+                  partition = attrs: {
+                    argo = lib.filterAttrs (n: _: isArgo n) attrs;
+                    rest = lib.filterAttrs (n: _: !isArgo n) attrs;
+                  };
                   la = partition (m.labels or { });
                   an = partition (m.annotations or { });
-                  whenSet = cond: attrs: lib.optionalAttrs cond attrs;
+                  whenSet = lib.optionalAttrs;
                 in
                 {
                   apiVersion = "isindir.github.com/v1alpha3";
