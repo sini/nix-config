@@ -386,7 +386,7 @@ Each image is defined in `images/<namespace>/<image-name>/default.nix`:
 
 1. ✅ **Python Updater Tool**
    - Implemented in `pkgs/by-name/oci-image-updater/`
-   - Modular architecture inspired by k8s-update-manifests
+   - Modular architecture inspired by the former k8s manifest updater tool
    - Commands: init, update-all, check-all, list-path, list-paths, build-image,
      build-images
    - Uses skopeo for efficient digest checking
@@ -641,7 +641,8 @@ Future enhancements could include:
 ## References
 
 - **Helm chart updater**: Pattern inspiration for flake integration
-- **k8s-update-manifests**: Architecture inspiration for modular design
+- **Former k8s manifest updater**: Architecture inspiration for modular design
+  (since removed, superseded by native nixidy objectTransforms + nixidy-sync)
 - **nix-prefetch-docker**: Fetches and hashes images
 - **skopeo**: Efficient remote image inspection
 - **haumea**: Auto-discovery library used by flake-parts

@@ -1,6 +1,12 @@
 # Phase 3 — Domain-contributed devshell and pre-commit (Issues 6, 7)
 
-**Status**: TODO
+**Status**: SUPERSEDED
+
+> Note: the k8s manifest pre-commit hook and devshell command described below no
+> longer exist. Manifest regeneration is now handled by native nixidy
+> `objectTransforms` rules plus `nixidy-sync`. The references below are retained
+> for historical context only; substitute `nixidy-sync` wherever the old tool is
+> mentioned.
 
 **Goal**: Let each domain own its devshell commands and pre-commit hooks.
 
@@ -10,9 +16,9 @@
 
 **File**: `devtools/pre-commit.nix` lines ~45–52
 
-The `k8s-update-manifests` hook is kubernetes-domain logic (trigger pattern,
-command, purpose) living in the devtools domain. Kubernetes workflow changes
-require editing a devtools file.
+The `nixidy-sync` hook is kubernetes-domain logic (trigger pattern, command,
+purpose) living in the devtools domain. Kubernetes workflow changes require
+editing a devtools file.
 
 ### Issue 7 — Domain-specific commands in devshell
 
@@ -51,10 +57,9 @@ inputs | | `list-infra` | Cross-cutting overview tool |
 
 | Command | Current location | Reason | |---|---|---| | `toggle-axon-kubernetes`
 | `devtools/devshell.nix` | K8s cluster management | | `convert-oidc-secrets` |
-`devtools/devshell.nix` | OIDC is k8s service auth | | `k8s-update-manifests`
-(command) | `kubernetes/nixidy-envs.nix` | Consolidate k8s devshell | |
-`k8s-update-manifests` (pre-commit) | `devtools/pre-commit.nix` | K8s manifest
-regeneration |
+`devtools/devshell.nix` | OIDC is k8s service auth | | `nixidy-sync` (command) |
+`kubernetes/nixidy-envs.nix` | Consolidate k8s devshell | | `nixidy-sync`
+(pre-commit) | `devtools/pre-commit.nix` | K8s manifest regeneration |
 
 ### Moves to `hosts/devshell.nix` — host provisioning
 
@@ -80,8 +85,8 @@ generation | | `generate-user-keys` | User SSH key generation + encryption |
     {
       devshells.default.commands = [
         {
-          package = config.packages.k8s-update-manifests;
-          name = "k8s-update-manifests";
+          package = config.packages.nixidy-sync;
+          name = "nixidy-sync";
           help = "Update Kubernetes manifests for nixidy environments";
         }
         {
@@ -96,11 +101,11 @@ generation | | `generate-user-keys` | User SSH key generation + encryption |
         }
       ];
 
-      pre-commit.settings.hooks.k8s-update-manifests = {
+      pre-commit.settings.hooks.nixidy-sync = {
         enable = true;
-        name = "k8s-update-manifests";
-        description = "Run k8s-update-manifests to re-generate argocd config";
-        entry = "${config.packages.k8s-update-manifests}/bin/k8s-update-manifests --skip-secrets";
+        name = "nixidy-sync";
+        description = "Run nixidy-sync to re-generate argocd config";
+        entry = "${config.packages.nixidy-sync}/bin/nixidy-sync --skip-secrets";
         files = "^(flake\\.lock|modules/(environments|flake-parts|lib|kubernetes)/.*\\.nix)$";
         pass_filenames = false;
       };
@@ -183,12 +188,12 @@ Remove all domain-specific commands. Retain only:
 
 ### 5. Update `devtools/pre-commit.nix`
 
-Remove the `k8s-update-manifests` hook. Retain only: treefmt, statix.
+Remove the `nixidy-sync` hook. Retain only: treefmt, statix.
 
 ### 6. Update `kubernetes/nixidy-envs.nix`
 
-Remove the `devshells.default.commands` block (the k8s-update-manifests command
-is now in `kubernetes/devshell.nix`).
+Remove the `devshells.default.commands` block (the nixidy-sync command is now in
+`kubernetes/devshell.nix`).
 
 ### 7. Verify
 
