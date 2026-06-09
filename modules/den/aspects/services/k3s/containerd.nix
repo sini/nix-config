@@ -81,12 +81,18 @@
                 };
               };
 
-              # CRI's pull via the transfer service doesn't pass unpack
-              # platforms, so it fails with "no unpack platforms defined"
-              # regardless of the transfer plugin's unpack_config. Use the
-              # legacy local image pull, which unpacks into the CRI snapshotter
-              # directly.
-              "io.containerd.cri.v1.images".use_local_image_pull = true;
+              # In containerd 2.x the CRI plugin is split: snapshotter set under
+              # the legacy grpc.v1.cri id migrates to the *runtime* plugin only,
+              # leaving the *image* service on the default (overlayfs). Images
+              # then unpack into overlayfs while the runtime wants zfs → sandbox
+              # "image not found". Set the image service snapshotter explicitly.
+              # use_local_image_pull: CRI's transfer-service pull doesn't pass
+              # unpack platforms ("no unpack platforms defined"); the local pull
+              # unpacks into the CRI snapshotter directly.
+              "io.containerd.cri.v1.images" = {
+                use_local_image_pull = true;
+                snapshotter = snapshotter;
+              };
 
               # Unpack pulled images into the same snapshotter CRI runs on, or
               # CRI can't find the sandbox image's snapshot ("not found").
