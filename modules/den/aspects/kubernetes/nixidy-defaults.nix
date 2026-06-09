@@ -16,8 +16,9 @@ let
     k8s-manifests =
       { cluster, environment, ... }:
       # Inner module function: lib comes from nixidy's module system, so
-      # lib.kube (release-label transformer) is available.
-      { lib, ... }:
+      # lib.kube (release-label transformer) is available. pkgs is provided by
+      # nixidy's mkEnv (used for objectTransforms render runtimeInputs).
+      { lib, pkgs, ... }:
       let
         envName = "${environment.name}-${cluster.name}";
       in
@@ -55,6 +56,80 @@ let
               ]
             );
           };
+
+          objectTransforms = [
+            # Rule 1 — eval map: k8s Secret -> isindir SopsSecret (replaces converter.py).
+            # Mirrors converter.py's conditional emission (omit empty/absent keys) for fixture parity.
+            {
+              match.kind = "Secret";
+              map =
+                secret:
+                let
+                  m = secret.metadata;
+                  isArgo = n: lib.match ".*(argocd\\.argoproj\\.io|app\\.kubernetes\\.io).*" n != null;
+                  partition =
+                    attrs':
+                    let
+                      attrs = if attrs' == null then { } else attrs';
+                    in
+                    {
+                      argo = lib.filterAttrs (n: _: isArgo n) attrs;
+                      rest = lib.filterAttrs (n: _: !isArgo n) attrs;
+                    };
+                  la = partition (m.labels or { });
+                  an = partition (m.annotations or { });
+                  whenSet = cond: attrs: lib.optionalAttrs cond attrs;
+                in
+                {
+                  apiVersion = "isindir.github.com/v1alpha3";
+                  kind = "SopsSecret";
+                  metadata = {
+                    inherit (m) name namespace;
+                  }
+                  // whenSet (la.argo != { }) { labels = la.argo; }
+                  // whenSet (an.argo != { }) { annotations = an.argo; };
+                  spec.secretTemplates = [
+                    (
+                      {
+                        inherit (m) name;
+                      }
+                      // whenSet (secret ? type) { inherit (secret) type; }
+                      // whenSet (la.rest != { }) { labels = la.rest; }
+                      // whenSet (an.rest != { }) { annotations = an.rest; }
+                      // whenSet (secret ? stringData) { inherit (secret) stringData; }
+                      // whenSet (secret ? data) { inherit (secret) data; }
+                    )
+                  ];
+                };
+            }
+            # Rule 2 — runtime render: resolve vals + sops-encrypt (replaces processor.py).
+            # Idempotent: skips re-encrypt when resolved-plaintext hash unchanged (avoids git churn).
+            {
+              match.kind = "SopsSecret";
+              render = {
+                runtimeInputs = with pkgs; [
+                  vals
+                  sops
+                  age-plugin-yubikey
+                  yq-go
+                  coreutils
+                ];
+                command = ''
+                  resolved=$(vals eval)
+                  sha=$(printf '%s' "$resolved" | sha256sum | cut -d' ' -f1)
+                  if [ -f "$TARGET_PATH" ]; then
+                    prev=$(yq -r '.metadata.annotations["secrets.json64.dev/plaintext-sha256"] // ""' "$TARGET_PATH")
+                    if [ "$prev" = "$sha" ]; then cat "$TARGET_PATH"; exit 0; fi
+                  fi
+                  printf '%s' "$resolved" \
+                    | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$sha"'"' \
+                    | SOPS_AGE_KEY_CMD="age-plugin-yubikey -i" \
+                      sops --config "$PWD/.sops.yaml" --filename-override "$TARGET_PATH" \
+                           --input-type yaml --output-type yaml -e /dev/stdin
+                '';
+              };
+            }
+          ];
         };
       };
   };

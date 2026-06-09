@@ -228,7 +228,7 @@
     };
     nixhelm.url = "github:nix-community/nixhelm";
     nixidy = {
-      url = "github:sini/nixidy/feat/crd-native-module";
+      url = "github:sini/nixidy/object-transforms-upstream";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nixkraken.url = "github:nicolas-goudry/nixkraken";

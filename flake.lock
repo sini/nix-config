@@ -2480,16 +2480,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1780937101,
-        "narHash": "sha256-Kf9j1ocS5LGgw2i6uojcL+H03r8o3qV4WW3KD3Zg+x4=",
+        "lastModified": 1781030250,
+        "narHash": "sha256-6WmM+aTL4g7NQOhd44F9Cf/w0ey18/QcW92Ev4fUeic=",
         "owner": "sini",
         "repo": "nixidy",
-        "rev": "c084b8f6e18adb2349f590818dd0172efeeff032",
+        "rev": "c4babd3b22ff3180759bd71e06e77cc600a5ebbb",
         "type": "github"
       },
       "original": {
         "owner": "sini",
-        "ref": "feat/crd-native-module",
+        "ref": "object-transforms-upstream",
         "repo": "nixidy",
         "type": "github"
       }
