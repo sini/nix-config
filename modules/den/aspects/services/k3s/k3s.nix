@@ -4,11 +4,13 @@
 #
 # Emits k3s-nodes quirk; consumes collected nodes for peer discovery,
 # bootstrap ordering, keepalived, and TLS SANs.
+#
+# Static node plumbing (kernel modules, firewall, tooling) lives in the
+# `node` sub-aspect; the bootstrap systemd units live in ./_bootstrap.nix.
 {
   den,
   lib,
   config,
-  self,
   ...
 }:
 let
@@ -17,7 +19,6 @@ let
     flatten
     head
     mkForce
-    mkIf
     mkOption
     types
     ;
@@ -27,7 +28,11 @@ let
 in
 {
   den.aspects.services.k3s = {
-    includes = [ den.aspects.services.k3s.containerd ];
+    includes = [
+      den.aspects.services.k3s.containerd
+      den.aspects.services.k3s.node
+      den.aspects.services.k3s.bootstrap
+    ];
 
     settings = {
       clusterName = mkOption {
@@ -107,14 +112,6 @@ in
             in
             (head otherNodes).ip;
 
-        manifestBase = self + "/generated/manifests/${cluster.environment}-${clusterName}";
-        manifestPath =
-          name:
-          builtins.path {
-            path = manifestBase + "/${name}";
-            name = "${clusterName}-${builtins.replaceStrings [ "/" "." ] [ "-" "-" ] name}";
-          };
-
         # TLS SANs: VIP + all peer node IPs + hostnames + tailscale names +
         # fabric loopbacks (etcd peer traffic is sourced from these over the mesh)
         peerTlsSans = flatten (
@@ -193,129 +190,7 @@ in
         serverFlags = concatStringsSep " " (generalFlagList ++ serverFlagList);
       in
       {
-        environment.systemPackages = [
-          pkgs.k3s
-          pkgs.k9s
-          pkgs.kubectl
-          pkgs.istioctl
-          pkgs.kubernetes-helm
-          pkgs.cilium-cli
-
-          pkgs.clusterctl
-          pkgs.nerdctl
-
-          pkgs.skopeo
-          pkgs.go-containerregistry
-          pkgs.dive
-
-          pkgs.openiscsi
-          pkgs.nfs-utils
-
-          pkgs.util-linux
-          pkgs.parted
-          pkgs.gptfdisk
-          pkgs.lvm2
-
-          # Host iptables/nftables on PATH. networking.nftables is enabled but
-          # with the firewall disabled NixOS installs no iptables wrapper, so
-          # k3s falls back to its bundled binaries for kubelet's iptables
-          # canaries — leaving tables on a backend Cilium's nft iptables-wrapper
-          # then rejects ("table `mangle' is incompatible, use 'nft' tool"),
-          # crashing the agent. Providing the host iptables-nft + nft keeps the
-          # whole stack (k3s, kubelet, Cilium) on one compatible nft backend.
-          pkgs.iptables
-          pkgs.nftables
-        ];
-
-        boot = {
-          kernelModules = [
-            # Filesystem
-            "ceph"
-            "rbd"
-            "nfs"
-            "overlay"
-            # Networking / eBPF
-            "bpf"
-            "ip_tables"
-            "br_netfilter"
-            "nft-expr-counter"
-            "iptable_nat"
-            "iptable_filter"
-            "nft_counter"
-            "ip6_tables"
-            "ip6table_mangle"
-            "ip6table_raw"
-            "ip6table_filter"
-            "ip_conntrack"
-            "ip_vs"
-            "ip_vs_rr"
-            "ip_vs_wrr"
-            "ip_vs_sh"
-            "iscsi_tcp"
-          ];
-
-          kernel.sysctl = {
-            "net.bridge.bridge-nf-call-iptables" = 1;
-            "net.bridge.bridge-nf-call-ip6tables" = 1;
-            "net.core.bpf_jit_enable" = 1;
-            "net.core.bpf_jit_harden" = 0;
-          };
-
-          blacklistedKernelModules = [ "nbd" ];
-        };
-
-        networking.firewall = {
-          enable = mkForce false;
-
-          allowedTCPPorts = flatten [
-            179 # BGP
-            6443 # Kubernetes API
-            6444
-            6081
-            10250 # Kubelet metrics
-            2379 # etcd
-            2380 # etcd
-            4240 # Cilium healthcheck
-            4244 # Hubble API
-            8080
-            443
-            9500 # Longhorn Manager
-          ];
-
-          allowedUDPPorts = [
-            8472 # Cilium VXLAN
-            4789 # Cilium VXLAN fallback
-            51820 # WireGuard
-          ];
-
-          trustedInterfaces = [
-            "lo"
-            "cni+"
-            "cilium+"
-            "lxc+"
-            "enp199s0f5"
-            "enp199s0f6"
-          ];
-
-          extraCommands = ''
-            iptables -A nixos-fw -p vrrp -j ACCEPT
-          '';
-        };
-
         services = {
-          # Stop tailscale managing netfilter on k3s nodes. Its nftables mode
-          # writes raw-nft chains into the shared mangle/nat/filter tables
-          # (connmark mark save/restore, ts-* chains), which Cilium's iptables-nft
-          # then refuses ("table `mangle' is incompatible, use 'nft' tool"),
-          # crashing the agent's IPv6 iptables probe. Cilium owns node/pod
-          # firewalling and the host firewall is disabled, so tailscale needs no
-          # netfilter rules here; the tailscale0 interface still routes.
-          # extraSetFlags (tailscale set) is used rather than extraUpFlags
-          # because the autoconnect only runs `tailscale up` on first auth — on
-          # already-connected nodes only `tailscale set` re-applies the mode and
-          # tears down the rules tailscale previously installed.
-          tailscale.extraSetFlags = [ "--netfilter-mode=off" ];
-
           # Keepalived VRRP — floats the kube-apiserver VIP across server nodes
           keepalived = {
             enable = true;
@@ -357,154 +232,13 @@ in
           };
         };
 
-        # Bootstrap services — oneshot systemd units that apply manifests in order
         systemd = {
           tmpfiles.rules = [
             "d /var/lib/longhorn 0750 root root -"
             "L+ /usr/local/bin/iscsiadm - - - - ${pkgs.openiscsi}/bin/iscsiadm"
           ];
 
-          services = {
-            multipathd.enable = mkForce false;
-
-            # Wave -2: Cilium CNI + CoreDNS (networking must come first)
-            k3s-bootstrap-cilium = mkIf shouldInit {
-              description = "Bootstrap Cilium CNI and CoreDNS";
-              after = [ "k3s.service" ];
-              requires = [ "k3s.service" ];
-              path = [
-                pkgs.kubectl
-                pkgs.cilium-cli
-              ];
-              environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-              serviceConfig = {
-                Type = "oneshot";
-                ExecStart = pkgs.writeShellScript "k3s-bootstrap-cilium" ''
-                  set -e
-
-                  echo "Waiting for k3s API server..."
-                  until kubectl get nodes; do
-                    sleep 5
-                  done
-
-                  if ${lib.getExe pkgs.cilium-cli} --kubeconfig $KUBECONFIG status >/dev/null 2>&1; then
-                    echo "Cilium already installed."
-                    exit 0
-                  fi
-
-                  echo "Applying bootstrap resources..."
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    --server-side --force-conflicts \
-                    -f ${manifestPath "bootstrap"} || true
-
-                  echo "Applying Cilium manifests..."
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    --server-side --force-conflicts \
-                    -f ${manifestPath "cilium"} || true
-                  sleep 30
-
-                  echo "Applying CoreDNS manifests..."
-                  ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    --server-side --force-conflicts \
-                    -f ${manifestPath "coredns"} || true
-                  sleep 30
-                '';
-              };
-              wantedBy = [ "multi-user.target" ];
-            };
-
-            # Wave -1: SOPS secrets operator + cert-manager
-            k3s-install-sops-secrets-operator = mkIf shouldInit {
-              description = "Bootstrap SOPS secrets operator and cert-manager";
-              after = [
-                "k3s.service"
-                "k3s-bootstrap-cilium.service"
-              ];
-              requires = [
-                "k3s.service"
-                "k3s-bootstrap-cilium.service"
-              ];
-              path = [ pkgs.kubectl ];
-              environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-              serviceConfig = {
-                Type = "oneshot";
-                ExecStart = pkgs.writeShellScript "k3s-install-sops" ''
-                  set -e
-
-                  echo "Waiting for k3s API server..."
-                  until kubectl get nodes; do
-                    sleep 5
-                  done
-
-                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace sops-secrets-operator >/dev/null 2>&1; then
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace sops-secrets-operator
-                  fi
-
-                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG --namespace sops-secrets-operator get secret sops-age-key-file >/dev/null 2>&1; then
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create secret generic sops-age-key-file \
-                      --namespace sops-secrets-operator \
-                      --from-file=key=${config.age.secrets.kubernetes-sops-age-key.path}
-                  fi
-
-                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n sops-secrets-operator sops-sops-secrets-operator >/dev/null 2>&1; then
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                      --server-side --force-conflicts \
-                      -f ${manifestPath "sops-secrets-operator"}
-                    sleep 30
-                  fi
-
-                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                      --server-side --force-conflicts \
-                      -f ${manifestPath "cert-manager"}
-                    sleep 30
-                  fi
-                '';
-              };
-              wantedBy = [ "multi-user.target" ];
-            };
-
-            # Wave -1: ArgoCD (depends on SOPS for secret decryption)
-            k3s-install-argocd = mkIf shouldInit {
-              description = "Bootstrap ArgoCD";
-              after = [
-                "k3s.service"
-                "k3s-bootstrap-cilium.service"
-                "k3s-install-sops-secrets-operator.service"
-              ];
-              requires = [
-                "k3s.service"
-                "k3s-bootstrap-cilium.service"
-                "k3s-install-sops-secrets-operator.service"
-              ];
-              path = [ pkgs.kubectl ];
-              environment.KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
-              serviceConfig = {
-                Type = "oneshot";
-                ExecStart = pkgs.writeShellScript "k3s-install-argocd" ''
-                  set -e
-
-                  echo "Waiting for k3s API server..."
-                  until kubectl get nodes; do
-                    sleep 5
-                  done
-
-                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get namespace argocd >/dev/null 2>&1; then
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG create namespace argocd
-                  fi
-
-                  if ! ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n argocd argocd-server >/dev/null 2>&1; then
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                      --server-side --force-conflicts \
-                      -f ${manifestPath "argocd"}
-                    ${lib.getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                      -f ${manifestPath "bootstrap.yaml"}
-                  fi
-                '';
-              };
-              wantedBy = [ "multi-user.target" ];
-            };
-          };
+          services.multipathd.enable = mkForce false;
         };
       };
 
