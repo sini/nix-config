@@ -28,8 +28,57 @@ in
   den.aspects.kubernetes.services.argocd = {
     service-domains = [ "argocd" ];
 
+    age-secrets =
+      { cluster, ... }:
+      let
+        environment = environments.${cluster.environment};
+      in
+      {
+        age.secrets = {
+          # Shares its rekeyFile AND generator with the kanidm OAuth2 client's
+          # basicSecretFile (modules/den/aspects/services/security/kanidm.nix),
+          # so both declarations of this secret resolve to the same value: the
+          # one ArgoCD presents and the one Kanidm validates against.
+          argocd-oidc-client-secret = {
+            rekeyFile = environment.secretPath + "/oidc/argocd-oidc-client-secret.age";
+            generator = {
+              tags = [ "oidc" ];
+              script = "rfc3986-secret";
+            };
+            sopsOutput.file = "oidc";
+          };
+
+          # No rekeyFile: these are pure generated secrets (stored in the
+          # cluster's generatedSecretsDir), not rekeyed from a shared source.
+          argocd-redis-secret = {
+            generator.script = "alnum";
+            sopsOutput.file = "argocd";
+          };
+
+          argocd-admin-pass = {
+            generator.script = "passphrase";
+            sopsOutput.file = "argocd";
+          };
+
+          argocd-admin-pass-mtime = {
+            generator.script = "timestamp";
+            sopsOutput.file = "argocd";
+          };
+
+          argocd-secret-key = {
+            generator.script = "base64";
+            sopsOutput.file = "argocd";
+          };
+        };
+      };
+
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        config,
+        cluster,
+        charts,
+        ...
+      }:
       let
         environment = environments.${cluster.environment};
         domain = environment.getDomainFor "argocd";
@@ -167,14 +216,14 @@ in
 
             secrets.argocd-redis = {
               type = "Opaque";
-              stringData.auth = "\${sops:argocd-redis-secret}";
+              stringData.auth = config.age.secrets.argocd-redis-secret.sopsRef;
             };
 
             secrets.argocd-secret.stringData = {
-              "admin.password" = "\${sops:argocd-admin-pass}";
-              "admin.passwordMtime" = "\${sops:argocd-admin-pass-mtime}";
-              "server.secretkey" = "\${sops:argocd-secret-key}";
-              "oidc.clientSecret" = "\${sops:argocd-oidc-client-secret}";
+              "admin.password" = config.age.secrets.argocd-admin-pass.sopsRef;
+              "admin.passwordMtime" = config.age.secrets.argocd-admin-pass-mtime.sopsRef;
+              "server.secretkey" = config.age.secrets.argocd-secret-key.sopsRef;
+              "oidc.clientSecret" = config.age.secrets.argocd-oidc-client-secret.sopsRef;
             };
 
             ciliumNetworkPolicies = {

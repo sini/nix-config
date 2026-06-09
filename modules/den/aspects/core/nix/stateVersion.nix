@@ -5,11 +5,11 @@
     };
 
     nixos = {
-      system.stateVersion = "26.05";
+      system.stateVersion = "26.11";
     };
 
     homeManager = {
-      home.stateVersion = "26.05";
+      home.stateVersion = "26.11";
     };
   };
 }

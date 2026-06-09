@@ -19,20 +19,11 @@ WATCHED_PATHS = [
     # Flake inputs
     "flake.lock",
     "flake.nix",
-    # Flake-parts kubernetes domain
-    "modules/flake-parts/kubernetes",
-    # Flake-parts types referenced by kubernetes
-    "modules/flake-parts/environments",
-    "modules/flake-parts/hosts/options.nix",
-    "modules/flake-parts/secrets/options.nix",
-    "modules/flake-parts/features/helpers.nix",
-    # Cluster definitions
-    "modules/clusters",
-    # Kubernetes services and environments
-    "modules/kubernetes",
-    "modules/environments",
-    # Host definitions (referenced by k8s modules)
-    "modules/hosts",
+    # Den module tree: aspects (incl. kubernetes services), batteries
+    # (nixidy/agenix), policies (cluster-to-nixidy), schema, environments,
+    # hosts, and clusters. Den's module system is an interconnected fixpoint,
+    # so any change under it can alter k8s manifest output.
+    "modules/den",
     # Helm charts
     "charts",
     # Secrets

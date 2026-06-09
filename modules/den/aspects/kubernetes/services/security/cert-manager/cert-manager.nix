@@ -10,7 +10,11 @@
 let
   inherit (lib)
     concatStringsSep
+    flatten
+    listToAttrs
     mapAttrs'
+    mapAttrsToList
+    optional
     splitString
     take
     ;
@@ -38,8 +42,42 @@ in
         ];
       };
 
+    age-secrets =
+      { cluster, ... }:
+      let
+        environment = environments.${cluster.environment};
+      in
+      {
+        # One cloudflare-api-token secret per issuer. Shares its rekeyFile with
+        # the host-side acme declaration (modules/den/aspects/services/security/
+        # acme.nix); re-exported here to the cluster sops file for vals to
+        # resolve. Real external tokens — no generator.
+        age.secrets = listToAttrs (
+          flatten (
+            mapAttrsToList (
+              issuerName: issuerConfig:
+              optional (issuerConfig.ageKeyFile != null) {
+                name = "${issuerName}-cloudflare-api-key";
+                value = {
+                  rekeyFile = issuerConfig.ageKeyFile;
+                  sopsOutput = {
+                    file = "cert-manager";
+                    key = "${issuerName}-cloudflare-api-key";
+                  };
+                };
+              }
+            ) environment.certificates.issuers
+          )
+        );
+      };
+
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        config,
+        cluster,
+        charts,
+        ...
+      }:
       let
         environment = environments.${cluster.environment};
         inherit (environment.certificates) domains issuers;
@@ -69,7 +107,7 @@ in
                   name = "${issuer}-secret";
                   value = {
                     type = "Opaque";
-                    stringData.cloudflare-api-token = "\${sops:${issuer}-cloudflare-api-key}";
+                    stringData.cloudflare-api-token = config.age.secrets."${issuer}-cloudflare-api-key".sopsRef;
                   };
                 }
               );

@@ -38,8 +38,34 @@ in
         namePrefix = "longhorn";
       };
 
+    age-secrets =
+      { cluster, ... }:
+      let
+        environment = environments.${cluster.environment};
+      in
+      {
+        # Shares its rekeyFile AND generator with the kanidm OAuth2 client's
+        # basicSecretFile, so both declarations resolve to the same value.
+        age.secrets.longhorn-oidc-client-secret = {
+          rekeyFile = environment.secretPath + "/oidc/longhorn-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script = "rfc3986-secret";
+          };
+          sopsOutput = {
+            file = "oidc";
+            key = "longhorn";
+          };
+        };
+      };
+
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        config,
+        cluster,
+        charts,
+        ...
+      }:
       let
         environment = environments.${cluster.environment};
         longhornDomain = environment.getDomainFor "longhorn";
@@ -127,7 +153,7 @@ in
 
             secrets.longhorn-oidc-client-secret = {
               type = "Opaque";
-              stringData.client-secret = "\${sops:longhorn-oidc-client-secret}";
+              stringData.client-secret = config.age.secrets.longhorn-oidc-client-secret.sopsRef;
             };
 
             ciliumNetworkPolicies.allow-kube-apiserver-egress = {

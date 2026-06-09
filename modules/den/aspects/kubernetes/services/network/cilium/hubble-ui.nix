@@ -194,6 +194,10 @@ in
       {
         age.secrets.hubble-ui-oidc-client-secret = {
           rekeyFile = env.secretPath + "/oidc/hubble-ui-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script = "rfc3986-secret";
+          };
           sopsOutput = {
             file = "oidc";
             key = "hubble-ui";
