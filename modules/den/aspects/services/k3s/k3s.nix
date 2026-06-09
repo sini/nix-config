@@ -303,6 +303,19 @@ in
         };
 
         services = {
+          # Stop tailscale managing netfilter on k3s nodes. Its nftables mode
+          # writes raw-nft chains into the shared mangle/nat/filter tables
+          # (connmark mark save/restore, ts-* chains), which Cilium's iptables-nft
+          # then refuses ("table `mangle' is incompatible, use 'nft' tool"),
+          # crashing the agent's IPv6 iptables probe. Cilium owns node/pod
+          # firewalling and the host firewall is disabled, so tailscale needs no
+          # netfilter rules here; the tailscale0 interface still routes.
+          # extraSetFlags (tailscale set) is used rather than extraUpFlags
+          # because the autoconnect only runs `tailscale up` on first auth — on
+          # already-connected nodes only `tailscale set` re-applies the mode and
+          # tears down the rules tailscale previously installed.
+          tailscale.extraSetFlags = [ "--netfilter-mode=off" ];
+
           # Keepalived VRRP — floats the kube-apiserver VIP across server nodes
           keepalived = {
             enable = true;
