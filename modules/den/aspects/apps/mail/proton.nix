@@ -14,7 +14,7 @@
       {
         services.protonmail-bridge = {
           enable = true;
-          path = with pkgs; [
+          extraPackages = with pkgs; [
             gnome-keyring
             libnotify
             gnupg
