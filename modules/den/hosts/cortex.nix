@@ -11,6 +11,8 @@
       ipv6 = [ "fd64:0:1::5/64" ];
     };
 
+    microvm.guests = [ den.hosts.x86_64-linux.cortex-cuda ];
+
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
       core.system.linux-kernel.optimization = "zen4";
