@@ -13,8 +13,10 @@
   ...
 }:
 let
-  allHosts = lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
-    builtins.attrNames (config.den.hosts or { })
+  allHosts = lib.filterAttrs (_: h: (h.class or "nixos") != "droid") (
+    lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
+      builtins.attrNames (config.den.hosts or { })
+    )
   );
 
   # Channel → nixpkgs input mapping.  Duplicates the table in host.nix but
