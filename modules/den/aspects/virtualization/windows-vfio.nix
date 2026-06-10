@@ -4,12 +4,18 @@
 {
   den.aspects.virtualization.windows-vfio = {
     includes = [
-      den.aspects.virtualization.microvm-cuda
       den.aspects.hardware.gpu.nvidia-vfio
     ];
 
+    gpu-claims = {
+      device = "nvidia";
+      priority = "interactive";
+      kind = "libvirt";
+    };
+
     nixos =
       {
+        gpu-claims,
         config,
         lib,
         pkgs,
@@ -39,6 +45,11 @@
                   sponge = "${pkgs.moreutils}/bin/sponge";
                   systemctl = "${config.systemd.package}/bin/systemctl";
                   virsh = "${pkgs.libvirt}/bin/virsh";
+                  preemptUnits = map (c: c.unit) (
+                    lib.filter (c: c.priority == "background" && c.device == "nvidia") gpu-claims
+                  );
+                  stopBackground = lib.concatMapStringsSep "\n" (u: "${systemctl} stop ${u}") preemptUnits;
+                  startBackground = lib.concatMapStringsSep "\n" (u: "${systemctl} start ${u}") preemptUnits;
                 in
                 pkgs.writeScript "windows-vfio-hook" ''
                   #!${bash}
@@ -53,7 +64,7 @@
                   vmpgid=$(ps -o pgid --no-heading $vmpid | ${awk} '{print $1}')
 
                   if [ "$event" = "prepare" ]; then
-                    ${systemctl} stop microvm@cuda.service
+                    ${stopBackground}
 
                     # Unbind USB controller for passthrough
                     echo "0000:14:00.4" > /sys/bus/pci/drivers/xhci_hcd/unbind
@@ -111,8 +122,8 @@
                     echo "1022 15b7" > /sys/bus/pci/drivers/vfio-pci/remove_id
                     echo "0000:14:00.4" > /sys/bus/pci/drivers/xhci_hcd/bind
 
-                    # Restore CUDA VM
-                    ${systemctl} start microvm@cuda.service
+                    # Restore preempted background GPU claims
+                    ${startBackground}
                   fi
                 '';
             };
