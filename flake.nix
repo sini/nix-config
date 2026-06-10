@@ -200,6 +200,13 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nix-kube-generators.url = "github:farcaller/nix-kube-generators";
+    nix-on-droid = {
+      url = "github:nix-community/nix-on-droid";
+      inputs = {
+        home-manager.follows = "home-manager-unstable";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
     nix-topology = {
       url = "github:oddlama/nix-topology";
       inputs = {
