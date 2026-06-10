@@ -41,6 +41,12 @@
         networking.hostName = "cortex-cuda";
         system.stateVersion = "25.05";
 
+        # The guest uses our externally-created CUDA pkgs (microvm.pkgs), so its
+        # own nixpkgs.config must be empty (allowUnfree/acceptLicense are baked
+        # into that external instance). hardware.gpu.nvidia otherwise sets
+        # nixpkgs.config.nvidia.acceptLicense, tripping the external-instance assertion.
+        nixpkgs.config = lib.mkForce { };
+
         microvm = {
           guest.enable = true;
           optimize.enable = true;
