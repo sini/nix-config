@@ -197,6 +197,7 @@ in
             echo "==> Copying closure to $target..."
             nix-copy-closure --to "ssh://$target" "$drv"
             echo "==> Activating on $target..."
+            # shellcheck disable=SC2029 # client-side $drv expansion is intentional
             ssh "$target" "$drv/activate"
           '';
         };
