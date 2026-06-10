@@ -109,11 +109,7 @@
           pkgs.blueman
           pkgs.pwvucontrol
           pkgs.snapshot
-          pkgs.split-monitor-workspaces
         ];
-
-        xdg.configFile."uwsm/env".source =
-          "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
 
         programs = {
           wofi.enable = true;
@@ -145,7 +141,10 @@
 
         # XDG mime associations
         xdg = {
-          configFile."mimeapps.list".force = true;
+          configFile = {
+            "mimeapps.list".force = true;
+            "uwsm/env".source = "${config.home.sessionVariablesPackage}/etc/profile.d/hm-session-vars.sh";
+          };
           mimeApps =
             let
               editorApps = [ "nvim.desktop" ];
@@ -202,10 +201,6 @@
           portalPackage = null;
           systemd.enable = false;
           xwayland.enable = true;
-
-          plugins = [
-            pkgs.split-monitor-workspaces
-          ];
 
           settings = {
             env = [
@@ -375,35 +370,35 @@
               "${PRIMARY} ${TERTIARY}, up, movewindow, u"
               "${PRIMARY} ${TERTIARY}, right, movewindow, r"
 
-              # Split-monitor workspaces
-              "${PRIMARY}, page_up, split-workspace, m-1"
-              "${PRIMARY}, page_down, split-workspace, m+1"
-              "${PRIMARY}, bracketleft, split-workspace, -1"
-              "${PRIMARY}, bracketright, split-workspace, +1"
-              "${PRIMARY}, mouse_up, split-workspace, m+1"
-              "${PRIMARY}, mouse_down, split-workspace, m-1"
-              "${PRIMARY} ${SECONDARY}, U, movetoworkspace, special"
-              "${PRIMARY}, U, togglespecialworkspace,"
-              "${PRIMARY} ${TERTIARY}, page_up, split-movetoworkspace, -1"
-              "${PRIMARY} ${TERTIARY}, page_down, split-movetoworkspace, +1"
-              "${PRIMARY} ${SECONDARY}, page_up, split-movetoworkspacesilent, -1"
-              "${PRIMARY} ${SECONDARY}, page_down, split-movetoworkspacesilent, +1"
-              "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
-              "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
-            ]
-            ++ (builtins.concatLists (
-              builtins.genList (
-                x:
-                let
-                  ws = toString (x + 1);
-                in
-                [
-                  "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
-                  "${PRIMARY} ${TERTIARY}, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
-                  "${PRIMARY} ${SECONDARY}, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
-                ]
-              ) 5
-            ));
+              # # Split-monitor workspaces
+              # "${PRIMARY}, page_up, split-workspace, m-1"
+              # "${PRIMARY}, page_down, split-workspace, m+1"
+              # "${PRIMARY}, bracketleft, split-workspace, -1"
+              # "${PRIMARY}, bracketright, split-workspace, +1"
+              # "${PRIMARY}, mouse_up, split-workspace, m+1"
+              # "${PRIMARY}, mouse_down, split-workspace, m-1"
+              # "${PRIMARY} ${SECONDARY}, U, movetoworkspace, special"
+              # "${PRIMARY}, U, togglespecialworkspace,"
+              # "${PRIMARY} ${TERTIARY}, page_up, split-movetoworkspace, -1"
+              # "${PRIMARY} ${TERTIARY}, page_down, split-movetoworkspace, +1"
+              # "${PRIMARY} ${SECONDARY}, page_up, split-movetoworkspacesilent, -1"
+              # "${PRIMARY} ${SECONDARY}, page_down, split-movetoworkspacesilent, +1"
+              # "${PRIMARY} ${TERTIARY}, left, split-changemonitor, prev"
+              # "${PRIMARY} ${TERTIARY}, right, split-changemonitor, next"
+            ];
+            # ++ (builtins.concatLists (
+            #   builtins.genList (
+            #     x:
+            #     let
+            #       ws = toString (x + 1);
+            #     in
+            #     [
+            #       "${PRIMARY}, ${ws}, split-workspace, ${toString (x + 1)}"
+            #       "${PRIMARY} ${TERTIARY}, ${ws}, split-movetoworkspace, ${toString (x + 1)}"
+            #       "${PRIMARY} ${SECONDARY}, ${ws}, split-movetoworkspacesilent, ${toString (x + 1)}"
+            #     ]
+            #   ) 5
+            # ));
           };
         };
       };

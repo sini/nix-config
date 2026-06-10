@@ -3,6 +3,10 @@
     homeManager =
       { pkgs, ... }:
       {
+        home.packages = [
+          pkgs.split-monitor-workspaces
+        ];
+
         wayland.windowManager.hyprland = {
           plugins = [
             pkgs.split-monitor-workspaces

@@ -37,7 +37,7 @@
       hardware.razer
       hardware.performance
 
-      desktop.hyprland
+      # desktop.hyprland
       desktop.uwsm
 
       disk.zfs-disk-single
@@ -53,7 +53,7 @@
         apps.wayland.waybar
         apps.wayland.swaync
         apps.wayland.hypridle
-        apps.wayland.hyprland-split-monitors
+        # apps.wayland.hyprland-split-monitors
         apps.media.spotify-player
       ];
     };

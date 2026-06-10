@@ -73,10 +73,6 @@
           ];
         };
 
-        systemd.user.extraConfig = ''
-          DefaultEnvironment="PATH=/run/current-system/sw/bin:/run/wrappers/bin:${lib.makeBinPath [ pkgs.bash ]}"
-        '';
-
         boot.kernel.sysctl."net.ipv4.ip_unprivileged_port_start" = 0;
       };
 

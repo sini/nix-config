@@ -88,10 +88,6 @@
 
     inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
-    inherit (inputs.hyprland-split-monitor-workspaces.packages.${prev.stdenv.hostPlatform.system})
-      split-monitor-workspaces
-      ;
-
     kvmfr = prev.kvmfr.override { looking-glass-client = prev.local.looking-glass-client-vulkan; };
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;
     nixidy = inputs.nixidy.packages.${prev.stdenv.hostPlatform.system}.default;

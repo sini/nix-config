@@ -160,10 +160,10 @@
         inputs.hyprland.follows = "hyprland";
       };
 
-      hyprland-split-monitor-workspaces = {
-        url = "github:Duckonaut/split-monitor-workspaces";
-        inputs.hyprland.follows = "hyprland";
-      };
+      # hyprland-split-monitor-workspaces = {
+      #   url = "github:Duckonaut/split-monitor-workspaces";
+      #   inputs.hyprland.follows = "hyprland";
+      # };
 
       impermanence.url = "github:nix-community/impermanence";
 
@@ -189,6 +189,11 @@
 
       microvm = {
         url = "github:microvm-nix/microvm.nix";
+        inputs.nixpkgs.follows = "nixpkgs-unstable";
+      };
+
+      noctalia = {
+        url = "github:noctalia-dev/noctalia-shell";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
@@ -259,7 +264,7 @@
 
       nixidy = {
         # Fork: custom features
-        url = "github:sini/nixidy/feat/crd-native-module";
+        url = "github:sini/nixidy/object-transforms-upstream";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 

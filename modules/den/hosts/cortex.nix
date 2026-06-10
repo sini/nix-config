@@ -39,7 +39,7 @@
       hardware.performance
       hardware.vr-amd
 
-      desktop.hyprland
+      # desktop.hyprland
       desktop.uwsm
 
       disk.zfs-disk-single
@@ -95,62 +95,62 @@
 
       home-manager.sharedModules = [
         {
-          wayland.windowManager.hyprland.settings = {
-            debug = {
-              full_cm_proto = true;
-            };
+          # wayland.windowManager.hyprland.settings = {
+          #   debug = {
+          #     full_cm_proto = true;
+          #   };
 
-            misc = {
-              vfr = true;
-              vrr = 3;
-              disable_xdg_env_checks = true;
-            };
+          #   misc = {
+          #     vfr = true;
+          #     vrr = 3;
+          #     disable_xdg_env_checks = true;
+          #   };
 
-            render = {
-              direct_scanout = 1;
-              cm_enabled = true;
-              send_content_type = true;
-              cm_fs_passthrough = 1;
-              cm_auto_hdr = 2;
-              expand_undersized_textures = false;
-              cm_sdr_eotf = 0;
-              non_shader_cm = 2;
-            };
+          #   render = {
+          #     direct_scanout = 1;
+          #     cm_enabled = true;
+          #     send_content_type = true;
+          #     cm_fs_passthrough = 1;
+          #     cm_auto_hdr = 2;
+          #     expand_undersized_textures = false;
+          #     cm_sdr_eotf = 0;
+          #     non_shader_cm = 2;
+          #   };
 
-            general = {
-              allow_tearing = true;
-            };
+          #   general = {
+          #     allow_tearing = true;
+          #   };
 
-            quirks = {
-              prefer_hdr = 2;
-            };
+          #   quirks = {
+          #     prefer_hdr = 2;
+          #   };
 
-            monitorv2 = [
-              {
-                output = "DP-1";
-                mode = "3840x2160@120.00";
-                position = "0x0";
-                scale = 1;
-                bitdepth = 10;
-              }
-              {
-                output = "DP-2";
-                mode = "2560x1440@165.00";
-                position = "-1440x0";
-                scale = 1;
-                vrr = true;
-                transform = 1;
-              }
-              {
-                output = "HDMI-A-1";
-                mode = "2560x2880@60.00";
-                position = "3840x0";
-                scale = 1.33;
-                vrr = false;
-                bitdepth = 10;
-              }
-            ];
-          };
+          #   monitorv2 = [
+          #     {
+          #       output = "DP-1";
+          #       mode = "3840x2160@120.00";
+          #       position = "0x0";
+          #       scale = 1;
+          #       bitdepth = 10;
+          #     }
+          #     {
+          #       output = "DP-2";
+          #       mode = "2560x1440@165.00";
+          #       position = "-1440x0";
+          #       scale = 1;
+          #       vrr = true;
+          #       transform = 1;
+          #     }
+          #     {
+          #       output = "HDMI-A-1";
+          #       mode = "2560x2880@60.00";
+          #       position = "3840x0";
+          #       scale = 1.33;
+          #       vrr = false;
+          #       bitdepth = 10;
+          #     }
+          #   ];
+          # };
           xdg.configFile = {
             "easyeffects/autoload/output/alsa_output.usb-Topping_D10-00.pro-output-0.json".text =
               builtins.toJSON
@@ -173,10 +173,10 @@
 
     sini = {
       includes = with den.aspects; [
-        apps.wayland.waybar
-        apps.wayland.swaync
-        apps.wayland.hypridle
-        apps.wayland.hyprland-split-monitors
+        # apps.wayland.waybar
+        # apps.wayland.swaync
+        # apps.wayland.hypridle
+        # apps.wayland.hyprland-split-monitors
         apps.media.spotify-player
       ];
     };
