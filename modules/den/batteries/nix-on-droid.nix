@@ -190,6 +190,9 @@ in
             nix
             openssh
           ];
+          # Client-side $drv expansion into the remote command is the point —
+          # the built activationPackage path must reach the tablet verbatim.
+          excludeShellChecks = [ "SC2029" ];
           text = ''
             target="''${1:-slab}"
             echo "==> Building slab activation package..."
@@ -197,7 +200,6 @@ in
             echo "==> Copying closure to $target..."
             nix-copy-closure --to "ssh://$target" "$drv"
             echo "==> Activating on $target..."
-            # shellcheck disable=SC2029 # client-side $drv expansion is intentional
             ssh "$target" "$drv/activate"
           '';
         };
