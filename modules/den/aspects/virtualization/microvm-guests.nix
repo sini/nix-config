@@ -45,6 +45,19 @@ in
       sharedNixStore = host.microvm.sharedNixStore;
     }) host.microvm.guests;
 
+  # PRODUCE: a background GPU claim per guest with a non-empty passthrough.
+  den.aspects.virtualization.microvm.gpu-claims =
+    { host, ... }:
+    lib.concatMap (
+      vm:
+      lib.optional ((vm.microvm.passthrough or [ ]) != [ ]) {
+        device = lib.head vm.microvm.passthrough;
+        priority = "background";
+        kind = "microvm";
+        unit = "microvm@${vm.name}.service";
+      }
+    ) host.microvm.guests;
+
   # CONSUME: turn each resolved guest into a microvm.vms.<name> definition.
   den.aspects.virtualization.microvm.nixos =
     {
