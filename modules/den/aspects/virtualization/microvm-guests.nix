@@ -1,5 +1,7 @@
 { den, lib, ... }:
 let
+  gpuLib = import ./_gpu-passthrough-lib.nix { inherit lib; };
+
   roStoreShare = {
     source = "/nix/store";
     mountPoint = "/nix/.ro-store";
@@ -45,7 +47,18 @@ in
 
   # CONSUME: turn each resolved guest into a microvm.vms.<name> definition.
   den.aspects.virtualization.microvm.nixos =
-    { microvm-guests, ... }:
+    {
+      microvm-guests,
+      config,
+      pkgs,
+      ...
+    }:
+    let
+      facter = config.facter.report;
+      # Resolve each guest's passthrough intent against the host facter report.
+      withRecs = g: g // { recs = gpuLib.resolvePassthrough g.passthrough facter; };
+      guests = map withRecs microvm-guests;
+    in
     {
       microvm.vms = lib.listToAttrs (
         map (
@@ -59,7 +72,7 @@ in
                 imports = [
                   g.osModules
                   {
-                    microvm.devices = [ ]; # Task 3 fills this
+                    microvm.devices = gpuLib.toMicrovmDevices g.recs;
                     microvm.shares = lib.optional g.sharedNixStore roStoreShare;
                     users.users.root.openssh.authorizedKeys.keys = rootKeys;
                   }
@@ -67,7 +80,24 @@ in
               };
             }
           )
-        ) microvm-guests
+        ) guests
+      );
+
+      # Host-side gate: hold the VM's start units until the passed-through PCI
+      # device has actually been unbound from the host onto vfio-pci.
+      systemd.services = lib.mkMerge (
+        map (
+          g:
+          lib.optionalAttrs (g.recs != [ ]) (
+            let
+              gate = gpuLib.mkVfioGate pkgs g.recs;
+            in
+            {
+              "microvm@${g.name}".serviceConfig.ExecCondition = gate;
+              "microvm-pci-devices@${g.name}".serviceConfig.ExecCondition = gate;
+            }
+          )
+        ) guests
       );
     };
 }
