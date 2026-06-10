@@ -1,6 +1,7 @@
-# Runtime render command for SopsSecret resources: resolve vals refs, stamp a
-# plaintext-sha256 annotation for idempotency, sops-encrypt. Shared by the
-# objectTransforms render rule and the idempotency check so they can't drift.
+# Runtime post-process command for SopsSecret resources: resolve vals refs,
+# stamp a plaintext-sha256 annotation for idempotency, sops-encrypt. Shared by
+# the objectTransforms postProcess rule and the idempotency check so they
+# can't drift.
 ''
   resolved=$(vals eval)
   sha=$(printf '%s' "$resolved" | sha256sum | cut -d' ' -f1)

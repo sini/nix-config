@@ -2496,11 +2496,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1781034021,
-        "narHash": "sha256-vNaTWnFUicZF6GF/fpKyAx1sC8rvnYEvwXckacQ5UoI=",
+        "lastModified": 1781104643,
+        "narHash": "sha256-kA5phYF9L9TYsNo5DFfW6rml0G8ea1/HdDsA4YCNjKo=",
         "owner": "sini",
         "repo": "nixidy",
-        "rev": "48d39a89b5d59ee3ac993b15f71d80ad5ff0b3b5",
+        "rev": "71bd9bdbacfef29111dc4240c483c08fab97af03",
         "type": "github"
       },
       "original": {

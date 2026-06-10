@@ -167,8 +167,8 @@ in
       # activate entrypoint is `<activationPackage>/activate` (not under bin/);
       # it bakes its own target and references rsync by store path, so the only
       # runtime input we need is git. `--skip-secrets` / `-s` sets
-      # NIXIDY_SKIP_RENDER=1, preserving the existing encrypted target files
-      # instead of re-rendering (no vals/sops/yubikey required).
+      # NIXIDY_SKIP_POST_PROCESS=1, preserving the existing encrypted target
+      # files instead of re-processing (no vals/sops/yubikey required).
       #
       # nixidyEnvs is read from the *flake-level* config (inputs.self), not the
       # perSystem config: the cluster-to-nixidy policy builds each env with an
@@ -180,7 +180,7 @@ in
         runtimeInputs = [ pkgs.git ];
         text = ''
           if [ "''${1:-}" = "--skip-secrets" ] || [ "''${1:-}" = "-s" ]; then
-            export NIXIDY_SKIP_RENDER=1
+            export NIXIDY_SKIP_POST_PROCESS=1
           fi
           root="$(git rev-parse --show-toplevel)" || { echo "nixidy-sync: not in a git repo" >&2; exit 1; }
           cd "$root"
@@ -202,21 +202,22 @@ in
         pass_filenames = false;
       };
 
-      # secret-render-idempotency: exercise the SHARED SopsSecret render command
-      # (../aspects/kubernetes/_secret-render-command.nix — the same string wired
-      # into the objectTransforms render rule) with stubbed vals/sops so it runs
-      # hermetically (no yubikey, no network). Importing the shared string here
-      # is what keeps the test from drifting from the real command. Three cases:
+      # secret-post-process-idempotency: exercise the SHARED SopsSecret
+      # post-process command (../aspects/kubernetes/_secret-post-process-command.nix
+      # — the same string wired into the objectTransforms postProcess rule) with
+      # stubbed vals/sops so it runs hermetically (no yubikey, no network).
+      # Importing the shared string here is what keeps the test from drifting
+      # from the real command. Three cases:
       #   1. matching plaintext-sha256 annotation -> output byte-identical to the
       #      target, no re-encrypt (idempotent);
       #   2. mutated plaintext -> hash differs -> re-encrypt with the new hash;
       #   3. target with unreadable/encrypted annotation (yq read -> "") ->
       #      fail-closed re-encrypt.
-      checks.secret-render-idempotency =
+      checks.secret-post-process-idempotency =
         let
-          renderCommand = import ../aspects/kubernetes/_secret-render-command.nix;
+          postProcessCommand = import ../aspects/kubernetes/_secret-post-process-command.nix;
         in
-        pkgs.runCommand "secret-render-idempotency"
+        pkgs.runCommand "secret-post-process-idempotency"
           {
             nativeBuildInputs = [
               pkgs.yq-go
@@ -250,10 +251,10 @@ in
             # has a path (the sops stub ignores it anyway).
             : > .sops.yaml
 
-            # Write the SHARED render command to a script under test.
-            cat > render.sh <<'RENDER_EOF'
-            ${renderCommand}
-            RENDER_EOF
+            # Write the SHARED post-process command to a script under test.
+            cat > post-process.sh <<'POST_PROCESS_EOF'
+            ${postProcessCommand}
+            POST_PROCESS_EOF
 
             fail() { echo "FAIL: $1" >&2; exit 1; }
 
@@ -273,7 +274,7 @@ in
               | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$SHA"'"' \
               > "$TARGET"
             EXPECTED="$(cat "$TARGET")"
-            OUT1="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$TARGET" sh render.sh)"
+            OUT1="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$TARGET" sh post-process.sh)"
             [ "$OUT1" = "$EXPECTED" ] || fail "case1: expected byte-identical target, got re-encrypt"
             case "$OUT1" in
               SOPS-ENC*) fail "case1: re-encrypted despite matching hash" ;;
@@ -289,7 +290,7 @@ in
             stringData:
               password: changed-password'
             NEWSHA="$(printf '%s' "$MUTATED" | sha256sum | cut -d' ' -f1)"
-            OUT2="$(printf '%s' "$MUTATED" | TARGET_PATH="$TARGET" sh render.sh)"
+            OUT2="$(printf '%s' "$MUTATED" | TARGET_PATH="$TARGET" sh post-process.sh)"
             [ "$OUT2" != "$EXPECTED" ] || fail "case2: output unchanged despite mutated plaintext"
             case "$OUT2" in
               SOPS-ENC*) : ;;
@@ -304,7 +305,7 @@ in
             printf 'fully: encrypted\n' > "$ENC_TARGET"
             PREV="$(yq -r '.metadata.annotations["secrets.json64.dev/plaintext-sha256"] // ""' "$ENC_TARGET")"
             [ "$PREV" = "" ] || fail "case3: expected empty annotation read on encrypted target"
-            OUT3="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$ENC_TARGET" sh render.sh)"
+            OUT3="$(printf '%s' "$PLAINTEXT" | TARGET_PATH="$ENC_TARGET" sh post-process.sh)"
             case "$OUT3" in
               SOPS-ENC*) : ;;
               *) fail "case3: expected fail-closed re-encrypt" ;;

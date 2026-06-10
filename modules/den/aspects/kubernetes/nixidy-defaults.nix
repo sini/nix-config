@@ -17,7 +17,7 @@ let
       { cluster, environment, ... }:
       # Inner module function: lib comes from nixidy's module system, so
       # lib.kube (release-label transformer) is available. pkgs is provided by
-      # nixidy's mkEnv (used for objectTransforms render runtimeInputs).
+      # nixidy's mkEnv (used for objectTransforms postProcess runtimeInputs).
       { lib, pkgs, ... }:
       let
         envName = "${environment.name}-${cluster.name}";
@@ -98,12 +98,12 @@ let
                   ];
                 };
             }
-            # Rule 2 — runtime render: resolve vals + sops-encrypt (replaces processor.py).
+            # Rule 2 — runtime post-process: resolve vals + sops-encrypt (replaces processor.py).
             # Idempotent: skips re-encrypt when resolved-plaintext hash unchanged (avoids git churn).
             {
               name = "sops-encrypt";
               match.kind = "SopsSecret";
-              render = {
+              postProcess = {
                 runtimeInputs = with pkgs; [
                   vals
                   sops
@@ -111,7 +111,7 @@ let
                   yq-go
                   coreutils
                 ];
-                command = import ./_secret-render-command.nix;
+                command = import ./_secret-post-process-command.nix;
               };
             }
           ];
