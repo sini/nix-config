@@ -44,6 +44,7 @@
       services.nix.attic
       core.network.tailscale
       services.web.den-docs-mirror
+      services.web.container-registry
       services.monitoring.grafana
       virtualization.podman
       hardware.cpu.amd
