@@ -43,7 +43,7 @@
 #   - kube-apiserver egress (k8s discovery, cluster mode).
 #   - internet egress (80/443): homepage fetches dashboard icons from a CDN.
 #
-# Version: pinned to a recent gethomepage release. Bump at deploy time.
+# Version: pinned to the latest stable gethomepage release. Bump at deploy time.
 {
   config,
   lib,
@@ -224,7 +224,7 @@ let
     port = homepagePort;
     image = {
       repository = "ghcr.io/gethomepage/homepage";
-      tag = "v1.5.0";
+      tag = "v1.13.2";
     };
     inherit (config.den) environments;
 

@@ -20,7 +20,7 @@
 # the TRaSH guides from GitHub on each run). Emitted as plain
 # CiliumNetworkPolicies here (raw aspect, no helper baselines).
 #
-# Version: pinned to a recent recyclarr release (7.4.1). Bump at deploy time.
+# Version: pinned to the latest stable recyclarr release (8.6.0). Bump at deploy time.
 { ... }:
 let
   schedule = "0 0 * * *"; # daily at midnight (cluster TZ via env TZ)
@@ -84,7 +84,7 @@ in
                 containers.main = {
                   image = {
                     repository = "ghcr.io/recyclarr/recyclarr";
-                    tag = "7.4.1";
+                    tag = "8.6.0";
                   };
                   # `sync` applies every configured instance.
                   args = [ "sync" ];

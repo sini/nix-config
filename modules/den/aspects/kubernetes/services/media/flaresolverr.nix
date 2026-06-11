@@ -13,7 +13,7 @@ in
     port = 8191;
     image = {
       repository = "ghcr.io/flaresolverr/flaresolverr";
-      tag = "v3.3.21";
+      tag = "v3.5.0";
     };
     inherit (config.den) environments;
 

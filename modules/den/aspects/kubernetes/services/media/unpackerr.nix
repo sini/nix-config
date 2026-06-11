@@ -22,7 +22,7 @@
 # matrix; the policy-matrix task (Task 9) owns the *inbound* side on the *arrs.
 #
 # Version: hotio prunes old point releases and the backup carries no version
-# marker, so we pin to a recent golift release (0.14.5). Bump at deploy time.
+# marker, so we pin to the latest stable golift release (0.15.2). Bump at deploy time.
 { config, lib, ... }:
 let
   media-app = import ./_media-app.nix { inherit lib; };
@@ -66,7 +66,7 @@ in
     port = 5656;
     image = {
       repository = "golift/unpackerr";
-      tag = "0.14.5";
+      tag = "0.15.2";
     };
     inherit (config.den) environments;
 

@@ -5,9 +5,9 @@
 # identity), fixed API key from the shared media-arr-api-keys secret. Mounts the
 # shared media data PVC (/data) and the NFS scratch PVC (/scratch) for imports.
 #
-# Version pinned to 4.0.16 — the v4-era release found running in the media-user
-# backup logs (latest entry v4.0.16.2944). LSIO publishes a matching `4.0.16`
-# tag. Bump tags in a dedicated pass at deploy time.
+# Version pinned to 4.0.17 — latest stable LSIO tag in the v4 line (the v4-era
+# release in the media-user backup logs was 4.0.16.2944). Bump tags in a
+# dedicated pass at deploy time.
 { config, lib, ... }:
 let
   media-app = import ./_media-app.nix { inherit lib; };
@@ -18,7 +18,7 @@ in
     port = 8989;
     image = {
       repository = "lscr.io/linuxserver/sonarr";
-      tag = "4.0.16";
+      tag = "4.0.17";
     };
     inherit (config.den) environments;
 

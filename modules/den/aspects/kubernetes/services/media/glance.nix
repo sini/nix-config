@@ -31,7 +31,7 @@
 #     (jellyfin.json64.dev, served off uplink — outside the cluster) and fetches
 #     icon assets (si: simple-icons) from a CDN. internetEgress = true covers both.
 #
-# Version: pinned to a recent glance release. Bump at deploy time.
+# Version: pinned to the latest stable glance release. Bump at deploy time.
 {
   config,
   lib,
@@ -158,7 +158,7 @@ let
     port = glancePort;
     image = {
       repository = "glanceapp/glance";
-      tag = "v0.8.4";
+      tag = "v0.8.5";
     };
     inherit (config.den) environments;
 

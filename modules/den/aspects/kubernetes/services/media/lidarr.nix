@@ -5,9 +5,9 @@
 # media-arr-api-keys secret. Mounts the shared media data PVC (/data) and the
 # NFS scratch PVC (/scratch) for imports.
 #
-# Version pinned to 2.14.5 — the release found running in the media-user backup
-# logs (latest entry v2.14.5.4836). LSIO publishes a matching `2.14.5` tag. Bump
-# tags in a dedicated pass at deploy time.
+# Version pinned to 3.1.0 — latest stable LSIO release (the release in the
+# media-user backup logs was 2.14.5.4836). Bump tags in a dedicated pass at
+# deploy time.
 { config, lib, ... }:
 let
   media-app = import ./_media-app.nix { inherit lib; };
@@ -18,7 +18,7 @@ in
     port = 8686;
     image = {
       repository = "lscr.io/linuxserver/lidarr";
-      tag = "2.14.5";
+      tag = "3.1.0";
     };
     inherit (config.den) environments;
 
