@@ -231,6 +231,10 @@ let
             description = "Default-deny all ingress to ${name} (no inbound callers).";
             endpointSelector = podSel name;
             enableDefaultDeny.ingress = true;
+            # CRD anyOf requires one of ingress/ingressDeny/egress/egressDeny to
+            # be present; an empty list adds zero allow rules (NOT [ { } ], which
+            # would allow-all) while enableDefaultDeny above does the deny.
+            ingress = [ ];
           };
         }
       )

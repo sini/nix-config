@@ -58,6 +58,7 @@ let
         printf '%s\n' 'port = 8080'
         printf '%s\n' "api_key = $API_KEY"
         printf '%s\n' "host_whitelist = $WHITELIST"
+        printf '%s\n' 'inet_exposure = 4'
         printf '%s\n' 'download_dir = /scratch/usenet/incomplete'
         printf '%s\n' 'complete_dir = /scratch/usenet/complete'
       } > "$INI"
@@ -75,6 +76,13 @@ let
         sed -i "s|^host_whitelist = .*|host_whitelist = $WHITELIST|" "$INI"
       else
         sed -i "/^\[misc\]/a host_whitelist = $WHITELIST" "$INI"
+      fi
+      # inet_exposure 4 = WebUI reachable from non-local clients (the gateway's
+      # pod network); without it SAB answers "External internet access denied".
+      if grep -q '^inet_exposure = ' "$INI"; then
+        sed -i "s|^inet_exposure = .*|inet_exposure = 4|" "$INI"
+      else
+        sed -i "/^\[misc\]/a inet_exposure = 4" "$INI"
       fi
     fi
   '';
