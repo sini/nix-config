@@ -70,6 +70,7 @@ in
       mounts ? { }, # { data?; scratch-nfs?; scratch-local?; } (bools)
       route ? true, # HTTPRoute on default-gateway
       oidc ? true, # SecurityPolicy + client secret (requires route)
+      oidcForwardAccessToken ? true, # forward the access token as Authorization: Bearer to the upstream. qBittorrent 5.x answers 404 to ANY request carrying an Authorization: Bearer header (verified live 2026-06-11), so qbt sets this false; everything else ignores the header.
       internetEgress ? false, # add world egress on 80/443 (flaresolverr et al)
       extraEgressPorts ? [ ], # extra TCP ports added to the world-egress policy alongside 80/443 (only meaningful with internetEgress=true). Used by sabnzbd for NNTP 119/563. Minimal helper extension for the media-stack Usenet task.
       extraCnps ? { }, # additional CiliumNetworkPolicies merged into the app's resources.ciliumNetworkPolicies. Keys colliding with a baseline policy are a build error (asserted below), not a silent clobber. Used by unpackerr for its own *arr-egress edges. Minimal helper extension.
@@ -392,7 +393,7 @@ in
                     "openid"
                     "profile"
                   ];
-                  forwardAccessToken = true;
+                  forwardAccessToken = oidcForwardAccessToken;
                 };
               };
 

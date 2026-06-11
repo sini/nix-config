@@ -8,7 +8,7 @@ spec:
     clientID: qbittorrent
     clientSecret:
       name: qbittorrent-oidc-client-secret
-    forwardAccessToken: true
+    forwardAccessToken: false
     provider:
       issuer: https://idm.json64.dev/oauth2/openid/qbittorrent
     scopes:
