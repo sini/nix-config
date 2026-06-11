@@ -79,7 +79,7 @@ the tag in the listed file, rebuild, re-sync.
 | qbittorrent | `5.1.2-libtorrentv1` | `services/media/qbittorrent.nix` |
 | gluetun | `v3.40.0` | `services/media/qbittorrent.nix` |
 | busybox | `1.37.0` | `services/media/qbittorrent.nix` |
-| recyclarr | `7.4.1` | `services/media/recyclarr.nix` |
+| configarr | `1.28.0` | `services/media/configarr.nix` |
 | unpackerr | `0.14.5` | `services/media/unpackerr.nix` |
 | glance | `v0.8.4` | `services/media/glance.nix` |
 | homepage | `v1.5.0` | `services/media/homepage.nix` |
