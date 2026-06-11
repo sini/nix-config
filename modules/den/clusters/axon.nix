@@ -84,6 +84,9 @@
       services.media.lidarr
       services.media.whisparr
       services.media.bazarr
+      services.media.sabnzbd
+      services.media.unpackerr
+      services.media.recyclarr
     ];
   };
 }
