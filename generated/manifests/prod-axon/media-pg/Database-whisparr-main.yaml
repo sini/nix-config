@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: whisparr-main
+  namespace: media
+spec:
+  cluster:
+    name: media-pg
+  name: whisparr-main
+  owner: whisparr

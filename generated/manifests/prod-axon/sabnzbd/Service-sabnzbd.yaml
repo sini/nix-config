@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: sabnzbd
+    app.kubernetes.io/name: sabnzbd
+    app.kubernetes.io/service: sabnzbd
+  name: sabnzbd
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: sabnzbd
+    app.kubernetes.io/name: sabnzbd
+  type: ClusterIP

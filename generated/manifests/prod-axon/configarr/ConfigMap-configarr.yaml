@@ -1,0 +1,43 @@
+apiVersion: v1
+data:
+  config.yml: |-
+    # Explicit upstream template sources (defaults, pinned for clarity).
+    trashGuideUrl: https://github.com/TRaSH-Guides/Guides
+    recyclarrConfigUrl: https://github.com/recyclarr/config-templates
+
+    sonarr:
+      series:
+        base_url: http://sonarr:8989
+        api_key: !env SONARR_API_KEY
+        quality_definition:
+          type: series
+        include:
+          - template: sonarr-quality-definition-series
+
+    radarr:
+      movies:
+        base_url: http://radarr:7878
+        api_key: !env RADARR_API_KEY
+        quality_definition:
+          type: movie
+        include:
+          - template: radarr-quality-definition-movie
+
+    # experimental support (configarr Lidarr v2): conservative baseline only.
+    lidarr:
+      main:
+        base_url: http://lidarr:8686
+        api_key: !env LIDARR_API_KEY
+
+    # experimental support (configarr Whisparr v3): conservative baseline only.
+    whisparr:
+      main:
+        base_url: http://whisparr:6969
+        api_key: !env WHISPARR_API_KEY
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: configarr
+    app.kubernetes.io/name: configarr
+  name: configarr
+  namespace: media

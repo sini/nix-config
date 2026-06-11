@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: glance
+    app.kubernetes.io/name: glance
+  name: glance
+  namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: glance
+      app.kubernetes.io/name: glance
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/configMaps: 232a76f086cfb2d497c1e12f8d2aabdbb3d35b6ad3cf877f679becd8c58a944d
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: glance
+        app.kubernetes.io/name: glance
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PGID
+              value: "65536"
+            - name: PUID
+              value: "1027"
+            - name: TZ
+              value: America/Los_Angeles
+          image: glanceapp/glance:v0.8.5
+          name: main
+          volumeMounts:
+            - mountPath: /app/config/glance.yml
+              name: config
+              readOnly: true
+              subPath: glance.yml
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: glance
+      volumes:
+        - configMap:
+            name: glance
+          name: config

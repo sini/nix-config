@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: romm
+    app.kubernetes.io/name: romm
+  name: romm
+  namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: romm
+      app.kubernetes.io/name: romm
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: romm
+        app.kubernetes.io/name: romm
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: DB_DRIVER
+              value: postgresql
+            - name: DB_HOST
+              value: media-pg-rw
+            - name: DB_NAME
+              value: romm
+            - name: DB_PASSWD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: media-pg-romm-password
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: media-pg-romm-password
+            - name: PGID
+              value: "65536"
+            - name: PUID
+              value: "1027"
+            - name: ROMM_AUTH_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: auth-secret-key
+                  name: media-romm
+            - name: TZ
+              value: America/Los_Angeles
+          image: rommapp/romm:3.10.3
+          name: main
+          volumeMounts:
+            - mountPath: /romm/library
+              name: library
+              subPath: media/games
+            - mountPath: /romm/resources
+              name: state
+              subPath: resources
+            - mountPath: /romm/assets
+              name: state
+              subPath: assets
+            - mountPath: /romm/config
+              name: state
+              subPath: config
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: romm
+      volumes:
+        - name: library
+          persistentVolumeClaim:
+            claimName: media-data-nfs
+        - name: state
+          persistentVolumeClaim:
+            claimName: romm

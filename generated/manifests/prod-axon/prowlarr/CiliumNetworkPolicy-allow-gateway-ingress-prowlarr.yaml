@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-prowlarr
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach prowlarr.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: prowlarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "9696"
+              protocol: TCP

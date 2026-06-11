@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: bazarr
+    app.kubernetes.io/name: bazarr
+    app.kubernetes.io/service: bazarr
+  name: bazarr
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 6767
+      protocol: TCP
+      targetPort: 6767
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: bazarr
+    app.kubernetes.io/name: bazarr
+  type: ClusterIP

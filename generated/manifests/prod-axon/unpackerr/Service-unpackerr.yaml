@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: unpackerr
+    app.kubernetes.io/name: unpackerr
+    app.kubernetes.io/service: unpackerr
+  name: unpackerr
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 5656
+      protocol: TCP
+      targetPort: 5656
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: unpackerr
+    app.kubernetes.io/name: unpackerr
+  type: ClusterIP

@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: dash
+  namespace: media
+spec:
+  hostnames:
+    - dash.json64.dev
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: json64-dev-https
+  rules:
+    - backendRefs:
+        - name: dash
+          port: 3000

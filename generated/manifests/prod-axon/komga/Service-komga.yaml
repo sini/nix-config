@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: komga
+    app.kubernetes.io/name: komga
+    app.kubernetes.io/service: komga
+  name: komga
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 25600
+      protocol: TCP
+      targetPort: 25600
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: komga
+    app.kubernetes.io/name: komga
+  type: ClusterIP

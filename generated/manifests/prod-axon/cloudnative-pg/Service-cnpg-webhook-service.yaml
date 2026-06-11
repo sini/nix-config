@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/name: cloudnative-pg
+  name: cnpg-webhook-service
+  namespace: cnpg-system
+spec:
+  ports:
+    - name: webhook-server
+      port: 443
+      targetPort: webhook-server
+  selector:
+    app.kubernetes.io/instance: cloudnative-pg
+    app.kubernetes.io/name: cloudnative-pg
+  type: ClusterIP

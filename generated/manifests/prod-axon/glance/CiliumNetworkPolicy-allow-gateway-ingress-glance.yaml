@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-glance
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach glance.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: glance
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

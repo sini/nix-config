@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: komga
+    app.kubernetes.io/name: komga
+  name: komga
+  namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: komga
+      app.kubernetes.io/name: komga
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: komga
+        app.kubernetes.io/name: komga
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PGID
+              value: "65536"
+            - name: PUID
+              value: "1027"
+            - name: TZ
+              value: America/Los_Angeles
+          image: ghcr.io/gotson/komga:1.24.4
+          name: main
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: komga
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: komga
+        - name: data
+          persistentVolumeClaim:
+            claimName: media-data-nfs

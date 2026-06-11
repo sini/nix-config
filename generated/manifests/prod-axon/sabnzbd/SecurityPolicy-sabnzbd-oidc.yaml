@@ -1,0 +1,21 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: sabnzbd-oidc
+  namespace: media
+spec:
+  oidc:
+    clientID: sabnzbd
+    clientSecret:
+      name: sabnzbd-oidc-client-secret
+    forwardAccessToken: true
+    provider:
+      issuer: https://idm.json64.dev/oauth2/openid/sabnzbd
+    scopes:
+      - email
+      - openid
+      - profile
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: sabnzbd

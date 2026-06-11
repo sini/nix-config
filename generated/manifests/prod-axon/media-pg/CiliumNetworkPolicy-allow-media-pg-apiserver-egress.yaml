@@ -1,0 +1,21 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: allow-media-pg-apiserver-egress
+  namespace: media
+spec:
+  description: Allow media-pg CNPG instance pods to talk to kube-apiserver.
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: media-pg

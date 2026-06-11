@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-sonarr
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach sonarr.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: sonarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP

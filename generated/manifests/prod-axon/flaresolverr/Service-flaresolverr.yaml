@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: flaresolverr
+    app.kubernetes.io/name: flaresolverr
+    app.kubernetes.io/service: flaresolverr
+  name: flaresolverr
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 8191
+      protocol: TCP
+      targetPort: 8191
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: flaresolverr
+    app.kubernetes.io/name: flaresolverr
+  type: ClusterIP

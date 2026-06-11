@@ -1,0 +1,24 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-media-ingress-sonarr
+  namespace: media
+spec:
+  description: Allow in-namespace callers + dashboards to reach sonarr:8989.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: sonarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prowlarr
+        - matchLabels:
+            app.kubernetes.io/name: bazarr
+        - matchLabels:
+            app.kubernetes.io/name: glance
+        - matchLabels:
+            app.kubernetes.io/name: dash
+      toPorts:
+        - ports:
+            - port: "8989"
+              protocol: TCP

@@ -1,0 +1,24 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-media-ingress-prowlarr
+  namespace: media
+spec:
+  description: Allow in-namespace callers to reach prowlarr:9696.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: prowlarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: sonarr
+        - matchLabels:
+            app.kubernetes.io/name: radarr
+        - matchLabels:
+            app.kubernetes.io/name: lidarr
+        - matchLabels:
+            app.kubernetes.io/name: whisparr
+      toPorts:
+        - ports:
+            - port: "9696"
+              protocol: TCP
