@@ -55,7 +55,7 @@
 # ScreenScraper, MobyGames) once those API creds are configured, so internetEgress
 # = true (world 80/443).
 #
-# Version: pinned to a recent RomM 3.x release. Bump at deploy time.
+# Version: pinned to the latest RomM 3.x release. Bump at deploy time.
 {
   config,
   lib,
@@ -77,7 +77,7 @@ let
     port = rommPort;
     image = {
       repository = "rommapp/romm";
-      tag = "3.10.2";
+      tag = "3.10.3";
     };
     inherit (config.den) environments;
 

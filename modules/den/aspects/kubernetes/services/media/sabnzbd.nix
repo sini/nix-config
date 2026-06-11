@@ -27,7 +27,7 @@
 # extension for this task; documented in _media-app.nix).
 #
 # Version: the media-user backup carries no SABnzbd version marker (the ini has
-# no version field), so we pin to a recent stable LSIO tag (4.5.3) rather than
+# no version field), so we pin to the latest stable LSIO tag (5.0.4) rather than
 # `latest`. Bump tags in the dedicated deploy-time pass.
 { config, lib, ... }:
 let
@@ -85,7 +85,7 @@ in
     port = 8080;
     image = {
       repository = "lscr.io/linuxserver/sabnzbd";
-      tag = "4.5.3";
+      tag = "5.0.4";
     };
     inherit (config.den) environments;
 
@@ -114,7 +114,7 @@ in
         initContainers.config-seed = {
           image = {
             repository = "lscr.io/linuxserver/sabnzbd";
-            tag = "4.5.3";
+            tag = "5.0.4";
           };
           command = [
             "/bin/sh"

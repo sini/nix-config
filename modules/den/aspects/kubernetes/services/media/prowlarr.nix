@@ -5,8 +5,9 @@
 # and a fixed API key from the shared media-arr-api-keys secret so the *arrs can
 # register against it deterministically.
 #
-# Version pinned to 2.3.0 (matching the pre-migration deployment found in the
-# media-user backup logs). Bump tags in a dedicated pass at deploy time.
+# Version pinned to 2.4.0 — latest stable LSIO release (the pre-migration
+# deployment in the media-user backup logs ran 2.3.0). Bump tags in a dedicated
+# pass at deploy time.
 { config, lib, ... }:
 let
   media-app = import ./_media-app.nix { inherit lib; };
@@ -17,7 +18,7 @@ in
     port = 9696;
     image = {
       repository = "lscr.io/linuxserver/prowlarr";
-      tag = "2.3.0";
+      tag = "2.4.0";
     };
     inherit (config.den) environments;
 

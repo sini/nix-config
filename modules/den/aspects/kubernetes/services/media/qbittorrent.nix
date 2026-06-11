@@ -92,8 +92,8 @@
 #
 # Version: the media-user backup carries no qBittorrent version marker (the conf
 # has no version field; the old image was the floating :libtorrentv1 tag). We pin
-# a recent libtorrent-v1-line LSIO tag (5.1.2-libtorrentv1). Gluetun pinned to
-# v3.40.0. Bump both in the deploy-time pass.
+# the latest libtorrent-v1-line LSIO tag (5.2.1-libtorrentv1). Gluetun pinned to
+# v3.41.1. Bump both in the deploy-time pass.
 {
   config,
   lib,
@@ -205,7 +205,7 @@ let
     port = webuiPort;
     image = {
       repository = "lscr.io/linuxserver/qbittorrent";
-      tag = "5.1.2-libtorrentv1";
+      tag = "5.2.1-libtorrentv1";
     };
     inherit (config.den) environments;
 
@@ -295,7 +295,7 @@ let
         initContainers.config-seed = {
           image = {
             repository = "lscr.io/linuxserver/qbittorrent";
-            tag = "5.1.2-libtorrentv1";
+            tag = "5.2.1-libtorrentv1";
           };
           command = [
             "/bin/sh"
@@ -315,7 +315,7 @@ let
         initContainers.gluetun = {
           image = {
             repository = "qmcgaw/gluetun";
-            tag = "v3.40.0";
+            tag = "v3.41.1";
           };
           # Native sidecar: never terminates, runs alongside main.
           restartPolicy = "Always";
@@ -364,7 +364,7 @@ let
         containers.port-sync = {
           image = {
             repository = "busybox";
-            tag = "1.37.0";
+            tag = "1.38.0";
           };
           command = [
             "/bin/sh"

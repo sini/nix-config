@@ -24,7 +24,7 @@
 # deployed here), so internetEgress stays false. Add it later if metadata fetching
 # is enabled in-app. No postgres (Komga uses its embedded DB under /config).
 #
-# Version: pinned to a recent Komga 1.x release. Bump at deploy time.
+# Version: pinned to the latest stable Komga 1.x release. Bump at deploy time.
 {
   config,
   lib,
@@ -39,7 +39,7 @@ in
     port = 25600;
     image = {
       repository = "ghcr.io/gotson/komga";
-      tag = "1.21.2";
+      tag = "1.24.4";
     };
     inherit (config.den) environments;
 
