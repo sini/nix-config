@@ -275,7 +275,90 @@ let
           };
         };
       };
+    }
+    // mkMediaClients env secretPaths;
+
+  # ---- Media-stack OAuth2 clients ----
+  # Every media UI sits behind an Envoy OIDC SecurityPolicy. The SecurityPolicy
+  # (rendered by _media-app.nix mkMediaApp) uses clientID = <name>, issuer
+  # https://idm.<domain>/oauth2/openid/<name>, clientSecret <name>-oidc-client-secret,
+  # and the Envoy-default redirect URI <app-url>/oauth2/callback. These client
+  # entries mirror that contract exactly (hubble-ui originUrl convention). The
+  # client secret shares its rekeyFile + generator with the k8s age-secret so a
+  # single generated value backs both sides.
+  mediaScopes = [
+    "openid"
+    "profile"
+    "email"
+    "groups"
+  ];
+
+  # name -> { displayName; group; }. group selects the scope-map: admin-gated
+  # apps map to media.admins, general apps to media.access.
+  mediaClientDefs = {
+    prowlarr = {
+      displayName = "Prowlarr";
+      group = "media.admins";
     };
+    sonarr = {
+      displayName = "Sonarr";
+      group = "media.access";
+    };
+    radarr = {
+      displayName = "Radarr";
+      group = "media.access";
+    };
+    lidarr = {
+      displayName = "Lidarr";
+      group = "media.access";
+    };
+    whisparr = {
+      displayName = "Whisparr";
+      group = "media.access";
+    };
+    bazarr = {
+      displayName = "Bazarr";
+      group = "media.access";
+    };
+    sabnzbd = {
+      displayName = "SABnzbd";
+      group = "media.admins";
+    };
+    qbittorrent = {
+      displayName = "qBittorrent";
+      group = "media.admins";
+    };
+    romm = {
+      displayName = "RoMM";
+      group = "media.access";
+    };
+    komga = {
+      displayName = "Komga";
+      group = "media.access";
+    };
+    glance = {
+      displayName = "Glance";
+      group = "media.access";
+    };
+    homepage = {
+      displayName = "Homepage";
+      group = "media.access";
+    };
+  };
+
+  mkMediaClients =
+    env: secretPaths:
+    let
+      domain = svc: env.getDomainFor svc;
+    in
+    mapAttrs (name: def: {
+      inherit (def) displayName;
+      originUrl = [ "https://${domain name}/oauth2/callback" ];
+      originLanding = "https://${domain name}";
+      basicSecretFile = secretPaths."${name}-oidc-client-secret";
+      preferShortUsername = true;
+      scopeMaps.${def.group} = mediaScopes;
+    }) mediaClientDefs;
 in
 {
   den.aspects.services.security.kanidm = {
