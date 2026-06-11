@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-postgres-egress-sonarr
+  namespace: media
+spec:
+  description: Allow sonarr to reach the media-pg CNPG cluster.
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: media-pg
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: sonarr

@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: qbittorrent
+    app.kubernetes.io/name: qbittorrent
+  name: qbittorrent
+  namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: qbittorrent
+      app.kubernetes.io/name: qbittorrent
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: qbittorrent
+        app.kubernetes.io/name: qbittorrent
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PGID
+              value: "65536"
+            - name: PUID
+              value: "1027"
+            - name: TZ
+              value: America/Los_Angeles
+            - name: UMASK
+              value: "022"
+            - name: WEBUI_PORT
+              value: "8080"
+          image: lscr.io/linuxserver/qbittorrent:5.2.1-libtorrentv1
+          name: main
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /scratch
+              name: scratch
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              GTN=http://127.0.0.1:8000/v1/openvpn/portforwarded
+              QBT=http://127.0.0.1:8080
+              last=""
+              while true; do
+                # Compact-JSON assumption: gluetun's control server emits a single-line
+                # object like {"port":12345}; this sed grabs the first "port":<digits>. If
+                # gluetun ever pretty-prints the response, this extraction must change.
+                port="$(wget -qO- "$GTN" 2>/dev/null | sed -n 's/.*"port":\([0-9]*\).*/\1/p' || true)"
+                if [ -n "${port:-}" ] && [ "${port}" != "0" ] && [ "${port}" != "${last}" ]; then
+                  echo "port-sync: setting qBittorrent listen port to ${port}"
+                  if wget -qO- --post-data "json={\"listen_port\":${port}}" \
+                      "$QBT/api/v2/app/setPreferences" >/dev/null 2>&1; then
+                    last="${port}"
+                  else
+                    echo "port-sync: setPreferences failed (qBittorrent not ready?), will retry"
+                  fi
+                else
+                  echo "port-sync: no forwarded port from gluetun control server"
+                fi
+                sleep 60
+              done
+          image: busybox:1.38.0
+          name: port-sync
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /scratch
+              name: scratch
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              INI=/config/qBittorrent/qBittorrent.conf
+              mkdir -p /config/qBittorrent
+              ensure_key() {
+                # ensure_key <key-escaped-for-sed> <full-line>
+                key="$1"; line="$2"
+                if grep -q "^$key=" "$INI"; then
+                  sed -i "s|^$key=.*|$line|" "$INI"
+                else
+                  sed -i "/^\[Preferences\]/a $line" "$INI"
+                fi
+              }
+              if [ ! -f "$INI" ]; then
+                echo "seeding fresh $INI"
+                {
+                  printf '%s\n' '[Preferences]'
+                  printf '%s\n' 'WebUI\AuthSubnetWhitelist=127.0.0.1/32'
+                  printf '%s\n' 'WebUI\AuthSubnetWhitelistEnabled=true'
+                  printf '%s\n' 'WebUI\HostHeaderValidation=false'
+                } > "$INI"
+              else
+                echo "reconciling existing $INI"
+                grep -q '^\[Preferences\]' "$INI" || printf '[Preferences]\n' >> "$INI"
+                ensure_key 'WebUI\\AuthSubnetWhitelist' 'WebUI\AuthSubnetWhitelist=127.0.0.1/32'
+                ensure_key 'WebUI\\AuthSubnetWhitelistEnabled' 'WebUI\AuthSubnetWhitelistEnabled=true'
+                ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
+              fi
+          image: lscr.io/linuxserver/qbittorrent:5.2.1-libtorrentv1
+          name: config-seed
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /scratch
+              name: scratch
+        - env:
+            - name: FIREWALL_OUTBOUND_SUBNETS
+              value: 172.20.0.0/16,172.21.0.0/16,10.10.10.0/24
+            - name: VPN_PORT_FORWARDING
+              value: "on"
+            - name: VPN_PORT_FORWARDING_PROVIDER
+              value: protonvpn
+            - name: VPN_SERVICE_PROVIDER
+              value: custom
+            - name: VPN_TYPE
+              value: wireguard
+            - name: WIREGUARD_ADDRESSES
+              valueFrom:
+                secretKeyRef:
+                  key: addresses
+                  name: media-vpn
+            - name: WIREGUARD_ENDPOINT_IP
+              valueFrom:
+                secretKeyRef:
+                  key: endpoint-ip
+                  name: media-vpn
+            - name: WIREGUARD_ENDPOINT_PORT
+              valueFrom:
+                secretKeyRef:
+                  key: endpoint-port
+                  name: media-vpn
+            - name: WIREGUARD_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: private-key
+                  name: media-vpn
+            - name: WIREGUARD_PUBLIC_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: peer-public-key
+                  name: media-vpn
+          image: qmcgaw/gluetun:v3.41.1
+          name: gluetun
+          readinessProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /v1/openvpn/status
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 1
+          restartPolicy: Always
+          securityContext:
+            capabilities:
+              add:
+                - NET_ADMIN
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /scratch
+              name: scratch
+            - mountPath: /dev/net/tun
+              name: tun
+      serviceAccountName: qbittorrent
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: qbittorrent
+        - name: scratch
+          persistentVolumeClaim:
+            claimName: media-scratch-local
+        - hostPath:
+            path: /dev/net/tun
+            type: CharDevice
+          name: tun

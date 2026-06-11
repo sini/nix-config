@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+  name: media-data-nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 1Ti
+  claimRef:
+    name: media-data-nfs
+    namespace: media
+  mountOptions:
+    - nfsvers=4.1
+    - noatime
+  nfs:
+    path: /volume2/data
+    server: 10.10.10.10
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""

@@ -1,0 +1,12 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: deny-media-ingress-configarr
+  namespace: media
+spec:
+  description: Default-deny all ingress to configarr (no inbound callers).
+  enableDefaultDeny:
+    ingress: true
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: configarr

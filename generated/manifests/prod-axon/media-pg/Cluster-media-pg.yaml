@@ -1,0 +1,45 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: media-pg
+  namespace: media
+spec:
+  affinity:
+    podAntiAffinityType: required
+  backup:
+    volumeSnapshot:
+      className: longhorn-snapshot
+  instances: 2
+  managed:
+    roles:
+      - login: true
+        name: sonarr
+        passwordSecret:
+          name: media-pg-sonarr-password
+      - login: true
+        name: radarr
+        passwordSecret:
+          name: media-pg-radarr-password
+      - login: true
+        name: lidarr
+        passwordSecret:
+          name: media-pg-lidarr-password
+      - login: true
+        name: whisparr
+        passwordSecret:
+          name: media-pg-whisparr-password
+      - login: true
+        name: prowlarr
+        passwordSecret:
+          name: media-pg-prowlarr-password
+      - login: true
+        name: bazarr
+        passwordSecret:
+          name: media-pg-bazarr-password
+      - login: true
+        name: romm
+        passwordSecret:
+          name: media-pg-romm-password
+  storage:
+    size: 20Gi
+    storageClass: longhorn-single

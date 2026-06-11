@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-bazarr
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach bazarr.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: bazarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "6767"
+              protocol: TCP

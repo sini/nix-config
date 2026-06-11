@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-dash
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach dash.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: dash
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP

@@ -1,0 +1,21 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: prowlarr-oidc
+  namespace: media
+spec:
+  oidc:
+    clientID: prowlarr
+    clientSecret:
+      name: prowlarr-oidc-client-secret
+    forwardAccessToken: true
+    provider:
+      issuer: https://idm.json64.dev/oauth2/openid/prowlarr
+    scopes:
+      - email
+      - openid
+      - profile
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: prowlarr

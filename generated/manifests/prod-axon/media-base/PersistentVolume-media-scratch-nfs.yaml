@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+  name: media-scratch-nfs
+spec:
+  accessModes:
+    - ReadWriteMany
+  capacity:
+    storage: 800Gi
+  claimRef:
+    name: media-scratch-nfs
+    namespace: media
+  mountOptions:
+    - nfsvers=4.1
+    - noatime
+    - soft
+    - timeo=50
+  nfs:
+    path: /cache/media-scratch
+    server: 10.10.10.2
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: ""

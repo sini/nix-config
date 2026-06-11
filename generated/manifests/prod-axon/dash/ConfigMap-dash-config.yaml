@@ -1,0 +1,94 @@
+apiVersion: v1
+data:
+  bookmarks.yaml: |
+    - Media:
+        - Jellyfin:
+            - abbr: JF
+              href: https://jellyfin.json64.dev/
+        - Bazarr:
+            - abbr: BZ
+              href: https://bazarr.json64.dev/
+        - Whisparr:
+            - abbr: WH
+              href: https://whisparr.json64.dev/
+  kubernetes.yaml: |
+    mode: cluster
+  services.yaml: |
+    - Media:
+        - Sonarr:
+            href: https://sonarr.json64.dev/
+            icon: sonarr.png
+            widget:
+              type: sonarr
+              url: http://sonarr:8989
+              key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
+        - Radarr:
+            href: https://radarr.json64.dev/
+            icon: radarr.png
+            widget:
+              type: radarr
+              url: http://radarr:7878
+              key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
+        - Lidarr:
+            href: https://lidarr.json64.dev/
+            icon: lidarr.png
+            widget:
+              type: lidarr
+              url: http://lidarr:8686
+              key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
+        - Prowlarr:
+            href: https://prowlarr.json64.dev/
+            icon: prowlarr.png
+            # No widget: prowlarr API is admin-gated; surfaced as bookmark only.
+    - Downloaders:
+        - SABnzbd:
+            href: https://nzb.json64.dev/
+            icon: sabnzbd.png
+            widget:
+              type: sabnzbd
+              url: http://sabnzbd:8080
+              key: "{{HOMEPAGE_VAR_SABNZBD_KEY}}"
+        - qBittorrent:
+            href: https://torrent.json64.dev/
+            icon: qbittorrent.png
+            # No widget: the qbt WebUI is OIDC/loopback-locked; homepage cannot
+            # authenticate to it. Torrent status is visible via the *arrs.
+    - Watch:
+        - Jellyfin:
+            href: https://jellyfin.json64.dev/
+            icon: jellyfin.png
+  settings.yaml: |
+    title: Media Dashboard
+    theme: dark
+    color: slate
+    headerStyle: clean
+    layout:
+      Media:
+        style: row
+        columns: 4
+      Downloaders:
+        style: row
+        columns: 2
+  widgets.yaml: |
+    - resources:
+        backend: kubernetes
+        expanded: true
+        cpu: true
+        memory: true
+    - kubernetes:
+        cluster:
+          show: true
+          cpu: true
+          memory: true
+          showLabel: true
+        nodes:
+          show: true
+          cpu: true
+          memory: true
+    - search:
+        provider: duckduckgo
+        target: _blank
+kind: ConfigMap
+metadata:
+  name: dash-config
+  namespace: media

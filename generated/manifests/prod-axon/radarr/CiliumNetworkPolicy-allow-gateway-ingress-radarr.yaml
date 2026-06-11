@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-radarr
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach radarr.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: radarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: envoy-gateway-system
+      toPorts:
+        - ports:
+            - port: "7878"
+              protocol: TCP

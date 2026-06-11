@@ -1,0 +1,75 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/controller: configarr
+    app.kubernetes.io/instance: configarr
+    app.kubernetes.io/name: configarr
+  name: configarr
+  namespace: media
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 6
+      template:
+        metadata:
+          annotations:
+            checksum/configMaps: 09af9ea5d26aaf4daa086abc551a18fb55edded31dcc8aa181a3238658453236
+          labels:
+            app.kubernetes.io/controller: configarr
+            app.kubernetes.io/instance: configarr
+            app.kubernetes.io/name: configarr
+        spec:
+          automountServiceAccountToken: false
+          containers:
+            - env:
+                - name: LIDARR_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: lidarr
+                      name: media-arr-api-keys
+                - name: RADARR_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: radarr
+                      name: media-arr-api-keys
+                - name: SONARR_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: sonarr
+                      name: media-arr-api-keys
+                - name: TZ
+                  value: America/Los_Angeles
+                - name: WHISPARR_API_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      key: whisparr
+                      name: media-arr-api-keys
+              image: ghcr.io/raydak-labs/configarr:1.28.0
+              name: main
+              volumeMounts:
+                - mountPath: /app/config/config.yml
+                  name: config
+                  readOnly: true
+                  subPath: config.yml
+                - mountPath: /app/repos
+                  name: repos
+          dnsPolicy: ClusterFirst
+          enableServiceLinks: false
+          hostIPC: false
+          hostNetwork: false
+          hostPID: false
+          restartPolicy: Never
+          serviceAccountName: configarr
+          volumes:
+            - configMap:
+                name: configarr
+              name: config
+            - emptyDir: {}
+              name: repos
+  schedule: 0 0 * * *
+  startingDeadlineSeconds: 30
+  successfulJobsHistoryLimit: 3
+  suspend: false

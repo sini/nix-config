@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: sonarr
+    app.kubernetes.io/name: sonarr
+  name: sonarr
+  namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: sonarr
+      app.kubernetes.io/name: sonarr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: sonarr
+        app.kubernetes.io/name: sonarr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PGID
+              value: "65536"
+            - name: PUID
+              value: "1027"
+            - name: SONARR__AUTH__APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: sonarr
+                  name: media-arr-api-keys
+            - name: SONARR__AUTH__METHOD
+              value: External
+            - name: SONARR__POSTGRES__HOST
+              value: media-pg-rw
+            - name: SONARR__POSTGRES__LOGDB
+              value: sonarr-log
+            - name: SONARR__POSTGRES__MAINDB
+              value: sonarr-main
+            - name: SONARR__POSTGRES__PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: media-pg-sonarr-password
+            - name: SONARR__POSTGRES__PORT
+              value: "5432"
+            - name: SONARR__POSTGRES__USER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: media-pg-sonarr-password
+            - name: TZ
+              value: America/Los_Angeles
+          image: lscr.io/linuxserver/sonarr:4.0.17
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: 8989
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          name: main
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: 8989
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /scratch
+              name: scratch
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: sonarr
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: sonarr
+        - name: data
+          persistentVolumeClaim:
+            claimName: media-data-nfs
+        - name: scratch
+          persistentVolumeClaim:
+            claimName: media-scratch-nfs

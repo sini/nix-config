@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: dash
+    app.kubernetes.io/name: dash
+    app.kubernetes.io/service: dash
+  name: dash
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 3000
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: dash
+    app.kubernetes.io/name: dash
+  type: ClusterIP

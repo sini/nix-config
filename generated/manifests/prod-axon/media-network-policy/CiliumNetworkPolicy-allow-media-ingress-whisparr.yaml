@@ -1,0 +1,22 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-media-ingress-whisparr
+  namespace: media
+spec:
+  description: Allow in-namespace callers + dashboards to reach whisparr:6969.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: whisparr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prowlarr
+        - matchLabels:
+            app.kubernetes.io/name: glance
+        - matchLabels:
+            app.kubernetes.io/name: dash
+      toPorts:
+        - ports:
+            - port: "6969"
+              protocol: TCP

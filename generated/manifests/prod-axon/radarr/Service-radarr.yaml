@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: radarr
+    app.kubernetes.io/name: radarr
+    app.kubernetes.io/service: radarr
+  name: radarr
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 7878
+      protocol: TCP
+      targetPort: 7878
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: radarr
+    app.kubernetes.io/name: radarr
+  type: ClusterIP

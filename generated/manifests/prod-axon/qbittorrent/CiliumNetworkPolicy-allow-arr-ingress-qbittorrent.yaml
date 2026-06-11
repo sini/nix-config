@@ -1,0 +1,28 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-arr-ingress-qbittorrent
+  namespace: media
+spec:
+  description: Allow the *arrs and unpackerr to reach qBittorrent's WebUI API (8080).
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: qbittorrent
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: sonarr
+        - matchLabels:
+            app.kubernetes.io/name: radarr
+        - matchLabels:
+            app.kubernetes.io/name: lidarr
+        - matchLabels:
+            app.kubernetes.io/name: whisparr
+        - matchLabels:
+            app.kubernetes.io/name: prowlarr
+        - matchLabels:
+            app.kubernetes.io/name: unpackerr
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

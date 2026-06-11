@@ -1,0 +1,87 @@
+apiVersion: v1
+data:
+  glance.yml: |-
+    theme:
+      # Catppuccin Mocha
+      background-color: 240 21 15
+      contrast-multiplier: 1.2
+      primary-color: 217 92 83
+      positive-color: 115 54 76
+      negative-color: 347 70 65
+
+    pages:
+      - name: Home
+        columns:
+          - size: small
+            widgets:
+              - type: clock
+                hour-format: 12h
+              - type: calendar
+                first-day-of-week: monday
+          - size: full
+            widgets:
+              - type: rss
+                limit: 10
+                collapse-after: 3
+                cache: 12h
+                feeds:
+                  - url: https://selfh.st/rss/
+                    title: selfh.st
+
+      - name: Media
+        columns:
+          - size: full
+            widgets:
+              - type: monitor
+                cache: 1m
+                title: Media Services
+                sites:
+                  - title: Sonarr
+                    url: http://sonarr:8989/
+                    icon: si:sonarr
+                  - title: Radarr
+                    url: http://radarr:7878/
+                    icon: si:radarr
+                  - title: Lidarr
+                    url: http://lidarr:8686/
+                    icon: si:lidarr
+                  - title: Whisparr
+                    url: http://whisparr:6969/
+                    icon: si:w
+                  - title: SABnzbd
+                    url: http://sabnzbd:8080/
+                    icon: si:sabnzbd
+                  - title: Jellyfin
+                    url: https://jellyfin.json64.dev/
+                    icon: si:jellyfin
+          - size: small
+            widgets:
+              - type: bookmarks
+                groups:
+                  - title: Media UIs
+                    links:
+                      - title: Jellyfin
+                        url: https://jellyfin.json64.dev/
+                      - title: Sonarr
+                        url: https://sonarr.json64.dev/
+                      - title: Radarr
+                        url: https://radarr.json64.dev/
+                      - title: Lidarr
+                        url: https://lidarr.json64.dev/
+                      - title: Whisparr
+                        url: https://whisparr.json64.dev/
+                      - title: Prowlarr
+                        url: https://prowlarr.json64.dev/
+                      - title: Bazarr
+                        url: https://bazarr.json64.dev/
+                      - title: SABnzbd
+                        url: https://nzb.json64.dev/
+                      - title: qBittorrent
+                        url: https://torrent.json64.dev/
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: glance
+    app.kubernetes.io/name: glance
+  name: glance
+  namespace: media

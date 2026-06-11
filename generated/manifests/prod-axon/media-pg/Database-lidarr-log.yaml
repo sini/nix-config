@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: lidarr-log
+  namespace: media
+spec:
+  cluster:
+    name: media-pg
+  name: lidarr-log
+  owner: lidarr

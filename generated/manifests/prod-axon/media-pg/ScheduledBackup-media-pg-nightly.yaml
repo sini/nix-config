@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: media-pg-nightly
+  namespace: media
+spec:
+  cluster:
+    name: media-pg
+  method: volumeSnapshot
+  schedule: 0 0 4 * * *

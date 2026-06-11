@@ -1,0 +1,28 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-media-ingress-sabnzbd
+  namespace: media
+spec:
+  description: Allow in-namespace callers + dashboards to reach sabnzbd:8080.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: sabnzbd
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: sonarr
+        - matchLabels:
+            app.kubernetes.io/name: radarr
+        - matchLabels:
+            app.kubernetes.io/name: lidarr
+        - matchLabels:
+            app.kubernetes.io/name: whisparr
+        - matchLabels:
+            app.kubernetes.io/name: glance
+        - matchLabels:
+            app.kubernetes.io/name: dash
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

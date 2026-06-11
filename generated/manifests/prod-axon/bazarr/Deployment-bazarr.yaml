@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: bazarr
+    app.kubernetes.io/name: bazarr
+  name: bazarr
+  namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: bazarr
+      app.kubernetes.io/name: bazarr
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: bazarr
+        app.kubernetes.io/name: bazarr
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PGID
+              value: "65536"
+            - name: POSTGRES_DATABASE
+              value: bazarr
+            - name: POSTGRES_ENABLED
+              value: "true"
+            - name: POSTGRES_HOST
+              value: media-pg-rw
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: media-pg-bazarr-password
+            - name: POSTGRES_PORT
+              value: "5432"
+            - name: POSTGRES_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: media-pg-bazarr-password
+            - name: PUID
+              value: "1027"
+            - name: TZ
+              value: America/Los_Angeles
+          image: lscr.io/linuxserver/bazarr:1.5.6
+          name: main
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: bazarr
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: bazarr
+        - name: data
+          persistentVolumeClaim:
+            claimName: media-data-nfs

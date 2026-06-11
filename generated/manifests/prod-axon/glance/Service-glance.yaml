@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: glance
+    app.kubernetes.io/name: glance
+    app.kubernetes.io/service: glance
+  name: glance
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: glance
+    app.kubernetes.io/name: glance
+  type: ClusterIP
