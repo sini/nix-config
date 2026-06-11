@@ -25,6 +25,9 @@
           "enp199s0f6"
         ];
         loopback.ipv4 = "172.16.255.3/32";
+        # Fabric v6 loopbacks: fdfd:cafe:0:ff::/64 reserved for the mesh
+        # (pods 0:1::/96, services 0:8001::/112 — see clusters/axon.nix)
+        loopback.ipv6 = "fdfd:cafe:0:ff::3/128";
         nsap = "49.0000.0000.0003.00";
       };
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-KINGSTON_OM8PGP41024Q-A0_50026B738300CCCC";
