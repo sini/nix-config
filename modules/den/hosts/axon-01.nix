@@ -48,6 +48,7 @@
       services.bgp.spoke
       services.bgp.cilium-bgp
       services.k3s
+      services.storage.media-scratch
       hardware.cpu.amd
       hardware.gpu.amd
       services.networking.thunderbolt-mesh-of
