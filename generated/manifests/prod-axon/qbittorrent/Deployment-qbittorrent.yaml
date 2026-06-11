@@ -131,8 +131,12 @@ spec:
             - mountPath: /scratch
               name: scratch
         - env:
+            - name: FIREWALL_INPUT_PORTS
+              value: 8080,9999
             - name: FIREWALL_OUTBOUND_SUBNETS
               value: 172.20.0.0/16,172.21.0.0/16,10.10.10.0/24
+            - name: HEALTH_SERVER_ADDRESS
+              value: :9999
             - name: VPN_PORT_FORWARDING
               value: "on"
             - name: VPN_PORT_FORWARDING_PROVIDER

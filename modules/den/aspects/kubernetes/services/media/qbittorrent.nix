@@ -331,9 +331,12 @@ let
           # Native sidecar: never terminates, runs alongside main.
           restartPolicy = "Always";
           securityContext.capabilities.add = [ "NET_ADMIN" ];
-          # Gate `main` on the tunnel: the readiness probe hits gluetun's control
-          # server status endpoint (HTTP 200 once the VPN loop is up). As a native
-          # sidecar, the kubelet won't start `main` until this probe passes.
+          # Gate `main` on the tunnel: the readiness probe hits gluetun's health
+          # server (HTTP 200 only once the VPN loop is up). As a native sidecar,
+          # the kubelet won't start `main` until this probe passes. The kubelet
+          # dials the POD IP, so the health server must bind beyond loopback
+          # (HEALTH_SERVER_ADDRESS below) and the firewall must accept the probe
+          # port on eth0 (FIREWALL_INPUT_PORTS below).
           probes.readiness = {
             enabled = true;
             type = "HTTP";
@@ -361,6 +364,21 @@ let
             # callbacks, and in-cluster DNS keep working through the tunnel's
             # kill-switch. Everything else non-tunnel is dropped by gluetun.
             FIREWALL_OUTBOUND_SUBNETS = "172.20.0.0/16,172.21.0.0/16,10.10.10.0/24";
+
+            # INBOUND (root-caused 2026-06-11): gluetun's INPUT policy is DROP and
+            # its local-subnet auto-detection breaks on Cilium's pod netns shape
+            # (eth0 carries the pod IP as a /32 with the node router as gateway):
+            # it derives "local ipnet" from the GATEWAY /32, so its only eth0
+            # accept rule never matches traffic to the actual pod IP — envoy,
+            # kubelet probes and the *arrs all hit DROP (connect timeout).
+            # FIREWALL_INPUT_PORTS adds interface-scoped accepts on the default
+            # interface (eth0 only, never tun0 — the VPN side stays closed except
+            # the forwarded port), immune to that detection: 8080 = qbt WebUI
+            # (gateway + *arr download clients), 9999 = health probe (kubelet).
+            FIREWALL_INPUT_PORTS = "8080,9999";
+            # Health server defaults to 127.0.0.1:9999, unreachable for the
+            # kubelet's pod-IP httpGet probe — bind all interfaces instead.
+            HEALTH_SERVER_ADDRESS = ":9999";
 
             # Forwarded port is read off gluetun's control server by the
             # port-sync sidecar (see below); no up-command (app-template's tpl
