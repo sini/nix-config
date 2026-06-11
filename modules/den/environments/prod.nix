@@ -63,6 +63,7 @@
       # qBittorrent routes on torrent.* (not the default qbittorrent.*); the
       # media helper reads this via getDomainFor "qbittorrent".
       qbittorrent.domain = "torrent.json64.dev";
+      registry.domain = "registry.json64.dev";
       # SABnzbd routes on nzb.* (not the default sabnzbd.*); the media helper
       # reads this via getDomainFor "sabnzbd".
       sabnzbd.domain = "nzb.json64.dev";

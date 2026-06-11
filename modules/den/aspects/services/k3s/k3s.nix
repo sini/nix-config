@@ -68,6 +68,7 @@ in
     nixos =
       {
         k3s-nodes,
+        container-registries,
         config,
         pkgs,
         host,
@@ -189,6 +190,15 @@ in
         ++ peerTlsSans;
 
         serverFlags = concatStringsSep " " (generalFlagList ++ serverFlagList);
+
+        # Container registries discovered via the container-registries quirk.
+        # Each contributes a configs.<domain>.auth entry to registries.yaml so
+        # k3s/containerd authenticates pulls. The cleartext password cannot live
+        # in the nix store, so it is substituted at activation from the shared
+        # registry-password age secret (rekeyed identically on the registry
+        # host) by the k3s-registries-config oneshot below.
+        registries = container-registries;
+        haveRegistries = registries != [ ];
       in
       {
         services = {
@@ -240,6 +250,41 @@ in
           ];
 
           services.multipathd.enable = mkForce false;
+
+          # Render /etc/rancher/k3s/registries.yaml from the shared
+          # registry-password age secret before k3s starts. Kept out of the
+          # nix store because it embeds a cleartext credential.
+          services.k3s-registries-config = lib.mkIf haveRegistries {
+            description = "Render k3s registries.yaml with registry credentials";
+            before = [ "k3s.service" ];
+            requiredBy = [ "k3s.service" ];
+            after = [ "run-agenix.d.mount" ];
+            unitConfig.ConditionPathExists = config.age.secrets.registry-password.path;
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+            };
+            script =
+              let
+                configsBlock = concatStringsSep "\n" (
+                  map (reg: ''
+                    "${reg.domain}":
+                      auth:
+                        username: "${reg.username}"
+                        password: "$registry_password"'') registries
+                );
+              in
+              ''
+                set -euo pipefail
+                registry_password="$(cat ${config.age.secrets.registry-password.path})"
+                install -d -m 0755 /etc/rancher/k3s
+                umask 077
+                cat > /etc/rancher/k3s/registries.yaml <<EOF
+                configs:
+                ${configsBlock}
+                EOF
+              '';
+          };
         };
       };
 
@@ -250,6 +295,7 @@ in
       let
         clusterName = host.settings.services.k3s.clusterName;
         cluster = clusters.${clusterName};
+        environment = environments.${cluster.environment};
       in
       {
         age.secrets.kubernetes-cluster-token = {
@@ -260,6 +306,15 @@ in
         age.secrets.kubernetes-sops-age-key = {
           rekeyFile = cluster.secretPath + "/cluster-sops-age-key.age";
           path = "/var/lib/sops/age/key.txt";
+        };
+
+        # Shared-rekeyFile registry credential: identical rekeyFile + generator
+        # to the registry host's registry-password, so agenix-rekey produces the
+        # same cleartext on every node. Consumed by k3s-registries-config to
+        # build registries.yaml.
+        age.secrets.registry-password = {
+          rekeyFile = environment.secretPath + "/registry/registry-password.age";
+          generator.script = "rfc3986-secret";
         };
       };
 
