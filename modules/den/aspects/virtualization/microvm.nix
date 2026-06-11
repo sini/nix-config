@@ -36,12 +36,11 @@
     (
       { ... }:
       {
-        options.microvm.guests = lib.mkOption {
-          type = lib.types.listOf lib.types.raw;
-          default = [ ];
-          defaultText = lib.literalExpression "[ ]";
-          description = "Guest MicroVMs to run on this host. List of den hosts, e.g. [ den.hosts.x86_64-linux.cortex-cuda ].";
-        };
+        # Guest MicroVMs are delivered via the guests policy
+        # (den.hosts.<sys>.<parent>.guests.<name>; see
+        # virtualization/guests.nix), not a `microvm.guests` list. These options
+        # document the per-guest entity contract read by the host-side GPU
+        # overlay (microvm-guests.nix).
         options.microvm.passthrough = lib.mkOption {
           type = lib.types.listOf lib.types.str;
           default = [ ];
