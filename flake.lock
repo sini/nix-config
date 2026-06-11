@@ -443,16 +443,16 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1781118933,
-        "narHash": "sha256-k0gC6N4NoX6CZmaBtyYbzbGMvnxLLv78o7JzGrsub1U=",
+        "lastModified": 1781197965,
+        "narHash": "sha256-KzJ8WMzFAXcIBxveZVz3DypYgqy3sa8B2AWaexBc3tw=",
         "owner": "sini",
         "repo": "den",
-        "rev": "4f317c5a914f966573cc34e5d01e9740e6e49e32",
+        "rev": "046589827bb217c7bb9419999fcb4cd68d1da40a",
         "type": "github"
       },
       "original": {
         "owner": "sini",
-        "ref": "feat/entity-gen-schema-port",
+        "ref": "feat/delivered-child-host-lazy",
         "repo": "den",
         "type": "github"
       }
