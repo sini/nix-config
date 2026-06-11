@@ -220,6 +220,11 @@ let
     };
     inherit (config.den) environments;
 
+    # qBittorrent 5.x answers 404 "Not Found" to ANY request carrying an
+    # Authorization: Bearer header (verified live 2026-06-11), and nothing in
+    # qbt consumes the forwarded token — keep it off the upstream request.
+    oidcForwardAccessToken = false;
+
     # qBittorrent stores nothing in postgres.
     postgres = false;
 
