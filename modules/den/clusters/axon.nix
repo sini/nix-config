@@ -73,6 +73,7 @@
       services.monitoring.loki
       services.monitoring.grafana
       services.network.cilium.hubble-ui
+      services.media.base
     ];
   };
 }
