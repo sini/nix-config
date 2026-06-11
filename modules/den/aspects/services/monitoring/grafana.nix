@@ -80,6 +80,21 @@
 
             provision = {
               enable = true;
+
+              # nixpkgs-master regression workaround: with alerting *.settings
+              # left at the default null, the module still calls
+              # formats.yaml.generate on it; mkDerivation drops null attrs, so
+              # the structuredAttrs `json2yaml --unwrap value` build fails with
+              # KeyError: 'value'. Non-null empty provisioning documents avoid
+              # the null path. Drop once upstream guards settings == null.
+              alerting = {
+                rules.settings.apiVersion = 1;
+                contactPoints.settings.apiVersion = 1;
+                policies.settings.apiVersion = 1;
+                templates.settings.apiVersion = 1;
+                muteTimings.settings.apiVersion = 1;
+              };
+
               datasources.settings.datasources = [
                 {
                   name = "Prometheus";
