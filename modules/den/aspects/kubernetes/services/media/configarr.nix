@@ -1,7 +1,8 @@
 # Configarr — syncs TRaSH-Guides quality definitions / profiles into the *arr
-# instances on a schedule. Successor to recyclarr.nix (a Recyclarr-compatible
-# fork) that additionally adds experimental support for Lidarr & Whisparr, so
-# this one aspect covers all four arrs.
+# instances on a schedule. Successor to recyclarr.nix — an independent tool
+# that consumes Recyclarr's config-templates and additionally adds
+# experimental support for Lidarr & Whisparr, so one aspect covers all four
+# arrs.
 #
 # Not a long-running service (no UI, no Service, no route): a daily CronJob. The
 # mkMediaApp helper assumes deployment + service + route, so configarr is a raw
