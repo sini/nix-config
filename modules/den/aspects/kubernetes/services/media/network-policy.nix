@@ -50,9 +50,9 @@
 # This is the canonical single-direction deny and avoids the `ingress: [{}]`
 # foot-gun (an empty rule = allow-all, the opposite of what we want).
 #
-# DASHBOARDS (Task 10/11: glance, homepage) are PRE-DECLARED as ingress sources
+# DASHBOARDS (Task 10/11: glance, dash) are PRE-DECLARED as ingress sources
 # on the *arr + sabnzbd API ports now, so the dashboard tasks need no edits here.
-# Their pods carry app.kubernetes.io/name in {glance, homepage} (app-template
+# Their pods carry app.kubernetes.io/name in {glance, dash} (app-template
 # convention, same as every app here — verified against a rendered Deployment).
 # qbittorrent is intentionally NOT in the dashboard set: its ingress is owned by
 # qbittorrent.nix and dashboards surface torrents via the *arr download clients.
@@ -88,10 +88,11 @@ let
   ];
 
   # Dashboards (land in Task 10/11) — pre-declared ingress sources on the API
-  # ports so their tasks need no edits here.
+  # ports so their tasks need no edits here. k8s dashboard renamed from
+  # "homepage" to "dash"; pods carry app.kubernetes.io/name = dash.
   dashboards = [
     "glance"
-    "homepage"
+    "dash"
   ];
 
   # ---- the edge graph ----------------------------------------------------

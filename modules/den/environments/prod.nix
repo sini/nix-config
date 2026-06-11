@@ -49,6 +49,9 @@
       grafana.domain = "grafana.json64.dev";
       headscale.domain = "hs.json64.dev";
       homepage.domain = "homepage.json64.dev";
+      # k8s media utility dashboard (gethomepage). Distinct from the uplink
+      # homepage above (homepage.json64.dev): see kanidm.nix mediaClientDefs.dash.
+      dash.domain = "dash.json64.dev";
       jellyfin.domain = "jellyfin.json64.dev";
       kanidm.domain = "idm.json64.dev";
       loki.domain = "loki.json64.dev";

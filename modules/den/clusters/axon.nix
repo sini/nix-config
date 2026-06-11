@@ -89,6 +89,8 @@
       services.media.unpackerr
       services.media.recyclarr
       services.media.network-policy
+      services.media.glance
+      services.media.dash
     ];
   };
 }

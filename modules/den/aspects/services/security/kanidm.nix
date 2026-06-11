@@ -340,8 +340,13 @@ let
       displayName = "Glance";
       group = "media.access";
     };
-    homepage = {
-      displayName = "Homepage";
+    # The k8s utility dashboard is named "dash" (NOT "homepage"): the uplink host
+    # already owns service-domains "homepage" (homepage.json64.dev) via its NixOS
+    # homepage-dashboard aspect (modules/den/aspects/services/web/homepage.nix,
+    # behind oauth2-proxy). Reusing "homepage" here would collide on that domain.
+    # "dash" -> dash.json64.dev keeps the two dashboards on distinct hosts/domains.
+    dash = {
+      displayName = "Dashboard";
       group = "media.access";
     };
   };
