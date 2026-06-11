@@ -90,6 +90,10 @@ spec:
               set -eu
               INI=/config/qBittorrent/qBittorrent.conf
               mkdir -p /config/qBittorrent
+              # A fresh pod can never legitimately hold the single-instance lock (RWO
+              # PVC, replicas=1). A stale lockfile from a prior pod makes qbt assume a
+              # running instance and exit 0 silently — crash-looping with zero output.
+              rm -f /config/qBittorrent/lockfile
               ensure_key() {
                 # ensure_key <key-escaped-for-sed> <full-line>
                 # NB: $line lands in sed REPLACEMENT/append contexts, where a lone

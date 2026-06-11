@@ -10,3 +10,4 @@ spec:
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: configarr
+  ingress: []
