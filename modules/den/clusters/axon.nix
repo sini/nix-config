@@ -69,11 +69,13 @@
       services.storage.longhorn
       services.storage.csi-driver-nfs
       services.storage.volume-snapshots
+      services.storage.cloudnative-pg
       services.monitoring.prometheus
       services.monitoring.loki
       services.monitoring.grafana
       services.network.cilium.hubble-ui
       services.media.base
+      services.media.media-pg
     ];
   };
 }
