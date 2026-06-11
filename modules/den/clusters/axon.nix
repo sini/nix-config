@@ -85,6 +85,7 @@
       services.media.whisparr
       services.media.bazarr
       services.media.sabnzbd
+      services.media.qbittorrent
       services.media.unpackerr
       services.media.recyclarr
     ];
