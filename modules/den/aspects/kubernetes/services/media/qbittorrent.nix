@@ -53,7 +53,7 @@
 # == Port forwarding ==
 # ProtonVPN supports incoming port forwarding; gluetun (VPN_PORT_FORWARDING=on)
 # obtains the forwarded port and exposes it on its control server at
-# 127.0.0.1:8000/v1/openvpn/portforwarded. We do NOT use gluetun's
+# 127.0.0.1:8000/v1/portforward (v3.40+ path; the old /v1/openvpn/portforwarded 301s and busybox wget will not follow). We do NOT use gluetun's
 # VPN_PORT_FORWARDING_UP_COMMAND: app-template runs every container env value
 # through Helm's `tpl`, which chokes on gluetun's {{PORTS}} placeholder
 # ("function PORTS not defined") — escaping it through two template layers is
@@ -172,7 +172,7 @@ let
   # escaped as `''${var}` so Nix leaves them for the shell.
   portSyncScript = ''
     set -eu
-    GTN=http://127.0.0.1:8000/v1/openvpn/portforwarded
+    GTN=http://127.0.0.1:8000/v1/portforward
     QBT=http://127.0.0.1:${toString webuiPort}
     last=""
     while true; do
@@ -326,7 +326,7 @@ let
           probes.readiness = {
             enabled = true;
             type = "HTTP";
-            path = "/v1/openvpn/status";
+            path = "/v1/vpn/status"; # v3.40+ path (old /v1/openvpn/* 301s)
             port = 8000;
             spec = {
               initialDelaySeconds = 5;
