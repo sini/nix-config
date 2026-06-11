@@ -61,8 +61,10 @@
 # shared loopback) reads the forwarded port from the gluetun control server every
 # 60s and, when it changes, PATCHes qBittorrent's listen port via the WebUI API.
 # This mirrors the old compose's gsp DOCKER_MOD (which polled gluetun:8000). The
-# WebUI call is unauthenticated because qBittorrent's AuthSubnetWhitelist trusts
-# 127.0.0.1/32 (seeded below) and all three containers share the pod loopback.
+# WebUI call is unauthenticated because qBittorrent's WebUI\LocalHostAuth is
+# disabled (seeded below) and all three containers share the pod loopback —
+# the canonical localhost bypass. (AuthSubnetWhitelist was tried first; qbt
+# never accepted the seeded keys and flattened them on its config save.)
 # DEPLOY-VALIDATE: confirm the forwarded port lands in qBittorrent prefs after
 # first connect (check `port-sync` logs).
 #
@@ -129,9 +131,9 @@ let
   #   fresh /config -> write a minimal [Preferences] section
   #   existing      -> reconcile the auth-whitelist + host-header keys
   # [Preferences] keys touched:
-  #   WebUI\AuthSubnetWhitelist         127.0.0.1/32 (trust pod loopback)
-  #   WebUI\AuthSubnetWhitelistEnabled  true  (lets the port-sync sidecar hit the
-  #                                            API unauthenticated from localhost)
+  #   WebUI\LocalHostAuth               false (canonical localhost auth bypass —
+  #                                            lets port-sync hit the API from the
+  #                                            shared pod loopback)
   #   WebUI\HostHeaderValidation        false (accept the gateway's proxied Host)
   # printf (not a heredoc) to survive Nix indented-string dedenting.
   configSeedScript = ''
@@ -140,26 +142,31 @@ let
     mkdir -p /config/qBittorrent
     ensure_key() {
       # ensure_key <key-escaped-for-sed> <full-line>
+      # NB: $line lands in sed REPLACEMENT/append contexts, where a lone
+      # backslash is consumed (s|..|WebUI\X| emits WebUIX — this is what
+      # flattened the first deployment's keys on its second boot). Escape
+      # backslashes for those contexts.
       key="$1"; line="$2"
+      escline=$(printf '%s' "$line" | sed 's|\\|\\\\|g')
       if grep -q "^$key=" "$INI"; then
-        sed -i "s|^$key=.*|$line|" "$INI"
+        sed -i "s|^$key=.*|$escline|" "$INI"
       else
-        sed -i "/^\[Preferences\]/a $line" "$INI"
+        sed -i "/^\[Preferences\]/a $escline" "$INI"
       fi
     }
     if [ ! -f "$INI" ]; then
       echo "seeding fresh $INI"
       {
         printf '%s\n' '[Preferences]'
-        printf '%s\n' 'WebUI\AuthSubnetWhitelist=127.0.0.1/32'
-        printf '%s\n' 'WebUI\AuthSubnetWhitelistEnabled=true'
+        printf '%s\n' 'WebUI\LocalHostAuth=false'
         printf '%s\n' 'WebUI\HostHeaderValidation=false'
       } > "$INI"
     else
       echo "reconciling existing $INI"
       grep -q '^\[Preferences\]' "$INI" || printf '[Preferences]\n' >> "$INI"
-      ensure_key 'WebUI\\AuthSubnetWhitelist' 'WebUI\AuthSubnetWhitelist=127.0.0.1/32'
-      ensure_key 'WebUI\\AuthSubnetWhitelistEnabled' 'WebUI\AuthSubnetWhitelistEnabled=true'
+      ensure_key 'WebUI\\LocalHostAuth' 'WebUI\LocalHostAuth=false'
+      # drop flattened leftovers from the earlier whitelist attempt
+      sed -i '/^WebUIAuthSubnetWhitelist/d; /^WebUIHostHeaderValidation/d' "$INI"
       ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
     fi
   '';
@@ -326,8 +333,9 @@ let
           probes.readiness = {
             enabled = true;
             type = "HTTP";
-            path = "/v1/vpn/status"; # v3.40+ path (old /v1/openvpn/* 301s)
-            port = 8000;
+            path = "/";
+            # gluetun internal health server: 200 only when tunnel is up
+            port = 9999;
             spec = {
               initialDelaySeconds = 5;
               periodSeconds = 10;
