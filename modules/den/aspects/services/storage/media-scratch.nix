@@ -33,12 +33,31 @@ in
       };
       users.groups.media = { };
 
-      systemd.tmpfiles.rules = [
-        "d ${exportPath}/usenet/incomplete 0775 media media -"
-        "d ${exportPath}/usenet/complete 0775 media media -"
-        "d ${exportPath}/torrents/incomplete 0775 media media -"
-        "d ${exportPath}/torrents/complete 0775 media media -"
-      ];
+      # NOT tmpfiles: systemd-tmpfiles refuses to operate beneath the
+      # media-owned root ("unsafe path transition" canonicalization check,
+      # not disable-able per rule). A oneshot creates the download tree with
+      # correct ownership, ordered before the NFS server exports it.
+      systemd.services.media-scratch-dirs = {
+        description = "Create media scratch download tree";
+        wantedBy = [ "multi-user.target" ];
+        after = [ "local-fs.target" ];
+        before = [ "nfs-server.service" ];
+        requiredBy = [ "nfs-server.service" ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = true;
+        };
+        script = ''
+          set -eu
+          # Dirs only — pod-written files are already 1027:65536 (all_squash /
+          # PUID); a recursive chown would walk the whole download tree at boot.
+          for d in usenet usenet/incomplete usenet/complete torrents torrents/incomplete torrents/complete; do
+            mkdir -p "${exportPath}/$d"
+            chown media:media "${exportPath}/$d"
+            chmod 0775 "${exportPath}/$d"
+          done
+        '';
+      };
 
       services.nfs.server = {
         enable = true;
