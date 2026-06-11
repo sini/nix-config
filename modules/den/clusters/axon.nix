@@ -65,7 +65,11 @@
       services.security.sops-secrets-operator
       services.argocd
       services.network.gateway.envoy-gateway
-      services.network.gateway.gateway-api
+      # gateway-api aspect NOT included: envoy-gateway's gateway-crds-helm is
+      # the sole Gateway API CRD owner (experimental channel, matches live
+      # cluster); a second standard-channel copy duplicated every shared kind
+      # and blocked the bootstrap sync. Its cilium GatewayClass was unused
+      # (default-gateway is class envoy).
       services.storage.longhorn
       services.storage.csi-driver-nfs
       services.storage.volume-snapshots
