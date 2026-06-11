@@ -63,6 +63,11 @@ in
       "${pkgs.openssl}/bin/openssl rand -hex ${toString (secret.settings.length or 24)}"
     );
 
+    # 32-char lowercase hex (16 random bytes) — Servarr-style API keys.
+    hex-secret =
+      { pkgs, ... }:
+      "${pkgs.openssl}/bin/openssl rand -hex 16";
+
     base64 = lib.mkForce (
       {
         pkgs,

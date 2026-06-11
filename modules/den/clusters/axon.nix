@@ -76,6 +76,9 @@
       services.network.cilium.hubble-ui
       services.media.base
       services.media.media-pg
+      services.media.api-keys
+      services.media.prowlarr
+      services.media.flaresolverr
     ];
   };
 }
