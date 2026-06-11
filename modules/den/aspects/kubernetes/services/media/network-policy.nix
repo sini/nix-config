@@ -10,7 +10,8 @@
 # A few cross-service edges already live with their owning app (single source of
 # truth, do NOT re-declare here):
 #   - unpackerr -> *arr  egress   (unpackerr.nix:  allow-arr-egress-unpackerr)
-#   - recyclarr -> sonarr/radarr   (recyclarr.nix: allow-arr-egress-recyclarr)
+#   - configarr -> sonarr/radarr/lidarr/whisparr (configarr.nix:
+#       allow-arr-egress-configarr — covers all four arrs)
 #   - *arr+prowlarr+unpackerr -> qbittorrent:8080 ingress (qbittorrent.nix:
 #       allow-arr-ingress-qbittorrent — the qbt INGRESS side is complete there)
 #   - media-pg -> kube-apiserver  egress (media-pg.nix)
@@ -37,13 +38,13 @@
 # INGRESS IS THE REAL WORK: a routed app (sonarr, …) already has gateway-ingress,
 # so it is in ingress default-deny and currently rejects in-namespace callers
 # (prowlarr/unpackerr/bazarr). The per-target ingress edges below restore those
-# flows. Route-less helper pods (flaresolverr, unpackerr, recyclarr) have NO
+# flows. Route-less helper pods (flaresolverr, unpackerr, configarr) have NO
 # ingress policy at all, so they accept all ingress — we add an ingress section
 # for each (a real allow for flaresolverr; a default-deny lockdown for the two
 # that need no inbound) so every pod is ingress-selected.
 #
-# unpackerr / recyclarr INGRESS DECISION (see report): neither needs any inbound
-# connection (unpackerr polls the *arrs; recyclarr is a CronJob that pushes to
+# unpackerr / configarr INGRESS DECISION (see report): neither needs any inbound
+# connection (unpackerr polls the *arrs; configarr is a CronJob that pushes to
 # them). To put them under ingress default-deny WITHOUT inventing a bogus allow,
 # we use the unambiguous `enableDefaultDeny.ingress = true` (Cilium ≥1.14): it
 # engages ingress default-deny for the selected endpoint with zero allow rules.
@@ -99,7 +100,7 @@ let
   # { from; to; } — every directed in-namespace TCP edge to the target's port.
   # Edges already declared in an owning app file are EXCLUDED here (see header)
   # to keep a single source of truth and avoid duplicate-name resources:
-  #   unpackerr->*arr, recyclarr->sonarr/radarr, *->qbittorrent ingress.
+  #   unpackerr->*arr, configarr->all-arrs, *->qbittorrent ingress.
   edges =
     # *arr <-> prowlarr (indexer sync, both directions)
     map (a: {
@@ -235,7 +236,7 @@ let
       )
       [
         "unpackerr"
-        "recyclarr"
+        "configarr"
       ]
   );
 

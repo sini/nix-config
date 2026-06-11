@@ -87,7 +87,7 @@
       services.media.sabnzbd
       services.media.qbittorrent
       services.media.unpackerr
-      services.media.recyclarr
+      services.media.configarr
       services.media.network-policy
       services.media.glance
       services.media.dash
