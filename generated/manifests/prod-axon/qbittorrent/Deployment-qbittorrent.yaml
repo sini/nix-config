@@ -92,26 +92,31 @@ spec:
               mkdir -p /config/qBittorrent
               ensure_key() {
                 # ensure_key <key-escaped-for-sed> <full-line>
+                # NB: $line lands in sed REPLACEMENT/append contexts, where a lone
+                # backslash is consumed (s|..|WebUI\X| emits WebUIX — this is what
+                # flattened the first deployment's keys on its second boot). Escape
+                # backslashes for those contexts.
                 key="$1"; line="$2"
+                escline=$(printf '%s' "$line" | sed 's|\\|\\\\|g')
                 if grep -q "^$key=" "$INI"; then
-                  sed -i "s|^$key=.*|$line|" "$INI"
+                  sed -i "s|^$key=.*|$escline|" "$INI"
                 else
-                  sed -i "/^\[Preferences\]/a $line" "$INI"
+                  sed -i "/^\[Preferences\]/a $escline" "$INI"
                 fi
               }
               if [ ! -f "$INI" ]; then
                 echo "seeding fresh $INI"
                 {
                   printf '%s\n' '[Preferences]'
-                  printf '%s\n' 'WebUI\AuthSubnetWhitelist=127.0.0.1/32'
-                  printf '%s\n' 'WebUI\AuthSubnetWhitelistEnabled=true'
+                  printf '%s\n' 'WebUI\LocalHostAuth=false'
                   printf '%s\n' 'WebUI\HostHeaderValidation=false'
                 } > "$INI"
               else
                 echo "reconciling existing $INI"
                 grep -q '^\[Preferences\]' "$INI" || printf '[Preferences]\n' >> "$INI"
-                ensure_key 'WebUI\\AuthSubnetWhitelist' 'WebUI\AuthSubnetWhitelist=127.0.0.1/32'
-                ensure_key 'WebUI\\AuthSubnetWhitelistEnabled' 'WebUI\AuthSubnetWhitelistEnabled=true'
+                ensure_key 'WebUI\\LocalHostAuth' 'WebUI\LocalHostAuth=false'
+                # drop flattened leftovers from the earlier whitelist attempt
+                sed -i '/^WebUIAuthSubnetWhitelist/d; /^WebUIHostHeaderValidation/d' "$INI"
                 ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
               fi
           image: lscr.io/linuxserver/qbittorrent:5.2.1-libtorrentv1
@@ -162,8 +167,8 @@ spec:
           readinessProbe:
             failureThreshold: 30
             httpGet:
-              path: /v1/vpn/status
-              port: 8000
+              path: /
+              port: 9999
               scheme: HTTP
             initialDelaySeconds: 5
             periodSeconds: 10
