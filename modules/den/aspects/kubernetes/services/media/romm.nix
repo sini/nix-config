@@ -5,8 +5,10 @@
 # "romm" client already targets), clientID "romm".
 #
 # == DATABASE DECISION: PostgreSQL (media-pg) — confidence HIGH ==
-# RomM 3.x officially supports PostgreSQL alongside MariaDB. The backend driver is
-# selected with DB_DRIVER ("postgresql" | "mariadb") and the connection is given
+# RomM officially supports PostgreSQL alongside MariaDB. The backend driver is
+# selected with ROMM_DB_DRIVER ("postgresql" | "mariadb", default mariadb — a bare
+# DB_DRIVER is silently ignored, so RomM speaks mariadb protocol to media-pg and
+# crash-loops on the handshake) and the connection is given
 # via DB_HOST / DB_PORT / DB_NAME / DB_USER / DB_PASSWD. We wire RomM to the shared
 # media-pg CNPG cluster: the `romm` login role and `romm` database are already
 # provisioned in media-pg.nix (roleApps + singleDatabases), and a generated
@@ -77,7 +79,7 @@ let
     port = rommPort;
     image = {
       repository = "rommapp/romm";
-      tag = "3.10.3";
+      tag = "4.9.0-beta.3";
     };
     inherit (config.den) environments;
 
@@ -100,7 +102,7 @@ let
 
     env = {
       # --- database (media-pg, postgresql driver) ---
-      DB_DRIVER = "postgresql";
+      ROMM_DB_DRIVER = "postgresql";
       DB_HOST = "media-pg-rw";
       DB_PORT = "5432";
       DB_NAME = "romm";
