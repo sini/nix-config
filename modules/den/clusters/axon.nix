@@ -79,6 +79,11 @@
       services.media.api-keys
       services.media.prowlarr
       services.media.flaresolverr
+      services.media.sonarr
+      services.media.radarr
+      services.media.lidarr
+      services.media.whisparr
+      services.media.bazarr
     ];
   };
 }

@@ -62,6 +62,7 @@ in
       env ? { }, # extra container env (map form: name -> value | { valueFrom… })
       envFromSecrets ? [ ], # k8s Secret names to envFrom
       postgres ? false, # wire <NAME>__POSTGRES__* env + main/log db names
+      postgresCnp ? postgres, # add the media-pg egress CiliumNetworkPolicy; defaults to `postgres`. Set true with postgres=false when the app talks to media-pg via a non-Servarr env style (e.g. bazarr's POSTGRES_* vars) so the egress policy is still emitted.
       config-size ? "2Gi", # longhorn config PVC size; null = no config PVC
       mounts ? { }, # { data?; scratch-nfs?; scratch-local?; } (bools)
       route ? true, # HTTPRoute on default-gateway
@@ -214,7 +215,7 @@ in
         };
       };
 
-      postgresEgressCnp = optionalAttrs postgres {
+      postgresEgressCnp = optionalAttrs postgresCnp {
         "allow-postgres-egress-${name}".spec = {
           description = "Allow ${name} to reach the media-pg CNPG cluster.";
           endpointSelector = podSelector;
