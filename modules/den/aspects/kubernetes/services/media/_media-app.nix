@@ -50,7 +50,10 @@ let
   # Namespace the Envoy Gateway data-plane (proxy) pods run in — they originate
   # ingress to the app pods. (envoy-gateway.nix deploys the controller and the
   # managed Envoy deployments in envoy-gateway-system.)
-  gatewayNamespace = "envoy-gateway-system";
+  # The DATA-PLANE proxy pods (EG-managed default-gateway deployment) live in
+  # ns "gateways" — not envoy-gateway-system (that's only the controller).
+  # The ingress allow must match the pods that actually dial the backends.
+  gatewayNamespace = "gateways";
 in
 {
   mkMediaApp =
