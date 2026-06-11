@@ -91,6 +91,8 @@
       services.media.network-policy
       services.media.glance
       services.media.dash
+      services.media.romm
+      services.media.komga
     ];
   };
 }
