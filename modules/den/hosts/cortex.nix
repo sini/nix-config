@@ -48,7 +48,6 @@
       core.boot.network-initrd
 
       virtualization.microvm
-      virtualization.microvm-cuda
       virtualization.windows-vfio
       virtualization.podman
 
