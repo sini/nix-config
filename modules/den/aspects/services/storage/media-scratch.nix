@@ -61,9 +61,17 @@ in
 
       services.nfs.server = {
         enable = true;
-        exports = ''
-          ${exportPath} 172.20.0.0/16(rw,no_subtree_check,all_squash,anonuid=1027,anongid=65536) 10.10.10.0/24(rw,no_subtree_check,all_squash,anonuid=1027,anongid=65536)
-        '';
+        # Client ranges: pod CIDR, management network, and the thunderbolt
+        # fabric loopbacks (172.16.255.0/24) — peer kubelets mount over the
+        # fabric and source from their loopback, as does pod traffic SNAT'd by
+        # the fabric-source-snat invariant (thunderbolt-mesh-of.nix).
+        exports =
+          let
+            opts = "(rw,no_subtree_check,all_squash,anonuid=1027,anongid=65536)";
+          in
+          ''
+            ${exportPath} 172.20.0.0/16${opts} 10.10.10.0/24${opts} 172.16.255.0/24${opts}
+          '';
       };
 
       networking.firewall.allowedTCPPorts = [ 2049 ];
