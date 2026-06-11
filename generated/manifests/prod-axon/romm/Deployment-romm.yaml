@@ -27,8 +27,6 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
-            - name: DB_DRIVER
-              value: postgresql
             - name: DB_HOST
               value: media-pg-rw
             - name: DB_NAME
@@ -54,9 +52,11 @@ spec:
                 secretKeyRef:
                   key: auth-secret-key
                   name: media-romm
+            - name: ROMM_DB_DRIVER
+              value: postgresql
             - name: TZ
               value: America/Los_Angeles
-          image: rommapp/romm:3.10.3
+          image: rommapp/romm:4.9.0-beta.3
           name: main
           volumeMounts:
             - mountPath: /romm/library
