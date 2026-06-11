@@ -131,7 +131,19 @@ in
         # the autoconnect only runs `tailscale up` on first auth — on
         # already-connected nodes only `tailscale set` re-applies the mode and
         # tears down the rules tailscale previously installed.
-        services.tailscale.extraSetFlags = [ "--netfilter-mode=off" ];
+        #
+        # --accept-dns=false: MagicDNS pushes `search ts.json64.dev` into
+        # systemd-resolved; kubelet copies node search domains into every pod
+        # sandbox, where ndots:5 search-expands ~every external hostname
+        # through the CF-proxied `*.ts.json64.dev` wildcard — hijacking pod
+        # TLS cluster-wide (SNI-mismatch handshake_failure at the CF edge,
+        # OIDC/ACME timeouts). k3s nodes must never inherit MagicDNS resolver
+        # config; tailscale0 still routes by IP. Takes effect in pods after a
+        # k3s restart (kubelet re-reads resolv.conf) + pod recreation.
+        services.tailscale.extraSetFlags = [
+          "--netfilter-mode=off"
+          "--accept-dns=false"
+        ];
       };
   };
 }
