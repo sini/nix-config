@@ -113,8 +113,11 @@
         fabricInterfaceConfig = lib.concatMapStringsSep "\n!\n" mkFabricInterface cfg.interfaces;
 
         loopbackIp = head (splitString "/" cfg.loopback.ipv4);
+        loopback6 = cfg.loopback.ipv6 or null;
+        loopback6Ip = if loopback6 != null then head (splitString "/" loopback6) else null;
         fabricIfSet = concatStringsSep ", " (map (i: "\"${i}\"") cfg.interfaces);
         snatExcludeSet = concatStringsSep ", " (lib.unique ([ loopbackIp ] ++ host.ipv4));
+        snat6ExcludeSet = concatStringsSep ", " (lib.unique ([ loopback6Ip ] ++ host.ipv6));
       in
       {
         config = {
@@ -122,6 +125,13 @@
             {
               address = loopbackIp;
               prefixLength = lib.toInt (lib.last (splitString "/" cfg.loopback.ipv4));
+            }
+          ];
+
+          networking.interfaces.lo.ipv6.addresses = lib.mkIf (loopback6 != null) [
+            {
+              address = loopback6Ip;
+              prefixLength = lib.toInt (lib.last (splitString "/" loopback6));
             }
           ];
 
@@ -133,7 +143,8 @@
           # Invariant: the fabric only carries host-addressed sources. Anything
           # else is SNAT'd to this node's fabric loopback; conntrack reverses
           # replies. Host-sourced traffic (loopback or mgmt IPs) passes
-          # untouched. IPv4 only — add an ip6 table if v6 fabric flows appear.
+          # untouched. The ip6 table mirrors it when a v6 loopback is set
+          # (link-local sources are left alone — they never leave the link).
           networking.nftables = lib.mkIf (cfg.interfaces != [ ]) {
             enable = true;
             tables.fabric-source-snat = {
@@ -142,6 +153,15 @@
                 chain postrouting {
                   type nat hook postrouting priority srcnat; policy accept;
                   oifname { ${fabricIfSet} } ip saddr != { ${snatExcludeSet} } snat ip to ${loopbackIp}
+                }
+              '';
+            };
+            tables.fabric-source-snat6 = lib.mkIf (loopback6 != null) {
+              family = "ip6";
+              content = ''
+                chain postrouting {
+                  type nat hook postrouting priority srcnat; policy accept;
+                  oifname { ${fabricIfSet} } ip6 saddr != { ${snat6ExcludeSet}, fe80::/10 } snat ip6 to ${loopback6Ip}
                 }
               '';
             };
@@ -154,7 +174,9 @@
                 ActivationPolicy = "up";
                 MTUBytes = "1500";
               };
-              networkConfig.LinkLocalAddressing = "no";
+              # v6 OpenFabric needs link-local on the fabric interfaces (IS-IS
+              # v6 nexthops are link-local); without a v6 loopback, no v6 at all.
+              networkConfig.LinkLocalAddressing = if loopback6 != null then "ipv6" else "no";
             };
 
             config.networkConfig = {
