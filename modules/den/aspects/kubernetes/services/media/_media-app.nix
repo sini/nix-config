@@ -68,6 +68,8 @@ in
       route ? true, # HTTPRoute on default-gateway
       oidc ? true, # SecurityPolicy + client secret (requires route)
       internetEgress ? false, # add world egress on 80/443 (flaresolverr et al)
+      extraEgressPorts ? [ ], # extra TCP ports added to the world-egress policy alongside 80/443 (only meaningful with internetEgress=true). Used by sabnzbd for NNTP 119/563. Minimal helper extension for the media-stack Usenet task.
+      extraCnps ? { }, # additional CiliumNetworkPolicies merged into the app's resources.ciliumNetworkPolicies. Keys colliding with a baseline policy are a build error (asserted below), not a silent clobber. Used by unpackerr for its own *arr-egress edges. Minimal helper extension.
       extraValues ? { }, # deep-merged into the helm release values; deep-merged, leaf collisions favor extraValues
     }:
     let
@@ -85,6 +87,10 @@ in
       _assertScratch = lib.assertMsg (
         !(scratchNfs && scratchLocal)
       ) "media-app ${name}: mounts.scratch-nfs and mounts.scratch-local are mutually exclusive";
+
+      _assertEgress = lib.assertMsg (
+        extraEgressPorts == [ ] || internetEgress
+      ) "media-app ${name}: extraEgressPorts requires internetEgress = true";
 
       # ---- container env -----------------------------------------------------
       baseEnv = {
@@ -181,7 +187,14 @@ in
                 { matchLabels."k8s:io.kubernetes.pod.namespace" = gatewayNamespace; }
               ];
               toPorts = [
-                { ports = [ { port = toString port; protocol = "TCP"; } ]; }
+                {
+                  ports = [
+                    {
+                      port = toString port;
+                      protocol = "TCP";
+                    }
+                  ];
+                }
               ];
             }
           ];
@@ -205,8 +218,14 @@ in
               toPorts = [
                 {
                   ports = [
-                    { port = "53"; protocol = "UDP"; }
-                    { port = "53"; protocol = "TCP"; }
+                    {
+                      port = "53";
+                      protocol = "UDP";
+                    }
+                    {
+                      port = "53";
+                      protocol = "TCP";
+                    }
                   ];
                 }
               ];
@@ -225,7 +244,14 @@ in
                 { matchLabels."cnpg.io/cluster" = "media-pg"; }
               ];
               toPorts = [
-                { ports = [ { port = "5432"; protocol = "TCP"; } ]; }
+                {
+                  ports = [
+                    {
+                      port = "5432";
+                      protocol = "TCP";
+                    }
+                  ];
+                }
               ];
             }
           ];
@@ -242,9 +268,19 @@ in
               toPorts = [
                 {
                   ports = [
-                    { port = "80"; protocol = "TCP"; }
-                    { port = "443"; protocol = "TCP"; }
-                  ];
+                    {
+                      port = "80";
+                      protocol = "TCP";
+                    }
+                    {
+                      port = "443";
+                      protocol = "TCP";
+                    }
+                  ]
+                  ++ map (p: {
+                    port = p;
+                    protocol = "TCP";
+                  }) extraEgressPorts;
                 }
               ];
             }
@@ -252,9 +288,17 @@ in
         };
       };
 
-      cnps = gatewayIngressCnp // dnsEgressCnp // postgresEgressCnp // internetEgressCnp;
+      baselineCnps = gatewayIngressCnp // dnsEgressCnp // postgresEgressCnp // internetEgressCnp;
+      cnpCollisions = lib.intersectAttrs baselineCnps extraCnps;
+      _assertCnps =
+        lib.assertMsg (cnpCollisions == { })
+          "media-app ${name}: extraCnps keys collide with baseline policies: ${concatStringsSep ", " (lib.attrNames cnpCollisions)}";
+
+      cnps = baselineCnps // extraCnps;
     in
     assert _assertScratch;
+    assert _assertEgress;
+    assert _assertCnps;
     {
       # service-domains: declared only when this app is routed (drives DNS /
       # certificate listeners elsewhere). Empty list for route-less apps.
@@ -302,57 +346,58 @@ in
               values = finalValues;
             };
 
-            resources =
-              { ciliumNetworkPolicies = cnps; }
-              // optionalAttrs route {
-                httpRoutes.${name}.spec = {
-                  hostnames = [ domain ];
-                  parentRefs = [
-                    {
-                      name = "default-gateway";
-                      namespace = "gateways";
-                      sectionName = sectionOf domain;
-                    }
-                  ];
-                  rules = [
-                    {
-                      backendRefs = [
-                        {
-                          inherit name;
-                          inherit port;
-                        }
-                      ];
-                    }
-                  ];
-                };
-              }
-              // optionalAttrs (oidc && route) {
-                securityPolicies."${name}-oidc".spec = {
-                  targetRefs = [
-                    {
-                      group = "gateway.networking.k8s.io";
-                      kind = "HTTPRoute";
-                      inherit name;
-                    }
-                  ];
-                  oidc = {
-                    provider.issuer = cluster.secrets.oidcIssuerFor name;
-                    clientID = name;
-                    clientSecret.name = oidcSecretName;
-                    scopes = [
-                      "email"
-                      "openid"
-                      "profile"
+            resources = {
+              ciliumNetworkPolicies = cnps;
+            }
+            // optionalAttrs route {
+              httpRoutes.${name}.spec = {
+                hostnames = [ domain ];
+                parentRefs = [
+                  {
+                    name = "default-gateway";
+                    namespace = "gateways";
+                    sectionName = sectionOf domain;
+                  }
+                ];
+                rules = [
+                  {
+                    backendRefs = [
+                      {
+                        inherit name;
+                        inherit port;
+                      }
                     ];
-                    forwardAccessToken = true;
-                  };
-                };
-
-                secrets.${oidcSecretName} = {
-                  type = "Opaque";
-                  stringData.client-secret = config.age.secrets.${oidcSecretName}.sopsRef;
+                  }
+                ];
+              };
+            }
+            // optionalAttrs (oidc && route) {
+              securityPolicies."${name}-oidc".spec = {
+                targetRefs = [
+                  {
+                    group = "gateway.networking.k8s.io";
+                    kind = "HTTPRoute";
+                    inherit name;
+                  }
+                ];
+                oidc = {
+                  provider.issuer = cluster.secrets.oidcIssuerFor name;
+                  clientID = name;
+                  clientSecret.name = oidcSecretName;
+                  scopes = [
+                    "email"
+                    "openid"
+                    "profile"
+                  ];
+                  forwardAccessToken = true;
                 };
               };
+
+              secrets.${oidcSecretName} = {
+                type = "Opaque";
+                stringData.client-secret = config.age.secrets.${oidcSecretName}.sopsRef;
+              };
+            };
           };
         };
     };

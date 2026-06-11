@@ -57,6 +57,9 @@
       oauth2-proxy.domain = "oauth2-proxy.json64.dev";
       open-webui.domain = "open-webui.json64.dev";
       prometheus.domain = "prometheus.json64.dev";
+      # SABnzbd routes on nzb.* (not the default sabnzbd.*); the media helper
+      # reads this via getDomainFor "sabnzbd".
+      sabnzbd.domain = "nzb.json64.dev";
       vault.domain = "vault.json64.dev";
       den-docs-mirror.domain = "den.json64.dev";
     };
