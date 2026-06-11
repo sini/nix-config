@@ -76,11 +76,19 @@
 #
 # == Secrets ==
 # The WireGuard material (private key, addresses, peer public key, endpoint
-# IP/port) is provided EXTERNALLY by the operator — there is NO generator. After
-# this lands the operator runs `agenix edit` on each .age file with the ProtonVPN
-# values, and `agenix rekey` produces the cluster sops file `media-vpn` (5 keys).
-# A k8s Secret `media-vpn` surfaces them; gluetun's env pulls each via
-# valueFrom.secretKeyRef. Nothing is hardcoded.
+# IP/port) is provided EXTERNALLY by the operator — there is NO generator, by
+# design: these are issued by ProtonVPN, not derivable. Everything else in this
+# stack uses agenix-rekey generators; manual encryption is reserved for exactly
+# this class of secret. To provision from a downloaded wireguard conf (no
+# decryption key needed — encrypt to the master recipient from .secrets/pub):
+#   printf '%s' "$VALUE" | age -r "$(grep -oP 'age1\S+' .secrets/pub/master.pub)" \
+#     -o .secrets/env/prod/media-vpn/<field>.age
+# Fields: private-key ([Interface] PrivateKey), addresses (ipv4 from Address),
+# peer-public-key ([Peer] PublicKey), endpoint-ip / endpoint-port (Endpoint).
+# `agenix edit` works too. `agenix rekey` then rekeys per-host and the
+# agenix-rekey-to-sops extension emits the cluster sops file `media-vpn`
+# (5 keys). A k8s Secret `media-vpn` surfaces them; gluetun's env pulls each
+# via valueFrom.secretKeyRef. Nothing is hardcoded.
 #
 # Version: the media-user backup carries no qBittorrent version marker (the conf
 # has no version field; the old image was the floating :libtorrentv1 tag). We pin

@@ -179,10 +179,9 @@ in
       lib.recursiveUpdate (app.age-secrets args) {
         age.secrets.${authAgeName} = {
           rekeyFile = environment.secretPath + "/media-romm/auth-secret-key.age";
-          generator = {
-            script = "hex";
-            settings.length = 32;
-          };
+          generator.script = "hex";
+          # settings is a SECRET-level option (agenix-rekey), not generator-level
+          settings.length = 32;
           sopsOutput = {
             file = authSecretName;
             key = authSopsKey;
