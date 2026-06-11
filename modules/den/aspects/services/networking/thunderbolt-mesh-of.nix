@@ -111,15 +111,41 @@
           );
 
         fabricInterfaceConfig = lib.concatMapStringsSep "\n!\n" mkFabricInterface cfg.interfaces;
+
+        loopbackIp = head (splitString "/" cfg.loopback.ipv4);
+        fabricIfSet = concatStringsSep ", " (map (i: "\"${i}\"") cfg.interfaces);
+        snatExcludeSet = concatStringsSep ", " (lib.unique ([ loopbackIp ] ++ host.ipv4));
       in
       {
         config = {
           networking.interfaces.lo.ipv4.addresses = [
             {
-              address = head (splitString "/" cfg.loopback.ipv4);
+              address = loopbackIp;
               prefixLength = lib.toInt (lib.last (splitString "/" cfg.loopback.ipv4));
             }
           ];
+
+          # The fabric interfaces are unnumbered (loopback-based OpenFabric), so
+          # nothing on the egress path can masquerade forwarded traffic — a
+          # packet leaving the fabric with a non-host source (pod CIDRs, future
+          # VM guests) reaches the peer with a source it rejects: Cilium
+          # spoof-drops raw pod-IP packets arriving outside its tunnel.
+          # Invariant: the fabric only carries host-addressed sources. Anything
+          # else is SNAT'd to this node's fabric loopback; conntrack reverses
+          # replies. Host-sourced traffic (loopback or mgmt IPs) passes
+          # untouched. IPv4 only — add an ip6 table if v6 fabric flows appear.
+          networking.nftables = lib.mkIf (cfg.interfaces != [ ]) {
+            enable = true;
+            tables.fabric-source-snat = {
+              family = "ip";
+              content = ''
+                chain postrouting {
+                  type nat hook postrouting priority srcnat; policy accept;
+                  oifname { ${fabricIfSet} } ip saddr != { ${snatExcludeSet} } snat ip to ${loopbackIp}
+                }
+              '';
+            };
+          };
 
           systemd.network = {
             networks."20-thunderbolt" = {
