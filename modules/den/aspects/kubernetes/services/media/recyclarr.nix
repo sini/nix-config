@@ -1,3 +1,13 @@
+# SUPERSEDED — replaced by configarr.nix.
+#
+# This aspect is NOT included from clusters/axon.nix anymore. configarr.nix (a
+# Recyclarr-compatible fork) does everything this did AND adds Lidarr/Whisparr,
+# so it covers all four arrs in one aspect. Kept here for reference only; do not
+# re-add it to the cluster include list (it would clash with configarr on the
+# network-policy ingress-lockdown name and duplicate the arr-egress edges).
+#
+# ---------------------------------------------------------------------------
+#
 # Recyclarr — syncs TRaSH-Guides quality definitions / profiles into Sonarr &
 # Radarr on a schedule.
 #
