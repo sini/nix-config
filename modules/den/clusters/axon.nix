@@ -47,6 +47,12 @@
       };
     };
 
+    # Reserved (NOT networks entries — nothing should iterate these as cluster
+    # networks): thunderbolt fabric loopbacks, assigned per-host in
+    # hosts/axon-0N.nix (services.networking.thunderbolt-mesh-of.loopback):
+    #   172.16.255.0/24      ipv4 fabric loopbacks (axon-0N = .N/32)
+    #   fdfd:cafe:0:ff::/64  ipv6 fabric loopbacks (axon-0N = ::N/128)
+
     nfsVolumes.vault-nfs = {
       server = "10.10.10.10";
       share = "/volume2/data";
