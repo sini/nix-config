@@ -85,7 +85,13 @@ let
               module = generators.fromChartCRDModule (
                 chartArgs // lib.optionalAttrs (spec ? crds) { kindFilter = spec.crds; } // typeOpts
               );
-              objects = generators.crdObjectsFromChart chartArgs;
+              # kindFilter must constrain the bootstrap objects too — otherwise a
+              # narrowed chart emission still dumps every chart CRD into bootstrap,
+              # duplicating CRDs owned by another aspect (ArgoCD then blocks the
+              # bootstrap sync with RepeatedResourceWarning).
+              objects = generators.crdObjectsFromChart (
+                chartArgs // lib.optionalAttrs (spec ? crds) { kindFilter = spec.crds; }
+              );
             }
           else if spec.src or null != null then
             # Src spec — `crds` is the list of CRD YAML files under `src`.

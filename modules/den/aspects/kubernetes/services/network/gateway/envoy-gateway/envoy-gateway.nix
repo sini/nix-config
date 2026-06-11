@@ -41,15 +41,14 @@ in
           "--set crds.gatewayAPI.channel=experimental"
           "--set crds.envoyGateway.enabled=true"
         ];
-        # Only generate Envoy-specific CRDs — Gateway API types are provided by gateway-api aspect
-        crds = [
-          "BackendTrafficPolicy"
-          "ClientTrafficPolicy"
-          "EnvoyExtensionPolicy"
-          "EnvoyPatchPolicy"
-          "EnvoyProxy"
-          "SecurityPolicy"
-        ];
+        # Sole owner of the Gateway API CRDs (experimental channel — a strict
+        # superset of standard, and what the live cluster runs) plus the
+        # Envoy-specific kinds; this module also generates the Gateway/HTTPRoute/
+        # GatewayClass nixidy types. No kindFilter: the full set materializes in
+        # bootstrap ahead of every consumer. The gateway-api aspect is NOT
+        # included on the cluster — a second (standard-channel) copy duplicated
+        # every shared kind and blocked the bootstrap sync
+        # (RepeatedResourceWarning).
       };
 
     k8s-manifests =
