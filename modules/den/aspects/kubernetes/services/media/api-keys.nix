@@ -55,6 +55,9 @@ in
         applications.media-secrets = {
           namespace = "media";
 
+          # Shared secrets before the app fleet (wave 0) consumes them.
+          annotations."argocd.argoproj.io/sync-wave" = "-1";
+
           resources.secrets.${secretName} = {
             type = "Opaque";
             # One stringData entry per app; each a sops ref resolved at render

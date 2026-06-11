@@ -33,6 +33,9 @@ in
         applications.media-base = {
           namespace = "media";
 
+          # Namespace + storage tiers before the app fleet (wave 0) lands in them.
+          annotations."argocd.argoproj.io/sync-wave" = "-1";
+
           resources = {
             # local-only StorageClass for node-pinned scratch volume. No
             # provisioner: the PV is statically declared below.

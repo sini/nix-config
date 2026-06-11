@@ -27,6 +27,9 @@
         applications.cloudnative-pg = {
           namespace = "cnpg-system";
 
+          # Operator + admission webhooks before the media-pg Cluster CR (wave 0).
+          annotations."argocd.argoproj.io/sync-wave" = "-1";
+
           # CNPG CRDs are huge; server-side apply avoids the
           # last-applied-configuration annotation size limit.
           syncPolicy.syncOptions.serverSideApply = true;
