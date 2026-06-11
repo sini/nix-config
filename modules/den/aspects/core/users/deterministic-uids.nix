@@ -163,6 +163,15 @@
           jellyfin = uidGid 1027;
           process-exporter = uidGid 948;
 
+          # uid deliberately shared with jellyfin (NFS media ownership parity
+          # across hosts — NAS files owned 1027:65536 from the legacy stack;
+          # jellyfin/uplink and media/axon-01 never coexist on one host).
+          # gid 65536 = Synology users group.
+          media = {
+            uid = 1027;
+            gid = 65536;
+          };
+
           system-access = {
             gid = 951;
           };
