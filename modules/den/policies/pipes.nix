@@ -40,6 +40,14 @@ in
       ])
     ];
 
+  den.policies.collect-container-registries =
+    { host, ... }:
+    [
+      (pipe.from "container-registries" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
+
   den.policies.collect-thunderbolt-mesh-peers =
     { host, ... }:
     [
@@ -76,6 +84,22 @@ in
       ])
     ];
 
+  den.policies.cluster-collect-media-scratch-exports =
+    { cluster, ... }:
+    [
+      (pipe.from "media-scratch-exports" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
+  den.policies.cluster-collect-container-registries =
+    { cluster, ... }:
+    [
+      (pipe.from "container-registries" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   # Bottom-up dual of the collect policies. `resolved-users` is emitted per user
   # at user scope (core/users/resolved-user-emitter.nix) and must bubble up the
   # P edge to the host so host aspects (wireshark, adb, ddcutil, razer,
@@ -96,6 +120,7 @@ in
     den.policies.collect-bgp-peers
     den.policies.collect-prometheus-targets
     den.policies.collect-k3s-nodes
+    den.policies.collect-container-registries
     den.policies.collect-thunderbolt-mesh-peers
     den.policies.collect-vault-peers
     den.policies.collect-ollama-endpoints
@@ -107,5 +132,7 @@ in
 
   den.schema.cluster.includes = [
     den.policies.cluster-collect-k3s-nodes
+    den.policies.cluster-collect-media-scratch-exports
+    den.policies.cluster-collect-container-registries
   ];
 }
