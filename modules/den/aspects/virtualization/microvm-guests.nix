@@ -12,8 +12,9 @@ let
   # The microvm.nix `microvm.vms.<name>` submodule does NOT accept a top-level
   # `imports` key — its option set is closed (pkgs/config/autostart/...). So the
   # resolved "microvm" class module (which sets host-side submodule options such
-  # as `pkgs`) is evaluated here into a flat attrset of those options, which the
-  # consumer can splice directly into the submodule definition.
+  # as `pkgs`) is evaluated here into a flat attrset of those options, which we
+  # splice directly into the submodule definition alongside the delivered
+  # `config`.
   microvmSubmoduleOpts =
     mod:
     (lib.evalModules {
@@ -25,7 +26,9 @@ let
 
   # M1: SSH keys for VM root access — collected from the den user registry
   # (wheel/admin members). Read from `den` here, where the registry lives;
-  # the class-module `config` arg is the guest's NixOS config, not den's.
+  # the class-module `config` arg is the host's NixOS config, not den's. With
+  # the guests policy core.users now also fires inside the guest, but this
+  # preserves the original root-key parity (admins/wheel keys).
   rootKeys = lib.concatMap (
     u:
     lib.optionals (builtins.any (g: g == "admins" || g == "wheel") (u.groups or [ ])) (
@@ -34,18 +37,9 @@ let
   ) (lib.attrValues (den.users.registry or { }));
 in
 {
-  # PRODUCE: host-parametric, eager. Resolve each guest to module data.
-  den.aspects.virtualization.microvm.microvm-guests =
-    { host, ... }:
-    map (vm: {
-      inherit (vm) name;
-      osModules = den.lib.aspects.resolve vm.class (den.lib.resolveEntity "host" { host = vm; });
-      microvmOpts = microvmSubmoduleOpts (den.lib.aspects.resolve "microvm" vm.aspect);
-      passthrough = vm.microvm.passthrough or [ ];
-      sharedNixStore = host.microvm.sharedNixStore;
-    }) host.microvm.guests;
-
-  # PRODUCE: a background GPU claim per guest with a non-empty passthrough.
+  # PRODUCE: a background GPU claim per guest with a non-empty
+  # passthrough intent. windows-vfio's qemu hook consumes these to preempt the
+  # microvm during interactive Windows sessions.
   den.aspects.virtualization.microvm.gpu-claims =
     { host, ... }:
     lib.concatMap (
@@ -56,44 +50,52 @@ in
         kind = "microvm";
         unit = "microvm@${vm.name}.service";
       }
-    ) host.microvm.guests;
+    ) (lib.attrValues (host.guests or { }));
 
-  # CONSUME: turn each resolved guest into a microvm.vms.<name> definition.
+  # CONSUME: layer the host-side GPU/passthrough overlay on top of the base
+  # guest configs the guests policy delivers into microvm.vms.<name>.config.
+  # The policy resolves each guest (agenix, core.users, collect, home-env) and
+  # routes its guest-os content into `.config`; here we add:
+  #   - host-side microvm submodule options (CUDA pkgs from the guest's microvm
+  #     class aspect), spliced as siblings of `.config`,
+  #   - facter-derived PCI passthrough devices + the ro-store share + root keys,
+  #     merged INTO the guest's `.config`,
+  #   - host-side systemd ExecCondition vfio gates.
   den.aspects.virtualization.microvm.nixos =
     {
-      microvm-guests,
+      host,
       config,
       pkgs,
       ...
     }:
     let
       facter = config.facter.report;
-      # Resolve each guest's passthrough intent against the host facter report.
-      withRecs = g: g // { recs = gpuLib.resolvePassthrough g.passthrough facter; };
-      guests = map withRecs microvm-guests;
+
+      children = lib.attrValues (host.guests or { });
+
+      # Per-guest overlay data: resolved microvm host-side options + the
+      # facter-resolved passthrough device records.
+      withOverlay = vm: {
+        inherit (vm) name;
+        microvmOpts = microvmSubmoduleOpts (den.lib.aspects.resolve "microvm" vm.aspect);
+        recs = gpuLib.resolvePassthrough (vm.microvm.passthrough or [ ]) facter;
+        sharedNixStore = vm.microvm.sharedNixStore or true;
+      };
+      guests = map withOverlay children;
     in
     {
-      microvm.vms = lib.listToAttrs (
-        map (
-          g:
-          lib.nameValuePair g.name (
-            # Host-side submodule options (e.g. CUDA pkgs) from the microvm class…
-            g.microvmOpts
-            // {
-              # …and the guest's full NixOS toplevel from its host pipeline.
-              config = {
-                imports = [
-                  g.osModules
-                  {
-                    microvm.devices = gpuLib.toMicrovmDevices g.recs;
-                    microvm.shares = lib.optional g.sharedNixStore roStoreShare;
-                    users.users.root.openssh.authorizedKeys.keys = rootKeys;
-                  }
-                ];
-              };
-            }
-          )
-        ) guests
+      microvm.vms = lib.mkMerge (
+        map (g: {
+          # Host-side submodule options (e.g. CUDA pkgs) from the microvm class.
+          ${g.name} = g.microvmOpts // {
+            # Layer the GPU host-side bits onto the primitive-delivered config.
+            config = {
+              microvm.devices = gpuLib.toMicrovmDevices g.recs;
+              microvm.shares = lib.optional g.sharedNixStore roStoreShare;
+              users.users.root.openssh.authorizedKeys.keys = rootKeys;
+            };
+          };
+        }) guests
       );
 
       # Host-side gate: hold the VM's start units until the passed-through PCI

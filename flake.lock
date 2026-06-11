@@ -443,11 +443,11 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1781197965,
-        "narHash": "sha256-KzJ8WMzFAXcIBxveZVz3DypYgqy3sa8B2AWaexBc3tw=",
+        "lastModified": 1781279595,
+        "narHash": "sha256-Vb9Bkg3MxjVOjWgl4OV1PRU3flllhs7eCwEDe7UMQYQ=",
         "owner": "sini",
         "repo": "den",
-        "rev": "046589827bb217c7bb9419999fcb4cd68d1da40a",
+        "rev": "e8876f3e26f752804b483a9f3fb8e68b563c4681",
         "type": "github"
       },
       "original": {

@@ -11,7 +11,12 @@
       ipv6 = [ "fd64:0:1::5/64" ];
     };
 
-    microvm.guests = [ den.hosts.x86_64-linux.cortex-cuda ];
+    # cortex-cuda is delivered as a CHILD host: resolved under cortex inheriting
+    # the curated host.includes (agenix retargeted, core.users, collect pipes,
+    # guest-os home-env) and routed into microvm.vms.cortex-cuda.config. The
+    # GPU passthrough/vfio/arbitration overlay is layered host-side by
+    # virtualization/microvm-guests.nix.
+    guests.cortex-cuda = den.hosts.x86_64-linux.cortex-cuda;
 
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
