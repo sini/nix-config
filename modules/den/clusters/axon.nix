@@ -81,6 +81,7 @@
       services.storage.volume-snapshots
       services.storage.cloudnative-pg
       services.monitoring.prometheus
+      services.monitoring.metrics-server
       services.monitoring.loki
       services.monitoring.alloy
       services.monitoring.monitoring-pg
