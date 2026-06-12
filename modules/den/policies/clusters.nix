@@ -122,9 +122,15 @@ in
                 # reach the repo's own packages via pkgs.local (e.g. the cilium
                 # CRD aspect reusing pkgs.local.cni-plugin-cilium.src).
                 pkgs = pkgs.extend config.flake.overlays.default;
+                # Merge per-org so a local chart (e.g. charts/grafana/alloy)
+                # extends an upstream org instead of shadowing it wholesale —
+                # a top-level // would drop nixhelm's grafana.{grafana,loki}.
                 charts =
-                  (inputs.nixhelm.chartsDerivations.${system} or { })
-                  // (config.flake.chartsDerivations.${system} or { });
+                  let
+                    upstream = inputs.nixhelm.chartsDerivations.${system} or { };
+                    local = config.flake.chartsDerivations.${system} or { };
+                  in
+                  upstream // lib.mapAttrs (org: orgCharts: (upstream.${org} or { }) // orgCharts) local;
                 # den-collected kubernetes-class modules for this cluster
                 inherit modules;
               }

@@ -1,6 +1,9 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
+  annotations:
+    cert-manager.io/inject-ca-from: monitoring/kube-prometheus-stack-admission
+    certmanager.k8s.io/inject-ca-from: monitoring/kube-prometheus-stack-admission
   labels:
     app: kube-prometheus-stack-admission
     app.kubernetes.io/component: prometheus-operator-webhook

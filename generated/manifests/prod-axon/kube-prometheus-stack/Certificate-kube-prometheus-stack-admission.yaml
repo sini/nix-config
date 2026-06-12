@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kube-prometheus-stack-admission
+  namespace: monitoring
+spec:
+  dnsNames:
+    - kube-prometheus-stack-operator
+    - kube-prometheus-stack-operator.monitoring.svc
+  duration: 8760h0m0s
+  issuerRef:
+    name: kube-prometheus-stack-root-issuer
+  secretName: kube-prometheus-stack-admission

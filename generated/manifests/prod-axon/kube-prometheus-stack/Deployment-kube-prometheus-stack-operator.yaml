@@ -46,8 +46,8 @@ spec:
             - --thanos-default-base-image=quay.io/thanos/thanos:v0.41.0
             - --secret-field-selector=type!=kubernetes.io/dockercfg,type!=kubernetes.io/service-account-token,type!=helm.sh/release.v1
             - --web.enable-tls=true
-            - --web.cert-file=/cert/cert
-            - --web.key-file=/cert/key
+            - --web.cert-file=/cert/tls.crt
+            - --web.key-file=/cert/tls.key
             - --web.listen-address=:10250
             - --web.tls-min-version=VersionTLS13
           env:

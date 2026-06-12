@@ -2,20 +2,19 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/component: gateway
     app.kubernetes.io/instance: loki
     app.kubernetes.io/name: loki
     prometheus.io/service-monitor: "false"
-  name: loki-gateway
+    variant: headless
+  name: loki-headless
   namespace: monitoring
 spec:
+  clusterIP: None
   ports:
     - name: http-metrics
-      port: 80
+      port: 3100
       protocol: TCP
       targetPort: http-metrics
   selector:
-    app.kubernetes.io/component: gateway
     app.kubernetes.io/instance: loki
     app.kubernetes.io/name: loki
-  type: ClusterIP

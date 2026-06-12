@@ -27,14 +27,15 @@ data:
           max_idle_conns: 72
           timeout: 2000ms
     common:
-      compactor_grpc_address: 'loki-backend.monitoring.svc.cluster.local:9095'
+      compactor_grpc_address: 'loki.monitoring.svc.cluster.local:9095'
       path_prefix: /var/loki
-      replication_factor: 3
+      replication_factor: 1
       storage:
         filesystem:
           chunks_directory: /var/loki/chunks
           rules_directory: /var/loki/rules
     compactor:
+      delete_request_store: filesystem
       retention_delete_delay: 2h
       retention_enabled: true
     frontend:
@@ -45,7 +46,6 @@ data:
     index_gateway:
       mode: simple
     limits_config:
-      allow_structured_metadata: false
       max_cache_freshness_per_query: 10m
       query_timeout: 300s
       reject_old_samples: true
@@ -82,13 +82,13 @@ data:
       file: /etc/loki/runtime-config/runtime-config.yaml
     schema_config:
       configs:
-      - from: "2020-10-24"
+      - from: "2026-06-01"
         index:
           period: 24h
           prefix: index_
         object_store: filesystem
-        schema: v11
-        store: boltdb-shipper
+        schema: v13
+        store: tsdb
     server:
       grpc_listen_port: 9095
       http_listen_port: 3100

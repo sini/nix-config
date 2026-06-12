@@ -20,7 +20,7 @@ spec:
       tlsConfig:
         ca:
           secret:
-            key: ca
+            key: ca.crt
             name: kube-prometheus-stack-admission
             optional: false
         serverName: kube-prometheus-stack-operator

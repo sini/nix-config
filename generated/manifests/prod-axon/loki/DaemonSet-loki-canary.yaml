@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
         - args:
-            - -addr=loki-gateway.monitoring.svc.cluster.local.:80
+            - -addr=loki.monitoring.svc.cluster.local.:3100
             - -labelname=pod
             - -labelvalue=$(POD_NAME)
             - -push=true

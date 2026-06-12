@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kube-prometheus-stack-root-cert
+  namespace: monitoring
+spec:
+  commonName: ca.webhook.kube-prometheus-stack
+  duration: 43800h0m0s
+  isCA: true
+  issuerRef:
+    name: kube-prometheus-stack-self-signed-issuer
+  secretName: kube-prometheus-stack-root-cert
