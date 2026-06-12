@@ -381,30 +381,31 @@ in
           };
 
           resources = {
-            configMaps = lib.mapAttrs' (
-              name: d:
-              lib.nameValuePair "dashboard-${name}" {
-                metadata = {
-                  labels.grafana_dashboard = "1";
-                  annotations.grafana_folder = d.folder;
-                };
-                data."${name}.json" = mkDashboardJson {
-                  inherit name;
-                  inherit (d) title url sha256;
-                  fixDatasource = d.fixDatasource or false;
-                };
-              }
-            ) importedDashboards
-            // lib.mapAttrs' (
-              name: d:
-              lib.nameValuePair "dashboard-${name}" {
-                metadata = {
-                  labels.grafana_dashboard = "1";
-                  annotations.grafana_folder = d.folder;
-                };
-                data."${name}.json" = builtins.toJSON d.dashboard;
-              }
-            ) localDashboards;
+            configMaps =
+              lib.mapAttrs' (
+                name: d:
+                lib.nameValuePair "dashboard-${name}" {
+                  metadata = {
+                    labels.grafana_dashboard = "1";
+                    annotations.grafana_folder = d.folder;
+                  };
+                  data."${name}.json" = mkDashboardJson {
+                    inherit name;
+                    inherit (d) title url sha256;
+                    fixDatasource = d.fixDatasource or false;
+                  };
+                }
+              ) importedDashboards
+              // lib.mapAttrs' (
+                name: d:
+                lib.nameValuePair "dashboard-${name}" {
+                  metadata = {
+                    labels.grafana_dashboard = "1";
+                    annotations.grafana_folder = d.folder;
+                  };
+                  data."${name}.json" = builtins.toJSON d.dashboard;
+                }
+              ) localDashboards;
 
             httpRoutes.grafana.spec = {
               parentRefs = [
