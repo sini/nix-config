@@ -309,6 +309,21 @@ in
 
               datasources."datasources.yaml" = {
                 apiVersion = 1;
+                # The original records were created without explicit uids;
+                # provisioning matches BY uid once one is specified and
+                # hard-fails on the lookup miss. Deleting by name first makes
+                # the pinned-uid recreate idempotent (provisioned datasources
+                # carry no state worth keeping).
+                deleteDatasources = [
+                  {
+                    name = "Prometheus";
+                    orgId = 1;
+                  }
+                  {
+                    name = "Loki";
+                    orgId = 1;
+                  }
+                ];
                 datasources = [
                   {
                     name = "Prometheus";
@@ -381,30 +396,31 @@ in
           };
 
           resources = {
-            configMaps = lib.mapAttrs' (
-              name: d:
-              lib.nameValuePair "dashboard-${name}" {
-                metadata = {
-                  labels.grafana_dashboard = "1";
-                  annotations.grafana_folder = d.folder;
-                };
-                data."${name}.json" = mkDashboardJson {
-                  inherit name;
-                  inherit (d) title url sha256;
-                  fixDatasource = d.fixDatasource or false;
-                };
-              }
-            ) importedDashboards
-            // lib.mapAttrs' (
-              name: d:
-              lib.nameValuePair "dashboard-${name}" {
-                metadata = {
-                  labels.grafana_dashboard = "1";
-                  annotations.grafana_folder = d.folder;
-                };
-                data."${name}.json" = builtins.toJSON d.dashboard;
-              }
-            ) localDashboards;
+            configMaps =
+              lib.mapAttrs' (
+                name: d:
+                lib.nameValuePair "dashboard-${name}" {
+                  metadata = {
+                    labels.grafana_dashboard = "1";
+                    annotations.grafana_folder = d.folder;
+                  };
+                  data."${name}.json" = mkDashboardJson {
+                    inherit name;
+                    inherit (d) title url sha256;
+                    fixDatasource = d.fixDatasource or false;
+                  };
+                }
+              ) importedDashboards
+              // lib.mapAttrs' (
+                name: d:
+                lib.nameValuePair "dashboard-${name}" {
+                  metadata = {
+                    labels.grafana_dashboard = "1";
+                    annotations.grafana_folder = d.folder;
+                  };
+                  data."${name}.json" = builtins.toJSON d.dashboard;
+                }
+              ) localDashboards;
 
             httpRoutes.grafana.spec = {
               parentRefs = [
