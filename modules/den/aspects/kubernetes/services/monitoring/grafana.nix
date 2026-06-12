@@ -283,6 +283,16 @@ in
               # stateless: no PVC, rolling updates are safe.
               persistence.enabled = false;
 
+              # Without this the chart mints a render-time random admin
+              # password — rotated on EVERY sync while the database keeps the
+              # first-boot value: local admin unusable, sidecar reload 401s,
+              # and perpetual SopsSecret drift in the diffs.
+              admin = {
+                existingSecret = "grafana-k8s-admin";
+                userKey = "admin-user";
+                passwordKey = "admin-password";
+              };
+
               serviceMonitor.enabled = true;
 
               # Provision dashboards from labeled ConfigMaps; the
@@ -443,9 +453,19 @@ in
               ];
             };
 
-            secrets.grafana-k8s-oidc-client-secret = {
-              type = "Opaque";
-              stringData.client-secret = config.age.secrets.grafana-k8s-oidc-client-secret.sopsRef;
+            secrets = {
+              grafana-k8s-oidc-client-secret = {
+                type = "Opaque";
+                stringData.client-secret = config.age.secrets.grafana-k8s-oidc-client-secret.sopsRef;
+              };
+
+              grafana-k8s-admin = {
+                type = "Opaque";
+                stringData = {
+                  admin-user = "admin";
+                  admin-password = config.age.secrets.grafana-k8s-admin-password.sopsRef;
+                };
+              };
             };
 
             ciliumNetworkPolicies = {
@@ -511,6 +531,15 @@ in
           sopsOutput = {
             file = "oidc";
             key = "grafana-k8s";
+          };
+        };
+
+        age.secrets.grafana-k8s-admin-password = {
+          rekeyFile = env.secretPath + "/grafana-k8s/admin-password.age";
+          generator.script = "rfc3986-secret";
+          sopsOutput = {
+            file = "grafana-k8s";
+            key = "admin-password";
           };
         };
       };
