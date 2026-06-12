@@ -15,6 +15,16 @@
           helm.releases.loki = {
             chart = charts.grafana.loki;
 
+            # The chart gates its ServiceMonitor/PrometheusRule on cluster
+            # capabilities, which offline helm template never satisfies —
+            # declare the live CRDs explicitly so monitoring.* renders.
+            extraOpts = [
+              "--api-versions"
+              "monitoring.coreos.com/v1/ServiceMonitor"
+              "--api-versions"
+              "monitoring.coreos.com/v1/PrometheusRule"
+            ];
+
             values = {
               # Without this the chart renders SimpleScalable and, with
               # read/write/backend at 0, no loki pods at all.
