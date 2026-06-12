@@ -42,6 +42,10 @@ in
       metadata = true;
     };
 
+    # World egress (80/443): movie metadata + artwork come from the Servarr metadata API, a
+    # direct world call.
+    internetEgress = true;
+
     # Servarr HTTP health endpoint.
     extraValues.controllers.main.containers.main.probes = {
       liveness = {
