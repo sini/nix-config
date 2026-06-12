@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-anidb-egress-shoko
+  namespace: media
+spec:
+  description: Allow shoko to reach the AniDB UDP (9000) and HTTP (9001) APIs.
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "9000"
+              protocol: UDP
+            - port: "9001"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: shoko

@@ -179,22 +179,6 @@
               networkConfig.LinkLocalAddressing = if loopback6 != null then "ipv6" else "no";
             };
 
-            # Segmentation/receive offloads stay OFF on the fabric: tbnet
-            # GRO/TSO superframes (2-11KB aggregates) exceed the device MTU,
-            # and cilium's legacy host-routing path checks the aggregate
-            # length rather than the GSO segment size, answering each one
-            # with ICMP frag-needed — host<->pod bulk flows across the mesh
-            # (e.g. prometheus scraping remote kubelets) stalled into
-            # retransmit crawl until these were disabled.
-            links."20-thunderbolt" = {
-              matchConfig.Driver = "thunderbolt-net";
-              linkConfig = {
-                GenericReceiveOffload = false;
-                GenericSegmentationOffload = false;
-                TCPSegmentationOffload = false;
-              };
-            };
-
             config.networkConfig = {
               IPv4Forwarding = true;
               IPv6Forwarding = true;

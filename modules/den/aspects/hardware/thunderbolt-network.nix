@@ -54,6 +54,17 @@
                 Name = predictableName;
                 Alias = alias;
                 AlternativeName = alias;
+                # Segmentation/receive offloads OFF on the fabric: tbnet
+                # GRO/TSO superframes exceed the device MTU and cilium's
+                # legacy host-routing path checks aggregate length, answering
+                # each with ICMP frag-needed (host<->pod bulk stalls). These
+                # settings MUST live here: udev applies exactly one .link
+                # file per device and these per-port files win the match
+                # (a separate 20-thunderbolt.link never applied — found when
+                # a cable reseat re-enumerated the device with offloads on).
+                GenericReceiveOffload = false;
+                GenericSegmentationOffload = false;
+                TCPSegmentationOffload = false;
               };
             };
           }
