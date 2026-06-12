@@ -72,18 +72,18 @@ in
 
                 echo "Applying bootstrap resources..."
                 ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                  --server-side --force-conflicts \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
                   -f ${manifestPath "bootstrap"} || true
 
                 echo "Applying Cilium manifests..."
                 ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                  --server-side --force-conflicts \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
                   -f ${manifestPath "cilium"} || true
                 sleep 30
 
                 echo "Applying CoreDNS manifests..."
                 ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                  --server-side --force-conflicts \
+                  --server-side --force-conflicts --field-manager=argocd-controller \
                   -f ${manifestPath "coredns"} || true
                 sleep 30
               '';
@@ -126,14 +126,14 @@ in
 
                 if ! ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n sops-secrets-operator sops-sops-secrets-operator >/dev/null 2>&1; then
                   ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    --server-side --force-conflicts \
+                    --server-side --force-conflicts --field-manager=argocd-controller \
                     -f ${manifestPath "sops-secrets-operator"}
                   sleep 30
                 fi
 
                 if ! ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n cert-manager cert-manager >/dev/null 2>&1; then
                   ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    --server-side --force-conflicts \
+                    --server-side --force-conflicts --field-manager=argocd-controller \
                     -f ${manifestPath "cert-manager"}
                   sleep 30
                 fi
@@ -173,9 +173,10 @@ in
 
                 if ! ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG get deployment -n argocd argocd-server >/dev/null 2>&1; then
                   ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
-                    --server-side --force-conflicts \
+                    --server-side --force-conflicts --field-manager=argocd-controller \
                     -f ${manifestPath "argocd"}
                   ${getExe pkgs.kubectl} --kubeconfig $KUBECONFIG apply \
+                    --server-side --force-conflicts --field-manager=argocd-controller \
                     -f ${manifestPath "bootstrap.yaml"}
                 fi
               '';

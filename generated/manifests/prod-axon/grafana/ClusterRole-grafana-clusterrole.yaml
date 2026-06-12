@@ -5,4 +5,13 @@ metadata:
     app.kubernetes.io/instance: grafana
     app.kubernetes.io/name: grafana
   name: grafana-clusterrole
-rules: []
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - watch
+      - list

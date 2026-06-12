@@ -18,9 +18,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 136f80ec3418f043afe65d5c9afeafab129e9d1c39453f1fafe9d3bb9d77897d
+        checksum/config: 7661486f82123d432083101512415d802dff9f701c41b209c0551933b7d0401a
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
-        checksum/secret: f2b488801b5d16da84a4b83cf355a72eca6daef5793f49367f275e5afc08e099
+        checksum/secret: 69468de725f8f5088ffa7a70369ba969b964b243d9bd459cee446dd4c81e86b7
         kubectl.kubernetes.io/default-container: grafana
       labels:
         app.kubernetes.io/instance: grafana
@@ -28,6 +28,44 @@ spec:
     spec:
       automountServiceAccountToken: true
       containers:
+        - env:
+            - name: METHOD
+              value: WATCH
+            - name: LABEL
+              value: grafana_dashboard
+            - name: FOLDER
+              value: /tmp/dashboards
+            - name: RESOURCE
+              value: both
+            - name: NAMESPACE
+              value: monitoring
+            - name: REQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: admin-user
+                  name: grafana
+            - name: REQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: admin-password
+                  name: grafana
+            - name: REQ_URL
+              value: http://localhost:3000/api/admin/provisioning/dashboards/reload
+            - name: REQ_METHOD
+              value: POST
+          image: quay.io/kiwigrid/k8s-sidecar:2.5.0
+          imagePullPolicy: IfNotPresent
+          name: grafana-sc-dashboard
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /tmp/dashboards
+              name: sc-dashboard-volume
         - env:
             - name: POD_IP
               valueFrom:
@@ -53,6 +91,11 @@ spec:
               value: /etc/grafana/provisioning
             - name: GF_UNIFIED_STORAGE_INDEX_PATH
               value: /var/lib/grafana-search/bleve
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: client-secret
+                  name: grafana-k8s-oidc-client-secret
           image: docker.io/grafana/grafana:12.3.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -99,6 +142,11 @@ spec:
             - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
               name: config
               subPath: datasources.yaml
+            - mountPath: /tmp/dashboards
+              name: sc-dashboard-volume
+            - mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
+              name: sc-dashboard-provider
+              subPath: provider.yaml
       enableServiceLinks: true
       initContainers:
         - command:
@@ -139,3 +187,8 @@ spec:
             claimName: grafana
         - emptyDir: {}
           name: search
+        - emptyDir: {}
+          name: sc-dashboard-volume
+        - configMap:
+            name: grafana-config-dashboards
+          name: sc-dashboard-provider

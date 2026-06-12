@@ -35,7 +35,13 @@
                 };
               };
 
-              grafana.enabled = false;
+              # The bundled grafana stays off (grafana.nix owns the instance),
+              # but its standard dashboard ConfigMaps still render for the
+              # sidecar there to pick up.
+              grafana = {
+                enabled = false;
+                forceDeployDashboards = true;
+              };
               alertmanager.enabled = true;
 
               # Admission webhook certs via cert-manager instead of the
