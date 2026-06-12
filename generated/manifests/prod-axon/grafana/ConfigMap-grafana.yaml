@@ -16,6 +16,24 @@ data:
     [analytics]
     check_for_updates = false
     reporting_enabled = false
+    [auth.generic_oauth]
+    allow_assign_grafana_admin = true
+    allow_sign_up = true
+    api_url = https://idm.json64.dev/oauth2/openid/grafana-k8s/userinfo
+    auth_url = https://idm.json64.dev/ui/oauth2
+    auto_login = true
+    client_id = grafana-k8s
+    enabled = true
+    icon = signin
+    login_attribute_path = preferred_username
+    name = KanIDM
+    role_attribute_path = contains(groups[*], 'server_admin') && 'GrafanaAdmin' || contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'editor') && 'Editor' || 'Viewer'
+    role_attribute_strict = false
+    scopes = openid email profile
+    skip_org_role_sync = false
+    token_url = https://idm.json64.dev/oauth2/token
+    use_pkce = true
+    use_refresh_token = true
     [log]
     mode = console
     [paths]
