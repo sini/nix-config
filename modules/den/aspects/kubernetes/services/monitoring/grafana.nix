@@ -58,15 +58,10 @@ in
             chart = charts.grafana.grafana;
 
             values = {
-              persistence = {
-                enabled = true;
-                storageClassName = "longhorn";
-                size = "10Gi";
-              };
-
-              # RWO volume: a rolling update deadlocks on multi-attach (the
-              # new pod cannot mount while the old one holds the PVC).
-              deploymentStrategy.type = "Recreate";
+              # State lives in monitoring-pg (see monitoring-pg.nix);
+              # dashboards/datasources are fully provisioned, so the pod is
+              # stateless: no PVC, rolling updates are safe.
+              persistence.enabled = false;
 
               serviceMonitor.enabled = true;
 
@@ -125,12 +120,16 @@ in
                   envoy-resources-monitor.url = envoyDashboard "resources-monitor.gen";
                 };
 
-              # The client secret lands as an env var (GF_ vars override
-              # grafana.ini), sourced from the SopsSecret below.
-              envValueFrom.GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET = {
-                secretKeyRef = {
+              # Secrets land as env vars (GF_ vars override grafana.ini),
+              # sourced from SopsSecrets / the CNPG role secret.
+              envValueFrom = {
+                GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET.secretKeyRef = {
                   name = "grafana-k8s-oidc-client-secret";
                   key = "client-secret";
+                };
+                GF_DATABASE_PASSWORD.secretKeyRef = {
+                  name = "monitoring-pg-grafana-password";
+                  key = "password";
                 };
               };
 
@@ -157,6 +156,17 @@ in
                 server = {
                   inherit domain;
                   root_url = "https://${domain}";
+                };
+
+                # Backing store in monitoring-pg (password via
+                # GF_DATABASE_PASSWORD above). ssl_mode require: CNPG serves
+                # TLS with a cluster-internal CA.
+                database = {
+                  type = "postgres";
+                  host = "monitoring-pg-rw.monitoring:5432";
+                  name = "grafana";
+                  user = "grafana";
+                  ssl_mode = "require";
                 };
 
                 analytics = {

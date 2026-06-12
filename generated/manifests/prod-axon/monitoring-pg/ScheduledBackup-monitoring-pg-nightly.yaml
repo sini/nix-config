@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: monitoring-pg-nightly
+  namespace: monitoring
+spec:
+  cluster:
+    name: monitoring-pg
+  method: volumeSnapshot
+  schedule: 0 0 4 * * *

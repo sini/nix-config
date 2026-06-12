@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  cluster:
+    name: monitoring-pg
+  name: grafana
+  owner: grafana

@@ -14,14 +14,14 @@ spec:
       app.kubernetes.io/instance: grafana
       app.kubernetes.io/name: grafana
   strategy:
-    type: Recreate
+    type: RollingUpdate
   template:
     metadata:
       annotations:
-        checksum/config: d80d30a08ed4d9e2f48400f0680d11dc721b9a017407ea68769911cb908e41f2
+        checksum/config: a7158195bd4cb2b41d857022447142b50c850d7fb0b3cb3cefdff13293d54663
         checksum/dashboards-json-config: 17554d4bfe190628c84b4440ddd019250695580f87c0ec2097b2a60c810c5147
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
-        checksum/secret: 14b6d85d40359bd99c374ecedb1dc8106aeaece4fca2150e0e23eb196809ab41
+        checksum/secret: 49f6858e74ceb84d91b98c10a7a8c82acec4e4593b06d20fa2cb71db7617e475
         kubectl.kubernetes.io/default-container: grafana
       labels:
         app.kubernetes.io/instance: grafana
@@ -97,6 +97,11 @@ spec:
                 secretKeyRef:
                   key: client-secret
                   name: grafana-k8s-oidc-client-secret
+            - name: GF_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: monitoring-pg-grafana-password
           image: docker.io/grafana/grafana:12.3.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
@@ -153,28 +158,6 @@ spec:
               subPath: provider.yaml
       enableServiceLinks: true
       initContainers:
-        - command:
-            - chown
-            - -R
-            - 472:472
-            - /var/lib/grafana
-          image: docker.io/library/busybox:1.31.1
-          imagePullPolicy: IfNotPresent
-          name: init-chown-data
-          securityContext:
-            capabilities:
-              add:
-                - CHOWN
-              drop:
-                - ALL
-            readOnlyRootFilesystem: false
-            runAsNonRoot: false
-            runAsUser: 0
-            seccompProfile:
-              type: RuntimeDefault
-          volumeMounts:
-            - mountPath: /var/lib/grafana
-              name: storage
         - args:
             - -c
             - mkdir -p /var/lib/grafana/dashboards/default && /bin/sh -x /etc/grafana/download_dashboards.sh
@@ -210,9 +193,8 @@ spec:
         - configMap:
             name: grafana-dashboards-imported
           name: dashboards-imported
-        - name: storage
-          persistentVolumeClaim:
-            claimName: grafana
+        - emptyDir: {}
+          name: storage
         - emptyDir: {}
           name: search
         - emptyDir: {}

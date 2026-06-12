@@ -1,0 +1,23 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: monitoring-pg
+  namespace: monitoring
+spec:
+  affinity:
+    podAntiAffinityType: required
+  backup:
+    volumeSnapshot:
+      className: longhorn-snapshot
+  instances: 2
+  managed:
+    roles:
+      - login: true
+        name: grafana
+        passwordSecret:
+          name: monitoring-pg-grafana-password
+  monitoring:
+    enablePodMonitor: true
+  storage:
+    size: 5Gi
+    storageClass: longhorn-single
