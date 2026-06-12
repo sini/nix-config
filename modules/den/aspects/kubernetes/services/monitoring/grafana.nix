@@ -41,6 +41,10 @@ in
         applications.grafana = {
           namespace = "monitoring";
 
+          # Dashboard ConfigMaps (the CNPG one is ~250KiB) blow past the
+          # 256KiB last-applied annotation limit under client-side apply.
+          syncPolicy.syncOptions.serverSideApply = true;
+
           # CNPG cluster dashboard — rendered as a labeled ConfigMap the
           # sidecar picks up. The operator chart's grafanaDashboard.create is
           # a stub (the JSON moved to the dedicated dashboards repo this
