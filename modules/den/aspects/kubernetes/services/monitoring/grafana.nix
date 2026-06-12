@@ -44,6 +44,7 @@ in
           # Dashboard ConfigMaps (the CNPG one is ~250KiB) blow past the
           # 256KiB last-applied annotation limit under client-side apply.
           syncPolicy.syncOptions.serverSideApply = true;
+          compareOptions.serverSideDiff = true;
 
           # CNPG cluster dashboard — rendered as a labeled ConfigMap the
           # sidecar picks up. The operator chart's grafanaDashboard.create is
@@ -62,6 +63,10 @@ in
                 storageClassName = "longhorn";
                 size = "10Gi";
               };
+
+              # RWO volume: a rolling update deadlocks on multi-attach (the
+              # new pod cannot mount while the old one holds the PVC).
+              deploymentStrategy.type = "Recreate";
 
               serviceMonitor.enabled = true;
 
