@@ -83,6 +83,7 @@
       services.monitoring.prometheus
       services.monitoring.loki
       services.monitoring.alloy
+      services.monitoring.monitoring-pg
       services.monitoring.grafana
       services.network.cilium.hubble-ui
       services.media.base
