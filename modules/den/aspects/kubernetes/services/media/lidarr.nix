@@ -41,6 +41,10 @@ in
       metadata = true;
     };
 
+    # World egress (80/443): artist/album metadata + artwork come from the Servarr metadata
+    # proxy (MusicBrainz front), a direct world call.
+    internetEgress = true;
+
     # Servarr HTTP health endpoint.
     extraValues.controllers.main.containers.main.probes = {
       liveness = {

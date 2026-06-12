@@ -60,6 +60,10 @@ in
       data = true;
     };
 
+    # World egress (80/443): subtitle providers (opensubtitles et al) are direct world calls
+    # (core function).
+    internetEgress = true;
+
     # Bazarr serves its health/UI on the web port; no Servarr /ping endpoint.
   };
 }

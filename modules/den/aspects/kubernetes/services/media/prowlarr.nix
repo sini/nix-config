@@ -37,6 +37,11 @@ in
     # Prowlarr stores nothing on shared media/scratch — config PVC only.
     mounts = { };
 
+    # World egress (80/443): indexer searches + the Cardigann definitions fetch are world-facing
+    # (core function; without this the indexer API hangs on the definitions
+    # download and every search fails).
+    internetEgress = true;
+
     # Servarr HTTP health endpoint.
     extraValues.controllers.main.containers.main.probes = {
       liveness = {
