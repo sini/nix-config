@@ -6,6 +6,10 @@ metadata:
 spec:
   endpoints:
     - port: http-metrics
+      relabelings:
+        - action: replace
+          replacement: argocd-repo-server
+          targetLabel: job
   selector:
     matchLabels:
       app.kubernetes.io/name: argocd-repo-server-metrics

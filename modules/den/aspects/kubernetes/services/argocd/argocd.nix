@@ -209,10 +209,13 @@ in
           # See metrics.enabled comments: chart ServiceMonitors are
           # capabilities-gated and never render offline. Selectors match the
           # rendered metrics Services' app.kubernetes.io/name labels (the
-          # controller's is the chart-quirky bare "argocd-metrics").
+          # controller's is the chart-quirky bare "argocd-metrics"), and the
+          # job label is forced to the names the canonical dashboard (14584)
+          # hardcodes — prometheus-operator would otherwise use the Service
+          # name, which only matches for the server component.
           objects =
             lib.mapAttrsToList
-              (comp: serviceLabel: {
+              (comp: m: {
                 apiVersion = "monitoring.coreos.com/v1";
                 kind = "ServiceMonitor";
                 metadata = {
@@ -220,14 +223,34 @@ in
                   namespace = "argocd";
                 };
                 spec = {
-                  selector.matchLabels."app.kubernetes.io/name" = serviceLabel;
-                  endpoints = [ { port = "http-metrics"; } ];
+                  selector.matchLabels."app.kubernetes.io/name" = m.serviceLabel;
+                  endpoints = [
+                    {
+                      port = "http-metrics";
+                      relabelings = [
+                        {
+                          action = "replace";
+                          targetLabel = "job";
+                          replacement = m.jobName;
+                        }
+                      ];
+                    }
+                  ];
                 };
               })
               {
-                application-controller = "argocd-metrics";
-                server = "argocd-server-metrics";
-                repo-server = "argocd-repo-server-metrics";
+                application-controller = {
+                  serviceLabel = "argocd-metrics";
+                  jobName = "argocd-metrics";
+                };
+                server = {
+                  serviceLabel = "argocd-server-metrics";
+                  jobName = "argocd-server-metrics";
+                };
+                repo-server = {
+                  serviceLabel = "argocd-repo-server-metrics";
+                  jobName = "argocd-repo-server";
+                };
               };
 
           resources = {

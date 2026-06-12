@@ -30,12 +30,97 @@ in
         config,
         cluster,
         charts,
+        pkgs,
         ...
       }:
       let
         environment = environments.${cluster.environment};
         domain = environment.getDomainFor "grafana-k8s";
         kanidmDomain = environment.getDomainFor "kanidm";
+
+        # Canonical upstream dashboards that no deployed chart bundles,
+        # pinned and transformed at BUILD time (no runtime downloads): title
+        # normalized, grafana.com `__inputs` datasource placeholders bound to
+        # the Prometheus datasource. Rendered below as sidecar ConfigMaps
+        # with a grafana_folder annotation.
+        mkDashboardJson =
+          {
+            name,
+            title,
+            url,
+            sha256,
+            fixDatasource ? false,
+          }:
+          builtins.readFile (
+            pkgs.runCommand "grafana-dashboard-${name}"
+              {
+                src = pkgs.fetchurl { inherit url sha256; };
+                nativeBuildInputs = [
+                  pkgs.jq
+                  pkgs.gnused
+                ];
+              }
+              ''
+                ${
+                  if fixDatasource then
+                    ''sed '/-- .* --/! s/"datasource":.*,/"datasource": "Prometheus",/g' "$src"''
+                  else
+                    ''cat "$src"''
+                } | jq '.title = "${title}"' > "$out"
+              ''
+          );
+
+        envoyDashboardUrl =
+          name:
+          "https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/${name}.json";
+
+        importedDashboards = {
+          argocd = {
+            title = "ArgoCD";
+            folder = "GitOps";
+            url = "https://grafana.com/api/dashboards/14584/revisions/1/download";
+            sha256 = "1ab8sdrd8ngaw4p9vzldzln5x1xqbp09wbmy9lkyv0gaxnl7nyqr";
+            fixDatasource = true;
+          };
+          cert-manager = {
+            title = "cert-manager";
+            folder = "Security";
+            url = "https://grafana.com/api/dashboards/11001/revisions/1/download";
+            sha256 = "01q5ks0q3sabnw1rmmpz1yl864i47hbfxw0ksk6vpibrwm52p879";
+            fixDatasource = true;
+          };
+          longhorn = {
+            title = "Longhorn";
+            folder = "Storage";
+            url = "https://grafana.com/api/dashboards/13032/revisions/6/download";
+            sha256 = "0rfdrixrj53czyxawvqf47z5rcgbiz2fr91ih9a7rj1n9akzhgvw";
+            fixDatasource = true;
+          };
+          envoy-gateway = {
+            title = "Envoy Gateway";
+            folder = "Networking";
+            url = envoyDashboardUrl "envoy-gateway-global";
+            sha256 = "0knr3cgqf4cg31hk4ds39mywz1xpxxfirb886y2d42i7bdh2rp1c";
+          };
+          envoy-proxy = {
+            title = "Envoy Proxy";
+            folder = "Networking";
+            url = envoyDashboardUrl "envoy-proxy-global";
+            sha256 = "1dv7rgcmxap5cr7ww9q6icl0kwhjgaygs89acxgaqf7k1kcr40kz";
+          };
+          envoy-clusters = {
+            title = "Envoy Clusters";
+            folder = "Networking";
+            url = envoyDashboardUrl "envoy-clusters";
+            sha256 = "1ghh652xv48l72scyan0d2fjx9ll19kgx9xm3cifhqn5763mjvl9";
+          };
+          envoy-resources = {
+            title = "Envoy Gateway Resources";
+            folder = "Networking";
+            url = envoyDashboardUrl "resources-monitor.gen";
+            sha256 = "0h55cpc8k3294w8pjri6shkqqxscqnr8qs87k1dkhhk79xrmrzhl";
+          };
+        };
       in
       {
         applications.grafana = {
@@ -52,6 +137,7 @@ in
           # chart is pinned from).
           helm.releases.cnpg-grafana-cluster = {
             chart = charts.cnpg-grafana-dashboards.cluster;
+            values.grafanaDashboard.annotations.grafana_folder = "Databases";
           };
 
           helm.releases.grafana = {
@@ -65,60 +151,14 @@ in
 
               serviceMonitor.enabled = true;
 
-              # Provision dashboards from labeled ConfigMaps (the
-              # kube-prometheus-stack set plus anything we add later).
+              # Provision dashboards from labeled ConfigMaps; the
+              # grafana_folder annotation routes each into a real folder.
               sidecar.dashboards = {
                 enabled = true;
                 searchNamespace = "monitoring";
+                folderAnnotation = "grafana_folder";
+                provider.foldersFromFilesStructure = true;
               };
-
-              # Canonical upstream dashboards that no deployed chart bundles:
-              # downloaded by the init container at startup (world:443 egress
-              # below covers grafana.com / raw.githubusercontent.com).
-              dashboardProviders."dashboardproviders.yaml" = {
-                apiVersion = 1;
-                providers = [
-                  {
-                    name = "imported";
-                    orgId = 1;
-                    folder = "Imported";
-                    type = "file";
-                    disableDeletion = false;
-                    editable = true;
-                    options.path = "/var/lib/grafana/dashboards/imported";
-                  }
-                ];
-              };
-
-              dashboards.imported =
-                let
-                  envoyDashboard =
-                    name:
-                    "https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/${name}.json";
-                in
-                {
-                  # Official Longhorn dashboard (referenced by longhorn docs)
-                  longhorn = {
-                    gnetId = 13032;
-                    revision = 6;
-                    datasource = "Prometheus";
-                  };
-                  # ArgoCD community-canonical dashboard
-                  argo-cd = {
-                    gnetId = 14584;
-                    datasource = "Prometheus";
-                  };
-                  cert-manager = {
-                    gnetId = 11001;
-                    datasource = "Prometheus";
-                  };
-                  # Envoy Gateway's own dashboards (the gateway-addons chart
-                  # set, pinned to the deployed EG release line)
-                  envoy-gateway-global.url = envoyDashboard "envoy-gateway-global";
-                  envoy-proxy-global.url = envoyDashboard "envoy-proxy-global";
-                  envoy-clusters.url = envoyDashboard "envoy-clusters";
-                  envoy-resources-monitor.url = envoyDashboard "resources-monitor.gen";
-                };
 
               # Secrets land as env vars (GF_ vars override grafana.ini),
               # sourced from SopsSecrets / the CNPG role secret.
@@ -205,6 +245,21 @@ in
           };
 
           resources = {
+            configMaps = lib.mapAttrs' (
+              name: d:
+              lib.nameValuePair "dashboard-${name}" {
+                metadata = {
+                  labels.grafana_dashboard = "1";
+                  annotations.grafana_folder = d.folder;
+                };
+                data."${name}.json" = mkDashboardJson {
+                  inherit name;
+                  inherit (d) title url sha256;
+                  fixDatasource = d.fixDatasource or false;
+                };
+              }
+            ) importedDashboards;
+
             httpRoutes.grafana.spec = {
               parentRefs = [
                 {

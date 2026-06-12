@@ -5,14 +5,12 @@ data:
     providers:
       - name: 'sidecarProvider'
         orgId: 1
-        folder: ''
-        folderUid: ''
         type: file
         disableDeletion: false
         allowUiUpdates: false
         updateIntervalSeconds: 30
         options:
-          foldersFromFilesStructure: false
+          foldersFromFilesStructure: true
           path: /tmp/dashboards
 kind: ConfigMap
 metadata:
