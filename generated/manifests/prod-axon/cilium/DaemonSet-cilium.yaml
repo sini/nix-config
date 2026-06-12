@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: ef208dad8f6b80b7740fc2bcdff78ca1dba6e6dc73b4454c10f50a4bf789eec8
+        cilium.io/cilium-configmap-checksum: b1f81899d5bbc9b4c4cf167de3ec6ffbf48f9cd73bb318106a5e8b347b0fa1cd
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -116,6 +116,18 @@ spec:
             - containerPort: 4244
               hostPort: 4244
               name: peer-service
+              protocol: TCP
+            - containerPort: 9962
+              hostPort: 9962
+              name: prometheus
+              protocol: TCP
+            - containerPort: 9964
+              hostPort: 9964
+              name: envoy-metrics
+              protocol: TCP
+            - containerPort: 9965
+              hostPort: 9965
+              name: hubble-metrics
               protocol: TCP
           readinessProbe:
             failureThreshold: 3

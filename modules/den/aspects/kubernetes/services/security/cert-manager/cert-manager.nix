@@ -90,12 +90,18 @@ in
             chart = charts.jetstack.cert-manager;
             values = {
               global.leaderElection.namespace = "cert-manager";
+
               extraArgs = [
                 "--dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53"
                 "--dns01-recursive-nameservers-only"
               ];
-              prometheus.enabled = false;
-              prometheus.servicemonitor.enabled = false;
+
+              # Controller metrics + ServiceMonitor (note: lowercase
+              # `servicemonitor` is the chart's spelling).
+              prometheus = {
+                enabled = true;
+                servicemonitor.enabled = true;
+              };
             };
           };
 

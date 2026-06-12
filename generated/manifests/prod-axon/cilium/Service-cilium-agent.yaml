@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/name: cilium-agent
+    app.kubernetes.io/part-of: cilium
+    k8s-app: cilium
+  name: cilium-agent
+  namespace: kube-system
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 9962
+      protocol: TCP
+      targetPort: prometheus
+    - name: envoy-metrics
+      port: 9964
+      protocol: TCP
+      targetPort: envoy-metrics
+  selector:
+    k8s-app: cilium
+  type: ClusterIP

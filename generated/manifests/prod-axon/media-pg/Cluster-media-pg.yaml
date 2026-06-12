@@ -40,6 +40,8 @@ spec:
         name: romm
         passwordSecret:
           name: media-pg-romm-password
+  monitoring:
+    enablePodMonitor: true
   storage:
     size: 20Gi
     storageClass: longhorn-single

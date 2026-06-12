@@ -1,0 +1,10 @@
+apiVersion: v1
+data: {}
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+    dashboard-provider: imported
+  name: grafana-dashboards-imported
+  namespace: monitoring

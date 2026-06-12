@@ -15,6 +15,8 @@
             chart = charts.grafana.alloy;
 
             values = {
+              serviceMonitor.enabled = true;
+
               controller = {
                 type = "daemonset";
                 volumes.extra = [

@@ -175,6 +175,27 @@ in
                       }
                     ];
                   }
+                  # prometheus -> coredns metrics (Corefile prometheus plugin)
+                  {
+                    fromEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "9153";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
                 ];
               };
             };

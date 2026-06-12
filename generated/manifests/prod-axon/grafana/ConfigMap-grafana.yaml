@@ -1,5 +1,16 @@
 apiVersion: v1
 data:
+  dashboardproviders.yaml: |
+    apiVersion: 1
+    providers:
+    - disableDeletion: false
+      editable: true
+      folder: Imported
+      name: imported
+      options:
+        path: /var/lib/grafana/dashboards/imported
+      orgId: 1
+      type: file
   datasources.yaml: |
     apiVersion: 1
     datasources:
@@ -12,6 +23,7 @@ data:
       name: Loki
       type: loki
       url: http://loki.monitoring:3100
+  download_dashboards.sh: "#!/usr/bin/env sh\nset -euf\nmkdir -p /var/lib/grafana/dashboards/imported\n\ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://grafana.com/api/dashboards/14584/revisions/1/download\" \\\n  | sed '/-- .* --/! s/\"datasource\":.*,/\"datasource\": \"Prometheus\",/g' \\\n> \"/var/lib/grafana/dashboards/imported/argo-cd.json\"\n  \ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://grafana.com/api/dashboards/11001/revisions/1/download\" \\\n  | sed '/-- .* --/! s/\"datasource\":.*,/\"datasource\": \"Prometheus\",/g' \\\n> \"/var/lib/grafana/dashboards/imported/cert-manager.json\"\n  \ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/envoy-clusters.json\" \\\n> \"/var/lib/grafana/dashboards/imported/envoy-clusters.json\"\n  \ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/envoy-gateway-global.json\" \\\n> \"/var/lib/grafana/dashboards/imported/envoy-gateway-global.json\"\n  \ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/envoy-proxy-global.json\" \\\n> \"/var/lib/grafana/dashboards/imported/envoy-proxy-global.json\"\n  \ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/resources-monitor.gen.json\" \\\n> \"/var/lib/grafana/dashboards/imported/envoy-resources-monitor.json\"\n  \ncurl -skf \\\n--connect-timeout 60 \\\n--max-time 60 \\\n-H \"Accept: application/json\" \\\n-H \"Content-Type: application/json;charset=UTF-8\" \\\n  \"https://grafana.com/api/dashboards/13032/revisions/6/download\" \\\n  | sed '/-- .* --/! s/\"datasource\":.*,/\"datasource\": \"Prometheus\",/g' \\\n> \"/var/lib/grafana/dashboards/imported/longhorn.json\"\n"
   grafana.ini: |
     [analytics]
     check_for_updates = false

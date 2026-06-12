@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: envoy-gateway
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - envoy-gateway-system
+  podMetricsEndpoints:
+    - port: metrics
+  selector:
+    matchLabels:
+      control-plane: envoy-gateway

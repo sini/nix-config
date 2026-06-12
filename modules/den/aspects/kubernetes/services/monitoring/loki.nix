@@ -68,6 +68,18 @@
               backend.replicas = 0;
 
               gateway.enabled = false;
+
+              # Self-monitoring: ServiceMonitor for loki's own metrics,
+              # upstream loki dashboards for the grafana sidecar, and the
+              # chart's PrometheusRule alert/record set.
+              monitoring = {
+                serviceMonitor.enabled = true;
+                dashboards = {
+                  enabled = true;
+                  namespace = "monitoring";
+                };
+                rules.enabled = true;
+              };
             };
           };
 

@@ -114,7 +114,13 @@ in
                 revisionHistoryLimit = 3;
               };
 
-              controller.replicas = 1;
+              controller = {
+                replicas = 1;
+                # ServiceMonitors are authored as raw objects below: the chart
+                # gates its own on .Capabilities, which offline helm template
+                # never satisfies.
+                metrics.enabled = true;
+              };
 
               server = {
                 replicas = 1;
@@ -125,6 +131,10 @@ in
                     value = "1";
                   }
                 ];
+                # ServiceMonitors are authored as raw objects below: the chart
+                # gates its own on .Capabilities, which offline helm template
+                # never satisfies.
+                metrics.enabled = true;
               };
 
               repoServer = {
@@ -137,6 +147,10 @@ in
                 ];
                 readinessProbe.timeoutSeconds = 60;
                 livenessProbe.timeoutSeconds = 60;
+                # ServiceMonitors are authored as raw objects below: the chart
+                # gates its own on .Capabilities, which offline helm template
+                # never satisfies.
+                metrics.enabled = true;
               };
 
               redis.enabled = true;
@@ -191,6 +205,30 @@ in
               global.networkPolicy.create = true;
             };
           };
+
+          # See metrics.enabled comments: chart ServiceMonitors are
+          # capabilities-gated and never render offline. Selectors match the
+          # rendered metrics Services' app.kubernetes.io/name labels (the
+          # controller's is the chart-quirky bare "argocd-metrics").
+          objects =
+            lib.mapAttrsToList
+              (comp: serviceLabel: {
+                apiVersion = "monitoring.coreos.com/v1";
+                kind = "ServiceMonitor";
+                metadata = {
+                  name = "argocd-${comp}";
+                  namespace = "argocd";
+                };
+                spec = {
+                  selector.matchLabels."app.kubernetes.io/name" = serviceLabel;
+                  endpoints = [ { port = "http-metrics"; } ];
+                };
+              })
+              {
+                application-controller = "argocd-metrics";
+                server = "argocd-server-metrics";
+                repo-server = "argocd-repo-server-metrics";
+              };
 
           resources = {
             httpRoutes.argocd-server.spec = {

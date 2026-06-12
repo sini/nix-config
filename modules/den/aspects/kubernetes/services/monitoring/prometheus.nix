@@ -27,6 +27,15 @@
                   retentionSize = "10GB";
                   enableRemoteWriteReceiver = true;
 
+                  # Pick up ServiceMonitors/PodMonitors/Probes/Rules from any
+                  # namespace regardless of release label — CNPG, exportarr,
+                  # and other app-owned monitors don't carry the chart's
+                  # release label.
+                  serviceMonitorSelectorNilUsesHelmValues = false;
+                  podMonitorSelectorNilUsesHelmValues = false;
+                  probeSelectorNilUsesHelmValues = false;
+                  ruleSelectorNilUsesHelmValues = false;
+
                   storageSpec.volumeClaimTemplate.spec = {
                     storageClassName = "longhorn";
                     accessModes = [ "ReadWriteOnce" ];
@@ -61,8 +70,47 @@
               kubeScheduler.enabled = false;
               kubeProxy.enabled = false;
               kubeEtcd.enabled = false;
+
+              # The chart's coredns Service selects k8s-app=kube-dns; our
+              # coredns chart labels its pods k8s-app=coredns, so the default
+              # selector matches nothing and the coredns dashboards read empty.
+              coreDns.service.selector."k8s-app" = "coredns";
             };
           };
+
+          # PodMonitors for workloads whose charts ship no monitor of their
+          # own (gateway-helm has none). They live here in monitoring and
+          # select across namespaces; raw objects because there is no typed
+          # accessor without a kube-prometheus-stack crds bridge (planned
+          # alongside PrometheusRule authoring for alerting).
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "envoy-gateway";
+                namespace = "monitoring";
+              };
+              spec = {
+                namespaceSelector.matchNames = [ "envoy-gateway-system" ];
+                selector.matchLabels."control-plane" = "envoy-gateway";
+                podMetricsEndpoints = [ { port = "metrics"; } ];
+              };
+            }
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "envoy-proxies";
+                namespace = "monitoring";
+              };
+              spec = {
+                namespaceSelector.matchNames = [ "gateways" ];
+                selector.matchLabels."app.kubernetes.io/component" = "proxy";
+                podMetricsEndpoints = [ { port = "metrics"; } ];
+              };
+            }
+          ];
 
           # The cluster default-denies egress to anything that isn't a
           # cilium-managed endpoint; the apiserver and kubelets are
@@ -106,7 +154,9 @@
                       }
                     ];
                   }
-                  # kubelet + cadvisor metrics on every node
+                  # Host-network scrape targets on every node: kubelet
+                  # (10250), cilium agent (9962), cilium operator (9963),
+                  # hubble metrics (9965).
                   {
                     toEntities = [
                       "host"
@@ -117,6 +167,18 @@
                         ports = [
                           {
                             port = "10250";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "9962";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "9963";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "9965";
                             protocol = "TCP";
                           }
                         ];

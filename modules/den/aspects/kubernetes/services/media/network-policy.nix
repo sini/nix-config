@@ -301,6 +301,19 @@ let
           fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "cnpg-system"; } ];
           toPorts = toPortsTcp 8000;
         }
+        # prometheus (monitoring) -> instance metrics exporter 9187
+        # (PodMonitor enabled on the Cluster in media-pg.nix)
+        {
+          fromEndpoints = [
+            {
+              matchLabels = {
+                "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                "app.kubernetes.io/name" = "prometheus";
+              };
+            }
+          ];
+          toPorts = toPortsTcp 9187;
+        }
       ];
     };
   };
