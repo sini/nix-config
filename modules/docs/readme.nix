@@ -44,53 +44,51 @@
         '';
 
     flake.readme.automatic-import = dag.entryBetween [ "files" ] [ "den" ] ''
-        ## Automatic import
+      ## Automatic import
 
-        Nix files (they're all flake-parts modules) are automatically imported.
-        Nix files prefixed with an underscore are ignored.
-        No literal path imports are used.
-        This means files can be moved around and nested in directories freely.
+      Nix files (they're all flake-parts modules) are automatically imported.
+      Nix files prefixed with an underscore are ignored.
+      No literal path imports are used.
+      This means files can be moved around and nested in directories freely.
 
-        > [!NOTE]
-        > This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
+      > [!NOTE]
+      > This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
 
-      '';
+    '';
 
     flake.readme.disallow-warnings = dag.entryBetween [ "links" ] [ "files" ] ''
-        ## Trying to disallow warnings
+      ## Trying to disallow warnings
 
-        This at the top level of the `flake.nix` file:
+      This at the top level of the `flake.nix` file:
 
-        ```nix
-        nixConfig.abort-on-warn = true;
-        ```
+      ```nix
+      nixConfig.abort-on-warn = true;
+      ```
 
-        > [!NOTE]
-        > It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
+      > [!NOTE]
+      > It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
 
-      '';
+    '';
 
     flake.readme.files = dag.entryBetween [ "disallow-warnings" ] [ "automatic-import" ] ''
-        ## Generated files
+      ## Generated files
 
-        The following files in this repository are generated and checked
-        using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
+      The following files in this repository are generated and checked
+      using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
 
-        - `.gitignore`
-        - `LICENSE`
-        - `README.md`
-        - `.sops.yaml`
-        - `.secrets/secrets-manifest.md`
+      - `.gitignore`
+      - `LICENSE`
+      - `README.md`
+      - `.sops.yaml`
+      - `.secrets/secrets-manifest.md`
 
-      '';
+    '';
 
-    perSystem =
-      _:
-      {
-        files.file."README.md".text = dag.render {
-          entries = config.flake.readme;
-          separator = "\n";
-        };
+    perSystem = _: {
+      files.file."README.md".text = dag.render {
+        entries = config.flake.readme;
+        separator = "\n";
       };
+    };
   };
 }
