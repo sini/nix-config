@@ -183,17 +183,30 @@ in
       # itself through that overlay.
       packages.nixidy-sync = pkgs.writeShellApplication {
         name = "nixidy-sync";
-        runtimeInputs = [ pkgs.git ];
+        runtimeInputs = [
+          pkgs.git
+          pkgs.nix
+        ];
         text = ''
           if [ "''${1:-}" = "--skip-secrets" ] || [ "''${1:-}" = "-s" ]; then
             export NIXIDY_SKIP_POST_PROCESS=1
           fi
           root="$(git rev-parse --show-toplevel)" || { echo "nixidy-sync: not in a git repo" >&2; exit 1; }
           cd "$root"
+          # Resolve each env's activationPackage AT RUN TIME against the current
+          # tree. Baking the activationPackage store path here would pin the
+          # repo state from whenever the CALLER's devshell was built (inputs.self
+          # at shell-eval time) — a stale direnv shell then silently syncs old
+          # manifests/secrets no matter what the working tree or HEAD contain
+          # (bit a secret rotation: the re-encrypt only landed after a fresh
+          # shell eval). Only the env NAMES are baked; their contents
+          # re-evaluate per invocation.
           ${lib.concatStringsSep "\n" (
-            lib.mapAttrsToList (env: nixidyEnv: ''
+            lib.mapAttrsToList (env: _: ''
               echo "==> Syncing nixidy env: ${env}"
-              ${nixidyEnv.activationPackage}/activate
+              out="$(nix build --no-link --print-out-paths \
+                ".#nixidyEnvs.${system}.${env}.activationPackage")"
+              "$out"/activate
             '') (inputs.self.nixidyEnvs.${system} or { })
           )}
         '';
