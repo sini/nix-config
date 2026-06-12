@@ -77,7 +77,7 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    den.url = "github:sini/den/feat/delivered-child-host-lazy";
+    den.url = "github:sini/den/feat/entity-gen-schema-port";
     den-diagram = {
       url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
