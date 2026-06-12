@@ -8,7 +8,8 @@ spec:
     matchNames:
       - gateways
   podMetricsEndpoints:
-    - port: metrics
+    - path: /stats/prometheus
+      port: metrics
   selector:
     matchLabels:
       app.kubernetes.io/component: proxy

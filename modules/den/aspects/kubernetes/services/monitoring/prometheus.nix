@@ -107,7 +107,14 @@
               spec = {
                 namespaceSelector.matchNames = [ "gateways" ];
                 selector.matchLabels."app.kubernetes.io/component" = "proxy";
-                podMetricsEndpoints = [ { port = "metrics"; } ];
+                # Envoy serves prometheus on the admin-style stats path, not
+                # /metrics (the controller does use /metrics).
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    path = "/stats/prometheus";
+                  }
+                ];
               };
             }
           ];
