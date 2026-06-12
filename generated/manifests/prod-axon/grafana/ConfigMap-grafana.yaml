@@ -5,11 +5,16 @@ data:
     datasources:
     - access: proxy
       isDefault: true
+      jsonData:
+        httpMethod: POST
+        timeInterval: 30s
       name: Prometheus
       type: prometheus
       uid: prometheus
       url: http://kube-prometheus-stack-prometheus.monitoring:9090
     - access: proxy
+      jsonData:
+        maxLines: 1000
       name: Loki
       type: loki
       uid: loki
@@ -23,6 +28,8 @@ data:
     [analytics]
     check_for_updates = false
     reporting_enabled = false
+    [auth]
+    oauth_auto_login = true
     [auth.generic_oauth]
     allow_assign_grafana_admin = true
     allow_sign_up = true
@@ -54,13 +61,20 @@ data:
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
+    [security]
+    cookie_secure = true
+    disable_gravatar = true
+    disable_initial_admin_creation = true
+    hide_version = true
     [server]
     domain = grafana-k8s.json64.dev
+    enforce_domain = false
     root_url = https://grafana-k8s.json64.dev
     [unified_storage]
     index_path = /var/lib/grafana-search/bleve
     [users]
     allow_sign_up = false
+    auto_assign_org = true
     auto_assign_org_role = Viewer
 kind: ConfigMap
 metadata:
