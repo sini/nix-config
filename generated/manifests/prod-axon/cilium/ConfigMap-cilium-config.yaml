@@ -36,6 +36,7 @@ data:
   clustermesh-mcs-api-install-crds: "true"
   cni-exclusive: "true"
   cni-log-file: /var/run/cilium/cilium-cni.log
+  controller-group-metrics: write-cni-file sync-host-ips sync-lb-maps-with-k8s-services
   custom-cni-conf: "false"
   datapath-mode: veth
   datapath-plugins-state-dir: /var/run/cilium/plugins
@@ -66,6 +67,7 @@ data:
   enable-host-firewall: "false"
   enable-host-legacy-routing: "true"
   enable-hubble: "true"
+  enable-hubble-open-metrics: "false"
   enable-ipv4: "true"
   enable-ipv4-big-tcp: "false"
   enable-ipv4-masquerade: "true"
@@ -102,6 +104,9 @@ data:
   http-stream-idle-timeout: "300"
   hubble-disable-tls: "false"
   hubble-listen-address: :4244
+  hubble-metrics: dns drop tcp flow icmp httpV2
+  hubble-metrics-server: :9965
+  hubble-metrics-server-enable-tls: "false"
   hubble-network-policy-correlation-enabled: "true"
   hubble-socket-path: /var/run/cilium/hubble.sock
   hubble-tls-cert-file: /var/lib/cilium/tls/hubble/server.crt
@@ -147,6 +152,7 @@ data:
   policy-secrets-only-from-secrets-namespace: "true"
   preallocate-bpf-maps: "false"
   procfs: /host/proc
+  prometheus-serve-addr: :9962
   proxy-cluster-max-connections: "1024"
   proxy-cluster-max-requests: "1024"
   proxy-connect-timeout: "2"

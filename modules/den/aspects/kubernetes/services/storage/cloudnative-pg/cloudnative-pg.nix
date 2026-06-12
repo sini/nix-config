@@ -41,6 +41,13 @@
               # CRDs are deployed via the bootstrap app (crds bridge), not the
               # operator chart, to keep them out of the helm release lifecycle.
               crds.create = false;
+
+              # Operator metrics PodMonitor (reconcile health, queue depths).
+              # NOTE: the chart's grafanaDashboard.create is a dead end — the
+              # bundled JSON is a stub pointing at the dedicated dashboards
+              # repo; the real dashboard ships via charts.cnpg-grafana-dashboards
+              # (see monitoring/grafana.nix).
+              monitoring.podMonitorEnabled = true;
             };
           };
 

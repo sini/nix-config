@@ -27,7 +27,6 @@ spec:
         - args:
             - --v=2
             - --leader-election-namespace=cert-manager
-            - --metrics-listen-address=0
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -36,6 +35,10 @@ spec:
           image: quay.io/jetstack/cert-manager-cainjector:v1.20.2
           imagePullPolicy: IfNotPresent
           name: cert-manager-cainjector
+          ports:
+            - containerPort: 9402
+              name: http-metrics
+              protocol: TCP
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

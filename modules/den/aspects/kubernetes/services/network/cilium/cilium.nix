@@ -125,6 +125,37 @@ in
                     method = "cronJob";
                   };
                 };
+
+                metrics = {
+                  enabled = [
+                    "dns"
+                    "drop"
+                    "tcp"
+                    "flow"
+                    "icmp"
+                    "httpV2"
+                  ];
+                  serviceMonitor.enabled = true;
+                  dashboards = {
+                    enabled = true;
+                    namespace = "monitoring";
+                  };
+                };
+              };
+
+              # Agent metrics + the chart's bundled dashboards (picked up by
+              # the grafana sidecar in the monitoring namespace).
+              prometheus = {
+                enabled = true;
+                serviceMonitor = {
+                  enabled = true;
+                  # helm template renders offline; the CRDs are live (kps).
+                  trustCRDsExist = true;
+                };
+              };
+              dashboards = {
+                enabled = true;
+                namespace = "monitoring";
               };
 
               tls.secretsNamespace.create = false;
@@ -135,6 +166,11 @@ in
                 enabled = true;
                 replicas = 1;
                 rollOutPods = true;
+                prometheus.serviceMonitor.enabled = true;
+                dashboards = {
+                  enabled = true;
+                  namespace = "monitoring";
+                };
               };
 
               # Socket LB + BPF masquerade

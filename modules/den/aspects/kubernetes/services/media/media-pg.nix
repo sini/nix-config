@@ -109,6 +109,12 @@ in
             clusters.media-pg.spec = {
               instances = 2;
 
+              # PodMonitor for the instance metrics exporter (9187); scraped
+              # by kube-prometheus-stack, charted by the CNPG cluster
+              # dashboard (see monitoring/grafana.nix). The matching scrape
+              # ingress allow lives in network-policy.nix.
+              monitoring.enablePodMonitor = true;
+
               storage = {
                 size = "20Gi";
                 storageClass = "longhorn-single";

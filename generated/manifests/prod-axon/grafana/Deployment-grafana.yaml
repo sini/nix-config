@@ -18,9 +18,10 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 7661486f82123d432083101512415d802dff9f701c41b209c0551933b7d0401a
+        checksum/config: d80d30a08ed4d9e2f48400f0680d11dc721b9a017407ea68769911cb908e41f2
+        checksum/dashboards-json-config: 17554d4bfe190628c84b4440ddd019250695580f87c0ec2097b2a60c810c5147
         checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
-        checksum/secret: 69468de725f8f5088ffa7a70369ba969b964b243d9bd459cee446dd4c81e86b7
+        checksum/secret: e63898bd76ca84f910f1ab45f341f57f227ce36da46a839a80d916f7a7e444ee
         kubectl.kubernetes.io/default-container: grafana
       labels:
         app.kubernetes.io/instance: grafana
@@ -142,6 +143,9 @@ spec:
             - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
               name: config
               subPath: datasources.yaml
+            - mountPath: /etc/grafana/provisioning/dashboards/dashboardproviders.yaml
+              name: config
+              subPath: dashboardproviders.yaml
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
             - mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
@@ -171,6 +175,27 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/grafana
               name: storage
+        - args:
+            - -c
+            - mkdir -p /var/lib/grafana/dashboards/default && /bin/sh -x /etc/grafana/download_dashboards.sh
+          command:
+            - /bin/sh
+          image: docker.io/curlimages/curl:8.9.1
+          imagePullPolicy: IfNotPresent
+          name: download-dashboards
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - mountPath: /etc/grafana/download_dashboards.sh
+              name: config
+              subPath: download_dashboards.sh
+            - mountPath: /var/lib/grafana
+              name: storage
       securityContext:
         fsGroup: 472
         runAsGroup: 472
@@ -182,6 +207,9 @@ spec:
         - configMap:
             name: grafana
           name: config
+        - configMap:
+            name: grafana-dashboards-imported
+          name: dashboards-imported
         - name: storage
           persistentVolumeClaim:
             claimName: grafana

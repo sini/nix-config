@@ -130,7 +130,14 @@ in
 
         generalFlagList = [
           "--snapshotter=overlayfs"
-          "--container-runtime-endpoint=unix:///run/containerd/containerd.sock"
+          # Bare path, NOT unix://…: k3s forwards this value to the kubelet's
+          # legacy cadvisor --containerd flag, which dials it verbatim — with
+          # a scheme the dial fails ("dial unix unix:///…"), cadvisor falls
+          # back to its systemd factory, and per-container + pod-network
+          # metrics silently vanish (only pod-level cgroup series remain,
+          # so every kps resource dashboard reads empty). The kubelet
+          # normalizes the bare path for CRI itself.
+          "--container-runtime-endpoint=/run/containerd/containerd.sock"
 
           "--node-ip=${head host.ipv4},${head host.ipv6}"
           "--node-external-ip=${head host.ipv4},${head host.ipv6}"

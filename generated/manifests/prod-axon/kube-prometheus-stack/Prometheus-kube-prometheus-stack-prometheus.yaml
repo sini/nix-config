@@ -47,22 +47,16 @@ spec:
   logLevel: info
   paused: false
   podMonitorNamespaceSelector: {}
-  podMonitorSelector:
-    matchLabels:
-      release: kube-prometheus-stack
+  podMonitorSelector: {}
   portName: http-web
   probeNamespaceSelector: {}
-  probeSelector:
-    matchLabels:
-      release: kube-prometheus-stack
+  probeSelector: {}
   replicas: 1
   retention: 30d
   retentionSize: 10GB
   routePrefix: /
   ruleNamespaceSelector: {}
-  ruleSelector:
-    matchLabels:
-      release: kube-prometheus-stack
+  ruleSelector: {}
   scrapeConfigNamespaceSelector: {}
   scrapeConfigSelector:
     matchLabels:
@@ -76,9 +70,7 @@ spec:
       type: RuntimeDefault
   serviceAccountName: kube-prometheus-stack-prometheus
   serviceMonitorNamespaceSelector: {}
-  serviceMonitorSelector:
-    matchLabels:
-      release: kube-prometheus-stack
+  serviceMonitorSelector: {}
   shards: 1
   storage:
     volumeClaimTemplate:

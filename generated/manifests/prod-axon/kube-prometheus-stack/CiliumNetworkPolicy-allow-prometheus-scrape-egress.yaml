@@ -18,6 +18,12 @@ spec:
         - ports:
             - port: "10250"
               protocol: TCP
+            - port: "9962"
+              protocol: TCP
+            - port: "9963"
+              protocol: TCP
+            - port: "9965"
+              protocol: TCP
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: prometheus

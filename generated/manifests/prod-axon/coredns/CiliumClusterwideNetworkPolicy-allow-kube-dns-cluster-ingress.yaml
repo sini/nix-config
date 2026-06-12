@@ -17,3 +17,11 @@ spec:
         - ports:
             - port: "53"
               protocol: UDP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "9153"
+              protocol: TCP

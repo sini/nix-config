@@ -32,7 +32,6 @@ spec:
             - --dynamic-serving-dns-names=cert-manager-webhook
             - --dynamic-serving-dns-names=cert-manager-webhook.$(POD_NAMESPACE)
             - --dynamic-serving-dns-names=cert-manager-webhook.$(POD_NAMESPACE).svc
-            - --metrics-listen-address=0
           env:
             - name: POD_NAMESPACE
               valueFrom:
@@ -57,6 +56,9 @@ spec:
               protocol: TCP
             - containerPort: 6080
               name: healthcheck
+              protocol: TCP
+            - containerPort: 9402
+              name: http-metrics
               protocol: TCP
           readinessProbe:
             failureThreshold: 3

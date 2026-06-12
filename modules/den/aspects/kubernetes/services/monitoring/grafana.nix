@@ -41,6 +41,14 @@ in
         applications.grafana = {
           namespace = "monitoring";
 
+          # CNPG cluster dashboard — rendered as a labeled ConfigMap the
+          # sidecar picks up. The operator chart's grafanaDashboard.create is
+          # a stub (the JSON moved to the dedicated dashboards repo this
+          # chart is pinned from).
+          helm.releases.cnpg-grafana-cluster = {
+            chart = charts.cnpg-grafana-dashboards.cluster;
+          };
+
           helm.releases.grafana = {
             chart = charts.grafana.grafana;
 
@@ -51,12 +59,62 @@ in
                 size = "10Gi";
               };
 
+              serviceMonitor.enabled = true;
+
               # Provision dashboards from labeled ConfigMaps (the
               # kube-prometheus-stack set plus anything we add later).
               sidecar.dashboards = {
                 enabled = true;
                 searchNamespace = "monitoring";
               };
+
+              # Canonical upstream dashboards that no deployed chart bundles:
+              # downloaded by the init container at startup (world:443 egress
+              # below covers grafana.com / raw.githubusercontent.com).
+              dashboardProviders."dashboardproviders.yaml" = {
+                apiVersion = 1;
+                providers = [
+                  {
+                    name = "imported";
+                    orgId = 1;
+                    folder = "Imported";
+                    type = "file";
+                    disableDeletion = false;
+                    editable = true;
+                    options.path = "/var/lib/grafana/dashboards/imported";
+                  }
+                ];
+              };
+
+              dashboards.imported =
+                let
+                  envoyDashboard =
+                    name:
+                    "https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/${name}.json";
+                in
+                {
+                  # Official Longhorn dashboard (referenced by longhorn docs)
+                  longhorn = {
+                    gnetId = 13032;
+                    revision = 6;
+                    datasource = "Prometheus";
+                  };
+                  # ArgoCD community-canonical dashboard
+                  argo-cd = {
+                    gnetId = 14584;
+                    datasource = "Prometheus";
+                  };
+                  cert-manager = {
+                    gnetId = 11001;
+                    datasource = "Prometheus";
+                  };
+                  # Envoy Gateway's own dashboards (the gateway-addons chart
+                  # set, pinned to the deployed EG release line)
+                  envoy-gateway-global.url = envoyDashboard "envoy-gateway-global";
+                  envoy-proxy-global.url = envoyDashboard "envoy-proxy-global";
+                  envoy-clusters.url = envoyDashboard "envoy-clusters";
+                  envoy-resources-monitor.url = envoyDashboard "resources-monitor.gen";
+                };
 
               # The client secret lands as an env var (GF_ vars override
               # grafana.ini), sourced from the SopsSecret below.

@@ -87,6 +87,10 @@ in
             values = {
               longhorn.preUpgradeChecker.jobEnabled = false;
 
+              # Longhorn-manager metrics ServiceMonitor (grafana.com dashboard
+              # 13032 imported in monitoring/grafana.nix charts on these).
+              metrics.serviceMonitor.enabled = true;
+
               preUpgradeChecker.upgradeVersionCheck = false;
 
               defaultSettings = {
