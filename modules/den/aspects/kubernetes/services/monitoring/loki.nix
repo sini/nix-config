@@ -1,4 +1,9 @@
 # Loki — Helm chart for in-cluster log aggregation.
+#
+# Single-binary deployment on longhorn storage; alloy (see alloy.nix) ships
+# pod logs here. The chart's nginx gateway is disabled — consumers hit the
+# loki service directly, and the gateway's resolver default (kube-dns)
+# doesn't exist on k3s (the service is named coredns).
 {
   den.aspects.kubernetes.services.monitoring.loki = {
     k8s-manifests =
@@ -11,8 +16,14 @@
             chart = charts.grafana.loki;
 
             values = {
+              # Without this the chart renders SimpleScalable and, with
+              # read/write/backend at 0, no loki pods at all.
+              deploymentMode = "SingleBinary";
+
               loki = {
                 auth_enabled = false;
+
+                commonConfig.replication_factor = 1;
 
                 storage = {
                   type = "filesystem";
@@ -20,10 +31,10 @@
 
                 schemaConfig.configs = [
                   {
-                    from = "2020-10-24";
-                    store = "boltdb-shipper";
+                    from = "2026-06-01";
+                    store = "tsdb";
                     object_store = "filesystem";
-                    schema = "v11";
+                    schema = "v13";
                     index = {
                       prefix = "index_";
                       period = "24h";
@@ -33,16 +44,15 @@
 
                 limits_config = {
                   retention_period = "30d";
-                  allow_structured_metadata = false;
                 };
 
                 compactor = {
                   retention_enabled = true;
                   retention_delete_delay = "2h";
+                  delete_request_store = "filesystem";
                 };
               };
 
-              # Single-binary mode for simplicity
               singleBinary = {
                 replicas = 1;
                 persistence = {
@@ -57,8 +67,7 @@
               write.replicas = 0;
               backend.replicas = 0;
 
-              # Deploy promtail for log collection
-              promtail.enabled = true;
+              gateway.enabled = false;
             };
           };
         };

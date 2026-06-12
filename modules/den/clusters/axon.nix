@@ -82,6 +82,7 @@
       services.storage.cloudnative-pg
       services.monitoring.prometheus
       services.monitoring.loki
+      services.monitoring.alloy
       services.monitoring.grafana
       services.network.cilium.hubble-ui
       services.media.base

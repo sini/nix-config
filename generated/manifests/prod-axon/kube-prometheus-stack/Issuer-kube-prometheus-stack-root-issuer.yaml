@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: kube-prometheus-stack-root-issuer
+  namespace: monitoring
+spec:
+  ca:
+    secretName: kube-prometheus-stack-root-cert
