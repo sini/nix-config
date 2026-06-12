@@ -101,6 +101,7 @@
       services.media.qbittorrent
       services.media.unpackerr
       services.media.configarr
+      services.media.shoko
       services.media.network-policy
       services.media.glance
       services.media.dash
