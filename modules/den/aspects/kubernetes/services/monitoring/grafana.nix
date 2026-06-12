@@ -302,6 +302,9 @@ in
                 searchNamespace = "monitoring";
                 folderAnnotation = "grafana_folder";
                 provider.foldersFromFilesStructure = true;
+                # No credentialed reload POSTs — there is no password-bearing
+                # account to authenticate them; the file provider polls.
+                skipReload = true;
               };
 
               # Secrets land as env vars (GF_ vars override grafana.ini),
@@ -314,6 +317,10 @@ in
                 GF_DATABASE_PASSWORD.secretKeyRef = {
                   name = "monitoring-pg-grafana-password";
                   key = "password";
+                };
+                GF_SECURITY_SECRET_KEY.secretKeyRef = {
+                  name = "grafana-k8s-secret-key";
+                  key = "secret-key";
                 };
               };
 
@@ -342,6 +349,12 @@ in
                     access = "proxy";
                     url = "http://kube-prometheus-stack-prometheus.monitoring:9090";
                     isDefault = true;
+                    jsonData = {
+                      # min step = the kps scrape interval (the host instance
+                      # uses 5s to match its own scraper)
+                      timeInterval = "30s";
+                      httpMethod = "POST";
+                    };
                   }
                   {
                     name = "Loki";
@@ -349,6 +362,9 @@ in
                     type = "loki";
                     access = "proxy";
                     url = "http://loki.monitoring:3100";
+                    jsonData = {
+                      maxLines = 1000;
+                    };
                   }
                 ];
               };
@@ -357,6 +373,20 @@ in
                 server = {
                   inherit domain;
                   root_url = "https://${domain}";
+                  enforce_domain = false;
+                };
+
+                # Passwordless, mirroring the host-level grafana: no admin
+                # user is ever created, so the login form stays harmless and
+                # kanidm is the only authority (server-admins map to
+                # GrafanaAdmin). secret_key is pinned via env above — the
+                # stateless pod must not sign cookies with the shipped
+                # default.
+                security = {
+                  disable_initial_admin_creation = true;
+                  cookie_secure = true;
+                  disable_gravatar = true;
+                  hide_version = true;
                 };
 
                 # Backing store in monitoring-pg (password via
@@ -377,8 +407,11 @@ in
 
                 users = {
                   allow_sign_up = false;
+                  auto_assign_org = true;
                   auto_assign_org_role = "Viewer";
                 };
+
+                auth.oauth_auto_login = true;
 
                 # Mirrors the host-level grafana OIDC config (same kanidm
                 # ACL groups: grafana.{editors,admins,server-admins}).
@@ -466,6 +499,11 @@ in
                   admin-password = config.age.secrets.grafana-k8s-admin-password.sopsRef;
                 };
               };
+
+              grafana-k8s-secret-key = {
+                type = "Opaque";
+                stringData.secret-key = config.age.secrets.grafana-k8s-secret-key.sopsRef;
+              };
             };
 
             ciliumNetworkPolicies = {
@@ -534,12 +572,26 @@ in
           };
         };
 
+        # The admin secret stays pinned but is inert: with
+        # disable_initial_admin_creation no account exists to use it, and
+        # removing it would regress the chart to render-time random
+        # passwords (diff churn).
         age.secrets.grafana-k8s-admin-password = {
           rekeyFile = env.secretPath + "/grafana-k8s/admin-password.age";
           generator.script = "rfc3986-secret";
           sopsOutput = {
             file = "grafana-k8s";
             key = "admin-password";
+          };
+        };
+
+        age.secrets.grafana-k8s-secret-key = {
+          rekeyFile = env.secretPath + "/grafana-k8s/secret-key.age";
+          settings.length = "32";
+          generator.script = "hex";
+          sopsOutput = {
+            file = "grafana-k8s";
+            key = "secret-key";
           };
         };
       };

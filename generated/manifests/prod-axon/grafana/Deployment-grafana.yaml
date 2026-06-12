@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 0f476b33e845a728a5842c4e8f6e98b80fc29563b8795f9bca8a9d18fdf46f3d
+        checksum/config: 32d5992f588ae3888375925e954c33c154a6afb36b7ed45c1c71bb4833395790
         checksum/sc-dashboard-provider-config: 81f722b8194d01e4a84ce12a0cbbe9b705b2d9145719c803ac264b4786c64a09
         kubectl.kubernetes.io/default-container: grafana
       labels:
@@ -40,20 +40,6 @@ spec:
               value: monitoring
             - name: FOLDER_ANNOTATION
               value: grafana_folder
-            - name: REQ_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  key: admin-user
-                  name: grafana-k8s-admin
-            - name: REQ_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: admin-password
-                  name: grafana-k8s-admin
-            - name: REQ_URL
-              value: http://localhost:3000/api/admin/provisioning/dashboards/reload
-            - name: REQ_METHOD
-              value: POST
           image: quay.io/kiwigrid/k8s-sidecar:2.5.0
           imagePullPolicy: IfNotPresent
           name: grafana-sc-dashboard
@@ -102,6 +88,11 @@ spec:
                 secretKeyRef:
                   key: password
                   name: monitoring-pg-grafana-password
+            - name: GF_SECURITY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-key
+                  name: grafana-k8s-secret-key
           image: docker.io/grafana/grafana:12.3.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
