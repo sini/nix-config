@@ -78,12 +78,16 @@ in
                 inherit (environment) id;
               };
 
-              # Routing — geneve tunnel with 1450 MTU (50-byte overhead)
+              # Routing — geneve tunnel. MTU stays auto-detected: an explicit
+              # MTU is the BASE device MTU (cilium subtracts the geneve
+              # overhead itself), so the old `MTU = 1450` double-subtracted —
+              # pods routed at 1400 and the datapath emitted frag-needed for
+              # any >1450 host flow, stalling GRO-coalesced kubelet/apiserver
+              # replies across the thunderbolt mesh in an ICMP storm.
               ipv4NativeRoutingCIDR = podNetwork.cidr;
               ipv6NativeRoutingCIDR = podNetwork.ipv6_cidr;
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
-              MTU = 1450;
 
               # Stable loopback routed by BGP fabric
               k8sServiceHost = "localhost";
