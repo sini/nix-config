@@ -10,6 +10,8 @@ spec:
     categories:
       - grafana-alloy
       - alloy
+      - grafana-alloy
+      - alloy
     kind: PodLogs
     listKind: PodLogsList
     plural: podlogs

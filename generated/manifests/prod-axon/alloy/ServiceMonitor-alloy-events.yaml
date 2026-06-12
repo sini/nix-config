@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/instance: alloy-events
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/part-of: alloy
+  name: alloy-events
+  namespace: monitoring
+spec:
+  endpoints:
+    - honorLabels: true
+      port: http-metrics
+      scheme: http
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: alloy-events
+      app.kubernetes.io/name: alloy

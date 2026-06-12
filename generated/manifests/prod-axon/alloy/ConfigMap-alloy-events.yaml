@@ -1,0 +1,21 @@
+apiVersion: v1
+data:
+  config.alloy: |-
+    loki.source.kubernetes_events "cluster_events" {
+      forward_to = [loki.write.loki.receiver]
+    }
+
+    loki.write "loki" {
+      endpoint {
+        url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+      }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/component: config
+    app.kubernetes.io/instance: alloy-events
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/part-of: alloy
+  name: alloy-events
+  namespace: monitoring
