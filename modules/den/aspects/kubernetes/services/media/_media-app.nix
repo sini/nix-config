@@ -67,7 +67,7 @@ in
       postgres ? false, # wire <NAME>__POSTGRES__* env + main/log db names
       postgresCnp ? postgres, # add the media-pg egress CiliumNetworkPolicy; defaults to `postgres`. Set true with postgres=false when the app talks to media-pg via a non-Servarr env style (e.g. bazarr's POSTGRES_* vars) so the egress policy is still emitted.
       config-size ? "2Gi", # longhorn config PVC size; null = no config PVC
-      mounts ? { }, # { data?; scratch-nfs?; scratch-local?; } (bools)
+      mounts ? { }, # { data?; scratch-nfs?; scratch-local?; metadata?; } (bools)
       route ? true, # HTTPRoute on default-gateway
       oidc ? true, # SecurityPolicy + client secret (requires route)
       oidcForwardAccessToken ? true, # forward the access token as Authorization: Bearer to the upstream. qBittorrent 5.x answers 404 to ANY request carrying an Authorization: Bearer header (verified live 2026-06-11), so qbt sets this false; everything else ignores the header.
@@ -80,6 +80,7 @@ in
       dataMount = mounts.data or false;
       scratchNfs = mounts.scratch-nfs or false;
       scratchLocal = mounts.scratch-local or false;
+      metadataMount = mounts.metadata or false;
 
       # ENV-prefix for the Servarr __POSTGRES__ convention (PROWLARR__POSTGRES__…)
       envPrefix = lib.toUpper name;
@@ -150,6 +151,25 @@ in
             type = "persistentVolumeClaim";
             existingClaim = "media-scratch-local";
             globalMounts = [ { path = "/scratch"; } ];
+          };
+        }
+        // optionalAttrs metadataMount {
+          # Servarr MediaCover (binary artwork cache) lives on the NAS, not the
+          # longhorn config PVC: radarr's cache alone is ~5.2G (> its config
+          # PVC), it's bulk re-fetchable image data that has no business being
+          # replicated, and the archive's covers were pre-staged to the same
+          # NAS path at migration so imported libraries keep their artwork
+          # without a re-download storm (cover dirs are keyed by DB id, which
+          # the pgloader import preserved).
+          metadata = {
+            type = "persistentVolumeClaim";
+            existingClaim = "media-data-nfs";
+            globalMounts = [
+              {
+                path = "/config/MediaCover";
+                subPath = "media/metadata/${name}/MediaCover";
+              }
+            ];
           };
         };
 

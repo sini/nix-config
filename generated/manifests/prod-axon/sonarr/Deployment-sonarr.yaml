@@ -83,6 +83,9 @@ spec:
               name: config
             - mountPath: /data
               name: data
+            - mountPath: /config/MediaCover
+              name: metadata
+              subPath: media/metadata/sonarr/MediaCover
             - mountPath: /scratch
               name: scratch
       dnsPolicy: ClusterFirst
@@ -96,6 +99,9 @@ spec:
           persistentVolumeClaim:
             claimName: sonarr
         - name: data
+          persistentVolumeClaim:
+            claimName: media-data-nfs
+        - name: metadata
           persistentVolumeClaim:
             claimName: media-data-nfs
         - name: scratch
