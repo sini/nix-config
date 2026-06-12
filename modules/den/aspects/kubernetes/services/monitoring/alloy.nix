@@ -1,8 +1,13 @@
-# Alloy — Grafana Alloy DaemonSet shipping pod logs to loki.
+# Alloy — Grafana Alloy shipping cluster logs to loki.
 #
-# Tails CRI logs from /var/log/pods on every node (filtered to the local
-# node via the kubernetes API) and pushes to the loki service. Positions
-# live on a hostPath so a pod restart doesn't re-ingest every log file.
+# Two releases of the same chart:
+#   - alloy: DaemonSet tailing CRI logs from /var/log/pods on every node
+#     (filtered to the local node via the kubernetes API). Positions live
+#     on a hostPath so a pod restart doesn't re-ingest every log file.
+#   - alloy-events: single-replica Deployment turning kubernetes events
+#     into loki streams. Deliberately NOT part of the DaemonSet — the
+#     kubernetes_events source is not replica-aware and a DS would ship
+#     every event once per node.
 {
   den.aspects.kubernetes.services.monitoring.alloy = {
     k8s-manifests =
@@ -10,6 +15,31 @@
       {
         applications.alloy = {
           namespace = "monitoring";
+
+          helm.releases.alloy-events = {
+            chart = charts.grafana.alloy;
+
+            values = {
+              serviceMonitor.enabled = true;
+
+              controller = {
+                type = "deployment";
+                replicas = 1;
+              };
+
+              alloy.configMap.content = ''
+                loki.source.kubernetes_events "cluster_events" {
+                  forward_to = [loki.write.loki.receiver]
+                }
+
+                loki.write "loki" {
+                  endpoint {
+                    url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+                  }
+                }
+              '';
+            };
+          };
 
           helm.releases.alloy = {
             chart = charts.grafana.alloy;
@@ -121,12 +151,13 @@
             };
           };
 
-          # Pod discovery (node-local filter) talks to the kube-apiserver;
-          # the loki push stays inside the cluster (allow-internal-egress).
+          # Pod discovery (node-local filter) and the events watch talk to
+          # the kube-apiserver; the loki push stays inside the cluster
+          # (allow-internal-egress). The name label covers both releases.
           resources.ciliumNetworkPolicies = {
             allow-alloy-kube-apiserver-egress = {
               spec = {
-                endpointSelector.matchLabels."app.kubernetes.io/instance" = "alloy";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "alloy";
                 egress = [
                   {
                     toEntities = [ "kube-apiserver" ];
