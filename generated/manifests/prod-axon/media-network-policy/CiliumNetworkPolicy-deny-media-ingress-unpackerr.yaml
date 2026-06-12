@@ -10,4 +10,6 @@ spec:
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: unpackerr
-  ingress: []
+  ingress:
+    - fromEntities:
+        - host
