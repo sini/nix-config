@@ -231,10 +231,15 @@ let
             description = "Default-deny all ingress to ${name} (no inbound callers).";
             endpointSelector = podSel name;
             enableDefaultDeny.ingress = true;
-            # CRD anyOf requires one of ingress/ingressDeny/egress/egressDeny to
-            # be present; an empty list adds zero allow rules (NOT [ { } ], which
-            # would allow-all) while enableDefaultDeny above does the deny.
-            ingress = [ ];
+            # The agent-side rule sanitizer (stricter than the CRD anyOf)
+            # rejects a spec whose only section is an empty list — the policy
+            # passed the apiserver but every agent refused to import it, so
+            # these pods ran with NO ingress enforcement. One real allow rule
+            # satisfies it: the local host (kubelet probes), which cilium
+            # exempts by default anyway. enableDefaultDeny above still denies
+            # everything else, and future allows (e.g. a metrics scrape)
+            # compose instead of being trumped by a hard ingressDeny.
+            ingress = [ { fromEntities = [ "host" ]; } ];
           };
         }
       )
