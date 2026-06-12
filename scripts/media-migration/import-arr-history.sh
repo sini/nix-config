@@ -236,7 +236,7 @@ kubectl wait --for=delete pod \
 # --------------------------------------------------------------------------- #
 #
 # We use a pgloader COMMAND FILE (not bare CLI args) because we must EXCLUDE the
-# VersionInfo table — the `EXCLUDING TABLE NAMES MATCHING` clause is only
+# VersionInfo table — the `EXCLUDING TABLE NAMES LIKE` clause is only
 # available in the load-command-file form. The command file is written into the
 # Job container via a heredoc in `sh -c`, then pgloader runs it.
 #
@@ -245,7 +245,7 @@ kubectl wait --for=delete pod \
 #                      them with the correct postgres types already).
 #   truncate         — TRUNCATE each target table before copy → idempotent reruns.
 #   quote identifiers— preserve Servarr's CamelCase table/column names.
-#   EXCLUDING TABLE NAMES MATCHING 'VersionInfo'
+#   EXCLUDING TABLE NAMES LIKE 'VersionInfo'
 #                    — do NOT touch the migration table; the fresh-boot value
 #                      stays authoritative (Servarr-wiki procedure).
 #
@@ -318,6 +318,20 @@ spec:
               fi
               echo "Found sqlite db: ${SQLITE_IN_JOB}"
 
+              # --- local writable copy -----------------------------------
+              # WAL-mode sqlite cannot be opened on the read-only NFS mount
+              # (the open needs to create/lock the -shm next to the file);
+              # pgloader then logs an ERROR but still exits 0 with an empty
+              # load. Copy db + journal files to the writable /tmp and load
+              # from there (sqlite recovers/replays the WAL on the copy, so
+              # un-checkpointed writes are preserved).
+              cp "${SQLITE_IN_JOB}" /tmp/source.db
+              for sfx in wal shm; do
+                if [ -f "${SQLITE_IN_JOB}-\${sfx}" ]; then
+                  cp "${SQLITE_IN_JOB}-\${sfx}" "/tmp/source.db-\${sfx}"
+                fi
+              done
+
               # --- write pgloader command file ---------------------------
               # Written with printf (not a nested heredoc) so we don't depend on
               # the in-pod /bin/sh finding an indented heredoc terminator. The
@@ -326,14 +340,17 @@ spec:
               # literal values here.
               printf '%s\n' \
                 'LOAD DATABASE' \
-                '  FROM sqlite://${SQLITE_IN_JOB}' \
+                '  FROM sqlite:///tmp/source.db' \
                 '  INTO pgsql://${PG_ROLE}@${PG_RW_HOST}:${PG_PORT}/${MAIN_DB}' \
                 '' \
                 'WITH data only,' \
                 '     truncate,' \
-                '     quote identifiers' \
+                '     reset no sequences,' \
+                '     quote identifiers,' \
+                '     workers = 2, concurrency = 1,' \
+                '     prefetch rows = 10000, batch rows = 5000' \
                 '' \
-                "EXCLUDING TABLE NAMES MATCHING 'VersionInfo'" \
+                "EXCLUDING TABLE NAMES LIKE 'VersionInfo'" \
                 ';' \
                 > /tmp/load.cmd
 
@@ -341,7 +358,7 @@ spec:
               cat /tmp/load.cmd
               echo "---------------------------------"
 
-              exec pgloader /tmp/load.cmd
+              exec pgloader --on-error-stop /tmp/load.cmd
 MANIFEST
 
 # --------------------------------------------------------------------------- #
@@ -376,6 +393,37 @@ fi
 
 info "pgloader Job completed. Deleting Job..."
 kubectl delete job "${JOB_NAME}" -n "${NAMESPACE}" --ignore-not-found
+
+# --------------------------------------------------------------------------- #
+# Step 7b — reset sequences (pgloader's own reset has a CamelCase quoting bug: #
+# it passes quote_ident(attname) to pg_get_serial_sequence, which wants the    #
+# bare column name, so every "Id" column errors. Done here correctly instead;  #
+# the Job runs WITH reset no sequences.)                                       #
+# --------------------------------------------------------------------------- #
+
+info "Resetting sequences in ${MAIN_DB}..."
+kubectl exec "${PG_POD}" -n "${NAMESPACE}" -c "${PG_CONTAINER}" -- \
+  psql -U postgres -d "${MAIN_DB}" -v ON_ERROR_STOP=1 -c "
+DO \$\$
+DECLARE r record; n int := 0;
+BEGIN
+  FOR r IN
+    SELECT n.nspname, c.relname, a.attname,
+           pg_get_serial_sequence(format('%I.%I', n.nspname, c.relname), a.attname) AS seq
+    FROM pg_class c
+    JOIN pg_namespace n ON n.oid = c.relnamespace
+    JOIN pg_attribute a ON a.attrelid = c.oid
+    JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum AND a.atthasdef
+    WHERE c.relkind = 'r' AND a.attnum > 0
+      AND pg_get_expr(d.adbin, d.adrelid) ~ '^nextval'
+      AND n.nspname = 'public'
+  LOOP
+    EXECUTE format('SELECT setval(%L, GREATEST((SELECT COALESCE(MAX(%I), 1) FROM ONLY %I.%I), 1))',
+                   r.seq, r.attname, r.nspname, r.relname);
+    n := n + 1;
+  END LOOP;
+  RAISE NOTICE 'sequences reset: %', n;
+END \$\$;"
 
 # --------------------------------------------------------------------------- #
 # Step 8 — scale deployment back up                                            #
