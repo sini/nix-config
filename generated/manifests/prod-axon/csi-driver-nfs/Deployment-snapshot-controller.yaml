@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: snapshot-controller
+    app.kubernetes.io/instance: csi-driver-nfs
+    app.kubernetes.io/name: csi-driver-nfs
+  name: snapshot-controller
+  namespace: csi-nfs
+spec:
+  minReadySeconds: 15
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snapshot-controller
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: snapshot-controller
+    spec:
+      containers:
+        - args:
+            - --v=2
+            - --leader-election=true
+            - --leader-election-namespace=csi-nfs
+          image: registry.k8s.io/sig-storage/snapshot-controller:v8.4.0
+          imagePullPolicy: IfNotPresent
+          name: snapshot-controller
+          resources:
+            limits:
+              memory: 300Mi
+            requests:
+              cpu: 10m
+              memory: 20Mi
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+      nodeSelector:
+        kubernetes.io/os: linux
+      priorityClassName: system-cluster-critical
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: snapshot-controller
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/controlplane
+          operator: Exists
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/control-plane
+          operator: Exists
+        - effect: NoSchedule
+          key: CriticalAddonsOnly
+          operator: Exists

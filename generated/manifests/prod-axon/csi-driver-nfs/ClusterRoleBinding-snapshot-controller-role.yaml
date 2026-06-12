@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: csi-driver-nfs
+    app.kubernetes.io/name: csi-driver-nfs
+  name: snapshot-controller-role
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: snapshot-controller-runner
+subjects:
+  - kind: ServiceAccount
+    name: snapshot-controller
+    namespace: csi-nfs

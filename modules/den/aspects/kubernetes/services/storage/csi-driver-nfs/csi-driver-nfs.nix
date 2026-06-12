@@ -28,6 +28,18 @@
 
           helm.releases.csi-driver-nfs = {
             chart = charts.kubernetes-csi.csi-driver-nfs;
+            # external-snapshotter: the cluster-wide snapshot-controller that
+            # binds VolumeSnapshot -> VolumeSnapshotContent. Nothing else
+            # deploys it (longhorn only ships the CSI sidecar), so without it
+            # every volumeSnapshot Backup hangs in `started` with the
+            # VolumeSnapshot unbound and event-less — bit the media-pg nightly.
+            # The matching apiserver-egress CNP below predates this enable.
+            values.externalSnapshotter = {
+              enabled = true;
+              # VolumeSnapshot CRDs already live on-cluster; a second emission
+              # sync-blocks argo with RepeatedResourceWarning (the #99 trap).
+              customResourceDefinitions.enabled = false;
+            };
           };
 
           resources = {
