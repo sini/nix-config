@@ -16,7 +16,7 @@ spec:
       template:
         metadata:
           annotations:
-            checksum/configMaps: 09af9ea5d26aaf4daa086abc551a18fb55edded31dcc8aa181a3238658453236
+            checksum/configMaps: f8a4e54ca437f12432a09a9e4a74e0199afe554833f365c2e5d4737235fb9b22
           labels:
             app.kubernetes.io/controller: configarr
             app.kubernetes.io/instance: configarr
