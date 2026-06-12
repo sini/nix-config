@@ -4,7 +4,7 @@ data:
 kind: ConfigMap
 metadata:
   annotations:
-    grafana_folder: Kubernetes
+    grafana_folder: Monitoring
   labels:
     app: kube-prometheus-stack-grafana
     app.kubernetes.io/instance: kube-prometheus-stack
