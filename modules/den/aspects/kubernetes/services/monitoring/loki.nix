@@ -70,6 +70,32 @@
               gateway.enabled = false;
             };
           };
+
+          # The rules sidecar (loki-sc-rules) watches the apiserver for
+          # rule ConfigMaps/Secrets; the cluster default-denies egress to
+          # non-endpoint entities.
+          resources.ciliumNetworkPolicies = {
+            allow-loki-kube-apiserver-egress = {
+              spec = {
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "loki";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
+          };
         };
       };
   };
