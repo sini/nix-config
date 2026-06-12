@@ -13,6 +13,10 @@
         applications.kube-prometheus-stack = {
           namespace = "monitoring";
 
+          # The prometheus-operator CRDs blow past the 256KiB annotation
+          # limit under client-side apply.
+          syncPolicy.syncOptions.serverSideApply = true;
+
           helm.releases.kube-prometheus-stack = {
             chart = charts.prometheus-community.kube-prometheus-stack;
 
