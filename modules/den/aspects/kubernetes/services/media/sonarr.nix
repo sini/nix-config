@@ -38,6 +38,8 @@ in
     mounts = {
       data = true;
       scratch-nfs = true;
+      # MediaCover on the NAS (pre-staged from the archive) — see _media-app.nix.
+      metadata = true;
     };
 
     # Servarr HTTP health endpoint.
