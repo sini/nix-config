@@ -11211,6 +11211,8 @@ data:
     }
 kind: ConfigMap
 metadata:
+  annotations:
+    grafana_folder: Networking
   labels:
     app.kubernetes.io/name: cilium-agent
     app.kubernetes.io/part-of: cilium

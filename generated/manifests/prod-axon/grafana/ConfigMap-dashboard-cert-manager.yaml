@@ -1,25 +1,45 @@
 apiVersion: v1
 data:
-  cilium-operator-dashboard.json: |
+  cert-manager.json: |
     {
-      "__inputs": [
+      "__inputs": [],
+      "__requires": [
         {
-          "name": "DS_PROMETHEUS",
-          "label": "prometheus",
-          "description": "",
+          "type": "grafana",
+          "id": "grafana",
+          "name": "Grafana",
+          "version": "6.3.4"
+        },
+        {
+          "type": "panel",
+          "id": "graph",
+          "name": "Graph",
+          "version": ""
+        },
+        {
           "type": "datasource",
-          "pluginId": "prometheus",
-          "pluginName": "Prometheus"
+          "id": "prometheus",
+          "name": "Prometheus",
+          "version": "1.0.0"
+        },
+        {
+          "type": "panel",
+          "id": "singlestat",
+          "name": "Singlestat",
+          "version": ""
+        },
+        {
+          "type": "panel",
+          "id": "table",
+          "name": "Table",
+          "version": ""
         }
       ],
       "annotations": {
         "list": [
           {
             "builtIn": 1,
-            "datasource": {
-              "type": "datasource",
-              "uid": "grafana"
-            },
+            "datasource": "-- Grafana --",
             "enable": true,
             "hide": true,
             "iconColor": "rgba(0, 211, 255, 1)",
@@ -28,44 +48,126 @@ data:
           }
         ]
       },
+      "description": "Monitors Kubernetes deployments in cluster using Prometheus. Shows overall cluster CPU / Memory of deployments, replicas in each deployment. Uses Kube state metrics and cAdvisor metrics (741)",
       "editable": true,
-      "gnetId": null,
+      "gnetId": 11001,
       "graphTooltip": 0,
-      "id": 8,
+      "id": null,
+      "iteration": 1571233502297,
       "links": [],
       "panels": [
         {
-          "aliasColors": {
-            "avg": "#cffaff"
-          },
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
-          "fill": 0,
-          "fillGradient": 0,
+          "collapsed": false,
           "gridPos": {
-            "h": 5,
-            "w": 12,
+            "h": 1,
+            "w": 24,
             "x": 0,
             "y": 0
           },
-          "hiddenSeries": false,
-          "id": 24,
+          "id": 18,
+          "panels": [],
+          "title": "Certificates",
+          "type": "row"
+        },
+        {
+          "columns": [],
+          "datasource": "Prometheus",
+          "fontSize": "100%",
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 0,
+            "y": 1
+          },
+          "id": 15,
+          "options": {},
+          "pageSize": null,
+          "pluginVersion": "6.3.4",
+          "scroll": true,
+          "showHeader": true,
+          "sort": {
+            "col": 0,
+            "desc": true
+          },
+          "styles": [
+            {
+              "alias": "Time",
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "pattern": "Time",
+              "type": "hidden"
+            },
+            {
+              "alias": "Time Left",
+              "colorMode": "cell",
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "decimals": 2,
+              "pattern": "Value",
+              "thresholds": [
+                "2592000",
+                "5184000",
+                "7776000"
+              ],
+              "type": "number",
+              "unit": "dtdurations"
+            },
+            {
+              "alias": "Certificate",
+              "colorMode": null,
+              "colors": [
+                "rgba(245, 54, 54, 0.9)",
+                "rgba(237, 129, 40, 0.89)",
+                "rgba(50, 172, 45, 0.97)"
+              ],
+              "dateFormat": "YYYY-MM-DD HH:mm:ss",
+              "decimals": 2,
+              "mappingType": 1,
+              "pattern": "Metric",
+              "thresholds": [],
+              "type": "string",
+              "unit": "short"
+            }
+          ],
+          "targets": [
+            {
+              "expr": "sort_desc( sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace) )",
+              "instant": true,
+              "legendFormat": " {{exported_namespace}} / {{name}}",
+              "refId": "A"
+            }
+          ],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Time Left",
+          "transform": "timeseries_to_rows",
+          "type": "table"
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "cacheTimeout": null,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 0,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 12,
+            "x": 12,
+            "y": 1
+          },
+          "id": 13,
           "legend": {
+            "alignAsTable": false,
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
+            "rightSide": true,
             "show": true,
             "total": false,
             "values": false
@@ -77,56 +179,29 @@ data:
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
-          "pointradius": 5,
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
-          "seriesOverrides": [
-            {
-              "alias": "max",
-              "fillBelowTo": "min",
-              "lines": false
-            },
-            {
-              "alias": "min",
-              "lines": false
-            }
-          ],
+          "seriesOverrides": [],
           "spaceLength": 10,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "min(irate(cilium_operator_process_cpu_seconds_total{io_cilium_app=\"operator\"}[1m])) by (pod) * 100",
+              "expr": "sum(certmanager_certificate_ready_status) BY (condition)",
               "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "min",
-              "refId": "A"
-            },
-            {
-              "expr": "avg(irate(cilium_operator_process_cpu_seconds_total{io_cilium_app=\"operator\"}[1m])) by (pod) * 100",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "avg",
-              "refId": "B"
-            },
-            {
-              "expr": "max(irate(cilium_operator_process_cpu_seconds_total{io_cilium_app=\"operator\"}[1m])) by (pod) * 100",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "max",
-              "refId": "C"
+              "intervalFactor": 2,
+              "legendFormat": "{{condition}}",
+              "refId": "A",
+              "step": 1800
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "CPU Usage per node",
+          "title": "Certificate Ready Status",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -142,11 +217,11 @@ data:
           },
           "yaxes": [
             {
-              "format": "percent",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             },
             {
@@ -164,53 +239,39 @@ data:
           }
         },
         {
-          "aliasColors": {
-            "MAX_resident_memory_bytes_max": "#e5ac0e"
-          },
+          "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
-          "fill": 1,
+          "datasource": "Prometheus",
+          "fill": 0,
           "fillGradient": 0,
           "gridPos": {
-            "h": 5,
-            "w": 12,
-            "x": 12,
-            "y": 0
+            "h": 8,
+            "w": 24,
+            "x": 0,
+            "y": 9
           },
-          "hiddenSeries": false,
-          "id": 26,
+          "id": 16,
           "legend": {
-            "alignAsTable": false,
             "avg": false,
             "current": false,
             "max": false,
             "min": false,
-            "rightSide": false,
+            "rightSide": true,
             "show": true,
             "total": false,
             "values": false
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
-          "pointradius": 5,
+          "pluginVersion": "6.3.4",
+          "pointradius": 2,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
@@ -219,38 +280,21 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg(cilium_operator_process_resident_memory_bytes{io_cilium_app=\"operator\"})",
-              "format": "time_series",
-              "interval": "",
+              "expr": "sum(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"} - time()) BY (name,exported_namespace)",
+              "instant": false,
               "intervalFactor": 1,
-              "legendFormat": "AVG_resident_memory_bytes",
-              "refId": "C"
-            },
-            {
-              "expr": "max(cilium_operator_process_resident_memory_bytes{io_cilium_app=\"operator\"})",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "MAX_resident_memory_bytes_max",
-              "refId": "D"
-            },
-            {
-              "expr": "min(cilium_operator_process_resident_memory_bytes{io_cilium_app=\"operator\"})",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 1,
-              "legendFormat": "MIN_resident_memory_bytes_min",
-              "refId": "E"
+              "legendFormat": " {{exported_namespace}} / {{name}}",
+              "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Resident memory status",
+          "title": "Time Left",
           "tooltip": {
             "shared": true,
-            "sort": 0,
+            "sort": 1,
             "value_type": "individual"
           },
           "type": "graph",
@@ -263,11 +307,12 @@ data:
           },
           "yaxes": [
             {
-              "format": "bytes",
+              "decimals": 2,
+              "format": "s",
               "label": null,
               "logBase": 1,
-              "max": null,
-              "min": null,
+              "max": "7776000",
+              "min": "0",
               "show": true
             },
             {
@@ -286,16 +331,15 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": null,
           "gridPos": {
             "h": 1,
             "w": 24,
             "x": 0,
-            "y": 5
+            "y": 17
           },
-          "id": 6,
+          "id": 20,
           "panels": [],
-          "title": "IPAM",
+          "title": "ACME Client",
           "type": "row"
         },
         {
@@ -303,26 +347,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 20,
             "x": 0,
-            "y": 6
+            "y": 18
           },
-          "hiddenSeries": false,
-          "id": 8,
+          "id": 22,
           "legend": {
             "avg": false,
             "current": false,
@@ -334,112 +368,10 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
-          "percentage": false,
-          "pointradius": 2,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "stack": true,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "avg(cilium_operator_ipam_ips) by (type)",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{type}}",
-              "refId": "A"
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeRegions": [],
-          "timeShift": null,
-          "title": "IP Addresses",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ],
-          "yaxis": {
-            "align": false,
-            "alignLevel": null
-          }
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
-          "fill": 1,
-          "fillGradient": 0,
-          "gridPos": {
-            "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 6
-          },
-          "hiddenSeries": false,
-          "id": 10,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "options": {
-            "dataLinks": []
-          },
-          "paceLength": 10,
           "percentage": false,
           "pointradius": 2,
           "points": false,
@@ -450,10 +382,8 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(cilium_operator_ec2_api_duration_seconds_sum[1m])/rate(cilium_operator_ec2_api_duration_seconds_count[1m])",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{operation}} {{response_code}}",
+              "expr": "sum(rate(certmanager_http_acme_client_request_count[2m])) BY (status)",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
@@ -461,7 +391,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "EC2 API Interactions",
+          "title": "Overall requests per 2m",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -477,7 +407,7 @@ data:
           },
           "yaxes": [
             {
-              "format": "dtdurations",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -499,30 +429,104 @@ data:
           }
         },
         {
+          "cacheTimeout": null,
+          "colorBackground": false,
+          "colorValue": false,
+          "colors": [
+            "#299c46",
+            "rgba(237, 129, 40, 0.89)",
+            "#d44a3a"
+          ],
+          "datasource": "Prometheus",
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 4,
+            "x": 20,
+            "y": 18
+          },
+          "id": 26,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "options": {},
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false,
+            "ymax": null,
+            "ymin": null
+          },
+          "tableColumn": "",
+          "targets": [
+            {
+              "expr": "sum(certmanager_http_acme_client_request_count)",
+              "instant": true,
+              "refId": "A"
+            }
+          ],
+          "thresholds": "",
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Total requests",
+          "type": "singlestat",
+          "valueFontSize": "80%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "N/A",
+              "value": "null"
+            }
+          ],
+          "valueName": "avg"
+        },
+        {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
-            "h": 7,
+            "h": 8,
             "w": 8,
             "x": 0,
-            "y": 14
+            "y": 26
           },
-          "hiddenSeries": false,
-          "id": 4,
+          "id": 24,
           "legend": {
             "avg": false,
             "current": false,
@@ -534,12 +538,10 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
           "pointradius": 2,
           "points": false,
@@ -550,10 +552,8 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "cilium_operator_ipam_nodes",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{category}}",
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/directory\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
@@ -561,7 +561,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Number of nodes",
+          "title": "/directory",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -603,26 +603,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
-            "h": 7,
+            "h": 8,
             "w": 8,
             "x": 8,
-            "y": 14
+            "y": 26
           },
-          "hiddenSeries": false,
-          "id": 12,
+          "id": 27,
           "legend": {
             "avg": false,
             "current": false,
@@ -634,12 +624,10 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
           "pointradius": 2,
           "points": false,
@@ -650,10 +638,8 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "cilium_operator_ipam_available",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "interfaces",
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/cert\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
@@ -661,7 +647,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "# interfaces with addresses available",
+          "title": "/acme/cert",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -703,26 +689,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
-            "h": 7,
+            "h": 8,
             "w": 8,
             "x": 16,
-            "y": 14
+            "y": 26
           },
-          "hiddenSeries": false,
-          "id": 16,
+          "id": 28,
           "legend": {
             "avg": false,
             "current": false,
@@ -734,12 +710,10 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
           "pointradius": 2,
           "points": false,
@@ -750,10 +724,8 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(cilium_operator_ipam_resync_total[1m])",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "operations",
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-acct\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
@@ -761,7 +733,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Metadata Resync Operations",
+          "title": "/acme/new-acct",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -777,7 +749,7 @@ data:
           },
           "yaxes": [
             {
-              "format": "ops",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -803,26 +775,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 8,
-            "w": 12,
+            "w": 8,
             "x": 0,
-            "y": 21
+            "y": 34
           },
-          "hiddenSeries": false,
-          "id": 14,
+          "id": 29,
           "legend": {
             "avg": false,
             "current": false,
@@ -834,26 +796,22 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
           "pointradius": 2,
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "stack": true,
+          "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(cilium_operator_ec2_api_rate_limit_duration_seconds_sum[1m])/rate(cilium_operator_ec2_api_rate_limit_duration_seconds_count[1m])",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{operation}}",
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/order\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
@@ -861,7 +819,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "EC2 client side rate limiting",
+          "title": "/acme/order",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -877,7 +835,7 @@ data:
           },
           "yaxes": [
             {
-              "format": "reqps",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -903,26 +861,16 @@ data:
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "fieldConfig": {
-            "defaults": {
-              "custom": {}
-            },
-            "overrides": []
-          },
+          "datasource": "Prometheus",
           "fill": 1,
           "fillGradient": 0,
           "gridPos": {
             "h": 8,
-            "w": 12,
-            "x": 12,
-            "y": 21
+            "w": 8,
+            "x": 8,
+            "y": 34
           },
-          "hiddenSeries": false,
-          "id": 2,
+          "id": 30,
           "legend": {
             "avg": false,
             "current": false,
@@ -934,12 +882,10 @@ data:
           },
           "lines": true,
           "linewidth": 1,
-          "links": [],
           "nullPointMode": "null",
           "options": {
             "dataLinks": []
           },
-          "paceLength": 10,
           "percentage": false,
           "pointradius": 2,
           "points": false,
@@ -950,10 +896,8 @@ data:
           "steppedLine": false,
           "targets": [
             {
-              "expr": "avg(rate(cilium_operator_ipam_interface_creation_ops[1m])) by (subnetId, status)",
-              "format": "time_series",
-              "intervalFactor": 1,
-              "legendFormat": "{{status}} ({{subnetId}})",
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/new-order\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
               "refId": "A"
             }
           ],
@@ -961,7 +905,7 @@ data:
           "timeFrom": null,
           "timeRegions": [],
           "timeShift": null,
-          "title": "Interface Creation",
+          "title": "/acme/new-order",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -977,7 +921,265 @@ data:
           },
           "yaxes": [
             {
-              "format": "ops",
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 16,
+            "y": 34
+          },
+          "id": 31,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/authz-v3\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "/acme/authz-v3",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 0,
+            "y": 42
+          },
+          "id": 32,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/chall-v3\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "/acme/chall-v3",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ],
+          "yaxis": {
+            "align": false,
+            "alignLevel": null
+          }
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "fillGradient": 0,
+          "gridPos": {
+            "h": 8,
+            "w": 8,
+            "x": 8,
+            "y": 42
+          },
+          "id": 33,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "nullPointMode": "null",
+          "options": {
+            "dataLinks": []
+          },
+          "percentage": false,
+          "pointradius": 2,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "sum(rate(certmanager_http_acme_client_request_count{path=\"/acme/finalize\"}[2m])) BY (status)",
+              "legendFormat": "{{status}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeRegions": [],
+          "timeShift": null,
+          "title": "/acme/finalize",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -1000,24 +1202,83 @@ data:
         }
       ],
       "refresh": false,
-      "schemaVersion": 25,
+      "schemaVersion": 19,
       "style": "dark",
-      "tags": [],
+      "tags": [
+        "k8s"
+      ],
       "templating": {
         "list": [
           {
-            "type": "datasource",
-            "name": "DS_PROMETHEUS",
-            "query": "prometheus"
+            "current": {
+              "text": "k8s-qa",
+              "value": "k8s-qa"
+            },
+            "hide": 0,
+            "includeAll": false,
+            "label": "Datasource",
+            "multi": false,
+            "name": "Datasource",
+            "options": [],
+            "query": "prometheus",
+            "refresh": 1,
+            "regex": "/k8s.*/",
+            "skipUrlSync": false,
+            "type": "datasource"
+          },
+          {
+            "allValue": ".*",
+            "current": {},
+            "datasource": "Prometheus",
+            "definition": "label_values(exported_namespace)",
+            "hide": 0,
+            "includeAll": true,
+            "label": null,
+            "multi": false,
+            "name": "Namespace",
+            "options": [],
+            "query": "label_values(exported_namespace)",
+            "refresh": 1,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
+          },
+          {
+            "allValue": ".*",
+            "current": {},
+            "datasource": "Prometheus",
+            "definition": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
+            "hide": 0,
+            "includeAll": true,
+            "label": null,
+            "multi": false,
+            "name": "Certificate",
+            "options": [],
+            "query": "label_values(certmanager_certificate_expiration_timestamp_seconds{exported_namespace=~\"$Namespace\"},name) ",
+            "refresh": 2,
+            "regex": "",
+            "skipUrlSync": false,
+            "sort": 0,
+            "tagValuesQuery": "",
+            "tags": [],
+            "tagsQuery": "",
+            "type": "query",
+            "useTags": false
           }
         ]
       },
       "time": {
-        "from": "now-30m",
+        "from": "now-24h",
         "to": "now"
       },
       "timepicker": {
         "refresh_intervals": [
+          "5s",
           "10s",
           "30s",
           "1m",
@@ -1040,19 +1301,16 @@ data:
           "30d"
         ]
       },
-      "timezone": "",
-      "title": "Cilium Operator",
-      "uid": "1GC0TT4Wz",
-      "version": 2
+      "timezone": "browser",
+      "title": "cert-manager",
+      "uid": "u6M5igpWk",
+      "version": 5
     }
 kind: ConfigMap
 metadata:
   annotations:
-    grafana_folder: Networking
+    grafana_folder: Security
   labels:
-    app.kubernetes.io/name: cilium-operator
-    app.kubernetes.io/part-of: cilium
     grafana_dashboard: "1"
-    k8s-app: cilium
-  name: cilium-operator-dashboard
+  name: dashboard-cert-manager
   namespace: monitoring

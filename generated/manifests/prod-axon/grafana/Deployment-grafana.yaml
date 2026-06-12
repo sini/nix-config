@@ -18,10 +18,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: a7158195bd4cb2b41d857022447142b50c850d7fb0b3cb3cefdff13293d54663
-        checksum/dashboards-json-config: 17554d4bfe190628c84b4440ddd019250695580f87c0ec2097b2a60c810c5147
-        checksum/sc-dashboard-provider-config: e70bf6a851099d385178a76de9757bb0bef8299da6d8443602590e44f05fdf24
-        checksum/secret: 49f6858e74ceb84d91b98c10a7a8c82acec4e4593b06d20fa2cb71db7617e475
+        checksum/config: ed04eece71a36e9b91be19e1cba7e2c6db3f172f620f9428308d4f739c9bdffc
+        checksum/sc-dashboard-provider-config: 81f722b8194d01e4a84ce12a0cbbe9b705b2d9145719c803ac264b4786c64a09
+        checksum/secret: ad8244c4cdaf669f140738cc295df8362ca6adbc68c8cb489d54de70b48b86b0
         kubectl.kubernetes.io/default-container: grafana
       labels:
         app.kubernetes.io/instance: grafana
@@ -40,6 +39,8 @@ spec:
               value: both
             - name: NAMESPACE
               value: monitoring
+            - name: FOLDER_ANNOTATION
+              value: grafana_folder
             - name: REQ_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -148,37 +149,12 @@ spec:
             - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
               name: config
               subPath: datasources.yaml
-            - mountPath: /etc/grafana/provisioning/dashboards/dashboardproviders.yaml
-              name: config
-              subPath: dashboardproviders.yaml
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
             - mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
               name: sc-dashboard-provider
               subPath: provider.yaml
       enableServiceLinks: true
-      initContainers:
-        - args:
-            - -c
-            - mkdir -p /var/lib/grafana/dashboards/default && /bin/sh -x /etc/grafana/download_dashboards.sh
-          command:
-            - /bin/sh
-          image: docker.io/curlimages/curl:8.9.1
-          imagePullPolicy: IfNotPresent
-          name: download-dashboards
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop:
-                - ALL
-            seccompProfile:
-              type: RuntimeDefault
-          volumeMounts:
-            - mountPath: /etc/grafana/download_dashboards.sh
-              name: config
-              subPath: download_dashboards.sh
-            - mountPath: /var/lib/grafana
-              name: storage
       securityContext:
         fsGroup: 472
         runAsGroup: 472
@@ -190,9 +166,6 @@ spec:
         - configMap:
             name: grafana
           name: config
-        - configMap:
-            name: grafana-dashboards-imported
-          name: dashboards-imported
         - emptyDir: {}
           name: storage
         - emptyDir: {}

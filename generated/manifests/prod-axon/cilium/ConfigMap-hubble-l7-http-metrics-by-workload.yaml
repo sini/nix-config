@@ -1397,6 +1397,8 @@ data:
     }
 kind: ConfigMap
 metadata:
+  annotations:
+    grafana_folder: Networking
   labels:
     app.kubernetes.io/name: hubble
     app.kubernetes.io/part-of: cilium

@@ -139,6 +139,7 @@ in
                   dashboards = {
                     enabled = true;
                     namespace = "monitoring";
+                    annotations.grafana_folder = "Networking";
                   };
                 };
               };
@@ -156,6 +157,7 @@ in
               dashboards = {
                 enabled = true;
                 namespace = "monitoring";
+                annotations.grafana_folder = "Networking";
               };
 
               tls.secretsNamespace.create = false;
@@ -170,6 +172,7 @@ in
                 dashboards = {
                   enabled = true;
                   namespace = "monitoring";
+                  annotations.grafana_folder = "Networking";
                 };
               };
 

@@ -50,6 +50,7 @@
               grafana = {
                 enabled = false;
                 forceDeployDashboards = true;
+                sidecar.dashboards.annotations.grafana_folder = "Kubernetes";
               };
               alertmanager.enabled = true;
 

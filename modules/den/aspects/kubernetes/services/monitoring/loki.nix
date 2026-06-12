@@ -87,6 +87,7 @@
                 dashboards = {
                   enabled = true;
                   namespace = "monitoring";
+                  annotations.grafana_folder = "Monitoring";
                 };
                 rules.enabled = true;
               };
