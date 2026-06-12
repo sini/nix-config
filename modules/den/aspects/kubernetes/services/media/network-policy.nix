@@ -193,13 +193,23 @@ let
   # prowlarr as a caller (internal), no dashboard reads it.
   dashboardConsumes = arrs ++ [ "sabnzbd" ];
 
+  # Helper pods whose EGRESS half lives in their owning app file (see header)
+  # still need the arr-side ingress allow HERE — the owning files only carry
+  # the source-side policy, and with only an egress half the arrs' ingress
+  # default-deny silently dropped configarr/unpackerr API calls.
+  arrHelperSources = [
+    "unpackerr"
+    "configarr"
+  ];
+
   ingressPolicies = builtins.listToAttrs (
     map (
       tgt:
       let
         appSources = uniq (map (e: e.from) (builtins.filter (e: e.to == tgt) edges));
         dashSources = lib.optionals (builtins.elem tgt dashboardConsumes) dashboards;
-        allSources = appSources ++ dashSources;
+        helperSources = lib.optionals (builtins.elem tgt arrs) arrHelperSources;
+        allSources = appSources ++ dashSources ++ helperSources;
       in
       lib.nameValuePair "allow-media-ingress-${tgt}" {
         spec = {

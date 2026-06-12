@@ -18,6 +18,10 @@ spec:
             app.kubernetes.io/name: glance
         - matchLabels:
             app.kubernetes.io/name: dash
+        - matchLabels:
+            app.kubernetes.io/name: unpackerr
+        - matchLabels:
+            app.kubernetes.io/name: configarr
       toPorts:
         - ports:
             - port: "8989"
