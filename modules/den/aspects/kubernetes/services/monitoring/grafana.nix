@@ -74,6 +74,140 @@ in
           name:
           "https://raw.githubusercontent.com/envoyproxy/gateway/v1.8.1/charts/gateway-addons-helm/dashboards/${name}.json";
 
+        # Log-browsing dashboards authored here (community ones key off a
+        # job-based label schema; ours is namespace/pod/container). Stable
+        # uids give stable URLs; the loki datasource uid is pinned above.
+        lokiDs = {
+          type = "loki";
+          uid = "loki";
+        };
+
+        mkLabelVar = name: query: {
+          inherit name;
+          type = "query";
+          datasource = lokiDs;
+          inherit query;
+          refresh = 2;
+          includeAll = true;
+          multi = true;
+          allValue = ".+";
+          current = {
+            selected = true;
+            text = [ "All" ];
+            value = [ "$__all" ];
+          };
+        };
+
+        searchVar = {
+          name = "search";
+          type = "textbox";
+          label = "search";
+          current = {
+            text = "";
+            value = "";
+          };
+        };
+
+        mkLogsDashboard =
+          {
+            uid,
+            title,
+            variables,
+            selector,
+            volumeBy,
+          }:
+          {
+            inherit uid title;
+            schemaVersion = 39;
+            version = 1;
+            editable = true;
+            time = {
+              from = "now-1h";
+              to = "now";
+            };
+            templating.list = variables ++ [ searchVar ];
+            panels = [
+              {
+                title = "Log volume";
+                type = "timeseries";
+                datasource = lokiDs;
+                gridPos = {
+                  h = 6;
+                  w = 24;
+                  x = 0;
+                  y = 0;
+                };
+                options.legend.displayMode = "list";
+                fieldConfig.defaults.custom = {
+                  drawStyle = "bars";
+                  fillOpacity = 50;
+                };
+                targets = [
+                  {
+                    refId = "A";
+                    datasource = lokiDs;
+                    expr = "sum by (${volumeBy}) (count_over_time(${selector} |= `$search` [$__auto]))";
+                    legendFormat = "{{${volumeBy}}}";
+                  }
+                ];
+              }
+              {
+                title = "Logs";
+                type = "logs";
+                datasource = lokiDs;
+                gridPos = {
+                  h = 20;
+                  w = 24;
+                  x = 0;
+                  y = 6;
+                };
+                options = {
+                  showTime = true;
+                  wrapLogMessage = true;
+                  enableLogDetails = true;
+                  sortOrder = "Descending";
+                  dedupStrategy = "none";
+                };
+                targets = [
+                  {
+                    refId = "A";
+                    datasource = lokiDs;
+                    expr = "${selector} |= `$search`";
+                  }
+                ];
+              }
+            ];
+          };
+
+        localDashboards = {
+          pod-logs = {
+            folder = "Logs";
+            dashboard = mkLogsDashboard {
+              uid = "pod-logs";
+              title = "Pod Logs";
+              variables = [
+                (mkLabelVar "namespace" "label_values(namespace)")
+                (mkLabelVar "pod" "label_values({namespace=~\"$namespace\"}, pod)")
+                (mkLabelVar "container" "label_values({namespace=~\"$namespace\", pod=~\"$pod\"}, container)")
+              ];
+              selector = "{namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"}";
+              volumeBy = "pod";
+            };
+          };
+          kubernetes-events = {
+            folder = "Logs";
+            dashboard = mkLogsDashboard {
+              uid = "k8s-events";
+              title = "Kubernetes Events";
+              variables = [
+                (mkLabelVar "namespace" "label_values({job=\"loki.source.kubernetes_events\"}, namespace)")
+              ];
+              selector = "{job=\"loki.source.kubernetes_events\", namespace=~\"$namespace\"}";
+              volumeBy = "namespace";
+            };
+          };
+        };
+
         importedDashboards = {
           argocd = {
             title = "ArgoCD";
@@ -178,6 +312,7 @@ in
                 datasources = [
                   {
                     name = "Prometheus";
+                    uid = "prometheus";
                     type = "prometheus";
                     access = "proxy";
                     url = "http://kube-prometheus-stack-prometheus.monitoring:9090";
@@ -185,6 +320,7 @@ in
                   }
                   {
                     name = "Loki";
+                    uid = "loki";
                     type = "loki";
                     access = "proxy";
                     url = "http://loki.monitoring:3100";
@@ -258,7 +394,17 @@ in
                   fixDatasource = d.fixDatasource or false;
                 };
               }
-            ) importedDashboards;
+            ) importedDashboards
+            // lib.mapAttrs' (
+              name: d:
+              lib.nameValuePair "dashboard-${name}" {
+                metadata = {
+                  labels.grafana_dashboard = "1";
+                  annotations.grafana_folder = d.folder;
+                };
+                data."${name}.json" = builtins.toJSON d.dashboard;
+              }
+            ) localDashboards;
 
             httpRoutes.grafana.spec = {
               parentRefs = [

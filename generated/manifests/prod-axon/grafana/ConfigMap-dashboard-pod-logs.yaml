@@ -1,0 +1,11 @@
+apiVersion: v1
+data:
+  pod-logs.json: '{"editable":true,"panels":[{"datasource":{"type":"loki","uid":"loki"},"fieldConfig":{"defaults":{"custom":{"drawStyle":"bars","fillOpacity":50}}},"gridPos":{"h":6,"w":24,"x":0,"y":0},"options":{"legend":{"displayMode":"list"}},"targets":[{"datasource":{"type":"loki","uid":"loki"},"expr":"sum by (pod) (count_over_time({namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"} |= `$search` [$__auto]))","legendFormat":"{{pod}}","refId":"A"}],"title":"Log volume","type":"timeseries"},{"datasource":{"type":"loki","uid":"loki"},"gridPos":{"h":20,"w":24,"x":0,"y":6},"options":{"dedupStrategy":"none","enableLogDetails":true,"showTime":true,"sortOrder":"Descending","wrapLogMessage":true},"targets":[{"datasource":{"type":"loki","uid":"loki"},"expr":"{namespace=~\"$namespace\", pod=~\"$pod\", container=~\"$container\"} |= `$search`","refId":"A"}],"title":"Logs","type":"logs"}],"schemaVersion":39,"templating":{"list":[{"allValue":".+","current":{"selected":true,"text":["All"],"value":["$__all"]},"datasource":{"type":"loki","uid":"loki"},"includeAll":true,"multi":true,"name":"namespace","query":"label_values(namespace)","refresh":2,"type":"query"},{"allValue":".+","current":{"selected":true,"text":["All"],"value":["$__all"]},"datasource":{"type":"loki","uid":"loki"},"includeAll":true,"multi":true,"name":"pod","query":"label_values({namespace=~\"$namespace\"}, pod)","refresh":2,"type":"query"},{"allValue":".+","current":{"selected":true,"text":["All"],"value":["$__all"]},"datasource":{"type":"loki","uid":"loki"},"includeAll":true,"multi":true,"name":"container","query":"label_values({namespace=~\"$namespace\", pod=~\"$pod\"}, container)","refresh":2,"type":"query"},{"current":{"text":"","value":""},"label":"search","name":"search","type":"textbox"}]},"time":{"from":"now-1h","to":"now"},"title":"Pod Logs","uid":"pod-logs","version":1}'
+kind: ConfigMap
+metadata:
+  annotations:
+    grafana_folder: Logs
+  labels:
+    grafana_dashboard: "1"
+  name: dashboard-pod-logs
+  namespace: monitoring

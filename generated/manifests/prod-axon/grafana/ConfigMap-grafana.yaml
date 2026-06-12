@@ -7,10 +7,12 @@ data:
       isDefault: true
       name: Prometheus
       type: prometheus
+      uid: prometheus
       url: http://kube-prometheus-stack-prometheus.monitoring:9090
     - access: proxy
       name: Loki
       type: loki
+      uid: loki
       url: http://loki.monitoring:3100
   grafana.ini: |
     [analytics]
