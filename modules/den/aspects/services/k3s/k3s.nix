@@ -33,6 +33,7 @@ in
       den.aspects.services.k3s.containerd
       den.aspects.services.k3s.node
       den.aspects.services.k3s.bootstrap
+      den.aspects.services.k3s.node-lifecycle
     ];
 
     settings = {
