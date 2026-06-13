@@ -3,36 +3,15 @@
 # Ported from main:modules/kubernetes/services/argocd/argocd.nix
 {
   lib,
-  config,
   ...
 }:
-let
-  inherit (lib)
-    concatStringsSep
-    splitString
-    take
-    ;
 
-  environments = config.den.environments;
-
-  # Convert domain to k8s-safe resource name (last 2 parts, hyphenated)
-  domainToResourceName =
-    domain:
-    let
-      parts = splitString "." domain;
-      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
-    in
-    concatStringsSep "-" topDomain;
-in
 {
   den.aspects.kubernetes.services.argocd = {
     service-domains = [ "argocd" ];
 
     age-secrets =
-      { cluster, ... }:
-      let
-        environment = environments.${cluster.environment};
-      in
+      { environment, ... }:
       {
         age.secrets = {
           # Shares its rekeyFile AND generator with the kanidm OAuth2 client's
@@ -77,18 +56,14 @@ in
         config,
         cluster,
         charts,
+        lib,
         ...
       }:
       let
-        environment = environments.${cluster.environment};
-        domain = environment.getDomainFor "argocd";
+        domain = cluster.domainFor "argocd";
 
         # OIDC issuer URL via Kanidm
-        oidcIssuerUrl =
-          let
-            kanidmDomain = environment.getDomainFor "kanidm";
-          in
-          "https://${kanidmDomain}/oauth2/openid/argocd";
+        oidcIssuerUrl = cluster.secrets.oidcIssuerFor "argocd";
       in
       {
         applications.argocd = {
@@ -259,10 +234,10 @@ in
                 {
                   name = "default-gateway";
                   namespace = "gateways";
-                  sectionName = "${domainToResourceName domain}-https";
+                  sectionName = "${cluster.domainForResource "argocd"}-https";
                 }
               ];
-              hostnames = [ domain ];
+              hostnames = [ (cluster.domainFor "argocd") ];
               rules = [
                 {
                   backendRefs = [

@@ -27,8 +27,5 @@
         name = "volume-snapshots";
         inherit src crds;
       };
-
-    # No k8s-manifests — volume-snapshots only provides CRDs via the
-    # CRD generation pipeline, no nixidy application.
   };
 }

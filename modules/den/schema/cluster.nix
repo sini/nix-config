@@ -10,6 +10,15 @@ let
   schemaLib = inputs.gen-schema.lib;
   environments = config.den.environments;
 
+  # Pure transform: a domain's k8s-safe resource name = its last two labels,
+  # hyphenated (glance.json64.dev -> json64-dev). Shared by the domainForResource
+  # (service-keyed) and resourceForDomain (domain-keyed) cluster methods below.
+  resourceNameOf =
+    domain:
+    lib.concatStringsSep "-" (
+      lib.reverseList (lib.take 2 (lib.reverseList (lib.splitString "." domain)))
+    );
+
   networkType = types.submodule {
     options = {
       cidr = mkOption {
@@ -112,6 +121,37 @@ in
             oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
           }
         );
+
+    # Resolve the public domain for a service in this cluster's environment
+    # (delegates to the environment's getDomainFor, following service overrides
+    # and delegation). Lets cluster-scoped aspects state `cluster.domainFor "x"`
+    # without re-deriving the environment.
+    den.schema.cluster.methods.domainFor =
+      schemaLib.schemaFn "Resolve the public domain for a service in this cluster's environment"
+        (lib.types.functionTo lib.types.str)
+        ({ environment, ... }: environments.${environment}.getDomainFor);
+
+    # Gateway listener resource name for a service's domain: the last two domain
+    # labels, hyphenated (glance.json64.dev -> json64-dev). Used to build the
+    # HTTPRoute parentRef sectionName ("${cluster.domainForResource "x"}-https").
+    # Replaces the per-aspect `domainToResourceName` let that was duplicated across
+    # glance / grafana / hubble-ui.
+    den.schema.cluster.methods.domainForResource =
+      schemaLib.schemaFn
+        "Gateway listener resource name (last two domain labels, hyphenated) for a service"
+        (lib.types.functionTo lib.types.str)
+        (
+          { environment, ... }:
+          serviceName: resourceNameOf (environments.${environment}.getDomainFor serviceName)
+        );
+
+    # Same transform keyed by a raw domain rather than a service — for aspects that
+    # enumerate domains directly (the gateway listeners in envoy-gateway, the
+    # wildcard certs in cert-manager) rather than resolving a single service.
+    den.schema.cluster.methods.resourceForDomain =
+      schemaLib.schemaFn "k8s-safe resource name (last two domain labels, hyphenated) for a domain"
+        (lib.types.functionTo lib.types.str)
+        (_: resourceNameOf);
 
     den.schema.cluster.imports = [
       (_: {

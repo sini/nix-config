@@ -9,6 +9,8 @@
 #
 # References the cluster-scoped `longhorn-snapshot` VolumeSnapshotClass
 # declared by media-pg.nix.
+
+# TODO: simplify this header
 { lib, ... }:
 let
   roleApps = [ "grafana" ];

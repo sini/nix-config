@@ -10,7 +10,7 @@
 #
 # This is a dedicated aspect with its own application (`media-secrets`) so the
 # shared Secret isn't coupled to any single app aspect. The Kanidm OIDC client
-# secrets live per-app (see _media-app.nix); this file is only the arr API keys.
+# secrets live per-app (in each app's aspect); this file is only the arr API keys.
 { lib, ... }:
 let
   # All apps that participate in the shared arr API-key web. Includes the

@@ -1,31 +1,6 @@
 # Longhorn — distributed block storage via longhorn/longhorn Helm chart,
 # 2-replica default, Retain policy, OIDC dashboard via Kanidm, HTTPRoute,
 # CiliumNetworkPolicy.
-#
-# Ported from main:modules/kubernetes/services/storage/longhorn/longhorn.nix
-{
-  lib,
-  config,
-  ...
-}:
-let
-  inherit (lib)
-    concatStringsSep
-    splitString
-    take
-    ;
-
-  environments = config.den.environments;
-
-  # Convert domain to k8s-safe resource name (last 2 parts, hyphenated)
-  domainToResourceName =
-    domain:
-    let
-      parts = splitString "." domain;
-      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
-    in
-    concatStringsSep "-" topDomain;
-in
 {
   den.aspects.kubernetes.services.storage.longhorn = {
     service-domains = [ "longhorn" ];
@@ -39,10 +14,7 @@ in
       };
 
     age-secrets =
-      { cluster, ... }:
-      let
-        environment = environments.${cluster.environment};
-      in
+      { environment, ... }:
       {
         # Shares its rekeyFile AND generator with the kanidm OAuth2 client's
         # basicSecretFile, so both declarations resolve to the same value.
@@ -66,10 +38,6 @@ in
         charts,
         ...
       }:
-      let
-        environment = environments.${cluster.environment};
-        longhornDomain = environment.getDomainFor "longhorn";
-      in
       {
         applications.longhorn = {
           namespace = "longhorn-system";
@@ -113,12 +81,12 @@ in
 
           resources = {
             httpRoutes.longhorn-dashboard.spec = {
-              hostnames = [ longhornDomain ];
+              hostnames = [ (cluster.domainFor "longhorn") ];
               parentRefs = [
                 {
                   name = "default-gateway";
                   namespace = "gateways";
-                  sectionName = "${domainToResourceName longhornDomain}-https";
+                  sectionName = "${cluster.domainForResource "longhorn"}-https";
                 }
               ];
               rules = [

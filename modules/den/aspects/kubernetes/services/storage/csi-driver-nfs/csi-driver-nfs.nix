@@ -1,13 +1,6 @@
 # CSI Driver NFS — dynamic StorageClasses per NFS volume via
 # kubernetes-csi/csi-driver-nfs Helm chart, proto=tcp nfsvers=4.1 noatime,
 # CiliumNetworkPolicy.
-#
-# Ported from main:modules/kubernetes/services/storage/csi-driver-nfs/csi-driver-nfs.nix
-{
-  lib,
-  config,
-  ...
-}:
 {
   den.aspects.kubernetes.services.storage.csi-driver-nfs = {
     crds =
@@ -18,7 +11,12 @@
       };
 
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        cluster,
+        charts,
+        lib,
+        ...
+      }:
       let
         inherit (cluster) nfsVolumes;
       in

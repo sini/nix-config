@@ -2,7 +2,7 @@
 #
 # WHY THIS FILE EXISTS
 # --------------------
-# Each media app's helper (_media-app.nix) emits only its *baseline* policies:
+# Each media app emits only its *baseline* policies inline:
 #   - gateway-ingress  (ingress, routed apps only)  -> engages INGRESS default-deny
 #   - dns-egress       (egress, every app)
 #   - postgres-egress  (egress, postgres apps)

@@ -1,20 +1,15 @@
 # CoreDNS — dual-stack, forward to env DNS, prometheus metrics 9153, cache 30s.
-#
-# Ported from main:modules/kubernetes/services/network/coredns/coredns.nix
-{
-  lib,
-  config,
-  ...
-}:
-let
-  environments = config.den.environments;
-in
 {
   den.aspects.kubernetes.services.network.coredns = {
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        cluster,
+        charts,
+        environment,
+        lib,
+        ...
+      }:
       let
-        environment = environments.${cluster.environment};
         defaultNetwork =
           environment.networks.default or {
             dnsServers = [

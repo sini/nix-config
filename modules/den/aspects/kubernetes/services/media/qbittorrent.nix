@@ -1,8 +1,7 @@
 # qBittorrent — BitTorrent client routed through a Gluetun WireGuard sidecar.
 #
-# Routed + OIDC-protected UI on torrent.json64.dev (prod.nix declares
-# services.qbittorrent.domain; the helper reads it via getDomainFor
-# "qbittorrent"). The OIDC clientID stays "qbittorrent".
+# Routed + OIDC-protected UI on the gateway (cluster.domainFor "qbittorrent"). The
+# OIDC clientID stays "qbittorrent".
 #
 # == VPN topology (single pod, shared netns) ==
 # qBittorrent's traffic MUST egress only through the VPN tunnel. We co-locate two
@@ -31,16 +30,16 @@
 #    blocks all non-tunnel egress except FIREWALL_OUTBOUND_SUBNETS (the cluster
 #    pod/service CIDRs + the management VLAN) and the WireGuard endpoint. If the
 #    tunnel drops, gluetun drops traffic — qBittorrent cannot leak to the clear.
-# 2. BELT+SUSPENDERS: CiliumNetworkPolicies on the pod. We do NOT enable the
-#    helper's internetEgress (no world 80/443). Instead extraCnps allow only:
+# 2. BELT+SUSPENDERS: CiliumNetworkPolicies on the pod. We do NOT add a world
+#    80/443 egress. Instead the policies below allow only:
 #      - world UDP 51820 (the WireGuard handshake/data to the ProtonVPN endpoint;
 #        the endpoint IP/port live in a secret a CNP can't read, so we allow the
 #        standard ProtonVPN WG port to all of `world`);
 #      - intra-namespace ingress on 8080 from the *arr API callers + unpackerr.
-#    DNS + gateway-ingress come from the helper baseline. Cilium policies are
-#    additive (union of allows), so the baseline DNS/gateway-ingress and these
-#    extras compose. No TCP world-egress policy exists, so even if gluetun's
-#    firewall were misconfigured, Cilium denies cleartext TCP to the internet.
+#    DNS + gateway-ingress are the routed-app baseline. Cilium policies are
+#    additive (union of allows), so these compose. No TCP world-egress policy
+#    exists, so even if gluetun's firewall were misconfigured, Cilium denies
+#    cleartext TCP to the internet.
 #
 # INVARIANT — pre-tunnel leak surface: the native sidecar (above) closes the
 # startup race by ordering gluetun's tunnel ahead of `main`. The CNP floor is the
@@ -96,373 +95,508 @@
 # has no version field; the old image was the floating :libtorrentv1 tag). We pin
 # the latest libtorrent-v1-line LSIO tag (5.2.1-libtorrentv1). Gluetun pinned to
 # v3.41.1. Bump both in the deploy-time pass.
+#
+# This aspect describes its full service inline (it does not call the _media-app
+# builder). The two shell scripts are kept as verbatim data bindings; everything
+# else — the WireGuard secrets, gluetun env, network policies, route + OIDC — is
+# stated explicitly.
 {
-  config,
-  lib,
-  ...
-}:
-let
-  media-app = import ./_media-app.nix { inherit lib; };
+  den.aspects.kubernetes.services.media.qbittorrent = {
+    service-domains = [ "qbittorrent" ];
 
-  webuiPort = 8080;
-
-  # WireGuard material: one externally-provided (generator-less) age secret per
-  # field, all rekeyed into a single cluster sops file `media-vpn`.
-  vpnSecretName = "media-vpn";
-  vpnFields = {
-    # age-secret name suffix -> { sopsKey; }
-    "private-key" = { };
-    "addresses" = { };
-    "peer-public-key" = { };
-    "endpoint-ip" = { };
-    "endpoint-port" = { };
-  };
-  vpnAgeName = field: "${vpnSecretName}-${field}";
-
-  # gluetun env reading a media-vpn Secret key.
-  vpnEnv = key: {
-    valueFrom.secretKeyRef = {
-      name = vpnSecretName;
-      inherit key;
-    };
-  };
-
-  # qBittorrent.conf seeder. Idempotent:
-  #   fresh /config -> write a minimal [Preferences] section
-  #   existing      -> reconcile the auth-whitelist + host-header keys
-  # [Preferences] keys touched:
-  #   WebUI\LocalHostAuth               false (canonical localhost auth bypass —
-  #                                            lets port-sync hit the API from the
-  #                                            shared pod loopback)
-  #   WebUI\HostHeaderValidation        false (accept the gateway's proxied Host)
-  # printf (not a heredoc) to survive Nix indented-string dedenting.
-  configSeedScript = ''
-    set -eu
-    INI=/config/qBittorrent/qBittorrent.conf
-    mkdir -p /config/qBittorrent
-    # A fresh pod can never legitimately hold the single-instance lock (RWO
-    # PVC, replicas=1). A stale lockfile from a prior pod makes qbt assume a
-    # running instance and exit 0 silently — crash-looping with zero output.
-    rm -f /config/qBittorrent/lockfile
-    ensure_key() {
-      # ensure_key <key-escaped-for-sed> <full-line>
-      # NB: $line lands in sed REPLACEMENT/append contexts, where a lone
-      # backslash is consumed (s|..|WebUI\X| emits WebUIX — this is what
-      # flattened the first deployment's keys on its second boot). Escape
-      # backslashes for those contexts.
-      key="$1"; line="$2"
-      escline=$(printf '%s' "$line" | sed 's|\\|\\\\|g')
-      if grep -q "^$key=" "$INI"; then
-        sed -i "s|^$key=.*|$escline|" "$INI"
-      else
-        sed -i "/^\[Preferences\]/a $escline" "$INI"
-      fi
-    }
-    if [ ! -f "$INI" ]; then
-      echo "seeding fresh $INI"
-      {
-        printf '%s\n' '[Preferences]'
-        printf '%s\n' 'WebUI\LocalHostAuth=false'
-        printf '%s\n' 'WebUI\HostHeaderValidation=false'
-      } > "$INI"
-    else
-      echo "reconciling existing $INI"
-      grep -q '^\[Preferences\]' "$INI" || printf '[Preferences]\n' >> "$INI"
-      ensure_key 'WebUI\\LocalHostAuth' 'WebUI\LocalHostAuth=false'
-      # drop flattened leftovers from the earlier whitelist attempt
-      sed -i '/^WebUIAuthSubnetWhitelist/d; /^WebUIHostHeaderValidation/d' "$INI"
-      ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
-    fi
-  '';
-
-  # port-sync sidecar loop: poll gluetun's control server for the ProtonVPN
-  # forwarded port and, when it changes, PATCH qBittorrent's listen port via the
-  # WebUI API. All on the shared pod loopback (busybox wget). Idempotent: only
-  # pushes when the port actually changes. NB: this is a Nix indented string; the
-  # `${...}` interpolations are Nix (webuiPort), and busybox shell `$var` refs are
-  # escaped as `''${var}` so Nix leaves them for the shell.
-  portSyncScript = ''
-    set -eu
-    GTN=http://127.0.0.1:8000/v1/portforward
-    QBT=http://127.0.0.1:${toString webuiPort}
-    last=""
-    while true; do
-      # Compact-JSON assumption: gluetun's control server emits a single-line
-      # object like {"port":12345}; this sed grabs the first "port":<digits>. If
-      # gluetun ever pretty-prints the response, this extraction must change.
-      port="$(wget -qO- "$GTN" 2>/dev/null | sed -n 's/.*"port":\([0-9]*\).*/\1/p' || true)"
-      if [ -z "''${port:-}" ] || [ "''${port}" = "0" ]; then
-        echo "port-sync: no forwarded port from gluetun control server"
-      elif [ "''${port}" = "''${last}" ]; then
-        : # steady state: port unchanged, nothing to push — stay quiet
-      else
-        echo "port-sync: setting qBittorrent listen port to ''${port}"
-        if wget -qO- --post-data "json={\"listen_port\":''${port}}" \
-            "$QBT/api/v2/app/setPreferences" >/dev/null 2>&1; then
-          last="''${port}"
-        else
-          echo "port-sync: setPreferences failed (qBittorrent not ready?), will retry"
-        fi
-      fi
-      sleep 60
-    done
-  '';
-
-  # Egress edge to a single in-namespace service port (used for arr-ingress).
-  fromArr = svc: {
-    matchLabels."app.kubernetes.io/name" = svc;
-  };
-
-  app = media-app.mkMediaApp {
-    name = "qbittorrent";
-    port = webuiPort;
-    image = {
-      repository = "lscr.io/linuxserver/qbittorrent";
-      tag = "5.2.1-libtorrentv1";
-    };
-    inherit (config.den) environments;
-
-    # qBittorrent 5.x answers 404 "Not Found" to ANY request carrying an
-    # Authorization: Bearer header (verified live 2026-06-11), and nothing in
-    # qbt consumes the forwarded token — keep it off the upstream request.
-    oidcForwardAccessToken = false;
-
-    # qBittorrent stores nothing in postgres.
-    postgres = false;
-
-    config-size = "1Gi";
-
-    # scratch-local RWO -> /scratch (pins pod to the scratch node, alongside
-    # sabnzbd / unpackerr on axon-01). No /data mount.
-    mounts = {
-      scratch-local = true;
-    };
-
-    # Main-container env. WEBUI_PORT tells the LSIO image which port to serve on.
-    env = {
-      WEBUI_PORT = toString webuiPort;
-      UMASK = "022";
-    };
-
-    # NO world TCP egress: qBittorrent must only reach the internet through the
-    # gluetun tunnel. The VPN handshake + intra-ns ingress are added via extraCnps
-    # below. gluetun's firewall is the primary kill-switch; these CNPs are the
-    # belt-and-suspenders cleartext-leak guard.
-    internetEgress = false;
-
-    extraCnps = {
-      # Allow the gluetun sidecar's WireGuard handshake/data to the ProtonVPN
-      # endpoint. The endpoint IP/port are secret (a CNP can't read them), so we
-      # allow the standard ProtonVPN WireGuard port (UDP 51820) to all of world.
-      # This is the ONLY world egress for the pod.
-      "allow-vpn-egress-qbittorrent".spec = {
-        description = "Allow the gluetun sidecar to reach the ProtonVPN WireGuard endpoint (UDP 51820).";
-        endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
-        egress = [
-          {
-            toEntities = [ "world" ];
-            toPorts = [
-              {
-                ports = [
-                  {
-                    port = "51820";
-                    protocol = "UDP";
-                  }
-                ];
-              }
-            ];
-          }
-        ];
-      };
-
-      # Allow the in-namespace *arr API callers + unpackerr to reach the WebUI on
-      # 8080 (download-client registration + queue management). The gateway
-      # ingress on 8080 is already covered by the helper baseline.
-      "allow-arr-ingress-qbittorrent".spec = {
-        description = "Allow the *arrs and unpackerr to reach qBittorrent's WebUI API (8080).";
-        endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
-        ingress = [
-          {
-            fromEndpoints = [
-              (fromArr "sonarr")
-              (fromArr "radarr")
-              (fromArr "lidarr")
-              (fromArr "whisparr")
-              (fromArr "prowlarr")
-              (fromArr "unpackerr")
-            ];
-            toPorts = [
-              {
-                ports = [
-                  {
-                    port = toString webuiPort;
-                    protocol = "TCP";
-                  }
-                ];
-              }
-            ];
-          }
-        ];
-      };
-    };
-
-    extraValues = {
-      controllers.main = {
-        # Seed/reconcile qBittorrent.conf before the main container starts. Runs
-        # the qBittorrent image so /config ownership stays consistent.
-        initContainers.config-seed = {
-          image = {
-            repository = "lscr.io/linuxserver/qbittorrent";
-            tag = "5.2.1-libtorrentv1";
-          };
-          command = [
-            "/bin/sh"
-            "-c"
-            configSeedScript
-          ];
-        };
-
-        # gluetun WireGuard native sidecar. A restartPolicy=Always initContainer:
-        # k8s starts it BEFORE the main container and keeps it running for the pod's
-        # lifetime, and (via the readiness probe below) holds `main` until the
-        # tunnel is up. Lives under initContainers (not containers) so it sequences
-        # ahead of qBittorrent — its only egress path. Shares the pod netns with
-        # the main container. app-template v5 renders restartPolicy + probes on
-        # initContainers through the same container spec template as regular
-        # containers (verified against the vendored chart).
-        initContainers.gluetun = {
-          image = {
-            repository = "qmcgaw/gluetun";
-            tag = "v3.41.1";
-          };
-          # Native sidecar: never terminates, runs alongside main.
-          restartPolicy = "Always";
-          securityContext.capabilities.add = [ "NET_ADMIN" ];
-          # Gate `main` on the tunnel: the readiness probe hits gluetun's health
-          # server (HTTP 200 only once the VPN loop is up). As a native sidecar,
-          # the kubelet won't start `main` until this probe passes. The kubelet
-          # dials the POD IP, so the health server must bind beyond loopback
-          # (HEALTH_SERVER_ADDRESS below) and the firewall must accept the probe
-          # port on eth0 (FIREWALL_INPUT_PORTS below).
-          probes.readiness = {
-            enabled = true;
-            type = "HTTP";
-            path = "/";
-            # gluetun internal health server: 200 only when tunnel is up
-            port = 9999;
-            spec = {
-              initialDelaySeconds = 5;
-              periodSeconds = 10;
-              failureThreshold = 30;
-            };
-          };
-          env = {
-            VPN_SERVICE_PROVIDER = "custom";
-            VPN_TYPE = "wireguard";
-
-            WIREGUARD_PRIVATE_KEY = vpnEnv "private-key";
-            WIREGUARD_ADDRESSES = vpnEnv "addresses";
-            WIREGUARD_PUBLIC_KEY = vpnEnv "peer-public-key";
-            WIREGUARD_ENDPOINT_IP = vpnEnv "endpoint-ip";
-            WIREGUARD_ENDPOINT_PORT = vpnEnv "endpoint-port";
-
-            # gluetun firewall: permit egress to the cluster pod/service CIDRs and
-            # the management VLAN so the WebUI ingress (via gateway), the *arr API
-            # callbacks, and in-cluster DNS keep working through the tunnel's
-            # kill-switch. Everything else non-tunnel is dropped by gluetun.
-            FIREWALL_OUTBOUND_SUBNETS = "172.20.0.0/16,172.21.0.0/16,10.10.10.0/24";
-
-            # INBOUND (root-caused 2026-06-11): gluetun's INPUT policy is DROP and
-            # its local-subnet auto-detection breaks on Cilium's pod netns shape
-            # (eth0 carries the pod IP as a /32 with the node router as gateway):
-            # it derives "local ipnet" from the GATEWAY /32, so its only eth0
-            # accept rule never matches traffic to the actual pod IP — envoy,
-            # kubelet probes and the *arrs all hit DROP (connect timeout).
-            # FIREWALL_INPUT_PORTS adds interface-scoped accepts on the default
-            # interface (eth0 only, never tun0 — the VPN side stays closed except
-            # the forwarded port), immune to that detection: 8080 = qbt WebUI
-            # (gateway + *arr download clients), 9999 = health probe (kubelet).
-            FIREWALL_INPUT_PORTS = "8080,9999";
-            # Health server defaults to 127.0.0.1:9999, unreachable for the
-            # kubelet's pod-IP httpGet probe — bind all interfaces instead.
-            HEALTH_SERVER_ADDRESS = ":9999";
-
-            # Forwarded port is read off gluetun's control server by the
-            # port-sync sidecar (see below); no up-command (app-template's tpl
-            # rejects gluetun's {{PORTS}} placeholder).
-            VPN_PORT_FORWARDING = "on";
-            VPN_PORT_FORWARDING_PROVIDER = "protonvpn";
-          };
-        };
-
-        # port-sync: pushes the ProtonVPN forwarded port into qBittorrent's prefs.
-        # Shares the pod loopback with gluetun (control server :8000) and qbt
-        # (WebUI :8080). busybox image for wget/sh; no secrets, no mounts.
-        containers.port-sync = {
-          image = {
-            repository = "busybox";
-            tag = "1.38.0";
-          };
-          command = [
-            "/bin/sh"
-            "-c"
-            portSyncScript
-          ];
-        };
-      };
-
-      # /dev/net/tun char device, mounted into the gluetun container only.
-      persistence.tun = {
-        type = "hostPath";
-        hostPath = "/dev/net/tun";
-        hostPathType = "CharDevice";
-        advancedMounts.main.gluetun = [ { path = "/dev/net/tun"; } ];
-      };
-    };
-  };
-in
-{
-  den.aspects.kubernetes.services.media.qbittorrent = app // {
-    # Post-merge the externally-provided WireGuard age secrets onto the helper's
-    # OIDC age-secrets. No generator: the operator fills these via `agenix edit`.
     age-secrets =
-      args@{ cluster, ... }:
-      let
-        environment = config.den.environments.${cluster.environment};
-        vpnSecrets = lib.mapAttrs' (
-          field: _:
-          lib.nameValuePair (vpnAgeName field) {
-            rekeyFile = environment.secretPath + "/media-vpn/${field}.age";
-            sopsOutput = {
-              file = vpnSecretName;
-              key = field;
+      { environment, ... }:
+      {
+        age.secrets = {
+          qbittorrent-oidc-client-secret = {
+            rekeyFile = environment.secretPath + "/oidc/qbittorrent-oidc-client-secret.age";
+            generator = {
+              tags = [ "oidc" ];
+              script = "rfc3986-secret";
             };
-          }
-        ) vpnFields;
-      in
-      # recursiveUpdate so the helper's OIDC age.secrets entry is preserved
-      # alongside the VPN entries (plain // would clobber the whole age.secrets).
-      lib.recursiveUpdate (app.age-secrets args) {
-        age.secrets = vpnSecrets;
+            sopsOutput = {
+              file = "oidc";
+              key = "qbittorrent";
+            };
+          };
+
+          # Externally-provided WireGuard material — NO generator, by design
+          # (issued by ProtonVPN; operator fills via `agenix edit`). Rekeyed into
+          # the cluster sops file `media-vpn`, one key per field.
+          media-vpn-private-key = {
+            rekeyFile = environment.secretPath + "/media-vpn/private-key.age";
+            sopsOutput = {
+              file = "media-vpn";
+              key = "private-key";
+            };
+          };
+          media-vpn-addresses = {
+            rekeyFile = environment.secretPath + "/media-vpn/addresses.age";
+            sopsOutput = {
+              file = "media-vpn";
+              key = "addresses";
+            };
+          };
+          media-vpn-peer-public-key = {
+            rekeyFile = environment.secretPath + "/media-vpn/peer-public-key.age";
+            sopsOutput = {
+              file = "media-vpn";
+              key = "peer-public-key";
+            };
+          };
+          media-vpn-endpoint-ip = {
+            rekeyFile = environment.secretPath + "/media-vpn/endpoint-ip.age";
+            sopsOutput = {
+              file = "media-vpn";
+              key = "endpoint-ip";
+            };
+          };
+          media-vpn-endpoint-port = {
+            rekeyFile = environment.secretPath + "/media-vpn/endpoint-port.age";
+            sopsOutput = {
+              file = "media-vpn";
+              key = "endpoint-port";
+            };
+          };
+        };
       };
 
-    # Post-merge the media-vpn k8s Secret (5 keys, each a sops ref) onto the
-    # helper's application manifests. The formals here must cover everything the
-    # helper's k8s-manifests needs (config, cluster, charts) — the module system
-    # only passes the args this function declares, and we forward them verbatim.
     k8s-manifests =
-      args@{
+      {
         config,
         cluster,
         charts,
         ...
       }:
-      lib.recursiveUpdate (app.k8s-manifests args) {
-        applications.qbittorrent.resources.secrets.${vpnSecretName} = {
-          type = "Opaque";
-          stringData = lib.mapAttrs' (
-            field: _: lib.nameValuePair field config.age.secrets.${vpnAgeName field}.sopsRef
-          ) vpnFields;
+      let
+        webuiPort = 8080;
+
+        # qBittorrent.conf seeder. Idempotent:
+        #   fresh /config -> write a minimal [Preferences] section
+        #   existing      -> reconcile the auth-whitelist + host-header keys
+        # printf (not a heredoc) to survive Nix indented-string dedenting.
+        configSeedScript = ''
+          set -eu
+          INI=/config/qBittorrent/qBittorrent.conf
+          mkdir -p /config/qBittorrent
+          # A fresh pod can never legitimately hold the single-instance lock (RWO
+          # PVC, replicas=1). A stale lockfile from a prior pod makes qbt assume a
+          # running instance and exit 0 silently — crash-looping with zero output.
+          rm -f /config/qBittorrent/lockfile
+          ensure_key() {
+            # ensure_key <key-escaped-for-sed> <full-line>
+            # NB: $line lands in sed REPLACEMENT/append contexts, where a lone
+            # backslash is consumed (s|..|WebUI\X| emits WebUIX — this is what
+            # flattened the first deployment's keys on its second boot). Escape
+            # backslashes for those contexts.
+            key="$1"; line="$2"
+            escline=$(printf '%s' "$line" | sed 's|\\|\\\\|g')
+            if grep -q "^$key=" "$INI"; then
+              sed -i "s|^$key=.*|$escline|" "$INI"
+            else
+              sed -i "/^\[Preferences\]/a $escline" "$INI"
+            fi
+          }
+          if [ ! -f "$INI" ]; then
+            echo "seeding fresh $INI"
+            {
+              printf '%s\n' '[Preferences]'
+              printf '%s\n' 'WebUI\LocalHostAuth=false'
+              printf '%s\n' 'WebUI\HostHeaderValidation=false'
+            } > "$INI"
+          else
+            echo "reconciling existing $INI"
+            grep -q '^\[Preferences\]' "$INI" || printf '[Preferences]\n' >> "$INI"
+            ensure_key 'WebUI\\LocalHostAuth' 'WebUI\LocalHostAuth=false'
+            # drop flattened leftovers from the earlier whitelist attempt
+            sed -i '/^WebUIAuthSubnetWhitelist/d; /^WebUIHostHeaderValidation/d' "$INI"
+            ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
+          fi
+        '';
+
+        # port-sync sidecar loop: poll gluetun's control server for the ProtonVPN
+        # forwarded port and, when it changes, PATCH qBittorrent's listen port via
+        # the WebUI API. All on the shared pod loopback (busybox wget). Idempotent:
+        # only pushes when the port actually changes. NB: this is a Nix indented
+        # string; the `${...}` interpolations are Nix (webuiPort), and busybox shell
+        # `$var` refs are escaped as `''${var}` so Nix leaves them for the shell.
+        portSyncScript = ''
+          set -eu
+          GTN=http://127.0.0.1:8000/v1/portforward
+          QBT=http://127.0.0.1:${toString webuiPort}
+          last=""
+          while true; do
+            # Compact-JSON assumption: gluetun's control server emits a single-line
+            # object like {"port":12345}; this sed grabs the first "port":<digits>. If
+            # gluetun ever pretty-prints the response, this extraction must change.
+            port="$(wget -qO- "$GTN" 2>/dev/null | sed -n 's/.*"port":\([0-9]*\).*/\1/p' || true)"
+            if [ -z "''${port:-}" ] || [ "''${port}" = "0" ]; then
+              echo "port-sync: no forwarded port from gluetun control server"
+            elif [ "''${port}" = "''${last}" ]; then
+              : # steady state: port unchanged, nothing to push — stay quiet
+            else
+              echo "port-sync: setting qBittorrent listen port to ''${port}"
+              if wget -qO- --post-data "json={\"listen_port\":''${port}}" \
+                  "$QBT/api/v2/app/setPreferences" >/dev/null 2>&1; then
+                last="''${port}"
+              else
+                echo "port-sync: setPreferences failed (qBittorrent not ready?), will retry"
+              fi
+            fi
+            sleep 60
+          done
+        '';
+      in
+      {
+        applications.qbittorrent = {
+          namespace = "media";
+
+          helm.releases.qbittorrent = {
+            chart = charts.bjw-s-labs.app-template;
+            values = {
+              controllers.main = {
+                type = "deployment";
+
+                containers.main = {
+                  image = {
+                    repository = "lscr.io/linuxserver/qbittorrent";
+                    tag = "5.2.1-libtorrentv1";
+                  };
+                  env = {
+                    TZ = "America/Los_Angeles";
+                    PUID = "1027";
+                    PGID = "65536";
+                    # WEBUI_PORT tells the LSIO image which port to serve on.
+                    WEBUI_PORT = toString webuiPort;
+                    UMASK = "022";
+                  };
+                  envFrom = [ ];
+                };
+
+                # Seed/reconcile qBittorrent.conf before the main container starts.
+                # Runs the qBittorrent image so /config ownership stays consistent.
+                initContainers.config-seed = {
+                  image = {
+                    repository = "lscr.io/linuxserver/qbittorrent";
+                    tag = "5.2.1-libtorrentv1";
+                  };
+                  command = [
+                    "/bin/sh"
+                    "-c"
+                    configSeedScript
+                  ];
+                };
+
+                # gluetun WireGuard native sidecar. A restartPolicy=Always
+                # initContainer: k8s starts it BEFORE the main container and keeps it
+                # running for the pod's lifetime, and (via the readiness probe below)
+                # holds `main` until the tunnel is up. Shares the pod netns with the
+                # main container.
+                initContainers.gluetun = {
+                  image = {
+                    repository = "qmcgaw/gluetun";
+                    tag = "v3.41.1";
+                  };
+                  restartPolicy = "Always";
+                  securityContext.capabilities.add = [ "NET_ADMIN" ];
+                  # Gate `main` on the tunnel: the readiness probe hits gluetun's
+                  # health server (HTTP 200 only once the VPN loop is up). The kubelet
+                  # dials the POD IP, so the health server must bind beyond loopback
+                  # (HEALTH_SERVER_ADDRESS) and the firewall must accept the probe
+                  # port on eth0 (FIREWALL_INPUT_PORTS).
+                  probes.readiness = {
+                    enabled = true;
+                    type = "HTTP";
+                    path = "/";
+                    port = 9999;
+                    spec = {
+                      initialDelaySeconds = 5;
+                      periodSeconds = 10;
+                      failureThreshold = 30;
+                    };
+                  };
+                  env = {
+                    VPN_SERVICE_PROVIDER = "custom";
+                    VPN_TYPE = "wireguard";
+
+                    WIREGUARD_PRIVATE_KEY.valueFrom.secretKeyRef = {
+                      name = "media-vpn";
+                      key = "private-key";
+                    };
+                    WIREGUARD_ADDRESSES.valueFrom.secretKeyRef = {
+                      name = "media-vpn";
+                      key = "addresses";
+                    };
+                    WIREGUARD_PUBLIC_KEY.valueFrom.secretKeyRef = {
+                      name = "media-vpn";
+                      key = "peer-public-key";
+                    };
+                    WIREGUARD_ENDPOINT_IP.valueFrom.secretKeyRef = {
+                      name = "media-vpn";
+                      key = "endpoint-ip";
+                    };
+                    WIREGUARD_ENDPOINT_PORT.valueFrom.secretKeyRef = {
+                      name = "media-vpn";
+                      key = "endpoint-port";
+                    };
+
+                    # gluetun firewall: permit egress to the cluster pod/service
+                    # CIDRs and the management VLAN so the WebUI ingress (via
+                    # gateway), the *arr API callbacks, and in-cluster DNS keep
+                    # working through the tunnel's kill-switch. Everything else
+                    # non-tunnel is dropped by gluetun.
+                    FIREWALL_OUTBOUND_SUBNETS = "172.20.0.0/16,172.21.0.0/16,10.10.10.0/24";
+
+                    # INBOUND (root-caused 2026-06-11): gluetun's INPUT policy is DROP
+                    # and its local-subnet auto-detection breaks on Cilium's pod netns
+                    # shape (eth0 carries the pod IP as a /32 with the node router as
+                    # gateway): it derives "local ipnet" from the GATEWAY /32, so its
+                    # only eth0 accept rule never matches traffic to the actual pod IP
+                    # — envoy, kubelet probes and the *arrs all hit DROP (connect
+                    # timeout). FIREWALL_INPUT_PORTS adds interface-scoped accepts on
+                    # the default interface (eth0 only, never tun0 — the VPN side stays
+                    # closed except the forwarded port), immune to that detection: 8080
+                    # = qbt WebUI (gateway + *arr download clients), 9999 = health
+                    # probe (kubelet).
+                    FIREWALL_INPUT_PORTS = "8080,9999";
+                    # Health server defaults to 127.0.0.1:9999, unreachable for the
+                    # kubelet's pod-IP httpGet probe — bind all interfaces instead.
+                    HEALTH_SERVER_ADDRESS = ":9999";
+
+                    # Forwarded port is read off gluetun's control server by the
+                    # port-sync sidecar (below); no up-command (app-template's tpl
+                    # rejects gluetun's {{PORTS}} placeholder).
+                    VPN_PORT_FORWARDING = "on";
+                    VPN_PORT_FORWARDING_PROVIDER = "protonvpn";
+                  };
+                };
+
+                # port-sync: pushes the ProtonVPN forwarded port into qBittorrent's
+                # prefs. Shares the pod loopback with gluetun (control server :8000)
+                # and qbt (WebUI :8080). busybox for wget/sh; no secrets, no mounts.
+                containers.port-sync = {
+                  image = {
+                    repository = "busybox";
+                    tag = "1.38.0";
+                  };
+                  command = [
+                    "/bin/sh"
+                    "-c"
+                    portSyncScript
+                  ];
+                };
+              };
+
+              service.main = {
+                controller = "main";
+                ports.http.port = webuiPort;
+              };
+
+              persistence = {
+                config = {
+                  type = "persistentVolumeClaim";
+                  accessMode = "ReadWriteOnce";
+                  size = "1Gi";
+                  storageClass = "longhorn";
+                  globalMounts = [ { path = "/config"; } ];
+                };
+
+                # scratch-local RWO -> /scratch (pins pod to the scratch node,
+                # alongside sabnzbd / unpackerr). No /data mount.
+                scratch = {
+                  type = "persistentVolumeClaim";
+                  existingClaim = "media-scratch-local";
+                  globalMounts = [ { path = "/scratch"; } ];
+                };
+
+                # /dev/net/tun char device, mounted into the gluetun container only.
+                tun = {
+                  type = "hostPath";
+                  hostPath = "/dev/net/tun";
+                  hostPathType = "CharDevice";
+                  advancedMounts.main.gluetun = [ { path = "/dev/net/tun"; } ];
+                };
+              };
+            };
+          };
+
+          resources = {
+            ciliumNetworkPolicies = {
+              # Routed-app baseline: Envoy Gateway proxies (ns "gateways") -> :8080.
+              allow-gateway-ingress-qbittorrent.spec = {
+                description = "Allow Envoy Gateway proxies to reach qbittorrent.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = toString webuiPort;
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # Routed-app baseline: kube-dns.
+              allow-dns-egress-qbittorrent.spec = {
+                description = "Allow qbittorrent to resolve via kube-dns.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
+                egress = [
+                  {
+                    toEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                          "k8s-app" = "kube-dns";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "53";
+                            protocol = "UDP";
+                          }
+                          {
+                            port = "53";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # The gluetun sidecar's WireGuard handshake/data to the ProtonVPN
+              # endpoint. The endpoint IP/port are secret (a CNP can't read them), so
+              # we allow the standard ProtonVPN WireGuard port (UDP 51820) to all of
+              # world. This is the ONLY world egress for the pod.
+              allow-vpn-egress-qbittorrent.spec = {
+                description = "Allow the gluetun sidecar to reach the ProtonVPN WireGuard endpoint (UDP 51820).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
+                egress = [
+                  {
+                    toEntities = [ "world" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "51820";
+                            protocol = "UDP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # The in-namespace *arr API callers + unpackerr reach the WebUI on 8080
+              # (download-client registration + queue management). The gateway ingress
+              # on 8080 is the baseline above; this is the intra-namespace side.
+              allow-arr-ingress-qbittorrent.spec = {
+                description = "Allow the *arrs and unpackerr to reach qBittorrent's WebUI API (8080).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      { matchLabels."app.kubernetes.io/name" = "sonarr"; }
+                      { matchLabels."app.kubernetes.io/name" = "radarr"; }
+                      { matchLabels."app.kubernetes.io/name" = "lidarr"; }
+                      { matchLabels."app.kubernetes.io/name" = "whisparr"; }
+                      { matchLabels."app.kubernetes.io/name" = "prowlarr"; }
+                      { matchLabels."app.kubernetes.io/name" = "unpackerr"; }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = toString webuiPort;
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
+
+            httpRoutes.qbittorrent.spec = {
+              hostnames = [ (cluster.domainFor "qbittorrent") ];
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "gateways";
+                  sectionName = "${cluster.domainForResource "qbittorrent"}-https";
+                }
+              ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      name = "qbittorrent";
+                      port = webuiPort;
+                    }
+                  ];
+                }
+              ];
+            };
+
+            securityPolicies."qbittorrent-oidc".spec = {
+              targetRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "HTTPRoute";
+                  name = "qbittorrent";
+                }
+              ];
+              oidc = {
+                provider.issuer = cluster.secrets.oidcIssuerFor "qbittorrent";
+                clientID = "qbittorrent";
+                clientSecret.name = "qbittorrent-oidc-client-secret";
+                scopes = [
+                  "email"
+                  "openid"
+                  "profile"
+                ];
+                # qBittorrent 5.x answers 404 to ANY request carrying an
+                # Authorization: Bearer header (verified live 2026-06-11), and nothing
+                # in qbt consumes the forwarded token — keep it off the upstream.
+                forwardAccessToken = false;
+              };
+            };
+
+            secrets = {
+              qbittorrent-oidc-client-secret = {
+                type = "Opaque";
+                stringData.client-secret = config.age.secrets.qbittorrent-oidc-client-secret.sopsRef;
+              };
+
+              # media-vpn k8s Secret (5 keys, each a sops ref); gluetun's env pulls
+              # each via valueFrom.secretKeyRef above.
+              media-vpn = {
+                type = "Opaque";
+                stringData = {
+                  private-key = config.age.secrets.media-vpn-private-key.sopsRef;
+                  addresses = config.age.secrets.media-vpn-addresses.sopsRef;
+                  peer-public-key = config.age.secrets.media-vpn-peer-public-key.sopsRef;
+                  endpoint-ip = config.age.secrets.media-vpn-endpoint-ip.sopsRef;
+                  endpoint-port = config.age.secrets.media-vpn-endpoint-port.sopsRef;
+                };
+              };
+            };
+          };
         };
       };
   };

@@ -1,14 +1,5 @@
 # Cilium CNI — geneve tunnel, kube-proxy replacement, BGP control-plane,
 # BPF masquerade, IPAM cluster-pool, socket LB, CiliumNetworkPolicies.
-#
-# Ported from main:modules/kubernetes/services/network/cilium/cilium.nix
-{
-  config,
-  ...
-}:
-let
-  environments = config.den.environments;
-in
 {
   den.aspects.kubernetes.services.network.cilium = {
     crds =
@@ -44,9 +35,14 @@ in
       };
 
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        cluster,
+        charts,
+        environment,
+        lib,
+        ...
+      }:
       let
-        environment = environments.${cluster.environment};
         podNetwork = cluster.networks.kubernetes-pods;
         loadbalancerNetwork = cluster.networks.kubernetes-loadbalancers;
         loadbalancer-cidr = loadbalancerNetwork.cidr;

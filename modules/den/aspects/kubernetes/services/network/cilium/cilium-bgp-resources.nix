@@ -1,17 +1,14 @@
 # Cilium BGP CRDs — BGPAdvertisements (Service ExternalIP + LoadBalancerIP),
 # BGPPeerConfigs (EBGP multihop 4, timers), BGPClusterConfigs per host.
-#
-# Consumes k3s-nodes pipe data collected at cluster scope via pipe.collectAll.
-{ lib, ... }:
-let
-  inherit (lib)
-    listToAttrs
-    ;
-in
 {
   den.aspects.kubernetes.services.network.cilium.cilium-bgp-resources = {
     k8s-manifests =
-      { cluster, k3s-nodes, ... }:
+      {
+        cluster,
+        k3s-nodes,
+        lib,
+        ...
+      }:
       let
         clusterNodes = lib.filter (n: n.environment.name == cluster.environment) k3s-nodes;
       in
@@ -63,7 +60,7 @@ in
               };
             };
 
-            ciliumBGPNodeConfigOverrides = listToAttrs (
+            ciliumBGPNodeConfigOverrides = lib.listToAttrs (
               map (node: {
                 name = node.hostname;
                 value.spec.bgpInstances = [
@@ -72,7 +69,7 @@ in
               }) clusterNodes
             );
 
-            ciliumBGPClusterConfigs = listToAttrs (
+            ciliumBGPClusterConfigs = lib.listToAttrs (
               map (node: {
                 name = "cilium-bgp-${node.hostname}";
                 value.spec = {

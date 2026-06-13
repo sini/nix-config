@@ -28,7 +28,7 @@
         inherit src crds;
       };
 
-    k8s-manifests = _: {
+    k8s-manifests = {
       applications.gateway-api = {
         namespace = "kube-system";
 

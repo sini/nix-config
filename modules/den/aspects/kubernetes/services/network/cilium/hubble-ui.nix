@@ -1,22 +1,4 @@
 # Hubble UI — Cilium network observability with OIDC protection.
-#
-# Ported from main:modules/kubernetes/services/network/cilium/hubble-ui.nix
-{
-  config,
-  lib,
-  ...
-}:
-let
-  inherit (lib) concatStringsSep splitString take;
-  environments = config.den.environments;
-  domainToResourceName =
-    domain:
-    let
-      parts = splitString "." domain;
-      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
-    in
-    concatStringsSep "-" topDomain;
-in
 {
   den.aspects.kubernetes.services.network.cilium.hubble-ui = {
     k8s-manifests =
@@ -25,10 +7,6 @@ in
         cluster,
         ...
       }:
-      let
-        environment = environments.${cluster.environment};
-        domain = environment.getDomainFor "hubble-ui";
-      in
       {
         applications.cilium = {
           compareOptions.serverSideDiff = true;
@@ -51,10 +29,10 @@ in
                 {
                   name = "default-gateway";
                   namespace = "gateways";
-                  sectionName = "${domainToResourceName domain}-https";
+                  sectionName = "${cluster.domainForResource "hubble-ui"}-https";
                 }
               ];
-              hostnames = [ domain ];
+              hostnames = [ (cluster.domainFor "hubble-ui") ];
               rules = [
                 {
                   backendRefs = [
@@ -187,13 +165,10 @@ in
       };
 
     age-secrets =
-      { cluster, ... }:
-      let
-        env = environments.${cluster.environment};
-      in
+      { environment, ... }:
       {
         age.secrets.hubble-ui-oidc-client-secret = {
-          rekeyFile = env.secretPath + "/oidc/hubble-ui-oidc-client-secret.age";
+          rekeyFile = environment.secretPath + "/oidc/hubble-ui-oidc-client-secret.age";
           generator = {
             tags = [ "oidc" ];
             script = "rfc3986-secret";

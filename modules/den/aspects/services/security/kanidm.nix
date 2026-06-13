@@ -304,7 +304,7 @@ let
 
   # ---- Media-stack OAuth2 clients ----
   # Every media UI sits behind an Envoy OIDC SecurityPolicy. The SecurityPolicy
-  # (rendered by _media-app.nix mkMediaApp) uses clientID = <name>, issuer
+  # (rendered per-app in each media aspect) uses clientID = <name>, issuer
   # https://idm.<domain>/oauth2/openid/<name>, clientSecret <name>-oidc-client-secret,
   # and the Envoy-default redirect URI <app-url>/oauth2/callback. These client
   # entries mirror that contract exactly (hubble-ui originUrl convention). The

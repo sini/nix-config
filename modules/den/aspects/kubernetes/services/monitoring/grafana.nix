@@ -8,35 +8,19 @@
 # kube-prometheus-stack force-deploys its standard dashboard set even
 # with its bundled grafana disabled (see prometheus.nix).
 {
-  config,
-  lib,
-  ...
-}:
-let
-  inherit (lib) concatStringsSep splitString take;
-  environments = config.den.environments;
-  domainToResourceName =
-    domain:
-    let
-      parts = splitString "." domain;
-      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
-    in
-    concatStringsSep "-" topDomain;
-in
-{
   den.aspects.kubernetes.services.monitoring.grafana = {
     k8s-manifests =
       {
         config,
         cluster,
         charts,
+        lib,
         pkgs,
         ...
       }:
       let
-        environment = environments.${cluster.environment};
-        domain = environment.getDomainFor "grafana-k8s";
-        kanidmDomain = environment.getDomainFor "kanidm";
+        domain = cluster.domainFor "grafana-k8s";
+        kanidmDomain = cluster.domainFor "kanidm";
 
         # Canonical upstream dashboards that no deployed chart bundles,
         # pinned and transformed at BUILD time (no runtime downloads): title
@@ -470,10 +454,10 @@ in
                 {
                   name = "default-gateway";
                   namespace = "gateways";
-                  sectionName = "${domainToResourceName domain}-https";
+                  sectionName = "${cluster.domainForResource "grafana-k8s"}-https";
                 }
               ];
-              hostnames = [ domain ];
+              hostnames = [ (cluster.domainFor "grafana-k8s") ];
               rules = [
                 {
                   backendRefs = [
@@ -555,13 +539,10 @@ in
       };
 
     age-secrets =
-      { cluster, ... }:
-      let
-        env = environments.${cluster.environment};
-      in
+      { environment, ... }:
       {
         age.secrets.grafana-k8s-oidc-client-secret = {
-          rekeyFile = env.secretPath + "/oidc/grafana-k8s-oidc-client-secret.age";
+          rekeyFile = environment.secretPath + "/oidc/grafana-k8s-oidc-client-secret.age";
           generator = {
             tags = [ "oidc" ];
             script = "rfc3986-secret";
@@ -577,7 +558,7 @@ in
         # removing it would regress the chart to render-time random
         # passwords (diff churn).
         age.secrets.grafana-k8s-admin-password = {
-          rekeyFile = env.secretPath + "/grafana-k8s/admin-password.age";
+          rekeyFile = environment.secretPath + "/grafana-k8s/admin-password.age";
           generator.script = "rfc3986-secret";
           sopsOutput = {
             file = "grafana-k8s";
@@ -586,7 +567,7 @@ in
         };
 
         age.secrets.grafana-k8s-secret-key = {
-          rekeyFile = env.secretPath + "/grafana-k8s/secret-key.age";
+          rekeyFile = environment.secretPath + "/grafana-k8s/secret-key.age";
           settings.length = "32";
           generator.script = "hex";
           sopsOutput = {

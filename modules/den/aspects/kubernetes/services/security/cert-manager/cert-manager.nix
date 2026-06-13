@@ -4,31 +4,16 @@
 # Ported from main:modules/kubernetes/services/security/cert-manager/cert-manager.nix
 {
   lib,
-  config,
   ...
 }:
 let
   inherit (lib)
-    concatStringsSep
     flatten
     listToAttrs
     mapAttrs'
     mapAttrsToList
     optional
-    splitString
-    take
     ;
-
-  environments = config.den.environments;
-
-  # Convert domain to k8s-safe resource name (last 2 parts, hyphenated)
-  domainToResourceName =
-    domain:
-    let
-      parts = splitString "." domain;
-      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
-    in
-    concatStringsSep "-" topDomain;
 in
 {
   den.aspects.kubernetes.services.security.cert-manager = {
@@ -43,10 +28,7 @@ in
       };
 
     age-secrets =
-      { cluster, ... }:
-      let
-        environment = environments.${cluster.environment};
-      in
+      { environment, ... }:
       {
         # One cloudflare-api-token secret per issuer. Shares its rekeyFile with
         # the host-side acme declaration (modules/den/aspects/services/security/
@@ -75,11 +57,11 @@ in
       {
         config,
         cluster,
+        environment,
         charts,
         ...
       }:
       let
-        environment = environments.${cluster.environment};
         inherit (environment.certificates) domains issuers;
       in
       {
@@ -152,14 +134,14 @@ in
               domains
               |> mapAttrs' (
                 domain: args: {
-                  name = (domainToResourceName domain) + "-wildcard-certificate";
+                  name = (cluster.resourceForDomain domain) + "-wildcard-certificate";
                   value = {
                     metadata = {
                       namespace = "certs";
                       annotations."cert-manager.io/issue-temporary-certificate" = "true";
                     };
                     spec = {
-                      secretName = "${domainToResourceName domain}-wildcard-tls";
+                      secretName = "${cluster.resourceForDomain domain}-wildcard-tls";
                       issuerRef = {
                         name = "${args.issuer}-issuer";
                         kind = "ClusterIssuer";

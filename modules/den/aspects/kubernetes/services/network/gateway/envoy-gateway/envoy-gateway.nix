@@ -1,34 +1,6 @@
 # Envoy Gateway — Gateway API controller via envoyproxy/gateway-helm,
 # experimental channel CRDs, EnvoyProxy config, default-gateway with
 # per-domain HTTP/HTTPS listeners, CiliumNetworkPolicies.
-#
-# Ported from main:modules/kubernetes/services/network/gateway/envoy-gateway/
-{
-  lib,
-  config,
-  ...
-}:
-let
-  inherit (lib)
-    concatStringsSep
-    flatten
-    map
-    optionalAttrs
-    splitString
-    take
-    ;
-
-  environments = config.den.environments;
-
-  # Convert domain to k8s-safe resource name (last 2 parts, hyphenated)
-  domainToResourceName =
-    domain:
-    let
-      parts = splitString "." domain;
-      topDomain = lib.reverseList (take 2 (lib.reverseList parts));
-    in
-    concatStringsSep "-" topDomain;
-in
 {
   den.aspects.kubernetes.services.network.gateway.envoy-gateway = {
     crds =
@@ -52,9 +24,20 @@ in
       };
 
     k8s-manifests =
-      { cluster, charts, ... }:
+      {
+        cluster,
+        charts,
+        environment,
+        lib,
+        ...
+      }:
       let
-        environment = environments.${cluster.environment};
+        inherit (lib)
+          flatten
+          map
+          optionalAttrs
+          ;
+
         numReplicas = if cluster.hosts != null then builtins.length cluster.hosts else 3;
         domains = environment.certificates.domains;
         default-gateway-address = cluster.getAssignment "default-gateway";
@@ -206,7 +189,7 @@ in
                 |> map (
                   domain:
                   let
-                    domainResourceName = domainToResourceName domain;
+                    domainResourceName = cluster.resourceForDomain domain;
                   in
                   [
                     {
@@ -291,7 +274,7 @@ in
                   |> map (domain: {
                     group = "";
                     kind = "Secret";
-                    name = "${domainToResourceName domain}-wildcard-tls";
+                    name = "${cluster.resourceForDomain domain}-wildcard-tls";
                   });
               };
             };

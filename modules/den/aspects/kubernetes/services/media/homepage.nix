@@ -6,12 +6,11 @@
 # service-domains "homepage". To avoid a hard domain collision this k8s dashboard
 # is named "dash" -> dash.json64.dev (prod.nix services.dash.domain). The Kanidm
 # OAuth2 client is "dash" too (kanidm.nix mediaClientDefs.dash), so clientID =
-# "dash" and the helper's getDomainFor "dash" + OIDC contract line up.
+# "dash" and the domain + OIDC contract line up.
 #
 # == Chart vs raw ==
-# nixhelm carries no gethomepage chart, so this is mkMediaApp on the upstream
-# image (ghcr.io/gethomepage/homepage) with config + RBAC layered via extraValues
-# and an aspect post-merge (the qbittorrent.nix pattern).
+# nixhelm carries no gethomepage chart, so this is the bjw-s app-template on the
+# upstream image (ghcr.io/gethomepage/homepage) with config + RBAC layered in.
 #
 # == Config (static, deterministic) ==
 # Homepage reads /app/config/{settings,services,widgets,bookmarks,kubernetes}.yaml.
@@ -33,353 +32,545 @@
 # the name is deterministic for the binding subject), point the controller at it
 # (controllers.main.serviceAccount.name = "dash"), and grant a ClusterRole (get/
 # list/watch on namespaces, pods, nodes, services, ingresses, gateway-api
-# httproutes, and metrics) via a ClusterRoleBinding. RBAC objects are added as raw
-# resources post-merged onto the helper output.
+# httproutes, and metrics) via a ClusterRoleBinding.
+#
+# == Config delivery (raw ConfigMap) ==
+# The config files are delivered as a RAW ConfigMap "dash-config" (not via the
+# chart's `configMaps` values) so their data bypasses app-template's Helm `tpl`
+# pass — that pass would try to evaluate homepage's `{{HOMEPAGE_VAR_*}}`
+# substitution tokens as Helm template calls and fail (the same `tpl` foot-gun
+# qbittorrent.nix documents). The ConfigMap is mounted by name, one file per
+# subPath, via persistence.config.
 #
 # == Networking ==
 # Egress (mirrors the pre-declared dashboard ingress edges in network-policy.nix):
-#   - DNS + gateway-ingress: helper baseline.
-#   - in-namespace API edges to sonarr/radarr/lidarr/whisparr/sabnzbd (extraCnps).
+#   - DNS + gateway-ingress baseline.
+#   - in-namespace API edges to sonarr/radarr/lidarr/whisparr/sabnzbd.
 #   - kube-apiserver egress (k8s discovery, cluster mode).
 #   - internet egress (80/443): homepage fetches dashboard icons from a CDN.
 #
 # Version: pinned to the latest stable gethomepage release. Bump at deploy time.
 {
-  config,
-  lib,
-  ...
-}:
-let
-  media-app = import ./_media-app.nix { inherit lib; };
+  den.aspects.kubernetes.services.media.dash = {
+    service-domains = [ "dash" ];
 
-  appName = "dash";
-  homepagePort = 3000; # gethomepage default HTTP port
-  saName = "dash";
-
-  # In-namespace service ports the dashboard surfaces (the dashboard ingress edges
-  # pre-declared in network-policy.nix). Single source of truth for the egress
-  # policy below.
-  apiTargets = {
-    sonarr = 8989;
-    radarr = 7878;
-    lidarr = 8686;
-    whisparr = 6969;
-    sabnzbd = 8080;
-  };
-
-  podSelector.matchLabels."app.kubernetes.io/name" = appName;
-
-  apiEgress = svc: port: {
-    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = svc; } ];
-    toPorts = [
+    age-secrets =
+      { environment, ... }:
       {
-        ports = [
-          {
-            port = toString port;
-            protocol = "TCP";
-          }
-        ];
-      }
-    ];
-  };
-
-  # API-key env: HOMEPAGE_VAR_<APP>_KEY <- media-arr-api-keys.<app>. Referenced in
-  # services.yaml as {{HOMEPAGE_VAR_<APP>_KEY}}. qbittorrent omitted (see header).
-  apiKeyApps = [
-    "sonarr"
-    "radarr"
-    "lidarr"
-    "sabnzbd"
-  ];
-  apiKeyEnv = lib.listToAttrs (
-    map (
-      app:
-      lib.nameValuePair "HOMEPAGE_VAR_${lib.toUpper app}_KEY" {
-        valueFrom.secretKeyRef = {
-          name = "media-arr-api-keys";
-          key = app;
+        age.secrets.dash-oidc-client-secret = {
+          rekeyFile = environment.secretPath + "/oidc/dash-oidc-client-secret.age";
+          generator = {
+            tags = [ "oidc" ];
+            script = "rfc3986-secret";
+          };
+          sopsOutput = {
+            file = "oidc";
+            key = "dash";
+          };
         };
-      }
-    ) apiKeyApps
-  );
-
-  # ---- config files ------------------------------------------------------
-  settingsYaml = ''
-    title: Media Dashboard
-    theme: dark
-    color: slate
-    headerStyle: clean
-    layout:
-      Media:
-        style: row
-        columns: 4
-      Downloaders:
-        style: row
-        columns: 2
-  '';
-
-  # Static service list with widgets keyed by {{HOMEPAGE_VAR_*_KEY}} env.
-  servicesYaml = ''
-    - Media:
-        - Sonarr:
-            href: https://sonarr.json64.dev/
-            icon: sonarr.png
-            widget:
-              type: sonarr
-              url: http://sonarr:8989
-              key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
-        - Radarr:
-            href: https://radarr.json64.dev/
-            icon: radarr.png
-            widget:
-              type: radarr
-              url: http://radarr:7878
-              key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
-        - Lidarr:
-            href: https://lidarr.json64.dev/
-            icon: lidarr.png
-            widget:
-              type: lidarr
-              url: http://lidarr:8686
-              key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
-        - Prowlarr:
-            href: https://prowlarr.json64.dev/
-            icon: prowlarr.png
-            # No widget: prowlarr API is admin-gated; surfaced as bookmark only.
-    - Downloaders:
-        - SABnzbd:
-            href: https://nzb.json64.dev/
-            icon: sabnzbd.png
-            widget:
-              type: sabnzbd
-              url: http://sabnzbd:8080
-              key: "{{HOMEPAGE_VAR_SABNZBD_KEY}}"
-        - qBittorrent:
-            href: https://torrent.json64.dev/
-            icon: qbittorrent.png
-            # No widget: the qbt WebUI is OIDC/loopback-locked; homepage cannot
-            # authenticate to it. Torrent status is visible via the *arrs.
-    - Watch:
-        - Jellyfin:
-            href: https://jellyfin.json64.dev/
-            icon: jellyfin.png
-  '';
-
-  widgetsYaml = ''
-    - resources:
-        backend: kubernetes
-        expanded: true
-        cpu: true
-        memory: true
-    - kubernetes:
-        cluster:
-          show: true
-          cpu: true
-          memory: true
-          showLabel: true
-        nodes:
-          show: true
-          cpu: true
-          memory: true
-    - search:
-        provider: duckduckgo
-        target: _blank
-  '';
-
-  bookmarksYaml = ''
-    - Media:
-        - Jellyfin:
-            - abbr: JF
-              href: https://jellyfin.json64.dev/
-        - Bazarr:
-            - abbr: BZ
-              href: https://bazarr.json64.dev/
-        - Whisparr:
-            - abbr: WH
-              href: https://whisparr.json64.dev/
-  '';
-
-  kubernetesYaml = ''
-    mode: cluster
-  '';
-
-  # The external ConfigMap holding the config files. Delivered as a RAW resource
-  # (not via the chart's `configMaps` values) so its data bypasses app-template's
-  # Helm `tpl` pass — that pass would try to evaluate homepage's
-  # `{{HOMEPAGE_VAR_*}}` substitution tokens as Helm template calls and fail (the
-  # same `tpl` foot-gun qbittorrent.nix documents). Mounted by `name` below.
-  configMapName = "dash-config";
-
-  # Mount each config file individually via subPath into /app/config.
-  configFiles = {
-    "settings.yaml" = settingsYaml;
-    "services.yaml" = servicesYaml;
-    "widgets.yaml" = widgetsYaml;
-    "bookmarks.yaml" = bookmarksYaml;
-    "kubernetes.yaml" = kubernetesYaml;
-  };
-
-  app = media-app.mkMediaApp {
-    name = appName;
-    port = homepagePort;
-    image = {
-      repository = "ghcr.io/gethomepage/homepage";
-      tag = "v1.13.2";
-    };
-    inherit (config.den) environments;
-
-    # Stateless: config arrives via ConfigMap (below), no config PVC.
-    config-size = null;
-
-    # Homepage fetches dashboard icons from a CDN.
-    internetEgress = true;
-
-    # HOMEPAGE_ALLOWED_HOSTS guards against host-header attacks; must match the
-    # public hostname the gateway forwards. Plus the *arr/sabnzbd API key env.
-    env = {
-      HOMEPAGE_ALLOWED_HOSTS = "dash.json64.dev";
-    }
-    // apiKeyEnv;
-
-    extraCnps = {
-      # Egress mirror of the pre-declared dashboard ingress edges.
-      "allow-api-egress-${appName}".spec = {
-        description = "Allow ${appName} to reach the in-namespace media APIs it surfaces.";
-        endpointSelector = podSelector;
-        egress = lib.mapAttrsToList apiEgress apiTargets;
       };
 
-      # k8s discovery (kubernetes.yaml mode=cluster) talks to the kube-apiserver.
-      "allow-apiserver-egress-${appName}".spec = {
-        description = "Allow ${appName} to reach the kube-apiserver for cluster resource discovery.";
-        endpointSelector = podSelector;
-        egress = [
-          {
-            toEntities = [ "kube-apiserver" ];
-            toPorts = [
-              {
-                ports = [
-                  {
-                    port = "6443";
-                    protocol = "TCP";
-                  }
-                ];
-              }
-            ];
-          }
-        ];
-      };
-    };
-
-    extraValues = {
-      # Bind the pod to our explicit ServiceAccount (created as a raw resource so
-      # its name is deterministic for the ClusterRoleBinding subject below) and
-      # mount its token — homepage's cluster-mode discovery authenticates to the
-      # kube-apiserver with it (the chart defaults automount to false).
-      controllers.main = {
-        serviceAccount.name = saName;
-        pod.automountServiceAccountToken = true;
-      };
-
-      # Mount the external (raw) ConfigMap by name, one file per subPath.
-      persistence.config = {
-        type = "configMap";
-        name = configMapName;
-        globalMounts = map (f: {
-          path = "/app/config/${f}";
-          subPath = f;
-          readOnly = true;
-        }) (lib.attrNames configFiles);
-      };
-    };
-  };
-in
-{
-  den.aspects.kubernetes.services.media.${appName} = app // {
-    # Post-merge the k8s-discovery RBAC (ServiceAccount + ClusterRole +
-    # ClusterRoleBinding) onto the helper's application manifests. Forward the
-    # helper's formals verbatim (the module system only passes declared args).
     k8s-manifests =
-      args@{
+      {
         config,
         cluster,
         charts,
         ...
       }:
-      lib.recursiveUpdate (app.k8s-manifests args) {
-        applications.${appName}.resources = {
-          # Config delivered as a raw ConfigMap (bypasses the chart's `tpl` pass —
-          # see configMapName note above). Mounted by name via persistence.config.
-          configMaps.${configMapName} = {
-            metadata.namespace = "media";
-            data = configFiles;
-          };
+      {
+        applications.dash = {
+          namespace = "media";
 
-          serviceAccounts.${saName} = {
-            metadata.namespace = "media";
-          };
+          helm.releases.dash = {
+            chart = charts.bjw-s-labs.app-template;
+            values = {
+              controllers.main = {
+                type = "deployment";
+                containers.main = {
+                  image = {
+                    repository = "ghcr.io/gethomepage/homepage";
+                    tag = "v1.13.2";
+                  };
+                  # baseEnv + HOMEPAGE_ALLOWED_HOSTS (host-header guard; must match
+                  # the public hostname the gateway forwards) + the *arr/sabnzbd
+                  # API key env (HOMEPAGE_VAR_<APP>_KEY <- media-arr-api-keys.<app>,
+                  # referenced in services.yaml as {{HOMEPAGE_VAR_<APP>_KEY}};
+                  # qbittorrent omitted, see header).
+                  env = {
+                    TZ = "America/Los_Angeles";
+                    PUID = "1027";
+                    PGID = "65536";
+                    HOMEPAGE_ALLOWED_HOSTS = "dash.json64.dev";
+                    HOMEPAGE_VAR_LIDARR_KEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "lidarr";
+                    };
+                    HOMEPAGE_VAR_RADARR_KEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "radarr";
+                    };
+                    HOMEPAGE_VAR_SABNZBD_KEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "sabnzbd";
+                    };
+                    HOMEPAGE_VAR_SONARR_KEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "sonarr";
+                    };
+                  };
+                  envFrom = [ ];
+                };
 
-          clusterRoles."media-${appName}-discovery" = {
-            rules = [
-              {
-                apiGroups = [ "" ];
-                resources = [
-                  "namespaces"
-                  "pods"
-                  "nodes"
-                  "services"
-                ];
-                verbs = [
-                  "get"
-                  "list"
-                  "watch"
-                ];
-              }
-              {
-                apiGroups = [ "metrics.k8s.io" ];
-                resources = [
-                  "nodes"
-                  "pods"
-                ];
-                verbs = [
-                  "get"
-                  "list"
-                ];
-              }
-              {
-                apiGroups = [ "networking.k8s.io" ];
-                resources = [ "ingresses" ];
-                verbs = [
-                  "get"
-                  "list"
-                  "watch"
-                ];
-              }
-              {
-                apiGroups = [ "gateway.networking.k8s.io" ];
-                resources = [ "httproutes" ];
-                verbs = [
-                  "get"
-                  "list"
-                  "watch"
-                ];
-              }
-            ];
-          };
+                # Bind the pod to our explicit ServiceAccount (created as a raw
+                # resource so its name is deterministic for the ClusterRoleBinding
+                # subject below) and mount its token — homepage's cluster-mode
+                # discovery authenticates to the kube-apiserver with it (the chart
+                # defaults automount to false).
+                serviceAccount.name = "dash";
+                pod.automountServiceAccountToken = true;
+              };
 
-          clusterRoleBindings."media-${appName}-discovery" = {
-            roleRef = {
-              apiGroup = "rbac.authorization.k8s.io";
-              kind = "ClusterRole";
-              name = "media-${appName}-discovery";
+              service.main = {
+                controller = "main";
+                ports.http.port = 3000; # gethomepage default HTTP port
+              };
+
+              # Mount the external (raw) ConfigMap by name, one file per subPath
+              # into /app/config. Stateless: config arrives via this ConfigMap, no
+              # config PVC.
+              persistence.config = {
+                type = "configMap";
+                name = "dash-config";
+                # One mount per config file, in attr-name-sorted order
+                # (lib.attrNames over the config-file set: bookmarks, kubernetes,
+                # services, settings, widgets).
+                globalMounts = [
+                  {
+                    path = "/app/config/bookmarks.yaml";
+                    subPath = "bookmarks.yaml";
+                    readOnly = true;
+                  }
+                  {
+                    path = "/app/config/kubernetes.yaml";
+                    subPath = "kubernetes.yaml";
+                    readOnly = true;
+                  }
+                  {
+                    path = "/app/config/services.yaml";
+                    subPath = "services.yaml";
+                    readOnly = true;
+                  }
+                  {
+                    path = "/app/config/settings.yaml";
+                    subPath = "settings.yaml";
+                    readOnly = true;
+                  }
+                  {
+                    path = "/app/config/widgets.yaml";
+                    subPath = "widgets.yaml";
+                    readOnly = true;
+                  }
+                ];
+              };
             };
-            subjects = [
-              {
-                kind = "ServiceAccount";
-                name = saName;
-                namespace = "media";
-              }
-            ];
+          };
+
+          resources = {
+            ciliumNetworkPolicies = {
+              allow-gateway-ingress-dash.spec = {
+                description = "Allow Envoy Gateway proxies to reach dash.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "dash";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "3000";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              allow-dns-egress-dash.spec = {
+                description = "Allow dash to resolve via kube-dns.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "dash";
+                egress = [
+                  {
+                    toEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                          "k8s-app" = "kube-dns";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "53";
+                            protocol = "UDP";
+                          }
+                          {
+                            port = "53";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              allow-internet-egress-dash.spec = {
+                description = "Allow dash to reach the public internet.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "dash";
+                egress = [
+                  {
+                    toEntities = [ "world" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "80";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # Egress mirror of the pre-declared dashboard ingress edges (the
+              # in-namespace media APIs the dashboard surfaces). Endpoints in
+              # attr-name-sorted order: lidarr, radarr, sabnzbd, sonarr, whisparr.
+              allow-api-egress-dash.spec = {
+                description = "Allow dash to reach the in-namespace media APIs it surfaces.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "dash";
+                egress = [
+                  {
+                    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "lidarr"; } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "8686";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                  {
+                    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "radarr"; } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "7878";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                  {
+                    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "sabnzbd"; } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "8080";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                  {
+                    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "sonarr"; } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "8989";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                  {
+                    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "whisparr"; } ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6969";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # k8s discovery (kubernetes.yaml mode=cluster) talks to the
+              # kube-apiserver.
+              allow-apiserver-egress-dash.spec = {
+                description = "Allow dash to reach the kube-apiserver for cluster resource discovery.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "dash";
+                egress = [
+                  {
+                    toEntities = [ "kube-apiserver" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
+
+            httpRoutes.dash.spec = {
+              hostnames = [ (cluster.domainFor "dash") ];
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "gateways";
+                  sectionName = "${cluster.domainForResource "dash"}-https";
+                }
+              ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      name = "dash";
+                      port = 3000;
+                    }
+                  ];
+                }
+              ];
+            };
+
+            securityPolicies."dash-oidc".spec = {
+              targetRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "HTTPRoute";
+                  name = "dash";
+                }
+              ];
+              oidc = {
+                provider.issuer = cluster.secrets.oidcIssuerFor "dash";
+                clientID = "dash";
+                clientSecret.name = "dash-oidc-client-secret";
+                scopes = [
+                  "email"
+                  "openid"
+                  "profile"
+                ];
+                forwardAccessToken = true;
+              };
+            };
+
+            secrets.dash-oidc-client-secret = {
+              type = "Opaque";
+              stringData.client-secret = config.age.secrets.dash-oidc-client-secret.sopsRef;
+            };
+
+            # Config delivered as a raw ConfigMap (bypasses the chart's `tpl` pass
+            # — see header note). Mounted by name via persistence.config above.
+            configMaps.dash-config = {
+              metadata.namespace = "media";
+              data = {
+                "settings.yaml" = ''
+                  title: Media Dashboard
+                  theme: dark
+                  color: slate
+                  headerStyle: clean
+                  layout:
+                    Media:
+                      style: row
+                      columns: 4
+                    Downloaders:
+                      style: row
+                      columns: 2
+                '';
+
+                # Static service list with widgets keyed by {{HOMEPAGE_VAR_*_KEY}} env.
+                "services.yaml" = ''
+                  - Media:
+                      - Sonarr:
+                          href: https://sonarr.json64.dev/
+                          icon: sonarr.png
+                          widget:
+                            type: sonarr
+                            url: http://sonarr:8989
+                            key: "{{HOMEPAGE_VAR_SONARR_KEY}}"
+                      - Radarr:
+                          href: https://radarr.json64.dev/
+                          icon: radarr.png
+                          widget:
+                            type: radarr
+                            url: http://radarr:7878
+                            key: "{{HOMEPAGE_VAR_RADARR_KEY}}"
+                      - Lidarr:
+                          href: https://lidarr.json64.dev/
+                          icon: lidarr.png
+                          widget:
+                            type: lidarr
+                            url: http://lidarr:8686
+                            key: "{{HOMEPAGE_VAR_LIDARR_KEY}}"
+                      - Prowlarr:
+                          href: https://prowlarr.json64.dev/
+                          icon: prowlarr.png
+                          # No widget: prowlarr API is admin-gated; surfaced as bookmark only.
+                  - Downloaders:
+                      - SABnzbd:
+                          href: https://nzb.json64.dev/
+                          icon: sabnzbd.png
+                          widget:
+                            type: sabnzbd
+                            url: http://sabnzbd:8080
+                            key: "{{HOMEPAGE_VAR_SABNZBD_KEY}}"
+                      - qBittorrent:
+                          href: https://torrent.json64.dev/
+                          icon: qbittorrent.png
+                          # No widget: the qbt WebUI is OIDC/loopback-locked; homepage cannot
+                          # authenticate to it. Torrent status is visible via the *arrs.
+                  - Watch:
+                      - Jellyfin:
+                          href: https://jellyfin.json64.dev/
+                          icon: jellyfin.png
+                '';
+
+                "widgets.yaml" = ''
+                  - resources:
+                      backend: kubernetes
+                      expanded: true
+                      cpu: true
+                      memory: true
+                  - kubernetes:
+                      cluster:
+                        show: true
+                        cpu: true
+                        memory: true
+                        showLabel: true
+                      nodes:
+                        show: true
+                        cpu: true
+                        memory: true
+                  - search:
+                      provider: duckduckgo
+                      target: _blank
+                '';
+
+                "bookmarks.yaml" = ''
+                  - Media:
+                      - Jellyfin:
+                          - abbr: JF
+                            href: https://jellyfin.json64.dev/
+                      - Bazarr:
+                          - abbr: BZ
+                            href: https://bazarr.json64.dev/
+                      - Whisparr:
+                          - abbr: WH
+                            href: https://whisparr.json64.dev/
+                '';
+
+                "kubernetes.yaml" = ''
+                  mode: cluster
+                '';
+              };
+            };
+
+            serviceAccounts.dash = {
+              metadata.namespace = "media";
+            };
+
+            clusterRoles."media-dash-discovery" = {
+              rules = [
+                {
+                  apiGroups = [ "" ];
+                  resources = [
+                    "namespaces"
+                    "pods"
+                    "nodes"
+                    "services"
+                  ];
+                  verbs = [
+                    "get"
+                    "list"
+                    "watch"
+                  ];
+                }
+                {
+                  apiGroups = [ "metrics.k8s.io" ];
+                  resources = [
+                    "nodes"
+                    "pods"
+                  ];
+                  verbs = [
+                    "get"
+                    "list"
+                  ];
+                }
+                {
+                  apiGroups = [ "networking.k8s.io" ];
+                  resources = [ "ingresses" ];
+                  verbs = [
+                    "get"
+                    "list"
+                    "watch"
+                  ];
+                }
+                {
+                  apiGroups = [ "gateway.networking.k8s.io" ];
+                  resources = [ "httproutes" ];
+                  verbs = [
+                    "get"
+                    "list"
+                    "watch"
+                  ];
+                }
+              ];
+            };
+
+            clusterRoleBindings."media-dash-discovery" = {
+              roleRef = {
+                apiGroup = "rbac.authorization.k8s.io";
+                kind = "ClusterRole";
+                name = "media-dash-discovery";
+              };
+              subjects = [
+                {
+                  kind = "ServiceAccount";
+                  name = "dash";
+                  namespace = "media";
+                }
+              ];
+            };
           };
         };
       };
