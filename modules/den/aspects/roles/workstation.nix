@@ -27,6 +27,7 @@
       apps.terminals.alacritty
       apps.terminals.kitty
       apps.browsers.firefox
+      apps.browsers.chromium
 
       apps.mail.protonmail
 
