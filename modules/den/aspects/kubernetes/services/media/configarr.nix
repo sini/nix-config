@@ -136,6 +136,21 @@ in
           helm.releases.configarr = {
             chart = charts.bjw-s-labs.app-template;
             values = {
+              # configarr's `git` is linked against c-ares (libcurl→libcares),
+              # not musl getaddrinfo. Under the cluster default ndots:5,
+              # `github.com` (1 dot < 5) is resolved search-domains-first, and
+              # c-ares stalls on the cluster.local permutations where musl does
+              # not — so the TRaSH/recyclarr clones time out ("Could not resolve
+              # host"). ndots:1 makes single-dot names (github.com) resolve as
+              # absolute; 0-dot service names (sonarr/radarr/…) still use the
+              # search list, so in-cluster lookups are unaffected.
+              defaultPodOptions.dnsConfig.options = [
+                {
+                  name = "ndots";
+                  value = "1";
+                }
+              ];
+
               controllers.configarr = {
                 type = "cronjob";
                 cronjob = {
