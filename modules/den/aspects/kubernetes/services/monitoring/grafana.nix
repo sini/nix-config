@@ -201,11 +201,11 @@
             };
           };
           # Media file-tail logs: the per-app Alloy sidecars ship loki streams
-          # labelled app/namespace/filename. The stream selector only uses
-          # labels EVERY media stream carries (app, namespace, filename) — a
-          # parsed `level` label exists on some apps but not others (differing
-          # log formats), so it is deliberately kept out of the selector to
-          # avoid dropping apps that lack it. Filter further with the search box.
+          # labelled app/namespace + a static `log_file` (= app name). The raw
+          # rotating `filename` label was dropped to bound stream cardinality,
+          # and only the active info log is tailed (one logical file per app) —
+          # so `app` IS the file provenance. `level` and free text are
+          # filterable via the search box.
           media-logs = {
             folder = "Media";
             dashboard = mkLogsDashboard {
@@ -213,9 +213,8 @@
               title = "Media Logs";
               variables = [
                 (mkLabelVar "app" "label_values({namespace=\"media\"}, app)")
-                (mkLabelVar "filename" "label_values({namespace=\"media\", app=~\"$app\"}, filename)")
               ];
-              selector = "{namespace=\"media\", app=~\"$app\", filename=~\"$filename\"}";
+              selector = "{namespace=\"media\", app=~\"$app\"}";
               volumeBy = "app";
             };
           };
