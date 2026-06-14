@@ -52,6 +52,17 @@
                   retentionSize = "10GB";
                   enableRemoteWriteReceiver = true;
 
+                  # Expose the admin TSDB API (--web.enable-admin-api):
+                  # /api/v1/admin/tsdb/delete_series + clean_tombstones, so
+                  # stale/orphaned series can be force-purged (e.g. churned
+                  # pod-IP `instance` series) instead of waiting out retention —
+                  # the prometheus analogue of loki's delete API. Prometheus has
+                  # no external route; the endpoint is reachable only in-cluster
+                  # (kubectl port-forward / monitoring ns). These endpoints are
+                  # DESTRUCTIVE — always scope match[] selectors tightly. See
+                  # docs/runbooks/monitoring-data-cleanup.md.
+                  enableAdminAPI = true;
+
                   # Pick up ServiceMonitors/PodMonitors/Probes/Rules from any
                   # namespace regardless of release label — CNPG, exportarr,
                   # and other app-owned monitors don't carry the chart's

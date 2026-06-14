@@ -35,7 +35,7 @@ spec:
         pathPrefix: /
         port: http-web
   automountServiceAccountToken: true
-  enableAdminAPI: false
+  enableAdminAPI: true
   enableOTLPReceiver: false
   enableRemoteWriteReceiver: true
   externalUrl: http://kube-prometheus-stack-prometheus.monitoring:9090
