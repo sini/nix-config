@@ -33,6 +33,19 @@ data:
         target_label  = "app"
       }
 
+      // Pods carrying den.observability/file-tailed=true run an
+      // Alloy sidecar that tails their file logs directly. Drop the
+      // duplicate main-container stdout so loki keeps only the
+      // labeled file-tail stream. Init/sidecar containers
+      // (config-seed, exportarr, logtail) and all other pods are
+      // untouched.
+      rule {
+        source_labels = ["__meta_kubernetes_pod_label_den_observability_file_tailed", "__meta_kubernetes_pod_container_name"]
+        separator     = "/"
+        regex         = "true/main"
+        action        = "drop"
+      }
+
       rule {
         source_labels = ["__meta_kubernetes_pod_uid", "__meta_kubernetes_pod_container_name"]
         separator     = "/"
