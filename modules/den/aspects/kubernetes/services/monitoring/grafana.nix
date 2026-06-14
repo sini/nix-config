@@ -34,6 +34,14 @@
             url,
             sha256,
             fixDatasource ? false,
+            # Filter colon-form (pod-IP:port) values out of any `*instance*`
+            # template variable. Our media exporters relabel `instance` to a
+            # stable app-name, but deleted pre-relabel pod-IP series linger in
+            # the prometheus index until head compaction, so `label_values`
+            # still offers them → duplicate repeated panels. Drop them at the
+            # variable. Only for dashboards whose instance IS app-name (NOT
+            # node-exporter dashboards where instance is legitimately host:port).
+            excludeColonInstances ? false,
           }:
           builtins.readFile (
             pkgs.runCommand "grafana-dashboard-${name}"
@@ -60,7 +68,7 @@
                     ''sed -E 's/\$\{DS_[A-Z0-9_]+\}/prometheus/g' "$src" | sed '/-- .* --/! s/"datasource":.*,/"datasource": "Prometheus",/g' ''
                   else
                     ''cat "$src"''
-                } | jq '.title = "${title}"' > "$out"
+                } | jq '.title = "${title}"'${lib.optionalString excludeColonInstances " | jq '(.templating.list) |= map(if ((.name // \"\") | test(\"instance\")) then . + {regex:\"/^[^:]+$/\"} else . end)'"} > "$out"
               ''
           );
 
@@ -280,6 +288,7 @@
             url = "https://grafana.com/api/dashboards/12530/revisions/2/download";
             sha256 = "0nqnl7vyg0nlskgxskhkyfyn2c0izf2wq5350sg4x8sp1zv1q429";
             fixDatasource = true;
+            excludeColonInstances = true;
           };
           media-radarr = {
             title = "Radarr";
@@ -287,6 +296,7 @@
             url = "https://grafana.com/api/dashboards/12896/revisions/1/download";
             sha256 = "1fqpwp544sc3m0gvnn9cvgiampkwilpp5vizhix2182c120waqih";
             fixDatasource = true;
+            excludeColonInstances = true;
           };
           # exportarr's own multi-app "Media Dashboard" — the only
           # exportarr-schema dashboard covering Lidarr/Prowlarr/SABnzbd (no
@@ -298,6 +308,7 @@
             url = "https://raw.githubusercontent.com/onedr0p/exportarr/88b9d3d0916ca701b89a2bdefe8b1d5b45294111/examples/grafana/dashboard2.json";
             sha256 = "158bvaf8djk9rda9vswpqkigkpawbw3arpg2vraaqgdblqqdlhs1";
             fixDatasource = true;
+            excludeColonInstances = true;
           };
           # qBittorrent via the esanchezm exporter — this dashboard ships in
           # that exporter's repo and matches our qbittorrent_* schema
@@ -310,6 +321,7 @@
             url = "https://raw.githubusercontent.com/esanchezm/prometheus-qbittorrent-exporter/fac38ac30d29e3bac4d3044c2011f523fc7c04c6/grafana/dashboard.json";
             sha256 = "0l7z8dfnm4crxlczd5a6cdgnz9jy91vmxq25x78rjkskky02an8h";
             fixDatasource = true;
+            excludeColonInstances = true;
           };
           # Unpackerr — golift's own dashboard, keyed on unpackerr_* with an
           # instance template var our series populate.
@@ -319,6 +331,7 @@
             url = "https://grafana.com/api/dashboards/18817/revisions/1/download";
             sha256 = "1p7xlfm7kbydymh7gxl60bm7bj3cphjbf69hnqqsbkm0npj99jgw";
             fixDatasource = true;
+            excludeColonInstances = true;
           };
         };
       in
@@ -517,6 +530,7 @@
                     inherit name;
                     inherit (d) title url sha256;
                     fixDatasource = d.fixDatasource or false;
+                    excludeColonInstances = d.excludeColonInstances or false;
                   };
                 }
               ) importedDashboards

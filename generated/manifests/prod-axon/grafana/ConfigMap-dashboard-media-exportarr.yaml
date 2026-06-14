@@ -5776,7 +5776,7 @@ data:
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^[^:]+$/",
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"
@@ -5806,7 +5806,7 @@ data:
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^[^:]+$/",
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"
@@ -5836,7 +5836,7 @@ data:
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^[^:]+$/",
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"
@@ -5866,7 +5866,7 @@ data:
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^[^:]+$/",
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"
@@ -5896,7 +5896,7 @@ data:
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^[^:]+$/",
             "skipUrlSync": false,
             "sort": 0,
             "type": "query"

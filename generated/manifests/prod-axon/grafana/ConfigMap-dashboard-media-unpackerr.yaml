@@ -1121,7 +1121,7 @@ data:
               "refId": "PrometheusVariableQueryEditor-VariableQuery"
             },
             "refresh": 1,
-            "regex": "",
+            "regex": "/^[^:]+$/",
             "skipUrlSync": false,
             "sort": 1,
             "type": "query"
