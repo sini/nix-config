@@ -8,7 +8,10 @@ spec:
     podAntiAffinityType: required
   backup:
     volumeSnapshot:
-      className: longhorn-snapshot
+      className: longhorn-backup-nfs
+  inheritedMetadata:
+    labels:
+      recurring-job-group.longhorn.io/db-local-snap: enabled
   instances: 2
   managed:
     roles:

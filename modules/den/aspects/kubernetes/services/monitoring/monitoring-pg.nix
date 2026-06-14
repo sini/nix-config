@@ -64,7 +64,12 @@ in
                 passwordSecret.name = passwordSecretName app;
               }) roleApps;
 
-              backup.volumeSnapshot.className = "longhorn-snapshot";
+              # Authoritative backup → off-cluster NAS (type:bak). Local
+              # fast-rollback is the db-local-snap Longhorn RecurringJob,
+              # enrolled via inheritedMetadata.
+              backup.volumeSnapshot.className = "longhorn-backup-nfs";
+
+              inheritedMetadata.labels."recurring-job-group.longhorn.io/db-local-snap" = "enabled";
             };
 
             databases.grafana.spec = {

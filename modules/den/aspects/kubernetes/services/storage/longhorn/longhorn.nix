@@ -87,6 +87,26 @@
                 pollInterval = "5m0s";
               };
             }
+            # Local fast-rollback snapshots for the CNPG database volumes
+            # (Longhorn-native, in-cluster — NOT a backup/upload). DB PVCs join
+            # the `db-local-snap` group via inheritedMetadata labels on the CNPG
+            # clusters. The authoritative off-cluster copy is the CNPG
+            # type:bak ScheduledBackup; this is a cheap COW rollback point.
+            {
+              apiVersion = "longhorn.io/v1beta2";
+              kind = "RecurringJob";
+              metadata = {
+                name = "db-local-snap";
+                namespace = "longhorn-system";
+              };
+              spec = {
+                task = "snapshot";
+                cron = "0 */6 * * *";
+                retain = 4;
+                concurrency = 2;
+                groups = [ "db-local-snap" ];
+              };
+            }
           ];
 
           helm.releases.longhorn = {
