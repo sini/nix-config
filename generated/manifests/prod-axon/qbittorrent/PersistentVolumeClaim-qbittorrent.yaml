@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: qbittorrent
     app.kubernetes.io/name: qbittorrent
+    recurring-job-group.longhorn.io/media-config: enabled
   name: qbittorrent
   namespace: media
 spec:

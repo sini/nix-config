@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: shoko
     app.kubernetes.io/name: shoko
+    recurring-job-group.longhorn.io/media-config: enabled
   name: shoko
   namespace: media
 spec:

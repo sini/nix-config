@@ -398,6 +398,7 @@
                   accessMode = "ReadWriteOnce";
                   size = "1Gi";
                   storageClass = "longhorn";
+                  labels."recurring-job-group.longhorn.io/media-config" = "enabled";
                   globalMounts = [ { path = "/config"; } ];
                 };
 

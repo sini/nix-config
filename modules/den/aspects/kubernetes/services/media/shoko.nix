@@ -89,6 +89,7 @@
                   accessMode = "ReadWriteOnce";
                   size = "10Gi";
                   storageClass = "longhorn";
+                  labels."recurring-job-group.longhorn.io/media-config" = "enabled";
                   globalMounts = [ { path = "/home/shoko/.shoko"; } ];
                 };
                 data = {

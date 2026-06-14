@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: sonarr
     app.kubernetes.io/name: sonarr
+    recurring-job-group.longhorn.io/media-config: enabled
   name: sonarr
   namespace: media
 spec:

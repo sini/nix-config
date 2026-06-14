@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: sabnzbd
     app.kubernetes.io/name: sabnzbd
+    recurring-job-group.longhorn.io/media-config: enabled
   name: sabnzbd
   namespace: media
 spec:
