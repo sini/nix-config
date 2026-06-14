@@ -26,6 +26,33 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
+        - args:
+            - sonarr
+          env:
+            - name: APIKEY
+              valueFrom:
+                secretKeyRef:
+                  key: sonarr
+                  name: media-arr-api-keys
+            - name: PORT
+              value: "9707"
+            - name: URL
+              value: http://localhost:8989
+          image: ghcr.io/onedr0p/exportarr@sha256:320b0ea7399f4b9af4741dcdddd7d40c05c36b0359679305d8a54df4e97065df
+          name: exportarr
+          ports:
+            - containerPort: 9707
+              name: metrics
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /config/MediaCover
+              name: metadata
+              subPath: media/metadata/sonarr/MediaCover
+            - mountPath: /scratch
+              name: scratch
         - env:
             - name: PGID
               value: "65536"
