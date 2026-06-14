@@ -41,6 +41,8 @@
           };
 
           resources = {
+            # Only type="storageclass" NFS targets become StorageClasses;
+            # type="backup" (e.g. the Longhorn backupstore) is filtered out.
             storageClasses = lib.mapAttrs (_volumeName: volumeConfig: {
               provisioner = "nfs.csi.k8s.io";
               reclaimPolicy = "Retain";
@@ -60,7 +62,7 @@
                 "noauto"
                 "noatime"
               ];
-            }) nfsVolumes;
+            }) (lib.filterAttrs (_: v: v.type == "storageclass") nfsVolumes);
 
             ciliumNetworkPolicies.allow-kube-apiserver-egress = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";

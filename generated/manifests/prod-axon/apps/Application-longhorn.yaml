@@ -9,6 +9,13 @@ spec:
   destination:
     namespace: longhorn-system
     server: https://kubernetes.default.svc
+  ignoreDifferences:
+    - group: longhorn.io
+      jsonPointers:
+        - /status
+      kind: BackupTarget
+      name: default
+      namespace: longhorn-system
   project: default
   source:
     path: ./generated/manifests/prod-axon/longhorn
