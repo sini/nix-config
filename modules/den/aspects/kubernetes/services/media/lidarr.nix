@@ -35,6 +35,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       {
@@ -90,6 +91,29 @@
                     };
                   };
                 };
+
+                # Prometheus metrics sidecar: scrapes the Lidarr API over pod
+                # loopback and re-exports it on :9707 for kube-prometheus-stack.
+                containers.exportarr = {
+                  image = {
+                    inherit (images."onedr0p/exportarr") repository digest;
+                  };
+                  args = [ "lidarr" ];
+                  env = {
+                    PORT = "9707";
+                    URL = "http://localhost:8686";
+                    APIKEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "lidarr";
+                    };
+                  };
+                  ports = [
+                    {
+                      name = "metrics";
+                      containerPort = 9707;
+                    }
+                  ];
+                };
               };
 
               service.main = {
@@ -133,6 +157,29 @@
             };
           };
 
+          # Raw PodMonitor: no typed accessor without a kube-prometheus-stack
+          # CRDs bridge, so author it directly (mirrors the monitoring aspect).
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "lidarr";
+                namespace = "media";
+              };
+              spec = {
+                selector.matchLabels."app.kubernetes.io/name" = "lidarr";
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    path = "/metrics";
+                    interval = "30s";
+                  }
+                ];
+              };
+            }
+          ];
+
           resources = {
             ciliumNetworkPolicies = {
               allow-gateway-ingress-lidarr.spec = {
@@ -148,6 +195,33 @@
                         ports = [
                           {
                             port = "8686";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              allow-metrics-ingress-lidarr.spec = {
+                description = "Allow Prometheus to scrape lidarr's exportarr sidecar (9707).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "lidarr";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "9707";
                             protocol = "TCP";
                           }
                         ];

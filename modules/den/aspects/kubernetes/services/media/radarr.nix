@@ -35,6 +35,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       {
@@ -90,6 +91,29 @@
                     };
                   };
                 };
+
+                # Prometheus metrics sidecar: scrapes the Radarr API over pod
+                # loopback and re-exports it on :9707 for kube-prometheus-stack.
+                containers.exportarr = {
+                  image = {
+                    inherit (images."onedr0p/exportarr") repository digest;
+                  };
+                  args = [ "radarr" ];
+                  env = {
+                    PORT = "9707";
+                    URL = "http://localhost:7878";
+                    APIKEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "radarr";
+                    };
+                  };
+                  ports = [
+                    {
+                      name = "metrics";
+                      containerPort = 9707;
+                    }
+                  ];
+                };
               };
 
               service.main = {
@@ -134,6 +158,29 @@
             };
           };
 
+          # Raw PodMonitor: no typed accessor without a kube-prometheus-stack
+          # CRDs bridge, so author it directly (mirrors the monitoring aspect).
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "radarr";
+                namespace = "media";
+              };
+              spec = {
+                selector.matchLabels."app.kubernetes.io/name" = "radarr";
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    path = "/metrics";
+                    interval = "30s";
+                  }
+                ];
+              };
+            }
+          ];
+
           resources = {
             ciliumNetworkPolicies = {
               allow-gateway-ingress-radarr.spec = {
@@ -149,6 +196,33 @@
                         ports = [
                           {
                             port = "7878";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              allow-metrics-ingress-radarr.spec = {
+                description = "Allow Prometheus to scrape radarr's exportarr sidecar (9707).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "radarr";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "9707";
                             protocol = "TCP";
                           }
                         ];
