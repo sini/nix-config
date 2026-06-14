@@ -179,6 +179,7 @@
                   accessMode = "ReadWriteOnce";
                   size = "1Gi";
                   storageClass = "longhorn";
+                  labels."recurring-job-group.longhorn.io/media-config" = "enabled";
                   globalMounts = [ { path = "/config"; } ];
                 };
                 # scratch-local RWO → /scratch (pins pod to the scratch node).

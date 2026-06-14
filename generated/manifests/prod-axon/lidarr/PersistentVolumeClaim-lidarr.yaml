@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: lidarr
     app.kubernetes.io/name: lidarr
+    recurring-job-group.longhorn.io/media-config: enabled
   name: lidarr
   namespace: media
 spec:

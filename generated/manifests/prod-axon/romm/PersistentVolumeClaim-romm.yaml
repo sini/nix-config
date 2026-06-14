@@ -4,6 +4,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: romm
     app.kubernetes.io/name: romm
+    recurring-job-group.longhorn.io/media-config: enabled
   name: romm
   namespace: media
 spec:

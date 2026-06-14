@@ -1,0 +1,12 @@
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: media-config-backup
+  namespace: longhorn-system
+spec:
+  concurrency: 2
+  cron: 0 3 * * *
+  groups:
+    - media-config
+  retain: 7
+  task: backup

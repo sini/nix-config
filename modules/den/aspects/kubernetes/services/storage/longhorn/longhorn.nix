@@ -107,6 +107,25 @@
                 groups = [ "db-local-snap" ];
               };
             }
+            # Nightly off-cluster backup of the app-config volumes (the media app
+            # PVCs enrolled via the media-config group label on their config PVC).
+            # loki/prometheus are intentionally unlabeled (observability TSDB is
+            # treated as ephemeral), and never join via a default-group job.
+            {
+              apiVersion = "longhorn.io/v1beta2";
+              kind = "RecurringJob";
+              metadata = {
+                name = "media-config-backup";
+                namespace = "longhorn-system";
+              };
+              spec = {
+                task = "backup";
+                cron = "0 3 * * *";
+                retain = 7;
+                concurrency = 2;
+                groups = [ "media-config" ];
+              };
+            }
           ];
 
           helm.releases.longhorn = {
