@@ -214,7 +214,9 @@
               variables = [
                 (mkLabelVar "app" "label_values({namespace=\"media\"}, app)")
               ];
-              selector = "{namespace=\"media\", app=~\"$app\"}";
+              # Require log_file → file-tail streams only; excludes the kept
+              # sidecar (exportarr/logtail) stdout and any pre-fix streams.
+              selector = "{namespace=\"media\", app=~\"$app\", log_file=~\".+\"}";
               volumeBy = "app";
             };
           };
