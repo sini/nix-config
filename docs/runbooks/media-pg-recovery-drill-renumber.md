@@ -304,5 +304,117 @@ until the new cluster is verified healthy and serving apps.
   imperative CNPG surgery on a live cluster.
 - A new Cluster object resets instance serials to 1; in-place renumber is
   impossible.
-- snapshot-only/in-cluster backups are not disaster recovery — off-cluster
-  object store + WAL archiving remains the real DR gap (deferred).
+- snapshot-only/in-cluster backups are not disaster recovery — the off-cluster
+  copy is now addressed (Longhorn NFS BackupTarget → NAS; both CNPG DBs via
+  `type:bak` ScheduledBackups + app-config volumes via the `media-config-backup`
+  RecurringJob). WAL archiving / PITR remains the one deferred DR gap.
+
+## Restore from the NAS (off-cluster DR)
+
+Validated 2026-06-14. The Longhorn NFS BackupTarget
+(`nfs://…:/volume2/longhorn-backups`) holds off-cluster `Backup` objects for the
+CNPG DB volumes (`type:bak`) and the app-config volumes (`media-config-backup`
+RecurringJob). In a real DR the in-cluster CSI VolumeSnapshot objects are gone
+with the cluster, but the Longhorn Backups persist on the NAS. Recovery =
+**reconstruct a VolumeSnapshot from the NAS backup handle, then recover from
+it** — no reliance on any surviving in-cluster snapshot.
+
+GOTCHA: the `longhorn-backup-nfs` VSC is `deletionPolicy: Delete`, so do NOT
+delete a CNPG-managed VolumeSnapshot to "simulate DR" — it cascade-deletes the
+NAS backup. Build an INDEPENDENT, `Retain` VolumeSnapshot (below).
+
+1. **Find the NAS Longhorn Backup** for the target volume (BackupTarget sync
+   re-discovers them after a cluster loss):
+
+   ```bash
+   kubectl -n longhorn-system get backups.longhorn.io \
+     -o custom-columns='NAME:.metadata.name,VOL:.status.volumeName,STATE:.status.state,SIZE:.status.size'
+   ```
+
+   The CSI handle is `bak://<volumeName>/<backupName>`.
+
+2. **Reconstruct a pre-provisioned VolumeSnapshot** (`Retain`, so teardown never
+   touches the NAS backup):
+
+   ```bash
+   cat <<'EOF' | kubectl apply -f -
+   apiVersion: snapshot.storage.k8s.io/v1
+   kind: VolumeSnapshotContent
+   metadata: { name: media-pg-nasrestore-content }
+   spec:
+     deletionPolicy: Retain
+     driver: driver.longhorn.io
+     source: { snapshotHandle: "bak://<volumeName>/<backupName>" }
+     volumeSnapshotClassName: longhorn-backup-nfs
+     volumeSnapshotRef: { name: media-pg-nasrestore, namespace: media }
+   ---
+   apiVersion: snapshot.storage.k8s.io/v1
+   kind: VolumeSnapshot
+   metadata: { name: media-pg-nasrestore, namespace: media }
+   spec:
+     source: { volumeSnapshotContentName: media-pg-nasrestore-content }
+     volumeSnapshotClassName: longhorn-backup-nfs
+   EOF
+   kubectl -n media wait --for=jsonpath='{.status.readyToUse}'=true \
+     volumesnapshot/media-pg-nasrestore --timeout=10m
+   ```
+
+3. **Temp apiserver-egress CNP** for the throwaway cluster (same shape as Phase
+   0: CNP `allow-media-pg-verify-apiserver-egress`, endpointSelector
+   `cnpg.io/cluster=media-pg-verify`, egress to `kube-apiserver` 443/6443).
+
+4. **Recover a throwaway cluster** from the reconstructed snapshot — the DR path
+   uses `bootstrap.recovery.volumeSnapshots` (no CNPG `Backup` object needed):
+
+   ```bash
+   cat <<'EOF' | kubectl apply -f -
+   apiVersion: postgresql.cnpg.io/v1
+   kind: Cluster
+   metadata: { name: media-pg-verify, namespace: media }
+   spec:
+     instances: 1
+     storage: { size: 20Gi, storageClass: longhorn-single }
+     bootstrap:
+       recovery:
+         volumeSnapshots:
+           storage:
+             name: media-pg-nasrestore
+             kind: VolumeSnapshot
+             apiGroup: snapshot.storage.k8s.io
+   EOF
+   kubectl -n media wait --for=condition=Ready cluster/media-pg-verify --timeout=15m
+   ```
+
+5. **Verify parity** (in-pod peer auth; superuser disabled), compare vs prod
+   (`media-pg-rw`):
+
+   ```bash
+   kubectl -n media exec media-pg-verify-1 -c postgres -- psql -U postgres -d sonarr-main -tAc 'select count(*) from "Series"'
+   kubectl -n media exec media-pg-verify-1 -c postgres -- psql -U postgres -d radarr-main -tAc 'select count(*) from "Movies"'
+   ```
+
+6. **Teardown** (`Retain` content → NAS backup survives — verify it does):
+   ```bash
+   kubectl -n media delete cluster media-pg-verify
+   kubectl -n media delete pvc -l cnpg.io/cluster=media-pg-verify
+   kubectl -n media delete volumesnapshot media-pg-nasrestore
+   kubectl delete volumesnapshotcontent media-pg-nasrestore-content
+   kubectl -n media delete ciliumnetworkpolicy allow-media-pg-verify-apiserver-egress
+   kubectl -n longhorn-system get backups.longhorn.io <backupName>   # MUST still exist
+   ```
+
+For an **app-config** volume (non-CNPG), step 4 is instead a PVC with the
+VolumeSnapshot as `dataSource` (size = the snapshot's `restoreSize`), then mount
+it.
+
+### Longhorn RecurringJob enrollment note
+
+Recurring jobs select by **Volume CR** label; Longhorn does NOT retro-sync PVC
+labels onto pre-existing volumes (they sit in the auto-assigned `default`
+group). The declarative `persistence.<vol>.labels` / CNPG
+`inheritedMetadata.labels` apply only at volume provision. EXISTING volumes must
+be labeled directly, once:
+`kubectl -n longhorn-system label volume <vol> recurring-job-group.longhorn.io/<group>=enabled recurring-job-group.longhorn.io/default-`.
+Verify a job picks them up via a one-off run (bypasses cron + ArgoCD):
+`kubectl -n longhorn-system create job --from=cronjob/<rjob> <name>`, then read
+the pod log for "Found N volumes".
