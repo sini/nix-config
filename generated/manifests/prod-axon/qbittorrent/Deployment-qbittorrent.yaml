@@ -19,10 +19,13 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: 6a9c26289117784dd6b6c54671197b166581e2f40ee99a5d864f747518606b77
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: qbittorrent
         app.kubernetes.io/name: qbittorrent
+        den.observability/file-tailed: "true"
     spec:
       automountServiceAccountToken: false
       containers:
@@ -45,6 +48,25 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
+            - mountPath: /scratch
+              name: scratch
+        - args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/config/.alloy
+            - --server.http.listen-addr=127.0.0.1:12345
+          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          name: logtail
+          securityContext:
+            runAsGroup: 65536
+            runAsUser: 1027
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /etc/alloy/config.alloy
+              name: logtail
+              readOnly: true
+              subPath: config.alloy
             - mountPath: /scratch
               name: scratch
         - env:
@@ -131,9 +153,32 @@ spec:
                   sed -i "/^\[Preferences\]/a $escline" "$INI"
                 fi
               }
+              # Same as ensure_key but for the [Application] section (FileLogger\*
+              # rotation keys live there, not under [Preferences]). Creates the
+              # section if absent. Idempotent.
+              ensure_app_key() {
+                key="$1"; line="$2"
+                escline=$(printf '%s' "$line" | sed 's|\\|\\\\|g')
+                grep -q '^\[Application\]' "$INI" || printf '\n[Application]\n' >> "$INI"
+                if grep -q "^$key=" "$INI"; then
+                  sed -i "s|^$key=.*|$escline|" "$INI"
+                else
+                  sed -i "/^\[Application\]/a $escline" "$INI"
+                fi
+              }
               if [ ! -f "$INI" ]; then
                 echo "seeding fresh $INI"
                 {
+                  printf '%s\n' '[Application]'
+                  # Bound /config/qBittorrent/logs: rotate at MaxSizeBytes keeping a
+                  # bounded backup set; DeleteOld prunes the oldest. The file-tail
+                  # sidecar ships entries before they roll off.
+                  printf '%s\n' 'FileLogger\Backup=true'
+                  printf '%s\n' 'FileLogger\DeleteOld=true'
+                  printf '%s\n' 'FileLogger\MaxSizeBytes=1048576'
+                  printf '%s\n' 'FileLogger\Age=1'
+                  printf '%s\n' 'FileLogger\AgeType=1'
+                  printf '\n'
                   printf '%s\n' '[Preferences]'
                   printf '%s\n' 'WebUI\LocalHostAuth=false'
                   printf '%s\n' 'WebUI\HostHeaderValidation=false'
@@ -145,6 +190,10 @@ spec:
                 # drop flattened leftovers from the earlier whitelist attempt
                 sed -i '/^WebUIAuthSubnetWhitelist/d; /^WebUIHostHeaderValidation/d' "$INI"
                 ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
+                # Bound the file logger (see fresh-seed comment above).
+                ensure_app_key 'FileLogger\\Backup' 'FileLogger\Backup=true'
+                ensure_app_key 'FileLogger\\DeleteOld' 'FileLogger\DeleteOld=true'
+                ensure_app_key 'FileLogger\\MaxSizeBytes' 'FileLogger\MaxSizeBytes=1048576'
               fi
           image: lscr.io/linuxserver/qbittorrent:5.2.1-libtorrentv1
           name: config-seed
@@ -221,6 +270,9 @@ spec:
         - name: config
           persistentVolumeClaim:
             claimName: qbittorrent
+        - configMap:
+            name: qbittorrent
+          name: logtail
         - name: scratch
           persistentVolumeClaim:
             claimName: media-scratch-local

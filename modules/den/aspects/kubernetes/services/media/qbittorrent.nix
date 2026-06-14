@@ -172,6 +172,56 @@
       let
         webuiPort = 8080;
 
+        # Alloy River config for the per-pod log-tail sidecar. qBittorrent writes
+        # to /config/qBittorrent/logs/qbittorrent.log with .bak/.bakN backups, so
+        # the glob `qbittorrent.log*` catches the active file + rotations. The line
+        # format prefixes a parenthesised level letter — (N)ormal, (I)nfo,
+        # (W)arning, (C)ritical — which we lift verbatim into the `level` label.
+        # The duplicate main-container stdout copy is dropped at the cluster
+        # DaemonSet via the den.observability/file-tailed pod label.
+        #
+        # Egress: the logtail push to loki.monitoring.svc (an in-cluster service
+        # IP in 172.21.0.0/16) is permitted both by Cilium's clusterwide
+        # allow-internal-egress and by gluetun's FIREWALL_OUTBOUND_SUBNETS (which
+        # already lists 172.21.0.0/16), so the sidecar reaches loki through the
+        # kill-switch without widening any firewall.
+        #
+        # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
+        logtailConfig = ''
+          local.file_match "logs" {
+            path_targets = [{
+              "__path__"  = "/config/qBittorrent/logs/qbittorrent.log*",
+              "app"       = "qbittorrent",
+              "namespace" = "media",
+            }]
+          }
+
+          loki.source.file "logs" {
+            targets    = local.file_match.logs.targets
+            forward_to = [loki.process.logs.receiver]
+          }
+
+          loki.process "logs" {
+            stage.regex {
+              expression = "^\\((?P<level>N|I|W|C)\\)"
+            }
+
+            stage.labels {
+              values = {
+                level = "",
+              }
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+            }
+          }
+        '';
+
         # qBittorrent.conf seeder. Idempotent:
         #   fresh /config -> write a minimal [Preferences] section
         #   existing      -> reconcile the auth-whitelist + host-header keys
@@ -198,9 +248,32 @@
               sed -i "/^\[Preferences\]/a $escline" "$INI"
             fi
           }
+          # Same as ensure_key but for the [Application] section (FileLogger\*
+          # rotation keys live there, not under [Preferences]). Creates the
+          # section if absent. Idempotent.
+          ensure_app_key() {
+            key="$1"; line="$2"
+            escline=$(printf '%s' "$line" | sed 's|\\|\\\\|g')
+            grep -q '^\[Application\]' "$INI" || printf '\n[Application]\n' >> "$INI"
+            if grep -q "^$key=" "$INI"; then
+              sed -i "s|^$key=.*|$escline|" "$INI"
+            else
+              sed -i "/^\[Application\]/a $escline" "$INI"
+            fi
+          }
           if [ ! -f "$INI" ]; then
             echo "seeding fresh $INI"
             {
+              printf '%s\n' '[Application]'
+              # Bound /config/qBittorrent/logs: rotate at MaxSizeBytes keeping a
+              # bounded backup set; DeleteOld prunes the oldest. The file-tail
+              # sidecar ships entries before they roll off.
+              printf '%s\n' 'FileLogger\Backup=true'
+              printf '%s\n' 'FileLogger\DeleteOld=true'
+              printf '%s\n' 'FileLogger\MaxSizeBytes=1048576'
+              printf '%s\n' 'FileLogger\Age=1'
+              printf '%s\n' 'FileLogger\AgeType=1'
+              printf '\n'
               printf '%s\n' '[Preferences]'
               printf '%s\n' 'WebUI\LocalHostAuth=false'
               printf '%s\n' 'WebUI\HostHeaderValidation=false'
@@ -212,6 +285,10 @@
             # drop flattened leftovers from the earlier whitelist attempt
             sed -i '/^WebUIAuthSubnetWhitelist/d; /^WebUIHostHeaderValidation/d' "$INI"
             ensure_key 'WebUI\\HostHeaderValidation' 'WebUI\HostHeaderValidation=false'
+            # Bound the file logger (see fresh-seed comment above).
+            ensure_app_key 'FileLogger\\Backup' 'FileLogger\Backup=true'
+            ensure_app_key 'FileLogger\\DeleteOld' 'FileLogger\DeleteOld=true'
+            ensure_app_key 'FileLogger\\MaxSizeBytes' 'FileLogger\MaxSizeBytes=1048576'
           fi
         '';
 
@@ -257,6 +334,10 @@
             values = {
               controllers.main = {
                 type = "deployment";
+
+                # Drives the cluster DaemonSet's stdout-drop for this pod's main
+                # container (the logtail sidecar is the canonical log source).
+                pod.labels."den.observability/file-tailed" = "true";
 
                 containers.main = {
                   image = {
@@ -416,6 +497,32 @@
                     }
                   ];
                 };
+
+                # Log-tail sidecar: tails /config/qBittorrent/logs/qbittorrent.log*
+                # off the shared config PVC and ships labeled, level-parsed streams
+                # to loki. The grafana/alloy image entrypoint is the alloy binary,
+                # so args begin with the `run` subcommand. Runs as PUID 1027 — the
+                # qbt log files are mode 0600 owned by 1027, so only that uid can
+                # read them and write the offset store. Shares the pod netns with
+                # gluetun; the loki push is permitted by gluetun's
+                # FIREWALL_OUTBOUND_SUBNETS (172.21.0.0/16).
+                containers.logtail = {
+                  image = {
+                    inherit (images."grafana/alloy") repository digest;
+                  };
+                  args = [
+                    "run"
+                    "/etc/alloy/config.alloy"
+                    # tail offsets on the config PVC -> survive pod restart
+                    "--storage.path=/config/.alloy"
+                    # keep the alloy UI loopback-only (no CNP needed)
+                    "--server.http.listen-addr=127.0.0.1:12345"
+                  ];
+                  securityContext = {
+                    runAsUser = 1027;
+                    runAsGroup = 65536;
+                  };
+                };
               };
 
               service.main = {
@@ -423,7 +530,22 @@
                 ports.http.port = webuiPort;
               };
 
+              # Sidecar Alloy River config delivered as a ConfigMap.
+              configMaps.logtail.data."config.alloy" = logtailConfig;
+
               persistence = {
+                # Mount the sidecar config into the logtail container only.
+                logtail = {
+                  type = "configMap";
+                  identifier = "logtail";
+                  advancedMounts.main.logtail = [
+                    {
+                      path = "/etc/alloy/config.alloy";
+                      subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 config = {
                   type = "persistentVolumeClaim";
                   accessMode = "ReadWriteOnce";

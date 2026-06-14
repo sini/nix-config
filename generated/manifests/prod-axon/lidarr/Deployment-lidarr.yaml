@@ -19,10 +19,13 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: 6e69fe522add6bd502a202b6ee415c13e05bbdc124906d26e48c91e50b469346
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: lidarr
         app.kubernetes.io/name: lidarr
+        den.observability/file-tailed: "true"
     spec:
       automountServiceAccountToken: false
       containers:
@@ -53,6 +56,30 @@ spec:
               subPath: media/metadata/lidarr/MediaCover
             - mountPath: /scratch
               name: scratch
+        - args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/config/.alloy
+            - --server.http.listen-addr=127.0.0.1:12345
+          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          name: logtail
+          securityContext:
+            runAsGroup: 65536
+            runAsUser: 1027
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /etc/alloy/config.alloy
+              name: logtail
+              readOnly: true
+              subPath: config.alloy
+            - mountPath: /config/MediaCover
+              name: metadata
+              subPath: media/metadata/lidarr/MediaCover
+            - mountPath: /scratch
+              name: scratch
         - env:
             - name: LIDARR__AUTH__APIKEY
               valueFrom:
@@ -61,6 +88,10 @@ spec:
                   name: media-arr-api-keys
             - name: LIDARR__AUTH__METHOD
               value: External
+            - name: LIDARR__LOG__ROTATE
+              value: "2"
+            - name: LIDARR__LOG__SIZELIMIT
+              value: "1"
             - name: LIDARR__POSTGRES__HOST
               value: media-pg-rw
             - name: LIDARR__POSTGRES__LOGDB
@@ -128,6 +159,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: media-data-nfs
+        - configMap:
+            name: lidarr
+          name: logtail
         - name: metadata
           persistentVolumeClaim:
             claimName: media-data-nfs

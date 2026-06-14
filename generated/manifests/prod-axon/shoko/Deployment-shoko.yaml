@@ -19,13 +19,35 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: dc52d8241e17bb020794907da0fc7b8f3857f4f097f17531cd07bb4698ec01a6
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: shoko
         app.kubernetes.io/name: shoko
+        den.observability/file-tailed: "true"
     spec:
       automountServiceAccountToken: false
       containers:
+        - args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/home/shoko/.shoko/.alloy
+            - --server.http.listen-addr=127.0.0.1:12345
+          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          name: logtail
+          securityContext:
+            runAsGroup: 65536
+            runAsUser: 1027
+          volumeMounts:
+            - mountPath: /home/shoko/.shoko
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /etc/alloy/config.alloy
+              name: logtail
+              readOnly: true
+              subPath: config.alloy
         - env:
             - name: PGID
               value: "65536"
@@ -71,3 +93,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: media-data-nfs
+        - configMap:
+            name: shoko
+          name: logtail

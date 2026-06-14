@@ -52,8 +52,63 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
+      let
+        # Alloy River config for the per-pod log-tail sidecar. Komga (Spring Boot
+        # / logback) writes to /config/logs/komga.log; the glob `/config/logs/*.log`
+        # tails the active file (rotated history is gzipped to `*.log.<date>.N.gz`
+        # and intentionally not tailed). The logback line format is
+        # `<ts>  <LEVEL> <pid> --- [...] : <msg>`; we lift the (upper-case) level
+        # keyword. The duplicate main-container stdout copy is dropped at the
+        # cluster DaemonSet via the den.observability/file-tailed pod label.
+        #
+        # Rotation: komga's bundled logback rolling policy rotates daily, gzips
+        # history and self-prunes (maxHistory) — not env-overridable from a bundled
+        # logback config, so we accept komga's default rotation.
+        #
+        # NB: the gotson/komga image does NOT honour PUID/PGID (it is not an LSIO
+        # image); it runs as root and writes its logs + /config as uid 0. The
+        # logtail sidecar therefore runs as root so it can read the logs and write
+        # its offset store under /config/.alloy.
+        #
+        # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
+        logtailConfig = ''
+          local.file_match "logs" {
+            path_targets = [{
+              "__path__"  = "/config/logs/*.log",
+              "app"       = "komga",
+              "namespace" = "media",
+            }]
+          }
+
+          loki.source.file "logs" {
+            targets    = local.file_match.logs.targets
+            forward_to = [loki.process.logs.receiver]
+          }
+
+          loki.process "logs" {
+            stage.regex {
+              expression = "\\s(?P<level>TRACE|DEBUG|INFO|WARN|ERROR|FATAL)\\s"
+            }
+
+            stage.labels {
+              values = {
+                level = "",
+              }
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+            }
+          }
+        '';
+      in
       {
         applications.komga = {
           namespace = "media";
@@ -63,6 +118,11 @@
             values = {
               controllers.main = {
                 type = "deployment";
+
+                # Drives the cluster DaemonSet's stdout-drop for this pod's main
+                # container (the logtail sidecar is the canonical log source).
+                pod.labels."den.observability/file-tailed" = "true";
+
                 containers.main = {
                   image = {
                     repository = "ghcr.io/gotson/komga";
@@ -75,6 +135,29 @@
                   };
                   envFrom = [ ];
                 };
+
+                # Log-tail sidecar: tails /config/logs/*.log off the shared config
+                # PVC and ships labeled, level-parsed streams to loki. The
+                # grafana/alloy image entrypoint is the alloy binary, so args begin
+                # with the `run` subcommand. Runs as root (uid 0) because komga
+                # writes its logs + /config as root (no PUID/PGID honouring).
+                containers.logtail = {
+                  image = {
+                    inherit (images."grafana/alloy") repository digest;
+                  };
+                  args = [
+                    "run"
+                    "/etc/alloy/config.alloy"
+                    # tail offsets on the config PVC -> survive pod restart
+                    "--storage.path=/config/.alloy"
+                    # keep the alloy UI loopback-only (no CNP needed)
+                    "--server.http.listen-addr=127.0.0.1:12345"
+                  ];
+                  securityContext = {
+                    runAsUser = 0;
+                    runAsGroup = 0;
+                  };
+                };
               };
 
               service.main = {
@@ -82,7 +165,22 @@
                 ports.http.port = 25600;
               };
 
+              # Sidecar Alloy River config delivered as a ConfigMap.
+              configMaps.logtail.data."config.alloy" = logtailConfig;
+
               persistence = {
+                # Mount the sidecar config into the logtail container only.
+                logtail = {
+                  type = "configMap";
+                  identifier = "logtail";
+                  advancedMounts.main.logtail = [
+                    {
+                      path = "/etc/alloy/config.alloy";
+                      subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 config = {
                   type = "persistentVolumeClaim";
                   accessMode = "ReadWriteOnce";

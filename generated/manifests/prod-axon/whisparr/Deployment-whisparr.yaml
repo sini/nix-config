@@ -19,13 +19,40 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: 338ba9a7672645e6a1c0c7e7d3b2732a8c7fc42e7b5cbdb99ec750773000eb89
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: whisparr
         app.kubernetes.io/name: whisparr
+        den.observability/file-tailed: "true"
     spec:
       automountServiceAccountToken: false
       containers:
+        - args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/config/.alloy
+            - --server.http.listen-addr=127.0.0.1:12345
+          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          name: logtail
+          securityContext:
+            runAsGroup: 65536
+            runAsUser: 1027
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /etc/alloy/config.alloy
+              name: logtail
+              readOnly: true
+              subPath: config.alloy
+            - mountPath: /config/MediaCover
+              name: metadata
+              subPath: media/metadata/whisparr/MediaCover
+            - mountPath: /scratch
+              name: scratch
         - env:
             - name: PGID
               value: "65536"
@@ -40,6 +67,10 @@ spec:
                   name: media-arr-api-keys
             - name: WHISPARR__AUTH__METHOD
               value: External
+            - name: WHISPARR__LOG__ROTATE
+              value: "2"
+            - name: WHISPARR__LOG__SIZELIMIT
+              value: "1"
             - name: WHISPARR__POSTGRES__HOST
               value: media-pg-rw
             - name: WHISPARR__POSTGRES__LOGDB
@@ -101,6 +132,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: media-data-nfs
+        - configMap:
+            name: whisparr
+          name: logtail
         - name: metadata
           persistentVolumeClaim:
             claimName: media-data-nfs

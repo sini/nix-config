@@ -19,13 +19,35 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: eb9770e89840f81d32de0293416486483a16fdf43b8eccc3a671b5e180b3fd21
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: komga
         app.kubernetes.io/name: komga
+        den.observability/file-tailed: "true"
     spec:
       automountServiceAccountToken: false
       containers:
+        - args:
+            - run
+            - /etc/alloy/config.alloy
+            - --storage.path=/config/.alloy
+            - --server.http.listen-addr=127.0.0.1:12345
+          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          name: logtail
+          securityContext:
+            runAsGroup: 0
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /etc/alloy/config.alloy
+              name: logtail
+              readOnly: true
+              subPath: config.alloy
         - env:
             - name: PGID
               value: "65536"
@@ -53,3 +75,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: media-data-nfs
+        - configMap:
+            name: komga
+          name: logtail

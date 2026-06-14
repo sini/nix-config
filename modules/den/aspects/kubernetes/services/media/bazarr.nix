@@ -48,8 +48,60 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
+      let
+        # Alloy River config for the per-pod log-tail sidecar. Bazarr writes its
+        # logs to /config/log/ (singular `log` dir), active file `bazarr.log` plus
+        # date-suffixed rotations `bazarr.log.<date>` — the glob `bazarr.log*`
+        # catches both. Bazarr uses the same pipe-delimited line format as Servarr
+        # (`<ts>|<LEVEL>|<component>|<msg>`), so the same level regex applies.
+        # The duplicate main-container stdout copy is dropped at the cluster
+        # DaemonSet via the den.observability/file-tailed pod label.
+        #
+        # Rotation: bazarr uses Python's TimedRotatingFileHandler (its own daily
+        # rotation, not env-configurable); it keeps a bounded set of dated files
+        # and self-prunes. We accept bazarr's default rotation.
+        #
+        # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
+        logtailConfig = ''
+          local.file_match "logs" {
+            path_targets = [{
+              "__path__"  = "/config/log/bazarr.log*",
+              "app"       = "bazarr",
+              "namespace" = "media",
+            }]
+          }
+
+          loki.source.file "logs" {
+            targets    = local.file_match.logs.targets
+            forward_to = [loki.process.logs.receiver]
+          }
+
+          loki.process "logs" {
+            stage.regex {
+              // Bazarr emits the level in upper case (INFO|WARNING|...) padded
+              // with spaces before the pipe; match case-insensitively.
+              expression = "(?i)\\|(?P<level>trace|debug|info|warn|warning|error|fatal|critical)\\s*\\|"
+            }
+
+            stage.labels {
+              values = {
+                level = "",
+              }
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+            }
+          }
+        '';
+      in
       {
         applications.bazarr = {
           namespace = "media";
@@ -59,6 +111,11 @@
             values = {
               controllers.main = {
                 type = "deployment";
+
+                # Drives the cluster DaemonSet's stdout-drop for this pod's main
+                # container (the logtail sidecar is the canonical log source).
+                pod.labels."den.observability/file-tailed" = "true";
+
                 containers.main = {
                   image = {
                     repository = "lscr.io/linuxserver/bazarr";
@@ -86,6 +143,31 @@
                   };
                   envFrom = [ ];
                 };
+
+                # Log-tail sidecar: tails /config/log/bazarr.log* off the shared
+                # config PVC and ships labeled, level-parsed streams to loki.
+                # The grafana/alloy image entrypoint is the alloy binary, so
+                # args begin with the `run` subcommand. (Bazarr has no metrics
+                # exporter — it is log-tailed only.)
+                containers.logtail = {
+                  image = {
+                    inherit (images."grafana/alloy") repository digest;
+                  };
+                  args = [
+                    "run"
+                    "/etc/alloy/config.alloy"
+                    # tail offsets on the config PVC -> survive pod restart
+                    "--storage.path=/config/.alloy"
+                    # keep the alloy UI loopback-only (no CNP needed)
+                    "--server.http.listen-addr=127.0.0.1:12345"
+                  ];
+                  # Must read app-written logs (LSIO writes as PUID 1027 /
+                  # PGID 65536).
+                  securityContext = {
+                    runAsUser = 1027;
+                    runAsGroup = 65536;
+                  };
+                };
               };
 
               service.main = {
@@ -93,7 +175,22 @@
                 ports.http.port = 6767;
               };
 
+              # Sidecar Alloy River config delivered as a ConfigMap.
+              configMaps.logtail.data."config.alloy" = logtailConfig;
+
               persistence = {
+                # Mount the sidecar config into the logtail container only.
+                logtail = {
+                  type = "configMap";
+                  identifier = "logtail";
+                  advancedMounts.main.logtail = [
+                    {
+                      path = "/etc/alloy/config.alloy";
+                      subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 config = {
                   type = "persistentVolumeClaim";
                   accessMode = "ReadWriteOnce";

@@ -38,8 +38,54 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
+      let
+        # Alloy River config for the per-pod log-tail sidecar. Tails Whisparr's
+        # file logs (/config/logs/*.txt off the config PVC mounted at /config in
+        # every container), labels each entry with app/namespace + the auto
+        # `filename` provenance label, parses the Servarr line format
+        # (`<ts>|<LEVEL>|<Component>|<msg>`) to lift `level`, and ships to loki.
+        # The duplicate main-container stdout copy is dropped at the cluster
+        # DaemonSet via the den.observability/file-tailed pod label.
+        #
+        # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
+        logtailConfig = ''
+          local.file_match "logs" {
+            path_targets = [{
+              "__path__"  = "/config/logs/*.txt",
+              "app"       = "whisparr",
+              "namespace" = "media",
+            }]
+          }
+
+          loki.source.file "logs" {
+            targets    = local.file_match.logs.targets
+            forward_to = [loki.process.logs.receiver]
+          }
+
+          loki.process "logs" {
+            stage.regex {
+              expression = "\\|(?P<level>Trace|Debug|Info|Warn|Error|Fatal)\\|"
+            }
+
+            stage.labels {
+              values = {
+                level = "",
+              }
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+            }
+          }
+        '';
+      in
       {
         applications.whisparr = {
           namespace = "media";
@@ -49,6 +95,11 @@
             values = {
               controllers.main = {
                 type = "deployment";
+
+                # Drives the cluster DaemonSet's stdout-drop for this pod's main
+                # container (the logtail sidecar is the canonical log source).
+                pod.labels."den.observability/file-tailed" = "true";
+
                 containers.main = {
                   image = {
                     repository = "ghcr.io/hotio/whisparr";
@@ -75,6 +126,11 @@
                       name = "media-arr-api-keys";
                       key = "whisparr";
                     };
+                    # Bound /config/logs: Servarr rotates at SizeLimit MB/file
+                    # keeping Rotate files (Log section; SizeLimit clamped 0..10).
+                    # The file-tail sidecar ships these before they roll off.
+                    WHISPARR__LOG__ROTATE = "2";
+                    WHISPARR__LOG__SIZELIMIT = "1";
                   };
                   envFrom = [ ];
                   # Servarr HTTP health endpoint.
@@ -93,6 +149,31 @@
                     };
                   };
                 };
+
+                # Log-tail sidecar: tails /config/logs/*.txt off the shared
+                # config PVC and ships labeled, level-parsed streams to loki.
+                # The grafana/alloy image entrypoint is the alloy binary, so
+                # args begin with the `run` subcommand. (Whisparr has no metrics
+                # exporter — it is log-tailed only.)
+                containers.logtail = {
+                  image = {
+                    inherit (images."grafana/alloy") repository digest;
+                  };
+                  args = [
+                    "run"
+                    "/etc/alloy/config.alloy"
+                    # tail offsets on the config PVC -> survive pod restart
+                    "--storage.path=/config/.alloy"
+                    # keep the alloy UI loopback-only (no CNP needed)
+                    "--server.http.listen-addr=127.0.0.1:12345"
+                  ];
+                  # Must read app-written logs (hotio writes as PUID 1027 /
+                  # PGID 65536).
+                  securityContext = {
+                    runAsUser = 1027;
+                    runAsGroup = 65536;
+                  };
+                };
               };
 
               service.main = {
@@ -100,7 +181,22 @@
                 ports.http.port = 6969;
               };
 
+              # Sidecar Alloy River config delivered as a ConfigMap.
+              configMaps.logtail.data."config.alloy" = logtailConfig;
+
               persistence = {
+                # Mount the sidecar config into the logtail container only.
+                logtail = {
+                  type = "configMap";
+                  identifier = "logtail";
+                  advancedMounts.main.logtail = [
+                    {
+                      path = "/etc/alloy/config.alloy";
+                      subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 config = {
                   type = "persistentVolumeClaim";
                   accessMode = "ReadWriteOnce";

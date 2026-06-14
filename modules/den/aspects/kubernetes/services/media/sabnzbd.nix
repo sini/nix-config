@@ -57,6 +57,50 @@
         ...
       }:
       let
+        # Alloy River config for the per-pod log-tail sidecar. SABnzbd writes its
+        # log to /config/logs/sabnzbd.log with numbered backups (sabnzbd.log.1…),
+        # so the glob `sabnzbd.log*` catches the active file + rotations. The line
+        # format is `<ts>::<LEVEL>::[module:line] <msg>`; the level keyword is
+        # upper case (INFO|WARNING|…), matched case-insensitively. The duplicate
+        # main-container stdout copy is dropped at the cluster DaemonSet via the
+        # den.observability/file-tailed pod label.
+        #
+        # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
+        logtailConfig = ''
+          local.file_match "logs" {
+            path_targets = [{
+              "__path__"  = "/config/logs/sabnzbd.log*",
+              "app"       = "sabnzbd",
+              "namespace" = "media",
+            }]
+          }
+
+          loki.source.file "logs" {
+            targets    = local.file_match.logs.targets
+            forward_to = [loki.process.logs.receiver]
+          }
+
+          loki.process "logs" {
+            stage.regex {
+              expression = "(?i)::(?P<level>trace|debug|info|warn|warning|error|fatal|critical)::"
+            }
+
+            stage.labels {
+              values = {
+                level = "",
+              }
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+            }
+          }
+        '';
+
         # Minimal sabnzbd.ini seeder. Idempotent:
         #   fresh /config  -> write a minimal [misc] section
         #   existing       -> rewrite api_key + ensure host_whitelist line
@@ -73,7 +117,25 @@
           set -eu
           INI=/config/sabnzbd.ini
           WHITELIST="nzb.json64.dev, sabnzbd"
+          # Bound /config/logs: SAB rotates sabnzbd.log at max_log_size bytes,
+          # keeping log_backups files. 1 MiB * 2 backups keeps the dir small; the
+          # file-tail sidecar ships entries before they roll off.
+          LOG_SIZE="1048576"
+          LOG_BACKUPS="2"
           mkdir -p /scratch/usenet/incomplete /scratch/usenet/complete
+          # ensure_key <section-header-regex> <key> <full-line>: set <key> under
+          # the given section (creating the section if absent). The section must be
+          # the LAST one for the simple `/<section>/a` append to land inside it; we
+          # only use it for [logging] which we append at end-of-file below.
+          ensure_logging_key() {
+            key="$1"; line="$2"
+            grep -q '^\[logging\]' "$INI" || printf '\n[logging]\n' >> "$INI"
+            if grep -q "^$key = " "$INI"; then
+              sed -i "s|^$key = .*|$line|" "$INI"
+            else
+              sed -i "/^\[logging\]/a $line" "$INI"
+            fi
+          }
           if [ ! -f "$INI" ]; then
             echo "seeding fresh $INI"
             {
@@ -85,6 +147,9 @@
               printf '%s\n' 'inet_exposure = 4'
               printf '%s\n' 'download_dir = /scratch/usenet/incomplete'
               printf '%s\n' 'complete_dir = /scratch/usenet/complete'
+              printf '%s\n' '[logging]'
+              printf '%s\n' "max_log_size = $LOG_SIZE"
+              printf '%s\n' "log_backups = $LOG_BACKUPS"
             } > "$INI"
           else
             echo "reconciling existing $INI"
@@ -108,6 +173,8 @@
             else
               sed -i "/^\[misc\]/a inet_exposure = 4" "$INI"
             fi
+            ensure_logging_key 'max_log_size' "max_log_size = $LOG_SIZE"
+            ensure_logging_key 'log_backups' "log_backups = $LOG_BACKUPS"
           fi
         '';
       in
@@ -120,6 +187,10 @@
             values = {
               controllers.main = {
                 type = "deployment";
+
+                # Drives the cluster DaemonSet's stdout-drop for this pod's main
+                # container (the logtail sidecar is the canonical log source).
+                pod.labels."den.observability/file-tailed" = "true";
 
                 # Seed/reconcile sabnzbd.ini before the main container starts.
                 # Runs the SAB image (same UID handling) so /config ownership
@@ -192,6 +263,30 @@
                     }
                   ];
                 };
+
+                # Log-tail sidecar: tails /config/logs/sabnzbd.log* off the
+                # shared config PVC and ships labeled, level-parsed streams to
+                # loki. The grafana/alloy image entrypoint is the alloy binary,
+                # so args begin with the `run` subcommand.
+                containers.logtail = {
+                  image = {
+                    inherit (images."grafana/alloy") repository digest;
+                  };
+                  args = [
+                    "run"
+                    "/etc/alloy/config.alloy"
+                    # tail offsets on the config PVC -> survive pod restart
+                    "--storage.path=/config/.alloy"
+                    # keep the alloy UI loopback-only (no CNP needed)
+                    "--server.http.listen-addr=127.0.0.1:12345"
+                  ];
+                  # Must read app-written logs (LSIO writes as PUID 1027 /
+                  # PGID 65536).
+                  securityContext = {
+                    runAsUser = 1027;
+                    runAsGroup = 65536;
+                  };
+                };
               };
 
               service.main = {
@@ -199,7 +294,22 @@
                 ports.http.port = 8080;
               };
 
+              # Sidecar Alloy River config delivered as a ConfigMap.
+              configMaps.logtail.data."config.alloy" = logtailConfig;
+
               persistence = {
+                # Mount the sidecar config into the logtail container only.
+                logtail = {
+                  type = "configMap";
+                  identifier = "logtail";
+                  advancedMounts.main.logtail = [
+                    {
+                      path = "/etc/alloy/config.alloy";
+                      subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 config = {
                   type = "persistentVolumeClaim";
                   accessMode = "ReadWriteOnce";

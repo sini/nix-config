@@ -38,8 +38,62 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
+      let
+        # Alloy River config for the per-pod log-tail sidecar. Shoko (official
+        # image, .NET / NLog) writes date-named log files under
+        # /home/shoko/.shoko/Shoko.CLI/logs/<date>.log on the state PVC; the glob
+        # `*.log` catches them. The NLog line format is
+        # `[<ts>] <Level>|<logger> > <msg>`; we lift the (title-case) level keyword.
+        # The duplicate main-container stdout copy is dropped at the cluster
+        # DaemonSet via the den.observability/file-tailed pod label.
+        #
+        # Rotation: Shoko's NLog target rolls files by date and self-prunes
+        # (maxArchiveFiles) — not env-overridable, so we accept Shoko's default.
+        #
+        # The shoko user maps to PUID 1027 / PGID 65536 (confirmed live: it owns
+        # /home/shoko/.shoko and the log files), so the logtail runs as 1027 to
+        # read the logs and write its offset store under
+        # /home/shoko/.shoko/.alloy on the state PVC.
+        #
+        # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
+        logtailConfig = ''
+          local.file_match "logs" {
+            path_targets = [{
+              "__path__"  = "/home/shoko/.shoko/Shoko.CLI/logs/*.log",
+              "app"       = "shoko",
+              "namespace" = "media",
+            }]
+          }
+
+          loki.source.file "logs" {
+            targets    = local.file_match.logs.targets
+            forward_to = [loki.process.logs.receiver]
+          }
+
+          loki.process "logs" {
+            stage.regex {
+              expression = "\\]\\s(?P<level>Trace|Debug|Info|Warn|Error|Fatal)\\|"
+            }
+
+            stage.labels {
+              values = {
+                level = "",
+              }
+            }
+
+            forward_to = [loki.write.default.receiver]
+          }
+
+          loki.write "default" {
+            endpoint {
+              url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+            }
+          }
+        '';
+      in
       {
         applications.shoko = {
           namespace = "media";
@@ -49,6 +103,11 @@
             values = {
               controllers.main = {
                 type = "deployment";
+
+                # Drives the cluster DaemonSet's stdout-drop for this pod's main
+                # container (the logtail sidecar is the canonical log source).
+                pod.labels."den.observability/file-tailed" = "true";
+
                 containers.main = {
                   image = {
                     repository = "shokoanime/server";
@@ -75,6 +134,29 @@
                     };
                   };
                 };
+
+                # Log-tail sidecar: tails the Shoko.CLI/logs/*.log files off the
+                # state PVC and ships labeled, level-parsed streams to loki. The
+                # grafana/alloy image entrypoint is the alloy binary, so args begin
+                # with the `run` subcommand. Runs as the shoko uid (1027) so it can
+                # read the logs and write its offset store on the state PVC.
+                containers.logtail = {
+                  image = {
+                    inherit (images."grafana/alloy") repository digest;
+                  };
+                  args = [
+                    "run"
+                    "/etc/alloy/config.alloy"
+                    # tail offsets on the state PVC -> survive pod restart
+                    "--storage.path=/home/shoko/.shoko/.alloy"
+                    # keep the alloy UI loopback-only (no CNP needed)
+                    "--server.http.listen-addr=127.0.0.1:12345"
+                  ];
+                  securityContext = {
+                    runAsUser = 1027;
+                    runAsGroup = 65536;
+                  };
+                };
               };
 
               service.main = {
@@ -82,7 +164,22 @@
                 ports.http.port = 8111;
               };
 
+              # Sidecar Alloy River config delivered as a ConfigMap.
+              configMaps.logtail.data."config.alloy" = logtailConfig;
+
               persistence = {
+                # Mount the sidecar config into the logtail container only.
+                logtail = {
+                  type = "configMap";
+                  identifier = "logtail";
+                  advancedMounts.main.logtail = [
+                    {
+                      path = "/etc/alloy/config.alloy";
+                      subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 # Official image keeps its state in /home/shoko/.shoko (no /config).
                 config = {
                   type = "persistentVolumeClaim";

@@ -1,0 +1,44 @@
+apiVersion: v1
+data:
+  config.alloy: |-
+    local.file_match "logs" {
+      path_targets = [{
+        "__path__"  = "/config/log/bazarr.log*",
+        "app"       = "bazarr",
+        "namespace" = "media",
+      }]
+    }
+
+    loki.source.file "logs" {
+      targets    = local.file_match.logs.targets
+      forward_to = [loki.process.logs.receiver]
+    }
+
+    loki.process "logs" {
+      stage.regex {
+        // Bazarr emits the level in upper case (INFO|WARNING|...) padded
+        // with spaces before the pipe; match case-insensitively.
+        expression = "(?i)\\|(?P<level>trace|debug|info|warn|warning|error|fatal|critical)\\s*\\|"
+      }
+
+      stage.labels {
+        values = {
+          level = "",
+        }
+      }
+
+      forward_to = [loki.write.default.receiver]
+    }
+
+    loki.write "default" {
+      endpoint {
+        url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+      }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: bazarr
+    app.kubernetes.io/name: bazarr
+  name: bazarr
+  namespace: media

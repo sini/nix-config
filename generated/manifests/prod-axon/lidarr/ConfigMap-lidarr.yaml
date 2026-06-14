@@ -1,0 +1,42 @@
+apiVersion: v1
+data:
+  config.alloy: |-
+    local.file_match "logs" {
+      path_targets = [{
+        "__path__"  = "/config/logs/*.txt",
+        "app"       = "lidarr",
+        "namespace" = "media",
+      }]
+    }
+
+    loki.source.file "logs" {
+      targets    = local.file_match.logs.targets
+      forward_to = [loki.process.logs.receiver]
+    }
+
+    loki.process "logs" {
+      stage.regex {
+        expression = "\\|(?P<level>Trace|Debug|Info|Warn|Error|Fatal)\\|"
+      }
+
+      stage.labels {
+        values = {
+          level = "",
+        }
+      }
+
+      forward_to = [loki.write.default.receiver]
+    }
+
+    loki.write "default" {
+      endpoint {
+        url = "http://loki.monitoring.svc:3100/loki/api/v1/push"
+      }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: lidarr
+    app.kubernetes.io/name: lidarr
+  name: lidarr
+  namespace: media
