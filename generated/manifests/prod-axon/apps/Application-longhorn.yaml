@@ -11,11 +11,9 @@ spec:
     server: https://kubernetes.default.svc
   ignoreDifferences:
     - group: longhorn.io
-      jsonPointers:
-        - /status
-        - /spec/syncRequestedAt
-        - /spec/credentialSecret
       kind: BackupTarget
+      managedFieldsManagers:
+        - longhorn-manager
       name: default
       namespace: longhorn-system
   project: default
