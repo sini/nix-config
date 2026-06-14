@@ -103,17 +103,51 @@ in
         applications.media-pg = {
           namespace = "media";
 
+          # Manual metrics PodMonitor, replacing CNPG's monitoring.enablePodMonitor
+          # (deprecated; to be removed). It relabels `instance` to the stable pod
+          # name (media-pg-1/2) instead of the default ephemeral pod IP:port, so
+          # CNPG metric series don't churn on pod restart. Distinct name avoids an
+          # ownership race with the auto PodMonitor during the handoff. Replicates
+          # the CNPG auto spec (selector cnpg.io/cluster + podRole=instance, port
+          # `metrics`/9187); the prometheus→9187 scrape allow in network-policy.nix
+          # still covers it (matched by port).
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "media-pg-metrics";
+                namespace = "media";
+              };
+              spec = {
+                selector.matchLabels = {
+                  "cnpg.io/cluster" = "media-pg";
+                  "cnpg.io/podRole" = "instance";
+                };
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    relabelings = [
+                      {
+                        sourceLabels = [ "__meta_kubernetes_pod_name" ];
+                        targetLabel = "instance";
+                      }
+                    ];
+                  }
+                ];
+              };
+            }
+          ];
+
           resources = {
             # CNPG Cluster: 2 instances, single-replica longhorn storage,
             # required anti-affinity, per-app managed roles, nightly snapshots.
             clusters.media-pg.spec = {
               instances = 2;
 
-              # PodMonitor for the instance metrics exporter (9187); scraped
-              # by kube-prometheus-stack, charted by the CNPG cluster
-              # dashboard (see monitoring/grafana.nix). The matching scrape
-              # ingress allow lives in network-policy.nix.
-              monitoring.enablePodMonitor = true;
+              # Metrics scrape is via the manually-authored PodMonitor above
+              # (instance relabeled to the stable pod name); CNPG's deprecated
+              # monitoring.enablePodMonitor is intentionally NOT set.
 
               storage = {
                 size = "20Gi";

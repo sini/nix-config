@@ -45,11 +45,44 @@ in
         applications.monitoring-pg = {
           namespace = "monitoring";
 
+          # Manual metrics PodMonitor, replacing CNPG's deprecated
+          # monitoring.enablePodMonitor. Relabels `instance` to the stable pod
+          # name (monitoring-pg-1/2) instead of the ephemeral pod IP:port.
+          # Replicates the CNPG auto spec; distinct name avoids a handoff race.
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "monitoring-pg-metrics";
+                namespace = "monitoring";
+              };
+              spec = {
+                selector.matchLabels = {
+                  "cnpg.io/cluster" = "monitoring-pg";
+                  "cnpg.io/podRole" = "instance";
+                };
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    relabelings = [
+                      {
+                        sourceLabels = [ "__meta_kubernetes_pod_name" ];
+                        targetLabel = "instance";
+                      }
+                    ];
+                  }
+                ];
+              };
+            }
+          ];
+
           resources = {
             clusters.monitoring-pg.spec = {
               instances = 2;
 
-              monitoring.enablePodMonitor = true;
+              # Metrics scrape is via the manual PodMonitor above; CNPG's
+              # deprecated monitoring.enablePodMonitor is intentionally not set.
 
               storage = {
                 size = "5Gi";

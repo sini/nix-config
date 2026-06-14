@@ -19,8 +19,6 @@ spec:
         name: grafana
         passwordSecret:
           name: monitoring-pg-grafana-password
-  monitoring:
-    enablePodMonitor: true
   storage:
     size: 5Gi
     storageClass: longhorn-single

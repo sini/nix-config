@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: monitoring-pg-metrics
+  namespace: monitoring
+spec:
+  podMetricsEndpoints:
+    - port: metrics
+      relabelings:
+        - sourceLabels:
+            - __meta_kubernetes_pod_name
+          targetLabel: instance
+  selector:
+    matchLabels:
+      cnpg.io/cluster: monitoring-pg
+      cnpg.io/podRole: instance
