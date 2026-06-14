@@ -592,6 +592,14 @@
                     port = "metrics";
                     path = "/metrics";
                     interval = "30s";
+                    # Default instance is the ephemeral pod IP:port, which
+                    # churns on every restart; pin it to the stable app name.
+                    relabelings = [
+                      {
+                        sourceLabels = [ "__meta_kubernetes_pod_label_app_kubernetes_io_name" ];
+                        targetLabel = "instance";
+                      }
+                    ];
                   }
                 ];
               };
