@@ -53,6 +53,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       let
@@ -166,6 +167,31 @@
                     };
                   };
                 };
+
+                # Prometheus metrics sidecar: scrapes the SABnzbd API over pod
+                # loopback and re-exports it on :9707 for kube-prometheus-stack.
+                # SAB's real api_key is seeded from media-arr-api-keys/sabnzbd by
+                # the config-seed init, so the same secret authenticates exportarr.
+                containers.exportarr = {
+                  image = {
+                    inherit (images."onedr0p/exportarr") repository digest;
+                  };
+                  args = [ "sabnzbd" ];
+                  env = {
+                    PORT = "9707";
+                    URL = "http://localhost:8080";
+                    APIKEY.valueFrom.secretKeyRef = {
+                      name = "media-arr-api-keys";
+                      key = "sabnzbd";
+                    };
+                  };
+                  ports = [
+                    {
+                      name = "metrics";
+                      containerPort = 9707;
+                    }
+                  ];
+                };
               };
 
               service.main = {
@@ -193,6 +219,29 @@
             };
           };
 
+          # Raw PodMonitor: no typed accessor without a kube-prometheus-stack
+          # CRDs bridge, so author it directly (mirrors the monitoring aspect).
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "sabnzbd";
+                namespace = "media";
+              };
+              spec = {
+                selector.matchLabels."app.kubernetes.io/name" = "sabnzbd";
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    path = "/metrics";
+                    interval = "30s";
+                  }
+                ];
+              };
+            }
+          ];
+
           resources = {
             ciliumNetworkPolicies = {
               allow-gateway-ingress-sabnzbd.spec = {
@@ -208,6 +257,33 @@
                         ports = [
                           {
                             port = "8080";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              allow-metrics-ingress-sabnzbd.spec = {
+                description = "Allow Prometheus to scrape sabnzbd's exportarr sidecar (9707).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "sabnzbd";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "9707";
                             protocol = "TCP";
                           }
                         ];
