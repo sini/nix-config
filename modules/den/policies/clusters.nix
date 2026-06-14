@@ -131,6 +131,11 @@ in
                     local = config.flake.chartsDerivations.${system} or { };
                   in
                   upstream // lib.mapAttrs (org: orgCharts: (upstream.${org} or { }) // orgCharts) local;
+                # Pinned OCI image refs, exposed to manifest aspects as the
+                # `images` module arg: images."<ns>/<name>" = { repository; digest; }.
+                extraSpecialArgs = {
+                  images = config.flake.imageRefs.${system};
+                };
                 # den-collected kubernetes-class modules for this cluster
                 inherit modules;
               }
