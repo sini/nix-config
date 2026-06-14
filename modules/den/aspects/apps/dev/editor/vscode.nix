@@ -46,6 +46,7 @@
                 "cursor-workspace" = true;
                 "windsurf" = true;
               };
+              "claudeCode.preferredLocation" = "panel";
               "cSpell.userWords" = [
                 "distro"
                 "distrobox"
@@ -89,6 +90,7 @@
               ];
               "editor.semanticHighlighting.enabled" = true;
               "explorer.confirmDragAndDrop" = false;
+              "extensions.autoCheckUpdates" = false;
               "extensions.ignoreRecommendations" = true;
               "[lua]"."editor.defaultFormatter" = "JohnnyMorganz.stylua";
               "[nix]"."editor.defaultFormatter" = "jnoortheen.nix-ide";
@@ -202,15 +204,21 @@
               pkgs.vscode-marketplace.alexgb.nelua
               pkgs.vscode-marketplace.anthropic.claude-code
               pkgs.vscode-marketplace.automatalabs.copilot-mcp
+              pkgs.vscode-marketplace.bierner.markdown-checkbox
+              pkgs.vscode-marketplace.bierner.markdown-emoji
+              pkgs.vscode-marketplace.bierner.markdown-footnotes
+              pkgs.vscode-marketplace.bierner.markdown-mermaid
+              pkgs.vscode-marketplace.bierner.markdown-preview-github-styles
+              pkgs.vscode-marketplace.bierner.markdown-yaml-preamble
               pkgs.vscode-marketplace.bmalehorn.shell-syntax
               pkgs.vscode-marketplace.bmalehorn.vscode-fish
               pkgs.vscode-marketplace.budparr.language-hugo-vscode
               pkgs.vscode-marketplace.catppuccin.catppuccin-vsc-icons
               pkgs.vscode-marketplace.codezombiech.gitignore
+              pkgs.vscode-marketplace.davidanson.vscode-markdownlint
               pkgs.vscode-marketplace.coolbear.systemd-unit-file
               pkgs.vscode-marketplace.dotjoshjohnson.xml
               pkgs.vscode-marketplace.editorconfig.editorconfig
-              pkgs.vscode-marketplace.eliostruyf.vscode-front-matter
               pkgs.vscode-marketplace.esbenp.prettier-vscode
               pkgs.vscode-marketplace.evan-buss.font-switcher
               pkgs.vscode-marketplace.fill-labs.dependi
