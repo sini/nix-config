@@ -166,6 +166,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       let
@@ -357,8 +358,10 @@
                     # the default interface (eth0 only, never tun0 — the VPN side stays
                     # closed except the forwarded port), immune to that detection: 8080
                     # = qbt WebUI (gateway + *arr download clients), 9999 = health
-                    # probe (kubelet).
-                    FIREWALL_INPUT_PORTS = "8080,9999";
+                    # probe (kubelet), 9710 = the qbittorrent-exporter metrics port
+                    # (Prometheus dials the pod IP — without this accept gluetun DROPs
+                    # the scrape even though the exporter is healthy).
+                    FIREWALL_INPUT_PORTS = "8080,9999,9710";
                     # Health server defaults to 127.0.0.1:9999, unreachable for the
                     # kubelet's pod-IP httpGet probe — bind all interfaces instead.
                     HEALTH_SERVER_ADDRESS = ":9999";
@@ -383,6 +386,34 @@
                     "/bin/sh"
                     "-c"
                     portSyncScript
+                  ];
+                };
+
+                # Prometheus metrics sidecar (esanchezm qbittorrent-exporter):
+                # scrapes qBittorrent's WebUI API over the shared pod loopback and
+                # re-exports it on :9710 for kube-prometheus-stack. WebUI
+                # LocalHostAuth is disabled (seeded above), so localhost API access
+                # needs no credentials — USER/PASS stay empty. Port 9710 deliberately
+                # avoids 8000 (gluetun's control server on the same loopback).
+                # Reachable from Prometheus only because gluetun's FIREWALL_INPUT_PORTS
+                # (below) accepts 9710 on eth0; otherwise gluetun's DROP INPUT policy
+                # would silently drop the pod-IP scrape.
+                containers.exportarr = {
+                  image = {
+                    inherit (images."esanchezm/prometheus-qbittorrent-exporter") repository digest;
+                  };
+                  env = {
+                    QBITTORRENT_HOST = "localhost";
+                    QBITTORRENT_PORT = toString webuiPort;
+                    QBITTORRENT_USER = "";
+                    QBITTORRENT_PASS = "";
+                    EXPORTER_PORT = "9710";
+                  };
+                  ports = [
+                    {
+                      name = "metrics";
+                      containerPort = 9710;
+                    }
                   ];
                 };
               };
@@ -420,6 +451,30 @@
               };
             };
           };
+
+          # Raw PodMonitor: no typed accessor without a kube-prometheus-stack
+          # CRDs bridge, so author it directly (mirrors the *arr aspects). Scrapes
+          # the esanchezm exporter sidecar's "metrics" port at /metrics.
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "qbittorrent";
+                namespace = "media";
+              };
+              spec = {
+                selector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    path = "/metrics";
+                    interval = "30s";
+                  }
+                ];
+              };
+            }
+          ];
 
           resources = {
             ciliumNetworkPolicies = {
@@ -523,6 +578,37 @@
                         ports = [
                           {
                             port = toString webuiPort;
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # Prometheus scrape of the exporter sidecar (9710). The pod is in
+              # ingress default-deny (CNPs above), so this allow is required for the
+              # scrape to land — gluetun's eth0 firewall accept (9710) is the second,
+              # independent gate.
+              allow-metrics-ingress-qbittorrent.spec = {
+                description = "Allow Prometheus to scrape qbittorrent's exporter sidecar (9710).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "9710";
                             protocol = "TCP";
                           }
                         ];

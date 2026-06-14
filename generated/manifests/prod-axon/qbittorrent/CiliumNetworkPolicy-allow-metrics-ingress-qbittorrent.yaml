@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-metrics-ingress-qbittorrent
+  namespace: media
+spec:
+  description: Allow Prometheus to scrape qbittorrent's exporter sidecar (9710).
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: qbittorrent
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "9710"
+              protocol: TCP
