@@ -1,0 +1,21 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: allow-nas-backup-egress
+  namespace: longhorn-system
+spec:
+  description: Allow Longhorn pods to reach the NAS NFS backupstore.
+  egress:
+    - toCIDR:
+        - 10.10.10.10/32
+      toPorts:
+        - ports:
+            - port: "2049"
+              protocol: TCP
+            - port: "111"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      k8s:io.kubernetes.pod.namespace: longhorn-system

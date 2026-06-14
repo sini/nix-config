@@ -160,6 +160,38 @@
               stringData.client-secret = config.age.secrets.longhorn-oidc-client-secret.sopsRef;
             };
 
+            # Longhorn runs `longhorn system-backup`/backup mounts from the
+            # pod netns, so reaching the NAS backupstore (an external/world IP)
+            # needs an explicit egress allow — host-netns NFS (csi/kubelet)
+            # bypasses pod policy, but this does not. NFSv4 = 2049/TCP; 111/TCP
+            # (rpcbind) included for safety.
+            ciliumNetworkPolicies.allow-nas-backup-egress = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                description = "Allow Longhorn pods to reach the NAS NFS backupstore.";
+                endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "longhorn-system";
+                egress = [
+                  {
+                    toCIDR = [ "${backupNfs.server}/32" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "2049";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "111";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+            };
+
             ciliumNetworkPolicies.allow-kube-apiserver-egress = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
               spec = {
