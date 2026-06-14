@@ -62,6 +62,10 @@ spec:
               value: /scratch/torrents/complete
             - name: UN_SONARR_0_URL
               value: http://sonarr:8989
+            - name: UN_WEBSERVER_LISTEN_ADDR
+              value: 0.0.0.0:5656
+            - name: UN_WEBSERVER_METRICS
+              value: "true"
             - name: UN_WHISPARR_0_API_KEY
               valueFrom:
                 secretKeyRef:
@@ -73,6 +77,9 @@ spec:
               value: http://whisparr:6969
           image: golift/unpackerr:0.15.2
           name: main
+          ports:
+            - containerPort: 5656
+              name: metrics
           volumeMounts:
             - mountPath: /scratch
               name: scratch

@@ -88,12 +88,23 @@
                     PUID = "1027";
                     PGID = "65536";
                     UN_LOG_QUEUES = "1m";
+                    # Built-in prometheus webserver: served at /metrics on 5656.
+                    UN_WEBSERVER_METRICS = "true";
+                    UN_WEBSERVER_LISTEN_ADDR = "0.0.0.0:5656";
                   }
                   // arrEnv "SONARR" "sonarr" "http://sonarr:8989"
                   // arrEnv "RADARR" "radarr" "http://radarr:7878"
                   // arrEnv "LIDARR" "lidarr" "http://lidarr:8686"
                   // arrEnv "WHISPARR" "whisparr" "http://whisparr:6969";
                   envFrom = [ ];
+                  # Named container port so the PodMonitor can reference it by
+                  # name (the chart's service.main targetPort is numeric only).
+                  ports = [
+                    {
+                      name = "metrics";
+                      containerPort = 5656;
+                    }
+                  ];
                 };
               };
 
@@ -114,8 +125,61 @@
             };
           };
 
+          # Raw PodMonitor: no typed accessor without a kube-prometheus-stack
+          # CRDs bridge, so author it directly (mirrors the monitoring aspect).
+          # Unpackerr serves its own prometheus endpoint at /metrics on 5656.
+          objects = [
+            {
+              apiVersion = "monitoring.coreos.com/v1";
+              kind = "PodMonitor";
+              metadata = {
+                name = "unpackerr";
+                namespace = "media";
+              };
+              spec = {
+                selector.matchLabels."app.kubernetes.io/name" = "unpackerr";
+                podMetricsEndpoints = [
+                  {
+                    port = "metrics";
+                    path = "/metrics";
+                    interval = "30s";
+                  }
+                ];
+              };
+            }
+          ];
+
           resources = {
             ciliumNetworkPolicies = {
+              # Unpackerr is under ingress default-deny (no UI); this scrape
+              # allow is its only inbound edge.
+              allow-metrics-ingress-unpackerr.spec = {
+                description = "Allow Prometheus to scrape unpackerr's metrics webserver (5656).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "unpackerr";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "5656";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
               allow-dns-egress-unpackerr.spec = {
                 description = "Allow unpackerr to resolve via kube-dns.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "unpackerr";

@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-metrics-ingress-unpackerr
+  namespace: media
+spec:
+  description: Allow Prometheus to scrape unpackerr's metrics webserver (5656).
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: unpackerr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "5656"
+              protocol: TCP
