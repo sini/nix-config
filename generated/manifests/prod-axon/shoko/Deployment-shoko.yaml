@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: dc52d8241e17bb020794907da0fc7b8f3857f4f097f17531cd07bb4698ec01a6
+        checksum/configMaps: 5e09d21c7fba56e932ed2ae2c870f6e263e6c628210f30c55c3d8ce21ec811b3
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: shoko

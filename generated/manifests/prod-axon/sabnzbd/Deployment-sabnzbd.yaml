@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 4aeef72ef8fbd03bac5dd3bcad4db27c19a8e82813d5b1eebc0981daf9cba448
+        checksum/configMaps: a96eef1f072fc8edeb3738e670cfa83c3a7a70d545d1c0cf27990c4a47be2d0b
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: sabnzbd
@@ -31,6 +31,8 @@ spec:
       containers:
         - args:
             - sabnzbd
+            - --log-level
+            - warn
           env:
             - name: APIKEY
               valueFrom:

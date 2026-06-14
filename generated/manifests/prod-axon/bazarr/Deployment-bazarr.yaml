@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 0600e17c9ec6fb1b4552c2c67f972d1378c98a10fb0fdf8c7d743e9102b21ea4
+        checksum/configMaps: 89a4252f4fc8cdc3b70fe31e6386bb2bf7e1d485b9a153a5276fc5c8880a16ad
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: bazarr

@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 6523f27377ea567885b9bd6409640bec14ce834e1f2447da19eb18a00936a6f7
+        checksum/configMaps: 6afd295ba69a82c4df80adaf6f00ce872e1396c3797c75b3f3c1807cf8d9dfab
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: sonarr
@@ -31,6 +31,8 @@ spec:
       containers:
         - args:
             - sonarr
+            - --log-level
+            - warn
           env:
             - name: APIKEY
               valueFrom:

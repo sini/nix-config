@@ -1,9 +1,13 @@
 apiVersion: v1
 data:
   config.alloy: |-
+    logging {
+      level = "warn"
+    }
+
     local.file_match "logs" {
       path_targets = [{
-        "__path__"  = "/config/qBittorrent/logs/qbittorrent.log*",
+        "__path__"  = "/config/qBittorrent/logs/qbittorrent.log",
         "app"       = "qbittorrent",
         "namespace" = "media",
       }]
@@ -23,6 +27,19 @@ data:
         values = {
           level = "",
         }
+      }
+
+      // Bound stream cardinality: replace the per-file `filename`
+      // provenance label (one stream per .bak backup) with a static
+      // app-level `log_file` label, then drop the raw path.
+      stage.static_labels {
+        values = {
+          log_file = "qbittorrent",
+        }
+      }
+
+      stage.label_drop {
+        values = ["filename"]
       }
 
       forward_to = [loki.write.default.receiver]

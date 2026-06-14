@@ -45,7 +45,10 @@
         # Alloy River config for the per-pod log-tail sidecar. Shoko (official
         # image, .NET / NLog) writes date-named log files under
         # /home/shoko/.shoko/Shoko.CLI/logs/<date>.log on the state PVC; the glob
-        # `*.log` catches them. The NLog line format is
+        # `*.log` catches the active (current-day) file — older days are archived
+        # to `<date>.zip`. Because the filename carries the date (the cardinality
+        # driver), we collapse it to a bounded static `log_file = "shoko"` label
+        # and drop the raw per-file `filename` label. The NLog line format is
         # `[<ts>] <Level>|<logger> > <msg>`; we lift the (title-case) level keyword.
         # The duplicate main-container stdout copy is dropped at the cluster
         # DaemonSet via the den.observability/file-tailed pod label.
@@ -60,6 +63,10 @@
         #
         # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
         logtailConfig = ''
+          logging {
+            level = "warn"
+          }
+
           local.file_match "logs" {
             path_targets = [{
               "__path__"  = "/home/shoko/.shoko/Shoko.CLI/logs/*.log",
@@ -82,6 +89,19 @@
               values = {
                 level = "",
               }
+            }
+
+            // Bound stream cardinality: shoko names each day's log by date, so
+            // the raw `filename` label grows daily. Collapse it to a static
+            // app-level `log_file` label and drop the raw path.
+            stage.static_labels {
+              values = {
+                log_file = "shoko",
+              }
+            }
+
+            stage.label_drop {
+              values = ["filename"]
             }
 
             forward_to = [loki.write.default.receiver]

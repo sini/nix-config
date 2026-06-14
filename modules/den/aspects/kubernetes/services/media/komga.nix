@@ -57,12 +57,13 @@
       }:
       let
         # Alloy River config for the per-pod log-tail sidecar. Komga (Spring Boot
-        # / logback) writes to /config/logs/komga.log; the glob `/config/logs/*.log`
-        # tails the active file (rotated history is gzipped to `*.log.<date>.N.gz`
-        # and intentionally not tailed). The logback line format is
+        # / logback) writes to /config/logs/komga.log; we tail only that ACTIVE
+        # file (rotated history is gzipped to `*.log.<date>.N.gz` and intentionally
+        # not tailed). The logback line format is
         # `<ts>  <LEVEL> <pid> --- [...] : <msg>`; we lift the (upper-case) level
-        # keyword. The duplicate main-container stdout copy is dropped at the
-        # cluster DaemonSet via the den.observability/file-tailed pod label.
+        # keyword. A bounded static `log_file` label replaces the raw per-file
+        # `filename` label. The duplicate main-container stdout copy is dropped at
+        # the cluster DaemonSet via the den.observability/file-tailed pod label.
         #
         # Rotation: komga's bundled logback rolling policy rotates daily, gzips
         # history and self-prunes (maxHistory) — not env-overridable from a bundled
@@ -75,9 +76,13 @@
         #
         # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
         logtailConfig = ''
+          logging {
+            level = "warn"
+          }
+
           local.file_match "logs" {
             path_targets = [{
-              "__path__"  = "/config/logs/*.log",
+              "__path__"  = "/config/logs/komga.log",
               "app"       = "komga",
               "namespace" = "media",
             }]
@@ -97,6 +102,19 @@
               values = {
                 level = "",
               }
+            }
+
+            // Bound stream cardinality: replace the raw per-file `filename`
+            // provenance label with a static app-level `log_file` label, then
+            // drop the raw path.
+            stage.static_labels {
+              values = {
+                log_file = "komga",
+              }
+            }
+
+            stage.label_drop {
+              values = ["filename"]
             }
 
             forward_to = [loki.write.default.receiver]
@@ -136,7 +154,7 @@
                   envFrom = [ ];
                 };
 
-                # Log-tail sidecar: tails /config/logs/*.log off the shared config
+                # Log-tail sidecar: tails /config/logs/komga.log off the shared config
                 # PVC and ships labeled, level-parsed streams to loki. The
                 # grafana/alloy image entrypoint is the alloy binary, so args begin
                 # with the `run` subcommand. Runs as root (uid 0) because komga

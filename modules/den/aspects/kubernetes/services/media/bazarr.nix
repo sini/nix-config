@@ -53,22 +53,28 @@
       }:
       let
         # Alloy River config for the per-pod log-tail sidecar. Bazarr writes its
-        # logs to /config/log/ (singular `log` dir), active file `bazarr.log` plus
-        # date-suffixed rotations `bazarr.log.<date>` — the glob `bazarr.log*`
-        # catches both. Bazarr uses the same pipe-delimited line format as Servarr
-        # (`<ts>|<LEVEL>|<component>|<msg>`), so the same level regex applies.
-        # The duplicate main-container stdout copy is dropped at the cluster
-        # DaemonSet via the den.observability/file-tailed pod label.
+        # logs to /config/log/ (singular `log` dir); we tail only the ACTIVE file
+        # `bazarr.log` (the date-suffixed rotations `bazarr.log.<date>` are
+        # intentionally excluded — they were the cardinality driver). Bazarr uses
+        # the same pipe-delimited line format as Servarr
+        # (`<ts>|<LEVEL>|<component>|<msg>`), so the same level regex applies. A
+        # bounded static `log_file` label replaces the raw per-file `filename`
+        # label. The duplicate main-container stdout copy is dropped at the
+        # cluster DaemonSet via the den.observability/file-tailed pod label.
         #
         # Rotation: bazarr uses Python's TimedRotatingFileHandler (its own daily
-        # rotation, not env-configurable); it keeps a bounded set of dated files
-        # and self-prunes. We accept bazarr's default rotation.
+        # rotation, not env-configurable) and self-prunes; Alloy follows the
+        # active file across rotation by inode.
         #
         # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
         logtailConfig = ''
+          logging {
+            level = "warn"
+          }
+
           local.file_match "logs" {
             path_targets = [{
-              "__path__"  = "/config/log/bazarr.log*",
+              "__path__"  = "/config/log/bazarr.log",
               "app"       = "bazarr",
               "namespace" = "media",
             }]
@@ -90,6 +96,19 @@
               values = {
                 level = "",
               }
+            }
+
+            // Bound stream cardinality: replace the per-file `filename`
+            // provenance label (one stream per dated rotation) with a static
+            // app-level `log_file` label, then drop the raw path.
+            stage.static_labels {
+              values = {
+                log_file = "bazarr",
+              }
+            }
+
+            stage.label_drop {
+              values = ["filename"]
             }
 
             forward_to = [loki.write.default.receiver]
@@ -144,7 +163,7 @@
                   envFrom = [ ];
                 };
 
-                # Log-tail sidecar: tails /config/log/bazarr.log* off the shared
+                # Log-tail sidecar: tails /config/log/bazarr.log (active) off the shared
                 # config PVC and ships labeled, level-parsed streams to loki.
                 # The grafana/alloy image entrypoint is the alloy binary, so
                 # args begin with the `run` subcommand. (Bazarr has no metrics

@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: f99213ddac6f6c6d416d85e6fd2e71564846f70523f8bc1d80fca7fb9a891070
+        checksum/configMaps: 5bb3fb5fa576c7fab5da29130d713cb972c1786f8c79f373ba69c63536a6d8fb
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: prowlarr
@@ -31,6 +31,8 @@ spec:
       containers:
         - args:
             - prowlarr
+            - --log-level
+            - warn
           env:
             - name: APIKEY
               valueFrom:

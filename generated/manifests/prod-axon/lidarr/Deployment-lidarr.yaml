@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 6e69fe522add6bd502a202b6ee415c13e05bbdc124906d26e48c91e50b469346
+        checksum/configMaps: e4bbe465a6db99a7211a5e6b88f575c4941540e690762cbfa0d5a5f110eccd01
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: lidarr
@@ -31,6 +31,8 @@ spec:
       containers:
         - args:
             - lidarr
+            - --log-level
+            - warn
           env:
             - name: APIKEY
               valueFrom:

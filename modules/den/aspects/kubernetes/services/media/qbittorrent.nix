@@ -173,8 +173,9 @@
         webuiPort = 8080;
 
         # Alloy River config for the per-pod log-tail sidecar. qBittorrent writes
-        # to /config/qBittorrent/logs/qbittorrent.log with .bak/.bakN backups, so
-        # the glob `qbittorrent.log*` catches the active file + rotations. The line
+        # to /config/qBittorrent/logs/qbittorrent.log with .bak/.bakN backups; we
+        # tail only the ACTIVE file `qbittorrent.log` (the .bak rotations are
+        # intentionally excluded — they were the cardinality driver). The line
         # format prefixes a parenthesised level letter — (N)ormal, (I)nfo,
         # (W)arning, (C)ritical — which we lift verbatim into the `level` label.
         # The duplicate main-container stdout copy is dropped at the cluster
@@ -188,9 +189,13 @@
         #
         # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
         logtailConfig = ''
+          logging {
+            level = "warn"
+          }
+
           local.file_match "logs" {
             path_targets = [{
-              "__path__"  = "/config/qBittorrent/logs/qbittorrent.log*",
+              "__path__"  = "/config/qBittorrent/logs/qbittorrent.log",
               "app"       = "qbittorrent",
               "namespace" = "media",
             }]
@@ -210,6 +215,19 @@
               values = {
                 level = "",
               }
+            }
+
+            // Bound stream cardinality: replace the per-file `filename`
+            // provenance label (one stream per .bak backup) with a static
+            // app-level `log_file` label, then drop the raw path.
+            stage.static_labels {
+              values = {
+                log_file = "qbittorrent",
+              }
+            }
+
+            stage.label_drop {
+              values = ["filename"]
             }
 
             forward_to = [loki.write.default.receiver]
@@ -489,6 +507,9 @@
                     QBITTORRENT_USER = "";
                     QBITTORRENT_PASS = "";
                     EXPORTER_PORT = "9710";
+                    # Quiet the per-scrape retry/connection chatter (shipped to
+                    # loki). Python logging level name.
+                    EXPORTER_LOG_LEVEL = "WARNING";
                   };
                   ports = [
                     {
@@ -498,8 +519,8 @@
                   ];
                 };
 
-                # Log-tail sidecar: tails /config/qBittorrent/logs/qbittorrent.log*
-                # off the shared config PVC and ships labeled, level-parsed streams
+                # Log-tail sidecar: tails /config/qBittorrent/logs/qbittorrent.log
+                # (active) off the shared config PVC and ships labeled, level-parsed streams
                 # to loki. The grafana/alloy image entrypoint is the alloy binary,
                 # so args begin with the `run` subcommand. Runs as PUID 1027 — the
                 # qbt log files are mode 0600 owned by 1027, so only that uid can

@@ -1,6 +1,10 @@
 apiVersion: v1
 data:
   config.alloy: |-
+    logging {
+      level = "warn"
+    }
+
     local.file_match "logs" {
       path_targets = [{
         "__path__"  = "/home/shoko/.shoko/Shoko.CLI/logs/*.log",
@@ -23,6 +27,19 @@ data:
         values = {
           level = "",
         }
+      }
+
+      // Bound stream cardinality: shoko names each day's log by date, so
+      // the raw `filename` label grows daily. Collapse it to a static
+      // app-level `log_file` label and drop the raw path.
+      stage.static_labels {
+        values = {
+          log_file = "shoko",
+        }
+      }
+
+      stage.label_drop {
+        values = ["filename"]
       }
 
       forward_to = [loki.write.default.receiver]

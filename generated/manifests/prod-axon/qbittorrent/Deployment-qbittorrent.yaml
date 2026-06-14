@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 6a9c26289117784dd6b6c54671197b166581e2f40ee99a5d864f747518606b77
+        checksum/configMaps: 4c8f95947594d4dd950c8b6421bf5f33a4e6f71f0828337e6e6e5d044fd0d484
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: qbittorrent
@@ -30,6 +30,8 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: EXPORTER_LOG_LEVEL
+              value: WARNING
             - name: EXPORTER_PORT
               value: "9710"
             - name: QBITTORRENT_HOST

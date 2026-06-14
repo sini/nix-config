@@ -40,19 +40,25 @@
       }:
       let
         # Alloy River config for the per-pod log-tail sidecar. Tails Radarr's
-        # file logs (/config/logs/*.txt — catches radarr.N.txt + radarr.debug.N.txt
-        # off the config PVC mounted at /config in every container), labels each
-        # entry with app/namespace + the auto `filename` provenance label, parses
-        # the Servarr line format (`<ts>|<LEVEL>|<Component>|<msg>`) to lift
-        # `level`, and ships to loki. The duplicate main-container stdout copy is
-        # dropped at the cluster DaemonSet via the den.observability/file-tailed
-        # pod label.
+        # ACTIVE info log only (/config/logs/radarr.txt off the config PVC
+        # mounted at /config in every container; rotations radarr.N.txt and the
+        # debug/trace files are intentionally excluded — Alloy follows the active
+        # file across rotation by inode). Labels each entry with app/namespace +
+        # a bounded static `log_file` label (the raw per-file `filename` label is
+        # dropped to cap stream cardinality), parses the Servarr line format
+        # (`<ts>|<LEVEL>|<Component>|<msg>`) to lift `level`, and ships to loki at
+        # warn level. The duplicate main-container stdout copy is dropped at the
+        # cluster DaemonSet via the den.observability/file-tailed pod label.
         #
         # CRITICAL: validate any edit with `nix run nixpkgs#grafana-alloy -- fmt`.
         logtailConfig = ''
+          logging {
+            level = "warn"
+          }
+
           local.file_match "logs" {
             path_targets = [{
-              "__path__"  = "/config/logs/*.txt",
+              "__path__"  = "/config/logs/radarr.txt",
               "app"       = "radarr",
               "namespace" = "media",
             }]
@@ -72,6 +78,19 @@
               values = {
                 level = "",
               }
+            }
+
+            // Bound stream cardinality: replace the per-file `filename`
+            // provenance label (one stream per rotated file) with a static
+            // app-level `log_file` label, then drop the raw path.
+            stage.static_labels {
+              values = {
+                log_file = "radarr",
+              }
+            }
+
+            stage.label_drop {
+              values = ["filename"]
             }
 
             forward_to = [loki.write.default.receiver]
@@ -154,7 +173,12 @@
                   image = {
                     inherit (images."onedr0p/exportarr") repository digest;
                   };
-                  args = [ "radarr" ];
+                  args = [
+                    "radarr"
+                    # Quiet per-scrape HTTP request logging (shipped to loki).
+                    "--log-level"
+                    "warn"
+                  ];
                   env = {
                     PORT = "9707";
                     URL = "http://localhost:7878";
@@ -171,8 +195,9 @@
                   ];
                 };
 
-                # Log-tail sidecar: tails /config/logs/*.txt off the shared
-                # config PVC and ships labeled, level-parsed streams to loki.
+                # Log-tail sidecar: tails /config/logs/radarr.txt (active info log
+                # only) off the shared config PVC and ships labeled,
+                # level-parsed streams to loki.
                 # The grafana/alloy image entrypoint is the alloy binary, so
                 # args begin with the `run` subcommand.
                 containers.logtail = {

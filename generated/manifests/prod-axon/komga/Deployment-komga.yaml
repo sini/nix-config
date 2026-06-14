@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: eb9770e89840f81d32de0293416486483a16fdf43b8eccc3a671b5e180b3fd21
+        checksum/configMaps: cdcd503400afdf04205a7e8ec4bb87afd63620be933e6fd54bad95c67abb4add
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: komga

@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 49533a36591ea57fdb769c20203b19294d85c65a1e60ccd168fbd91de22c74e4
+        checksum/configMaps: 036686ddf513031cf1fb9ac8a8b17a402ef2835a959fb01006ff2b0e8a3b55d9
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: radarr
@@ -31,6 +31,8 @@ spec:
       containers:
         - args:
             - radarr
+            - --log-level
+            - warn
           env:
             - name: APIKEY
               valueFrom:
