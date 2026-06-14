@@ -59,12 +59,20 @@
           # only SEEDS a non-existent target, so the existing `default` CR is
           # managed directly here — ArgoCD owns the spec, the longhorn controller
           # owns status (ignored below). NFS needs no credential secret.
+          # The longhorn controller owns /status and periodically rewrites
+          # /spec/syncRequestedAt (and defaults /spec/credentialSecret), which
+          # otherwise flaps the app OutOfSync every poll. Git owns only the URL
+          # and pollInterval.
           ignoreDifferences."backup-target" = {
             group = "longhorn.io";
             kind = "BackupTarget";
             name = "default";
             namespace = "longhorn-system";
-            jsonPointers = [ "/status" ];
+            jsonPointers = [
+              "/status"
+              "/spec/syncRequestedAt"
+              "/spec/credentialSecret"
+            ];
           };
 
           objects = [

@@ -13,6 +13,8 @@ spec:
     - group: longhorn.io
       jsonPointers:
         - /status
+        - /spec/syncRequestedAt
+        - /spec/credentialSecret
       kind: BackupTarget
       name: default
       namespace: longhorn-system
