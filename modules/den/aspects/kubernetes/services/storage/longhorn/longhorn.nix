@@ -119,6 +119,16 @@
           };
 
           resources = {
+            # Off-cluster (type:bak) snapshot class: CNPG ScheduledBackups using
+            # it create Longhorn Backups uploaded to the NAS BackupTarget.
+            # Coexists with the in-cluster `longhorn-snapshot` (type:snap) class
+            # declared in media-pg.nix.
+            volumeSnapshotClasses.longhorn-backup-nfs = {
+              driver = "driver.longhorn.io";
+              deletionPolicy = "Delete";
+              parameters.type = "bak";
+            };
+
             httpRoutes.longhorn-dashboard.spec = {
               hostnames = [ (cluster.domainFor "longhorn") ];
               parentRefs = [
