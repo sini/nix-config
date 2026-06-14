@@ -1,0 +1,12 @@
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: db-local-snap
+  namespace: longhorn-system
+spec:
+  concurrency: 2
+  cron: 0 */6 * * *
+  groups:
+    - db-local-snap
+  retain: 4
+  task: snapshot

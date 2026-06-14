@@ -128,7 +128,15 @@ in
                 passwordSecret.name = passwordSecretName app;
               }) roleApps;
 
-              backup.volumeSnapshot.className = snapshotClassName;
+              # Authoritative backup → off-cluster NAS (type:bak). The in-cluster
+              # longhorn-snapshot VSC stays declared below for manual CSI
+              # snapshots; local fast-rollback is the db-local-snap Longhorn
+              # RecurringJob, enrolled via inheritedMetadata.
+              backup.volumeSnapshot.className = "longhorn-backup-nfs";
+
+              # Enroll this cluster's PVCs into the db-local-snap RecurringJob
+              # group (Longhorn-native local snapshots every 6h, retain 4).
+              inheritedMetadata.labels."recurring-job-group.longhorn.io/db-local-snap" = "enabled";
             };
 
             # One Database CR per (db, owner). arrs split main/log; bazarr/romm
