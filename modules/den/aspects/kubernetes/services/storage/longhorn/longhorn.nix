@@ -38,6 +38,10 @@
         charts,
         ...
       }:
+      let
+        # Off-cluster backup target declared on the cluster (type="backup").
+        backupNfs = cluster.nfsVolumes."longhorn-backups";
+      in
       {
         applications.longhorn = {
           namespace = "longhorn-system";
@@ -49,6 +53,34 @@
           };
 
           compareOptions.serverSideDiff = true;
+
+          # Off-cluster backups: point the longhorn-created `default` BackupTarget
+          # at the NAS NFS export. The chart's longhorn-default-resource ConfigMap
+          # only SEEDS a non-existent target, so the existing `default` CR is
+          # managed directly here — ArgoCD owns the spec, the longhorn controller
+          # owns status (ignored below). NFS needs no credential secret.
+          ignoreDifferences."backup-target" = {
+            group = "longhorn.io";
+            kind = "BackupTarget";
+            name = "default";
+            namespace = "longhorn-system";
+            jsonPointers = [ "/status" ];
+          };
+
+          objects = [
+            {
+              apiVersion = "longhorn.io/v1beta2";
+              kind = "BackupTarget";
+              metadata = {
+                name = "default";
+                namespace = "longhorn-system";
+              };
+              spec = {
+                backupTargetURL = "nfs://${backupNfs.server}:${backupNfs.share}";
+                pollInterval = "5m0s";
+              };
+            }
+          ];
 
           helm.releases.longhorn = {
             chart = charts.longhorn.longhorn;

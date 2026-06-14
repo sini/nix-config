@@ -19,6 +19,31 @@ let
       lib.reverseList (lib.take 2 (lib.reverseList (lib.splitString "." domain)))
     );
 
+  # An NFS endpoint declared on the cluster. `type` discriminates consumers:
+  # "storageclass" entries become CSI StorageClasses (csi-driver-nfs);
+  # "backup" entries are off-cluster backup targets (e.g. the Longhorn
+  # backupstore) and are filtered OUT of StorageClass generation.
+  nfsVolumeType = types.submodule {
+    options = {
+      server = mkOption {
+        type = types.str;
+        description = "NFS server address";
+      };
+      share = mkOption {
+        type = types.str;
+        description = "NFS share path";
+      };
+      type = mkOption {
+        type = types.enum [
+          "storageclass"
+          "backup"
+        ];
+        default = "storageclass";
+        description = "Consumer of this NFS target: \"storageclass\" → a CSI StorageClass; \"backup\" → an off-cluster backup target (no StorageClass generated).";
+      };
+    };
+  };
+
   networkType = types.submodule {
     options = {
       cidr = mkOption {
@@ -200,22 +225,9 @@ in
           };
 
           nfsVolumes = mkOption {
-            type = types.attrsOf (
-              types.submodule {
-                options = {
-                  server = mkOption {
-                    type = types.str;
-                    description = "NFS server address";
-                  };
-                  share = mkOption {
-                    type = types.str;
-                    description = "NFS share path";
-                  };
-                };
-              }
-            );
+            type = types.attrsOf nfsVolumeType;
             default = { };
-            description = "NFS volumes for CSI driver StorageClass generation";
+            description = "Cluster NFS targets. type=\"storageclass\" → CSI StorageClass; type=\"backup\" → off-cluster backup target.";
           };
         };
       })

@@ -57,6 +57,15 @@
       server = "10.10.10.10";
       share = "/volume2/data";
     };
+
+    # Off-cluster backup target for the Longhorn backupstore (NOT a
+    # StorageClass — csi-driver-nfs filters type="backup" out). Consumed by
+    # the longhorn aspect's BackupTarget.
+    nfsVolumes.longhorn-backups = {
+      server = "10.10.10.10";
+      share = "/volume2/longhorn-backups";
+      type = "backup";
+    };
   };
 
   # Cluster aspect — k8s services included at cluster scope
