@@ -10,7 +10,7 @@ metadata:
   name: coredns
   namespace: kube-system
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/instance: coredns
@@ -52,6 +52,9 @@ spec:
             - containerPort: 53
               name: udp-53
               protocol: UDP
+            - containerPort: 53
+              name: tcp-53
+              protocol: TCP
             - containerPort: 9153
               name: tcp-9153
               protocol: TCP

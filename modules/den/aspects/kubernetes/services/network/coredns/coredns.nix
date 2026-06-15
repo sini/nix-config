@@ -26,6 +26,10 @@
           helm.releases.coredns = {
             chart = charts.coredns.coredns;
             values = {
+              # Two replicas: removes the single-point-of-failure for cluster DNS
+              # and makes config rolls (e.g. the use_tcp change below) non-disruptive.
+              replicaCount = 2;
+
               service = {
                 k8sAppLabelOverride = "kube-dns";
                 clusterIP = cluster.getAssignment "coredns";
@@ -37,8 +41,18 @@
               };
               servers = [
                 {
+                  # use_tcp makes the chart emit a TCP/53 Service + container port
+                  # (its servicePorts helper only adds TCP for a dns:// zone when
+                  # use_tcp=true). Without it the Service is UDP/53-only, so glibc's
+                  # TCP fallback for truncated/large answers blackholes — cold
+                  # external names (e.g. OIDC discovery hosts) fail with a ~10s
+                  # timeout on the first search-domain leg. DNS-over-TCP is mandatory
+                  # (RFC 7766).
                   zones = [
-                    { zone = "."; }
+                    {
+                      zone = ".";
+                      use_tcp = true;
+                    }
                   ];
                   port = 53;
                   plugins = [
@@ -111,6 +125,12 @@
                               port = "53";
                               protocol = "UDP";
                             }
+                            # TCP/53 so coredns can retry truncated upstream answers
+                            # over TCP (mirrors the in-cluster TCP/53 ingress).
+                            {
+                              port = "53";
+                              protocol = "TCP";
+                            }
                             {
                               port = "853";
                               protocol = "UDP";
@@ -165,6 +185,12 @@
                           {
                             port = "53";
                             protocol = "UDP";
+                          }
+                          # TCP/53 for glibc's TCP fallback on truncated/large DNS
+                          # answers; without it those retries are dropped.
+                          {
+                            port = "53";
+                            protocol = "TCP";
                           }
                         ];
                       }
