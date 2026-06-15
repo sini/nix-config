@@ -1,0 +1,43 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    helm.sh/hook: test
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  labels:
+    app.kubernetes.io/instance: romm-redis
+    app.kubernetes.io/name: valkey
+  name: romm-redis-test-auth-existing
+  namespace: media
+spec:
+  containers:
+    - command:
+        - sh
+        - -c
+        - |
+          set -e
+          echo "Testing authentication with usersExistingSecret..."
+          TLS_FLAGS=""
+
+          # Test basic connection (no auth - will fail if auth is properly configured)
+          PING_RESULT=$(valkey-cli -h romm-redis -p 6379 $TLS_FLAGS PING 2>&1 || true)
+          if [ "$PING_RESULT" = "PONG" ]; then
+            echo "✗ Authentication test failed: server allows unauthenticated access"
+            exit 1
+          fi
+
+          echo "✓ Authentication is enforced (unauthenticated access denied)"
+          echo "✓ Received expected error: $PING_RESULT"
+          echo "⚠ Manual verification recommended for usersExistingSecret configuration"
+          exit 0
+      image: docker.io/valkey/valkey:9.0.2
+      name: test-auth
+      volumeMounts:
+        - mountPath: /valkey-users-secret
+          name: valkey-users-secret
+          readOnly: true
+  restartPolicy: Never
+  volumes:
+    - name: valkey-users-secret
+      secret:
+        secretName: media-romm

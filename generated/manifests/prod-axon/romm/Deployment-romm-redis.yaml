@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: romm-redis
+    app.kubernetes.io/name: valkey
+  name: romm-redis
+  namespace: media
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: romm-redis
+      app.kubernetes.io/name: valkey
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/initconfig: f5abf1d744ccb939d09d8a9c0195e154
+      labels:
+        app.kubernetes.io/instance: romm-redis
+        app.kubernetes.io/name: valkey
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - /data/conf/valkey.conf
+          command:
+            - valkey-server
+          env:
+            - name: VALKEY_LOGLEVEL
+              value: notice
+          image: docker.io/valkey/valkey:9.0.2
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+          name: romm-redis
+          ports:
+            - containerPort: 6379
+              name: tcp
+              protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          startupProbe:
+            exec:
+              command:
+                - sh
+                - -c
+                - valkey-cli ping
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - mountPath: /etc/valkey
+              name: valkey-acl
+      initContainers:
+        - command:
+            - /scripts/init.sh
+          image: docker.io/valkey/valkey:9.0.2
+          imagePullPolicy: IfNotPresent
+          name: romm-redis-init
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - mountPath: /scripts
+              name: scripts
+            - mountPath: /etc/valkey
+              name: valkey-acl
+            - mountPath: /valkey-users-secret
+              name: valkey-users-secret
+              readOnly: true
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: romm-redis
+      volumes:
+        - configMap:
+            defaultMode: 365
+            name: romm-redis-init-scripts
+          name: scripts
+        - emptyDir:
+            medium: Memory
+          name: valkey-acl
+        - name: valkey-users-secret
+          secret:
+            defaultMode: 256
+            secretName: media-romm
+        - emptyDir: {}
+          name: valkey-data

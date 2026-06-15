@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-redis-egress-romm
+  namespace: media
+spec:
+  description: Allow romm to reach its valkey (romm-redis).
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/instance: romm-redis
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: romm

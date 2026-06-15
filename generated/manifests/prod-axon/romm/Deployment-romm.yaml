@@ -43,6 +43,8 @@ spec:
                 secretKeyRef:
                   key: username
                   name: media-pg-romm-password
+            - name: DISABLE_SETUP_WIZARD
+              value: "true"
             - name: HASHEOUS_API_ENABLED
               value: "true"
             - name: IGDB_CLIENT_ID
@@ -84,6 +86,15 @@ spec:
               value: "65536"
             - name: PUID
               value: "1027"
+            - name: REDIS_HOST
+              value: romm-redis
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redis-password
+                  name: media-romm
+            - name: REDIS_PORT
+              value: "6379"
             - name: RETROACHIEVEMENTS_API_KEY
               valueFrom:
                 secretKeyRef:

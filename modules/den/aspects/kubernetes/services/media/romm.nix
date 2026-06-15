@@ -98,6 +98,17 @@
           };
         };
 
+        # Redis/valkey password (generated, strong alnum). Same media-romm sops
+        # file. Run `agenix generate` to create the .age after this lands.
+        age.secrets.media-romm-redis-password = {
+          rekeyFile = environment.secretPath + "/media-romm/redis-password.age";
+          generator.script = "alnum";
+          sopsOutput = {
+            file = "media-romm";
+            key = "redis-password";
+          };
+        };
+
         # Metadata-provider API credentials (IGDB/Twitch, SteamGridDB,
         # RetroAchievements) — EXTERNALLY issued by the operator, NO generator (same
         # class as the media-vpn WireGuard material). Encrypt each to the master
@@ -203,6 +214,26 @@
                     OIDC_ROLE_ADMIN = "admin";
                     OIDC_ROLE_VIEWER = "user";
 
+                    # --- setup wizard: disabled. RomM's frontend otherwise gates the
+                    # ENTIRE SPA behind the first-run wizard until an admin row exists
+                    # (SHOW_SETUP_WIZARD = admin-count==0 AND not DISABLE_SETUP_WIZARD),
+                    # and the OIDC autologin redirect can't get past that gate. With it
+                    # off, the first media.admins OIDC login provisions the admin (RomM
+                    # creates the user as ADMIN from the roles claim) — no local wizard
+                    # account, fully OIDC-native. ---
+                    DISABLE_SETUP_WIZARD = "true";
+
+                    # --- redis/valkey: RomM uses it for sessions + the RQ task queue
+                    # (scans) + cache. Dedicated romm-redis service (below), auth from
+                    # the generated media-romm/redis-password. Without REDIS_HOST RomM
+                    # defaults to 127.0.0.1:6379 (nothing there) and runs degraded. ---
+                    REDIS_HOST = "romm-redis";
+                    REDIS_PORT = "6379";
+                    REDIS_PASSWORD.valueFrom.secretKeyRef = {
+                      name = "media-romm";
+                      key = "redis-password";
+                    };
+
                     # --- metadata providers ---
                     # RomM's recommended optimal combo: Hasheous + IGDB +
                     # SteamGridDB + RetroAchievements. Hasheous is a keyless public
@@ -279,6 +310,29 @@
                   ];
                 };
               };
+            };
+          };
+
+          # Dedicated valkey for RomM (sessions + RQ task queue + cache), via the
+          # official valkey chart (charts/valkey/valkey). Standalone Deployment, ACL
+          # auth: the `default` user's password is read from media-romm/redis-password
+          # (the same Secret romm reads via REDIS_PASSWORD). Ephemeral — a pure cache;
+          # sessions/queue rebuild on restart. fullnameOverride pins the Service name
+          # to romm-redis (= romm's REDIS_HOST).
+          helm.releases.romm-redis = {
+            chart = charts.valkey.valkey;
+            values = {
+              fullnameOverride = "romm-redis";
+              auth = {
+                enabled = true;
+                usersExistingSecret = "media-romm";
+                aclUsers.default = {
+                  permissions = "~* &* +@all";
+                  passwordKey = "redis-password";
+                };
+              };
+              persistence.enabled = false;
+              service.port = 6379;
             };
           };
 
@@ -382,6 +436,54 @@
                   }
                 ];
               };
+
+              # romm -> romm-redis (valkey) for sessions/queue/cache. The valkey
+              # chart labels its pods app.kubernetes.io/instance=romm-redis
+              # (name=valkey), so select on the instance label.
+              allow-redis-egress-romm.spec = {
+                description = "Allow romm to reach its valkey (romm-redis).";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "romm";
+                egress = [
+                  {
+                    toEndpoints = [
+                      { matchLabels."app.kubernetes.io/instance" = "romm-redis"; }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6379";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # romm-redis only accepts traffic from romm (on 6379).
+              allow-romm-ingress-redis.spec = {
+                description = "Allow romm to reach the romm-redis valkey.";
+                endpointSelector.matchLabels."app.kubernetes.io/instance" = "romm-redis";
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      { matchLabels."app.kubernetes.io/name" = "romm"; }
+                    ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "6379";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
             };
 
             httpRoutes.romm.spec = {
@@ -413,10 +515,13 @@
               stringData.client-secret = config.age.secrets.romm-oidc-client-secret.sopsRef;
             };
 
-            # The media-romm k8s Secret (the auth key, a sops ref).
+            # The media-romm k8s Secret (auth key + redis password, sops refs).
             secrets.media-romm = {
               type = "Opaque";
-              stringData.auth-secret-key = config.age.secrets.media-romm-auth-secret-key.sopsRef;
+              stringData = {
+                auth-secret-key = config.age.secrets.media-romm-auth-secret-key.sopsRef;
+                redis-password = config.age.secrets.media-romm-redis-password.sopsRef;
+              };
             };
 
             # Metadata-provider API creds (sops refs; populated via agenix — see
