@@ -273,6 +273,38 @@ let
         };
       };
 
+      # RomM uses its NATIVE OIDC (not the gateway SecurityPolicy that the generic
+      # mkMediaClients entries get), so it needs a bespoke callback + role claim.
+      # Callback is RomM's own /api/oauth/openid. RomM requests scope
+      # "openid profile email roles", so `roles` is granted in the scopeMap (an
+      # arbitrary scope string) AND emitted as a claim via claimMaps.roles:
+      # media.admins -> RomM ADMIN, media.access -> RomM VIEWER. Mirrors jellyfin's
+      # claimMap; see romm.nix OIDC_* env.
+      romm = {
+        displayName = "RoMM";
+        originUrl = "https://${domain "romm"}/api/oauth/openid";
+        originLanding = "https://${domain "romm"}";
+        basicSecretFile = secretPaths.romm-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps."media.access" = [
+          "openid"
+          "profile"
+          "email"
+          "groups"
+          "roles"
+        ];
+        claimMaps.roles = {
+          joinType = "array";
+          valuesByGroup = {
+            "media.admins" = [
+              "admin"
+              "user"
+            ];
+            "media.access" = [ "user" ];
+          };
+        };
+      };
+
       open-webui = {
         displayName = "open-webui";
         imageFile = builtins.path { path = self + /assets/open-webui.svg; };
@@ -352,10 +384,9 @@ let
       displayName = "qBittorrent";
       group = "media.admins";
     };
-    romm = {
-      displayName = "RoMM";
-      group = "media.access";
-    };
+    # romm is NOT here: it uses NATIVE OIDC (not the gateway SecurityPolicy), so it
+    # needs a bespoke originUrl (/api/oauth/openid) + a `roles` claim/scope. It is
+    # defined as a standalone client in mkOAuth2Services below.
     komga = {
       displayName = "Komga";
       group = "media.access";

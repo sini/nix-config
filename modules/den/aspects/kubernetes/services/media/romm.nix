@@ -25,15 +25,22 @@
 # postgres support + pre-provisioned media-pg role/db.)
 #
 # == Auth ==
-# Stack convention = Envoy Gateway OIDC only. RomM supports native OIDC, but we
-# keep the gateway SecurityPolicy in front and leave RomM's native auth at default
-# (RomM still creates an internal admin user on first boot for app state). Gateway
-# OIDC clientID "romm".
+# RomM's NATIVE OIDC (kanidm), NOT the gateway SecurityPolicy. RomM owns the OIDC
+# flow itself (/api/login/openid -> kanidm -> /api/oauth/openid callback), so the
+# Envoy SecurityPolicy is removed and the gateway only routes. Native OIDC buys
+# per-user identity + role mapping (kanidm groups -> RomM admin/viewer via a `roles`
+# claim) and leaves RomM's own API auth intact for non-interactive clients (the
+# ROM-project download-cache clients can't do an interactive gateway redirect).
+# clientID "romm"; admin is provisioned by media.admins membership (no first-boot
+# password step). The kanidm `romm` client is a bespoke native-OIDC entry (see
+# kanidm.nix) — its scopeMap also grants the `roles` scope RomM requests.
 #
 # == Storage / mounts ==
-#   - library: ROMs live on the shared media NFS at /data/media/games. RomM expects
-#     its library at /romm/library, so we mount the media-data-nfs PVC with subPath
-#     media/games at /romm/library.
+#   - library: VALIDATION phase — mounted at the in-flight ROM-project canonical
+#     builds (media-data-nfs subPath rom-project/canonical) at /romm/library/roms,
+#     read-only. RomM uses Structure A ({library}/roms/{platform}); each canonical
+#     <slug> dir becomes a platform. Switch subPath to the production library +
+#     drop readOnly once validated.
 #   - state: RomM writes metadata cache (/romm/resources — can grow large), user
 #     assets/saves (/romm/assets) and config (/romm/config). A single 10Gi longhorn
 #     PVC is mounted at all three via subPaths (resources/assets/config). There is
@@ -47,15 +54,16 @@
 #     valueFrom.secretKeyRef. Declared alongside the OIDC age-secret / k8s-manifests
 #     entries inline.
 #   - DB credentials: from the existing media-pg-romm-password basic-auth Secret.
-#   - Metadata-provider API creds (IGDB twitch client id/secret, ScreenScraper):
-#     intentionally OMITTED here — the operator adds them later via their own
-#     secrets. Placeholder env names are listed (commented) below.
+#   - Metadata-provider API creds (IGDB/Twitch client id+secret, SteamGridDB key,
+#     RetroAchievements key): EXTERNALLY issued, no generator (media-vpn class).
+#     Rekeyed into the cluster sops file `media-romm-metadata`, surfaced as the
+#     k8s Secret of the same name. Hasheous is keyless (HASHEOUS_API_ENABLED bool).
 #
 # == Networking ==
 # Baseline (DNS egress + gateway ingress) + media-pg egress (postgres-egress CNP).
-# RomM fetches game metadata + box art from external providers (IGDB / Twitch,
-# ScreenScraper, MobyGames) once those API creds are configured, so internet egress
-# (world 80/443) is allowed.
+# RomM reaches kanidm (OIDC discovery/token at idm.json64.dev) + the metadata
+# providers (IGDB/Twitch, SteamGridDB, RetroAchievements, Hasheous) over the
+# internet, so internet egress (world 80/443) is allowed.
 #
 # Version: pinned to the latest RomM 3.x release. Bump at deploy time.
 {
@@ -87,6 +95,44 @@
           sopsOutput = {
             file = "media-romm";
             key = "auth-secret-key";
+          };
+        };
+
+        # Metadata-provider API credentials (IGDB/Twitch, SteamGridDB,
+        # RetroAchievements) — EXTERNALLY issued by the operator, NO generator (same
+        # class as the media-vpn WireGuard material). Encrypt each to the master
+        # recipient, then `agenix rekey`:
+        #   printf '%s' "$VALUE" | age -r "$(grep -oP 'age1\S+' .secrets/pub/master.pub)" \
+        #     -o .secrets/env/prod/media-romm-metadata/<field>.age
+        # (`agenix edit` works too.) Rekeyed into the cluster sops file
+        # `media-romm-metadata`; the k8s Secret `media-romm-metadata` surfaces them.
+        # Hasheous needs no key (HASHEOUS_API_ENABLED bool only).
+        age.secrets.media-romm-metadata-igdb-client-id = {
+          rekeyFile = environment.secretPath + "/media-romm-metadata/igdb-client-id.age";
+          sopsOutput = {
+            file = "media-romm-metadata";
+            key = "igdb-client-id";
+          };
+        };
+        age.secrets.media-romm-metadata-igdb-client-secret = {
+          rekeyFile = environment.secretPath + "/media-romm-metadata/igdb-client-secret.age";
+          sopsOutput = {
+            file = "media-romm-metadata";
+            key = "igdb-client-secret";
+          };
+        };
+        age.secrets.media-romm-metadata-steamgriddb-api-key = {
+          rekeyFile = environment.secretPath + "/media-romm-metadata/steamgriddb-api-key.age";
+          sopsOutput = {
+            file = "media-romm-metadata";
+            key = "steamgriddb-api-key";
+          };
+        };
+        age.secrets.media-romm-metadata-retroachievements-api-key = {
+          rekeyFile = environment.secretPath + "/media-romm-metadata/retroachievements-api-key.age";
+          sopsOutput = {
+            file = "media-romm-metadata";
+            key = "retroachievements-api-key";
           };
         };
       };
@@ -137,11 +183,48 @@
                       key = "auth-secret-key";
                     };
 
-                    # --- metadata provider API creds (operator-supplied later) ---
-                    # IGDB_CLIENT_ID = "...";        # Twitch app client id
-                    # IGDB_CLIENT_SECRET = "...";    # Twitch app client secret
-                    # SCREENSCRAPER_USER = "...";
-                    # SCREENSCRAPER_PASSWORD = "...";
+                    # --- native OIDC (kanidm); replaces the gateway SecurityPolicy ---
+                    OIDC_ENABLED = "true";
+                    OIDC_AUTOLOGIN = "true";
+                    OIDC_PROVIDER = "kanidm"; # display label only (login page / heartbeat)
+                    OIDC_CLIENT_ID = "romm";
+                    OIDC_CLIENT_SECRET.valueFrom.secretKeyRef = {
+                      name = "romm-oidc-client-secret";
+                      key = "client-secret";
+                    };
+                    OIDC_REDIRECT_URI = "https://${cluster.domainFor "romm"}/api/oauth/openid";
+                    OIDC_SERVER_APPLICATION_URL = "https://${cluster.domainFor "romm"}";
+                    OIDC_SERVER_METADATA_URL = "${cluster.secrets.oidcIssuerFor "romm"}/.well-known/openid-configuration";
+                    # kanidm emits a `roles` claim (claimMaps.roles): media.admins ->
+                    # admin, media.access -> user. RomM ALSO requests `roles` as a scope
+                    # (scope = "openid profile email ${OIDC_CLAIM_ROLES}"), so the kanidm
+                    # romm client must grant `roles` in its scopeMap (see kanidm.nix).
+                    OIDC_CLAIM_ROLES = "roles";
+                    OIDC_ROLE_ADMIN = "admin";
+                    OIDC_ROLE_VIEWER = "user";
+
+                    # --- metadata providers ---
+                    # RomM's recommended optimal combo: Hasheous + IGDB +
+                    # SteamGridDB + RetroAchievements. Hasheous is a keyless public
+                    # hash-matching service (bool toggle); the other three take
+                    # externally-issued creds from the media-romm-metadata Secret.
+                    HASHEOUS_API_ENABLED = "true";
+                    IGDB_CLIENT_ID.valueFrom.secretKeyRef = {
+                      name = "media-romm-metadata";
+                      key = "igdb-client-id";
+                    };
+                    IGDB_CLIENT_SECRET.valueFrom.secretKeyRef = {
+                      name = "media-romm-metadata";
+                      key = "igdb-client-secret";
+                    };
+                    STEAMGRIDDB_API_KEY.valueFrom.secretKeyRef = {
+                      name = "media-romm-metadata";
+                      key = "steamgriddb-api-key";
+                    };
+                    RETROACHIEVEMENTS_API_KEY.valueFrom.secretKeyRef = {
+                      name = "media-romm-metadata";
+                      key = "retroachievements-api-key";
+                    };
                   };
                   envFrom = [ ];
                 };
@@ -153,14 +236,20 @@
               };
 
               persistence = {
-                # ROM library: shared media NFS, subPath media/games -> /romm/library.
+                # VALIDATION: point at the in-flight ROM-project canonical builds on
+                # the same NAS volume (media-data-nfs = vault:/volume2/data), read-only
+                # so RomM scans/identifies but never writes/moves the canonical tree.
+                # Mounted at /romm/library/roms so each <slug> dir becomes a RomM
+                # platform (Structure A = {library}/roms/{platform_fs_slug}). After
+                # validation, flip subPath back to the production library + drop readOnly.
                 library = {
                   type = "persistentVolumeClaim";
                   existingClaim = "media-data-nfs";
                   globalMounts = [
                     {
-                      path = "/romm/library";
-                      subPath = "media/games";
+                      path = "/romm/library/roms";
+                      subPath = "rom-project/canonical";
+                      readOnly = true;
                     }
                   ];
                 };
@@ -316,27 +405,9 @@
               ];
             };
 
-            securityPolicies."romm-oidc".spec = {
-              targetRefs = [
-                {
-                  group = "gateway.networking.k8s.io";
-                  kind = "HTTPRoute";
-                  name = "romm";
-                }
-              ];
-              oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "romm";
-                clientID = "romm";
-                clientSecret.name = "romm-oidc-client-secret";
-                scopes = [
-                  "email"
-                  "openid"
-                  "profile"
-                ];
-                forwardAccessToken = true;
-              };
-            };
-
+            # No Envoy SecurityPolicy: RomM authenticates via its NATIVE OIDC (env
+            # above). The gateway just routes; the romm-oidc-client-secret Secret is
+            # now consumed by RomM's OIDC_CLIENT_SECRET env, not a SecurityPolicy.
             secrets.romm-oidc-client-secret = {
               type = "Opaque";
               stringData.client-secret = config.age.secrets.romm-oidc-client-secret.sopsRef;
@@ -346,6 +417,20 @@
             secrets.media-romm = {
               type = "Opaque";
               stringData.auth-secret-key = config.age.secrets.media-romm-auth-secret-key.sopsRef;
+            };
+
+            # Metadata-provider API creds (sops refs; populated via agenix — see
+            # the age-secrets block). IGDB needs both id + secret; SteamGridDB and
+            # RetroAchievements one key each. Hasheous is keyless.
+            secrets.media-romm-metadata = {
+              type = "Opaque";
+              stringData = {
+                igdb-client-id = config.age.secrets.media-romm-metadata-igdb-client-id.sopsRef;
+                igdb-client-secret = config.age.secrets.media-romm-metadata-igdb-client-secret.sopsRef;
+                steamgriddb-api-key = config.age.secrets.media-romm-metadata-steamgriddb-api-key.sopsRef;
+                retroachievements-api-key =
+                  config.age.secrets.media-romm-metadata-retroachievements-api-key.sopsRef;
+              };
             };
           };
         };

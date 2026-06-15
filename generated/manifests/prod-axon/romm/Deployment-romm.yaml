@@ -43,10 +43,52 @@ spec:
                 secretKeyRef:
                   key: username
                   name: media-pg-romm-password
+            - name: HASHEOUS_API_ENABLED
+              value: "true"
+            - name: IGDB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: igdb-client-id
+                  name: media-romm-metadata
+            - name: IGDB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: igdb-client-secret
+                  name: media-romm-metadata
+            - name: OIDC_AUTOLOGIN
+              value: "true"
+            - name: OIDC_CLAIM_ROLES
+              value: roles
+            - name: OIDC_CLIENT_ID
+              value: romm
+            - name: OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: client-secret
+                  name: romm-oidc-client-secret
+            - name: OIDC_ENABLED
+              value: "true"
+            - name: OIDC_PROVIDER
+              value: kanidm
+            - name: OIDC_REDIRECT_URI
+              value: https://romm.json64.dev/api/oauth/openid
+            - name: OIDC_ROLE_ADMIN
+              value: admin
+            - name: OIDC_ROLE_VIEWER
+              value: user
+            - name: OIDC_SERVER_APPLICATION_URL
+              value: https://romm.json64.dev
+            - name: OIDC_SERVER_METADATA_URL
+              value: https://idm.json64.dev/oauth2/openid/romm/.well-known/openid-configuration
             - name: PGID
               value: "65536"
             - name: PUID
               value: "1027"
+            - name: RETROACHIEVEMENTS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: retroachievements-api-key
+                  name: media-romm-metadata
             - name: ROMM_AUTH_SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -54,14 +96,20 @@ spec:
                   name: media-romm
             - name: ROMM_DB_DRIVER
               value: postgresql
+            - name: STEAMGRIDDB_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: steamgriddb-api-key
+                  name: media-romm-metadata
             - name: TZ
               value: America/Los_Angeles
           image: rommapp/romm:4.9.0-beta.3
           name: main
           volumeMounts:
-            - mountPath: /romm/library
+            - mountPath: /romm/library/roms
               name: library
-              subPath: media/games
+              readOnly: true
+              subPath: rom-project/canonical
             - mountPath: /romm/resources
               name: state
               subPath: resources
