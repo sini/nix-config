@@ -286,6 +286,7 @@ let
         originLanding = "https://${domain "romm"}";
         basicSecretFile = secretPaths.romm-oidc-client-secret;
         preferShortUsername = true;
+        allowInsecureClientDisablePkce = true;
         scopeMaps."media.access" = [
           "openid"
           "profile"
