@@ -77,7 +77,7 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    den.url = "github:sini/den/feat/entity-gen-schema-port";
+    den.url = "github:denful/den";
     den-diagram = {
       url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -111,10 +111,7 @@
       inputs.systems.follows = "systems";
     };
     gen-algebra.url = "github:sini/gen-algebra";
-    gen-schema = {
-      url = "github:sini/gen-schema";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
+    gen-schema.url = "github:sini/gen-schema";
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     haumea = {
       url = "github:nix-community/haumea/v0.2.2";

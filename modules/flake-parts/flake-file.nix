@@ -64,7 +64,7 @@
         flake = false;
       };
 
-      den.url = "github:sini/den/feat/entity-gen-schema-port";
+      den.url = "github:denful/den";
 
       gen-algebra.url = "github:sini/gen-algebra";
 
@@ -90,10 +90,7 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
-      gen-schema = {
-        url = "github:sini/gen-schema";
-        inputs.nixpkgs.follows = "nixpkgs-unstable";
-      };
+      gen-schema.url = "github:sini/gen-schema";
 
       fenix = {
         url = "github:nix-community/fenix";
