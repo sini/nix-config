@@ -6,6 +6,7 @@
 {
   config,
   lib,
+  den,
   inputs,
   withSystem,
   ...
@@ -211,6 +212,13 @@ in
           )}
         '';
       };
+
+      devshells.default.env = [
+        {
+          name = "NIXIDY_POST_PROCESS_APPROVE";
+          value = "1";
+        }
+      ];
 
       pre-commit.settings.hooks.nixidy-sync = {
         enable = true;

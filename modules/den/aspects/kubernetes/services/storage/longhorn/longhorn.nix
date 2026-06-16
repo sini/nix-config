@@ -74,6 +74,24 @@
             managedFieldsManagers = [ "longhorn-manager" ];
           };
 
+          # Longhorn's CRD installer stamps every longhorn.io CRD with
+          # chart-version labels (app.kubernetes.io/version, helm.sh/chart,
+          # app.kubernetes.io/managed-by) that the crds quirk extraction
+          # deliberately strips. The values track the chart version, so they
+          # can never match our generated manifests and flap every CRD
+          # OutOfSync each poll. Cosmetic metadata owned by Longhorn — ignore
+          # the label paths (jqPathExpressions, not managedFieldsManagers:
+          # there is no single owning manager, ownership oscillates).
+          ignoreDifferences."crd-chart-labels" = {
+            group = "apiextensions.k8s.io";
+            kind = "CustomResourceDefinition";
+            jqPathExpressions = [
+              ''.metadata.labels."app.kubernetes.io/version"''
+              ''.metadata.labels."app.kubernetes.io/managed-by"''
+              ''.metadata.labels."helm.sh/chart"''
+            ];
+          };
+
           objects = [
             {
               apiVersion = "longhorn.io/v1beta2";

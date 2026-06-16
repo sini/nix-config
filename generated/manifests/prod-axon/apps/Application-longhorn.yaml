@@ -16,6 +16,12 @@ spec:
         - longhorn-manager
       name: default
       namespace: longhorn-system
+    - group: apiextensions.k8s.io
+      jqPathExpressions:
+        - .metadata.labels."app.kubernetes.io/version"
+        - .metadata.labels."app.kubernetes.io/managed-by"
+        - .metadata.labels."helm.sh/chart"
+      kind: CustomResourceDefinition
   project: default
   source:
     path: ./generated/manifests/prod-axon/longhorn
