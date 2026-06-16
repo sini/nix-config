@@ -121,6 +121,10 @@ spec:
               name: library
               readOnly: true
               subPath: rom-project/canonical
+            - mountPath: /romm/library/bios
+              name: library
+              readOnly: true
+              subPath: rom-project/bios
             - mountPath: /romm/resources
               name: state
               subPath: resources

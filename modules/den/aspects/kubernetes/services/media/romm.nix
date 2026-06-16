@@ -282,6 +282,15 @@
                       subPath = "rom-project/canonical";
                       readOnly = true;
                     }
+                    # Firmware/BIOS: RomM (Structure A) serves firmware from
+                    # {library}/bios/{platform_fs_slug}. The bios tree is hash-built +
+                    # verified against RomM's known_bios_files reference; slugs already
+                    # equal RomM fs_slugs. Same NAS volume, read-only.
+                    {
+                      path = "/romm/library/bios";
+                      subPath = "rom-project/bios";
+                      readOnly = true;
+                    }
                   ];
                 };
 
