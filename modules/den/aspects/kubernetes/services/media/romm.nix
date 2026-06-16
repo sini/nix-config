@@ -41,13 +41,17 @@
 #     read-only. RomM uses Structure A ({library}/roms/{platform}); each canonical
 #     <slug> dir becomes a platform. Switch subPath to the production library +
 #     drop readOnly once validated.
-#   - state: RomM writes metadata cache (/romm/resources — can grow large), user
-#     assets/saves (/romm/assets) and config (/romm/config). These live on the NAS
-#     (media-data-nfs, RWX) under rom-project/romm-metadata/{resources,assets,config},
-#     mounted writable via subPaths. (Moved off a small longhorn block PVC: the
-#     metadata cache alone outgrows it, none of the three dirs is a DB — the DB is
-#     media-pg postgres and config is plain YAML, so NFS is safe — and the NAS is
-#     the durable, separately-backed tier, so RomM's state sits beside its library.)
+#   - resources: RomM's metadata cache (/romm/resources — covers/screenshots from
+#     the providers, grows large + is fully regenerable on rescan). On the NAS
+#     (media-data-nfs, RWX) under rom-project/romm-metadata/resources, writable. Not
+#     a DB (the DB is media-pg postgres), so NFS is safe, and the NAS is the durable
+#     bulk tier — no reason to spend replicated block storage on a regenerable cache.
+#   - userdata: user-generated state that is NOT regenerable — savegames / save
+#     states / uploaded assets (/romm/assets) and config.yml (/romm/config). KEPT on
+#     a replicated longhorn block PVC (romm-userdata) so it is replicated across
+#     nodes + enrolled in the media-config nightly backup job. Over-provisioned to
+#     20Gi (longhorn is thin-provisioned — actual disk = data written, not the
+#     nominal request) so savestates never run out.
 #
 # == Secrets ==
 #   - ROMM_AUTH_SECRET_KEY: RomM's auth/credential encryption key (RomM docs:
@@ -297,12 +301,10 @@
                   ];
                 };
 
-                # State: RomM's three writable dirs on the NAS (media-data-nfs, RWX),
-                # not a block PVC — resources = metadata cache (grows large; covers/
-                # screenshots from the providers), assets = user saves/uploads, config =
-                # config.yml. Each is a writable subPath under rom-project/romm-metadata,
-                # sitting beside the read-only canonical library on the same volume.
-                state = {
+                # Metadata cache (resources): bulky + regenerable → on the NAS
+                # (media-data-nfs, RWX), writable, beside the read-only canonical
+                # library on the same volume. subPath under rom-project/romm-metadata.
+                resources = {
                   type = "persistentVolumeClaim";
                   existingClaim = "media-data-nfs";
                   globalMounts = [
@@ -310,13 +312,24 @@
                       path = "/romm/resources";
                       subPath = "rom-project/romm-metadata/resources";
                     }
+                  ];
+                };
+
+                # User-generated state (savegames / save states / uploaded assets +
+                # config.yml): NOT regenerable → kept on the small replicated longhorn
+                # block PVC romm-userdata (defined under resources below; replicated +
+                # backed up via the media-config job).
+                userdata = {
+                  type = "persistentVolumeClaim";
+                  existingClaim = "romm-userdata";
+                  globalMounts = [
                     {
                       path = "/romm/assets";
-                      subPath = "rom-project/romm-metadata/assets";
+                      subPath = "assets";
                     }
                     {
                       path = "/romm/config";
-                      subPath = "rom-project/romm-metadata/config";
+                      subPath = "config";
                     }
                   ];
                 };
@@ -348,6 +361,22 @@
           };
 
           resources = {
+            # Replicated longhorn PVC for RomM's non-regenerable user state
+            # (savegames / save states / uploaded assets + config.yml). The bulky
+            # regenerable metadata cache lives on the NAS instead (see persistence
+            # above). Over-provisioned to 20Gi so savestates never run out: longhorn
+            # is thin-provisioned, so actual replicated disk = data written, not this
+            # nominal request. The media-config label enrolls it in the nightly
+            # off-cluster backup recurring job. (PVCs auto-namespace to media.)
+            persistentVolumeClaims.romm-userdata = {
+              metadata.labels."recurring-job-group.longhorn.io/media-config" = "enabled";
+              spec = {
+                accessModes = [ "ReadWriteOnce" ];
+                storageClassName = "longhorn";
+                resources.requests.storage = "20Gi";
+              };
+            };
+
             ciliumNetworkPolicies = {
               allow-gateway-ingress-romm.spec = {
                 description = "Allow Envoy Gateway proxies to reach romm.";
