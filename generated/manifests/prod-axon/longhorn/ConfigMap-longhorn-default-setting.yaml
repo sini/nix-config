@@ -5,6 +5,7 @@ data:
     default-data-path: "/var/lib/longhorn"
     replica-soft-anti-affinity: true
     replica-auto-balance: "best-effort"
+    default-replica-count: "2"
     priority-class: "longhorn-critical"
     disable-revision-counter: "{\"v1\":\"true\"}"
 kind: ConfigMap

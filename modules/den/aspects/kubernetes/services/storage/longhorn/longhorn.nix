@@ -163,6 +163,12 @@
                 backupstorePollInterval = 300;
                 replicaSoftAntiAffinity = true;
                 replicaAutoBalance = "best-effort";
+                # Cluster-wide default replica count. The longhorn StorageClass
+                # already pins numberOfReplicas=2 (persistence.defaultClassReplicaCount
+                # below), so every PVC is 2-replica regardless; this aligns the global
+                # default (and the dashboard) so any volume created outside that class
+                # also defaults to 2 rather than the chart default of 3.
+                defaultReplicaCount = 2;
               };
 
               persistence = {
