@@ -42,9 +42,12 @@
 #     <slug> dir becomes a platform. Switch subPath to the production library +
 #     drop readOnly once validated.
 #   - state: RomM writes metadata cache (/romm/resources — can grow large), user
-#     assets/saves (/romm/assets) and config (/romm/config). A single 10Gi longhorn
-#     PVC is mounted at all three via subPaths (resources/assets/config). There is
-#     no separate /config PVC.
+#     assets/saves (/romm/assets) and config (/romm/config). These live on the NAS
+#     (media-data-nfs, RWX) under rom-project/romm-metadata/{resources,assets,config},
+#     mounted writable via subPaths. (Moved off a small longhorn block PVC: the
+#     metadata cache alone outgrows it, none of the three dirs is a DB — the DB is
+#     media-pg postgres and config is plain YAML, so NFS is safe — and the NAS is
+#     the durable, separately-backed tier, so RomM's state sits beside its library.)
 #
 # == Secrets ==
 #   - ROMM_AUTH_SECRET_KEY: RomM's auth/credential encryption key (RomM docs:
@@ -294,27 +297,26 @@
                   ];
                 };
 
-                # State: single longhorn PVC mounted at RomM's three writable dirs via
-                # subPaths (resources = metadata cache, can grow large; assets = saves;
-                # config = app config).
+                # State: RomM's three writable dirs on the NAS (media-data-nfs, RWX),
+                # not a block PVC — resources = metadata cache (grows large; covers/
+                # screenshots from the providers), assets = user saves/uploads, config =
+                # config.yml. Each is a writable subPath under rom-project/romm-metadata,
+                # sitting beside the read-only canonical library on the same volume.
                 state = {
                   type = "persistentVolumeClaim";
-                  accessMode = "ReadWriteOnce";
-                  size = "10Gi";
-                  storageClass = "longhorn";
-                  labels."recurring-job-group.longhorn.io/media-config" = "enabled";
+                  existingClaim = "media-data-nfs";
                   globalMounts = [
                     {
                       path = "/romm/resources";
-                      subPath = "resources";
+                      subPath = "rom-project/romm-metadata/resources";
                     }
                     {
                       path = "/romm/assets";
-                      subPath = "assets";
+                      subPath = "rom-project/romm-metadata/assets";
                     }
                     {
                       path = "/romm/config";
-                      subPath = "config";
+                      subPath = "rom-project/romm-metadata/config";
                     }
                   ];
                 };

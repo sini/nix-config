@@ -127,13 +127,13 @@ spec:
               subPath: rom-project/bios
             - mountPath: /romm/resources
               name: state
-              subPath: resources
+              subPath: rom-project/romm-metadata/resources
             - mountPath: /romm/assets
               name: state
-              subPath: assets
+              subPath: rom-project/romm-metadata/assets
             - mountPath: /romm/config
               name: state
-              subPath: config
+              subPath: rom-project/romm-metadata/config
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
       hostIPC: false
@@ -146,4 +146,4 @@ spec:
             claimName: media-data-nfs
         - name: state
           persistentVolumeClaim:
-            claimName: romm
+            claimName: media-data-nfs
