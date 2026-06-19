@@ -15,7 +15,7 @@
       core.system.linux-kernel.optimization = "x86_64-v4";
       core.impermanence = {
         wipeRootOnBoot = true;
-        wipeHomeOnBoot = true;
+        wipeHomeOnBoot = false;
       };
     };
   };
@@ -27,6 +27,7 @@
       roles.gaming
       roles.dev
       roles.dev-gui
+      roles.messaging
       roles.media
 
       hardware.cpu.intel
@@ -45,14 +46,13 @@
       core.boot.wireless-initrd
       core.network.manager
       core.network.tailscale
-      apps.messaging.discord
     ];
 
     sini = {
       includes = with den.aspects; [
-        apps.wayland.waybar
-        apps.wayland.swaync
-        apps.wayland.hypridle
+        # apps.wayland.waybar
+        # apps.wayland.swaync
+        # apps.wayland.hypridle
         # apps.wayland.hyprland-split-monitors
         apps.media.spotify-player
       ];
