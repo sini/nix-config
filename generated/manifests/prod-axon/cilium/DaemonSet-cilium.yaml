@@ -14,7 +14,7 @@ spec:
   template:
     metadata:
       annotations:
-        cilium.io/cilium-configmap-checksum: b1f81899d5bbc9b4c4cf167de3ec6ffbf48f9cd73bb318106a5e8b347b0fa1cd
+        cilium.io/cilium-configmap-checksum: 83fd56099391f849572b5b876ef11e6783e84ea199240b55888b16d20fe61fe0
         kubectl.kubernetes.io/default-container: cilium-agent
       labels:
         app.kubernetes.io/name: cilium-agent
@@ -211,7 +211,6 @@ spec:
         - command:
             - cilium-dbg
             - build-config
-            - --k8s-api-server-urls=
           env:
             - name: K8S_NODE_NAME
               valueFrom:
