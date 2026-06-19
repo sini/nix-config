@@ -65,6 +65,33 @@ let
         default = null;
         description = "RequiredForOnline value";
       };
+      privacyExtensions = mkOption {
+        type = types.nullOr (
+          types.enum [
+            "yes"
+            "no"
+            "prefer-public"
+            "kernel"
+          ]
+        );
+        default = null;
+        description = ''
+          IPv6 privacy/temporary addresses (systemd-networkd
+          IPv6PrivacyExtensions). null = default ("yes"). Set "no" on
+          infrastructure nodes so the host sources traffic from a stable
+          address (e.g. so Cilium's masquerade source stays warm).
+        '';
+      };
+      acceptRAAutonomousPrefix = mkOption {
+        type = types.nullOr types.bool;
+        default = null;
+        description = ''
+          Generate a SLAAC address from RA autonomous prefixes
+          ([IPv6AcceptRA] UseAutonomousPrefix). null = default (true). Set
+          false for DHCPv6/static-only addressing so the interface holds a
+          single deterministic GUA (RA is still used for the route).
+        '';
+      };
     };
   };
 

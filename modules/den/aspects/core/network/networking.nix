@@ -75,11 +75,17 @@
               Address = ipv4Addrs ++ ipv6Addrs;
               DHCP = dhcp;
               IPv6AcceptRA = true;
-              IPv6PrivacyExtensions = "yes";
+              IPv6PrivacyExtensions = if ifCfg.privacyExtensions != null then ifCfg.privacyExtensions else "yes";
               LinkLocalAddressing = effectiveLinkLocal ifCfg;
               DNS = (environment.networks.default or { }).dnsServers or [ ];
               DNSOverTLS = true;
               DNSSEC = "allow-downgrade";
+            };
+            # Drop SLAAC address autoconf when an interface opts out (DHCPv6/
+            # static-only addressing → one deterministic GUA); RA is still used
+            # for the on-link prefix + default route.
+            ipv6AcceptRAConfig = optionalAttrs (ifCfg.acceptRAAutonomousPrefix or null != null) {
+              UseAutonomousPrefix = ifCfg.acceptRAAutonomousPrefix;
             };
             dhcpV6Config = {
               UseDelegatedPrefix = true;

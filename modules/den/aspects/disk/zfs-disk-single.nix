@@ -10,7 +10,7 @@
     includes = [ den.aspects.disk.zfs-diff ];
 
     nixos =
-      { pkgs, ... }:
+      { config, pkgs, ... }:
       {
         environment.systemPackages = [
           pkgs.lzop
@@ -22,7 +22,7 @@
           supportedFilesystems.zfs = true;
 
           zfs = {
-            package = pkgs.zfs_2_4;
+            package = config.boot.kernelPackages.zfs_cachyos;
             devNodes = "/dev/disk/by-id/";
             forceImportRoot = true;
             forceImportAll = true;
