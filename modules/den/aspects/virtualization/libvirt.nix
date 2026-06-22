@@ -127,6 +127,37 @@
           ];
         };
 
+        # libvirt 12.x ships an upstream drop-in (10-secret.conf) that loads
+        # /var/lib/libvirt/secrets/secrets-encryption-key via
+        # LoadCredentialEncrypted, i.e. encrypted against the host key in
+        # /var/lib/systemd/credential.secret. We persist that host key (see
+        # impermanence), but a blob written before the key was persisted — or
+        # any future host-key loss — leaves an undecryptable blob that libvirtd
+        # rejects with status=243/CREDENTIALS. virt-secret-init-encryption only
+        # generates the key when absent (ConditionPathExists=!...), so it never
+        # repairs a stale one. Drop a stale blob so it gets regenerated.
+        systemd.services.virt-secret-init-encryption-repair = {
+          before = [
+            "virt-secret-init-encryption.service"
+            "libvirtd.service"
+          ];
+          requiredBy = [ "libvirtd.service" ];
+          unitConfig.DefaultDependencies = false;
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+          script = ''
+            key=/var/lib/libvirt/secrets/secrets-encryption-key
+            if [ -e "$key" ] && \
+               ! ${pkgs.systemd}/bin/systemd-creds decrypt \
+                   --name=secrets-encryption-key "$key" - >/dev/null 2>&1; then
+              echo "removing undecryptable libvirt secrets-encryption-key for regeneration"
+              rm -f "$key"
+            fi
+          '';
+        };
+
         systemd.services.libvirt-networks = {
           description = "Setup libvirt networks";
           after = [ "libvirtd.service" ];
