@@ -7,7 +7,7 @@
           pkgs.jftui
           pkgs.jellyfin-tui
           pkgs.jellyfin-media-player
-          pkgs.jellyfin-mpv-shim
+          # pkgs.jellyfin-mpv-shim # TODO: find an alternative...
         ];
       };
   };
