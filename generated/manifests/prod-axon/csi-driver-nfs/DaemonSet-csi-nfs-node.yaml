@@ -44,6 +44,7 @@ spec:
             - --v=2
             - --csi-address=/csi/csi.sock
             - --kubelet-registration-path=$(DRIVER_REG_SOCK_PATH)
+            - --timeout=60s
             - --http-endpoint=localhost:19809
           env:
             - name: DRIVER_REG_SOCK_PATH
@@ -96,7 +97,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.2
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5

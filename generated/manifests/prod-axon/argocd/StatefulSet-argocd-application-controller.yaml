@@ -19,8 +19,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: f84f29e0349f4a49198c7fbe414fecbe67171b07685758430b03335cf8285b86
-        checksum/cmd-params: 46ae07a669f0b6fdcf832bf9f8f79b477567031d153165aaaa4641850d4852a5
+        checksum/cm: a5bd1bc9149b433398411c08ada83481328cb543dd8d192c04659193649a473d
+        checksum/cmd-params: 1a9a9f0884cc705c04a3ecdf9a9bd3253d8f0cb6f70c400b77e13081c91f675d
       labels:
         app.kubernetes.io/component: application-controller
         app.kubernetes.io/instance: argocd
@@ -324,7 +324,7 @@ spec:
                   optional: true
             - name: KUBECACHEDIR
               value: /tmp/kubecache
-          image: quay.io/argoproj/argocd:v3.4.3
+          image: quay.io/argoproj/argocd:v3.4.4
           imagePullPolicy: IfNotPresent
           name: application-controller
           ports:

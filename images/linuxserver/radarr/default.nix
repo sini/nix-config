@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/radarr";
   imageTag = "nightly";
-  imageDigest = "sha256:28cb6013c160bfa9455d613eff609619c2987ebd11de3e9a1fe0a73aed737329";
-  imageHash = "sha256-8PGTJBB5ezMHzP/rDgY+4pAAk6MI6USFFPHjFY01iEc=";
+  imageDigest = "sha256:79fc9420b2b7924ad82aebf576df370123742045da5698b1539703c16df622d6";
+  imageHash = "sha256-nxW3yu5lwE4mL8pon/Qy8gG6vABYs4COTtmUgYPTp60=";
   arch = "amd64";
   os = "linux";
   pinned = false;
