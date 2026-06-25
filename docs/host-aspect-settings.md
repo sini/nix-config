@@ -268,6 +268,44 @@ So the plan for the host is: compute a `settingsType` from `den.aspects` in the
 file's `let` block, then attach it as one more option (`settings`) inside
 `den.schema.host.imports`. The next two subsections show each half.
 
+### Required first: reserve `settings` as a structural key
+
+The generator below decides which keys to walk and which to skip via `skipKey`,
+which consults `den.lib.aspects.fx.keyClassification.structuralKeysSet` (plus
+`den.classes` / `den.quirks`). For this to work, **Den must classify `settings`
+itself as framework machinery, not as an ordinary aspect key.** You declare that
+once, in any module merged into the den config:
+
+```nix
+# e.g. modules/den/defaults.nix
+den.reservedKeys = [ "settings" ];
+```
+
+This adds `settings` to `structuralKeysSet` — exactly the set `skipKey` checks.
+
+**This step is not optional, and skipping it fails loudly.** Without it,
+`skipKey "settings"` is `false`, so the tree walk descends _into_ your
+`settings` block — into each `mkOption`, then into its `type` (a `lib.types.*`
+value whose internal `functor.type` is self-referential) — and recurses forever:
+
+```
+nix-repl> den.hosts.x86_64-linux.<host>.settings
+error: stack overflow; max-call-depth exceeded
+       at .../host.nix: … hasSettingsDeep …
+```
+
+The recursion path makes the cause obvious — it is walking option/type
+internals, which it must never touch:
+
+```
+<host>.settings.<aspect>.<key>.type.functor.type.functor.type.functor…
+```
+
+If you are porting this pattern to a non-Den framework, the rule generalizes:
+**whatever key you use for settings must be in the set `skipKey` consults before
+you wire up the generator.** Otherwise the generator mistakes your option
+declarations for child aspects and walks straight into the type system.
+
 ### The generator
 
 The contract `settingsType` implements:
@@ -534,6 +572,13 @@ owns without each host repeating it. Part 2 generalizes this cascade into a
 first-class, provenance-tracked construct.
 
 ## Gotchas and rules
+
+- **`stack overflow; max-call-depth exceeded` in `hasSettingsDeep` → you forgot
+  `den.reservedKeys = [ "settings" ];`.** This is the single most common
+  first-time failure. If `settings` isn't reserved, `skipKey` lets the tree walk
+  descend into your option declarations' `type` values, which are
+  self-referential, and the stack blows. See
+  [Required first: reserve `settings`](#required-first-reserve-settings-as-a-structural-key).
 
 - **Declarations are options; config is config.** A bare `settings` attrset must
   contain only `mkOption`s. If you catch yourself writing `foo = "bar";` (an
