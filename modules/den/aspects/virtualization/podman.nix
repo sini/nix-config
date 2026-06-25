@@ -1,6 +1,8 @@
 { den, ... }:
 {
   den.aspects.virtualization.podman = {
+    includes = [ den.aspects.virtualization.containers ];
+
     nixos =
       {
         config,
