@@ -116,7 +116,7 @@ in
       { inputs', pkgs, ... }:
       let
         colmena = inputs'.colmena.packages.colmena.override {
-          nix-eval-jobs = pkgs.lixPackageSets.stable.nix-eval-jobs;
+          nix-eval-jobs = pkgs.nix-eval-jobs;
         };
       in
       {

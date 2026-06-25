@@ -8,7 +8,8 @@
             "cgroups"
             "flakes"
             "nix-command"
-            "pipe-operator"
+            "pipe-operator" # Lix spelling (harmless warning on CppNix)
+            "pipe-operators" # CppNix spelling — needed so the host nix parses |> on CppNix
           ];
 
           allow-import-from-derivation = true;

@@ -3,7 +3,6 @@
   den.aspects.roles.default = {
     includes = with den.aspects; [
       core.nix
-      core.nix.lix
       core.nix.nixpkgs
       core.systemd.boot
       core.localization.i18n

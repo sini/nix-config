@@ -98,7 +98,7 @@
       };
 
       flake-compat = {
-        url = "github:lix-project/flake-compat";
+        url = "github:edolstra/flake-compat";
       };
 
       flake-file.url = "github:vic/flake-file";
@@ -169,19 +169,6 @@
       kubenix = {
         url = "github:pizzapim/kubenix";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
-      };
-
-      lix = {
-        url = "github:lix-project/lix";
-        flake = false;
-      };
-
-      lix-module = {
-        url = "git+https://git@git.lix.systems/lix-project/nixos-module";
-        inputs = {
-          nixpkgs.follows = "nixpkgs-unstable";
-          lix.follows = "lix";
-        };
       };
 
       microvm = {

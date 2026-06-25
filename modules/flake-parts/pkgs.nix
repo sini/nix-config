@@ -18,14 +18,11 @@
           allowUnfree = true;
           allowDeprecatedx86_64Darwin = true;
         };
-        overlays = [
-          # lix-module first so lixPackageSets is available to later overlays
-          inputs.lix-module.overlays.default
-        ]
-        ++ builtins.attrValues (import (rootPath + "/pkgs/overlays.nix") { inherit inputs; })
-        ++ [
-          inputs.nix-topology.overlays.default
-        ];
+        overlays =
+          builtins.attrValues (import (rootPath + "/pkgs/overlays.nix") { inherit inputs; })
+          ++ [
+            inputs.nix-topology.overlays.default
+          ];
       };
       pkgsDirectory = rootPath + "/pkgs/by-name";
     };
