@@ -99,7 +99,7 @@
       url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    flake-compat.url = "github:lix-project/flake-compat";
+    flake-compat.url = "github:edolstra/flake-compat";
     flake-file.url = "github:vic/flake-file";
     flake-parts = {
       url = "github:hercules-ci/flake-parts";
@@ -151,17 +151,6 @@
     kubenix = {
       url = "github:pizzapim/kubenix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
-    lix = {
-      url = "github:lix-project/lix";
-      flake = false;
-    };
-    lix-module = {
-      url = "git+https://git@git.lix.systems/lix-project/nixos-module";
-      inputs = {
-        lix.follows = "lix";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
     };
     microvm = {
       url = "github:microvm-nix/microvm.nix";
