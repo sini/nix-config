@@ -42,7 +42,15 @@
         # parent always exists. A leading-`/` path makes the HM module prepend
         # `unix://` for the daemon and reuse the path for its config-apply curl.
         guiAddress = "${config.xdg.cacheHome}/syncthing.sock";
-        cert = toString (user.secretPath + "/syncthing-${host.name}.crt"); # HM cert is nullOr str
+        # Import the (public) cert as its own store path so it's a real runtime
+        # dependency copied to remote hosts. A flake-source path (toString of
+        # rootPath + …) makes the whole `-source` the dep, which colmena's
+        # derivation rewrite drops from the closure it copies — so the cert never
+        # reaches remote members. builtins.path materializes just this file.
+        cert = "${builtins.path {
+          path = user.secretPath + "/syncthing-${host.name}.crt";
+          name = "syncthing-${host.name}.crt";
+        }}";
         key = config.age.secrets.syncthing-identity.path;
         settings = {
           # Fully declarative mesh: no global/local discovery, no relays — peers
