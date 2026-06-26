@@ -115,6 +115,20 @@ in
       ])
     ];
 
+  # Push each user's Syncthing device record to that SAME user's scopes on other
+  # hosts (a per-user mesh; users' meshes stay disjoint). Self-excluded by
+  # broadcast; the member consumer drops self + id-less peers.
+  den.policies.broadcast-syncthing-peers =
+    { user, ... }:
+    let
+      srcUser = user.name;
+    in
+    [
+      (pipe.from "syncthing-peers" [
+        (pipe.broadcast ({ user, ... }: user.name == srcUser))
+      ])
+    ];
+
   den.schema.host.includes = [
     den.policies.collect-host-addrs
     den.policies.collect-bgp-peers
@@ -128,6 +142,7 @@ in
 
   den.schema.user.includes = [
     den.policies.expose-resolved-users
+    den.policies.broadcast-syncthing-peers
   ];
 
   den.schema.cluster.includes = [

@@ -104,6 +104,26 @@ in
         ${lib.getExe pkgs.gnused} 's/Public key: //' -i "$publicKeyFile"
       '';
 
+    # Syncthing device identity. `generate` writes cert.pem/key.pem; `device-id`
+    # derives the (public, non-secret) device id from the cert. Commit the public
+    # .crt/.id sidecars; encrypt only key.pem. Strip device-id's trailing newline
+    # so the .id is exactly the id (consumers read it raw).
+    syncthing-identity =
+      {
+        pkgs,
+        file,
+        ...
+      }:
+      ''
+        set -euo pipefail
+        tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+        ${pkgs.syncthing}/bin/syncthing generate --home="$tmp" >/dev/null
+        base=${lib.escapeShellArg (lib.removeSuffix ".age" file)}
+        cp "$tmp/cert.pem" "$base.crt"
+        ${pkgs.syncthing}/bin/syncthing --home="$tmp" device-id | tr -d '\n' > "$base.id"
+        cat "$tmp/key.pem"
+      '';
+
     binary-cache-key =
       {
         pkgs,

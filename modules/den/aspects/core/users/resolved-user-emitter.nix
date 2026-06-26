@@ -9,7 +9,6 @@
         uid = user.system.uid or null;
         inherit (user) groups;
         sshKeys = map (k: k.key) (user.identity.sshKeys or [ ]);
-        inherit (user.system) syncthingOffset;
       };
   };
 }
