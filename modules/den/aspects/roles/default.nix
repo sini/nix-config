@@ -32,6 +32,7 @@
       core.security.openssh
       core.network.hosts
       core.network.tailscale
+      core.network.syncthing.member
 
       secrets.agenix
     ];
