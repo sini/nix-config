@@ -58,7 +58,10 @@
           ${syncthing} generate --home="$tmp" >/dev/null
           base=${lib.escapeShellArg (lib.removeSuffix ".age" file)}
           cp "$tmp/cert.pem" "$base.crt"
-          ${syncthing} --home="$tmp" device-id > "$base.id"
+          # newline-free: `device-id` appends a trailing \n; strip it so the
+          # committed .id is exactly the device ID (consumers read it raw). set
+          # -o pipefail keeps a device-id failure fatal.
+          ${syncthing} --home="$tmp" device-id | tr -d '\n' > "$base.id"
           cat "$tmp/key.pem"
         '';
 
