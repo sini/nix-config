@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ lib, rootPath, ... }:
 let
   inherit (lib) mkOption types;
 
@@ -18,8 +18,10 @@ let
 in
 {
   den.schema.user.imports = [
-    (_: {
-      options = {
+    (
+      { config, ... }:
+      {
+        options = {
         identity = mkOption {
           type = types.submodule {
             options = {
@@ -47,6 +49,16 @@ in
           };
           default = { };
           description = "User identity information";
+        };
+
+        secretPath = mkOption {
+          type = types.path;
+          # rootPath (a plain `../..` path literal), NOT `self`: this default is
+          # forced during the base registry eval, where `self` self-cycles
+          # (registry → self → flake outputs → registry). Matches the existing
+          # per-user secret convention (spotify-player, agenixUserAspect).
+          default = rootPath + "/.secrets/users/${config.name}";
+          description = "Per-user secret directory (mirrors host/environment/cluster secretPath).";
         };
 
         system = mkOption {

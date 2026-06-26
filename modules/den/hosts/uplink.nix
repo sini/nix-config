@@ -18,7 +18,6 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
-      core.network.syncthing.isHub = true;
     };
   };
 
@@ -46,7 +45,6 @@
       core.network.tailscale
       services.web.den-docs-mirror
       services.web.container-registry
-      core.network.syncthing.hub
       services.monitoring.grafana
       virtualization.podman
       hardware.cpu.amd

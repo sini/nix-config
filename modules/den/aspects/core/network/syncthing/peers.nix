@@ -1,92 +1,59 @@
-{ den, lib, rootPath, ... }:
+# The per-user `peer` aspect: advertise this user's Syncthing device to the
+# same-user mesh and open its sync port. User-scoped (the emit destructures
+# `user`); bundles the device emit + the firewall `nixos` branch the way
+# `agenixUserAspect` bundles `${host.class}` + `homeManager`. Both gate on the
+# committed `.id` sidecar's existence — present iff this user replicates (the
+# `member` collector's secret generator wrote it), the same `pathExists` idiom
+# `userEnrich`/`tailscale` use — so non-replicating users contribute nothing.
+{ den, lib, ... }:
 let
-  inherit (den.lib.policy) pipe;
-  port = user: 22000 + user.system.syncthingOffset;
   addrs = host: environment: p: [
     "tcp://${host.name}.${environment.name}.${environment.domain}:${toString p}"
     "tcp://${host.name}.ts.${environment.domain}:${toString p}"
   ];
-  hostIsHub = host: host.settings.core.network.syncthing.isHub or false;
 in
 {
-  # Per-user peer emit. Self-gates as a list: every emit is forced eagerly
-  # during pipe assembly, so an unconditional `readFile` of a missing `.id`
-  # sidecar would throw fleet-wide. `pathExists` is lazy and never throws, so
-  # when the device-id sidecar is absent the emit yields `[]` (no entry) and
-  # the `readFile` thunk is never forced.
-  den.aspects.core.network.syncthing.peer.syncthing-peers =
-    {
-      host,
-      user,
-      environment,
-      ...
-    }:
-    let
-      idFile = rootPath + "/.secrets/users/${user.name}/syncthing-${host.name}.id";
-      p = port user;
-    in
-    lib.optionals (builtins.pathExists idFile) [
+  den.aspects.core.network.syncthing.peer = {
+    # Self-gates as a list: emits are forced eagerly during pipe assembly, so a
+    # bare `readFile` of a missing `.id` would throw; `pathExists` is lazy, so an
+    # absent sidecar yields `[]` and the `readFile` is never reached.
+    syncthing-peers =
       {
-        hostname = host.name;
-        user = user.name;
-        deviceId = builtins.readFile idFile;
-        port = p;
-        isHub = hostIsHub host;
-        addresses = addrs host environment p;
-      }
-    ];
+        host,
+        user,
+        environment,
+        ...
+      }:
+      let
+        idFile = user.secretPath + "/syncthing-${host.name}.id";
+        port = 22000 + user.system.syncthingOffset;
+      in
+      lib.optionals (builtins.pathExists idFile) [
+        {
+          hostname = host.name;
+          user = user.name;
+          deviceId = builtins.readFile idFile;
+          addresses = addrs host environment port;
+        }
+      ];
 
-  den.aspects.core.network.syncthing.hub.syncthing-peers =
-    { host, environment, ... }:
-    let
-      idFile = rootPath + "/.secrets/hosts/${host.name}/syncthing-${host.name}.id";
-    in
-    lib.optionals (builtins.pathExists idFile) [
+    # Open this user's sync port on the trusted tailnet interface only (never
+    # global). A user-scoped `nixos` branch fans per user and merges into the
+    # host config; gated on the same sidecar so only replicating users open one.
+    nixos =
       {
-        hostname = host.name;
-        deviceId = builtins.readFile idFile;
-        port = 22000;
-        isHub = true;
-        addresses = addrs host environment 22000;
-      }
-    ];
+        host,
+        user,
+        config,
+        lib,
+        ...
+      }:
+      lib.mkIf (builtins.pathExists (user.secretPath + "/syncthing-${host.name}.id")) {
+        networking.firewall.interfaces.${config.services.tailscale.interfaceName}.allowedTCPPorts = [
+          (22000 + user.system.syncthingOffset)
+        ];
+      };
+  };
 
-  den.policies.broadcast-syncthing-peers-to-users =
-    { user, ... }:
-    let
-      srcUser = user.name;
-    in
-    [ (pipe.from "syncthing-peers" [ (pipe.broadcast ({ user, ... }: user.name == srcUser)) ]) ];
-
-  den.policies.broadcast-syncthing-peers-to-hub =
-    { ... }:
-    [
-      (pipe.from "syncthing-peers" [
-        (pipe.broadcast ({ host, ... }: hostIsHub host))
-      ])
-    ];
-
-  den.policies.broadcast-hub-peer =
-    { host, ... }:
-    lib.optionals (hostIsHub host) [
-      # `{ user, ... }` is load-bearing, NOT a stray arg: findMatchingAll keys the
-      # receiver KIND off `builtins.functionArgs`, so the `user` formal targets
-      # every user scope. Do NOT "simplify" to `(_: true)` — no formals matches
-      # nothing (spec §3 constraint 1). Body is constant true = all user scopes.
-      (pipe.from "syncthing-peers" [ (pipe.broadcast ({ user, ... }: true)) ])
-    ];
-
-  den.schema.user.includes = [
-    # Base-include the per-user peer aspect (the `syncthing-peers` emit) at USER
-    # scope. It must NOT go through a host role (e.g. roles.default): the emit
-    # destructures `user`, so a host-scope delivery throws "called without
-    # required argument 'user'". This mirrors core.users.resolved-user-emitter /
-    # userEnrich, which are user-scoped aspects base-included here. The `member`
-    # collector (which fans per-user and reads replicateHome) is included via
-    # roles.default instead.
-    den.aspects.core.network.syncthing.peer
-    den.policies.broadcast-syncthing-peers-to-users
-    den.policies.broadcast-syncthing-peers-to-hub
-  ];
-  den.schema.host.includes = [ den.policies.broadcast-hub-peer ];
+  den.schema.user.includes = [ den.aspects.core.network.syncthing.peer ];
 }

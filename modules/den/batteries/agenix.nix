@@ -34,6 +34,7 @@ let
             home-manager.sharedModules = [
               inputs.agenix.homeManagerModules.default
               inputs.agenix-rekey.homeManagerModules.default
+              agenixGeneratorsModule
               (
                 { config, lib, ... }:
                 {
@@ -81,6 +82,7 @@ let
             home-manager.sharedModules = [
               inputs.agenix.homeManagerModules.default
               inputs.agenix-rekey.homeManagerModules.default
+              agenixGeneratorsModule
               (
                 { config, lib, ... }:
                 {

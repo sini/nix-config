@@ -6,6 +6,7 @@
 
   den.users.registry.sini = {
     system.uid = 1000;
+    system.linger = true; # always-on per-user Syncthing daemon (replicateHome)
     groups = [
       "admins"
       "system-access"
