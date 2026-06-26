@@ -48,9 +48,12 @@
     };
 
     age-secrets = {
+      # nix-serve now runs under systemd DynamicUser and consumes the key via
+      # LoadCredential (read as root), so there is no static nix-serve user to
+      # own the secret — keep it root-owned and root-readable.
       age.secrets.nix_store_signing_key = {
         generator.script = "binary-cache-key";
-        owner = "nix-serve";
+        owner = "root";
         mode = "0400";
       };
     };
