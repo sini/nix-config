@@ -50,50 +50,58 @@ in
         };
 
         system = mkOption {
-          type = types.submodule {
-            options = {
-              uid = mkOption {
-                type = types.nullOr types.int;
-                default = null;
-                description = "User ID for the Unix account";
+          type = types.submodule (
+            { config, ... }:
+            {
+              options = {
+                uid = mkOption {
+                  type = types.nullOr types.int;
+                  default = null;
+                  description = "User ID for the Unix account";
+                };
+                gid = mkOption {
+                  type = types.nullOr types.int;
+                  default = null;
+                  description = "Group ID for the Unix account";
+                };
+                linger = mkOption {
+                  type = types.bool;
+                  default = false;
+                  description = "Enable lingering for the user (systemd user services start without login)";
+                };
+                syncthingOffset = mkOption {
+                  type = types.int;
+                  default = if config.uid == null then 0 else config.uid - 1000;
+                  description = "Per-user Syncthing sync-port offset (port = 22000 + offset). Default: uid - 1000.";
+                };
+                enableUnixAccount = mkOption {
+                  type = types.bool;
+                  default = true;
+                  description = "Whether to create a Unix account for this user (kanidm posixAccount flag)";
+                };
+                extra-features = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                  description = "Additional feature aspects to include for this user beyond defaults";
+                };
+                excluded-features = mkOption {
+                  type = types.listOf types.str;
+                  default = [ ];
+                  description = "Feature aspects to exclude for this user";
+                };
+                include-host-features = mkOption {
+                  type = types.bool;
+                  default = false;
+                  description = "Whether to inherit host-level aspect features for this user";
+                };
+                settings = mkOption {
+                  type = types.attrsOf (types.attrsOf types.anything);
+                  default = { };
+                  description = "Per-user feature settings (freeform nested namespace)";
+                };
               };
-              gid = mkOption {
-                type = types.nullOr types.int;
-                default = null;
-                description = "Group ID for the Unix account";
-              };
-              linger = mkOption {
-                type = types.bool;
-                default = false;
-                description = "Enable lingering for the user (systemd user services start without login)";
-              };
-              enableUnixAccount = mkOption {
-                type = types.bool;
-                default = true;
-                description = "Whether to create a Unix account for this user (kanidm posixAccount flag)";
-              };
-              extra-features = mkOption {
-                type = types.listOf types.str;
-                default = [ ];
-                description = "Additional feature aspects to include for this user beyond defaults";
-              };
-              excluded-features = mkOption {
-                type = types.listOf types.str;
-                default = [ ];
-                description = "Feature aspects to exclude for this user";
-              };
-              include-host-features = mkOption {
-                type = types.bool;
-                default = false;
-                description = "Whether to inherit host-level aspect features for this user";
-              };
-              settings = mkOption {
-                type = types.attrsOf (types.attrsOf types.anything);
-                default = { };
-                description = "Per-user feature settings (freeform nested namespace)";
-              };
-            };
-          };
+            }
+          );
           default = { };
           description = "Unix account defaults and system configuration";
         };
