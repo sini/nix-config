@@ -3163,11 +3163,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1771739334,
-        "narHash": "sha256-3QBhxucrM46Ah0SFC9kkdiqlz0OpXCBfDX1Yd8Q47cc=",
+        "lastModified": 1781733968,
+        "narHash": "sha256-Eo/85hh7RprNaKbcH7semqSGHd4cpf/ySwT79ingJTQ=",
         "owner": "sini",
         "repo": "razer-control-revived",
-        "rev": "ba4a52cea5ed490f2549e0cb342958932843bdbb",
+        "rev": "db07163aa42130740e73f9bdd00928b91cc453f1",
         "type": "github"
       },
       "original": {
