@@ -4,7 +4,7 @@
       { pkgs, ... }:
       {
         home.packages = [
-          pkgs.ytmdesktop
+          #pkgs.ytmdesktop # TODO: re-enable
         ];
       };
   };
