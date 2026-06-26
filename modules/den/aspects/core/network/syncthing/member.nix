@@ -71,10 +71,19 @@
         enable = true;
         overrideDevices = true;
         overrideFolders = true;
-        # GUI/REST API on a per-user unix socket — no TCP surface (§5a). The
-        # socket path is inherently per-user, so the offset governs only the
-        # sync port (§5b); syncthingtray + the CLI auto-detect this address.
-        guiAddress = "unix:///run/user/${toString user.system.uid}/syncthing/gui.sock";
+        # GUI/REST API on a per-user unix socket — no TCP surface (§5a); the
+        # offset governs only the sync port (§5b), and syncthingtray + the CLI
+        # auto-detect this address. Pass a PLAIN path (no `unix://`): the HM
+        # module's isUnixGui prepends `unix://` for `serve --gui-address` and
+        # reuses the same path for its config-apply curl. The path must be
+        # eval-resolved (syncthing writes it verbatim, no $VAR expansion) and
+        # space-free (the init curl interpolates it unquoted). `config.xdg.cacheHome`
+        # satisfies both and is cross-platform (~/.cache on Linux,
+        # /Users/<u>/.cache on darwin) — a socket is ephemeral, so cache is its
+        # XDG home; the dir already exists, and syncthing unlinks a stale socket
+        # on restart (verified). Avoids `/run/user/<uid>` (absent on darwin) and
+        # syncthing's data dir (whose darwin path has a space → breaks init curl).
+        guiAddress = "${config.xdg.cacheHome}/syncthing.sock";
         # `cert` is `nullOr str`, so coerce the path to its (store) string. The cert
         # is the PUBLIC committed sidecar, so store-copying it is harmless.
         cert = toString (rootPath + "/.secrets/users/${user.name}/syncthing-${host.name}.crt");
