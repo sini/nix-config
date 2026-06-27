@@ -18,6 +18,9 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = true;
       };
+      # Always-on Syncthing hub for replicated home dirs (the bgp pattern: the
+      # aspect declares the option, the host file sets it).
+      core.network.syncthing.isHub = true;
     };
   };
 
@@ -43,6 +46,7 @@
       services.ai.open-webui
       services.nix.attic
       core.network.tailscale
+      core.network.syncthing.hub
       services.web.den-docs-mirror
       services.web.container-registry
       services.monitoring.grafana

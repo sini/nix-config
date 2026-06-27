@@ -8,6 +8,7 @@
   inputs,
   den,
   self,
+  rootPath,
   ...
 }:
 let
@@ -388,8 +389,13 @@ in
 
         # Computed config — channel determines instantiate + HM module
         config = {
-          secretPath = lib.mkDefault (self + "/.secrets/hosts/${config.name}");
-          facts = lib.mkDefault (self + "/hosts/${config.name}/facter.json");
+          # rootPath (a `../..` path literal), NOT `self`: these defaults are
+          # forced during base eval by the producer-class config-thunk broadcast
+          # (a host config is navigated to reach a nested home config), where
+          # `self` self-cycles (registry → self → flake outputs → registry).
+          # Same git-tracked source as `self`; mirrors `user.secretPath`.
+          secretPath = lib.mkDefault (rootPath + "/.secrets/hosts/${config.name}");
+          facts = lib.mkDefault (rootPath + "/hosts/${config.name}/facter.json");
           public_key = lib.mkDefault (
             if config.secretPath != null then config.secretPath + "/ssh_host_ed25519_key.pub" else null
           );
