@@ -15,7 +15,7 @@
       core.system.facter
       core.users.home-manager
       core.users.deterministic-uids
-      core.nix.remote-build-client
+      #core.nix.remote-build-client
       core.security.sudo
       core.localization.time
       core.perf.disable-docs
