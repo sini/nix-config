@@ -73,6 +73,23 @@
             u: lib.unique (lib.concatMap (r: r.directories or [ ]) (lib.filter (r: r.user == u) replicateHome));
           hostsForUser = u: lib.unique (map (q: q.hostname) (lib.filter (q: q.user == u) members));
           folderId = u: p: "stfolder-" + builtins.hashString "sha256" "${u}:${p}";
+          # Append-only session logs (projects, …) only need delete-propagation
+          # protection, not `staggered`'s growth snapshots — which on the hub, the
+          # aggregate of every member's churn, would balloon `.stversions`.
+          # `trashcan` keeps just the last replaced/deleted copy; `memory` (small +
+          # curated) keeps its `staggered` edit history.
+          versioningFor =
+            p:
+            if baseNameOf p == "memory" then
+              {
+                type = "staggered";
+                params.maxAge = "2592000"; # 30 days
+              }
+            else
+              {
+                type = "trashcan";
+                params.cleanoutDays = "30";
+              };
         in
         {
           age.secrets.syncthing-hub-identity = {
@@ -120,10 +137,7 @@
                       label = "${u}/${p}";
                       path = "${dataDir}/${u}/${p}";
                       devices = hostsForUser u;
-                      versioning = {
-                        type = "staggered";
-                        params.maxAge = "2592000"; # 30 days
-                      };
+                      versioning = versioningFor p;
                     }
                   ) (dirsForUser u)
                 ) users
