@@ -3,7 +3,7 @@
 # Declares collection policies for all quirks that need cross-host
 # aggregation, wired into host schema so every host collects pipe
 # entries from peers.
-{ den, ... }:
+{ den, lib, ... }:
 let
   inherit (den.lib.policy) pipe;
 in
@@ -129,6 +129,46 @@ in
       ])
     ];
 
+  # Broadcast each replicating user's dir set to the hub. den PR #625 surfaces the
+  # home-pool `replicateHome` at the user scope, so a user-scope policy reads it; a
+  # source-side transform tags each dir record with the user (the hub namespaces
+  # folders per user). Delivered under `replicateHome` to the single isHub host.
+  den.policies.broadcast-syncthing-hub-shares =
+    { user, ... }:
+    let
+      srcUser = user.name;
+    in
+    [
+      (pipe.from "replicateHome" [
+        (pipe.transform (entry: {
+          user = srcUser;
+          directories = entry.directories or [ ];
+        }))
+        (pipe.broadcast ({ host, ... }: host.settings.core.network.syncthing.isHub or false))
+      ])
+    ];
+
+  # Each member's device record also reaches the hub so it can connect to and back
+  # up every member (the same record the same-user mesh gets, pushed to the hub).
+  den.policies.broadcast-syncthing-peers-to-hub =
+    { ... }:
+    [
+      (pipe.from "syncthing-peers" [
+        (pipe.broadcast ({ host, ... }: host.settings.core.network.syncthing.isHub or false))
+      ])
+    ];
+
+  # The hub advertises its OWN device record (its host-scope `syncthing-peers`
+  # emit; received member records are not re-broadcast) to every member so members
+  # add it and share their folders with it.
+  den.policies.broadcast-hub-peer =
+    { host, ... }:
+    lib.optionals (host.settings.core.network.syncthing.isHub or false) [
+      (pipe.from "syncthing-peers" [
+        (pipe.broadcast ({ user, ... }: true))
+      ])
+    ];
+
   den.schema.host.includes = [
     den.policies.collect-host-addrs
     den.policies.collect-bgp-peers
@@ -138,11 +178,14 @@ in
     den.policies.collect-thunderbolt-mesh-peers
     den.policies.collect-vault-peers
     den.policies.collect-ollama-endpoints
+    den.policies.broadcast-hub-peer
   ];
 
   den.schema.user.includes = [
     den.policies.expose-resolved-users
     den.policies.broadcast-syncthing-peers
+    den.policies.broadcast-syncthing-peers-to-hub
+    den.policies.broadcast-syncthing-hub-shares
   ];
 
   den.schema.cluster.includes = [

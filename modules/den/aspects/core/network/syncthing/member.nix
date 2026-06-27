@@ -26,7 +26,9 @@
       folderId = p: "stfolder-" + builtins.hashString "sha256" "${user.name}:${p}";
       # Delivered peers are already same-user (the broadcast scopes by user); just
       # drop self and any peer missing a device id.
-      sharePeers = lib.filter (q: q.hostname != host.name && (q.deviceId or null) != null) syncthing-peers;
+      sharePeers = lib.filter (
+        q: q.hostname != host.name && (q.deviceId or null) != null
+      ) syncthing-peers;
     in
     lib.mkIf (dirs != [ ]) {
       age.secrets.syncthing-identity = {
@@ -74,6 +76,9 @@
               p:
               lib.nameValuePair (folderId p) {
                 id = folderId p;
+                # The relative dir — the `peer` emit broadcasts these labels so
+                # the hub can mirror each folder at /var/lib/syncthing/<user>/<p>.
+                label = p;
                 path = "${home}/${p}";
                 devices = map (q: q.hostname) sharePeers;
                 versioning = {
