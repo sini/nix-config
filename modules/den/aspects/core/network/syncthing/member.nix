@@ -24,6 +24,24 @@
       dirs = lib.unique (lib.concatMap (e: e.directories or [ ]) replicateHome);
       home = config.home.homeDirectory;
       folderId = p: "stfolder-" + builtins.hashString "sha256" "${user.name}:${p}";
+      # Session logs (projects, …) are append-only and immutable once written, so
+      # `staggered` hoards useless intermediate snapshots of an actively-growing
+      # file — at ~60 MB/day of session writes that plateaus near GB-scale on the
+      # receivers. `trashcan` keeps only the last replaced/deleted copy (all the
+      # delete-propagation protection these logs actually need) for a fraction of
+      # the size. `memory` is small + curated, so keep its edit history.
+      versioningFor =
+        p:
+        if baseNameOf p == "memory" then
+          {
+            type = "staggered";
+            params.maxAge = "2592000"; # 30 days
+          }
+        else
+          {
+            type = "trashcan";
+            params.cleanoutDays = "30";
+          };
       # Delivered peers are already same-user (the broadcast scopes by user); just
       # drop self and any peer missing a device id.
       sharePeers = lib.filter (
@@ -81,10 +99,7 @@
                 label = p;
                 path = "${home}/${p}";
                 devices = map (q: q.hostname) sharePeers;
-                versioning = {
-                  type = "staggered";
-                  params.maxAge = "2592000"; # 30 days
-                };
+                versioning = versioningFor p;
               }
             ) dirs
           );
