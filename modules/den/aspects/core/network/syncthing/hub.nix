@@ -12,8 +12,20 @@
 { ... }:
 {
   den.aspects.core.network.syncthing.hub = {
-    # Daemon state + folder data survive the root wipe (uplink wipeRootOnBoot).
-    persist.directories = [ "/var/lib/syncthing" ];
+    # Daemon state + folder data survive the root wipe (uplink wipeRootOnBoot),
+    # OWNED by the syncthing service user so it can create the per-user folder
+    # roots (/var/lib/syncthing/<user>/...). A plain string entry lands root-owned
+    # and syncthing can't mkdir under it ("permission denied" creating folder
+    # root); the attrset carries user/group/mode through the persist quirk to
+    # impermanence.
+    persist.directories = [
+      {
+        directory = "/var/lib/syncthing";
+        user = "syncthing";
+        group = "syncthing";
+        mode = "0700";
+      }
+    ];
 
     # The hub's own device record → broadcast to every member. Self-gated on the
     # committed host identity sidecar (present once minted), like the member emit.
