@@ -443,15 +443,16 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1782462754,
-        "narHash": "sha256-uLIfN5z+7q/hhZpNRwRINbLkdI2EPfk1XgxeJuRfkwo=",
-        "owner": "denful",
+        "lastModified": 1782530818,
+        "narHash": "sha256-uWim/fe4pQx1+Ufk4oboUQTeoPXwsGj1Sbd1mynKFw8=",
+        "owner": "sini",
         "repo": "den",
-        "rev": "3932adfe8ef02d322168aa5b07d9371d8ec1664d",
+        "rev": "4911b7f2647c1d037d49fe59cd1cbd6302d18c88",
         "type": "github"
       },
       "original": {
-        "owner": "denful",
+        "owner": "sini",
+        "ref": "fix/broadcast-home-pool-to-host",
         "repo": "den",
         "type": "github"
       }
