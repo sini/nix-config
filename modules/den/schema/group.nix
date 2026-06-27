@@ -1,11 +1,11 @@
 { lib, inputs, ... }:
 let
   inherit (lib) mkOption types;
-  gen-algebra = inputs.gen-algebra { inherit lib; };
+  schemaLib = inputs.gen-schema.lib;
 in
 {
   den.schema.group.validators = [
-    (gen-algebra.mkValidator "posix-needs-gid" (
+    (schemaLib.mkValidator "posix-needs-gid" (
       { labels, gid, ... }: !(lib.elem "posix" labels) || gid != null
     ) "groups with the 'posix' label must have a gid set")
   ];
