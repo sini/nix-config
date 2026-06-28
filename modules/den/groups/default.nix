@@ -110,6 +110,16 @@
       description = "Open WebUI admin role";
       members = [ "admins" ];
     };
+    "coder.access" = {
+      labels = [ "oauth-grant" ];
+      description = "Coder access";
+      members = [ "users" ];
+    };
+    "coder.admins" = {
+      labels = [ "oauth-grant" ];
+      description = "Coder admin role";
+      members = [ "admins" ];
+    };
 
     # POSIX groups (Unix permissions with gidNumber)
     wheel = {

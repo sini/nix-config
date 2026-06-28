@@ -103,6 +103,27 @@ let
         };
       };
 
+      coder = {
+        displayName = "Coder";
+        originUrl = [ "https://${domain "coder"}/api/v2/users/oidc/callback" ];
+        originLanding = "https://${domain "coder"}";
+        basicSecretFile = secretPaths.coder-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps."coder.access" = [
+          "openid"
+          "email"
+          "profile"
+          "groups"
+        ];
+        claimMaps.groups = {
+          joinType = "array";
+          valuesByGroup = {
+            "coder.admins" = [ "admin" ];
+            "coder.access" = [ "user" ];
+          };
+        };
+      };
+
       forgejo = {
         displayName = "Forgejo";
         originUrl = "https://${domain "forgejo"}/user/oauth2/kanidm/callback";
