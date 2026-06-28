@@ -60,6 +60,16 @@ let
           "user-${userName}-password".rekeyFile = passwordPath;
         };
       };
+
+      # macOS account identity (uid/groups/password) is managed out of band, but
+      # the authorized keys are not — without this branch a darwin host installs
+      # no keys for the user and sshd (publickey-only) rejects every connection.
+      # nix-darwin turns `openssh.authorizedKeys.keys` into a managed
+      # /etc/ssh/nix_authorized_keys.d/<user> file + AuthorizedKeysCommand, so
+      # mirroring the nixos key set here is all that's needed for SSH parity.
+      darwin = {
+        users.users.${userName}.openssh.authorizedKeys.keys = map (k: k.key) (user.identity.sshKeys or [ ]);
+      };
     };
 in
 {
