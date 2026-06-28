@@ -23,8 +23,13 @@ let
   agenixHostAspect =
     { host, secretsConfig, ... }:
     let
+      # Only real (NixOS) impermanence relocates the host key under /persist; the
+      # darwin impermanence branch is a dummy (no wipe, no /persist), so a darwin
+      # host must read its identity from the plain /etc/ssh path. Without this
+      # guard the darwin host got `/persist/etc/ssh/...`, which doesn't exist, so
+      # system agenix had no identity to decrypt the per-user secrets with.
       hasImpermanence = host.hasAspect den.aspects.core.impermanence;
-      persistPrefix = lib.optionalString hasImpermanence "/persist";
+      persistPrefix = lib.optionalString (hasImpermanence && host.class == "nixos") "/persist";
     in
     {
       name = "agenix/${host.name}";
@@ -127,7 +132,12 @@ let
             age.secrets."user-identity-${user.name}" = {
               rekeyFile = rootPath + "/.secrets/users/${user.name}/id_agenix.age";
               owner = user.name;
-              group = user.name;
+              # macOS has no per-user primary group named after the user (it's
+              # `staff`), so `chown <user>:<user>` fails as a unit and agenix
+              # leaves the identity root-owned — unreadable by the user's
+              # home-manager agenix, which then finds "no readable identities".
+              # NixOS does create a same-named group, so keep that there.
+              group = if host.class == "darwin" then "staff" else user.name;
               mode = "600";
               generator.script = "age-identity";
             };
