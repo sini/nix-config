@@ -44,5 +44,12 @@
         };
       };
 
+    # macOS only exports SSH_AUTH_SOCK from interactive shell init, so ssh finds
+    # no agent in a clean/non-terminal state. gpg-agent runs at login (launchd
+    # RunAtLoad) with the YubiKey on its ssh socket, so point ssh straight at it —
+    # `ssh <host>` then uses the YubiKey from any context. (NixOS exports
+    # SSH_AUTH_SOCK globally via systemd, and IdentityAgent there would shadow a
+    # forwarded agent, so this is darwin-only.)
+    homeDarwin.programs.ssh.settings."*".identityAgent = "~/.gnupg/S.gpg-agent.ssh";
   };
 }
