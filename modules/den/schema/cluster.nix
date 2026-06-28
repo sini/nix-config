@@ -97,9 +97,13 @@ in
       lib.mapAttrs (
         _: c:
         lib.optionalAttrs
-          (c.secretPath != null && builtins.pathExists "${c.secretPath}/cluster-sops-age-key.pub")
+          # Path concatenation (NOT string interpolation): interpolating `c.secretPath`
+          # coerces the whole secret DIRECTORY into the store just to stat one file —
+          # which, for a non-existent secretPath, makes Nix emit an empty-NAR addToStore
+          # that deadlocks the nix-daemon worker protocol. `+ "/..."` stats/reads directly.
+          (c.secretPath != null && builtins.pathExists (c.secretPath + "/cluster-sops-age-key.pub"))
           {
-            sopsAgeRecipient = builtins.readFile "${c.secretPath}/cluster-sops-age-key.pub";
+            sopsAgeRecipient = builtins.readFile (c.secretPath + "/cluster-sops-age-key.pub");
           }
       ) clusters;
     extraModules = [
