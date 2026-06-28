@@ -30,7 +30,7 @@
 
       core.network.networking
       core.security.openssh
-      core.network.hosts
+      core.network.hostsfile
       core.network.tailscale
       core.network.syncthing.member
 

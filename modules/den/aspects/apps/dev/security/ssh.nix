@@ -2,13 +2,17 @@
 {
   den.aspects.apps.dev.security.ssh = {
     homeManager =
-      { host-addrs, ... }:
+      { host-addrs, host, ... }:
       let
         hostMatchBlocks = lib.listToAttrs (
           map (
             entry:
             lib.nameValuePair entry.hostname {
-              hostname = "${entry.hostname}.${entry.domain}";
+              # On darwin the LAN /etc/hosts names don't resolve (no hostsfile
+              # there, and the host roams), so address peers by their tailnet
+              # MagicDNS name, which resolves via the tailscale /etc/resolver
+              # route. NixOS keeps the LAN domain (direct over the local network).
+              hostname = if host.class == "darwin" then entry.tsName else "${entry.hostname}.${entry.domain}";
               forwardAgent = true;
             }
           ) host-addrs
