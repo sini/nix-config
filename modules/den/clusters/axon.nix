@@ -13,11 +13,12 @@
     kubeVersion = "1.36.1";
     secretPath = ./. + "/../../../.secrets/clusters/axon";
 
-    # First-run bootstrap: keep Coder's password auth on so the email/password
-    # setup wizard works (OIDC isn't offered for the first user). Flip to false
-    # once the first admin exists to lock the login page to kanidm OIDC only.
-    # See modules/den/aspects/kubernetes/services/dev/coder/settings.nix.
-    settings.kubernetes.services.dev.coder.coder.bootstrap = true;
+    # Coder bootstrap complete: the first admin was created via the wizard and
+    # promoted to owner, so lock the login page to kanidm OIDC only
+    # (bootstrap=false → CODER_DISABLE_PASSWORD_AUTH=true; owners keep a password
+    # backdoor per Coder's anti-lockout). Set back to true to re-run first-user
+    # setup. See modules/den/aspects/kubernetes/services/dev/coder/settings.nix.
+    settings.kubernetes.services.dev.coder.coder.bootstrap = false;
 
     networks = {
       control-plane = {

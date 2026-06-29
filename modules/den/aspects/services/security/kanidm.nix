@@ -115,6 +115,11 @@ let
           "profile"
           "groups"
         ];
+        # The admin/user values feed Coder's OIDC role sync
+        # (CODER_OIDC_USER_ROLE_MAPPING), a Coder PREMIUM feature — inert on
+        # unlicensed OSS, where roles are assigned manually. The groups claim is
+        # still emitted (harmless); login is gated by the coder.access scope map
+        # above, which works on OSS.
         claimMaps.groups = {
           joinType = "array";
           valuesByGroup = {

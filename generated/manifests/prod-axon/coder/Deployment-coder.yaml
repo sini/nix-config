@@ -79,6 +79,8 @@ spec:
               value: "false"
             - name: CODER_PROVISIONER_DAEMONS
               value: "3"
+            - name: CODER_DISABLE_PASSWORD_AUTH
+              value: "true"
           image: ghcr.io/coder/coder:v2.34.4
           imagePullPolicy: IfNotPresent
           lifecycle: {}

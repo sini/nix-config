@@ -102,6 +102,13 @@
                   name = "CODER_OIDC_SCOPES";
                   value = "openid,profile,email,groups";
                 }
+                # OIDC role sync (groups claim → Coder roles) is a Coder PREMIUM
+                # feature (entitlement `user_role_management`). On unlicensed OSS it
+                # is INERT — OIDC users land as members and an owner promotes them
+                # manually. Kept for parity with the kanidm claim map and so admin
+                # assignment "just works" if this is ever licensed. Login/access is
+                # gated separately, kanidm-side, by the coder.access scope map
+                # (kanidm.nix) — that DOES work on OSS.
                 {
                   name = "CODER_OIDC_USER_ROLE_FIELD";
                   value = "groups";
