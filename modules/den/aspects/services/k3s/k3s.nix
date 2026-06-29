@@ -274,12 +274,22 @@ in
             };
             script =
               let
+                # Build each registry block with explicit indentation so it nests
+                # under `configs:`. A Nix indented string (''…'') strips the common
+                # leading whitespace, which would drop the `"<domain>":` key to
+                # column 0 — a sibling of `configs:` rather than a child — so
+                # containerd reads an empty `configs` and pulls fail with
+                # "no basic auth credentials". Regular strings preserve the indent.
                 configsBlock = concatStringsSep "\n" (
-                  map (reg: ''
-                    "${reg.domain}":
-                      auth:
-                        username: "${reg.username}"
-                        password: "$registry_password"'') registries
+                  map (
+                    reg:
+                    concatStringsSep "\n" [
+                      "  \"${reg.domain}\":"
+                      "    auth:"
+                      "      username: \"${reg.username}\""
+                      "      password: \"$registry_password\""
+                    ]
+                  ) registries
                 );
               in
               ''
