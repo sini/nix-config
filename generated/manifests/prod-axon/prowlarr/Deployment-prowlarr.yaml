@@ -43,7 +43,7 @@ spec:
               value: "9707"
             - name: URL
               value: http://localhost:9696
-          image: ghcr.io/onedr0p/exportarr@sha256:320b0ea7399f4b9af4741dcdddd7d40c05c36b0359679305d8a54df4e97065df
+          image: ghcr.io/onedr0p/exportarr@sha256:af535d94061cf97a52e1661945ffba78c03f9443eae7c0da1a80a5a4be56b520
           name: exportarr
           ports:
             - containerPort: 9707
@@ -56,7 +56,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          image: docker.io/grafana/alloy@sha256:41c41849989b7e054ccbadc17938ee1e5592fe26bfbc56ef3ffc109c0b0b2739
           name: logtail
           securityContext:
             runAsGroup: 65536

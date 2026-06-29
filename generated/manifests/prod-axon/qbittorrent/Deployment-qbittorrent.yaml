@@ -42,7 +42,7 @@ spec:
               value: "8080"
             - name: QBITTORRENT_USER
               value: ""
-          image: ghcr.io/esanchezm/prometheus-qbittorrent-exporter@sha256:b987d19693a5b2fe7314b22009c6302e084ec801fcf96afaf14065b4cdafc842
+          image: ghcr.io/esanchezm/prometheus-qbittorrent-exporter@sha256:3e80be9b2e6bad50af7c47abf521b2db3980b2735f4621ef15f3e1867e171f86
           name: exportarr
           ports:
             - containerPort: 9710
@@ -57,7 +57,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:1bc130e909116a4bf950eb5187a346007d3b796f96832b529acb14a64e41230f
+          image: docker.io/grafana/alloy@sha256:41c41849989b7e054ccbadc17938ee1e5592fe26bfbc56ef3ffc109c0b0b2739
           name: logtail
           securityContext:
             runAsGroup: 65536

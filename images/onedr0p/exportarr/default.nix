@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/onedr0p/exportarr";
-  imageTag = "v2.2.0";
-  imageDigest = "sha256:320b0ea7399f4b9af4741dcdddd7d40c05c36b0359679305d8a54df4e97065df";
-  imageHash = "sha256-aXCgjGqcfA+fmZLYRnIZkIrOqfFs2xpEuH1qXMVYomQ=";
+  imageTag = "latest";
+  imageDigest = "sha256:af535d94061cf97a52e1661945ffba78c03f9443eae7c0da1a80a5a4be56b520";
+  imageHash = "sha256-oZaP5lIFBW8Ff5BZN+aAiurBvFZ6rVKqQ80z+b6Aqz8=";
   arch = "amd64";
   os = "linux";
   pinned = false;
