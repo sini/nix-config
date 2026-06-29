@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: coder-pg-nightly
+  namespace: coder
+spec:
+  cluster:
+    name: coder-pg
+  method: volumeSnapshot
+  schedule: 0 0 4 * * *

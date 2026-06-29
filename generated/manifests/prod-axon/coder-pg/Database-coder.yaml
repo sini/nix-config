@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Database
+metadata:
+  name: coder
+  namespace: coder
+spec:
+  cluster:
+    name: coder-pg
+  name: coder
+  owner: coder

@@ -116,6 +116,10 @@
       services.media.dash
       services.media.romm
       services.media.komga
+
+      # dev — Coder workspace platform (SP1 control plane)
+      services.dev.coder.coder-pg
+      services.dev.coder.coder
     ];
   };
 }

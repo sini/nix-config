@@ -1,0 +1,41 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-coder-pg-internal
+  namespace: coder
+spec:
+  description: 'coder-pg ingress: coderd (5432), peer replication (5432/8000), CNPG operator (8000), prometheus (9187).'
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: coder-pg
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: coder
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: coder-pg
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+            - port: "8000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: cnpg-system
+      toPorts:
+        - ports:
+            - port: "8000"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+      toPorts:
+        - ports:
+            - port: "9187"
+              protocol: TCP

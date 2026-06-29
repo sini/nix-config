@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    app.kubernetes.io/instance: coder
+    app.kubernetes.io/name: coder
+    app.kubernetes.io/part-of: coder
+  name: coder
+  namespace: coder
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app.kubernetes.io/instance: coder
+    app.kubernetes.io/name: coder
+  sessionAffinity: None
+  type: ClusterIP

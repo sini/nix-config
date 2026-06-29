@@ -1,0 +1,24 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: coder-pg
+  namespace: coder
+spec:
+  affinity:
+    podAntiAffinityType: required
+  backup:
+    volumeSnapshot:
+      className: longhorn-backup-nfs
+  inheritedMetadata:
+    labels:
+      recurring-job-group.longhorn.io/db-local-snap: enabled
+  instances: 2
+  managed:
+    roles:
+      - login: true
+        name: coder
+        passwordSecret:
+          name: coder-pg-coder-password
+  storage:
+    size: 5Gi
+    storageClass: longhorn-single
