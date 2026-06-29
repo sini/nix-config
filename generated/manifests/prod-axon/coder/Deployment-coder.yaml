@@ -75,13 +75,12 @@ spec:
               value: groups
             - name: CODER_OIDC_USER_ROLE_MAPPING
               value: '{"admin":["owner"]}'
+            - name: CODER_DISABLE_PASSWORD_AUTH
+              value: "true"
+            - name: CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE
+              value: "false"
             - name: CODER_PROVISIONER_DAEMONS
-              value: "0"
-            - name: CODER_PROVISIONER_DAEMON_PSK
-              valueFrom:
-                secretKeyRef:
-                  key: psk
-                  name: coder-provisioner-psk
+              value: "3"
           image: ghcr.io/coder/coder:v2.34.4
           imagePullPolicy: IfNotPresent
           lifecycle: {}

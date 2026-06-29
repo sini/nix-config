@@ -5,9 +5,9 @@
 # the kanidm host declares). State lives in the coder-pg CNPG cluster
 # (coder-pg.nix); coderd consumes the composed DSN secret (coder-pg-dsn).
 #
-# Builds run on a SEPARATE coder-provisioner release (CODER_PROVISIONER_DAEMONS
-# = 0 on coderd) authenticated by a shared pre-shared key (PSK). The PSK and the
-# OIDC client secret are minted by agenix-rekey and surfaced as SopsSecrets.
+# Builds run on coderd's built-in provisioner daemons (external/separate
+# provisioner daemons are a Coder Enterprise feature). The OIDC client secret is
+# minted by agenix-rekey and surfaced as a SopsSecret.
 #
 # In-cluster egress (coder-pg, kube-dns) is covered by the clusterwide
 # allow-internal-egress policy (cilium.nix); this aspect only needs to add the
@@ -29,16 +29,6 @@
             sopsOutput = {
               file = "oidc";
               key = "coder";
-            };
-          };
-
-          # Shared PSK authenticating the external provisioner to coderd.
-          coder-provisioner-psk = {
-            rekeyFile = environment.secretPath + "/coder/provisioner-psk.age";
-            generator.script = "rfc3986-secret";
-            sopsOutput = {
-              file = "coder";
-              key = "provisioner-psk";
             };
           };
         };
@@ -115,37 +105,23 @@
                   name = "CODER_OIDC_USER_ROLE_MAPPING";
                   value = builtins.toJSON { admin = [ "owner" ]; };
                 }
-                # No built-in provisioners: builds run on the external
-                # coder-provisioner release below (PSK-authenticated).
+                # kanidm OIDC is the only login path. Disabling password auth also
+                # removes the first-run setup wizard — the first OIDC login (a
+                # coder.admins member → owner) bootstraps the deployment. Also
+                # disable Coder's built-in default GitHub login provider.
+                {
+                  name = "CODER_DISABLE_PASSWORD_AUTH";
+                  value = "true";
+                }
+                {
+                  name = "CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE";
+                  value = "false";
+                }
+                # Built-in provisioner daemons run inside the coderd process
+                # (external provisioners are a Coder Enterprise feature).
                 {
                   name = "CODER_PROVISIONER_DAEMONS";
-                  value = "0";
-                }
-                {
-                  name = "CODER_PROVISIONER_DAEMON_PSK";
-                  valueFrom.secretKeyRef = {
-                    name = "coder-provisioner-psk";
-                    key = "psk";
-                  };
-                }
-              ];
-            };
-          };
-
-          helm.releases.coder-provisioner = {
-            chart = charts.coder.coder-provisioner;
-
-            values = {
-              # pskSecretName is a TOP-LEVEL provisioner value (not under
-              # `coder`); the referenced Secret must carry a data key named
-              # literally `psk`, which the chart wires to
-              # CODER_PROVISIONER_DAEMON_PSK.
-              provisionerDaemon.pskSecretName = "coder-provisioner-psk";
-
-              coder.env = [
-                {
-                  name = "CODER_URL";
-                  value = "http://coder.coder.svc.cluster.local";
+                  value = "3";
                 }
               ];
             };
@@ -177,11 +153,6 @@
               coder-oidc-client-secret = {
                 type = "Opaque";
                 stringData.client-secret = config.age.secrets.coder-oidc-client-secret.sopsRef;
-              };
-
-              coder-provisioner-psk = {
-                type = "Opaque";
-                stringData.psk = config.age.secrets.coder-provisioner-psk.sopsRef;
               };
             };
 
