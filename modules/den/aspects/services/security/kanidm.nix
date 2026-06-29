@@ -369,16 +369,11 @@ let
   # entries mirror that contract exactly (hubble-ui originUrl convention). The
   # client secret shares its rekeyFile + generator with the k8s age-secret so a
   # single generated value backs both sides.
-  # offline_access makes kanidm issue a refresh token (RT lifetime ~16h) so the
-  # Envoy Gateway oauth2 filter (refreshToken=true) silently refreshes the short
-  # ~15m access token instead of bouncing users back to kanidm every few minutes.
-  # Each media SecurityPolicy requests it in oidc.scopes; granted here.
   mediaScopes = [
     "openid"
     "profile"
     "email"
     "groups"
-    "offline_access"
   ];
 
   # name -> { displayName; group; }. group selects the scope-map: admin-gated

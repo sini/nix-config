@@ -807,7 +807,6 @@
                   "email"
                   "openid"
                   "profile"
-                  "offline_access"
                 ];
                 # qBittorrent 5.x answers 404 to ANY request carrying an
                 # Authorization: Bearer header (verified live 2026-06-11), and nothing
