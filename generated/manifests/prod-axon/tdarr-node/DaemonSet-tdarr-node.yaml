@@ -37,7 +37,9 @@ spec:
             - name: inContainer
               value: "true"
             - name: nodeName
-              value: axon-tdarr
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
             - name: nodeType
               value: mapped
             - name: serverIP
