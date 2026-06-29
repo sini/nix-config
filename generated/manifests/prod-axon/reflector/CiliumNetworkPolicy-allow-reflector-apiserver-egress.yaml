@@ -1,0 +1,21 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: allow-reflector-apiserver-egress
+  namespace: reflector
+spec:
+  description: Reflector to kube-apiserver (watch/replicate Secrets+ConfigMaps; health check).
+  egress:
+    - toEntities:
+        - kube-apiserver
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+            - port: "6443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      k8s:io.kubernetes.pod.namespace: reflector
