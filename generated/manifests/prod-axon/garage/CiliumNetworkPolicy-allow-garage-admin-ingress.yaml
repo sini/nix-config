@@ -4,14 +4,14 @@ metadata:
   name: allow-garage-admin-ingress
   namespace: garage
 spec:
-  description: Admin API (3903) ingress from garage-ui only.
+  description: Admin API (3903) ingress from the garage namespace (operator + UI).
   endpointSelector:
     matchLabels:
       app.kubernetes.io/name: garage
   ingress:
     - fromEndpoints:
         - matchLabels:
-            app.kubernetes.io/name: garage-ui
+            k8s:io.kubernetes.pod.namespace: garage
       toPorts:
         - ports:
             - port: "3903"

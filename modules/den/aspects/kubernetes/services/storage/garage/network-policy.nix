@@ -68,13 +68,17 @@
             ];
           };
 
-          # Admin API (3903) ingress from garage-ui ONLY (same namespace).
+          # Admin API (3903) ingress from within the garage namespace: the
+          # operator polls each node's admin API (GetClusterStatus) to discover
+          # node IDs, connect peers and drive layout — without this it times out
+          # and the cluster never forms ("Layout not ready"). garage-ui also uses
+          # it. The admin API is admin-token-gated, so namespace-scoping is safe.
           allow-garage-admin-ingress.spec = {
-            description = "Admin API (3903) ingress from garage-ui only.";
+            description = "Admin API (3903) ingress from the garage namespace (operator + UI).";
             endpointSelector.matchLabels."app.kubernetes.io/name" = "garage";
             ingress = [
               {
-                fromEndpoints = [ { matchLabels."app.kubernetes.io/name" = "garage-ui"; } ];
+                fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "garage"; } ];
                 toPorts = [
                   {
                     ports = [
