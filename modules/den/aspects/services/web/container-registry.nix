@@ -44,6 +44,15 @@
             basicAuthFile = config.age.secrets.registry-htpasswd.path;
             extraConfig = ''
               client_max_body_size 0;
+              # Stream large image-layer uploads straight to the registry instead
+              # of buffering the request body to a temp file (nginx's default,
+              # capped at proxy_max_temp_file_size) — multi-hundred-MB layers
+              # otherwise 502. Raise the proxy timeouts so slow large pushes have
+              # room. (DNS for this host bypasses the Cloudflare proxy so CF's
+              # upload cap doesn't also clip pushes.)
+              proxy_request_buffering off;
+              proxy_read_timeout 900s;
+              proxy_send_timeout 900s;
             '';
           };
         };
