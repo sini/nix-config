@@ -271,6 +271,18 @@ let
         ];
       };
 
+      garage-ui = {
+        displayName = "Garage UI";
+        originUrl = [ "https://${domain "garage-ui"}/oauth2/callback" ];
+        originLanding = "https://${domain "garage-ui"}/";
+        basicSecretFile = secretPaths.garage-ui-oidc-client-secret;
+        scopeMaps."admins" = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
       oauth2-proxy = {
         displayName = "OAuth2-Proxy";
         originUrl = "https://${domain "oauth2-proxy"}/oauth2/callback";
