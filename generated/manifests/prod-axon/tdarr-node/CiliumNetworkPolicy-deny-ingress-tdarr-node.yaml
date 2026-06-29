@@ -1,0 +1,15 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: deny-ingress-tdarr-node
+  namespace: media
+spec:
+  description: Default-deny ingress for tdarr-node (host-only).
+  enableDefaultDeny:
+    ingress: true
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: tdarr-node
+  ingress:
+    - fromEntities:
+        - host
