@@ -44,12 +44,33 @@
         };
       };
 
-    # macOS only exports SSH_AUTH_SOCK from interactive shell init, so ssh finds
-    # no agent in a clean/non-terminal state. gpg-agent runs at login (launchd
-    # RunAtLoad) with the YubiKey on its ssh socket, so point ssh straight at it —
-    # `ssh <host>` then uses the YubiKey from any context. (NixOS exports
+    # macOS only exports SSH_AUTH_SOCK from interactive shell init, so the agent
+    # is invisible in a clean/non-terminal state. gpg-agent runs at login
+    # (launchd RunAtLoad) with the YubiKey on its ssh socket, so address it two
+    # ways below so the YubiKey works from any context. NixOS exports
     # SSH_AUTH_SOCK globally via systemd, and IdentityAgent there would shadow a
-    # forwarded agent, so this is darwin-only.)
-    homeDarwin.programs.ssh.settings."*".identityAgent = "~/.gnupg/S.gpg-agent.ssh";
+    # forwarded agent, so this is darwin-only.
+    homeDarwin =
+      { pkgs, ... }:
+      {
+        # `ssh` itself: point straight at gpg-agent's ssh socket.
+        programs.ssh.settings."*".identityAgent = "~/.gnupg/S.gpg-agent.ssh";
+
+        # Everything else (ssh-add, GUI apps, scripts): export SSH_AUTH_SOCK into
+        # the GUI launchd session at login so it's not limited to interactive
+        # shells. gpgconf resolves the socket path regardless of whether the agent
+        # has started yet.
+        launchd.agents.ssh-auth-sock = {
+          enable = true;
+          config = {
+            ProgramArguments = [
+              "/bin/sh"
+              "-c"
+              ''/bin/launchctl setenv SSH_AUTH_SOCK "$(${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket)"''
+            ];
+            RunAtLoad = true;
+          };
+        };
+      };
   };
 }
