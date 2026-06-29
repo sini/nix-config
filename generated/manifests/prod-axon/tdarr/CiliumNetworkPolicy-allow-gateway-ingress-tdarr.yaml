@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-tdarr
+  namespace: media
+spec:
+  description: Allow Envoy Gateway proxies to reach tdarr's webUI.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: tdarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "8265"
+              protocol: TCP
