@@ -1,0 +1,19 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyPatchPolicy
+metadata:
+  name: oauth2-disable-empty-base
+  namespace: gateways
+spec:
+  jsonPatches:
+    - name: gateways/default-gateway/json64-com-https
+      operation:
+        jsonPath: .filter_chains[*].filters[*].typed_config.http_filters[?(@.name=="envoy.filters.http.oauth2")]
+        op: add
+        path: /disabled
+        value: true
+      type: type.googleapis.com/envoy.config.listener.v3.Listener
+  targetRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: default-gateway
+  type: JSONPatch

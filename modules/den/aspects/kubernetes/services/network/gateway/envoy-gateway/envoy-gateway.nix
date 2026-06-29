@@ -248,6 +248,40 @@
               timeout.http.streamIdleTimeout = "660s";
             };
 
+            # Envoy Gateway 1.8 installs the OIDC SecurityPolicy oauth2 filter on the
+            # merged HTTPS listener's HCM as ENABLED-but-empty, supplying the real config
+            # per-OIDC-route via OAuth2PerRoute. Requests to OPEN routes that share an
+            # OIDC listener (coder/grafana/romm on *.json64.dev, argocd on *.zeroday.run)
+            # fall through to that empty base filter and segfault Envoy (null-deref),
+            # taking down the whole proxy and every OIDC app with it. Disable the base
+            # filter so open routes skip it; the per-route OAuth2PerRoute config re-enables
+            # it for the OIDC routes (Envoy's disabled-filter + per-route-enable pattern).
+            envoyPatchPolicies.oauth2-disable-empty-base.spec = {
+              targetRef = {
+                group = "gateway.networking.k8s.io";
+                kind = "Gateway";
+                name = "default-gateway";
+              };
+              type = "JSONPatch";
+              jsonPatches = [
+                {
+                  type = "type.googleapis.com/envoy.config.listener.v3.Listener";
+                  # EG merges every HTTPS listener section into one Envoy listener named
+                  # after the first cert-domain section (attrNames is sorted, so the
+                  # alphabetically-first domain). Derived, not hardcoded.
+                  name = "gateways/default-gateway/${cluster.resourceForDomain (builtins.head (builtins.attrNames domains))}-https";
+                  operation = {
+                    op = "add";
+                    # Match the oauth2 filter by name in any filter chain (index-agnostic),
+                    # then append /disabled = true.
+                    jsonPath = ''.filter_chains[*].filters[*].typed_config.http_filters[?(@.name=="envoy.filters.http.oauth2")]'';
+                    path = "/disabled";
+                    value = true;
+                  };
+                }
+              ];
+            };
+
             envoyProxies.default-gateway-proxy-config.spec = {
               provider = {
                 type = "Kubernetes";
