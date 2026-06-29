@@ -296,11 +296,13 @@
                 ];
                 to =
                   domains
-                  |> mapAttrsToList (domain: args: {
-                    group = "";
-                    kind = "Secret";
-                    name = "${resourceNameFor domain args}-wildcard-tls";
-                  });
+                  |> mapAttrsToList (
+                    domain: args: {
+                      group = "";
+                      kind = "Secret";
+                      name = "${resourceNameFor domain args}-wildcard-tls";
+                    }
+                  );
               };
             };
 

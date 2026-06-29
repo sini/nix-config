@@ -14,13 +14,31 @@
             ingress = [
               {
                 fromEndpoints = [ { matchLabels."app.kubernetes.io/name" = "garage"; } ];
-                toPorts = [ { ports = [ { port = "3901"; protocol = "TCP"; } ]; } ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = "3901";
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
               }
             ];
             egress = [
               {
                 toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "garage"; } ];
-                toPorts = [ { ports = [ { port = "3901"; protocol = "TCP"; } ]; } ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = "3901";
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
               }
             ];
           };
@@ -36,7 +54,16 @@
                   { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
                   { matchLabels."k8s:io.kubernetes.pod.namespace" = "burrito"; }
                 ];
-                toPorts = [ { ports = [ { port = "3900"; protocol = "TCP"; } ]; } ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = "3900";
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
               }
             ];
           };
@@ -48,7 +75,16 @@
             ingress = [
               {
                 fromEndpoints = [ { matchLabels."app.kubernetes.io/name" = "garage-ui"; } ];
-                toPorts = [ { ports = [ { port = "3903"; protocol = "TCP"; } ]; } ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = "3903";
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
               }
             ];
           };
