@@ -46,6 +46,7 @@
         podNetwork = cluster.networks.kubernetes-pods;
         loadbalancerNetwork = cluster.networks.kubernetes-loadbalancers;
         loadbalancer-cidr = loadbalancerNetwork.cidr;
+        inherit (cluster.settings.kubernetes.services.network.cilium) devices;
       in
       {
         applications.cilium = {
@@ -88,6 +89,13 @@
               routingMode = "tunnel";
               tunnelProtocol = "geneve";
               MTU = 1500;
+
+              # Pin the datapath device set (default auto-detect otherwise wrongly
+              # grabs tailscale0 into the masquerade + device-watch set, where its
+              # peer/DERP churn perturbs pod egress). `enp+` on axon = enp2s0 (WAN
+              # egress/ingress) + enp199s0f5/f6 (thunderbolt fabric, inter-node
+              # geneve); excludes tailscale0. See cluster.settings…cilium.devices.
+              inherit devices;
 
               # Stable loopback routed by BGP fabric
               k8sServiceHost = "localhost";

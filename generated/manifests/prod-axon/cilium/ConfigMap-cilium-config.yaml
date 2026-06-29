@@ -42,7 +42,7 @@ data:
   datapath-plugins-state-dir: /var/run/cilium/plugins
   debug: "false"
   default-lb-service-ipam: lbipam
-  devices: ""
+  devices: enp+
   direct-routing-skip-unreachable: "false"
   disable-external-ip-mitigation: "true"
   dnsproxy-enable-transparent-mode: "true"

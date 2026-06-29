@@ -20,6 +20,15 @@
     # setup. See modules/den/aspects/kubernetes/services/dev/coder/settings.nix.
     settings.kubernetes.services.dev.coder.coder.bootstrap = false;
 
+    # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
+    # ingress/egress + masquerade) and the thunderbolt-fabric NICs
+    # enp199s0f5/f6 (inter-node geneve, routed by OpenFabric). The `enp+`
+    # wildcard excludes tailscale0, which Cilium's auto-detection otherwise
+    # pulls into its masquerade/device-watch set — the admin tailnet does not
+    # carry cluster data-plane traffic. See
+    # modules/den/aspects/kubernetes/services/network/cilium/settings.nix.
+    settings.kubernetes.services.network.cilium.devices = "enp+";
+
     networks = {
       control-plane = {
         cidr = "10.10.10.0/24";
