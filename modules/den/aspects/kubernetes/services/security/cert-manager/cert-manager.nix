@@ -63,6 +63,15 @@ in
       }:
       let
         inherit (environment.certificates) domains issuers;
+
+        # Resolve a domain's k8s resource-name stem: an explicit per-domain
+        # resourceName (for nested wildcards that would otherwise collide on
+        # their last-two-labels) takes precedence over the default derivation.
+        # Note the explicit `if … != null`: resourceName defaults to null and
+        # the attr always exists, so `or` would never fall back.
+        resourceNameFor =
+          domain: args:
+          if args.resourceName != null then args.resourceName else cluster.resourceForDomain domain;
       in
       {
         applications.cert-manager = {
@@ -134,14 +143,14 @@ in
               domains
               |> mapAttrs' (
                 domain: args: {
-                  name = (cluster.resourceForDomain domain) + "-wildcard-certificate";
+                  name = (resourceNameFor domain args) + "-wildcard-certificate";
                   value = {
                     metadata = {
                       namespace = "certs";
                       annotations."cert-manager.io/issue-temporary-certificate" = "true";
                     };
                     spec = {
-                      secretName = "${cluster.resourceForDomain domain}-wildcard-tls";
+                      secretName = "${resourceNameFor domain args}-wildcard-tls";
                       issuerRef = {
                         name = "${args.issuer}-issuer";
                         kind = "ClusterIssuer";
