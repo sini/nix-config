@@ -297,6 +297,37 @@
                   }
                 ];
               };
+
+              # World egress (80/443): the server fetches its plugin repo
+              # (github) on boot to populate the plugins folder. Without it the
+              # "Updating plugins" step times out (AxiosError 15000ms), leaving
+              # the plugins incomplete — e.g. hardwareUtils.test.js missing, which
+              # fails the FFmpeg-encoder enumeration on both server and nodes (the
+              # nodes inherit the plugin set from the server, so only the server
+              # needs egress).
+              allow-internet-egress-tdarr.spec = {
+                description = "Allow tdarr's server to fetch its plugin repo from the public internet.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "tdarr";
+                egress = [
+                  {
+                    toEntities = [ "world" ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "80";
+                            protocol = "TCP";
+                          }
+                          {
+                            port = "443";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
             };
 
             httpRoutes.tdarr.spec = {
