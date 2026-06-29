@@ -144,6 +144,28 @@ in
         cat "$tmpdir/private.pem"
       '';
 
+    # Docker/podman auth.json content derived from a registry-password
+    # dependency: encodes `username:password` as the base64 `auth` token keyed
+    # by the registry domain. Mirrors `htpasswd` (single password dep, username
+    # from settings); emitted via jq so the JSON stays well-formed regardless of
+    # the password's contents.
+    container-auth =
+      {
+        decrypt,
+        deps,
+        pkgs,
+        secret,
+        ...
+      }:
+      let
+        dep = builtins.head deps;
+        inherit (secret.settings) username registry;
+      in
+      ''
+        auth=$(printf '%s:%s' ${lib.escapeShellArg username} "$(${decrypt} ${lib.escapeShellArg dep.file})" | ${pkgs.coreutils}/bin/base64 -w0)
+        ${pkgs.jq}/bin/jq -cn --arg reg ${lib.escapeShellArg registry} --arg auth "$auth" '{auths: {($reg): {auth: $auth}}}'
+      '';
+
     environment-file =
       {
         decrypt,

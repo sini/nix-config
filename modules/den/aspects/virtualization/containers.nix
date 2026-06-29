@@ -1,4 +1,9 @@
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  rootPath,
+  ...
+}:
 {
   # Engine-agnostic containers/image configuration surface: the files under
   # ~/.config/containers/ that podman, buildah and skopeo all read. Included by
@@ -60,11 +65,56 @@
       };
     };
 
+    # (3) SECRETS — push credentials for the private registry, declared via the
+    # age-secrets quirk (collected into HOST agenix by core.secrets.collector,
+    # never home-manager agenix). The cleartext password is decrypted from the
+    # same prod-env rekeyFile the registry host and k3s nodes share; the
+    # auth.json is generated from it via the container-auth generator.
+    age-secrets =
+      {
+        environment,
+        config,
+        host,
+        ...
+      }:
+      {
+        age.secrets = {
+          # Recipient of the shared registry password — identical rekeyFile +
+          # generator to the registry host's `registry-password`, so agenix-rekey
+          # yields the same cleartext here. Pinned to the prod env path (where
+          # the registry lives) rather than this host's dev env secretPath.
+          registry-password = {
+            rekeyFile = rootPath + "/.secrets/env/prod/registry/registry-password.age";
+            generator.script = "rfc3986-secret";
+          };
+
+          # Generated ~/.config/containers/auth.json content, derived from the
+          # password above. Owned by the system user so rootless podman/skopeo/
+          # buildah can read the decrypted file through the home symlink.
+          registry-auth = {
+            rekeyFile = host.secretPath + "/registry-auth.age";
+            generator.dependencies = [ config.age.secrets.registry-password ];
+            generator.script = "container-auth";
+            settings = {
+              username = "builder";
+              registry = environment.getDomainFor "registry";
+            };
+            owner = host.system-owner;
+          };
+        };
+      };
+
     # (4) CONSUME — render each configured file into the user scope. Rootless
     # podman/buildah/skopeo read ~/.config/containers/* in preference to /etc,
     # so this is sufficient to fix rootless tooling without touching /etc.
     homeManager =
-      { host, pkgs, ... }:
+      {
+        host,
+        pkgs,
+        config,
+        osConfig,
+        ...
+      }:
       let
         cfg = host.settings.virtualization.containers;
         toml = (pkgs.formats.toml { }).generate;
@@ -96,6 +146,13 @@
 
         xdg.configFile = lib.mkMerge [
           { "containers/registries.conf".source = registriesV2; }
+          # Generated push credentials: an out-of-store symlink to the HOST
+          # agenix secret's decrypted runtime path (the auth.json IS the secret;
+          # no activation script writes it).
+          {
+            "containers/auth.json".source =
+              config.lib.file.mkOutOfStoreSymlink osConfig.age.secrets.registry-auth.path;
+          }
           (lib.mkIf (cfg.containersConf != { }) {
             "containers/containers.conf".source = toml "containers.conf" cfg.containersConf;
           })
