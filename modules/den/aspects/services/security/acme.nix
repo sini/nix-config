@@ -43,7 +43,10 @@
         issuers = environment.certificates.issuers or { };
       in
       {
-        age.secrets = lib.mkMerge (
+        # Plain disjoint merge (one secret per issuer), not mkMerge: the secrets
+        # collector deduplicates broadcast emissions by name with a shallow
+        # merge, so emitters must return a plain attrset.
+        age.secrets = lib.mergeAttrsList (
           lib.mapAttrsToList (
             issuerName: issuer:
             lib.optionalAttrs (issuer.ageKeyFile or null != null) {
