@@ -64,7 +64,9 @@
                 garage = {
                   endpoint = "http://garage.garage.svc:3900";
                   region = "garage";
-                  admin_endpoint = "http://garage-admin.garage.svc:3903";
+                  # The operator's own `garage` Service exposes admin on :3903
+                  # (no separate garage-admin Service — that collided with the operator).
+                  admin_endpoint = "http://garage.garage.svc:3903";
                   # Admin bearer token from the agenix->sops garage-admin-token
                   # Secret (T3); chart injects it as GARAGE_UI_GARAGE_ADMIN_TOKEN.
                   existingSecret = {

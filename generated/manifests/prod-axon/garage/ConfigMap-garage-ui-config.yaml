@@ -52,7 +52,7 @@ data:
       enabled: true
       max_age: 3600
     garage:
-      admin_endpoint: http://garage-admin.garage.svc:3903
+      admin_endpoint: http://garage.garage.svc:3903
       endpoint: http://garage.garage.svc:3900
       existingSecret:
         key: admin-token

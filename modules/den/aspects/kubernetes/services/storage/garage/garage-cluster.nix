@@ -72,36 +72,13 @@
             };
           };
 
-          # Stable ClusterIP Services that consumers / routes / the UI reference by
-          # name (http://garage.garage.svc:3900, garage-admin.garage.svc:3903).
-          services.garage.spec = {
-            type = "ClusterIP";
-            selector = {
-              "app.kubernetes.io/name" = "garage";
-              "app.kubernetes.io/instance" = "garage";
-            };
-            ports = [
-              {
-                name = "s3";
-                port = 3900;
-                targetPort = 3900;
-              }
-            ];
-          };
-          services.garage-admin.spec = {
-            type = "ClusterIP";
-            selector = {
-              "app.kubernetes.io/name" = "garage";
-              "app.kubernetes.io/instance" = "garage";
-            };
-            ports = [
-              {
-                name = "admin";
-                port = 3903;
-                targetPort = 3903;
-              }
-            ];
-          };
+          # NB: the operator creates and OWNS the cluster Services from the
+          # GarageCluster spec above — `garage` (s3 :3900 / admin :3903 / web :3902)
+          # and `garage-headless` (rpc :3901). Do NOT hand-declare them here: a
+          # duplicate `garage` Service collides with the operator's (two managers
+          # fighting the same object) and leaves the ArgoCD app permanently
+          # OutOfSync. Consumers reference the operator's `garage` Service by name
+          # (routes -> garage:3900, garage-ui -> garage:3903).
         };
       };
   };

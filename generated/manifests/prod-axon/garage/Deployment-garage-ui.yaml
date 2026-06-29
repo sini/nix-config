@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: fc86ae3ba820061482a7c966951a62ea15cf38f8e7114f2b6355fecc45b20577
+        checksum/config: 71ce82d4bd4788a6c9d90681886d710e67789fcdb9c100f6ed4f493fdab1a69f
       labels:
         app.kubernetes.io/instance: garage-ui
         app.kubernetes.io/name: garage-ui
