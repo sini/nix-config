@@ -48,7 +48,7 @@ spec:
               value: "0"
             - name: transcodegpuWorkers
               value: "1"
-          image: registry.json64.dev/tdarr-node@sha256:9283db46056f42f7efca590cf91d9dc89fad1f73310c2fda37107822236f38b6
+          image: registry.json64.dev/tdarr-node@sha256:7f28f6da015feb112aabc5810135b22396a98bb0436739d2ecc5af951b4e6c77
           name: main
           resources:
             limits:

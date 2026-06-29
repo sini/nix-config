@@ -1,7 +1,7 @@
 {
   imageName = "registry.json64.dev/tdarr-node";
   imageTag = "av1";
-  imageDigest = "sha256:9283db46056f42f7efca590cf91d9dc89fad1f73310c2fda37107822236f38b6";
+  imageDigest = "sha256:7f28f6da015feb112aabc5810135b22396a98bb0436739d2ecc5af951b4e6c77";
   # Unused for this image: imageRefs (what the aspect consumes) reads only
   # imageName+imageDigest; the k3s node pulls it at runtime via registries.yaml.
   # Only `images`/`imagesDerivations` (dockerTools.pullImage) read imageHash, and
