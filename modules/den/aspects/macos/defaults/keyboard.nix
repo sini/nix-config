@@ -1,10 +1,12 @@
 # Keyboard behaviour: caps->ctrl remap, fast key repeat, function keys, and
 # disabling the "smart" substitutions that mangle text in code/terminals.
+{ lib, ... }:
 {
   den.aspects.macos.defaults.keyboard.darwin = {
     system.keyboard = {
       enableKeyMapping = true;
-      remapCapsLockToControl = true;
+      # mkDefault so an aspect that takes over caps lock (karabiner) can override.
+      remapCapsLockToControl = lib.mkDefault true;
     };
 
     system.defaults.NSGlobalDomain = {

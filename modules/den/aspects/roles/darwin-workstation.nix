@@ -13,6 +13,7 @@
       macos.fonts
       macos.homebrew
       macos.spotlight-apps
+      macos.apps.karabiner
 
       # macOS defaults
       macos.defaults.keyboard
@@ -31,6 +32,7 @@
 
       # GUI apps (native nixpkgs where it builds on darwin, homebrew cask where
       # it doesn't — see each aspect's homebrew-cask contribution).
+      macos.apps.raycast
       apps.browsers.firefox
       apps.browsers.chromium
       apps.terminals.kitty
