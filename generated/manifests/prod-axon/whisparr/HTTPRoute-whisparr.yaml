@@ -15,4 +15,4 @@ spec:
         - name: whisparr
           port: 6969
       timeouts:
-        request: 300s
+        request: 600s

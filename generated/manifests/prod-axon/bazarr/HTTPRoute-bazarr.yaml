@@ -15,4 +15,4 @@ spec:
         - name: bazarr
           port: 6767
       timeouts:
-        request: 300s
+        request: 600s

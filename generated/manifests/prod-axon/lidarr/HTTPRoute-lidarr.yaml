@@ -15,4 +15,4 @@ spec:
         - name: lidarr
           port: 8686
       timeouts:
-        request: 300s
+        request: 600s

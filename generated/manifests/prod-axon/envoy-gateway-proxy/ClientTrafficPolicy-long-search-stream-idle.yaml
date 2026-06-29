@@ -1,0 +1,13 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: ClientTrafficPolicy
+metadata:
+  name: long-search-stream-idle
+  namespace: gateways
+spec:
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: default-gateway
+  timeout:
+    http:
+      streamIdleTimeout: 660s

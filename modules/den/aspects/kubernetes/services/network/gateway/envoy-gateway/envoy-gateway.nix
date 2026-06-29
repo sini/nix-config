@@ -222,6 +222,24 @@
                 |> flatten;
             };
 
+            # The arr HTTPRoutes raise timeouts.request to 600s for slow anime
+            # interactive searches (Sonarr processes hundreds of releases). Envoy's
+            # per-stream idle timeout (5m default) is the next ceiling and would cut
+            # the held-open /api/v3/release response before the route timeout. Lift
+            # it gateway-wide just above the route timeout so the route timeout is
+            # the binding limit. This is a ceiling only: routes that don't raise
+            # their own request timeout still hit Envoy's 15s route default.
+            clientTrafficPolicies.long-search-stream-idle.spec = {
+              targetRefs = [
+                {
+                  group = "gateway.networking.k8s.io";
+                  kind = "Gateway";
+                  name = "default-gateway";
+                }
+              ];
+              timeout.http.streamIdleTimeout = "660s";
+            };
+
             envoyProxies.default-gateway-proxy-config.spec = {
               provider = {
                 type = "Kubernetes";

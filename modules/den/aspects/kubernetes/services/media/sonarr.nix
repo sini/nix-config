@@ -463,10 +463,11 @@
                   ];
                   # Interactive search (anime fans out to many title-variants ×
                   # indexers, then Sonarr processes hundreds of releases) can run
-                  # minutes; lift well above Envoy's 15s route default. 300s is the
-                  # stream-idle ceiling — the clean max without also raising
-                  # stream_idle_timeout.
-                  timeouts.request = "300s";
+                  # several minutes; 600s route timeout. The default-gateway
+                  # ClientTrafficPolicy raises stream_idle_timeout to match — Envoy's
+                  # 5m stream-idle default would otherwise cut the held-open response
+                  # first (see envoy-gateway.nix).
+                  timeouts.request = "600s";
                 }
               ];
             };
