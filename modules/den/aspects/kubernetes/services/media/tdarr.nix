@@ -410,7 +410,11 @@
                     inContainer = "true";
                     serverIP = "tdarr.media.svc.cluster.local";
                     serverPort = "8266";
-                    nodeName = "axon-tdarr";
+                    # Per-host node name so the server tracks each DaemonSet pod as
+                    # its own GPU worker. A static value makes all three register
+                    # under one name (server warns "nodeName ... used by multiple
+                    # Nodes") and muddles per-node worker assignment + stats.
+                    nodeName.valueFrom.fieldRef.fieldPath = "spec.nodeName";
                     nodeType = "mapped";
                     transcodegpuWorkers = "1";
                     transcodecpuWorkers = "0";
