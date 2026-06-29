@@ -457,6 +457,9 @@
                       port = 8686;
                     }
                   ];
+                  # Interactive search runs 20-60s; lift above Envoy's 15s route
+                  # default so the gateway doesn't 504 the held-open search request.
+                  timeouts.request = "120s";
                 }
               ];
             };
