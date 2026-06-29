@@ -5,7 +5,7 @@ metadata:
     app: kube-prometheus-stack
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-86.3.2
+    chart: kube-prometheus-stack-87.2.1
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-alertmanager.rules
@@ -136,3 +136,15 @@ spec:
           for: 5m
           labels:
             severity: critical
+        - alert: AlertmanagerClusterFailedPeers
+          annotations:
+            description: Alertmanager {{ $labels.namespace }}/{{ $labels.pod}} has {{ $value }} failed peers in the {{$labels.job}} cluster.
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/alertmanager/alertmanagerclusterfailedpeers
+            summary: An Alertmanager instance has failed peers in the cluster.
+          expr: |-
+            # Without max_over_time, failed scrapes could create false negatives, see
+            # https://www.robustperception.io/alerting-on-gauges-in-prometheus-2-0 for details.
+            max_over_time(alertmanager_cluster_failed_peers{job="kube-prometheus-stack-alertmanager",container="alertmanager",namespace="monitoring"}[5m]) > 0
+          for: 15m
+          labels:
+            severity: warning
