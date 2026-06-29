@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-garage-s3-ingress
+  namespace: garage
+spec:
+  description: S3 API (3900) ingress from gateways + consumer namespaces.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: garage
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: burrito
+      toPorts:
+        - ports:
+            - port: "3900"
+              protocol: TCP

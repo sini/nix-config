@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: garage-ui
+    app.kubernetes.io/name: garage-ui
+  name: garage-ui
+  namespace: garage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: garage-ui
+      app.kubernetes.io/name: garage-ui
+  template:
+    metadata:
+      annotations:
+        checksum/config: fc86ae3ba820061482a7c966951a62ea15cf38f8e7114f2b6355fecc45b20577
+      labels:
+        app.kubernetes.io/instance: garage-ui
+        app.kubernetes.io/name: garage-ui
+    spec:
+      containers:
+        - env:
+            - name: GARAGE_UI_GARAGE_ADMIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  key: admin-token
+                  name: garage-admin-token
+            - name: GARAGE_UI_AUTH_JWT_PRIVATE_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: jwt-key.pem
+                  name: garage-ui-jwt-key
+          image: noooste/garage-ui:v0.8.4
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+          name: garage-ui
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: false
+          volumeMounts:
+            - mountPath: /app/config.yaml
+              name: config
+              readOnly: true
+              subPath: config.yaml
+      securityContext:
+        fsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      volumes:
+        - configMap:
+            name: garage-ui-config
+          name: config

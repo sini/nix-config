@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: garage-operator
+  namespace: argocd
+spec:
+  destination:
+    namespace: garage
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    path: ./generated/manifests/prod-axon/garage-operator
+    repoURL: https://github.com/sini/nix-config.git
+    targetRevision: main
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

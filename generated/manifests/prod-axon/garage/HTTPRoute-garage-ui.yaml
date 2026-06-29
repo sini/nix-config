@@ -1,0 +1,16 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: garage-ui
+  namespace: garage
+spec:
+  hostnames:
+    - garage.json64.dev
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: json64-dev-https
+  rules:
+    - backendRefs:
+        - name: garage-ui
+          port: 80

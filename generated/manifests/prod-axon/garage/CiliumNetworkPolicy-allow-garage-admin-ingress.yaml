@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-garage-admin-ingress
+  namespace: garage
+spec:
+  description: Admin API (3903) ingress from garage-ui only.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: garage
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: garage-ui
+      toPorts:
+        - ports:
+            - port: "3903"
+              protocol: TCP

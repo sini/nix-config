@@ -136,6 +136,16 @@
       # dev — Coder workspace platform (SP1 control plane)
       services.dev.coder.coder-pg
       services.dev.coder.coder
+
+      # storage — Garage S3 (operator-managed, 3-node; public S3 + OIDC UI)
+      services.security.reflector
+      services.storage.garage.secrets
+      services.storage.garage.garage-operator
+      services.storage.garage.garage-cluster
+      services.storage.garage.buckets
+      services.storage.garage.network-policy
+      services.storage.garage.routes
+      services.storage.garage.garage-ui
     ];
   };
 }

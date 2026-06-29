@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: reflector
+    app.kubernetes.io/name: reflector
+  name: reflector
+  namespace: reflector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: reflector
+      app.kubernetes.io/name: reflector
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: reflector
+        app.kubernetes.io/name: reflector
+    spec:
+      containers:
+        - env:
+            - name: ES_Serilog__MinimumLevel__Default
+              value: Information
+            - name: ES_Reflector__Watcher__Timeout
+              value: ""
+            - name: ES_Reflector__Watcher__ExcludedNamespaces
+              value: ""
+            - name: ES_Ignite__KubernetesClient__SkipTlsVerify
+              value: "false"
+          image: docker.io/emberstack/kubernetes-reflector:10.0.54
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /health/live
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 10
+          name: reflector
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 10
+          resources: {}
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          startupProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /health/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 10
+          volumeMounts: []
+      securityContext:
+        fsGroup: 2000
+      serviceAccountName: reflector
