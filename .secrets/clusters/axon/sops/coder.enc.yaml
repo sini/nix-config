@@ -1,0 +1,17 @@
+provisioner-psk: ENC[AES256_GCM,data:bU2hj41dSvz+ZqHcxSv53lCbBidEkDZS5s7YiSh9UCNfUX3tjGrp2eVOQGUKAV+L/3NVFucKB9L5Q5sQvLtSU78Gi5k3QPSz,iv:Jtf4zgAAshA+5pT5Iqi3u/OhT9CRHWhU8oLsFTbEOVk=,tag:/AqRtIiE1I96DRqK7Psn/g==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IElYZUZuUSBBaXJVRkFx
+            cSt4MGxOM1gxOXVxVjl1Q1F1RlQwajBiVGRmVXZRaVlFcWlWNwppWUtnU0VUSXhZ
+            VlJhRk1pbUtMMnlwUXVnZ3BHc1M5TjNWS0k3R09DbFFzCi0tLSA3VExCaVRSaHdC
+            TWVUY1J1SEFxVFdJRlVHVVNwV2daelEvQktyOFJmSDk0CsVS25TYKj/8LJrm/RPT
+            zz0XTljYdSDKHWfcMcIcThW7LbVQqQig/peM+zkBbIWcdaAGUB/JlPROM6C6vFDa
+            pw8=
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0
+    lastmodified: "2026-06-29T01:10:17Z"
+    mac: ENC[AES256_GCM,data:qqEu8imF+8Y1zCAbogLlpm9VmhnhDITg730BVSWKD1gSX8nF2LCfsI2PqoSmJehFfauaVhw3yTf1RHFV8mmRdNVYobbl/vVimVqIuOLPR3AUv2RU1On3m4iEaGO9BudMQRNeT91pamV6oQwamvbT4g89uu+y2mzqTzGX47cH3hM=,iv:xcZnWLe0x2sU6pfg2NujZ9V53X6/sVQP4IxKV0Mq2Gw=,tag:F/nwBbZOmm4UtLbOXOGR9w==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.1
