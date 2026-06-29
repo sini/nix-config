@@ -333,6 +333,24 @@
             fixDatasource = true;
             excludeColonInstances = true;
           };
+          # Tdarr via the homeylab/tdarr-exporter v3 sidecar — the exporter's
+          # own v3 dashboard (examples/dashboard.json pinned at the v3.0.0 tag;
+          # archive/ holds the retired v1/v2 ones). Keyed on the v3 tdarr_*
+          # schema: tdarr_size_diff_bytes (space saved), files/transcode counts,
+          # per-library tdarr_library_transcodes_completed_total joined to
+          # tdarr_library_info for the name, node/worker status
+          # (tdarr_node_worker_status), and tdarr_server_uptime_seconds. No
+          # excludeColonInstances: this dashboard's instance variable is
+          # `tdarr_instance` (the exporter-set server hostname — here `localhost`,
+          # never a colon-form pod-IP), not the prometheus `instance` label our
+          # PodMonitor relabels, so the pod-IP churn that option fixes can't arise.
+          media-tdarr = {
+            title = "Tdarr";
+            folder = "Media";
+            url = "https://raw.githubusercontent.com/homeylab/tdarr-exporter/28de93aaea020744ce246f4eb33ef9e830a52419/examples/dashboard.json";
+            sha256 = "03h41n18csh0jjvxlxqbk9ssf8gaxk4k210wq6nla32zzrlc2n5w";
+            fixDatasource = true;
+          };
         };
       in
       {
