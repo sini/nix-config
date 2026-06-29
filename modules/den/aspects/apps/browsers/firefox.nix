@@ -205,13 +205,18 @@ in
           };
         };
 
-        xdg.mimeApps.defaultApplications = {
-          "text/html" = [ "firefox.desktop" ];
-          "text/xml" = [ "firefox.desktop" ];
-          "x-scheme-handler/http" = [ "firefox.desktop" ];
-          "x-scheme-handler/https" = [ "firefox.desktop" ];
-        };
       };
+
+    # Desktop-file MIME associations are Linux-only; on darwin firefox is set as
+    # the default browser through System Settings.
+    homeLinux = {
+      xdg.mimeApps.defaultApplications = {
+        "text/html" = [ "firefox.desktop" ];
+        "text/xml" = [ "firefox.desktop" ];
+        "x-scheme-handler/http" = [ "firefox.desktop" ];
+        "x-scheme-handler/https" = [ "firefox.desktop" ];
+      };
+    };
 
     stylix-hm = {
       targets.firefox.profileNames = [ "default" ];

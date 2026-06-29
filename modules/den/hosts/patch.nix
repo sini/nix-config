@@ -14,6 +14,15 @@
     includes = with den.aspects; [
       roles.default
       roles.dev
+      roles.darwin-workstation
+
+      # Build Linux closures locally for the fleet. linux-builder (aarch64-linux,
+      # cached image) bootstraps the toolchain; rosetta-builder (x86_64-linux +
+      # aarch64-linux) can't be built until a Linux builder is already running,
+      # so it's enabled in a second switch once this one is live:
+      #   1. switch with linux-builder (below) -> aarch64-linux builder comes up
+      #   2. swap to core.nix.rosetta-builder -> its image builds on that builder
+      core.nix.linux-builder
     ];
 
     darwin = {
@@ -22,51 +31,8 @@
 
       security.pam.services.sudo_local.touchIdAuth = true;
 
-      system = {
-        primaryUser = "sini";
-
-        defaults = {
-          NSGlobalDomain = {
-            ApplePressAndHoldEnabled = false;
-            AppleShowAllExtensions = true;
-            NSAutomaticCapitalizationEnabled = false;
-            NSAutomaticPeriodSubstitutionEnabled = false;
-            NSAutomaticSpellingCorrectionEnabled = false;
-            NSWindowShouldDragOnGesture = true;
-            InitialKeyRepeat = 15;
-            KeyRepeat = 2;
-            "com.apple.keyboard.fnState" = true;
-            "com.apple.mouse.tapBehavior" = 1;
-            "com.apple.sound.beep.volume" = 0.0;
-            "com.apple.sound.beep.feedback" = 0;
-          };
-
-          dock = {
-            autohide = true;
-            show-recents = false;
-            launchanim = true;
-            mouse-over-hilite-stack = true;
-            orientation = "bottom";
-            tilesize = 48;
-          };
-
-          finder = {
-            ShowPathbar = true;
-            CreateDesktop = false;
-            FXDefaultSearchScope = "SCcf";
-            FXPreferredViewStyle = "clmv";
-          };
-        };
-
-        keyboard = {
-          enableKeyMapping = true;
-          remapCapsLockToControl = true;
-        };
-
-        # ======================== DO NOT CHANGE THIS ========================
-        stateVersion = 6;
-        # ======================== DO NOT CHANGE THIS ========================
-      };
+      # stateVersion is set by the core.nix.stateVersion aspect (darwin = 6).
+      system.primaryUser = "sini";
     };
   };
 }

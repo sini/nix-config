@@ -1,7 +1,11 @@
+# GitKraken. The nixkraken home-manager module targets Linux; macOS gets the
+# native app via the `gitkraken` cask (configured in-app there).
 { inputs, ... }:
 {
   den.aspects.apps.dev.git.gitkraken = {
-    homeManager =
+    homebrew-cask = [ "gitkraken" ];
+
+    homeLinux =
       {
         pkgs,
         user,
