@@ -7,6 +7,9 @@
     let
       workspaces = map toString (lib.range 1 9);
       gap = 8;
+      # Reserve room at the top for the floating sketchybar so tiled windows
+      # don't slide under it: bar height 32 + y_offset 8 + a gap.
+      barClearance = 48;
       toWorkspace = lib.listToAttrs (map (n: lib.nameValuePair "alt-${n}" "workspace ${n}") workspaces);
       moveToWorkspace = lib.listToAttrs (
         map (n: lib.nameValuePair "alt-shift-${n}" "move-node-to-workspace ${n}") workspaces
@@ -31,9 +34,29 @@
             inner.vertical = gap;
             outer.left = gap;
             outer.right = gap;
-            outer.top = gap;
+            outer.top = barClearance;
             outer.bottom = gap;
           };
+
+          # Float utility/dialog apps instead of forcing them into the tiling
+          # layout (the main daily friction with a tiler on macOS).
+          on-window-detected =
+            map
+              (id: {
+                "if".app-id = id;
+                run = [ "layout floating" ];
+              })
+              [
+                "com.apple.systempreferences"
+                "com.apple.ActivityMonitor"
+                "com.apple.Console"
+                "com.apple.calculator"
+                "com.apple.SystemProfiler"
+                "com.apple.ScreenSharing"
+                "com.apple.AppStore"
+                "com.apple.PhotoBooth"
+                "org.pqrs.Karabiner-Elements.Settings"
+              ];
 
           # Keep sketchybar's workspace indicators in sync.
           exec-on-workspace-change = [
