@@ -37,9 +37,10 @@ spec:
               weight: 1
       containers:
         - args:
-            - server
+            - export CODER_PG_CONNECTION_URL="postgres://coder:$CODER_PG_PASSWORD@coder-pg-rw.coder:5432/coder?sslmode=require"; exec /opt/coder server
           command:
-            - /opt/coder
+            - /bin/sh
+            - -c
           env:
             - name: CODER_HTTP_ADDRESS
               value: 0.0.0.0:8080
@@ -60,8 +61,6 @@ spec:
                 secretKeyRef:
                   key: password
                   name: coder-pg-coder-password
-            - name: CODER_PG_CONNECTION_URL
-              value: postgres://coder:$(CODER_PG_PASSWORD)@coder-pg-rw.coder:5432/coder?sslmode=require
             - name: CODER_OIDC_ISSUER_URL
               value: https://idm.json64.dev/oauth2/openid/coder
             - name: CODER_OIDC_CLIENT_ID
