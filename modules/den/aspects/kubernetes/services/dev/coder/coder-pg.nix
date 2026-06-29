@@ -2,8 +2,9 @@
 #
 # Mirrors the monitoring-pg pattern: 2-instance HA cluster on longhorn-single
 # (CNPG owns redundancy via streaming replication), required anti-affinity,
-# nightly volumeSnapshot backups. coderd consumes the role's basic-auth password
-# directly (key `password`) and assembles its DSN via kubelet env expansion.
+# nightly volumeSnapshot backups. coderd consumes a single composed connection
+# URL (coder-pg-dsn, the chart's coder-db-url pattern); CNPG reads the role's
+# basic-auth password from the same generated secret.
 #
 # References the cluster-scoped `longhorn-snapshot` VolumeSnapshotClass
 # declared by media-pg.nix.
@@ -18,21 +19,38 @@ in
     # One generated password per role, rekeyed into the cluster sops store.
     # The .age files are created by `agenix generate` after this lands.
     age-secrets =
-      { environment, ... }:
+      { environment, config, ... }:
       {
-        age.secrets = lib.listToAttrs (
-          map (
-            app:
-            lib.nameValuePair (passwordSecretName app) {
-              rekeyFile = environment.secretPath + "/coder-pg/${app}-password.age";
-              generator.script = "rfc3986-secret";
+        age.secrets =
+          lib.listToAttrs (
+            map (
+              app:
+              lib.nameValuePair (passwordSecretName app) {
+                rekeyFile = environment.secretPath + "/coder-pg/${app}-password.age";
+                generator.script = "rfc3986-secret";
+                sopsOutput = {
+                  file = "coder-pg";
+                  key = app;
+                };
+              }
+            ) roleApps
+          )
+          // {
+            # coderd wants one connection URL (the chart's coder-db-url pattern).
+            # template-file substitutes the role password into a standalone DSN, so
+            # the resulting sops value is a single ref that encrypts cleanly — unlike
+            # a sopsRef embedded mid-string, which the live-encryption can't resolve.
+            coder-pg-dsn = {
+              rekeyFile = environment.secretPath + "/coder-pg/dsn.age";
+              generator.script = "template-file";
+              generator.dependencies = [ config.age.secrets.coder-pg-coder-password ];
+              settings.template = "postgres://coder:%coder-pg-coder-password%@coder-pg-rw.coder:5432/coder?sslmode=require";
               sopsOutput = {
                 file = "coder-pg";
-                key = app;
+                key = "dsn";
               };
-            }
-          ) roleApps
-        );
+            };
+          };
       };
 
     k8s-manifests =
@@ -114,23 +132,29 @@ in
               method = "volumeSnapshot";
             };
 
-            # Basic-auth secret (username+password) for the coder role. coderd
-            # consumes the `password` field directly and assembles the DSN via
-            # kubelet env expansion (see coder.nix). A composed `stringData.url` was
-            # removed: the sops live-encryption can't resolve a sopsRef embedded
-            # mid-string.
-            secrets = lib.listToAttrs (
-              map (
-                app:
-                lib.nameValuePair (passwordSecretName app) {
-                  type = "kubernetes.io/basic-auth";
-                  stringData = {
-                    username = app;
-                    password = config.age.secrets.${passwordSecretName app}.sopsRef;
-                  };
-                }
-              ) roleApps
-            );
+            # Basic-auth secret (username+password) per role for the CNPG managed
+            # role. coderd consumes coder-pg-dsn (below) — a single connection URL
+            # composed by the template-file generator, referenced as a standalone
+            # sopsRef so it encrypts cleanly.
+            secrets =
+              lib.listToAttrs (
+                map (
+                  app:
+                  lib.nameValuePair (passwordSecretName app) {
+                    type = "kubernetes.io/basic-auth";
+                    stringData = {
+                      username = app;
+                      password = config.age.secrets.${passwordSecretName app}.sopsRef;
+                    };
+                  }
+                ) roleApps
+              )
+              // {
+                coder-pg-dsn = {
+                  type = "Opaque";
+                  stringData.url = config.age.secrets.coder-pg-dsn.sopsRef;
+                };
+              };
 
             ciliumNetworkPolicies = {
               # CNPG instance pods (instance manager) talk to the kube-apiserver.

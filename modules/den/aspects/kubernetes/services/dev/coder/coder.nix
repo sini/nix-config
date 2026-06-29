@@ -72,19 +72,6 @@
               # backs the route in-cluster (chart default type is LoadBalancer).
               service.type = "ClusterIP";
 
-              # Assemble CODER_PG_CONNECTION_URL in the entrypoint shell. kubelet's
-              # $(VAR) expansion does NOT substitute a secretKeyRef-sourced var into
-              # another env (coderd would get an empty password), but a shell $VAR
-              # does. Setting commandArgs replaces the chart's default `server` arg,
-              # so we exec the server ourselves after exporting the DSN.
-              command = [
-                "/bin/sh"
-                "-c"
-              ];
-              commandArgs = [
-                "export CODER_PG_CONNECTION_URL=\"postgres://coder:$CODER_PG_PASSWORD@coder-pg-rw.coder:5432/coder?sslmode=require\"; exec /opt/coder server"
-              ];
-
               # env is a verbatim EnvVar list (chart toYaml's it through), so
               # valueFrom.secretKeyRef entries are honored.
               env = [
@@ -92,15 +79,13 @@
                   name = "CODER_ACCESS_URL";
                   value = "https://${domain}";
                 }
-                # PG password from the basic-auth secret (standalone field →
-                # encrypts cleanly via sops). The entrypoint shell (command above)
-                # reads $CODER_PG_PASSWORD to build the DSN; the rfc3986-secret value
-                # is URL-safe, so no quoting issues in the URL.
+                # Full connection URL from the composed coder-pg-dsn secret (the
+                # chart's coder-db-url pattern).
                 {
-                  name = "CODER_PG_PASSWORD";
+                  name = "CODER_PG_CONNECTION_URL";
                   valueFrom.secretKeyRef = {
-                    name = "coder-pg-coder-password";
-                    key = "password";
+                    name = "coder-pg-dsn";
+                    key = "url";
                   };
                 }
                 {
