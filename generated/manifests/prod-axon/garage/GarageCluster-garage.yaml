@@ -1,0 +1,42 @@
+apiVersion: garage.rajsingh.info/v1beta2
+kind: GarageCluster
+metadata:
+  name: garage
+  namespace: garage
+spec:
+  admin:
+    adminTokenSecretRef:
+      key: admin-token
+      name: garage-admin-token
+    bindPort: 3903
+  database:
+    engine: lmdb
+  discovery:
+    kubernetes:
+      enabled: true
+  layoutManagement:
+    autoApply: true
+    minNodesHealthy: 2
+  layoutPolicy: Auto
+  network:
+    rpcBindPort: 3901
+    rpcSecretRef:
+      key: rpc-secret
+      name: garage-rpc-secret
+    service:
+      type: ClusterIP
+  replication:
+    factor: 3
+  s3Api:
+    bindPort: 3900
+    region: garage
+    rootDomain: .s3.json64.dev
+  storage:
+    data:
+      size: 50Gi
+      storageClassName: longhorn-single
+    metadata:
+      size: 5Gi
+      storageClassName: longhorn-single
+    replicas: 3
+  zone: axon

@@ -1,0 +1,26 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-garage-rpc-mesh
+  namespace: garage
+spec:
+  description: Garage inter-node RPC mesh (3901) within the garage namespace.
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: garage
+      toPorts:
+        - ports:
+            - port: "3901"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: garage
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: garage
+      toPorts:
+        - ports:
+            - port: "3901"
+              protocol: TCP

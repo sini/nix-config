@@ -1,0 +1,130 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: garage-operator
+    app.kubernetes.io/name: garage-operator
+    control-plane: controller-manager
+  name: garage-operator-manager-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - persistentvolumeclaims
+      - secrets
+      - services
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - pods/exec
+    verbs:
+      - create
+  - apiGroups:
+      - ""
+    resources:
+      - events
+    verbs:
+      - create
+      - patch
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+      - statefulsets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - garage.rajsingh.info
+    resources:
+      - garageadmintokens
+      - garagebuckets
+      - garageclusters
+      - garagekeys
+      - garagenodes
+      - garagereferencegrants
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - garage.rajsingh.info
+    resources:
+      - garageadmintokens/finalizers
+      - garagebuckets/finalizers
+      - garageclusters/finalizers
+      - garagekeys/finalizers
+      - garagenodes/finalizers
+    verbs:
+      - update
+  - apiGroups:
+      - garage.rajsingh.info
+    resources:
+      - garageadmintokens/status
+      - garagebuckets/status
+      - garageclusters/status
+      - garagekeys/status
+      - garagenodes/status
+      - garagereferencegrants/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - servicemonitors
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - storage.k8s.io
+    resources:
+      - storageclasses
+    verbs:
+      - get
+      - list
+      - watch

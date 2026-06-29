@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: garage-ui
+    app.kubernetes.io/name: garage-ui
+  name: garage-ui
+  namespace: garage
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app.kubernetes.io/instance: garage-ui
+    app.kubernetes.io/name: garage-ui
+  type: ClusterIP
