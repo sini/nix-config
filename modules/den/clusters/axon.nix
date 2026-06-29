@@ -125,7 +125,7 @@
       services.media.sabnzbd
       services.media.qbittorrent
       services.media.unpackerr
-      services.media.configarr
+      services.media.profilarr
       services.media.shoko
       services.media.network-policy
       services.media.glance

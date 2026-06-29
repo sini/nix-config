@@ -1,10 +1,10 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: allow-internet-egress-configarr
+  name: allow-internet-egress-profilarr
   namespace: media
 spec:
-  description: Allow configarr to fetch the TRaSH/recyclarr config templates over HTTPS.
+  description: Allow profilarr to git-clone the Dictionarry database over HTTPS.
   egress:
     - toEntities:
         - world
@@ -14,4 +14,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: configarr
+      app.kubernetes.io/name: profilarr

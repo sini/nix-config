@@ -10,8 +10,8 @@
 # A few cross-service edges already live with their owning app (single source of
 # truth, do NOT re-declare here):
 #   - unpackerr -> *arr  egress   (unpackerr.nix:  allow-arr-egress-unpackerr)
-#   - configarr -> sonarr/radarr/lidarr/whisparr (configarr.nix:
-#       allow-arr-egress-configarr — covers all four arrs)
+#   - profilarr -> sonarr/radarr  egress (profilarr.nix:
+#       allow-arr-egress-profilarr — sonarr/radarr only)
 #   - *arr+prowlarr+unpackerr -> qbittorrent:8080 ingress (qbittorrent.nix:
 #       allow-arr-ingress-qbittorrent — the qbt INGRESS side is complete there)
 #   - media-pg -> kube-apiserver  egress (media-pg.nix)
@@ -38,18 +38,19 @@
 # INGRESS IS THE REAL WORK: a routed app (sonarr, …) already has gateway-ingress,
 # so it is in ingress default-deny and currently rejects in-namespace callers
 # (prowlarr/unpackerr/bazarr). The per-target ingress edges below restore those
-# flows. Route-less helper pods (flaresolverr, unpackerr, configarr) have NO
-# ingress policy at all, so they accept all ingress — we add an ingress section
-# for each (a real allow for flaresolverr; a default-deny lockdown for the two
-# that need no inbound) so every pod is ingress-selected.
+# flows. Route-less helper pods (flaresolverr, unpackerr) have NO ingress policy
+# at all, so they accept all ingress — we add an ingress section for each (a real
+# allow for flaresolverr; a default-deny lockdown for unpackerr, which needs no
+# inbound) so every pod is ingress-selected. (profilarr is ROUTED — it carries
+# allow-gateway-ingress-profilarr in profilarr.nix — so it is NOT in this set.)
 #
-# unpackerr / configarr INGRESS DECISION (see report): neither needs any inbound
-# connection (unpackerr polls the *arrs; configarr is a CronJob that pushes to
-# them). To put them under ingress default-deny WITHOUT inventing a bogus allow,
-# we use the unambiguous `enableDefaultDeny.ingress = true` (Cilium ≥1.14): it
-# engages ingress default-deny for the selected endpoint with zero allow rules.
-# This is the canonical single-direction deny and avoids the `ingress: [{}]`
-# foot-gun (an empty rule = allow-all, the opposite of what we want).
+# unpackerr INGRESS DECISION (see report): it needs no inbound connection
+# (unpackerr polls the *arrs). To put it under ingress default-deny WITHOUT
+# inventing a bogus allow, we use the unambiguous `enableDefaultDeny.ingress =
+# true` (Cilium ≥1.14): it engages ingress default-deny for the selected
+# endpoint with zero allow rules. This is the canonical single-direction deny
+# and avoids the `ingress: [{}]` foot-gun (an empty rule = allow-all, the
+# opposite of what we want).
 #
 # DASHBOARDS (Task 10/11: glance, dash) are PRE-DECLARED as ingress sources
 # on the *arr + sabnzbd API ports now, so the dashboard tasks need no edits here.
@@ -100,7 +101,7 @@ let
   # { from; to; } — every directed in-namespace TCP edge to the target's port.
   # Edges already declared in an owning app file are EXCLUDED here (see header)
   # to keep a single source of truth and avoid duplicate-name resources:
-  #   unpackerr->*arr, configarr->all-arrs, *->qbittorrent ingress.
+  #   unpackerr->*arr, profilarr->sonarr/radarr, *->qbittorrent ingress.
   edges =
     # *arr <-> prowlarr (indexer sync, both directions)
     map (a: {
@@ -196,10 +197,16 @@ let
   # Helper pods whose EGRESS half lives in their owning app file (see header)
   # still need the arr-side ingress allow HERE — the owning files only carry
   # the source-side policy, and with only an egress half the arrs' ingress
-  # default-deny silently dropped configarr/unpackerr API calls.
+  # default-deny silently dropped profilarr/unpackerr API calls.
+  #
+  # Benign asymmetry: this fans BOTH helpers into ALL four arrs' ingress, but
+  # profilarr egresses only to sonarr/radarr (allow-arr-egress-profilarr). The
+  # lidarr/whisparr ingress grants for profilarr are therefore unreachable —
+  # profilarr's egress half never opens those edges — so they are dead, egress-
+  # blocked allows and harmless. (unpackerr is symmetric: it egresses to all four.)
   arrHelperSources = [
     "unpackerr"
-    "configarr"
+    "profilarr"
   ];
 
   ingressPolicies = builtins.listToAttrs (
@@ -255,7 +262,6 @@ let
       )
       [
         "unpackerr"
-        "configarr"
       ]
   );
 

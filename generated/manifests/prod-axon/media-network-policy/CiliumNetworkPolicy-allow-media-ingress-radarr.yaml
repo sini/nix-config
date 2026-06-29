@@ -21,7 +21,7 @@ spec:
         - matchLabels:
             app.kubernetes.io/name: unpackerr
         - matchLabels:
-            app.kubernetes.io/name: configarr
+            app.kubernetes.io/name: profilarr
       toPorts:
         - ports:
             - port: "7878"

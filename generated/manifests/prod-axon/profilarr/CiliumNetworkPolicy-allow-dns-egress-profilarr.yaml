@@ -1,10 +1,10 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: allow-dns-egress-configarr
+  name: allow-dns-egress-profilarr
   namespace: media
 spec:
-  description: Allow configarr to resolve via kube-dns.
+  description: Allow profilarr to resolve via kube-dns.
   egress:
     - toEndpoints:
         - matchLabels:
@@ -18,4 +18,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: configarr
+      app.kubernetes.io/name: profilarr
