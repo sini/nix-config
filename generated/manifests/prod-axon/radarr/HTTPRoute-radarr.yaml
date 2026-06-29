@@ -15,4 +15,4 @@ spec:
         - name: radarr
           port: 7878
       timeouts:
-        request: 120s
+        request: 300s

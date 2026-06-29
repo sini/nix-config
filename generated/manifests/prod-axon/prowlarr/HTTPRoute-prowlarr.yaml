@@ -15,4 +15,4 @@ spec:
         - name: prowlarr
           port: 9696
       timeouts:
-        request: 120s
+        request: 300s

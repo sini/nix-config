@@ -457,9 +457,12 @@
                       port = 8686;
                     }
                   ];
-                  # Interactive search runs 20-60s; lift above Envoy's 15s route
-                  # default so the gateway doesn't 504 the held-open search request.
-                  timeouts.request = "120s";
+                  # Interactive search (anime fans out to many title-variants ×
+                  # indexers, then Sonarr processes hundreds of releases) can run
+                  # minutes; lift well above Envoy's 15s route default. 300s is the
+                  # stream-idle ceiling — the clean max without also raising
+                  # stream_idle_timeout.
+                  timeouts.request = "300s";
                 }
               ];
             };
