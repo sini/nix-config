@@ -389,6 +389,7 @@
                   "email"
                   "openid"
                   "profile"
+                  "offline_access"
                 ];
                 forwardAccessToken = true;
               };

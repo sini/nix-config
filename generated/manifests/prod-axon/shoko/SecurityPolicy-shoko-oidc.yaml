@@ -15,6 +15,7 @@ spec:
       - email
       - openid
       - profile
+      - offline_access
   targetRefs:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
