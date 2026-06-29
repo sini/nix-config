@@ -99,6 +99,18 @@ let
                 type = types.str;
                 description = "The issuer name to use for this domain";
               };
+
+              resourceName = mkOption {
+                type = types.nullOr types.str;
+                default = null;
+                description = ''
+                  Explicit k8s resource-name stem for this domain's wildcard certificate +
+                  gateway listener, overriding the default last-two-labels derivation
+                  (resourceNameOf in schema/cluster.nix). REQUIRED for a nested wildcard
+                  (e.g. *.s3.json64.dev) whose last-two-labels (json64-dev) would collide
+                  with its parent registrable domain. null = derive from the domain (back-compat).
+                '';
+              };
             };
           }
         );

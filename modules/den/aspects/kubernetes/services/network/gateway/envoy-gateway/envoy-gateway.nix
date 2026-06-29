@@ -34,12 +34,21 @@
       let
         inherit (lib)
           flatten
-          map
+          mapAttrsToList
           optionalAttrs
           ;
 
         numReplicas = if cluster.hosts != null then builtins.length cluster.hosts else 3;
         domains = environment.certificates.domains;
+
+        # Resolve a domain's k8s resource-name stem: an explicit per-domain
+        # resourceName (for nested wildcards that would otherwise collide on
+        # their last-two-labels) takes precedence over the default derivation.
+        # Note the explicit `if … != null`: resourceName defaults to null and
+        # the attr always exists, so `or` would never fall back.
+        resourceNameFor =
+          domain: args:
+          if args.resourceName != null then args.resourceName else cluster.resourceForDomain domain;
         default-gateway-address = cluster.getAssignment "default-gateway";
       in
       {
@@ -185,11 +194,10 @@
               };
               listeners =
                 domains
-                |> builtins.attrNames
-                |> map (
-                  domain:
+                |> mapAttrsToList (
+                  domain: args:
                   let
-                    domainResourceName = cluster.resourceForDomain domain;
+                    domainResourceName = resourceNameFor domain args;
                   in
                   [
                     {
@@ -288,11 +296,10 @@
                 ];
                 to =
                   domains
-                  |> builtins.attrNames
-                  |> map (domain: {
+                  |> mapAttrsToList (domain: args: {
                     group = "";
                     kind = "Secret";
-                    name = "${cluster.resourceForDomain domain}-wildcard-tls";
+                    name = "${resourceNameFor domain args}-wildcard-tls";
                   });
               };
             };
