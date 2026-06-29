@@ -589,7 +589,10 @@ in
         );
       in
       {
-        age.secrets = mkMerge (
+        # Plain disjoint merge (each element is a distinct secret name), not
+        # mkMerge: the secrets collector deduplicates broadcast emissions by name
+        # with a shallow merge, so emitters must return a plain attrset.
+        age.secrets = lib.mergeAttrsList (
           [
             {
               kanidm-admin-password = {
