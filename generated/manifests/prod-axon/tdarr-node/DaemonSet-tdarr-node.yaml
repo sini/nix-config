@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: tdarr-node
+    app.kubernetes.io/name: tdarr-node
+  name: tdarr-node
+  namespace: media
+spec:
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: tdarr-node
+      app.kubernetes.io/name: tdarr-node
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: tdarr-node
+        app.kubernetes.io/name: tdarr-node
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PGID
+              value: "65536"
+            - name: PUID
+              value: "1027"
+            - name: TZ
+              value: America/Los_Angeles
+            - name: healthcheckcpuWorkers
+              value: "0"
+            - name: healthcheckgpuWorkers
+              value: "0"
+            - name: inContainer
+              value: "true"
+            - name: nodeName
+              value: axon-tdarr
+            - name: nodeType
+              value: mapped
+            - name: serverIP
+              value: tdarr.media.svc.cluster.local
+            - name: serverPort
+              value: "8266"
+            - name: transcodecpuWorkers
+              value: "0"
+            - name: transcodegpuWorkers
+              value: "1"
+          image: registry.json64.dev/tdarr-node@sha256:9283db46056f42f7efca590cf91d9dc89fad1f73310c2fda37107822236f38b6
+          name: main
+          resources:
+            limits:
+              amd.com/gpu: 1
+            requests:
+              amd.com/gpu: 1
+          volumeMounts:
+            - mountPath: /data
+              name: data
+            - mountPath: /temp
+              name: temp
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      nodeSelector:
+        node.kubernetes.io/amd-gpu: "true"
+      serviceAccountName: tdarr-node
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: media-data-nfs
+        - emptyDir: {}
+          name: temp
