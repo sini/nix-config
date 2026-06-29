@@ -142,7 +142,6 @@
       services.storage.garage.secrets
       services.storage.garage.garage-operator
       services.storage.garage.garage-cluster
-      services.storage.garage.buckets
       services.storage.garage.network-policy
       services.storage.garage.routes
       services.storage.garage.garage-ui
