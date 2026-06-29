@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: tdarr
+    app.kubernetes.io/name: tdarr
+    app.kubernetes.io/service: tdarr
+  name: tdarr
+  namespace: media
+spec:
+  ports:
+    - name: http
+      port: 8265
+      protocol: TCP
+      targetPort: 8265
+    - name: node
+      port: 8266
+      protocol: TCP
+      targetPort: 8266
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: tdarr
+    app.kubernetes.io/name: tdarr
+  type: ClusterIP

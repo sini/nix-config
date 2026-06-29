@@ -442,6 +442,10 @@ let
       displayName = "Profilarr";
       group = "media.admins";
     };
+    tdarr = {
+      displayName = "Tdarr";
+      group = "media.admins";
+    };
     # The k8s utility dashboard is named "dash" (NOT "homepage"): the uplink host
     # already owns service-domains "homepage" (homepage.json64.dev) via its NixOS
     # homepage-dashboard aspect (modules/den/aspects/services/web/homepage.nix,

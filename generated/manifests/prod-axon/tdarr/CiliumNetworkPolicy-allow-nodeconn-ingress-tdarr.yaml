@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-nodeconn-ingress-tdarr
+  namespace: media
+spec:
+  description: Allow tdarr-node workers to reach the tdarr server's node port (8266).
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: tdarr
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: tdarr-node
+      toPorts:
+        - ports:
+            - port: "8266"
+              protocol: TCP
