@@ -77,6 +77,27 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: '*.s3.json64.dev'
+      name: s3-json64-dev-http
+      port: 80
+      protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: '*.s3.json64.dev'
+      name: s3-json64-dev-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: s3-json64-dev-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.sinistar.io'
       name: sinistar-io-http
       port: 80

@@ -11,6 +11,13 @@
         "json64.dev" = {
           issuer = "json64-dev";
         };
+        "s3.json64.dev" = {
+          issuer = "json64-dev";
+          # Distinct stem: without it resourceForDomain "s3.json64.dev" = json64-dev,
+          # colliding with the json64.dev wildcard. Enables the *.s3.json64.dev
+          # listener + s3-json64-dev-wildcard-tls cert (T1 resourceName extension).
+          resourceName = "s3-json64-dev";
+        };
         "json64.com" = {
           issuer = "global";
         };
@@ -46,6 +53,8 @@
       longhorn.domain = "longhorn.zeroday.run";
       attic.domain = "attic.json64.dev";
       forgejo.domain = "git.json64.dev";
+      garage-s3.domain = "s3.json64.dev";
+      garage-ui.domain = "garage.json64.dev";
       grafana.domain = "grafana.json64.dev";
       headscale.domain = "hs.json64.dev";
       homepage.domain = "homepage.json64.dev";
