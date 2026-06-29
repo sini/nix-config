@@ -14,9 +14,17 @@
       # `{ age.secrets = <attrset>; }` (no `mkIf`/`mkMerge` wrappers, which a
       # shallow merge can't see through) — emitters express conditional/iterative
       # secret sets with `optionalAttrs`/`mergeAttrsList` instead.
-      collect = lib: age-secrets: {
-        age.secrets = lib.mergeAttrsList (map (m: m.age.secrets or { }) age-secrets);
-      };
+      collect =
+        lib: age-secrets:
+        let
+          merged = lib.mergeAttrsList (map (m: m.age.secrets or { }) age-secrets);
+        in
+        # Only touch `age.secrets` when there's at least one secret. A microvm
+        # guest (e.g. cortex-cuda) gets this collector aspect but has no agenix
+        # module, so its config has no `age` option — an unconditional
+        # `age.secrets = {}` would fail to evaluate there. This matches the old
+        # `lib.mkMerge []` no-op for hosts/guests with no secrets.
+        lib.optionalAttrs (merged != { }) { age.secrets = merged; };
     in
     {
       nixos = { age-secrets, lib, ... }: collect lib age-secrets;
