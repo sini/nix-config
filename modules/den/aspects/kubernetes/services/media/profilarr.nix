@@ -21,7 +21,11 @@
 # cluster default ndots:5 — ndots:1 resolves single-dot github.com as absolute
 # while 0-dot service names (sonarr/radarr) still use the search list.
 #
-# Version pinned to v2.0.9 — bump in the media tag-bump pass at deploy time.
+# Image is digest-pinned via the oci-images logic (images/dictionarry-hub/profilarr,
+# the `images."dictionarry-hub/profilarr"` accessor), tracking ghcr `develop` (the
+# only v2 channel — no stable v2 image is published). oci-image-updater bumps the
+# pinned digest as develop moves. NOT an inline tag (a non-existent tag is exactly
+# what slipped through before).
 {
   den.aspects.kubernetes.services.media.profilarr = {
     service-domains = [ "profilarr" ];
@@ -47,6 +51,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       let
@@ -87,8 +92,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/dictionarry-hub/profilarr";
-                    tag = "v2.0.9";
+                    inherit (images."dictionarry-hub/profilarr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";
