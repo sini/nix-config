@@ -79,12 +79,22 @@
                   name = "CODER_ACCESS_URL";
                   value = "https://${domain}";
                 }
+                # PG password comes from the basic-auth secret as a STANDALONE
+                # field (encrypts cleanly via sops). kubelet expands
+                # $(CODER_PG_PASSWORD) into the URL below — the DSN is assembled at
+                # container start, not render time, so there is no sopsRef embedded
+                # mid-string (which the live-encryption can't resolve). The
+                # rfc3986-secret password is URL-safe.
+                {
+                  name = "CODER_PG_PASSWORD";
+                  valueFrom.secretKeyRef = {
+                    name = "coder-pg-coder-password";
+                    key = "password";
+                  };
+                }
                 {
                   name = "CODER_PG_CONNECTION_URL";
-                  valueFrom.secretKeyRef = {
-                    name = "coder-pg-dsn";
-                    key = "url";
-                  };
+                  value = "postgres://coder:$(CODER_PG_PASSWORD)@coder-pg-rw.coder:5432/coder?sslmode=require";
                 }
                 {
                   name = "CODER_OIDC_ISSUER_URL";

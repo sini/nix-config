@@ -2,8 +2,8 @@
 #
 # Mirrors the monitoring-pg pattern: 2-instance HA cluster on longhorn-single
 # (CNPG owns redundancy via streaming replication), required anti-affinity,
-# nightly volumeSnapshot backups. The coderd server consumes the composed DSN
-# secret (coder-pg-dsn) rather than the raw basic-auth password.
+# nightly volumeSnapshot backups. coderd consumes the role's basic-auth password
+# directly (key `password`) and assembles its DSN via kubelet env expansion.
 #
 # References the cluster-scoped `longhorn-snapshot` VolumeSnapshotClass
 # declared by media-pg.nix.
@@ -114,29 +114,23 @@ in
               method = "volumeSnapshot";
             };
 
-            secrets =
-              lib.listToAttrs (
-                map (
-                  app:
-                  lib.nameValuePair (passwordSecretName app) {
-                    type = "kubernetes.io/basic-auth";
-                    stringData = {
-                      username = app;
-                      password = config.age.secrets.${passwordSecretName app}.sopsRef;
-                    };
-                  }
-                ) roleApps
-              )
-              // {
-                # Composed DSN consumed by coderd, sslmode=require against the
-                # CNPG read-write service.
-                coder-pg-dsn = {
-                  type = "Opaque";
-                  stringData.url =
-                    "postgres://coder:${config.age.secrets.coder-pg-coder-password.sopsRef}"
-                    + "@coder-pg-rw.coder:5432/coder?sslmode=require";
-                };
-              };
+            # Basic-auth secret (username+password) for the coder role. coderd
+            # consumes the `password` field directly and assembles the DSN via
+            # kubelet env expansion (see coder.nix). A composed `stringData.url` was
+            # removed: the sops live-encryption can't resolve a sopsRef embedded
+            # mid-string.
+            secrets = lib.listToAttrs (
+              map (
+                app:
+                lib.nameValuePair (passwordSecretName app) {
+                  type = "kubernetes.io/basic-auth";
+                  stringData = {
+                    username = app;
+                    password = config.age.secrets.${passwordSecretName app}.sopsRef;
+                  };
+                }
+              ) roleApps
+            );
 
             ciliumNetworkPolicies = {
               # CNPG instance pods (instance manager) talk to the kube-apiserver.

@@ -55,11 +55,13 @@ spec:
               value: http://$(KUBE_POD_IP):8080
             - name: CODER_ACCESS_URL
               value: https://coder.json64.dev
-            - name: CODER_PG_CONNECTION_URL
+            - name: CODER_PG_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  key: url
-                  name: coder-pg-dsn
+                  key: password
+                  name: coder-pg-coder-password
+            - name: CODER_PG_CONNECTION_URL
+              value: postgres://coder:$(CODER_PG_PASSWORD)@coder-pg-rw.coder:5432/coder?sslmode=require
             - name: CODER_OIDC_ISSUER_URL
               value: https://idm.json64.dev/oauth2/openid/coder
             - name: CODER_OIDC_CLIENT_ID
