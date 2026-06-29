@@ -18,5 +18,10 @@
           width = 6.0;
         };
       };
+
+      # Reload the running borders agent so settings changes apply on activation.
+      home.activation.restartJankyborders = config.lib.dag.entryAfter [ "setupLaunchAgents" ] ''
+        run /bin/launchctl kickstart -k "gui/$UID/org.nix-community.home.jankyborders" || true
+      '';
     };
 }

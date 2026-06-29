@@ -9,13 +9,21 @@
       inherit (config.lib.stylix) colors;
       font = config.stylix.fonts.monospace.name;
 
+      # Fixed workspace set, matching the aerospace bindings (alt-1..9). Generated
+      # statically rather than by querying `aerospace list-workspaces` at config
+      # load: sketchybar's launch agent can start before AeroSpace is ready, so a
+      # load-time query races and silently drops the workspace items.
+      workspaces = map toString (lib.range 1 9);
+
       argb = alpha: hex: "0x${alpha}${hex}";
       bg = argb "e6" colors.base00;
       surface = argb "ff" colors.base01;
       fg = argb "ff" colors.base05;
       accent = argb "ff" colors.base0D;
 
-      # $NAME / $FOCUSED are injected by sketchybar at runtime (SC2154).
+      # $NAME / $FOCUSED are injected by sketchybar at runtime (SC2154). The
+      # aerospace query is guarded so a not-yet-ready server doesn't abort the
+      # script (writeShellApplication runs under `set -euo pipefail`).
       workspaceScript = lib.getExe (
         pkgs.writeShellApplication {
           name = "sketchybar-workspace";
@@ -25,7 +33,10 @@
           ];
           excludeShellChecks = [ "SC2154" ];
           text = ''
-            focused="''${FOCUSED:-$(aerospace list-workspaces --focused)}"
+            focused="''${FOCUSED:-}"
+            if [ -z "$focused" ]; then
+              focused="$(aerospace list-workspaces --focused 2>/dev/null || true)"
+            fi
             sid="''${NAME#space.}"
             if [ "$sid" = "$focused" ]; then
               sketchybar --set "$NAME" background.drawing=on background.color=${accent} label.color=${bg}
@@ -65,6 +76,13 @@
           '';
         }
       );
+
+      workspaceItems = lib.concatMapStringsSep "\n" (sid: ''
+        sketchybar \
+          --add item space.${sid} left \
+          --subscribe space.${sid} aerospace_workspace_changed \
+          --set space.${sid} label="${sid}" click_script="${pkgs.aerospace}/bin/aerospace workspace ${sid}" script="${workspaceScript}"
+      '') workspaces;
     in
     {
       programs.sketchybar = {
@@ -96,12 +114,7 @@
             padding_right=4
 
           sketchybar --add event aerospace_workspace_changed
-          for sid in $(${pkgs.aerospace}/bin/aerospace list-workspaces --all); do
-            sketchybar \
-              --add item "space.$sid" left \
-              --subscribe "space.$sid" aerospace_workspace_changed \
-              --set "space.$sid" label="$sid" click_script="${pkgs.aerospace}/bin/aerospace workspace $sid" script="${workspaceScript}"
-          done
+          ${workspaceItems}
 
           sketchybar \
             --add item clock right \
@@ -112,8 +125,18 @@
             --add item tailscale right \
             --set tailscale update_freq=10 script="${tailscaleScript}"
 
+          # Paint the current workspace highlight now that all items exist (and
+          # again whenever aerospace reports a change).
           sketchybar --update
+          sketchybar --trigger aerospace_workspace_changed
         '';
       };
+
+      # home-manager doesn't restart the launchd agent when only the (fixed-path)
+      # sketchybarrc content changes, so kickstart it on activation to load the
+      # new config.
+      home.activation.restartSketchybar = config.lib.dag.entryAfter [ "setupLaunchAgents" ] ''
+        run /bin/launchctl kickstart -k "gui/$UID/org.nix-community.home.sketchybar" || true
+      '';
     };
 }

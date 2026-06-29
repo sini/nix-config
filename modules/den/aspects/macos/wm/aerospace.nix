@@ -3,7 +3,7 @@
 { lib, ... }:
 {
   den.aspects.macos.wm.aerospace.homeDarwin =
-    { pkgs, ... }:
+    { config, pkgs, ... }:
     let
       workspaces = map toString (lib.range 1 9);
       gap = 8;
@@ -66,5 +66,11 @@
           // moveToWorkspace;
         };
       };
+
+      # Apply config changes to the running WM without restarting it (preserves
+      # the current window layout).
+      home.activation.reloadAerospace = config.lib.dag.entryAfter [ "setupLaunchAgents" ] ''
+        run ${pkgs.aerospace}/bin/aerospace reload-config || true
+      '';
     };
 }
