@@ -20,6 +20,9 @@ spec:
       name: json64-net-wildcard-tls
     - group: ""
       kind: Secret
+      name: s3-json64-dev-wildcard-tls
+    - group: ""
+      kind: Secret
       name: sinistar-io-wildcard-tls
     - group: ""
       kind: Secret
