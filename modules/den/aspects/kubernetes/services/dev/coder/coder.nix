@@ -105,14 +105,12 @@
                   name = "CODER_OIDC_USER_ROLE_MAPPING";
                   value = builtins.toJSON { admin = [ "owner" ]; };
                 }
-                # kanidm OIDC is the only login path. Disabling password auth also
-                # removes the first-run setup wizard — the first OIDC login (a
-                # coder.admins member → owner) bootstraps the deployment. Also
-                # disable Coder's built-in default GitHub login provider.
-                {
-                  name = "CODER_DISABLE_PASSWORD_AUTH";
-                  value = "true";
-                }
+                # Coder creates the FIRST admin via the email/password setup wizard
+                # (OIDC is not offered on the first-run screen — Coder's design), so
+                # password auth must stay enabled to bootstrap. After the first user
+                # exists, set CODER_DISABLE_PASSWORD_AUTH=true for a kanidm-OIDC-only
+                # login page (owners keep a password backdoor per Coder's
+                # anti-lockout). Coder's default GitHub login stays disabled.
                 {
                   name = "CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE";
                   value = "false";
