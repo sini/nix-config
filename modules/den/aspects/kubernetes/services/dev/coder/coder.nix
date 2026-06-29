@@ -39,11 +39,16 @@
         config,
         cluster,
         charts,
+        lib,
         ...
       }:
       let
         domain = cluster.domainFor "coder";
         kanidmDomain = cluster.domainFor "kanidm";
+        # bootstrap=true keeps password auth on for Coder's first-user setup
+        # wizard; bootstrap=false (production) disables it for an OIDC-only login
+        # page. Declared + documented in settings.nix.
+        bootstrap = cluster.settings.kubernetes.services.dev.coder.coder.bootstrap;
       in
       {
         applications.coder = {
@@ -105,12 +110,7 @@
                   name = "CODER_OIDC_USER_ROLE_MAPPING";
                   value = builtins.toJSON { admin = [ "owner" ]; };
                 }
-                # Coder creates the FIRST admin via the email/password setup wizard
-                # (OIDC is not offered on the first-run screen — Coder's design), so
-                # password auth must stay enabled to bootstrap. After the first user
-                # exists, set CODER_DISABLE_PASSWORD_AUTH=true for a kanidm-OIDC-only
-                # login page (owners keep a password backdoor per Coder's
-                # anti-lockout). Coder's default GitHub login stays disabled.
+                # GitHub login is always off — kanidm OIDC is the only IdP.
                 {
                   name = "CODER_OAUTH2_GITHUB_DEFAULT_PROVIDER_ENABLE";
                   value = "false";
@@ -121,7 +121,14 @@
                   name = "CODER_PROVISIONER_DAEMONS";
                   value = "3";
                 }
-              ];
+              ]
+              # Production (bootstrap=false): disable password auth so the login
+              # page is kanidm-OIDC-only. Omitted while bootstrap=true so Coder's
+              # first-user setup wizard works (it can't use OIDC). See settings.nix.
+              ++ lib.optional (!bootstrap) {
+                name = "CODER_DISABLE_PASSWORD_AUTH";
+                value = "true";
+              };
             };
           };
 

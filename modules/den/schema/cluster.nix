@@ -10,6 +10,10 @@ let
   schemaLib = inputs.gen-schema.lib;
   environments = config.den.environments;
 
+  # Per-aspect settings namespace, mirroring host.settings — the same shared
+  # helper auto-discovers every aspect's `.settings` block onto cluster.settings.
+  settingsType = import ./_settings-type.nix { inherit den lib; };
+
   # Pure transform: a domain's k8s-safe resource name = its last two labels,
   # hyphenated (glance.json64.dev -> json64-dev). Shared by the domainForResource
   # (service-keyed) and resourceForDomain (domain-keyed) cluster methods below.
@@ -233,6 +237,21 @@ in
             default = { };
             description = "Cluster NFS targets. type=\"storageclass\" → CSI StorageClass; type=\"backup\" → off-cluster backup target.";
           };
+
+          # Per-aspect typed settings, surfaced to cluster-scoped aspect functions
+          # as `cluster.settings.<aspect.path>.*` — the cluster mirror of
+          # host.settings. Auto-discovered from each aspect's inline `.settings`
+          # block via the shared settingsType. Set per-cluster, e.g.
+          # `den.clusters.axon.settings.kubernetes.services.dev.coder.coder.bootstrap = true;`.
+          settings =
+            mkOption {
+              type = settingsType;
+              default = { };
+              description = "Per-aspect typed settings for cluster-scoped aspects (mirrors host.settings)";
+            }
+            // {
+              identity = false;
+            };
         };
       })
     ];
