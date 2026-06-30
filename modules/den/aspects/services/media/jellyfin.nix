@@ -97,6 +97,13 @@
                   };
                   tag = "RepositoryInfo";
                 }
+                {
+                  content = {
+                    Name = "Shokofin";
+                    Url = "https://raw.githubusercontent.com/ShokoAnime/Shokofin/metadata/stable/manifest.json";
+                  };
+                  tag = "RepositoryInfo";
+                }
               ];
             };
 
@@ -127,6 +134,21 @@
                 contentType = "tvshows";
                 pathInfos = [ "${mediaRoot}/anime" ];
                 enableAutomaticSeriesGrouping = true;
+              };
+              AnimeMovies = {
+                enabled = true;
+                contentType = "movies";
+                pathInfos = [ "${mediaRoot}/anime-movies" ];
+                typeOptions.Movies = {
+                  metadataFetchers = [
+                    "The Open Movie Database"
+                    "TheMovieDb"
+                  ];
+                  imageFetchers = [
+                    "The Open Movie Database"
+                    "TheMovieDb"
+                  ];
+                };
               };
               Books = {
                 enabled = true;
