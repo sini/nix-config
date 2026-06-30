@@ -8,7 +8,7 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# AniDB talks over its own ports: UDP API on 9000, HTTP API on 9001 —
+# AniDB talks over its own ports: UDP API on 9000/9002, HTTP API on 9001 —
 # world egress for those rides an extra CNP next to the standard 80/443
 # (artwork CDN) policy.
 #
@@ -357,7 +357,7 @@
               };
 
               allow-anidb-egress-shoko.spec = {
-                description = "Allow shoko to reach the AniDB UDP (9000) and HTTP (9001) APIs.";
+                description = "Allow shoko to reach the AniDB UDP (9000, 9002) and HTTP (9001) APIs.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "shoko";
                 egress = [
                   {
@@ -372,6 +372,10 @@
                           {
                             port = "9001";
                             protocol = "TCP";
+                          }
+                          {
+                            port = "9002";
+                            protocol = "UDP";
                           }
                         ];
                       }
