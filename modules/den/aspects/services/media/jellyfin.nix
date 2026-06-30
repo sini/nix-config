@@ -139,16 +139,6 @@
                 enabled = true;
                 contentType = "movies";
                 pathInfos = [ "${mediaRoot}/anime-movies" ];
-                typeOptions.Movies = {
-                  metadataFetchers = [
-                    "The Open Movie Database"
-                    "TheMovieDb"
-                  ];
-                  imageFetchers = [
-                    "The Open Movie Database"
-                    "TheMovieDb"
-                  ];
-                };
               };
               Books = {
                 enabled = true;
