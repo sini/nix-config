@@ -42,6 +42,11 @@
         ...
       }:
       let
+        # Private LB IP (kubernetes-loadbalancers pool) for the internal Shoko
+        # API service below — BGP-advertised to the uplink host, not routable
+        # from the internet.
+        internalAddress = cluster.getAssignment "shoko-internal";
+
         # Alloy River config for the per-pod log-tail sidecar. Shoko (official
         # image, .NET / NLog) writes date-named log files under
         # /home/shoko/.shoko/Shoko.CLI/logs/<date>.log on the state PVC; the glob
@@ -181,6 +186,31 @@
 
               service.main = {
                 controller = "main";
+                # Pin the public service name to `shoko`: bjw-s suffixes every
+                # service with its identifier once a controller owns >1 service
+                # (main would become `shoko-main`), which would dangle the
+                # HTTPRoute backendRef (-> `shoko`) below. forceRename keeps this
+                # the byte-identical single-service name.
+                forceRename = "shoko";
+                ports.http.port = 8111;
+              };
+
+              # Internal-only LoadBalancer so off-cluster callers on the LAN can
+              # reach Shoko's API directly, bypassing the OIDC-gated public route.
+              # Jellyfin/Shokofin runs on the uplink host (outside the cluster)
+              # and only speaks Shoko's native host + username/password login, so
+              # it can't satisfy the Envoy OIDC SecurityPolicy on the public
+              # `shoko` HTTPRoute. The LB IP comes from the private
+              # kubernetes-loadbalancers pool (BGP-advertised to uplink, NOT
+              # internet-routable — haproxy only SNI-forwards :443 to the
+              # gateway), so the auth in front of it is Shoko's own API key.
+              # externalTrafficPolicy=Local preserves the caller's real source
+              # IP; the CNP below scopes ingress to the private LAN range.
+              service.internal = {
+                controller = "main";
+                type = "LoadBalancer";
+                externalTrafficPolicy = "Local";
+                annotations."lbipam.cilium.io/ips" = internalAddress;
                 ports.http.port = 8111;
               };
 
@@ -228,6 +258,34 @@
                     fromEndpoints = [
                       { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
                     ];
+                    toPorts = [
+                      {
+                        ports = [
+                          {
+                            port = "8111";
+                            protocol = "TCP";
+                          }
+                        ];
+                      }
+                    ];
+                  }
+                ];
+              };
+
+              # Off-cluster LAN callers (e.g. Jellyfin/Shokofin on uplink) reach
+              # Shoko over the internal LoadBalancer service above, bypassing the
+              # OIDC gateway. Allow the whole private 10.0.0.0/8 range rather than
+              # pinning a single host IP: it's portable (any LAN host, no
+              # per-deployment IP), the LB IP is RFC1918 / not internet-routable,
+              # and Shoko's own login is the auth in front. The wide CIDR also
+              # covers both the externalTrafficPolicy=Local source (the caller's
+              # real IP) and any future node-SNAT (a cluster node's 10.x address).
+              allow-lan-ingress-shoko.spec = {
+                description = "Allow private-LAN clients (e.g. Jellyfin/Shokofin) to reach shoko on 8111, bypassing the OIDC gateway.";
+                endpointSelector.matchLabels."app.kubernetes.io/name" = "shoko";
+                ingress = [
+                  {
+                    fromCIDR = [ "10.0.0.0/8" ];
                     toPorts = [
                       {
                         ports = [
