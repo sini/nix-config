@@ -1,0 +1,58 @@
+Subject: [PATCH] kanidm: 8h OAuth2 access tokens + refresh-token reuse grace
+
+Two carried patches that together stop the Envoy-Gateway/kanidm logout loop.
+Envoy's oauth2 filter is stateless and cannot single-flight refreshes; kanidm's
+refresh-token reuse check is strict single-use with no grace. With 15m access
+tokens, SPA backends behind the gateway refresh constantly, fan concurrent
+same-token refreshes across replicas, and trip reuse detection -> session
+destroyed -> user logged out. Both constants are compile-time and not
+configurable in kanidm 1.10.4 (proven from source).
+
+(B) constants/mod.rs: OAUTH2_ACCESS_TOKEN_EXPIRY 15m -> 8h. The proxy then
+    almost never refreshes mid-session. Revocation latency rises to <=8h
+    (accepted posture trade-off).
+(A) idm/oauth2.rs: tolerate a 60s grace in the refresh reuse check so the rare
+    concurrent refresh of a just-rotated token is not misdetected as reuse.
+    Genuinely stale tokens still nuke the session.
+
+Only .rs files change, so the vendored cargoDeps hash is unaffected.
+---
+diff --git a/server/lib/src/constants/mod.rs b/server/lib/src/constants/mod.rs
+index 1840dc9..1824dd1 100644
+--- a/server/lib/src/constants/mod.rs
++++ b/server/lib/src/constants/mod.rs
+@@ -185,7 +185,13 @@ pub const OAUTH_REFRESH_TOKEN_EXPIRY: u32 = 3600 * 16;
+ 
+ /// How long access tokens should last. This is NOT the length
+ /// of the refresh token, which is bound to the issuing session.
+-pub const OAUTH2_ACCESS_TOKEN_EXPIRY: u32 = 15 * 60;
++//
++// nix-config patch: raised from 15m to 8h. The Envoy Gateway oauth2 filter is
++// stateless and cannot single-flight refreshes; with 15m tokens its SPA backends
++// refresh constantly and race kanidm's single-use refresh-token reuse check. An
++// 8h access token means the proxy almost never refreshes mid-session. Paired with
++// the refresh reuse-grace patch in idm/oauth2.rs.
++pub const OAUTH2_ACCESS_TOKEN_EXPIRY: u32 = 8 * 60 * 60;
+ 
+ /// The amount of time a suppliers clock can be "ahead" before
+ /// we warn about possible clock synchronisation issues.
+diff --git a/server/lib/src/idm/oauth2.rs b/server/lib/src/idm/oauth2.rs
+index 7e2ad23..0512c48 100644
+--- a/server/lib/src/idm/oauth2.rs
++++ b/server/lib/src/idm/oauth2.rs
+@@ -1653,7 +1653,14 @@ impl IdmServerProxyWriteTransaction<'_> {
+                 // this indicates session desync / replay. We must nuke the session at this point.
+                 //
+                 // Need to think about how to handle this nicely give transactions.
+-                if iat < oauth2_session.issued_at.unix_timestamp() {
++                //
++                // nix-config patch: tolerate a short grace window so that concurrent refreshes
++                // carrying the SAME just-rotated refresh token (e.g. parallel XHRs fanned across
++                // multiple stateless Envoy gateway replicas that cannot single-flight) are not
++                // misdetected as reuse and do not destroy the session. This is the OAuth2 Security
++                // BCP refresh-token rotation grace. Genuinely stale tokens (issued more than the
++                // grace before the session's issued_at) still trip reuse detection and nuke it.
++                if iat < oauth2_session.issued_at.unix_timestamp() - 60 {
+                     security_info!(
+                         ?session_id,
+                         "Attempt to reuse a refresh token detected, destroying session"

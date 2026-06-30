@@ -14,7 +14,6 @@ let
     elem
     unique
     optionalAttrs
-    mkMerge
     ;
 
   groups = config.den.groups;
@@ -499,7 +498,17 @@ in
       {
         services = {
           kanidm = {
-            package = pkgs.kanidm_1_10.withSecretProvisioning;
+            # Carries two OAuth2 token-lifetime patches (see the .patch header):
+            # (B) 8h access tokens so the stateless Envoy oauth2 filter rarely
+            # refreshes, and (A) a refresh-token reuse grace so the rare concurrent
+            # refresh fanned across the gateway replicas isn't misdetected as reuse
+            # and doesn't destroy the session. Neither is configurable in kanidm
+            # (proven from source). Only .rs files change, so vendored cargoDeps
+            # stay valid; --replace would silently no-op on a bump, so a context
+            # diff (fails loudly if the lines move) is used instead.
+            package = pkgs.kanidm_1_10.withSecretProvisioning.overrideAttrs (old: {
+              patches = (old.patches or [ ]) ++ [ ./kanidm-oauth2-token-tuning.patch ];
+            });
 
             server = {
               enable = true;

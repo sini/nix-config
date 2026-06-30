@@ -65,6 +65,7 @@
             "*.xml"
             "*.dds"
             "*.diff"
+            "*.patch"
             "*.bin"
             # Underscore-prefixed files/dirs are ignored by the module auto-import system
             "**/_*/**"
