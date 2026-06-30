@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-lan-ingress-shoko
+  namespace: media
+spec:
+  description: Allow private-LAN clients (e.g. Jellyfin/Shokofin) to reach shoko on 8111, bypassing the OIDC gateway.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: shoko
+  ingress:
+    - fromCIDR:
+        - 10.0.0.0/8
+      toPorts:
+        - ports:
+            - port: "8111"
+              protocol: TCP

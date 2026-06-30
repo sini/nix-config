@@ -59,6 +59,10 @@
         assignments = {
           cilium-ingress-controller = "10.11.0.2";
           default-gateway = "10.11.0.1";
+          # Internal-only LB for Shoko's API, reached by Jellyfin/Shokofin on the
+          # uplink host (off-cluster) so it bypasses the OIDC-gated public route.
+          # BGP-advertised to uplink, NOT internet-routable. See media/shoko.nix.
+          shoko-internal = "10.11.0.10";
         };
       };
     };
