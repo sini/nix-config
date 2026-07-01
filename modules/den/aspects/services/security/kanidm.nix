@@ -258,6 +258,28 @@ let
         preferShortUsername = true;
       };
 
+      opkssh = {
+        displayName = "opkssh";
+        public = true;
+        enableLocalhostRedirects = true;
+        enableLegacyCrypto = true; # opkssh needs RS256; kanidm defaults to ES256
+        preferShortUsername = true;
+        originUrl = [
+          "http://localhost:3000/login-callback"
+          "http://localhost:10001/login-callback"
+          "http://localhost:11110/login-callback"
+          # iOS (rootshell) uses a custom URL scheme, not localhost loopback — its redirect
+          # URI is added later once captured hands-on. Do NOT invent one now.
+        ];
+        originLanding = "http://localhost:3000";
+        scopeMaps."opkssh.access" = [
+          "openid"
+          "email"
+          "profile"
+          "groups"
+        ];
+      };
+
       longhorn = {
         displayName = "longhorn";
         originUrl = [ "https://${domain "longhorn"}/oauth2/callback" ];
