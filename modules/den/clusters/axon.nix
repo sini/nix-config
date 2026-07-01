@@ -29,6 +29,15 @@
     # modules/den/aspects/kubernetes/services/network/cilium/settings.nix.
     settings.kubernetes.services.network.cilium.devices = "enp+";
 
+    # RomM initial full-library scan: the ~100k-ROM first pass far exceeds RomM's
+    # 4h default scan window, so give the scan job a 14-day timeout and raise the
+    # per-ROM scan concurrency (SCAN_WORKERS — an asyncio semaphore over
+    # metadata-provider I/O) well above the serial default. Replicas stay at 1:
+    # they do not speed a single scan. See
+    # modules/den/aspects/kubernetes/services/media/romm-settings.nix.
+    settings.kubernetes.services.media.romm.scanTimeout = 14 * 24 * 60 * 60; # 14 days
+    settings.kubernetes.services.media.romm.scanWorkers = 10;
+
     networks = {
       control-plane = {
         cidr = "10.10.10.0/24";

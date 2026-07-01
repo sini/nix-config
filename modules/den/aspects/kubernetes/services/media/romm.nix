@@ -162,6 +162,15 @@
         charts,
         ...
       }:
+      let
+        # Tunable scan/scale knobs (romm-settings.nix; per-cluster overrides in the
+        # cluster's `settings.kubernetes.services.media.romm.*`).
+        inherit (cluster.settings.kubernetes.services.media.romm)
+          scanTimeout
+          scanWorkers
+          replicas
+          ;
+      in
       {
         applications.romm = {
           namespace = "media";
@@ -171,6 +180,10 @@
             values = {
               controllers.main = {
                 type = "deployment";
+                # Replica count is a cluster setting. NOTE: extra replicas do NOT
+                # speed a single scan (that is SCAN_WORKERS below); see
+                # romm-settings.nix for the RWO-userdata caveat before raising it.
+                inherit replicas;
                 containers.main = {
                   image = {
                     repository = "rommapp/romm";
@@ -180,6 +193,13 @@
                     TZ = "America/Los_Angeles";
                     PUID = "1027";
                     PGID = "65536";
+
+                    # --- scanning (cluster-tunable; see romm-settings.nix) ---
+                    # SCAN_TIMEOUT caps a single scan job; SCAN_WORKERS is the
+                    # asyncio concurrency over per-ROM metadata I/O (the real
+                    # throughput lever — default 1 scans strictly serially).
+                    SCAN_TIMEOUT = toString scanTimeout;
+                    SCAN_WORKERS = toString scanWorkers;
 
                     # --- database (media-pg, postgresql driver) ---
                     ROMM_DB_DRIVER = "postgresql";

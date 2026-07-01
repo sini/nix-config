@@ -107,6 +107,10 @@ spec:
                   name: media-romm
             - name: ROMM_DB_DRIVER
               value: postgresql
+            - name: SCAN_TIMEOUT
+              value: "1209600"
+            - name: SCAN_WORKERS
+              value: "10"
             - name: STEAMGRIDDB_API_KEY
               valueFrom:
                 secretKeyRef:
