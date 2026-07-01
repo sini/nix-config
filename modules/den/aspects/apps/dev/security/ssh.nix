@@ -25,7 +25,12 @@
           settings = {
             "*" = {
               forwardAgent = false;
-              addKeysToAgent = "yes";
+              # "no", not "yes": gpg-agent is our ssh-agent, and adding a key to it
+              # makes it demand a protective passphrase. opkssh mints an EPHEMERAL
+              # key+cert (~/.ssh/id_ecdsa) every login, which we do not want persisted
+              # or passphrase-wrapped — ssh uses it directly from disk. The YubiKey is
+              # agent-native and unaffected by this setting.
+              addKeysToAgent = "no";
               compression = true;
               serverAliveInterval = 0;
               serverAliveCountMax = 3;
