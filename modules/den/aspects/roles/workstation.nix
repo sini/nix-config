@@ -29,6 +29,8 @@
       apps.browsers.firefox
       apps.browsers.chromium
 
+      apps.dev.security.opkssh-client
+
       apps.mail.protonmail
 
       apps.productivity.obs-studio

@@ -40,6 +40,7 @@
       apps.dev.editor.vscode
       apps.dev.git.gitkraken
       apps.dev.networking.wireshark
+      apps.dev.security.opkssh-client
       apps.productivity.obsidian
       apps.productivity.obs-studio
       apps.mail.protonmail
