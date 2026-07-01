@@ -23,30 +23,58 @@ in
       {
         options = {
           identity = mkOption {
-            type = types.submodule {
-              options = {
-                displayName = mkOption {
-                  type = types.str;
-                  default = "";
-                  description = "Display name for the user";
+            type = types.submodule (
+              { config, ... }:
+              {
+                options = {
+                  displayName = mkOption {
+                    type = types.str;
+                    default = "";
+                    description = "Display name for the user";
+                  };
+                  email = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "Email address for the user";
+                  };
+                  gpgKey = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = "GPG key ID for the user";
+                  };
+                  sshKeys = mkOption {
+                    type = types.listOf sshKeyType;
+                    default = [ ];
+                    description = "SSH public keys for the user, each with an optional tag";
+                  };
+                  sshOidcPrincipals = mkOption {
+                    type = types.listOf (
+                      types.submodule {
+                        options = {
+                          provider = mkOption {
+                            type = types.enum [
+                              "kanidm"
+                              "google"
+                            ];
+                            description = "Which opkssh OIDC provider this principal authenticates against.";
+                          };
+                          email = mkOption {
+                            type = types.str;
+                            description = "OIDC email claim authorized to log in as this user via opkssh.";
+                          };
+                        };
+                      }
+                    );
+                    default = lib.optional (config.email != null) {
+                      provider = "kanidm";
+                      email = config.email;
+                    };
+                    defaultText = "kanidm principal from identity.email (if set)";
+                    description = "opkssh OIDC principals authorized to log in as this user.";
+                  };
                 };
-                email = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "Email address for the user";
-                };
-                gpgKey = mkOption {
-                  type = types.nullOr types.str;
-                  default = null;
-                  description = "GPG key ID for the user";
-                };
-                sshKeys = mkOption {
-                  type = types.listOf sshKeyType;
-                  default = [ ];
-                  description = "SSH public keys for the user, each with an optional tag";
-                };
-              };
-            };
+              }
+            );
             default = { };
             description = "User identity information";
           };
