@@ -120,6 +120,11 @@
       description = "Coder admin role";
       members = [ "admins" ];
     };
+    "opkssh.access" = {
+      labels = [ "oauth-grant" ];
+      description = "Members may obtain an opkssh OIDC SSH token from kanidm.";
+      members = [ "admins" ];
+    };
 
     # POSIX groups (Unix permissions with gidNumber)
     wheel = {
