@@ -12,6 +12,12 @@
 # world egress for those rides an extra CNP next to the standard 80/443
 # (artwork CDN) policy.
 #
+# Rename/move: Shoko 5.3.x stable has no in-app plugin manager, so the
+# LuaRenamer plugin (which can branch the destination folder on media type,
+# unlike the built-in WebAOM renamer) is installed declaratively by an init
+# container that drops the pinned release onto the config PVC — see
+# initContainers.install-luarenamer / installLuaRenamerScript below.
+#
 # Version pinned to v5.3.3 — latest stable. Bump in a dedicated pass.
 {
   den.aspects.kubernetes.services.media.shoko = {
@@ -118,6 +124,41 @@
             }
           }
         '';
+
+        # LuaRenamer plugin, installed declaratively onto the config PVC (Shoko
+        # 5.3.x stable has no in-app plugin manager). Pinned to the current
+        # stable build, which targets Shoko abstractions 5.3.1 and is compatible
+        # with the 5.3.3 server pinned above. The release URL path uses the git
+        # tag; the asset filename carries the full `git describe` suffix. Bump
+        # both together (see https://github.com/Mik1ll/LuaRenamer/releases).
+        luaRenamerTag = "v5.10.3-stable-5.3.1";
+        luaRenamerAsset = "LuaRenamer_${luaRenamerTag}-0-g4f8f6bb_linux-x64.zip";
+
+        # Install script for the init container below. Idempotent via a
+        # per-version marker: it downloads only on first install or a version
+        # bump, so ordinary pod restarts need no network (and never block on
+        # GitHub being reachable). GitHub release assets 302-redirect to a CDN,
+        # so curl -L is required — busybox wget will not follow the redirect.
+        # Extracted files are chown'd to the shoko uid (1027:65536) that owns the
+        # state PVC so the server can load them.
+        installLuaRenamerScript = ''
+          set -eu
+          dst=/home/shoko/.shoko/Shoko.CLI/plugins
+          marker="$dst/LuaRenamer/.installed-${luaRenamerTag}"
+          if [ -f "$marker" ]; then
+            echo "LuaRenamer ${luaRenamerTag} already present; skipping."
+            exit 0
+          fi
+          echo "Installing LuaRenamer ${luaRenamerTag}..."
+          apk add --no-cache curl unzip
+          mkdir -p "$dst"
+          rm -rf "$dst/LuaRenamer"
+          curl -fL "https://github.com/Mik1ll/LuaRenamer/releases/download/${luaRenamerTag}/${luaRenamerAsset}" -o /tmp/lr.zip
+          unzip -o /tmp/lr.zip -d "$dst"
+          chown -R 1027:65536 "$dst/LuaRenamer"
+          touch "$marker"
+          echo "LuaRenamer ${luaRenamerTag} installed."
+        '';
       in
       {
         applications.shoko = {
@@ -181,6 +222,23 @@
                     runAsUser = 1027;
                     runAsGroup = 65536;
                   };
+                };
+
+                # Install the LuaRenamer plugin onto the config PVC before Shoko
+                # starts (see installLuaRenamerScript above). alpine for curl +
+                # unzip; runs as root (default) so it can apk-add and chown the
+                # extracted files to the shoko uid. globalMounts on the config
+                # PVC reach init containers, so /home/shoko/.shoko is present.
+                initContainers.install-luarenamer = {
+                  image = {
+                    repository = "alpine";
+                    tag = "3.21";
+                  };
+                  command = [
+                    "/bin/sh"
+                    "-c"
+                    installLuaRenamerScript
+                  ];
                 };
               };
 
