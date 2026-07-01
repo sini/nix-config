@@ -88,6 +88,9 @@
             ".aider*"
             "!.aider.conf.yml"
             "!.aiderignore"
+            ".worktrees"
+            ".pre-commit-config.yaml"
+            ".claude"
           ];
 
           includes = lib.pipe allIdentities [
