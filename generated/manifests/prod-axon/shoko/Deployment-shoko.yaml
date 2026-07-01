@@ -85,6 +85,34 @@ spec:
       hostIPC: false
       hostNetwork: false
       hostPID: false
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              dst=/home/shoko/.shoko/Shoko.CLI/plugins
+              marker="$dst/LuaRenamer/.installed-v5.10.3-stable-5.3.1"
+              if [ -f "$marker" ]; then
+                echo "LuaRenamer v5.10.3-stable-5.3.1 already present; skipping."
+                exit 0
+              fi
+              echo "Installing LuaRenamer v5.10.3-stable-5.3.1..."
+              apk add --no-cache curl unzip
+              mkdir -p "$dst"
+              rm -rf "$dst/LuaRenamer"
+              curl -fL "https://github.com/Mik1ll/LuaRenamer/releases/download/v5.10.3-stable-5.3.1/LuaRenamer_v5.10.3-stable-5.3.1-0-g4f8f6bb_linux-x64.zip" -o /tmp/lr.zip
+              unzip -o /tmp/lr.zip -d "$dst"
+              chown -R 1027:65536 "$dst/LuaRenamer"
+              touch "$marker"
+              echo "LuaRenamer v5.10.3-stable-5.3.1 installed."
+          image: alpine:3.21
+          name: install-luarenamer
+          volumeMounts:
+            - mountPath: /home/shoko/.shoko
+              name: config
+            - mountPath: /data
+              name: data
       serviceAccountName: shoko
       volumes:
         - name: config
