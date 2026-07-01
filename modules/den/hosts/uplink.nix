@@ -13,6 +13,9 @@
 
     settings = {
       services.bgp.localAsn = 65000;
+      # Break-glass jumpbox: sshd stays publicly reachable (all other hosts are
+      # tailnet/LAN-only).
+      core.security.openssh.exposure = "public";
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_EVO_Plus_4TB_S7U8NJ0XC20015K";
       core.impermanence = {
         wipeRootOnBoot = true;
