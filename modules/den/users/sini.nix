@@ -16,6 +16,24 @@
     identity = {
       displayName = "Jason Bowman";
       email = "jason@json64.dev";
+
+      # opkssh: which kanidm OIDC identities may log in as this unix account.
+      # The human's SSO login is the `json` identity-only person (json@json64.dev,
+      # admins — see identity-only.nix), a DIFFERENT kanidm resource than the `sini`
+      # unix-user person (jason@). The default would only map sini's own email, so
+      # `opkssh login` (which authenticates as `json`) would be rejected. Authorize
+      # both of Jason's kanidm identities to assume the `sini` unix account.
+      sshOidcPrincipals = [
+        {
+          provider = "kanidm";
+          email = "json@json64.dev";
+        }
+        {
+          provider = "kanidm";
+          email = "jason@json64.dev";
+        }
+      ];
+
       gpgKey = "0xE822121B6A3D7FC6";
       sshKeys = [
         {
