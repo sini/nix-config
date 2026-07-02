@@ -66,26 +66,38 @@
         # Composite AuthorizedKeysCommand: emit opkssh-verified principals (if a valid
         # opkssh cert was presented) AND nix-darwin's static keys, then always exit 0 so
         # sshd uses the combined output regardless of opkssh's verdict. Reuses _sshd.
+        # `cd /` first: sshd runs this in the login user's home, which _sshd can't stat
+        # (noisy getcwd errors otherwise). It may reference store paths internally — sshd
+        # only safe-path-checks the AuthorizedKeysCommand path, not what the script calls.
         authKeysCmd = pkgs.writeShellScript "opkssh-authorized-keys" ''
+          cd /
           ${pkgs.opkssh}/bin/opkssh verify "$1" "$2" "$3" 2>/dev/null || true
           /bin/cat "/etc/ssh/nix_authorized_keys.d/$1" 2>/dev/null || true
           exit 0
         '';
+        # sshd refuses an AuthorizedKeysCommand whose path (or any parent) is group/world
+        # writable — and on macOS /nix/store IS group-writable ("Unsafe AuthorizedKeysCommand
+        # ... bad ownership or modes for directory /nix/store"). nix-darwin sidesteps this with
+        # /bin/cat; we must too, so the command is installed to a root-owned safe path below.
+        authKeysCmdPath = "/etc/opk/authorized-keys-command";
       in
       {
-        # 100- sorts before nix-darwin's 101-authorized-keys.conf, so sshd takes this
-        # composite AuthorizedKeysCommand (first value wins). A store symlink is fine here.
+        # 100- sorts before nix-darwin's 101-authorized-keys.conf, so sshd uses this composite
+        # command (first value wins). Points at the safe /etc path, NOT the store (see above).
         environment.etc."ssh/sshd_config.d/100-opkssh.conf".text = ''
-          AuthorizedKeysCommand ${authKeysCmd} %u %k %t
+          AuthorizedKeysCommand ${authKeysCmdPath} %u %k %t
           AuthorizedKeysCommandUser _sshd
         '';
 
-        # opkssh REFUSES to read a policy file unless it is mode 640 (anti-tampering check);
-        # nix-darwin's environment.etc only makes 0444 store symlinks, which opkssh rejects
-        # ("policy file has insecure permissions ... got (444)"). So materialise the policy
-        # files as real 0640 files owned by _sshd (the verify user) via an activation script.
+        # Materialise, via activation script (nix-darwin's environment.etc only makes 0444
+        # store symlinks), two things that can't live in the store:
+        #  - the AuthorizedKeysCommand at a root-owned safe path (store is group-writable → sshd
+        #    rejects it);
+        #  - the opkssh policy files as real 0640 files owned by _sshd — opkssh refuses a policy
+        #    file that isn't mode 640 ("insecure permissions ... got (444)").
         system.activationScripts.postActivation.text = ''
           mkdir -p /etc/opk
+          install -m 0755 ${authKeysCmd} ${authKeysCmdPath}
           rm -f /etc/opk/providers /etc/opk/auth_id
           install -m 0640 -o _sshd ${providersFile} /etc/opk/providers
           install -m 0640 -o _sshd ${authIdFile} /etc/opk/auth_id
