@@ -58,6 +58,11 @@
         authIdLines = lib.concatMap (
           u: map (p: "${u.name} ${p.email} ${issuerFor p}") (u.sshOidcPrincipals or [ ])
         ) resolved-users;
+        providersFile = pkgs.writeText "opk-providers" ''
+          https://accounts.google.com 206584157355-7cbe4s640tvm7naoludob4ut1emii7sf.apps.googleusercontent.com 24h
+          https://${idmDomain}/oauth2/openid/opkssh opkssh 24h
+        '';
+        authIdFile = pkgs.writeText "opk-auth-id" (lib.concatStringsSep "\n" authIdLines + "\n");
         # Composite AuthorizedKeysCommand: emit opkssh-verified principals (if a valid
         # opkssh cert was presented) AND nix-darwin's static keys, then always exit 0 so
         # sshd uses the combined output regardless of opkssh's verdict. Reuses _sshd.
@@ -68,19 +73,23 @@
         '';
       in
       {
-        environment.etc = {
-          "opk/providers".text = ''
-            https://accounts.google.com 206584157355-7cbe4s640tvm7naoludob4ut1emii7sf.apps.googleusercontent.com 24h
-            https://${idmDomain}/oauth2/openid/opkssh opkssh 24h
-          '';
-          "opk/auth_id".text = lib.concatStringsSep "\n" authIdLines + "\n";
-          # 100- sorts before nix-darwin's 101-authorized-keys.conf, so sshd takes this
-          # composite AuthorizedKeysCommand (first value wins). _sshd matches nix-darwin.
-          "ssh/sshd_config.d/100-opkssh.conf".text = ''
-            AuthorizedKeysCommand ${authKeysCmd} %u %k %t
-            AuthorizedKeysCommandUser _sshd
-          '';
-        };
+        # 100- sorts before nix-darwin's 101-authorized-keys.conf, so sshd takes this
+        # composite AuthorizedKeysCommand (first value wins). A store symlink is fine here.
+        environment.etc."ssh/sshd_config.d/100-opkssh.conf".text = ''
+          AuthorizedKeysCommand ${authKeysCmd} %u %k %t
+          AuthorizedKeysCommandUser _sshd
+        '';
+
+        # opkssh REFUSES to read a policy file unless it is mode 640 (anti-tampering check);
+        # nix-darwin's environment.etc only makes 0444 store symlinks, which opkssh rejects
+        # ("policy file has insecure permissions ... got (444)"). So materialise the policy
+        # files as real 0640 files owned by _sshd (the verify user) via an activation script.
+        system.activationScripts.postActivation.text = ''
+          mkdir -p /etc/opk
+          rm -f /etc/opk/providers /etc/opk/auth_id
+          install -m 0640 -o _sshd ${providersFile} /etc/opk/providers
+          install -m 0640 -o _sshd ${authIdFile} /etc/opk/auth_id
+        '';
       };
   };
 
