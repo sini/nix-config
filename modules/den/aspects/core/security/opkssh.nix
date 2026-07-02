@@ -1,6 +1,13 @@
 {
-  # NIXOS-BRANCH-ONLY: darwin (patch) pulls roles.default but ignores the nixos branch,
-  # so services.opkssh (a NixOS-only module) never evaluates there. Do NOT add os/darwin.
+  # opkssh SERVER verifier.
+  # - NixOS: the nixpkgs `services.opkssh` module wires sshd's AuthorizedKeysCommand
+  #   + /etc/opk/{providers,auth_id} for us (nixos branch below).
+  # - darwin: there is no nix-darwin module, so the `darwin` branch hand-rolls the same
+  #   thing. Critically, nix-darwin ALREADY owns sshd's AuthorizedKeysCommand for static
+  #   keys (101-authorized-keys.conf: `/bin/cat /etc/ssh/nix_authorized_keys.d/%u`), and
+  #   sshd honours only the first AuthorizedKeysCommand — so we COMPOSE with it (a wrapper
+  #   that runs opkssh verify AND cats that same static-key file), at 100- so it wins,
+  #   without breaking key-based access.
   den.aspects.core.security.opkssh = {
     nixos =
       { environment, ... }:
@@ -26,6 +33,53 @@
             };
           };
           # authorizations are contributed per-user via den.schema.user.includes below.
+        };
+      };
+
+    # macOS hand-rolled verifier (no nix-darwin services.opkssh). Builds auth_id from the
+    # host's resolved users (via the resolved-users collection, which now carries
+    # sshOidcPrincipals) instead of the nixos-only list option.
+    darwin =
+      {
+        pkgs,
+        lib,
+        environment,
+        resolved-users,
+        ...
+      }:
+      let
+        idmDomain = environment.getDomainFor "kanidm";
+        issuerFor =
+          p:
+          if p.provider == "google" then
+            "https://accounts.google.com"
+          else
+            "https://${idmDomain}/oauth2/openid/opkssh";
+        authIdLines = lib.concatMap (
+          u: map (p: "${u.name} ${p.email} ${issuerFor p}") (u.sshOidcPrincipals or [ ])
+        ) resolved-users;
+        # Composite AuthorizedKeysCommand: emit opkssh-verified principals (if a valid
+        # opkssh cert was presented) AND nix-darwin's static keys, then always exit 0 so
+        # sshd uses the combined output regardless of opkssh's verdict. Reuses _sshd.
+        authKeysCmd = pkgs.writeShellScript "opkssh-authorized-keys" ''
+          ${pkgs.opkssh}/bin/opkssh verify "$1" "$2" "$3" 2>/dev/null || true
+          /bin/cat "/etc/ssh/nix_authorized_keys.d/$1" 2>/dev/null || true
+          exit 0
+        '';
+      in
+      {
+        environment.etc = {
+          "opk/providers".text = ''
+            https://accounts.google.com 206584157355-7cbe4s640tvm7naoludob4ut1emii7sf.apps.googleusercontent.com 24h
+            https://${idmDomain}/oauth2/openid/opkssh opkssh 24h
+          '';
+          "opk/auth_id".text = lib.concatStringsSep "\n" authIdLines + "\n";
+          # 100- sorts before nix-darwin's 101-authorized-keys.conf, so sshd takes this
+          # composite AuthorizedKeysCommand (first value wins). _sshd matches nix-darwin.
+          "ssh/sshd_config.d/100-opkssh.conf".text = ''
+            AuthorizedKeysCommand ${authKeysCmd} %u %k %t
+            AuthorizedKeysCommandUser _sshd
+          '';
         };
       };
   };
