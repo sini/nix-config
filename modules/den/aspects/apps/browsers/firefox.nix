@@ -7,10 +7,11 @@ in
     homeManager =
       {
         pkgs,
+        inputs',
         ...
       }:
       let
-        inherit (inputs.firefox-addons.packages.${pkgs.stdenv.hostPlatform.system})
+        inherit (inputs'.firefox-addons.packages)
           bitwarden
           ublock-origin
           sponsorblock

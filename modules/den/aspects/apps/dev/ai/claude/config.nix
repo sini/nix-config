@@ -13,7 +13,6 @@
 # Switching blanket -> per-entry reuses the same /persist/.../.claude/* paths, so
 # existing data is preserved; an entry omitted from every bucket is not deleted,
 # only unmounted (recoverable by adding it to a bucket).
-{ ... }:
 {
   den.aspects.apps.dev.ai.claude-config = {
 

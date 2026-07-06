@@ -9,7 +9,6 @@
 # Included + gated `isHub` from uplink.nix (the bgp pattern). Identity is a
 # host-level agenix secret (`syncthing-identity` generator) committing the public
 # `.crt`/`.id` sidecars, like the per-user member identity.
-{ ... }:
 {
   den.aspects.core.network.syncthing.hub = {
     # Daemon state + folder data survive the root wipe (uplink wipeRootOnBoot),

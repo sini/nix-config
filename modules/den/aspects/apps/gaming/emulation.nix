@@ -4,6 +4,7 @@
     nixos =
       {
         pkgs,
+        inputs',
         ...
       }:
       {
@@ -13,7 +14,7 @@
 
         programs.wine = {
           enable = true;
-          package = inputs.nix-gaming.packages.${pkgs.stdenv.hostPlatform.system}.wine-ge;
+          package = inputs'.nix-gaming.packages.wine-ge;
           binfmt = true;
           ntsync = true;
         };

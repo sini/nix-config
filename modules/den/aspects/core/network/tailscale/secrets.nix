@@ -1,6 +1,5 @@
 # Tailscale auth key — generated against the headscale host, shared by the
 # Linux and Darwin concerns of the tailscale aspect.
-{ ... }:
 {
   den.aspects.core.network.tailscale.age-secrets =
     { environment, host, ... }:

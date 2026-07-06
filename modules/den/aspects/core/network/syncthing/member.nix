@@ -8,7 +8,6 @@
 # The replicated dirs stay persisted via the `claude` aspect's `persistHome`, so
 # this collector owns no system/firewall content — that is the user-scoped `peer`
 # aspect (peers.nix).
-{ ... }:
 {
   den.aspects.core.network.syncthing.member.homeManager =
     {

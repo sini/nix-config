@@ -32,51 +32,50 @@
 # CiliumNetworkPolicies here (raw aspect, no helper baselines).
 #
 # Version: pinned to the latest stable recyclarr release (8.6.0). Bump at deploy time.
-{ ... }:
-let
-  schedule = "0 0 * * *"; # daily at midnight (cluster TZ via env TZ)
-
-  # Minimal-but-real starter config. !env_var pulls the key from the env we wire
-  # below. quality_definition sync is the safe, always-applicable baseline.
-  recyclarrYml = ''
-    sonarr:
-      series:
-        base_url: http://sonarr:8989
-        api_key: !env_var SONARR_API_KEY
-        quality_definition:
-          type: series
-
-    radarr:
-      movies:
-        base_url: http://radarr:7878
-        api_key: !env_var RADARR_API_KEY
-        quality_definition:
-          type: movie
-  '';
-
-  # Egress edge to a single *arr service port.
-  arrEgress = svc: port: {
-    toEndpoints = [
-      { matchLabels."app.kubernetes.io/name" = svc; }
-    ];
-    toPorts = [
-      {
-        ports = [
-          {
-            port = toString port;
-            protocol = "TCP";
-          }
-        ];
-      }
-    ];
-  };
-
-  podSelector.matchLabels."app.kubernetes.io/name" = "recyclarr";
-in
 {
   den.aspects.kubernetes.services.media.recyclarr = {
     k8s-manifests =
       { charts, ... }:
+      let
+        schedule = "0 0 * * *"; # daily at midnight (cluster TZ via env TZ)
+
+        # Minimal-but-real starter config. !env_var pulls the key from the env we wire
+        # below. quality_definition sync is the safe, always-applicable baseline.
+        recyclarrYml = ''
+          sonarr:
+            series:
+              base_url: http://sonarr:8989
+              api_key: !env_var SONARR_API_KEY
+              quality_definition:
+                type: series
+
+          radarr:
+            movies:
+              base_url: http://radarr:7878
+              api_key: !env_var RADARR_API_KEY
+              quality_definition:
+                type: movie
+        '';
+
+        # Egress edge to a single *arr service port.
+        arrEgress = svc: port: {
+          toEndpoints = [
+            { matchLabels."app.kubernetes.io/name" = svc; }
+          ];
+          toPorts = [
+            {
+              ports = [
+                {
+                  port = toString port;
+                  protocol = "TCP";
+                }
+              ];
+            }
+          ];
+        };
+
+        podSelector.matchLabels."app.kubernetes.io/name" = "recyclarr";
+      in
       {
         applications.recyclarr = {
           namespace = "media";
