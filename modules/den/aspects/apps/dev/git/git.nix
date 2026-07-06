@@ -92,9 +92,15 @@
           fi
 
           # Check if Bitwarden Desktop socket is active and unlocked
-          SOCKET="$HOME/.bitwarden-ssh-agent.sock"
-          if [ -S "$SOCKET" ] && SSH_AUTH_SOCK="$SOCKET" ${pkgs.openssh}/bin/ssh-add -l >/dev/null 2>&1; then
-            export SSH_AUTH_SOCK="$SOCKET"
+          DESKTOP_SOCKET=""
+          if [ -S "$HOME/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock" ]; then
+            DESKTOP_SOCKET="$HOME/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock"
+          elif [ -S "$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock" ]; then
+            DESKTOP_SOCKET="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
+          fi
+
+          if [ -n "$DESKTOP_SOCKET" ] && SSH_AUTH_SOCK="$DESKTOP_SOCKET" ${pkgs.openssh}/bin/ssh-add -l >/dev/null 2>&1; then
+            export SSH_AUTH_SOCK="$DESKTOP_SOCKET"
             exec ${pkgs.openssh}/bin/ssh-keygen "$@"
           # Check if rbw socket is active and unlocked
           elif [ -n "$RBW_SOCKET" ] && SSH_AUTH_SOCK="$RBW_SOCKET" ${pkgs.openssh}/bin/ssh-add -l >/dev/null 2>&1; then
