@@ -64,7 +64,7 @@
         flake = false;
       };
 
-      den.url = "github:denful/den";
+      den.url = "github:sini/den/fix/broadcast-home-pool-to-host";
 
       gen-algebra.url = "github:sini/gen-algebra";
 

@@ -12,6 +12,8 @@
           tctiEnvironment.enable = true;
         };
 
+        services.pcscd.enable = true;
+
         environment.systemPackages = [
           pkgs.clevis
           pkgs.jose

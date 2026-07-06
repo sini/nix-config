@@ -9,8 +9,9 @@
 
       apps.dev.editor.nvf
 
-      apps.dev.security.gpg
       apps.dev.security.ssh
+      apps.dev.security.bitwarden
+      apps.dev.security.signing-key
 
       apps.dev.shell.bat
       apps.dev.shell.bottom

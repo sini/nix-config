@@ -77,10 +77,6 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    # TEMPORARY: pinned to the spawn-projected-quirk-surfacing fix (denful/den
-    # PR #625) until it merges, so a user-scope `pipe.broadcast` of a
-    # host-aspects-projected `replicateHome` reaches the hub. Revert to
-    # `github:denful/den` once #625 lands.
     den.url = "github:sini/den/fix/broadcast-home-pool-to-host";
     den-diagram = {
       url = "github:denful/den-diagram";

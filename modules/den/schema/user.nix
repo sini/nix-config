@@ -142,8 +142,6 @@ in
                 };
               }
             );
-            default = { };
-            description = "Unix account defaults and system configuration";
           };
         };
       }

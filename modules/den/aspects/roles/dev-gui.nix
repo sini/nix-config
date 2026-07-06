@@ -2,7 +2,6 @@
 {
   den.aspects.roles.dev-gui = {
     includes = with den.aspects; [
-      apps.dev.security.gpg
       apps.dev.editor.antigravity
       apps.dev.editor.vscode
       apps.dev.git.gitkraken

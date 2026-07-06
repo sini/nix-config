@@ -2,7 +2,13 @@
 {
   den.aspects.apps.dev.security.ssh = {
     homeManager =
-      { host-addrs, host, ... }:
+      {
+        host-addrs,
+        host,
+        user,
+        secrets,
+        ...
+      }:
       let
         hostMatchBlocks = lib.listToAttrs (
           map (
@@ -25,12 +31,7 @@
           settings = {
             "*" = {
               forwardAgent = false;
-              # "no", not "yes": gpg-agent is our ssh-agent, and adding a key to it
-              # makes it demand a protective passphrase. opkssh mints an EPHEMERAL
-              # key+cert (~/.ssh/id_ecdsa) every login, which we do not want persisted
-              # or passphrase-wrapped — ssh uses it directly from disk. The YubiKey is
-              # agent-native and unaffected by this setting.
-              addKeysToAgent = "no";
+              addKeysToAgent = "yes";
               compression = true;
               serverAliveInterval = 0;
               serverAliveCountMax = 3;
@@ -39,6 +40,8 @@
               controlMaster = "no";
               controlPath = "~/.ssh/master-%r@%n:%p";
               controlPersist = "no";
+              # Try agent first, then fall back to the decrypted agenix file.
+              identityFile = lib.optional (secrets ? user-signing-key) secrets.user-signing-key;
             };
             github = {
               hostname = "github.com";
@@ -46,35 +49,6 @@
             };
           }
           // hostMatchBlocks;
-        };
-      };
-
-    # macOS only exports SSH_AUTH_SOCK from interactive shell init, so the agent
-    # is invisible in a clean/non-terminal state. gpg-agent runs at login
-    # (launchd RunAtLoad) with the YubiKey on its ssh socket, so address it two
-    # ways below so the YubiKey works from any context. NixOS exports
-    # SSH_AUTH_SOCK globally via systemd, and IdentityAgent there would shadow a
-    # forwarded agent, so this is darwin-only.
-    homeDarwin =
-      { pkgs, ... }:
-      {
-        # `ssh` itself: point straight at gpg-agent's ssh socket.
-        programs.ssh.settings."*".identityAgent = "~/.gnupg/S.gpg-agent.ssh";
-
-        # Everything else (ssh-add, GUI apps, scripts): export SSH_AUTH_SOCK into
-        # the GUI launchd session at login so it's not limited to interactive
-        # shells. gpgconf resolves the socket path regardless of whether the agent
-        # has started yet.
-        launchd.agents.ssh-auth-sock = {
-          enable = true;
-          config = {
-            ProgramArguments = [
-              "/bin/sh"
-              "-c"
-              ''/bin/launchctl setenv SSH_AUTH_SOCK "$(${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket)"''
-            ];
-            RunAtLoad = true;
-          };
         };
       };
   };

@@ -1,8 +1,8 @@
 # Agenix Secrets Manifest
 
 Generated on: 26.11
-Total unique secrets: 59
-- Generated: 50
+Total unique secrets: 85
+- Generated: 76
 - Manually set: 9
 
 ---
@@ -140,10 +140,58 @@ They will be created automatically if they don't exist.
 
 - **Intermediary**: Yes (not exposed to services)
 
+### bazarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/bazarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### coder-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/coder-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### dash-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/dash-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
 ### forgejo-oidc-client-secret
 - **Used by**: nixos:uplink
 - **Owner**: kanidm:kanidm (0400)
 - **Rekey File**: `.secrets/env/prod/oidc/forgejo-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### garage-ui-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/garage-ui-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### glance-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/glance-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### grafana-k8s-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/grafana-k8s-oidc-client-secret.age`
 - **Generator**: built-in: rfc3986-secret
 
 
@@ -268,6 +316,14 @@ They will be created automatically if they don't exist.
 
 
 
+### komga-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/komga-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
 ### kubernetes-cluster-token
 - **Used by**: 
   - nixos:axon-01
@@ -279,6 +335,14 @@ They will be created automatically if they don't exist.
 
 
 
+### lidarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/lidarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
 ### longhorn-oidc-client-secret
 - **Used by**: nixos:uplink
 - **Owner**: kanidm:kanidm (0400)
@@ -287,25 +351,9 @@ They will be created automatically if they don't exist.
 
 
 
-### nix-remote-build-user-key
-- **Used by**: 
-  - nixos:axon-01
-  - nixos:axon-02
-  - nixos:axon-03
-  - nixos:bitstream
-  - nixos:blade
-  - nixos:cortex
-  - nixos:uplink
-  - darwin:patch
-- **Owner**: 0:0 (600)
-- **Rekey File**: `.secrets/users/nix-remote-build/id_ed25519.age`
-- **Generator**: built-in: shared-ssh-key
-
-
-
 ### nix_store_signing_key
 - **Used by**: nixos:axon-01
-- **Owner**: nix-serve:0 (0400)
+- **Owner**: root:root (0400)
 - **Rekey File**: `.secrets/hosts/axon-01/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
@@ -313,7 +361,7 @@ They will be created automatically if they don't exist.
 
 ### nix_store_signing_key
 - **Used by**: nixos:axon-02
-- **Owner**: nix-serve:0 (0400)
+- **Owner**: root:root (0400)
 - **Rekey File**: `.secrets/hosts/axon-02/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
@@ -321,7 +369,7 @@ They will be created automatically if they don't exist.
 
 ### nix_store_signing_key
 - **Used by**: nixos:axon-03
-- **Owner**: nix-serve:0 (0400)
+- **Owner**: root:root (0400)
 - **Rekey File**: `.secrets/hosts/axon-03/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
@@ -329,7 +377,7 @@ They will be created automatically if they don't exist.
 
 ### nix_store_signing_key
 - **Used by**: nixos:bitstream
-- **Owner**: nix-serve:0 (0400)
+- **Owner**: root:root (0400)
 - **Rekey File**: `.secrets/hosts/bitstream/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
@@ -337,7 +385,7 @@ They will be created automatically if they don't exist.
 
 ### nix_store_signing_key
 - **Used by**: nixos:cortex
-- **Owner**: nix-serve:0 (0400)
+- **Owner**: root:root (0400)
 - **Rekey File**: `.secrets/hosts/cortex/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
@@ -345,7 +393,7 @@ They will be created automatically if they don't exist.
 
 ### nix_store_signing_key
 - **Used by**: nixos:uplink
-- **Owner**: nix-serve:0 (0400)
+- **Owner**: root:root (0400)
 - **Rekey File**: `.secrets/hosts/uplink/generated/nix_store_signing_key.age`
 - **Generator**: built-in: binary-cache-key
 
@@ -406,6 +454,131 @@ They will be created automatically if they don't exist.
 - **Generator**: built-in: rfc3986-secret
 
 - **Intermediary**: Yes (not exposed to services)
+
+### profilarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/profilarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### prowlarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/prowlarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### qbittorrent-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/qbittorrent-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### radarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/radarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### registry-auth
+- **Used by**: nixos:cortex
+- **Owner**: sini:users (0400)
+- **Rekey File**: `.secrets/hosts/cortex/registry-auth.age`
+- **Generator**: built-in: container-auth
+- **Has Dependencies**: Yes
+
+
+### registry-auth
+- **Used by**: nixos:uplink
+- **Owner**: sini:users (0400)
+- **Rekey File**: `.secrets/hosts/uplink/registry-auth.age`
+- **Generator**: built-in: container-auth
+- **Has Dependencies**: Yes
+
+
+### registry-htpasswd
+- **Used by**: nixos:uplink
+- **Owner**: nginx:nginx (0400)
+- **Rekey File**: `.secrets/env/prod/registry/registry-htpasswd.age`
+- **Generator**: built-in: htpasswd
+- **Has Dependencies**: Yes
+
+
+### registry-password
+- **Used by**: 
+  - nixos:axon-01
+  - nixos:axon-02
+  - nixos:axon-03
+  - nixos:cortex
+  - nixos:uplink
+- **Owner**: 0:0 (0400)
+- **Rekey File**: `.secrets/env/prod/registry/registry-password.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### romm-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/romm-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### sabnzbd-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/sabnzbd-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### shoko-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/shoko-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### sonarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/sonarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### syncthing-hub-identity
+- **Used by**: nixos:uplink
+- **Owner**: syncthing:syncthing (0400)
+- **Rekey File**: `.secrets/hosts/uplink/syncthing-uplink.age`
+- **Generator**: built-in: syncthing-identity
+
+
+
+### syncthing-identity
+- **Used by**: home:sini@blade
+- **Owner**: root:root (0400)
+- **Rekey File**: `.secrets/users/sini/syncthing-blade.age`
+- **Generator**: built-in: syncthing-identity
+
+
+
+### syncthing-identity
+- **Used by**: home:sini@cortex
+- **Owner**: root:root (0400)
+- **Rekey File**: `.secrets/users/sini/syncthing-cortex.age`
+- **Generator**: built-in: syncthing-identity
+
+
 
 ### tailscale-auth-key
 - **Used by**: nixos:axon-01
@@ -468,6 +641,27 @@ They will be created automatically if they don't exist.
 - **Owner**: 0:0 (0400)
 - **Rekey File**: `.secrets/hosts/uplink/tailscale-preauthkey.age`
 - **Generator**: built-in: tailscale-preauthkey
+
+
+
+### tdarr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/tdarr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
+
+
+
+### user-identity-dvicory
+- **Used by**: 
+  - nixos:axon-01
+  - nixos:axon-02
+  - nixos:axon-03
+  - nixos:bitstream
+  - nixos:uplink
+- **Owner**: dvicory:dvicory (600)
+- **Rekey File**: `.secrets/users/dvicory/id_agenix.age`
+- **Generator**: built-in: age-identity
 
 
 
@@ -543,6 +737,24 @@ They will be created automatically if they don't exist.
 - **Owner**: will:will (600)
 - **Rekey File**: `.secrets/users/will/id_agenix.age`
 - **Generator**: built-in: age-identity
+
+
+
+### user-signing-key
+- **Used by**: 
+  - home:sini@blade
+  - home:sini@cortex
+- **Owner**: root:root (600)
+- **Rekey File**: `.secrets/users/sini/id_signing.age`
+- **Generator**: built-in: shared-ssh-key
+
+
+
+### whisparr-oidc-client-secret
+- **Used by**: nixos:uplink
+- **Owner**: kanidm:kanidm (0400)
+- **Rekey File**: `.secrets/env/prod/oidc/whisparr-oidc-client-secret.age`
+- **Generator**: built-in: rfc3986-secret
 
 
 
