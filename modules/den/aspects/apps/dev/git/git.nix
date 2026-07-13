@@ -28,8 +28,6 @@
         ...
       }:
       let
-        localKeyPath = secrets.user-signing-key or "$HOME/.ssh/id_signing";
-
         userEmail = user.identity.email or "${user.name}@users.noreply.github.com";
 
         makeGitConfig =
@@ -79,53 +77,6 @@
 
         allIdentities = [ defaultIdentity ] ++ (user.settings.git.extraIdentities or [ ]);
 
-        git-ssh-signer = pkgs.writeShellScriptBin "git-ssh-signer" ''
-          # Determine rbw socket path dynamically
-          RBW_SOCKET=""
-          if [ -n "''${XDG_RUNTIME_DIR:-}" ] && [ -S "''${XDG_RUNTIME_DIR}/rbw/ssh-agent-socket" ]; then
-            RBW_SOCKET="''${XDG_RUNTIME_DIR}/rbw/ssh-agent-socket"
-          elif command -v getconf >/dev/null 2>&1; then
-            DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null)
-            if [ -n "$DARWIN_TEMP" ] && [ -S "$DARWIN_TEMP/rbw-$(id -u)/ssh-agent-socket" ]; then
-              RBW_SOCKET="$DARWIN_TEMP/rbw-$(id -u)/ssh-agent-socket"
-            fi
-          fi
-
-          # Check if Bitwarden Desktop socket is active and unlocked
-          DESKTOP_SOCKET=""
-          if [ -S "$HOME/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock" ]; then
-            DESKTOP_SOCKET="$HOME/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock"
-          elif [ -S "$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock" ]; then
-            DESKTOP_SOCKET="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
-          fi
-
-          if [ -n "$DESKTOP_SOCKET" ] && SSH_AUTH_SOCK="$DESKTOP_SOCKET" ${pkgs.openssh}/bin/ssh-add -l >/dev/null 2>&1; then
-            export SSH_AUTH_SOCK="$DESKTOP_SOCKET"
-            exec ${pkgs.openssh}/bin/ssh-keygen "$@"
-          # Check if rbw socket is active and unlocked
-          elif [ -n "$RBW_SOCKET" ] && SSH_AUTH_SOCK="$RBW_SOCKET" ${pkgs.openssh}/bin/ssh-add -l >/dev/null 2>&1; then
-            export SSH_AUTH_SOCK="$RBW_SOCKET"
-            exec ${pkgs.openssh}/bin/ssh-keygen "$@"
-          else
-            # Agent not running or locked, fall back to the decrypted agenix private key file.
-            # We replace whatever key path git passed with our local agenix private key.
-            args=()
-            while [ $# -gt 0 ]; do
-              case "$1" in
-                -s)
-                  args+=("-s" "${localKeyPath}")
-                  shift 2
-                  ;;
-                *)
-                  args+=("$1")
-                  shift
-                  ;;
-              esac
-            done
-            exec ${pkgs.openssh}/bin/ssh-keygen "''${args[@]}"
-          fi
-        '';
-
       in
       {
         assertions = [
@@ -160,9 +111,6 @@
             "url \"git@github.com:\"".pushInsteadOf = "https://github.com/";
             core.autocrlf = "input";
             http.postBuffer = "524288000";
-          }
-          // lib.optionalAttrs (signingMethod == "ssh") {
-            gpg.ssh.program = "${git-ssh-signer}/bin/git-ssh-signer";
           };
 
           ignores = [

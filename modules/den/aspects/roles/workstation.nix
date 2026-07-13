@@ -31,6 +31,8 @@
 
       apps.dev.security.opkssh-client
 
+      core.network.syncthing.tray
+
       apps.mail.protonmail
 
       apps.productivity.obs-studio

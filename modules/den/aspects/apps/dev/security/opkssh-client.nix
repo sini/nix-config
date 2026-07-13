@@ -41,9 +41,28 @@
         # datosh recipe) that works regardless of whether the pinned opkssh
         # version (currently 0.14.x in nixpkgs) honors the config file — pending
         # hands-on confirmation of its config-file support at e2e
-        # (fleet/hardware) time.
+        # Moved shellAliases to OS-specific blocks below to handle socket paths
+      };
+
+    homeLinux = { pkgs, lib, environment, ... }:
+      let
+        idmDomain = environment.getDomainFor "kanidm";
+        kanidmIssuer = "https://${idmDomain}/oauth2/openid/opkssh";
+      in
+      {
         home.shellAliases = {
-          opkssh-login = "${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh";
+          opkssh-login = "SSH_AUTH_SOCK=\${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/standard-ssh-agent.sock ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh";
+        };
+      };
+
+    homeDarwin = { pkgs, lib, environment, ... }:
+      let
+        idmDomain = environment.getDomainFor "kanidm";
+        kanidmIssuer = "https://${idmDomain}/oauth2/openid/opkssh";
+      in
+      {
+        home.shellAliases = {
+          opkssh-login = "SSH_AUTH_SOCK=$(getconf DARWIN_USER_TEMP_DIR)/standard-ssh-agent.sock ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh";
         };
       };
   };

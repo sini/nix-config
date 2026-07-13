@@ -11,6 +11,7 @@
 
       apps.dev.security.ssh
       apps.dev.security.bitwarden
+      apps.dev.security.ssh-agent-mux
       apps.dev.security.signing-key
 
       apps.dev.shell.bat
