@@ -135,6 +135,7 @@ in
                 # `images` module arg: images."<ns>/<name>" = { repository; digest; }.
                 extraSpecialArgs = {
                   images = config.flake.imageRefs.${system};
+                  inherit inputs system;
                 };
                 # den-collected kubernetes-class modules for this cluster
                 inherit modules;

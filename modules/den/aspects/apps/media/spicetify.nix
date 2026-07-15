@@ -1,6 +1,12 @@
 { inputs, ... }:
 {
   den.aspects.apps.media.spicetify = {
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.spicetify-nix.homeManagerModules.spicetify
+      ];
+
     homeManager =
       {
         inputs',
@@ -10,8 +16,6 @@
         spicePkgs = inputs'.spicetify-nix.legacyPackages;
       in
       {
-        imports = [ inputs.spicetify-nix.homeManagerModules.spicetify ];
-
         programs.spicetify = {
           enable = true;
           enabledExtensions = with spicePkgs.extensions; [

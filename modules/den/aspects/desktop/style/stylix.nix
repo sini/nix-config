@@ -173,6 +173,12 @@ in
         };
       };
 
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.stylix.homeModules.stylix
+      ];
+
     homeManager =
       {
         pkgs,
@@ -181,10 +187,6 @@ in
         ...
       }:
       {
-        imports = [
-          inputs.stylix.homeModules.stylix
-        ];
-
         stylix = lib.mkMerge (
           stylix-hm
           ++ [

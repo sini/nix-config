@@ -59,6 +59,12 @@
         };
       };
 
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.hyprland.homeManagerModules.default
+      ];
+
     homeManager =
       {
         config,
@@ -97,9 +103,6 @@
         TERTIARY = "CTRL";
       in
       {
-        imports = [
-          inputs.hyprland.homeManagerModules.default
-        ];
 
         home.packages = [
           pkgs.hyprpicker

@@ -77,7 +77,7 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    den.url = "github:sini/den/fix/broadcast-home-pool-to-host";
+    den.url = "github:denful/den";
     den-diagram = {
       url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

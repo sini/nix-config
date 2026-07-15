@@ -35,19 +35,7 @@ let
       name = "agenix/${host.name}";
       ${host.class} =
         if host.class == "droid" then
-          {
-            home-manager.sharedModules = [
-              inputs.agenix.homeManagerModules.default
-              inputs.agenix-rekey.homeManagerModules.default
-              agenixGeneratorsModule
-              (
-                { config, lib, ... }:
-                {
-                  _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
-                }
-              )
-            ];
-          }
+          { }
         else
           { config, lib, ... }:
           {
@@ -82,19 +70,6 @@ let
 
             # Make secrets paths available as module arg
             _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
-
-            # Make agenix home-manager module available
-            home-manager.sharedModules = [
-              inputs.agenix.homeManagerModules.default
-              inputs.agenix-rekey.homeManagerModules.default
-              agenixGeneratorsModule
-              (
-                { config, lib, ... }:
-                {
-                  _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
-                }
-              )
-            ];
           };
     };
   # At cluster scope, bridge age-secrets quirk data into the k8s-manifests
@@ -122,6 +97,21 @@ let
     }:
     {
       name = "agenix-identity/${user.name}@${host.name}";
+
+      homeManagerModules =
+        { inputs', ... }:
+        [
+          inputs'.agenix.homeManagerModules.default
+          inputs'.agenix-rekey.homeManagerModules.default
+          agenixGeneratorsModule
+          (
+            { config, lib, ... }:
+            {
+              _module.args.secrets = lib.mapAttrs (_: v: v.path) config.age.secrets;
+            }
+          )
+        ];
+
       # droid has no system agenix module (see agenixHostAspect note), so the
       # per-user system identity secret is skipped there.
       ${host.class} =

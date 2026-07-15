@@ -1,12 +1,15 @@
 { inputs, ... }:
 {
   den.aspects.apps.browsers.zen-browser = {
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.zen-browser.homeModules.twilight
+      ];
+
     homeManager =
       { ... }:
       {
-        imports = [
-          inputs.zen-browser.homeModules.twilight
-        ];
         programs.zen-browser = {
           enable = true;
 

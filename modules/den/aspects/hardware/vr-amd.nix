@@ -84,6 +84,12 @@
         };
       };
 
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.nix-flatpak.homeManagerModules.nix-flatpak
+      ];
+
     homeManager =
       {
         config,
@@ -91,9 +97,6 @@
         ...
       }:
       {
-        imports = [
-          inputs.nix-flatpak.homeManagerModules.nix-flatpak
-        ];
 
         xdg.configFile = {
           "openxr/1/active_runtime.json".source = "${pkgs.custom-monado}/share/openxr/1/openxr_monado.json";

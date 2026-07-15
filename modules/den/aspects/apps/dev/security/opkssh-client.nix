@@ -44,7 +44,13 @@
         # Moved shellAliases to OS-specific blocks below to handle socket paths
       };
 
-    homeLinux = { pkgs, lib, environment, ... }:
+    homeLinux =
+      {
+        pkgs,
+        lib,
+        environment,
+        ...
+      }:
       let
         idmDomain = environment.getDomainFor "kanidm";
         kanidmIssuer = "https://${idmDomain}/oauth2/openid/opkssh";
@@ -55,7 +61,13 @@
         };
       };
 
-    homeDarwin = { pkgs, lib, environment, ... }:
+    homeDarwin =
+      {
+        pkgs,
+        lib,
+        environment,
+        ...
+      }:
       let
         idmDomain = environment.getDomainFor "kanidm";
         kanidmIssuer = "https://${idmDomain}/oauth2/openid/opkssh";

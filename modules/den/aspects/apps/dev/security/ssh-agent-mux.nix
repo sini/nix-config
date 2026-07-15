@@ -12,7 +12,7 @@
       let
         wrapper = pkgs.writeShellScript "ssh-agent-mux-start" ''
           set -euo pipefail
-          
+
           # Ensure XDG_RUNTIME_DIR is set
           if [ -z "''${XDG_RUNTIME_DIR:-}" ]; then
             export XDG_RUNTIME_DIR="/run/user/$(id -u)"
@@ -30,11 +30,11 @@
           fi
 
           ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" )
-          
+
           if [ -S "$DESKTOP_SOCK" ]; then
             ARGS+=("$DESKTOP_SOCK")
           fi
-          
+
           if [ -S "$RBW_SOCK" ]; then
             ARGS+=("$RBW_SOCK")
           fi
@@ -44,7 +44,7 @@
       in
       {
         home.sessionVariables = {
-          SSH_AUTH_SOCK = ''''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent-mux.sock'';
+          SSH_AUTH_SOCK = "\${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-agent-mux.sock";
         };
 
         systemd.user.services.standard-ssh-agent = {
@@ -96,11 +96,11 @@
           fi
 
           ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" )
-          
+
           if [ -S "$DESKTOP_SOCK" ]; then
             ARGS+=("$DESKTOP_SOCK")
           fi
-          
+
           if [ -S "$RBW_SOCK" ]; then
             ARGS+=("$RBW_SOCK")
           fi
@@ -117,7 +117,8 @@
           enable = true;
           config = {
             ProgramArguments = [
-              "/bin/sh" "-c"
+              "/bin/sh"
+              "-c"
               ''DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null); exec ${pkgs.openssh}/bin/ssh-agent -D -a "$DARWIN_TEMP/standard-ssh-agent.sock"''
             ];
             RunAtLoad = true;
@@ -133,12 +134,13 @@
             KeepAlive = true;
           };
         };
-        
+
         launchd.agents.ssh-auth-sock-mux = {
           enable = true;
           config = {
             ProgramArguments = [
-              "/bin/sh" "-c"
+              "/bin/sh"
+              "-c"
               ''/bin/launchctl setenv SSH_AUTH_SOCK "$(/bin/sh -c 'DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null); echo "$DARWIN_TEMP/ssh-agent-mux.sock"')"''
             ];
             RunAtLoad = true;

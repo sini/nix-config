@@ -1,13 +1,18 @@
 { inputs, ... }:
 {
   den.aspects.apps.messaging.discord = {
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.nixcord.homeModules.nixcord
+      ];
+
     homeManager =
       {
         pkgs,
         ...
       }:
       {
-        imports = [ inputs.nixcord.homeModules.nixcord ];
 
         home.packages = [
           pkgs.discordo

@@ -37,7 +37,15 @@
       apps.browsers.chromium
       apps.terminals.kitty
       apps.terminals.alacritty
-      apps.dev.editor.vscode
+      apps.dev.editor.codium.vscode
+      apps.dev.editor.codium.core
+      apps.dev.lang.c
+      apps.dev.lang.go
+      apps.dev.lang.lua
+      apps.dev.lang.markdown
+      apps.dev.lang.nix
+      apps.dev.lang.python
+      apps.dev.lang.shell
       apps.dev.git.gitkraken
       apps.dev.networking.wireshark
       apps.dev.security.opkssh-client

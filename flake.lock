@@ -460,18 +460,14 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1782530818,
-        "narHash": "sha256-uWim/fe4pQx1+Ufk4oboUQTeoPXwsGj1Sbd1mynKFw8=",
-        "owner": "sini",
-        "repo": "den",
-        "rev": "4911b7f2647c1d037d49fe59cd1cbd6302d18c88",
-        "type": "github"
+        "lastModified": 1784132399,
+        "narHash": "sha256-EfI468Zn6bkk9zdaJtSqwShI2tUmRJR954k4uDzqlYU=",
+        "path": "/home/sini/Documents/repos/denful/den",
+        "type": "path"
       },
       "original": {
-        "owner": "sini",
-        "ref": "fix/broadcast-home-pool-to-host",
-        "repo": "den",
-        "type": "github"
+        "path": "/home/sini/Documents/repos/denful/den",
+        "type": "path"
       }
     },
     "den-diagram": {

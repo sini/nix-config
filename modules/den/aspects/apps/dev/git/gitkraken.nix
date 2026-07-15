@@ -5,6 +5,12 @@
   den.aspects.apps.dev.git.gitkraken = {
     homebrew-cask = [ "gitkraken" ];
 
+    homeManagerModules =
+      { inputs', ... }:
+      [
+        inputs'.nixkraken.homeManagerModules.nixkraken
+      ];
+
     homeLinux =
       {
         pkgs,
@@ -12,10 +18,6 @@
         ...
       }:
       {
-        imports = [
-          inputs.nixkraken.homeManagerModules.nixkraken
-        ];
-
         programs.nixkraken = {
           enable = true;
           acceptEULA = true;

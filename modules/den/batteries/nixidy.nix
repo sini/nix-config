@@ -31,14 +31,13 @@ let
   crdsBridge = {
     name = "crds/nixidy";
     k8s-manifests =
-      # outer: den args — `crds` (collected quirk specs) and `cluster`
       {
         crds ? [ ],
         cluster,
+        pkgs,
+        lib,
         ...
       }:
-      # inner: nixidy module — pkgs/lib are specialArgs from mkEnv
-      { pkgs, lib, ... }:
       let
         system = pkgs.stdenv.hostPlatform.system;
         generators = inputs.nixidy.packages.${system}.generators;
@@ -47,20 +46,7 @@ let
         buildCrd =
           entry:
           let
-            # Most specs are pkgs-deferred functions (passed through raw); resolve
-            # with the args den couldn't supply in the pkgs-less walk.
-            spec =
-              if builtins.isFunction entry then
-                entry {
-                  inherit
-                    pkgs
-                    lib
-                    inputs
-                    system
-                    ;
-                }
-              else
-                entry;
+            spec = entry;
 
             # name becomes the helm release name / app.kubernetes.io/instance
             # label on chart CRDs, so it must be the short, meaningful aspect
