@@ -1,6 +1,12 @@
-{ den, lib, withSystem, config, inputs, ... }:
+{
+  den,
+  lib,
+  withSystem,
+  config,
+  inputs,
+  ...
+}:
 let
-  den-lib = inputs.den.lib { inherit lib config inputs; };
 
   mergeInputs = inputs'': lib.mapAttrs (name: input: input // (inputs''.${name} or { })) inputs;
 
@@ -19,7 +25,12 @@ let
       { inputs', ... }:
       {
         name = "inputs'/os";
-        __scopeHandlers.inputs' = _: { resume = mergeInputs inputs' // { collisionPolicy = "den-wins"; }; state = { }; };
+        __scopeHandlers.inputs' = _: {
+          resume = mergeInputs inputs' // {
+            collisionPolicy = "den-wins";
+          };
+          state = { };
+        };
       }
       // lib.optionalAttrs (host ? class) (mkAspectInputs host.class host.system)
     );
@@ -34,7 +45,12 @@ let
       {
         name = "inputs'/user";
         includes = map (c: mkAspectInputs c host.system) user.classes;
-        __scopeHandlers.inputs' = _: { resume = mergeInputs inputs' // { collisionPolicy = "den-wins"; }; state = { }; };
+        __scopeHandlers.inputs' = _: {
+          resume = mergeInputs inputs' // {
+            collisionPolicy = "den-wins";
+          };
+          state = { };
+        };
       }
     );
 
@@ -44,7 +60,12 @@ let
       { inputs', ... }:
       {
         name = "inputs'/home";
-        __scopeHandlers.inputs' = _: { resume = mergeInputs inputs' // { collisionPolicy = "den-wins"; }; state = { }; };
+        __scopeHandlers.inputs' = _: {
+          resume = mergeInputs inputs' // {
+            collisionPolicy = "den-wins";
+          };
+          state = { };
+        };
       }
       // lib.optionalAttrs (home ? class) (mkAspectInputs home.class home.system)
     );
@@ -64,7 +85,10 @@ let
       { self', ... }:
       {
         name = "self'/os";
-        __scopeHandlers.self' = _: { resume = self'; state = { }; };
+        __scopeHandlers.self' = _: {
+          resume = self';
+          state = { };
+        };
       }
       // lib.optionalAttrs (host ? class) (mkAspectSelf host.class host.system)
     );
@@ -79,7 +103,10 @@ let
       {
         name = "self'/user";
         includes = map (c: mkAspectSelf c host.system) user.classes;
-        __scopeHandlers.self' = _: { resume = self'; state = { }; };
+        __scopeHandlers.self' = _: {
+          resume = self';
+          state = { };
+        };
       }
     );
 
@@ -89,7 +116,10 @@ let
       { self', ... }:
       {
         name = "self'/home";
-        __scopeHandlers.self' = _: { resume = self'; state = { }; };
+        __scopeHandlers.self' = _: {
+          resume = self';
+          state = { };
+        };
       }
       // lib.optionalAttrs (home ? class) (mkAspectSelf home.class home.system)
     );
@@ -129,7 +159,9 @@ in
 
     (den.lib.policy.mkPolicy "home-manager-modules-propagation" (
       { ... }:
-      let inherit (den.lib.policy) pipe; in
+      let
+        inherit (den.lib.policy) pipe;
+      in
       [ (pipe.from "homeManagerModules" [ ]) ]
     ))
 

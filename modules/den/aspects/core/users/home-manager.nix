@@ -43,7 +43,8 @@
           }
         )
       ];
-    };  };
+    };
+  };
 
   den.aspects.core.users.home-manager-collector = {
     homeManager =
