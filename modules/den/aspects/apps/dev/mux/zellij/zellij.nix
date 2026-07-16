@@ -3,7 +3,7 @@
   flake-file.inputs.zjstatus.url = "github:dj95/zjstatus";
   flake-file.inputs.gsesh = {
     url = "gitlab:hmajid2301/gsesh";
-    inputs.nixpkgs.follows = "nixpkgs";
+    inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
   den.aspects.apps.dev.mux.zellij = {

@@ -41,6 +41,7 @@
       apps.dev.lang.python
       apps.dev.lang.nix
 
+      apps.dev.mux.herdr
       apps.dev.mux.sesh
       apps.dev.mux.tmux
       apps.dev.mux.zellij

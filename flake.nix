@@ -113,6 +113,10 @@
     gen-algebra.url = "github:sini/gen-algebra";
     gen-schema.url = "github:sini/gen-schema";
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
+    gsesh = {
+      url = "gitlab:hmajid2301/gsesh";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     haumea = {
       url = "github:nix-community/haumea/v0.2.2";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
