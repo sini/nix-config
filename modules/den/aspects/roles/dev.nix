@@ -41,6 +41,10 @@
       apps.dev.lang.python
       apps.dev.lang.nix
 
+      apps.dev.mux.sesh
+      apps.dev.mux.tmux
+      apps.dev.mux.zellij
+
       apps.dev.k8s.k9s
     ];
   };

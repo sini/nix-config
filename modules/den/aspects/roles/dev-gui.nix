@@ -14,7 +14,6 @@
       apps.dev.lang.shell
       apps.dev.git.gitkraken
       apps.dev.networking.wireshark
-      apps.dev.zellij
       apps.dev.k8s.core
       apps.dev.k8s.dev
       apps.dev.k8s.helm
