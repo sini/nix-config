@@ -1249,11 +1249,11 @@
         "gen-types": "gen-types_2"
       },
       "locked": {
-        "lastModified": 1784234127,
-        "narHash": "sha256-W8Wn6FCN9gds7pTUAbCFDB+RZySLjfdPL7ZZmdOtWZ0=",
+        "lastModified": 1784236105,
+        "narHash": "sha256-PnAB6w9NJcyuyPaJ5AtsxDinx3PCxW54GONcvSjwrRc=",
         "owner": "sini",
         "repo": "gen-schema",
-        "rev": "69dcbb14b82da8d872ff5d3cd8b753ae7fc1479a",
+        "rev": "e6dbe8e7724810a448b2157c87ed5c051e36c9d4",
         "type": "github"
       },
       "original": {
