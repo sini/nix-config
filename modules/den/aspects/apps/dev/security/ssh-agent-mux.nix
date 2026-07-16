@@ -29,15 +29,10 @@
             SSH_AUTH_SOCK="$STANDARD_SOCK" ${pkgs.openssh}/bin/ssh-add "$SIGNING_KEY_PATH" 2>/dev/null || true
           fi
 
-          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" )
-
-          if [ -S "$DESKTOP_SOCK" ]; then
-            ARGS+=("$DESKTOP_SOCK")
-          fi
-
-          if [ -S "$RBW_SOCK" ]; then
-            ARGS+=("$RBW_SOCK")
-          fi
+          # Pass all potential sockets to the multiplexer unconditionally.
+          # ssh-agent-mux gracefully ignores missing upstream sockets and will
+          # automatically connect to them if they are created later (e.g. when rbw is unlocked).
+          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" "$DESKTOP_SOCK" "$RBW_SOCK" )
 
           exec ${pkgs.ssh-agent-mux}/bin/ssh-agent-mux "''${ARGS[@]}"
         '';
@@ -95,15 +90,10 @@
             SSH_AUTH_SOCK="$STANDARD_SOCK" ${pkgs.openssh}/bin/ssh-add "$SIGNING_KEY_PATH" 2>/dev/null || true
           fi
 
-          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" )
-
-          if [ -S "$DESKTOP_SOCK" ]; then
-            ARGS+=("$DESKTOP_SOCK")
-          fi
-
-          if [ -S "$RBW_SOCK" ]; then
-            ARGS+=("$RBW_SOCK")
-          fi
+          # Pass all potential sockets to the multiplexer unconditionally.
+          # ssh-agent-mux gracefully ignores missing upstream sockets and will
+          # automatically connect to them if they are created later (e.g. when rbw is unlocked).
+          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" "$DESKTOP_SOCK" "$RBW_SOCK" )
 
           exec ${pkgs.ssh-agent-mux}/bin/ssh-agent-mux "''${ARGS[@]}"
         '';
