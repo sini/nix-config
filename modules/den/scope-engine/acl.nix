@@ -19,7 +19,7 @@
 let
   inherit (lib) mkOption types;
 
-  engine = inputs.scope-engine { inherit lib; };
+  engine = inputs.scope-engine.lib;
 
   flatHosts = lib.foldl' (acc: system: acc // (den.hosts.${system} or { })) { } (
     builtins.attrNames (den.hosts or { })

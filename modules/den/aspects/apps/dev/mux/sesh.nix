@@ -3,7 +3,6 @@
     homeManager = {
       programs.sesh = {
         enable = true;
-        enableTmuxIntegration = true;
         settings = {
           blacklist = [ "scratch" ];
           session = [
