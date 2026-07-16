@@ -39,7 +39,6 @@
               callTimer.enable = true;
               fakeNitro.enable = true;
               fakeProfileThemes.enable = true;
-              friendsSince.enable = true;
               fullSearchContext.enable = true;
               fullUserInChatbox.enable = true;
               gameActivityToggle.enable = true;
