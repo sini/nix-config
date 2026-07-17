@@ -1,4 +1,3 @@
-{ den, ... }:
 {
   den.aspects.apps.dev.editor.codium.vscode = {
     homeManager =

@@ -1,12 +1,29 @@
 # Home-manager NixOS module configuration.
 # Den's home-manager battery handles importing the HM NixOS module itself.
 # This aspect sets shared config (useGlobalPkgs, useUserPackages, sharedModules).
+{ lib, ... }:
 {
   den.aspects.core.users.home-manager = {
+    settings.useGlobalPkgs = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = ''
+        Home-manager shares the host's nixpkgs — its overlays and config — instead
+        of evaluating its own pkgs set. User-declared overlays project to the host
+        (see the nixpkgs-overlays quirk); when false each user's home-manager
+        collects its own overlays as before.
+      '';
+    };
+
     os =
-      { inputs', self', ... }:
       {
-        home-manager.useGlobalPkgs = false;
+        host,
+        inputs',
+        self',
+        ...
+      }:
+      {
+        home-manager.useGlobalPkgs = host.settings.core.users.home-manager.useGlobalPkgs;
         home-manager.useUserPackages = true;
         home-manager.backupFileExtension = ".hm-backup";
 
@@ -44,12 +61,10 @@
         )
       ];
     };
-  };
 
-  den.aspects.core.users.home-manager-collector = {
     homeManager =
       {
-        homeManagerModules ? [ ],
+        homeManagerModules,
         ...
       }:
       {

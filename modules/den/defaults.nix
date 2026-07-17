@@ -155,15 +155,6 @@ in
   # Default user includes — per-user data emission + entity-named aspect auto-include
   den.schema.user.includes = [
     den.aspects.core.users.resolved-user-emitter
-    den.aspects.core.users.home-manager-collector
-
-    (den.lib.policy.mkPolicy "home-manager-modules-propagation" (
-      { ... }:
-      let
-        inherit (den.lib.policy) pipe;
-      in
-      [ (pipe.from "homeManagerModules" [ ]) ]
-    ))
 
     # Include den.aspects.<hostname>.<username> if it exists
     (den.lib.policy.mkPolicy "user-aspect-auto-include" (

@@ -26,11 +26,7 @@ in
       ++ builtins.attrValues (import (self + "/pkgs/overlays.nix") { inherit inputs; });
 
     os =
-      {
-        nixpkgs-overlays ? [ ],
-        lib,
-        ...
-      }:
+      { nixpkgs-overlays, lib, ... }:
       {
         nixpkgs = {
           inherit config;
@@ -38,13 +34,19 @@ in
         };
       };
 
+    # The per-user home-manager nixpkgs. Included by the nixpkgs-overlays quirk's
+    # home-own-nixpkgs policy ONLY when the host does not share its nixpkgs —
+    # otherwise home-manager.useGlobalPkgs is enabled and setting nixpkgs.* here
+    # trips home-manager's assertion. Collects the same nixpkgs-overlays as os, per
+    # home scope.
     homeManager =
       {
-        nixpkgs-overlays ? [ ],
+        host,
+        nixpkgs-overlays,
         lib,
         ...
       }:
-      {
+      lib.mkIf (!host.settings.core.users.home-manager.useGlobalPkgs) {
         nixpkgs = {
           inherit config;
           overlays = lib.unique nixpkgs-overlays;
