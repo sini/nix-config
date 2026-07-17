@@ -1512,15 +1512,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1784129366,
-        "narHash": "sha256-N5JiyICSeQF14x+OQebNyPpYowOT9Rs1iKyeCylSzOA=",
-        "owner": "nix-community",
+        "lastModified": 1784327546,
+        "narHash": "sha256-p2gLqkQjfyGTFDfL8J5G0dT1eX3iUXidGr4lz7ELQOY=",
+        "owner": "sini",
         "repo": "home-manager",
-        "rev": "165228b0efefc3e635e5174020c40ea64271dc25",
+        "rev": "7dfcdf12c2074682f69479c3491216761dfa4847",
         "type": "github"
       },
       "original": {
-        "owner": "nix-community",
+        "owner": "sini",
+        "ref": "fix/syncthing-unix-socket-host",
         "repo": "home-manager",
         "type": "github"
       }
@@ -1553,15 +1554,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1784129366,
-        "narHash": "sha256-N5JiyICSeQF14x+OQebNyPpYowOT9Rs1iKyeCylSzOA=",
-        "owner": "nix-community",
+        "lastModified": 1784327546,
+        "narHash": "sha256-p2gLqkQjfyGTFDfL8J5G0dT1eX3iUXidGr4lz7ELQOY=",
+        "owner": "sini",
         "repo": "home-manager",
-        "rev": "165228b0efefc3e635e5174020c40ea64271dc25",
+        "rev": "7dfcdf12c2074682f69479c3491216761dfa4847",
         "type": "github"
       },
       "original": {
-        "owner": "nix-community",
+        "owner": "sini",
+        "ref": "fix/syncthing-unix-socket-host",
         "repo": "home-manager",
         "type": "github"
       }

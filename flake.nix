@@ -134,7 +134,9 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager-master = {
-      url = "github:nix-community/home-manager";
+      # Fork pin: curl >= 8.21 rejects the bare-dot host the syncthing
+      # merge-script used for unix-socket guiAddress. Drop when upstream merges.
+      url = "github:sini/home-manager/fix/syncthing-unix-socket-host";
       inputs.nixpkgs.follows = "nixpkgs-master";
     };
     home-manager-stable-darwin = {
@@ -142,7 +144,9 @@
       inputs.nixpkgs.follows = "nixpkgs-stable-darwin";
     };
     home-manager-unstable = {
-      url = "github:nix-community/home-manager";
+      # Fork pin: curl >= 8.21 rejects the bare-dot host the syncthing
+      # merge-script used for unix-socket guiAddress. Drop when upstream merges.
+      url = "github:sini/home-manager/fix/syncthing-unix-socket-host";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     homebrew-cask = {
