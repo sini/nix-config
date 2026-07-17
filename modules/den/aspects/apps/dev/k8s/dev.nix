@@ -6,7 +6,6 @@
         home.packages = [
           pkgs.devspace
           pkgs.kind
-          pkgs.minikube
           pkgs.kops
           pkgs.kluctl
           pkgs.kompose
