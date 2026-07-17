@@ -77,7 +77,9 @@
       url = "github:Sveske-Juice/declarative-jellyfin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    den.url = "github:denful/den";
+    # Temporary: denful/den#633 (user-scope quirk exposure into host-aspects
+    # spawns). Revert to github:denful/den once merged.
+    den.url = "github:sini/den/fix/user-scope-quirk-class-exposure";
     den-diagram = {
       url = "github:denful/den-diagram";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

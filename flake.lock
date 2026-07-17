@@ -435,15 +435,16 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1784302930,
-        "narHash": "sha256-XxIGsZ6Q1V7hv6Yh+bFq7CXddtULtbhKymJGSyWf394=",
-        "owner": "denful",
+        "lastModified": 1784315194,
+        "narHash": "sha256-8vZQKzch1IfaD9Enw9l0sNKbdr14Ne48r+3qgfkid4g=",
+        "owner": "sini",
         "repo": "den",
-        "rev": "b7bebdeb796ba1721f842b8c5d1dd25a41fa2707",
+        "rev": "98e838956d980bbf8d531a06330efb190778d038",
         "type": "github"
       },
       "original": {
-        "owner": "denful",
+        "owner": "sini",
+        "ref": "fix/user-scope-quirk-class-exposure",
         "repo": "den",
         "type": "github"
       }
