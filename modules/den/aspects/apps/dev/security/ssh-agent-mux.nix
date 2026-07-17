@@ -1,6 +1,20 @@
 { den, lib, ... }:
 {
   den.aspects.apps.dev.security.ssh-agent-mux = {
+    # rbw's ssh-agent has a partial protocol implementation; when it returns an
+    # error on listing, upstream ssh-agent-mux propagated it with `?` and dropped
+    # every agent's keys until the mux was restarted. The patch skips a
+    # list-erroring upstream, like it already skips a missing socket. Wrapped in a
+    # function so pipe assembly does not pre-apply the positional overlay.
+    # Upstream: sini/ssh-agent-mux fix/tolerate-upstream-list-errors.
+    nixpkgs-overlays = _: [
+      (_final: prev: {
+        ssh-agent-mux = prev.ssh-agent-mux.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ [ ./ssh-agent-mux-list-errors.patch ];
+        });
+      })
+    ];
+
     homeManager =
       { pkgs, ... }:
       {

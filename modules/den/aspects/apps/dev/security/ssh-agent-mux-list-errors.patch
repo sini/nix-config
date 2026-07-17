@@ -1,0 +1,26 @@
+diff --git a/src/lib.rs b/src/lib.rs
+index 2e65da8..f145bb4 100644
+--- a/src/lib.rs
++++ b/src/lib.rs
+@@ -199,7 +199,20 @@ impl MuxAgent {
+                     continue;
+                 }
+             };
+-            let agent_identities = client.request_identities().await?;
++            let agent_identities = match client.request_identities().await {
++                Ok(ids) => ids,
++                Err(e) => {
++                    // A reachable-but-misbehaving upstream (e.g. one mid-restart, or
++                    // one with a partial agent-protocol implementation) must not take
++                    // down every other agent's keys. Skip it, like a missing socket.
++                    log::warn!(
++                        "Ignoring upstream agent that failed to list identities <{}>: {}",
++                        sock_path.display(),
++                        e
++                    );
++                    continue;
++                }
++            };
+             {
+                 for id in &agent_identities {
+                     known_keys.insert(id.pubkey.clone(), sock_path.clone());
