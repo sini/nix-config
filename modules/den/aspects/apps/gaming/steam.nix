@@ -136,7 +136,7 @@
         lib,
         ...
       }:
-      lib.mkIf (host.hasAspect den.aspects.apps.gaming.steam) {
+      lib.mkIf (!host.hasAspect den.aspects.apps.gaming.steam) {
         home.packages = [
           (pkgs.steam.override {
             extraEnv = {

@@ -1,8 +1,5 @@
-{ den, ... }:
 {
   den.aspects.hardware.gpu.nvidia-vfio = {
-    includes = [ den.aspects.hardware.gpu.nvidia ];
-
     nixos =
       { config, lib, ... }:
       let
