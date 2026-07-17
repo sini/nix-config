@@ -34,8 +34,7 @@ in
       {
         nixpkgs = {
           inherit config;
-          # proton stays inline here until it moves onto the steam aspect.
-          overlays = lib.unique ([ inputs.proton-cachyos.overlays.default ] ++ nixpkgs-overlays);
+          overlays = lib.unique nixpkgs-overlays;
         };
       };
 

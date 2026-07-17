@@ -181,6 +181,10 @@
         ];
       };
 
+    nixpkgs-overlays =
+      { inputs', ... }:
+      [ inputs'.proton-cachyos.overlays.default ];
+
     cacheHome.directories = [
       ".local/share/Steam"
     ];
