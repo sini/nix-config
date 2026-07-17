@@ -1,19 +1,21 @@
 { inputs, ... }:
 {
   den.aspects.hardware.cpu.amd = {
+    # ucodenix's package is missing jql from nativeBuildInputs. Wrapped in a
+    # function so the pipe assembly does not mistake the inline (positional)
+    # overlay for a pipeline-parametric value and pre-apply it.
+    nixpkgs-overlays = _: [
+      (_final: prev: {
+        ucodenix = prev.ucodenix.overrideAttrs (old: {
+          nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ prev.jql ];
+        });
+      })
+    ];
+
     nixos =
       { config, pkgs, ... }:
       {
         imports = [ inputs.ucodenix.nixosModules.default ];
-
-        # ucodenix's package is missing jql from nativeBuildInputs
-        nixpkgs.overlays = [
-          (_final: prev: {
-            ucodenix = prev.ucodenix.overrideAttrs (old: {
-              nativeBuildInputs = (old.nativeBuildInputs or [ ]) ++ [ prev.jql ];
-            });
-          })
-        ];
 
         environment.systemPackages = [ pkgs.amdctl ];
 

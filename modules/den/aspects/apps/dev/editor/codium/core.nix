@@ -1,6 +1,9 @@
-{ inputs, ... }:
 {
   den.aspects.apps.dev.editor.codium.core = {
+    nixpkgs-overlays =
+      { inputs', ... }:
+      [ inputs'.nix-vscode-extensions.overlays.default ];
+
     homeManager =
       {
         lib,
@@ -8,10 +11,6 @@
         ...
       }:
       {
-        nixpkgs.overlays = [
-          inputs.nix-vscode-extensions.overlays.default
-        ];
-
         home.packages = [
           pkgs.prettier
         ];

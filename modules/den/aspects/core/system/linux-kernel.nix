@@ -1,9 +1,13 @@
 # linux-kernel — CachyOS kernel selection.
 #
 # Ported from main:modules/_legacy/core/linux-kernel.nix.
-{ lib, inputs, ... }:
+{ lib, ... }:
 {
   den.aspects.core.system.linux-kernel = {
+    nixpkgs-overlays =
+      { inputs', ... }:
+      [ inputs'.nix-cachyos-kernel.overlays.default ];
+
     settings = {
       channel = lib.mkOption {
         type = lib.types.enum [
@@ -35,10 +39,6 @@
             "linuxPackages-cachyos-${cfg.channel}-lto-${cfg.optimization}";
       in
       {
-        nixpkgs.overlays = [
-          inputs.nix-cachyos-kernel.overlays.default
-        ];
-
         nix.settings.substituters = [ "https://attic.xuyh0120.win/lantian" ];
         nix.settings.trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
 
