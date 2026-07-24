@@ -19,7 +19,7 @@ in
   # excluding the whole aspect cascades, so that gating is deferred.
   den.policies.project-user-overlays =
     { user, host, ... }:
-    lib.optionals host.settings.core.users.home-manager.useGlobalPkgs [
+    lib.optionals host.settings.core.users.home-manager-shared.useGlobalPkgs [
       (pipe.from "nixpkgs-overlays" [ pipe.expose ])
     ];
 

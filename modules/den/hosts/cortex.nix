@@ -47,7 +47,7 @@
       disk.zfs-disk-single
       core.boot.network-initrd
 
-      virtualization.microvm
+      virtualization.microvm-host
       virtualization.windows-vfio
       virtualization.podman
 

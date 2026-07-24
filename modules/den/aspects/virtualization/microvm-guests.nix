@@ -35,7 +35,7 @@ let
 in
 {
   # PRODUCE: host-parametric, eager. Resolve each guest to module data.
-  den.aspects.virtualization.microvm.microvm-guests =
+  den.aspects.virtualization.microvm-host.microvm-guests =
     { host, ... }:
     map (vm: {
       inherit (vm) name;
@@ -46,7 +46,7 @@ in
     }) host.microvm.guests;
 
   # PRODUCE: a background GPU claim per guest with a non-empty passthrough.
-  den.aspects.virtualization.microvm.gpu-claims =
+  den.aspects.virtualization.microvm-host.gpu-claims =
     { host, ... }:
     lib.concatMap (
       vm:
@@ -59,7 +59,7 @@ in
     ) host.microvm.guests;
 
   # CONSUME: turn each resolved guest into a microvm.vms.<name> definition.
-  den.aspects.virtualization.microvm.nixos =
+  den.aspects.virtualization.microvm-host.nixos =
     {
       microvm-guests,
       config,

@@ -5,7 +5,7 @@
   ...
 }:
 {
-  den.aspects.virtualization.microvm = {
+  den.aspects.virtualization.microvm-host = {
     nixos =
       { ... }:
       {

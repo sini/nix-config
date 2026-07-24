@@ -13,7 +13,7 @@
       core.system.firmware
       core.security
       core.system.facter
-      core.users.home-manager
+      core.users.home-manager-shared
       core.users.deterministic-uids
       #core.nix.remote-build-client
       core.security.sudo

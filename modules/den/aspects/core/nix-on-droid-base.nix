@@ -1,7 +1,7 @@
 # nix-on-droid system baseline (the `droid` class). Supplies what NixOS-oriented
 # roles cannot on a Termux host: base packages, nix flags, stateVersion, shell,
 # and the home-manager wiring (stateVersion + nixpkgs policy) that a droid host
-# would otherwise get from core.users.home-manager (which it does not include —
+# would otherwise get from core.users.home-manager-shared (which it does not include —
 # a droid host does not pull roles.default).
 {
   den.aspects.core.nix-on-droid-base.droid =

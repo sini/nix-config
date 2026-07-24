@@ -3,7 +3,7 @@
 # This aspect sets shared config (useGlobalPkgs, useUserPackages, sharedModules).
 { lib, ... }:
 {
-  den.aspects.core.users.home-manager = {
+  den.aspects.core.users.home-manager-shared = {
     settings.useGlobalPkgs = lib.mkOption {
       type = lib.types.bool;
       default = false;
@@ -23,7 +23,7 @@
         ...
       }:
       {
-        home-manager.useGlobalPkgs = host.settings.core.users.home-manager.useGlobalPkgs;
+        home-manager.useGlobalPkgs = host.settings.core.users.home-manager-shared.useGlobalPkgs;
         home-manager.useUserPackages = true;
         home-manager.backupFileExtension = ".hm-backup";
 
