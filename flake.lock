@@ -1133,6 +1133,26 @@
         "type": "github"
       }
     },
+    "gen-lsp": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1784926336,
+        "narHash": "sha256-QP08TQ53zdC9BsgtbG/wqX5fVlD0dKFV+P0NOsbUNtA=",
+        "owner": "sini",
+        "repo": "gen-lsp",
+        "rev": "f6f6e9d3230a54b9cc0ad1a2fbd483969cf861d2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "gen-lsp",
+        "type": "github"
+      }
+    },
     "gen-merge": {
       "inputs": {
         "gen-prelude": "gen-prelude",
@@ -1511,16 +1531,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1784327546,
-        "narHash": "sha256-p2gLqkQjfyGTFDfL8J5G0dT1eX3iUXidGr4lz7ELQOY=",
-        "owner": "sini",
+        "lastModified": 1784913159,
+        "narHash": "sha256-JWq0BfjO4ktpH5USfQNQzdvHpIDT8fSKD5K7LvdMRFs=",
+        "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "7dfcdf12c2074682f69479c3491216761dfa4847",
+        "rev": "079a3b5d1aa6a719920a51316253b7d6dd22738d",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
-        "ref": "fix/syncthing-unix-socket-host",
+        "owner": "nix-community",
         "repo": "home-manager",
         "type": "github"
       }
@@ -1553,16 +1572,15 @@
         ]
       },
       "locked": {
-        "lastModified": 1784327546,
-        "narHash": "sha256-p2gLqkQjfyGTFDfL8J5G0dT1eX3iUXidGr4lz7ELQOY=",
-        "owner": "sini",
+        "lastModified": 1784913159,
+        "narHash": "sha256-JWq0BfjO4ktpH5USfQNQzdvHpIDT8fSKD5K7LvdMRFs=",
+        "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "7dfcdf12c2074682f69479c3491216761dfa4847",
+        "rev": "079a3b5d1aa6a719920a51316253b7d6dd22738d",
         "type": "github"
       },
       "original": {
-        "owner": "sini",
-        "ref": "fix/syncthing-unix-socket-host",
+        "owner": "nix-community",
         "repo": "home-manager",
         "type": "github"
       }
@@ -3366,6 +3384,7 @@
         "flake-root": "flake-root",
         "flake-utils": "flake-utils",
         "gen-algebra": "gen-algebra",
+        "gen-lsp": "gen-lsp",
         "gen-schema": "gen-schema",
         "git-hooks-nix": "git-hooks-nix",
         "gsesh": "gsesh",

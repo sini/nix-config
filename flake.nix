@@ -111,6 +111,10 @@
       inputs.systems.follows = "systems";
     };
     gen-algebra.url = "github:sini/gen-algebra";
+    gen-lsp = {
+      url = "github:sini/gen-lsp";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     gen-schema.url = "github:sini/gen-schema";
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     gsesh = {
@@ -134,9 +138,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     home-manager-master = {
-      # Fork pin: curl >= 8.21 rejects the bare-dot host the syncthing
-      # merge-script used for unix-socket guiAddress. Drop when upstream merges.
-      url = "github:sini/home-manager/fix/syncthing-unix-socket-host";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-master";
     };
     home-manager-stable-darwin = {
@@ -144,9 +146,7 @@
       inputs.nixpkgs.follows = "nixpkgs-stable-darwin";
     };
     home-manager-unstable = {
-      # Fork pin: curl >= 8.21 rejects the bare-dot host the syncthing
-      # merge-script used for unix-socket guiAddress. Drop when upstream merges.
-      url = "github:sini/home-manager/fix/syncthing-unix-socket-host";
+      url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     homebrew-cask = {
