@@ -28,6 +28,7 @@
           pkgs.nil
           pkgs.nixd
           pkgs.sops
+          config.packages.gen-lsp-mcp # gen-lsp MCP enumeration server (registered in .mcp.json for this fleet)
         ]
         ++ lib.optionals pkgs.stdenv.buildPlatform.isDarwin [
           pkgs.coreutils-full # Include GNU coreutils for darwin systems

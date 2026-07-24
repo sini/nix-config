@@ -70,6 +70,15 @@
                 lsp = {
                   enable = true;
                   servers = [ "nixd" ];
+                  # gen-lsp follow-up: point nixd at this fleet's projected
+                  # option surface for den.* completion/hover, i.e.
+                  #   nixd.settings.options.den.expr =
+                  #     "(builtins.getFlake (toString ./.)).den-lsp.options.den";
+                  # A RUNTIME string expr, inert until the den pin carries the
+                  # gen-lsp integration (this fleet then auto-exports
+                  # `den-lsp.options` via gen-lsp.lib.forNixd). Left as a note
+                  # rather than wired because nvf's nixd-settings passthrough is
+                  # version-specific — confirm the option path before enabling.
                 };
                 treesitter.enable = true;
               };

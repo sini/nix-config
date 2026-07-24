@@ -108,6 +108,13 @@
     #   };
   };
 
+  # Thread the gen-lsp flake source to pkgs-by-name so pkgs/by-name/gen-lsp-mcp
+  # can take `gen-lsp-src` as a callPackage arg and build the mcp/ subdir
+  # hermetically (from the locked gen-lsp input, not a re-export of its package).
+  gen-lsp-src = _final: _prev: {
+    gen-lsp-src = inputs.gen-lsp;
+  };
+
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
   # be accessible through 'pkgs.unstable'
   unstable-packages = final: _prev: {

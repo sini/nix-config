@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "gen-lsp-mcp": {
+      "type": "stdio",
+      "command": "gen-lsp-mcp",
+      "args": ["--fleet", "."]
+    }
+  }
+}
