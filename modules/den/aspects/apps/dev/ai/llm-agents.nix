@@ -1,18 +1,18 @@
-# The claude-code toolchain (binaries). Pulls in `claude-config` (settings + the
-# .claude state map) — den merges quirks across files but NOT a class function, so
-# the config's `homeManager` lives in its own aspect rather than a second
-# `claude.homeManager` here (which would last-wins-clobber this one). replicate.nix
-# adds the replicated dir set onto `claude` directly (a quirk, so it merges).
-{ den, ... }:
+# numtide/llm-agents.nix CLI tooling for coding agents (beads, codegraph, hunk,
+# rtk, …). The Claude Code companion skills for these tools live with the rest of
+# the claude skills under mcp/_skills and are registered by the claude aspect.
 {
-  flake-file.inputs.llm-agents.url = "gh:numtide/llm-agents.nix";
+  flake-file.inputs.llm-agents.url = "github:numtide/llm-agents.nix";
 
   den.aspects.apps.dev.ai.llm-agents = {
     homeManager =
       { pkgs, inputs', ... }:
       {
+        # These tools have their own aspects that own their Claude Code wiring:
+        # beads (→ beads.nix, github:gastownhall/beads), hunk (→ hunk.nix, numtide
+        # package + upstream skill), rtk (→ rtk.nix, numtide binary + skill + hook).
+        # The rest stay here on the numtide collection.
         home.packages = [
-          inputs'.llm-agents.packages.beads-rust
           inputs'.llm-agents.packages.beads-viewer
           inputs'.llm-agents.packages.codegraph
           pkgs.playwright-mcp

@@ -60,8 +60,16 @@
       url = "github:tinted-theming/schemes";
       flake = false;
     };
+    beads = {
+      url = "github:gastownhall/beads";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     betterfox = {
       url = "github:yokoffing/Betterfox";
+      flake = false;
+    };
+    caveman = {
+      url = "github:JuliusBrussee/caveman";
       flake = false;
     };
     colmena = {
@@ -167,6 +175,11 @@
     kubenix = {
       url = "github:pizzapim/kubenix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    llm-agents.url = "github:numtide/llm-agents.nix";
+    mattpocock-skills = {
+      url = "github:mattpocock/skills";
+      flake = false;
     };
     microvm = {
       url = "github:microvm-nix/microvm.nix";
@@ -279,13 +292,6 @@
       flake = false;
     };
     spicetify-nix.url = "github:Gerg-L/spicetify-nix";
-    statix = {
-      url = "github:oppiliappan/statix";
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
-    };
     steam-config-nix = {
       url = "github:different-name/steam-config-nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -293,6 +299,10 @@
     stylix = {
       url = "github:nix-community/stylix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    superpowers-extended-cc = {
+      url = "github:pcvelz/superpowers";
+      flake = false;
     };
     systems.url = "github:nix-systems/default/future-26.11";
     treefmt-nix = {

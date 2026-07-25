@@ -321,13 +321,13 @@
 
       spicetify-nix.url = "github:Gerg-L/spicetify-nix";
 
-      statix = {
-        url = "github:oppiliappan/statix";
-        inputs = {
-          flake-parts.follows = "flake-parts";
-          nixpkgs.follows = "nixpkgs-unstable";
-        };
-      };
+      # statix = {
+      #   url = "github:oppiliappan/statix";
+      #   inputs = {
+      #     flake-parts.follows = "flake-parts";
+      #     nixpkgs.follows = "nixpkgs-unstable";
+      #   };
+      # };
 
       steam-config-nix = {
         url = "github:different-name/steam-config-nix";

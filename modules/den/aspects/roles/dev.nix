@@ -4,6 +4,11 @@
     includes = with den.aspects; [
       hardware.adb
       apps.dev.ai.claude
+      apps.dev.ai.beads
+      apps.dev.ai.hunk
+      apps.dev.ai.rtk
+      apps.dev.ai.llm-agents
+      apps.dev.ai.mcp.codebase-memory
 
       apps.shell.nix-index
 

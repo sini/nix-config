@@ -19,7 +19,7 @@
       ...
     }:
     {
-      devshells.default.packages = [ inputs'.statix.packages.default ];
+      # devshells.default.packages = [ inputs'.statix.packages.default ];
 
       # Provide a formatter package for `nix fmt`. Setting this
       # to `config.treefmt.build.wrapper` will use the treefmt

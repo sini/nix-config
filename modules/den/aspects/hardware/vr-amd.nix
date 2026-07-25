@@ -51,7 +51,8 @@
           pkgs.wayvr
           pkgs.resolute
           pkgs.lighthouse-steamvr
-          pkgs.custom-monado
+          #pkgs.custom-monado
+          pkgs.monado
           # pkgs.custom-xrizer # TODO: fix pkg
           pkgs.sidequest
         ];
@@ -60,7 +61,7 @@
           enable = true;
           defaultRuntime = false;
           highPriority = true;
-          package = pkgs.custom-monado;
+          #package = pkgs.custom-monado;
         };
 
         systemd.user.services.monado = {
@@ -108,7 +109,7 @@
               ],
               "external_drivers" :
               [
-                "${pkgs.custom-monado}/share/steamvr-monado"
+                "${pkgs.monado}/share/steamvr-monado"
               ],
               "jsonid" : "vrpathreg",
               "log" :
