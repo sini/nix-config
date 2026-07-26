@@ -170,9 +170,21 @@
 
             env = {
               CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
-              DISABLE_TELEMETRY = "1";
-              DISABLE_ERROR_REPORTING = "1";
+              # DISABLE_TELEMETRY = "1";
+              # DISABLE_ERROR_REPORTING = "1";
               ENABLE_TOOL_SEARCH = "auto:5";
+
+              # DISABLE_TELEMETRY also disables the GrowthBook feature-gate client,
+              # and gate lookups short-circuit to their compiled-in default *before*
+              # consulting the on-disk cache in ~/.claude.json. Several user-visible
+              # features default to off and are gate-enabled, so telemetry-off silently
+              # removes them (e.g. `tengu_ccr_bridge` gates the whole Remote Control
+              # surface: /remote-control, `claude remote-control`, --rc, the settings
+              # toggle). This flag is upstream's supported opt-out: keep telemetry off,
+              # but let gate reads fall back to the cached payload. Note the cache no
+              # longer refreshes while telemetry is off, so gate values are frozen at
+              # whatever was last fetched — hence ~/.claude.json is persisted below.
+              # CLAUDE_CODE_GB_DISK_CACHE_WHEN_TELEMETRY_OFF = "1";
             };
 
             enabledPlugins = {
@@ -272,6 +284,11 @@
       files = [
         ".claude/.credentials.json"
         ".claude/history.jsonl"
+        # Not under .claude/ — CC's main state file: per-project history, MCP server
+        # approvals, onboarding state, and the cached GrowthBook feature payload the
+        # env flag above falls back to. With telemetry off that payload is never
+        # refetched, so losing this file permanently disables every gated feature.
+        ".claude.json"
       ];
     };
 
