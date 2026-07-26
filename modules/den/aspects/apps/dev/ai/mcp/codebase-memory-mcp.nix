@@ -32,22 +32,31 @@
             let
               sessionReminder = pkgs.writeShellScript "cbm-session-reminder" ''
                 cat << 'REMINDER'
-                CRITICAL - Code Discovery Protocol:
-                1. ALWAYS use codebase-memory-mcp tools FIRST for ANY code exploration:
+                Code Discovery Protocol:
+                1. Check coverage before relying on the graph. `get_architecture(project)`
+                   lists the languages actually extracted. A language absent from that list
+                   has NO symbols in the index no matter how many File/Module nodes exist,
+                   and `search_graph` returns 0 for every real identifier in it.
+                2. For a COVERED language, prefer codebase-memory-mcp over grep:
                    - search_graph(name_pattern/label/qn_pattern) to find functions/classes/routes
                    - trace_path(function_name, mode=calls|data_flow|cross_service) for call chains
                    - get_code_snippet(qualified_name) for exact symbol source (precise ranges)
                    - query_graph(query) for complex Cypher patterns
                    - get_architecture(aspects) for project structure
                    - search_code(pattern) for text search (graph-augmented grep)
-                2. Use Grep/Glob/Read freely for text, configs, non-code files, and
+                3. NIX IS NOT COVERED. The grammar is linked, but the extractor keeps Nix in
+                   a file-tree-only tier, so .nix files yield no Function or Variable nodes.
+                   In Nix repos use Grep/Read directly and do not spend turns on search_graph
+                   or trace_path. A configured language server's documentSymbol is the
+                   accurate source of Nix symbols.
+                4. Use Grep/Glob/Read freely for text, configs, non-code files, and
                    always Read a file before editing it.
-                3. If a project is not indexed yet, run index_repository FIRST.
+                5. If a project is not indexed yet, run index_repository FIRST.
                 REMINDER
               '';
 
               subagentReminder = pkgs.writeShellScript "cbm-subagent-reminder" ''
-                printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"Code discovery: prefer codebase-memory-mcp tools (search_graph, trace_path, get_code_snippet, query_graph, get_architecture, search_code) over grep/file-read for navigating code. Use Grep/Glob/Read for text, configs, and non-code files."}}'
+                printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"Code discovery: for languages the index actually covers (check get_architecture), prefer codebase-memory-mcp tools (search_graph, trace_path, get_code_snippet, query_graph, search_code) over grep. NIX IS NOT COVERED - .nix files yield no Function/Variable nodes, so use Grep/Read directly in Nix repos. Use Grep/Glob/Read for text, configs, and non-code files."}}'
               '';
 
               hookOf = command: [
