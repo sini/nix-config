@@ -74,12 +74,18 @@
                    (`prelude.genAttrs` never resolves, however `prelude` is bound).
                 5. Use Grep/Glob/Read freely for text, configs, non-code files, and
                    always Read a file before editing it.
-                6. If a project is not indexed yet, run index_repository FIRST.
+                6. If a project is not indexed yet, run index_repository FIRST — and never
+                   pass mode: only the default (full) walks the whole tree. `fast` and
+                   `moderate` apply a NAME-based directory skip list that includes `gen`,
+                   `media`, `docs`, `examples`, `scripts`, `tools`, `bin`, `build`,
+                   `external`, `integration` and more. Those are ordinary source directory
+                   names here, and a skipped directory is silently absent from the graph —
+                   indistinguishable from code that does not exist.
                 REMINDER
               '';
 
               subagentReminder = pkgs.writeShellScript "cbm-subagent-reminder" ''
-                printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"Code discovery: for languages the index actually covers (check get_architecture), prefer codebase-memory-mcp tools (search_graph, trace_path, get_code_snippet, query_graph, search_code) over grep. Nix is PARTIALLY covered - defs are extracted only from files whose root is a let or an attrset, so a file headed by a function pattern ({ pkgs, ... }:) yields none; a Nix graph miss is inconclusive, not absence. For Nix symbols use the nix LSP (documentSymbol, hover, file-local goToDefinition) and Grep. Use Grep/Glob/Read for text, configs, and non-code files."}}'
+                printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"Code discovery: for languages the index actually covers (check get_architecture), prefer codebase-memory-mcp tools (search_graph, trace_path, get_code_snippet, query_graph, search_code) over grep. Nix is PARTIALLY covered - defs are extracted only from files whose root is a let or an attrset, so a file headed by a function pattern ({ pkgs, ... }:) yields none; a Nix graph miss is inconclusive, not absence. For Nix symbols use the nix LSP (documentSymbol, hover, file-local goToDefinition) and Grep. Never pass mode to index_repository - the default (full) walks everything, while fast/moderate silently skip directories named gen, media, docs, examples, scripts, tools, bin, build. Use Grep/Glob/Read for text, configs, and non-code files."}}'
               '';
 
               hookOf = command: [
