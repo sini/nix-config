@@ -120,6 +120,7 @@
               "sema-unused-def-lambda-witharg-formal"
               "sema-unused-def-lambda-noarg-formal"
               "sema-primop-overridden"
+              "sema-unused-def-let"
             ];
           };
           prettier = {
