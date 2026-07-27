@@ -1230,11 +1230,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1784926336,
-        "narHash": "sha256-QP08TQ53zdC9BsgtbG/wqX5fVlD0dKFV+P0NOsbUNtA=",
+        "lastModified": 1785115666,
+        "narHash": "sha256-OrWG56zMMaN0qWn2Y05iW9hFL+WWRa936Q8Z6Ui6pho=",
         "owner": "sini",
         "repo": "gen-lsp",
-        "rev": "f6f6e9d3230a54b9cc0ad1a2fbd483969cf861d2",
+        "rev": "b9cbd0ba3a54cf860994ce7ee4983b31fde35901",
         "type": "github"
       },
       "original": {
@@ -1249,11 +1249,11 @@
         "gen-types": "gen-types"
       },
       "locked": {
-        "lastModified": 1784234101,
-        "narHash": "sha256-yddYWPXGTwT+hX1197elzckg7/BMzir8KFrvzPgxQIo=",
+        "lastModified": 1785114420,
+        "narHash": "sha256-znkcgWdj2DKf2VBrDKmTT2MwjlzAcbeKdh2shU1b5Rw=",
         "owner": "sini",
         "repo": "gen-merge",
-        "rev": "f7e3afb3837ef036864da4598d360ed5a418e66f",
+        "rev": "8daa25deb482b184d1a040ae36182ca7332e94a9",
         "type": "github"
       },
       "original": {
@@ -1345,11 +1345,11 @@
         "gen-types": "gen-types_2"
       },
       "locked": {
-        "lastModified": 1784941820,
-        "narHash": "sha256-DWB8IzFFnNb4jOsdjvT7DrUlLqJtAZDZqgssTPsJ5/w=",
+        "lastModified": 1785115756,
+        "narHash": "sha256-EjzlzkoolXHifcgqt3qoSd6TElsriBveLseYCOzGnFE=",
         "owner": "sini",
         "repo": "gen-schema",
-        "rev": "c6331f30b0bc886af957adc43b497565f31cc962",
+        "rev": "103ea8897e106c5baa4348dfaac2942799fdcd3d",
         "type": "github"
       },
       "original": {
