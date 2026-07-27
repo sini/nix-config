@@ -5,7 +5,9 @@
 # HEAD gives 39 Nix Function nodes and 38 CALLS. The flake exposes exactly one
 # output we need, `packages.<system>.default`.
 #
-# `nixpkgs.follows` dedups the server's build nixpkgs onto ours.
+# `nixpkgs.follows` dedups the server's build nixpkgs onto ours. `pkgs` here is
+# the overlay's build (pkgs/overlays.nix: this flake's package plus one local
+# patch), NOT the channel's — see that overlay entry for what the patch fixes.
 {
   flake-file.inputs.codebase-memory-mcp = {
     url = "github:DeusData/codebase-memory-mcp";
@@ -14,14 +16,9 @@
 
   den.aspects.apps.dev.ai.mcp.codebase-memory = {
     homeManager =
-      {
-        pkgs,
-        lib,
-        inputs',
-        ...
-      }:
+      { pkgs, lib, ... }:
       let
-        cbm = inputs'.codebase-memory-mcp.packages.default;
+        cbm = pkgs.codebase-memory-mcp;
       in
       {
         home.packages = [ cbm ];

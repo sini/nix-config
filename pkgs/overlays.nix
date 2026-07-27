@@ -115,6 +115,28 @@
     gen-lsp-src = inputs.gen-lsp;
   };
 
+  # codebase-memory-mcp: take the upstream flake's build, not the channel's, and
+  # carry one local patch on top.
+  #
+  # The patch fixes total definition loss for the dominant Nix file shape. A Nix
+  # library or module file's root expression is normally itself a function —
+  # `{ pkgs, lib, ... }: <body>` — which matches the extractor's Nix function
+  # types, resolves no name of its own, and then hit `if (!descend_into_func)
+  # continue;`, abandoning the whole subtree before any binding below the header
+  # was visited. Files opening with a bare `let` or attrset were walked normally,
+  # which is why the language looked supported. Measured on a 332-file Nix repo:
+  # 39 Function nodes across 6 files before, 1871 across 253 after.
+  #
+  # Upstream: sini/codebase-memory-mcp @ spike/nix-function-header-defs. Drop this
+  # overlay entry and the patch file once that lands in a release the input tracks.
+  codebase-memory-mcp = _final: prev: {
+    codebase-memory-mcp =
+      inputs.codebase-memory-mcp.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
+        (old: {
+          patches = (old.patches or [ ]) ++ [ ./patches/codebase-memory-mcp-nix-function-header.patch ];
+        });
+  };
+
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
   # be accessible through 'pkgs.unstable'
   unstable-packages = final: _prev: {
