@@ -116,24 +116,41 @@
   };
 
   # codebase-memory-mcp: take the upstream flake's build, not the channel's, and
-  # carry one local patch on top.
+  # carry two local patches. One patch per upstream PR, so each can be dropped
+  # independently as they land.
   #
-  # The patch fixes total definition loss for the dominant Nix file shape. A Nix
-  # library or module file's root expression is normally itself a function —
-  # `{ pkgs, lib, ... }: <body>` — which matches the extractor's Nix function
-  # types, resolves no name of its own, and then hit `if (!descend_into_func)
-  # continue;`, abandoning the whole subtree before any binding below the header
-  # was visited. Files opening with a bare `let` or attrset were walked normally,
-  # which is why the language looked supported. Measured on a 332-file Nix repo:
-  # 39 Function nodes across 6 files before, 1871 across 253 after.
+  # 1. nix-function-header (PR #1304) — total definition loss for the dominant Nix
+  #    file shape. A library or module file's root expression is normally itself a
+  #    function (`{ pkgs, lib, ... }: <body>`), which matches the extractor's Nix
+  #    function types, resolves no name of its own, and then hit
+  #    `if (!descend_into_func) continue;` — abandoning the whole subtree before
+  #    any binding below the header was visited. Files opening with a bare `let`
+  #    or attrset were walked normally, which is why the language looked
+  #    supported.
   #
-  # Upstream: sini/codebase-memory-mcp @ spike/nix-function-header-defs. Drop this
-  # overlay entry and the patch file once that lands in a release the input tracks.
+  # 2. nix-attrpath-variables (PR #1305) — a Nix binding's name is a PATH, and the
+  #    resolver took only its first segment. `setA.dup` and `setB.dup` collapsed
+  #    onto one node, silently discarding the second definition and every CALLS
+  #    edge sourced from it; `a.b.fn` was named `a`; `"kebab-case"` kept its
+  #    quotes. Also mints Variable nodes for module-level bindings, which were
+  #    unconditionally absent. Scope is bounded to file level — the `let` bindings
+  #    and the returned attrset — so a NixOS module's settings tree does not mint
+  #    a node per `enable = true`.
+  #
+  # Cumulative on this repository, mode=full: Function 293 -> 684, CALLS 204 ->
+  # 327, and 226 Nix Variables where there were none. On den-hoag: Function
+  # 48 -> 2213, CALLS 56 -> 1461.
+  #
+  # Upstream: sini/codebase-memory-mcp, branches spike/nix-function-header-defs and
+  # feat/nix-attrpath-and-variables. Drop each entry with its PR.
   codebase-memory-mcp = _final: prev: {
     codebase-memory-mcp =
       inputs.codebase-memory-mcp.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
         (old: {
-          patches = (old.patches or [ ]) ++ [ ./patches/codebase-memory-mcp-nix-function-header.patch ];
+          patches = (old.patches or [ ]) ++ [
+            ./patches/codebase-memory-mcp-nix-function-header.patch
+            ./patches/codebase-memory-mcp-nix-attrpath-variables.patch
+          ];
         });
   };
 
