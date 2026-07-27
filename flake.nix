@@ -72,6 +72,10 @@
       url = "github:JuliusBrussee/caveman";
       flake = false;
     };
+    codebase-memory-mcp = {
+      url = "github:DeusData/codebase-memory-mcp";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     colmena = {
       url = "github:sini/colmena/feat/local-system-detection";
       inputs = {

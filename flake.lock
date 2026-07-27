@@ -382,6 +382,26 @@
         "type": "github"
       }
     },
+    "codebase-memory-mcp": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1785135508,
+        "narHash": "sha256-kXMkOCf2NCCFT5UFiNzSCdPjrWRTluj5S2JwuazNzVk=",
+        "owner": "DeusData",
+        "repo": "codebase-memory-mcp",
+        "rev": "d587deab3f0a7ab2ad63341dafdfdd3f7a1b62f3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DeusData",
+        "repo": "codebase-memory-mcp",
+        "type": "github"
+      }
+    },
     "colmena": {
       "inputs": {
         "flake-compat": [
@@ -3516,6 +3536,7 @@
         "beads": "beads",
         "betterfox": "betterfox",
         "caveman": "caveman",
+        "codebase-memory-mcp": "codebase-memory-mcp",
         "colmena": "colmena",
         "dag": "dag",
         "declarative-jellyfin": "declarative-jellyfin",
