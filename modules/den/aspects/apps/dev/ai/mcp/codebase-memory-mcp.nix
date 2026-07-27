@@ -60,13 +60,26 @@
                    - query_graph(query) for complex Cypher patterns
                    - get_architecture(aspects) for project structure
                    - search_code(pattern) for text search (graph-augmented grep)
-                3. Nix is PARTIALLY covered. Definitions are extracted only from files whose
-                   ROOT expression is a `let` or an attrset. A file headed by a function
-                   pattern (`{ pkgs, ... }:` — most module and lib files) yields NO Function
-                   nodes at all. Nix bindings yield no Variable nodes either, and only a
-                   literal `import ./path` becomes an edge: flake inputs are invisible, so
-                   there are no cross-repo edges. Treat a Nix graph miss as INCONCLUSIVE,
-                   never as absence — confirm with the LSP or Grep before concluding.
+                3. Nix IS covered for definitions and calls. The function-headed-file gap is
+                   FIXED (den-hoag measures 2213 Function nodes, 1461 CALLS). Two traps
+                   remain, both measured 2026-07-27, and both make a real capability look
+                   like an absent one:
+                   (a) `get_architecture`'s `languages` FIELD DOES NOT LIST NIX — den-hoag
+                       reports only YAML and Python while 2213 Nix functions sit in the same
+                       response. Do NOT confirm Nix coverage from that field; confirm it with
+                       a known-positive SYMBOL QUERY.
+                   (b) CALLS edges MISS ATTRSET-MEDIATED CALLS, which is Nix's dominant
+                       cross-module idiom. Measured: `trace_path runPrePass inbound` returns
+                       ZERO callers while the real call sits at `lib/default.nix:1097` as
+                       `stagedResolution.runPrePass { … }`. Positive control proving the
+                       direction works at all: `trace_path fail inbound` returns 23 callers.
+                       ⇒ ZERO CALLERS IS NOT EVIDENCE OF DEAD CODE. Cross-check every
+                       zero-caller result with Grep before concluding, and absolutely before
+                       deleting anything.
+                   Strong for STRUCTURE (what exists, what a function calls, clustering,
+                   fan-in). NOT trustworthy alone for REACHABILITY or liveness. Nix bindings
+                   still yield no Variable nodes, and only a literal `import ./path` becomes
+                   an edge — flake inputs are invisible, so there are no cross-repo edges.
                 4. For Nix symbols prefer the nix LSP (nil, registered for .nix):
                    documentSymbol for a file outline, hover, and file-local goToDefinition /
                    findReferences. nil is single-file — workspace/symbol and call hierarchy
@@ -85,7 +98,7 @@
               '';
 
               subagentReminder = pkgs.writeShellScript "cbm-subagent-reminder" ''
-                printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"Code discovery: for languages the index actually covers (check get_architecture), prefer codebase-memory-mcp tools (search_graph, trace_path, get_code_snippet, query_graph, search_code) over grep. Nix is PARTIALLY covered - defs are extracted only from files whose root is a let or an attrset, so a file headed by a function pattern ({ pkgs, ... }:) yields none; a Nix graph miss is inconclusive, not absence. For Nix symbols use the nix LSP (documentSymbol, hover, file-local goToDefinition) and Grep. Never pass mode to index_repository - the default (full) walks everything, while fast/moderate silently skip directories named gen, media, docs, examples, scripts, tools, bin, build. Use Grep/Glob/Read for text, configs, and non-code files."}}'
+                printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"SubagentStart","additionalContext":"Code discovery: for languages the index actually covers (check get_architecture), prefer codebase-memory-mcp tools (search_graph, trace_path, get_code_snippet, query_graph, search_code) over grep. Nix IS covered for defs and calls (the function-headed-file gap is fixed). TWO TRAPS: (a) get_architecture's languages field does NOT list Nix even when thousands of Nix functions are indexed - confirm coverage with a known-positive symbol query, never that field; (b) CALLS edges MISS attrset-mediated calls (stagedResolution.runPrePass), so ZERO CALLERS IS NOT EVIDENCE OF DEAD CODE - cross-check with Grep before concluding or deleting. Strong for structure, not trustworthy alone for reachability. Nix still yields no Variable nodes and no cross-repo edges. The nix LSP (documentSymbol, hover, file-local goToDefinition) complements it. Never pass mode to index_repository - the default (full) walks everything, while fast/moderate silently skip directories named gen, media, docs, examples, scripts, tools, bin, build. Use Grep/Glob/Read for text, configs, and non-code files."}}'
               '';
 
               hookOf = command: [

@@ -143,16 +143,37 @@
   #
   # Upstream: sini/codebase-memory-mcp, branches spike/nix-function-header-defs and
   # feat/nix-attrpath-and-variables. Drop each entry with its PR.
-  codebase-memory-mcp = _final: prev: {
-    codebase-memory-mcp =
-      inputs.codebase-memory-mcp.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
-        (old: {
-          patches = (old.patches or [ ]) ++ [
-            ./patches/codebase-memory-mcp-nix-function-header.patch
-            ./patches/codebase-memory-mcp-nix-attrpath-variables.patch
-          ];
-        });
-  };
+  #
+  # The version is corrected here too. Upstream's flake hardcodes `version =
+  # "0.6.0"` while its src is whatever the input resolves to — currently 438
+  # commits PAST v0.9.0 — so the store path read `codebase-memory-mcp-0.6.0`,
+  # three releases behind the code in it. Separately the binary reported `dev`,
+  # because Makefile.cbm only picks up a real version when CI injects
+  # `-DCBM_VERSION` through CFLAGS_EXTRA. That value is not cosmetic: cli.c feeds
+  # it to `source_version` in the CLI and MCP JSON output, so an agent asking the
+  # server what it is running was told `dev`.
+  #
+  # CFLAGS_EXTRA is only ever read in Makefile.cbm, never assigned, so make picks
+  # it up from the environment.
+  codebase-memory-mcp =
+    _final: prev:
+    let
+      unstableVersion = "0.9.0-unstable-2026-07-27";
+    in
+    {
+      codebase-memory-mcp =
+        inputs.codebase-memory-mcp.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
+          (old: {
+            version = unstableVersion;
+            env = (old.env or { }) // {
+              CFLAGS_EXTRA = "-DCBM_VERSION=\\\"${unstableVersion}\\\"";
+            };
+            patches = (old.patches or [ ]) ++ [
+              ./patches/codebase-memory-mcp-nix-function-header.patch
+              ./patches/codebase-memory-mcp-nix-attrpath-variables.patch
+            ];
+          });
+    };
 
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
   # be accessible through 'pkgs.unstable'
