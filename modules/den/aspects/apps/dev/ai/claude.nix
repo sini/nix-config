@@ -135,6 +135,21 @@
                 "Bash(git remote *)"
                 "Bash(git branch:*)"
 
+                # git (write). Subagents cannot establish user intent from a teammate
+                # message, so these previously round-tripped through the orchestrator.
+                # Push stays the literal `origin main` form — no wildcard remote or ref,
+                # so a force-push or a push to another branch still prompts.
+                "Bash(git push origin main)"
+                "Bash(git fetch *)"
+                "Bash(git add *)"
+                "Bash(git commit *)"
+                "Bash(git stash *)"
+
+                # trackers and gates
+                "Bash(bd *)"
+                "Bash(treefmt *)"
+                "Bash(just *)"
+
                 # nix
                 "Bash(nix eval *)"
                 "Bash(nix flake *)"

@@ -47,45 +47,6 @@ let
     ) envNames
   );
 
-  baseNodes = engine.buildNodes {
-    parentGraph = parentEdges;
-    importGraph = importEdges;
-
-    decls = lib.listToAttrs (
-      [
-        {
-          name = "root";
-          value = { };
-        }
-      ]
-      ++ map (ename: {
-        name = "env:${ename}";
-        value = environments.${ename}.settings or { };
-      }) envNames
-      ++ map (hname: {
-        name = "host:${hname}";
-        value = hosts.${hname}.settings or { };
-      }) hostNames
-    );
-
-    types = lib.listToAttrs (
-      [
-        {
-          name = "root";
-          value = "root";
-        }
-      ]
-      ++ map (e: {
-        name = "env:${e}";
-        value = "environment";
-      }) envNames
-      ++ map (h: {
-        name = "host:${h}";
-        value = "host";
-      }) hostNames
-    );
-  };
-
   attributes = {
     setting = engine.paramAttr (
       self: id: key:
