@@ -17,6 +17,10 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
+
+      # vic may attach sini's live herdr `pair` session (his key lands on sini's
+      # account behind a forced herdr-attach command). See core.security.herdr-pair.
+      core.security.herdr-pair.pairs.sini = [ "vic" ];
     };
   };
 
@@ -46,6 +50,8 @@
       core.boot.wireless-initrd
       core.network.manager
       core.network.tailscale
+
+      core.security.herdr-pair
     ];
 
     sini = {

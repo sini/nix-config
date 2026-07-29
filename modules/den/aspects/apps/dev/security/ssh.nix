@@ -20,6 +20,16 @@
               # route. NixOS keeps the LAN domain (direct over the local network).
               hostname = if host.class == "darwin" then entry.tsName else "${entry.hostname}.${entry.domain}";
               forwardAgent = true;
+              # opkssh `login` is file-based: it writes an OIDC-backed SSH cert to
+              # ~/.ssh/id_ecdsa(+-cert.pub) and adds nothing to any agent, so the
+              # cert never reaches the ssh-agent-mux. Offer that identity directly
+              # to the fleet peers whose sshd runs the opkssh AuthorizedKeysCommand
+              # verifier. Scoped here (not `*`) so the OIDC identity cert is not
+              # advertised to github or other external hosts. The `*` block's
+              # signing key is still offered on these hosts (IdentityFile
+              # directives accumulate across matching blocks). A missing file
+              # (before first `opkssh login`) is skipped by ssh without error.
+              identityFile = [ "~/.ssh/id_ecdsa" ];
             }
           ) host-addrs
         );
