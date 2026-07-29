@@ -165,6 +165,11 @@
         inputs.codebase-memory-mcp.packages.${prev.stdenv.hostPlatform.system}.default.overrideAttrs
           (old: {
             version = unstableVersion;
+            # The src is not stale — it is the flake input, already 438 commits
+            # past what upstream's hardcoded "0.6.0" claims. Only the version
+            # string is being corrected, so nixpkgs' version-without-src warning
+            # does not apply.
+            __intentionallyOverridingVersion = true;
             env = (old.env or { }) // {
               CFLAGS_EXTRA = "-DCBM_VERSION=\\\"${unstableVersion}\\\"";
             };

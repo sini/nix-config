@@ -9,6 +9,7 @@
     groups = [
       "users"
       "server-access"
+      "workstation-access" # For pair programming
       "grafana.server-admins"
       "open-webui.admins"
     ];

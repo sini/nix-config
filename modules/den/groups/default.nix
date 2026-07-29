@@ -98,7 +98,12 @@
     "vpn.users" = {
       labels = [ "oauth-grant" ];
       description = "Headscale VPN access";
-      members = [ "admins" ];
+      members = [
+        "admins"
+        "system-access"
+        "server-access"
+        "workstation-access"
+      ];
     };
     "open-webui.access" = {
       labels = [ "oauth-grant" ];
@@ -123,7 +128,12 @@
     "opkssh.access" = {
       labels = [ "oauth-grant" ];
       description = "Members may obtain an opkssh OIDC SSH token from kanidm.";
-      members = [ "admins" ];
+      members = [
+        "admins"
+        "system-access"
+        "server-access"
+        "workstation-access"
+      ];
     };
 
     # POSIX groups (Unix permissions with gidNumber)
@@ -131,7 +141,7 @@
       labels = [ "posix" ];
       gid = 10;
       description = "Sudo access";
-      members = [ "workstation-access" ];
+      members = [ "admins" ];
     };
     audio = {
       labels = [ "posix" ];
@@ -197,11 +207,13 @@
       labels = [ "posix" ];
       gid = 901;
       description = "VM management access";
+      members = [ "admins" ];
     };
     kvm = {
       labels = [ "posix" ];
       gid = 902;
       description = "KVM hypervisor access";
+      members = [ "admins" ];
     };
   };
 }
