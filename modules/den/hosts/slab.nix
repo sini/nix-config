@@ -21,7 +21,7 @@
   # hardware.adb) are simply not extracted for the droid class.
   den.aspects.slab.includes = with den.aspects; [
     roles.dev
-    apps.shell.zsh
+    applications.shell.zsh
     core.nix-on-droid-base
   ];
 }

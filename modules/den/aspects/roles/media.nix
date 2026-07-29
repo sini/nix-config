@@ -2,12 +2,12 @@
 {
   den.aspects.roles.media = {
     includes = with den.aspects; [
-      apps.media.jellyfin-client
-      apps.media.mpv
-      apps.media.spicetify
-      apps.media.qbittorrent
-      apps.media.youtube-music
-      apps.media.yt-dlp
+      applications.media.jellyfin-client
+      applications.media.mpv
+      applications.media.spicetify
+      applications.media.qbittorrent
+      applications.media.youtube-music
+      applications.media.yt-dlp
     ];
   };
 }

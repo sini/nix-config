@@ -26,7 +26,7 @@
 
       core.impermanence
 
-      apps.shell.zsh
+      applications.shell.zsh
 
       core.network.networking
       core.security.openssh

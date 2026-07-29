@@ -3,55 +3,55 @@
   den.aspects.roles.dev = {
     includes = with den.aspects; [
       hardware.adb
-      apps.dev.ai.claude
-      apps.dev.ai.beads
-      apps.dev.ai.hunk
-      apps.dev.ai.rtk
-      apps.dev.ai.llm-agents
-      apps.dev.ai.mcp.codebase-memory
+      applications.dev.ai.claude
+      applications.dev.ai.beads
+      applications.dev.ai.hunk
+      applications.dev.ai.rtk
+      applications.dev.ai.llm-agents
+      applications.dev.ai.mcp.codebase-memory
 
-      apps.shell.nix-index
+      applications.shell.nix-index
 
-      apps.dev.editor.nvf
+      applications.dev.editor.nvf
 
-      apps.dev.security.ssh
-      apps.dev.security.bitwarden
-      apps.dev.security.ssh-agent-mux
-      apps.dev.security.signing-key
+      applications.dev.security.ssh
+      applications.dev.security.bitwarden
+      applications.dev.security.ssh-agent-mux
+      applications.dev.security.signing-key
 
-      apps.dev.shell.bat
-      apps.dev.shell.bottom
-      apps.dev.shell.btop
-      apps.dev.shell.direnv
-      apps.dev.shell.eza
-      apps.dev.shell.starship
+      applications.dev.shell.bat
+      applications.dev.shell.bottom
+      applications.dev.shell.btop
+      applications.dev.shell.direnv
+      applications.dev.shell.eza
+      applications.dev.shell.starship
 
-      apps.shell.yazi
-      apps.shell.archive
-      apps.shell.data
-      apps.shell.disk
-      apps.shell.process
-      apps.shell.search
-      apps.shell.zoxide
+      applications.shell.yazi
+      applications.shell.archive
+      applications.shell.data
+      applications.shell.disk
+      applications.shell.process
+      applications.shell.search
+      applications.shell.zoxide
 
-      apps.dev.git
-      apps.dev.git.delta
-      apps.dev.git.github
-      apps.dev.git.jujutsu
-      apps.dev.git.lazygit
-      apps.dev.git.mergiraf
+      applications.dev.git
+      applications.dev.git.delta
+      applications.dev.git.github
+      applications.dev.git.jujutsu
+      applications.dev.git.lazygit
+      applications.dev.git.mergiraf
 
-      apps.dev.lang.go
-      apps.dev.lang.rust
-      apps.dev.lang.python
-      apps.dev.lang.nix
+      applications.dev.lang.go
+      applications.dev.lang.rust
+      applications.dev.lang.python
+      applications.dev.lang.nix
 
-      apps.dev.mux.herdr
-      apps.dev.mux.sesh
-      apps.dev.mux.tmux
-      apps.dev.mux.zellij
+      applications.dev.mux.herdr
+      applications.dev.mux.sesh
+      applications.dev.mux.tmux
+      applications.dev.mux.zellij
 
-      apps.dev.k8s.k9s
+      applications.dev.k8s.k9s
     ];
   };
 }

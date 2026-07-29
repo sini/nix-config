@@ -13,7 +13,7 @@
       macos.fonts
       macos.homebrew
       macos.spotlight-apps
-      macos.apps.karabiner
+      macos.applications.karabiner
 
       # macOS defaults
       macos.defaults.keyboard
@@ -32,26 +32,26 @@
 
       # GUI apps (native nixpkgs where it builds on darwin, homebrew cask where
       # it doesn't — see each aspect's homebrew-cask contribution).
-      macos.apps.raycast
-      apps.browsers.firefox
-      apps.browsers.chromium
-      apps.terminals.kitty
-      apps.terminals.alacritty
-      apps.dev.editor.codium.vscode
-      apps.dev.editor.codium.core
-      apps.dev.lang.c
-      apps.dev.lang.go
-      apps.dev.lang.lua
-      apps.dev.lang.markdown
-      apps.dev.lang.nix
-      apps.dev.lang.python
-      apps.dev.lang.shell
-      apps.dev.git.gitkraken
-      apps.dev.networking.wireshark
-      apps.dev.security.opkssh-client
-      apps.productivity.obsidian
-      apps.productivity.obs-studio
-      apps.mail.protonmail
+      macos.applications.raycast
+      applications.browsers.firefox
+      applications.browsers.chromium
+      applications.terminals.kitty
+      applications.terminals.alacritty
+      applications.dev.editor.codium.vscode
+      applications.dev.editor.codium.core
+      applications.dev.lang.c
+      applications.dev.lang.go
+      applications.dev.lang.lua
+      applications.dev.lang.markdown
+      applications.dev.lang.nix
+      applications.dev.lang.python
+      applications.dev.lang.shell
+      applications.dev.git.gitkraken
+      applications.dev.networking.wireshark
+      applications.dev.security.opkssh-client
+      applications.productivity.obsidian
+      applications.productivity.obs-studio
+      applications.mail.protonmail
     ];
   };
 }

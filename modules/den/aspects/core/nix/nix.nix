@@ -50,17 +50,15 @@
     };
 
     darwin = {
-      nix.settings =
-        let
-          users = [
-            "root"
-            "@admin"
-          ];
-        in
-        {
-          trusted-users = users;
-          allowed-users = users;
-        };
+      nix.settings = {
+        # trusted-users (root-equivalent nix power) stays admin-only; allowed-users
+        # (mere daemon access) covers every local login user. See the nixos arm.
+        trusted-users = [
+          "root"
+          "@admin"
+        ];
+        allowed-users = [ "*" ];
+      };
       nix.gc.interval = {
         Hour = 5;
         Minute = 0;
@@ -71,17 +69,20 @@
       { lib, ... }:
       {
         nix = {
-          settings =
-            let
-              users = [
-                "root"
-                "@wheel"
-              ];
-            in
-            {
-              trusted-users = users;
-              allowed-users = users;
-            };
+          settings = {
+            # trusted-users grants root-equivalent nix power (override settings,
+            # add substituters, import untrusted store paths) — admins only.
+            trusted-users = [
+              "root"
+              "@wheel"
+            ];
+            # allowed-users only gates who may connect to the daemon; every local
+            # login user needs it (HM activation, nix-shell). It is NOT a privilege
+            # boundary, so it must not track wheel — decoupled from sudo like login.
+            # With mutableUsers = false, local accounts are exactly the resolved
+            # registry users, so "*" is precisely the login set.
+            allowed-users = [ "*" ];
+          };
 
           gc.dates = "05:00";
           daemonCPUSchedPolicy = lib.mkDefault "batch";

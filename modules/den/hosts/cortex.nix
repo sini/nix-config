@@ -53,7 +53,7 @@
 
       services.storage.media-data-share
 
-      apps.media.easyeffects
+      applications.media.easyeffects
     ];
 
     nixos = {
@@ -174,19 +174,19 @@
 
     sini = {
       includes = with den.aspects; [
-        # apps.wayland.waybar
-        # apps.wayland.swaync
-        # apps.wayland.hypridle
-        # apps.wayland.hyprland-split-monitors
-        apps.media.spotify-player
+        # applications.wayland.waybar
+        # applications.wayland.swaync
+        # applications.wayland.hypridle
+        # applications.wayland.hyprland-split-monitors
+        applications.media.spotify-player
       ];
     };
 
     shuo = {
       includes = with den.aspects; [
-        apps.browsers.firefox
-        apps.gaming.steam
-        apps.media.spicetify
+        applications.browsers.firefox
+        applications.gaming.steam
+        applications.media.spicetify
       ];
     };
   };

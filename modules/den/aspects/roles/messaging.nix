@@ -2,12 +2,12 @@
 {
   den.aspects.roles.messaging = {
     includes = with den.aspects; [
-      apps.messaging.discord
-      apps.messaging.element
-      apps.messaging.kdeconnect
-      apps.messaging.messenger
-      apps.messaging.telegram
-      apps.messaging.zoom
+      applications.messaging.discord
+      applications.messaging.element
+      applications.messaging.kdeconnect
+      applications.messaging.messenger
+      applications.messaging.telegram
+      applications.messaging.zoom
     ];
   };
 }

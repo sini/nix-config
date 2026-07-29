@@ -2,26 +2,26 @@
 {
   den.aspects.roles.dev-gui = {
     includes = with den.aspects; [
-      apps.dev.editor.codium.antigravity
-      apps.dev.editor.codium.vscode
-      apps.dev.editor.codium.core
-      apps.dev.lang.c
-      apps.dev.lang.go
-      apps.dev.lang.lua
-      apps.dev.lang.markdown
-      apps.dev.lang.nix
-      apps.dev.lang.python
-      apps.dev.lang.shell
-      apps.dev.git.gitkraken
-      apps.dev.networking.wireshark
-      apps.dev.k8s.core
-      apps.dev.k8s.dev
-      apps.dev.k8s.helm
-      apps.dev.k8s.observability
-      apps.dev.k8s.plugins
-      apps.dev.k8s.security
-      apps.dev.k8s.tui
-      apps.dev.k8s.utils
+      applications.dev.editor.codium.antigravity
+      applications.dev.editor.codium.vscode
+      applications.dev.editor.codium.core
+      applications.dev.lang.c
+      applications.dev.lang.go
+      applications.dev.lang.lua
+      applications.dev.lang.markdown
+      applications.dev.lang.nix
+      applications.dev.lang.python
+      applications.dev.lang.shell
+      applications.dev.git.gitkraken
+      applications.dev.networking.wireshark
+      applications.dev.k8s.core
+      applications.dev.k8s.dev
+      applications.dev.k8s.helm
+      applications.dev.k8s.observability
+      applications.dev.k8s.plugins
+      applications.dev.k8s.security
+      applications.dev.k8s.tui
+      applications.dev.k8s.utils
     ];
   };
 }

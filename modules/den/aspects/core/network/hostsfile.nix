@@ -5,7 +5,7 @@
 # collected entries from all peers. NixOS populates networking.hosts and
 # services.openssh.knownHosts; Darwin has no comparable /etc/hosts story (and the
 # LAN addresses are unreachable while roaming), so it only pins known_hosts by the
-# tailnet name that `ssh <host>` resolves to (apps.dev.security.ssh aliases the
+# tailnet name that `ssh <host>` resolves to (applications.dev.security.ssh aliases the
 # short name to that tailnet name on darwin).
 {
   den.aspects.core.network.hostsfile = {
@@ -74,7 +74,7 @@
       {
         # No /etc/hosts equivalent on darwin, and the LAN addresses are
         # unreachable while roaming, so `ssh <host>` connects via the tailnet
-        # name (aliased in apps.dev.security.ssh). Pin each peer's host key under
+        # name (aliased in applications.dev.security.ssh). Pin each peer's host key under
         # that name (+ its others) so the connection verifies instead of
         # TOFU-prompting.
         programs.ssh.knownHosts = lib.listToAttrs (

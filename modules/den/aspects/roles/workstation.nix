@@ -24,20 +24,20 @@
       desktop.xdg-portal
 
       # Apps
-      apps.terminals.alacritty
-      apps.terminals.kitty
-      apps.browsers.firefox
-      apps.browsers.chromium
+      applications.terminals.alacritty
+      applications.terminals.kitty
+      applications.browsers.firefox
+      applications.browsers.chromium
 
-      apps.dev.security.opkssh-client
+      applications.dev.security.opkssh-client
 
       core.network.syncthing.tray
 
-      apps.mail.protonmail
+      applications.mail.protonmail
 
-      apps.productivity.obs-studio
-      apps.productivity.obsidian
-      apps.productivity.zathura
+      applications.productivity.obs-studio
+      applications.productivity.obsidian
+      applications.productivity.zathura
     ];
   };
 }

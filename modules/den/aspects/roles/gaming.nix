@@ -3,11 +3,11 @@
   den.aspects.roles.gaming = {
     includes = with den.aspects; [
       hardware.gamepad
-      apps.gaming.nix-ld
-      apps.gaming.steam
-      apps.gaming.sunshine
-      apps.gaming.mangohud
-      apps.gaming.emulation
+      applications.gaming.nix-ld
+      applications.gaming.steam
+      applications.gaming.sunshine
+      applications.gaming.mangohud
+      applications.gaming.emulation
     ];
   };
 }

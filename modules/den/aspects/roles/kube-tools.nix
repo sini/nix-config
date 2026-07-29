@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.aspects.roles.kube-tools = {
-    includes = with den.aspects.apps.dev.k8s; [
+    includes = with den.aspects.applications.dev.k8s; [
       core
       dev
       helm
