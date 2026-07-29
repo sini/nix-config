@@ -9,9 +9,9 @@
     groups = [
       "users"
       "server-access"
-      "workstation-access" # For pair programming
       "grafana.server-admins"
       "open-webui.admins"
+      "workstation-access" # pair-programming login on workstations; no sudo (not system-owner)
     ];
     identity = {
       displayName = "Victor Borja";

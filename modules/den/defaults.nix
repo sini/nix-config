@@ -163,6 +163,18 @@ in
         den.lib.policy.include den.aspects.${host.name}.${user.name}
       )
     ))
+
+    # primary-user grants wheel (+ networkmanager; darwin primaryUser; wsl
+    # defaultUser). It must apply ONLY to the host's declared system-owner, not
+    # to every login user — otherwise login on a workstation implies sudo.
+    # Non-owners still get networkmanager via the acl (workstation-access);
+    # wheel stays admin-only via den.groups.wheel.members.
+    (den.lib.policy.mkPolicy "primary-user-for-owner" (
+      { host, user, ... }:
+      lib.optional (user.name == (host.system-owner or null)) (
+        den.lib.policy.include den.batteries.primary-user
+      )
+    ))
   ];
 
   # Wire den batteries that every host/user should have
@@ -171,7 +183,8 @@ in
   den.default.includes = [
     den.batteries.define-user
     den.batteries.hostname
-    den.batteries.primary-user
+    # primary-user is NOT a blanket default: it grants wheel, so it is applied
+    # per system-owner via the "primary-user-for-owner" policy above.
     den.batteries.inputs'
     den.batteries.self'
   ];
