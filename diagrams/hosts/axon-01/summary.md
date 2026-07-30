@@ -2,198 +2,875 @@
 
 ## Overview
 
-- **49** aspects across **2** classes (nixos, homeManager)
-- **59** provider sub-aspects
-- **8** policies fired
-- **1** entity instances
+- **277** aspects across **1** classes (nixos)
+- **232** provider sub-aspects
+- **58** policies fired
+- **6** entity instances
 
 ## Aspects
 
-| Aspect                           | Classes            | Parametric | Instance     |
-| -------------------------------- | ------------------ | ---------- | ------------ |
-| axon-01                          | nixos              | yes (host) | host:axon-01 |
-| batteries/hostname/os            | nixos              | yes (host) | host:axon-01 |
-| core/deterministic-uids          | nixos              | no         | host:axon-01 |
-| core/facter                      | nixos              | no         | host:axon-01 |
-| core/firewall-collector          | nixos              | no         | host:axon-01 |
-| core/firmware                    | nixos              | no         | host:axon-01 |
-| core/home-manager                | nixos              | no         | host:axon-01 |
-| core/i18n                        | nixos              | no         | host:axon-01 |
-| core/linux-kernel                | nixos              | no         | host:axon-01 |
-| core/lix                         | nixos              | no         | host:axon-01 |
-| core/nix                         | nixos              | no         | host:axon-01 |
-| core/nix-remote-build-client     | nixos              | no         | host:axon-01 |
-| core/persist-collector           | nixos              | no         | host:axon-01 |
-| core/secrets-collector           | nixos              | no         | host:axon-01 |
-| core/security                    | nixos              | no         | host:axon-01 |
-| core/shell                       | nixos              | no         | host:axon-01 |
-| core/ssd                         | nixos              | no         | host:axon-01 |
-| core/stateVersion                | nixos              | no         | host:axon-01 |
-| core/sudo                        | nixos              | no         | host:axon-01 |
-| core/systemd                     | nixos              | no         | host:axon-01 |
-| core/systemd-boot                | nixos              | no         | host:axon-01 |
-| core/users                       | nixos              | no         | host:axon-01 |
-| core/utils                       | nixos              | no         | host:axon-01 |
-| disk/impermanence                | nixos, homeManager | no         | host:axon-01 |
-| disk/xfs-disk-longhorn           | nixos              | no         | host:axon-01 |
-| disk/zfs-diff                    | nixos              | no         | host:axon-01 |
-| disk/zfs-disk-single             | nixos              | no         | host:axon-01 |
-| hardware/cpu-amd                 | nixos              | no         | host:axon-01 |
-| hardware/gpu-amd                 | nixos              | no         | host:axon-01 |
-| hardware/thunderbolt-network     | nixos              | no         | host:axon-01 |
-| insecure-predicate/os            | nixos              | yes (host) | host:axon-01 |
-| network/hosts                    | nixos              | no         | host:axon-01 |
-| network/network-boot             | nixos              | no         | host:axon-01 |
-| network/networking               | nixos              | no         | host:axon-01 |
-| network/openssh                  | nixos              | no         | host:axon-01 |
-| roles/server                     | nixos              | no         | host:axon-01 |
-| services/acme                    | nixos              | no         | host:axon-01 |
-| services/bgp                     | nixos              | no         | host:axon-01 |
-| services/cilium-bgp              | nixos              | no         | host:axon-01 |
-| services/k3s                     | nixos              | no         | host:axon-01 |
-| services/k3s-containerd          | nixos              | no         | host:axon-01 |
-| services/media-data-share        | nixos              | no         | host:axon-01 |
-| services/nix-remote-build-server | nixos              | no         | host:axon-01 |
-| services/prometheus-exporter     | nixos              | no         | host:axon-01 |
-| services/tailscale               | nixos              | no         | host:axon-01 |
-| services/tang                    | nixos              | no         | host:axon-01 |
-| services/thunderbolt-mesh-of     | nixos              | no         | host:axon-01 |
-| unfree-predicate/os              | nixos              | yes (host) | host:axon-01 |
-| zfs-disk-single/root             | nixos              | no         | host:axon-01 |
+| Aspect | Classes | Parametric | Instance |
+| -------- | --------- | ------------ | ---------- |
+| agenix-identity/dvicory@axon-01 | nixos | yes (host, secretsConfig, user) | user:dvicory |
+| agenix-identity/dvicory@axon-02 | nixos | yes (host, secretsConfig, user) | user:dvicory |
+| agenix-identity/dvicory@axon-03 | nixos | yes (host, secretsConfig, user) | user:dvicory |
+| agenix-identity/dvicory@bitstream | nixos | yes (host, secretsConfig, user) | user:dvicory |
+| agenix-identity/dvicory@uplink | nixos | yes (host, secretsConfig, user) | user:dvicory |
+| agenix-identity/pol@axon-01 | nixos | yes (host, secretsConfig, user) | user:pol |
+| agenix-identity/pol@axon-02 | nixos | yes (host, secretsConfig, user) | user:pol |
+| agenix-identity/pol@axon-03 | nixos | yes (host, secretsConfig, user) | user:pol |
+| agenix-identity/pol@bitstream | nixos | yes (host, secretsConfig, user) | user:pol |
+| agenix-identity/pol@uplink | nixos | yes (host, secretsConfig, user) | user:pol |
+| agenix-identity/sini@axon-01 | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/sini@axon-02 | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/sini@axon-03 | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/sini@bitstream | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/sini@blade | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/sini@cortex | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/sini@uplink | nixos | yes (host, secretsConfig, user) | user:sini |
+| agenix-identity/theutz@axon-01 | nixos | yes (host, secretsConfig, user) | user:theutz |
+| agenix-identity/theutz@axon-02 | nixos | yes (host, secretsConfig, user) | user:theutz |
+| agenix-identity/theutz@axon-03 | nixos | yes (host, secretsConfig, user) | user:theutz |
+| agenix-identity/theutz@bitstream | nixos | yes (host, secretsConfig, user) | user:theutz |
+| agenix-identity/theutz@uplink | nixos | yes (host, secretsConfig, user) | user:theutz |
+| agenix-identity/vic@axon-01 | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix-identity/vic@axon-02 | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix-identity/vic@axon-03 | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix-identity/vic@bitstream | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix-identity/vic@blade | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix-identity/vic@cortex | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix-identity/vic@uplink | nixos | yes (host, secretsConfig, user) | user:vic |
+| agenix/axon-01 | nixos | yes (host, secretsConfig) | host:axon-01 |
+| axon-01 | nixos | yes (host) | host:axon-01 |
+| batteries/define-user/dvicory@axon-01 | nixos | yes (host, user) | host:axon-01 |
+| batteries/define-user/pol@axon-01 | nixos | yes (host, user) | host:axon-01 |
+| batteries/define-user/sini@axon-01 | nixos | yes (host, user) | host:axon-01 |
+| batteries/define-user/theutz@axon-01 | nixos | yes (host, user) | host:axon-01 |
+| batteries/define-user/vic@axon-01 | nixos | yes (host, user) | host:axon-01 |
+| batteries/hostname/os | nixos | yes (host) | host:axon-01 |
+| batteries/inputs'/os | nixos | yes (host) | host:axon-01 |
+| batteries/primary-user(sini@axon-01) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@axon-02) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@axon-03) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@bitstream) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@blade) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@cortex) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@patch) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@slab) | nixos | yes (host, user) | user:sini |
+| batteries/primary-user(sini@uplink) | nixos | yes (host, user) | user:sini |
+| batteries/self'/os | nixos | yes (host) | host:axon-01 |
+| bgp/cilium-bgp | nixos | no | host:axon-01 |
+| boot/network-initrd | nixos | no | host:axon-01 |
+| core/impermanence | nixos | no | user:dvicory |
+| core/impermanence | nixos | no | user:pol |
+| core/impermanence | nixos | no | user:theutz |
+| core/impermanence | nixos | no | user:vic |
+| core/impermanence | nixos | no | host:axon-01 |
+| core/impermanence/btrfs | nixos | no | user:dvicory |
+| core/impermanence/btrfs | nixos | no | user:pol |
+| core/impermanence/btrfs | nixos | no | user:theutz |
+| core/impermanence/btrfs | nixos | no | user:vic |
+| core/impermanence/btrfs | nixos | no | host:axon-01 |
+| core/impermanence/persist-collector | nixos | no | user:dvicory |
+| core/impermanence/persist-collector | nixos | no | user:pol |
+| core/impermanence/persist-collector | nixos | no | user:theutz |
+| core/impermanence/persist-collector | nixos | no | user:vic |
+| core/impermanence/persist-collector | nixos | no | host:axon-01 |
+| core/impermanence/zfs | nixos | no | user:dvicory |
+| core/impermanence/zfs | nixos | no | user:pol |
+| core/impermanence/zfs | nixos | no | user:theutz |
+| core/impermanence/zfs | nixos | no | user:vic |
+| core/impermanence/zfs | nixos | no | host:axon-01 |
+| core/localization/i18n | nixos | no | user:dvicory |
+| core/localization/i18n | nixos | no | user:pol |
+| core/localization/i18n | nixos | no | user:theutz |
+| core/localization/i18n | nixos | no | user:vic |
+| core/localization/i18n | nixos | no | host:axon-01 |
+| core/network/hostsfile | nixos | no | user:dvicory |
+| core/network/hostsfile | nixos | no | user:pol |
+| core/network/hostsfile | nixos | no | user:theutz |
+| core/network/hostsfile | nixos | no | user:vic |
+| core/network/hostsfile | nixos | no | host:axon-01 |
+| core/network/networking | nixos | no | user:dvicory |
+| core/network/networking | nixos | no | user:pol |
+| core/network/networking | nixos | no | user:theutz |
+| core/network/networking | nixos | no | user:vic |
+| core/network/networking | nixos | no | host:axon-01 |
+| core/network/syncthing/peer | nixos | no | user:sini |
+| core/network/syncthing/peer | nixos | no | user:dvicory |
+| core/network/syncthing/peer | nixos | no | user:pol |
+| core/network/syncthing/peer | nixos | no | user:theutz |
+| core/network/syncthing/peer | nixos | no | user:vic |
+| core/network/tailscale | nixos | no | user:dvicory |
+| core/network/tailscale | nixos | no | user:pol |
+| core/network/tailscale | nixos | no | user:theutz |
+| core/network/tailscale | nixos | no | user:vic |
+| core/network/tailscale | nixos | no | host:axon-01 |
+| core/nix | nixos | no | user:dvicory |
+| core/nix | nixos | no | user:pol |
+| core/nix | nixos | no | user:theutz |
+| core/nix | nixos | no | user:vic |
+| core/nix | nixos | no | host:axon-01 |
+| core/nix/stateVersion | nixos | no | user:dvicory |
+| core/nix/stateVersion | nixos | no | user:pol |
+| core/nix/stateVersion | nixos | no | user:theutz |
+| core/nix/stateVersion | nixos | no | user:vic |
+| core/nix/stateVersion | nixos | no | host:axon-01 |
+| core/perf/disable-docs | nixos | no | user:dvicory |
+| core/perf/disable-docs | nixos | no | user:pol |
+| core/perf/disable-docs | nixos | no | user:theutz |
+| core/perf/disable-docs | nixos | no | user:vic |
+| core/perf/disable-docs | nixos | no | host:axon-01 |
+| core/perf/ssd | nixos | no | user:dvicory |
+| core/perf/ssd | nixos | no | user:pol |
+| core/perf/ssd | nixos | no | user:theutz |
+| core/perf/ssd | nixos | no | user:vic |
+| core/perf/ssd | nixos | no | host:axon-01 |
+| core/perf/zram-swap | nixos | no | user:dvicory |
+| core/perf/zram-swap | nixos | no | user:pol |
+| core/perf/zram-swap | nixos | no | user:theutz |
+| core/perf/zram-swap | nixos | no | user:vic |
+| core/perf/zram-swap | nixos | no | host:axon-01 |
+| core/security | nixos | no | user:dvicory |
+| core/security | nixos | no | user:pol |
+| core/security | nixos | no | user:theutz |
+| core/security | nixos | no | user:vic |
+| core/security | nixos | no | host:axon-01 |
+| core/security/openssh | nixos | no | user:dvicory |
+| core/security/openssh | nixos | no | user:pol |
+| core/security/openssh | nixos | no | user:theutz |
+| core/security/openssh | nixos | no | user:vic |
+| core/security/openssh | nixos | no | host:axon-01 |
+| core/security/opkssh | nixos | no | user:dvicory |
+| core/security/opkssh | nixos | no | user:pol |
+| core/security/opkssh | nixos | no | user:theutz |
+| core/security/opkssh | nixos | no | user:vic |
+| core/security/opkssh | nixos | no | host:axon-01 |
+| core/security/sudo | nixos | no | user:dvicory |
+| core/security/sudo | nixos | no | user:pol |
+| core/security/sudo | nixos | no | user:theutz |
+| core/security/sudo | nixos | no | user:vic |
+| core/security/sudo | nixos | no | host:axon-01 |
+| core/system/facter | nixos | no | user:dvicory |
+| core/system/facter | nixos | no | user:pol |
+| core/system/facter | nixos | no | user:theutz |
+| core/system/facter | nixos | no | user:vic |
+| core/system/facter | nixos | no | host:axon-01 |
+| core/system/firmware | nixos | no | user:dvicory |
+| core/system/firmware | nixos | no | user:pol |
+| core/system/firmware | nixos | no | user:theutz |
+| core/system/firmware | nixos | no | user:vic |
+| core/system/firmware | nixos | no | host:axon-01 |
+| core/system/linux-kernel | nixos | no | user:dvicory |
+| core/system/linux-kernel | nixos | no | user:pol |
+| core/system/linux-kernel | nixos | no | user:theutz |
+| core/system/linux-kernel | nixos | no | user:vic |
+| core/system/linux-kernel | nixos | no | host:axon-01 |
+| core/systemd | nixos | no | user:dvicory |
+| core/systemd | nixos | no | user:pol |
+| core/systemd | nixos | no | user:theutz |
+| core/systemd | nixos | no | user:vic |
+| core/systemd | nixos | no | host:axon-01 |
+| core/systemd/boot | nixos | no | user:dvicory |
+| core/systemd/boot | nixos | no | user:pol |
+| core/systemd/boot | nixos | no | user:theutz |
+| core/systemd/boot | nixos | no | user:vic |
+| core/systemd/boot | nixos | no | host:axon-01 |
+| core/users | nixos | no | user:dvicory |
+| core/users | nixos | no | user:pol |
+| core/users | nixos | no | user:theutz |
+| core/users | nixos | no | user:vic |
+| core/users | nixos | no | host:axon-01 |
+| core/users/deterministic-uids | nixos | no | user:dvicory |
+| core/users/deterministic-uids | nixos | no | user:pol |
+| core/users/deterministic-uids | nixos | no | user:theutz |
+| core/users/deterministic-uids | nixos | no | user:vic |
+| core/users/deterministic-uids | nixos | no | host:axon-01 |
+| core/users/home-manager-shared | nixos | no | user:dvicory |
+| core/users/home-manager-shared | nixos | no | user:pol |
+| core/users/home-manager-shared | nixos | no | user:theutz |
+| core/users/home-manager-shared | nixos | no | user:vic |
+| core/users/home-manager-shared | nixos | no | host:axon-01 |
+| core/users/shell | nixos | no | user:dvicory |
+| core/users/shell | nixos | no | user:pol |
+| core/users/shell | nixos | no | user:theutz |
+| core/users/shell | nixos | no | user:vic |
+| core/users/shell | nixos | no | host:axon-01 |
+| core/utils | nixos | no | user:dvicory |
+| core/utils | nixos | no | user:pol |
+| core/utils | nixos | no | user:theutz |
+| core/utils | nixos | no | user:vic |
+| core/utils | nixos | no | host:axon-01 |
+| cpu/amd | nixos | no | host:axon-01 |
+| disk/xfs-disk-longhorn | nixos | no | host:axon-01 |
+| disk/zfs-diff | nixos | no | host:axon-01 |
+| disk/zfs-disk-single | nixos | no | host:axon-01 |
+| gpu/amd | nixos | no | host:axon-01 |
+| hardware/thunderbolt-network | nixos | no | host:axon-01 |
+| insecure-predicate/os | nixos | yes (host) | host:axon-01 |
+| k3s/bootstrap | nixos | no | host:axon-01 |
+| k3s/containerd | nixos | no | host:axon-01 |
+| k3s/node | nixos | no | host:axon-01 |
+| k3s/node-lifecycle | nixos | no | host:axon-01 |
+| monitoring/prometheus-exporter | nixos | no | host:axon-01 |
+| network/firewall-collector | nixos | no | host:axon-01 |
+| networking/thunderbolt-mesh-of | nixos | no | host:axon-01 |
+| nix/remote-build-server | nixos | no | host:axon-01 |
+| opkssh-authz/dvicory@axon-01 | nixos | yes (host, user) | user:dvicory |
+| opkssh-authz/dvicory@axon-02 | nixos | yes (host, user) | user:dvicory |
+| opkssh-authz/dvicory@axon-03 | nixos | yes (host, user) | user:dvicory |
+| opkssh-authz/dvicory@bitstream | nixos | yes (host, user) | user:dvicory |
+| opkssh-authz/dvicory@uplink | nixos | yes (host, user) | user:dvicory |
+| opkssh-authz/pol@axon-01 | nixos | yes (host, user) | user:pol |
+| opkssh-authz/pol@axon-02 | nixos | yes (host, user) | user:pol |
+| opkssh-authz/pol@axon-03 | nixos | yes (host, user) | user:pol |
+| opkssh-authz/pol@bitstream | nixos | yes (host, user) | user:pol |
+| opkssh-authz/pol@uplink | nixos | yes (host, user) | user:pol |
+| opkssh-authz/sini@axon-01 | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@axon-02 | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@axon-03 | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@bitstream | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@blade | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@cortex | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@patch | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@slab | nixos | yes (host, user) | user:sini |
+| opkssh-authz/sini@uplink | nixos | yes (host, user) | user:sini |
+| opkssh-authz/theutz@axon-01 | nixos | yes (host, user) | user:theutz |
+| opkssh-authz/theutz@axon-02 | nixos | yes (host, user) | user:theutz |
+| opkssh-authz/theutz@axon-03 | nixos | yes (host, user) | user:theutz |
+| opkssh-authz/theutz@bitstream | nixos | yes (host, user) | user:theutz |
+| opkssh-authz/theutz@uplink | nixos | yes (host, user) | user:theutz |
+| opkssh-authz/vic@axon-01 | nixos | yes (host, user) | user:vic |
+| opkssh-authz/vic@axon-02 | nixos | yes (host, user) | user:vic |
+| opkssh-authz/vic@axon-03 | nixos | yes (host, user) | user:vic |
+| opkssh-authz/vic@bitstream | nixos | yes (host, user) | user:vic |
+| opkssh-authz/vic@blade | nixos | yes (host, user) | user:vic |
+| opkssh-authz/vic@cortex | nixos | yes (host, user) | user:vic |
+| opkssh-authz/vic@uplink | nixos | yes (host, user) | user:vic |
+| roles/server | nixos | no | host:axon-01 |
+| secrets/collector | nixos | no | host:axon-01 |
+| security/acme | nixos | no | host:axon-01 |
+| security/tang | nixos | no | host:axon-01 |
+| services/bgp | nixos | no | host:axon-01 |
+| services/k3s | nixos | no | host:axon-01 |
+| storage/media-data-share | nixos | no | host:axon-01 |
+| storage/media-scratch | nixos | no | host:axon-01 |
+| unfree-predicate/os | nixos | yes (host) | host:axon-01 |
+| user-enrich/dvicory@axon-01 | nixos | yes (host, user) | user:dvicory |
+| user-enrich/dvicory@axon-02 | nixos | yes (host, user) | user:dvicory |
+| user-enrich/dvicory@axon-03 | nixos | yes (host, user) | user:dvicory |
+| user-enrich/dvicory@bitstream | nixos | yes (host, user) | user:dvicory |
+| user-enrich/dvicory@uplink | nixos | yes (host, user) | user:dvicory |
+| user-enrich/pol@axon-01 | nixos | yes (host, user) | user:pol |
+| user-enrich/pol@axon-02 | nixos | yes (host, user) | user:pol |
+| user-enrich/pol@axon-03 | nixos | yes (host, user) | user:pol |
+| user-enrich/pol@bitstream | nixos | yes (host, user) | user:pol |
+| user-enrich/pol@uplink | nixos | yes (host, user) | user:pol |
+| user-enrich/sini@axon-01 | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@axon-02 | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@axon-03 | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@bitstream | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@blade | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@cortex | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@patch | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@slab | nixos | yes (host, user) | user:sini |
+| user-enrich/sini@uplink | nixos | yes (host, user) | user:sini |
+| user-enrich/theutz@axon-01 | nixos | yes (host, user) | user:theutz |
+| user-enrich/theutz@axon-02 | nixos | yes (host, user) | user:theutz |
+| user-enrich/theutz@axon-03 | nixos | yes (host, user) | user:theutz |
+| user-enrich/theutz@bitstream | nixos | yes (host, user) | user:theutz |
+| user-enrich/theutz@uplink | nixos | yes (host, user) | user:theutz |
+| user-enrich/vic@axon-01 | nixos | yes (host, user) | user:vic |
+| user-enrich/vic@axon-02 | nixos | yes (host, user) | user:vic |
+| user-enrich/vic@axon-03 | nixos | yes (host, user) | user:vic |
+| user-enrich/vic@bitstream | nixos | yes (host, user) | user:vic |
+| user-enrich/vic@blade | nixos | yes (host, user) | user:vic |
+| user-enrich/vic@cortex | nixos | yes (host, user) | user:vic |
+| user-enrich/vic@uplink | nixos | yes (host, user) | user:vic |
+| zfs-disk-single/root | nixos | no | host:axon-01 |
 
 ## Classes
 
-### nixos (49)
+### nixos (277)
 
+- agenix-identity/dvicory@axon-01
+- agenix-identity/dvicory@axon-02
+- agenix-identity/dvicory@axon-03
+- agenix-identity/dvicory@bitstream
+- agenix-identity/dvicory@uplink
+- agenix-identity/pol@axon-01
+- agenix-identity/pol@axon-02
+- agenix-identity/pol@axon-03
+- agenix-identity/pol@bitstream
+- agenix-identity/pol@uplink
+- agenix-identity/sini@axon-01
+- agenix-identity/sini@axon-02
+- agenix-identity/sini@axon-03
+- agenix-identity/sini@bitstream
+- agenix-identity/sini@blade
+- agenix-identity/sini@cortex
+- agenix-identity/sini@uplink
+- agenix-identity/theutz@axon-01
+- agenix-identity/theutz@axon-02
+- agenix-identity/theutz@axon-03
+- agenix-identity/theutz@bitstream
+- agenix-identity/theutz@uplink
+- agenix-identity/vic@axon-01
+- agenix-identity/vic@axon-02
+- agenix-identity/vic@axon-03
+- agenix-identity/vic@bitstream
+- agenix-identity/vic@blade
+- agenix-identity/vic@cortex
+- agenix-identity/vic@uplink
+- agenix/axon-01
 - axon-01
+- batteries/define-user/dvicory@axon-01
+- batteries/define-user/pol@axon-01
+- batteries/define-user/sini@axon-01
+- batteries/define-user/theutz@axon-01
+- batteries/define-user/vic@axon-01
 - batteries/hostname/os
-- core/deterministic-uids
-- core/facter
-- core/firewall-collector
-- core/firmware
-- core/home-manager
-- core/i18n
-- core/linux-kernel
-- core/lix
+- batteries/inputs'/os
+- batteries/primary-user(sini@axon-01)
+- batteries/primary-user(sini@axon-02)
+- batteries/primary-user(sini@axon-03)
+- batteries/primary-user(sini@bitstream)
+- batteries/primary-user(sini@blade)
+- batteries/primary-user(sini@cortex)
+- batteries/primary-user(sini@patch)
+- batteries/primary-user(sini@slab)
+- batteries/primary-user(sini@uplink)
+- batteries/self'/os
+- bgp/cilium-bgp
+- boot/network-initrd
+- core/impermanence
+- core/impermanence
+- core/impermanence
+- core/impermanence
+- core/impermanence
+- core/impermanence/btrfs
+- core/impermanence/btrfs
+- core/impermanence/btrfs
+- core/impermanence/btrfs
+- core/impermanence/btrfs
+- core/impermanence/persist-collector
+- core/impermanence/persist-collector
+- core/impermanence/persist-collector
+- core/impermanence/persist-collector
+- core/impermanence/persist-collector
+- core/impermanence/zfs
+- core/impermanence/zfs
+- core/impermanence/zfs
+- core/impermanence/zfs
+- core/impermanence/zfs
+- core/localization/i18n
+- core/localization/i18n
+- core/localization/i18n
+- core/localization/i18n
+- core/localization/i18n
+- core/network/hostsfile
+- core/network/hostsfile
+- core/network/hostsfile
+- core/network/hostsfile
+- core/network/hostsfile
+- core/network/networking
+- core/network/networking
+- core/network/networking
+- core/network/networking
+- core/network/networking
+- core/network/syncthing/peer
+- core/network/syncthing/peer
+- core/network/syncthing/peer
+- core/network/syncthing/peer
+- core/network/syncthing/peer
+- core/network/tailscale
+- core/network/tailscale
+- core/network/tailscale
+- core/network/tailscale
+- core/network/tailscale
 - core/nix
-- core/nix-remote-build-client
-- core/persist-collector
-- core/secrets-collector
+- core/nix
+- core/nix
+- core/nix
+- core/nix
+- core/nix/stateVersion
+- core/nix/stateVersion
+- core/nix/stateVersion
+- core/nix/stateVersion
+- core/nix/stateVersion
+- core/perf/disable-docs
+- core/perf/disable-docs
+- core/perf/disable-docs
+- core/perf/disable-docs
+- core/perf/disable-docs
+- core/perf/ssd
+- core/perf/ssd
+- core/perf/ssd
+- core/perf/ssd
+- core/perf/ssd
+- core/perf/zram-swap
+- core/perf/zram-swap
+- core/perf/zram-swap
+- core/perf/zram-swap
+- core/perf/zram-swap
 - core/security
-- core/shell
-- core/ssd
-- core/stateVersion
-- core/sudo
+- core/security
+- core/security
+- core/security
+- core/security
+- core/security/openssh
+- core/security/openssh
+- core/security/openssh
+- core/security/openssh
+- core/security/openssh
+- core/security/opkssh
+- core/security/opkssh
+- core/security/opkssh
+- core/security/opkssh
+- core/security/opkssh
+- core/security/sudo
+- core/security/sudo
+- core/security/sudo
+- core/security/sudo
+- core/security/sudo
+- core/system/facter
+- core/system/facter
+- core/system/facter
+- core/system/facter
+- core/system/facter
+- core/system/firmware
+- core/system/firmware
+- core/system/firmware
+- core/system/firmware
+- core/system/firmware
+- core/system/linux-kernel
+- core/system/linux-kernel
+- core/system/linux-kernel
+- core/system/linux-kernel
+- core/system/linux-kernel
 - core/systemd
-- core/systemd-boot
+- core/systemd
+- core/systemd
+- core/systemd
+- core/systemd
+- core/systemd/boot
+- core/systemd/boot
+- core/systemd/boot
+- core/systemd/boot
+- core/systemd/boot
 - core/users
+- core/users
+- core/users
+- core/users
+- core/users
+- core/users/deterministic-uids
+- core/users/deterministic-uids
+- core/users/deterministic-uids
+- core/users/deterministic-uids
+- core/users/deterministic-uids
+- core/users/home-manager-shared
+- core/users/home-manager-shared
+- core/users/home-manager-shared
+- core/users/home-manager-shared
+- core/users/home-manager-shared
+- core/users/shell
+- core/users/shell
+- core/users/shell
+- core/users/shell
+- core/users/shell
 - core/utils
-- disk/impermanence
+- core/utils
+- core/utils
+- core/utils
+- core/utils
+- cpu/amd
 - disk/xfs-disk-longhorn
 - disk/zfs-diff
 - disk/zfs-disk-single
-- hardware/cpu-amd
-- hardware/gpu-amd
+- gpu/amd
 - hardware/thunderbolt-network
 - insecure-predicate/os
-- network/hosts
-- network/network-boot
-- network/networking
-- network/openssh
+- k3s/bootstrap
+- k3s/containerd
+- k3s/node
+- k3s/node-lifecycle
+- monitoring/prometheus-exporter
+- network/firewall-collector
+- networking/thunderbolt-mesh-of
+- nix/remote-build-server
+- opkssh-authz/dvicory@axon-01
+- opkssh-authz/dvicory@axon-02
+- opkssh-authz/dvicory@axon-03
+- opkssh-authz/dvicory@bitstream
+- opkssh-authz/dvicory@uplink
+- opkssh-authz/pol@axon-01
+- opkssh-authz/pol@axon-02
+- opkssh-authz/pol@axon-03
+- opkssh-authz/pol@bitstream
+- opkssh-authz/pol@uplink
+- opkssh-authz/sini@axon-01
+- opkssh-authz/sini@axon-02
+- opkssh-authz/sini@axon-03
+- opkssh-authz/sini@bitstream
+- opkssh-authz/sini@blade
+- opkssh-authz/sini@cortex
+- opkssh-authz/sini@patch
+- opkssh-authz/sini@slab
+- opkssh-authz/sini@uplink
+- opkssh-authz/theutz@axon-01
+- opkssh-authz/theutz@axon-02
+- opkssh-authz/theutz@axon-03
+- opkssh-authz/theutz@bitstream
+- opkssh-authz/theutz@uplink
+- opkssh-authz/vic@axon-01
+- opkssh-authz/vic@axon-02
+- opkssh-authz/vic@axon-03
+- opkssh-authz/vic@bitstream
+- opkssh-authz/vic@blade
+- opkssh-authz/vic@cortex
+- opkssh-authz/vic@uplink
 - roles/server
-- services/acme
+- secrets/collector
+- security/acme
+- security/tang
 - services/bgp
-- services/cilium-bgp
 - services/k3s
-- services/k3s-containerd
-- services/media-data-share
-- services/nix-remote-build-server
-- services/prometheus-exporter
-- services/tailscale
-- services/tang
-- services/thunderbolt-mesh-of
+- storage/media-data-share
+- storage/media-scratch
 - unfree-predicate/os
+- user-enrich/dvicory@axon-01
+- user-enrich/dvicory@axon-02
+- user-enrich/dvicory@axon-03
+- user-enrich/dvicory@bitstream
+- user-enrich/dvicory@uplink
+- user-enrich/pol@axon-01
+- user-enrich/pol@axon-02
+- user-enrich/pol@axon-03
+- user-enrich/pol@bitstream
+- user-enrich/pol@uplink
+- user-enrich/sini@axon-01
+- user-enrich/sini@axon-02
+- user-enrich/sini@axon-03
+- user-enrich/sini@bitstream
+- user-enrich/sini@blade
+- user-enrich/sini@cortex
+- user-enrich/sini@patch
+- user-enrich/sini@slab
+- user-enrich/sini@uplink
+- user-enrich/theutz@axon-01
+- user-enrich/theutz@axon-02
+- user-enrich/theutz@axon-03
+- user-enrich/theutz@bitstream
+- user-enrich/theutz@uplink
+- user-enrich/vic@axon-01
+- user-enrich/vic@axon-02
+- user-enrich/vic@axon-03
+- user-enrich/vic@bitstream
+- user-enrich/vic@blade
+- user-enrich/vic@cortex
+- user-enrich/vic@uplink
 - zfs-disk-single/root
 
-### homeManager (1)
-
-- disk/impermanence
 
 ## Providers
 
-| Provider Aspect                                   | Classes            | Provider Path        |
-| ------------------------------------------------- | ------------------ | -------------------- |
-| apps/zsh                                          | homeManager        | apps                 |
-| batteries/define-user                             |                    | den/batteries        |
-| batteries/host/resolve(define-user):den/batteries |                    | den/batteries        |
-| batteries/hostname                                |                    | den/batteries        |
-| batteries/hostname/os                             | nixos              | den/batteries        |
-| batteries/primary-user                            |                    | den/batteries        |
-| bgp/spoke                                         |                    | services/bgp         |
-| core/default                                      |                    | core                 |
-| core/deterministic-uids                           | nixos              | core                 |
-| core/facter                                       | nixos              | core                 |
-| core/firewall-collector                           | nixos              | core                 |
-| core/firmware                                     | nixos              | core                 |
-| core/home-manager                                 | nixos              | core                 |
-| core/i18n                                         | nixos              | core                 |
-| core/linux-kernel                                 | nixos              | core                 |
-| core/lix                                          | nixos              | core                 |
-| core/nix                                          | nixos              | core                 |
-| core/nix-remote-build-client                      | nixos              | core                 |
-| core/nixpkgs                                      |                    | core                 |
-| core/persist-collector                            | nixos              | core                 |
-| core/persist-home-collector                       | homeManager        | core                 |
-| core/secrets-collector                            | nixos              | core                 |
-| core/security                                     | nixos              | core                 |
-| core/shell                                        | nixos              | core                 |
-| core/ssd                                          | nixos              | core                 |
-| core/stateVersion                                 | nixos              | core                 |
-| core/sudo                                         | nixos              | core                 |
-| core/systemd                                      | nixos              | core                 |
-| core/systemd-boot                                 | nixos              | core                 |
-| core/time                                         |                    | core                 |
-| core/users                                        | nixos              | core                 |
-| core/utils                                        | nixos              | core                 |
-| disk/impermanence                                 | nixos, homeManager | disk                 |
-| disk/xfs-disk-longhorn                            | nixos              | disk                 |
-| disk/zfs-diff                                     | nixos              | disk                 |
-| disk/zfs-disk-single                              | nixos              | disk                 |
-| hardware/cpu-amd                                  | nixos              | hardware             |
-| hardware/gpu-amd                                  | nixos              | hardware             |
-| hardware/thunderbolt-network                      | nixos              | hardware             |
-| network/hosts                                     | nixos              | network              |
-| network/network-boot                              | nixos              | network              |
-| network/networking                                | nixos              | network              |
-| network/openssh                                   | nixos              | network              |
-| roles/nix-builder                                 |                    | roles                |
-| roles/server                                      | nixos              | roles                |
-| roles/unlock                                      |                    | roles                |
-| secrets/agenix                                    |                    | secrets              |
-| services/acme                                     | nixos              | services             |
-| services/bgp                                      | nixos              | services             |
-| services/cilium-bgp                               | nixos              | services             |
-| services/k3s                                      | nixos              | services             |
-| services/k3s-containerd                           | nixos              | services             |
-| services/media-data-share                         | nixos              | services             |
-| services/nix-remote-build-server                  | nixos              | services             |
-| services/prometheus-exporter                      | nixos              | services             |
-| services/tailscale                                | nixos              | services             |
-| services/tang                                     | nixos              | services             |
-| services/thunderbolt-mesh-of                      | nixos              | services             |
-| zfs-disk-single/root                              | nixos              | disk/zfs-disk-single |
+| Provider Aspect | Classes | Provider Path |
+| ----------------- | --------- | --------------- |
+| applications/shell/zsh |  | applications/shell |
+| applications/shell/zsh |  | applications/shell |
+| applications/shell/zsh |  | applications/shell |
+| applications/shell/zsh |  | applications/shell |
+| applications/shell/zsh |  | applications/shell |
+| batteries/define-user |  | den/batteries |
+| batteries/define-user/dvicory@axon-01 | nixos | den/batteries |
+| batteries/define-user/pol@axon-01 | nixos | den/batteries |
+| batteries/define-user/sini@axon-01 | nixos | den/batteries |
+| batteries/define-user/theutz@axon-01 | nixos | den/batteries |
+| batteries/define-user/vic@axon-01 | nixos | den/batteries |
+| batteries/host-aspects |  | den/batteries |
+| batteries/hostname |  | den/batteries |
+| batteries/hostname/os | nixos | den/batteries |
+| batteries/inputs' |  | den/batteries |
+| batteries/inputs'/os | nixos | den/batteries |
+| batteries/inputs'/user |  | den/batteries |
+| batteries/primary-user(sini@axon-01) | nixos | den/batteries |
+| batteries/primary-user(sini@axon-02) | nixos | den/batteries |
+| batteries/primary-user(sini@axon-03) | nixos | den/batteries |
+| batteries/primary-user(sini@bitstream) | nixos | den/batteries |
+| batteries/primary-user(sini@blade) | nixos | den/batteries |
+| batteries/primary-user(sini@cortex) | nixos | den/batteries |
+| batteries/primary-user(sini@patch) | nixos | den/batteries |
+| batteries/primary-user(sini@slab) | nixos | den/batteries |
+| batteries/primary-user(sini@uplink) | nixos | den/batteries |
+| batteries/self' |  | den/batteries |
+| batteries/self'/os | nixos | den/batteries |
+| batteries/self'/user |  | den/batteries |
+| bgp/cilium-bgp | nixos | services/bgp |
+| bgp/spoke |  | services/bgp |
+| boot/network-initrd | nixos | core/boot |
+| core/impermanence | nixos | core |
+| core/impermanence | nixos | core |
+| core/impermanence | nixos | core |
+| core/impermanence | nixos | core |
+| core/impermanence | nixos | core |
+| core/impermanence/btrfs | nixos | core/impermanence |
+| core/impermanence/btrfs | nixos | core/impermanence |
+| core/impermanence/btrfs | nixos | core/impermanence |
+| core/impermanence/btrfs | nixos | core/impermanence |
+| core/impermanence/btrfs | nixos | core/impermanence |
+| core/impermanence/persist-collector | nixos | core/impermanence |
+| core/impermanence/persist-collector | nixos | core/impermanence |
+| core/impermanence/persist-collector | nixos | core/impermanence |
+| core/impermanence/persist-collector | nixos | core/impermanence |
+| core/impermanence/persist-collector | nixos | core/impermanence |
+| core/impermanence/persist-home-collector |  | core/impermanence |
+| core/impermanence/persist-home-collector |  | core/impermanence |
+| core/impermanence/persist-home-collector |  | core/impermanence |
+| core/impermanence/persist-home-collector |  | core/impermanence |
+| core/impermanence/persist-home-collector |  | core/impermanence |
+| core/impermanence/zfs | nixos | core/impermanence |
+| core/impermanence/zfs | nixos | core/impermanence |
+| core/impermanence/zfs | nixos | core/impermanence |
+| core/impermanence/zfs | nixos | core/impermanence |
+| core/impermanence/zfs | nixos | core/impermanence |
+| core/localization/i18n | nixos | core/localization |
+| core/localization/i18n | nixos | core/localization |
+| core/localization/i18n | nixos | core/localization |
+| core/localization/i18n | nixos | core/localization |
+| core/localization/i18n | nixos | core/localization |
+| core/localization/time |  | core/localization |
+| core/localization/time |  | core/localization |
+| core/localization/time |  | core/localization |
+| core/localization/time |  | core/localization |
+| core/localization/time |  | core/localization |
+| core/network/hostsfile | nixos | core/network |
+| core/network/hostsfile | nixos | core/network |
+| core/network/hostsfile | nixos | core/network |
+| core/network/hostsfile | nixos | core/network |
+| core/network/hostsfile | nixos | core/network |
+| core/network/networking | nixos | core/network |
+| core/network/networking | nixos | core/network |
+| core/network/networking | nixos | core/network |
+| core/network/networking | nixos | core/network |
+| core/network/networking | nixos | core/network |
+| core/network/syncthing/member |  | core/network/syncthing |
+| core/network/syncthing/member |  | core/network/syncthing |
+| core/network/syncthing/member |  | core/network/syncthing |
+| core/network/syncthing/member |  | core/network/syncthing |
+| core/network/syncthing/peer | nixos | core/network/syncthing |
+| core/network/syncthing/peer | nixos | core/network/syncthing |
+| core/network/syncthing/peer | nixos | core/network/syncthing |
+| core/network/syncthing/peer | nixos | core/network/syncthing |
+| core/network/syncthing/peer | nixos | core/network/syncthing |
+| core/network/tailscale | nixos | core/network |
+| core/network/tailscale | nixos | core/network |
+| core/network/tailscale | nixos | core/network |
+| core/network/tailscale | nixos | core/network |
+| core/network/tailscale | nixos | core/network |
+| core/nix | nixos | core |
+| core/nix | nixos | core |
+| core/nix | nixos | core |
+| core/nix | nixos | core |
+| core/nix | nixos | core |
+| core/nix/nixpkgs |  | core/nix |
+| core/nix/nixpkgs |  | core/nix |
+| core/nix/nixpkgs |  | core/nix |
+| core/nix/nixpkgs |  | core/nix |
+| core/nix/nixpkgs |  | core/nix |
+| core/nix/stateVersion | nixos | core/nix |
+| core/nix/stateVersion | nixos | core/nix |
+| core/nix/stateVersion | nixos | core/nix |
+| core/nix/stateVersion | nixos | core/nix |
+| core/nix/stateVersion | nixos | core/nix |
+| core/perf/disable-docs | nixos | core/perf |
+| core/perf/disable-docs | nixos | core/perf |
+| core/perf/disable-docs | nixos | core/perf |
+| core/perf/disable-docs | nixos | core/perf |
+| core/perf/disable-docs | nixos | core/perf |
+| core/perf/ssd | nixos | core/perf |
+| core/perf/ssd | nixos | core/perf |
+| core/perf/ssd | nixos | core/perf |
+| core/perf/ssd | nixos | core/perf |
+| core/perf/ssd | nixos | core/perf |
+| core/perf/zram-swap | nixos | core/perf |
+| core/perf/zram-swap | nixos | core/perf |
+| core/perf/zram-swap | nixos | core/perf |
+| core/perf/zram-swap | nixos | core/perf |
+| core/perf/zram-swap | nixos | core/perf |
+| core/security | nixos | core |
+| core/security | nixos | core |
+| core/security | nixos | core |
+| core/security | nixos | core |
+| core/security | nixos | core |
+| core/security/openssh | nixos | core/security |
+| core/security/openssh | nixos | core/security |
+| core/security/openssh | nixos | core/security |
+| core/security/openssh | nixos | core/security |
+| core/security/openssh | nixos | core/security |
+| core/security/opkssh | nixos | core/security |
+| core/security/opkssh | nixos | core/security |
+| core/security/opkssh | nixos | core/security |
+| core/security/opkssh | nixos | core/security |
+| core/security/opkssh | nixos | core/security |
+| core/security/sudo | nixos | core/security |
+| core/security/sudo | nixos | core/security |
+| core/security/sudo | nixos | core/security |
+| core/security/sudo | nixos | core/security |
+| core/security/sudo | nixos | core/security |
+| core/system/facter | nixos | core/system |
+| core/system/facter | nixos | core/system |
+| core/system/facter | nixos | core/system |
+| core/system/facter | nixos | core/system |
+| core/system/facter | nixos | core/system |
+| core/system/firmware | nixos | core/system |
+| core/system/firmware | nixos | core/system |
+| core/system/firmware | nixos | core/system |
+| core/system/firmware | nixos | core/system |
+| core/system/firmware | nixos | core/system |
+| core/system/linux-kernel | nixos | core/system |
+| core/system/linux-kernel | nixos | core/system |
+| core/system/linux-kernel | nixos | core/system |
+| core/system/linux-kernel | nixos | core/system |
+| core/system/linux-kernel | nixos | core/system |
+| core/systemd | nixos | core |
+| core/systemd | nixos | core |
+| core/systemd | nixos | core |
+| core/systemd | nixos | core |
+| core/systemd | nixos | core |
+| core/systemd/boot | nixos | core/systemd |
+| core/systemd/boot | nixos | core/systemd |
+| core/systemd/boot | nixos | core/systemd |
+| core/systemd/boot | nixos | core/systemd |
+| core/systemd/boot | nixos | core/systemd |
+| core/users | nixos | core |
+| core/users | nixos | core |
+| core/users | nixos | core |
+| core/users | nixos | core |
+| core/users | nixos | core |
+| core/users/deterministic-uids | nixos | core/users |
+| core/users/deterministic-uids | nixos | core/users |
+| core/users/deterministic-uids | nixos | core/users |
+| core/users/deterministic-uids | nixos | core/users |
+| core/users/deterministic-uids | nixos | core/users |
+| core/users/home-manager-shared | nixos | core/users |
+| core/users/home-manager-shared | nixos | core/users |
+| core/users/home-manager-shared | nixos | core/users |
+| core/users/home-manager-shared | nixos | core/users |
+| core/users/home-manager-shared | nixos | core/users |
+| core/users/resolved-user-emitter |  | core/users |
+| core/users/resolved-user-emitter |  | core/users |
+| core/users/resolved-user-emitter |  | core/users |
+| core/users/resolved-user-emitter |  | core/users |
+| core/users/resolved-user-emitter |  | core/users |
+| core/users/shell | nixos | core/users |
+| core/users/shell | nixos | core/users |
+| core/users/shell | nixos | core/users |
+| core/users/shell | nixos | core/users |
+| core/users/shell | nixos | core/users |
+| core/utils | nixos | core |
+| core/utils | nixos | core |
+| core/utils | nixos | core |
+| core/utils | nixos | core |
+| core/utils | nixos | core |
+| cpu/amd | nixos | hardware/cpu |
+| disk/xfs-disk-longhorn | nixos | disk |
+| disk/zfs-diff | nixos | disk |
+| disk/zfs-disk-single | nixos | disk |
+| gpu/amd | nixos | hardware/gpu |
+| hardware/thunderbolt-network | nixos | hardware |
+| k3s/bootstrap | nixos | services/k3s |
+| k3s/containerd | nixos | services/k3s |
+| k3s/node | nixos | services/k3s |
+| k3s/node-lifecycle | nixos | services/k3s |
+| media/spotify-player |  | applications/media |
+| monitoring/prometheus-exporter | nixos | services/monitoring |
+| network/firewall-collector | nixos | core/network |
+| networking/thunderbolt-mesh-of | nixos | services/networking |
+| nix/remote-build-server | nixos | services/nix |
+| roles/default |  | roles |
+| roles/default |  | roles |
+| roles/default |  | roles |
+| roles/default |  | roles |
+| roles/default |  | roles |
+| roles/nix-builder |  | roles |
+| roles/server | nixos | roles |
+| roles/unlock |  | roles |
+| secrets/agenix |  | secrets |
+| secrets/agenix |  | secrets |
+| secrets/agenix |  | secrets |
+| secrets/agenix |  | secrets |
+| secrets/agenix |  | secrets |
+| secrets/collector | nixos | core/secrets |
+| security/acme | nixos | services/security |
+| security/tang | nixos | services/security |
+| services/bgp | nixos | services |
+| services/k3s | nixos | services |
+| storage/media-data-share | nixos | services/storage |
+| storage/media-scratch | nixos | services/storage |
+| zfs-disk-single/root | nixos | disk/zfs-disk-single |
 
 ## Policies
 
+- **broadcast-syncthing-hub-shares** (from: user)
+- **broadcast-syncthing-hub-shares** (from: user)
+- **broadcast-syncthing-hub-shares** (from: user)
+- **broadcast-syncthing-hub-shares** (from: user)
+- **broadcast-syncthing-hub-shares** (from: user)
+- **broadcast-syncthing-peers** (from: user)
+- **broadcast-syncthing-peers** (from: user)
+- **broadcast-syncthing-peers** (from: user)
+- **broadcast-syncthing-peers** (from: user)
+- **broadcast-syncthing-peers** (from: user)
+- **broadcast-syncthing-peers-to-hub** (from: user)
+- **broadcast-syncthing-peers-to-hub** (from: user)
+- **broadcast-syncthing-peers-to-hub** (from: user)
+- **broadcast-syncthing-peers-to-hub** (from: user)
+- **broadcast-syncthing-peers-to-hub** (from: user)
 - **collect-bgp-peers** (from: host)
+- **collect-container-registries** (from: host)
 - **collect-host-addrs** (from: host)
 - **collect-k3s-nodes** (from: host)
 - **collect-ollama-endpoints** (from: host)
 - **collect-prometheus-targets** (from: host)
 - **collect-thunderbolt-mesh-peers** (from: host)
 - **collect-vault-peers** (from: host)
+- **droidHm-user-detect** (from: user)
+- **drop-user-to-host-on-droid** (from: user)
+- **env-users** (from: host)
+- **expose-resolved-users** (from: user)
+- **expose-resolved-users** (from: user)
+- **expose-resolved-users** (from: user)
+- **expose-resolved-users** (from: user)
+- **expose-resolved-users** (from: user)
+- **hm-user-detect** (from: user)
+- **hm-user-detect** (from: user)
+- **hm-user-detect** (from: user)
+- **hm-user-detect** (from: user)
+- **hm-user-detect** (from: user)
+- **homeAarch64-to-hm** (from: user)
+- **homeDarwin-to-hm** (from: user)
+- **homeLinux-to-hm** (from: user)
+- **homeLinux-to-hm** (from: user)
+- **homeLinux-to-hm** (from: user)
+- **homeLinux-to-hm** (from: user)
+- **homeLinux-to-hm** (from: user)
+- **host-aspects-project** (from: user)
+- **host-modules-capture** (from: host)
+- **os-to-host** (from: user)
+- **os-to-host** (from: user)
+- **os-to-host** (from: user)
+- **os-to-host** (from: user)
+- **os-to-host** (from: user)
 - **os-to-host** (from: host)
+- **primary-user-for-owner** (from: user)
+- **user-aspect-auto-include** (from: user)
+- **user-to-host** (from: user)
+- **user-to-host** (from: user)
+- **user-to-host** (from: user)
+- **user-to-host** (from: user)
+- **user-to-host** (from: user)
 
 ## Pipe Data
 
-**Produces:** none **Collects:** none
+**Produces:** none
+**Collects:** none

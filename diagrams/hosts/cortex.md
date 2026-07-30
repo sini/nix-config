@@ -24,10 +24,6 @@
 
 ![class-nixos](./cortex/class-nixos.mmd.svg)
 
-## class-homeManager
-
-![class-homeManager](./cortex/class-homeManager.mmd.svg)
-
 ## dag
 
 ![dag](./cortex/dag.mmd.svg)

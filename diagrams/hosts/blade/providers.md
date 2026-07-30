@@ -7,346 +7,358 @@
 graph TD
   blade([blade]):::root
   hardware__adb[/"hardware/adb · host"\]:::hardware__adb_c
-  secrets__agenix[/"secrets/agenix · host"\]:::secrets__agenix_c
-  apps__alacritty[/"apps/alacritty · host"\]:::apps__alacritty_c
-  apps["apps"]:::apps_c
+  secrets__agenix_user_vic[/"secrets/agenix · user"\]:::secrets__agenix_user_vic_c
+  secrets__agenix_host_blade[/"secrets/agenix · host"\]:::secrets__agenix_host_blade_c
+  secrets__agenix_user_shuo[/"secrets/agenix · user"\]:::secrets__agenix_user_shuo_c
+  secrets__agenix_user_will[/"secrets/agenix · user"\]:::secrets__agenix_user_will_c
   hardware__audio[/"hardware/audio · host"\]:::hardware__audio_c
-  apps__bat[/"apps/bat · host"\]:::apps__bat_c
   hardware__bluetooth[/"hardware/bluetooth · host"\]:::hardware__bluetooth_c
-  apps__claude[/"apps/claude · host"\]:::apps__claude_c
+  core__systemd__boot_user_vic[/"core/systemd/boot · user"\]:::core__systemd__boot_user_vic_c
+  core__systemd__boot_host_blade[/"core/systemd/boot · host"\]:::core__systemd__boot_host_blade_c
+  core__systemd__boot_user_shuo[/"core/systemd/boot · user"\]:::core__systemd__boot_user_shuo_c
+  core__systemd__boot_user_will[/"core/systemd/boot · user"\]:::core__systemd__boot_user_will_c
+  core__impermanence__btrfs_user_vic[/"core/impermanence/btrfs · user"\]:::core__impermanence__btrfs_user_vic_c
+  core__impermanence__btrfs_host_blade[/"core/impermanence/btrfs · host"\]:::core__impermanence__btrfs_host_blade_c
+  core__impermanence__btrfs_user_shuo[/"core/impermanence/btrfs · user"\]:::core__impermanence__btrfs_user_shuo_c
+  core__impermanence__btrfs_user_will[/"core/impermanence/btrfs · user"\]:::core__impermanence__btrfs_user_will_c
   hardware__coolercontrol[/"hardware/coolercontrol · host"\]:::hardware__coolercontrol_c
   core["core"]:::core_c
-  hardware__cpu_intel[/"hardware/cpu-intel · host"\]:::hardware__cpu_intel_c
   hardware__ddcutil[/"hardware/ddcutil · host"\]:::hardware__ddcutil_c
-  core__default[/"core/default · host"\]:::core__default_c
+  roles__default_user_vic[/"roles/default · user"\]:::roles__default_user_vic_c
+  roles__default_host_blade[/"roles/default · host"\]:::roles__default_host_blade_c
+  roles__default_user_shuo[/"roles/default · user"\]:::roles__default_user_shuo_c
+  roles__default_user_will[/"roles/default · user"\]:::roles__default_user_will_c
   desktop["desktop"]:::desktop_c
-  core__deterministic_uids[/"core/deterministic-uids · host"\]:::core__deterministic_uids_c
+  core__users__deterministic_uids_user_vic[/"core/users/deterministic-uids · user"\]:::core__users__deterministic_uids_user_vic_c
+  core__users__deterministic_uids_host_blade[/"core/users/deterministic-uids · host"\]:::core__users__deterministic_uids_host_blade_c
+  core__users__deterministic_uids_user_shuo[/"core/users/deterministic-uids · user"\]:::core__users__deterministic_uids_user_shuo_c
+  core__users__deterministic_uids_user_will[/"core/users/deterministic-uids · user"\]:::core__users__deterministic_uids_user_will_c
   roles__dev[/"roles/dev · host"\]:::roles__dev_c
   roles__dev_gui[/"roles/dev-gui · host"\]:::roles__dev_gui_c
-  apps__direnv[/"apps/direnv · host"\]:::apps__direnv_c
-  apps__discord[/"apps/discord · host"\]:::apps__discord_c
   disk["disk"]:::disk_c
-  apps__emulation[/"apps/emulation · host"\]:::apps__emulation_c
-  apps__eza[/"apps/eza · host"\]:::apps__eza_c
-  core__facter[/"core/facter · host"\]:::core__facter_c
-  apps__firefox[/"apps/firefox · host"\]:::apps__firefox_c
-  core__firewall_collector[/"core/firewall-collector · host"\]:::core__firewall_collector_c
-  core__firmware[/"core/firmware · host"\]:::core__firmware_c
-  desktop__fonts[/"desktop/fonts · host"\]:::desktop__fonts_c
+  desktop__style__fonts[/"style/fonts · host"\]:::desktop__style__fonts_c
   hardware__gamepad[/"hardware/gamepad · host"\]:::hardware__gamepad_c
   roles__gaming[/"roles/gaming · host"\]:::roles__gaming_c
   desktop__gdm[/"desktop/gdm · host"\]:::desktop__gdm_c
-  apps__git[/"apps/git · host"\]:::apps__git_c
-  apps__gitkraken[/"apps/gitkraken · host"\]:::apps__gitkraken_c
   desktop__gnome[/"desktop/gnome · host"\]:::desktop__gnome_c
-  apps__gpg[/"apps/gpg · host"\]:::apps__gpg_c
-  hardware__gpu_intel[/"hardware/gpu-intel · host"\]:::hardware__gpu_intel_c
-  hardware__gpu_nvidia[/"hardware/gpu-nvidia · host"\]:::hardware__gpu_nvidia_c
-  hardware__gpu_nvidia_prime[/"hardware/gpu-nvidia-prime · host"\]:::hardware__gpu_nvidia_prime_c
   hardware["hardware"]:::hardware_c
-  core__home_manager[/"core/home-manager · host"\]:::core__home_manager_c
-  network__hosts[/"network/hosts · host"\]:::network__hosts_c
-  desktop__hyprland[/"desktop/hyprland · host"\]:::desktop__hyprland_c
-  core__i18n[/"core/i18n · host"\]:::core__i18n_c
-  disk__impermanence[/"disk/impermanence · host"\]:::disk__impermanence_c
-  apps__jellyfin_client[/"apps/jellyfin-client · host"\]:::apps__jellyfin_client_c
-  apps__k9s[/"apps/k9s · host"\]:::apps__k9s_c
+  core__users__home_manager_shared_user_vic[/"core/users/home-manager-shared · user"\]:::core__users__home_manager_shared_user_vic_c
+  core__users__home_manager_shared_host_blade[/"core/users/home-manager-shared · host"\]:::core__users__home_manager_shared_host_blade_c
+  core__users__home_manager_shared_user_shuo[/"core/users/home-manager-shared · user"\]:::core__users__home_manager_shared_user_shuo_c
+  core__users__home_manager_shared_user_will[/"core/users/home-manager-shared · user"\]:::core__users__home_manager_shared_user_will_c
+  core__impermanence_user_vic[/"core/impermanence · user"\]:::core__impermanence_user_vic_c
+  core__impermanence_host_blade[/"core/impermanence · host"\]:::core__impermanence_host_blade_c
+  core__impermanence_user_shuo[/"core/impermanence · user"\]:::core__impermanence_user_shuo_c
+  core__impermanence_user_will[/"core/impermanence · user"\]:::core__impermanence_user_will_c
   hardware__keyboard[/"hardware/keyboard · host"\]:::hardware__keyboard_c
-  apps__kitty[/"apps/kitty · host"\]:::apps__kitty_c
-  apps__kube_tools[/"apps/kube-tools · host"\]:::apps__kube_tools_c
-  roles__laptop[/"roles/laptop · host"\]:::roles__laptop_c
+  hardware__laptop[/"hardware/laptop · host"\]:::hardware__laptop_c
   virtualization__libvirt[/"virtualization/libvirt · host"\]:::virtualization__libvirt_c
-  core__linux_kernel[/"core/linux-kernel · host"\]:::core__linux_kernel_c
-  core__lix[/"core/lix · host"\]:::core__lix_c
-  apps__mangohud[/"apps/mangohud · host"\]:::apps__mangohud_c
   roles__media[/"roles/media · host"\]:::roles__media_c
-  apps__misc_tools[/"apps/misc-tools · host"\]:::apps__misc_tools_c
-  apps__mpv[/"apps/mpv · host"\]:::apps__mpv_c
-  network["network"]:::network_c
-  network__network_boot[/"network/network-boot · host"\]:::network__network_boot_c
-  network__network_manager[/"network/network-manager · host"\]:::network__network_manager_c
-  network__networking[/"network/networking · host"\]:::network__networking_c
-  core__nix[/"core/nix · host"\]:::core__nix_c
-  apps__nix_index[/"apps/nix-index · host"\]:::apps__nix_index_c
-  system__nix_ld[/"system/nix-ld · host"\]:::system__nix_ld_c
-  core__nix_remote_build_client[/"core/nix-remote-build-client · host"\]:::core__nix_remote_build_client_c
-  core__nixpkgs[/"core/nixpkgs · host"\]:::core__nixpkgs_c
-  apps__nvf[/"apps/nvf · host"\]:::apps__nvf_c
-  apps__obs_studio[/"apps/obs-studio · host"\]:::apps__obs_studio_c
-  apps__obsidian[/"apps/obsidian · host"\]:::apps__obsidian_c
-  network__openssh[/"network/openssh · host"\]:::network__openssh_c
+  roles__messaging[/"roles/messaging · host"\]:::roles__messaging_c
+  desktop__style__fonts__nerd_fonts[/"fonts/nerd-fonts · host"\]:::desktop__style__fonts__nerd_fonts_c
+  core__nix_user_vic[/"core/nix · user"\]:::core__nix_user_vic_c
+  core__nix_host_blade[/"core/nix · host"\]:::core__nix_host_blade_c
+  core__nix_user_shuo[/"core/nix · user"\]:::core__nix_user_shuo_c
+  core__nix_user_will[/"core/nix · user"\]:::core__nix_user_will_c
+  core__nix__nixpkgs_user_vic[/"core/nix/nixpkgs · user"\]:::core__nix__nixpkgs_user_vic_c
+  core__nix__nixpkgs_host_blade[/"core/nix/nixpkgs · host"\]:::core__nix__nixpkgs_host_blade_c
+  core__nix__nixpkgs_user_shuo[/"core/nix/nixpkgs · user"\]:::core__nix__nixpkgs_user_shuo_c
+  core__nix__nixpkgs_user_will[/"core/nix/nixpkgs · user"\]:::core__nix__nixpkgs_user_will_c
+  core__security__openssh_user_vic[/"core/security/openssh · user"\]:::core__security__openssh_user_vic_c
+  core__security__openssh_host_blade[/"core/security/openssh · host"\]:::core__security__openssh_host_blade_c
+  core__security__openssh_user_shuo[/"core/security/openssh · user"\]:::core__security__openssh_user_shuo_c
+  core__security__openssh_user_will[/"core/security/openssh · user"\]:::core__security__openssh_user_will_c
+  core__security__opkssh_user_vic[/"core/security/opkssh · user"\]:::core__security__opkssh_user_vic_c
+  core__security__opkssh_host_blade[/"core/security/opkssh · host"\]:::core__security__opkssh_host_blade_c
+  core__security__opkssh_user_shuo[/"core/security/opkssh · user"\]:::core__security__opkssh_user_shuo_c
+  core__security__opkssh_user_will[/"core/security/opkssh · user"\]:::core__security__opkssh_user_will_c
   hardware__performance[/"hardware/performance · host"\]:::hardware__performance_c
-  core__persist_collector[/"core/persist-collector · host"\]:::core__persist_collector_c
-  core__persist_home_collector[/"core/persist-home-collector · host"\]:::core__persist_home_collector_c
-  apps__python[/"apps/python · host"\]:::apps__python_c
-  apps__qbittorrent[/"apps/qbittorrent · host"\]:::apps__qbittorrent_c
+  core__impermanence__persist_collector_user_vic[/"core/impermanence/persist-collector · user"\]:::core__impermanence__persist_collector_user_vic_c
+  core__impermanence__persist_collector_host_blade[/"core/impermanence/persist-collector · host"\]:::core__impermanence__persist_collector_host_blade_c
+  core__impermanence__persist_collector_user_shuo[/"core/impermanence/persist-collector · user"\]:::core__impermanence__persist_collector_user_shuo_c
+  core__impermanence__persist_collector_user_will[/"core/impermanence/persist-collector · user"\]:::core__impermanence__persist_collector_user_will_c
+  core__impermanence__persist_home_collector_user_vic[/"core/impermanence/persist-home-collector · user"\]:::core__impermanence__persist_home_collector_user_vic_c
+  core__impermanence__persist_home_collector_host_blade[/"core/impermanence/persist-home-collector · host"\]:::core__impermanence__persist_home_collector_host_blade_c
+  core__impermanence__persist_home_collector_user_shuo[/"core/impermanence/persist-home-collector · user"\]:::core__impermanence__persist_home_collector_user_shuo_c
+  core__impermanence__persist_home_collector_user_will[/"core/impermanence/persist-home-collector · user"\]:::core__impermanence__persist_home_collector_user_will_c
   hardware__razer[/"hardware/razer · host"\]:::hardware__razer_c
+  desktop__style__fonts__regular[/"fonts/regular · host"\]:::desktop__style__fonts__regular_c
   roles["roles"]:::roles_c
   disk__zfs_disk_single__root[/"zfs-disk-single/root · host"\]:::disk__zfs_disk_single__root_c
   secrets["secrets"]:::secrets_c
-  core__secrets_collector[/"core/secrets-collector · host"\]:::core__secrets_collector_c
-  core__security[/"core/security · host"\]:::core__security_c
-  services["services"]:::services_c
-  core__shell[/"core/shell · host"\]:::core__shell_c
-  apps__spicetify[/"apps/spicetify · host"\]:::apps__spicetify_c
-  core__ssd[/"core/ssd · host"\]:::core__ssd_c
-  apps__ssh[/"apps/ssh · host"\]:::apps__ssh_c
-  apps__starship[/"apps/starship · host"\]:::apps__starship_c
-  core__stateVersion[/"core/stateVersion · host"\]:::core__stateVersion_c
-  apps__steam[/"apps/steam · host"\]:::apps__steam_c
-  desktop__stylix[/"desktop/stylix · host"\]:::desktop__stylix_c
-  core__sudo[/"core/sudo · host"\]:::core__sudo_c
-  apps__sunshine[/"apps/sunshine · host"\]:::apps__sunshine_c
-  apps__sysmon[/"apps/sysmon · host"\]:::apps__sysmon_c
-  system["system"]:::system_c
-  core__systemd[/"core/systemd · host"\]:::core__systemd_c
-  core__systemd_boot[/"core/systemd-boot · host"\]:::core__systemd_boot_c
-  services__tailscale[/"services/tailscale · host"\]:::services__tailscale_c
-  core__time[/"core/time · host"\]:::core__time_c
-  core__users[/"core/users · host"\]:::core__users_c
-  core__utils[/"core/utils · host"\]:::core__utils_c
+  core__security_user_vic[/"core/security · user"\]:::core__security_user_vic_c
+  core__security_host_blade[/"core/security · host"\]:::core__security_host_blade_c
+  core__security_user_shuo[/"core/security · user"\]:::core__security_user_shuo_c
+  core__security_user_will[/"core/security · user"\]:::core__security_user_will_c
+  core__users__shell_user_vic[/"core/users/shell · user"\]:::core__users__shell_user_vic_c
+  core__users__shell_host_blade[/"core/users/shell · host"\]:::core__users__shell_host_blade_c
+  core__users__shell_user_shuo[/"core/users/shell · user"\]:::core__users__shell_user_shuo_c
+  core__users__shell_user_will[/"core/users/shell · user"\]:::core__users__shell_user_will_c
+  core__nix__stateVersion_user_vic[/"core/nix/stateVersion · user"\]:::core__nix__stateVersion_user_vic_c
+  core__nix__stateVersion_host_blade[/"core/nix/stateVersion · host"\]:::core__nix__stateVersion_host_blade_c
+  core__nix__stateVersion_user_shuo[/"core/nix/stateVersion · user"\]:::core__nix__stateVersion_user_shuo_c
+  core__nix__stateVersion_user_will[/"core/nix/stateVersion · user"\]:::core__nix__stateVersion_user_will_c
+  core__security__sudo_user_vic[/"core/security/sudo · user"\]:::core__security__sudo_user_vic_c
+  core__security__sudo_host_blade[/"core/security/sudo · host"\]:::core__security__sudo_host_blade_c
+  core__security__sudo_user_shuo[/"core/security/sudo · user"\]:::core__security__sudo_user_shuo_c
+  core__security__sudo_user_will[/"core/security/sudo · user"\]:::core__security__sudo_user_will_c
+  core__systemd_user_vic[/"core/systemd · user"\]:::core__systemd_user_vic_c
+  core__systemd_host_blade[/"core/systemd · host"\]:::core__systemd_host_blade_c
+  core__systemd_user_shuo[/"core/systemd · user"\]:::core__systemd_user_shuo_c
+  core__systemd_user_will[/"core/systemd · user"\]:::core__systemd_user_will_c
+  core__users_user_vic[/"core/users · user"\]:::core__users_user_vic_c
+  core__users_host_blade[/"core/users · host"\]:::core__users_host_blade_c
+  core__users_user_shuo[/"core/users · user"\]:::core__users_user_shuo_c
+  core__users_user_will[/"core/users · user"\]:::core__users_user_will_c
+  core__utils_user_vic[/"core/utils · user"\]:::core__utils_user_vic_c
+  core__utils_host_blade[/"core/utils · host"\]:::core__utils_host_blade_c
+  core__utils_user_shuo[/"core/utils · user"\]:::core__utils_user_shuo_c
+  core__utils_user_will[/"core/utils · user"\]:::core__utils_user_will_c
   desktop__uwsm[/"desktop/uwsm · host"\]:::desktop__uwsm_c
   virtualization["virtualization"]:::virtualization_c
-  apps__vscode[/"apps/vscode · host"\]:::apps__vscode_c
-  network__wireless[/"network/wireless · host"\]:::network__wireless_c
-  apps__wireshark[/"apps/wireshark · host"\]:::apps__wireshark_c
   roles__workstation[/"roles/workstation · host"\]:::roles__workstation_c
   desktop__xdg_portal[/"desktop/xdg-portal · host"\]:::desktop__xdg_portal_c
   desktop__xserver[/"desktop/xserver · host"\]:::desktop__xserver_c
   desktop__xwayland[/"desktop/xwayland · host"\]:::desktop__xwayland_c
-  apps__yazi[/"apps/yazi · host"\]:::apps__yazi_c
-  apps__youtube_music[/"apps/youtube-music · host"\]:::apps__youtube_music_c
-  apps__yt_dlp[/"apps/yt-dlp · host"\]:::apps__yt_dlp_c
-  apps__zathura[/"apps/zathura · host"\]:::apps__zathura_c
-  apps__zellij[/"apps/zellij · host"\]:::apps__zellij_c
+  core__impermanence__zfs_user_vic[/"core/impermanence/zfs · user"\]:::core__impermanence__zfs_user_vic_c
+  core__impermanence__zfs_host_blade[/"core/impermanence/zfs · host"\]:::core__impermanence__zfs_host_blade_c
+  core__impermanence__zfs_user_shuo[/"core/impermanence/zfs · user"\]:::core__impermanence__zfs_user_shuo_c
+  core__impermanence__zfs_user_will[/"core/impermanence/zfs · user"\]:::core__impermanence__zfs_user_will_c
   disk__zfs_diff[/"disk/zfs-diff · host"\]:::disk__zfs_diff_c
   disk__zfs_disk_single[/"disk/zfs-disk-single · host"\]:::disk__zfs_disk_single_c
-  apps__zoxide[/"apps/zoxide · host"\]:::apps__zoxide_c
-  apps__zsh[/"apps/zsh · host"\]:::apps__zsh_c
 
   hardware --> hardware__adb
-  secrets --> secrets__agenix
-  apps --> apps__alacritty
+  secrets --> secrets__agenix_user_vic
+  secrets --> secrets__agenix_host_blade
+  secrets --> secrets__agenix_user_shuo
+  secrets --> secrets__agenix_user_will
   hardware --> hardware__audio
-  apps --> apps__bat
   hardware --> hardware__bluetooth
-  apps --> apps__claude
+  core__systemd_user_vic --> core__systemd__boot_user_vic
+  core__systemd_user_vic --> core__systemd__boot_host_blade
+  core__systemd_user_vic --> core__systemd__boot_user_shuo
+  core__systemd_user_vic --> core__systemd__boot_user_will
+  core__impermanence_user_vic --> core__impermanence__btrfs_user_vic
+  core__impermanence_user_vic --> core__impermanence__btrfs_host_blade
+  core__impermanence_user_vic --> core__impermanence__btrfs_user_shuo
+  core__impermanence_user_vic --> core__impermanence__btrfs_user_will
   hardware --> hardware__coolercontrol
-  hardware --> hardware__cpu_intel
   hardware --> hardware__ddcutil
-  core --> core__default
-  core --> core__deterministic_uids
+  roles --> roles__default_user_vic
+  roles --> roles__default_host_blade
+  roles --> roles__default_user_shuo
+  roles --> roles__default_user_will
+  core__users_user_vic --> core__users__deterministic_uids_user_vic
+  core__users_user_vic --> core__users__deterministic_uids_host_blade
+  core__users_user_vic --> core__users__deterministic_uids_user_shuo
+  core__users_user_vic --> core__users__deterministic_uids_user_will
   roles --> roles__dev
   roles --> roles__dev_gui
-  apps --> apps__direnv
-  apps --> apps__discord
-  apps --> apps__emulation
-  apps --> apps__eza
-  core --> core__facter
-  apps --> apps__firefox
-  core --> core__firewall_collector
-  core --> core__firmware
-  desktop --> desktop__fonts
   hardware --> hardware__gamepad
   roles --> roles__gaming
   desktop --> desktop__gdm
-  apps --> apps__git
-  apps --> apps__gitkraken
   desktop --> desktop__gnome
-  apps --> apps__gpg
-  hardware --> hardware__gpu_intel
-  hardware --> hardware__gpu_nvidia
-  hardware --> hardware__gpu_nvidia_prime
-  core --> core__home_manager
-  network --> network__hosts
-  desktop --> desktop__hyprland
-  core --> core__i18n
-  disk --> disk__impermanence
-  apps --> apps__jellyfin_client
-  apps --> apps__k9s
+  core__users_user_vic --> core__users__home_manager_shared_user_vic
+  core__users_user_vic --> core__users__home_manager_shared_host_blade
+  core__users_user_vic --> core__users__home_manager_shared_user_shuo
+  core__users_user_vic --> core__users__home_manager_shared_user_will
+  core --> core__impermanence_user_vic
+  core --> core__impermanence_host_blade
+  core --> core__impermanence_user_shuo
+  core --> core__impermanence_user_will
   hardware --> hardware__keyboard
-  apps --> apps__kitty
-  apps --> apps__kube_tools
-  roles --> roles__laptop
+  hardware --> hardware__laptop
   virtualization --> virtualization__libvirt
-  core --> core__linux_kernel
-  core --> core__lix
-  apps --> apps__mangohud
   roles --> roles__media
-  apps --> apps__misc_tools
-  apps --> apps__mpv
-  network --> network__network_boot
-  network --> network__network_manager
-  network --> network__networking
-  core --> core__nix
-  apps --> apps__nix_index
-  system --> system__nix_ld
-  core --> core__nix_remote_build_client
-  core --> core__nixpkgs
-  apps --> apps__nvf
-  apps --> apps__obs_studio
-  apps --> apps__obsidian
-  network --> network__openssh
+  roles --> roles__messaging
+  desktop__style__fonts --> desktop__style__fonts__nerd_fonts
+  core --> core__nix_user_vic
+  core --> core__nix_host_blade
+  core --> core__nix_user_shuo
+  core --> core__nix_user_will
+  core__nix_user_vic --> core__nix__nixpkgs_user_vic
+  core__nix_user_vic --> core__nix__nixpkgs_host_blade
+  core__nix_user_vic --> core__nix__nixpkgs_user_shuo
+  core__nix_user_vic --> core__nix__nixpkgs_user_will
+  core__security_user_vic --> core__security__openssh_user_vic
+  core__security_user_vic --> core__security__openssh_host_blade
+  core__security_user_vic --> core__security__openssh_user_shuo
+  core__security_user_vic --> core__security__openssh_user_will
+  core__security_user_vic --> core__security__opkssh_user_vic
+  core__security_user_vic --> core__security__opkssh_host_blade
+  core__security_user_vic --> core__security__opkssh_user_shuo
+  core__security_user_vic --> core__security__opkssh_user_will
   hardware --> hardware__performance
-  core --> core__persist_collector
-  core --> core__persist_home_collector
-  apps --> apps__python
-  apps --> apps__qbittorrent
+  core__impermanence_user_vic --> core__impermanence__persist_collector_user_vic
+  core__impermanence_user_vic --> core__impermanence__persist_collector_host_blade
+  core__impermanence_user_vic --> core__impermanence__persist_collector_user_shuo
+  core__impermanence_user_vic --> core__impermanence__persist_collector_user_will
+  core__impermanence_user_vic --> core__impermanence__persist_home_collector_user_vic
+  core__impermanence_user_vic --> core__impermanence__persist_home_collector_host_blade
+  core__impermanence_user_vic --> core__impermanence__persist_home_collector_user_shuo
+  core__impermanence_user_vic --> core__impermanence__persist_home_collector_user_will
   hardware --> hardware__razer
+  desktop__style__fonts --> desktop__style__fonts__regular
   disk__zfs_disk_single --> disk__zfs_disk_single__root
-  core --> core__secrets_collector
-  core --> core__security
-  core --> core__shell
-  apps --> apps__spicetify
-  core --> core__ssd
-  apps --> apps__ssh
-  apps --> apps__starship
-  core --> core__stateVersion
-  apps --> apps__steam
-  desktop --> desktop__stylix
-  core --> core__sudo
-  apps --> apps__sunshine
-  apps --> apps__sysmon
-  core --> core__systemd
-  core --> core__systemd_boot
-  services --> services__tailscale
-  core --> core__time
-  core --> core__users
-  core --> core__utils
+  core --> core__security_user_vic
+  core --> core__security_host_blade
+  core --> core__security_user_shuo
+  core --> core__security_user_will
+  core__users_user_vic --> core__users__shell_user_vic
+  core__users_user_vic --> core__users__shell_host_blade
+  core__users_user_vic --> core__users__shell_user_shuo
+  core__users_user_vic --> core__users__shell_user_will
+  core__nix_user_vic --> core__nix__stateVersion_user_vic
+  core__nix_user_vic --> core__nix__stateVersion_host_blade
+  core__nix_user_vic --> core__nix__stateVersion_user_shuo
+  core__nix_user_vic --> core__nix__stateVersion_user_will
+  core__security_user_vic --> core__security__sudo_user_vic
+  core__security_user_vic --> core__security__sudo_host_blade
+  core__security_user_vic --> core__security__sudo_user_shuo
+  core__security_user_vic --> core__security__sudo_user_will
+  core --> core__systemd_user_vic
+  core --> core__systemd_host_blade
+  core --> core__systemd_user_shuo
+  core --> core__systemd_user_will
+  core --> core__users_user_vic
+  core --> core__users_host_blade
+  core --> core__users_user_shuo
+  core --> core__users_user_will
+  core --> core__utils_user_vic
+  core --> core__utils_host_blade
+  core --> core__utils_user_shuo
+  core --> core__utils_user_will
   desktop --> desktop__uwsm
-  apps --> apps__vscode
-  network --> network__wireless
-  apps --> apps__wireshark
   roles --> roles__workstation
   desktop --> desktop__xdg_portal
   desktop --> desktop__xserver
   desktop --> desktop__xwayland
-  apps --> apps__yazi
-  apps --> apps__youtube_music
-  apps --> apps__yt_dlp
-  apps --> apps__zathura
-  apps --> apps__zellij
+  core__impermanence_user_vic --> core__impermanence__zfs_user_vic
+  core__impermanence_user_vic --> core__impermanence__zfs_host_blade
+  core__impermanence_user_vic --> core__impermanence__zfs_user_shuo
+  core__impermanence_user_vic --> core__impermanence__zfs_user_will
   disk --> disk__zfs_diff
   disk --> disk__zfs_disk_single
-  apps --> apps__zoxide
-  apps --> apps__zsh
 
   classDef root fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,font-weight:bold
   classDef hardware__adb_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef secrets__agenix_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__alacritty_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef secrets__agenix_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef hardware__audio_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__bat_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef hardware__bluetooth_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__claude_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef hardware__coolercontrol_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef core_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef hardware__cpu_intel_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef hardware__ddcutil_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__default_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef desktop_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__deterministic_uids_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_host_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_shuo_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_will_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
   classDef roles__dev_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef roles__dev_gui_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__direnv_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__discord_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef disk_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef apps__emulation_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__eza_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__facter_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__firefox_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__firewall_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
-  classDef core__firmware_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef desktop__fonts_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef desktop__style__fonts_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef hardware__gamepad_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef roles__gaming_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef desktop__gdm_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__git_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__gitkraken_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef desktop__gnome_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__gpg_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef hardware__gpu_intel_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef hardware__gpu_nvidia_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef hardware__gpu_nvidia_prime_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef hardware_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__home_manager_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef network__hosts_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef desktop__hyprland_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__i18n_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef disk__impermanence_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__jellyfin_client_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__k9s_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
   classDef hardware__keyboard_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__kitty_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__kube_tools_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef roles__laptop_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef hardware__laptop_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef virtualization__libvirt_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__linux_kernel_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__lix_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__mangohud_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef roles__media_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__misc_tools_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__mpv_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef network_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef network__network_boot_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef network__network_manager_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef network__networking_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__nix_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__nix_index_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef system__nix_ld_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__nix_remote_build_client_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__nixpkgs_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__nvf_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__obs_studio_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__obsidian_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef network__openssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef roles__messaging_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef desktop__style__fonts__nerd_fonts_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef hardware__performance_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__persist_collector_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__persist_home_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__python_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__qbittorrent_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_host_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_shuo_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_will_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
   classDef hardware__razer_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef desktop__style__fonts__regular_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef roles_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef disk__zfs_disk_single__root_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef secrets_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__secrets_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
-  classDef core__security_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef services_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__shell_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__spicetify_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__ssd_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__ssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__starship_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__stateVersion_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__steam_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef desktop__stylix_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__sudo_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__sunshine_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__sysmon_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef system_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__systemd_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__systemd_boot_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef services__tailscale_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__time_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__users_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__utils_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_host_blade_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_shuo_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_will_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_host_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_shuo_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_will_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
   classDef desktop__uwsm_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef virtualization_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef apps__vscode_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef network__wireless_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__wireshark_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef roles__workstation_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef desktop__xdg_portal_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef desktop__xserver_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef desktop__xwayland_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__yazi_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__youtube_music_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__yt_dlp_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__zathura_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__zellij_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_host_blade_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_shuo_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_will_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef disk__zfs_diff_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef disk__zfs_disk_single_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__zoxide_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__zsh_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
 ```

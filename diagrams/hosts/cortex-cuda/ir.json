@@ -1,0 +1,10 @@
+{
+  "direction": "LR",
+  "edges": [],
+  "entityEdges": [],
+  "entityInstances": [],
+  "entityKinds": [],
+  "nodes": [],
+  "rootId": "cortex_cuda",
+  "rootName": "cortex-cuda"
+}

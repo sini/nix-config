@@ -1,0 +1,2294 @@
+{
+  "direction": "LR",
+  "edges": [
+    {
+      "from": "_policy_user_aspect_auto_include__3_",
+      "label": null,
+      "style": "normal",
+      "to": "applications__media__spotify_player"
+    },
+    {
+      "from": "sini",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__host_aspects"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "_policy_droidHm_user_detect__0_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "_policy_hm_user_detect__0_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "_policy_user_aspect_auto_include__3_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_axon_01"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_axon_02"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_axon_03"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_bitstream"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_blade"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_cortex"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_patch"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_slab"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "agenix_identity__sini_uplink"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "n_default"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_axon_01"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_axon_02"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_axon_03"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_bitstream"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_blade"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_cortex"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_patch"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_slab"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "opkssh_authz__sini_uplink"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "core__network__syncthing__peer"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_axon_01_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_axon_02_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_axon_03_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_bitstream_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_blade_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_cortex_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_patch_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_slab_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "den__batteries__primary_user_sini_uplink_"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "core__users__resolved_user_emitter"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "sini"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_axon_01"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_axon_02"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_axon_03"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_bitstream"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_blade"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_cortex"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_patch"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_slab"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user_enrich__sini_uplink"
+    },
+    {
+      "from": "user",
+      "label": null,
+      "style": "normal",
+      "to": "user__resolve_user_"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__users__resolved_user_emitter"
+    },
+    {
+      "from": "core",
+      "label": "provides",
+      "style": "provide",
+      "to": "core__network__syncthing__peer"
+    },
+    {
+      "from": "applications",
+      "label": "provides",
+      "style": "provide",
+      "to": "applications__media__spotify_player"
+    }
+  ],
+  "entityEdges": [],
+  "entityInstances": [
+    {
+      "id": "ctx_user_sini",
+      "kind": "user",
+      "label": "user: sini",
+      "name": "sini"
+    }
+  ],
+  "entityKinds": [
+    {
+      "ctxKeys": [
+        "accessGroups",
+        "environment",
+        "fleet",
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "id": "ctx_user",
+      "name": "user"
+    }
+  ],
+  "nodes": [
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "<policy:droidHm-user-detect>[0]",
+      "hasClass": false,
+      "id": "_policy_droidHm_user_detect__0_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "<policy:droidHm-user-detect>[0]",
+      "pathKey": "<policy:droidHm-user-detect>[0]",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "<policy:hm-user-detect>[0]",
+      "hasClass": false,
+      "id": "_policy_hm_user_detect__0_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "<policy:hm-user-detect>[0]",
+      "pathKey": "<policy:hm-user-detect>[0]",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "<policy:user-aspect-auto-include>[3]",
+      "hasClass": false,
+      "id": "_policy_user_aspect_auto_include__3_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "<policy:user-aspect-auto-include>[3]",
+      "pathKey": "<policy:user-aspect-auto-include>[3]",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@axon-01",
+      "hasClass": true,
+      "id": "agenix_identity__sini_axon_01",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@axon-01",
+      "pathKey": "agenix-identity/sini@axon-01",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@axon-02",
+      "hasClass": true,
+      "id": "agenix_identity__sini_axon_02",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@axon-02",
+      "pathKey": "agenix-identity/sini@axon-02",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@axon-03",
+      "hasClass": true,
+      "id": "agenix_identity__sini_axon_03",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@axon-03",
+      "pathKey": "agenix-identity/sini@axon-03",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@bitstream",
+      "hasClass": true,
+      "id": "agenix_identity__sini_bitstream",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@bitstream",
+      "pathKey": "agenix-identity/sini@bitstream",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@blade",
+      "hasClass": true,
+      "id": "agenix_identity__sini_blade",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@blade",
+      "pathKey": "agenix-identity/sini@blade",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@cortex",
+      "hasClass": true,
+      "id": "agenix_identity__sini_cortex",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@cortex",
+      "pathKey": "agenix-identity/sini@cortex",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@patch",
+      "hasClass": false,
+      "id": "agenix_identity__sini_patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@patch",
+      "pathKey": "agenix-identity/sini@patch",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@slab",
+      "hasClass": false,
+      "id": "agenix_identity__sini_slab",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@slab",
+      "pathKey": "agenix-identity/sini@slab",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "secretsConfig",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "agenix-identity/sini@uplink",
+      "hasClass": true,
+      "id": "agenix_identity__sini_uplink",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "agenix-identity/sini@uplink",
+      "pathKey": "agenix-identity/sini@uplink",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "applications",
+      "hasClass": false,
+      "id": "applications",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "applications",
+      "pathKey": "applications",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "broadcast-syncthing-hub-shares",
+      "hasClass": false,
+      "id": "broadcast_syncthing_hub_shares",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "broadcast-syncthing-hub-shares",
+      "pathKey": "broadcast-syncthing-hub-shares",
+      "perClass": {},
+      "policyName": "broadcast-syncthing-hub-shares",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "broadcast-syncthing-peers",
+      "hasClass": false,
+      "id": "broadcast_syncthing_peers",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "broadcast-syncthing-peers",
+      "pathKey": "broadcast-syncthing-peers",
+      "perClass": {},
+      "policyName": "broadcast-syncthing-peers",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "broadcast-syncthing-peers-to-hub",
+      "hasClass": false,
+      "id": "broadcast_syncthing_peers_to_hub",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "broadcast-syncthing-peers-to-hub",
+      "pathKey": "broadcast-syncthing-peers-to-hub",
+      "perClass": {},
+      "policyName": "broadcast-syncthing-peers-to-hub",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": null,
+      "entityKind": null,
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core",
+      "hasClass": false,
+      "id": "core",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "core",
+      "pathKey": "core",
+      "perClass": {},
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "default",
+      "hasClass": false,
+      "id": "n_default",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "default",
+      "pathKey": "default",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "droidHm-user-detect",
+      "hasClass": false,
+      "id": "droidHm_user_detect",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "droidHm-user-detect",
+      "pathKey": "droidHm-user-detect",
+      "perClass": {},
+      "policyName": "droidHm-user-detect",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "drop-user-to-host-on-droid",
+      "hasClass": false,
+      "id": "drop_user_to_host_on_droid",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "drop-user-to-host-on-droid",
+      "pathKey": "drop-user-to-host-on-droid",
+      "perClass": {},
+      "policyName": "drop-user-to-host-on-droid",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "expose-resolved-users",
+      "hasClass": false,
+      "id": "expose_resolved_users",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "expose-resolved-users",
+      "pathKey": "expose-resolved-users",
+      "perClass": {},
+      "policyName": "expose-resolved-users",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "hm-user-detect",
+      "hasClass": false,
+      "id": "hm_user_detect",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "hm-user-detect",
+      "pathKey": "hm-user-detect",
+      "perClass": {},
+      "policyName": "hm-user-detect",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "homeAarch64-to-hm",
+      "hasClass": false,
+      "id": "homeAarch64_to_hm",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "homeAarch64-to-hm",
+      "pathKey": "homeAarch64-to-hm",
+      "perClass": {},
+      "policyName": "homeAarch64-to-hm",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "homeDarwin-to-hm",
+      "hasClass": false,
+      "id": "homeDarwin_to_hm",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "homeDarwin-to-hm",
+      "pathKey": "homeDarwin-to-hm",
+      "perClass": {},
+      "policyName": "homeDarwin-to-hm",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "homeLinux-to-hm",
+      "hasClass": false,
+      "id": "homeLinux_to_hm",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "homeLinux-to-hm",
+      "pathKey": "homeLinux-to-hm",
+      "perClass": {},
+      "policyName": "homeLinux-to-hm",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "den/batteries/host-aspects",
+      "hasClass": false,
+      "id": "den__batteries__host_aspects",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/host-aspects",
+      "pathKey": "den/batteries/host-aspects",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "trapezoid",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "host-aspects-project",
+      "hasClass": false,
+      "id": "host_aspects_project",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "host-aspects-project",
+      "pathKey": "host-aspects-project",
+      "perClass": {},
+      "policyName": "host-aspects-project",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@axon-01",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_axon_01",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@axon-01",
+      "pathKey": "opkssh-authz/sini@axon-01",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@axon-02",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_axon_02",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@axon-02",
+      "pathKey": "opkssh-authz/sini@axon-02",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@axon-03",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_axon_03",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@axon-03",
+      "pathKey": "opkssh-authz/sini@axon-03",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@bitstream",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_bitstream",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@bitstream",
+      "pathKey": "opkssh-authz/sini@bitstream",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@blade",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_blade",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@blade",
+      "pathKey": "opkssh-authz/sini@blade",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@cortex",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_cortex",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@cortex",
+      "pathKey": "opkssh-authz/sini@cortex",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@patch",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@patch",
+      "pathKey": "opkssh-authz/sini@patch",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@slab",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_slab",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@slab",
+      "pathKey": "opkssh-authz/sini@slab",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "opkssh-authz/sini@uplink",
+      "hasClass": true,
+      "id": "opkssh_authz__sini_uplink",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "opkssh-authz/sini@uplink",
+      "pathKey": "opkssh-authz/sini@uplink",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "os-to-host",
+      "hasClass": false,
+      "id": "os_to_host",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "os-to-host",
+      "pathKey": "os-to-host",
+      "perClass": {},
+      "policyName": "os-to-host",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/network/syncthing/peer",
+      "hasClass": true,
+      "id": "core__network__syncthing__peer",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "syncthing/peer",
+      "pathKey": "core/network/syncthing/peer",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core",
+        "network",
+        "syncthing"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@axon-01)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_axon_01_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@axon-01)",
+      "pathKey": "den/batteries/primary-user(sini@axon-01)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@axon-02)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_axon_02_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@axon-02)",
+      "pathKey": "den/batteries/primary-user(sini@axon-02)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@axon-03)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_axon_03_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@axon-03)",
+      "pathKey": "den/batteries/primary-user(sini@axon-03)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@bitstream)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_bitstream_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@bitstream)",
+      "pathKey": "den/batteries/primary-user(sini@bitstream)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@blade)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_blade_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@blade)",
+      "pathKey": "den/batteries/primary-user(sini@blade)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@cortex)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_cortex_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@cortex)",
+      "pathKey": "den/batteries/primary-user(sini@cortex)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@patch)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_patch_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@patch)",
+      "pathKey": "den/batteries/primary-user(sini@patch)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@slab)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_slab_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@slab)",
+      "pathKey": "den/batteries/primary-user(sini@slab)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "den/batteries/primary-user(sini@uplink)",
+      "hasClass": true,
+      "id": "den__batteries__primary_user_sini_uplink_",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "batteries/primary-user(sini@uplink)",
+      "pathKey": "den/batteries/primary-user(sini@uplink)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "den",
+        "batteries"
+      ],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "primary-user-for-owner",
+      "hasClass": false,
+      "id": "primary_user_for_owner",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "primary-user-for-owner",
+      "pathKey": "primary-user-for-owner",
+      "perClass": {},
+      "policyName": "primary-user-for-owner",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "core/users/resolved-user-emitter",
+      "hasClass": false,
+      "id": "core__users__resolved_user_emitter",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "users/resolved-user-emitter",
+      "pathKey": "core/users/resolved-user-emitter",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "core",
+        "users"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "sini",
+      "hasClass": false,
+      "id": "sini",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "sini",
+      "pathKey": "sini",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "applications/media/spotify-player",
+      "hasClass": false,
+      "id": "applications__media__spotify_player",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": true,
+      "label": "media/spotify-player",
+      "pathKey": "applications/media/spotify-player",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [
+        "applications",
+        "media"
+      ],
+      "shape": "trapezoid",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "user",
+      "hasClass": false,
+      "id": "user",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user",
+      "pathKey": "user",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": false,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "adapter",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "user-aspect-auto-include",
+      "hasClass": false,
+      "id": "user_aspect_auto_include",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "user-aspect-auto-include",
+      "pathKey": "user-aspect-auto-include",
+      "perClass": {},
+      "policyName": "user-aspect-auto-include",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@axon-01",
+      "hasClass": true,
+      "id": "user_enrich__sini_axon_01",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@axon-01",
+      "pathKey": "user-enrich/sini@axon-01",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@axon-02",
+      "hasClass": true,
+      "id": "user_enrich__sini_axon_02",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@axon-02",
+      "pathKey": "user-enrich/sini@axon-02",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@axon-03",
+      "hasClass": true,
+      "id": "user_enrich__sini_axon_03",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@axon-03",
+      "pathKey": "user-enrich/sini@axon-03",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@bitstream",
+      "hasClass": true,
+      "id": "user_enrich__sini_bitstream",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@bitstream",
+      "pathKey": "user-enrich/sini@bitstream",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@blade",
+      "hasClass": true,
+      "id": "user_enrich__sini_blade",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@blade",
+      "pathKey": "user-enrich/sini@blade",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@cortex",
+      "hasClass": true,
+      "id": "user_enrich__sini_cortex",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@cortex",
+      "pathKey": "user-enrich/sini@cortex",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@patch",
+      "hasClass": true,
+      "id": "user_enrich__sini_patch",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@patch",
+      "pathKey": "user-enrich/sini@patch",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@slab",
+      "hasClass": true,
+      "id": "user_enrich__sini_slab",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@slab",
+      "pathKey": "user-enrich/sini@slab",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [
+        "host",
+        "user"
+      ],
+      "from": null,
+      "fullLabel": "user-enrich/sini@uplink",
+      "hasClass": true,
+      "id": "user_enrich__sini_uplink",
+      "isParametric": true,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user-enrich/sini@uplink",
+      "pathKey": "user-enrich/sini@uplink",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "hexagon",
+      "style": "default",
+      "to": null
+    },
+    {
+      "class": "",
+      "classes": [],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": "user",
+      "fullLabel": "user-to-host",
+      "hasClass": false,
+      "id": "user_to_host",
+      "isParametric": false,
+      "isPolicyDispatch": true,
+      "isProvider": false,
+      "label": "user-to-host",
+      "pathKey": "user-to-host",
+      "perClass": {},
+      "policyName": "user-to-host",
+      "providerPath": [],
+      "shape": "rect",
+      "style": "policy",
+      "to": null
+    },
+    {
+      "class": "nixos",
+      "classes": [
+        "nixos"
+      ],
+      "entityInstance": "user:sini",
+      "entityKind": "user",
+      "fnArgNames": [],
+      "from": null,
+      "fullLabel": "user/resolve(user)",
+      "hasClass": false,
+      "id": "user__resolve_user_",
+      "isParametric": false,
+      "isPolicyDispatch": false,
+      "isProvider": false,
+      "label": "user/resolve(user)",
+      "pathKey": "user/resolve(user)",
+      "perClass": {
+        "nixos": {
+          "excluded": false,
+          "excludedFrom": null,
+          "hasClass": true,
+          "replacedBy": null
+        }
+      },
+      "policyName": null,
+      "providerPath": [],
+      "shape": "rect",
+      "style": "terminal",
+      "to": null
+    }
+  ],
+  "rootId": "sini",
+  "rootName": "sini"
+}

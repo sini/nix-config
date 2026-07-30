@@ -7,156 +7,120 @@
 graph TD
   patch([patch]):::root
   hardware__adb[/"hardware/adb · host"\]:::hardware__adb_c
-  apps["apps"]:::apps_c
-  apps__bat[/"apps/bat · host"\]:::apps__bat_c
-  apps__claude[/"apps/claude · host"\]:::apps__claude_c
+  secrets__agenix[/"secrets/agenix · host"\]:::secrets__agenix_c
+  core__systemd__boot[/"systemd/boot · host"\]:::core__systemd__boot_c
+  core__impermanence__btrfs[/"impermanence/btrfs · host"\]:::core__impermanence__btrfs_c
   core["core"]:::core_c
-  core__default[/"core/default · host"\]:::core__default_c
-  core__deterministic_uids[/"core/deterministic-uids · host"\]:::core__deterministic_uids_c
+  roles__darwin_workstation[/"roles/darwin-workstation · host"\]:::roles__darwin_workstation_c
+  roles__default[/"roles/default · host"\]:::roles__default_c
+  applications__dev__git__delta[/"git/delta · host"\]:::applications__dev__git__delta_c
+  core__users__deterministic_uids[/"users/deterministic-uids · host"\]:::core__users__deterministic_uids_c
   roles__dev[/"roles/dev · host"\]:::roles__dev_c
-  apps__direnv[/"apps/direnv · host"\]:::apps__direnv_c
-  apps__eza[/"apps/eza · host"\]:::apps__eza_c
-  core__facter[/"core/facter · host"\]:::core__facter_c
-  core__firewall_collector[/"core/firewall-collector · host"\]:::core__firewall_collector_c
-  core__firmware[/"core/firmware · host"\]:::core__firmware_c
-  apps__git[/"apps/git · host"\]:::apps__git_c
-  apps__gpg[/"apps/gpg · host"\]:::apps__gpg_c
+  macos__fonts[/"macos/fonts · host"\]:::macos__fonts_c
+  applications__dev__git{{"dev/git · host"}}:::applications__dev__git_c
+  applications__dev__git__github[/"git/github · host"\]:::applications__dev__git__github_c
+  applications__dev__git__gitkraken{{"git/gitkraken · host"}}:::applications__dev__git__gitkraken_c
   hardware["hardware"]:::hardware_c
-  core__home_manager[/"core/home-manager · host"\]:::core__home_manager_c
-  network__hosts[/"network/hosts · host"\]:::network__hosts_c
-  core__i18n[/"core/i18n · host"\]:::core__i18n_c
-  apps__k9s[/"apps/k9s · host"\]:::apps__k9s_c
-  core__linux_kernel[/"core/linux-kernel · host"\]:::core__linux_kernel_c
-  core__lix[/"core/lix · host"\]:::core__lix_c
-  apps__misc_tools[/"apps/misc-tools · host"\]:::apps__misc_tools_c
-  network["network"]:::network_c
-  network__networking[/"network/networking · host"\]:::network__networking_c
+  core__users__home_manager_shared[/"users/home-manager-shared · host"\]:::core__users__home_manager_shared_c
+  macos__homebrew[/"macos/homebrew · host"\]:::macos__homebrew_c
+  core__impermanence[/"core/impermanence · host"\]:::core__impermanence_c
+  applications__dev__git__jujutsu{{"git/jujutsu · host"}}:::applications__dev__git__jujutsu_c
+  applications__dev__git__lazygit[/"git/lazygit · host"\]:::applications__dev__git__lazygit_c
+  core__nix__linux_builder[/"nix/linux-builder · host"\]:::core__nix__linux_builder_c
+  macos["macos"]:::macos_c
+  applications__dev__git__mergiraf[/"git/mergiraf · host"\]:::applications__dev__git__mergiraf_c
   core__nix[/"core/nix · host"\]:::core__nix_c
-  apps__nix_index[/"apps/nix-index · host"\]:::apps__nix_index_c
-  core__nix_remote_build_client[/"core/nix-remote-build-client · host"\]:::core__nix_remote_build_client_c
-  core__nixpkgs[/"core/nixpkgs · host"\]:::core__nixpkgs_c
-  apps__nvf[/"apps/nvf · host"\]:::apps__nvf_c
-  network__openssh[/"network/openssh · host"\]:::network__openssh_c
-  apps__python[/"apps/python · host"\]:::apps__python_c
+  core__nix__nixpkgs[/"nix/nixpkgs · host"\]:::core__nix__nixpkgs_c
+  core__security__openssh[/"security/openssh · host"\]:::core__security__openssh_c
+  core__security__opkssh[/"security/opkssh · host"\]:::core__security__opkssh_c
+  core__impermanence__persist_collector[/"impermanence/persist-collector · host"\]:::core__impermanence__persist_collector_c
+  core__impermanence__persist_home_collector[/"impermanence/persist-home-collector · host"\]:::core__impermanence__persist_home_collector_c
   roles["roles"]:::roles_c
-  core__secrets_collector[/"core/secrets-collector · host"\]:::core__secrets_collector_c
+  secrets["secrets"]:::secrets_c
   core__security[/"core/security · host"\]:::core__security_c
-  services["services"]:::services_c
-  core__shell[/"core/shell · host"\]:::core__shell_c
-  core__ssd[/"core/ssd · host"\]:::core__ssd_c
-  apps__ssh[/"apps/ssh · host"\]:::apps__ssh_c
-  apps__starship[/"apps/starship · host"\]:::apps__starship_c
-  core__stateVersion[/"core/stateVersion · host"\]:::core__stateVersion_c
-  core__sudo[/"core/sudo · host"\]:::core__sudo_c
-  apps__sysmon[/"apps/sysmon · host"\]:::apps__sysmon_c
+  core__users__shell[/"users/shell · host"\]:::core__users__shell_c
+  macos__spotlight_apps[/"macos/spotlight-apps · host"\]:::macos__spotlight_apps_c
+  core__nix__stateVersion[/"nix/stateVersion · host"\]:::core__nix__stateVersion_c
+  core__security__sudo[/"security/sudo · host"\]:::core__security__sudo_c
   core__systemd[/"core/systemd · host"\]:::core__systemd_c
-  core__systemd_boot[/"core/systemd-boot · host"\]:::core__systemd_boot_c
-  services__tailscale[/"services/tailscale · host"\]:::services__tailscale_c
-  core__time[/"core/time · host"\]:::core__time_c
   core__users[/"core/users · host"\]:::core__users_c
   core__utils[/"core/utils · host"\]:::core__utils_c
-  apps__yazi[/"apps/yazi · host"\]:::apps__yazi_c
-  apps__zoxide[/"apps/zoxide · host"\]:::apps__zoxide_c
-  apps__zsh[/"apps/zsh · host"\]:::apps__zsh_c
+  core__impermanence__zfs[/"impermanence/zfs · host"\]:::core__impermanence__zfs_c
 
   hardware --> hardware__adb
-  apps --> apps__bat
-  apps --> apps__claude
-  core --> core__default
-  core --> core__deterministic_uids
+  secrets --> secrets__agenix
+  core__systemd --> core__systemd__boot
+  core__impermanence --> core__impermanence__btrfs
+  roles --> roles__darwin_workstation
+  roles --> roles__default
+  applications__dev__git --> applications__dev__git__delta
+  core__users --> core__users__deterministic_uids
   roles --> roles__dev
-  apps --> apps__direnv
-  apps --> apps__eza
-  core --> core__facter
-  core --> core__firewall_collector
-  core --> core__firmware
-  apps --> apps__git
-  apps --> apps__gpg
-  core --> core__home_manager
-  network --> network__hosts
-  core --> core__i18n
-  apps --> apps__k9s
-  core --> core__linux_kernel
-  core --> core__lix
-  apps --> apps__misc_tools
-  network --> network__networking
+  macos --> macos__fonts
+  applications__dev__git --> applications__dev__git__github
+  applications__dev__git --> applications__dev__git__gitkraken
+  core__users --> core__users__home_manager_shared
+  macos --> macos__homebrew
+  core --> core__impermanence
+  applications__dev__git --> applications__dev__git__jujutsu
+  applications__dev__git --> applications__dev__git__lazygit
+  core__nix --> core__nix__linux_builder
+  applications__dev__git --> applications__dev__git__mergiraf
   core --> core__nix
-  apps --> apps__nix_index
-  core --> core__nix_remote_build_client
-  core --> core__nixpkgs
-  apps --> apps__nvf
-  network --> network__openssh
-  apps --> apps__python
-  core --> core__secrets_collector
+  core__nix --> core__nix__nixpkgs
+  core__security --> core__security__openssh
+  core__security --> core__security__opkssh
+  core__impermanence --> core__impermanence__persist_collector
+  core__impermanence --> core__impermanence__persist_home_collector
   core --> core__security
-  core --> core__shell
-  core --> core__ssd
-  apps --> apps__ssh
-  apps --> apps__starship
-  core --> core__stateVersion
-  core --> core__sudo
-  apps --> apps__sysmon
+  core__users --> core__users__shell
+  macos --> macos__spotlight_apps
+  core__nix --> core__nix__stateVersion
+  core__security --> core__security__sudo
   core --> core__systemd
-  core --> core__systemd_boot
-  services --> services__tailscale
-  core --> core__time
   core --> core__users
   core --> core__utils
-  apps --> apps__yazi
-  apps --> apps__zoxide
-  apps --> apps__zsh
+  core__impermanence --> core__impermanence__zfs
 
   classDef root fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,font-weight:bold
   classDef hardware__adb_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef apps__bat_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__claude_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef core_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__default_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__deterministic_uids_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef roles__darwin_workstation_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef applications__dev__git__delta_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef roles__dev_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__direnv_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__eza_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__facter_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__firewall_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
-  classDef core__firmware_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__git_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__gpg_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef macos__fonts_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef applications__dev__git_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef applications__dev__git__github_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef applications__dev__git__gitkraken_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef hardware_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__home_manager_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef network__hosts_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__i18n_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__k9s_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__linux_kernel_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__lix_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__misc_tools_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef network_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef network__networking_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef macos__homebrew_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef applications__dev__git__jujutsu_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef applications__dev__git__lazygit_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__linux_builder_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef macos_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef applications__dev__git__mergiraf_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef core__nix_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__nix_index_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__nix_remote_build_client_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__nixpkgs_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__nvf_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef network__openssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__python_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef roles_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__secrets_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
+  classDef secrets_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef core__security_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef services_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__shell_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__ssd_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__ssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps__starship_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__stateVersion_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__sudo_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__sysmon_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef macos__spotlight_apps_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef core__systemd_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__systemd_boot_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef services__tailscale_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__time_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef core__users_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef core__utils_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__yazi_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef apps__zoxide_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__zsh_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
 ```

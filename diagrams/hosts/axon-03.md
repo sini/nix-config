@@ -24,10 +24,6 @@
 
 ![class-nixos](./axon-03/class-nixos.mmd.svg)
 
-## class-homeManager
-
-![class-homeManager](./axon-03/class-homeManager.mmd.svg)
-
 ## dag
 
 ![dag](./axon-03/dag.mmd.svg)

@@ -1,202 +1,774 @@
-<div align="center">
-  <img src="https://raw.githubusercontent.com/sini/nix-config/main/modules/docs/logo/logo.png" width="120px" />
-</div>
+# Fleet Topology
 
-<br />
+Auto-generated visualizations of the nix-config fleet's
+aspect-resolution pipeline, scope tree, and data flow.
 
-<br>
+## Scope Topology
 
-# sini/nix-config
+```mermaid
+graph TD
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_["host: bitstream"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_["host: blade"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo(["user: shuo"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will(["user: will"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_["host: cortex"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo(["user: shuo"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will(["user: will"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_["host: patch"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_["host: slab"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_["host: axon-01"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_["host: axon-02"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_["host: axon-03"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_["host: uplink"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_["cluster: axon"]
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_[["environment: dev"]]
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_[["environment: prod"]]
+  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin["flake-parts: flake-parts-aarch64-darwin"]
+  flake_parts_flake_parts_aarch64_linux_system_aarch64_linux["flake-parts: flake-parts-aarch64-linux"]
+  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux["flake-parts: flake-parts-x86_64-linux"]
+  fleet_fleet_secretsConfig__set_secretsConfig_(["fleet: fleet"])
+  system_aarch64_darwin["flake-system: system=aarch64-darwin"]
+  system_aarch64_linux["flake-system: system=aarch64-linux"]
+  system_x86_64_linux["flake-system: system=x86_64-linux"]
 
-<br>
-<div align="center">
-    <a href="https://github.com/sini/nix-config/stargazers">
-        <img src="https://img.shields.io/github/stars/sini/nix-config?color=c14d26&labelColor=0b0b0b&style=for-the-badge&logo=starship&logoColor=c14d26">
-    </a>
-    <a href="https://github.com/sini/nix-config">
-        <img src="https://img.shields.io/github/repo-size/sini/nix-config?color=c14d26&labelColor=0b0b0b&style=for-the-badge&logo=github&logoColor=c14d26">
-    </a>
-    <a href="https://nixos.org">
-        <img src="https://img.shields.io/badge/NixOS-unstable-blue.svg?style=for-the-badge&labelColor=0b0b0b&logo=NixOS&logoColor=c14d26&color=c14d26">
-    </a>
-    <a href="https://github.com/sini/nix-config/blob/main/LICENSE">
-        <img src="https://img.shields.io/static/v1.svg?style=for-the-badge&label=License&message=MIT&colorA=0b0b0b&colorB=c14d26&logo=unlicense&logoColor=c14d26"/>
-    </a>
-</div>
-<br>
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_vic
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_vic
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_vic
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig__user_sini
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ --> accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ --> cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
+  fleet_fleet_secretsConfig__set_secretsConfig_ --> environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_
+  fleet_fleet_secretsConfig__set_secretsConfig_ --> environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
+  system_aarch64_darwin --> flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin
+  system_aarch64_linux --> flake_parts_flake_parts_aarch64_linux_system_aarch64_linux
+  system_x86_64_linux --> flake_parts_flake_parts_x86_64_linux_system_x86_64_linux
 
-sini's [NixOS](https://nix.dev) homelab and workstation configuration repository.
-
-> [!NOTE]
-> If you have any questions or suggestions, feel free to contact me via e-mail `jason <at> json64 <dot> dev`.
-
-
-## Hosts
-
-| Name                                  | Description                                                                                             |    Type     |      Arch      |
-| :------------------------------------ | :------------------------------------------------------------------------------------------------------ | :---------: | :------------: |
-| [uplink](modules/den/hosts/uplink.nix)       | Ryzen 5950X (16/32) - 128GB - 10gbe - Intel Arc A310 - AV1 Transcoding / Router / k8s control           |   Server    |  x86_64-linux  |
-| [axon-01](modules/den/hosts/axon-01.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [axon-02](modules/den/hosts/axon-02.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [axon-03](modules/den/hosts/axon-03.nix)     | MINISFORUM Venus UM790 Pro - Ryzen 9 7940HS (8/16) - 64GB - 2.5gbe - Radeon 780M - k8s node             |   Server    |  x86_64-linux  |
-| [bitstream](modules/den/hosts/bitstream.nix) | GMKtec M6 - Ryzen 5 6600H (8/16) - 64GB - 2.5gbe - Radeon 660M - k8s node                               |   Server    |  x86_64-linux  |
-| [cortex](modules/den/hosts/cortex.nix)       | Ryzen 9950X3D (16/32) - 128GB - 10gbe - 7900XTX + 3090TI - Hybrid ML Server/Workstation/VFIO Gaming Rig | Workstation |  x86_64-linux  |
-| [blade](modules/den/hosts/blade.nix)         | Razer Blade 16 (2023) - NixOS - 32GB ram - RTX 4090 (mobile)                                            |   Laptop    |  x86_64-linux  |
-| [patch](modules/den/hosts/patch.nix)         | M1 Macbook Air - 16gb / 1tb - macOS Sequoia 15.2                                                        |   Laptop    | aarch64-darwin |
-
-
-## Architecture
-
-This configuration uses [den](https://github.com/sini/den) for declarative multi-entity system management, with [gen-schema](https://github.com/denful/gen-schema) for typed entity registries and [scope-engine](https://github.com/denful/scope-engine) for hierarchical settings resolution.
-
-### Entity Model
-
-Entity types are defined via gen-schema with strict validation, cross-registry refs, and identity hashing:
-
-| Entity | Purpose |
-| :--- | :--- |
-| `environment` | Domain, networks, certs, delegation, service domains |
-| `group` | Membership labels, transitive resolution, ACL gating |
-| `host` | Channel, networking, settings, system-owner, facts |
-| `user` | Identity (SSH, GPG), system config (uid, groups) |
-| `cluster` | K8s cluster: role-based host discovery, networks |
-
-### Policy Chain
-
-Entities are resolved through a scope tree driven by policies:
-
-```
-fleet
- +-> environment       (fan out den.environments)
-     +-> host           (match host.environment)
-     |   +-> user       (ACL-gated via group intersection)
-     +-> cluster        (match cluster.environment)
-         +-> host       (role-based membership)
-```
-
-User assignment is ACL-driven via `fleet.user-access` group mappings against `den.users.registry`, not den's built-in host-to-users policy.
-
-### Aspects
-
-Configuration is organized into 216 aspects across 13 categories:
-
-| Category | Examples |
-| :--- | :--- |
-| `core/` | nix, nixpkgs, boot, i18n, systemd, shell, security, impermanence |
-| `network/` | networking (systemd-networkd), manager, hosts, wireless, avahi |
-| `disk/` | ZFS (root + disko layout), impermanence, btrfs, xfs |
-| `hardware/` | cpu-amd/intel, gpu-amd/nvidia, laptop, razer, performance |
-| `desktop/` | hyprland, kde, gnome, stylix, fonts |
-| `apps/` | browsers, dev tools, gaming, media, messaging, shell utilities |
-| `services/` | haproxy, nginx, k3s, vault, prometheus, kanidm, jellyfin |
-| `roles/` | workstation, server, dev, gaming, media, nix-builder |
-| `secrets/` | agenix + agenix-rekey integration, custom generators |
-| `kubernetes/` | argocd, cilium, cert-manager, storage, gateway-api |
-| `virtualization/` | libvirt, podman, microvm |
-| `system/` | ananicy |
-| `devshell/` | colmena CLI |
-
-Aspects emit into class keys (`nixos`, `darwin`, `homeManager`) and quirks (`firewall`, `persist`, `secrets`, etc.). Roles are composite aspects that bundle features via `includes`.
-
-### Quirks (Pipe Data)
-
-Cross-cutting concerns collected from aspects and aggregated at host/user scope:
-
-`firewall` `persist` `cache` `persistHome` `cacheHome` `secrets` `resolved-users` `service-domains` `prometheus-targets` `k8s-manifests` `nix-builders` `host-addrs` `bgp-peers` `vault-peers`
-
-### Batteries
-
-| Battery | Purpose |
-| :--- | :--- |
-| `agenix` | Secret management: agenix-rekey per host/user, identity keys, HM integration |
-| `colmena` | Fleet deployment via colmena hive with per-channel nixpkgs |
-| `nixidy` | K8s manifest collection per cluster via policy.instantiate |
-
-### Custom Classes
-
-| Class | Routes Into | Guard |
-| :--- | :--- | :--- |
-| `homeLinux` | `homeManager` | `host.system` ends with `-linux` |
-| `homeDarwin` | `homeManager` | `host.system` ends with `-darwin` |
-| `homeAarch64` | `homeManager` | `host.system` starts with `aarch64-` |
-| `devshell` | `flake-parts` | (always) |
-
-### Settings Resolution
-
-Feature settings use scope-engine for demand-driven resolution with automatic precedence: aspect defaults -> environment -> host -> user. Override provenance tracking shows where each setting came from.
-
-### Directory Layout
-
-```
-modules/den/
-+-- schema/          Entity type definitions (host, environment, user, group, cluster)
-+-- environments/    Environment instances (prod, dev)
-+-- groups/          Group definitions (admins, system-access, ...)
-+-- users/           User registry + per-user aspects
-+-- hosts/           Host definitions + per-host aspects
-+-- clusters/        Cluster definitions (axon)
-+-- aspects/         216 aspect modules across 13 categories
-+-- policies/        Scope resolution policies (fleet, hosts, users, pipes)
-+-- quirks/          Pipe data type declarations
-+-- classes/         Custom class definitions + route policies
-+-- batteries/       Agenix, colmena, nixidy integration
-+-- scope-engine/    Settings + ACL resolution graphs
-+-- defaults.nix     Default includes, quirk collectors, user-aspect auto-include
-```
-
-
-## Automatic import
-
-Nix files (they're all flake-parts modules) are automatically imported.
-Nix files prefixed with an underscore are ignored.
-No literal path imports are used.
-This means files can be moved around and nested in directories freely.
-
-> [!NOTE]
-> This pattern has been the inspiration of [an auto-imports library, import-tree](https://github.com/vic/import-tree).
-
-
-## Generated files
-
-The following files in this repository are generated and checked
-using [the ENHANCED _files_ flake-parts module](https://github.com/sini/files):
-
-- `.gitignore`
-- `LICENSE`
-- `README.md`
-- `.sops.yaml`
-- `.secrets/secrets-manifest.md`
-
-
-## Trying to disallow warnings
-
-This at the top level of the `flake.nix` file:
-
-```nix
-nixConfig.abort-on-warn = true;
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#313244,stroke:#313244,color:#1e1e2e
+  style environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e
+  style environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e
+  style flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin fill:#313244,stroke:#313244,color:#1e1e2e
+  style flake_parts_flake_parts_aarch64_linux_system_aarch64_linux fill:#313244,stroke:#313244,color:#1e1e2e
+  style flake_parts_flake_parts_x86_64_linux_system_x86_64_linux fill:#313244,stroke:#313244,color:#1e1e2e
+  style fleet_fleet_secretsConfig__set_secretsConfig_ fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e
+  style system_aarch64_darwin fill:#94e2d5,stroke:#94e2d5,color:#1e1e2e
+  style system_aarch64_linux fill:#94e2d5,stroke:#94e2d5,color:#1e1e2e
+  style system_x86_64_linux fill:#94e2d5,stroke:#94e2d5,color:#1e1e2e
 ```
 
-> [!NOTE]
-> It does not currently catch all warnings Nix can produce, but perhaps only evaluation warnings.
+## Policy Resolution
 
+```mermaid
+graph TD
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_["host: bitstream"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_["host: blade"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo(["user: shuo"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will(["user: will"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_["host: cortex"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo(["user: shuo"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will(["user: will"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_["host: patch"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_["host: slab"]
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_["host: axon-01"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_["host: axon-02"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_["host: axon-03"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_["host: uplink"]
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_dvicory(["user: dvicory"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_pol(["user: pol"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini(["user: sini"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_theutz(["user: theutz"])
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_vic(["user: vic"])
+  cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_["cluster: axon"]
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_{{"environment: dev"}}
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_{{"environment: prod"}}
+  flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin["flake-parts: flake-parts-aarch64-darwin"]
+  flake_parts_flake_parts_aarch64_linux_system_aarch64_linux["flake-parts: flake-parts-aarch64-linux"]
+  flake_parts_flake_parts_x86_64_linux_system_x86_64_linux["flake-parts: flake-parts-x86_64-linux"]
+  fleet_fleet_secretsConfig__set_secretsConfig_(["fleet: fleet"])
+  system_aarch64_darwin["flake-system: system=aarch64-darwin"]
+  system_aarch64_linux["flake-system: system=aarch64-linux"]
+  system_x86_64_linux["flake-system: system=x86_64-linux"]
 
-## Notable Links
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_vic
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_vic
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_vic
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini
+  environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig__user_sini
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_dvicory
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_pol
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_theutz
+  accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ -->|collect-bgp-peers, collect-container-registries, collect-host-addrs, collect-k3s-nodes, collect-ollama-endpoints, collect-prometheus-targets, collect-thunderbolt-mesh-peers, collect-vault-peers, env-users, host-modules-capture, host-to-hm-users, os-to-host, drop-user-to-host-on-droid, host-to-droidHm-users, broadcast-hub-peer| accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_vic
+  environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ -->|env-to-hosts, env-to-clusters| cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
+  fleet_fleet_secretsConfig__set_secretsConfig_ -->|fleet-to-envs| environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_
+  fleet_fleet_secretsConfig__set_secretsConfig_ -->|fleet-to-envs| environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_
+  system_aarch64_darwin -->|apps-to-flake, checks-to-flake, devShells-to-flake, legacyPackages-to-flake, packages-to-flake, system-to-flake-parts| flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin
+  system_aarch64_linux -->|apps-to-flake, checks-to-flake, devShells-to-flake, legacyPackages-to-flake, packages-to-flake, system-to-flake-parts| flake_parts_flake_parts_aarch64_linux_system_aarch64_linux
+  system_x86_64_linux -->|apps-to-flake, checks-to-flake, devShells-to-flake, legacyPackages-to-flake, packages-to-flake, system-to-flake-parts| flake_parts_flake_parts_x86_64_linux_system_x86_64_linux
 
-### Other dendritic users:
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_bitstream_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_shuo fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_blade_secretsConfig__set_secretsConfig__user_will fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_shuo fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_cortex_secretsConfig__set_secretsConfig__user_will fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_patch_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_dev_fleet_fleet_host_slab_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_01_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_02_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_axon_03_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig_ fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_dvicory fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_pol fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_sini fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_theutz fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style accessGroups__list_accessGroups__environment_prod_fleet_fleet_host_uplink_secretsConfig__set_secretsConfig__user_vic fill:#fab387,stroke:#fab387,color:#1e1e2e
+  style cluster_axon_environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#313244,stroke:#313244,color:#1e1e2e
+  style environment_dev_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e
+  style environment_prod_fleet_fleet_secretsConfig__set_secretsConfig_ fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e
+  style flake_parts_flake_parts_aarch64_darwin_system_aarch64_darwin fill:#313244,stroke:#313244,color:#1e1e2e
+  style flake_parts_flake_parts_aarch64_linux_system_aarch64_linux fill:#313244,stroke:#313244,color:#1e1e2e
+  style flake_parts_flake_parts_x86_64_linux_system_x86_64_linux fill:#313244,stroke:#313244,color:#1e1e2e
+  style fleet_fleet_secretsConfig__set_secretsConfig_ fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e
+  style system_aarch64_darwin fill:#94e2d5,stroke:#94e2d5,color:#1e1e2e
+  style system_aarch64_linux fill:#94e2d5,stroke:#94e2d5,color:#1e1e2e
+  style system_x86_64_linux fill:#94e2d5,stroke:#94e2d5,color:#1e1e2e
+```
 
-- [GaetanLepage/nix-config](https://github.com/GaetanLepage/nix-config/)
-- [vic/vix](https://github.com/vic/vix)
-- [drupol/infra](https://github.com/drupol/infra/tree/master)
+## Pipe Flow
 
-### Other inspirational nix configs:
+```mermaid
+graph LR
+  subgraph env_dev["dev"]
+    bitstream(["bitstream (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, services/security/acme→age-secrets, services/security/acme→persist, services/security/tang→firewall, services/security/tang→persist, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, roles/nix-builder→nix-builders, services/nix/remote-build-server→age-secrets, services/nix/remote-build-server→firewall, hardware/cpu/amd→nixpkgs-overlays)"])
+    blade(["blade (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, hardware/audio→persistHome, hardware/bluetooth→persist, desktop/style/stylix→homeManagerModules, desktop/style/stylix→persist, virtualization/libvirt→persist, desktop/gnome→persist, applications/browsers/firefox→cacheHome, applications/browsers/firefox→persistHome, applications/browsers/firefox→stylix-hm, applications/browsers/chromium→cacheHome, applications/browsers/chromium→homebrew-cask, applications/browsers/chromium→persistHome, applications/mail/protonmail→homebrew-cask, applications/productivity/obs-studio→homebrew-cask, applications/gaming/steam→cacheHome, applications/gaming/steam→nixpkgs-overlays, applications/gaming/sunshine→persistHome, applications/dev/ai/claude→cacheHome, applications/dev/ai/claude→persistHome, applications/dev/ai/claude→replicateHome, applications/shell/nix-index→homeManagerModules, applications/dev/editor/nvf→homeManagerModules, applications/dev/security/ssh-agent-mux→nixpkgs-overlays, applications/dev/lang/go→codium-extensions, applications/dev/lang/rust→nixpkgs-overlays, applications/dev/lang/python→codium-extensions, applications/dev/lang/python→codium-settings, applications/dev/lang/nix→codium-extensions, applications/dev/lang/nix→codium-settings, applications/dev/editor/codium/antigravity→persistHome, applications/dev/editor/codium/vscode→persistHome, applications/dev/editor/codium/core→codium-extensions, applications/dev/editor/codium/core→codium-settings, applications/dev/editor/codium/core→nixpkgs-overlays, applications/dev/lang/c→codium-extensions, applications/dev/lang/lua→codium-extensions, applications/dev/lang/lua→codium-settings, applications/dev/lang/markdown→codium-extensions, applications/dev/lang/markdown→codium-settings, applications/dev/lang/shell→codium-extensions, applications/dev/lang/shell→codium-settings, roles/dev-gui/<anon>:11→homebrew-cask, applications/messaging/discord→homeManagerModules, applications/messaging/element→persistHome, applications/messaging/kdeconnect→persistHome, applications/messaging/messenger→persistHome, applications/media/spicetify→firewall, applications/media/spicetify→homeManagerModules, hardware/laptop→persist, hardware/razer→persistHome, core/boot/wireless-initrd→age-secrets, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, core/network/manager→cache)"])
+    cortex(["cortex (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, hardware/audio→persistHome, hardware/bluetooth→persist, desktop/style/stylix→homeManagerModules, desktop/style/stylix→persist, virtualization/libvirt→persist, desktop/gnome→persist, applications/browsers/firefox→cacheHome, applications/browsers/firefox→persistHome, applications/browsers/firefox→stylix-hm, applications/browsers/chromium→cacheHome, applications/browsers/chromium→homebrew-cask, applications/browsers/chromium→persistHome, applications/mail/protonmail→homebrew-cask, applications/productivity/obs-studio→homebrew-cask, applications/gaming/steam→cacheHome, applications/gaming/steam→nixpkgs-overlays, applications/gaming/sunshine→persistHome, applications/dev/ai/claude→cacheHome, applications/dev/ai/claude→persistHome, applications/dev/ai/claude→replicateHome, applications/shell/nix-index→homeManagerModules, applications/dev/editor/nvf→homeManagerModules, applications/dev/security/ssh-agent-mux→nixpkgs-overlays, applications/dev/lang/go→codium-extensions, applications/dev/lang/rust→nixpkgs-overlays, applications/dev/lang/python→codium-extensions, applications/dev/lang/python→codium-settings, applications/dev/lang/nix→codium-extensions, applications/dev/lang/nix→codium-settings, applications/dev/editor/codium/antigravity→persistHome, applications/dev/editor/codium/vscode→persistHome, applications/dev/editor/codium/core→codium-extensions, applications/dev/editor/codium/core→codium-settings, applications/dev/editor/codium/core→nixpkgs-overlays, applications/dev/lang/c→codium-extensions, applications/dev/lang/lua→codium-extensions, applications/dev/lang/lua→codium-settings, applications/dev/lang/markdown→codium-extensions, applications/dev/lang/markdown→codium-settings, applications/dev/lang/shell→codium-extensions, applications/dev/lang/shell→codium-settings, roles/dev-gui/<anon>:11→homebrew-cask, applications/media/spicetify→firewall, applications/media/spicetify→homeManagerModules, services/ai/ollama→cache, services/ai/ollama→ollama-endpoints, applications/messaging/discord→homeManagerModules, applications/messaging/element→persistHome, applications/messaging/kdeconnect→persistHome, applications/messaging/messenger→persistHome, roles/nix-builder→nix-builders, services/nix/remote-build-server→age-secrets, services/nix/remote-build-server→firewall, hardware/cpu/amd→nixpkgs-overlays, hardware/vr-amd→homeManagerModules, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, virtualization/microvm-host→firewall, virtualization/microvm-host→gpu-claims, virtualization/microvm-host→microvm-guests, virtualization/microvm-host→persist, virtualization/windows-vfio→gpu-claims, virtualization/podman→cache, virtualization/podman→cacheHome, virtualization/containers→age-secrets, applications/media/easyeffects→persistHome)"])
+    patch(["patch (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, applications/dev/ai/claude→cacheHome, applications/dev/ai/claude→persistHome, applications/dev/ai/claude→replicateHome, applications/shell/nix-index→homeManagerModules, applications/dev/editor/nvf→homeManagerModules, applications/dev/security/ssh-agent-mux→nixpkgs-overlays, applications/dev/lang/go→codium-extensions, applications/dev/lang/rust→nixpkgs-overlays, applications/dev/lang/python→codium-extensions, applications/dev/lang/python→codium-settings, applications/dev/lang/nix→codium-extensions, applications/dev/lang/nix→codium-settings, desktop/style/stylix→homeManagerModules, desktop/style/stylix→persist, macos/applications/karabiner→homebrew-cask, macos/applications/raycast→homebrew-cask, applications/browsers/firefox→cacheHome, applications/browsers/firefox→persistHome, applications/browsers/firefox→stylix-hm, applications/browsers/chromium→cacheHome, applications/browsers/chromium→homebrew-cask, applications/browsers/chromium→persistHome, applications/dev/editor/codium/vscode→persistHome, applications/dev/editor/codium/core→codium-extensions, applications/dev/editor/codium/core→codium-settings, applications/dev/editor/codium/core→nixpkgs-overlays, applications/dev/lang/c→codium-extensions, applications/dev/lang/lua→codium-extensions, applications/dev/lang/lua→codium-settings, applications/dev/lang/markdown→codium-extensions, applications/dev/lang/markdown→codium-settings, applications/dev/lang/shell→codium-extensions, applications/dev/lang/shell→codium-settings, applications/dev/git/gitkraken/{gitkraken@user=sini}→homeManagerModules, applications/dev/git/gitkraken/{gitkraken@user=sini}→homebrew-cask, applications/dev/git/gitkraken/{gitkraken@user=sini}→persistHome, roles/darwin-workstation/<anon>:31→homebrew-cask, applications/productivity/obs-studio→homebrew-cask, applications/mail/protonmail→homebrew-cask)"])
+    slab(["slab (applications/dev/ai/claude→cacheHome, applications/dev/ai/claude→persistHome, applications/dev/ai/claude→replicateHome, applications/shell/nix-index→homeManagerModules, applications/dev/editor/nvf→homeManagerModules, applications/dev/security/ssh-agent-mux→nixpkgs-overlays, applications/dev/lang/go→codium-extensions, applications/dev/lang/rust→nixpkgs-overlays, applications/dev/lang/python→codium-extensions, applications/dev/lang/python→codium-settings, applications/dev/lang/nix→codium-extensions, applications/dev/lang/nix→codium-settings, applications/shell/zsh→persistHome)"])
+  end
+  subgraph env_prod["prod"]
+    axon_01(["axon-01 (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, services/security/acme→age-secrets, services/security/acme→persist, services/security/tang→firewall, services/security/tang→persist, roles/nix-builder→nix-builders, services/nix/remote-build-server→age-secrets, services/nix/remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s/containerd→persist, services/storage/media-scratch→cache, services/storage/media-scratch→media-scratch-exports, hardware/cpu/amd→nixpkgs-overlays, services/networking/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
+    axon_02(["axon-02 (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, services/security/acme→age-secrets, services/security/acme→persist, services/security/tang→firewall, services/security/tang→persist, roles/nix-builder→nix-builders, services/nix/remote-build-server→age-secrets, services/nix/remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s/containerd→persist, hardware/cpu/amd→nixpkgs-overlays, services/networking/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
+    axon_03(["axon-03 (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, services/security/acme→age-secrets, services/security/acme→persist, services/security/tang→firewall, services/security/tang→persist, roles/nix-builder→nix-builders, services/nix/remote-build-server→age-secrets, services/nix/remote-build-server→firewall, services/bgp→bgp-peers, services/bgp→firewall, services/k3s→age-secrets, services/k3s→k3s-nodes, services/k3s→persist, services/k3s/containerd→persist, hardware/cpu/amd→nixpkgs-overlays, services/networking/thunderbolt-mesh-of→thunderbolt-mesh-peers)"])
+    uplink(["uplink (core/nix/nixpkgs→nixpkgs-overlays, core/systemd→cache, core/system/firmware→persist, core/security→persist, core/system/linux-kernel→nixpkgs-overlays, applications/shell/zsh→persistHome, core/security/openssh→persist, core/network/hostsfile→host-addrs, core/network/tailscale→age-secrets, core/network/tailscale→persist, secrets/agenix→persist, core/boot/network-initrd→age-secrets, core/boot/network-initrd→persist, services/security/acme→age-secrets, services/security/acme→persist, services/security/tang→firewall, services/security/tang→persist, roles/nix-builder→nix-builders, services/nix/remote-build-server→age-secrets, services/nix/remote-build-server→firewall, services/monitoring/prometheus→firewall, services/monitoring/prometheus→persist, services/monitoring/prometheus→prometheus-targets, services/monitoring/prometheus→service-domains, services/monitoring/loki→firewall, services/monitoring/loki→persist, services/monitoring/loki→service-domains, services/monitoring/grafana→age-secrets, services/monitoring/grafana→persist, services/monitoring/grafana→service-domains, services/bgp→bgp-peers, services/bgp→firewall, services/networking/headscale→age-secrets, services/networking/headscale→firewall, services/networking/headscale→persist, services/networking/headscale→prometheus-targets, services/networking/headscale→service-domains, services/networking/nginx→firewall, services/networking/nginx→persist, services/networking/nginx→prometheus-targets, services/security/kanidm→age-secrets, services/security/kanidm→firewall, services/security/kanidm→persist, services/security/kanidm→service-domains, services/networking/haproxy→firewall, services/media/jellyfin→firewall, services/media/jellyfin→persist, services/media/jellyfin→service-domains, services/web/homepage→service-domains, services/security/oauth2-proxy→age-secrets, services/security/oauth2-proxy→service-domains, services/ai/ollama→cache, services/ai/ollama→ollama-endpoints, services/ai/open-webui→age-secrets, services/ai/open-webui→persist, services/ai/open-webui→service-domains, services/nix/attic→age-secrets, services/nix/attic→cache, services/nix/attic→service-domains, core/network/syncthing/hub→persist, core/network/syncthing/hub→syncthing-peers, services/web/den-docs-mirror→persist, services/web/den-docs-mirror→service-domains, services/web/container-registry→age-secrets, services/web/container-registry→container-registries, services/web/container-registry→persist, virtualization/podman→cache, virtualization/podman→cacheHome, virtualization/containers→age-secrets, hardware/cpu/amd→nixpkgs-overlays)"])
+  end
 
-- [oddlama/nix-config](https://github.com/oddlama/nix-config/)
-- [JManch/nixos](https://github.com/JManch/nixos)
-- [akirak/homelab](https://github.com/akirak/nix-config/)
-- [pim/nix-config](https://git.kun.is/pim/nixos-configs) & [pim's kubernetes configs](https://git.kun.is/home/kubernetes-deployments)
+  cortex -->|ollama-endpoints| bitstream
+  cortex -->|ollama-endpoints| blade
+  cortex -->|ollama-endpoints| patch
+  cortex -->|ollama-endpoints| slab
+  uplink -->|ollama-endpoints| axon_01
+  uplink -->|ollama-endpoints| axon_02
+  uplink -->|ollama-endpoints| axon_03
+  axon_02 -->|bgp-peers| axon_01
+  axon_03 -->|bgp-peers| axon_01
+  uplink -->|bgp-peers| axon_01
+  axon_01 -->|bgp-peers| axon_02
+  axon_03 -->|bgp-peers| axon_02
+  uplink -->|bgp-peers| axon_02
+  axon_01 -->|bgp-peers| axon_03
+  axon_02 -->|bgp-peers| axon_03
+  uplink -->|bgp-peers| axon_03
+  axon_01 -->|bgp-peers| uplink
+  axon_02 -->|bgp-peers| uplink
+  axon_03 -->|bgp-peers| uplink
+  uplink -->|container-registries| axon_01
+  uplink -->|container-registries| axon_02
+  uplink -->|container-registries| axon_03
+  axon_01 -->|k3s-nodes| uplink
+  axon_02 -->|k3s-nodes| uplink
+  axon_03 -->|k3s-nodes| uplink
+  uplink -->|prometheus-targets| axon_01
+  uplink -->|prometheus-targets| axon_02
+  uplink -->|prometheus-targets| axon_03
+  axon_01 -->|thunderbolt-mesh-peers| uplink
+  axon_02 -->|thunderbolt-mesh-peers| uplink
+  axon_03 -->|thunderbolt-mesh-peers| uplink
 
-### Notable References:
+  linkStyle 0 stroke:#f38ba8,stroke-width:2px
+  linkStyle 1 stroke:#f38ba8,stroke-width:2px
+  linkStyle 2 stroke:#f38ba8,stroke-width:2px
+  linkStyle 3 stroke:#f38ba8,stroke-width:2px
+  linkStyle 4 stroke:#f38ba8,stroke-width:2px
+  linkStyle 5 stroke:#f38ba8,stroke-width:2px
+  linkStyle 6 stroke:#f38ba8,stroke-width:2px
+  linkStyle 7 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 8 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 9 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 10 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 11 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 12 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 13 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 14 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 15 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 16 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 17 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 18 stroke:#a6e3a1,stroke-width:2px
+  linkStyle 19 stroke:#cba6f7,stroke-width:2px
+  linkStyle 20 stroke:#cba6f7,stroke-width:2px
+  linkStyle 21 stroke:#cba6f7,stroke-width:2px
+  linkStyle 22 stroke:#fab387,stroke-width:2px
+  linkStyle 23 stroke:#fab387,stroke-width:2px
+  linkStyle 24 stroke:#fab387,stroke-width:2px
+  linkStyle 25 stroke:#94e2d5,stroke-width:2px
+  linkStyle 26 stroke:#94e2d5,stroke-width:2px
+  linkStyle 27 stroke:#94e2d5,stroke-width:2px
+  linkStyle 28 stroke:#f2cdcd,stroke-width:2px
+  linkStyle 29 stroke:#f2cdcd,stroke-width:2px
+  linkStyle 30 stroke:#f2cdcd,stroke-width:2px
 
-- [colmena](https://github.com/zhaofengli/colmena)
-- [agenix](https://github.com/ryantm/agenix) & [agenix-rekey](https://github.com/oddlama/agenix-rekey)
-- [flake-parts](https://flake.parts/)
+  style bitstream fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style blade fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style cortex fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style patch fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style slab fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style axon_01 fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style axon_02 fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style axon_03 fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style uplink fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+  style env_dev fill:transparent,stroke:#6c7086,stroke-width:1px
+  style env_prod fill:transparent,stroke:#6c7086,stroke-width:1px
+```
+
+## Pipe Sequence
+
+```mermaid
+sequenceDiagram
+    box dev
+    participant bitstream as bitstream
+    participant blade as blade
+    participant cortex as cortex
+    participant patch as patch
+    participant slab as slab
+    end
+    box prod
+    participant axon_01 as axon-01
+    participant axon_02 as axon-02
+    participant axon_03 as axon-03
+    participant uplink as uplink
+    end
+
+    Note over axon_01: core/nix/nixpkgs, core/system/linux-kernel, hardware/cpu/amd → nixpkgs-overlays
+    Note over axon_02: core/nix/nixpkgs, core/system/linux-kernel, hardware/cpu/amd → nixpkgs-overlays
+    Note over axon_03: core/nix/nixpkgs, core/system/linux-kernel, hardware/cpu/amd → nixpkgs-overlays
+    Note over bitstream: core/nix/nixpkgs, core/system/linux-kernel, hardware/cpu/amd → nixpkgs-overlays
+    Note over blade: core/nix/nixpkgs, core/system/linux-kernel, applications/gaming/steam, applications/dev/security/ssh-agent-mux, applications/dev/lang/rust, applications/dev/editor/codium/core → nixpkgs-overlays
+    Note over cortex: core/nix/nixpkgs, core/system/linux-kernel, applications/gaming/steam, applications/dev/security/ssh-agent-mux, applications/dev/lang/rust, applications/dev/editor/codium/core, hardware/cpu/amd → nixpkgs-overlays
+    Note over patch: core/nix/nixpkgs, core/system/linux-kernel, applications/dev/security/ssh-agent-mux, applications/dev/lang/rust, applications/dev/editor/codium/core → nixpkgs-overlays
+    Note over slab: applications/dev/security/ssh-agent-mux, applications/dev/lang/rust → nixpkgs-overlays
+    Note over uplink: core/nix/nixpkgs, core/system/linux-kernel, hardware/cpu/amd → nixpkgs-overlays
+
+    Note over axon_01: core/systemd, services/storage/media-scratch → cache
+    Note over axon_02: core/systemd → cache
+    Note over axon_03: core/systemd → cache
+    Note over bitstream: core/systemd → cache
+    Note over blade: core/systemd, core/network/manager → cache
+    Note over cortex: core/systemd, services/ai/ollama, virtualization/podman → cache
+    Note over patch: core/systemd → cache
+    Note over uplink: core/systemd, services/ai/ollama, services/nix/attic, virtualization/podman → cache
+
+    Note over axon_01: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, core/boot/network-initrd, services/security/acme, services/security/tang, services/k3s, services/k3s/containerd → persist
+    Note over axon_02: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, core/boot/network-initrd, services/security/acme, services/security/tang, services/k3s, services/k3s/containerd → persist
+    Note over axon_03: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, core/boot/network-initrd, services/security/acme, services/security/tang, services/k3s, services/k3s/containerd → persist
+    Note over bitstream: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, services/security/acme, services/security/tang, core/boot/network-initrd → persist
+    Note over blade: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, hardware/bluetooth, desktop/style/stylix, virtualization/libvirt, desktop/gnome, hardware/laptop, core/boot/network-initrd → persist
+    Note over cortex: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, hardware/bluetooth, desktop/style/stylix, virtualization/libvirt, desktop/gnome, core/boot/network-initrd, virtualization/microvm-host → persist
+    Note over patch: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, desktop/style/stylix → persist
+    Note over uplink: core/system/firmware, core/security, core/security/openssh, core/network/tailscale, secrets/agenix, core/boot/network-initrd, services/security/acme, services/security/tang, services/monitoring/prometheus, services/monitoring/loki, services/monitoring/grafana, services/networking/headscale, services/networking/nginx, services/security/kanidm, services/media/jellyfin, services/ai/open-webui, core/network/syncthing/hub, services/web/den-docs-mirror, services/web/container-registry → persist
+
+    Note over axon_01: applications/shell/zsh → persistHome
+    Note over axon_02: applications/shell/zsh → persistHome
+    Note over axon_03: applications/shell/zsh → persistHome
+    Note over bitstream: applications/shell/zsh → persistHome
+    Note over blade: applications/shell/zsh, hardware/audio, applications/browsers/firefox, applications/browsers/chromium, applications/gaming/sunshine, applications/dev/ai/claude, applications/dev/editor/codium/antigravity, applications/dev/editor/codium/vscode, applications/messaging/element, applications/messaging/kdeconnect, applications/messaging/messenger, hardware/razer → persistHome
+    Note over cortex: applications/shell/zsh, hardware/audio, applications/browsers/firefox, applications/browsers/chromium, applications/gaming/sunshine, applications/dev/ai/claude, applications/dev/editor/codium/antigravity, applications/dev/editor/codium/vscode, applications/messaging/element, applications/messaging/kdeconnect, applications/messaging/messenger, applications/media/easyeffects → persistHome
+    Note over patch: applications/shell/zsh, applications/dev/ai/claude, applications/browsers/firefox, applications/browsers/chromium, applications/dev/editor/codium/vscode, applications/dev/git/gitkraken/{gitkraken@user=sini} → persistHome
+    Note over slab: applications/dev/ai/claude, applications/shell/zsh → persistHome
+    Note over uplink: applications/shell/zsh → persistHome
+
+    Note over axon_01: core/network/hostsfile → host-addrs
+    Note over axon_02: core/network/hostsfile → host-addrs
+    Note over axon_03: core/network/hostsfile → host-addrs
+    Note over bitstream: core/network/hostsfile → host-addrs
+    Note over blade: core/network/hostsfile → host-addrs
+    Note over cortex: core/network/hostsfile → host-addrs
+    Note over patch: core/network/hostsfile → host-addrs
+    Note over uplink: core/network/hostsfile → host-addrs
+
+    Note over axon_01: core/network/tailscale, core/boot/network-initrd, services/security/acme, services/nix/remote-build-server, services/k3s → age-secrets
+    Note over axon_02: core/network/tailscale, core/boot/network-initrd, services/security/acme, services/nix/remote-build-server, services/k3s → age-secrets
+    Note over axon_03: core/network/tailscale, core/boot/network-initrd, services/security/acme, services/nix/remote-build-server, services/k3s → age-secrets
+    Note over bitstream: core/network/tailscale, services/security/acme, core/boot/network-initrd, services/nix/remote-build-server → age-secrets
+    Note over blade: core/network/tailscale, core/boot/wireless-initrd, core/boot/network-initrd → age-secrets
+    Note over cortex: core/network/tailscale, services/nix/remote-build-server, core/boot/network-initrd, virtualization/containers → age-secrets
+    Note over patch: core/network/tailscale → age-secrets
+    Note over uplink: core/network/tailscale, core/boot/network-initrd, services/security/acme, services/nix/remote-build-server, services/monitoring/grafana, services/networking/headscale, services/security/kanidm, services/security/oauth2-proxy, services/ai/open-webui, services/nix/attic, services/web/container-registry, virtualization/containers → age-secrets
+
+    Note over blade: applications/browsers/firefox, applications/browsers/chromium, applications/gaming/steam, applications/dev/ai/claude → cacheHome
+    Note over cortex: applications/browsers/firefox, applications/browsers/chromium, applications/gaming/steam, applications/dev/ai/claude, virtualization/podman → cacheHome
+    Note over patch: applications/dev/ai/claude, applications/browsers/firefox, applications/browsers/chromium → cacheHome
+    Note over slab: applications/dev/ai/claude → cacheHome
+    Note over uplink: virtualization/podman → cacheHome
+
+    Note over blade: applications/dev/ai/claude → replicateHome
+    Note over cortex: applications/dev/ai/claude → replicateHome
+    Note over patch: applications/dev/ai/claude → replicateHome
+    Note over slab: applications/dev/ai/claude → replicateHome
+
+    Note over axon_01: agenix-identity/dvicory@axon-01, agenix-identity/pol@axon-01, agenix-identity/sini@axon-01, agenix-identity/theutz@axon-01, agenix-identity/vic@axon-01 → homeManagerModules
+    Note over axon_02: agenix-identity/dvicory@axon-02, agenix-identity/pol@axon-02, agenix-identity/sini@axon-02, agenix-identity/theutz@axon-02, agenix-identity/vic@axon-02 → homeManagerModules
+    Note over axon_03: agenix-identity/dvicory@axon-03, agenix-identity/pol@axon-03, agenix-identity/sini@axon-03, agenix-identity/theutz@axon-03, agenix-identity/vic@axon-03 → homeManagerModules
+    Note over bitstream: agenix-identity/dvicory@bitstream, agenix-identity/pol@bitstream, agenix-identity/sini@bitstream, agenix-identity/theutz@bitstream, agenix-identity/vic@bitstream → homeManagerModules
+    Note over blade: desktop/style/stylix, applications/shell/nix-index, applications/dev/editor/nvf, applications/messaging/discord, applications/media/spicetify, agenix-identity/shuo@blade, agenix-identity/sini@blade, agenix-identity/vic@blade, agenix-identity/will@blade → homeManagerModules
+    Note over cortex: desktop/style/stylix, applications/shell/nix-index, applications/dev/editor/nvf, applications/media/spicetify, applications/messaging/discord, hardware/vr-amd, agenix-identity/shuo@cortex, agenix-identity/sini@cortex, agenix-identity/vic@cortex, agenix-identity/will@cortex → homeManagerModules
+    Note over patch: applications/shell/nix-index, applications/dev/editor/nvf, desktop/style/stylix, applications/dev/git/gitkraken/{gitkraken@user=sini}, agenix-identity/sini@patch → homeManagerModules
+    Note over slab: applications/shell/nix-index, applications/dev/editor/nvf, agenix-identity/sini@slab → homeManagerModules
+    Note over uplink: agenix-identity/dvicory@uplink, agenix-identity/pol@uplink, agenix-identity/sini@uplink, agenix-identity/theutz@uplink, agenix-identity/vic@uplink → homeManagerModules
+
+    Note over blade: applications/dev/lang/go, applications/dev/lang/python, applications/dev/lang/nix, applications/dev/editor/codium/core, applications/dev/lang/c, applications/dev/lang/lua, applications/dev/lang/markdown, applications/dev/lang/shell → codium-extensions
+    Note over cortex: applications/dev/lang/go, applications/dev/lang/python, applications/dev/lang/nix, applications/dev/editor/codium/core, applications/dev/lang/c, applications/dev/lang/lua, applications/dev/lang/markdown, applications/dev/lang/shell → codium-extensions
+    Note over patch: applications/dev/lang/go, applications/dev/lang/python, applications/dev/lang/nix, applications/dev/editor/codium/core, applications/dev/lang/c, applications/dev/lang/lua, applications/dev/lang/markdown, applications/dev/lang/shell → codium-extensions
+    Note over slab: applications/dev/lang/go, applications/dev/lang/python, applications/dev/lang/nix → codium-extensions
+
+    Note over blade: applications/dev/lang/python, applications/dev/lang/nix, applications/dev/editor/codium/core, applications/dev/lang/lua, applications/dev/lang/markdown, applications/dev/lang/shell → codium-settings
+    Note over cortex: applications/dev/lang/python, applications/dev/lang/nix, applications/dev/editor/codium/core, applications/dev/lang/lua, applications/dev/lang/markdown, applications/dev/lang/shell → codium-settings
+    Note over patch: applications/dev/lang/python, applications/dev/lang/nix, applications/dev/editor/codium/core, applications/dev/lang/lua, applications/dev/lang/markdown, applications/dev/lang/shell → codium-settings
+    Note over slab: applications/dev/lang/python, applications/dev/lang/nix → codium-settings
+
+    Note over blade: applications/browsers/chromium, applications/mail/protonmail, applications/productivity/obs-studio, roles/dev-gui/<anon>:11 → homebrew-cask
+    Note over cortex: applications/browsers/chromium, applications/mail/protonmail, applications/productivity/obs-studio, roles/dev-gui/<anon>:11 → homebrew-cask
+    Note over patch: macos/applications/karabiner, macos/applications/raycast, applications/browsers/chromium, applications/dev/git/gitkraken/{gitkraken@user=sini}, roles/darwin-workstation/<anon>:31, applications/productivity/obs-studio, applications/mail/protonmail → homebrew-cask
+
+    Note over blade: applications/browsers/firefox → stylix-hm
+    Note over cortex: applications/browsers/firefox → stylix-hm
+    Note over patch: applications/browsers/firefox → stylix-hm
+
+    Note over axon_01: core/users/resolved-user-emitter → resolved-users
+    Note over axon_02: core/users/resolved-user-emitter → resolved-users
+    Note over axon_03: core/users/resolved-user-emitter → resolved-users
+    Note over bitstream: core/users/resolved-user-emitter → resolved-users
+    Note over blade: core/users/resolved-user-emitter → resolved-users
+    Note over cortex: core/users/resolved-user-emitter → resolved-users
+    Note over patch: core/users/resolved-user-emitter → resolved-users
+    Note over slab: core/users/resolved-user-emitter → resolved-users
+    Note over uplink: core/users/resolved-user-emitter → resolved-users
+
+    Note over axon_01: core/network/syncthing/peer → syncthing-peers
+    Note over axon_02: core/network/syncthing/peer → syncthing-peers
+    Note over axon_03: core/network/syncthing/peer → syncthing-peers
+    Note over bitstream: core/network/syncthing/peer → syncthing-peers
+    Note over blade: core/network/syncthing/peer → syncthing-peers
+    Note over cortex: core/network/syncthing/peer → syncthing-peers
+    Note over patch: core/network/syncthing/peer → syncthing-peers
+    Note over slab: core/network/syncthing/peer → syncthing-peers
+    Note over uplink: core/network/syncthing/hub, core/network/syncthing/peer → syncthing-peers
+
+    Note over axon_01: services/security/tang, services/nix/remote-build-server, services/bgp → firewall
+    Note over axon_02: services/security/tang, services/nix/remote-build-server, services/bgp → firewall
+    Note over axon_03: services/security/tang, services/nix/remote-build-server, services/bgp → firewall
+    Note over bitstream: services/security/tang, services/nix/remote-build-server → firewall
+    Note over blade: applications/media/spicetify → firewall
+    Note over cortex: applications/media/spicetify, services/nix/remote-build-server, virtualization/microvm-host → firewall
+    Note over uplink: services/security/tang, services/nix/remote-build-server, services/monitoring/prometheus, services/monitoring/loki, services/bgp, services/networking/headscale, services/networking/nginx, services/security/kanidm, services/networking/haproxy, services/media/jellyfin → firewall
+
+    Note over axon_01: roles/nix-builder → nix-builders
+    Note over axon_02: roles/nix-builder → nix-builders
+    Note over axon_03: roles/nix-builder → nix-builders
+    Note over bitstream: roles/nix-builder → nix-builders
+    Note over cortex: roles/nix-builder → nix-builders
+    Note over uplink: roles/nix-builder → nix-builders
+
+    Note over cortex: services/ai/ollama → ollama-endpoints
+    Note over uplink: services/ai/ollama → ollama-endpoints
+    cortex -->> bitstream: ollama-endpoints
+    cortex -->> blade: ollama-endpoints
+    cortex -->> patch: ollama-endpoints
+    cortex -->> slab: ollama-endpoints
+    uplink -->> axon_01: ollama-endpoints
+    uplink -->> axon_02: ollama-endpoints
+    uplink -->> axon_03: ollama-endpoints
+
+    Note over cortex: virtualization/microvm-host, virtualization/windows-vfio → gpu-claims
+
+    Note over cortex: virtualization/microvm-host → microvm-guests
+
+    Note over uplink: services/monitoring/prometheus, services/monitoring/loki, services/monitoring/grafana, services/networking/headscale, services/security/kanidm, services/media/jellyfin, services/web/homepage, services/security/oauth2-proxy, services/ai/open-webui, services/nix/attic, services/web/den-docs-mirror → service-domains
+
+    Note over axon_01: services/bgp → bgp-peers
+    Note over axon_02: services/bgp → bgp-peers
+    Note over axon_03: services/bgp → bgp-peers
+    Note over uplink: services/bgp → bgp-peers
+    axon_02 -->> axon_01: bgp-peers
+    axon_03 -->> axon_01: bgp-peers
+    uplink -->> axon_01: bgp-peers
+    axon_01 -->> axon_02: bgp-peers
+    axon_03 -->> axon_02: bgp-peers
+    uplink -->> axon_02: bgp-peers
+    axon_01 -->> axon_03: bgp-peers
+    axon_02 -->> axon_03: bgp-peers
+    uplink -->> axon_03: bgp-peers
+    axon_01 -->> uplink: bgp-peers
+    axon_02 -->> uplink: bgp-peers
+    axon_03 -->> uplink: bgp-peers
+
+    Note over axon_01: services/k3s → k3s-nodes
+    Note over axon_02: services/k3s → k3s-nodes
+    Note over axon_03: services/k3s → k3s-nodes
+    axon_01 -->> uplink: k3s-nodes
+    axon_02 -->> uplink: k3s-nodes
+    axon_03 -->> uplink: k3s-nodes
+
+    Note over axon_01: services/storage/media-scratch → media-scratch-exports
+
+    Note over axon_01: services/networking/thunderbolt-mesh-of → thunderbolt-mesh-peers
+    Note over axon_02: services/networking/thunderbolt-mesh-of → thunderbolt-mesh-peers
+    Note over axon_03: services/networking/thunderbolt-mesh-of → thunderbolt-mesh-peers
+    axon_01 -->> uplink: thunderbolt-mesh-peers
+    axon_02 -->> uplink: thunderbolt-mesh-peers
+    axon_03 -->> uplink: thunderbolt-mesh-peers
+
+    Note over uplink: services/monitoring/prometheus, services/networking/headscale, services/networking/nginx → prometheus-targets
+    uplink -->> axon_01: prometheus-targets
+    uplink -->> axon_02: prometheus-targets
+    uplink -->> axon_03: prometheus-targets
+
+    Note over uplink: services/web/container-registry → container-registries
+    uplink -->> axon_01: container-registries
+    uplink -->> axon_02: container-registries
+    uplink -->> axon_03: container-registries
+```
+
+## Fleet Summary
+
+# Fleet Summary
+
+## Topology
+
+- **2** environments, **9** hosts, **35** users
+- Scope chain: flake → fleet → cluster → user → host → environment → flake-system → flake-parts
+- Trace entries: 3500
+
+## Environments
+
+| Environment | Hosts | Host Count | Users |
+| ------------- | ------- | ------------ | ------- |
+| dev | bitstream, blade, cortex, patch, slab | 5 | 15 |
+| prod | axon-01, axon-02, axon-03, uplink | 4 | 20 |
+
+## Aspects by Host
+
+| Host | Aspect Count | Aspects |
+| ------ | -------------- | --------- |
+| bitstream | 4 | agenix/bitstream, bitstream, insecure-predicate/os, unfree-predicate/os |
+| blade | 5 | agenix/blade, blade, host/resolve(dev-gui), insecure-predicate/os, unfree-predicate/os |
+| cortex | 5 | agenix/cortex, cortex, host/resolve(dev-gui), insecure-predicate/os, unfree-predicate/os |
+| patch | 1 | host/resolve(darwin-workstation) |
+| slab | 0 |  |
+| axon-01 | 4 | agenix/axon-01, axon-01, insecure-predicate/os, unfree-predicate/os |
+| axon-02 | 4 | agenix/axon-02, axon-02, insecure-predicate/os, unfree-predicate/os |
+| axon-03 | 4 | agenix/axon-03, axon-03, insecure-predicate/os, unfree-predicate/os |
+| uplink | 4 | agenix/uplink, insecure-predicate/os, unfree-predicate/os, uplink |
+
+## Pipes
+
+| Pipe | Scope Boundary | Producers | Collectors |
+| ------ | ---------------- | ----------- | ------------ |
+| age-secrets | environment: dev | bitstream, blade, cortex, patch |  |
+| age-secrets | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| cache | environment: dev | bitstream, blade, cortex, patch |  |
+| cache | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| firewall | environment: dev | bitstream, blade, cortex |  |
+| firewall | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| homeLinux | environment: dev | bitstream, blade, cortex, patch, slab |  |
+| homeLinux | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| host-addrs | environment: dev | bitstream, blade, cortex, patch |  |
+| host-addrs | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| nix-builders | environment: dev | bitstream, cortex |  |
+| nix-builders | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| nixpkgs-overlays | environment: dev | bitstream, blade, cortex, patch, slab |  |
+| nixpkgs-overlays | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| os | environment: dev | bitstream, blade, cortex, patch, slab |  |
+| os | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| persist | environment: dev | bitstream, blade, cortex, patch |  |
+| persist | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| persistHome | environment: dev | bitstream, blade, cortex, patch, slab |  |
+| persistHome | environment: prod | axon-01, axon-02, axon-03, uplink |  |
+| bgp-peers | environment: dev |  | bitstream, blade, cortex, patch, slab |
+| bgp-peers | environment: prod | axon-01, axon-02, axon-03, uplink | axon-01, axon-02, axon-03, uplink |
+| container-registries | environment: dev |  | bitstream, blade, cortex, patch, slab |
+| container-registries | environment: prod | uplink | axon-01, axon-02, axon-03 |
+| k3s-nodes | environment: dev |  | bitstream, blade, cortex, patch, slab |
+| k3s-nodes | environment: prod | axon-01, axon-02, axon-03 | uplink |
+| ollama-endpoints | environment: dev | cortex | bitstream, blade, patch, slab |
+| ollama-endpoints | environment: prod | uplink | axon-01, axon-02, axon-03 |
+| prometheus-targets | environment: dev |  | bitstream, blade, cortex, patch, slab |
+| prometheus-targets | environment: prod | uplink | axon-01, axon-02, axon-03 |
+| thunderbolt-mesh-peers | environment: dev |  | bitstream, blade, cortex, patch, slab |
+| thunderbolt-mesh-peers | environment: prod | axon-01, axon-02, axon-03 | uplink |
+| vault-peers | environment: dev |  | bitstream, blade, cortex, patch, slab |
+| vault-peers | environment: prod |  | axon-01, axon-02, axon-03, uplink |
+| cacheHome | environment: dev | blade, cortex, patch, slab |  |
+| cacheHome | environment: prod | uplink |  |
+| codium-extensions | environment: dev | blade, cortex, patch, slab |  |
+| codium-settings | environment: dev | blade, cortex, patch, slab |  |
+| homeDarwin | environment: dev | blade, cortex, patch, slab |  |
+| homeManagerModules | environment: dev | blade, cortex, patch, slab |  |
+| homebrew-cask | environment: dev | blade, cortex, patch |  |
+| replicateHome | environment: dev | blade, cortex, patch, slab |  |
+| stylix-hm | environment: dev | blade, cortex, patch |  |
+| gpu-claims | environment: dev | cortex |  |
+| microvm-guests | environment: dev | cortex |  |
+| droid | environment: dev | slab |  |
+| media-scratch-exports | environment: prod | axon-01 |  |
+| service-domains | environment: prod | uplink |  |
+| syncthing-peers | environment: prod | uplink |  |
+
+## Policies
+
+| Policy | Fires at |
+| -------- | ---------- |
+| flake-to-systems | flake |
+| to-fleet | flake |
+| apps-to-flake | flake-system |
+| checks-to-flake | flake-system |
+| devShells-to-flake | flake-system |
+| legacyPackages-to-flake | flake-system |
+| packages-to-flake | flake-system |
+| system-to-flake-parts | flake-system |
+| devshell-to-flake-parts | flake-parts |
+| fleet-to-envs | fleet |
+| env-to-hosts | environment |
+| collect-bgp-peers | host |
+| collect-container-registries | host |
+| collect-host-addrs | host |
+| collect-k3s-nodes | host |
+| collect-ollama-endpoints | host |
+| collect-prometheus-targets | host |
+| collect-thunderbolt-mesh-peers | host |
+| collect-vault-peers | host |
+| env-users | host |
+| host-modules-capture | host |
+| host-to-hm-users | host |
+| os-to-host | host |
+| broadcast-syncthing-hub-shares | user |
+| broadcast-syncthing-peers | user |
+| broadcast-syncthing-peers-to-hub | user |
+| expose-resolved-users | user |
+| hm-user-detect | user |
+| homeAarch64-to-hm | user |
+| homeDarwin-to-hm | user |
+| host-aspects-project | user |
+| primary-user-for-owner | user |
+| user-to-host | user |
+| drop-user-to-host-on-droid | host |
+| host-to-droidHm-users | host |
+| droidHm-user-detect | user |
+| homeLinux-to-hm | user |
+| user-aspect-auto-include | user |
+| env-to-clusters | environment |
+| cluster-aspect | cluster |
+| cluster-collect-container-registries | cluster |
+| cluster-collect-k3s-nodes | cluster |
+| cluster-collect-media-scratch-exports | cluster |
+| cluster-to-nixidy | cluster |
+| broadcast-hub-peer | host |

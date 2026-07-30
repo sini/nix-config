@@ -7,212 +7,1195 @@
 graph LR
   bitstream([bitstream]):::root
 
+  subgraph ctx_user_sini["user: sini"]
+  _policy_droidHm_user_detect__0_["<policy:droidHm-user-detect>[0]"]:::_policy_droidHm_user_detect__0__c
+  _policy_hm_user_detect__0__user_sini["<policy:hm-user-detect>[0]"]:::_policy_hm_user_detect__0__user_sini_c
+  _policy_user_aspect_auto_include__3_["<policy:user-aspect-auto-include>[3]"]:::_policy_user_aspect_auto_include__3__c
+  agenix_identity__sini_axon_01{{"agenix-identity/sini@axon-01"}}:::agenix_identity__sini_axon_01_c
+  agenix_identity__sini_axon_02{{"agenix-identity/sini@axon-02"}}:::agenix_identity__sini_axon_02_c
+  agenix_identity__sini_axon_03{{"agenix-identity/sini@axon-03"}}:::agenix_identity__sini_axon_03_c
+  agenix_identity__sini_bitstream{{"agenix-identity/sini@bitstream"}}:::agenix_identity__sini_bitstream_c
+  agenix_identity__sini_blade{{"agenix-identity/sini@blade"}}:::agenix_identity__sini_blade_c
+  agenix_identity__sini_cortex{{"agenix-identity/sini@cortex"}}:::agenix_identity__sini_cortex_c
+  agenix_identity__sini_patch{{"agenix-identity/sini@patch"}}:::agenix_identity__sini_patch_c
+  agenix_identity__sini_slab{{"agenix-identity/sini@slab"}}:::agenix_identity__sini_slab_c
+  agenix_identity__sini_uplink{{"agenix-identity/sini@uplink"}}:::agenix_identity__sini_uplink_c
+  broadcast_syncthing_hub_shares_user_sini["broadcast-syncthing-hub-shares"]:::broadcast_syncthing_hub_shares_user_sini_c
+  broadcast_syncthing_peers_user_sini["broadcast-syncthing-peers"]:::broadcast_syncthing_peers_user_sini_c
+  broadcast_syncthing_peers_to_hub_user_sini["broadcast-syncthing-peers-to-hub"]:::broadcast_syncthing_peers_to_hub_user_sini_c
+  default_user_sini["default"]:::default_user_sini_c
+  droidHm_user_detect["droidHm-user-detect"]:::droidHm_user_detect_c
+  drop_user_to_host_on_droid["drop-user-to-host-on-droid"]:::drop_user_to_host_on_droid_c
+  expose_resolved_users_user_sini["expose-resolved-users"]:::expose_resolved_users_user_sini_c
+  hm_user_detect_user_sini["hm-user-detect"]:::hm_user_detect_user_sini_c
+  homeAarch64_to_hm["homeAarch64-to-hm"]:::homeAarch64_to_hm_c
+  homeDarwin_to_hm["homeDarwin-to-hm"]:::homeDarwin_to_hm_c
+  homeLinux_to_hm_user_sini["homeLinux-to-hm"]:::homeLinux_to_hm_user_sini_c
+  den__batteries__host_aspects[/"batteries/host-aspects"\]:::den__batteries__host_aspects_c
+  host_aspects_project["host-aspects-project"]:::host_aspects_project_c
+  opkssh_authz__sini_axon_01{{"opkssh-authz/sini@axon-01"}}:::opkssh_authz__sini_axon_01_c
+  opkssh_authz__sini_axon_02{{"opkssh-authz/sini@axon-02"}}:::opkssh_authz__sini_axon_02_c
+  opkssh_authz__sini_axon_03{{"opkssh-authz/sini@axon-03"}}:::opkssh_authz__sini_axon_03_c
+  opkssh_authz__sini_bitstream{{"opkssh-authz/sini@bitstream"}}:::opkssh_authz__sini_bitstream_c
+  opkssh_authz__sini_blade{{"opkssh-authz/sini@blade"}}:::opkssh_authz__sini_blade_c
+  opkssh_authz__sini_cortex{{"opkssh-authz/sini@cortex"}}:::opkssh_authz__sini_cortex_c
+  opkssh_authz__sini_patch{{"opkssh-authz/sini@patch"}}:::opkssh_authz__sini_patch_c
+  opkssh_authz__sini_slab{{"opkssh-authz/sini@slab"}}:::opkssh_authz__sini_slab_c
+  opkssh_authz__sini_uplink{{"opkssh-authz/sini@uplink"}}:::opkssh_authz__sini_uplink_c
+  os_to_host_user_sini["os-to-host"]:::os_to_host_user_sini_c
+  core__network__syncthing__peer_user_sini[/"core/network/syncthing/peer"\]:::core__network__syncthing__peer_user_sini_c
+  den__batteries__primary_user_sini_axon_01_{{"batteries/primary-user(sini@axon-01)"}}:::den__batteries__primary_user_sini_axon_01__c
+  den__batteries__primary_user_sini_axon_02_{{"batteries/primary-user(sini@axon-02)"}}:::den__batteries__primary_user_sini_axon_02__c
+  den__batteries__primary_user_sini_axon_03_{{"batteries/primary-user(sini@axon-03)"}}:::den__batteries__primary_user_sini_axon_03__c
+  den__batteries__primary_user_sini_bitstream_{{"batteries/primary-user(sini@bitstream)"}}:::den__batteries__primary_user_sini_bitstream__c
+  den__batteries__primary_user_sini_blade_{{"batteries/primary-user(sini@blade)"}}:::den__batteries__primary_user_sini_blade__c
+  den__batteries__primary_user_sini_cortex_{{"batteries/primary-user(sini@cortex)"}}:::den__batteries__primary_user_sini_cortex__c
+  den__batteries__primary_user_sini_patch_{{"batteries/primary-user(sini@patch)"}}:::den__batteries__primary_user_sini_patch__c
+  den__batteries__primary_user_sini_slab_{{"batteries/primary-user(sini@slab)"}}:::den__batteries__primary_user_sini_slab__c
+  den__batteries__primary_user_sini_uplink_{{"batteries/primary-user(sini@uplink)"}}:::den__batteries__primary_user_sini_uplink__c
+  primary_user_for_owner["primary-user-for-owner"]:::primary_user_for_owner_c
+  core__users__resolved_user_emitter_user_sini[/"core/users/resolved-user-emitter"\]:::core__users__resolved_user_emitter_user_sini_c
+  sini{{"sini"}}:::sini_c
+  applications__media__spotify_player[/"media/spotify-player"\]:::applications__media__spotify_player_c
+  user_user_sini["user"]:::user_user_sini_c
+  user_aspect_auto_include["user-aspect-auto-include"]:::user_aspect_auto_include_c
+  user_enrich__sini_axon_01{{"user-enrich/sini@axon-01"}}:::user_enrich__sini_axon_01_c
+  user_enrich__sini_axon_02{{"user-enrich/sini@axon-02"}}:::user_enrich__sini_axon_02_c
+  user_enrich__sini_axon_03{{"user-enrich/sini@axon-03"}}:::user_enrich__sini_axon_03_c
+  user_enrich__sini_bitstream{{"user-enrich/sini@bitstream"}}:::user_enrich__sini_bitstream_c
+  user_enrich__sini_blade{{"user-enrich/sini@blade"}}:::user_enrich__sini_blade_c
+  user_enrich__sini_cortex{{"user-enrich/sini@cortex"}}:::user_enrich__sini_cortex_c
+  user_enrich__sini_patch{{"user-enrich/sini@patch"}}:::user_enrich__sini_patch_c
+  user_enrich__sini_slab{{"user-enrich/sini@slab"}}:::user_enrich__sini_slab_c
+  user_enrich__sini_uplink{{"user-enrich/sini@uplink"}}:::user_enrich__sini_uplink_c
+  user_to_host_user_sini["user-to-host"]:::user_to_host_user_sini_c
+  user__resolve_user__user_sini["user/resolve(user)"]:::user__resolve_user__user_sini_c
+  _policy_user_aspect_auto_include__3_ --> applications__media__spotify_player
+  sini --> den__batteries__host_aspects
+  user_user_sini --> _policy_droidHm_user_detect__0_
+  user_user_sini --> _policy_hm_user_detect__0__user_sini
+  user_user_sini --> _policy_user_aspect_auto_include__3_
+  user_user_sini --> agenix_identity__sini_axon_01
+  user_user_sini --> agenix_identity__sini_axon_02
+  user_user_sini --> agenix_identity__sini_axon_03
+  user_user_sini --> agenix_identity__sini_bitstream
+  user_user_sini --> agenix_identity__sini_blade
+  user_user_sini --> agenix_identity__sini_cortex
+  user_user_sini --> agenix_identity__sini_patch
+  user_user_sini --> agenix_identity__sini_slab
+  user_user_sini --> agenix_identity__sini_uplink
+  user_user_sini --> default_user_sini
+  user_user_sini --> opkssh_authz__sini_axon_01
+  user_user_sini --> opkssh_authz__sini_axon_02
+  user_user_sini --> opkssh_authz__sini_axon_03
+  user_user_sini --> opkssh_authz__sini_bitstream
+  user_user_sini --> opkssh_authz__sini_blade
+  user_user_sini --> opkssh_authz__sini_cortex
+  user_user_sini --> opkssh_authz__sini_patch
+  user_user_sini --> opkssh_authz__sini_slab
+  user_user_sini --> opkssh_authz__sini_uplink
+  user_user_sini --> core__network__syncthing__peer_user_sini
+  user_user_sini --> den__batteries__primary_user_sini_axon_01_
+  user_user_sini --> den__batteries__primary_user_sini_axon_02_
+  user_user_sini --> den__batteries__primary_user_sini_axon_03_
+  user_user_sini --> den__batteries__primary_user_sini_bitstream_
+  user_user_sini --> den__batteries__primary_user_sini_blade_
+  user_user_sini --> den__batteries__primary_user_sini_cortex_
+  user_user_sini --> den__batteries__primary_user_sini_patch_
+  user_user_sini --> den__batteries__primary_user_sini_slab_
+  user_user_sini --> den__batteries__primary_user_sini_uplink_
+  user_user_sini --> core__users__resolved_user_emitter_user_sini
+  user_user_sini --> sini
+  user_user_sini --> user_enrich__sini_axon_01
+  user_user_sini --> user_enrich__sini_axon_02
+  user_user_sini --> user_enrich__sini_axon_03
+  user_user_sini --> user_enrich__sini_bitstream
+  user_user_sini --> user_enrich__sini_blade
+  user_user_sini --> user_enrich__sini_cortex
+  user_user_sini --> user_enrich__sini_patch
+  user_user_sini --> user_enrich__sini_slab
+  user_user_sini --> user_enrich__sini_uplink
+  user_user_sini --> user__resolve_user__user_sini
+  end
+  subgraph ctx_user_dvicory["user: dvicory"]
+  _policy_hm_user_detect__0__user_dvicory["<policy:hm-user-detect>[0]"]:::_policy_hm_user_detect__0__user_dvicory_c
+  secrets__agenix_user_dvicory[/"secrets/agenix"\]:::secrets__agenix_user_dvicory_c
+  agenix_identity__dvicory_axon_01{{"agenix-identity/dvicory@axon-01"}}:::agenix_identity__dvicory_axon_01_c
+  agenix_identity__dvicory_axon_02{{"agenix-identity/dvicory@axon-02"}}:::agenix_identity__dvicory_axon_02_c
+  agenix_identity__dvicory_axon_03{{"agenix-identity/dvicory@axon-03"}}:::agenix_identity__dvicory_axon_03_c
+  agenix_identity__dvicory_bitstream{{"agenix-identity/dvicory@bitstream"}}:::agenix_identity__dvicory_bitstream_c
+  agenix_identity__dvicory_uplink{{"agenix-identity/dvicory@uplink"}}:::agenix_identity__dvicory_uplink_c
+  core__systemd__boot_user_dvicory[/"core/systemd/boot"\]:::core__systemd__boot_user_dvicory_c
+  broadcast_syncthing_hub_shares_user_dvicory["broadcast-syncthing-hub-shares"]:::broadcast_syncthing_hub_shares_user_dvicory_c
+  broadcast_syncthing_peers_user_dvicory["broadcast-syncthing-peers"]:::broadcast_syncthing_peers_user_dvicory_c
+  broadcast_syncthing_peers_to_hub_user_dvicory["broadcast-syncthing-peers-to-hub"]:::broadcast_syncthing_peers_to_hub_user_dvicory_c
+  core__impermanence__btrfs_user_dvicory[/"core/impermanence/btrfs"\]:::core__impermanence__btrfs_user_dvicory_c
+  roles__default_user_dvicory[/"roles/default"\]:::roles__default_user_dvicory_c
+  default_user_dvicory["default"]:::default_user_dvicory_c
+  core__users__deterministic_uids_user_dvicory[/"core/users/deterministic-uids"\]:::core__users__deterministic_uids_user_dvicory_c
+  core__perf__disable_docs_user_dvicory[/"core/perf/disable-docs"\]:::core__perf__disable_docs_user_dvicory_c
+  dvicory{{"dvicory"}}:::dvicory_c
+  expose_resolved_users_user_dvicory["expose-resolved-users"]:::expose_resolved_users_user_dvicory_c
+  core__system__facter_user_dvicory[/"core/system/facter"\]:::core__system__facter_user_dvicory_c
+  core__system__firmware_user_dvicory[/"core/system/firmware"\]:::core__system__firmware_user_dvicory_c
+  hm_user_detect_user_dvicory["hm-user-detect"]:::hm_user_detect_user_dvicory_c
+  core__users__home_manager_shared_user_dvicory[/"core/users/home-manager-shared"\]:::core__users__home_manager_shared_user_dvicory_c
+  homeLinux_to_hm_user_dvicory["homeLinux-to-hm"]:::homeLinux_to_hm_user_dvicory_c
+  core__network__hostsfile_user_dvicory[/"core/network/hostsfile"\]:::core__network__hostsfile_user_dvicory_c
+  core__localization__i18n_user_dvicory[/"core/localization/i18n"\]:::core__localization__i18n_user_dvicory_c
+  core__impermanence_user_dvicory[/"core/impermanence"\]:::core__impermanence_user_dvicory_c
+  core__system__linux_kernel_user_dvicory[/"core/system/linux-kernel"\]:::core__system__linux_kernel_user_dvicory_c
+  core__network__syncthing__member_user_dvicory[/"core/network/syncthing/member"\]:::core__network__syncthing__member_user_dvicory_c
+  core__network__networking_user_dvicory[/"core/network/networking"\]:::core__network__networking_user_dvicory_c
+  core__nix_user_dvicory[/"core/nix"\]:::core__nix_user_dvicory_c
+  core__nix__nixpkgs_user_dvicory[/"core/nix/nixpkgs"\]:::core__nix__nixpkgs_user_dvicory_c
+  core__security__openssh_user_dvicory[/"core/security/openssh"\]:::core__security__openssh_user_dvicory_c
+  core__security__opkssh_user_dvicory[/"core/security/opkssh"\]:::core__security__opkssh_user_dvicory_c
+  opkssh_authz__dvicory_axon_01{{"opkssh-authz/dvicory@axon-01"}}:::opkssh_authz__dvicory_axon_01_c
+  opkssh_authz__dvicory_axon_02{{"opkssh-authz/dvicory@axon-02"}}:::opkssh_authz__dvicory_axon_02_c
+  opkssh_authz__dvicory_axon_03{{"opkssh-authz/dvicory@axon-03"}}:::opkssh_authz__dvicory_axon_03_c
+  opkssh_authz__dvicory_bitstream{{"opkssh-authz/dvicory@bitstream"}}:::opkssh_authz__dvicory_bitstream_c
+  opkssh_authz__dvicory_uplink{{"opkssh-authz/dvicory@uplink"}}:::opkssh_authz__dvicory_uplink_c
+  os_to_host_user_dvicory["os-to-host"]:::os_to_host_user_dvicory_c
+  core__network__syncthing__peer_user_dvicory[/"core/network/syncthing/peer"\]:::core__network__syncthing__peer_user_dvicory_c
+  core__impermanence__persist_collector_user_dvicory[/"core/impermanence/persist-collector"\]:::core__impermanence__persist_collector_user_dvicory_c
+  core__impermanence__persist_home_collector_user_dvicory[/"core/impermanence/persist-home-collector"\]:::core__impermanence__persist_home_collector_user_dvicory_c
+  core__users__resolved_user_emitter_user_dvicory[/"core/users/resolved-user-emitter"\]:::core__users__resolved_user_emitter_user_dvicory_c
+  core__security_user_dvicory[/"core/security"\]:::core__security_user_dvicory_c
+  core__users__shell_user_dvicory[/"core/users/shell"\]:::core__users__shell_user_dvicory_c
+  core__perf__ssd_user_dvicory[/"core/perf/ssd"\]:::core__perf__ssd_user_dvicory_c
+  core__nix__stateVersion_user_dvicory[/"core/nix/stateVersion"\]:::core__nix__stateVersion_user_dvicory_c
+  core__security__sudo_user_dvicory[/"core/security/sudo"\]:::core__security__sudo_user_dvicory_c
+  core__systemd_user_dvicory[/"core/systemd"\]:::core__systemd_user_dvicory_c
+  core__network__tailscale_user_dvicory[/"core/network/tailscale"\]:::core__network__tailscale_user_dvicory_c
+  core__localization__time_user_dvicory[/"core/localization/time"\]:::core__localization__time_user_dvicory_c
+  user_user_dvicory["user"]:::user_user_dvicory_c
+  user_enrich__dvicory_axon_01{{"user-enrich/dvicory@axon-01"}}:::user_enrich__dvicory_axon_01_c
+  user_enrich__dvicory_axon_02{{"user-enrich/dvicory@axon-02"}}:::user_enrich__dvicory_axon_02_c
+  user_enrich__dvicory_axon_03{{"user-enrich/dvicory@axon-03"}}:::user_enrich__dvicory_axon_03_c
+  user_enrich__dvicory_bitstream{{"user-enrich/dvicory@bitstream"}}:::user_enrich__dvicory_bitstream_c
+  user_enrich__dvicory_uplink{{"user-enrich/dvicory@uplink"}}:::user_enrich__dvicory_uplink_c
+  user_to_host_user_dvicory["user-to-host"]:::user_to_host_user_dvicory_c
+  user__resolve_user__user_dvicory["user/resolve(user)"]:::user__resolve_user__user_dvicory_c
+  core__users_user_dvicory[/"core/users"\]:::core__users_user_dvicory_c
+  core__utils_user_dvicory[/"core/utils"\]:::core__utils_user_dvicory_c
+  core__impermanence__zfs_user_dvicory[/"core/impermanence/zfs"\]:::core__impermanence__zfs_user_dvicory_c
+  core__perf__zram_swap_user_dvicory[/"core/perf/zram-swap"\]:::core__perf__zram_swap_user_dvicory_c
+  applications__shell__zsh_user_dvicory[/"applications/shell/zsh"\]:::applications__shell__zsh_user_dvicory_c
+  core__impermanence_user_dvicory --> core__impermanence__btrfs_user_dvicory
+  core__impermanence_user_dvicory --> core__impermanence__persist_collector_user_dvicory
+  core__impermanence_user_dvicory --> core__impermanence__persist_home_collector_user_dvicory
+  core__impermanence_user_dvicory --> core__impermanence__zfs_user_dvicory
+  dvicory --> roles__default_user_dvicory
+  roles__default_user_dvicory --> secrets__agenix_user_dvicory
+  roles__default_user_dvicory --> core__systemd__boot_user_dvicory
+  roles__default_user_dvicory --> core__users__deterministic_uids_user_dvicory
+  roles__default_user_dvicory --> core__perf__disable_docs_user_dvicory
+  roles__default_user_dvicory --> core__system__facter_user_dvicory
+  roles__default_user_dvicory --> core__system__firmware_user_dvicory
+  roles__default_user_dvicory --> core__users__home_manager_shared_user_dvicory
+  roles__default_user_dvicory --> core__network__hostsfile_user_dvicory
+  roles__default_user_dvicory --> core__localization__i18n_user_dvicory
+  roles__default_user_dvicory --> core__impermanence_user_dvicory
+  roles__default_user_dvicory --> core__system__linux_kernel_user_dvicory
+  roles__default_user_dvicory --> core__network__syncthing__member_user_dvicory
+  roles__default_user_dvicory --> core__network__networking_user_dvicory
+  roles__default_user_dvicory --> core__nix_user_dvicory
+  roles__default_user_dvicory --> core__nix__nixpkgs_user_dvicory
+  roles__default_user_dvicory --> core__security__openssh_user_dvicory
+  roles__default_user_dvicory --> core__security__opkssh_user_dvicory
+  roles__default_user_dvicory --> core__security_user_dvicory
+  roles__default_user_dvicory --> core__users__shell_user_dvicory
+  roles__default_user_dvicory --> core__perf__ssd_user_dvicory
+  roles__default_user_dvicory --> core__nix__stateVersion_user_dvicory
+  roles__default_user_dvicory --> core__security__sudo_user_dvicory
+  roles__default_user_dvicory --> core__systemd_user_dvicory
+  roles__default_user_dvicory --> core__network__tailscale_user_dvicory
+  roles__default_user_dvicory --> core__localization__time_user_dvicory
+  roles__default_user_dvicory --> core__users_user_dvicory
+  roles__default_user_dvicory --> core__utils_user_dvicory
+  roles__default_user_dvicory --> core__perf__zram_swap_user_dvicory
+  roles__default_user_dvicory --> applications__shell__zsh_user_dvicory
+  user_user_dvicory --> _policy_hm_user_detect__0__user_dvicory
+  user_user_dvicory --> agenix_identity__dvicory_axon_01
+  user_user_dvicory --> agenix_identity__dvicory_axon_02
+  user_user_dvicory --> agenix_identity__dvicory_axon_03
+  user_user_dvicory --> agenix_identity__dvicory_bitstream
+  user_user_dvicory --> agenix_identity__dvicory_uplink
+  user_user_dvicory --> default_user_dvicory
+  user_user_dvicory --> dvicory
+  user_user_dvicory --> opkssh_authz__dvicory_axon_01
+  user_user_dvicory --> opkssh_authz__dvicory_axon_02
+  user_user_dvicory --> opkssh_authz__dvicory_axon_03
+  user_user_dvicory --> opkssh_authz__dvicory_bitstream
+  user_user_dvicory --> opkssh_authz__dvicory_uplink
+  user_user_dvicory --> core__network__syncthing__peer_user_dvicory
+  user_user_dvicory --> core__users__resolved_user_emitter_user_dvicory
+  user_user_dvicory --> user_enrich__dvicory_axon_01
+  user_user_dvicory --> user_enrich__dvicory_axon_02
+  user_user_dvicory --> user_enrich__dvicory_axon_03
+  user_user_dvicory --> user_enrich__dvicory_bitstream
+  user_user_dvicory --> user_enrich__dvicory_uplink
+  user_user_dvicory --> user__resolve_user__user_dvicory
+  end
+  subgraph ctx_user_pol["user: pol"]
+  _policy_hm_user_detect__0__user_pol["<policy:hm-user-detect>[0]"]:::_policy_hm_user_detect__0__user_pol_c
+  secrets__agenix_user_pol[/"secrets/agenix"\]:::secrets__agenix_user_pol_c
+  agenix_identity__pol_axon_01{{"agenix-identity/pol@axon-01"}}:::agenix_identity__pol_axon_01_c
+  agenix_identity__pol_axon_02{{"agenix-identity/pol@axon-02"}}:::agenix_identity__pol_axon_02_c
+  agenix_identity__pol_axon_03{{"agenix-identity/pol@axon-03"}}:::agenix_identity__pol_axon_03_c
+  agenix_identity__pol_bitstream{{"agenix-identity/pol@bitstream"}}:::agenix_identity__pol_bitstream_c
+  agenix_identity__pol_uplink{{"agenix-identity/pol@uplink"}}:::agenix_identity__pol_uplink_c
+  core__systemd__boot_user_pol[/"core/systemd/boot"\]:::core__systemd__boot_user_pol_c
+  broadcast_syncthing_hub_shares_user_pol["broadcast-syncthing-hub-shares"]:::broadcast_syncthing_hub_shares_user_pol_c
+  broadcast_syncthing_peers_user_pol["broadcast-syncthing-peers"]:::broadcast_syncthing_peers_user_pol_c
+  broadcast_syncthing_peers_to_hub_user_pol["broadcast-syncthing-peers-to-hub"]:::broadcast_syncthing_peers_to_hub_user_pol_c
+  core__impermanence__btrfs_user_pol[/"core/impermanence/btrfs"\]:::core__impermanence__btrfs_user_pol_c
+  roles__default_user_pol[/"roles/default"\]:::roles__default_user_pol_c
+  default_user_pol["default"]:::default_user_pol_c
+  core__users__deterministic_uids_user_pol[/"core/users/deterministic-uids"\]:::core__users__deterministic_uids_user_pol_c
+  core__perf__disable_docs_user_pol[/"core/perf/disable-docs"\]:::core__perf__disable_docs_user_pol_c
+  expose_resolved_users_user_pol["expose-resolved-users"]:::expose_resolved_users_user_pol_c
+  core__system__facter_user_pol[/"core/system/facter"\]:::core__system__facter_user_pol_c
+  core__system__firmware_user_pol[/"core/system/firmware"\]:::core__system__firmware_user_pol_c
+  hm_user_detect_user_pol["hm-user-detect"]:::hm_user_detect_user_pol_c
+  core__users__home_manager_shared_user_pol[/"core/users/home-manager-shared"\]:::core__users__home_manager_shared_user_pol_c
+  homeLinux_to_hm_user_pol["homeLinux-to-hm"]:::homeLinux_to_hm_user_pol_c
+  core__network__hostsfile_user_pol[/"core/network/hostsfile"\]:::core__network__hostsfile_user_pol_c
+  core__localization__i18n_user_pol[/"core/localization/i18n"\]:::core__localization__i18n_user_pol_c
+  core__impermanence_user_pol[/"core/impermanence"\]:::core__impermanence_user_pol_c
+  core__system__linux_kernel_user_pol[/"core/system/linux-kernel"\]:::core__system__linux_kernel_user_pol_c
+  core__network__syncthing__member_user_pol[/"core/network/syncthing/member"\]:::core__network__syncthing__member_user_pol_c
+  core__network__networking_user_pol[/"core/network/networking"\]:::core__network__networking_user_pol_c
+  core__nix_user_pol[/"core/nix"\]:::core__nix_user_pol_c
+  core__nix__nixpkgs_user_pol[/"core/nix/nixpkgs"\]:::core__nix__nixpkgs_user_pol_c
+  core__security__openssh_user_pol[/"core/security/openssh"\]:::core__security__openssh_user_pol_c
+  core__security__opkssh_user_pol[/"core/security/opkssh"\]:::core__security__opkssh_user_pol_c
+  opkssh_authz__pol_axon_01{{"opkssh-authz/pol@axon-01"}}:::opkssh_authz__pol_axon_01_c
+  opkssh_authz__pol_axon_02{{"opkssh-authz/pol@axon-02"}}:::opkssh_authz__pol_axon_02_c
+  opkssh_authz__pol_axon_03{{"opkssh-authz/pol@axon-03"}}:::opkssh_authz__pol_axon_03_c
+  opkssh_authz__pol_bitstream{{"opkssh-authz/pol@bitstream"}}:::opkssh_authz__pol_bitstream_c
+  opkssh_authz__pol_uplink{{"opkssh-authz/pol@uplink"}}:::opkssh_authz__pol_uplink_c
+  os_to_host_user_pol["os-to-host"]:::os_to_host_user_pol_c
+  core__network__syncthing__peer_user_pol[/"core/network/syncthing/peer"\]:::core__network__syncthing__peer_user_pol_c
+  core__impermanence__persist_collector_user_pol[/"core/impermanence/persist-collector"\]:::core__impermanence__persist_collector_user_pol_c
+  core__impermanence__persist_home_collector_user_pol[/"core/impermanence/persist-home-collector"\]:::core__impermanence__persist_home_collector_user_pol_c
+  pol{{"pol"}}:::pol_c
+  core__users__resolved_user_emitter_user_pol[/"core/users/resolved-user-emitter"\]:::core__users__resolved_user_emitter_user_pol_c
+  core__security_user_pol[/"core/security"\]:::core__security_user_pol_c
+  core__users__shell_user_pol[/"core/users/shell"\]:::core__users__shell_user_pol_c
+  core__perf__ssd_user_pol[/"core/perf/ssd"\]:::core__perf__ssd_user_pol_c
+  core__nix__stateVersion_user_pol[/"core/nix/stateVersion"\]:::core__nix__stateVersion_user_pol_c
+  core__security__sudo_user_pol[/"core/security/sudo"\]:::core__security__sudo_user_pol_c
+  core__systemd_user_pol[/"core/systemd"\]:::core__systemd_user_pol_c
+  core__network__tailscale_user_pol[/"core/network/tailscale"\]:::core__network__tailscale_user_pol_c
+  core__localization__time_user_pol[/"core/localization/time"\]:::core__localization__time_user_pol_c
+  user_user_pol["user"]:::user_user_pol_c
+  user_enrich__pol_axon_01{{"user-enrich/pol@axon-01"}}:::user_enrich__pol_axon_01_c
+  user_enrich__pol_axon_02{{"user-enrich/pol@axon-02"}}:::user_enrich__pol_axon_02_c
+  user_enrich__pol_axon_03{{"user-enrich/pol@axon-03"}}:::user_enrich__pol_axon_03_c
+  user_enrich__pol_bitstream{{"user-enrich/pol@bitstream"}}:::user_enrich__pol_bitstream_c
+  user_enrich__pol_uplink{{"user-enrich/pol@uplink"}}:::user_enrich__pol_uplink_c
+  user_to_host_user_pol["user-to-host"]:::user_to_host_user_pol_c
+  user__resolve_user__user_pol["user/resolve(user)"]:::user__resolve_user__user_pol_c
+  core__users_user_pol[/"core/users"\]:::core__users_user_pol_c
+  core__utils_user_pol[/"core/utils"\]:::core__utils_user_pol_c
+  core__impermanence__zfs_user_pol[/"core/impermanence/zfs"\]:::core__impermanence__zfs_user_pol_c
+  core__perf__zram_swap_user_pol[/"core/perf/zram-swap"\]:::core__perf__zram_swap_user_pol_c
+  applications__shell__zsh_user_pol[/"applications/shell/zsh"\]:::applications__shell__zsh_user_pol_c
+  core__impermanence_user_pol --> core__impermanence__btrfs_user_pol
+  core__impermanence_user_pol --> core__impermanence__persist_collector_user_pol
+  core__impermanence_user_pol --> core__impermanence__persist_home_collector_user_pol
+  core__impermanence_user_pol --> core__impermanence__zfs_user_pol
+  pol --> roles__default_user_pol
+  roles__default_user_pol --> secrets__agenix_user_pol
+  roles__default_user_pol --> core__systemd__boot_user_pol
+  roles__default_user_pol --> core__users__deterministic_uids_user_pol
+  roles__default_user_pol --> core__perf__disable_docs_user_pol
+  roles__default_user_pol --> core__system__facter_user_pol
+  roles__default_user_pol --> core__system__firmware_user_pol
+  roles__default_user_pol --> core__users__home_manager_shared_user_pol
+  roles__default_user_pol --> core__network__hostsfile_user_pol
+  roles__default_user_pol --> core__localization__i18n_user_pol
+  roles__default_user_pol --> core__impermanence_user_pol
+  roles__default_user_pol --> core__system__linux_kernel_user_pol
+  roles__default_user_pol --> core__network__syncthing__member_user_pol
+  roles__default_user_pol --> core__network__networking_user_pol
+  roles__default_user_pol --> core__nix_user_pol
+  roles__default_user_pol --> core__nix__nixpkgs_user_pol
+  roles__default_user_pol --> core__security__openssh_user_pol
+  roles__default_user_pol --> core__security__opkssh_user_pol
+  roles__default_user_pol --> core__security_user_pol
+  roles__default_user_pol --> core__users__shell_user_pol
+  roles__default_user_pol --> core__perf__ssd_user_pol
+  roles__default_user_pol --> core__nix__stateVersion_user_pol
+  roles__default_user_pol --> core__security__sudo_user_pol
+  roles__default_user_pol --> core__systemd_user_pol
+  roles__default_user_pol --> core__network__tailscale_user_pol
+  roles__default_user_pol --> core__localization__time_user_pol
+  roles__default_user_pol --> core__users_user_pol
+  roles__default_user_pol --> core__utils_user_pol
+  roles__default_user_pol --> core__perf__zram_swap_user_pol
+  roles__default_user_pol --> applications__shell__zsh_user_pol
+  user_user_pol --> _policy_hm_user_detect__0__user_pol
+  user_user_pol --> agenix_identity__pol_axon_01
+  user_user_pol --> agenix_identity__pol_axon_02
+  user_user_pol --> agenix_identity__pol_axon_03
+  user_user_pol --> agenix_identity__pol_bitstream
+  user_user_pol --> agenix_identity__pol_uplink
+  user_user_pol --> default_user_pol
+  user_user_pol --> opkssh_authz__pol_axon_01
+  user_user_pol --> opkssh_authz__pol_axon_02
+  user_user_pol --> opkssh_authz__pol_axon_03
+  user_user_pol --> opkssh_authz__pol_bitstream
+  user_user_pol --> opkssh_authz__pol_uplink
+  user_user_pol --> core__network__syncthing__peer_user_pol
+  user_user_pol --> pol
+  user_user_pol --> core__users__resolved_user_emitter_user_pol
+  user_user_pol --> user_enrich__pol_axon_01
+  user_user_pol --> user_enrich__pol_axon_02
+  user_user_pol --> user_enrich__pol_axon_03
+  user_user_pol --> user_enrich__pol_bitstream
+  user_user_pol --> user_enrich__pol_uplink
+  user_user_pol --> user__resolve_user__user_pol
+  end
+  subgraph ctx_user_theutz["user: theutz"]
+  _policy_hm_user_detect__0__user_theutz["<policy:hm-user-detect>[0]"]:::_policy_hm_user_detect__0__user_theutz_c
+  secrets__agenix_user_theutz[/"secrets/agenix"\]:::secrets__agenix_user_theutz_c
+  agenix_identity__theutz_axon_01{{"agenix-identity/theutz@axon-01"}}:::agenix_identity__theutz_axon_01_c
+  agenix_identity__theutz_axon_02{{"agenix-identity/theutz@axon-02"}}:::agenix_identity__theutz_axon_02_c
+  agenix_identity__theutz_axon_03{{"agenix-identity/theutz@axon-03"}}:::agenix_identity__theutz_axon_03_c
+  agenix_identity__theutz_bitstream{{"agenix-identity/theutz@bitstream"}}:::agenix_identity__theutz_bitstream_c
+  agenix_identity__theutz_uplink{{"agenix-identity/theutz@uplink"}}:::agenix_identity__theutz_uplink_c
+  core__systemd__boot_user_theutz[/"core/systemd/boot"\]:::core__systemd__boot_user_theutz_c
+  broadcast_syncthing_hub_shares_user_theutz["broadcast-syncthing-hub-shares"]:::broadcast_syncthing_hub_shares_user_theutz_c
+  broadcast_syncthing_peers_user_theutz["broadcast-syncthing-peers"]:::broadcast_syncthing_peers_user_theutz_c
+  broadcast_syncthing_peers_to_hub_user_theutz["broadcast-syncthing-peers-to-hub"]:::broadcast_syncthing_peers_to_hub_user_theutz_c
+  core__impermanence__btrfs_user_theutz[/"core/impermanence/btrfs"\]:::core__impermanence__btrfs_user_theutz_c
+  roles__default_user_theutz[/"roles/default"\]:::roles__default_user_theutz_c
+  default_user_theutz["default"]:::default_user_theutz_c
+  core__users__deterministic_uids_user_theutz[/"core/users/deterministic-uids"\]:::core__users__deterministic_uids_user_theutz_c
+  core__perf__disable_docs_user_theutz[/"core/perf/disable-docs"\]:::core__perf__disable_docs_user_theutz_c
+  expose_resolved_users_user_theutz["expose-resolved-users"]:::expose_resolved_users_user_theutz_c
+  core__system__facter_user_theutz[/"core/system/facter"\]:::core__system__facter_user_theutz_c
+  core__system__firmware_user_theutz[/"core/system/firmware"\]:::core__system__firmware_user_theutz_c
+  hm_user_detect_user_theutz["hm-user-detect"]:::hm_user_detect_user_theutz_c
+  core__users__home_manager_shared_user_theutz[/"core/users/home-manager-shared"\]:::core__users__home_manager_shared_user_theutz_c
+  homeLinux_to_hm_user_theutz["homeLinux-to-hm"]:::homeLinux_to_hm_user_theutz_c
+  core__network__hostsfile_user_theutz[/"core/network/hostsfile"\]:::core__network__hostsfile_user_theutz_c
+  core__localization__i18n_user_theutz[/"core/localization/i18n"\]:::core__localization__i18n_user_theutz_c
+  core__impermanence_user_theutz[/"core/impermanence"\]:::core__impermanence_user_theutz_c
+  core__system__linux_kernel_user_theutz[/"core/system/linux-kernel"\]:::core__system__linux_kernel_user_theutz_c
+  core__network__syncthing__member_user_theutz[/"core/network/syncthing/member"\]:::core__network__syncthing__member_user_theutz_c
+  core__network__networking_user_theutz[/"core/network/networking"\]:::core__network__networking_user_theutz_c
+  core__nix_user_theutz[/"core/nix"\]:::core__nix_user_theutz_c
+  core__nix__nixpkgs_user_theutz[/"core/nix/nixpkgs"\]:::core__nix__nixpkgs_user_theutz_c
+  core__security__openssh_user_theutz[/"core/security/openssh"\]:::core__security__openssh_user_theutz_c
+  core__security__opkssh_user_theutz[/"core/security/opkssh"\]:::core__security__opkssh_user_theutz_c
+  opkssh_authz__theutz_axon_01{{"opkssh-authz/theutz@axon-01"}}:::opkssh_authz__theutz_axon_01_c
+  opkssh_authz__theutz_axon_02{{"opkssh-authz/theutz@axon-02"}}:::opkssh_authz__theutz_axon_02_c
+  opkssh_authz__theutz_axon_03{{"opkssh-authz/theutz@axon-03"}}:::opkssh_authz__theutz_axon_03_c
+  opkssh_authz__theutz_bitstream{{"opkssh-authz/theutz@bitstream"}}:::opkssh_authz__theutz_bitstream_c
+  opkssh_authz__theutz_uplink{{"opkssh-authz/theutz@uplink"}}:::opkssh_authz__theutz_uplink_c
+  os_to_host_user_theutz["os-to-host"]:::os_to_host_user_theutz_c
+  core__network__syncthing__peer_user_theutz[/"core/network/syncthing/peer"\]:::core__network__syncthing__peer_user_theutz_c
+  core__impermanence__persist_collector_user_theutz[/"core/impermanence/persist-collector"\]:::core__impermanence__persist_collector_user_theutz_c
+  core__impermanence__persist_home_collector_user_theutz[/"core/impermanence/persist-home-collector"\]:::core__impermanence__persist_home_collector_user_theutz_c
+  core__users__resolved_user_emitter_user_theutz[/"core/users/resolved-user-emitter"\]:::core__users__resolved_user_emitter_user_theutz_c
+  core__security_user_theutz[/"core/security"\]:::core__security_user_theutz_c
+  core__users__shell_user_theutz[/"core/users/shell"\]:::core__users__shell_user_theutz_c
+  core__perf__ssd_user_theutz[/"core/perf/ssd"\]:::core__perf__ssd_user_theutz_c
+  core__nix__stateVersion_user_theutz[/"core/nix/stateVersion"\]:::core__nix__stateVersion_user_theutz_c
+  core__security__sudo_user_theutz[/"core/security/sudo"\]:::core__security__sudo_user_theutz_c
+  core__systemd_user_theutz[/"core/systemd"\]:::core__systemd_user_theutz_c
+  core__network__tailscale_user_theutz[/"core/network/tailscale"\]:::core__network__tailscale_user_theutz_c
+  theutz{{"theutz"}}:::theutz_c
+  core__localization__time_user_theutz[/"core/localization/time"\]:::core__localization__time_user_theutz_c
+  user_user_theutz["user"]:::user_user_theutz_c
+  user_enrich__theutz_axon_01{{"user-enrich/theutz@axon-01"}}:::user_enrich__theutz_axon_01_c
+  user_enrich__theutz_axon_02{{"user-enrich/theutz@axon-02"}}:::user_enrich__theutz_axon_02_c
+  user_enrich__theutz_axon_03{{"user-enrich/theutz@axon-03"}}:::user_enrich__theutz_axon_03_c
+  user_enrich__theutz_bitstream{{"user-enrich/theutz@bitstream"}}:::user_enrich__theutz_bitstream_c
+  user_enrich__theutz_uplink{{"user-enrich/theutz@uplink"}}:::user_enrich__theutz_uplink_c
+  user_to_host_user_theutz["user-to-host"]:::user_to_host_user_theutz_c
+  user__resolve_user__user_theutz["user/resolve(user)"]:::user__resolve_user__user_theutz_c
+  core__users_user_theutz[/"core/users"\]:::core__users_user_theutz_c
+  core__utils_user_theutz[/"core/utils"\]:::core__utils_user_theutz_c
+  core__impermanence__zfs_user_theutz[/"core/impermanence/zfs"\]:::core__impermanence__zfs_user_theutz_c
+  core__perf__zram_swap_user_theutz[/"core/perf/zram-swap"\]:::core__perf__zram_swap_user_theutz_c
+  applications__shell__zsh_user_theutz[/"applications/shell/zsh"\]:::applications__shell__zsh_user_theutz_c
+  core__impermanence_user_theutz --> core__impermanence__btrfs_user_theutz
+  core__impermanence_user_theutz --> core__impermanence__persist_collector_user_theutz
+  core__impermanence_user_theutz --> core__impermanence__persist_home_collector_user_theutz
+  core__impermanence_user_theutz --> core__impermanence__zfs_user_theutz
+  roles__default_user_theutz --> secrets__agenix_user_theutz
+  roles__default_user_theutz --> core__systemd__boot_user_theutz
+  roles__default_user_theutz --> core__users__deterministic_uids_user_theutz
+  roles__default_user_theutz --> core__perf__disable_docs_user_theutz
+  roles__default_user_theutz --> core__system__facter_user_theutz
+  roles__default_user_theutz --> core__system__firmware_user_theutz
+  roles__default_user_theutz --> core__users__home_manager_shared_user_theutz
+  roles__default_user_theutz --> core__network__hostsfile_user_theutz
+  roles__default_user_theutz --> core__localization__i18n_user_theutz
+  roles__default_user_theutz --> core__impermanence_user_theutz
+  roles__default_user_theutz --> core__system__linux_kernel_user_theutz
+  roles__default_user_theutz --> core__network__syncthing__member_user_theutz
+  roles__default_user_theutz --> core__network__networking_user_theutz
+  roles__default_user_theutz --> core__nix_user_theutz
+  roles__default_user_theutz --> core__nix__nixpkgs_user_theutz
+  roles__default_user_theutz --> core__security__openssh_user_theutz
+  roles__default_user_theutz --> core__security__opkssh_user_theutz
+  roles__default_user_theutz --> core__security_user_theutz
+  roles__default_user_theutz --> core__users__shell_user_theutz
+  roles__default_user_theutz --> core__perf__ssd_user_theutz
+  roles__default_user_theutz --> core__nix__stateVersion_user_theutz
+  roles__default_user_theutz --> core__security__sudo_user_theutz
+  roles__default_user_theutz --> core__systemd_user_theutz
+  roles__default_user_theutz --> core__network__tailscale_user_theutz
+  roles__default_user_theutz --> core__localization__time_user_theutz
+  roles__default_user_theutz --> core__users_user_theutz
+  roles__default_user_theutz --> core__utils_user_theutz
+  roles__default_user_theutz --> core__perf__zram_swap_user_theutz
+  roles__default_user_theutz --> applications__shell__zsh_user_theutz
+  theutz --> roles__default_user_theutz
+  user_user_theutz --> _policy_hm_user_detect__0__user_theutz
+  user_user_theutz --> agenix_identity__theutz_axon_01
+  user_user_theutz --> agenix_identity__theutz_axon_02
+  user_user_theutz --> agenix_identity__theutz_axon_03
+  user_user_theutz --> agenix_identity__theutz_bitstream
+  user_user_theutz --> agenix_identity__theutz_uplink
+  user_user_theutz --> default_user_theutz
+  user_user_theutz --> opkssh_authz__theutz_axon_01
+  user_user_theutz --> opkssh_authz__theutz_axon_02
+  user_user_theutz --> opkssh_authz__theutz_axon_03
+  user_user_theutz --> opkssh_authz__theutz_bitstream
+  user_user_theutz --> opkssh_authz__theutz_uplink
+  user_user_theutz --> core__network__syncthing__peer_user_theutz
+  user_user_theutz --> core__users__resolved_user_emitter_user_theutz
+  user_user_theutz --> theutz
+  user_user_theutz --> user_enrich__theutz_axon_01
+  user_user_theutz --> user_enrich__theutz_axon_02
+  user_user_theutz --> user_enrich__theutz_axon_03
+  user_user_theutz --> user_enrich__theutz_bitstream
+  user_user_theutz --> user_enrich__theutz_uplink
+  user_user_theutz --> user__resolve_user__user_theutz
+  end
+  subgraph ctx_user_vic["user: vic"]
+  _policy_hm_user_detect__0__user_vic["<policy:hm-user-detect>[0]"]:::_policy_hm_user_detect__0__user_vic_c
+  secrets__agenix_user_vic[/"secrets/agenix"\]:::secrets__agenix_user_vic_c
+  agenix_identity__vic_axon_01{{"agenix-identity/vic@axon-01"}}:::agenix_identity__vic_axon_01_c
+  agenix_identity__vic_axon_02{{"agenix-identity/vic@axon-02"}}:::agenix_identity__vic_axon_02_c
+  agenix_identity__vic_axon_03{{"agenix-identity/vic@axon-03"}}:::agenix_identity__vic_axon_03_c
+  agenix_identity__vic_bitstream{{"agenix-identity/vic@bitstream"}}:::agenix_identity__vic_bitstream_c
+  agenix_identity__vic_blade{{"agenix-identity/vic@blade"}}:::agenix_identity__vic_blade_c
+  agenix_identity__vic_cortex{{"agenix-identity/vic@cortex"}}:::agenix_identity__vic_cortex_c
+  agenix_identity__vic_uplink{{"agenix-identity/vic@uplink"}}:::agenix_identity__vic_uplink_c
+  core__systemd__boot_user_vic[/"core/systemd/boot"\]:::core__systemd__boot_user_vic_c
+  broadcast_syncthing_hub_shares_user_vic["broadcast-syncthing-hub-shares"]:::broadcast_syncthing_hub_shares_user_vic_c
+  broadcast_syncthing_peers_user_vic["broadcast-syncthing-peers"]:::broadcast_syncthing_peers_user_vic_c
+  broadcast_syncthing_peers_to_hub_user_vic["broadcast-syncthing-peers-to-hub"]:::broadcast_syncthing_peers_to_hub_user_vic_c
+  core__impermanence__btrfs_user_vic[/"core/impermanence/btrfs"\]:::core__impermanence__btrfs_user_vic_c
+  roles__default_user_vic[/"roles/default"\]:::roles__default_user_vic_c
+  default_user_vic["default"]:::default_user_vic_c
+  core__users__deterministic_uids_user_vic[/"core/users/deterministic-uids"\]:::core__users__deterministic_uids_user_vic_c
+  core__perf__disable_docs_user_vic[/"core/perf/disable-docs"\]:::core__perf__disable_docs_user_vic_c
+  expose_resolved_users_user_vic["expose-resolved-users"]:::expose_resolved_users_user_vic_c
+  core__system__facter_user_vic[/"core/system/facter"\]:::core__system__facter_user_vic_c
+  core__system__firmware_user_vic[/"core/system/firmware"\]:::core__system__firmware_user_vic_c
+  hm_user_detect_user_vic["hm-user-detect"]:::hm_user_detect_user_vic_c
+  core__users__home_manager_shared_user_vic[/"core/users/home-manager-shared"\]:::core__users__home_manager_shared_user_vic_c
+  homeLinux_to_hm_user_vic["homeLinux-to-hm"]:::homeLinux_to_hm_user_vic_c
+  core__network__hostsfile_user_vic[/"core/network/hostsfile"\]:::core__network__hostsfile_user_vic_c
+  core__localization__i18n_user_vic[/"core/localization/i18n"\]:::core__localization__i18n_user_vic_c
+  core__impermanence_user_vic[/"core/impermanence"\]:::core__impermanence_user_vic_c
+  core__system__linux_kernel_user_vic[/"core/system/linux-kernel"\]:::core__system__linux_kernel_user_vic_c
+  core__network__syncthing__member_user_vic[/"core/network/syncthing/member"\]:::core__network__syncthing__member_user_vic_c
+  core__network__networking_user_vic[/"core/network/networking"\]:::core__network__networking_user_vic_c
+  core__nix_user_vic[/"core/nix"\]:::core__nix_user_vic_c
+  core__nix__nixpkgs_user_vic[/"core/nix/nixpkgs"\]:::core__nix__nixpkgs_user_vic_c
+  core__security__openssh_user_vic[/"core/security/openssh"\]:::core__security__openssh_user_vic_c
+  core__security__opkssh_user_vic[/"core/security/opkssh"\]:::core__security__opkssh_user_vic_c
+  opkssh_authz__vic_axon_01{{"opkssh-authz/vic@axon-01"}}:::opkssh_authz__vic_axon_01_c
+  opkssh_authz__vic_axon_02{{"opkssh-authz/vic@axon-02"}}:::opkssh_authz__vic_axon_02_c
+  opkssh_authz__vic_axon_03{{"opkssh-authz/vic@axon-03"}}:::opkssh_authz__vic_axon_03_c
+  opkssh_authz__vic_bitstream{{"opkssh-authz/vic@bitstream"}}:::opkssh_authz__vic_bitstream_c
+  opkssh_authz__vic_blade{{"opkssh-authz/vic@blade"}}:::opkssh_authz__vic_blade_c
+  opkssh_authz__vic_cortex{{"opkssh-authz/vic@cortex"}}:::opkssh_authz__vic_cortex_c
+  opkssh_authz__vic_uplink{{"opkssh-authz/vic@uplink"}}:::opkssh_authz__vic_uplink_c
+  os_to_host_user_vic["os-to-host"]:::os_to_host_user_vic_c
+  core__network__syncthing__peer_user_vic[/"core/network/syncthing/peer"\]:::core__network__syncthing__peer_user_vic_c
+  core__impermanence__persist_collector_user_vic[/"core/impermanence/persist-collector"\]:::core__impermanence__persist_collector_user_vic_c
+  core__impermanence__persist_home_collector_user_vic[/"core/impermanence/persist-home-collector"\]:::core__impermanence__persist_home_collector_user_vic_c
+  core__users__resolved_user_emitter_user_vic[/"core/users/resolved-user-emitter"\]:::core__users__resolved_user_emitter_user_vic_c
+  core__security_user_vic[/"core/security"\]:::core__security_user_vic_c
+  core__users__shell_user_vic[/"core/users/shell"\]:::core__users__shell_user_vic_c
+  core__perf__ssd_user_vic[/"core/perf/ssd"\]:::core__perf__ssd_user_vic_c
+  core__nix__stateVersion_user_vic[/"core/nix/stateVersion"\]:::core__nix__stateVersion_user_vic_c
+  core__security__sudo_user_vic[/"core/security/sudo"\]:::core__security__sudo_user_vic_c
+  core__systemd_user_vic[/"core/systemd"\]:::core__systemd_user_vic_c
+  core__network__tailscale_user_vic[/"core/network/tailscale"\]:::core__network__tailscale_user_vic_c
+  core__localization__time_user_vic[/"core/localization/time"\]:::core__localization__time_user_vic_c
+  user_user_vic["user"]:::user_user_vic_c
+  user_enrich__vic_axon_01{{"user-enrich/vic@axon-01"}}:::user_enrich__vic_axon_01_c
+  user_enrich__vic_axon_02{{"user-enrich/vic@axon-02"}}:::user_enrich__vic_axon_02_c
+  user_enrich__vic_axon_03{{"user-enrich/vic@axon-03"}}:::user_enrich__vic_axon_03_c
+  user_enrich__vic_bitstream{{"user-enrich/vic@bitstream"}}:::user_enrich__vic_bitstream_c
+  user_enrich__vic_blade{{"user-enrich/vic@blade"}}:::user_enrich__vic_blade_c
+  user_enrich__vic_cortex{{"user-enrich/vic@cortex"}}:::user_enrich__vic_cortex_c
+  user_enrich__vic_uplink{{"user-enrich/vic@uplink"}}:::user_enrich__vic_uplink_c
+  user_to_host_user_vic["user-to-host"]:::user_to_host_user_vic_c
+  user__resolve_user__user_vic["user/resolve(user)"]:::user__resolve_user__user_vic_c
+  core__users_user_vic[/"core/users"\]:::core__users_user_vic_c
+  core__utils_user_vic[/"core/utils"\]:::core__utils_user_vic_c
+  vic{{"vic"}}:::vic_c
+  core__impermanence__zfs_user_vic[/"core/impermanence/zfs"\]:::core__impermanence__zfs_user_vic_c
+  core__perf__zram_swap_user_vic[/"core/perf/zram-swap"\]:::core__perf__zram_swap_user_vic_c
+  applications__shell__zsh_user_vic[/"applications/shell/zsh"\]:::applications__shell__zsh_user_vic_c
+  core__impermanence_user_vic --> core__impermanence__btrfs_user_vic
+  core__impermanence_user_vic --> core__impermanence__persist_collector_user_vic
+  core__impermanence_user_vic --> core__impermanence__persist_home_collector_user_vic
+  core__impermanence_user_vic --> core__impermanence__zfs_user_vic
+  roles__default_user_vic --> secrets__agenix_user_vic
+  roles__default_user_vic --> core__systemd__boot_user_vic
+  roles__default_user_vic --> core__users__deterministic_uids_user_vic
+  roles__default_user_vic --> core__perf__disable_docs_user_vic
+  roles__default_user_vic --> core__system__facter_user_vic
+  roles__default_user_vic --> core__system__firmware_user_vic
+  roles__default_user_vic --> core__users__home_manager_shared_user_vic
+  roles__default_user_vic --> core__network__hostsfile_user_vic
+  roles__default_user_vic --> core__localization__i18n_user_vic
+  roles__default_user_vic --> core__impermanence_user_vic
+  roles__default_user_vic --> core__system__linux_kernel_user_vic
+  roles__default_user_vic --> core__network__syncthing__member_user_vic
+  roles__default_user_vic --> core__network__networking_user_vic
+  roles__default_user_vic --> core__nix_user_vic
+  roles__default_user_vic --> core__nix__nixpkgs_user_vic
+  roles__default_user_vic --> core__security__openssh_user_vic
+  roles__default_user_vic --> core__security__opkssh_user_vic
+  roles__default_user_vic --> core__security_user_vic
+  roles__default_user_vic --> core__users__shell_user_vic
+  roles__default_user_vic --> core__perf__ssd_user_vic
+  roles__default_user_vic --> core__nix__stateVersion_user_vic
+  roles__default_user_vic --> core__security__sudo_user_vic
+  roles__default_user_vic --> core__systemd_user_vic
+  roles__default_user_vic --> core__network__tailscale_user_vic
+  roles__default_user_vic --> core__localization__time_user_vic
+  roles__default_user_vic --> core__users_user_vic
+  roles__default_user_vic --> core__utils_user_vic
+  roles__default_user_vic --> core__perf__zram_swap_user_vic
+  roles__default_user_vic --> applications__shell__zsh_user_vic
+  user_user_vic --> _policy_hm_user_detect__0__user_vic
+  user_user_vic --> agenix_identity__vic_axon_01
+  user_user_vic --> agenix_identity__vic_axon_02
+  user_user_vic --> agenix_identity__vic_axon_03
+  user_user_vic --> agenix_identity__vic_bitstream
+  user_user_vic --> agenix_identity__vic_blade
+  user_user_vic --> agenix_identity__vic_cortex
+  user_user_vic --> agenix_identity__vic_uplink
+  user_user_vic --> default_user_vic
+  user_user_vic --> opkssh_authz__vic_axon_01
+  user_user_vic --> opkssh_authz__vic_axon_02
+  user_user_vic --> opkssh_authz__vic_axon_03
+  user_user_vic --> opkssh_authz__vic_bitstream
+  user_user_vic --> opkssh_authz__vic_blade
+  user_user_vic --> opkssh_authz__vic_cortex
+  user_user_vic --> opkssh_authz__vic_uplink
+  user_user_vic --> core__network__syncthing__peer_user_vic
+  user_user_vic --> core__users__resolved_user_emitter_user_vic
+  user_user_vic --> user_enrich__vic_axon_01
+  user_user_vic --> user_enrich__vic_axon_02
+  user_user_vic --> user_enrich__vic_axon_03
+  user_user_vic --> user_enrich__vic_bitstream
+  user_user_vic --> user_enrich__vic_blade
+  user_user_vic --> user_enrich__vic_cortex
+  user_user_vic --> user_enrich__vic_uplink
+  user_user_vic --> user__resolve_user__user_vic
+  user_user_vic --> vic
+  vic --> roles__default_user_vic
+  end
   subgraph ctx_host_bitstream["host: bitstream"]
-  services__acme[/"services/acme"\]:::services__acme_c
-  secrets__agenix[/"secrets/agenix"\]:::secrets__agenix_c
+  services__security__acme[/"security/acme"\]:::services__security__acme_c
+  secrets__agenix_host_bitstream[/"secrets/agenix"\]:::secrets__agenix_host_bitstream_c
+  agenix__bitstream{{"agenix/bitstream"}}:::agenix__bitstream_c
+  hardware__cpu__amd[/"cpu/amd"\]:::hardware__cpu__amd_c
+  hardware__gpu__amd[/"gpu/amd"\]:::hardware__gpu__amd_c
+  core__systemd__boot_host_bitstream[/"core/systemd/boot"\]:::core__systemd__boot_host_bitstream_c
+  core__impermanence__btrfs_host_bitstream[/"core/impermanence/btrfs"\]:::core__impermanence__btrfs_host_bitstream_c
   collect_bgp_peers["collect-bgp-peers"]:::collect_bgp_peers_c
+  collect_container_registries["collect-container-registries"]:::collect_container_registries_c
   collect_host_addrs["collect-host-addrs"]:::collect_host_addrs_c
   collect_k3s_nodes["collect-k3s-nodes"]:::collect_k3s_nodes_c
   collect_ollama_endpoints["collect-ollama-endpoints"]:::collect_ollama_endpoints_c
   collect_prometheus_targets["collect-prometheus-targets"]:::collect_prometheus_targets_c
   collect_thunderbolt_mesh_peers["collect-thunderbolt-mesh-peers"]:::collect_thunderbolt_mesh_peers_c
   collect_vault_peers["collect-vault-peers"]:::collect_vault_peers_c
-  hardware__cpu_amd[/"hardware/cpu-amd"\]:::hardware__cpu_amd_c
-  core__default[/"core/default"\]:::core__default_c
-  n_default["default"]:::n_default_c
+  core__secrets__collector[/"secrets/collector"\]:::core__secrets__collector_c
+  roles__default_host_bitstream[/"roles/default"\]:::roles__default_host_bitstream_c
+  default_host_bitstream["default"]:::default_host_bitstream_c
   den__batteries__define_user[/"batteries/define-user"\]:::den__batteries__define_user_c
-  core__deterministic_uids[/"core/deterministic-uids"\]:::core__deterministic_uids_c
-  core__facter[/"core/facter"\]:::core__facter_c
-  core__firewall_collector[/"core/firewall-collector"\]:::core__firewall_collector_c
-  core__firmware[/"core/firmware"\]:::core__firmware_c
-  hardware__gpu_amd[/"hardware/gpu-amd"\]:::hardware__gpu_amd_c
-  core__home_manager[/"core/home-manager"\]:::core__home_manager_c
+  den__batteries__define_user__dvicory_bitstream{{"batteries/define-user/dvicory@bitstream"}}:::den__batteries__define_user__dvicory_bitstream_c
+  den__batteries__define_user__pol_bitstream{{"batteries/define-user/pol@bitstream"}}:::den__batteries__define_user__pol_bitstream_c
+  den__batteries__define_user__sini_bitstream{{"batteries/define-user/sini@bitstream"}}:::den__batteries__define_user__sini_bitstream_c
+  den__batteries__define_user__theutz_bitstream{{"batteries/define-user/theutz@bitstream"}}:::den__batteries__define_user__theutz_bitstream_c
+  den__batteries__define_user__vic_bitstream{{"batteries/define-user/vic@bitstream"}}:::den__batteries__define_user__vic_bitstream_c
+  core__users__deterministic_uids_host_bitstream[/"core/users/deterministic-uids"\]:::core__users__deterministic_uids_host_bitstream_c
+  core__perf__disable_docs_host_bitstream[/"core/perf/disable-docs"\]:::core__perf__disable_docs_host_bitstream_c
+  env_users["env-users"]:::env_users_c
+  core__system__facter_host_bitstream[/"core/system/facter"\]:::core__system__facter_host_bitstream_c
+  core__network__firewall_collector[/"network/firewall-collector"\]:::core__network__firewall_collector_c
+  core__system__firmware_host_bitstream[/"core/system/firmware"\]:::core__system__firmware_host_bitstream_c
+  core__users__home_manager_shared_host_bitstream[/"core/users/home-manager-shared"\]:::core__users__home_manager_shared_host_bitstream_c
   host["host"]:::host_c
-  den__batteries__host__resolve_define_user__den__batteries[/"batteries/host/resolve(define-user):den/batteries"\]:::den__batteries__host__resolve_define_user__den__batteries_c
+  host_modules_capture["host-modules-capture"]:::host_modules_capture_c
   host__resolve_host_["host/resolve(host)"]:::host__resolve_host__c
-  host__resolve_insecure_predicate_["host/resolve(insecure-predicate)"]:::host__resolve_insecure_predicate__c
-  host__resolve_unfree_predicate_["host/resolve(unfree-predicate)"]:::host__resolve_unfree_predicate__c
+  host__resolve_user_["host/resolve(user)"]:::host__resolve_user__c
   den__batteries__hostname[/"batteries/hostname"\]:::den__batteries__hostname_c
   den__batteries__hostname__os{{"batteries/hostname/os"}}:::den__batteries__hostname__os_c
-  network__hosts[/"network/hosts"\]:::network__hosts_c
-  core__i18n[/"core/i18n"\]:::core__i18n_c
-  disk__impermanence[/"disk/impermanence"\]:::disk__impermanence_c
+  core__network__hostsfile_host_bitstream[/"core/network/hostsfile"\]:::core__network__hostsfile_host_bitstream_c
+  core__localization__i18n_host_bitstream[/"core/localization/i18n"\]:::core__localization__i18n_host_bitstream_c
+  core__impermanence_host_bitstream[/"core/impermanence"\]:::core__impermanence_host_bitstream_c
+  den__batteries__inputs_[/"batteries/inputs'"\]:::den__batteries__inputs__c
+  den__batteries__inputs___os{{"batteries/inputs'/os"}}:::den__batteries__inputs___os_c
+  den__batteries__inputs___user{{"batteries/inputs'/user"}}:::den__batteries__inputs___user_c
   insecure_predicate["insecure-predicate"]:::insecure_predicate_c
   insecure_predicate__os{{"insecure-predicate/os"}}:::insecure_predicate__os_c
-  core__linux_kernel[/"core/linux-kernel"\]:::core__linux_kernel_c
-  core__lix[/"core/lix"\]:::core__lix_c
-  services__media_data_share[/"services/media-data-share"\]:::services__media_data_share_c
-  network__network_boot[/"network/network-boot"\]:::network__network_boot_c
-  network__networking[/"network/networking"\]:::network__networking_c
-  core__nix[/"core/nix"\]:::core__nix_c
+  insecure_predicate__user{{"insecure-predicate/user"}}:::insecure_predicate__user_c
+  core__system__linux_kernel_host_bitstream[/"core/system/linux-kernel"\]:::core__system__linux_kernel_host_bitstream_c
+  services__storage__media_data_share[/"storage/media-data-share"\]:::services__storage__media_data_share_c
+  core__boot__network_initrd[/"boot/network-initrd"\]:::core__boot__network_initrd_c
+  core__network__networking_host_bitstream[/"core/network/networking"\]:::core__network__networking_host_bitstream_c
+  core__nix_host_bitstream[/"core/nix"\]:::core__nix_host_bitstream_c
   roles__nix_builder[/"roles/nix-builder"\]:::roles__nix_builder_c
-  core__nix_remote_build_client[/"core/nix-remote-build-client"\]:::core__nix_remote_build_client_c
-  services__nix_remote_build_server[/"services/nix-remote-build-server"\]:::services__nix_remote_build_server_c
-  core__nixpkgs[/"core/nixpkgs"\]:::core__nixpkgs_c
-  network__openssh[/"network/openssh"\]:::network__openssh_c
-  os_to_host["os-to-host"]:::os_to_host_c
-  core__persist_collector[/"core/persist-collector"\]:::core__persist_collector_c
-  core__persist_home_collector[/"core/persist-home-collector"\]:::core__persist_home_collector_c
-  den__batteries__primary_user[/"batteries/primary-user"\]:::den__batteries__primary_user_c
-  services__prometheus_exporter[/"services/prometheus-exporter"\]:::services__prometheus_exporter_c
+  core__nix__nixpkgs_host_bitstream[/"core/nix/nixpkgs"\]:::core__nix__nixpkgs_host_bitstream_c
+  core__security__openssh_host_bitstream[/"core/security/openssh"\]:::core__security__openssh_host_bitstream_c
+  core__security__opkssh_host_bitstream[/"core/security/opkssh"\]:::core__security__opkssh_host_bitstream_c
+  os_to_host_host_bitstream["os-to-host"]:::os_to_host_host_bitstream_c
+  core__impermanence__persist_collector_host_bitstream[/"core/impermanence/persist-collector"\]:::core__impermanence__persist_collector_host_bitstream_c
+  core__impermanence__persist_home_collector_host_bitstream[/"core/impermanence/persist-home-collector"\]:::core__impermanence__persist_home_collector_host_bitstream_c
+  services__monitoring__prometheus_exporter[/"monitoring/prometheus-exporter"\]:::services__monitoring__prometheus_exporter_c
+  services__nix__remote_build_server[/"nix/remote-build-server"\]:::services__nix__remote_build_server_c
   disk__zfs_disk_single__root[/"zfs-disk-single/root"\]:::disk__zfs_disk_single__root_c
-  core__secrets_collector[/"core/secrets-collector"\]:::core__secrets_collector_c
-  core__security[/"core/security"\]:::core__security_c
+  core__security_host_bitstream[/"core/security"\]:::core__security_host_bitstream_c
+  den__batteries__self_[/"batteries/self'"\]:::den__batteries__self__c
+  den__batteries__self___os{{"batteries/self'/os"}}:::den__batteries__self___os_c
+  den__batteries__self___user{{"batteries/self'/user"}}:::den__batteries__self___user_c
   roles__server[/"roles/server"\]:::roles__server_c
-  core__shell[/"core/shell"\]:::core__shell_c
-  core__ssd[/"core/ssd"\]:::core__ssd_c
-  core__stateVersion[/"core/stateVersion"\]:::core__stateVersion_c
-  core__sudo[/"core/sudo"\]:::core__sudo_c
-  core__systemd[/"core/systemd"\]:::core__systemd_c
-  core__systemd_boot[/"core/systemd-boot"\]:::core__systemd_boot_c
-  services__tailscale[/"services/tailscale"\]:::services__tailscale_c
-  services__tang[/"services/tang"\]:::services__tang_c
-  core__time[/"core/time"\]:::core__time_c
+  core__users__shell_host_bitstream[/"core/users/shell"\]:::core__users__shell_host_bitstream_c
+  core__perf__ssd_host_bitstream[/"core/perf/ssd"\]:::core__perf__ssd_host_bitstream_c
+  core__nix__stateVersion_host_bitstream[/"core/nix/stateVersion"\]:::core__nix__stateVersion_host_bitstream_c
+  core__security__sudo_host_bitstream[/"core/security/sudo"\]:::core__security__sudo_host_bitstream_c
+  core__systemd_host_bitstream[/"core/systemd"\]:::core__systemd_host_bitstream_c
+  core__network__tailscale_host_bitstream[/"core/network/tailscale"\]:::core__network__tailscale_host_bitstream_c
+  services__security__tang[/"security/tang"\]:::services__security__tang_c
+  core__localization__time_host_bitstream[/"core/localization/time"\]:::core__localization__time_host_bitstream_c
   unfree_predicate["unfree-predicate"]:::unfree_predicate_c
   unfree_predicate__os{{"unfree-predicate/os"}}:::unfree_predicate__os_c
-  core__users[/"core/users"\]:::core__users_c
-  core__utils[/"core/utils"\]:::core__utils_c
+  unfree_predicate__user{{"unfree-predicate/user"}}:::unfree_predicate__user_c
+  core__users_host_bitstream[/"core/users"\]:::core__users_host_bitstream_c
+  core__utils_host_bitstream[/"core/utils"\]:::core__utils_host_bitstream_c
+  core__impermanence__zfs_host_bitstream[/"core/impermanence/zfs"\]:::core__impermanence__zfs_host_bitstream_c
   disk__zfs_diff[/"disk/zfs-diff"\]:::disk__zfs_diff_c
   disk__zfs_disk_single[/"disk/zfs-disk-single"\]:::disk__zfs_disk_single_c
-  apps__zsh[/"apps/zsh"\]:::apps__zsh_c
-  bitstream --> secrets__agenix
-  bitstream --> hardware__cpu_amd
-  bitstream --> core__default
-  bitstream --> hardware__gpu_amd
-  bitstream --> disk__impermanence
-  bitstream --> network__network_boot
+  core__perf__zram_swap_host_bitstream[/"core/perf/zram-swap"\]:::core__perf__zram_swap_host_bitstream_c
+  applications__shell__zsh_host_bitstream[/"applications/shell/zsh"\]:::applications__shell__zsh_host_bitstream_c
+  bitstream --> hardware__cpu__amd
+  bitstream --> hardware__gpu__amd
+  bitstream --> roles__default_host_bitstream
   bitstream --> roles__nix_builder
   bitstream --> roles__server
   bitstream --> disk__zfs_disk_single
-  core__default --> core__deterministic_uids
-  core__default --> core__facter
-  core__default --> core__firmware
-  core__default --> core__home_manager
-  core__default --> network__hosts
-  core__default --> core__i18n
-  core__default --> core__linux_kernel
-  core__default --> core__lix
-  core__default --> network__networking
-  core__default --> core__nix
-  core__default --> core__nix_remote_build_client
-  core__default --> core__nixpkgs
-  core__default --> network__openssh
-  core__default --> core__security
-  core__default --> core__shell
-  core__default --> core__ssd
-  core__default --> core__stateVersion
-  core__default --> core__sudo
-  core__default --> core__systemd
-  core__default --> core__systemd_boot
-  core__default --> services__tailscale
-  core__default --> core__time
-  core__default --> core__users
-  core__default --> core__utils
-  core__default --> apps__zsh
-  n_default --> den__batteries__define_user
-  n_default --> den__batteries__hostname
-  n_default --> insecure_predicate
-  n_default --> den__batteries__primary_user
-  n_default --> unfree_predicate
-  den__batteries__define_user --> den__batteries__host__resolve_define_user__den__batteries
+  core__impermanence_host_bitstream --> core__impermanence__btrfs_host_bitstream
+  core__impermanence_host_bitstream --> core__impermanence__persist_collector_host_bitstream
+  core__impermanence_host_bitstream --> core__impermanence__persist_home_collector_host_bitstream
+  core__impermanence_host_bitstream --> core__impermanence__zfs_host_bitstream
+  default_host_bitstream --> den__batteries__define_user
+  default_host_bitstream --> den__batteries__hostname
+  default_host_bitstream --> den__batteries__inputs_
+  default_host_bitstream --> insecure_predicate
+  default_host_bitstream --> den__batteries__self_
+  default_host_bitstream --> unfree_predicate
+  den__batteries__define_user --> den__batteries__define_user__dvicory_bitstream
+  den__batteries__define_user --> den__batteries__define_user__pol_bitstream
+  den__batteries__define_user --> den__batteries__define_user__sini_bitstream
+  den__batteries__define_user --> den__batteries__define_user__theutz_bitstream
+  den__batteries__define_user --> den__batteries__define_user__vic_bitstream
   den__batteries__hostname --> den__batteries__hostname__os
-  disk__impermanence --> core__persist_collector
-  disk__impermanence --> core__persist_home_collector
+  den__batteries__inputs_ --> den__batteries__inputs___os
+  den__batteries__inputs_ --> den__batteries__inputs___user
+  den__batteries__inputs___user --> host__resolve_user_
+  den__batteries__self_ --> den__batteries__self___os
+  den__batteries__self_ --> den__batteries__self___user
+  den__batteries__self___user --> host__resolve_user_
   disk__zfs_disk_single --> disk__zfs_disk_single__root
   disk__zfs_disk_single__root --> disk__zfs_diff
+  host --> agenix__bitstream
   host --> bitstream
-  host --> n_default
-  host --> core__firewall_collector
+  host --> core__secrets__collector
+  host --> default_host_bitstream
+  host --> core__network__firewall_collector
   host --> host__resolve_host_
-  host --> core__secrets_collector
-  insecure_predicate --> host__resolve_insecure_predicate_
   insecure_predicate --> insecure_predicate__os
-  roles__nix_builder --> services__nix_remote_build_server
-  roles__server --> services__acme
-  roles__server --> services__media_data_share
-  roles__server --> services__prometheus_exporter
-  roles__server --> services__tang
-  unfree_predicate --> host__resolve_unfree_predicate_
+  insecure_predicate --> insecure_predicate__user
+  roles__default_host_bitstream --> secrets__agenix_host_bitstream
+  roles__default_host_bitstream --> core__systemd__boot_host_bitstream
+  roles__default_host_bitstream --> core__users__deterministic_uids_host_bitstream
+  roles__default_host_bitstream --> core__perf__disable_docs_host_bitstream
+  roles__default_host_bitstream --> core__system__facter_host_bitstream
+  roles__default_host_bitstream --> core__system__firmware_host_bitstream
+  roles__default_host_bitstream --> core__users__home_manager_shared_host_bitstream
+  roles__default_host_bitstream --> core__network__hostsfile_host_bitstream
+  roles__default_host_bitstream --> core__localization__i18n_host_bitstream
+  roles__default_host_bitstream --> core__impermanence_host_bitstream
+  roles__default_host_bitstream --> core__system__linux_kernel_host_bitstream
+  roles__default_host_bitstream --> core__network__networking_host_bitstream
+  roles__default_host_bitstream --> core__nix_host_bitstream
+  roles__default_host_bitstream --> core__nix__nixpkgs_host_bitstream
+  roles__default_host_bitstream --> core__security__openssh_host_bitstream
+  roles__default_host_bitstream --> core__security__opkssh_host_bitstream
+  roles__default_host_bitstream --> core__security_host_bitstream
+  roles__default_host_bitstream --> core__users__shell_host_bitstream
+  roles__default_host_bitstream --> core__perf__ssd_host_bitstream
+  roles__default_host_bitstream --> core__nix__stateVersion_host_bitstream
+  roles__default_host_bitstream --> core__security__sudo_host_bitstream
+  roles__default_host_bitstream --> core__systemd_host_bitstream
+  roles__default_host_bitstream --> core__network__tailscale_host_bitstream
+  roles__default_host_bitstream --> core__localization__time_host_bitstream
+  roles__default_host_bitstream --> core__users_host_bitstream
+  roles__default_host_bitstream --> core__utils_host_bitstream
+  roles__default_host_bitstream --> core__perf__zram_swap_host_bitstream
+  roles__default_host_bitstream --> applications__shell__zsh_host_bitstream
+  roles__nix_builder --> services__nix__remote_build_server
+  roles__server --> services__security__acme
+  roles__server --> services__storage__media_data_share
+  roles__server --> core__boot__network_initrd
+  roles__server --> services__monitoring__prometheus_exporter
+  roles__server --> services__security__tang
   unfree_predicate --> unfree_predicate__os
+  unfree_predicate --> unfree_predicate__user
   end
 
 
   classDef root fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,font-weight:bold
-  classDef services__acme_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef secrets__agenix_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef apps_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_droidHm_user_detect__0__c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_hm_user_detect__0__user_sini_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_hm_user_detect__0__user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_hm_user_detect__0__user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_hm_user_detect__0__user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_hm_user_detect__0__user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef _policy_user_aspect_auto_include__3__c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef services__security__acme_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef secrets__agenix_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef agenix_identity__dvicory_axon_01_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__dvicory_axon_02_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__dvicory_axon_03_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__dvicory_bitstream_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__dvicory_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__pol_axon_01_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__pol_axon_02_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__pol_axon_03_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__pol_bitstream_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__pol_uplink_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_axon_01_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_axon_02_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_axon_03_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_cortex_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__sini_patch_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef agenix_identity__sini_slab_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef agenix_identity__sini_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__theutz_axon_01_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__theutz_axon_02_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__theutz_axon_03_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__theutz_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__theutz_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_axon_02_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_axon_03_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_cortex_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix_identity__vic_uplink_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef agenix__bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
+  classDef hardware__cpu__amd_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef hardware__gpu__amd_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef applications_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd__boot_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef broadcast_syncthing_hub_shares_user_sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_hub_shares_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_hub_shares_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_hub_shares_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_hub_shares_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_user_sini_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_to_hub_user_sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_to_hub_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_to_hub_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_to_hub_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef broadcast_syncthing_peers_to_hub_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef core__impermanence__btrfs_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__btrfs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef collect_bgp_peers_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef collect_container_registries_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef collect_host_addrs_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef collect_k3s_nodes_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef collect_ollama_endpoints_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef collect_prometheus_targets_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef collect_thunderbolt_mesh_peers_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef collect_vault_peers_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef core__secrets__collector_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
   classDef core_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef hardware__cpu_amd_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__default_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef n_default_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef default_user_sini_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef default_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef default_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef default_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef default_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef roles__default_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef default_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef den__batteries__define_user_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__deterministic_uids_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef den__batteries__define_user__dvicory_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__define_user__pol_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__define_user__sini_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__define_user__theutz_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__define_user__vic_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef core__users__deterministic_uids_host_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__users__deterministic_uids_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__disable_docs_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__disable_docs_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__disable_docs_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__disable_docs_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__disable_docs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef disk_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__facter_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__firewall_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
-  classDef core__firmware_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef hardware__gpu_amd_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef droidHm_user_detect_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef drop_user_to_host_on_droid_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef env_users_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef expose_resolved_users_user_sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef expose_resolved_users_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef expose_resolved_users_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef expose_resolved_users_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef expose_resolved_users_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef core__system__facter_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__system__facter_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__system__facter_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__system__facter_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__system__facter_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__firewall_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
+  classDef core__system__firmware_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__system__firmware_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__system__firmware_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__system__firmware_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__system__firmware_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef hardware_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__home_manager_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef hm_user_detect_user_sini_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef hm_user_detect_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef hm_user_detect_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef hm_user_detect_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef hm_user_detect_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef core__users__home_manager_shared_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__home_manager_shared_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef homeAarch64_to_hm_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef homeDarwin_to_hm_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef homeLinux_to_hm_user_sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef homeLinux_to_hm_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef homeLinux_to_hm_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef homeLinux_to_hm_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef homeLinux_to_hm_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef host_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef den__batteries__host__resolve_define_user__den__batteries_c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef den__batteries__host_aspects_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef host_aspects_project_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef host_modules_capture_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
   classDef host__resolve_host__c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
-  classDef host__resolve_insecure_predicate__c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
-  classDef host__resolve_unfree_predicate__c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef host__resolve_user__c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
   classDef den__batteries__hostname_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef den__batteries__hostname__os_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
-  classDef network__hosts_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__i18n_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef disk__impermanence_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__hostsfile_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__network__hostsfile_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__hostsfile_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__hostsfile_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__hostsfile_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__i18n_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__i18n_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__i18n_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__i18n_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__i18n_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef den__batteries__inputs__c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef den__batteries__inputs___os_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__inputs___user_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef insecure_predicate_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef insecure_predicate__os_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:2px
-  classDef core__linux_kernel_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__lix_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef services__media_data_share_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef network_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef network__network_boot_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef network__networking_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__nix_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef insecure_predicate__user_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef core__system__linux_kernel_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__system__linux_kernel_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__system__linux_kernel_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__system__linux_kernel_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__system__linux_kernel_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef services__storage__media_data_share_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__network__syncthing__member_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__network__syncthing__member_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__network__syncthing__member_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__network__syncthing__member_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__boot__network_initrd_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__network__networking_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__network__networking_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__networking_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__networking_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__networking_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
   classDef roles__nix_builder_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__nix_remote_build_client_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef services__nix_remote_build_server_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__nixpkgs_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef network__openssh_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef os_to_host_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
-  classDef core__persist_collector_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__persist_home_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef den__batteries__primary_user_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef services__prometheus_exporter_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__nixpkgs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__openssh_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__opkssh_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef opkssh_authz__dvicory_axon_01_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__dvicory_axon_02_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__dvicory_axon_03_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__dvicory_bitstream_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__dvicory_uplink_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__pol_axon_01_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__pol_axon_02_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__pol_axon_03_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__pol_bitstream_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__pol_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_axon_01_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_axon_02_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_axon_03_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_bitstream_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_blade_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_cortex_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_patch_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_slab_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__sini_uplink_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__theutz_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__theutz_axon_02_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__theutz_axon_03_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__theutz_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__theutz_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_axon_02_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_axon_03_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_cortex_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef opkssh_authz__vic_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef os_to_host_user_sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef os_to_host_host_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef os_to_host_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef os_to_host_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef os_to_host_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef os_to_host_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef core__network__syncthing__peer_user_sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef core__network__syncthing__peer_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef core__network__syncthing__peer_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef core__network__syncthing__peer_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef core__network__syncthing__peer_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef core__impermanence__persist_collector_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_collector_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_host_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__persist_home_collector_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef den__batteries__primary_user_sini_axon_01__c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_axon_02__c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_axon_03__c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_bitstream__c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_blade__c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_cortex__c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_patch__c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_slab__c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__primary_user_sini_uplink__c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef primary_user_for_owner_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef services__monitoring__prometheus_exporter_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef services__nix__remote_build_server_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__users__resolved_user_emitter_user_sini_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef core__users__resolved_user_emitter_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef core__users__resolved_user_emitter_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef core__users__resolved_user_emitter_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef core__users__resolved_user_emitter_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef roles_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef disk__zfs_disk_single__root_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
   classDef secrets_c fill:#f9e2af,stroke:#f9e2af,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__secrets_collector_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
-  classDef core__security_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef den__batteries__self__c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef den__batteries__self___os_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef den__batteries__self___user_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
   classDef roles__server_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef services_c fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
-  classDef core__shell_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__ssd_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__stateVersion_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__sudo_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__systemd_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef core__systemd_boot_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef services__tailscale_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef services__tang_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
-  classDef core__time_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__users__shell_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef sini_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef applications__media__spotify_player_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef core__perf__ssd_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__ssd_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__ssd_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__ssd_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__ssd_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__nix__stateVersion_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__security__sudo_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__systemd_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__network__tailscale_host_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__network__tailscale_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__network__tailscale_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__network__tailscale_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__network__tailscale_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef services__security__tang_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__time_host_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__time_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__time_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__time_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__localization__time_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
   classDef unfree_predicate_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef unfree_predicate__os_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:2px
-  classDef core__users_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
-  classDef core__utils_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef unfree_predicate__user_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-dasharray: 3 3,stroke-width:1px
+  classDef user_user_sini_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef user_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef user_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef user_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef user_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef user_aspect_auto_include_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef user_enrich__dvicory_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__dvicory_axon_02_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__dvicory_axon_03_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__dvicory_bitstream_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__dvicory_uplink_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__pol_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__pol_axon_02_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__pol_axon_03_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__pol_bitstream_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__pol_uplink_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_axon_02_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_axon_03_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_bitstream_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_blade_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_cortex_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_patch_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_slab_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__sini_uplink_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__theutz_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__theutz_axon_02_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__theutz_axon_03_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__theutz_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__theutz_uplink_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_axon_01_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_axon_02_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_axon_03_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_bitstream_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_blade_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_cortex_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px
+  classDef user_enrich__vic_uplink_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:2px
+  classDef user_to_host_user_sini_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef user_to_host_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef user_to_host_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef user_to_host_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef user_to_host_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:2px,stroke-dasharray: 8 4
+  classDef user__resolve_user__user_sini_c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef user__resolve_user__user_dvicory_c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef user__resolve_user__user_pol_c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef user__resolve_user__user_theutz_c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef user__resolve_user__user_vic_c fill:#313244,stroke:#6c7086,color:#cdd6f4,stroke-dasharray: 2 2,stroke-width:1px
+  classDef core__users_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__users_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_host_bitstream_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_dvicory_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_pol_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_theutz_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef core__utils_user_vic_c fill:#fab387,stroke:#fab387,color:#1e1e2e,stroke-width:3px
+  classDef vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_host_bitstream_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_dvicory_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_pol_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_theutz_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__impermanence__zfs_user_vic_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
   classDef disk__zfs_diff_c fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e,stroke-width:3px
   classDef disk__zfs_disk_single_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
-  classDef apps__zsh_c fill:#f2cdcd,stroke:#f2cdcd,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__zram_swap_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__zram_swap_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__zram_swap_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__zram_swap_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef core__perf__zram_swap_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef applications__shell__zsh_host_bitstream_c fill:#cba6f7,stroke:#cba6f7,color:#1e1e2e,stroke-width:3px
+  classDef applications__shell__zsh_user_dvicory_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef applications__shell__zsh_user_pol_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef applications__shell__zsh_user_theutz_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+  classDef applications__shell__zsh_user_vic_c fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e,stroke-width:3px
+style ctx_user_sini fill:#313244,stroke:#6c7086,stroke-width:2px
+style ctx_user_dvicory fill:#313244,stroke:#6c7086,stroke-width:2px
+style ctx_user_pol fill:#313244,stroke:#6c7086,stroke-width:2px
+style ctx_user_theutz fill:#313244,stroke:#6c7086,stroke-width:2px
+style ctx_user_vic fill:#313244,stroke:#6c7086,stroke-width:2px
 style ctx_host_bitstream fill:#313244,stroke:#6c7086,stroke-width:2px
 ```

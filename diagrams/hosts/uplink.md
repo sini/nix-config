@@ -24,10 +24,6 @@
 
 ![class-nixos](./uplink/class-nixos.mmd.svg)
 
-## class-homeManager
-
-![class-homeManager](./uplink/class-homeManager.mmd.svg)
-
 ## dag
 
 ![dag](./uplink/dag.mmd.svg)

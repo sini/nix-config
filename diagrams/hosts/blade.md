@@ -24,10 +24,6 @@
 
 ![class-nixos](./blade/class-nixos.mmd.svg)
 
-## class-homeManager
-
-![class-homeManager](./blade/class-homeManager.mmd.svg)
-
 ## dag
 
 ![dag](./blade/dag.mmd.svg)

@@ -24,10 +24,6 @@
 
 ![class-nixos](./bitstream/class-nixos.mmd.svg)
 
-## class-homeManager
-
-![class-homeManager](./bitstream/class-homeManager.mmd.svg)
-
 ## dag
 
 ![dag](./bitstream/dag.mmd.svg)

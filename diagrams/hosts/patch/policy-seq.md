@@ -7,23 +7,38 @@
 sequenceDiagram
     participant root as patch
     participant collect_bgp_peers as collect-bgp-peers
+    participant collect_container_registries as collect-container-registries
     participant collect_host_addrs as collect-host-addrs
     participant collect_k3s_nodes as collect-k3s-nodes
     participant collect_ollama_endpoints as collect-ollama-endpoints
     participant collect_prometheus_targets as collect-prometheus-targets
     participant collect_thunderbolt_mesh_peers as collect-thunderbolt-mesh-peers
     participant collect_vault_peers as collect-vault-peers
+    participant env_users as env-users
+    participant host_modules_capture as host-modules-capture
     participant host_to_hm_users as host-to-hm-users
     participant os_to_host as os-to-host
+    participant broadcast_syncthing_hub_shares as broadcast-syncthing-hub-shares
+    participant broadcast_syncthing_peers as broadcast-syncthing-peers
+    participant broadcast_syncthing_peers_to_hub as broadcast-syncthing-peers-to-hub
+    participant droidHm_user_detect as droidHm-user-detect
+    participant drop_user_to_host_on_droid as drop-user-to-host-on-droid
+    participant expose_resolved_users as expose-resolved-users
     participant hm_user_detect as hm-user-detect
     participant homeAarch64_to_hm as homeAarch64-to-hm
     participant homeDarwin_to_hm as homeDarwin-to-hm
+    participant homeLinux_to_hm as homeLinux-to-hm
+    participant host_aspects_project as host-aspects-project
     participant os_to_host as os-to-host
+    participant primary_user_for_owner as primary-user-for-owner
+    participant user_aspect_auto_include as user-aspect-auto-include
     participant user_to_host as user-to-host
 
     root ->> collect_bgp_peers: dispatch
     activate collect_bgp_peers
     deactivate collect_bgp_peers
+
+    root ->> collect_container_registries: dispatch
 
     root ->> collect_host_addrs: dispatch
 
@@ -37,9 +52,25 @@ sequenceDiagram
 
     root ->> collect_vault_peers: dispatch
 
+    root ->> env_users: dispatch
+
+    root ->> host_modules_capture: dispatch
+
     root ->> host_to_hm_users: dispatch
 
     root ->> os_to_host: dispatch
+
+    root ->> broadcast_syncthing_hub_shares: dispatch
+
+    root ->> broadcast_syncthing_peers: dispatch
+
+    root ->> broadcast_syncthing_peers_to_hub: dispatch
+
+    root ->> droidHm_user_detect: dispatch
+
+    root ->> drop_user_to_host_on_droid: dispatch
+
+    root ->> expose_resolved_users: dispatch
 
     root ->> hm_user_detect: dispatch
 
@@ -47,7 +78,15 @@ sequenceDiagram
 
     root ->> homeDarwin_to_hm: dispatch
 
+    root ->> homeLinux_to_hm: dispatch
+
+    root ->> host_aspects_project: dispatch
+
     root ->> os_to_host: dispatch
+
+    root ->> primary_user_for_owner: dispatch
+
+    root ->> user_aspect_auto_include: dispatch
 
     root ->> user_to_host: dispatch
 ```
