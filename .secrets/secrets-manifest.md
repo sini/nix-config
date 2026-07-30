@@ -723,6 +723,8 @@ They will be created automatically if they don't exist.
   - nixos:axon-02
   - nixos:axon-03
   - nixos:bitstream
+  - nixos:blade
+  - nixos:cortex
   - nixos:uplink
 - **Owner**: vic:vic (600)
 - **Rekey File**: `.secrets/users/vic/id_agenix.age`
