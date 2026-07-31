@@ -10,15 +10,15 @@
       {
         programs.uwsm.enable = true;
 
-        environment = {
-          systemPackages = [ pkgs.app2unit ];
-          sessionVariables = {
-            NIXOS_OZONE_WL = "1";
-            GSK_RENDERER = "cairo";
-            APP2UNIT_SLICES = "a=app-graphical.slice b=background-graphical.slice s=session-graphical.slice";
-            APP2UNIT_TYPE = "scope";
-          };
-        };
+        # environment = {
+        #   systemPackages = [ pkgs.app2unit ];
+        #   sessionVariables = {
+        #     NIXOS_OZONE_WL = "1";
+        #     GSK_RENDERER = "cairo";
+        #     APP2UNIT_SLICES = "a=app-graphical.slice b=background-graphical.slice s=session-graphical.slice";
+        #     APP2UNIT_TYPE = "scope";
+        #   };
+        # };
 
         systemd.user.services.fumon = {
           enable = true;

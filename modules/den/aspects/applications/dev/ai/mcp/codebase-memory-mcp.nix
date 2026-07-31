@@ -16,9 +16,14 @@
 
   den.aspects.applications.dev.ai.mcp.codebase-memory = {
     homeManager =
-      { pkgs, lib, ... }:
+      {
+        inputs',
+        pkgs,
+        lib,
+        ...
+      }:
       let
-        cbm = pkgs.codebase-memory-mcp;
+        cbm = inputs'.codebase-memory-mcp.packages.default;
       in
       {
         home.packages = [ cbm ];
