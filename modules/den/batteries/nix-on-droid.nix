@@ -94,9 +94,20 @@ in
   # modules below, and an mkForce on home.username/homeDirectory in
   # core.nix-on-droid-base. All three keep the stock den batteries untouched, so
   # nixos/darwin hosts stay byte-identical.)
-  den.policies.drop-user-to-host-on-droid =
-    { host, ... }:
-    lib.optional (host.class == "droid") (den.lib.policy.exclude den.policies.user-to-host);
+  # Written as a policy record rather than a bare function so it can carry
+  # `suppresses`. The exclusion is value-conditional — it fires only where the host
+  # is droid — so a body fired at a sentinel context takes the false branch and
+  # produces no suppression at all. The suppression codomain therefore cannot be
+  # observed by firing the body and has to be stated here; the stratification reads
+  # suppression edges from the declared graph, and an empty recovery would let the
+  # first real exclusion be refused.
+  den.policies.drop-user-to-host-on-droid = {
+    __isPolicy = true;
+    suppresses = [ "user-to-host" ];
+    fn =
+      { host, ... }:
+      lib.optional (host.class == "droid") (den.lib.policy.exclude den.policies.user-to-host);
+  };
 
   # Registered at default scope (not host scope) to mirror den's os-class.nix:
   # user content is emitted at host AND user scope, so the exclude must fire in
