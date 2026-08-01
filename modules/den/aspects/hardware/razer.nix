@@ -1,10 +1,14 @@
-{ inputs, ... }:
 {
   den.aspects.hardware.razer = {
     nixos =
-      { pkgs, resolved-users, ... }:
       {
-        imports = [ inputs.razerdaemon.nixosModules.default ];
+        inputs',
+        pkgs,
+        resolved-users,
+        ...
+      }:
+      {
+        imports = [ inputs'.razerdaemon.nixosModules.default ];
 
         services.razer-laptop-control.enable = true;
 
@@ -19,21 +23,23 @@
           unitConfig.ConditionUser = "!media";
         };
 
-        systemd.user.services.razer-activate-power-unlock = {
-          description = "Uncap power limits";
-          after = [ "razerdaemon.service" ];
-          requires = [ "razerdaemon.service" ];
-          unitConfig.ConditionUser = "!media";
-          path = [ pkgs.razer-cli ];
-          serviceConfig = {
-            Type = "oneshot";
-            ExecStart = pkgs.writeShellScript "razer-uncap-ac-power" ''
-              set -e
-              razer-cli write power ac 4 3 2
-            '';
-          };
-          wantedBy = [ "default.target" ];
-        };
+        # TODO: Reconsider the AC power uncap
+
+        # systemd.user.services.razer-activate-power-unlock = {
+        #   description = "Uncap power limits";
+        #   after = [ "razerdaemon.service" ];
+        #   requires = [ "razerdaemon.service" ];
+        #   unitConfig.ConditionUser = "!media";
+        #   path = [ pkgs.razer-cli ];
+        #   serviceConfig = {
+        #     Type = "oneshot";
+        #     ExecStart = pkgs.writeShellScript "razer-uncap-ac-power" ''
+        #       set -e
+        #       razer-cli write power ac 4 3 2
+        #     '';
+        #   };
+        #   wantedBy = [ "default.target" ];
+        # };
       };
 
     persistHome = {
