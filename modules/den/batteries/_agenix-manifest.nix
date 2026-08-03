@@ -1,3 +1,4 @@
+# TODO: root cause and fix infinte recursion regression in agenix-manifest.nix
 {
   lib,
   self,
