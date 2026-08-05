@@ -50,10 +50,14 @@
 
           systemd = {
             packages = [ pkgs.wpa_supplicant ];
+            # The initrd's own systemd (boot.initrd.systemd.package) is already
+            # in the bin env; listing pkgs.systemd here duplicated it. It was
+            # harmless only while both resolved to a byte-identical derivation —
+            # once the channels' systemd patch sets diverged the two distinct
+            # store paths collided in buildEnv on bin/udevadm. Don't re-add it.
             initrdBin = [
               pkgs.wpa_supplicant
               pkgs.coreutils
-              pkgs.systemd
               pkgs.iproute2
             ];
 

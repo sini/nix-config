@@ -1,14 +1,14 @@
+{ inputs, ... }:
 {
   den.aspects.hardware.razer = {
     nixos =
       {
-        inputs',
         pkgs,
         resolved-users,
         ...
       }:
       {
-        imports = [ inputs'.razerdaemon.nixosModules.default ];
+        imports = [ inputs.razerdaemon.nixosModules.default ];
 
         services.razer-laptop-control.enable = true;
 
