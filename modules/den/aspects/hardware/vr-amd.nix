@@ -1,18 +1,6 @@
 { inputs, ... }:
 {
   den.aspects.hardware.vr-amd = {
-    # nixpkgs-master's Lighthouse 1.5.0 carries a stale source hash: upstream
-    # re-tagged 1.5.0, so github.com/ShayBox/Lighthouse/archive/1.5.0.tar.gz no
-    # longer matches and the fetch fails on any master-channel host. Take the
-    # package from nixpkgs-unstable (1.4.0) instead. Wrapped in a function so
-    # pipe assembly does not mistake the inline (positional) overlay for a
-    # pipeline-parametric value and pre-apply it.
-    nixpkgs-overlays =
-      { inputs', ... }:
-      [
-        (_final: _prev: { inherit (inputs'.nixpkgs-unstable.legacyPackages) lighthouse-steamvr; })
-      ];
-
     nixos =
       { pkgs, ... }:
       {
