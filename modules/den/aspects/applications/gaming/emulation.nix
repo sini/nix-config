@@ -41,9 +41,9 @@
           pkgs.dolphin-emu
           pkgs.cemu
           pkgs.ryubing
-          #pkgs.local.citron # TODO: Safe to re-enable
-          #pkgs.local.eden
-          pkgs.moonlight-qt
+          # pkgs.local.citron # TODO: Safe to re-enable
+          # pkgs.local.eden
+          # pkgs.moonlight-qt
         ];
       };
   };
