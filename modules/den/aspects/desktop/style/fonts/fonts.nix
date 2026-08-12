@@ -25,7 +25,7 @@
             monospace = [ "Monaspace Neon NF" ];
             sansSerif = [ "Inter" ];
             serif = [ "Source Serif" ];
-            emoji = [ "OpenMoji Color" ];
+            emoji = [ "Noto Color Emoji" ];
 
           };
         };

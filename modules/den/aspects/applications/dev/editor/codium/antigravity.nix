@@ -2,7 +2,7 @@
 {
   den.aspects.applications.dev.editor.codium.antigravity = {
     includes = [
-      (den.batteries.unfree [ "antigravity" ])
+      (den.batteries.unfree [ "antigravity-ide" ])
     ];
 
     homeManager =
