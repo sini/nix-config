@@ -51,9 +51,8 @@
           pkgs.wayvr
           pkgs.resolute
           pkgs.lighthouse-steamvr
-          #pkgs.custom-monado
           pkgs.monado
-          # pkgs.custom-xrizer # TODO: fix pkg
+          pkgs.xrizer
           pkgs.sidequest
         ];
 
@@ -116,13 +115,14 @@
               [
                 "${config.xdg.dataHome}/Steam/logs"
               ],
+              "runtime" :
+              [
+                "${pkgs.xrizer}/lib/xrizer"
+              ],
               "version" : 1
             }
           '';
-          # "runtime" :
-          # [
-          #   "${pkgs.custom-xrizer}/lib/xrizer"
-          # ],
+
         };
 
         home = {
