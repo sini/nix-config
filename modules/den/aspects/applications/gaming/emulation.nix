@@ -37,7 +37,7 @@
           pkgs.sameboy
           pkgs.mgba
           pkgs.melonds
-          pkgs.azahar
+          # pkgs.azahar # TODO: Safe to re-enable
           pkgs.dolphin-emu
           pkgs.cemu
           pkgs.ryubing
