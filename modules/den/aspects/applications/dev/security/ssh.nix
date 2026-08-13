@@ -20,16 +20,12 @@
               # route. NixOS keeps the LAN domain (direct over the local network).
               hostname = if host.class == "darwin" then entry.tsName else "${entry.hostname}.${entry.domain}";
               forwardAgent = true;
-              # opkssh `login` is file-based: it writes an OIDC-backed SSH cert to
-              # ~/.ssh/id_ecdsa(+-cert.pub) and adds nothing to any agent, so the
-              # cert never reaches the ssh-agent-mux. Offer that identity directly
-              # to the fleet peers whose sshd runs the opkssh AuthorizedKeysCommand
-              # verifier. Scoped here (not `*`) so the OIDC identity cert is not
-              # advertised to github or other external hosts. The `*` block's
-              # signing key is still offered on these hosts (IdentityFile
-              # directives accumulate across matching blocks). A missing file
-              # (before first `opkssh login`) is skipped by ssh without error.
-              identityFile = [ "~/.ssh/id_ecdsa" ];
+              # The opkssh OIDC cert is delivered via the ssh-agent-mux, not the
+              # ssh config: `opkssh-login` loads ~/.ssh/id_ecdsa into the standard
+              # agent (see opkssh-client.nix), so it is presented to these peers
+              # over SSH_AUTH_SOCK regardless of how the host is addressed. This
+              # is the only path that works for colmena, which targets a bare IP
+              # matching no `Host` block. No per-host IdentityFile here.
             }
           ) host-addrs
         );

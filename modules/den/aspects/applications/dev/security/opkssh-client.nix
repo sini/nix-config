@@ -4,7 +4,31 @@
 # server-side verifier lives in core/security/opkssh.nix; this is the client
 # counterpart. Attached via roles.workstation / roles.darwin-workstation only
 # (NOT roles.dev — that reaches slab/droid, which has no opkssh).
-{ lib, ... }:
+{ ... }:
+let
+  # `opkssh-login` wrapper: authenticate, then load the freshly-minted cert into
+  # the standard ssh-agent (an ssh-agent-mux backend). opkssh writes the OIDC
+  # cert to ~/.ssh/id_ecdsa(+-cert.pub) and adds it to NO agent, so on its own
+  # the cert only reaches consumers that name the file explicitly. That breaks
+  # colmena, which targets a bare IP (host.ipv4) matching no ssh `Host` block.
+  # Loading it into the agent makes it available to every SSH_AUTH_SOCK consumer
+  # — colmena and plain ssh alike — with no per-host ssh-config dependency.
+  loginScript =
+    pkgs: lib: kanidmIssuer: standardSock:
+    pkgs.writeShellScript "opkssh-login" ''
+      set -euo pipefail
+
+      # Point at the standard agent, not the mux: opkssh/ssh-add write keys and
+      # the mux is a read-only aggregator that cannot accept adds.
+      export SSH_AUTH_SOCK="${standardSock}"
+
+      ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh "$@"
+
+      # ssh-add loads the private key and automatically picks up the adjacent
+      # id_ecdsa-cert.pub certificate.
+      ${pkgs.openssh}/bin/ssh-add "$HOME/.ssh/id_ecdsa"
+    '';
+in
 {
   den.aspects.applications.dev.security.opkssh-client = {
     homeManager =
@@ -54,10 +78,11 @@
       let
         idmDomain = environment.getDomainFor "kanidm";
         kanidmIssuer = "https://${idmDomain}/oauth2/openid/opkssh";
+        standardSock = "\${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/standard-ssh-agent.sock";
       in
       {
         home.shellAliases = {
-          opkssh-login = "SSH_AUTH_SOCK=\${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/standard-ssh-agent.sock ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh";
+          opkssh-login = "${loginScript pkgs lib kanidmIssuer standardSock}";
         };
       };
 
@@ -71,10 +96,11 @@
       let
         idmDomain = environment.getDomainFor "kanidm";
         kanidmIssuer = "https://${idmDomain}/oauth2/openid/opkssh";
+        standardSock = "$(getconf DARWIN_USER_TEMP_DIR)/standard-ssh-agent.sock";
       in
       {
         home.shellAliases = {
-          opkssh-login = "SSH_AUTH_SOCK=$(getconf DARWIN_USER_TEMP_DIR)/standard-ssh-agent.sock ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh";
+          opkssh-login = "${loginScript pkgs lib kanidmIssuer standardSock}";
         };
       };
   };
