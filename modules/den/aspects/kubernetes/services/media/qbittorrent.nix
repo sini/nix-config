@@ -91,10 +91,10 @@
 # (5 keys). A k8s Secret `media-vpn` surfaces them; gluetun's env pulls each
 # via valueFrom.secretKeyRef. Nothing is hardcoded.
 #
-# Version: the media-user backup carries no qBittorrent version marker (the conf
-# has no version field; the old image was the floating :libtorrentv1 tag). We pin
-# the latest libtorrent-v1-line LSIO tag (5.2.1-libtorrentv1). Gluetun pinned to
-# v3.41.1. Bump both in the deploy-time pass.
+# Images tracked via the oci-image-updater, digest-pinned in images/ and bumped
+# by `oci-image-updater update-all`: qBittorrent at the rolling `libtorrentv1`
+# LSIO tag (images/linuxserver/qbittorrent — the libtorrent-v1 line, matching the
+# floating tag the backup ran), gluetun at `latest` (images/qmcgaw/gluetun).
 #
 # This aspect describes its full service inline (it does not call the _media-app
 # builder). The two shell scripts are kept as verbatim data bindings; everything
@@ -359,8 +359,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/qbittorrent";
-                    tag = "5.2.1-libtorrentv1";
+                    inherit (images."linuxserver/qbittorrent") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";
@@ -377,8 +376,7 @@
                 # Runs the qBittorrent image so /config ownership stays consistent.
                 initContainers.config-seed = {
                   image = {
-                    repository = "lscr.io/linuxserver/qbittorrent";
-                    tag = "5.2.1-libtorrentv1";
+                    inherit (images."linuxserver/qbittorrent") repository digest;
                   };
                   command = [
                     "/bin/sh"
@@ -394,8 +392,7 @@
                 # main container.
                 initContainers.gluetun = {
                   image = {
-                    repository = "qmcgaw/gluetun";
-                    tag = "v3.41.1";
+                    inherit (images."qmcgaw/gluetun") repository digest;
                   };
                   restartPolicy = "Always";
                   securityContext.capabilities.add = [ "NET_ADMIN" ];
@@ -478,8 +475,7 @@
                 # and qbt (WebUI :8080). busybox for wget/sh; no secrets, no mounts.
                 containers.port-sync = {
                   image = {
-                    repository = "busybox";
-                    tag = "1.38.0";
+                    inherit (images."library/busybox") repository digest;
                   };
                   command = [
                     "/bin/sh"

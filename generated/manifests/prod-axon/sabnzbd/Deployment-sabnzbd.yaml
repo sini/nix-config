@@ -58,7 +58,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:41c41849989b7e054ccbadc17938ee1e5592fe26bfbc56ef3ffc109c0b0b2739
+          image: docker.io/grafana/alloy@sha256:0f4434c92b3e6cdac38bb129b344e1790c246f7b6e2eaffcc16a5fa363240e33
           name: logtail
           securityContext:
             runAsGroup: 65536
@@ -79,7 +79,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: lscr.io/linuxserver/sabnzbd:5.0.4
+          image: linuxserver/sabnzbd@sha256:b0f9755d795913bd26ae3f3a12805668ab0681ab847a7624568559c573fc7cae
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -182,7 +182,7 @@ spec:
                 secretKeyRef:
                   key: sabnzbd
                   name: media-arr-api-keys
-          image: lscr.io/linuxserver/sabnzbd:5.0.4
+          image: linuxserver/sabnzbd@sha256:b0f9755d795913bd26ae3f3a12805668ab0681ab847a7624568559c573fc7cae
           name: config-seed
           volumeMounts:
             - mountPath: /config

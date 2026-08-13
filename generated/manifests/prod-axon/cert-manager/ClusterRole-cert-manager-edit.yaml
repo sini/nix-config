@@ -32,10 +32,15 @@ rules:
       - acme.cert-manager.io
     resources:
       - challenges
-      - orders
     verbs:
-      - create
       - delete
       - deletecollection
       - patch
       - update
+  - apiGroups:
+      - acme.cert-manager.io
+    resources:
+      - orders
+    verbs:
+      - delete
+      - deletecollection

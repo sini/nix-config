@@ -72,7 +72,9 @@
 # providers (IGDB/Twitch, SteamGridDB, RetroAchievements, Hasheous) over the
 # internet, so internet egress (world 80/443) is allowed.
 #
-# Version: pinned to the latest RomM 3.x release. Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` tag,
+# digest-pinned in images/rommapp/romm; `oci-image-updater update-all` bumps the
+# digest.
 {
   den.aspects.kubernetes.services.media.romm = {
     service-domains = [ "romm" ];
@@ -160,6 +162,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       let
@@ -186,8 +189,7 @@
                 inherit replicas;
                 containers.main = {
                   image = {
-                    repository = "rommapp/romm";
-                    tag = "4.9.0-beta.3";
+                    inherit (images."rommapp/romm") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

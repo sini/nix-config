@@ -57,7 +57,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:41c41849989b7e054ccbadc17938ee1e5592fe26bfbc56ef3ffc109c0b0b2739
+          image: docker.io/grafana/alloy@sha256:0f4434c92b3e6cdac38bb129b344e1790c246f7b6e2eaffcc16a5fa363240e33
           name: logtail
           securityContext:
             runAsGroup: 65536
@@ -82,7 +82,7 @@ spec:
               value: "022"
             - name: WEBUI_PORT
               value: "8080"
-          image: lscr.io/linuxserver/qbittorrent:5.2.1-libtorrentv1
+          image: linuxserver/qbittorrent@sha256:2626892a6fd232fe8667358fa51110867aeb528bca6fdede1aba7bdcf9e23dcb
           name: main
           volumeMounts:
             - mountPath: /config
@@ -117,7 +117,7 @@ spec:
                 fi
                 sleep 60
               done
-          image: busybox:1.38.0
+          image: library/busybox@sha256:dc2d74b28e4cf8984fa52af1f39bc7c3d9c73760b41a74d629f5d11b1ab28616
           name: port-sync
           volumeMounts:
             - mountPath: /config
@@ -197,7 +197,7 @@ spec:
                 ensure_app_key 'FileLogger\\DeleteOld' 'FileLogger\DeleteOld=true'
                 ensure_app_key 'FileLogger\\MaxSizeBytes' 'FileLogger\MaxSizeBytes=1048576'
               fi
-          image: lscr.io/linuxserver/qbittorrent:5.2.1-libtorrentv1
+          image: linuxserver/qbittorrent@sha256:2626892a6fd232fe8667358fa51110867aeb528bca6fdede1aba7bdcf9e23dcb
           name: config-seed
           volumeMounts:
             - mountPath: /config
@@ -244,7 +244,7 @@ spec:
                 secretKeyRef:
                   key: peer-public-key
                   name: media-vpn
-          image: qmcgaw/gluetun:v3.41.1
+          image: qmcgaw/gluetun@sha256:e3272b29a4bc177b389fbdcb54cf9716ccbfc30f04d8b7a35b0a5be9cdb58461
           name: gluetun
           readinessProbe:
             failureThreshold: 30

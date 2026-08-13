@@ -22,8 +22,9 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# Version: hotio prunes old point releases and the backup carries no version
-# marker, so we pin to the latest stable golift release (0.15.2). Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` golift tag,
+# digest-pinned in images/golift/unpackerr; `oci-image-updater update-all` bumps
+# the digest. (The backup carries no version marker.)
 {
   den.aspects.kubernetes.services.media.unpackerr = {
     service-domains = [ ];
@@ -33,6 +34,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       let
@@ -80,8 +82,7 @@
                 type = "deployment";
                 containers.main = {
                   image = {
-                    repository = "golift/unpackerr";
-                    tag = "0.15.2";
+                    inherit (images."golift/unpackerr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

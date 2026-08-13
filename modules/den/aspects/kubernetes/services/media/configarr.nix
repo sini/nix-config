@@ -40,12 +40,17 @@
 # baselines). The ingress default-deny lockdown lives in network-policy.nix
 # (the media policy matrix), alongside the other route-less helpers.
 #
-# Version: pinned to the latest stable configarr release (1.28.0). Bump at
-# deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` tag,
+# digest-pinned in images/raydak-labs/configarr; `oci-image-updater update-all`
+# bumps the digest.
 {
   den.aspects.kubernetes.services.media.configarr = {
     k8s-manifests =
-      { charts, ... }:
+      {
+        charts,
+        images,
+        ...
+      }:
       let
         schedule = "0 0 * * *"; # daily at midnight (cluster TZ via env TZ)
 
@@ -160,8 +165,7 @@
                 };
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/raydak-labs/configarr";
-                    tag = "1.28.0";
+                    inherit (images."raydak-labs/configarr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

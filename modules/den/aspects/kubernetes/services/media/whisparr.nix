@@ -10,9 +10,9 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# Version: archive ran v2.0.0.1750, but hotio prunes old point releases; the
-# closest pinned v2 tag still published is `v2-2.2.0-release.108`. Bump in the
-# dedicated tag pass at deploy time.
+# Image tracked via the oci-image-updater at the rolling hotio `v2` tag,
+# digest-pinned in images/hotio/whisparr; `oci-image-updater update-all` bumps
+# the digest. (Archive ran v2.0.0.1750; hotio prunes old point releases.)
 {
   den.aspects.kubernetes.services.media.whisparr = {
     service-domains = [ "whisparr" ];
@@ -122,8 +122,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/hotio/whisparr";
-                    tag = "v2-2.2.0-release.108";
+                    inherit (images."hotio/whisparr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

@@ -7,9 +7,9 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# Version pinned to 3.1.0 — latest stable LSIO release (the release in the
-# media-user backup logs was 2.14.5.4836). Bump tags in a dedicated pass at
-# deploy time.
+# Image tracked via the oci-image-updater at the rolling `nightly` LSIO tag,
+# digest-pinned in images/linuxserver/lidarr; `oci-image-updater update-all`
+# bumps the digest. (The release in the media-user backup logs was 2.14.5.4836.)
 {
   den.aspects.kubernetes.services.media.lidarr = {
     service-domains = [ "lidarr" ];
@@ -119,8 +119,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/lidarr";
-                    tag = "3.1.0";
+                    inherit (images."linuxserver/lidarr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

@@ -7,9 +7,9 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# Version pinned to 6.2.1 — latest stable LSIO release (the release in the
-# media-user backup logs was 6.0.4.10291). Bump tags in a dedicated pass at
-# deploy time.
+# Image tracked via the oci-image-updater at the rolling `nightly` LSIO tag,
+# digest-pinned in images/linuxserver/radarr; `oci-image-updater update-all`
+# bumps the digest. (The release in the media-user backup logs was 6.0.4.10291.)
 {
   den.aspects.kubernetes.services.media.radarr = {
     service-domains = [ "radarr" ];
@@ -119,8 +119,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/radarr";
-                    tag = "6.2.1";
+                    inherit (images."linuxserver/radarr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

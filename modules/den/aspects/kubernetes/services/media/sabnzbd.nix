@@ -25,9 +25,9 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# Version: the media-user backup carries no SABnzbd version marker (the ini has
-# no version field), so we pin to the latest stable LSIO tag (5.0.4) rather than
-# `latest`. Bump tags in the dedicated deploy-time pass.
+# Image tracked via the oci-image-updater at the rolling `latest` LSIO tag,
+# digest-pinned in images/linuxserver/sabnzbd; `oci-image-updater update-all`
+# bumps the digest. (The media-user backup carries no SABnzbd version marker.)
 {
   den.aspects.kubernetes.services.media.sabnzbd = {
     service-domains = [ "sabnzbd" ];
@@ -216,8 +216,7 @@
                 # stays consistent.
                 initContainers.config-seed = {
                   image = {
-                    repository = "lscr.io/linuxserver/sabnzbd";
-                    tag = "5.0.4";
+                    inherit (images."linuxserver/sabnzbd") repository digest;
                   };
                   command = [
                     "/bin/sh"
@@ -232,8 +231,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/sabnzbd";
-                    tag = "5.0.4";
+                    inherit (images."linuxserver/sabnzbd") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

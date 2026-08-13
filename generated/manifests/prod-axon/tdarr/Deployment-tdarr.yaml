@@ -65,7 +65,7 @@ spec:
               value: "8266"
             - name: webUIPort
               value: "8265"
-          image: ghcr.io/haveagitgat/tdarr@sha256:71360670ac0c39e1bb8daf2b0c5c9ebb92b5d41e79c54128f2cea5bbdc32ddf2
+          image: ghcr.io/haveagitgat/tdarr@sha256:45742f00e51a58553844c8b13d97e7ae9b2ee9a056bd8e5993d9a8282a45a23f
           livenessProbe:
             failureThreshold: 3
             httpGet:

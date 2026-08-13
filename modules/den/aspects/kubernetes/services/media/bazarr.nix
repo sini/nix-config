@@ -21,8 +21,9 @@
 # config is left to bazarr first-boot / config seeding (Task 9/14 wire
 # consumers). See report note.
 #
-# Version pinned to 1.5.6 — latest non-prerelease in the backup releases.txt
-# (v1.5.6). LSIO publishes a matching `1.5.6` tag. Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` LSIO tag,
+# digest-pinned in images/linuxserver/bazarr; `oci-image-updater update-all`
+# bumps the digest. (The backup releases.txt latest non-prerelease was v1.5.6.)
 {
   den.aspects.kubernetes.services.media.bazarr = {
     service-domains = [ "bazarr" ];
@@ -137,8 +138,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/bazarr";
-                    tag = "1.5.6";
+                    inherit (images."linuxserver/bazarr") repository digest;
                   };
                   # Bazarr uses POSTGRES_* (not Servarr __POSTGRES__), pointing at
                   # the single `bazarr` database with media-pg-bazarr-password

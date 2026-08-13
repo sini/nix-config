@@ -31,11 +31,17 @@
 # the TRaSH guides from GitHub on each run). Emitted as plain
 # CiliumNetworkPolicies here (raw aspect, no helper baselines).
 #
-# Version: pinned to the latest stable recyclarr release (8.6.0). Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `8` tag (current major),
+# digest-pinned in images/recyclarr/recyclarr; `oci-image-updater update-all`
+# bumps the digest.
 {
   den.aspects.kubernetes.services.media.recyclarr = {
     k8s-manifests =
-      { charts, ... }:
+      {
+        charts,
+        images,
+        ...
+      }:
       let
         schedule = "0 0 * * *"; # daily at midnight (cluster TZ via env TZ)
 
@@ -93,8 +99,7 @@
                 };
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/recyclarr/recyclarr";
-                    tag = "8.6.0";
+                    inherit (images."recyclarr/recyclarr") repository digest;
                   };
                   # `sync` applies every configured instance.
                   args = [ "sync" ];

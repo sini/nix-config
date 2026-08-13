@@ -35,7 +35,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/flaresolverr/flaresolverr:v3.5.0
+          image: ghcr.io/flaresolverr/flaresolverr@sha256:139dfee1c6f89249c8d665d1333a42e8ec74ec0a86bc6bb1c8461e10d3a66a47
           name: main
       dnsPolicy: ClusterFirst
       enableServiceLinks: false

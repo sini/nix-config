@@ -34,7 +34,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:41c41849989b7e054ccbadc17938ee1e5592fe26bfbc56ef3ffc109c0b0b2739
+          image: docker.io/grafana/alloy@sha256:0f4434c92b3e6cdac38bb129b344e1790c246f7b6e2eaffcc16a5fa363240e33
           name: logtail
           securityContext:
             runAsGroup: 0
@@ -55,7 +55,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/gotson/komga:1.24.4
+          image: ghcr.io/gotson/komga@sha256:6c2a967bbe9acefd05933b2eb498f34afe96a83c6f7f8ab0acb512a1bb3ab50f
           name: main
           volumeMounts:
             - mountPath: /config

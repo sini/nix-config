@@ -75,7 +75,7 @@ spec:
               value: /scratch/torrents/complete
             - name: UN_WHISPARR_0_URL
               value: http://whisparr:6969
-          image: golift/unpackerr:0.15.2
+          image: golift/unpackerr@sha256:4ec141eeb0cb2f971d7c92f21cc40b0d2d50d7920eb7a0557443cca52270c0b0
           name: main
           ports:
             - containerPort: 5656

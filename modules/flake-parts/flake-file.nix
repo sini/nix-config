@@ -264,7 +264,8 @@
       nixhelm.url = "github:nix-community/nixhelm";
 
       nixidy = {
-        url = "github:arnarg/nixidy";
+        # url = "github:arnarg/nixidy"; # TODO: https://github.com/arnarg/nixidy/pull/108
+        url = "github:sini/nixidy/fix/crd-pattern-posix-ere";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 

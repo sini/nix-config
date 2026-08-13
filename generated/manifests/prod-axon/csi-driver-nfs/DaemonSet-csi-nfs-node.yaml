@@ -7,6 +7,7 @@ metadata:
   name: csi-nfs-node
   namespace: csi-nfs
 spec:
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: csi-nfs-node
@@ -23,7 +24,7 @@ spec:
             - --probe-timeout=3s
             - --http-endpoint=localhost:29653
             - --v=2
-          image: registry.k8s.io/sig-storage/livenessprobe:v2.17.0
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.19.0
           imagePullPolicy: IfNotPresent
           name: liveness-probe
           resources:
@@ -53,7 +54,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.15.0
+          image: registry.k8s.io/sig-storage/csi-node-driver-registrar:v2.17.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 2
@@ -97,7 +98,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.3
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5

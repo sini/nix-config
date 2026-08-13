@@ -49,7 +49,9 @@
 #   - kube-apiserver egress (k8s discovery, cluster mode).
 #   - internet egress (80/443): homepage fetches dashboard icons from a CDN.
 #
-# Version: pinned to the latest stable gethomepage release. Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` tag,
+# digest-pinned in images/gethomepage/homepage; `oci-image-updater update-all`
+# bumps the digest.
 {
   den.aspects.kubernetes.services.media.dash = {
     service-domains = [ "dash" ];
@@ -75,6 +77,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       {
@@ -88,8 +91,7 @@
                 type = "deployment";
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/gethomepage/homepage";
-                    tag = "v1.13.2";
+                    inherit (images."gethomepage/homepage") repository digest;
                   };
                   # baseEnv + HOMEPAGE_ALLOWED_HOSTS (host-header guard; must match
                   # the public hostname the gateway forwards) + the *arr/sabnzbd

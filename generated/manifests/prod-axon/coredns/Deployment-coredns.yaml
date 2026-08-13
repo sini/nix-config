@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 7c3539072575dcdd848bf7173a89edbd8d96c6bed0be03a1e7fc5c3318ce83b2
+        checksum/config: c4482d50b587140b4c16d0fd1a2a785a199472d960f77e99ec4bbbffd933447b
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
       labels:
         app.kubernetes.io/instance: coredns
@@ -35,7 +35,7 @@ spec:
         - args:
             - -conf
             - /etc/coredns/Corefile
-          image: coredns/coredns:1.13.1
+          image: coredns/coredns:1.14.6
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5

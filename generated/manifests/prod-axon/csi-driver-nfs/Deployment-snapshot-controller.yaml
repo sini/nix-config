@@ -10,6 +10,7 @@ metadata:
 spec:
   minReadySeconds: 15
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: snapshot-controller
@@ -28,7 +29,7 @@ spec:
             - --v=2
             - --leader-election=true
             - --leader-election-namespace=csi-nfs
-          image: registry.k8s.io/sig-storage/snapshot-controller:v8.4.0
+          image: registry.k8s.io/sig-storage/snapshot-controller:v8.6.0
           imagePullPolicy: IfNotPresent
           name: snapshot-controller
           resources:

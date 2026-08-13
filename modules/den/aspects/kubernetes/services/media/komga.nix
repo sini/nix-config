@@ -26,7 +26,9 @@
 # here), so there is no internet-egress policy. Add it later if metadata fetching
 # is enabled in-app. No postgres (Komga uses its embedded DB under /config).
 #
-# Version: pinned to the latest stable Komga 1.x release. Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` tag,
+# digest-pinned in images/gotson/komga; `oci-image-updater update-all` bumps the
+# digest.
 {
   den.aspects.kubernetes.services.media.komga = {
     service-domains = [ "komga" ];
@@ -143,8 +145,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/gotson/komga";
-                    tag = "1.24.4";
+                    inherit (images."gotson/komga") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

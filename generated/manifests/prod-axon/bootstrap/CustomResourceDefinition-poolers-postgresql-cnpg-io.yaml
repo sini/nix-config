@@ -2,7 +2,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.20.1
+    controller-gen.kubebuilder.io/version: v0.21.0
     helm.sh/resource-policy: keep
   name: poolers.postgresql.cnpg.io
 spec:
@@ -23,6 +23,9 @@ spec:
           type: string
         - jsonPath: .spec.type
           name: Type
+          type: string
+        - jsonPath: .status.phase
+          name: Phase
           type: string
       name: v1
       schema:
@@ -62,6 +65,9 @@ spec:
                   required:
                     - name
                   type: object
+                  x-kubernetes-validations:
+                    - message: cluster reference is immutable after creation
+                      rule: self == oldSelf
                 deploymentStrategy:
                   description: The deployment strategy to use for pgbouncer to replace existing pods with new ones
                   properties:
@@ -114,18 +120,22 @@ spec:
                   format: int32
                   type: integer
                 monitoring:
-                  description: |-
-                    The configuration of the monitoring infrastructure of this pooler.
-
-                    Deprecated: This feature will be removed in an upcoming release. If
-                    you need this functionality, you can create a PodMonitor manually.
+                  description: The configuration of the monitoring infrastructure of this pooler.
                   properties:
                     enablePodMonitor:
                       default: false
-                      description: Enable or disable the `PodMonitor`
+                      description: |-
+                        Enable or disable the `PodMonitor`
+
+                        Deprecated: This feature will be removed in an upcoming release. If
+                        you need this functionality, you can create a PodMonitor manually.
                       type: boolean
                     podMonitorMetricRelabelings:
-                      description: The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion.
+                      description: |-
+                        The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion.
+
+                        Deprecated: This feature will be removed in an upcoming release. If
+                        you need this functionality, you can create a PodMonitor manually.
                       items:
                         description: |-
                           RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -210,7 +220,11 @@ spec:
                         type: object
                       type: array
                     podMonitorRelabelings:
-                      description: The list of relabelings for the `PodMonitor`. Applied to samples before scraping.
+                      description: |-
+                        The list of relabelings for the `PodMonitor`. Applied to samples before scraping.
+
+                        Deprecated: This feature will be removed in an upcoming release. If
+                        you need this functionality, you can create a PodMonitor manually.
                       items:
                         description: |-
                           RelabelConfig allows dynamic rewriting of the label set for targets, alerts,
@@ -294,6 +308,18 @@ spec:
                             type: string
                         type: object
                       type: array
+                    tls:
+                      description: |-
+                        Configure TLS communication for the metrics endpoint.
+                        Changing tls.enabled option will force a rollout of all instances.
+                      properties:
+                        enabled:
+                          default: false
+                          description: |-
+                            Enable TLS for the monitoring endpoint.
+                            Changing this option will force a rollout of all instances.
+                          type: boolean
+                      type: object
                   type: object
                 pgbouncer:
                   description: The PgBouncer configuration
@@ -342,6 +368,45 @@ spec:
                       required:
                         - name
                       type: object
+                    image:
+                      description: |-
+                        Image is the pgbouncer container image to use. When set, it takes
+                        precedence over ImageCatalogRef and the operator default, but is
+                        overridden by an explicit image set in the pod template.
+                      type: string
+                    imageCatalogRef:
+                      description: |-
+                        ImageCatalogRef points to an entry in an ImageCatalog or ClusterImageCatalog.
+                        Mutually exclusive with Image.
+                      properties:
+                        apiGroup:
+                          description: |-
+                            APIGroup is the group for the resource being referenced.
+                            If APIGroup is not specified, the specified Kind must be in the core API group.
+                            For any other third-party types, APIGroup is required.
+                          type: string
+                        key:
+                          description: Key identifies the entry within the catalog's componentImages list.
+                          maxLength: 63
+                          pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                          type: string
+                        kind:
+                          description: Kind is the type of resource being referenced
+                          type: string
+                        name:
+                          description: Name is the name of resource being referenced
+                          type: string
+                      required:
+                        - key
+                        - kind
+                        - name
+                      type: object
+                      x-kubernetes-map-type: atomic
+                      x-kubernetes-validations:
+                        - message: Only ImageCatalog and ClusterImageCatalog are supported
+                          rule: self.kind == 'ImageCatalog' || self.kind == 'ClusterImageCatalog'
+                        - message: apiGroup must be postgresql.cnpg.io
+                          rule: self.apiGroup == 'postgresql.cnpg.io'
                     parameters:
                       additionalProperties:
                         type: string
@@ -395,6 +460,9 @@ spec:
                         - name
                       type: object
                   type: object
+                  x-kubernetes-validations:
+                    - message: image and imageCatalogRef are mutually exclusive
+                      rule: '!(has(self.image) && has(self.imageCatalogRef))'
                 serviceAccountName:
                   description: |-
                     Name of an existing ServiceAccount in the same namespace to use for the pooler.
@@ -8900,10 +8968,33 @@ spec:
                 date. Populated by the system. Read-only.
                 More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status
               properties:
+                error:
+                  description: Error is the latest admission validation error
+                  type: string
+                image:
+                  description: |-
+                    Image is the resolved pgbouncer container image that the operator is
+                    using for this Pooler, including any override coming from spec.template.
+                    While Phase is Active or Paused this field reflects what the Deployment
+                    actually runs; while Phase is Inactive or Failed it may carry the last
+                    successfully resolved value (or be empty if the Pooler has never reconciled
+                    successfully).
+                  type: string
                 instances:
                   description: The number of pods trying to be scheduled
                   format: int32
                   type: integer
+                phase:
+                  description: Phase summarizes the overall lifecycle state of the Pooler.
+                  enum:
+                    - active
+                    - paused
+                    - inactive
+                    - failed
+                  type: string
+                phaseReason:
+                  description: PhaseReason is a human-readable explanation of the current Phase.
+                  type: string
                 secrets:
                   description: The resource version of the config object
                   properties:

@@ -8,6 +8,7 @@ metadata:
   namespace: csi-nfs
 spec:
   replicas: 1
+  revisionHistoryLimit: 10
   selector:
     matchLabels:
       app: csi-nfs-controller
@@ -27,13 +28,13 @@ spec:
             - --leader-election
             - --leader-election-namespace=csi-nfs
             - --extra-create-metadata=true
-            - --feature-gates=HonorPVReclaimPolicy=true,VolumeAttributesClass=false
+            - --feature-gates=VolumeAttributesClass=false
             - --timeout=1200s
             - --retry-interval-max=30m
           env:
             - name: ADDRESS
               value: /csi/csi.sock
-          image: registry.k8s.io/sig-storage/csi-provisioner:v6.1.0
+          image: registry.k8s.io/sig-storage/csi-provisioner:v6.3.0
           imagePullPolicy: IfNotPresent
           name: csi-provisioner
           resources:
@@ -60,7 +61,7 @@ spec:
           env:
             - name: ADDRESS
               value: /csi/csi.sock
-          image: registry.k8s.io/sig-storage/csi-resizer:v2.0.0
+          image: registry.k8s.io/sig-storage/csi-resizer:v2.2.0
           imagePullPolicy: IfNotPresent
           name: csi-resizer
           resources:
@@ -86,7 +87,7 @@ spec:
           env:
             - name: ADDRESS
               value: /csi/csi.sock
-          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.4.0
+          image: registry.k8s.io/sig-storage/csi-snapshotter:v8.6.0
           imagePullPolicy: IfNotPresent
           name: csi-snapshotter
           resources:
@@ -107,7 +108,7 @@ spec:
             - --probe-timeout=3s
             - --http-endpoint=localhost:29652
             - --v=2
-          image: registry.k8s.io/sig-storage/livenessprobe:v2.17.0
+          image: registry.k8s.io/sig-storage/livenessprobe:v2.19.0
           imagePullPolicy: IfNotPresent
           name: liveness-probe
           resources:
@@ -141,7 +142,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.3
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.4
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5

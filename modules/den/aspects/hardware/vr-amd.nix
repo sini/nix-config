@@ -12,6 +12,8 @@
 
         hardware.graphics.extraPackages = [ pkgs.monado-vulkan-layers ];
 
+        # https://wiki.nixos.org/wiki/VR#Applying_as_a_NixOS_kernel_patch
+
         boot.kernelPatches = [
           {
             name = "amdgpu-ignore-ctx-privileges";
@@ -100,28 +102,27 @@
 
         xdg.configFile = {
           "openxr/1/active_runtime.json".source = "${pkgs.monado}/share/openxr/1/openxr_monado.json";
-          "openvr/openvrpaths.vrpath".text = ''
-            {
-              "config" :
-              [
-                "${config.xdg.dataHome}/Steam/config"
-              ],
-              "external_drivers" :
-              [
-                "${pkgs.monado}/share/steamvr-monado"
-              ],
-              "jsonid" : "vrpathreg",
-              "log" :
-              [
-                "${config.xdg.dataHome}/Steam/logs"
-              ],
-              "runtime" :
-              [
+          "openvr/openvrpaths.vrpath".text =
+            let
+              steam = "${config.xdg.dataHome}/Steam";
+            in
+            builtins.toJSON {
+              version = 1;
+
+              jsonid = "vrpathreg";
+
+              external_drivers = [ "${pkgs.monado}/share/steamvr-monado" ];
+
+              config = [ "${steam}/config" ];
+
+              log = [ "${steam}/logs" ];
+
+              runtime = [
                 "${pkgs.xrizer}/lib/xrizer"
-              ],
-              "version" : 1
-            }
-          '';
+                # OR
+                #"${pkgs.opencomposite}/lib/opencomposite"
+              ];
+            };
 
         };
 

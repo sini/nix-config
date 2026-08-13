@@ -47,7 +47,7 @@ spec:
         - args:
             - -config.file=/etc/loki/config/config.yaml
             - -target=all
-          image: docker.io/grafana/loki:3.6.7
+          image: docker.io/grafana/loki:3.6.11
           imagePullPolicy: IfNotPresent
           name: loki
           ports:

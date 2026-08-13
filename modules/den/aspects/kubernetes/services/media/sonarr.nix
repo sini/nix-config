@@ -7,9 +7,10 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper).
 #
-# Version pinned to 4.0.17 — latest stable LSIO tag in the v4 line (the v4-era
-# release in the media-user backup logs was 4.0.16.2944). Bump tags in a
-# dedicated pass at deploy time.
+# Image tracked via the oci-image-updater at the rolling `nightly` LSIO tag,
+# digest-pinned in images/linuxserver/sonarr; `oci-image-updater update-all`
+# bumps the digest. (The v4-era release in the media-user backup logs was
+# 4.0.16.2944.)
 {
   den.aspects.kubernetes.services.media.sonarr = {
     service-domains = [ "sonarr" ];
@@ -121,8 +122,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/sonarr";
-                    tag = "4.0.17";
+                    inherit (images."linuxserver/sonarr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

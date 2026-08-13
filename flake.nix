@@ -255,7 +255,7 @@
     };
     nixhelm.url = "github:nix-community/nixhelm";
     nixidy = {
-      url = "github:arnarg/nixidy";
+      url = "github:sini/nixidy/fix/crd-pattern-posix-ere";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nixkraken.url = "github:nicolas-goudry/nixkraken";

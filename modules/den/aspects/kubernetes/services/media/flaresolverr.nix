@@ -17,6 +17,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       {
@@ -30,8 +31,7 @@
                 type = "deployment";
                 containers.main = {
                   image = {
-                    repository = "ghcr.io/flaresolverr/flaresolverr";
-                    tag = "v3.5.0";
+                    inherit (images."flaresolverr/flaresolverr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

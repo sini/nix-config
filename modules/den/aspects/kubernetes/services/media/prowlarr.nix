@@ -10,9 +10,10 @@
 # CiliumNetworkPolicies (gateway ingress, DNS egress, media-pg egress, internet
 # egress), an HTTPRoute on the default-gateway, and a Kanidm OIDC SecurityPolicy.
 #
-# Version pinned to 2.4.0 — latest stable LSIO release (the pre-migration
-# deployment in the media-user backup logs ran 2.3.0). Bump tags in a dedicated
-# pass at deploy time.
+# Image tracked via the oci-image-updater at the rolling `nightly` LSIO tag,
+# digest-pinned in images/linuxserver/prowlarr; `oci-image-updater update-all`
+# bumps the digest. (The pre-migration deployment in the media-user backup logs
+# ran 2.3.0.)
 {
   den.aspects.kubernetes.services.media.prowlarr = {
     service-domains = [ "prowlarr" ];
@@ -122,8 +123,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "lscr.io/linuxserver/prowlarr";
-                    tag = "2.4.0";
+                    inherit (images."linuxserver/prowlarr") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

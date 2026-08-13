@@ -18,7 +18,9 @@
 #   - internet egress (80/443): glance monitors Jellyfin's external URL and fetches
 #     simple-icons from a CDN.
 #
-# Version: pinned to the latest stable glance release. Bump at deploy time.
+# Image tracked via the oci-image-updater at the rolling `latest` tag,
+# digest-pinned in images/glanceapp/glance; `oci-image-updater update-all` bumps
+# the digest.
 {
   den.aspects.kubernetes.services.media.glance = {
     service-domains = [ "glance" ];
@@ -44,6 +46,7 @@
         config,
         cluster,
         charts,
+        images,
         ...
       }:
       {
@@ -57,8 +60,7 @@
                 type = "deployment";
                 containers.main = {
                   image = {
-                    repository = "glanceapp/glance";
-                    tag = "v0.8.5";
+                    inherit (images."glanceapp/glance") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";

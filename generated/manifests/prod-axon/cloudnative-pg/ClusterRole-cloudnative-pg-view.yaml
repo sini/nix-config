@@ -12,6 +12,7 @@ rules:
       - backups
       - clusters
       - clusters/status
+      - databaseroles
       - databases
       - failoverquorums
       - poolers

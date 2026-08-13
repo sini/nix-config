@@ -18,7 +18,9 @@
 # container that drops the pinned release onto the config PVC — see
 # initContainers.install-luarenamer / installLuaRenamerScript below.
 #
-# Version pinned to v5.3.3 — latest stable. Bump in a dedicated pass.
+# Image tracked via the oci-image-updater at the rolling `latest` tag,
+# digest-pinned in images/shokoanime/server; `oci-image-updater update-all`
+# bumps the digest.
 {
   den.aspects.kubernetes.services.media.shoko = {
     service-domains = [ "shoko" ];
@@ -176,8 +178,7 @@
 
                 containers.main = {
                   image = {
-                    repository = "shokoanime/server";
-                    tag = "v5.3.3";
+                    inherit (images."shokoanime/server") repository digest;
                   };
                   env = {
                     TZ = "America/Los_Angeles";
@@ -231,8 +232,7 @@
                 # PVC reach init containers, so /home/shoko/.shoko is present.
                 initContainers.install-luarenamer = {
                   image = {
-                    repository = "alpine";
-                    tag = "3.21";
+                    inherit (images."library/alpine") repository digest;
                   };
                   command = [
                     "/bin/sh"
