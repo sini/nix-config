@@ -82,6 +82,19 @@ in
           blacklistedKernelModules = [ "nbd" ];
         };
 
+        # Disable systemd-resolved DNSSEC validation. The node's /etc/resolv.conf
+        # points host clients (notably containerd) at the resolved stub
+        # (127.0.0.53); with the default `best-effort` mode resolved fails to
+        # resolve registry.k8s.io's redirect target `us-west2-docker.pkg.dev`
+        # (GCP Artifact Registry, CNAME'd to the unsigned l.googleusercontent.com)
+        # with "DNSSEC validation failed: failed-auxiliary", so containerd gets
+        # `no such host` and every sig-storage image ImagePullBackOffs. Pods are
+        # unaffected (kubelet hands them upstream resolvers directly), which is why
+        # only fresh node image pulls broke. DNSSEC over resolved is unreliable for
+        # these CDN/CNAME chains; the cluster gains nothing from validating public
+        # image-registry lookups, so turn it off.
+        services.resolved.dnssec = "false";
+
         networking.firewall = {
           enable = mkForce false;
 

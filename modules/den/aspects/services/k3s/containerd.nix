@@ -22,7 +22,7 @@
           name = "k3s-cni-plugins";
           paths = [
             pkgs.cni-plugins
-            pkgs.cni-plugin-flannel
+            # pkgs.cni-plugin-flannel # TODO: Flannel CNI plugin is currently broken in nixpkgs
             pkgs.local.cni-plugin-cilium
           ];
         };
