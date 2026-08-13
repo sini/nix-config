@@ -28,18 +28,18 @@
     # from-source font builds (jetbrains-mono, openmoji, ...), so the whole font
     # set fails on the hash mismatch. Pin the corrected src across all python
     # sets until nixpkgs catches up.
-    pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
-      (_pyfinal: pyprev: {
-        nanoemoji = pyprev.nanoemoji.overrideAttrs (_old: {
-          src = prev.fetchFromGitHub {
-            owner = "googlefonts";
-            repo = "nanoemoji";
-            tag = "v0.16.0";
-            hash = "sha256-FysyKC01XBnRiur5RR9fcsTxQqE8x0JJHSoe3q6JtKc=";
-          };
-        });
-      })
-    ];
+    # pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
+    #   (_pyfinal: pyprev: {
+    #     nanoemoji = pyprev.nanoemoji.overrideAttrs (_old: {
+    #       src = prev.fetchFromGitHub {
+    #         owner = "googlefonts";
+    #         repo = "nanoemoji";
+    #         tag = "v0.16.0";
+    #         hash = "sha256-FysyKC01XBnRiur5RR9fcsTxQqE8x0JJHSoe3q6JtKc=";
+    #       };
+    #     });
+    #   })
+    # ];
 
     inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
