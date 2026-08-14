@@ -126,11 +126,13 @@ in
             # Wayland
             "--ozone-platform=wayland"
 
-            # GPU + hardware video acceleration (mirrors firefox gfx.webrender.all)
-            "--ignore-gpu-blocklist"
-            (enableFeature true "gpu-rasterization")
-            (enableFeature true "oop-rasterization")
-            (enableFeature true "zero-copy")
+            # GPU acceleration is left to Chromium's own driver detection. The
+            # force-on switches (--ignore-gpu-blocklist, --enable-gpu-rasterization,
+            # --enable-zero-copy) have no firefox analogue: firefox honours its own
+            # graphics blocklist even with gfx.webrender.all, and zero-copy
+            # rasterization corrupts page tiles on mesa. Hardware video decode is
+            # requested through the Vaapi* features above, which is the part
+            # media.ffmpeg.vaapi.enabled actually mirrors.
 
             # Quality of life
             "--no-first-run"
