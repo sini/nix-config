@@ -350,6 +350,22 @@
         "type": "github"
       }
     },
+    "claude-plugins-official": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786666228,
+        "narHash": "sha256-GcT93czWUixhyECh/EA2swBqSVvSYuDNeu+iBcevp/s=",
+        "owner": "anthropics",
+        "repo": "claude-plugins-official",
+        "rev": "f8f7402b0ff3b88bf311d2efedeb6aad5841d0bb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "anthropics",
+        "repo": "claude-plugins-official",
+        "type": "github"
+      }
+    },
     "codebase-memory-mcp": {
       "inputs": {
         "nixpkgs": [
@@ -3522,6 +3538,7 @@
         "beads": "beads",
         "betterfox": "betterfox",
         "caveman": "caveman",
+        "claude-plugins-official": "claude-plugins-official",
         "codebase-memory-mcp": "codebase-memory-mcp",
         "colmena": "colmena",
         "dag": "dag",

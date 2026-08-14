@@ -72,6 +72,10 @@
       url = "github:JuliusBrussee/caveman";
       flake = false;
     };
+    claude-plugins-official = {
+      url = "github:anthropics/claude-plugins-official";
+      flake = false;
+    };
     codebase-memory-mcp = {
       url = "github:DeusData/codebase-memory-mcp";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

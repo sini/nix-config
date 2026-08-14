@@ -18,8 +18,16 @@
   # Claude Code plugin marketplaces, store-pinned: CC resolves plugins from these
   # nix-store paths instead of fetching from GitHub at runtime (consistent with the
   # read-only settings.json below). Plugin *enablement* lives in settings.enabledPlugins.
-  # The built-in `claude-plugins-official` marketplace needs no registration.
   flake-file.inputs = {
+    # The built-in official marketplace, store-pinned. CC otherwise bootstraps it
+    # from github on launch and network-refreshes its timestamp, rewriting
+    # known_marketplaces.json every session (the source of the .hm-backup clobber
+    # loop). Registering it as a directory source pre-empts the bootstrap: local
+    # sources are never refreshed, so the file stops diverging.
+    claude-plugins-official = {
+      url = "github:anthropics/claude-plugins-official";
+      flake = false;
+    };
     caveman = {
       url = "github:JuliusBrussee/caveman";
       flake = false;
@@ -89,8 +97,8 @@
           # Store-pinned plugin marketplaces (inputs declared above). The attr name
           # is the marketplace name referenced by settings.enabledPlugins, e.g.
           # `caveman@caveman`, `superpowers-extended-cc@superpowers-extended-cc-marketplace`.
-          # The built-in `claude-plugins-official` marketplace needs no registration.
           marketplaces = {
+            claude-plugins-official = inputs.claude-plugins-official;
             caveman = inputs.caveman;
             superpowers-extended-cc-marketplace = inputs.superpowers-extended-cc;
             mattpocock = inputs.mattpocock-skills;
@@ -203,9 +211,9 @@
             };
 
             enabledPlugins = {
-              # @claude-plugins-official is a built-in known marketplace (no
-              # registration needed); caveman/superpowers-extended-cc resolve from
-              # the marketplaces registered above.
+              # All marketplaces (including claude-plugins-official) are store-pinned
+              # via the marketplaces attr above, so plugins resolve from nix-store
+              # paths and CC never network-fetches or rewrites known_marketplaces.json.
               "commit-commands@claude-plugins-official" = true;
               "skill-creator@claude-plugins-official" = true;
               "code-simplifier@claude-plugins-official" = true;
