@@ -11,11 +11,10 @@
     # also carries the merged list-errors tolerance (#94): a misbehaving upstream
     # (rbw mid-unlock) is skipped instead of taking down the whole list.
     #
-    # ssh-agent-lib 0.6.0 builds on the released ssh-key 0.6.7, which still
-    # rejects `Valid: forever` certificates (valid_before = u64::MAX) with
-    # "invalid time" (RustCrypto/SSH#504). Until ssh-key 0.7.0 ships, the mux
-    # fork's Cargo patch points ssh-agent-lib at sini/ssh-agent-lib built on
-    # ssh-key 0.7.0-rc.11 (a fetched git dependency resolved by fetchCargoVendor).
+    # This builds on the RELEASED ssh-key 0.6.7 (no ssh-key 0.7 fork): our opkssh
+    # fork now mints certificates with a real valid_before (= the ID Token exp),
+    # which ssh-key 0.6.7 parses fine. Only the old `Valid: forever` certs
+    # (valid_before = u64::MAX) needed ssh-key 0.7 (RustCrypto/SSH#504).
     # Wrapped in a function so pipe assembly does not pre-apply the overlay.
     nixpkgs-overlays = _: [
       (final: prev: {
@@ -24,13 +23,13 @@
           src = final.fetchFromGitHub {
             owner = "sini";
             repo = "ssh-agent-mux";
-            rev = "223f6c232f07e0b573cdfc0cf54d441b8aa6a45a";
-            hash = "sha256-41L3cCNwfAFhCXiLANcXcsZjXhzk07hZYYNKwPxFkd8=";
+            rev = "8c47a16b2878de0525bbe564a30779ece40694f1";
+            hash = "sha256-YnjFMfHlIRN6vfsXiDf+cA9/0vZ132mtIuCvLB/HLHg=";
           };
           cargoDeps = final.rustPlatform.fetchCargoVendor {
             inherit src;
             name = "ssh-agent-mux-${version}-vendor";
-            hash = "sha256-BJg57gXpyfD+6vTYUnmU7W8RL+JU2W1NoFpLnq4vnDw=";
+            hash = "sha256-UsJUGxs7tn9wGtmjjPIHIO7dy6R5HXhlQ9eg8A3gRbw=";
           };
           patches = [ ];
         });
@@ -46,6 +45,24 @@
     homeLinux =
       { pkgs, config, ... }:
       let
+        # Load the git signing key into the standard agent once its socket is up
+        # and the agenix secret is decrypted. Runs as standard-ssh-agent's
+        # ExecStartPost, so it reloads whenever that agent (re)starts and does not
+        # race the mux the way loading it from the mux wrapper did (After= only
+        # guarantees the unit started, not that ssh-agent bound its socket).
+        signingKeyLoader = pkgs.writeShellScript "standard-ssh-agent-load-key" ''
+          set -uo pipefail
+          RUNTIME="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+          SOCK="$RUNTIME/standard-ssh-agent.sock"
+          KEY="${config.age.secrets.user-signing-key.path or "$HOME/.ssh/id_signing"}"
+          for _ in $(seq 1 100); do
+            { [ -S "$SOCK" ] && [ -f "$KEY" ]; } && break
+            sleep 0.1
+          done
+          [ -S "$SOCK" ] && [ -f "$KEY" ] \
+            && SSH_AUTH_SOCK="$SOCK" ${pkgs.openssh}/bin/ssh-add "$KEY" 2>/dev/null
+          exit 0
+        '';
         wrapper = pkgs.writeShellScript "ssh-agent-mux-start" ''
           set -euo pipefail
 
@@ -58,12 +75,9 @@
           STANDARD_SOCK="$XDG_RUNTIME_DIR/standard-ssh-agent.sock"
           RBW_SOCK="$XDG_RUNTIME_DIR/rbw/ssh-agent-socket"
           DESKTOP_SOCK="$HOME/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock"
-          SIGNING_KEY_PATH="${config.age.secrets.user-signing-key.path or "$HOME/.ssh/id_signing"}"
 
-          # Load the signing key into the standard agent before starting the mux
-          if [ -f "$SIGNING_KEY_PATH" ] && [ -S "$STANDARD_SOCK" ]; then
-            SSH_AUTH_SOCK="$STANDARD_SOCK" ${pkgs.openssh}/bin/ssh-add "$SIGNING_KEY_PATH" 2>/dev/null || true
-          fi
+          # (The signing key is loaded into the standard agent by that agent's
+          # own ExecStartPost, not here.)
 
           # Pass all potential sockets to the multiplexer unconditionally.
           # ssh-agent-mux gracefully ignores missing upstream sockets and will
@@ -87,6 +101,7 @@
           };
           Service = {
             ExecStart = "${pkgs.openssh}/bin/ssh-agent -D -a %t/standard-ssh-agent.sock";
+            ExecStartPost = "${signingKeyLoader}";
             Restart = "always";
           };
         };
@@ -109,6 +124,23 @@
     homeDarwin =
       { pkgs, config, ... }:
       let
+        # Load the git signing key into the standard agent once its socket is up
+        # and the agenix secret is decrypted, from a dedicated launchd agent
+        # rather than the mux wrapper (which raced the standard socket at login).
+        signingKeyLoader = pkgs.writeShellScript "standard-ssh-agent-load-key" ''
+          set -uo pipefail
+          DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || true)
+          DARWIN_TEMP="''${DARWIN_TEMP%/}"
+          SOCK="$DARWIN_TEMP/standard-ssh-agent.sock"
+          KEY="${config.age.secrets.user-signing-key.path or "$HOME/.ssh/id_signing"}"
+          for _ in $(seq 1 100); do
+            { [ -S "$SOCK" ] && [ -f "$KEY" ]; } && break
+            sleep 0.1
+          done
+          [ -S "$SOCK" ] && [ -f "$KEY" ] \
+            && SSH_AUTH_SOCK="$SOCK" ${pkgs.openssh}/bin/ssh-add "$KEY" 2>/dev/null
+          exit 0
+        '';
         wrapper = pkgs.writeShellScript "ssh-agent-mux-start" ''
           set -euo pipefail
 
@@ -119,12 +151,9 @@
           STANDARD_SOCK="$DARWIN_TEMP/standard-ssh-agent.sock"
           RBW_SOCK="$DARWIN_TEMP/rbw-$(id -u)/ssh-agent-socket"
           DESKTOP_SOCK="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
-          SIGNING_KEY_PATH="${config.age.secrets.user-signing-key.path or "$HOME/.ssh/id_signing"}"
 
-          # Load the signing key into the standard agent before starting the mux
-          if [ -f "$SIGNING_KEY_PATH" ] && [ -S "$STANDARD_SOCK" ]; then
-            SSH_AUTH_SOCK="$STANDARD_SOCK" ${pkgs.openssh}/bin/ssh-add "$SIGNING_KEY_PATH" 2>/dev/null || true
-          fi
+          # (The signing key is loaded into the standard agent by the
+          # standard-ssh-agent-load-key launchd agent, not here.)
 
           # Pass all potential sockets to the multiplexer unconditionally.
           # ssh-agent-mux gracefully ignores missing upstream sockets and will
@@ -149,6 +178,14 @@
             ];
             RunAtLoad = true;
             KeepAlive = true;
+          };
+        };
+
+        launchd.agents.standard-ssh-agent-load-key = {
+          enable = true;
+          config = {
+            ProgramArguments = [ "${signingKeyLoader}" ];
+            RunAtLoad = true;
           };
         };
 

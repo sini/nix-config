@@ -6,31 +6,51 @@
 # (NOT roles.dev — that reaches slab/droid, which has no opkssh).
 { ... }:
 let
-  # `opkssh-login` wrapper: authenticate, then load the freshly-minted cert into
-  # the standard ssh-agent (an ssh-agent-mux backend). opkssh writes the OIDC
-  # cert to ~/.ssh/id_ecdsa(+-cert.pub) and adds it to NO agent, so on its own
-  # the cert only reaches consumers that name the file explicitly. That breaks
-  # colmena, which targets a bare IP (host.ipv4) matching no ssh `Host` block.
-  # Loading it into the agent makes it available to every SSH_AUTH_SOCK consumer
-  # — colmena and plain ssh alike — with no per-host ssh-config dependency.
+  # `opkssh-login` wrapper: authenticate against kanidm. Our opkssh fork (see the
+  # overlay below) loads the freshly-minted cert into the ssh-agent named by
+  # SSH_AUTH_SOCK with a lifetime matching the token, so the cert reaches every
+  # SSH_AUTH_SOCK consumer — colmena (which targets a bare IP matching no ssh
+  # `Host` block) and plain ssh alike — with no per-host ssh-config dependency.
+  # SSH_AUTH_SOCK points at the standard agent, not the mux: the mux is a
+  # read-only aggregator that cannot accept key adds, and it re-reads the
+  # standard agent live, so the cert shows up through the mux immediately.
   loginScript =
     pkgs: lib: kanidmIssuer: standardSock:
     pkgs.writeShellScript "opkssh-login" ''
       set -euo pipefail
-
-      # Point at the standard agent, not the mux: opkssh/ssh-add write keys and
-      # the mux is a read-only aggregator that cannot accept adds.
       export SSH_AUTH_SOCK="${standardSock}"
-
-      ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh "$@"
-
-      # ssh-add loads the private key and automatically picks up the adjacent
-      # id_ecdsa-cert.pub certificate.
-      ${pkgs.openssh}/bin/ssh-add "$HOME/.ssh/id_ecdsa"
+      exec ${lib.getExe pkgs.opkssh} login --provider=${kanidmIssuer},opkssh "$@"
     '';
 in
 {
   den.aspects.applications.dev.security.opkssh-client = {
+    # Build opkssh from the sini fork: mint certificates with a real valid_before
+    # (the ID Token exp) instead of `Valid: forever`, and load the cert into the
+    # ssh-agent (SSH_AUTH_SOCK) with a matching lifetime. The real expiry is what
+    # lets ssh-agent-mux proxy the cert on the RELEASED ssh-key 0.6.7 (see
+    # ssh-agent-mux.nix); the agent-add makes `opkssh-login` self-contained and
+    # the agent drops the key when the cert expires. Client-only overlay
+    # (workstations); the server verifier is unaffected by these changes.
+    # Upstream: sini/opkssh feat/cert-expiry-and-agent (PRs pending).
+    nixpkgs-overlays = _: [
+      (final: prev: {
+        opkssh = prev.opkssh.overrideAttrs (_old: {
+          version = "0.16.0-unstable-2026-08-13";
+          src = final.fetchFromGitHub {
+            owner = "sini";
+            repo = "opkssh";
+            rev = "86ebb35ada989197ce83c8eb1673974866536d7a";
+            hash = "sha256-Gnr2yks/dZC+hrlGzimane4j2ZmvktfnvD3vuzEA774=";
+          };
+          vendorHash = "sha256-Qlk9zkElpCIpntMDNU5f+5YK2C2Jnc7Lp6uDUYFgQ2Q=";
+          # main carries integration tests that shell out to a real `sshd`, which
+          # isn't present in the Nix build sandbox ("exec: sshd not found"). The
+          # unit tests (incl. sshcert) are run against the fork out-of-band.
+          doCheck = false;
+        });
+      })
+    ];
+
     homeManager =
       { pkgs, environment, ... }:
       let
