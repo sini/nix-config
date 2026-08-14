@@ -1,16 +1,38 @@
-{ den, lib, ... }:
+{ ... }:
 {
   den.aspects.applications.dev.security.ssh-agent-mux = {
-    # rbw's ssh-agent has a partial protocol implementation; when it returns an
-    # error on listing, upstream ssh-agent-mux propagated it with `?` and dropped
-    # every agent's keys until the mux was restarted. The patch skips a
-    # list-erroring upstream, like it already skips a missing socket. Wrapped in a
-    # function so pipe assembly does not pre-apply the positional overlay.
-    # Upstream: sini/ssh-agent-mux fix/tolerate-upstream-list-errors.
+    # Build ssh-agent-mux from the sini fork. It bumps ssh-agent-lib 0.5.1 ->
+    # 0.6.0 for the `PublicCredential` (Key | Cert) type, so an SSH *certificate*
+    # in an upstream agent — e.g. the opkssh OIDC cert loaded into the standard
+    # agent — round-trips through the mux instead of decoding to a lossy opaque
+    # key and re-serializing a truncated identity list, which made `ssh-add -l`
+    # fail with "incomplete message" and dropped every other agent's keys
+    # (overhacked/ssh-agent-mux#56). The fork is branched off upstream main, so it
+    # also carries the merged list-errors tolerance (#94): a misbehaving upstream
+    # (rbw mid-unlock) is skipped instead of taking down the whole list.
+    #
+    # ssh-agent-lib 0.6.0 builds on the released ssh-key 0.6.7, which still
+    # rejects `Valid: forever` certificates (valid_before = u64::MAX) with
+    # "invalid time" (RustCrypto/SSH#504). Until ssh-key 0.7.0 ships, the mux
+    # fork's Cargo patch points ssh-agent-lib at sini/ssh-agent-lib built on
+    # ssh-key 0.7.0-rc.11 (a fetched git dependency resolved by fetchCargoVendor).
+    # Wrapped in a function so pipe assembly does not pre-apply the overlay.
     nixpkgs-overlays = _: [
-      (_final: prev: {
-        ssh-agent-mux = prev.ssh-agent-mux.overrideAttrs (old: {
-          patches = (old.patches or [ ]) ++ [ ./ssh-agent-mux-list-errors.patch ];
+      (final: prev: {
+        ssh-agent-mux = prev.ssh-agent-mux.overrideAttrs (_old: rec {
+          version = "0.2.0-unstable-2026-08-13";
+          src = final.fetchFromGitHub {
+            owner = "sini";
+            repo = "ssh-agent-mux";
+            rev = "223f6c232f07e0b573cdfc0cf54d441b8aa6a45a";
+            hash = "sha256-41L3cCNwfAFhCXiLANcXcsZjXhzk07hZYYNKwPxFkd8=";
+          };
+          cargoDeps = final.rustPlatform.fetchCargoVendor {
+            inherit src;
+            name = "ssh-agent-mux-${version}-vendor";
+            hash = "sha256-BJg57gXpyfD+6vTYUnmU7W8RL+JU2W1NoFpLnq4vnDw=";
+          };
+          patches = [ ];
         });
       })
     ];
