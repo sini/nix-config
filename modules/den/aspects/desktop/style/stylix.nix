@@ -193,7 +193,7 @@ in
 
               enable = true;
               enableReleaseChecks = false;
-              autoEnable = true;
+              autoEnable = false;
 
               image = wallpaper pkgs;
 
