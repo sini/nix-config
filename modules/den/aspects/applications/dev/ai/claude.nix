@@ -206,6 +206,16 @@
               # It lives beside the ADRs and specs it cites rather than in den-hoag,
               # which ADR-0002 freezes.
               BEADS_DIR = "${config.home.homeDirectory}/Documents/repos/sini/den-ag-design/.beads";
+
+              # The one supported way to give Bash tool shells a per-directory environment.
+              # Measured in claude-code 2.1.229: the binary reads this path and prepends its
+              # contents to the shell it spawns —
+              #   let n = Q.CLAUDE_ENV_FILE; if (n) { let i = readFile(n); if (i) r.push(i) }
+              # The hooks below keep the snapshot current. Without it, agents inherit NOTHING from
+              # a devshell: measured in a live session, a cwd with an allowed .envrc still gave
+              # PRJ_ROOT/IN_NIX_SHELL/DIRENV_DIR all unset, so every dispatch had to hand-carry
+              # `bd -C` and absolute tool paths in prompt text.
+              CLAUDE_ENV_FILE = "${config.home.homeDirectory}/.claude/direnv-snapshot.sh";
               # DISABLE_TELEMETRY = "1";
               # DISABLE_ERROR_REPORTING = "1";
               ENABLE_TOOL_SEARCH = "auto:5";
@@ -235,26 +245,65 @@
               "superpowers-extended-cc@superpowers-extended-cc-marketplace" = true;
               "mattpocock-skills@mattpocock" = true;
             };
+
+            # Two events, deliberately: session start, and every directory change. NOT PreToolUse —
+            # refreshing per tool call is the fork-bomb shape the upstream example warns about.
+            # `|| true` so a direnv failure never blocks a session or a tool call.
+            hooks = {
+              SessionStart = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/load-direnv.sh || true";
+                    }
+                  ];
+                }
+              ];
+              CwdChanged = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/load-direnv.sh || true";
+                    }
+                  ];
+                }
+              ];
+            };
           };
         };
 
-        home.file.".claude/env.sh" = {
+        # RETIRED: `.claude/env.sh` used to live here, on the belief that Claude Code sources it.
+        # It does not. Measured against claude-code 2.1.229: `env.sh` occurs ZERO times in the
+        # binary, with live controls in the same run (`settings.json` 201, `CLAUDE.md` 201,
+        # `.claude` 2933). It never ran. The supported mechanism is CLAUDE_ENV_FILE above.
+        home.file.".claude/load-direnv.sh" = {
           executable = true;
           text = ''
             #!/usr/bin/env bash
-            if command -v direnv >/dev/null; then
-              if [ -e .envrc ]; then
-                eval "$(direnv export bash 2>/dev/null)"
-                exit
-              fi
+            # Refresh the CLAUDE_ENV_FILE snapshot from direnv for the CURRENT directory.
+            #
+            # ★ THE HAZARD THIS SHAPE AVOIDS: evaluating direnv on every shell fork-bombs the host,
+            # and an agent asked to fix it re-triggers the same loop. So this runs on exactly TWO
+            # hook events — session start and directory change — and writes a SNAPSHOT the harness
+            # then reads per shell. It never evaluates during a Bash call.
+            set -uo pipefail
+            snap="''${CLAUDE_ENV_FILE:-$HOME/.claude/direnv-snapshot.sh}"
+            mkdir -p "$(dirname "$snap")"
+            # No .envrc here: leave whatever the last directory established rather than blanking it,
+            # so moving into an unmanaged directory does not strip the tools mid-task.
+            [ -e .envrc ] || exit 0
+            command -v direnv >/dev/null || exit 0
+            tmp="$(mktemp)"
+            if direnv export bash 2>/dev/null > "$tmp"; then
+              # Write via temp+mv: a half-written snapshot is sourced by every later shell, so a
+              # partial write is worse than a stale one.
+              mv "$tmp" "$snap"
+            else
+              rm -f "$tmp"
             fi
-            if command -v devenv >/dev/null; then
-              if devenv --version | grep -q '1\.1*'; then
-                eval "$(devenv print-dev-env)"
-              else
-                eval "$(devenv print-dev-env --no-tui)"
-              fi
-            fi
+            exit 0
           '';
         };
 
