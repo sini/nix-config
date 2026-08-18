@@ -54,6 +54,7 @@
 
     homeManager =
       {
+        config,
         pkgs,
         lib,
         inputs',
@@ -193,6 +194,18 @@
 
             env = {
               CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
+
+              # `bd` resolves its workspace from the CWD, so any agent command that
+              # cd's elsewhere first — another repo in the same ecosystem, a worktree —
+              # loses the tracker. Two of its failure modes are loud, but the body-edit
+              # idiom (`bd show > body.md`, append, write back) TRUNCATES THE FILE
+              # BEFORE the resolution error, so the read fails silently into a clobber.
+              # Pinning the directory removes the class rather than asking every call
+              # site to remember `-C`. Safe as a single global: this is the tracker for
+              # every gen-* repo by ruling, and the only .beads workspace in the tree.
+              # It lives beside the ADRs and specs it cites rather than in den-hoag,
+              # which ADR-0002 freezes.
+              BEADS_DIR = "${config.home.homeDirectory}/Documents/repos/sini/den-ag-design/.beads";
               # DISABLE_TELEMETRY = "1";
               # DISABLE_ERROR_REPORTING = "1";
               ENABLE_TOOL_SEARCH = "auto:5";

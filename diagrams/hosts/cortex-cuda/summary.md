@@ -10,22 +10,17 @@
 ## Aspects
 
 | Aspect | Classes | Parametric | Instance |
-| -------- | --------- | ------------ | ---------- |
+| ------ | ------- | ---------- | -------- |
 
 ## Classes
-
-
 
 ## Providers
 
 | Provider Aspect | Classes | Provider Path |
-| ----------------- | --------- | --------------- |
+| --------------- | ------- | ------------- |
 
 ## Policies
 
-
-
 ## Pipe Data
 
-**Produces:** none
-**Collects:** none
+**Produces:** none **Collects:** none

@@ -661,25 +661,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "secrets"
-      ],
+      "providerPath": ["secrets"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@axon-01",
       "hasClass": true,
@@ -705,16 +697,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@axon-02",
       "hasClass": true,
@@ -740,16 +726,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@axon-03",
       "hasClass": true,
@@ -775,16 +755,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@bitstream",
       "hasClass": true,
@@ -810,16 +784,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@blade",
       "hasClass": true,
@@ -845,16 +813,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@cortex",
       "hasClass": true,
@@ -880,16 +842,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/vic@uplink",
       "hasClass": true,
@@ -937,9 +893,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -961,10 +915,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "systemd"
-      ],
+      "providerPath": ["core", "systemd"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1037,9 +988,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1061,10 +1010,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "impermanence"
-      ],
+      "providerPath": ["core", "impermanence"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1115,9 +1061,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "roles"
-      ],
+      "providerPath": ["roles"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1153,9 +1097,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1177,19 +1119,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "users"
-      ],
+      "providerPath": ["core", "users"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1211,10 +1148,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "perf"
-      ],
+      "providerPath": ["core", "perf"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1243,9 +1177,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1267,19 +1199,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "system"
-      ],
+      "providerPath": ["core", "system"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1301,10 +1228,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "system"
-      ],
+      "providerPath": ["core", "system"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1333,9 +1257,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1357,10 +1279,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "users"
-      ],
+      "providerPath": ["core", "users"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1389,9 +1308,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1413,19 +1330,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "network"
-      ],
+      "providerPath": ["core", "network"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1447,19 +1359,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "localization"
-      ],
+      "providerPath": ["core", "localization"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1481,18 +1388,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core"
-      ],
+      "providerPath": ["core"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1514,10 +1417,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "system"
-      ],
+      "providerPath": ["core", "system"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1546,20 +1446,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "network",
-        "syncthing"
-      ],
+      "providerPath": ["core", "network", "syncthing"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1581,19 +1475,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "network"
-      ],
+      "providerPath": ["core", "network"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1615,9 +1504,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core"
-      ],
+      "providerPath": ["core"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1646,19 +1533,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "nix"
-      ],
+      "providerPath": ["core", "nix"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1680,19 +1562,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "security"
-      ],
+      "providerPath": ["core", "security"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1714,25 +1591,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "security"
-      ],
+      "providerPath": ["core", "security"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@axon-01",
       "hasClass": true,
@@ -1758,15 +1627,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@axon-02",
       "hasClass": true,
@@ -1792,15 +1656,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@axon-03",
       "hasClass": true,
@@ -1826,15 +1685,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@bitstream",
       "hasClass": true,
@@ -1860,15 +1714,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@blade",
       "hasClass": true,
@@ -1894,15 +1743,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@cortex",
       "hasClass": true,
@@ -1928,15 +1772,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/vic@uplink",
       "hasClass": true,
@@ -1984,9 +1823,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2008,20 +1845,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "network",
-        "syncthing"
-      ],
+      "providerPath": ["core", "network", "syncthing"],
       "shape": "trapezoid",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2043,10 +1874,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "impermanence"
-      ],
+      "providerPath": ["core", "impermanence"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -2075,10 +1903,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "impermanence"
-      ],
+      "providerPath": ["core", "impermanence"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -2107,10 +1932,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "users"
-      ],
+      "providerPath": ["core", "users"],
       "shape": "trapezoid",
       "style": "default",
       "to": null
@@ -2161,9 +1983,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2185,18 +2005,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core"
-      ],
+      "providerPath": ["core"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2218,19 +2034,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "users"
-      ],
+      "providerPath": ["core", "users"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2252,19 +2063,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "perf"
-      ],
+      "providerPath": ["core", "perf"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2286,19 +2092,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "nix"
-      ],
+      "providerPath": ["core", "nix"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2320,19 +2121,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "security"
-      ],
+      "providerPath": ["core", "security"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2354,18 +2150,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core"
-      ],
+      "providerPath": ["core"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2387,10 +2179,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "network"
-      ],
+      "providerPath": ["core", "network"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -2419,10 +2208,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "localization"
-      ],
+      "providerPath": ["core", "localization"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -2458,15 +2244,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@axon-01",
       "hasClass": true,
@@ -2492,15 +2273,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@axon-02",
       "hasClass": true,
@@ -2526,15 +2302,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@axon-03",
       "hasClass": true,
@@ -2560,15 +2331,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@bitstream",
       "hasClass": true,
@@ -2594,15 +2360,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@blade",
       "hasClass": true,
@@ -2628,15 +2389,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@cortex",
       "hasClass": true,
@@ -2662,15 +2418,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/vic@uplink",
       "hasClass": true,
@@ -2718,9 +2469,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2749,9 +2498,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2773,18 +2520,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core"
-      ],
+      "providerPath": ["core"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2806,9 +2549,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core"
-      ],
+      "providerPath": ["core"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -2818,9 +2559,7 @@
       "classes": [],
       "entityInstance": "user:vic",
       "entityKind": "user",
-      "fnArgNames": [
-        "user"
-      ],
+      "fnArgNames": ["user"],
       "from": null,
       "fullLabel": "vic",
       "hasClass": false,
@@ -2846,9 +2585,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2870,19 +2607,14 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "impermanence"
-      ],
+      "providerPath": ["core", "impermanence"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:vic",
       "entityKind": "user",
       "fnArgNames": [],
@@ -2904,10 +2636,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "perf"
-      ],
+      "providerPath": ["core", "perf"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -2936,10 +2665,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "applications",
-        "shell"
-      ],
+      "providerPath": ["applications", "shell"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null

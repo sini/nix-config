@@ -409,16 +409,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@axon-01",
       "hasClass": true,
@@ -444,16 +438,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@axon-02",
       "hasClass": true,
@@ -479,16 +467,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@axon-03",
       "hasClass": true,
@@ -514,16 +496,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@bitstream",
       "hasClass": true,
@@ -549,16 +525,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@blade",
       "hasClass": true,
@@ -584,16 +554,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@cortex",
       "hasClass": true,
@@ -622,11 +586,7 @@
       "classes": [],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@patch",
       "hasClass": false,
@@ -655,11 +615,7 @@
       "classes": [],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@slab",
       "hasClass": false,
@@ -685,16 +641,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "secretsConfig",
-        "user"
-      ],
+      "fnArgNames": ["host", "secretsConfig", "user"],
       "from": null,
       "fullLabel": "agenix-identity/sini@uplink",
       "hasClass": true,
@@ -1035,10 +985,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "trapezoid",
       "style": "adapter",
       "to": null
@@ -1067,15 +1014,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@axon-01",
       "hasClass": true,
@@ -1101,15 +1043,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@axon-02",
       "hasClass": true,
@@ -1135,15 +1072,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@axon-03",
       "hasClass": true,
@@ -1169,15 +1101,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@bitstream",
       "hasClass": true,
@@ -1203,15 +1130,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@blade",
       "hasClass": true,
@@ -1237,15 +1159,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@cortex",
       "hasClass": true,
@@ -1271,15 +1188,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@patch",
       "hasClass": true,
@@ -1305,15 +1217,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@slab",
       "hasClass": true,
@@ -1339,15 +1246,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "opkssh-authz/sini@uplink",
       "hasClass": true,
@@ -1395,9 +1297,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
       "fnArgNames": [],
@@ -1419,26 +1319,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "network",
-        "syncthing"
-      ],
+      "providerPath": ["core", "network", "syncthing"],
       "shape": "trapezoid",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@axon-01)",
       "hasClass": true,
@@ -1457,25 +1348,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@axon-02)",
       "hasClass": true,
@@ -1494,25 +1377,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@axon-03)",
       "hasClass": true,
@@ -1531,25 +1406,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@bitstream)",
       "hasClass": true,
@@ -1568,25 +1435,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@blade)",
       "hasClass": true,
@@ -1605,25 +1464,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@cortex)",
       "hasClass": true,
@@ -1642,25 +1493,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@patch)",
       "hasClass": true,
@@ -1679,25 +1522,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@slab)",
       "hasClass": true,
@@ -1716,25 +1551,17 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "den/batteries/primary-user(sini@uplink)",
       "hasClass": true,
@@ -1753,10 +1580,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "den",
-        "batteries"
-      ],
+      "providerPath": ["den", "batteries"],
       "shape": "hexagon",
       "style": "default",
       "to": null
@@ -1807,10 +1631,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "core",
-        "users"
-      ],
+      "providerPath": ["core", "users"],
       "shape": "trapezoid",
       "style": "default",
       "to": null
@@ -1820,9 +1641,7 @@
       "classes": [],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "user"
-      ],
+      "fnArgNames": ["user"],
       "from": null,
       "fullLabel": "sini",
       "hasClass": false,
@@ -1870,10 +1689,7 @@
         }
       },
       "policyName": null,
-      "providerPath": [
-        "applications",
-        "media"
-      ],
+      "providerPath": ["applications", "media"],
       "shape": "trapezoid",
       "style": "default",
       "to": null
@@ -1931,15 +1747,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@axon-01",
       "hasClass": true,
@@ -1965,15 +1776,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@axon-02",
       "hasClass": true,
@@ -1999,15 +1805,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@axon-03",
       "hasClass": true,
@@ -2033,15 +1834,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@bitstream",
       "hasClass": true,
@@ -2067,15 +1863,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@blade",
       "hasClass": true,
@@ -2101,15 +1892,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@cortex",
       "hasClass": true,
@@ -2135,15 +1921,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@patch",
       "hasClass": true,
@@ -2169,15 +1950,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@slab",
       "hasClass": true,
@@ -2203,15 +1979,10 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
-      "fnArgNames": [
-        "host",
-        "user"
-      ],
+      "fnArgNames": ["host", "user"],
       "from": null,
       "fullLabel": "user-enrich/sini@uplink",
       "hasClass": true,
@@ -2259,9 +2030,7 @@
     },
     {
       "class": "nixos",
-      "classes": [
-        "nixos"
-      ],
+      "classes": ["nixos"],
       "entityInstance": "user:sini",
       "entityKind": "user",
       "fnArgNames": [],
