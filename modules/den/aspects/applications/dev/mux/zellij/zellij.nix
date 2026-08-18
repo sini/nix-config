@@ -15,6 +15,7 @@
         ...
       }:
       let
+        # TODO: abstract away stylix dep
         inherit (config.lib.stylix) colors;
 
         zsesh = pkgs.writeScriptBin "zsesh" ''
@@ -150,6 +151,7 @@
           }
         '';
 
+        # TODO: Remove stylix dependency from zellij, make optional
         stylixTheme = ''
           themes {
             stylix {

@@ -37,7 +37,7 @@ in
 
             enable = true;
             enableReleaseChecks = false;
-            autoEnable = true;
+            autoEnable = false;
 
             homeManagerIntegration.autoImport = false;
             homeManagerIntegration.followSystem = false;
@@ -162,8 +162,6 @@ in
             };
             dark = "Papirus-Dark";
           };
-
-          targets.firefox.firefoxGnomeTheme.enable = true;
 
           cursor = {
             name = "catppuccin-mocha-peach-cursors";

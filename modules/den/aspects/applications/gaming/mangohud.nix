@@ -8,7 +8,8 @@
           enableSessionWide = true;
         };
 
-        stylix.targets.mangohud.enable = false;
+        # TODO: only set this if stylix is enabled
+        # stylix.targets.mangohud.enable = false;
 
         xdg.configFile."MangoHud/MangoHud.conf".text =
           # conf

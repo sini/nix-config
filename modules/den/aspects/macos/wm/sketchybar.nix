@@ -8,6 +8,7 @@
   den.aspects.macos.wm.sketchybar.homeDarwin =
     { config, pkgs, ... }:
     let
+      # TODO: Abstract away stylix dependency
       inherit (config.lib.stylix) colors;
       font = config.stylix.fonts.monospace.name;
 

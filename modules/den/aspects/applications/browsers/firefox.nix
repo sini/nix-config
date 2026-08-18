@@ -221,6 +221,8 @@ in
 
     stylix-hm = {
       targets.firefox.profileNames = [ "default" ];
+      # TODO: bind this to linux only
+      # targets.firefox.firefoxGnomeTheme.enable = true;
     };
 
     cacheHome.directories = [
