@@ -75,6 +75,11 @@
           STANDARD_SOCK="$XDG_RUNTIME_DIR/standard-ssh-agent.sock"
           RBW_SOCK="$XDG_RUNTIME_DIR/rbw/ssh-agent-socket"
           DESKTOP_SOCK="$HOME/.var/app/com.bitwarden.desktop/data/.bitwarden-ssh-agent.sock"
+          # Asked of gpgconf rather than hardcoded: the path is derived from a
+          # hash of the gnupg homedir, so it moves if programs.gpg.homedir does.
+          # Resolvable whether or not the agent has started.
+          GPG_SOCK="$(${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket 2>/dev/null \
+            || echo "$XDG_RUNTIME_DIR/gnupg/S.gpg-agent.ssh")"
 
           # (The signing key is loaded into the standard agent by that agent's
           # own ExecStartPost, not here.)
@@ -82,7 +87,7 @@
           # Pass all potential sockets to the multiplexer unconditionally.
           # ssh-agent-mux gracefully ignores missing upstream sockets and will
           # automatically connect to them if they are created later (e.g. when rbw is unlocked).
-          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" "$DESKTOP_SOCK" "$RBW_SOCK" )
+          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" "$DESKTOP_SOCK" "$RBW_SOCK" "$GPG_SOCK" )
 
           exec ${pkgs.ssh-agent-mux}/bin/ssh-agent-mux "''${ARGS[@]}"
         '';
@@ -151,6 +156,8 @@
           STANDARD_SOCK="$DARWIN_TEMP/standard-ssh-agent.sock"
           RBW_SOCK="$DARWIN_TEMP/rbw-$(id -u)/ssh-agent-socket"
           DESKTOP_SOCK="$HOME/Library/Containers/com.bitwarden.desktop/Data/.bitwarden-ssh-agent.sock"
+          GPG_SOCK="$(${pkgs.gnupg}/bin/gpgconf --list-dirs agent-ssh-socket 2>/dev/null \
+            || echo "$HOME/.gnupg/S.gpg-agent.ssh")"
 
           # (The signing key is loaded into the standard agent by the
           # standard-ssh-agent-load-key launchd agent, not here.)
@@ -158,7 +165,7 @@
           # Pass all potential sockets to the multiplexer unconditionally.
           # ssh-agent-mux gracefully ignores missing upstream sockets and will
           # automatically connect to them if they are created later (e.g. when rbw is unlocked).
-          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" "$DESKTOP_SOCK" "$RBW_SOCK" )
+          ARGS=( "-l" "$MUX_SOCK" "$STANDARD_SOCK" "$DESKTOP_SOCK" "$RBW_SOCK" "$GPG_SOCK" )
 
           exec ${pkgs.ssh-agent-mux}/bin/ssh-agent-mux "''${ARGS[@]}"
         '';
@@ -166,6 +173,22 @@
       {
         home.sessionVariables = {
           SSH_AUTH_SOCK = ''$(DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null); echo "$DARWIN_TEMP/ssh-agent-mux.sock")'';
+        };
+
+        # Export the mux socket into the GUI login session, so it reaches apps
+        # and scripts rather than only interactive shells. This lived in the gpg
+        # aspect and pointed at gpg's own socket; it belongs with whichever agent
+        # actually fronts ssh, which is now the mux.
+        launchd.agents.ssh-auth-sock = {
+          enable = true;
+          config = {
+            ProgramArguments = [
+              "/bin/sh"
+              "-c"
+              ''DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null); /bin/launchctl setenv SSH_AUTH_SOCK "$DARWIN_TEMP/ssh-agent-mux.sock"''
+            ];
+            RunAtLoad = true;
+          };
         };
 
         launchd.agents.standard-ssh-agent = {

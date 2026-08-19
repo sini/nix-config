@@ -14,6 +14,7 @@
 
       applications.dev.editor.nvf
 
+      applications.dev.security.gpg
       applications.dev.security.ssh
       applications.dev.security.bitwarden
       applications.dev.security.ssh-agent-mux
