@@ -95,6 +95,15 @@
           slices."nix-daemon".sliceConfig = {
             ManagedOOMMemoryPressure = "kill";
             ManagedOOMMemoryPressureLimit = "50%";
+            # A pressure policy alone only reacts once the host is already
+            # struggling, and it cannot act at all while the kernel still sees
+            # swap to hand out. These are the standing bound: High throttles the
+            # slice into reclaim, Max fails one build rather than letting the
+            # builds take the machine with them. systemd resolves both against
+            # physical RAM, so a build host and a small node are bounded in the
+            # same proportion without either being named here.
+            MemoryHigh = "60%";
+            MemoryMax = "85%";
           };
           services."nix-daemon".serviceConfig = {
             Slice = "nix-daemon.slice";

@@ -31,6 +31,16 @@
 
           kernelParams = [
             "zfs.zfs_arc_max=${toString (16 * 1024 * 1024 * 1024)}"
+            # Cloning a range whose source blocks are still dirty makes
+            # zfs_clone_range() wait on a full txg sync and retry
+            # (module/zfs/zfs_vnops.c: the EAGAIN arm calling
+            # txg_wait_synced_flags). Nix and coreutils >= 9 reach that path
+            # constantly via copy_file_range, so on a busy pool every writer on
+            # the host serialises behind one sync and stalls long enough to trip
+            # the systemd watchdogs. With the wait off, the clone returns a
+            # short range and the caller falls back to a plain copy; cloning
+            # still applies to blocks that are already on disk.
+            "zfs.zfs_bclone_wait_dirty=0"
             "elevator=none"
             "nohibernate"
           ];
