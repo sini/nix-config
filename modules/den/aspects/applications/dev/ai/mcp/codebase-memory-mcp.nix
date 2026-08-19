@@ -35,7 +35,14 @@
         # own sqlite config, hence an idempotent activation step rather than a
         # managed file.
         home.activation.cbmAutoIndex = lib.hm.dag.entryAfter [ "writeBoundary" ] ''
-          run ${cbm}/bin/codebase-memory-mcp config set auto_index true
+          # `config set` refuses while a codebase-memory process from a different
+          # build is live, and an open agent session pins the old build across the
+          # very switch that installs the new one — so an ordinary deploy started
+          # from inside a session takes the whole generation down with it. The
+          # write is idempotent and the next activation re-applies it, so warn and
+          # carry on instead.
+          run ${cbm}/bin/codebase-memory-mcp config set auto_index true \
+            || warnEcho "codebase-memory-mcp: auto_index left unchanged (a live session holds a conflicting build); re-applied on the next activation"
         '';
 
         # stdio MCP server: spawned per session by Claude Code, no daemon

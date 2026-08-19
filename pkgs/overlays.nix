@@ -22,24 +22,35 @@
 
     openldap = prev.openldap.overrideAttrs { doCheck = false; };
 
-    # TODO: Remove this once nixpkgs updates nanoemoji to v0.16.0 (or later)
-    # nanoemoji's v0.16.0 GitHub tag tarball re-hashed upstream; nixpkgs (incl.
-    # master) still pins the stale FOD hash. gftools -> nanoemoji drags it into
-    # from-source font builds (jetbrains-mono, openmoji, ...), so the whole font
-    # set fails on the hash mismatch. Pin the corrected src across all python
-    # sets until nixpkgs catches up.
-    # pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
-    #   (_pyfinal: pyprev: {
-    #     nanoemoji = pyprev.nanoemoji.overrideAttrs (_old: {
-    #       src = prev.fetchFromGitHub {
-    #         owner = "googlefonts";
-    #         repo = "nanoemoji";
-    #         tag = "v0.16.0";
-    #         hash = "sha256-FysyKC01XBnRiur5RR9fcsTxQqE8x0JJHSoe3q6JtKc=";
-    #       };
-    #     });
-    #   })
-    # ];
+    pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
+      (_pyfinal: pyprev: {
+        # TODO: Remove once nixpkgs picks up
+        # https://github.com/NixOS/nixpkgs/pull/554405 or bumps curl-cffi to
+        # 0.16.0. The 0.15.0 test suite asserts on TLS/cookie error strings that
+        # the current curl-impersonate no longer emits. yt-dlp pulls curl-cffi
+        # into every closure, so the whole host build fails on it.
+        curl-cffi = pyprev.curl-cffi.overrideAttrs (old: {
+          disabledTestPaths = (old.disabledTestPaths or [ ]) ++ [
+            "tests/unittest/test_async_session.py::test_verify"
+            "tests/unittest/test_curl.py::test_verify"
+            "tests/unittest/test_requests.py::test_verify"
+            "tests/unittest/test_requests.py::test_delete_cookies"
+          ];
+        });
+
+        # Our ZFS datasets are created with utf8only=on, so the kernel refuses
+        # filenames that are not valid UTF-8 (EILSEQ) instead of creating them.
+        # These two tests exist to exercise exactly such names, so they can never
+        # pass on this machine regardless of nixpkgs revision. gftools -> pygit2
+        # drags this into from-source font builds.
+        pygit2 = pyprev.pygit2.overrideAttrs (old: {
+          disabledTests = (old.disabledTests or [ ]) ++ [
+            "test_lookup_branch_local"
+            "test_nonunicode_status_path"
+          ];
+        });
+      })
+    ];
 
     inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 

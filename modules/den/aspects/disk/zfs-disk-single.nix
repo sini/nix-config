@@ -80,61 +80,81 @@
         emptySnapshot =
           name: "zfs list -t snapshot -H -o name | grep -E '^${name}@empty$' || zfs snapshot ${name}@empty";
 
-        # Datasets are read back from the disko declaration below so the
-        # provisioner stays in lockstep with the layout (single source of truth).
-        zfsDatasets = config.disko.devices.zpool.zroot.datasets;
-
-        # Foundational mounts always exist on a booted host and come up early;
-        # never reorder around them. Every other dataset with a mountpoint is a
-        # data dataset that may be newly introduced on an already-deployed pool.
-        foundationalMounts = [
-          "/"
-          "/nix"
-          "/home"
-          "/persist"
-          "/cache"
-          "/boot"
-        ];
-        provisionable = lib.filterAttrs (
-          _name: ds: ds.mountpoint != null && !(lib.elem ds.mountpoint foundationalMounts)
-        ) zfsDatasets;
-
-        mountUnit = path: "${lib.replaceStrings [ "/" ] [ "-" ] (lib.removePrefix "/" path)}.mount";
-        mkOpts =
-          ds: lib.concatStringsSep " " (lib.mapAttrsToList (k: v: "-o ${k}=${toString v}") ds.options);
-        provisionMounts = lib.mapAttrsToList (_name: ds: mountUnit ds.mountpoint) provisionable;
+        # Retired: support for provision-zfs-datasets (commented out below).
+        # Kept for reference should a future dataset need the same rollout.
+        #
+        # zfsDatasets = config.disko.devices.zpool.zroot.datasets;
+        #
+        # foundationalMounts = [
+        #   "/"
+        #   "/nix"
+        #   "/home"
+        #   "/persist"
+        #   "/cache"
+        #   "/boot"
+        # ];
+        # provisionable = lib.filterAttrs (
+        #   _name: ds: ds.mountpoint != null && !(lib.elem ds.mountpoint foundationalMounts)
+        # ) zfsDatasets;
+        #
+        # mountUnit = path: "${lib.replaceStrings [ "/" ] [ "-" ] (lib.removePrefix "/" path)}.mount";
+        #
+        # Pools predating rootFsOptions.normalization = "none" still carry formD
+        # (and the utf8only=on it forces) on their root dataset, and both are
+        # create-time only, so anything provisioned on such a pool inherits them
+        # for good. A child may override its parent; only the pool root is stuck.
+        # unicodeOptions = {
+        #   normalization = "none";
+        #   utf8only = "off";
+        # };
+        # mkOpts =
+        #   ds:
+        #   lib.concatStringsSep " " (
+        #     lib.mapAttrsToList (k: v: "-o ${k}=${toString v}") (unicodeOptions // ds.options)
+        #   );
+        # provisionMounts = lib.mapAttrsToList (_name: ds: mountUnit ds.mountpoint) provisionable;
       in
       {
         imports = [ inputs.disko.nixosModules.default ];
 
-        # Rollout provisioner: disko only creates datasets at install, yet it
-        # emits a *required* fileSystems mount for each at every switch. Adding a
-        # dataset to the layout would therefore fail to boot on pools created
-        # earlier. Create any missing data dataset after the pool imports and
-        # before its mount runs. Idempotent — a no-op once the dataset exists.
-        systemd.services.provision-zfs-datasets = {
-          description = "Create declared zfs datasets missing on pre-existing pools";
-          # Runs in the early pre-local-fs phase. DefaultDependencies must be off:
-          # default deps add After=basic.target, which (being after local-fs.target)
-          # forms a cycle with Before=<dataset>.mount and makes systemd delete mount
-          # jobs nondeterministically — datasets then mount on some boots, not others.
-          unitConfig.DefaultDependencies = false;
-          after = [ "zfs-import-zroot.service" ];
-          before = provisionMounts ++ [ "shutdown.target" ];
-          conflicts = [ "shutdown.target" ];
-          requiredBy = provisionMounts;
-          path = [ config.boot.zfs.package ];
-          serviceConfig = {
-            Type = "oneshot";
-            RemainAfterExit = true;
-          };
-          script = lib.concatStringsSep "\n" (
-            lib.mapAttrsToList (
-              name: ds:
-              "zfs list -H -o name zroot/${name} >/dev/null 2>&1 || zfs create ${mkOpts ds} zroot/${name}"
-            ) provisionable
-          );
-        };
+        # Retired rollout provisioner, kept for reference.
+        #
+        # disko only creates datasets at install, yet it emits a *required*
+        # fileSystems mount for each at every switch, so adding a dataset to the
+        # layout would fail to boot on pools created earlier. This unit created
+        # any missing data dataset after the pool imported and before its mount
+        # ran. Every deployed pool now carries the full layout, so it is dead
+        # weight.
+        #
+        # Two traps if it is ever reinstated. DefaultDependencies must stay off:
+        # default deps add After=basic.target, which (being after local-fs.target)
+        # forms a cycle with Before=<dataset>.mount and makes systemd delete mount
+        # jobs nondeterministically — datasets then mount on some boots, not
+        # others. And requiredBy puts Requires= on each data mount, which systemd
+        # propagates: any switch that changes this unit's text stops it and takes
+        # those mounts down with it, unmounting containerd's data root under a
+        # running containerd. Prefer wantedBy, which keeps the Before= ordering
+        # without the propagation.
+        #
+        # systemd.services.provision-zfs-datasets = {
+        #   description = "Create declared zfs datasets missing on pre-existing pools";
+        #   unitConfig.DefaultDependencies = false;
+        #   after = [ "zfs-import-zroot.service" ];
+        #   before = provisionMounts ++ [ "shutdown.target" ];
+        #   conflicts = [ "shutdown.target" ];
+        #   requiredBy = provisionMounts;
+        #   path = [ config.boot.zfs.package ];
+        #   serviceConfig = {
+        #     Type = "oneshot";
+        #     RemainAfterExit = true;
+        #   };
+        #   script = lib.concatStringsSep "\n" (
+        #     lib.mapAttrsToList (
+        #       name: ds:
+        #       "zfs list -H -o name zroot/${name} >/dev/null 2>&1 || zfs create ${mkOpts ds} zroot/${name}"
+        #     ) provisionable
+        #   );
+        # };
 
         disko.devices = {
           disk.disk0 = {
@@ -173,14 +193,35 @@
             rootFsOptions = {
               acltype = "posixacl";
               canmount = "off";
-              checksum = "edonr";
+              # blake3 over edonr: OpenZFS ships no SIMD implementation of edonr
+              # at all, so it runs scalar everywhere, while blake3 has avx2 and
+              # avx512 paths. Every host in the fleet has at least avx2, which is
+              # the crossover (measured on cortex, 64k blocks: edonr 2325 MB/s,
+              # blake3-avx2 3831, blake3-avx512 8552; blake3 loses below avx2).
+              # Encryption does not bypass it — an encrypted block's checksum is
+              # 128 bits of this algorithm plus 128 bits of AEAD MAC.
+              # Note the pool feature is not read-only compatible: once a blake3
+              # block is written the pool needs OpenZFS >= 2.2 to import at all,
+              # so rescue media older than that stops working.
+              checksum = "blake3";
               compression = "zstd";
               dnodesize = "auto";
               encryption = "aes-256-gcm";
               keyformat = "passphrase";
               keylocation = "file:///tmp/secret.key";
               mountpoint = "none";
-              normalization = "formD";
+              # Byte-exact filenames, as on every other Linux filesystem. Any
+              # normalization other than "none" forces utf8only=on, and utf8only
+              # makes the kernel reject filenames that are not valid UTF-8 with
+              # EILSEQ instead of creating them: package test suites that build
+              # such names fail (python pygit2), and OCI layers carrying them
+              # fail to unpack. formD additionally makes lookups
+              # normalization-insensitive, so NFC and NFD spellings of one name
+              # collide and a tree containing both cannot be checked out.
+              # Both are create-time only and cannot be set on zfs receive, so
+              # getting this wrong costs a dataset rebuild.
+              normalization = "none";
+              utf8only = "off";
               relatime = "on";
               xattr = "sa";
               "com.sun:auto-snapshot" = "false";
