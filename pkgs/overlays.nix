@@ -4,7 +4,7 @@
   # This one contains whatever you want to overlay
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
-  modifications = _final: prev: {
+  modifications = final: prev: {
 
     kanidm-provision = prev.kanidm-provision.overrideAttrs (_old: rec {
       src = prev.fetchFromGitHub {
@@ -21,6 +21,18 @@
     });
 
     openldap = prev.openldap.overrideAttrs { doCheck = false; };
+
+    # TODO: Remove once nixpkgs fixes intel-graphics-compiler 2.40.13. Bump
+    # 65e994d (2.38.2 -> 2.40.13) broke the build: opencl-clang applies its
+    # clang patches with `git am` against a tree that IGC's own LLVM patcher
+    # already edited with GNU patch, so the index is stale and the first patch
+    # aborts with "clang/lib/Basic/Targets/SPIR.h: does not match index". The
+    # vendored clang-17 is then built without opencl-clang's extensions and
+    # cl_headers dies on `-cl-std=CL3.1` a few thousand ninja targets later.
+    # unstable still has 2.38.2 and carries the *same* intel-compute-runtime
+    # (26.27.39122.11), so this takes the pair upstream tests together rather
+    # than mixing a downgraded IGC into master's runtime.
+    inherit (final.unstable) intel-graphics-compiler intel-compute-runtime;
 
     pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
       (_pyfinal: pyprev: {
