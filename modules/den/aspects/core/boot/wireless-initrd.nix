@@ -38,10 +38,23 @@
       {
         boot.initrd = lib.mkIf hasWireless {
           # WPA crypto modules (network drivers come from core.boot.network-initrd).
+          #
+          # ccm/ctr/cmac are only the crypto *templates*. mac80211 asks the
+          # crypto API for the composed algorithm "ccm(aes)", and the cipher it
+          # composes over is resolved separately at runtime — no module link
+          # records that dependency, so the initrd closure never pulls it in.
+          # Without an AES implementation present, allocating ccm(aes) fails and
+          # the association dies right after the 4-way handshake with "kernel
+          # reports: key addition failed" / "Failed to set PTK to the driver",
+          # which looks like a wifi problem but is a missing-cipher problem.
+          # "aes" is the generic implementation and is what makes it work at
+          # all; aesni_intel is the accelerated path.
           availableKernelModules = [
             "ccm"
             "ctr"
             "cmac"
+            "aes"
+            "aesni_intel"
           ];
 
           compressor = "zstd";
