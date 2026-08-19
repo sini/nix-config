@@ -291,10 +291,7 @@
       url = "github:sini/razer-control-revived";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    scope-engine = {
-      url = "github:sini/scope-engine";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
+    scope-engine.url = "github:sini/scope-engine/04cd87c076acfc1b023e6db912f9f0cb3029871d";
     shimmer = {
       url = "github:nuclearcodecat/shimmer";
       flake = false;
