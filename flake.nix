@@ -102,6 +102,10 @@
       url = "github:numtide/devshell";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    diagram-design = {
+      url = "github:cathrynlavery/diagram-design";
+      flake = false;
+    };
     disko = {
       url = "github:nix-community/disko";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
@@ -133,13 +137,25 @@
     };
     gen-schema.url = "github:sini/gen-schema";
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
+    graphify = {
+      url = "github:Graphify-Labs/graphify";
+      flake = false;
+    };
     gsesh = {
       url = "gitlab:hmajid2301/gsesh";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    gstack = {
+      url = "github:garrytan/gstack";
+      flake = false;
+    };
     haumea = {
       url = "github:nix-community/haumea/v0.2.2";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    headroom = {
+      url = "github:headroomlabs-ai/headroom";
+      flake = false;
     };
     hm-wrapper-modules = {
       url = "github:sini/hm-wrapper-modules";
@@ -267,7 +283,6 @@
       url = "github:numtide/nixos-anywhere";
       inputs = {
         disko.follows = "disko";
-        flake-parts.follows = "flake-parts";
         nixos-stable.follows = "nixpkgs";
         nixpkgs.follows = "nixpkgs-unstable";
         treefmt-nix.follows = "treefmt-nix";
@@ -285,7 +300,15 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nvf.url = "github:notashelf/nvf";
+    one-skill-to-rule-them-all = {
+      url = "github:rebelytics/one-skill-to-rule-them-all";
+      flake = false;
+    };
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
+    ponytail = {
+      url = "github:dietrichgebert/ponytail";
+      flake = false;
+    };
     proton-cachyos.url = "github:powerofthe69/proton-cachyos-nix";
     razerdaemon = {
       url = "github:sini/razer-control-revived";
@@ -315,6 +338,10 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     ucodenix.url = "github:e-tho/ucodenix";
+    ui-ux-pro-max-skill = {
+      url = "github:nextlevelbuilder/ui-ux-pro-max-skill";
+      flake = false;
+    };
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs = {

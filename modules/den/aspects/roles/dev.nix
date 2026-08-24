@@ -8,7 +8,16 @@
       applications.dev.ai.hunk
       applications.dev.ai.rtk
       applications.dev.ai.llm-agents
+      applications.dev.ai.gstack
+      applications.dev.ai.ponytail
+      applications.dev.ai.graphify
+      applications.dev.ai.headroom
+      applications.dev.ai.diagram-design
+      applications.dev.ai.ui-ux-pro-max
+      applications.dev.ai.one-skill-to-rule-them-all
+      applications.dev.ai.codegraph
       applications.dev.ai.mcp.codebase-memory
+      applications.dev.ai.mcp.serena
 
       applications.shell.nix-index
 

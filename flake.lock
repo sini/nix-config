@@ -603,6 +603,22 @@
         "type": "github"
       }
     },
+    "diagram-design": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787351183,
+        "narHash": "sha256-8mRjpyE0ltu4KE606Db2bIg3MtOEixnSJxrfRUOsFT4=",
+        "owner": "cathrynlavery",
+        "repo": "diagram-design",
+        "rev": "648c2a597839301e06df1e7434a08bde9f42eed3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cathrynlavery",
+        "repo": "diagram-design",
+        "type": "github"
+      }
+    },
     "disko": {
       "inputs": {
         "nixpkgs": [
@@ -1493,6 +1509,22 @@
         "type": "github"
       }
     },
+    "graphify": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787577513,
+        "narHash": "sha256-w/Dc1i3Akn8Uz/QdTqrdFlFkvcwQKras6EmvXHotA20=",
+        "owner": "Graphify-Labs",
+        "repo": "graphify",
+        "rev": "282976b2f4066b55cf2fa346c3d5568f7ac044e2",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Graphify-Labs",
+        "repo": "graphify",
+        "type": "github"
+      }
+    },
     "gsesh": {
       "inputs": {
         "flake-utils": "flake-utils_2",
@@ -1513,6 +1545,22 @@
         "owner": "hmajid2301",
         "repo": "gsesh",
         "type": "gitlab"
+      }
+    },
+    "gstack": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787586958,
+        "narHash": "sha256-NZmxhLXabRvULUqc1vNf4o0UI5ECcuMVZk8uhiYQj6c=",
+        "owner": "garrytan",
+        "repo": "gstack",
+        "rev": "ad8400543cd9ce8d07641362db48d44a95417e33",
+        "type": "github"
+      },
+      "original": {
+        "owner": "garrytan",
+        "repo": "gstack",
+        "type": "github"
       }
     },
     "haumea": {
@@ -1555,6 +1603,22 @@
         "owner": "nix-community",
         "ref": "v0.2.2",
         "repo": "haumea",
+        "type": "github"
+      }
+    },
+    "headroom": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787569383,
+        "narHash": "sha256-CSqF9QeX6ka5vKmcy4dkNg3l++bUSYeh2FgBUrKGHNM=",
+        "owner": "headroomlabs-ai",
+        "repo": "headroom",
+        "rev": "4408e881064741a5113be69d631f336ce92631f5",
+        "type": "github"
+      },
+      "original": {
+        "owner": "headroomlabs-ai",
+        "repo": "headroom",
         "type": "github"
       }
     },
@@ -3345,6 +3409,22 @@
         "type": "github"
       }
     },
+    "one-skill-to-rule-them-all": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1784280948,
+        "narHash": "sha256-VdK06HjwFWqAmFcN6xG11fH4D2gnZy91SmXVFFrmLXQ=",
+        "owner": "rebelytics",
+        "repo": "one-skill-to-rule-them-all",
+        "rev": "281f13466cd3a73e9ebc9d210907748e1941a3dd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "rebelytics",
+        "repo": "one-skill-to-rule-them-all",
+        "type": "github"
+      }
+    },
     "pkgs-by-name-for-flake-parts": {
       "locked": {
         "lastModified": 1769286518,
@@ -3357,6 +3437,22 @@
       "original": {
         "owner": "drupol",
         "repo": "pkgs-by-name-for-flake-parts",
+        "type": "github"
+      }
+    },
+    "ponytail": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1786139041,
+        "narHash": "sha256-bGdXvzhWPwGdz3T2Yh2h6lf+3PBRFAfdBxP5pESmCHI=",
+        "owner": "dietrichgebert",
+        "repo": "ponytail",
+        "rev": "2ed6c52c9d7e5e56942508591085fd45dea277d3",
+        "type": "github"
+      },
+      "original": {
+        "owner": "dietrichgebert",
+        "repo": "ponytail",
         "type": "github"
       }
     },
@@ -3512,6 +3608,7 @@
         "den": "den",
         "den-diagram": "den-diagram",
         "devshell": "devshell_3",
+        "diagram-design": "diagram-design",
         "disko": "disko",
         "fenix": "fenix",
         "files": "files",
@@ -3525,8 +3622,11 @@
         "gen-lsp": "gen-lsp",
         "gen-schema": "gen-schema",
         "git-hooks-nix": "git-hooks-nix",
+        "graphify": "graphify",
         "gsesh": "gsesh",
+        "gstack": "gstack",
         "haumea": "haumea",
+        "headroom": "headroom",
         "hm-wrapper-modules": "hm-wrapper-modules",
         "home-manager": "home-manager",
         "home-manager-master": "home-manager-master",
@@ -3571,7 +3671,9 @@
         "nixpkgs-xr": "nixpkgs-xr",
         "noctalia": "noctalia",
         "nvf": "nvf",
+        "one-skill-to-rule-them-all": "one-skill-to-rule-them-all",
         "pkgs-by-name-for-flake-parts": "pkgs-by-name-for-flake-parts",
+        "ponytail": "ponytail",
         "proton-cachyos": "proton-cachyos",
         "razerdaemon": "razerdaemon",
         "scope-engine": "scope-engine",
@@ -3583,6 +3685,7 @@
         "systems": "systems_15",
         "treefmt-nix": "treefmt-nix_9",
         "ucodenix": "ucodenix",
+        "ui-ux-pro-max-skill": "ui-ux-pro-max-skill",
         "zen-browser": "zen-browser",
         "zjstatus": "zjstatus"
       }
@@ -4349,6 +4452,22 @@
       "original": {
         "owner": "e-tho",
         "repo": "ucodenix",
+        "type": "github"
+      }
+    },
+    "ui-ux-pro-max-skill": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1787590601,
+        "narHash": "sha256-dIKgmKFE9UTvVYhpHOqv3gm2Cnwn49i7Hqjj6EC48c0=",
+        "owner": "nextlevelbuilder",
+        "repo": "ui-ux-pro-max-skill",
+        "rev": "c87cdc226f85b28040c6f15c1d29b5684fd32121",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nextlevelbuilder",
+        "repo": "ui-ux-pro-max-skill",
         "type": "github"
       }
     },
