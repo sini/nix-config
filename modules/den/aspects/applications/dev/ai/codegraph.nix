@@ -32,7 +32,7 @@
         };
 
         programs.git.ignores = [
-          "/.codegraph/"
+          ".codegraph"
         ];
       };
   };

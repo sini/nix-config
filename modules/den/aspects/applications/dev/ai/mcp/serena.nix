@@ -9,6 +9,10 @@
           pkgs.local.serena-agent
         ];
 
+        programs.git.ignores = [
+          ".serena"
+        ];
+
         programs.claude-code = {
           mcpServers.serena = {
             type = "stdio";

@@ -9,11 +9,10 @@
       { pkgs, inputs', ... }:
       {
         # These tools have their own aspects that own their Claude Code wiring:
-        # beads (→ beads.nix, github:gastownhall/beads), hunk (→ hunk.nix, numtide
-        # package + upstream skill), rtk (→ rtk.nix, numtide binary + skill + hook).
-        # The rest stay here on the numtide collection.
+        # beads (→ beads.nix, `bd` + `br` + beads-viewer), hunk (→ hunk.nix,
+        # numtide package + upstream skill), rtk (→ rtk.nix, numtide binary +
+        # skill + hook). The rest stay here on the numtide collection.
         home.packages = [
-          inputs'.llm-agents.packages.beads-viewer
           inputs'.llm-agents.packages.codegraph
           pkgs.playwright-mcp
         ];
