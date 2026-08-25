@@ -39,66 +39,9 @@
       };
 
     nixos =
-      {
-        config,
-        options,
-        host,
-        pkgs,
-        ...
-      }:
+      { host, pkgs, ... }:
       let
         cfg = host.settings.services.ai.llama-cpp;
-        hasSettingsOpt = options.services.llama-cpp ? settings;
-
-        settingsAttr = {
-          ctx-size = cfg.contextSize; # 819,200 tokens
-          cache-ram = cfg.cacheRamMB; # 48 GB CPU System RAM for KV spillover
-          no-cache-idle-slots = true; # Automatically release idle slots
-          ctk = cfg.kvCacheType; # 4-bit KV quantization
-          ctv = cfg.kvCacheType;
-          ngl = 99;
-          flash-attn = true;
-          kv-unified = true; # Spill KV cache into system RAM for 800k context
-          reasoning-preserve = true; # Retain internal thinking stream for Qwen 3.8 / DeepSeek
-          reasoning-budget = 4096;
-          reasoning-budget-message = "... I am thinking for too long -- let me gather more info about the task.";
-          batch-size = 2048;
-          ubatch-size = 512;
-          chat-template-kwargs = "{\"preserve_thinking\":true}";
-          host = "0.0.0.0";
-          port = 8080;
-        };
-
-        extraFlagsList = [
-          "--ctx-size"
-          (toString cfg.contextSize)
-          "--cache-ram"
-          (toString cfg.cacheRamMB)
-          "--no-cache-idle-slots"
-          "--ctk"
-          cfg.kvCacheType
-          "--ctv"
-          cfg.kvCacheType
-          "-ngl"
-          "99"
-          "--flash-attn"
-          "--kv-unified"
-          "--reasoning-preserve"
-          "--reasoning-budget"
-          "4096"
-          "--reasoning-budget-message"
-          "... I am thinking for too long -- let me gather more info about the task."
-          "--batch-size"
-          "2048"
-          "--ubatch-size"
-          "512"
-          "--chat-template-kwargs"
-          "{\"preserve_thinking\":true}"
-          "--host"
-          "0.0.0.0"
-          "--port"
-          "8080"
-        ];
       in
       {
         # Target single CUDA GPU (RTX 3090 Ti inside MicroVM) for 800k context
@@ -106,22 +49,35 @@
         services.llama-cpp = {
           enable = true;
           package = pkgs.llama-cpp.override { cudaSupport = true; };
-          model =
-            if cfg.modelPath != null then
-              cfg.modelPath
-            else
-              "/cache/var/lib/private/llama-cpp/models/qwen3.8-27b-instruct.Q4_K_M.gguf";
-        }
-        // (if hasSettingsOpt then { settings = settingsAttr; } else { extraFlags = extraFlagsList; });
+          settings = {
+            model =
+              if cfg.modelPath != null then
+                cfg.modelPath
+              else
+                "/cache/var/lib/private/llama-cpp/models/qwen3.8-27b-instruct.Q4_K_M.gguf";
+            ctx-size = cfg.contextSize; # 819,200 tokens
+            cache-ram = cfg.cacheRamMB; # 48 GB CPU System RAM for KV spillover
+            no-cache-idle-slots = true; # Automatically release idle slots
+            ctk = cfg.kvCacheType; # 4-bit KV quantization
+            ctv = cfg.kvCacheType;
+            ngl = 99;
+            flash-attn = true;
+            kv-unified = true; # Spill KV cache into system RAM for 800k context
+            reasoning-preserve = true; # Retain internal thinking stream for Qwen 3.8 / DeepSeek
+            reasoning-budget = 4096;
+            reasoning-budget-message = "... I am thinking for too long -- let me gather more info about the task.";
+            batch-size = 2048;
+            ubatch-size = 512;
+            chat-template-kwargs = "{\"preserve_thinking\":true}";
+            host = "0.0.0.0";
+            port = 8080;
+          };
+        };
 
         # Mutex GPU VRAM against Ollama so only one model engine holds VRAM at a time
         systemd.services.llama-cpp = {
           unitConfig = {
             Conflicts = [ "ollama.service" ];
-          };
-          serviceConfig = {
-            Restart = "on-failure";
-            RestartSec = 10;
           };
         };
 

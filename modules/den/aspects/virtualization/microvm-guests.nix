@@ -114,5 +114,26 @@ in
           )
         ) guests
       );
+
+      # Host-side network routing: dynamically derive host routes for guest TAP interfaces
+      # from each guest entity's declared `vm.networking.interfaces`.
+      systemd.network.networks = lib.mkMerge (
+        lib.concatMap (
+          vm:
+          lib.mapAttrsToList (
+            ifName: ifCfg:
+            let
+              ipv4Addrs = ifCfg.ipv4 or [ ];
+              guestIps = map (cidr: lib.head (lib.splitString "/" cidr)) ipv4Addrs;
+            in
+            lib.optionalAttrs (guestIps != [ ]) {
+              "30-microvm-${vm.name}-${ifName}" = {
+                matchConfig.Name = ifName;
+                routes = map (ip: { Destination = "${ip}/32"; }) guestIps;
+              };
+            }
+          ) (vm.networking.interfaces or { })
+        ) children
+      );
     };
 }

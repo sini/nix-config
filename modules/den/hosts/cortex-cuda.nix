@@ -38,7 +38,7 @@
     ];
 
     # M2: CUDA-enable the guest's package set at the microvm submodule level.
-    microvm.pkgs = import inputs.nixpkgs {
+    microvm.pkgs = import inputs.nixpkgs-master {
       system = "x86_64-linux";
       config = {
         allowUnfree = true;
@@ -131,7 +131,7 @@
         systemd.network = {
           enable = true;
           networks."20-lan" = {
-            matchConfig.Type = "ether";
+            matchConfig.MACAddress = "02:00:00:01:01:01";
             networkConfig = {
               Address = [
                 "10.9.2.2/16"
@@ -145,7 +145,20 @@
               IPv6AcceptRA = true;
               DHCP = "no";
             };
+            linkConfig = {
+              MTUBytes = "9000";
+            };
           };
+        };
+
+        boot.kernel.sysctl = {
+          "net.core.default_qdisc" = "fq";
+          "net.ipv4.tcp_congestion_control" = "bbr";
+          "net.core.rmem_max" = 16777216;
+          "net.core.wmem_max" = 16777216;
+          "net.ipv4.tcp_rmem" = "4096 87380 16777216";
+          "net.ipv4.tcp_wmem" = "4096 65536 16777216";
+          "net.ipv4.tcp_fastopen" = 3;
         };
 
         # The fleet users participating here (shuo/sini/will) use the zsh login
