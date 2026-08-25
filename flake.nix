@@ -60,10 +60,6 @@
       url = "github:tinted-theming/schemes";
       flake = false;
     };
-    beads = {
-      url = "github:gastownhall/beads";
-      inputs.nixpkgs.follows = "nixpkgs-unstable";
-    };
     betterfox = {
       url = "github:yokoffing/Betterfox";
       flake = false;
@@ -157,6 +153,7 @@
       url = "github:headroomlabs-ai/headroom";
       flake = false;
     };
+    hermes-agent.url = "github:NousResearch/hermes-agent";
     hm-wrapper-modules = {
       url = "github:sini/hm-wrapper-modules";
       inputs = {
@@ -209,6 +206,7 @@
       url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    ninfer-3090.url = "github:Don-Chad/ninfer-3090/release/v0.6.0-rtx3090";
     niri.url = "github:sodiboo/niri-flake";
     nix-ai-tools.url = "github:numtide/nix-ai-tools";
     nix-cachyos-kernel = {

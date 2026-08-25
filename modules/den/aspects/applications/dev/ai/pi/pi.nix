@@ -8,9 +8,14 @@
         config,
         pkgs,
         lib,
+        ninfer-endpoints,
         ...
       }:
       let
+        # ponytail: first endpoint wins — key the provider by hostname if a
+        # second inference host ever appears.
+        ninfer = if ninfer-endpoints == [ ] then null else builtins.head ninfer-endpoints;
+
         # Check if stylix colors are available
         hasStylix = config ? lib.stylix && config.lib.stylix ? colors;
         s =
@@ -126,14 +131,16 @@
         };
 
         # Deploy Plan Mode & Security Guard extensions for pi
-        home.file.".pi/agent/extensions/plan-mode.ts".source = ./pi/extensions/plan-mode.ts;
-        home.file.".pi/agent/extensions/plan-tracker.ts".source = ./pi/extensions/plan-tracker.ts;
-        home.file.".pi/agent/extensions/security-guard.ts".source = ./pi/extensions/security-guard.ts;
+        home.file.".pi/agent/extensions/plan-mode.ts".source = ./extensions/plan-mode.ts;
+        home.file.".pi/agent/extensions/plan-tracker.ts".source = ./extensions/plan-tracker.ts;
+        home.file.".pi/agent/extensions/security-guard.ts".source = ./extensions/security-guard.ts;
 
         # Configure default settings to use stylix theme and local endpoints
         home.file.".pi/agent/settings.json".text = builtins.toJSON {
-          defaultProvider = "llama-cpp";
-          defaultModel = "qwen3.8-27b-q4-256k";
+          # ninfer is the resident engine on the inference guest; llama-cpp
+          # stays configured as a standby but is not started at boot.
+          defaultProvider = if ninfer != null then "ninfer" else "llama-cpp";
+          defaultModel = if ninfer != null then ninfer.modelId else "qwen3.8-27b-q4-256k";
           defaultThinkingLevel = "medium";
           defaultProjectTrust = "never";
           theme = "stylix";
@@ -145,14 +152,63 @@
         };
 
         # Deploy dummy auth keys for keyless local inference servers (ollama & llama-cpp)
-        home.file.".pi/agent/auth.json".text = builtins.toJSON {
-          ollama = { type = "api_key"; key = "ollama"; };
-          llama-cpp = { type = "api_key"; key = "llama-cpp"; };
-        };
+        home.file.".pi/agent/auth.json".text = builtins.toJSON (
+          {
+            ollama = {
+              type = "api_key";
+              key = "ollama";
+            };
+            llama-cpp = {
+              type = "api_key";
+              key = "llama-cpp";
+            };
+          }
+          // lib.optionalAttrs (ninfer != null) {
+            ninfer = {
+              type = "api_key";
+              key = "ninfer";
+            };
+          }
+        );
 
         # Configure model provider endpoints for remote cortex-cuda MicroVM
         home.file.".pi/agent/models.json".text = builtins.toJSON {
           providers = {
+            # NInfer serves the same Qwen3.8-27B from the same guest, but on
+            # its own port and with a strictly validated model id (it rejects a
+            # `model` field that is not its `--model-id`), so endpoint and id
+            # both come off the ninfer-endpoints quirk rather than being
+            # restated here. Not the default provider: the unit conflicts with
+            # llama-cpp over the GPU and does not auto-start, so selecting it
+            # in-session is the deliberate half of the A/B.
+          }
+          // lib.optionalAttrs (ninfer != null) {
+            ninfer = {
+              name = "NInfer (${ninfer.hostname})";
+              baseUrl = "http://${ninfer.ip}:${toString ninfer.port}/v1";
+              api = "openai-completions";
+              apiKey = "ninfer";
+              compat = {
+                # Both are genuine NInfer capabilities rather than the
+                # llama-cpp workarounds above. Note the loaded Qwen3.8 chat
+                # template exposes only low/medium/xhigh (plus none): pi's
+                # minimal/high/max levels return HTTP 400
+                # reasoning_effort_not_supported.
+                supportsDeveloperRole = true;
+                supportsReasoningEffort = true;
+              };
+              models = [
+                {
+                  id = ninfer.modelId;
+                  name = "Qwen 3.8 27B (NInfer sm_86, MTP3)";
+                  reasoning = true;
+                  contextWindow = ninfer.maxContext;
+                  maxTokens = ninfer.maxTokens;
+                }
+              ];
+            };
+          }
+          // {
             ollama = {
               name = "Ollama (cortex-cuda)";
               baseUrl = "http://10.9.2.2:11434/v1";

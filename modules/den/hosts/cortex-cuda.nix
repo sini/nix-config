@@ -29,6 +29,10 @@
 
     # Settings on the ENTITY (cascade reads hosts.<name>.settings) → ollama-cuda.
     settings.services.ai.ollama.acceleration = "cuda";
+
+    # NInfer is the resident engine: measured 96.2 tok/s decode against
+    # llama-cpp's 45.5 on identical prompts (2.1x), for a 1.26x prefill cost.
+    settings.services.ai.ninfer.autoStart = true;
   };
 
   den.aspects.cortex-cuda = {
@@ -105,6 +109,12 @@
               tag = "llama-cpp";
               proto = "virtiofs";
             }
+            {
+              source = "/cache/var/lib/private/ninfer";
+              mountPoint = "/cache/var/lib/private/ninfer";
+              tag = "ninfer";
+              proto = "virtiofs";
+            }
           ];
         };
 
@@ -125,6 +135,14 @@
         };
         systemd.services.ollama.after = [ "nvidia-gpu-config.service" ];
         systemd.services.llama-cpp.after = [ "nvidia-gpu-config.service" ];
+        systemd.services.ninfer.after = [ "nvidia-gpu-config.service" ];
+
+        # One 24 GB card holds one engine, and ninfer.service already declares
+        # Conflicts= against llama-cpp. Both being wantedBy multi-user.target
+        # would race at boot and let systemd pick the winner, so the standby
+        # engine is started on demand only. The llama-cpp ASPECT is untouched —
+        # which engine is resident is a property of this host, not of llama-cpp.
+        systemd.services.llama-cpp.wantedBy = lib.mkForce [ ];
 
         networking.firewall.allowedTCPPorts = [ 22 ];
 

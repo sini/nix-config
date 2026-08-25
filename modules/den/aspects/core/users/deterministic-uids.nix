@@ -150,6 +150,7 @@
           docker = uidGid 964;
           tang = uidGid 963;
           ollama = uidGid 962;
+          ninfer = uidGid 945;
           open-webui = uidGid 961;
           gnome-initial-setup = uidGid 960;
           wpa_supplicant = uidGid 959;

@@ -72,6 +72,14 @@ in
       ])
     ];
 
+  den.policies.collect-ninfer-endpoints =
+    { host, ... }:
+    [
+      (pipe.from "ninfer-endpoints" [
+        (pipe.collect ({ host, ... }: true))
+      ])
+    ];
+
   # Cluster-scoped: collect k3s node data from host scopes across all environments.
   # The predicate must require `host` so findMatchingAll's entity kind filter
   # includes host scopes (a bare `_: true` has no entity args and rejects
@@ -178,6 +186,7 @@ in
     den.policies.collect-thunderbolt-mesh-peers
     den.policies.collect-vault-peers
     den.policies.collect-ollama-endpoints
+    den.policies.collect-ninfer-endpoints
     den.policies.broadcast-hub-peer
   ];
 

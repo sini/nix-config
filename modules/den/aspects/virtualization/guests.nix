@@ -287,6 +287,7 @@ in
       type = lib.types.listOf lib.types.str;
       default = [
         "ollama-endpoints"
+        "ninfer-endpoints"
         "prometheus-targets"
       ];
     };

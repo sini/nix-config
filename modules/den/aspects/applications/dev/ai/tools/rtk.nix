@@ -12,7 +12,7 @@
         home.packages = [ inputs'.llm-agents.packages.rtk ];
 
         programs.claude-code = {
-          skills.rtk = ./mcp/_skills/rtk;
+          skills.rtk = ./rtk;
 
           # The hook rewrites eligible Bash commands to their rtk equivalents
           # before execution, so every command (and subagent) gets the savings
