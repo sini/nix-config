@@ -62,8 +62,8 @@
 
             environmentVariables = {
               OLLAMA_FLASH_ATTENTION = "true";
-              OLLAMA_CONTEXT_LENGTH = "32768";
-              OLLAMA_KV_CACHE_TYPE = "q8_0";
+              OLLAMA_CONTEXT_LENGTH = "262144";
+              OLLAMA_KV_CACHE_TYPE = "q4_0";
               OLLAMA_KEEP_ALIVE = "10m";
               OLLAMA_MAX_LOADED_MODELS = "4";
               OLLAMA_MAX_QUEUE = "64";
@@ -72,22 +72,23 @@
             };
 
             loadModels = [
-              "deepcoder:14b"
-              "gpt-oss:20b"
-              "deepseek-coder:1.3b-instruct-q4_K_M"
-              "codellama:7b-instruct-q2_K"
-              "qwen2.5-coder:14b"
-              "qwen2.5-coder:32b"
-              "qwen3-coder:30b"
-              "qwen3:4b"
-              "qwen3.5:9b"
-              "qwen3.5:27b"
-              "qwen3.5:35b"
-              "deepseek-coder-v2:16b"
-              "codegemma:7b"
-              "gemma3:27b"
-              "gemma3:12b"
-              "gemma3:4b"
+              # "deepcoder:14b"
+              # "gpt-oss:20b"
+              # "deepseek-coder:1.3b-instruct-q4_K_M"
+              # "codellama:7b-instruct-q2_K"
+              # "qwen2.5-coder:14b"
+              # "qwen2.5-coder:32b"
+              # "qwen3-coder:30b"
+              # "qwen3:4b"
+              # "qwen3.5:9b"
+              # "qwen3.5:27b"
+              # "qwen3.5:35b"
+              # "deepseek-coder-v2:16b"
+              # "codegemma:7b"
+              # "gemma3:27b"
+              # "gemma3:12b"
+              # "gemma3:4b"
+              "qwen3.8:27b"
             ];
           };
         };

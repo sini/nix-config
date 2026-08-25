@@ -18,6 +18,8 @@
       applications.dev.ai.codegraph
       applications.dev.ai.mcp.codebase-memory
       applications.dev.ai.mcp.serena
+      applications.dev.ai.pi
+      applications.dev.ai.hermes
 
       applications.shell.nix-index
 

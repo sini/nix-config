@@ -55,7 +55,8 @@
               ENABLE_OAUTH_GROUP_MANAGEMENT = "True";
 
               RESET_CONFIG_ON_START = "True";
-              ENABLE_OPENAI_API = "False";
+              ENABLE_OPENAI_API = "True";
+              OPENAI_API_BASE_URLS = "http://10.9.2.2:8080/v1";
 
               ENABLE_VERSION_UPDATE_CHECK = "False";
 

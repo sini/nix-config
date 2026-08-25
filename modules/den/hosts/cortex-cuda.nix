@@ -51,7 +51,7 @@
           guest.enable = true;
           optimize.enable = true;
           vcpu = 32;
-          mem = 32768;
+          mem = 65536; # 64 GB RAM allocated to support 800k KV cache spillover (--cache-ram 49152)
 
           interfaces = [
             {
@@ -66,6 +66,12 @@
               source = "/cache/var/lib/private/ollama";
               mountPoint = "/cache/var/lib/private/ollama";
               tag = "ollama";
+              proto = "virtiofs";
+            }
+            {
+              source = "/cache/var/lib/private/llama-cpp";
+              mountPoint = "/cache/var/lib/private/llama-cpp";
+              tag = "llama-cpp";
               proto = "virtiofs";
             }
           ];
@@ -87,6 +93,7 @@
           serviceConfig.Type = "oneshot";
         };
         systemd.services.ollama.after = [ "nvidia-gpu-config.service" ];
+        systemd.services.llama-cpp.after = [ "nvidia-gpu-config.service" ];
 
         networking.firewall.allowedTCPPorts = [ 22 ];
 
