@@ -15,7 +15,7 @@
       };
       contextSize = lib.mkOption {
         type = lib.types.int;
-        default = 819200; # 800K context window (819,200 tokens) reproduce from augustus config
+        default = 262144; # 256K (262,144 tokens) native context fitting GPU VRAM with Q4_K_M
         description = "Maximum context window size in tokens";
       };
       cacheRamMB = lib.mkOption {
@@ -44,8 +44,7 @@
         cfg = host.settings.services.ai.llama-cpp;
       in
       {
-        # Target single CUDA GPU (RTX 3090 Ti inside MicroVM) for 800k context
-        # TODO: Evaluate Vulkan performance & multi-GPU tensor splitting across hosts later
+        # Target single CUDA GPU (RTX 3090 Ti inside MicroVM)
         services.llama-cpp = {
           enable = true;
           package = pkgs.llama-cpp.override { cudaSupport = true; };
@@ -54,21 +53,21 @@
               if cfg.modelPath != null then
                 cfg.modelPath
               else
-                "/cache/var/lib/private/llama-cpp/models/qwen3.8-27b-instruct.Q4_K_M.gguf";
-            ctx-size = cfg.contextSize; # 819,200 tokens
+                "/cache/var/lib/private/llama-cpp/models/Qwen3.8-27B-UD-Q4_K_M.gguf";
+            ctx-size = cfg.contextSize; # 262,144 tokens
+            parallel = 1; # Single slot for max VRAM context allocation
             cache-ram = cfg.cacheRamMB; # 48 GB CPU System RAM for KV spillover
             no-cache-idle-slots = true; # Automatically release idle slots
-            ctk = cfg.kvCacheType; # 4-bit KV quantization
-            ctv = cfg.kvCacheType;
-            ngl = 99;
-            flash-attn = true;
+            cache-type-k = cfg.kvCacheType; # 4-bit KV quantization
+            cache-type-v = cfg.kvCacheType;
+            n-gpu-layers = 99;
+            flash-attn = "on";
             kv-unified = true; # Spill KV cache into system RAM for 800k context
             reasoning-preserve = true; # Retain internal thinking stream for Qwen 3.8 / DeepSeek
             reasoning-budget = 4096;
-            reasoning-budget-message = "... I am thinking for too long -- let me gather more info about the task.";
             batch-size = 2048;
             ubatch-size = 512;
-            chat-template-kwargs = "{\"preserve_thinking\":true}";
+            chat-template-kwargs = "'{\"preserve_thinking\":true}'";
             host = "0.0.0.0";
             port = 8080;
           };

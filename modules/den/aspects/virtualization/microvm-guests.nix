@@ -125,10 +125,24 @@ in
             let
               ipv4Addrs = ifCfg.ipv4 or [ ];
               guestIps = map (cidr: lib.head (lib.splitString "/" cidr)) ipv4Addrs;
+              hostAddrs = map (
+                cidr:
+                let
+                  ipParts = lib.splitString "." (lib.head (lib.splitString "/" cidr));
+                  prefix = lib.concatStringsSep "." (lib.take 3 ipParts);
+                  mask = lib.last (lib.splitString "/" cidr);
+                in
+                "${prefix}.1/${mask}"
+              ) ipv4Addrs;
             in
             lib.optionalAttrs (guestIps != [ ]) {
               "30-microvm-${vm.name}-${ifName}" = {
                 matchConfig.Name = ifName;
+                address = hostAddrs;
+                networkConfig = {
+                  IPv4Forwarding = "yes";
+                  IPMasquerade = "both";
+                };
                 routes = map (ip: { Destination = "${ip}/32"; }) guestIps;
               };
             }

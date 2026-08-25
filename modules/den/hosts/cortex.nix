@@ -36,7 +36,6 @@
       roles.dev
       roles.dev-gui
       roles.media
-      roles.inference
       roles.messaging
       roles.nix-builder
 

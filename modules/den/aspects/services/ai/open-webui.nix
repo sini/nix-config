@@ -29,9 +29,10 @@
               WEBUI_NAME = "LLM @ Home";
               WEBUI_URL = "https://${domain}";
 
-              OLLAMA_BASE_URLS = builtins.concatStringsSep ";" (
-                [ "http://10.9.2.2:11434" ] ++ (map (ip: "http://${ip}:11434") ollamaHosts)
-              );
+              # OLLAMA_BASE_URLS = builtins.concatStringsSep ";" (
+              #   [ "http://10.9.2.2:11434" ] ++ (map (ip: "http://${ip}:11434") ollamaHosts)
+              # );
+              ENABLE_OLLAMA_API = "False";
 
               SHOW_ADMIN_DETAILS = "False";
 
@@ -57,6 +58,7 @@
               RESET_CONFIG_ON_START = "True";
               ENABLE_OPENAI_API = "True";
               OPENAI_API_BASE_URLS = "http://10.9.2.2:8080/v1";
+              OPENAI_API_KEYS = "llama-cpp";
 
               ENABLE_VERSION_UPDATE_CHECK = "False";
 

@@ -67,6 +67,7 @@ python3Packages.buildPythonPackage {
       beautifulsoup4
       cryptography
       docstring-parser
+      filelock
       flask
       jinja2
       joblib
@@ -79,6 +80,14 @@ python3Packages.buildPythonPackage {
       pygls
       python-dotenv
       python-multipart
+      # serena/agent.py and serena/dashboard.py import webview and pystray
+      # unconditionally at module scope, so the server cannot start without them even
+      # when launched with --open-web-dashboard False. pystray also carries the Pillow
+      # import dashboard.py makes without declaring it. The wheel names all three in
+      # Requires-Dist; `dontCheckRuntimeDeps` below is why the omission built cleanly
+      # and only failed at import time.
+      pystray
+      pywebview
       pyyaml
       regex
       requests

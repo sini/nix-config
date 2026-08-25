@@ -90,6 +90,21 @@
               toolDiffRemoved = "red";
               toolDiffContext = "fgDark";
               syntaxComment = "comment";
+              bashMode = "yellow";
+              syntaxFunction = "blue";
+              syntaxKeyword = "magenta";
+              syntaxNumber = "orange";
+              syntaxOperator = "cyan";
+              syntaxPunctuation = "fg";
+              syntaxString = "green";
+              syntaxType = "yellow";
+              syntaxVariable = "red";
+              thinkingHigh = "magenta";
+              thinkingLow = "cyan";
+              thinkingMedium = "blue";
+              thinkingMinimal = "comment";
+              thinkingOff = "fgDark";
+              thinkingXhigh = "red";
             };
           }
         );
@@ -106,6 +121,10 @@
         # Deploy Stylix theme for pi
         home.file.".pi/agent/themes/stylix.json".source = stylixTheme;
 
+        home.sessionVariables = {
+          OLLAMA_HOST = "http://10.9.2.2:11434";
+        };
+
         # Deploy Plan Mode & Security Guard extensions for pi
         home.file.".pi/agent/extensions/plan-mode.ts".source = ./pi/extensions/plan-mode.ts;
         home.file.".pi/agent/extensions/plan-tracker.ts".source = ./pi/extensions/plan-tracker.ts;
@@ -113,8 +132,8 @@
 
         # Configure default settings to use stylix theme and local endpoints
         home.file.".pi/agent/settings.json".text = builtins.toJSON {
-          defaultProvider = "ollama";
-          defaultModel = "qwen3.8:27b";
+          defaultProvider = "llama-cpp";
+          defaultModel = "qwen3.8-27b-q4-256k";
           defaultThinkingLevel = "medium";
           defaultProjectTrust = "never";
           theme = "stylix";
@@ -123,6 +142,63 @@
             "~/.pi/agent/extensions/plan-tracker.ts"
             "~/.pi/agent/extensions/security-guard.ts"
           ];
+        };
+
+        # Deploy dummy auth keys for keyless local inference servers (ollama & llama-cpp)
+        home.file.".pi/agent/auth.json".text = builtins.toJSON {
+          ollama = { type = "api_key"; key = "ollama"; };
+          llama-cpp = { type = "api_key"; key = "llama-cpp"; };
+        };
+
+        # Configure model provider endpoints for remote cortex-cuda MicroVM
+        home.file.".pi/agent/models.json".text = builtins.toJSON {
+          providers = {
+            ollama = {
+              name = "Ollama (cortex-cuda)";
+              baseUrl = "http://10.9.2.2:11434/v1";
+              api = "openai-completions";
+              apiKey = "ollama";
+              compat = {
+                supportsDeveloperRole = false;
+                supportsReasoningEffort = false;
+              };
+              models = [
+                {
+                  id = "qwen3.8:27b";
+                  name = "Qwen 3.8 27B (Ollama)";
+                  reasoning = true;
+                  contextWindow = 262144;
+                  maxTokens = 16384;
+                }
+              ];
+            };
+            llama-cpp = {
+              name = "llama.cpp (cortex-cuda)";
+              baseUrl = "http://10.9.2.2:8080/v1";
+              api = "openai-completions";
+              apiKey = "llama-cpp";
+              compat = {
+                supportsDeveloperRole = false;
+                supportsReasoningEffort = false;
+              };
+              models = [
+                {
+                  id = "qwen3.8-27b-q4-256k";
+                  name = "Qwen 3.8 27B Q4 (llama-cpp 256K VRAM)";
+                  reasoning = true;
+                  contextWindow = 262144;
+                  maxTokens = 32768;
+                }
+                {
+                  id = "qwen3.8-27b-q6-128k";
+                  name = "Qwen 3.8 27B Q6 (llama-cpp 128K VRAM)";
+                  reasoning = true;
+                  contextWindow = 131072;
+                  maxTokens = 32768;
+                }
+              ];
+            };
+          };
         };
       };
 
