@@ -2,7 +2,7 @@
 # Terminal AI coding agent with Stylix theme generation & Plan Mode extensions.
 { ... }:
 {
-  den.aspects.applications.dev.ai.pi = {
+  den.aspects.applications.dev.ai.agents.pi = {
     homeManager =
       {
         config,

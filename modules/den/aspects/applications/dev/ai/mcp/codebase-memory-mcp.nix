@@ -15,6 +15,20 @@
   };
 
   den.aspects.applications.dev.ai.mcp.codebase-memory = {
+    agent-extensions =
+      { inputs', ... }:
+      {
+        type = "mcp";
+        mcpServers = {
+          codebase-memory = {
+            command = "${inputs'.codebase-memory-mcp.packages.default}/bin/codebase-memory-mcp";
+          };
+        };
+        skills = {
+          codebase-memory = ./_skills/codebase-memory;
+        };
+      };
+
     homeManager =
       {
         inputs',
@@ -49,12 +63,6 @@
         # needed. The per-repo SQLite index lives in ~/.cache and is shared
         # across sessions; incremental git-sync runs inside the server.
         programs.claude-code = {
-          mcpServers.codebase-memory = {
-            type = "stdio";
-            command = "${cbm}/bin/codebase-memory-mcp";
-          };
-
-          skills.codebase-memory = ./_skills/codebase-memory;
 
           settings.hooks =
             let

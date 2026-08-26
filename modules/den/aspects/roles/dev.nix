@@ -3,12 +3,17 @@
   den.aspects.roles.dev = {
     includes = with den.aspects; [
       hardware.adb
-      applications.dev.ai.claude
       applications.dev.ai.tools.beads
+      applications.dev.ai.tools.calldiff
       applications.dev.ai.tools.hunk
+      applications.dev.ai.tools.openspec
       applications.dev.ai.tools.rtk
       applications.dev.ai.llm-agents
-      applications.dev.ai.skills.caveman
+      # applications.dev.ai.skills.caveman
+      applications.dev.ai.skills.adversarial-review
+      applications.dev.ai.skills.diagram-mermaid-render
+      applications.dev.ai.skills.search-code-routing
+      applications.dev.ai.skills.writing-style
       applications.dev.ai.skills.superpowers
       applications.dev.ai.skills.mattpocock
       applications.dev.ai.skills.gstack
@@ -21,8 +26,10 @@
       applications.dev.ai.mcp.codegraph
       applications.dev.ai.mcp.codebase-memory
       applications.dev.ai.mcp.serena
-      applications.dev.ai.pi
+      applications.dev.ai.agents.claude
+      applications.dev.ai.agents.gemini
       applications.dev.ai.agents.hermes
+      applications.dev.ai.agents.pi
 
       applications.shell.nix-index
 

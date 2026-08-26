@@ -9,6 +9,21 @@
   };
 
   den.aspects.applications.dev.ai.mcp.headroom = {
+    agent-extensions =
+      { lib, pkgs, ... }:
+      {
+        type = "mcp";
+        mcpServers = {
+          headroom = {
+            command = "${lib.getExe pkgs.local.headroom-ai}";
+            args = [
+              "mcp"
+              "serve"
+            ];
+          };
+        };
+      };
+
     homeManager =
       { pkgs, lib, ... }:
       {
@@ -19,14 +34,6 @@
 
         programs.claude-code = {
           marketplaces.headroom-marketplace = inputs.headroom;
-          mcpServers.headroom = {
-            type = "stdio";
-            command = "${lib.getExe pkgs.local.headroom-ai}";
-            args = [
-              "mcp"
-              "serve"
-            ];
-          };
           settings = {
             enabledPlugins."headroom@headroom-marketplace" = true;
             env = {

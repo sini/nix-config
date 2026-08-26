@@ -51,7 +51,7 @@
       }:
       let
         cfg = host.settings.applications.dev.mux.herdr-pair;
-        herdr = "${inputs'.nix-ai-tools.packages.herdr}/bin/herdr";
+        herdr = "${inputs'.llm-agents.packages.herdr}/bin/herdr";
 
         resolvedNames = map (u: u.name) resolved-users;
 

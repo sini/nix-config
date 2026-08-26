@@ -30,7 +30,7 @@
     };
   };
 
-  den.aspects.applications.dev.ai.claude = {
+  den.aspects.applications.dev.ai.agents.claude = {
     homeLinux =
       { pkgs, ... }:
       {
@@ -42,15 +42,58 @@
 
     homeManager =
       {
+        agent-extensions,
         config,
-        pkgs,
-        lib,
         inputs',
+        lib,
+        pkgs,
         ...
       }:
+      let
+        extensionsList = lib.flatten agent-extensions;
+
+        skillExts = lib.filter (e: e.type or "" == "skill" || e.type or "" == "mcp") extensionsList;
+        mcpExts = lib.filter (e: e.type or "" == "mcp") extensionsList;
+        pluginExts = lib.filter (e: e.type or "" == "plugin") extensionsList;
+
+        claudeSkills = lib.foldl' (
+          acc: e:
+          if (e ? skills) then
+            acc // (lib.mapAttrs (_: src: src.outPath or src) e.skills)
+          else
+            acc
+        ) { } skillExts;
+
+        claudeAgents = lib.foldl' (
+          acc: e: if (e ? agents) then acc // e.agents else acc
+        ) { } extensionsList;
+
+        claudeCommands = lib.foldl' (
+          acc: e: if (e ? commands) then acc // e.commands else acc
+        ) { } extensionsList;
+
+        claudeMcpServers = lib.foldl' (
+          acc: e:
+          acc
+          // (lib.mapAttrs (_name: server: {
+            type = "stdio";
+            inherit (server) command;
+            args = server.args or [ ];
+            env = server.env or { };
+          }) (e.mcpServers or { }))
+        ) { } mcpExts;
+
+        claudeMarketplaces = lib.foldl' (
+          acc: e: acc // { ${e.marketplace.name} = e.marketplace.src; }
+        ) { } pluginExts;
+
+        claudeEnabledPlugins = lib.foldl' (
+          acc: e: acc // { ${e.marketplace.pluginId} = e.marketplace.enabled or true; }
+        ) { } pluginExts;
+      in
       {
         home.packages = [
-          inputs'.nix-ai-tools.packages.crush
+          inputs'.llm-agents.packages.crush
           pkgs.nodejs_22
           # pkgs.markitdown
         ];
@@ -62,33 +105,22 @@
 
         programs.claude-code = {
           enable = true;
-          package = inputs'.nix-ai-tools.packages.claude-code;
+          package = inputs'.llm-agents.packages.claude-code;
           enableMcpIntegration = true;
+          mcpServers = claudeMcpServers;
+          skills = claudeSkills;
+          agents = claudeAgents;
+          commands = claudeCommands;
 
-          # nil, not nixd: nixd resolves options/nixpkgs data by blocking the request
-          # handler on an untimed `binary_semaphore::acquire()` (Controller/{Hover,Definition}.cpp),
-          # so a worker that never replies hangs the client forever — fatal for an agent
-          # that cannot cancel. nil keeps its `nix` subprocess calls in background,
-          # debounced, cancellable loads and serves requests from a pure salsa snapshot,
-          # and supports `$/cancelRequest`. Both are single-file only (nil states it:
-          # docs/features.md "[ ] Cross-file analysis"), and neither implements
-          # `workspace/symbol`, so no analysis capability is lost in the trade.
           lspServers.nix = {
             command = lib.getExe pkgs.nil;
             extensionToLanguage.".nix" = "nix";
           };
 
-          # Per-tool skills are registered by their own aspect: rtk (rtk.nix,
-          # vendored under mcp/_skills), codebase-memory (mcp/codebase-memory-mcp.nix),
-          # herdr (mux/herdr.nix, from the package src), beads (beads.nix, via its
-          # plugin), hunk (hunk.nix, from the package src).
-
-          # Store-pinned plugin marketplaces (inputs declared above). The attr name
-          # is the marketplace name referenced by settings.enabledPlugins, e.g.
-          # `caveman@caveman`, `superpowers-extended-cc@superpowers-extended-cc-marketplace`.
           marketplaces = {
             claude-plugins-official = inputs.claude-plugins-official;
-          };
+          }
+          // claudeMarketplaces;
 
           settings = {
             theme = "auto";
@@ -188,8 +220,6 @@
               # PRJ_ROOT/IN_NIX_SHELL/DIRENV_DIR all unset, so every dispatch had to hand-carry
               # `bd -C` and absolute tool paths in prompt text.
               CLAUDE_ENV_FILE = "${config.home.homeDirectory}/.claude/direnv-snapshot.sh";
-              # DISABLE_TELEMETRY = "1";
-              # DISABLE_ERROR_REPORTING = "1";
               ENABLE_TOOL_SEARCH = "auto:5";
 
               # DISABLE_TELEMETRY also disables the GrowthBook feature-gate client,
@@ -213,7 +243,8 @@
               "skill-creator@claude-plugins-official" = true;
               "code-simplifier@claude-plugins-official" = true;
               "rust-analyzer-lsp@claude-plugins-official" = true;
-            };
+            }
+            // claudeEnabledPlugins;
 
             # Two events, deliberately: session start, and every directory change. NOT PreToolUse —
             # refreshing per tool call is the fork-bomb shape the upstream example warns about.

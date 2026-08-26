@@ -3,6 +3,21 @@
 # llm-agents.nix.
 {
   den.aspects.applications.dev.ai.mcp.codegraph = {
+    agent-extensions =
+      { inputs', ... }:
+      {
+        type = "mcp";
+        mcpServers = {
+          codegraph = {
+            command = "${inputs'.llm-agents.packages.codegraph}/bin/codegraph";
+            args = [
+              "serve"
+              "--mcp"
+            ];
+          };
+        };
+      };
+
     homeManager =
       { inputs', ... }:
       let
@@ -12,20 +27,6 @@
         home.packages = [ codegraph ];
 
         programs.claude-code = {
-          # `serve --mcp` is the server entrypoint (`codegraph install --print-config claude`
-          # emits exactly this). Bare `codegraph` is the CLI: it prints help and exits, so
-          # the handshake never completes and the client sits on it until the startup
-          # timeout, then picks the tools up mid-session — a tool-list change, which costs
-          # a full prompt-cache bust.
-          mcpServers.codegraph = {
-            type = "stdio";
-            command = "${codegraph}/bin/codegraph";
-            args = [
-              "serve"
-              "--mcp"
-            ];
-          };
-
           settings.permissions.allow = [
             "Bash(codegraph *)"
           ];

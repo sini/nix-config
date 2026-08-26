@@ -1,5 +1,5 @@
 # caveman (github:JuliusBrussee/caveman): Concise, high-density token-minimizing
-# prompt skill for Claude Code.
+# prompt skill for AI coding agents.
 { inputs, ... }:
 {
   flake-file.inputs.caveman = {
@@ -8,13 +8,16 @@
   };
 
   den.aspects.applications.dev.ai.skills.caveman = {
-    homeManager =
-      { ... }:
-      {
-        programs.claude-code = {
-          marketplaces.caveman = inputs.caveman;
-          settings.enabledPlugins."caveman@caveman" = true;
-        };
+    agent-extensions = {
+      type = "plugin";
+      marketplace = {
+        name = "caveman";
+        src = inputs.caveman;
+        pluginId = "caveman@caveman";
       };
+      skills = {
+        caveman = inputs.caveman;
+      };
+    };
   };
 }

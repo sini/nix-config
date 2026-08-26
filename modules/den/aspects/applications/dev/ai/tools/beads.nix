@@ -13,6 +13,21 @@
 # cleanup.
 {
   den.aspects.applications.dev.ai.tools.beads = {
+    agent-extensions =
+      { inputs', ... }:
+      {
+        type = "plugin";
+        marketplace = {
+          name = "beads-rust";
+          src = inputs'.llm-agents.packages.beads-rust.src;
+          pluginId = "beads@beads-rust";
+          enabled = false;
+        };
+        skills = {
+          beads = inputs'.llm-agents.packages.beads-rust.src;
+        };
+      };
+
     homeManager =
       {
         config,
@@ -30,10 +45,6 @@
         ];
 
         programs.claude-code = {
-          # Store-pinned marketplace: CC resolves the plugin from the nix store
-          # (the beads-rust source holds .claude-plugin/marketplace.json), not
-          # by fetching GitHub at runtime.
-          marketplaces.beads-rust = inputs'.llm-agents.packages.beads-rust.src;
 
           # THE PLUGIN IS REGISTERED BUT NOT ENABLED, and the reason is its skill.
           # br's plugin is nothing but `.claude/skills/br/SKILL.md` (367 lines; no

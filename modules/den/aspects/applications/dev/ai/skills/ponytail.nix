@@ -1,5 +1,4 @@
-# ponytail (github:dietrichgebert/ponytail): Lazy senior dev mode for AI agents.
-# Ships a store-pinned plugin containing native activation and subagent hooks.
+# ponytail (github:dietrichgebert/ponytail): Agent harness companions.
 { inputs, ... }:
 {
   flake-file.inputs.ponytail = {
@@ -8,13 +7,16 @@
   };
 
   den.aspects.applications.dev.ai.skills.ponytail = {
-    homeManager =
-      { ... }:
-      {
-        programs.claude-code = {
-          marketplaces.ponytail = inputs.ponytail;
-          settings.enabledPlugins."ponytail@ponytail" = true;
-        };
+    agent-extensions = {
+      type = "plugin";
+      marketplace = {
+        name = "ponytail";
+        src = inputs.ponytail;
+        pluginId = "ponytail@ponytail";
       };
+      skills = {
+        ponytail = inputs.ponytail;
+      };
+    };
   };
 }

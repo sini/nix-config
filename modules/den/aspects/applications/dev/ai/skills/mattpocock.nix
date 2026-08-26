@@ -1,5 +1,4 @@
-# mattpocock-skills (github:mattpocock/skills): TypeScript/Web development skills
-# for Claude Code.
+# mattpocock-skills (github:mattpocock/skills): TypeScript/Web development skills.
 { inputs, ... }:
 {
   flake-file.inputs.mattpocock-skills = {
@@ -8,13 +7,16 @@
   };
 
   den.aspects.applications.dev.ai.skills.mattpocock = {
-    homeManager =
-      { ... }:
-      {
-        programs.claude-code = {
-          marketplaces.mattpocock = inputs.mattpocock-skills;
-          settings.enabledPlugins."mattpocock-skills@mattpocock" = true;
-        };
+    agent-extensions = {
+      type = "plugin";
+      marketplace = {
+        name = "mattpocock";
+        src = inputs.mattpocock-skills;
+        pluginId = "mattpocock-skills@mattpocock";
       };
+      skills = {
+        mattpocock = inputs.mattpocock-skills;
+      };
+    };
   };
 }

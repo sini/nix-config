@@ -209,7 +209,6 @@
     };
     ninfer-3090.url = "github:Don-Chad/ninfer-3090/release/v0.6.0-rtx3090";
     niri.url = "github:sodiboo/niri-flake";
-    nix-ai-tools.url = "github:numtide/nix-ai-tools";
     nix-cachyos-kernel = {
       url = "github:xddxdd/nix-cachyos-kernel";
       inputs = {

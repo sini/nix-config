@@ -1,5 +1,5 @@
 # diagram-design (github:cathrynlavery/diagram-design): Editorial diagrams your
-# designer won't hate — 39 visual diagram types for Claude Code, Codex, and Pi.
+# designer won't hate — 39 visual diagram types for AI coding agents.
 { inputs, ... }:
 {
   flake-file.inputs.diagram-design = {
@@ -8,13 +8,16 @@
   };
 
   den.aspects.applications.dev.ai.skills.diagram-design = {
-    homeManager =
-      { ... }:
-      {
-        programs.claude-code = {
-          marketplaces.diagram-design = inputs.diagram-design;
-          settings.enabledPlugins."diagram-design@diagram-design" = true;
-        };
+    agent-extensions = {
+      type = "plugin";
+      marketplace = {
+        name = "diagram-design";
+        src = inputs.diagram-design;
+        pluginId = "diagram-design@diagram-design";
       };
+      skills = {
+        diagram-design = inputs.diagram-design;
+      };
+    };
   };
 }

@@ -2,6 +2,25 @@
 { ... }:
 {
   den.aspects.applications.dev.ai.mcp.serena = {
+    agent-extensions =
+      { lib, pkgs, ... }:
+      {
+        type = "mcp";
+        mcpServers = {
+          serena = {
+            command = "${lib.getExe pkgs.local.serena-agent}";
+            args = [
+              "start-mcp-server"
+              "--project-from-cwd"
+              "--context"
+              "claude-code"
+              "--open-web-dashboard"
+              "False"
+            ];
+          };
+        };
+      };
+
     homeManager =
       { pkgs, lib, ... }:
       {
@@ -14,19 +33,6 @@
         ];
 
         programs.claude-code = {
-          mcpServers.serena = {
-            type = "stdio";
-            command = "${lib.getExe pkgs.local.serena-agent}";
-            args = [
-              "start-mcp-server"
-              "--project-from-cwd"
-              "--context"
-              "claude-code"
-              "--open-web-dashboard"
-              "False"
-            ];
-          };
-
           settings.permissions.allow = [
             "Bash(serena *)"
           ];

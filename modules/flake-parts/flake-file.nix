@@ -191,8 +191,6 @@
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
-      nix-ai-tools.url = "github:numtide/nix-ai-tools";
-
       nix-cachyos-kernel = {
         url = "github:xddxdd/nix-cachyos-kernel";
         inputs = {
