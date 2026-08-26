@@ -4,22 +4,25 @@
     includes = with den.aspects; [
       hardware.adb
       applications.dev.ai.claude
-      applications.dev.ai.beads
-      applications.dev.ai.hunk
-      applications.dev.ai.rtk
+      applications.dev.ai.tools.beads
+      applications.dev.ai.tools.hunk
+      applications.dev.ai.tools.rtk
       applications.dev.ai.llm-agents
-      applications.dev.ai.gstack
-      applications.dev.ai.ponytail
-      applications.dev.ai.graphify
-      applications.dev.ai.headroom
-      applications.dev.ai.diagram-design
-      applications.dev.ai.ui-ux-pro-max
-      applications.dev.ai.one-skill-to-rule-them-all
-      applications.dev.ai.codegraph
+      applications.dev.ai.skills.caveman
+      applications.dev.ai.skills.superpowers
+      applications.dev.ai.skills.mattpocock
+      applications.dev.ai.skills.gstack
+      applications.dev.ai.skills.ponytail
+      applications.dev.ai.skills.diagram-design
+      applications.dev.ai.skills.ui-ux-pro-max
+      applications.dev.ai.skills.one-skill-to-rule-them-all
+      applications.dev.ai.mcp.graphify
+      applications.dev.ai.mcp.headroom
+      applications.dev.ai.mcp.codegraph
       applications.dev.ai.mcp.codebase-memory
       applications.dev.ai.mcp.serena
       applications.dev.ai.pi
-      applications.dev.ai.hermes
+      applications.dev.ai.agents.hermes
 
       applications.shell.nix-index
 

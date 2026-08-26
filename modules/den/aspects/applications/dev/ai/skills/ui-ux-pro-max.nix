@@ -7,7 +7,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.ui-ux-pro-max = {
+  den.aspects.applications.dev.ai.skills.ui-ux-pro-max = {
     homeManager =
       { ... }:
       {

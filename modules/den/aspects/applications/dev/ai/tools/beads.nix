@@ -12,7 +12,7 @@
 # through the cutover tail and retires with the runbook's post-validation
 # cleanup.
 {
-  den.aspects.applications.dev.ai.beads = {
+  den.aspects.applications.dev.ai.tools.beads = {
     homeManager =
       {
         config,

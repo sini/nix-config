@@ -2,7 +2,7 @@
 # fast 100% local code graph for AI coding agents. Package comes from
 # llm-agents.nix.
 {
-  den.aspects.applications.dev.ai.codegraph = {
+  den.aspects.applications.dev.ai.mcp.codegraph = {
     homeManager =
       { inputs', ... }:
       let

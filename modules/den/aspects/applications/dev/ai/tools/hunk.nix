@@ -6,7 +6,7 @@
 # linux host. The Claude Code skill is still sourced from the same upstream tree
 # (skills/hunk-review), which the numtide package exposes via `.src`.
 {
-  den.aspects.applications.dev.ai.hunk = {
+  den.aspects.applications.dev.ai.tools.hunk = {
     homeManager =
       { inputs', ... }:
       {

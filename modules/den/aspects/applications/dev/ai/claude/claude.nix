@@ -28,18 +28,6 @@
       url = "github:anthropics/claude-plugins-official";
       flake = false;
     };
-    caveman = {
-      url = "github:JuliusBrussee/caveman";
-      flake = false;
-    };
-    superpowers-extended-cc = {
-      url = "github:pcvelz/superpowers";
-      flake = false;
-    };
-    mattpocock-skills = {
-      url = "github:mattpocock/skills";
-      flake = false;
-    };
   };
 
   den.aspects.applications.dev.ai.claude = {
@@ -100,9 +88,6 @@
           # `caveman@caveman`, `superpowers-extended-cc@superpowers-extended-cc-marketplace`.
           marketplaces = {
             claude-plugins-official = inputs.claude-plugins-official;
-            caveman = inputs.caveman;
-            superpowers-extended-cc-marketplace = inputs.superpowers-extended-cc;
-            mattpocock = inputs.mattpocock-skills;
           };
 
           settings = {
@@ -228,9 +213,6 @@
               "skill-creator@claude-plugins-official" = true;
               "code-simplifier@claude-plugins-official" = true;
               "rust-analyzer-lsp@claude-plugins-official" = true;
-              "caveman@caveman" = true;
-              "superpowers-extended-cc@superpowers-extended-cc-marketplace" = true;
-              "mattpocock-skills@mattpocock" = true;
             };
 
             # Two events, deliberately: session start, and every directory change. NOT PreToolUse —
@@ -293,47 +275,6 @@
             exit 0
           '';
         };
-
-        # Read-only, declarative — the cortex canonical, rendered to the store.
-        # home.file.".claude/settings.json".source = (pkgs.formats.json { }).generate "claude-settings.json" {
-        #   env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS = "1";
-        #   permissions = {
-        #     allow = [
-        #       "Bash(wc:*)"
-        #       "WebFetch(domain:raw.githubusercontent.com)"
-        #     ];
-        #     defaultMode = "default";
-        #   };
-        #   enabledPlugins = {
-        #     "commit-commands@claude-plugins-official" = true;
-        #     "caveman@caveman" = true;
-        #     "skill-creator@claude-plugins-official" = true;
-        #     "code-simplifier@claude-plugins-official" = true;
-        #     "superpowers-extended-cc@superpowers-extended-cc-marketplace" = true;
-        #     "rust-analyzer-lsp@claude-plugins-official" = true;
-        #   };
-        #   extraKnownMarketplaces = {
-        #     superpowers-marketplace.source = {
-        #       source = "github";
-        #       repo = "obra/superpowers-marketplace";
-        #     };
-        #     superpowers-extended-cc-marketplace.source = {
-        #       source = "github";
-        #       repo = "pcvelz/superpowers";
-        #     };
-        #     caveman.source = {
-        #       source = "github";
-        #       repo = "JuliusBrussee/caveman";
-        #     };
-        #   };
-        #   effortLevel = "xhigh";
-        #   tui = "default";
-        #   autoMemoryDirectory = "~/.claude/memory";
-        #   skipWorkflowUsageWarning = true;
-        #   verbose = true;
-        #   inputNeededNotifEnabled = true;
-        #   agentPushNotifEnabled = true;
-        # };
       };
 
     # Mutable local state — survives a home wipe, in /persist, NOT synced.

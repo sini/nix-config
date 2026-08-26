@@ -5,7 +5,7 @@
 # comes from the numtide collection (llm-agents) — only beads/hunk moved to their
 # canonical upstreams.
 {
-  den.aspects.applications.dev.ai.rtk = {
+  den.aspects.applications.dev.ai.tools.rtk = {
     homeManager =
       { inputs', ... }:
       {

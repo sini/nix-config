@@ -13,7 +13,7 @@
 {
   flake-file.inputs.hermes-agent.url = "github:NousResearch/hermes-agent";
 
-  den.aspects.applications.dev.ai.hermes = {
+  den.aspects.applications.dev.ai.agents.hermes = {
     homeManagerModules =
       { inputs', ... }:
       [

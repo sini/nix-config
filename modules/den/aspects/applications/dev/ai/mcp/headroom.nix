@@ -8,7 +8,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.headroom = {
+  den.aspects.applications.dev.ai.mcp.headroom = {
     homeManager =
       { pkgs, lib, ... }:
       {

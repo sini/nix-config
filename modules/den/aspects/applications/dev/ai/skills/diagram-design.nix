@@ -7,7 +7,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.diagram-design = {
+  den.aspects.applications.dev.ai.skills.diagram-design = {
     homeManager =
       { ... }:
       {

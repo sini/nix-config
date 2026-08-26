@@ -7,7 +7,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.ponytail = {
+  den.aspects.applications.dev.ai.skills.ponytail = {
     homeManager =
       { ... }:
       {

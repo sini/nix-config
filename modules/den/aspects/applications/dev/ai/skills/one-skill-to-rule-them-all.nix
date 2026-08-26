@@ -8,7 +8,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.one-skill-to-rule-them-all = {
+  den.aspects.applications.dev.ai.skills.one-skill-to-rule-them-all = {
     homeManager =
       { ... }:
       {

@@ -7,7 +7,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.gstack = {
+  den.aspects.applications.dev.ai.skills.gstack = {
     homeManager =
       { pkgs, ... }:
       {

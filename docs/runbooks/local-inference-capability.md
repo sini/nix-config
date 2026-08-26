@@ -25,7 +25,7 @@ Measured from `hosts/<name>/facter.json` unless marked otherwise.
 | Host | CPU | RAM | Accelerator | Notes |
 |---|---|---|---|---|
 | `cortex-cuda` | — | — | RTX 3090 Ti 24 GiB, 1008 GB/s | **Reference.** Measured in `services/ai/ninfer.nix`: 96.2 tok/s decode, 1121 tok/s prefill, 15,523 tok prefilled in 13.66 s |
-| `blade` | i9-13950HX, 24c/32t, **no AVX-512** | **2×48 = 96 GiB** DDR5-5600 ⚠ | RTX 4090 Laptop, 16 GiB, ~576 GB/s | Razer notebook. Not 24/7, thermally constrained |
+| `blade` | i9-13950HX, 8P+16E (24c/32t), **no AVX-512** | **2×48 = 96 GiB** DDR5-5600 ⚠ | RTX 4090 Laptop, 16 GiB, ~576 GB/s | Razer notebook. Thermally constrained. ⚠ **Pin to P-cores (`taskset -c 0-15` or `-t 16`)** to avoid low-bandwidth E-core scheduling |
 | `axon-01..03` | Ryzen 9 7940HS, 8c/16t, **AVX-512 + BF16** | 2×32 = 64 GiB DDR5-5600 | Radeon 780M (gfx1103) | Mobile 35–54 W. Prod k3s nodes. TB mesh @ 20 Gbps |
 | `uplink` | Ryzen 9 5950X, 16c/32t, **no AVX-512** | 4×32 = 128 GiB DDR4 **@ 2666?** ⚠ | Arc A310, ~4 GiB (not an offload target) | Only host with >64 GiB in one address space |
 | `bitstream` | Ryzen 5 6600H, 6c/12t | 2×8 = 16 GiB ⚠ | Radeon 660M | **Excluded** — too small |
@@ -103,6 +103,19 @@ Hold constant across every cell: model file (by sha256), prompt corpus,
 `--flash-attn`, CPU governor `performance`, and a 60 s idle before each run.
 Record the fingerprint (below) or the cell is uninterpretable.
 
+### Execution Environment
+
+Dependencies can be satisfied natively by including `services.ai.benchmarking` in a host's NixOS aspect, or invoked dynamically via an ephemeral `nix shell`:
+
+```bash
+# Option A: Native binary execution (if host aspect includes services.ai.benchmarking)
+# Option B: Ephemeral nix shell wrapper (zero pre-install required on fleet nodes)
+nix shell github:NixOS/nixpkgs/nixos-unstable#sysbench \
+          nixpkgs#iperf3 \
+          nixpkgs#dmidecode \
+          nixpkgs#llama-cpp
+```
+
 ### P0 · Substrate ceilings
 
 The **predictor**. If P1 lands far under `membw / active_bytes`, the ceiling is
@@ -110,8 +123,14 @@ the implementation, not the hardware — and that is a different bug.
 
 ```bash
 sudo dmidecode -t 17 | grep -E 'Speed|Rank|Size'
-sysbench memory --memory-block-size=1M --memory-total-size=64G \
-  --memory-oper=read --threads=$(nproc) run
+
+# Sweep thread counts to find true RAM bandwidth ceiling before thread contention
+for t in 4 8 16 32; do
+  echo "=== Threads: $t ==="
+  sysbench memory --memory-block-size=1M --memory-total-size=64G \
+    --memory-oper=read --threads=$t run
+done
+
 # TB mesh (axon only) — latency matters more than the 20 Gbps: two hops enter
 # every token's critical path under pipeline parallel
 iperf3 -c <peer> -t 20 -P 4
@@ -123,13 +142,17 @@ ping -c 500 -i 0.01 -q <peer>
 `llama-bench -d` prefills to depth and then times pp/tg *there*. `d=0` is the
 **live control**: if it is also slow, the finding is not about depth.
 
+> ⚠ **Context Floor:** Explicitly pass `-c 163840` to ensure `llama-bench` allocates context space for depth testing.
+> ⚠ **Blade Threading:** Pin CPU runs to P-cores with `taskset -c 0-15` or `-t 16` to prevent scheduling onto E-cores.
+
 ```bash
-llama-bench -m $MODEL -p 4096 -n 64 -d 0,16384,65536,131072,163840 \
+# Native or via `nix run github:NixOS/nixpkgs/nixos-unstable#llama-cpp -- llama-bench ...`
+llama-bench -m $MODEL -c 163840 -p 4096 -n 64 -d 0,16384,65536,131072,163840 \
   -ngl $NGL -t $T -fa 1 -ctk $KV -ctv $KV -r 3 -o csv
 ```
 
-Sweep: backend {cpu, vulkan(780M), cuda(blade)} × KV {f16, q8_0, q4_0} ×
-threads {8,16} (axon/blade) or {16,32} (uplink).
+Sweep: backend {cpu, vulkan(780M), hip(780M w/ `HSA_OVERRIDE_GFX_VERSION=11.0.0`), cuda(blade)} × KV {f16, q8_0, q4_0} ×
+threads {8,16} (axon / blade P-cores pinned) or {16,32} (uplink).
 
 ### P2 · Cache reuse — the shape that decides "slow but correct"
 
@@ -138,7 +161,8 @@ across turns, the cold prefill amortises once per session and only delta TTFT
 matters. If it doesn't, H1 is dead regardless of throughput.
 
 ```bash
-llama-server -m $MODEL -c 163840 -fa 1 -ctk q8_0 -ctv q8_0 \
+# Force slot context retention with --no-context-shift
+llama-server -m $MODEL -c 163840 --no-context-shift -fa 1 -ctk q8_0 -ctv q8_0 \
   --cache-reuse 256 --slot-save-path ./slots --port 8099
 # 1. cold: POST a real 160k transcript, n_predict=16, cache_prompt=true
 # 2. warm: same prefix + 2k delta, n_predict=128 — this is the number
@@ -154,8 +178,8 @@ per model and depth.
 
 ```bash
 for ncm in 0 12 24 36 48; do
-  llama-bench -m $MODEL -p 4096 -n 64 -d 0,163840 -ngl 99 --n-cpu-moe $ncm \
-    -fa 1 -ctk q8_0 -ctv q8_0 -r 3 -o csv
+  taskset -c 0-15 llama-bench -m $MODEL -c 163840 -p 4096 -n 64 -d 0,163840 -ngl 99 \
+    --n-cpu-moe $ncm -fa 1 -ctk q8_0 -ctv q8_0 -r 3 -o csv
 done
 ```
 
@@ -181,6 +205,8 @@ processed per hour at acceptable quality*, and the risk is that per-item
 minutes, and no amount of concurrency fixes that. Measure per-item wall clock
 first; if it fails, stop — the agreement study is moot.
 
+* **Prefill Wall-Clock Gate:** If per-item TTFT for a 20k transcript exceeds **180 s** on candidate nodes, stop immediately. H4 is capacity/bandwidth bound and cannot clear the item throughput threshold.
+
 **Corpus.** Real data we already hold: N=100 turns sampled from
 `~/.hermes/state.db` (FTS5) plus N=50 entries from `~/.claude/memory/`.
 
@@ -195,6 +221,10 @@ path measures the harness, not the models.
 same item; agreement accepts, disagreement escalates to `cortex-cuda`. This
 gives a real oracle instead of an ensemble hand-wave, and the escalation rate
 is itself the cost model.
+
+**Agreement Definition.** To avoid false disagreements on formatting differences, score agreement as:
+1. **JSON Key Agreement:** Both model outputs extract identical structural field keys ($\ge 95\%$ overlap).
+2. **Field Value Semantic Similarity:** Textual field values achieve $\ge 0.88$ cosine similarity against reference embeddings (or exact match for discrete metadata fields).
 
 **Negative control — required.** Compute agreement between *mismatched* pairs
 (reference item _i_ vs candidate item _j≠i_). Structured extraction output is

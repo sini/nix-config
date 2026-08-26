@@ -7,7 +7,7 @@
     flake = false;
   };
 
-  den.aspects.applications.dev.ai.graphify = {
+  den.aspects.applications.dev.ai.mcp.graphify = {
     homeManager =
       { pkgs, ... }:
       let
