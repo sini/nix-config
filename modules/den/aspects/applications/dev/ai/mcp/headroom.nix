@@ -69,6 +69,22 @@
             # rate on matched long-context sessions went from 0.65 to 2.93 per 100 requests.
             # Re-measure with `headroom_cache_bust_tokens_lost_total` at
             # http://127.0.0.1:8787/metrics before enabling it again.
+            # HEADROOM_LOSSLESS drops the LOSSY compressors for format-native lossless
+            # compaction. Lossy compression measured NET NEGATIVE against the prompt cache:
+            # over one fleet-wide window it removed 5,318,047 tokens while the proxy's own
+            # `headroom_cache_bust_tokens_lost_total` ("tokens that lost provider cache
+            # discount because of compression") recorded 5,327,329 — one token knocked out
+            # of cache per token saved. The prices are not symmetric: a cached token bills
+            # at 0.1x and its re-write at 2.0x on the 1h TTL (headroom's own
+            # CACHE_READ_MULTIPLIER / CACHE_WRITE_MULTIPLIER_1H), so that trade runs 20:1
+            # against. This is not a policy misconfiguration to tune around — the client UA
+            # is `claude-cli/`, which auth_policy classifies SUBSCRIPTION, already headroom's
+            # most cache-conservative policy (live_zone_only, cache aligner off, 25% cap).
+            # The savings that survive are tool_search's, an order of magnitude larger and
+            # earned by deferring tool schemas rather than by rewriting cached bytes.
+            # Lossless also ends the agent-side workaround tax: a lossy rendering is not the
+            # artefact, so every verbatim-critical read had to go dump-to-file and back.
+            #
             # HEADROOM_LOG_MESSAGES makes the proxy store pre/post-compression
             # message snapshots, which is the ONLY thing `headroom inspect` reads.
             # Without it that command refuses outright ("the proxy isn't capturing
@@ -89,6 +105,7 @@
             Environment = [
               "HEADROOM_TELEMETRY=off"
               "HEADROOM_MODE=cache"
+              "HEADROOM_LOSSLESS=1"
               "HEADROOM_LOG_MESSAGES=1"
             ];
             ExecStart = "${lib.getExe pkgs.local.headroom-ai} proxy --host 127.0.0.1 --port 8787 --no-telemetry";
@@ -128,6 +145,7 @@
             EnvironmentVariables = {
               HEADROOM_TELEMETRY = "off";
               HEADROOM_MODE = "cache";
+              HEADROOM_LOSSLESS = "1";
               HEADROOM_LOG_MESSAGES = "1";
             };
             KeepAlive = {

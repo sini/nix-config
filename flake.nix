@@ -154,6 +154,7 @@
       flake = false;
     };
     hermes-agent.url = "github:NousResearch/hermes-agent";
+    hipfire.url = "github:warpfront/hipfire";
     hm-wrapper-modules = {
       url = "github:sini/hm-wrapper-modules";
       inputs = {

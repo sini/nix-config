@@ -11,7 +11,9 @@
         # These tools have their own aspects that own their Claude Code wiring:
         # beads (→ beads.nix, `bd` + `br` + beads-viewer), hunk (→ hunk.nix,
         # numtide package + upstream skill), rtk (→ rtk.nix, numtide binary +
-        # skill + hook). The rest stay here on the numtide collection.
+        # skill + hook). agents/hermes.nix likewise pulls hermes-hud and
+        # hermes-one from here, next to the upstream flake it takes the agent
+        # itself from. The rest stay here on the numtide collection.
         home.packages = [
           inputs'.llm-agents.packages.codegraph
           pkgs.playwright-mcp
