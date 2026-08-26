@@ -53,6 +53,10 @@ spec:
                   fieldPath: status.podIP
             - name: CODER_DERP_SERVER_RELAY_URL
               value: http://$(KUBE_POD_IP):8080
+            - name: CODER_CLUSTER_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
             - name: CODER_ACCESS_URL
               value: https://coder.json64.dev
             - name: CODER_PG_CONNECTION_URL
@@ -81,7 +85,7 @@ spec:
               value: "3"
             - name: CODER_DISABLE_PASSWORD_AUTH
               value: "true"
-          image: ghcr.io/coder/coder:v2.34.4
+          image: ghcr.io/coder/coder:v2.36.3
           imagePullPolicy: IfNotPresent
           lifecycle: {}
           name: coder

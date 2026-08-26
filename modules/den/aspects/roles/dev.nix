@@ -29,6 +29,7 @@
       applications.dev.ai.agents.claude
       applications.dev.ai.agents.gemini
       applications.dev.ai.agents.hermes
+      applications.dev.ai.agents.opencode
       applications.dev.ai.agents.pi
 
       applications.shell.nix-index

@@ -41,7 +41,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/grafana/alloy:v1.17.0
+          image: docker.io/grafana/alloy:v1.19.0
           imagePullPolicy: IfNotPresent
           name: alloy
           ports:
@@ -67,6 +67,17 @@ spec:
             requests:
               cpu: 10m
               memory: 50Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - mountPath: /etc/alloy
               name: config

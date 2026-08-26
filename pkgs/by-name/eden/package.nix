@@ -176,7 +176,7 @@ let
 in
 stdenv.mkDerivation (finalAttrs: {
   pname = "eden";
-  version = "master";
+  version = "test-tag2";
   src = fetchFromGitea {
     domain = "git.eden-emu.dev";
     owner = "eden-emu";

@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/qbittorrent";
   imageTag = "libtorrentv1";
-  imageDigest = "sha256:2626892a6fd232fe8667358fa51110867aeb528bca6fdede1aba7bdcf9e23dcb";
-  imageHash = "sha256-Mms8GtoSOMOeuQH4UI+rVFHQ/wY3vZcGjyblzVX60qU=";
+  imageDigest = "sha256:b63369ec3dbbd43d15e77e58fb776b5c193d618efbe43c91bea297d32fb14f83";
+  imageHash = "sha256-hC2+ykT/WhLUyuD19HEDHswoh29YPYB/mnDiEhfU7R8=";
   arch = "amd64";
   os = "linux";
   pinned = false;

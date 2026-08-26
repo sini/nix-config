@@ -37,13 +37,13 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "looking-glass-client";
-  version = "B7-188-53bfb654";
+  version = "B7";
 
   src = fetchFromGitHub {
     owner = "gnif";
     repo = "LookingGlass";
     rev = "53bfb6547f2b7abd6c183192e13a57068c1677ea";
-    hash = "sha256-I84oVLeS63mnR19vTalgvLvA5RzCPTXV+tSsw+ImDwQ=";
+    hash = "sha256-SakFCEXPsJW3zmNpmklK8ZCGpcJzJ/4v7TJDpjWqVeA=";
     fetchSubmodules = true;
   };
 

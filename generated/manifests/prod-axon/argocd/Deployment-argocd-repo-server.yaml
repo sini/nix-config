@@ -18,8 +18,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: 992427cf5e0a122974bc3c93fb2ec300e05308b5bdd09f64f722e028716824e7
-        checksum/cmd-params: 988122142c4845978943c620fb95adb910fb3e48bac2aa69fcbaa55ea3c4d8fa
+        checksum/cm: 47d8f343a0d67a97cfae551bcfebef8274a1f3c85af1b09d6ac60463a2cce110
+        checksum/cmd-params: 9869a38a313f6566e667ee66648a10f9a5bcc3234a3920e92f25a2e06cde7c2a
       labels:
         app.kubernetes.io/component: repo-server
         app.kubernetes.io/instance: argocd
@@ -302,7 +302,7 @@ spec:
               value: /helm-working-dir
             - name: HELM_DATA_HOME
               value: /helm-working-dir
-          image: quay.io/argoproj/argocd:v3.5.0
+          image: quay.io/argoproj/argocd:v3.5.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -368,7 +368,7 @@ spec:
           command:
             - sh
             - -c
-          image: quay.io/argoproj/argocd:v3.5.0
+          image: quay.io/argoproj/argocd:v3.5.1
           imagePullPolicy: IfNotPresent
           name: copyutil
           resources: {}

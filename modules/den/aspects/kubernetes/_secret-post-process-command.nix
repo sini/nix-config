@@ -3,6 +3,7 @@
 # the objectTransforms postProcess rule and the idempotency check so they
 # can't drift.
 ''
+  export SOPS_AGE_KEY_CMD="''${SOPS_AGE_KEY_CMD:-age-plugin-yubikey -i}"
   resolved=$(vals eval)
   sha=$(printf '%s' "$resolved" | sha256sum | cut -d' ' -f1)
   if [ -f "$TARGET_PATH" ]; then
@@ -11,7 +12,6 @@
   fi
   printf '%s' "$resolved" \
     | yq '.metadata.annotations."secrets.json64.dev/plaintext-sha256" = "'"$sha"'"' \
-    | SOPS_AGE_KEY_CMD="age-plugin-yubikey -i" \
-      sops --config "$PWD/.sops.yaml" --filename-override "$TARGET_PATH" \
+    | sops --config "$PWD/.sops.yaml" --filename-override "$TARGET_PATH" \
            --input-type yaml --output-type yaml -e /dev/stdin
 ''

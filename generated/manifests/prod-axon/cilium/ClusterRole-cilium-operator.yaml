@@ -127,6 +127,8 @@ rules:
     resources:
       - ciliumendpointslices
       - ciliumenvoyconfigs
+      - ciliumbgpclusterconfigs
+      - ciliumbgpnodeconfigoverrides
       - ciliumbgppeerconfigs
       - ciliumbgpadvertisements
       - ciliumbgpnodeconfigs
@@ -185,12 +187,22 @@ rules:
     verbs:
       - update
   - apiGroups:
+      - apiextensions.k8s.io
+    resourceNames:
+      - ciliumbgpclusterconfigs.cilium.io
+      - ciliumbgppeerconfigs.cilium.io
+      - ciliumbgpadvertisements.cilium.io
+      - ciliumbgpnodeconfigs.cilium.io
+      - ciliumbgpnodeconfigoverrides.cilium.io
+    resources:
+      - customresourcedefinitions/status
+    verbs:
+      - update
+  - apiGroups:
       - cilium.io
     resources:
       - ciliumloadbalancerippools
       - ciliumpodippools
-      - ciliumbgpclusterconfigs
-      - ciliumbgpnodeconfigoverrides
       - ciliumbgppeerconfigs
       - ciliumdatapathplugins
     verbs:

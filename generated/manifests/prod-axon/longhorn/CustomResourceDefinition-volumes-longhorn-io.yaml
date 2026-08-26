@@ -117,6 +117,51 @@ spec:
                     - v1
                     - v2
                   type: string
+                dataLayout:
+                  description: |-
+                    DataLayout declares the user's intended data layout (topology type, protection mode, and EC parameters).
+                    The entire struct is immutable after creation.
+                  properties:
+                    dataChunks:
+                      description: |-
+                        DataChunks is the number of data chunks (k) in the EC array.
+                        Required when Type is sharded; must be 0 for replicated volumes.
+                      minimum: 0
+                      type: integer
+                    mode:
+                      description: |-
+                        Mode describes the specific data protection mechanism in use.
+                        Empty for V1 volumes where no SPDK-level mode applies.
+                      enum:
+                        - raid1
+                        - erasureCoding
+                        - ""
+                      type: string
+                    parityChunks:
+                      description: |-
+                        ParityChunks is the number of parity chunks (m) in the EC array.
+                        The volume tolerates up to m simultaneous disk failures.
+                        Required when Type is sharded; must be 0 for replicated volumes.
+                      minimum: 0
+                      type: integer
+                    stripSizeKB:
+                      description: |-
+                        StripSizeKB is the chunk size in KiB used by the EC bdev.
+                        Must be a power of two in the range [4, 1024].
+                        Required when Type is sharded; must be 0 for replicated volumes.
+                      minimum: 0
+                      type: integer
+                    type:
+                      description: Type describes how volume data is distributed across nodes.
+                      enum:
+                        - replicated
+                        - sharded
+                        - ""
+                      type: string
+                  type: object
+                  x-kubernetes-validations:
+                    - message: DataLayout is immutable
+                      rule: self == oldSelf
                 dataLocality:
                   enum:
                     - disabled

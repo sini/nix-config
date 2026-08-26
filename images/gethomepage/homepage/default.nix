@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/gethomepage/homepage";
   imageTag = "latest";
-  imageDigest = "sha256:a0b71c8e757298d02560186bab9fbe3fc2d375c523a62cc1019177b37e48aa28";
-  imageHash = "sha256-9v2nTyoIoeL3F5Lb84a2Dy6WrVtJ0IuW9UZ0pC3OJy8=";
+  imageDigest = "sha256:da9dca9ec258c628146bed1445da0853f2b88f0b10bafd97c091de807c363d60";
+  imageHash = "sha256-lFblsVbF0UTnaVIrZnkBM3ykI3FIp2B1MD0Bw1vdxvM=";
   arch = "amd64";
   os = "linux";
   pinned = false;

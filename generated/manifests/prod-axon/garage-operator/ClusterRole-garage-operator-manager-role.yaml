@@ -25,7 +25,7 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods
+      - namespaces
     verbs:
       - get
       - list
@@ -33,9 +33,14 @@ rules:
   - apiGroups:
       - ""
     resources:
-      - pods/exec
+      - pods
     verbs:
       - create
+      - delete
+      - get
+      - list
+      - patch
+      - watch
   - apiGroups:
       - ""
     resources:
@@ -44,8 +49,19 @@ rules:
       - create
       - patch
   - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
       - apps
     resources:
+      - daemonsets
       - deployments
       - statefulsets
     verbs:
@@ -55,6 +71,14 @@ rules:
       - list
       - patch
       - update
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - replicasets
+    verbs:
+      - get
+      - list
       - watch
   - apiGroups:
       - policy

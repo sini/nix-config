@@ -41,7 +41,7 @@
 }:
 stdenv.mkDerivation (finalAttrs: {
   pname = "looking-glass-client-vulkan";
-  version = "b8-vulkan";
+  version = "B5.0.1";
 
   src = fetchFromGitHub {
     owner = "sini";

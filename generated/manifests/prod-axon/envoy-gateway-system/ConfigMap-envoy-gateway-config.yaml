@@ -17,7 +17,7 @@ data:
           type: GatewayNamespace
         rateLimitDeployment:
           container:
-            image: docker.io/envoyproxy/ratelimit:1e50889b
+            image: docker.io/envoyproxy/ratelimit:17b1956c
           patch:
             type: StrategicMerge
             value:
@@ -28,7 +28,7 @@ data:
                     - imagePullPolicy: IfNotPresent
                       name: envoy-ratelimit
         shutdownManager:
-          image: docker.io/envoyproxy/gateway:v1.8.3
+          image: docker.io/envoyproxy/gateway:v1.9.0
       type: Kubernetes
 kind: ConfigMap
 metadata:

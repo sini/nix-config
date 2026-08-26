@@ -97,6 +97,7 @@ data:
   envoy-base-id: "0"
   envoy-keep-cap-netbindservice: "false"
   envoy-node-locality-enabled: "false"
+  envoy-xds-mode: ads
   external-envoy-proxy: "false"
   health-check-icmp-failure-threshold: "3"
   http-retry-count: "3"
@@ -151,6 +152,7 @@ data:
   procfs: /host/proc
   prometheus-serve-addr: :9962
   proxy-cluster-max-connections: "1024"
+  proxy-cluster-max-pending-requests: "1024"
   proxy-cluster-max-requests: "1024"
   proxy-connect-timeout: "2"
   proxy-idle-timeout-seconds: "60"

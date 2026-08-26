@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/hotio/whisparr";
   imageTag = "v2";
-  imageDigest = "sha256:c97884f746e7209c42412fb1cdcc232c9711d273675e1ebb96df9da2225aadd5";
-  imageHash = "sha256-k9hBW6wuPHf16oo8tLRBPPkTXLEVuL72FhEkLQ1FULg=";
+  imageDigest = "sha256:428045708fb4680b4ff8e4f81063733e78d53aa5c819bb1ead3389504456d298";
+  imageHash = "sha256-xz08IaF0icjimXzz2rdmdiJ1ZNjFAZ3SKOjARnxiGqw=";
   arch = "amd64";
   os = "linux";
   pinned = false;

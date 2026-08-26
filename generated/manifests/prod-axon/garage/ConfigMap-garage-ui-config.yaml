@@ -8,6 +8,7 @@ data:
           key: admin-password
           name: ""
         username: admin
+      metrics_public: false
       oidc:
         admin_role: admin
         admin_roles: []
@@ -32,6 +33,7 @@ data:
         session_max_age: 86400
         skip_expiry_check: false
         skip_issuer_check: false
+        team_attribute_path: ""
         tls_skip_verify: false
         username_attribute: preferred_username
     cors:
@@ -66,10 +68,10 @@ data:
       environment: production
       host: '::'
       max_body_size: 314572800
-      max_header_size: 1048576
+      max_header_size: 32768
       port: 8080
       protocol: http
-      read_buffer_size: 4096
+      read_buffer_size: 32768
       root_url: https://garage.json64.dev
       write_buffer_size: 4096
 kind: ConfigMap

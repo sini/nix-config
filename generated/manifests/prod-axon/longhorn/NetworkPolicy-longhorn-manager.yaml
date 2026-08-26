@@ -1,0 +1,35 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: longhorn-manager
+  namespace: longhorn-system
+spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: longhorn-manager
+        - podSelector:
+            matchLabels:
+              app: longhorn-ui
+        - podSelector:
+            matchLabels:
+              app: longhorn-csi-plugin
+        - podSelector:
+            matchExpressions:
+              - key: recurring-job.longhorn.io
+                operator: Exists
+            matchLabels:
+              longhorn.io/managed-by: longhorn-manager
+        - podSelector:
+            matchExpressions:
+              - key: longhorn.io/job-task
+                operator: Exists
+        - podSelector:
+            matchLabels:
+              app: longhorn-driver-deployer
+  podSelector:
+    matchLabels:
+      app: longhorn-manager
+  policyTypes:
+    - Ingress

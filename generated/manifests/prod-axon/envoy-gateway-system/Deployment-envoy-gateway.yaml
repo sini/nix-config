@@ -24,6 +24,7 @@ spec:
         app.kubernetes.io/name: gateway-helm
         control-plane: envoy-gateway
     spec:
+      automountServiceAccountToken: true
       containers:
         - args:
             - server
@@ -36,14 +37,15 @@ spec:
                   fieldPath: metadata.namespace
             - name: KUBERNETES_CLUSTER_DOMAIN
               value: cluster.local
-          image: docker.io/envoyproxy/gateway:v1.8.3
+          image: docker.io/envoyproxy/gateway:v1.9.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8081
-            initialDelaySeconds: 15
             periodSeconds: 20
+            successThreshold: 1
+            timeoutSeconds: 1
           name: envoy-gateway
           ports:
             - containerPort: 18000
@@ -60,8 +62,9 @@ spec:
             httpGet:
               path: /readyz
               port: 8081
-            initialDelaySeconds: 5
             periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
           resources:
             limits:
               memory: 1024Mi
@@ -74,11 +77,20 @@ spec:
               drop:
                 - ALL
             privileged: false
+            readOnlyRootFilesystem: true
             runAsGroup: 65532
             runAsNonRoot: true
             runAsUser: 65532
             seccompProfile:
               type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 30
+            httpGet:
+              path: /healthz
+              port: 8081
+            periodSeconds: 1
+            successThreshold: 1
+            timeoutSeconds: 1
           volumeMounts:
             - mountPath: /config
               name: envoy-gateway-config
@@ -86,7 +98,16 @@ spec:
             - mountPath: /certs
               name: certs
               readOnly: true
+            - mountPath: /var/lib/eg/wasm
+              name: wasm-cache
       imagePullSecrets: []
+      securityContext:
+        fsGroup: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: envoy-gateway
       terminationGracePeriodSeconds: 10
       volumes:
@@ -97,3 +118,5 @@ spec:
         - name: certs
           secret:
             secretName: envoy-gateway
+        - emptyDir: {}
+          name: wasm-cache

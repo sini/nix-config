@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/sonarr";
   imageTag = "latest";
-  imageDigest = "sha256:373159ba768e23a3a1c497d9f2b936addf8fd5b1fdce7dd6a14080ac928bfda0";
-  imageHash = "sha256-MIQ1S4AePaH52vbudHLcTBBPM0OdzBK3aRiRFYrF9G0=";
+  imageDigest = "sha256:c19aa4ecdf03d73e1d5c901da33744cb7eb4d921f89bafed1ca264601d7fa224";
+  imageHash = "sha256-BKwkaOf6kXHRCjyZ5sQYd4qUKdzvpgWfIxTaVfSFO4Y=";
   arch = "amd64";
   os = "linux";
   pinned = false;

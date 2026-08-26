@@ -55,7 +55,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/gethomepage/homepage@sha256:a0b71c8e757298d02560186bab9fbe3fc2d375c523a62cc1019177b37e48aa28
+          image: ghcr.io/gethomepage/homepage@sha256:da9dca9ec258c628146bed1445da0853f2b88f0b10bafd97c091de807c363d60
           name: main
           volumeMounts:
             - mountPath: /app/config/bookmarks.yaml

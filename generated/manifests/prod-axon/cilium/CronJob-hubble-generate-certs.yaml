@@ -25,6 +25,7 @@ spec:
                 - --ca-secret-namespace=kube-system
                 - --ca-secret-name=cilium-ca
                 - --ca-common-name=Cilium CA
+                - --ca-enforce-validity-throughout-leaves-duration=true
               command:
                 - /usr/bin/cilium-certgen
               env:
@@ -52,7 +53,7 @@ spec:
                       - key encipherment
                       - client auth
                       validity: 8760h
-              image: quay.io/cilium/certgen:v0.4.1@sha256:f0c656830e856d26b24b0e144df1f8b327d3b46748d76a630514111fc365b697
+              image: quay.io/cilium/certgen:v0.4.9@sha256:6213a4c54a1f36e14a9280765f058aaa2017550c28bc122f5b09ad146fd0da2b
               imagePullPolicy: IfNotPresent
               name: certgen
               securityContext:

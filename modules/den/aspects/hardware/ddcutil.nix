@@ -16,6 +16,7 @@
           initrd.availableKernelModules = [
             "i2c-dev"
           ];
+
           extraModulePackages = [
             config.boot.kernelPackages.ddcci-driver
           ];

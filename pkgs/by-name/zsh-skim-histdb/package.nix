@@ -5,17 +5,17 @@
 }:
 rustPlatform.buildRustPackage rec {
   pname = "zsh-histdb-skim";
-  version = "0.8.6";
+  version = "0.9.7";
 
   buildInputs = [ sqlite ];
   src = fetchFromGitHub {
     owner = "m42e";
     repo = "zsh-histdb-skim";
     rev = "v${version}";
-    hash = "sha256-lJ2kpIXPHE8qP0EBnLuyvatWMtepBobNAC09e7itGas=";
+    hash = "sha256-+wxL95YLlGWLmLFmWETwziRYCtGhtfBXKQQIJQ/oxUk=";
   };
 
-  cargoHash = "sha256-dqTYJkKnvjzkV124XZHzDV58rjLhNz+Nc3Jj5gSaJas=";
+  cargoHash = "sha256-ljB00oZtXA18ukey1nRocmchI72N/DPQrQCEr1Ks13A=";
 
   patchPhase = ''
     substituteInPlace zsh-histdb-skim-vendored.zsh \

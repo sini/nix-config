@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/initconfig: 0c3aa913bf195d9379a435e916e28963
+        checksum/initconfig: 8dfb321dfbd8c8be824ea15802b29c12
       labels:
         app.kubernetes.io/instance: romm-redis
         app.kubernetes.io/name: valkey
@@ -29,16 +29,19 @@ spec:
           command:
             - valkey-server
           env:
-            - name: VALKEY_LOGLEVEL
+            - name: VALKEY_LOG_LEVEL
               value: notice
-          image: docker.io/valkey/valkey:9.1.0
+          image: docker.io/valkey/valkey:9.1.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
               command:
-                - sh
-                - -c
-                - valkey-cli ping
+                - valkey-cli
+                - ping
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
           name: romm-redis
           ports:
             - containerPort: 6379
@@ -56,9 +59,12 @@ spec:
           startupProbe:
             exec:
               command:
-                - sh
-                - -c
-                - valkey-cli ping
+                - valkey-cli
+                - ping
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
           volumeMounts:
             - mountPath: /data
               name: valkey-data
@@ -67,7 +73,7 @@ spec:
       initContainers:
         - command:
             - /scripts/init.sh
-          image: docker.io/valkey/valkey:9.1.0
+          image: docker.io/valkey/valkey:9.1.1
           imagePullPolicy: IfNotPresent
           name: romm-redis-init
           securityContext:

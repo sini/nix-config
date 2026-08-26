@@ -17,6 +17,7 @@ spec:
       labels:
         app: certgen
     spec:
+      automountServiceAccountToken: true
       containers:
         - command:
             - envoy-gateway
@@ -29,7 +30,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: KUBERNETES_CLUSTER_DOMAIN
               value: cluster.local
-          image: docker.io/envoyproxy/gateway:v1.8.3
+          image: docker.io/envoyproxy/gateway:v1.9.0
           imagePullPolicy: IfNotPresent
           name: envoy-gateway-certgen
           securityContext:
@@ -46,5 +47,12 @@ spec:
               type: RuntimeDefault
       imagePullSecrets: []
       restartPolicy: Never
+      securityContext:
+        fsGroup: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
       serviceAccountName: envoy-gateway-helm-certgen
   ttlSecondsAfterFinished: 30

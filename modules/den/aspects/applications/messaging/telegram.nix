@@ -1,10 +1,10 @@
 {
   den.aspects.applications.messaging.telegram = {
     homeManager =
-      { pkgs, ... }:
+      { inputs', ... }:
       {
         home.packages = [
-          pkgs.ayugram-desktop
+          inputs'.ayugram-desktop.packages.ayugram-desktop
         ];
       };
   };

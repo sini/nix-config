@@ -5,7 +5,6 @@
   # You can change versions, add patches, set compilation flags, anything really.
   # https://nixos.wiki/wiki/Overlays
   modifications = final: prev: {
-
     kanidm-provision = prev.kanidm-provision.overrideAttrs (_old: rec {
       src = prev.fetchFromGitHub {
         owner = "sini";
@@ -19,52 +18,6 @@
         hash = "sha256-dPTrIc/hTbMlFDXYMk/dTjqaNECazldfW43egDOwyLM=";
       };
     });
-
-    openldap = prev.openldap.overrideAttrs { doCheck = false; };
-
-    # TODO: Remove once nixpkgs fixes intel-graphics-compiler 2.40.13. Bump
-    # 65e994d (2.38.2 -> 2.40.13) broke the build: opencl-clang applies its
-    # clang patches with `git am` against a tree that IGC's own LLVM patcher
-    # already edited with GNU patch, so the index is stale and the first patch
-    # aborts with "clang/lib/Basic/Targets/SPIR.h: does not match index". The
-    # vendored clang-17 is then built without opencl-clang's extensions and
-    # cl_headers dies on `-cl-std=CL3.1` a few thousand ninja targets later.
-    # unstable still has 2.38.2 and carries the *same* intel-compute-runtime
-    # (26.27.39122.11), so this takes the pair upstream tests together rather
-    # than mixing a downgraded IGC into master's runtime.
-    inherit (final.unstable) intel-graphics-compiler intel-compute-runtime;
-
-    pythonPackagesExtensions = (prev.pythonPackagesExtensions or [ ]) ++ [
-      (_pyfinal: pyprev: {
-        # TODO: Remove once nixpkgs picks up
-        # https://github.com/NixOS/nixpkgs/pull/554405 or bumps curl-cffi to
-        # 0.16.0. The 0.15.0 test suite asserts on TLS/cookie error strings that
-        # the current curl-impersonate no longer emits. yt-dlp pulls curl-cffi
-        # into every closure, so the whole host build fails on it.
-        curl-cffi = pyprev.curl-cffi.overrideAttrs (old: {
-          disabledTestPaths = (old.disabledTestPaths or [ ]) ++ [
-            "tests/unittest/test_async_session.py::test_verify"
-            "tests/unittest/test_curl.py::test_verify"
-            "tests/unittest/test_requests.py::test_verify"
-            "tests/unittest/test_requests.py::test_delete_cookies"
-          ];
-        });
-
-        # Our ZFS datasets are created with utf8only=on, so the kernel refuses
-        # filenames that are not valid UTF-8 (EILSEQ) instead of creating them.
-        # These two tests exist to exercise exactly such names, so they can never
-        # pass on this machine regardless of nixpkgs revision. gftools -> pygit2
-        # drags this into from-source font builds.
-        pygit2 = pyprev.pygit2.overrideAttrs (old: {
-          disabledTests = (old.disabledTests or [ ]) ++ [
-            "test_lookup_branch_local"
-            "test_nonunicode_status_path"
-          ];
-        });
-      })
-    ];
-
-    inherit (inputs.ayugram-desktop.packages.${prev.stdenv.hostPlatform.system}) ayugram-desktop;
 
     zjstatus = inputs.zjstatus.packages.${prev.stdenv.hostPlatform.system}.default;
     nixidy = inputs.nixidy.packages.${prev.stdenv.hostPlatform.system}.default;
@@ -86,11 +39,4 @@
       config.allowUnfree = true;
     };
   };
-
-  # stable-packages = final: _prev: {
-  #   stable = import inputs.nixpkgs {
-  #     inherit (final.stdenv.hostPlatform) system;
-  #     config.allowUnfree = true;
-  #   };
-  # };
 }

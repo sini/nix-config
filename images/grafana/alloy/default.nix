@@ -1,8 +1,8 @@
 {
   imageName = "docker.io/grafana/alloy";
   imageTag = "latest";
-  imageDigest = "sha256:0f4434c92b3e6cdac38bb129b344e1790c246f7b6e2eaffcc16a5fa363240e33";
-  imageHash = "sha256-7wsHE5xlR29dGhf59oBE+DxN6SnIdDKzDTlVCEqFXNc=";
+  imageDigest = "sha256:b8ec653c44235fbe910879145dac3597d66b0aaecf60bcbbe82580767771a839";
+  imageHash = "sha256-uGifKd5q3c9/vrzHcC1XLqM/62i/WmsGSRDVNRpUEJk=";
   arch = "amd64";
   os = "linux";
   pinned = false;

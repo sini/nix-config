@@ -4,10 +4,10 @@
 {
   den.aspects.kubernetes.services.storage.csi-driver-nfs = {
     crds =
-      { inputs, system, ... }:
+      { charts, ... }:
       {
         name = "csi-driver-nfs";
-        chart = inputs.nixhelm.chartsDerivations.${system}.kubernetes-csi.csi-driver-nfs;
+        chart = charts.kubernetes-csi.csi-driver-nfs;
       };
 
     k8s-manifests =

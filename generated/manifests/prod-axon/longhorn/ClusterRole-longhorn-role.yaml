@@ -157,6 +157,10 @@ rules:
       - volumeattachments/status
       - backupbackingimages
       - backupbackingimages/status
+      - shards
+      - shards/status
+      - shardgroups
+      - shardgroups/status
     verbs:
       - '*'
   - apiGroups:

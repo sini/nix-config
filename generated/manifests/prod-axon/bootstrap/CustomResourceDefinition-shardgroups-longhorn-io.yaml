@@ -1,0 +1,255 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+  labels:
+    app.kubernetes.io/instance: longhorn
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/version: v1.12.1
+    helm.sh/chart: longhorn-1.12.1
+    longhorn-manager: ""
+  name: shardgroups.longhorn.io
+spec:
+  group: longhorn.io
+  names:
+    kind: ShardGroup
+    listKind: ShardGroupList
+    plural: shardgroups
+    shortNames:
+      - lhsg
+    singular: shardgroup
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: The volume that owns this ShardGroup
+          jsonPath: .spec.volumeName
+          name: Volume
+          type: string
+        - description: The aggregate health state of the EC array
+          jsonPath: .status.state
+          name: State
+          type: string
+        - description: The node hosting the ShardGroup process (typically co-located with the engine)
+          jsonPath: .spec.nodeID
+          name: Node
+          type: string
+        - description: The number of failed slots
+          jsonPath: .status.failedCount
+          name: Failed
+          type: integer
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta2
+      schema:
+        openAPIV3Schema:
+          description: ShardGroup is where Longhorn stores ShardGroup object.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: ShardGroupSpec defines the desired state of the Longhorn ShardGroup
+              properties:
+                creationSize:
+                  description: |-
+                    CreationSize is the volume size in bytes when the lvstore is first
+                    created. The lvstore metadata region is sized from it and never grows,
+                    so in-place expansion is limited to EcLvstoreMaxGrowthFactor (10x) of
+                    this size. Zero means the lvstore does not exist yet; the creation cap
+                    applies instead. Immutable once set.
+                  format: int64
+                  type: integer
+                  x-kubernetes-validations:
+                    - message: CreationSize is immutable once set
+                      rule: oldSelf == 0 || self == oldSelf
+                dataChunks:
+                  description: DataChunks is the k parameter of the EC array. Immutable after creation.
+                  minimum: 1
+                  type: integer
+                nodeID:
+                  description: |-
+                    NodeID identifies the node hosting the long-lived ShardGroup process that owns the
+                    EC volume's bdev_ec, lvol store, head lvol, and NVMe-oF export. It is typically equal
+                    to Engine.Spec.NodeID for engine-process co-location. The Volume controller is the
+                    sole writer and sets this field at first attach. NodeID is NOT cleared on volume
+                    detach (the ShardGroup process keeps running across detach to preserve the lvstore
+                    and head lvol on the encoded shard blocks for fast re-attach); it only changes on
+                    engine-node failover or volume deletion.
+                  type: string
+                parityChunks:
+                  description: |-
+                    ParityChunks is the m parameter of the EC array. The ShardGroup tolerates up to m
+                    simultaneous shard failures. Immutable after creation.
+                  minimum: 1
+                  type: integer
+                stripSizeKB:
+                  description: |-
+                    StripSizeKB is the EC chunk size in KiB. Must be a power of two in the range [4, 1024].
+                    Immutable after creation.
+                  maximum: 1024
+                  minimum: 4
+                  type: integer
+                volumeName:
+                  description: VolumeName is the name of the owning Volume CR. Immutable after creation.
+                  type: string
+              type: object
+            status:
+              description: ShardGroupStatus defines the observed state of the Longhorn ShardGroup
+              properties:
+                conditions:
+                  description: |-
+                    Conditions holds the latest observations of the ShardGroup's state, such as a
+                    degraded read that returned EIO.
+                  items:
+                    properties:
+                      lastProbeTime:
+                        description: Last time we probed the condition.
+                        type: string
+                      lastTransitionTime:
+                        description: Last time the condition transitioned from one status to another.
+                        type: string
+                      message:
+                        description: Human-readable message indicating details about last transition.
+                        type: string
+                      reason:
+                        description: Unique, one-word, CamelCase reason for the condition's last transition.
+                        type: string
+                      status:
+                        description: |-
+                          Status is the status of the condition.
+                          Can be True, False, Unknown.
+                        type: string
+                      type:
+                        description: Type is the type of the condition.
+                        type: string
+                    type: object
+                  nullable: true
+                  type: array
+                ecShardAddressMap:
+                  additionalProperties:
+                    type: string
+                  description: |-
+                    ECShardAddressMap maps shard slot index (as string) to the NVMe-oF address ("ip:port")
+                    of each healthy shard instance (ShardStateNormal with a non-empty StorageIP and Port).
+                    It is the base-bdev list for the ShardGroup process's EC array, and acts as the readiness
+                    gate (together with every Shard CR being in ShardStateNormal) before the ShardGroup
+                    process is provisioned.
+                  nullable: true
+                  type: object
+                evictingSlots:
+                  description: |-
+                    EvictingSlots is the ordered list of slot indices currently in the eviction
+                    pipeline (old Shard CR deleted, replacement not yet rebuilt). Tracked in
+                    status so VolumeEvictionController can observe progress without annotation parsing.
+                  items:
+                    type: integer
+                  nullable: true
+                  type: array
+                failedCount:
+                  description: |-
+                    FailedCount is the number of slots currently in the failed state. Slots being replaced
+                    (ShardStateReplacing) are not counted; an active rebuild is tracked separately via
+                    RebuildInProgress.
+                  type: integer
+                growInProgress:
+                  description: GrowInProgress indicates whether a capacity expansion is currently running.
+                  type: boolean
+                headLvolUUID:
+                  description: |-
+                    HeadLvolUUID is the UUID of the head lvol on the ShardGroup-process-owned lvol
+                    store. Surfaced for observability and debugging only.
+                  type: string
+                instanceManagerName:
+                  description: |-
+                    InstanceManagerName is the InstanceManager currently hosting the ShardGroup process,
+                    set during provisioning and cleared on teardown. During a re-bind to a new node it may
+                    still reference the previous InstanceManager until teardown completes, so consumers must
+                    validate it against Spec.NodeID before trusting the endpoint above.
+                  type: string
+                intentionalDeleteSlots:
+                  description: |-
+                    IntentionalDeleteSlots is the list of slot indices whose old Shard CR was
+                    deleted intentionally (admin kubectl delete, eviction, drain). The replacement
+                    Shard CR's failure-recovery debounce is bypassed for these slots so the
+                    replace+rebuild sequence runs immediately rather than after the full
+                    replica-replenishment-wait-interval. Cleared once the replacement reaches
+                    ShardStateNormal with StorageIP set, and defensively cleared on ShardGroup
+                    process re-bind.
+                  items:
+                    type: integer
+                  nullable: true
+                  type: array
+                lvstoreUUID:
+                  description: |-
+                    LvstoreUUID is reserved for the UUID of the lvol store created on bdev_ec inside the
+                    ShardGroup process. It is currently unpopulated: the ShardGroup instance does not surface
+                    the lvstore UUID over the instance-manager proto yet. Kept for forward-compatible
+                    observability; not on the engine data path.
+                  type: string
+                nqn:
+                  description: NQN is the NVMe-oF subsystem NQN of the ShardGroup process's exposed head lvol.
+                  type: string
+                ownerID:
+                  description: OwnerID is the ID of the node that owns this ShardGroup.
+                  type: string
+                port:
+                  description: Port is the NVMe-oF port allocated for the ShardGroup process's exposed head lvol.
+                  format: int32
+                  type: integer
+                processState:
+                  description: ProcessState is the runtime state of the ShardGroup process owned by this CR.
+                  type: string
+                rebuildInProgress:
+                  description: RebuildInProgress indicates whether a background shard rebuild is currently running.
+                  type: boolean
+                scrubInProgress:
+                  description: ScrubInProgress indicates whether a background scrub is currently running.
+                  type: boolean
+                shardRefs:
+                  description: ShardRefs is an ordered list of Shard CR names, where the list index equals the EC slot index.
+                  items:
+                    type: string
+                  nullable: true
+                  type: array
+                state:
+                  description: State is the aggregate health state of the EC array.
+                  enum:
+                    - healthy
+                    - degraded
+                    - offline
+                    - rebuilding
+                    - growing
+                    - ""
+                  type: string
+                storageIP:
+                  description: |-
+                    StorageIP is the storage-network IP of the InstanceManager pod hosting the ShardGroup
+                    process. Combined with Port and NQN, it forms the NVMe-oF endpoint that an EC volume's
+                    engine attaches to.
+                  type: string
+                wibDirtyRegion:
+                  description: WIBDirtyRegion is the number of dirty WIB regions reported by the EC bdev.
+                  type: integer
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

@@ -1,0 +1,151 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.19.0
+  labels:
+    app.kubernetes.io/instance: longhorn
+    app.kubernetes.io/name: longhorn
+    longhorn-manager: ""
+  name: shards.longhorn.io
+spec:
+  group: longhorn.io
+  names:
+    kind: Shard
+    listKind: ShardList
+    plural: shards
+    shortNames:
+      - lhsd
+    singular: shard
+  scope: Namespaced
+  versions:
+    - additionalPrinterColumns:
+        - description: The ShardGroup that owns this Shard
+          jsonPath: .spec.shardGroupName
+          name: ShardGroup
+          type: string
+        - description: The EC slot index of this Shard
+          jsonPath: .spec.slotIndex
+          name: Slot
+          type: integer
+        - description: The node that the shard instance runs on
+          jsonPath: .spec.nodeID
+          name: Node
+          type: string
+        - description: The health state of this shard slot
+          jsonPath: .status.state
+          name: State
+          type: string
+        - description: The EC role of this shard slot (data or parity)
+          jsonPath: .status.role
+          name: Role
+          type: string
+        - jsonPath: .metadata.creationTimestamp
+          name: Age
+          type: date
+      name: v1beta2
+      schema:
+        openAPIV3Schema:
+          description: Shard is where Longhorn stores Shard object.
+          properties:
+            apiVersion:
+              description: |-
+                APIVersion defines the versioned schema of this representation of an object.
+                Servers should convert recognized schemas to the latest internal value, and
+                may reject unrecognized values.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+              type: string
+            kind:
+              description: |-
+                Kind is a string value representing the REST resource this object represents.
+                Servers may infer this from the endpoint the client submits requests to.
+                Cannot be updated.
+                In CamelCase.
+                More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: ShardSpec defines the desired state of the Longhorn Shard
+              properties:
+                diskPath:
+                  description: DiskPath is the path of the disk that hosts the shard lvol.
+                  type: string
+                diskUUID:
+                  description: DiskUUID is the UUID of the disk that hosts the shard lvol.
+                  type: string
+                evictionRequested:
+                  description: |-
+                    EvictionRequested indicates this shard should be relocated to a different node or disk.
+                    Set by the node controller when the shard's node is being drained or its disk is evicted.
+                  type: boolean
+                nodeID:
+                  description: NodeID is the node where this shard's lvol resides and its NVMe-oF target runs.
+                  type: string
+                shardGroupName:
+                  description: ShardGroupName is the name of the owning ShardGroup CR. Immutable after creation.
+                  type: string
+                size:
+                  description: |-
+                    Size is the shard lvol size in bytes. Set by the ShardGroup controller at creation time
+                    and used for idempotent reconciliation.
+                  format: int64
+                  type: string
+                slotIndex:
+                  description: |-
+                    SlotIndex is the zero-based position of this shard in the EC base-bdev array.
+                    Determines the shard's role: indices 0..k-1 are DATA, k..k+m-1 are PARITY.
+                    Immutable after creation.
+                  minimum: 0
+                  type: integer
+              type: object
+            status:
+              description: ShardStatus defines the observed state of the Longhorn Shard
+              properties:
+                lastFailureTimestamp:
+                  description: LastFailureTimestamp is the RFC3339 timestamp of the most recent shard failure.
+                  type: string
+                ownerID:
+                  description: OwnerID is the ID of the node that owns this Shard.
+                  type: string
+                port:
+                  description: Port is the NVMe-oF port of the shard's target export.
+                  format: int32
+                  type: integer
+                rebuildProgress:
+                  description: RebuildProgress is the rebuild completion percentage (0-100).
+                  type: integer
+                replaceTriggered:
+                  description: |-
+                    ReplaceTriggered is set to true after shard replacement has been initiated, to prevent
+                    re-issuing the replace command on subsequent cycles while SPDK advances the slot state.
+                    Cleared when the slot state transitions away from Failed.
+                  type: boolean
+                role:
+                  description: |-
+                    Role is the EC role of this slot (data or parity). Derived from SlotIndex and the parent
+                    ShardGroup's DataChunks; stored here for informational purposes only.
+                  enum:
+                    - data
+                    - parity
+                    - ""
+                  type: string
+                state:
+                  description: State is the health state of this EC shard slot.
+                  enum:
+                    - normal
+                    - failed
+                    - replacing
+                    - ""
+                  type: string
+                storageIP:
+                  description: |-
+                    StorageIP is the IP address of the NVMe-oF target exported by the shard's InstanceManager.
+                    Populated after the shard instance is running.
+                  type: string
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: {}

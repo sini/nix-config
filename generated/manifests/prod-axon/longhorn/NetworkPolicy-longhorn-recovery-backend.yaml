@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: longhorn-recovery-backend
+  namespace: longhorn-system
+spec:
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              longhorn.io/component: share-manager
+      ports:
+        - port: 9503
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      longhorn.io/recovery-backend: longhorn-recovery-backend
+  policyTypes:
+    - Ingress
