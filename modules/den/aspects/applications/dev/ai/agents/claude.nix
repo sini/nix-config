@@ -57,11 +57,7 @@
         pluginExts = lib.filter (e: e.type or "" == "plugin") extensionsList;
 
         claudeSkills = lib.foldl' (
-          acc: e:
-          if (e ? skills) then
-            acc // (lib.mapAttrs (_: src: src.outPath or src) e.skills)
-          else
-            acc
+          acc: e: if (e ? skills) then acc // (lib.mapAttrs (_: src: src.outPath or src) e.skills) else acc
         ) { } skillExts;
 
         claudeAgents = lib.foldl' (
@@ -270,6 +266,37 @@
                   ];
                 }
               ];
+
+              # A subagent finished. Measured failure this addresses: agents go idle WITHOUT
+              # delivering their report — the notification arrives and the findings do not — and
+              # the reflex is to re-prompt, which costs a round-trip on work that is already done.
+              # Worse, an attempt that FAILED and wrote nothing is indistinguishable from work
+              # never started when seen from outside. This makes the stop visible and names the
+              # correct next move.
+              SubagentStop = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/subagent-stop.sh || true";
+                    }
+                  ];
+                }
+              ];
+
+              # About to compact. Standing law here: markdown does not survive compaction, the
+              # graph does. This runs the close-protocol reads and puts their ANSWERS in context,
+              # so the checkpoint decision is made against measured state rather than recall.
+              PreCompact = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/pre-compact.sh || true";
+                    }
+                  ];
+                }
+              ];
             };
           };
         };
@@ -278,6 +305,67 @@
         # It does not. Measured against claude-code 2.1.229: `env.sh` occurs ZERO times in the
         # binary, with live controls in the same run (`settings.json` 201, `CLAUDE.md` 201,
         # `.claude` 2933). It never ran. The supported mechanism is CLAUDE_ENV_FILE above.
+        # SubagentStop: make a silent idle visible, and name the correct next move.
+        # Deliberately does NOT try to decide whether a report arrived — the hook cannot see the
+        # conversation. It records the stop and states the rule, which is what the orchestrator
+        # actually gets wrong under pressure.
+        home.file.".claude/subagent-stop.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            set -uo pipefail
+            log="$HOME/.claude/subagent-stops.log"
+            mkdir -p "$(dirname "$log")"
+            printf '%s\tstopped\n' "$(date -Is)" >> "$log" 2>/dev/null || true
+            cat <<'"'"'MSG'"'"'
+            A subagent just STOPPED.
+
+            If its report has NOT arrived: TREE FIRST, then prompt ONCE. Never re-dispatch — a
+            resend duplicates completed work, while a message revives the agent with its context.
+            Read the artefact it was told to write before assuming nothing happened: reports
+            routinely cross the idle notification.
+
+            A silent idle is NOT a clean result. Never infer a finding, a pass, or an absence from
+            a report that never arrived — say it is outstanding.
+
+            An attempt that failed and wrote NOTHING looks identical from here to work never
+            started. If the tree is unchanged, that is "no artefact", never "no attempt".
+            MSG
+            exit 0
+          '';
+        };
+
+        # PreCompact: run the close-protocol reads and put their ANSWERS in context.
+        # Every command here is a read. It changes nothing.
+        home.file.".claude/pre-compact.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            set -uo pipefail
+            echo "COMPACTION CHECKPOINT — measured state, not recall:"
+            if command -v br >/dev/null 2>&1; then
+              n=$(br list --status in_progress --limit 0 2>/dev/null | grep -c "" || echo "?")
+              echo "  in_progress rows      : $n   (a status nobody stands behind is a claim with no writer)"
+              br sync --status 2>/dev/null | grep -i dirty | sed "s/^/  export /" || true
+            else
+              echo "  tracker               : br not on PATH here"
+            fi
+            for r in "$HOME"/Documents/repos/sini/den-ag-design "$HOME"/Documents/repos/sini/gen*; do
+              [ -d "$r/.git" ] || continue
+              st=$(git -C "$r" status --porcelain 2>/dev/null | wc -l)
+              ah=$(git -C "$r" rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
+              [ "$st" -gt 0 ] || [ "$ah" -gt 0 ] && printf "  %-22s %s modified, %s unpushed\n" "$(basename "$r")" "$st" "$ah"
+            done
+            cat <<'"'"'MSG'"'"'
+
+            Before context is lost: EVERY LIVE OBLIGATION GOES IN A BEAD BODY. Markdown does not
+            survive compaction; the graph does. Bank rulings, forks and residue at their carrier
+            NOW — not in the handoff alone, which is wholesale-replaced.
+            MSG
+            exit 0
+          '';
+        };
+
         home.file.".claude/load-direnv.sh" = {
           executable = true;
           text = ''

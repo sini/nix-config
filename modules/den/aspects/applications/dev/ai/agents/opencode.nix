@@ -17,10 +17,19 @@
         # ponytail: first endpoint wins — key by hostname if a second inference host appears.
         ninfer = if ninfer-endpoints == [ ] then null else builtins.head ninfer-endpoints;
 
-        # Extract collected extensions
-        collectedSkills = agent-extensions.skills or { };
-        collectedAgents = agent-extensions.agents or { };
-        collectedMcp = agent-extensions.mcpServers or { };
+        # Extract collected extensions.
+        # ★ `agent-extensions` is a LIST (the quirk collects one entry per contributing
+        # aspect), so it must be flattened and FOLDED — not attribute-selected. The prior
+        # form `agent-extensions.skills or { }` was an attr-select against a list, which
+        # silently resolved to the `or` default: opencode received ZERO skills, ZERO
+        # subagents and ZERO MCP servers, with no error. claude.nix and gemini.nix both
+        # already fold; this brings opencode onto the same read.
+        extensionsList = lib.flatten agent-extensions;
+        collectFrom = key: lib.foldl' (acc: e: acc // (e.${key} or { })) { } extensionsList;
+
+        collectedSkills = collectFrom "skills";
+        collectedAgents = collectFrom "agents";
+        collectedMcp = collectFrom "mcpServers";
 
         # Unwrap flake input attrsets to pure Nix store paths
         resolveSrc = src: src.outPath or src;
@@ -86,13 +95,12 @@
         ];
 
         # Deploy config files, skills, and subagents in single merged home.file block
-        home.file =
-          {
-            ".config/opencode/opencode.json".text = builtins.toJSON opencodeConfig;
-            ".config/opencode/tui.json".text = builtins.toJSON tuiConfig;
-          }
-          // skillFiles
-          // agentFiles;
+        home.file = {
+          ".config/opencode/opencode.json".text = builtins.toJSON opencodeConfig;
+          ".config/opencode/tui.json".text = builtins.toJSON tuiConfig;
+        }
+        // skillFiles
+        // agentFiles;
       };
 
     persistHome = {

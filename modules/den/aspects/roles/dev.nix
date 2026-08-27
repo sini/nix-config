@@ -5,12 +5,14 @@
       hardware.adb
       applications.dev.ai.tools.beads
       applications.dev.ai.tools.calldiff
+      applications.dev.ai.tools.ccstatusline
       applications.dev.ai.tools.hunk
       applications.dev.ai.tools.openspec
       applications.dev.ai.tools.rtk
       applications.dev.ai.llm-agents
       # applications.dev.ai.skills.caveman
       applications.dev.ai.skills.adversarial-review
+      applications.dev.ai.skills.gen-agents
       applications.dev.ai.skills.diagram-mermaid-render
       applications.dev.ai.skills.search-code-routing
       applications.dev.ai.skills.writing-style
