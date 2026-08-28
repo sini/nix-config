@@ -8,6 +8,7 @@
       applications.dev.ai.tools.ccstatusline
       applications.dev.ai.tools.hunk
       applications.dev.ai.tools.openspec
+      applications.dev.ai.tools.peer-sync
       applications.dev.ai.tools.rtk
       applications.dev.ai.llm-agents
       # applications.dev.ai.skills.caveman
