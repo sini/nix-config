@@ -1,176 +1,132 @@
 ---
-description: Writes GitHub PR descriptions in a terse, opinionated style. Delegates body shape to the repo PR template when one exists; falls back to `## Summary` plus an optional ad-hoc validating-changes block. Never mutates an existing checklist. A change carrying more than one reviewable concern is stacked by default, one PR per concern, via the `gh-stack` skill. Use when drafting a `gh pr create` body, opening a PR, or when the user says 'PR body' / 'pull request description'.
+description: 'Writes GitHub PR descriptions. Uses the repo PR template verbatim when one exists; otherwise `## Summary` plus an optional validation block. Never invents sections and never appends checklist items. Carries the reasoning a hand-written description would omit. Use when drafting a `gh pr create` body, opening a PR, or when the user says "PR body" / "pull request description".'
 model: haiku
 effort: low
 ---
 
-# Opinionated PR descriptions
+# PR descriptions
 
-A prescriptive style guide for GitHub PR bodies. The repo PR template always
-wins; the defaults below are the fallback when none exists. Each rule pairs the
-correct shape with the form it replaces.
+This file is a specification, not a specimen. Its bolding and worked examples
+are navigation aids; do not reproduce them in what you write.
 
-Provenance: derived from a personal-OSS corpus of 295 PRs authored before
-2024-06-01, plus the standing rules in `~/.claude/CLAUDE.md`.
+The repo PR template always wins; everything below is the fallback.
+
+**A PR body is where the reasoning goes.** The commit subject is terse by
+design and the diff shows only what changed. The body carries what neither
+does: why this shape, what was tried first, what was verified by hand. That is
+what it is for, not a licence to pad. Never write a reason you cannot source --
+an invented rationale reads exactly like a known one once it is merged.
 
 ## Decision routing
 
 ```
-Change carries more than one concern?    -> stack it; `gh-stack` skill owns the shape
-Repo has a PR template?                 -> fill it verbatim; add no sections, no checklist items
-No template?                             -> ## Summary + optional ## Validating Changes
-Change tracks an external issue?         -> issue URL alone on line 1, nothing before it
-Behavior hand-verified, not by tests?    -> add the Validating Changes block
-Creating the PR?                          -> gh pr create --web; never auto-submit
+Repo has a PR template?            -> fill it verbatim; add no sections, no checklist items
+No template?                        -> ## Summary + optional validation block
+PR tracks an issue?                 -> issue URL alone on line 1, nothing before it
+Behaviour hand-verified, no test?   -> add the validation block
+Change carries several concerns?    -> stack it; one PR per concern, each based on the one below
+Creating the PR?                    -> gh pr create --web; never auto-submit
 ```
 
-Stacked is the default shape for a change with more than one reviewable concern,
-which is the same rule as one concern per commit. One PR per concern, each based
-on the one below. Route to the `gh-stack` skill for the commands; the body of each
-layer is still written here. A change with one concern is an ordinary PR: a stack
-of one is just a PR.
+## Title
 
-## PR title
+A PR title is a commit subject: compose it with `writing-commit-message`.
+Lowercase imperative, names what changed, optional `<type>(<scope>): ` prefix,
+no trailing period. Do not attach an uppercase ticket id -- that is not this
+project's convention.
 
-A PR title is a commit subject, so compose it with the `writing-commit-message`
-skill. The shape is `<type>(<scope>): <TICKET>: <description>`, with the ticket
-after the scope and before the description, never as a trailing suffix. PR-specific addition:
-multiple tickets join with `/` (`INF-2291/INF-2493`).
-
-## First, read the repo's contribution docs
-
-Repo-specific rules override these defaults. Sweep before drafting:
+## Read the repo's contribution docs first
 
 ```bash
 ls CONTRIBUTING.md .github/CONTRIBUTING.md docs/CONTRIBUTING.md 2>/dev/null
 ls .github/CODEOWNERS CODEOWNERS DCO .github/DCO 2>/dev/null
-grep -l "Signed-off-by\\|DCO" CONTRIBUTING.md .github/* 2>/dev/null
 ```
 
-Extract the required commit format and issue-link syntax, plus branch naming.
-Extract whether an issue link or a "How to test" section is mandatory. Extract
-which CI checks gate merge, the CODEOWNERS reviewers, and any DCO or
-`--signoff` requirement. When `CONTRIBUTING.md`
-conflicts with the defaults below, the repo wins.
+Take the required commit format, issue-link syntax, branch naming, whether a
+"how to test" section is mandatory, which checks gate merge, and any DCO or
+`--signoff` requirement. Where `CONTRIBUTING.md` conflicts with this file, the
+repo wins.
 
-## Use the repo PR template verbatim when one exists
+## Use the repo template verbatim when one exists
 
 ```bash
 ls .github/pull_request_template.md .github/PULL_REQUEST_TEMPLATE.md \
-   .github/PULL_REQUEST_TEMPLATE/ docs/pull_request_template.md \
-   PULL_REQUEST_TEMPLATE.md 2>/dev/null
+   .github/PULL_REQUEST_TEMPLATE/ docs/pull_request_template.md 2>/dev/null
 ```
 
-The template's structure is canonical. Fill its sections; leave its structure alone.
+Its structure is canonical. Fill its sections; leave its structure alone. Only
+tick or leave the existing `- [ ]` items -- **never append a new one**, even
+when the change seems to warrant it.
 
-```
-# good — template defines ## Summary + a 3-item checklist
-## Summary
-- <one bullet>
-## Checklist
-- [x] tests pass
-- [ ] docs updated
-- [ ] changelog entry        (exactly the three the template defines)
+```markdown
+<!-- bad -->
 
-# bad
 ## Summary
+
 ...
-## Risks            <- invented section not in the template
+
+## Risks <- invented section, not in the template
+
 ## Checklist
+
 - [x] tests pass
-- [ ] docs updated
-- [ ] changelog entry
-- [ ] new: security review   <- appended a fourth checklist item — forbidden
+- [ ] new: security review <- appended item, forbidden
 ```
 
-Only check or leave the existing `- [ ]` items; never append new ones, even when
-the change seems to warrant one.
+## Fallback structure when there is no template
 
-## How to create the PR: exact form
+```markdown
+<issue URL, if any, alone on the first line>
 
-```bash
-gh pr create --web \
-  --title "<conv-commit-style title>" \
-  --body "<body content>"
+## Summary
+
+- <one sentence, what changed and why>
+- <one sentence>
+
+## Validation
+
+- <what was verified by hand, past tense>
 ```
 
-For a stack, `gh stack submit` replaces this form and stays owner-gated the same
-way. Each layer gets its own body written by these rules, and only the bottom
-layer carries the issue URL.
+Use `## Summary` and at most one validation section. Do not invent `## Risks`,
+`## Test plan`, `## Description`, `## Motivation and context`, or
+`## Types of changes`.
 
-`--web` opens the pre-filled web editor so the user reviews, sets labels and
-reviewers, and submits. Never use these by default: `--draft`, `--fill` /
-`--fill-first`, `--reviewer` / `--assignee` / `--label`, or submitting without
-`--web`. Never auto-submit (draft or ready) unless the immediately preceding user
-turn explicitly directed it.
+For a PR spanning distinct areas, group bullets under area subheads with a
+trailing colon (`Schema:`, `Permissions:`, `Testing:`) rather than a flat list
+of multi-sentence bullets. The shortest acceptable body for a self-evident PR
+is `See title.`
 
-## Top-line: issue URL alone on line 1
+## Summary bullets
+
+One sentence each. Lead with the action. Attach the reason with `so`, `as` or
+`because` -- the reason is the part the diff cannot show.
 
 ```
 # good
-https://linear.app/<workspace>/issue/PROJECT-NNN/<slug>
-
-## Summary
-- ...
+- Removes the `aws-knowledge` MCP server as it is no longer referenced by any aspect.
+- Routes clipboard restore through `panel.hide()` so the panel closes before the paste lands.
 
 # bad
-Fixes: https://linear.app/...    <- no prefix; the bare URL leads
+- This PR adds a bunch of changes, it removes the server and also...   <- preamble, multi-clause
+- Search: now uses ast-grep                                            <- bolded-row shape
 ```
 
-Use `Closes #NN` / `Fixes #NN` suffixes only when the PR fully closes that issue.
+## Show a rerouted call path instead of describing it
 
-## Fallback structure when no template exists
+When a change adds, drops or reroutes a call path, run
+`calldiff diff <base> --max-depth 3` and put the plain tree in a fenced block
+under `## Summary`, below the bullets. Then delete the bullet that was
+describing it in prose -- the tree is shorter and a reviewer can check it.
 
-````markdown
-https://linear.app/<workspace>/issue/PROJECT-NNN/<slug>
-
-## Summary
-
-- <one-sentence bullet>
-- <one-sentence bullet>
-
-## Validating Changes (ad-hoc, if logic is not covered by automated tests)
-
-- <one-sentence bullet describing what was hand-verified>
-````
-
-Use only `## Summary` and at most `## Validating Changes (ad-hoc, if logic is not
-covered by automated tests)`. Do not invent `## Risks`, `## Test plan`,
-`## Description`, `## Motivation and context`, or `## Types of changes`, those
-are auto-template defaults or post-corpus inventions.
-
-## Summary bullets: good vs bad
-
-```
-# good, one sentence per bullet, identifiers backticked, causal `so`/`as`/`because`
-- Removes the `aws-knowledge` MCP server as it is no longer used.
-- Defaults structural search to `ast-grep` so agents stop approximating code shapes with regex.
-
-# bad
-- This PR adds a bunch of changes, it removes the server and also...   <- preamble + em-dash + multi-clause
-- Search: now uses ast-grep                                         <- bolded list row
-```
-
-The shortest acceptable bullet for a self-evident PR is `See title.`. For a PR
-spanning many distinct areas, group bullets under area subheads with a trailing
-colon, such as `Schema:`, `Permissions:`, and `Testing:`. Do not use a flat
-list of multi-sentence bullets.
-
-## Show a rerouted call path, do not describe it
-
-A change moves control flow when it adds a call path, drops one, or reroutes a
-caller. Run `calldiff diff <base> --max-depth 3` and put the plain tree in a
-fenced block under `## Summary`, below the bullets. The tree is shorter than the
-paragraph, and a reviewer can check it. Then delete the bullet that was
-describing the same thing in prose.
-
-This is a block inside `## Summary`, not a new section. Do not add a
-`## Call graph` heading; the rule against invented sections still holds. Skip it
-for a Nix-only change, which calldiff cannot parse, and for a change that only
-edits bodies without moving edges. Load the `calldiff` skill for the flags.
+This is a block inside `## Summary`, not a new section; the rule against
+invented sections still holds. Skip it for Nix-only changes, which calldiff
+cannot parse, and for changes that only edit bodies without moving edges. Load
+the `calldiff` skill for the flags.
 
 ````markdown
 <!-- good, the tree carries the claim -->
+
 ## Summary
 
 - Routes clipboard restore through `panel.hide()` so the panel closes before the paste lands.
@@ -180,26 +136,36 @@ edits bodies without moving edges. Load the `calldiff` skill for the flags.
 + ├─ panel.hide()
   └─ clipboard.restore(row.entry)
 ```
-
-<!-- bad, a paragraph doing the tree's job, and an invented section -->
-## Call graph
-
-Previously `activate` called `clipboard.restore` directly, but now it first
-calls `panel.hide()`, which changes the ordering such that...
 ````
 
-## Validating Changes section
+## Stacked PRs
 
-Optional. Use only when behavior was hand-verified rather than covered by tests.
-Header is literally `## Validating Changes (ad-hoc, if logic is not covered by
-automated tests)`. Bullets are past tense, describing what was actually done. If
-nothing was hand-verified, omit the section, do not leave an empty placeholder.
+A change with more than one reviewable concern is stacked by default: one PR per
+concern, each based on the one below. A stack of one is just an ordinary PR.
+`gh stack` (a `gh` extension, not a skill) owns the commands -- `gh stack submit`
+replaces `gh pr create` and stays owner-gated the same way.
+
+Each layer gets its own body by the rules above, and **only the bottom layer
+carries the issue URL.**
+
+## Creating the PR
+
+```bash
+gh pr create --web --title "<subject>" --body "<body>"
+```
+
+`--web` opens the pre-filled editor so the user reviews, sets labels and
+reviewers, and submits. Never use `--draft`, `--fill` / `--fill-first`,
+`--reviewer` / `--assignee` / `--label`, and never submit without `--web`,
+unless the immediately preceding user turn directed it.
 
 ## Never
 
-- Paste a generic GitHub template over an existing repo template.
-- Preamble (`This PR adds…`, `In this change…`), lead with the action.
-- Tool-attribution / `Co-authored-by Claude` trailers unless the user opted in.
-- Architecture overviews, which belong in the change's `design.md`.
-- Em-dashes for elaboration, use `so`, `as`, `because`.
+- Paste a generic template over an existing repo template.
+- Preamble (`This PR adds...`, `In this change...`). Lead with the action.
+- **Em-dashes.** Use `so`, `as`, `because`, or a second sentence.
+- `Co-authored-by:` / `Claude-Session:` / tool-attribution trailers. Standing
+  law, no exceptions.
+- Architecture overviews. Those belong in a design doc.
+- Marketing adjectives: `robust`, `seamless`, `comprehensive`.
 - Emojis, anywhere.
