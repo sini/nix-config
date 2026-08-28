@@ -284,9 +284,17 @@ for i in "${!PEERS[@]}"; do
         # host — it is simply not pretended to be the peer's branch.
         git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null || true
 
-        # Classify by comparing shas, never by a push's exit code.
+        # ★ REFRESH THE PEER'S VIEW OF ORIGIN. Fast-forwarding its branch without this
+        # leaves `refs/remotes/origin/*` at whatever the peer last fetched, so the first
+        # thing a handoff session sees is a LIE: `git status` reported `ahead 3` on a
+        # branch that was exactly in sync. Measured 2026-08-28: 26 of 57 peer repos
+        # carrying an origin ref were stale straight after a clean sync. The whole point
+        # is that the peer needs no ceremony on arrival, and "run a fetch first" is
+        # ceremony. Failure is non-fatal — the peer may have no route to origin, and the
+        # branches are already correct regardless.
+        # Folded into the classification ssh so this costs no extra round trip.
         # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-        peer_heads=$(ssh -n "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+        peer_heads=$(ssh -n "$addr" "git -C '$DIR/$r' fetch --quiet --prune origin 2>/dev/null || true; git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
         stuck=""
         while read -r bname bsha; do
           [ -n "$bname" ] || continue
@@ -299,6 +307,9 @@ for i in "${!PEERS[@]}"; do
         fi
         ;;
       pull)
+        # Same reason as the sync arm above, mirrored: this side is the one being
+        # updated, so this side's view of origin is the one that goes stale.
+        git -C "$d" fetch --quiet --prune origin 2>/dev/null || true
         if git -C "$d" fetch -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$PEER/*" 2>/dev/null; then
           ok+=("$r")
         else
