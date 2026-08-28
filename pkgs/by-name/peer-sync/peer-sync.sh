@@ -128,7 +128,7 @@ for i in "${!PEERS[@]}"; do
   # CARRIED INTO the message — "unreachable" alone is true and useless, and
   # hides the difference between a closed laptop, a missing known_hosts entry
   # and a refused key.
-  if ! sshtest=$(ssh -o BatchMode=yes -o ConnectTimeout=10 "$addr" true 2>&1); then
+  if ! sshtest=$(ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$addr" true 2>&1); then
     die "cannot ssh to $addr — ${sshtest:-no output from ssh}. Nothing was changed."
   fi
 
@@ -141,9 +141,15 @@ for i in "${!PEERS[@]}"; do
   #
   # This is also one ssh instead of one per repo for the existence probe.
   # shellcheck disable=SC2029  # $DIR is LOCAL, expanded here on purpose
-  peer_repos=$(ssh "$addr" "cd '$DIR' 2>/dev/null || exit 0; for x in */.git; do [ -e \"\$x\" ] || continue; echo \"\${x%/.git}\"; done" 2>/dev/null | sort -u || true)
+  peer_repos=$(ssh -n "$addr" "cd '$DIR' 2>/dev/null || exit 0; for x in */.git; do [ -e \"\$x\" ] || continue; echo \"\${x%/.git}\"; done" 2>/dev/null | sort -u || true)
   local_repos=$(cd "$ROOT" && for x in */.git; do [ -e "$x" ] || continue; echo "${x%/.git}"; done | sort -u || true)
   universe=$(printf '%s\n%s\n' "$local_repos" "$peer_repos" | grep -v '^$' | sort -u)
+  # ★ COUNT THE UNIVERSE BEFORE THE LOOP. The bucket arithmetic below sums against
+  # `total`, which the loop increments — so a loop that TERMINATES EARLY sums perfectly
+  # against its own truncated view and reports a clean run. Measured 2026-08-28: an `ssh`
+  # inside the read loop consumed the loop's stdin, 64 repos became 5, and every bucket
+  # still balanced. Only the ref verification caught it.
+  universe_n=$(printf '%s\n' "$universe" | grep -cv '^$')
 
   # Every repo lands in exactly ONE bucket and the buckets are summed against
   # the universe below. A repo falling silently out of the loop is the failure
@@ -188,7 +194,7 @@ for i in "${!PEERS[@]}"; do
         # overwrites the peer's branches and discards its uncommitted work. The
         # glob decides which bucket to try; only this probe authorises writing.
         # shellcheck disable=SC2029  # $DIR/$r are LOCAL, expanded here on purpose
-        peer_state=$(ssh "$addr" "t='$DIR/$r'
+        peer_state=$(ssh -n "$addr" "t='$DIR/$r'
           if [ ! -e \"\$t\" ]; then echo ABSENT
           elif [ ! -e \"\$t/.git\" ]; then echo NOT_A_REPO
           elif [ -n \"\$(git -C \"\$t\" status --porcelain 2>/dev/null)\" ]; then echo DIRTY
@@ -198,10 +204,10 @@ for i in "${!PEERS[@]}"; do
           ABSENT)
             # Nothing there to lose, so force and the working-tree checkout are safe.
             # shellcheck disable=SC2029  # $DIR/$r/$ou are LOCAL, expanded here on purpose
-            if ssh "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
+            if ssh -n "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
               && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/heads/*" 2>/dev/null \
               && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null \
-              && ssh "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
+              && ssh -n "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
               ok+=("$r(created-on-peer)")
             else
               failed+=("$r(create)")
@@ -267,7 +273,7 @@ for i in "${!PEERS[@]}"; do
         # that owns the invariant. `updateInstead` carries a fast-forward into a CLEAN
         # worktree and refuses a dirty one, which is the safety we would have had to build.
         # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-        ssh "$addr" "git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead" 2>/dev/null || true
+        ssh -n "$addr" "git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead" 2>/dev/null || true
         git -C "$d" push -q "$addr:$DIR/$r" "refs/heads/*:refs/heads/*" 2>/dev/null || true
         # The peer namespace is now a FALLBACK, not the destination: a branch that could
         # NOT fast-forward still arrives here, so diverged work is never stranded on one
@@ -276,7 +282,7 @@ for i in "${!PEERS[@]}"; do
 
         # Classify by comparing shas, never by a push's exit code.
         # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-        peer_heads=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+        peer_heads=$(ssh -n "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
         stuck=""
         while read -r bname bsha; do
           [ -n "$bname" ] || continue
@@ -322,6 +328,9 @@ for i in "${!PEERS[@]}"; do
   [ ${#dirty[@]} -gt 0 ] && echo "    uncommitted — NOT transferred by this tool: ${dirty[*]}"
   [ ${#unpushed[@]} -gt 0 ] && echo "    unpushed to origin (fine, the peer has them): ${unpushed[*]}"
 
+  if [ "$total" -ne "$universe_n" ]; then
+    die "the repo loop processed $total of $universe_n repos for $PEER — it terminated early. Do not trust this run."
+  fi
   if [ $((n_ok + n_ol + n_op + n_fail + n_rev)) -ne "$total" ]; then
     die "bucket arithmetic does not sum for $PEER: $n_ok+$n_ol+$n_op+$n_fail+$n_rev != $total. A repo was dropped silently; do not trust this run."
   fi
@@ -352,10 +361,10 @@ for i in "${!PEERS[@]}"; do
       want=$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' refs/heads/ | sed 's|^refs/heads/||' | sort)
       # ★ VERIFY AGAINST THE PEER'S REAL BRANCHES — that is where a handoff will look.
       # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-      have=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+      have=$(ssh -n "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
     else
       # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-      want=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+      want=$(ssh -n "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
       have=$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' "refs/remotes/$PEER/" | sed "s|^refs/remotes/$PEER/||" | sort)
     fi
 
