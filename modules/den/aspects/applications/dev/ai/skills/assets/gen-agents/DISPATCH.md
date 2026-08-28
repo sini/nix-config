@@ -93,7 +93,7 @@ independently.
 
 ## Reachability
 
-The orchestrator's standing entry point is
-`den-ag-design/STATUS/RESUME-PROMPT-ARCH.md`. **This template needs a pointer
-from there to actually get used** — a template nobody opens changes nothing.
-That one-line edit is pending: it lives in a checkout held by another session.
+Pointed to from `den-ag-design/STATUS/RESUME-PROMPT-ARCH.md`, immediately before
+its graph-instructions section — the orchestrator's standing entry point, so
+this is read at boot rather than discovered. That pointer also carries the
+measured brief-error rate, which is the reason the premise field is tagged.
