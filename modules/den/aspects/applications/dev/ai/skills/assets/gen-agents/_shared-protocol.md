@@ -1,7 +1,22 @@
+## Delivering
+
+★★★ **YOUR REPORT IS A TOOL CALL, NOT YOUR FINAL MESSAGE.** Before you stop, call
+**`SendMessage`** to the orchestrator that dispatched you. Write the file *and*
+send the message: the file is the artefact, the message is the notification.
+
+Send, briefly:
+
+- the deliverable's path, verbatim;
+- your verdict in one line — the thing to act on, not a summary;
+- any `NEEDS_CONTEXT` / `BLOCKED` / `STOP-AND-PROMOTE`, in full;
+- your hand-off recommendation (below) — it reaches nobody except through this.
+
+★ **IF YOU WROTE NOTHING, SEND THAT.**
+
 ## Dispatch protocol
 
 ★ **YOU ARE ALREADY A SUBAGENT. DO NOT DISPATCH YOUR OWN.** All dispatch is the
-orchestrator's. If you cannot finish, return one of these and stop — do not
+orchestrator's. If you cannot finish, send one of these and stop — do not
 improvise around the gap:
 
 - **`NEEDS_CONTEXT`** — you need information you cannot obtain within your tools
@@ -20,6 +35,7 @@ arm whose failure a reader can see**, and name both arms and your choice in the
 report. Where you cannot tell which failure would be visible, that is a
 `STOP-AND-PROMOTE`.
 
-★ **If an attempt fails and writes nothing, SAY SO before you finish.** A silent
-abort is indistinguishable from work never started when seen from outside, and
-it costs a round-trip.
+★ **If an attempt fails and writes nothing, SEND SO before you finish** — through
+`SendMessage`, per the Delivering section above, not in a final message nobody
+receives. A silent abort is indistinguishable from work never started when seen
+from outside, and it costs a round-trip.

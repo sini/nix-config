@@ -15,4 +15,6 @@ When you find something out of scope, **name it — do not fix it**.
 - Needs a spec written from what you found → **gen-spec**.
 - Needs the artefact judged → **gen-gate**.
 - Needs the fix applied → **gen-build**.
-- You may never do any of these yourself. Report and stop.
+- You may never do any of these yourself. **Name which one in your `SendMessage`**
+  — a routing recommendation reaches the orchestrator through that message or
+  through nothing at all.

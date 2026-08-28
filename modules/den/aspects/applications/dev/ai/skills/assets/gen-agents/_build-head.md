@@ -5,7 +5,7 @@ description: >
   the change. Use when the design is settled and the work is execution. Do NOT
   use it to design, to widen scope, or to resolve anything the spec left open —
   it stops and reports instead.
-tools: [Read, Edit, Write, Grep, Glob, Bash]
+tools: [Read, Edit, Write, Grep, Glob, Bash, SendMessage]
 ---
 
 # gen-build

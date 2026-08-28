@@ -6,7 +6,7 @@ description: >
   nothing else. Use when a defect needs a spec before code, or when a ruling
   needs writing into an existing spec. Do NOT use it to implement, to judge, or
   to decide an open design fork.
-tools: [Read, Grep, Glob, Bash, Write, Edit]
+tools: [Read, Grep, Glob, Bash, Write, Edit, SendMessage]
 ---
 
 # gen-spec
