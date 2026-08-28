@@ -148,7 +148,7 @@ for i in "${!PEERS[@]}"; do
   # Every repo lands in exactly ONE bucket and the buckets are summed against
   # the universe below. A repo falling silently out of the loop is the failure
   # this tool exists to prevent, so the arithmetic is itself the check.
-  ok=(); only_local=(); only_peer=(); failed=(); dirty=(); unpushed=()
+  ok=(); only_local=(); only_peer=(); failed=(); dirty=(); unpushed=(); review=()
   total=0
 
   while read -r r; do
@@ -179,15 +179,51 @@ for i in "${!PEERS[@]}"; do
         # tree, safe precisely because the repo was just created.
         head_branch=$(git -C "$d" symbolic-ref --short HEAD 2>/dev/null || echo main)
         ou=$(git -C "$d" remote get-url origin 2>/dev/null || true)
-        # shellcheck disable=SC2029  # $DIR/$r/$ou are LOCAL, expanded here on purpose
-        if ssh "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
-          && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/heads/*" 2>/dev/null \
-          && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null \
-          && ssh "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
-          ok+=("$r(created-on-peer)")
-        else
-          failed+=("$r(create)")
-        fi
+
+        # ★ PROBE THE PATH ITSELF; the bucket said "absent" on the strength of a
+        # `*/.git` glob, and that glob is defeated by a different --dir/--root, a
+        # bare repo, or a linked worktree whose `.git` is a FILE. `git init` on an
+        # existing repo is a NO-OP rather than a failure, so a wrong "absent" used
+        # to reach a force-push into real branches plus `checkout -- .`, which
+        # overwrites the peer's branches and discards its uncommitted work. The
+        # glob decides which bucket to try; only this probe authorises writing.
+        # shellcheck disable=SC2029  # $DIR/$r are LOCAL, expanded here on purpose
+        peer_state=$(ssh "$addr" "t='$DIR/$r'
+          if [ ! -e \"\$t\" ]; then echo ABSENT
+          elif [ ! -e \"\$t/.git\" ]; then echo NOT_A_REPO
+          elif [ -n \"\$(git -C \"\$t\" status --porcelain 2>/dev/null)\" ]; then echo DIRTY
+          else echo PRESENT_CLEAN; fi" 2>/dev/null || echo PROBE_FAILED)
+
+        case "$peer_state" in
+          ABSENT)
+            # Nothing there to lose, so force and the working-tree checkout are safe.
+            # shellcheck disable=SC2029  # $DIR/$r/$ou are LOCAL, expanded here on purpose
+            if ssh "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
+              && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/heads/*" 2>/dev/null \
+              && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null \
+              && ssh "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
+              ok+=("$r(created-on-peer)")
+            else
+              failed+=("$r(create)")
+            fi
+            ;;
+          PRESENT_CLEAN)
+            # ★ NO `+`. Git rejects a non-fast-forward push, so git itself decides
+            # whether what we hold is a descendant of what the peer holds. That is
+            # the ancestry check, enforced by the thing that owns the invariant
+            # rather than reimplemented here — and a rejection costs nothing.
+            if git -C "$d" push -q "$addr:$DIR/$r" "refs/heads/*:refs/heads/*" 2>/dev/null \
+              && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null; then
+              ok+=("$r(fast-forwarded-on-peer)")
+            else
+              review+=("$r(diverged)")
+            fi
+            ;;
+          *)
+            # DIRTY, NOT_A_REPO, PROBE_FAILED. Nothing is written.
+            review+=("$r($(printf '%s' "$peer_state" | tr 'A-Z_' 'a-z-'))")
+            ;;
+        esac
       else
         only_local+=("$r")
       fi
@@ -240,18 +276,25 @@ for i in "${!PEERS[@]}"; do
   n_ol=${#only_local[@]}
   n_op=${#only_peer[@]}
   n_fail=${#failed[@]}
-  say "repos: $total (both sides)   ok: $n_ok   here-only: $n_ol   peer-only: $n_op   failed: $n_fail"
+  n_rev=${#review[@]}
+  say "repos: $total (both sides)   ok: $n_ok   here-only: $n_ol   peer-only: $n_op   failed: $n_fail   needs-review: $n_rev"
   [ "$n_ol" -gt 0 ] && echo "    here only — $PEER has never checked these out; --sync creates them there: ${only_local[*]}"
   [ "$n_op" -gt 0 ] && echo "    on $PEER only — not present here; --pull --clone-new would clone them: ${only_peer[*]}"
   if [ "$n_fail" -gt 0 ]; then
     echo "    FAILED: ${failed[*]}" >&2
     overall=1
   fi
+  if [ "$n_rev" -gt 0 ]; then
+    echo "    NEEDS MANUAL REVIEW — the peer already holds these and nothing was written: ${review[*]}" >&2
+    echo "      diverged = the peer has commits this host does not; dirty = uncommitted work there;" >&2
+    echo "      not-a-repo / probe-failed = the path exists but is not a checkout we can reason about." >&2
+    overall=1
+  fi
   [ ${#dirty[@]} -gt 0 ] && echo "    uncommitted — NOT transferred by this tool: ${dirty[*]}"
   [ ${#unpushed[@]} -gt 0 ] && echo "    unpushed to origin (fine, the peer has them): ${unpushed[*]}"
 
-  if [ $((n_ok + n_ol + n_op + n_fail)) -ne "$total" ]; then
-    die "bucket arithmetic does not sum for $PEER: $n_ok+$n_ol+$n_op+$n_fail != $total. A repo was dropped silently; do not trust this run."
+  if [ $((n_ok + n_ol + n_op + n_fail + n_rev)) -ne "$total" ]; then
+    die "bucket arithmetic does not sum for $PEER: $n_ok+$n_ol+$n_op+$n_fail+$n_rev != $total. A repo was dropped silently; do not trust this run."
   fi
 
   [ "$MODE" = check ] && continue
@@ -267,7 +310,7 @@ for i in "${!PEERS[@]}"; do
   for d in "$ROOT"/*/; do
     r="$(basename "$d")"
     [ -d "$d/.git" ] || continue
-    case " ${failed[*]} ${only_local[*]} ${only_peer[*]} " in *" $r "*) continue ;; esac
+    case " ${failed[*]} ${only_local[*]} ${only_peer[*]} ${review[*]} " in *" $r "*) continue ;; esac
 
     # ★ FULL refname, never %(refname:short). The short form strips the longest
     # UNAMBIGUOUS prefix, so it disambiguates per-ref and unpredictably:
