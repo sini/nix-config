@@ -10,6 +10,8 @@
 - Unquoted `$list` does **not** word-split in zsh.
 - Use `/run/current-system/sw/bin/grep` for any count you report; the wrapper
   `grep` honours `.gitignore` and under-reports.
+- **`grep -r` does not follow symlinks; `-R` does.** A tree of symlinks reads
+  EMPTY — a clean zero over files you can `cat` by name.
 - **`grep -c` counts matching LINES, and prose wraps** — a multi-word phrase reads
   0 while present. Flatten AND squeeze:
   `tr -s '[:space:]' ' ' | grep -o 'phrase' | wc -l`. `tr '\n' ' '` alone is not
