@@ -40,7 +40,9 @@
           lib.mapAttrs (
             _: server:
             lib.filterAttrs (_: v: v != [ ] && v != { }) {
-              inherit (server) command args env;
+              inherit (server) command;
+              args = server.args or [ ];
+              env = server.env or { };
             }
           ) mcpMap;
 
