@@ -9,13 +9,21 @@ So: **editing `_shared-measurement.md` or `_shared-protocol.md` changes all four
 agents at once.** That is the point, and it is also the hazard — check the blast
 radius before you touch either.
 
-| file                     | reaches                                                              |
-| ------------------------ | -------------------------------------------------------------------- |
-| `_shared-measurement.md` | all four — instrument facts, measurement law, reporting              |
-| `_shared-protocol.md`    | all four — the dispatch protocol                                     |
-| `_<role>-head.md`        | one — frontmatter (name/description/tools) and the role's opening    |
-| `_<role>-body.md`        | one — the role's own sections, through "Hand off"                    |
-| `DISPATCH.md`            | nobody — a template for the orchestrator, deliberately not installed |
+| file                     | reaches                                                           |
+| ------------------------ | ----------------------------------------------------------------- |
+| `_shared-measurement.md` | all four — instrument facts, measurement law, reporting           |
+| `_shared-protocol.md`    | all four — the dispatch protocol                                  |
+| `_<role>-head.md`        | one — frontmatter (name/description/tools) and the role's opening |
+| `_<role>-body.md`        | one — the role's own sections, through "Hand off"                 |
+
+**`DISPATCH.md` sat here until 2026-08-28 and no longer does** (owner-ruled). It
+is the template for the ORCHESTRATOR's half of a dispatch, and this table
+recorded it as reaching **nobody** — which was the tell rather than a curiosity:
+nothing in this directory read it, while its one reader had to leave the
+repository that holds the tracker, the ADRs and its own boot file in order to
+find it. It now lives with that reader, at `den-ag-design/STATUS/DISPATCH.md`.
+Nothing here is assembled from it and `gen-agents.nix` never referenced it, so
+the move touches no build.
 
 ## Why it is split
 
