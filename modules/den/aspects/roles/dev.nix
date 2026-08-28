@@ -30,7 +30,7 @@
       applications.dev.ai.mcp.codebase-memory
       applications.dev.ai.mcp.serena
       applications.dev.ai.agents.claude
-      applications.dev.ai.agents.gemini
+      applications.dev.ai.agents.antigravity-cli
       applications.dev.ai.agents.hermes
       applications.dev.ai.agents.opencode
       applications.dev.ai.agents.pi

@@ -2,7 +2,7 @@
 # Provides antigravity-cli (agy), gemini-cli, and openskills from numtide/llm-agents,
 # manages global ~/.gemini customization tree, MCP server registry, and persistence.
 {
-  den.aspects.applications.dev.ai.agents.gemini = {
+  den.aspects.applications.dev.ai.agents.antigravity-cli = {
     homeManager =
       {
         agent-extensions,
@@ -58,25 +58,22 @@
         # 4. stdio MCP servers
         mcpExts = lib.filter (e: e.type or "" == "mcp") extensionsList;
         allMcpServers = lib.foldl' (acc: e: acc // (e.mcpServers or { })) { } mcpExts;
-
-        mcpConfig = {
-          mcpServers = lib.mapAttrs (
-            _name: server:
-            lib.filterAttrs (_: v: v != [ ] && v != { }) {
-              command = server.command;
-              args = server.args or [ ];
-              env = server.env or { };
-            }
-          ) allMcpServers;
-        };
-        mcpJson = (pkgs.formats.json { }).generate "antigravity-mcp-config.json" mcpConfig;
       in
       {
         home.packages = [
-          inputs'.llm-agents.packages.antigravity-cli
           inputs'.llm-agents.packages.gemini-cli
           inputs'.llm-agents.packages.openskills
         ];
+
+        programs.antigravity-cli = {
+          enable = true;
+          package = inputs'.llm-agents.packages.antigravity-cli;
+          skills = allSkillSources;
+          mcpServers = allMcpServers;
+          commands = allCommandSources;
+          # Omit settings ({}) so Home Manager does not generate a read-only settings.json
+          # symlink that blocks runtime OAuth token writes (see nix-community/home-manager#8654).
+        };
 
         home.sessionVariables = {
           GEMINI_CONFIG_DIR = "${config.home.homeDirectory}/.gemini/config";
@@ -95,33 +92,14 @@
           // {
             ".gemini/config/skills/.keep".text = "";
             ".gemini/config/rules/.keep".text = "";
-
-            # Declarative gemini-cli default configuration
-            ".config/gemini/config.yaml".text = builtins.toJSON {
-              model = "gemini-2.5-pro";
-              temperature = 0.2;
-            };
-
-            # Dynamic MCP server config linking across CLI & IDE discovery paths:
-            ".gemini/config/mcp_config.json".source = mcpJson;
-            ".gemini/antigravity/mcp_config.json".source = mcpJson;
-            ".gemini/settings.json".source = mcpJson;
-            ".config/gemini/settings.json".source = mcpJson;
-            ".config/antigravity/mcp_config.json".source = mcpJson;
           };
       };
 
     persistHome = {
       directories = [
-        ".gemini/config"
-        ".gemini/antigravity-ide"
-        ".gemini/brain"
-      ];
-    };
-
-    cacheHome = {
-      directories = [
-        ".gemini/cache"
+        ".gemini"
+        ".config/antigravity-cli"
+        ".config/gemini"
       ];
     };
   };

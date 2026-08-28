@@ -73,7 +73,7 @@
           };
 
           "org/gnome/desktop/session" = {
-            idle-delay = lib.hm.gvariant.mkUint32 180;
+            idle-delay = lib.hm.gvariant.mkUint32 900;
           };
 
           "org/gnome/shell" = {

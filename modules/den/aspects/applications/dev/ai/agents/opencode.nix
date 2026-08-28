@@ -22,7 +22,7 @@
         # aspect), so it must be flattened and FOLDED — not attribute-selected. The prior
         # form `agent-extensions.skills or { }` was an attr-select against a list, which
         # silently resolved to the `or` default: opencode received ZERO skills, ZERO
-        # subagents and ZERO MCP servers, with no error. claude.nix and gemini.nix both
+        # subagents and ZERO MCP servers, with no error. claude.nix and antigravity-cli.nix both
         # already fold; this brings opencode onto the same read.
         extensionsList = lib.flatten agent-extensions;
         collectFrom = key: lib.foldl' (acc: e: acc // (e.${key} or { })) { } extensionsList;
