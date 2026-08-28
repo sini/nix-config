@@ -25,13 +25,14 @@
 # the one real hole, not because it is acceptable.
 set -euo pipefail
 
+DIRECTION=""
+CHECK_ONLY=0
 MODE=check
 CLONE_NEW=0
 DIR="Documents/repos/sini"
 REMOTE_USER=""
 LOCAL_USER="$(whoami)"
 PEERS=()
-LABELS=()
 ROOT=""
 
 say() { echo "==> $*"; }
@@ -42,63 +43,63 @@ die() {
 
 usage() {
   cat <<'EOF'
-peer-sync — mirror this host's git refs to a peer, verifiably.
+peer-sync — make a peer's checkouts match this host's, verifiably.
 
-  peer-sync --peer DEST [--peer DEST]...   check what would move (default)
-  peer-sync --peer DEST --sync             push refs, then verify they arrived
-  peer-sync --peer DEST --pull             fetch the peer's refs to here instead
+  peer-sync --to DEST      send this host's branches to DEST
+  peer-sync --from DEST    bring DEST's branches here
+  peer-sync --check --to DEST    report what would move; change nothing
+
+DEST is anything ssh accepts, and is the only thing you have to say:
+  cortex          cortex.ts.example.net          10.0.0.4
+  user@10.0.0.4   my-ssh-alias
+
+Branches FAST-FORWARD. A branch that cannot fast-forward is never moved; it is
+carried into refs/remotes/<peer>/ and the repo is reported as needing review.
 
 Options:
-  --peer DEST        REQUIRED, repeatable. Anything ssh accepts:
-                       cortex            cortex.ts.example.net
-                       10.0.0.4          user@10.0.0.4
-                       my-ssh-alias
-  --sync             push local refs to the peer (default is check-only)
-  --pull             fetch the peer's refs into refs/remotes/<label>/*
-  --clone-new        with --pull, also clone repos the peer has and we do not.
+  --to DEST          REQUIRED (or --from). Repeatable. Push direction.
+  --from DEST        REQUIRED (or --to). Repeatable. Pull direction.
+  --check            report only; write nothing
+  --clone-new        with --from, also clone repos DEST has and this host does not.
                      Off by default: the hosts legitimately differ, and cloning
                      every peer-only repo makes them identical rather than
                      transferring work.
   --dir PATH         repo tree, relative to $HOME on BOTH hosts
                      (default: Documents/repos/sini)
   --root PATH        absolute local repo tree; overrides --dir locally
-  --user NAME        ssh user, if DEST has no user@ (default: this host's user)
-  --as LABEL         ref-namespace label for the PREVIOUS --peer. Defaults to the
-                     destination's first component; give it explicitly for an IP,
-                     which would otherwise label refs `10`.
-  --self LABEL       label this host announces its refs under (default: hostname)
+  --user NAME        ssh user, when DEST carries no user@ (default: this host's)
   -h, --help         this
 
-Labels name a git ref namespace and nothing else — they are never resolved, so
-an IP or an ssh alias works without any DNS agreeing with them.
 EOF
 }
 
 SELF=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --sync) MODE=sync; shift ;;
-    --check) MODE=check; shift ;;
-    --pull) MODE=pull; shift ;;
+    --to)
+      [ -z "$DIRECTION" ] || [ "$DIRECTION" = sync ] || die "--to and --from are opposite directions; pick one"
+      DIRECTION=sync; PEERS+=("$2"); shift 2 ;;
+    --from)
+      [ -z "$DIRECTION" ] || [ "$DIRECTION" = pull ] || die "--to and --from are opposite directions; pick one"
+      DIRECTION=pull; PEERS+=("$2"); shift 2 ;;
+    --check) CHECK_ONLY=1; shift ;;
     --clone-new) CLONE_NEW=1; shift ;;
-    --peer) PEERS+=("$2"); LABELS+=(""); shift 2 ;;
-    --as)
-      [ ${#LABELS[@]} -gt 0 ] || die "--as must follow a --peer"
-      LABELS[${#LABELS[@]} - 1]="$2"; shift 2 ;;
     --dir) DIR="$2"; shift 2 ;;
     --root) ROOT="$2"; shift 2 ;;
     --user) REMOTE_USER="$2"; shift 2 ;;
-    --self) SELF="$2"; shift 2 ;;
     -h | --help) usage; exit 0 ;;
     *) echo "unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
-[ ${#PEERS[@]} -gt 0 ] || {
-  echo "REFUSED: no --peer given. This tool will not guess which machine to talk to." >&2
+[ -n "$DIRECTION" ] || {
+  echo "REFUSED: no direction given. --to DEST sends this host's branches there; --from DEST brings" >&2
+  echo "         DEST's branches here. This tool will not guess which way work should move." >&2
   usage >&2
   exit 2
 }
+MODE="$DIRECTION"
+[ "$CHECK_ONLY" = 1 ] && MODE=check
 
 # `hostname` returns e.g. `laptop.local` on darwin and a bare name on NixOS.
 [ -n "$SELF" ] || { SELF="$(hostname -s 2>/dev/null || hostname)"; SELF="${SELF%%.*}"; }
@@ -115,22 +116,25 @@ for i in "${!PEERS[@]}"; do
     *@*) addr="$dest" ;;
     *) addr="${REMOTE_USER:-$LOCAL_USER}@$dest" ;;
   esac
-  # The label names a ref namespace; it is never resolved. Default to the first
-  # component, which is right for `cortex` and `cortex.ts.example.net` and wrong
-  # for an IP — hence --as.
-  PEER="${LABELS[$i]}"
-  if [ -z "$PEER" ]; then PEER="${dest#*@}"; PEER="${PEER%%.*}"; fi
   echo
-  say "$SELF -> $PEER   dest=$addr   mode=$MODE   dir=$DIR"
 
   # Named explicitly, so being unreachable is an error rather than a fact to
   # note: every peer here was asked for by the caller. ssh's own stderr is
   # CARRIED INTO the message — "unreachable" alone is true and useless, and
   # hides the difference between a closed laptop, a missing known_hosts entry
   # and a refused key.
-  if ! sshtest=$(ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$addr" true 2>&1); then
+  # ★ ONE PROBE, TWO ANSWERS: reachability, and the peer's own name for the ref
+  # namespace. Deriving the label from DEST meant an IP labelled its refs `10`,
+  # which is why a --as flag existed at all; asking the host what it is called
+  # removes the flag and the failure together. `--self` is gone for the same
+  # reason: this host can answer that itself.
+  if ! sshtest=$(ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$addr" 'hostname -s 2>/dev/null || hostname' 2>&1); then
     die "cannot ssh to $addr — ${sshtest:-no output from ssh}. Nothing was changed."
   fi
+  PEER="${sshtest%%.*}"
+  PEER="$(printf '%s' "$PEER" | tr -cd 'A-Za-z0-9._-')"
+  [ -n "$PEER" ] || { PEER="${dest#*@}"; PEER="${PEER%%.*}"; }
+  say "$SELF -> $PEER   dest=$addr   mode=$MODE   dir=$DIR"
 
   # ★ THE UNIVERSE IS BOTH SIDES, NOT THE LOCAL TREE. Enumerating only local
   # repos meant a repo existing solely on the peer was never reached: it landed
@@ -311,8 +315,8 @@ for i in "${!PEERS[@]}"; do
   n_fail=${#failed[@]}
   n_rev=${#review[@]}
   say "repos: $total (both sides)   ok: $n_ok   here-only: $n_ol   peer-only: $n_op   failed: $n_fail   needs-review: $n_rev"
-  [ "$n_ol" -gt 0 ] && echo "    here only — $PEER has never checked these out; --sync creates them there: ${only_local[*]}"
-  [ "$n_op" -gt 0 ] && echo "    on $PEER only — not present here; --pull --clone-new would clone them: ${only_peer[*]}"
+  [ "$n_ol" -gt 0 ] && echo "    here only — $PEER has never checked these out; --to creates them there: ${only_local[*]}"
+  [ "$n_op" -gt 0 ] && echo "    on $PEER only — not present here; --from --clone-new would clone them: ${only_peer[*]}"
   if [ "$n_fail" -gt 0 ]; then
     echo "    FAILED: ${failed[*]}" >&2
     overall=1
@@ -388,7 +392,7 @@ done
 
 echo
 case "$MODE" in
-  check) say "CHECK ONLY — nothing was changed. Re-run with --sync or --pull to act." ;;
+  check) say "CHECK ONLY — nothing was changed. Re-run without --check to act." ;;
   *)
     if [ "$overall" -eq 0 ]; then
       say "HANDOFF READY: every peer verified."
