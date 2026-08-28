@@ -255,10 +255,37 @@ for i in "${!PEERS[@]}"; do
     # --- on both sides ------------------------------------------------------
     case "$MODE" in
       sync)
-        if git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null; then
+        # ★ FAST-FORWARD THE PEER'S REAL BRANCHES. A handoff session runs `git status` and
+        # `git log`; it does not begin by checking which iteration of main it is on, or
+        # whether some side namespace holds a better one. So the work has to land ON the
+        # branch it expects, at the sha it expects.
+        # Mirroring into `refs/remotes/<self>/` failed that: with no configured remote,
+        # `blade/main` did not even resolve — measured, `warning: refname 'blade/main' is
+        # ambiguous` — and neither `git remote -v` nor `git branch` showed anything.
+        # ★★ NO `+`. Git fast-forwards what it can and refuses divergence PER REF, so what
+        # lands is exactly what a handoff can trust, and the check is enforced by the thing
+        # that owns the invariant. `updateInstead` carries a fast-forward into a CLEAN
+        # worktree and refuses a dirty one, which is the safety we would have had to build.
+        # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
+        ssh "$addr" "git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead" 2>/dev/null || true
+        git -C "$d" push -q "$addr:$DIR/$r" "refs/heads/*:refs/heads/*" 2>/dev/null || true
+        # The peer namespace is now a FALLBACK, not the destination: a branch that could
+        # NOT fast-forward still arrives here, so diverged work is never stranded on one
+        # host — it is simply not pretended to be the peer's branch.
+        git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null || true
+
+        # Classify by comparing shas, never by a push's exit code.
+        # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
+        peer_heads=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+        stuck=""
+        while read -r bname bsha; do
+          [ -n "$bname" ] || continue
+          printf '%s\n' "$peer_heads" | grep -qx "$bname $bsha" || stuck="$stuck,$bname"
+        done <<< "$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' refs/heads/ | sed 's|^refs/heads/||' | sort)"
+        if [ -z "$stuck" ]; then
           ok+=("$r")
         else
-          failed+=("$r")
+          review+=("$r(no-ff:${stuck#,})")
         fi
         ;;
       pull)
@@ -286,7 +313,9 @@ for i in "${!PEERS[@]}"; do
   fi
   if [ "$n_rev" -gt 0 ]; then
     echo "    NEEDS MANUAL REVIEW — the peer already holds these and nothing was written: ${review[*]}" >&2
-    echo "      diverged = the peer has commits this host does not; dirty = uncommitted work there;" >&2
+    echo "      no-ff = the peer's branch is not an ancestor of ours, so it was NOT moved; the commits
+      are on the peer under refs/remotes/<self>/ and need a human merge or rebase.
+      diverged = the peer has commits this host does not; dirty = uncommitted work there;" >&2
     echo "      not-a-repo / probe-failed = the path exists but is not a checkout we can reason about." >&2
     overall=1
   fi
@@ -321,8 +350,9 @@ for i in "${!PEERS[@]}"; do
     # complete prefix from the full name is deterministic.
     if [ "$MODE" = sync ]; then
       want=$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' refs/heads/ | sed 's|^refs/heads/||' | sort)
-      # shellcheck disable=SC2029  # $DIR/$r/$SELF are LOCAL, expanded here on purpose
-      have=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' 'refs/remotes/$SELF/'" 2>/dev/null | sed "s|^refs/remotes/$SELF/||" | sort)
+      # ★ VERIFY AGAINST THE PEER'S REAL BRANCHES — that is where a handoff will look.
+      # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
+      have=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
     else
       # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
       want=$(ssh "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
