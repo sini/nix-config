@@ -18,6 +18,8 @@
   enough: it leaves the continuation line's indentation, so the phrase still
   carries several spaces and still reads 0. Three units, never interchangeable:
   `-c` counts lines, `-o | wc -l` counts occurrences, `-rc | wc -l` counts files.
+  **Carry the unit in the figure.** Two readers on different units read as a
+  contradiction, and the disagreement costs a round to adjudicate.
 - Read exit status **unpiped**: `cmd > file; echo $?`. Piping through `tail`
   gives you `tail`'s status and truncates the domain of any absence claim.
 - `2>/dev/null` turns a **missing instrument** into an **absence finding**. Do
