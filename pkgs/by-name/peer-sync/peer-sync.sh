@@ -13,12 +13,14 @@
 # Hence: this refuses to report a state it has not verified, and its bucket
 # counts must sum.
 #
-# ★ THE MECHANISM: git push <peer> '+refs/heads/*:refs/remotes/<self>/*'
-# Refs land in the peer's remote-tracking namespace, so the transfer CANNOT
-# collide with a checked-out branch and CANNOT move a HEAD or disturb a worktree.
-# Measured 2026-08-28 across 38 repos in both directions: 0 files changed, 0
-# HEADs moved. Worktrees need no transfer — a worktree is a checkout, and the
-# receiving host recreates it from the mirrored branch.
+# ★ THE MECHANISM, BOTH DIRECTIONS: the peer's (or this host's) REAL branches are
+# fast-forwarded, and refs/remotes/<other>/ is the FALLBACK that catches whatever
+# could not. A handoff session runs `git status` and `git log`; it does not look in
+# a side namespace, so work that lands only there has not arrived in any sense the
+# next session can act on. Divergence is never forced and never stranded: git owns
+# the ancestry test in both arms, and what it refuses is reported for review.
+# Worktrees need no transfer — a worktree is a checkout, and the receiving host
+# recreates it from the mirrored branch.
 #
 # ★ WHAT IT DOES NOT MOVE: uncommitted work. Ref mirroring moves commits. A hard
 # stop mid-edit leaves that edit on the host that made it. Named because it is
@@ -34,6 +36,21 @@ REMOTE_USER=""
 LOCAL_USER="$(whoami)"
 PEERS=()
 ROOT=""
+
+# ★★★ SSH'S OWN TIMEOUT COVERS THE WRONG HALF. `ConnectTimeout` bounds the TCP
+# connect ONLY. Measured 2026-08-30: a hostname whose DNS pointed at a CDN edge
+# rather than at the host ACCEPTED the connect and then never spoke SSH — so
+# ConnectTimeout could not fire, and the probe hung with no output. The tool read
+# as "stalling" while the network behaved exactly as configured. `timeout` bounds
+# the WHOLE probe and is the only thing that catches a PRE-AUTH stall;
+# ServerAlive* bounds the post-auth half and is structurally blind to this one.
+# Both are needed, and neither substitutes for the other.
+PROBE_TIMEOUT="${PEER_SYNC_PROBE_TIMEOUT:-20}"
+
+# ★ BatchMode ON EVERY CALL, not just the probe. Without it a host that has
+# dropped our key drops to an interactive password prompt and the run hangs
+# there — the same stall wearing a different cause.
+SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3)
 
 say() { echo "==> $*"; }
 die() {
@@ -58,7 +75,8 @@ carried into refs/remotes/<peer>/ and the repo is reported as needing review.
 
 Options:
   --to DEST          REQUIRED (or --from). Repeatable. Push direction.
-  --from DEST        REQUIRED (or --to). Repeatable. Pull direction.
+  --from DEST        REQUIRED (or --to). Repeatable. Pull direction. Fast-forwards THIS
+                     host's branches; a branch that cannot is left alone and reported.
   --check            report only; write nothing
   --clone-new        with --from, also clone repos DEST has and this host does not.
                      Off by default: the hosts legitimately differ, and cloning
@@ -128,9 +146,17 @@ for i in "${!PEERS[@]}"; do
   # which is why a --as flag existed at all; asking the host what it is called
   # removes the flag and the failure together. `--self` is gone for the same
   # reason: this host can answer that itself.
-  if ! sshtest=$(ssh -n -o BatchMode=yes -o ConnectTimeout=10 "$addr" 'hostname -s 2>/dev/null || hostname' 2>&1); then
-    die "cannot ssh to $addr — ${sshtest:-no output from ssh}. Nothing was changed."
+  probe_host="${addr#*@}"
+  probe_rc=0
+  sshtest=$(timeout "$PROBE_TIMEOUT" ssh -n "${SSH_OPTS[@]}" "$addr" 'hostname -s 2>/dev/null || hostname' 2>&1) || probe_rc=$?
+  if [ "$probe_rc" -eq 124 ]; then
+    die "ssh to $addr neither answered nor failed within ${PROBE_TIMEOUT}s — the connection was ACCEPTED
+       and then went silent. A name that resolves to a CDN/proxy edge instead of to the host does
+       exactly this, and ConnectTimeout cannot catch it because the TCP connect SUCCEEDS. Check what
+       the name points at:  getent hosts $probe_host
+       Raise the bound with PEER_SYNC_PROBE_TIMEOUT if the link is merely slow. Nothing was changed."
   fi
+  [ "$probe_rc" -eq 0 ] || die "cannot ssh to $addr — ${sshtest:-no output from ssh}. Nothing was changed."
   PEER="${sshtest%%.*}"
   PEER="$(printf '%s' "$PEER" | tr -cd 'A-Za-z0-9._-')"
   [ -n "$PEER" ] || { PEER="${dest#*@}"; PEER="${PEER%%.*}"; }
@@ -145,7 +171,7 @@ for i in "${!PEERS[@]}"; do
   #
   # This is also one ssh instead of one per repo for the existence probe.
   # shellcheck disable=SC2029  # $DIR is LOCAL, expanded here on purpose
-  peer_repos=$(ssh -n "$addr" "cd '$DIR' 2>/dev/null || exit 0; for x in */.git; do [ -e \"\$x\" ] || continue; echo \"\${x%/.git}\"; done" 2>/dev/null | sort -u || true)
+  peer_repos=$(ssh -n "${SSH_OPTS[@]}" "$addr" "cd '$DIR' 2>/dev/null || exit 0; for x in */.git; do [ -e \"\$x\" ] || continue; echo \"\${x%/.git}\"; done" 2>/dev/null | sort -u || true)
   local_repos=$(cd "$ROOT" && for x in */.git; do [ -e "$x" ] || continue; echo "${x%/.git}"; done | sort -u || true)
   universe=$(printf '%s\n%s\n' "$local_repos" "$peer_repos" | grep -v '^$' | sort -u)
   # ★ COUNT THE UNIVERSE BEFORE THE LOOP. The bucket arithmetic below sums against
@@ -198,7 +224,7 @@ for i in "${!PEERS[@]}"; do
         # overwrites the peer's branches and discards its uncommitted work. The
         # glob decides which bucket to try; only this probe authorises writing.
         # shellcheck disable=SC2029  # $DIR/$r are LOCAL, expanded here on purpose
-        peer_state=$(ssh -n "$addr" "t='$DIR/$r'
+        peer_state=$(ssh -n "${SSH_OPTS[@]}" "$addr" "t='$DIR/$r'
           if [ ! -e \"\$t\" ]; then echo ABSENT
           elif [ ! -e \"\$t/.git\" ]; then echo NOT_A_REPO
           elif [ -n \"\$(git -C \"\$t\" status --porcelain 2>/dev/null)\" ]; then echo DIRTY
@@ -208,10 +234,10 @@ for i in "${!PEERS[@]}"; do
           ABSENT)
             # Nothing there to lose, so force and the working-tree checkout are safe.
             # shellcheck disable=SC2029  # $DIR/$r/$ou are LOCAL, expanded here on purpose
-            if ssh -n "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
+            if ssh -n "${SSH_OPTS[@]}" "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
               && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/heads/*" 2>/dev/null \
               && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null \
-              && ssh -n "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
+              && ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
               ok+=("$r(created-on-peer)")
             else
               failed+=("$r(create)")
@@ -277,7 +303,7 @@ for i in "${!PEERS[@]}"; do
         # that owns the invariant. `updateInstead` carries a fast-forward into a CLEAN
         # worktree and refuses a dirty one, which is the safety we would have had to build.
         # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-        ssh -n "$addr" "git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead" 2>/dev/null || true
+        ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead" 2>/dev/null || true
         git -C "$d" push -q "$addr:$DIR/$r" "refs/heads/*:refs/heads/*" 2>/dev/null || true
         # The peer namespace is now a FALLBACK, not the destination: a branch that could
         # NOT fast-forward still arrives here, so diverged work is never stranded on one
@@ -294,7 +320,7 @@ for i in "${!PEERS[@]}"; do
         # branches are already correct regardless.
         # Folded into the classification ssh so this costs no extra round trip.
         # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-        peer_heads=$(ssh -n "$addr" "git -C '$DIR/$r' fetch --quiet --prune origin 2>/dev/null || true; git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+        peer_heads=$(ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' fetch --quiet --prune origin 2>/dev/null || true; git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
         stuck=""
         while read -r bname bsha; do
           [ -n "$bname" ] || continue
@@ -310,10 +336,55 @@ for i in "${!PEERS[@]}"; do
         # Same reason as the sync arm above, mirrored: this side is the one being
         # updated, so this side's view of origin is the one that goes stale.
         git -C "$d" fetch --quiet --prune origin 2>/dev/null || true
-        if git -C "$d" fetch -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$PEER/*" 2>/dev/null; then
+
+        # One round trip for every branch, into the FALLBACK namespace. --prune so the
+        # namespace mirrors the peer exactly and a branch deleted there cannot be read
+        # back below as one that failed to arrive.
+        if ! git -C "$d" fetch -q --prune "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$PEER/*" 2>/dev/null; then
+          failed+=("$r")
+          continue
+        fi
+
+        # ★★★ FAST-FORWARD THIS HOST'S REAL BRANCHES. Landing the refs ONLY under
+        # refs/remotes/<peer>/ is what made a --from run read as "nothing transferred"
+        # while every commit had in fact arrived: measured 2026-08-30, three gen-* repos
+        # held the peer's shas in the local object store with main still at the older
+        # commit and no configured remote, so `<peer>/main` did not even resolve.
+        # ★★ THE PUSH ARM GETS THIS FREE FROM `receive.denyCurrentBranch=updateInstead`
+        # AND FETCH HAS NO EQUIVALENT. Measured 2026-08-30 on a fixture: a single
+        # `fetch <url> refs/heads/*:refs/heads/*` dies `fatal: refusing to fetch into
+        # branch ... checked out at ...` with exit 128 and ABORTS THE WHOLE FETCH — the
+        # fast-forwardable siblings did not move either. So the update is done locally,
+        # per branch, out of the namespace just fetched: no extra round trip, and the
+        # ancestry test stays git's.
+        cur=$(git -C "$d" symbolic-ref --short HEAD 2>/dev/null || true)
+        clean=1; [ -n "$(git -C "$d" status --porcelain 2>/dev/null)" ] && clean=0
+        stuck=""
+        while read -r pname psha; do
+          [ -n "$pname" ] || continue
+          if [ "$pname" = "$cur" ]; then
+            # The checked-out branch: `merge --ff-only` IS the local `updateInstead`. It
+            # carries a fast-forward into a CLEAN worktree and refuses everything else,
+            # so a dirty tree is never silently overwritten.
+            if [ "$clean" = 1 ]; then
+              git -C "$d" merge --ff-only "$psha" > /dev/null 2>&1 || true
+            fi
+          elif ! lsha=$(git -C "$d" rev-parse --verify -q "refs/heads/$pname"); then
+            # New branch here. There is no ancestry question to answer.
+            git -C "$d" update-ref "refs/heads/$pname" "$psha" 2>/dev/null || true
+          elif git -C "$d" merge-base --is-ancestor "$lsha" "$psha" 2>/dev/null; then
+            git -C "$d" update-ref "refs/heads/$pname" "$psha" 2>/dev/null || true
+          fi
+          # ★ THE BUCKET IS DECIDED BY RE-READING THE REF, never by the exit status of the
+          # arm above. An update that silently did nothing and one that was refused look
+          # identical from here, and both must land in review rather than in ok.
+          [ "$(git -C "$d" rev-parse -q "refs/heads/$pname" 2>/dev/null)" = "$psha" ] || stuck="$stuck,$pname"
+        done <<< "$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' "refs/remotes/$PEER/" | sed "s|^refs/remotes/$PEER/||")"
+
+        if [ -z "$stuck" ]; then
           ok+=("$r")
         else
-          failed+=("$r")
+          review+=("$r(no-ff:${stuck#,})")
         fi
         ;;
       *) ok+=("$r") ;;
@@ -376,11 +447,15 @@ for i in "${!PEERS[@]}"; do
       want=$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' refs/heads/ | sed 's|^refs/heads/||' | sort)
       # ★ VERIFY AGAINST THE PEER'S REAL BRANCHES — that is where a handoff will look.
       # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-      have=$(ssh -n "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+      have=$(ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
     else
       # shellcheck disable=SC2029  # $DIR/$r is LOCAL, expanded here on purpose
-      want=$(ssh -n "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
-      have=$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' "refs/remotes/$PEER/" | sed "s|^refs/remotes/$PEER/||" | sort)
+      want=$(ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' for-each-ref --format='%(refname) %(objectname)' refs/heads/" 2>/dev/null | sed 's|^refs/heads/||' | sort)
+      # ★ VERIFY AGAINST THIS HOST'S REAL BRANCHES — the mirror of the sync arm's rule and
+      # for the same reason: a handoff reads `git log`, not a side namespace. Checking the
+      # namespace only was how a --from could report VERIFIED while every local branch still
+      # pointed at the older commit.
+      have=$(git -C "$d" for-each-ref --format='%(refname) %(objectname)' refs/heads/ | sed 's|^refs/heads/||' | sort)
     fi
 
     while read -r name sha; do
