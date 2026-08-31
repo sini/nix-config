@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-lan-ingress-llama-cpp
+  namespace: ai
+spec:
+  description: Allow private-LAN clients to reach llama-cpp on 8080 over the internal LoadBalancers.
+  endpointSelector:
+    matchLabels:
+      den.ai/engine: llama-cpp
+  ingress:
+    - fromCIDR:
+        - 10.0.0.0/8
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

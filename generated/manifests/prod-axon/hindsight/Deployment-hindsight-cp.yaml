@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: hindsight-cp
+    app.kubernetes.io/name: hindsight-cp
+  name: hindsight-cp
+  namespace: ai
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: hindsight-cp
+      app.kubernetes.io/name: hindsight-cp
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: hindsight-cp
+        app.kubernetes.io/name: hindsight-cp
+        den.ai/component: hindsight-cp
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: HINDSIGHT_CP_DATAPLANE_API_URL
+              value: http://hindsight.ai.svc.cluster.local:8888
+            - name: HINDSIGHT_CP_HOSTNAME
+              value: 0.0.0.0
+            - name: HINDSIGHT_CP_PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: production
+          image: ghcr.io/vectorize-io/hindsight-control-plane@sha256:d9bf57083f7cb0a53ee5011bdfde6aae2490dbf5c360d2d1bff10473b45eb112
+          livenessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            tcpSocket:
+              port: 3000
+          name: main
+          ports:
+            - containerPort: 3000
+              name: http
+          readinessProbe:
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            tcpSocket:
+              port: 3000
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 256Mi
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: hindsight-cp

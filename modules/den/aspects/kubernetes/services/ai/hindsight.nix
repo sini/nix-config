@@ -16,37 +16,40 @@
 # (cross-encoder/ms-marco-MiniLM-L-6-v2) run in-process on CPU at upstream
 # defaults; both models are fetched from HuggingFace on first boot into the
 # model-cache PVC, which is why this pod has world:443 egress.
+{ den, ... }:
 {
   den.aspects.kubernetes.services.ai.hindsight = {
+    # Hard dependency, not a coincidence of cluster composition: both LLM
+    # endpoints and their model names are read out of this aspect's `instances`.
+    includes = [ den.aspects.kubernetes.services.ai.llama-cpp ];
+
     k8s-manifests =
       {
         cluster,
         charts,
         images,
-        lib,
-        ollama-endpoints,
         ...
       }:
       let
         settings = cluster.settings.kubernetes.services.ai.hindsight;
 
-        # Extraction runs on an ollama host outside the cluster, discovered via
-        # the quirk (sorted for a stable pick when the fleet grows a second
-        # one). Only forced when extractionBaseUrl is left to derive.
-        ollamaHosts = builtins.sort (a: b: a.hostname < b.hostname) ollama-endpoints;
-        ollamaHost =
-          if ollamaHosts == [ ] then
-            throw "hindsight: no ollama-endpoints in this environment — set settings.kubernetes.services.ai.hindsight.extractionBaseUrl"
-          else
-            lib.head ollamaHosts;
+        # Inference is in-cluster: both LLMs are llama-cpp instances on the node
+        # APUs, addressed by instance key so the model identity stays defined in
+        # exactly one place (the llama-cpp aspect's `instances`).
+        llamaInstances = cluster.settings.kubernetes.services.ai.llama-cpp.instances;
 
-        extractionBaseUrl =
-          if settings.extractionBaseUrl != null then
-            settings.extractionBaseUrl
-          else
-            "http://${ollamaHost.ip}:${toString ollamaHost.port}/v1";
+        instanceOr =
+          key:
+          llamaInstances.${key}
+            or (throw "hindsight: no llama-cpp instance '${key}' — known instances: ${toString (builtins.attrNames llamaInstances)}");
+
+        # Fully qualified for the same reason the postgres DSN is; see the note
+        # in hindsight-pg.nix on the short form failing to resolve here.
+        llamaUrl = key: "http://llama-cpp-${key}.ai.svc.cluster.local:8080/v1";
+        llamaModel = key: (instanceOr key).modelAlias;
 
         port = 8888;
+        cpPort = 3000;
       in
       {
         applications.hindsight = {
@@ -78,6 +81,35 @@
                   fsGroupChangePolicy = "OnRootMismatch";
                 };
 
+                # Release anything the previous incarnation of this worker was
+                # holding. A pod that dies mid-retain (OOM, node loss, the crash
+                # loop this deployment already went through) leaves its tasks in
+                # 'processing' forever — the document sits in the bank with its
+                # facts unextracted, which is silently unreachable by recall.
+                # Graceful shutdown releases them; ungraceful termination is the
+                # gap this closes.
+                #
+                # Only safe to do unconditionally because WORKER_ID is pinned and
+                # replicas = 1: there is never another live worker whose tasks
+                # this could steal. It is `|| true` on purpose — on a first
+                # deploy the tables do not exist yet (migrations run in the main
+                # container, after this), and a best-effort cleanup must never
+                # block the startup that would create them.
+                initContainers.release-stale-tasks = {
+                  image = {
+                    inherit (images."vectorize-io/hindsight-api") repository digest;
+                  };
+                  command = [
+                    "sh"
+                    "-c"
+                    "hindsight-admin decommission-worker hindsight --yes || echo 'release-stale-tasks: skipped (see error above)'"
+                  ];
+                  env.HINDSIGHT_API_DATABASE_URL.valueFrom.secretKeyRef = {
+                    name = "hindsight-pg-dsn";
+                    key = "url";
+                  };
+                };
+
                 containers.main = {
                   image = {
                     inherit (images."vectorize-io/hindsight-api") repository digest;
@@ -88,12 +120,17 @@
                     HINDSIGHT_API_PORT = toString port;
                     HINDSIGHT_API_LOG_LEVEL = "info";
 
-                    # A worker claims operations under this id and holds them
-                    # until it reports back. Left unset it defaults to the pod
-                    # name, which churns on every restart, and in-flight work is
-                    # then orphaned under a worker identity that no longer
-                    # exists — recoverable only by an external reaper. Pinning
-                    # it means a restarted pod is the same worker.
+                    # A worker claims operations under this id and holds them in
+                    # 'processing' until it reports back. Left unset it defaults
+                    # to the hostname — the pod name — which churns on every
+                    # restart, so in-flight work is orphaned under an identity
+                    # that no longer exists and cannot be addressed afterwards.
+                    #
+                    # Pinning it does NOT make recovery automatic: upstream has
+                    # no startup reclaim (decommission-worker exists only in the
+                    # admin CLI, and its documented use case is "if a worker
+                    # crashed while processing tasks"). What pinning buys is a
+                    # KNOWN name to release, which the init container does.
                     HINDSIGHT_API_WORKER_ID = "hindsight";
 
                     HINDSIGHT_API_DATABASE_URL.valueFrom.secretKeyRef = {
@@ -104,9 +141,27 @@
                     # provisions to match it (CREATE EXTENSION vector).
                     HINDSIGHT_API_VECTOR_EXTENSION = "pgvector";
 
-                    HINDSIGHT_API_LLM_PROVIDER = "ollama";
-                    HINDSIGHT_API_LLM_BASE_URL = extractionBaseUrl;
-                    HINDSIGHT_API_LLM_MODEL = settings.extractionModel;
+                    # `openai`, not `llamacpp`: upstream's in-process llamacpp
+                    # provider needs llama-cpp-python, which the published image
+                    # deliberately omits (it fails with ModuleNotFoundError).
+                    # Talking to a llama-server over its OpenAI-compatible API is
+                    # the supported shape, and upstream's own local-llm compose
+                    # example does exactly this.
+                    HINDSIGHT_API_LLM_PROVIDER = "openai";
+                    HINDSIGHT_API_LLM_BASE_URL = llamaUrl settings.defaultLlmInstance;
+                    HINDSIGHT_API_LLM_MODEL = llamaModel settings.defaultLlmInstance;
+                    # The openai provider requires this populated even when the
+                    # backend ignores it; llama-server runs with no API key set.
+                    # Upstream's own example uses the literal "not-needed".
+                    HINDSIGHT_API_LLM_API_KEY = "not-needed";
+
+                    # Retain gets the stronger extractor (see hindsight-settings.nix).
+                    # Everything else — reflect, consolidation, verification —
+                    # falls through to the default instance above.
+                    HINDSIGHT_API_RETAIN_LLM_PROVIDER = "openai";
+                    HINDSIGHT_API_RETAIN_LLM_BASE_URL = llamaUrl settings.retainLlmInstance;
+                    HINDSIGHT_API_RETAIN_LLM_MODEL = llamaModel settings.retainLlmInstance;
+                    HINDSIGHT_API_RETAIN_LLM_API_KEY = "not-needed";
 
                     # Not a tuning preference — a 15.5-point swing on upstream's
                     # own retain leaderboard (v0.9.2, the version pinned here):
@@ -183,6 +238,29 @@
 
               service.main = {
                 controller = "main";
+                # Pin to `hindsight`: bjw-s suffixes every service with its
+                # identifier once a controller owns >1 service, so adding the
+                # LoadBalancer below would otherwise rename this to
+                # `hindsight-main` and move the in-cluster address under every
+                # existing consumer. Same reason shoko.nix pins its own.
+                forceRename = "hindsight";
+                ports.http.port = port;
+              };
+
+              # Private-network reach on a kubernetes-loadbalancers address,
+              # BGP-advertised to the LAN and not internet-routable — the shoko
+              # idiom. This is how workstations and off-cluster agents reach the
+              # bank without a public HTTPRoute and without the OIDC gateway,
+              # which headless MCP clients cannot complete anyway.
+              #
+              # NOTE: hindsight's dataplane has no authentication of its own, so
+              # anything on the LAN that can route here has full read/write on
+              # the bank. The CiliumNetworkPolicy below is the only control.
+              service.internal = {
+                controller = "main";
+                type = "LoadBalancer";
+                externalTrafficPolicy = "Local";
+                annotations."lbipam.cilium.io/ips" = cluster.getAssignment "hindsight-internal";
                 ports.http.port = port;
               };
 
@@ -197,6 +275,96 @@
                   storageClass = "longhorn";
                   globalMounts = [ { path = "/home/hindsight/.cache"; } ];
                 };
+              };
+            };
+          };
+
+          # Control plane — the Next.js UI over the dataplane API. Separate
+          # release rather than a second controller in the one above: it is a
+          # different image on a different lifecycle, holds no state, wants no
+          # PVC, and should be able to restart without touching the API.
+          #
+          # It exposes no metrics (upstream: "the control plane (Next.js) does
+          # not expose metrics"), so it gets no PodMonitor, and its probes are
+          # tcpSocket because it serves no /health.
+          helm.releases.hindsight-cp = {
+            chart = charts.bjw-s-labs.app-template;
+            values = {
+              controllers.main = {
+                type = "deployment";
+                replicas = 1;
+                pod.labels."den.ai/component" = "hindsight-cp";
+
+                containers.main = {
+                  image = {
+                    inherit (images."vectorize-io/hindsight-control-plane") repository digest;
+                  };
+
+                  env = {
+                    NODE_ENV = "production";
+                    HINDSIGHT_CP_HOSTNAME = "0.0.0.0";
+                    HINDSIGHT_CP_PORT = toString cpPort;
+                    # In-cluster, via the pinned service name.
+                    HINDSIGHT_CP_DATAPLANE_API_URL = "http://hindsight.ai.svc.cluster.local:${toString port}";
+                    # Bearer the CP sends to the dataplane. Only required when
+                    # the API is auth-protected; ours is not, so this is left
+                    # unset deliberately rather than set to a placeholder.
+                  };
+
+                  probes = {
+                    liveness = {
+                      enabled = true;
+                      custom = true;
+                      spec = {
+                        tcpSocket.port = cpPort;
+                        initialDelaySeconds = 30;
+                        periodSeconds = 10;
+                      };
+                    };
+                    readiness = {
+                      enabled = true;
+                      custom = true;
+                      spec = {
+                        tcpSocket.port = cpPort;
+                        initialDelaySeconds = 10;
+                        periodSeconds = 5;
+                      };
+                    };
+                  };
+
+                  ports = [
+                    {
+                      name = "http";
+                      containerPort = cpPort;
+                    }
+                  ];
+
+                  resources = {
+                    requests = {
+                      cpu = "50m";
+                      memory = "256Mi";
+                    };
+                    limits = {
+                      cpu = "1000m";
+                      memory = "1Gi";
+                    };
+                  };
+                };
+              };
+
+              service.main = {
+                controller = "main";
+                forceRename = "hindsight-cp";
+                ports.http.port = cpPort;
+              };
+
+              # Private-network reach, same rationale as the API's.
+              service.internal = {
+                controller = "main";
+                type = "LoadBalancer";
+                externalTrafficPolicy = "Local";
+                annotations."lbipam.cilium.io/ips" = cluster.getAssignment "hindsight-cp-internal";
+                ports.http.port = cpPort;
               };
             };
           };
@@ -267,25 +435,82 @@
               ];
             };
 
-            # Retain-path egress to the fleet's ollama hosts (off-cluster LAN),
-            # pinned per host rather than opened to the LAN range.
-            allow-extraction-egress-hindsight.spec = {
-              description = "Allow hindsight to reach the ollama extraction endpoint(s).";
+            # The control plane reaches the API from a POD address (172.20/16),
+            # which the LAN rule below does not cover — without this the
+            # ingress default-deny silently drops it.
+            allow-cp-ingress-hindsight.spec = {
+              description = "Allow the hindsight control plane to reach the dataplane API (8888).";
               endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
-              egress = map (e: {
-                toCIDR = [ "${e.ip}/32" ];
-                toPorts = [
-                  {
-                    ports = [
-                      {
-                        port = toString e.port;
-                        protocol = "TCP";
-                      }
-                    ];
-                  }
-                ];
-              }) ollamaHosts;
+              ingress = [
+                {
+                  fromEndpoints = [
+                    { matchLabels."app.kubernetes.io/name" = "hindsight-cp"; }
+                  ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString port;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
             };
+
+            # Browser access to the control plane over its own LoadBalancer.
+            allow-lan-ingress-hindsight-cp.spec = {
+              description = "Allow private-LAN clients to reach the hindsight control plane UI (3000).";
+              endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight-cp";
+              ingress = [
+                {
+                  fromCIDR = [ "10.0.0.0/8" ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString cpPort;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
+
+            # Off-cluster LAN callers (workstations, uplink) reach the bank over
+            # the internal LoadBalancer above, bypassing the gateway. The whole
+            # private 10/8 range rather than a per-host pin: it is portable, the
+            # LB address is RFC1918 and not internet-routable, and it covers both
+            # the externalTrafficPolicy=Local source (the caller's real IP) and
+            # any node SNAT. Mirrors allow-lan-ingress-shoko.
+            allow-lan-ingress-hindsight.spec = {
+              description = "Allow private-LAN clients to reach hindsight on 8888 over the internal LoadBalancer.";
+              endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
+              ingress = [
+                {
+                  fromCIDR = [ "10.0.0.0/8" ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString port;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
+
+            # No egress rule for the LLM: both instances are in-cluster now, and
+            # the clusterwide allow-internal-egress policy already covers
+            # endpoint-to-endpoint traffic. llama-cpp's own ingress policy names
+            # this app as a permitted source.
 
             # World egress purely to populate the model cache on first boot.
             # Once the PVC is warm this is dead weight — a candidate to drop, or

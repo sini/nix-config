@@ -69,6 +69,13 @@
                 env = {
                   LLAMA_ARG_HF_REPO = inst.model;
                   LLAMA_ARG_ALIAS = inst.modelAlias;
+                  # -hf pulls a multimodal projector alongside the weights
+                  # whenever the repo has one. Qwen3.6-35B-A3B is a VL model, so
+                  # that is an extra 0.9 GB downloaded, held in RAM, and warned
+                  # about on every start ("Qwen-VL models require at minimum 1024
+                  # image tokens") for a text-only extraction workload. No-op on
+                  # instances whose repo ships no projector.
+                  LLAMA_ARG_MMPROJ_AUTO = "0";
                   LLAMA_ARG_PORT = toString port;
                   LLAMA_ARG_CTX_SIZE = toString inst.contextSize;
                   LLAMA_ARG_N_GPU_LAYERS = toString inst.gpuLayers;
@@ -138,6 +145,35 @@
 
             service.main = {
               controller = "main";
+              # Pin the in-cluster name to `llama-cpp-<key>`: bjw-s suffixes
+              # every service with its identifier once a controller owns >1
+              # service (main would become `llama-cpp-qwen-main`), which would
+              # dangle hindsight's HINDSIGHT_API_*_LLM_BASE_URL. Same reason
+              # shoko.nix pins its own. Keep this byte-identical to the
+              # single-service name.
+              forceRename = "llama-cpp-${name}";
+              ports.http.port = port;
+            };
+
+            # Private-network reach on a kubernetes-loadbalancers address, the
+            # shoko idiom: BGP-advertised to the LAN, not internet-routable. Lets
+            # workstations and off-cluster hosts use these endpoints directly as
+            # OpenAI-compatible backends.
+            #
+            # The assignment name is derived from the instance key, so adding an
+            # instance without reserving its address in the cluster's
+            # kubernetes-loadbalancers network fails at eval with the missing
+            # name — rather than silently coming up unreachable.
+            #
+            # NOTE: llama-server runs with no API key (it says so at startup:
+            # "CORS is set to allow all origins and no API key is set"), so
+            # anything on the LAN that can route here can spend GPU time. The
+            # CiliumNetworkPolicy below is the only control.
+            service.internal = {
+              controller = "main";
+              type = "LoadBalancer";
+              externalTrafficPolicy = "Local";
+              annotations."lbipam.cilium.io/ips" = cluster.getAssignment "llama-cpp-${name}-internal";
               ports.http.port = port;
             };
 
@@ -215,6 +251,30 @@
                       };
                     }
                   ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString port;
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
+
+            # Off-cluster LAN callers reach these over the internal
+            # LoadBalancers above. Same reasoning as allow-lan-ingress-shoko:
+            # the whole private 10/8 rather than per-host pins, covering both
+            # the externalTrafficPolicy=Local source IP and any node SNAT.
+            allow-lan-ingress-llama-cpp.spec = {
+              description = "Allow private-LAN clients to reach llama-cpp on 8080 over the internal LoadBalancers.";
+              endpointSelector.matchLabels.${engineLabel} = engineValue;
+              ingress = [
+                {
+                  fromCIDR = [ "10.0.0.0/8" ];
                   toPorts = [
                     {
                       ports = [

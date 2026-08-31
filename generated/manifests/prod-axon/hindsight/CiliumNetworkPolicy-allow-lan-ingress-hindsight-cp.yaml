@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-lan-ingress-hindsight-cp
+  namespace: ai
+spec:
+  description: Allow private-LAN clients to reach the hindsight control plane UI (3000).
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hindsight-cp
+  ingress:
+    - fromCIDR:
+        - 10.0.0.0/8
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP

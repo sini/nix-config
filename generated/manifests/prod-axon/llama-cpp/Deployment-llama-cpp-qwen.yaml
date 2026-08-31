@@ -36,6 +36,8 @@ spec:
               value: "1"
             - name: LLAMA_ARG_HF_REPO
               value: unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M
+            - name: LLAMA_ARG_MMPROJ_AUTO
+              value: "0"
             - name: LLAMA_ARG_N_GPU_LAYERS
               value: "99"
             - name: LLAMA_ARG_PORT

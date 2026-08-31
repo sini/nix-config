@@ -108,17 +108,6 @@ in
       ])
     ];
 
-  # Cluster-scoped dual of collect-ollama-endpoints: the hindsight bank runs in
-  # the cluster but calls its extraction LLM on an ollama host outside it, so the
-  # k8s aspect needs the same endpoint facts the host-scoped consumers get.
-  den.policies.cluster-collect-ollama-endpoints =
-    { cluster, ... }:
-    [
-      (pipe.from "ollama-endpoints" [
-        (pipe.collectAll ({ host, ... }: true))
-      ])
-    ];
-
   den.policies.cluster-collect-container-registries =
     { cluster, ... }:
     [
@@ -220,7 +209,6 @@ in
   den.schema.cluster.includes = [
     den.policies.cluster-collect-k3s-nodes
     den.policies.cluster-collect-media-scratch-exports
-    den.policies.cluster-collect-ollama-endpoints
     den.policies.cluster-collect-container-registries
   ];
 }

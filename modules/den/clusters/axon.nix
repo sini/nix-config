@@ -72,6 +72,17 @@
           # uplink host (off-cluster) so it bypasses the OIDC-gated public route.
           # BGP-advertised to uplink, NOT internet-routable. See media/shoko.nix.
           shoko-internal = "10.11.0.10";
+
+          # ai stack, .20-.29 — private-network reach for the memory bank and the
+          # inference endpoints, so LAN hosts and workstations can use them
+          # without a public HTTPRoute. BGP-advertised, NOT internet-routable.
+          # The llama-cpp names are derived from the instance keys in
+          # kubernetes.services.ai.llama-cpp.instances: adding an instance
+          # without adding its address here fails at eval, by design.
+          hindsight-internal = "10.11.0.20";
+          llama-cpp-qwen-internal = "10.11.0.21";
+          llama-cpp-gpt-oss-internal = "10.11.0.22";
+          hindsight-cp-internal = "10.11.0.23";
         };
       };
     };

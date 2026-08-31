@@ -36,6 +36,8 @@ spec:
               value: "1"
             - name: LLAMA_ARG_HF_REPO
               value: ggml-org/gpt-oss-20b-GGUF:MXFP4
+            - name: LLAMA_ARG_MMPROJ_AUTO
+              value: "0"
             - name: LLAMA_ARG_N_GPU_LAYERS
               value: "99"
             - name: LLAMA_ARG_PORT

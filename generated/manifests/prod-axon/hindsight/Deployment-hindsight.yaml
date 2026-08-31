@@ -36,18 +36,28 @@ spec:
               value: "true"
             - name: HINDSIGHT_API_HOST
               value: 0.0.0.0
+            - name: HINDSIGHT_API_LLM_API_KEY
+              value: not-needed
             - name: HINDSIGHT_API_LLM_BASE_URL
-              value: http://10.10.10.1:11434/v1
+              value: http://llama-cpp-gpt-oss.ai.svc.cluster.local:8080/v1
             - name: HINDSIGHT_API_LLM_MODEL
-              value: gpt-oss:20b
+              value: gpt-oss-20b
             - name: HINDSIGHT_API_LLM_PROVIDER
-              value: ollama
+              value: openai
             - name: HINDSIGHT_API_LLM_REASONING_EFFORT
               value: low
             - name: HINDSIGHT_API_LOG_LEVEL
               value: info
             - name: HINDSIGHT_API_PORT
               value: "8888"
+            - name: HINDSIGHT_API_RETAIN_LLM_API_KEY
+              value: not-needed
+            - name: HINDSIGHT_API_RETAIN_LLM_BASE_URL
+              value: http://llama-cpp-qwen.ai.svc.cluster.local:8080/v1
+            - name: HINDSIGHT_API_RETAIN_LLM_MODEL
+              value: qwen3.6-35b-a3b
+            - name: HINDSIGHT_API_RETAIN_LLM_PROVIDER
+              value: openai
             - name: HINDSIGHT_API_VECTOR_EXTENSION
               value: pgvector
             - name: HINDSIGHT_API_WORKER_ID
@@ -96,6 +106,22 @@ spec:
       hostIPC: false
       hostNetwork: false
       hostPID: false
+      initContainers:
+        - command:
+            - sh
+            - -c
+            - 'hindsight-admin decommission-worker hindsight --yes || echo ''release-stale-tasks: skipped (see error above)'''
+          env:
+            - name: HINDSIGHT_API_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: url
+                  name: hindsight-pg-dsn
+          image: ghcr.io/vectorize-io/hindsight-api@sha256:7b14a1f4062252992d0176758753615e0a2071d9a269995be007be223ab01812
+          name: release-stale-tasks
+          volumeMounts:
+            - mountPath: /home/hindsight/.cache
+              name: model-cache
       securityContext:
         fsGroup: 1000
         fsGroupChangePolicy: OnRootMismatch

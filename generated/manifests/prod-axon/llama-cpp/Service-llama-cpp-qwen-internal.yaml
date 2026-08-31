@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.11.0.21
+  labels:
+    app.kubernetes.io/instance: llama-cpp-qwen
+    app.kubernetes.io/name: llama-cpp-qwen
+    app.kubernetes.io/service: llama-cpp-qwen-internal
+  name: llama-cpp-qwen-internal
+  namespace: ai
+spec:
+  externalTrafficPolicy: Local
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: llama-cpp-qwen
+    app.kubernetes.io/name: llama-cpp-qwen
+  type: LoadBalancer
