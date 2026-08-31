@@ -259,7 +259,7 @@
                   hooks = [
                     {
                       type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh SessionStart || true";
+                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh SessionStart || true";
                     }
                   ];
                 }
@@ -294,43 +294,32 @@
                   hooks = [
                     {
                       type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh SubagentStop || true";
+                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh SubagentStop || true";
                     }
                   ];
                 }
               ];
 
-              # PROBE ONLY — capture the raw stdin payload per event, emit NOTHING.
-              # The binary carries transcript_path, session_id, model_id, agent_type and
-              # teammate_id as payload field names (measured, claude-code 2.1.246, negative
-              # control 0), but which EVENTS carry which FIELDS is not statically derivable —
-              # no payload-construction site co-locates them. A budget reader needs
-              # transcript_path (context %) and model_id (the divisor, where a wrong value is
-              # a silent 5x error), so it must be shown they arrive before anything is built
-              # on them. TeammateIdle is wired here for the same reason and has no other
-              # wiring anywhere: it is present in the binary (16 occurrences) but has never
-              # fired into a log, so whether it fires at all under teammateMode=in-process is
-              # unmeasured. Retire this block once the payloads are captured.
+              # The DISPATCH GATE fires here, because SubagentStart is the only event that
+              # runs at the moment a new unit of work is about to start. The 70% context rule
+              # has nowhere else to bite.
               SubagentStart = [
                 {
                   hooks = [
                     {
                       type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh SubagentStart || true";
+                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh SubagentStart || true";
                     }
                   ];
                 }
               ];
-              TeammateIdle = [
-                {
-                  hooks = [
-                    {
-                      type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh TeammateIdle || true";
-                    }
-                  ];
-                }
-              ];
+
+              # TeammateIdle is DELIBERATELY NOT WIRED. It fires (measured: claude-code
+              # 2.1.246, coincident with SubagentStop to the same second across 5 dispatches),
+              # but its payload is a strict SUBSET: it carries teammate_name and team_name,
+              # which duplicate SubagentStop's agent_type and session_id, and lacks agent_id,
+              # agent_transcript_path, last_assistant_message and background_tasks. Same
+              # moment, less data — so wiring it would only duplicate the firing.
 
               # About to compact. Standing law here: markdown does not survive compaction, the
               # graph does. This runs the close-protocol reads and puts their ANSWERS in context,
@@ -354,9 +343,18 @@
         # binary, with live controls in the same run (`settings.json` 201, `CLAUDE.md` 201,
         # `.claude` 2933). It never ran. The supported mechanism is CLAUDE_ENV_FILE above.
         # SubagentStop: make a silent idle visible, and name the correct next move.
-        # Deliberately does NOT try to decide whether a report arrived — the hook cannot see the
-        # conversation. It records the stop and states the rule, which is what the orchestrator
-        # actually gets wrong under pressure.
+        # Does not try to decide whether a report arrived. It records the stop and states the
+        # rule, which is what the orchestrator actually gets wrong under pressure.
+        #
+        # ★ THE STATED REASON FOR THAT WAS "the hook cannot see the conversation" AND IT IS
+        # FALSE (measured 2026-08-31): the SubagentStop payload carries
+        # `last_assistant_message`, present with correct content in 3 of 3 captures, plus
+        # `agent_transcript_path` to the subagent's own transcript. The hook COULD tell a
+        # delivered report from a silent idle mechanically rather than instructing the reader
+        # to go and check — the discipline-to-mechanism move handoff-gate.sh already made.
+        # The conclusion (state the rule, don't adjudicate) is LEFT STANDING; only its basis
+        # is corrected. Making it report-aware changes what it says to the orchestrator and
+        # is an owner call, not a comment fix.
         home.file.".claude/subagent-stop.sh" = {
           executable = true;
           text = ''
@@ -383,30 +381,101 @@
           '';
         };
 
-        # Hook payload PROBE. Measurement only: it writes to a log and emits NOTHING on
-        # stdout, so it injects no context and cannot perturb what it measures.
+        # ONE LEAN BUDGET LINE per firing. It reports STATE and the tripped gate; it does
+        # NOT restate the rules. The rules live in den-ag-design STATUS/RESUME-PROMPT-ARCH.md
+        # and are read once at boot — a policy repeated on every firing is a second copy that
+        # decays, and 400 identical repetitions train the reader to skip the line that finally
+        # differs.
         #
-        # ★ IT LOGS ON EVERY INVOCATION, INCLUDING AN EMPTY PAYLOAD. An event that fires
-        # with no payload and an event that never fires are different findings, and they
-        # are indistinguishable from a log that only records non-empty reads — the same
-        # absence-reads-as-clean shape the SubagentStop message above exists to refuse.
-        # EMPTY is therefore written explicitly rather than skipped.
-        #
-        # The log holds cwd, session ids and event metadata. It is local, unsynced, and
-        # is meant to be deleted with this block.
-        home.file.".claude/hook-probe.sh" = {
+        # Field availability, measured (claude-code 2.1.246, payload capture 2026-08-31):
+        #   SessionStart  : session_id transcript_path cwd model source [prompt_id]
+        #   SubagentStart : session_id transcript_path cwd agent_id agent_type prompt_id
+        #   SubagentStop  : the above + agent_transcript_path last_assistant_message
+        #                   background_tasks effort stop_hook_active permission_mode
+        # `model` reaches ONLY SessionStart, which is why the divisor below cannot come from
+        # the payload on the events that need it most.
+        home.file.".claude/budget.sh" = {
           executable = true;
           text = ''
             #!/usr/bin/env bash
             set -uo pipefail
-            log="$HOME/.claude/hook-payloads.jsonl"
-            mkdir -p "$(dirname "$log")"
-            # `cat` with no stdin would block on a tty; hooks always get a pipe, and the
-            # -t guard keeps a hand-run of this script from hanging.
+            sub="$HOME/.headroom/subscription_state.json"
+            event="''${1:-unknown}"
             payload=""
             if [ ! -t 0 ]; then payload="$(cat 2>/dev/null || true)"; fi
-            printf '%s\t%s\t%s\n' \
-              "$(date -Is)" "''${1:-unknown}" "''${payload:-EMPTY}" >> "$log" 2>/dev/null || true
+            transcript=$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null)
+
+            # ★ DIVISOR DEFAULTS TO 1,000,000 (owner-ruled 2026-08-31): every orchestrator is
+            # Opus or Fable, and transcript_path is always the ORCHESTRATOR's window, never a
+            # subagent's. This is what makes a model cache unnecessary on the events that
+            # carry no model. It fails toward UNDER-reporting, so an orchestrator on a 200K
+            # model would read 5x low and reach compaction rather than raise a false alarm.
+            # ★ NEVER TAKE THE MODEL FROM THE TRANSCRIPT. It records `claude-opus-5` with the
+            # `[1m]` marker STRIPPED (measured: 218/218 assistant messages) while the
+            # SessionStart payload records `claude-opus-5[1m]`. Trusting it selects a 200000
+            # divisor and reports 133% where the truth is 26.6% — tripping every gate at once.
+            limit=1000000
+            model=$(printf '%s' "$payload" \
+              | jq -r 'if (.model|type)=="string" then .model else (.model.id // empty) end' 2>/dev/null)
+            case "$model" in
+              "" | *"[1m]") ;;
+              claude-haiku-* | claude-sonnet-5) limit=200000 ;;
+            esac
+
+            ctx="?"
+            if [ -n "$transcript" ] && [ -s "$transcript" ]; then
+              tok=$(jq -r 'select(.type=="assistant") | select(.isSidechain != true)
+                           | select(.message.usage != null) | .message.usage
+                           | (.input_tokens//0)+(.cache_read_input_tokens//0)+(.cache_creation_input_tokens//0)' \
+                      "$transcript" 2>/dev/null | tail -1)
+              case "''${tok:-}" in
+                "" | *[!0-9]*) ctx="?" ;;
+                *) ctx=$(awk -v t="$tok" -v l="$limit" 'BEGIN{printf "%.1f", t*100/l}') ;;
+              esac
+            fi
+
+            # utilization_pct ONLY: `used` and `limit` read 0 against a live percentage, so
+            # any limit-minus-used arithmetic reports a full window as exhausted.
+            five="?"; seven="?"; mins="?"; stale=""
+            if [ -s "$sub" ]; then
+              vals=$(jq -r '[(.latest.five_hour.utilization_pct // "x"),
+                             (.latest.seven_day.utilization_pct // "x"),
+                             (.latest.five_hour.seconds_to_reset // 0)] | @tsv' "$sub" 2>/dev/null)
+              five=$(printf '%s' "$vals" | cut -f1)
+              seven=$(printf '%s' "$vals" | cut -f2)
+              secs=$(printf '%s' "$vals" | cut -f3)
+              case "$five$seven" in "" | *[!0-9.]*) five="?"; seven="?" ;; esac
+              mins=$(awk -v s="''${secs:-0}" 'BEGIN{ if (s+0>0) printf "%d", s/60; else printf "?" }')
+              # The poller runs a measured ~17% error rate, so staleness is a state to name.
+              age=$(( $(date +%s) - $(stat -c %Y "$sub" 2>/dev/null || echo 0) ))
+              [ "$age" -gt 900 ] && stale=" STALE(''${age}s)"
+            fi
+
+            # Thresholds are HERE because a hook has to decide; the rules they serve are in
+            # the bootstrap prompt. WEEKLY OUTRANKS CONTEXT: a session limit resumes cleanly,
+            # a weekly limit needs handoff and recovery, so it is evaluated last and wins.
+            #
+            # ★ EACH GATE NAMES ITS CONSTRAINT, NEVER A MOOD (HANDOFF-RULES.md rule 4:
+            # "vigilance is a procedure, not a mood"). The two closeout gates are DIFFERENT
+            # KINDS OF EVENT and must not read alike: ctx>=90 has a real deadline, because the
+            # window only shrinks and compaction is the cliff. 7d>=95 has none — 5% is hours
+            # of light single-agent work, or under an hour at 4x parallel Opus. Wording it as
+            # an emergency buys a rushed handoff in the one case where recovery is expensive
+            # and handoff QUALITY is the whole point.
+            gate=""
+            if [ "$ctx" != "?" ]; then
+              gate=$(awk -v c="$ctx" 'BEGIN{
+                if (c+0 >= 90)      print "CLOSE OUT (ctx>=90) - compaction is the deadline";
+                else if (c+0 >= 85) print "PREPARE CLOSEOUT (ctx>=85)";
+                else if (c+0 >= 70) print "NO NEW DISPATCH (ctx>=70) - in-flight only";
+              }')
+            fi
+            if [ "$seven" != "?" ] && awk -v w="$seven" 'BEGIN{exit !(w+0>=95)}'; then
+              gate="CLEAN CLOSEOUT (7d>=95) - unhurried; finish in-flight, no new dispatch"
+            fi
+
+            printf 'BUDGET %s · ctx %s%% · 5h %s%% (%sm) · 7d %s%%%s%s\n' \
+              "$event" "$ctx" "$five" "$mins" "$seven" "$stale" "''${gate:+ · GATE: $gate}"
             exit 0
           '';
         };
