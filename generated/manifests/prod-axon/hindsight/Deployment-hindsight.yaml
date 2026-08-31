@@ -96,6 +96,9 @@ spec:
       hostIPC: false
       hostNetwork: false
       hostPID: false
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
       serviceAccountName: hindsight
       volumes:
         - name: model-cache

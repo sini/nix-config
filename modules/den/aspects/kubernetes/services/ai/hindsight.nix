@@ -65,6 +65,19 @@
                 # separate worker StatefulSet upstream ships for that case.
                 replicas = 1;
 
+                # The image drops to USER hindsight (uid/gid 1000 — `useradd -m`
+                # in upstream's Dockerfile, and its own comment says 1000), but a
+                # freshly provisioned PVC mounts root-owned 0755. The model cache
+                # below lands on one, so the embedder's first write fails with
+                # "PermissionError at /home/hindsight/.cache/huggingface".
+                # fsGroup makes the kubelet chown the volume to this GID and add
+                # it to the container's supplementary groups; OnRootMismatch
+                # keeps it from re-walking the whole cache on every start.
+                pod.securityContext = {
+                  fsGroup = 1000;
+                  fsGroupChangePolicy = "OnRootMismatch";
+                };
+
                 containers.main = {
                   image = {
                     inherit (images."vectorize-io/hindsight-api") repository digest;
