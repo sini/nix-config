@@ -28,6 +28,7 @@
         cluster,
         charts,
         images,
+        lib,
         ...
       }:
       let
@@ -155,14 +156,6 @@
                     # Upstream's own example uses the literal "not-needed".
                     HINDSIGHT_API_LLM_API_KEY = "not-needed";
 
-                    # Retain gets the stronger extractor (see hindsight-settings.nix).
-                    # Everything else — reflect, consolidation, verification —
-                    # falls through to the default instance above.
-                    HINDSIGHT_API_RETAIN_LLM_PROVIDER = "openai";
-                    HINDSIGHT_API_RETAIN_LLM_BASE_URL = llamaUrl settings.retainLlmInstance;
-                    HINDSIGHT_API_RETAIN_LLM_MODEL = llamaModel settings.retainLlmInstance;
-                    HINDSIGHT_API_RETAIN_LLM_API_KEY = "not-needed";
-
                     # Not a tuning preference — a 15.5-point swing on upstream's
                     # own retain leaderboard (v0.9.2, the version pinned here):
                     # gpt-oss 20B at LOW ranks 4th at 57.8 and 5.1s end to end,
@@ -177,6 +170,17 @@
                     # failure this deployment exists to stop happening to the
                     # law corpus, so failures are made loud.
                     HINDSIGHT_API_FAIL_ON_EXTRACTION_ERRORS = "true";
+                  }
+                  # Per-operation override for retain, emitted ONLY when it
+                  # actually differs from the default. Pointing both at one
+                  # instance and still emitting these would be four env vars
+                  # restating the global config — and a reader would reasonably
+                  # infer a split that isn't there.
+                  // lib.optionalAttrs (settings.retainLlmInstance != settings.defaultLlmInstance) {
+                    HINDSIGHT_API_RETAIN_LLM_PROVIDER = "openai";
+                    HINDSIGHT_API_RETAIN_LLM_BASE_URL = llamaUrl settings.retainLlmInstance;
+                    HINDSIGHT_API_RETAIN_LLM_MODEL = llamaModel settings.retainLlmInstance;
+                    HINDSIGHT_API_RETAIN_LLM_API_KEY = "not-needed";
                   };
 
                   probes = {

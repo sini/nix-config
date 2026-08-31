@@ -50,14 +50,6 @@ spec:
               value: info
             - name: HINDSIGHT_API_PORT
               value: "8888"
-            - name: HINDSIGHT_API_RETAIN_LLM_API_KEY
-              value: not-needed
-            - name: HINDSIGHT_API_RETAIN_LLM_BASE_URL
-              value: http://llama-cpp-qwen.ai.svc.cluster.local:8080/v1
-            - name: HINDSIGHT_API_RETAIN_LLM_MODEL
-              value: qwen3.6-35b-a3b
-            - name: HINDSIGHT_API_RETAIN_LLM_PROVIDER
-              value: openai
             - name: HINDSIGHT_API_VECTOR_EXTENSION
               value: pgvector
             - name: HINDSIGHT_API_WORKER_ID

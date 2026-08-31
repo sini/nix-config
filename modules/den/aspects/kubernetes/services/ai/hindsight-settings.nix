@@ -21,17 +21,28 @@
     '';
   };
 
-  # Retain is the write path, and it gets the better extractor: Qwen3.6 35B-A3B
-  # leads the open-weight field on the retain leaderboard at quality 59.5 (49%)
-  # against 56.3 (48%) for both gpt-oss 20B and the dense Qwen3.8 27B. Measured
-  # on this hardware it decodes at 23.2 tok/s against gpt-oss's 28.9 — a fifth
-  # slower for a 3.2-point quality gain, on a path that is asynchronous anyway.
+  # Same instance as the default for now, which collapses the split: when this
+  # equals defaultLlmInstance the aspect emits no HINDSIGHT_API_RETAIN_LLM_*
+  # at all and every operation runs on one model.
+  #
+  # The leaderboard argues for Qwen3.6 35B-A3B here — it leads the open-weight
+  # retain field at quality 59.5 (49%) against gpt-oss 20B's 56.3 (48%). First
+  # contact on this hardware did not bear that out: extracting from a 136-char
+  # document took Qwen 104s and 2121 output tokens for ONE memory unit, where
+  # gpt-oss took 179 output tokens for TWO from a comparable input. Not hidden
+  # reasoning — thoughts_tokens was 0 and raw completions showed empty <think>
+  # blocks — just verbosity that bought nothing.
+  #
+  # Two documents is not a sample, and the leaderboard is a real measurement
+  # against a real benchmark, so this is provisional rather than a refutation.
+  # Set this to "qwen" to restore the split; the instance stays deployed.
   den.aspects.kubernetes.services.ai.hindsight.settings.retainLlmInstance = lib.mkOption {
     type = lib.types.str;
-    default = "qwen";
+    default = "gpt-oss";
     description = ''
       Key into `kubernetes.services.ai.llama-cpp.instances` serving the retain
-      (fact-extraction) path, via HINDSIGHT_API_RETAIN_LLM_*.
+      (fact-extraction) path, via HINDSIGHT_API_RETAIN_LLM_*. When equal to
+      defaultLlmInstance the per-operation override is omitted entirely.
     '';
   };
 }
