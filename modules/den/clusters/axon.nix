@@ -136,7 +136,8 @@
       services.media.whisparr
       services.media.bazarr
       services.media.sabnzbd
-      services.media.tdarr
+      # TODO: allocate against LLM GPU resources (see hardware.amd-gpu-device-plugin) and enable
+      #services.media.tdarr
       services.media.qbittorrent
       services.media.unpackerr
       services.media.profilarr
