@@ -95,6 +95,14 @@
                     HINDSIGHT_API_LLM_BASE_URL = extractionBaseUrl;
                     HINDSIGHT_API_LLM_MODEL = settings.extractionModel;
 
+                    # Not a tuning preference — a 15.5-point swing on upstream's
+                    # own retain leaderboard (v0.9.2, the version pinned here):
+                    # gpt-oss 20B at LOW ranks 4th at 57.8 and 5.1s end to end,
+                    # the same model at MEDIUM ranks 14th at 42.3 and 55.2s.
+                    # Leaving this unset sends no reasoning parameter at all, and
+                    # gpt-oss then runs at its own default — which is medium.
+                    HINDSIGHT_API_LLM_REASONING_EFFORT = "low";
+
                     # Upstream default is false: a retain that hit extraction
                     # errors is reported 'completed' and the dropped facts are
                     # silently unreachable by recall. That is precisely the

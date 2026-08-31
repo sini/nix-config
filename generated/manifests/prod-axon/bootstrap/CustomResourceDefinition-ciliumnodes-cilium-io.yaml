@@ -310,6 +310,7 @@ spec:
                         PodCIDRs is the list of CIDRs available to the node for allocation.
                         When an IP is used, the IP will be added to Status.IPAM.Used
                       items:
+                        format: cidr
                         type: string
                       type: array
                     pool:
@@ -352,10 +353,15 @@ spec:
                               IPAMPoolAllocation describes an allocation of an IPAM pool from the operator to the
                               node. It contains the assigned PodCIDRs allocated from this pool
                             properties:
+                              allowFirstIP:
+                                description: AllowFirstIP allows the first IP of each allocated CIDR to be used.
+                                type: boolean
+                              allowLastIP:
+                                description: AllowLastIP allows the last IP of each allocated CIDR to be used.
+                                type: boolean
                               cidrs:
                                 description: CIDRs contains a list of pod CIDRs currently allocated from this pool
                                 items:
-                                  description: IPAMCIDR is a CIDR used for IPAM
                                   format: cidr
                                   type: string
                                 type: array
@@ -404,7 +410,7 @@ spec:
                     pre-allocate:
                       description: |-
                         PreAllocate defines the number of IP addresses that must be
-                        available for allocation in the IPAMspec. It defines the buffer of
+                        available for allocation in the IPAMSpec. It defines the buffer of
                         addresses available immediately without requiring cilium-operator to
                         get involved.
                       minimum: 0
@@ -613,6 +619,12 @@ spec:
                           ip:
                             description: IP is the primary IP of the ENI
                             type: string
+                          ipv6-prefixes:
+                            description: IPv6Prefixes is the list of all IPv6 /80 delegated prefixes associated with the ENI
+                            items:
+                              format: cidr
+                              type: string
+                            type: array
                           mac:
                             description: MAC is the mac address of the ENI
                             type: string
@@ -622,7 +634,7 @@ spec:
                               FirstInterfaceIndex
                             type: integer
                           prefixes:
-                            description: Prefixes is the list of all /28 prefixes associated with the ENI
+                            description: Prefixes is the list of all IPv4 /28 delegated prefixes associated with the ENI
                             items:
                               format: cidr
                               type: string

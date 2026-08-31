@@ -1,0 +1,21 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-ingress-llama-cpp
+  namespace: ai
+spec:
+  description: Allow hindsight and Prometheus to reach llama-cpp (8080).
+  endpointSelector:
+    matchLabels:
+      den.ai/engine: llama-cpp
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: hindsight
+        - matchLabels:
+            app.kubernetes.io/name: prometheus
+            k8s:io.kubernetes.pod.namespace: monitoring
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

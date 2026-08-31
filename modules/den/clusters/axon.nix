@@ -152,6 +152,10 @@
       services.ai.hindsight-pg
       services.ai.hindsight
 
+      # ai — llama.cpp on the node APUs (Radeon 780M, Vulkan). Cluster-internal;
+      # requires hardware.amd-gpu-device-plugin above for the amd.com/gpu resource.
+      services.ai.llama-cpp
+
       # dev — Coder workspace platform (SP1 control plane)
       services.dev.coder.coder-pg
       services.dev.coder.coder

@@ -379,7 +379,7 @@ spec:
                         description: |-
                           ToEntities is a list of special entities to which the endpoint subject
                           to the rule is allowed to initiate connections. Supported entities are
-                          `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                          `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                           `health`, `unmanaged`, `none` and `all`.
                         items:
                           description: |-
@@ -390,6 +390,7 @@ spec:
                             - all
                             - world
                             - cluster
+                            - cluster-mesh
                             - host
                             - init
                             - ingress
@@ -1351,7 +1352,7 @@ spec:
                         description: |-
                           ToEntities is a list of special entities to which the endpoint subject
                           to the rule is allowed to initiate connections. Supported entities are
-                          `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                          `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                           `health`, `unmanaged`, `none` and `all`.
                         items:
                           description: |-
@@ -1362,6 +1363,7 @@ spec:
                             - all
                             - world
                             - cluster
+                            - cluster-mesh
                             - host
                             - init
                             - ingress
@@ -1960,7 +1962,7 @@ spec:
                         description: |-
                           FromEntities is a list of special entities which the endpoint subject
                           to the rule is allowed to receive connections from. Supported entities are
-                          `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                          `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                           `health`, `unmanaged`, `none` and `all`.
                         items:
                           description: |-
@@ -1971,6 +1973,7 @@ spec:
                             - all
                             - world
                             - cluster
+                            - cluster-mesh
                             - host
                             - init
                             - ingress
@@ -2794,7 +2797,7 @@ spec:
                         description: |-
                           FromEntities is a list of special entities which the endpoint subject
                           to the rule is allowed to receive connections from. Supported entities are
-                          `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                          `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                           `health`, `unmanaged`, `none` and `all`.
                         items:
                           description: |-
@@ -2805,6 +2808,7 @@ spec:
                             - all
                             - world
                             - cluster
+                            - cluster-mesh
                             - host
                             - init
                             - ingress
@@ -3059,12 +3063,12 @@ spec:
                     or delete strings based on labels. Labels are not required to be
                     unique, multiple rules can have overlapping or identical labels.
                   items:
-                    description: Label is the Cilium's representation of a container label.
+                    description: Label is Cilium's representation of a label.
                     properties:
                       key:
                         type: string
                       source:
-                        description: 'Source can be one of the above values (e.g.: LabelSourceContainer).'
+                        description: 'Source can be one of the above values (e.g.: LabelSourceK8s).'
                         type: string
                       value:
                         type: string
@@ -3481,7 +3485,7 @@ spec:
                           description: |-
                             ToEntities is a list of special entities to which the endpoint subject
                             to the rule is allowed to initiate connections. Supported entities are
-                            `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                            `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                             `health`, `unmanaged`, `none` and `all`.
                           items:
                             description: |-
@@ -3492,6 +3496,7 @@ spec:
                               - all
                               - world
                               - cluster
+                              - cluster-mesh
                               - host
                               - init
                               - ingress
@@ -4453,7 +4458,7 @@ spec:
                           description: |-
                             ToEntities is a list of special entities to which the endpoint subject
                             to the rule is allowed to initiate connections. Supported entities are
-                            `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                            `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                             `health`, `unmanaged`, `none` and `all`.
                           items:
                             description: |-
@@ -4464,6 +4469,7 @@ spec:
                               - all
                               - world
                               - cluster
+                              - cluster-mesh
                               - host
                               - init
                               - ingress
@@ -5062,7 +5068,7 @@ spec:
                           description: |-
                             FromEntities is a list of special entities which the endpoint subject
                             to the rule is allowed to receive connections from. Supported entities are
-                            `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                            `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                             `health`, `unmanaged`, `none` and `all`.
                           items:
                             description: |-
@@ -5073,6 +5079,7 @@ spec:
                               - all
                               - world
                               - cluster
+                              - cluster-mesh
                               - host
                               - init
                               - ingress
@@ -5896,7 +5903,7 @@ spec:
                           description: |-
                             FromEntities is a list of special entities which the endpoint subject
                             to the rule is allowed to receive connections from. Supported entities are
-                            `world`, `cluster`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
+                            `world`, `cluster`, `cluster-mesh`, `host`, `remote-node`, `kube-apiserver`, `ingress`, `init`,
                             `health`, `unmanaged`, `none` and `all`.
                           items:
                             description: |-
@@ -5907,6 +5914,7 @@ spec:
                               - all
                               - world
                               - cluster
+                              - cluster-mesh
                               - host
                               - init
                               - ingress
@@ -6161,12 +6169,12 @@ spec:
                       or delete strings based on labels. Labels are not required to be
                       unique, multiple rules can have overlapping or identical labels.
                     items:
-                      description: Label is the Cilium's representation of a container label.
+                      description: Label is Cilium's representation of a label.
                       properties:
                         key:
                           type: string
                         source:
-                          description: 'Source can be one of the above values (e.g.: LabelSourceContainer).'
+                          description: 'Source can be one of the above values (e.g.: LabelSourceK8s).'
                           type: string
                         value:
                           type: string

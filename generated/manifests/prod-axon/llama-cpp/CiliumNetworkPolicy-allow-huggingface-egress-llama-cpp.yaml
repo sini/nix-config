@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-huggingface-egress-llama-cpp
+  namespace: ai
+spec:
+  description: Allow llama-cpp to fetch GGUF weights from HuggingFace.
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      den.ai/engine: llama-cpp

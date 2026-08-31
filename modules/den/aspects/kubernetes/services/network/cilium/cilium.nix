@@ -69,6 +69,17 @@
             values = {
               namespaceOverride = "kube-system";
 
+              # Kernel 7.2 tightened bpf_set_retval's argument validation, so
+              # the agent's runtime probe for it — which passes the context
+              # pointer in R1 — is now rejected by the verifier, and cilium
+              # turns that unexpected error into a startup fatal: every agent
+              # crashloops and the node is left without a CNI. Fixed upstream by
+              # b73ca6e8d, which detects the helper via CO-RE instead; it sits
+              # on the v1.20 branch 21 commits past v1.20.1 and is in no release
+              # yet (cilium/cilium#48016). Run the agent from the branch build
+              # until the chart carries v1.20.2.
+              image.override = "quay.io/cilium/cilium-ci:cb24a125d75532b4be7f2e70ee774f57be9a19ec@sha256:1729a8cd055e10f650526587eaed4ed8fc294162c132b20643c01dff1e0c67b7";
+
               # Cluster identity
               cluster = {
                 inherit (environment) name;

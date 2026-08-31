@@ -42,6 +42,8 @@ spec:
               value: gpt-oss:20b
             - name: HINDSIGHT_API_LLM_PROVIDER
               value: ollama
+            - name: HINDSIGHT_API_LLM_REASONING_EFFORT
+              value: low
             - name: HINDSIGHT_API_LOG_LEVEL
               value: info
             - name: HINDSIGHT_API_PORT
