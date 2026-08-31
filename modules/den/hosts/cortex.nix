@@ -25,6 +25,8 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
+
+      applications.dev.mux.herdr-pair.pairs.sini = [ "theutz" ];
     };
   };
 

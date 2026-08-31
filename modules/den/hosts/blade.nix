@@ -17,10 +17,6 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
-
-      # vic may attach sini's live herdr `pair` session (his key lands on sini's
-      # account behind a forced herdr-attach command). See applications.dev.mux.herdr-pair.
-      applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
     };
   };
 
