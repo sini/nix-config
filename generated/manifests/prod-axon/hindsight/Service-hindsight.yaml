@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: hindsight
+    app.kubernetes.io/name: hindsight
+    app.kubernetes.io/service: hindsight
+  name: hindsight
+  namespace: ai
+spec:
+  ports:
+    - name: http
+      port: 8888
+      protocol: TCP
+      targetPort: 8888
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: hindsight
+    app.kubernetes.io/name: hindsight
+  type: ClusterIP

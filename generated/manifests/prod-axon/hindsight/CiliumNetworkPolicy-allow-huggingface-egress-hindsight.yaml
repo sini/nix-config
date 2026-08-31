@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-huggingface-egress-hindsight
+  namespace: ai
+spec:
+  description: Allow hindsight to fetch the local embedder/reranker from HuggingFace on first boot.
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hindsight

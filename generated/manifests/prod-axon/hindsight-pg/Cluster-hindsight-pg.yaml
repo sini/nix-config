@@ -1,0 +1,27 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: hindsight-pg
+  namespace: ai
+spec:
+  affinity:
+    podAntiAffinityType: required
+  backup:
+    volumeSnapshot:
+      className: longhorn-backup-nfs
+  bootstrap:
+    initdb:
+      database: hindsight
+      owner: hindsight
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vector;
+        - CREATE EXTENSION IF NOT EXISTS pg_trgm;
+      secret:
+        name: hindsight-pg-hindsight-password
+  inheritedMetadata:
+    labels:
+      recurring-job-group.longhorn.io/db-local-snap: enabled
+  instances: 2
+  storage:
+    size: 10Gi
+    storageClass: longhorn-single

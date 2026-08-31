@@ -147,6 +147,11 @@
       services.media.romm
       services.media.komga
 
+      # ai — Hindsight agent memory bank. Cluster-internal in this wave: no
+      # route, no service domain (see hindsight.nix on why exposure is separate).
+      services.ai.hindsight-pg
+      services.ai.hindsight
+
       # dev — Coder workspace platform (SP1 control plane)
       services.dev.coder.coder-pg
       services.dev.coder.coder

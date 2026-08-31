@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-extraction-egress-hindsight
+  namespace: ai
+spec:
+  description: Allow hindsight to reach the ollama extraction endpoint(s).
+  egress:
+    - toCIDR:
+        - 10.10.10.1/32
+      toPorts:
+        - ports:
+            - port: "11434"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hindsight
