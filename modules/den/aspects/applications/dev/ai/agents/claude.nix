@@ -255,6 +255,14 @@
                     }
                   ];
                 }
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh SessionStart || true";
+                    }
+                  ];
+                }
               ];
               CwdChanged = [
                 {
@@ -279,6 +287,46 @@
                     {
                       type = "command";
                       command = "bash ${config.home.homeDirectory}/.claude/subagent-stop.sh || true";
+                    }
+                  ];
+                }
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh SubagentStop || true";
+                    }
+                  ];
+                }
+              ];
+
+              # PROBE ONLY — capture the raw stdin payload per event, emit NOTHING.
+              # The binary carries transcript_path, session_id, model_id, agent_type and
+              # teammate_id as payload field names (measured, claude-code 2.1.246, negative
+              # control 0), but which EVENTS carry which FIELDS is not statically derivable —
+              # no payload-construction site co-locates them. A budget reader needs
+              # transcript_path (context %) and model_id (the divisor, where a wrong value is
+              # a silent 5x error), so it must be shown they arrive before anything is built
+              # on them. TeammateIdle is wired here for the same reason and has no other
+              # wiring anywhere: it is present in the binary (16 occurrences) but has never
+              # fired into a log, so whether it fires at all under teammateMode=in-process is
+              # unmeasured. Retire this block once the payloads are captured.
+              SubagentStart = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh SubagentStart || true";
+                    }
+                  ];
+                }
+              ];
+              TeammateIdle = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/hook-probe.sh TeammateIdle || true";
                     }
                   ];
                 }
@@ -331,6 +379,34 @@
             An attempt that failed and wrote NOTHING looks identical from here to work never
             started. If the tree is unchanged, that is "no artefact", never "no attempt".
             MSG
+            exit 0
+          '';
+        };
+
+        # Hook payload PROBE. Measurement only: it writes to a log and emits NOTHING on
+        # stdout, so it injects no context and cannot perturb what it measures.
+        #
+        # ★ IT LOGS ON EVERY INVOCATION, INCLUDING AN EMPTY PAYLOAD. An event that fires
+        # with no payload and an event that never fires are different findings, and they
+        # are indistinguishable from a log that only records non-empty reads — the same
+        # absence-reads-as-clean shape the SubagentStop message above exists to refuse.
+        # EMPTY is therefore written explicitly rather than skipped.
+        #
+        # The log holds cwd, session ids and event metadata. It is local, unsynced, and
+        # is meant to be deleted with this block.
+        home.file.".claude/hook-probe.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            set -uo pipefail
+            log="$HOME/.claude/hook-payloads.jsonl"
+            mkdir -p "$(dirname "$log")"
+            # `cat` with no stdin would block on a tty; hooks always get a pipe, and the
+            # -t guard keeps a hand-run of this script from hanging.
+            payload=""
+            if [ ! -t 0 ]; then payload="$(cat 2>/dev/null || true)"; fi
+            printf '%s\t%s\t%s\n' \
+              "$(date -Is)" "''${1:-unknown}" "''${payload:-EMPTY}" >> "$log" 2>/dev/null || true
             exit 0
           '';
         };
