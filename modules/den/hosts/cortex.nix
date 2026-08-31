@@ -60,6 +60,9 @@
       services.storage.media-data-share
 
       applications.media.easyeffects
+
+      applications.dev.mux.herdr-pair
+
     ];
 
     nixos = {
