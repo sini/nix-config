@@ -18,8 +18,25 @@
     service-domains = [ "garage-ui" ];
 
     age-secrets =
-      { environment, ... }:
+      { cluster, environment, ... }:
       {
+        # JWT signing key for the UI's own session cookies. Owned here rather
+        # than left to the chart: garage-ui's secret template mints one with
+        # `genPrivateKey "ed25519"` guarded by a `lookup` for an existing
+        # Secret, and `lookup` always returns empty under `helm template` — which
+        # is how nixidy renders. The guard therefore never fires here, so every
+        # full nixidy-sync minted a NEW key and committed it, silently rotating
+        # the live one and dropping every session. Cluster-scoped like the other
+        # garage secrets: nothing host-side consumes it.
+        age.secrets.garage-ui-jwt-key = {
+          rekeyFile = cluster.secretPath + "/garage/ui-jwt-key.age";
+          generator.script = "ed25519-private-key";
+          sopsOutput = {
+            file = "garage";
+            key = "ui-jwt-key";
+          };
+        };
+
         # Shares its rekeyFile + generator with the kanidm garage-ui client's
         # basicSecretFile, so both sides resolve to the same value (the longhorn
         # idiom). The host-side age secret is auto-derived by kanidm.nix for every
@@ -55,6 +72,13 @@
             chart = charts.noooste.garage-ui;
             values = {
               config = {
+                # Point the chart at the Secret declared below. Setting this
+                # name switches OFF both of the chart's jwt-key emit branches,
+                # so the key is ours end to end and stable across renders.
+                auth.jwt_private_key_secret = {
+                  name = "garage-ui-jwt-key";
+                  key = "jwt-key.pem";
+                };
                 server = {
                   # Informational external URL (the chart only requires it for its
                   # own OIDC, which we leave off; set correctly for hygiene).
@@ -125,9 +149,19 @@
               };
             };
 
-            secrets.garage-ui-oidc-client-secret = {
-              type = "Opaque";
-              stringData.client-secret = config.age.secrets.garage-ui-oidc-client-secret.sopsRef;
+            secrets = {
+              garage-ui-oidc-client-secret = {
+                type = "Opaque";
+                stringData.client-secret = config.age.secrets.garage-ui-oidc-client-secret.sopsRef;
+              };
+
+              # Same name the chart used, so the live Secret is replaced in
+              # place rather than renamed. Its VALUE changes once on this
+              # deploy (active UI sessions drop), then never again.
+              garage-ui-jwt-key = {
+                type = "Opaque";
+                stringData."jwt-key.pem" = config.age.secrets.garage-ui-jwt-key.sopsRef;
+              };
             };
 
             # garage-ui drives the Garage admin API only (3903). Once any egress

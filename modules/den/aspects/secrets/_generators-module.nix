@@ -166,6 +166,13 @@ in
         ${pkgs.jq}/bin/jq -cn --arg reg ${lib.escapeShellArg registry} --arg auth "$auth" '{auths: {($reg): {auth: $auth}}}'
       '';
 
+    # PKCS#8 ed25519 private key in PEM form — byte-compatible with what helm's
+    # `genPrivateKey "ed25519"` emits, so it can replace a chart-minted signing
+    # key with one this repo owns.
+    ed25519-private-key =
+      { pkgs, ... }:
+      "${pkgs.openssl}/bin/openssl genpkey -algorithm ed25519";
+
     environment-file =
       {
         decrypt,
