@@ -39,7 +39,20 @@
             rekeyFile = environment.secretPath + "/hindsight-pg/dsn.age";
             generator.script = "template-file";
             generator.dependencies = [ config.age.secrets.hindsight-pg-hindsight-password ];
-            settings.template = "postgresql://hindsight:%hindsight-pg-hindsight-password%@hindsight-pg-rw.ai:5432/hindsight?sslmode=require";
+            # Fully qualified on purpose. Measured from a pod in this namespace:
+            # `hindsight-pg-rw.ai` gets NXDOMAIN, `hindsight-pg-rw.ai.svc.cluster.local`
+            # returns the ClusterIP; hindsight's psycopg2 failed on the short form
+            # with "could not translate host name" even with the primary Ready and
+            # the -rw service carrying an endpoint.
+            #
+            # Why the short form fails here is NOT established. The obvious guess —
+            # that `ai` collides with the real .ai TLD, so the Corefile's
+            # `forward . 1.1.1.1` answers it authoritatively — does not survive its
+            # control: `coder-pg-rw.coder` resolves exactly the same way (NXDOMAIN
+            # queried absolutely) and coderd connects fine. So the FQDN is used
+            # because it is the form measured to work, not because the mechanism is
+            # understood. Don't shorten it back without re-measuring.
+            settings.template = "postgresql://hindsight:%hindsight-pg-hindsight-password%@hindsight-pg-rw.ai.svc.cluster.local:5432/hindsight?sslmode=require";
             sopsOutput = {
               file = "hindsight-pg";
               key = "dsn";
