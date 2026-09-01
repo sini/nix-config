@@ -311,6 +311,21 @@
               # the recalled text is present before its first tool call. If the mcp_tool handler
               # does not fire, the command arm below still delivers the instruction, so the floor
               # is the pre-existing behaviour rather than nothing.
+              # ★★ THE 90s TIMEOUT IS MEASURED, NOT PADDING. From hindsight's OWN server trace
+              # on 2026-09-01, not from a client stopwatch:
+              #     [2] parallel retrieval          0.029s  -> 289 candidates
+              #     [4] reranking [cross-encoder]  24.036s  -> 289 scored
+              #     total                          24.128s
+              # Recall latency is the CROSS-ENCODER, not the LLM and not the network: the
+              # reranker scores every candidate to return five. The first version allowed 20s,
+              # which under that load did not merely risk failing — it failed EVERY time.
+              # ★ And it fails toward SILENCE. A timed-out recall leaves the agent starting with
+              # no standing law and nothing to say so, which is the defect this block exists to
+              # remove. A slow dispatch beats a quiet one.
+              # ★ It gets SLOWER AS THE BANK GROWS — candidates scale with the corpus and the
+              # reranker scales with candidates, so session capture moves this number. Re-read
+              # the SERVER trace before trusting 90; a client stopwatch cannot separate rerank
+              # time from queue wait, and under a backfill it is nearly all queue wait.
               SubagentStart = [
                 {
                   matcher = "gen-scout";
@@ -328,7 +343,7 @@
                         ];
                         tags_match = "any_strict";
                       };
-                      timeout = 20;
+                      timeout = 90;
                     }
                   ];
                 }
@@ -348,7 +363,7 @@
                         ];
                         tags_match = "any_strict";
                       };
-                      timeout = 20;
+                      timeout = 90;
                     }
                   ];
                 }
@@ -368,7 +383,7 @@
                         ];
                         tags_match = "any_strict";
                       };
-                      timeout = 20;
+                      timeout = 90;
                     }
                   ];
                 }
@@ -388,7 +403,7 @@
                         ];
                         tags_match = "any_strict";
                       };
-                      timeout = 20;
+                      timeout = 90;
                     }
                   ];
                 }

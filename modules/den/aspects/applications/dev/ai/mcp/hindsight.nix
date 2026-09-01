@@ -104,9 +104,22 @@
           O3 must include a run under LOAD, not just a quiet one. Measured
           2026-08-31 during a backfill: recall exceeded 20s and the dataplane
           then refused connections for 135s. The script fails open, so the cost
-          of that is not a broken session — it is up to 17s of dead time per
-          prompt (2 health + 5 stats + 10 recall) followed by silence, which is
-          indistinguishable from a bank that had nothing to say.
+          of that is not a broken session — it is dead time per prompt followed
+          by silence, which is indistinguishable from a bank that had nothing
+          to say.
+
+          THE BUDGET IS NOW 75s WORST CASE (5 health + 10 stats + 60 recall),
+          up from 17s. Not padding: hindsight's own server trace on 2026-09-01
+          shows one recall at 24.128s, of which 24.036s is the CROSS-ENCODER
+          scoring 289 candidates to return five. Retrieval was 0.029s. The old
+          10s recall budget sat BELOW that floor, so under load it would time
+          out every time — spending 10s to inject nothing, the worst of both.
+          This makes the ceiling honest rather than making it fast, and it is
+          precisely why this hook stays off until O3 measures what 75s per
+          prompt actually costs.
+
+          The number moves as the bank grows: candidates scale with the corpus,
+          reranking scales with candidates, and session capture adds corpus.
         '';
       };
 
@@ -409,8 +422,8 @@
             # Preflight, cheapest first. Without these a cold or empty bank costs
             # a full recall round-trip on every prompt and injects a header with
             # nothing under it.
-            ${curl} -sS -m 2 -o /dev/null "$base/health" 2>/dev/null || exit 0
-            nodes=$(${curl} -sS -m 5 "$base/v1/default/banks/$bank/stats" 2>/dev/null \
+            ${curl} -sS -m 5 -o /dev/null "$base/health" 2>/dev/null || exit 0
+            nodes=$(${curl} -sS -m 10 "$base/v1/default/banks/$bank/stats" 2>/dev/null \
               | ${jq} -r '.total_nodes // 0' 2>/dev/null) || exit 0
             [ "''${nodes:-0}" -gt 0 ] 2>/dev/null || exit 0
 
@@ -433,7 +446,7 @@
               '{query:$q, tags:["active"], tags_match:"any", budget:"low",
                 min_scores:{reranker:0.5}}' 2>/dev/null) || exit 0
 
-            resp=$(${curl} -sS -m 10 -X POST \
+            resp=$(${curl} -sS -m 60 -X POST \
               "$base/v1/default/banks/$bank/memories/recall" \
               -H 'Content-Type: application/json' -d "$body" 2>/dev/null) || exit 0
 
