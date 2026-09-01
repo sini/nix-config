@@ -38,12 +38,12 @@
 
             contextSize = lib.mkOption {
               type = lib.types.ints.positive;
-              default = 16384;
+              default = 131072;
               description = ''
-                Prompt context in tokens available to ONE request. Both models
-                here are natively 262K, far more than an APU sharing 64 GB with
-                the rest of the cluster should reserve; KV cache grows linearly
-                with this and comes out of the same pool as the weights.
+                Prompt context in tokens available to ONE request. KV cache
+                grows linearly with this and comes out of the same pool as the
+                weights, so it is not free — but sizing it below what callers
+                actually send fails as a 500 rather than as truncation.
 
                 This is NOT LLAMA_ARG_CTX_SIZE directly — see parallelSlots.
               '';
@@ -68,20 +68,28 @@
             # relationship between one setting and a default chosen elsewhere.
             parallelSlots = lib.mkOption {
               type = lib.types.ints.positive;
-              default = 4;
+              default = 2;
               description = ''
                 Concurrent request slots (LLAMA_ARG_N_PARALLEL). Total KV pool
                 is contextSize * parallelSlots, so each slot gets a real
                 contextSize rather than competing for a shared one.
 
-                Raising this past ~4 buys little on an APU: measured aggregate
-                throughput on a 780M was 23.5 tok/s at 1 concurrent request,
+                That product is the whole budget, and how it is SLICED is free:
+                a 262144-token pool costs the same as 1x262144, 2x131072 or
+                4x65536. Only the per-request ceiling and the concurrency move.
+                It is sliced 2x131072 here because the observed failures were
+                context failures, not queueing — hindsight sends whole
+                documents, and in verbatim mode the model must reproduce its
+                input, so one request costs roughly twice the document.
+
+                Slots are the wrong axis to buy throughput on anyway: measured
+                aggregate on a 780M was 23.5 tok/s at 1 concurrent request,
                 32.4 at 2 and 40.5 at 4 — 1.72x for 4x the load, while
-                per-stream rate fell 23.5 -> 10.1. Decode is bandwidth-bound
-                and these are fine-grained MoE, so batching amortizes weight
-                reads poorly (different sequences activate different experts).
-                Add REPLICAS on other nodes instead: each brings its own memory
-                bus and scales ~linearly at full per-stream speed.
+                per-stream fell 23.5 -> 10.1. Decode is bandwidth-bound and
+                this is a fine-grained MoE, so batching amortizes weight reads
+                poorly (different sequences activate different experts). Add
+                REPLICAS on other nodes instead: each brings its own memory bus
+                and scales ~linearly at full per-stream rate.
               '';
             };
 
@@ -164,8 +172,17 @@
       "gpt-oss" = {
         model = "ggml-org/gpt-oss-20b-GGUF:MXFP4";
         modelAlias = "gpt-oss-20b";
-        # 12 GB of weights + KV for the full 4-slot pool + compute buffers.
-        memoryLimit = "32Gi";
+
+        # 131072 is this model's NATIVE context — asking for more buys no
+        # usable context without RoPE scaling. (The 262144 on cortex-cuda is
+        # right for the model there; it is a per-model number, not a target.)
+        # Sliced 2x131072, so the pool is 262144 either way.
+        #
+        # 12 GB of weights + ~6 GB KV for that pool + compute buffers. The APU
+        # can afford it precisely because it is a UMA part: 62 GB addressable
+        # against the 24 GB of the discrete card, which is this hardware's one
+        # advantage over it.
+        memoryLimit = "40Gi";
 
         # One per GPU node. Sole instance, so the whole budget is available:
         # three separate memory buses at full per-stream rate, which is where
