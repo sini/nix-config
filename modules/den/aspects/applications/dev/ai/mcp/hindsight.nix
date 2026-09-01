@@ -199,6 +199,16 @@
         renderer = "${config.home.homeDirectory}/.claude/hindsight-episode.jq";
       in
       {
+        # Backfill tool for sessions that predate the hook, or that ended without
+        # firing it. Overridden with THIS host's endpoint and bank rather than
+        # carrying its own copy of them — the package's defaults exist so it runs
+        # standalone, not so there are two places to change the address.
+        home.packages = [
+          (pkgs.local.hindsight-backfill.override {
+            inherit (cfg) endpoint bank;
+          })
+        ];
+
         # Transcript renderer, shared by the SessionEnd hook and the disk sweep so
         # both produce the SAME shape — a corpus assembled by two renderers is two
         # corpora. Derived from upstream's `transcript.ts`, which this deployment
@@ -346,9 +356,17 @@
             # document_id is the SESSION id and update_mode is replace, so this is
             # idempotent: the SessionEnd hook and the disk sweep are the same write,
             # and running either twice replaces rather than duplicates.
-            ${jq} -nc --rawfile c "$turns" \
+            # The HOOK wants fire-and-forget: a session close must not wait on 30
+            # chunks of extraction. The BACKFILL wants the opposite — one session
+            # at a time, so progress is observable, an interrupt loses at most one
+            # session, and 90 of them do not land on the queue at once. Same write
+            # path, one switch.
+            async=true
+            [ "''${HINDSIGHT_ARCHIVE_SYNC:-0}" = "1" ] && async=false
+
+            ${jq} -nc --rawfile c "$turns" --argjson async "$async" \
               --arg s "$session" --arg p "$project" --arg st "$strategy" \
-              '{async: true, items: [{
+              '{async: $async, items: [{
                   content: $c,
                   context: "One agent working session, rendered transcript.",
                   document_id: $s,
@@ -357,7 +375,15 @@
                   tags: ["tier:episode", ("project:" + $p), ("session:" + $s)]
                 }]}' > "$req" 2>/dev/null || fail "build"
 
-            ${curl} -sS -m 30 -X POST "$base/v1/default/banks/$bank/memories" \
+            # The timeout follows the mode. Async returns as soon as the retain is
+            # ACCEPTED, so 30s is generous. Sync returns when EXTRACTION FINISHES,
+            # and one real 5.8 MB session measured ~10 minutes across ~30 chunks —
+            # 30s there would abort every session and log a "post" bail that looks
+            # like the service is down.
+            timeout=30
+            [ "$async" = "false" ] && timeout=3600
+
+            ${curl} -sS -m "$timeout" -X POST "$base/v1/default/banks/$bank/memories" \
               -H 'Content-Type: application/json' --data-binary @"$req" \
               >/dev/null 2>&1 || fail "post"
             exit 0
