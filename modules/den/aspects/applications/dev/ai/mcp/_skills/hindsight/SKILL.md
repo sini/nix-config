@@ -26,14 +26,26 @@ Do NOT recall for pure code mechanics with no policy dimension.
 
 ## How to read a result
 
-Results are stored **verbatim** — the text is the rule exactly as authored, not a
-paraphrase. Treat the wording as load-bearing: "never" is not "prefer not to".
+Check `type` FIRST. A `world` fact is the owner's text stored **verbatim** — the
+rule exactly as authored, not a paraphrase — so treat its wording as load-bearing:
+"never" is not "prefer not to". An `observation` is the engine's synthesis OF
+those facts. It is a pattern worth checking; it is not law and must never be
+quoted as a ruling.
 
-Two fields carry meaning beyond the text:
+The recall hook prints the two under separate headers. The MCP `recall` tool does
+NOT — there you get raw results, and `type` is the only thing distinguishing
+owner law from machine paraphrase. Pass `types: ["world"]` if you want law only.
 
-- `tags` — `active` is current law. `archived` is RETIRED: kept for history, not
-  binding. If a result is tagged `archived`, do not apply it as current policy
-  without checking whether something superseded it.
+Three fields carry meaning beyond the text:
+
+- `type` — `world` is owner-authored. `observation` is synthesised from `world`
+  facts and carries no authority of its own.
+- `tags` — `active` and `archived` are both LAW. `archived` mostly records
+  capacity management, not retirement: a rule was moved out of the always-loaded
+  index because that index has a size budget, which says nothing about whether
+  the rule still binds. Do NOT discount an `archived` result for being archived.
+  Retirement is stated in the text itself — a rule that no longer binds says so,
+  and names what replaced it. Read the text, not the tag.
 - inline `(owner, YYYY-MM-DD)` markers are PROVENANCE — who ruled it and when.
   They are never deadlines or assignments.
 
@@ -45,4 +57,9 @@ rule points at one.
 This bank is curated, not captured. Do NOT retain conversation transcripts,
 session summaries, or self-assessments into it — an agent's account of its own
 work is exactly the material that must stay out. New law enters by the owner
-writing a memory file, which syncs in.
+writing a memory file, which an agent then retains BY HAND — no unit in the
+deployment does it, so the bank is only as reviewed as that run was.
+
+Nothing stops you mechanically. The bank's `mcp_enabled_tools` allowlist is
+unset, so `retain`, `update_bank` and `clear_memories` are all exposed to you.
+This section is the only thing holding that line.
