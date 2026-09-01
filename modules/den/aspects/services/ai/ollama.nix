@@ -73,7 +73,7 @@
 
             loadModels = [
               # "deepcoder:14b"
-              # "gpt-oss:20b"
+              "gpt-oss:20b"
               # "deepseek-coder:1.3b-instruct-q4_K_M"
               # "codellama:7b-instruct-q2_K"
               # "qwen2.5-coder:14b"
