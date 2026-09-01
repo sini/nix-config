@@ -305,25 +305,35 @@
                     }
                   ];
                 }
-                {
-                  hooks = [
-                    {
-                      type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh SubagentStop || true";
-                    }
-                  ];
-                }
+                # ★ THE budget.sh SubagentStop CALL IS RETIRED — measured 2026-09-01 to deliver
+                # NOTHING to the model in any output shape (see the PreToolUse block below).
+                # It is not moved here but replaced there, because a budget reading is only
+                # actionable BEFORE a dispatch, not after one ends.
+                # ★★ subagent-stop.sh ABOVE IS ON THE SAME DEAD CHANNEL and is deliberately
+                # left wired: it still writes its log, which is what proved the firing. Its
+                # tree-first text has never reached a model and needs a live beat — the
+                # natural one is PreToolUse/Agent, since "never re-dispatch, read the tree
+                # first" is actionable exactly when the next dispatch is about to happen.
+                # Carried as its own change rather than folded in here.
               ];
 
-              # The DISPATCH GATE fires here, because SubagentStart is the only event that
-              # runs at the moment a new unit of work is about to start. The 70% context rule
-              # has nowhere else to bite.
-              SubagentStart = [
+              # ★★ THE DISPATCH GATE MOVED TO PreToolUse/Agent, MEASURED 2026-09-01. It was on
+              # SubagentStart, whose output NEVER REACHED THE MODEL — and neither did
+              # SubagentStop's. Armed probe over 10 firings: a SubagentStop hook emitting
+              # `systemMessage` and `hookSpecificOutput.additionalContext` produced ZERO
+              # attachment records (live control, SessionStart => 7; the hook's own logfile
+              # proves it FIRED every time). The failure was silent for the whole life of the
+              # wiring: a budget line was computed correctly and delivered to nobody.
+              # PreToolUse/Agent is strictly better than SubagentStart even setting delivery
+              # aside — it fires BEFORE the dispatch rather than after it starts, which is
+              # where a "no new dispatch" gate has to bite to prevent anything.
+              PreToolUse = [
                 {
+                  matcher = "Agent";
                   hooks = [
                     {
                       type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh SubagentStart || true";
+                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh PreToolUse || true";
                     }
                   ];
                 }
@@ -489,8 +499,23 @@
               gate="CLEAN CLOSEOUT (7d>=95) - unhurried; finish in-flight, no new dispatch"
             fi
 
-            printf 'BUDGET %s · ctx %s%% · 5h %s%% (%sm) · 7d %s%%%s%s\n' \
-              "$event" "$ctx" "$five" "$mins" "$seven" "$stale" "''${gate:+ · GATE: $gate}"
+            line=$(printf 'BUDGET %s · ctx %s%% · 5h %s%% (%sm) · 7d %s%%%s%s' \
+              "$event" "$ctx" "$five" "$mins" "$seven" "$stale" "''${gate:+ · GATE: $gate}")
+
+            # ★ DELIVERY DIFFERS BY EVENT, MEASURED 2026-09-01 (claude-code 2.1.246), and
+            # plain stdout reaches the model on SessionStart ONLY. Armed probe, 10 fires:
+            # a SubagentStop hook emitting `systemMessage` AND
+            # `hookSpecificOutput.additionalContext` produced ZERO deliveries — the event
+            # has no attachment record at all (control: SessionStart => 7). The same
+            # `additionalContext` shape on PreToolUse DID land. So this is not a schema
+            # problem on SubagentStop; that event cannot reach the model in any shape.
+            case "$event" in
+              PreToolUse*)
+                printf '%s' "$line" \
+                  | jq -Rs '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:.}}'
+                ;;
+              *) printf '%s\n' "$line" ;;
+            esac
             exit 0
           '';
         };
