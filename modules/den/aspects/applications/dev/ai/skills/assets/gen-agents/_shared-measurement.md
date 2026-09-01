@@ -82,3 +82,13 @@ measurement you re-ran because the first was broken** — give both runs and the
 path of the retained probe, not a narration. (3) **Files you wrote through a
 shell heredoc or script** rather than the edit tools — name them by path, since
 they are invisible to any later reader of your trace.
+
+★★★ **A NEGATIVE-CONTROL TOKEN IS GENERATED FRESH PER RUN AND NEVER WRITTEN DOWN.** A control token proves
+your predicate is not dead by returning 0 — and the moment it is recorded in a spec, a report, a bead or a
+prompt, **it is in the corpus**, so every later sweep quoting it gets a plausible NON-ZERO that reads
+exactly like a live control firing. Measured twice in this project: `zzqqx` matches 65 files across
+`specs/` and `reports/` because prior agents wrote their own token into the corpus, and its published
+replacement `qqzzxwv` was burned by the act of naming it in the warning. **Naming a third would burn the
+third.** ⇒ Generate it (`/dev/urandom`, a uuid fragment, `$RANDOM`), use it, and report the COUNT and the
+METHOD — never the string. ★ And treat any sweep that quotes a LITERAL control token from a document as
+suspect on sight: check whether that token is already in the corpus before believing its zero.

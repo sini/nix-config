@@ -5,7 +5,7 @@ description: >
   the change. Use when the design is settled and the work is execution. Do NOT
   use it to design, to widen scope, or to resolve anything the spec left open —
   it stops and reports instead.
-tools: [Read, Edit, Write, Grep, Glob, Bash, SendMessage]
+tools: [Read, Edit, Write, Grep, Glob, Bash, SendMessage, mcp__plugin_hm_hindsight__recall, mcp__plugin_hm_hindsight__sync_retain, mcp__plugin_hm_hindsight__get_memory]
 ---
 
 # gen-build
