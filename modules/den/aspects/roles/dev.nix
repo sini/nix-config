@@ -29,6 +29,9 @@
       applications.dev.ai.mcp.codegraph
       applications.dev.ai.mcp.codebase-memory
       applications.dev.ai.mcp.serena
+      # Remote MCP over the cluster's private LoadBalancer — read-only against
+      # the den-law bank; no retain path is wired (see the aspect).
+      applications.dev.ai.mcp.hindsight
       applications.dev.ai.agents.claude
       applications.dev.ai.agents.antigravity-cli
       applications.dev.ai.agents.hermes

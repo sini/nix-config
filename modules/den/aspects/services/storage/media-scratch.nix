@@ -25,6 +25,23 @@ in
       }
     ];
 
+    # NFS server state. Two reasons, either sufficient on its own:
+    #
+    # 1. Lock recovery. sm/sm.bak/state are the NSM peer records rpc.statd uses
+    #    to reclaim locks after a reboot; wiped, clients holding locks are never
+    #    notified and recovery is silent.
+    #
+    # 2. A boot race that took the media stack down on 2026-08-31. This host
+    #    wipes / on boot, so /var/lib/nfs starts EMPTY — and rpc.mountd logged
+    #    "couldn't open /var/lib/nfs/etab" and exited 0 (so systemd recorded the
+    #    unit as started, and nothing restarted it). nfsd stayed up, so 2049 kept
+    #    accepting connections and the host looked healthy to a port check, while
+    #    every MOUNT RPC was refused. Result: every pod mounting media-scratch-nfs
+    #    hung in ContainerCreating with no events, indefinitely. On a host that
+    #    keeps /var/lib/nfs, a stale etab from the previous boot is present and
+    #    mountd opens it regardless of when exportfs runs.
+    persist.directories = [ "/var/lib/nfs" ];
+
     nixos = {
       # uid/gid sourced from users.deterministicIds registry (media = 1027:65536).
       users.users.media = {

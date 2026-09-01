@@ -68,15 +68,30 @@
           acc: e: if (e ? commands) then acc // e.commands else acc
         ) { } extensionsList;
 
+        # Two transports. A server declaring `url` is remote — claude-code
+        # connects over HTTP and there is no process to spawn, so `command` is
+        # absent and forcing type=stdio onto it produces an entry the client
+        # cannot use. Everything else is a local process. Keyed on `url` rather
+        # than an explicit flag so existing stdio aspects need no change.
         claudeMcpServers = lib.foldl' (
           acc: e:
           acc
-          // (lib.mapAttrs (_name: server: {
-            type = "stdio";
-            inherit (server) command;
-            args = server.args or [ ];
-            env = server.env or { };
-          }) (e.mcpServers or { }))
+          // (lib.mapAttrs (
+            _name: server:
+            if server ? url then
+              {
+                type = server.type or "http";
+                inherit (server) url;
+              }
+              // lib.optionalAttrs (server ? headers) { inherit (server) headers; }
+            else
+              {
+                type = "stdio";
+                inherit (server) command;
+                args = server.args or [ ];
+                env = server.env or { };
+              }
+          ) (e.mcpServers or { }))
         ) { } mcpExts;
 
         claudeMarketplaces = lib.foldl' (

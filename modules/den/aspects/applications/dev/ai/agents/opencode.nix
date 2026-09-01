@@ -39,11 +39,20 @@
           mcpMap:
           lib.mapAttrs (
             _: server:
-            lib.filterAttrs (_: v: v != [ ] && v != { }) {
-              inherit (server) command;
-              args = server.args or [ ];
-              env = server.env or { };
-            }
+            # A server declaring `url` is remote: there is no process to spawn,
+            # so the local shape (which inherits `command`) would fail to
+            # evaluate. opencode spells the two forms type=local/remote.
+            if server ? url then
+              {
+                type = "remote";
+                inherit (server) url;
+              }
+            else
+              lib.filterAttrs (_: v: v != [ ] && v != { }) {
+                inherit (server) command;
+                args = server.args or [ ];
+                env = server.env or { };
+              }
           ) mcpMap;
 
         opencodeConfig = {
