@@ -480,6 +480,23 @@
           '';
         };
 
+        # Every hook that talks to this bank, in one place — READ on prompt, READ on
+        # subagent start, WRITE on session end. They were split across claude.nix and
+        # here, which put the recall query, the tags it filters on, and the tier those
+        # tags are written by in two files that had to be changed together.
+        #
+        # Three arms, three gates, deliberately different: UserPromptSubmit is opt-in
+        # and OFF (a per-prompt cost on an unmet evidence bar), SessionEnd is opt-in
+        # and ON (the write path, with the evidence recorded at its option), and
+        # SubagentStart is UNCONDITIONAL — it is a read, it costs nothing against an
+        # empty bank, and an agent dispatched without its standing law is the failure
+        # this aspect exists to prevent.
+        #
+        # Hook LISTS merge across modules: codebase-memory-mcp.nix contributes its own
+        # SubagentStart command arm and the two combine rather than conflict. Verified
+        # when this moved — the evaluated hook set is byte-identical either side, which
+        # is also what caught the move landing on a bare `SubagentStart` instead of
+        # `hooks.SubagentStart`: it evaluated clean and silently dropped all four.
         programs.claude-code.settings = lib.mkMerge [
           (lib.mkIf cfg.recallHook {
             hooks.UserPromptSubmit = [
@@ -493,6 +510,126 @@
               }
             ];
           })
+          {
+            # ★★★ A SUBAGENT IS STARTING — RECALL INTO ITS OWN CONTEXT, BEFORE ITS FIRST PROMPT.
+            # This is the beat the orchestrator cannot cover: by the time it dispatches, the
+            # brief is already written, so a recall there informs nobody in time and never
+            # reaches the agent. `SubagentStart` injects into the SUBAGENT's context
+            # (docs, hooks#subagentstart) and is the only event that does.
+            # ★★ WHY A HOOK AND NOT AN INSTRUCTION: the agents hold `recall` themselves, and an
+            # instruction to use it is exactly what was measured to fail — 0 recalls across 14
+            # dispatches in one session, with the instruction sitting in context the whole time.
+            # A rule that depends on remembering has now failed twice, measured. This makes it
+            # mechanical.
+            # ★ THE MATCHER IS THE AGENT TYPE, which is what lets each role recall on its OWN
+            # subject with no payload interpolation — the payload carries only `agent_id` and
+            # `agent_type`, never the task prompt, so a per-role query is the available
+            # granularity. The agent refines from there with its own `recall`.
+            # ★ `mcp_tool` is permitted here and carries none of SessionStart's "MCP not yet
+            # connected" caveat, which makes this a better host for an MCP-backed recall.
+            # ★★ VERIFY BEFORE TRUSTING IT — this event fails silently in two ways (see the
+            # PreToolUse block). Read a SUBAGENT's transcript, never the parent's, and confirm
+            # the recalled text is present before its first tool call. If the mcp_tool handler
+            # does not fire, the command arm below still delivers the instruction, so the floor
+            # is the pre-existing behaviour rather than nothing.
+            # ★★ THE 90s TIMEOUT IS MEASURED, NOT PADDING. From hindsight's OWN server trace
+            # on 2026-09-01, not from a client stopwatch:
+            #     [2] parallel retrieval          0.029s  -> 289 candidates
+            #     [4] reranking [cross-encoder]  24.036s  -> 289 scored
+            #     total                          24.128s
+            # Recall latency is the CROSS-ENCODER, not the LLM and not the network: the
+            # reranker scores every candidate to return five. The first version allowed 20s,
+            # which under that load did not merely risk failing — it failed EVERY time.
+            # ★ And it fails toward SILENCE. A timed-out recall leaves the agent starting with
+            # no standing law and nothing to say so, which is the defect this block exists to
+            # remove. A slow dispatch beats a quiet one.
+            # ★ It gets SLOWER AS THE BANK GROWS — candidates scale with the corpus and the
+            # reranker scales with candidates, so session capture moves this number. Re-read
+            # the SERVER trace before trusting 90; a client stopwatch cannot separate rerank
+            # time from queue wait, and under a backfill it is nearly all queue wait.
+            hooks.SubagentStart = [
+              {
+                matcher = "gen-scout";
+                hooks = [
+                  {
+                    type = "mcp_tool";
+                    server = "plugin_hm_hindsight";
+                    tool = "recall";
+                    input = {
+                      query = "measurement law, absence claims and live controls, grep and predicate traps, tool behaviours that lie, burned control tokens, shell idioms that fail silently";
+                      tags = [
+                        "tier:law"
+                        "tier:trap"
+                        "role:scout"
+                      ];
+                      tags_match = "any_strict";
+                    };
+                    timeout = 90;
+                  }
+                ];
+              }
+              {
+                matcher = "gen-gate";
+                hooks = [
+                  {
+                    type = "mcp_tool";
+                    server = "plugin_hm_hindsight";
+                    tool = "recall";
+                    input = {
+                      query = "adversarial gate rubric, prior art sweeps, refutation discipline, second independent pass, coordinate and citation checking";
+                      tags = [
+                        "tier:law"
+                        "tier:trap"
+                        "role:gate"
+                      ];
+                      tags_match = "any_strict";
+                    };
+                    timeout = 90;
+                  }
+                ];
+              }
+              {
+                matcher = "gen-spec";
+                hooks = [
+                  {
+                    type = "mcp_tool";
+                    server = "plugin_hm_hindsight";
+                    tool = "recall";
+                    input = {
+                      query = "spec form and acceptance oracles, ADR law and amendment policy, owner rulings, forks that must not be settled by an agent";
+                      tags = [
+                        "tier:law"
+                        "tier:trap"
+                        "role:spec"
+                      ];
+                      tags_match = "any_strict";
+                    };
+                    timeout = 90;
+                  }
+                ];
+              }
+              {
+                matcher = "gen-build";
+                hooks = [
+                  {
+                    type = "mcp_tool";
+                    server = "plugin_hm_hindsight";
+                    tool = "recall";
+                    input = {
+                      query = "landing and commit discipline, formatting before commit, nix-unit and oracle arming, seeded defects, push gates";
+                      tags = [
+                        "tier:law"
+                        "tier:trap"
+                        "role:build"
+                      ];
+                      tags_match = "any_strict";
+                    };
+                    timeout = 90;
+                  }
+                ];
+              }
+            ];
+          }
           (lib.mkIf cfg.archiveHook {
             hooks.SessionEnd = [
               {
