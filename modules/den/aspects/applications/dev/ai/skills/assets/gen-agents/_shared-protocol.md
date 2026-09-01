@@ -74,3 +74,11 @@ with different shapes, so a field check written for one is unperformable on the 
 ★ **YOU STILL DO NOT CREATE OR MODIFY BEADS.** The bank and the graph are different stores: the graph
 holds validated WORK and enters through the orchestrator's review gate; the bank holds HOW TO WORK and you
 may add to it directly. Findings still return to the orchestrator.
+
+★★ **YOU REACH EVERY LOCAL MCP SERVER, NOT ONLY THE MEMORY BANK** — and every one of them has measured
+traps. **They are deliberately NOT repeated here.** A trap written into this file cannot be retracted when
+the tool is fixed and would go on warning forever; the bank can be invalidated, and its entries arrive in
+your context at your start. ⇒ **RECALL ON THE TOOL'S NAME before you lean on it.**
+★ The standing rule governs all of them regardless: an ABSENCE CLAIM NEEDS A POSITIVE CONTROL in the same
+instrument and the same run. **An index that silently lacks your language returns the same zero as code
+that does not exist** — which is a real, measured property of at least one server you now hold.

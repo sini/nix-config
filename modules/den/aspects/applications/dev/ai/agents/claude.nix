@@ -290,6 +290,86 @@
                 }
               ];
 
+              # ★★★ A SUBAGENT IS STARTING — RECALL INTO ITS OWN CONTEXT, BEFORE ITS FIRST PROMPT.
+              # This is the beat the orchestrator cannot cover: by the time it dispatches, the
+              # brief is already written, so a recall there informs nobody in time and never
+              # reaches the agent. `SubagentStart` injects into the SUBAGENT's context
+              # (docs, hooks#subagentstart) and is the only event that does.
+              # ★★ WHY A HOOK AND NOT AN INSTRUCTION: the agents hold `recall` themselves, and an
+              # instruction to use it is exactly what was measured to fail — 0 recalls across 14
+              # dispatches in one session, with the instruction sitting in context the whole time.
+              # A rule that depends on remembering has now failed twice, measured. This makes it
+              # mechanical.
+              # ★ THE MATCHER IS THE AGENT TYPE, which is what lets each role recall on its OWN
+              # subject with no payload interpolation — the payload carries only `agent_id` and
+              # `agent_type`, never the task prompt, so a per-role query is the available
+              # granularity. The agent refines from there with its own `recall`.
+              # ★ `mcp_tool` is permitted here and carries none of SessionStart's "MCP not yet
+              # connected" caveat, which makes this a better host for an MCP-backed recall.
+              # ★★ VERIFY BEFORE TRUSTING IT — this event fails silently in two ways (see the
+              # PreToolUse block). Read a SUBAGENT's transcript, never the parent's, and confirm
+              # the recalled text is present before its first tool call. If the mcp_tool handler
+              # does not fire, the command arm below still delivers the instruction, so the floor
+              # is the pre-existing behaviour rather than nothing.
+              SubagentStart = [
+                {
+                  matcher = "gen-scout";
+                  hooks = [
+                    {
+                      type = "mcp_tool";
+                      server = "plugin_hm_hindsight";
+                      tool = "recall";
+                      input = {
+                        query = "measurement law, absence claims and live controls, grep and predicate traps, tool behaviours that lie, burned control tokens, shell idioms that fail silently";
+                      };
+                      timeout = 20;
+                    }
+                  ];
+                }
+                {
+                  matcher = "gen-gate";
+                  hooks = [
+                    {
+                      type = "mcp_tool";
+                      server = "plugin_hm_hindsight";
+                      tool = "recall";
+                      input = {
+                        query = "adversarial gate rubric, prior art sweeps, refutation discipline, second independent pass, coordinate and citation checking";
+                      };
+                      timeout = 20;
+                    }
+                  ];
+                }
+                {
+                  matcher = "gen-spec";
+                  hooks = [
+                    {
+                      type = "mcp_tool";
+                      server = "plugin_hm_hindsight";
+                      tool = "recall";
+                      input = {
+                        query = "spec form and acceptance oracles, ADR law and amendment policy, owner rulings, forks that must not be settled by an agent";
+                      };
+                      timeout = 20;
+                    }
+                  ];
+                }
+                {
+                  matcher = "gen-build";
+                  hooks = [
+                    {
+                      type = "mcp_tool";
+                      server = "plugin_hm_hindsight";
+                      tool = "recall";
+                      input = {
+                        query = "landing and commit discipline, formatting before commit, nix-unit and oracle arming, seeded defects, push gates";
+                      };
+                      timeout = 20;
+                    }
+                  ];
+                }
+              ];
+
               # A subagent finished. Measured failure this addresses: agents go idle WITHOUT
               # delivering their report — the notification arrives and the findings do not — and
               # the reflex is to re-prompt, which costs a round-trip on work that is already done.
@@ -317,13 +397,29 @@
                 # Carried as its own change rather than folded in here.
               ];
 
-              # ★★ THE DISPATCH GATE MOVED TO PreToolUse/Agent, MEASURED 2026-09-01. It was on
-              # SubagentStart, whose output NEVER REACHED THE MODEL — and neither did
-              # SubagentStop's. Armed probe over 10 firings: a SubagentStop hook emitting
-              # `systemMessage` and `hookSpecificOutput.additionalContext` produced ZERO
-              # attachment records (live control, SessionStart => 7; the hook's own logfile
-              # proves it FIRED every time). The failure was silent for the whole life of the
-              # wiring: a budget line was computed correctly and delivered to nobody.
+              # ★★ THE DISPATCH GATE MOVED TO PreToolUse/Agent, MEASURED 2026-09-01, AND THE MOVE
+              # STANDS — but ★★★ ITS STATED GROUND WAS FALSE AND IS STRUCK (2026-09-01, later the
+              # same day, from the docs at v2.1.251). The struck sentence read: "It was on
+              # SubagentStart, whose output NEVER REACHED THE MODEL".
+              # ★★★ `SubagentStart` DOES REACH A MODEL — THE SUBAGENT'S. Documented at
+              # code.claude.com/docs/en/hooks#subagentstart: `additionalContext` is "String added
+              # to the subagent's context at the start of its conversation, before its first
+              # prompt". The probe counted attachment records in the ORCHESTRATOR's transcript,
+              # where that injection never appears BY CONSTRUCTION — a predicate that could not
+              # have matched, returning a confident zero. VERIFIED LIVE the same day:
+              # `cbm-subagent-reminder`, wired on this very event, emits exactly that JSON shape
+              # and has been delivering into every subagent all along.
+              # ★★ TWO INDEPENDENT WAYS THIS EVENT READS DEAD, needing DIFFERENT fixes — check
+              # which before concluding: (1) wrong OBSERVER, as above; (2) wrong SHAPE —
+              # `SubagentStart` accepts `additionalContext` ONLY and is NOT among the four events
+              # that deliver PLAIN STDOUT to a model (`UserPromptSubmit`, `UserPromptExpansion`,
+              # `SessionStart`, `PostModelSwitch`), so a hook echoing prose genuinely delivers
+              # nothing. budget.sh's default arm echoes prose, so on this event it would have hit
+              # (2) as well.
+              # ⇒ WHAT SURVIVES: the MOVE was right and the REASON was wrong. A budget reading is
+              # the ORCHESTRATOR's and is actionable before a dispatch; SubagentStart addresses
+              # the SUBAGENT and is the wrong recipient for it. Conclusion survives, basis
+              # replaced. The SubagentStop half of the struck sentence is untouched and stands.
               # PreToolUse/Agent is strictly better than SubagentStart even setting delivery
               # aside — it fires BEFORE the dispatch rather than after it starts, which is
               # where a "no new dispatch" gate has to bite to prevent anything.
