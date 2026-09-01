@@ -31,7 +31,7 @@ spec:
             - name: LLAMA_ARG_ALIAS
               value: gpt-oss-20b
             - name: LLAMA_ARG_CTX_SIZE
-              value: "65536"
+              value: "262144"
             - name: LLAMA_ARG_ENDPOINT_METRICS
               value: "1"
             - name: LLAMA_ARG_HF_REPO
@@ -41,7 +41,7 @@ spec:
             - name: LLAMA_ARG_N_GPU_LAYERS
               value: "99"
             - name: LLAMA_ARG_N_PARALLEL
-              value: "4"
+              value: "2"
             - name: LLAMA_ARG_PORT
               value: "8080"
             - name: LLAMA_CACHE
@@ -73,7 +73,7 @@ spec:
             limits:
               amd.com/gpu: 1
               cpu: 6000m
-              memory: 32Gi
+              memory: 40Gi
             requests:
               amd.com/gpu: 1
               cpu: 500m
