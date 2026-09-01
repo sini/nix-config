@@ -5,13 +5,38 @@
 # reached over the private LoadBalancer, so this declares a `url` rather than a
 # `command`. claude.nix routes url-bearing servers to the http transport.
 #
-# WRITE POSTURE IS READ-ONLY BY CONSTRUCTION. The upstream claude-code plugin
-# ships a Stop hook that retains the transcript; it is deliberately NOT
-# installed, and this aspect wires no retain path at all. That is the standing
-# ruling from the 2026-08-28 evaluation: curation is the write path's property,
-# and auto-capturing adversarial transcripts would bank seeded defects and
-# self-assessment prose as law. New law enters by the owner editing a memory
-# file, which the uplink sync unit retains.
+# WRITE POSTURE. The standing ruling from the 2026-08-28 evaluation is that
+# curation is the write path's property: auto-capturing adversarial transcripts
+# would bank seeded defects and self-assessment prose as law. New law enters by
+# the owner editing a memory file.
+#
+# That posture has two halves, and until 2026-08-31 only one was built.
+#
+#   BUILT — the upstream claude-code plugin ships a Stop hook that retains the
+#   transcript; it is deliberately NOT installed and no retain path is wired.
+#   Measured against the active generation: settings.json carries six other hook
+#   types and no Stop, so that absence is a real absence and not a bad query.
+#
+#   NOT BUILT — the MCP endpoint still hands the agent `retain`, `update_bank`,
+#   `clear_memories` and `delete_bank`, because the bank's `mcp_enabled_tools`
+#   allowlist is null and null means ALL. Read-only is a posture observed, not a
+#   property held. Setting that allowlist is what would make the claim true, and
+#   it is BANK state — see the note on bank configuration below.
+#
+# Retaining the memory files is NOT mechanised. No unit in this tree does it —
+# an earlier revision of this comment credited an "uplink sync unit" that does
+# not exist — so it is an agent run by hand, and the bank's contents are
+# therefore only as reviewed as that run was.
+#
+# BANK CONFIGURATION IS NOT MANAGED FROM HERE, and that is deliberate. Missions,
+# dispositions, the observation switch and the tool allowlist are properties of
+# the BANK — one shared object in the cluster. This aspect is a CONSUMER of that
+# bank and ships to every dev host, so applying config from here would make
+# three hosts writers on one resource, and hosts on different generations would
+# flap the bank's configuration on each boot with the losing write silent.
+# Built, measured and rejected on 2026-08-31 for that reason. If it is worth
+# declaring, it belongs beside the service in
+# aspects/kubernetes/services/ai/hindsight.nix, under exactly one writer.
 { lib, ... }:
 {
   den.aspects.applications.dev.ai.mcp.hindsight = {
@@ -53,6 +78,13 @@
           evidence first: the replay oracle (O3) green before it is worth
           paying for on each turn. The MCP tools above already make recall
           available on demand; this only removes the need to ask.
+
+          O3 must include a run under LOAD, not just a quiet one. Measured
+          2026-08-31 during a backfill: recall exceeded 20s and the dataplane
+          then refused connections for 135s. The script fails open, so the cost
+          of that is not a broken session — it is up to 17s of dead time per
+          prompt (2 health + 5 stats + 10 recall) followed by silence, which is
+          indistinguishable from a bank that had nothing to say.
         '';
       };
     };
@@ -134,13 +166,32 @@
               "$base/v1/default/banks/$bank/memories/recall" \
               -H 'Content-Type: application/json' -d "$body" 2>/dev/null) || exit 0
 
-            memories=$(printf '%s' "$resp" \
-              | ${jq} -r '(.results // [])[]? | "- " + (.text // empty)' 2>/dev/null | head -20)
-            [ -z "$memories" ] && exit 0
+            # Partition on fact type. A `world` fact is the owner's text as
+            # authored; an `observation` is the engine's synthesis OF that text.
+            # Both earn their place, they are NOT the same kind of claim, and so
+            # they never share a header — an observation printed under "Standing
+            # law" is a paraphrase wearing the primary's label, which is the one
+            # thing this bank exists to prevent.
+            #
+            # The cap is [0:20] on RESULTS. It used to be `head -20` on LINES,
+            # and memory bodies run to dozens of lines each, so a single long
+            # first hit consumed the whole budget and every later memory was
+            # dropped with nothing to say so.
+            out=$(printf '%s' "$resp" | ${jq} -r --arg bank "$bank" '
+              (.results // [])[0:20] as $r
+              | [$r[] | select(.type != "observation") | "- " + (.text // empty)] as $law
+              | [$r[] | select(.type == "observation") | "- " + (.text // empty)] as $obs
+              | (if ($law | length) > 0
+                 then ["## Standing law (recalled from \($bank))", ""] + $law
+                 else [] end)
+                + (if ($obs | length) > 0
+                   then ["", "## Observed patterns (synthesised from this bank — NOT owner law)", ""] + $obs
+                   else [] end)
+              | .[]
+            ' 2>/dev/null)
+            [ -z "$out" ] && exit 0
 
-            echo "## Standing law (recalled from $bank)"
-            echo ""
-            echo "$memories"
+            printf '%s\n' "$out"
             exit 0
           '';
         };
