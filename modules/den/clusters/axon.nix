@@ -80,7 +80,10 @@
           # kubernetes.services.ai.llama-cpp.instances: adding an instance
           # without adding its address here fails at eval, by design.
           hindsight-internal = "10.11.0.20";
-          llama-cpp-qwen-internal = "10.11.0.21";
+          # .21 held llama-cpp-qwen-internal until the qwen instance was
+          # dropped (see llama-cpp-settings.nix for why, and for the entry to
+          # restore). Left reserved rather than reused so bringing it back is
+          # additive.
           llama-cpp-gpt-oss-internal = "10.11.0.22";
           hindsight-cp-internal = "10.11.0.23";
         };

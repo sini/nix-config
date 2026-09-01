@@ -129,33 +129,48 @@
       )
     );
 
-    # Two instances, split by what upstream's leaderboards actually measure.
+    # ONE model, replicated across every GPU node, rather than two models on one
+    # node each. gpt-oss 20B is rank 2 of 21 on upstream's reflect board (86.3,
+    # 0.3 behind gpt-oss-120b, which will not fit here).
     #
-    # retain -> Qwen3.6 35B-A3B: the top open-weight model on the retain board
-    # (quality 59.5 / 49%, against 56.3 / 48% for both gpt-oss 20B and the dense
-    # Qwen3.8 27B). It is a fine-grained MoE — 256 experts, 8 active, ~3B active
-    # of 35B — so despite being the larger file it reads FEWER bytes per token
-    # than gpt-oss 20B's 3.6B active, and decode here is bandwidth-bound. That
-    # shape also suits a UMA APU specifically: on a discrete card a 256-expert
-    # MoE that does not fit thrashes PCIe fetching cold experts, whereas here
-    # every expert is equally resident in the one memory pool.
+    # Qwen3.6 35B-A3B was the second instance and held a whole node for the
+    # retain path. It is dropped, on three findings that landed together:
     #
-    # reflect -> gpt-oss 20B: rank 2 of 21 on the reflect board at 86.3, 0.3
-    # behind gpt-oss-120b which will not fit. No Qwen model appears on the
-    # reflect board at all, so using 35B-A3B there would have nothing behind it.
+    #   - Nothing routed to it. Both defaultLlmInstance and retainLlmInstance
+    #     resolved to gpt-oss, so it held a third of the fleet's inference
+    #     capacity serving zero requests.
+    #   - First contact did not support the leaderboard. It leads the retain
+    #     board on quality (59.5 / 49% against gpt-oss 20B's 56.3 / 48%), but
+    #     extracting from a 136-char document took 104s and 2121 output tokens
+    #     for ONE memory unit where gpt-oss produced TWO from 179. Not hidden
+    #     reasoning — thoughts_tokens was 0 and the <think> blocks came back
+    #     empty — just verbosity that bought nothing.
+    #   - The role it was held for now has a better occupant. ninfer (see
+    #     hindsight-settings.nix externalLlms) serves a stronger retain model at
+    #     ~68 tok/s against this hardware's 23.5.
+    #
+    # To restore it, add back alongside gpt-oss and drop replicas to match the
+    # GPU budget — the entry was:
+    #
+    #   qwen = {
+    #     model = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M";
+    #     modelAlias = "qwen3.6-35b-a3b";
+    #     memoryLimit = "40Gi";   # 22.1 GB weights + ~5.2 GB KV + buffers
+    #   };
+    #
+    # It also needs its `llama-cpp-qwen-internal` LoadBalancer address back in
+    # the cluster's kubernetes-loadbalancers assignments, or eval fails.
     default = {
-      qwen = {
-        model = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M";
-        modelAlias = "qwen3.6-35b-a3b";
-        # 22.1 GB of weights + ~5.2 GB KV (16K x 4 slots) + compute buffers.
-        memoryLimit = "40Gi";
-      };
-
       "gpt-oss" = {
         model = "ggml-org/gpt-oss-20b-GGUF:MXFP4";
         modelAlias = "gpt-oss-20b";
         # 12 GB of weights + KV for the full 4-slot pool + compute buffers.
         memoryLimit = "32Gi";
+
+        # One per GPU node. Sole instance, so the whole budget is available:
+        # three separate memory buses at full per-stream rate, which is where
+        # the throughput is on this hardware (see parallelSlots).
+        replicas = 3;
       };
     };
 

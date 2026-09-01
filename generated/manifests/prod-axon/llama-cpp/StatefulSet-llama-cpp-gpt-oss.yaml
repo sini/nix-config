@@ -1,45 +1,47 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels:
     app.kubernetes.io/controller: main
-    app.kubernetes.io/instance: llama-cpp-qwen
-    app.kubernetes.io/name: llama-cpp-qwen
-  name: llama-cpp-qwen
+    app.kubernetes.io/instance: llama-cpp-gpt-oss
+    app.kubernetes.io/name: llama-cpp-gpt-oss
+  name: llama-cpp-gpt-oss
   namespace: ai
 spec:
-  replicas: 1
+  podManagementPolicy: Parallel
+  replicas: 3
   revisionHistoryLimit: 3
   selector:
     matchLabels:
       app.kubernetes.io/controller: main
-      app.kubernetes.io/instance: llama-cpp-qwen
-      app.kubernetes.io/name: llama-cpp-qwen
-  strategy:
-    type: Recreate
+      app.kubernetes.io/instance: llama-cpp-gpt-oss
+      app.kubernetes.io/name: llama-cpp-gpt-oss
+  serviceName: llama-cpp-gpt-oss
   template:
     metadata:
       labels:
         app.kubernetes.io/controller: main
-        app.kubernetes.io/instance: llama-cpp-qwen
-        app.kubernetes.io/name: llama-cpp-qwen
+        app.kubernetes.io/instance: llama-cpp-gpt-oss
+        app.kubernetes.io/name: llama-cpp-gpt-oss
         den.ai/engine: llama-cpp
     spec:
       automountServiceAccountToken: false
       containers:
         - env:
             - name: LLAMA_ARG_ALIAS
-              value: qwen3.6-35b-a3b
+              value: gpt-oss-20b
             - name: LLAMA_ARG_CTX_SIZE
-              value: "16384"
+              value: "65536"
             - name: LLAMA_ARG_ENDPOINT_METRICS
               value: "1"
             - name: LLAMA_ARG_HF_REPO
-              value: unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M
+              value: ggml-org/gpt-oss-20b-GGUF:MXFP4
             - name: LLAMA_ARG_MMPROJ_AUTO
               value: "0"
             - name: LLAMA_ARG_N_GPU_LAYERS
               value: "99"
+            - name: LLAMA_ARG_N_PARALLEL
+              value: "4"
             - name: LLAMA_ARG_PORT
               value: "8080"
             - name: LLAMA_CACHE
@@ -90,8 +92,16 @@ spec:
       hostIPC: false
       hostNetwork: false
       hostPID: false
-      serviceAccountName: llama-cpp-qwen
-      volumes:
-        - name: models
-          persistentVolumeClaim:
-            claimName: llama-cpp-qwen
+      serviceAccountName: llama-cpp-gpt-oss
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+    - metadata:
+        name: models
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 30Gi
+        storageClassName: longhorn-single
