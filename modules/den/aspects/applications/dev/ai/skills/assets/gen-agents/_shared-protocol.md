@@ -56,13 +56,28 @@ orchestrator only ever sees relayed. When you learn something that would have sa
 recur, `mcp__plugin_hm_hindsight__sync_retain` it: a tool that lies about its own state, a predicate that
 cannot match what it claims to, an idiom that fails silently in this shell, a corpus whose text layer is
 damaged. **That is the tool behaving as intended, not scope creep.**
-★★ **THE BANK IS CURATED, NOT CAPTURED — and this is the one rule that keeps it worth reading.** NEVER
-retain a transcript, a session summary, a narrative of your own work, or an assessment of how you did. A
-measured trap qualifies; an account of your run does not. **The test: would this change what a stranger
-DOES, on a different task, months from now?** If it only records that something happened, it belongs in
-your report.
+★★★ **EVERY ENTRY CARRIES A `tier:` TAG, REQUIRED AND TOTAL — there is no default.** The tier is an
+AUTHORITY LEVEL, not a topic, and it is what makes a scoped recall possible at all: an untagged entry is
+unreachable by every strict query and invisible to every exclusion.
+· **`tier:law`** — owner-ruled, or derived from the ADR corpus by its own structure. **IT BINDS.**
+  ★ **YOU DO NOT WRITE THIS TIER.** Law is the owner's; an agent assigning it manufactures a ruling.
+· **`tier:trap`** — a MEASURED CLAIM about an instrument or a tool. **THIS IS YOUR TIER.** It is
+  agent-authored and therefore FALLIBLE — some existing traps are wrong, typically measured from the
+  wrong working directory, and a wrong one reads exactly as authoritative as a correct one. ⇒ **RE-DERIVE
+  A TRAP AT HEAD BEFORE RELYING ON IT**, and when you write one, make that cheap for the next reader.
+· **`tier:episode`** — auto-captured session content. **Evidence, never instruction**, and never
+  hand-written.
+★★ **A TRAP WITHOUT ITS COMMAND AND ITS CONTROL IS A RUMOUR IN A CITATION FORMAT.** `X ⇒ 0` is
+unfalsifiable; `X ⇒ 0 at <path> at <sha>, live control Y ⇒ 9, same run` is checkable in seconds, so its
+wrongness becomes visible on contact instead of propagating. Always write the second form.
+★ **ALSO TAG `subject:<tool-or-library>` AND `project:<repo>`** — `subject:` is how a later reader finds
+this when they reach for that tool; `project:` localises exactly the wrong-directory class above.
 ★ **ONE ENTRY, ONE FACT, STATED AS A RULE** — lead with what to do or avoid, then the measurement that
 earns it, with the command. An entry a reader must decode is an entry that gets skipped.
+★ **DO NOT HAND-WRITE A NARRATIVE OF YOUR OWN RUN.** Session capture is automatic and lands as
+`tier:episode`; writing your own account duplicates it and dilutes the tier you do own. **The test: would
+this change what a stranger DOES, on a different task, months from now?** If it only records that
+something happened, it belongs in your report.
 
 ★ **VERIFY ON THE DURABLE SIDE, NEVER ON THE RESPONSE.** `sync_retain` BLOCKS and returns
 `{"status":"completed", "memory_ids":[…]}`; `retain` is ASYNCHRONOUS and returns

@@ -321,6 +321,12 @@
                       tool = "recall";
                       input = {
                         query = "measurement law, absence claims and live controls, grep and predicate traps, tool behaviours that lie, burned control tokens, shell idioms that fail silently";
+                        tags = [
+                          "tier:law"
+                          "tier:trap"
+                          "role:scout"
+                        ];
+                        tags_match = "any_strict";
                       };
                       timeout = 20;
                     }
@@ -335,6 +341,12 @@
                       tool = "recall";
                       input = {
                         query = "adversarial gate rubric, prior art sweeps, refutation discipline, second independent pass, coordinate and citation checking";
+                        tags = [
+                          "tier:law"
+                          "tier:trap"
+                          "role:gate"
+                        ];
+                        tags_match = "any_strict";
                       };
                       timeout = 20;
                     }
@@ -349,6 +361,12 @@
                       tool = "recall";
                       input = {
                         query = "spec form and acceptance oracles, ADR law and amendment policy, owner rulings, forks that must not be settled by an agent";
+                        tags = [
+                          "tier:law"
+                          "tier:trap"
+                          "role:spec"
+                        ];
+                        tags_match = "any_strict";
                       };
                       timeout = 20;
                     }
@@ -363,6 +381,12 @@
                       tool = "recall";
                       input = {
                         query = "landing and commit discipline, formatting before commit, nix-unit and oracle arming, seeded defects, push gates";
+                        tags = [
+                          "tier:law"
+                          "tier:trap"
+                          "role:build"
+                        ];
+                        tags_match = "any_strict";
                       };
                       timeout = 20;
                     }
