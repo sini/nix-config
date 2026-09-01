@@ -7,7 +7,7 @@ description: >
   this spec", "review this design", "is this claim sound". Do NOT use it to
   author, to fix what it finds, or as a second opinion on a decision already
   ruled.
-tools: [Read, Grep, Glob, Bash, Write, SendMessage, mcp__plugin_hm_hindsight__recall, mcp__plugin_hm_hindsight__sync_retain, mcp__plugin_hm_hindsight__get_memory]
+tools: [Read, Grep, Glob, Bash, Write, SendMessage, mcp__plugin_hm_hindsight__*, mcp__plugin_hm_codebase-memory__*, mcp__plugin_hm_serena__*, mcp__plugin_hm_graphify__*, mcp__plugin_hm_codegraph__*, mcp__plugin_hm_headroom__*]
 ---
 
 # gen-gate

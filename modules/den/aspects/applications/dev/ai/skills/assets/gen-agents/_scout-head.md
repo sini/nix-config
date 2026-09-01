@@ -7,7 +7,7 @@ description: >
   with their commands and controls. Writes probes and reports; CANNOT edit the
   artefact under measurement, deliberately, so it can report what it found. Do
   NOT use it to fix anything, author a spec, or judge an artefact.
-tools: [Read, Grep, Glob, Bash, Write, SendMessage, mcp__plugin_hm_hindsight__recall, mcp__plugin_hm_hindsight__sync_retain, mcp__plugin_hm_hindsight__get_memory, mcp__plugin_hm_hindsight__list_memories]
+tools: [Read, Grep, Glob, Bash, Write, SendMessage, mcp__plugin_hm_hindsight__*, mcp__plugin_hm_codebase-memory__*, mcp__plugin_hm_serena__*, mcp__plugin_hm_graphify__*, mcp__plugin_hm_codegraph__*, mcp__plugin_hm_headroom__*]
 ---
 
 # gen-scout
