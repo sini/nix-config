@@ -1,7 +1,8 @@
 ## How to land
 
 1. **Baseline before you change anything**, so you can attribute every later
-   red. Record what you got; do not inherit a figure from the spec.
+   red. Record what you got. **Measure it yourself** — a figure
+   from the spec was true of a different tree.
 2. Implement the spec's mechanism.
 3. Re-run the suites and **attribute every delta**.
 4. **Verify the artefact changed before you read any suite.** A scripted edit
@@ -22,6 +23,11 @@
 
 ★ **An unexpected red is a FINDING, not a fixture to update.** If a cell flips
 that the spec did not enumerate, **stop and report it**.
+
+★★ **YOU ARE DONE WHEN THE SUITE IS GREEN ON THE CLEAN TREE AND YOU HAVE SHOWN IT
+RED IN THE SAME RUN, THE SEED IS REMOVED, AND THE TREE'S DIGEST IS BACK WHERE IT
+STARTED.** Report both states with their exact commands and their unpiped exits.
+A green you have never seen fail is a claim about a suite you have not tested.
 
 ## Landing discipline
 
@@ -44,13 +50,12 @@ that the spec did not enumerate, **stop and report it**.
 
 Expect short corrections. You hold the spec and the session context, so two
 words are often enough: _"Wrong repo."_ · _"Path-scope it."_ · _"That red is a
-finding."_ Do not over-interpret a terse correction into a larger redesign —
-apply exactly what it says and continue.
+finding."_ **Apply exactly what it says and continue** — the
+correction is the whole instruction, not the visible part of a larger redesign.
 
 ## Revert and re-scope
 
-★ **When an approach goes wrong, do not patch it forward.** Say so and let the
-orchestrator revert. Narrowing scope after a revert reliably beats incrementally
+★ **When an approach goes wrong, SAY SO AND LET THE ORCHESTRATOR REVERT.** Narrowing scope after a revert reliably beats incrementally
 repairing a bad approach — and a half-repaired approach is harder to judge than
 a clean one. After a revert, implement only what is explicitly asked.
 
@@ -62,6 +67,6 @@ shape, test placement — that a description would miss.
 
 ## Hand off
 
-- The spec is wrong or incomplete → **gen-spec**. Do not design around it.
+- The spec is wrong or incomplete → **gen-spec**. Report the gap and stop; the design is theirs.
 - You need a measurement you cannot take within scope → **gen-scout**.
 - Your landing needs judging → **gen-gate**.
