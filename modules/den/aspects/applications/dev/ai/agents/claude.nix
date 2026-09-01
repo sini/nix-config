@@ -339,31 +339,28 @@
                 }
               ];
 
-              # ★★★ AGENT COMPLETION, ADDED 2026-09-01 (owner-directed). PreToolUse alone
-              # reports at the wrong beat for the decision it serves. It is right for the
-              # GATE — "no new dispatch" must bite before a dispatch — but the moment the
-              # orchestrator CHOOSES is when an agent RETURNS, and there the reading was
-              # absent, so it got INFERRED. Measured that day: several turns asserted
+              # ★★★ PostToolUse/Agent WAS WIRED HERE 2026-09-01 AND IS WITHDRAWN THE SAME DAY,
+              # ON TWO INDEPENDENT GROUNDS. Recorded rather than deleted, because the reasoning
+              # is what stops it being re-proposed.
+              # THE PROBLEM IT AIMED AT IS REAL: PreToolUse reports at DISPATCH, which is right
+              # for the GATE ("no new dispatch" must bite before a dispatch) but is not when the
+              # orchestrator CHOOSES. That moment is when an agent RETURNS, and there the reading
+              # was absent, so it got INFERRED — measured that day: several turns asserted
               # "ctx ~70%, near the no-dispatch line" and self-throttled while the next real
-              # reading was 52%, and closeout was entered at 59.7%. A budget number with no
-              # reading behind it is a figure without its command.
-              # ⇒ PostToolUse/Agent fires when the Agent tool RETURNS, which is that beat.
-              # ★ ITS DELIVERY IS UNMEASURED — see budget.sh's case block for the one-run
-              # verification predicate and its live control. It is the same additionalContext
-              # shape that LANDED on PreToolUse, on the same tool-scoped family, and is NOT
-              # SubagentStop's dead channel; but "plausible channel" is not "measured
-              # channel", and this whole block exists because that class fails silently.
-              PostToolUse = [
-                {
-                  matcher = "Agent";
-                  hooks = [
-                    {
-                      type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh PostToolUse || true";
-                    }
-                  ];
-                }
-              ];
+              # reading was 52%, and closeout was entered at 59.7%.
+              # ★ GROUND 1 — WRONG BEAT, BY CONSTRUCTION. The Agent tool RETURNS AT SPAWN
+              # ("Spawned successfully … the agent is now running"), so PostToolUse/Agent fires
+              # microseconds after PreToolUse at the SAME beat. It duplicates the dispatch
+              # reading and never observes a completion, however well it delivers.
+              # ★ GROUND 2 — NO HOOK IS NEEDED. `budget.sh` READS ON DEMAND:
+              #     printf '{"transcript_path":"<session>.jsonl"}' | bash ~/.claude/budget.sh manual
+              #     ⇒ BUDGET manual · ctx 64.0% · 5h 29.0% (86m) · 7d 22.0%    (measured)
+              # Without the payload `ctx` degrades to `?` and the 5h/7d arms still read, so the
+              # transcript path is what the ctx arm needs. A command the model can run at any
+              # beat strictly dominates a hook that fires at one beat and must be verified.
+              # ⇒ THE COMPLETION BEAT HAS NO LIVE HOOK CHANNEL and does not need one:
+              # SubagentStop is measured dead, TeammateIdle is a strict subset of it (see below),
+              # and the on-demand read covers every beat including those two.
 
               # TeammateIdle is DELIBERATELY NOT WIRED. It fires (measured: claude-code
               # 2.1.246, coincident with SubagentStop to the same second across 5 dispatches),
@@ -452,6 +449,16 @@
             set -uo pipefail
             sub="$HOME/.headroom/subscription_state.json"
             event="''${1:-unknown}"
+
+            # ★★★ FIRING LOG — this is what separates "the hook NEVER FIRED" from "the hook
+            # FIRED AND REACHED NOBODY", and those are different defects with different fixes.
+            # The second is the silent one: SubagentStop fired correctly on every one of ten
+            # probe dispatches and delivered ZERO, and only its own logfile proved the
+            # difference. Without a line like this a delivery count of 0 is UNDECIDABLE, and
+            # an undecidable zero reads as a dead channel. One append per hook invocation.
+            printf '%s\t%s\n' "$(date -Is)" "$event" \
+              >> "$HOME/.claude/budget-fires.log" 2>/dev/null || true
+
             payload=""
             if [ ! -t 0 ]; then payload="$(cat 2>/dev/null || true)"; fi
             transcript=$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null)
@@ -535,18 +542,17 @@
             # has no attachment record at all (control: SessionStart => 7). The same
             # `additionalContext` shape on PreToolUse DID land. So this is not a schema
             # problem on SubagentStop; that event cannot reach the model in any shape.
-            # ★★ PostToolUse/Agent IS THE AGENT-COMPLETION BEAT, AND ITS DELIVERY IS
-            # UNMEASURED. It emits the same `additionalContext` shape that DID land on
-            # PreToolUse, on the same tool-scoped event family — that is why it is the
-            # candidate, and it is NOT the SubagentStop channel measured dead above.
-            # ⇒ VERIFY ONCE BEFORE TRUSTING IT, with this predicate: after an Agent call
-            # returns, count records of type "attachment" in the session transcript carrying
-            # `BUDGET PostToolUse` — NEVER a raw grep, which finds the string in the tool
-            # call that installed it. Live control, same run: `BUDGET PreToolUse` must be
-            # non-zero. A zero with the control firing means this arm is dead like
-            # SubagentStop, and it should be RECORDED RETIRED here rather than left looking
-            # live. The FIRING half is separately provable from the logfile above, which is
-            # what separates "never fired" from "fired and reached nobody".
+            # ★ THE `hookSpecificOutput` ARM STAYS GENERALISED over event name rather than
+            # hardcoding PreToolUse: the shape is what the event family accepts, and threading
+            # `$event` costs nothing while letting a future wiring reuse it without editing the
+            # emitter. PostToolUse is NOT wired (see the hooks block: wrong beat, and the
+            # on-demand read supersedes it) — this arm simply does not refuse it.
+            # ★★ WHEN A DELIVERY COUNT IS 0, IT IS UNDECIDABLE UNTIL THE FIRING LOG IS READ.
+            # `~/.claude/budget-fires.log` gets one append per invocation, so "never fired" and
+            # "fired and reached nobody" are distinguishable — the distinction SubagentStop's
+            # ten-fire probe needed its own logfile to make. Count deliveries as records of
+            # type "attachment" in the session transcript, NEVER as a raw grep: the event name
+            # appears in this file and in any tool call that installs a probe.
             case "$event" in
               PreToolUse* | PostToolUse*)
                 printf '%s' "$line" \
