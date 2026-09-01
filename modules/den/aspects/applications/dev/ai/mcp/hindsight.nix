@@ -21,8 +21,9 @@
 # splitting the store would prevent cross-tier consolidation.
 #
 #   HELD HERE — upstream's plugin hooks Stop and carries a retain cursor; this
-#   deployment installs neither. `archiveHook` below is the equivalent path,
-#   default OFF, on SessionEnd, and reasoned out at that option.
+#   deployment installs neither. `archiveHook` below is the equivalent path, on
+#   SessionEnd rather than Stop, ON since 2026-09-01, and reasoned out with the
+#   evidence that turned it on at that option.
 #
 #   HELD ON THE BANK, NOT HERE — `mcp_enabled_tools` was null, and null means
 #   ALL, so `retain`, `update_bank`, `clear_memories` and `delete_bank` were
@@ -111,15 +112,27 @@
 
       archiveHook = lib.mkOption {
         type = lib.types.bool;
-        default = false;
+        default = true;
         description = ''
           Install a SessionEnd hook that renders the session transcript and
           retains it as `tier:episode`.
 
-          Default false, and this one is a WRITE path — it is opt-in until the
-          bank's `episode` retain strategy is settled, because a mission that
-          extracts the wrong thing writes sediment into the same bank recall
-          serves law from.
+          On since 2026-09-01. It was opt-in until the bank's `episode` strategy
+          was settled, because a mission that extracts the wrong thing writes
+          sediment into the same bank recall serves law from. What discharged
+          that, in order:
+
+            · the strategy NAME resolves. Armed pair, same content, same call:
+              `episode` returned extracted prose, a deliberately bogus name
+              returned THE RAW JSONL as one verbatim fact at HTTP 200. Upstream
+              falls back on an unknown name with only a server-side log line, so
+              a typo here banks unextracted transcripts and reports success.
+            · one real 5.8 MB session, end to end: 28 facts, 0 unlabelled,
+              19 measurement / 5 correction / 4 instrument, every fact carrying
+              tier: project: session: and kind:.
+            · attribution holds. The corrections name "Peer message" and "the
+              scout" rather than the owner — which is the renderer's peer
+              re-labelling working, and is the whole reason it exists.
 
           SessionEnd, not Stop. Upstream's plugin hooks Stop and carries a
           retain cursor to go with it, because Stop fires every time the agent
