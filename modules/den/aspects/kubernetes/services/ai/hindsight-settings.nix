@@ -45,4 +45,63 @@
       defaultLlmInstance the per-operation override is omitted entirely.
     '';
   };
+
+  # Off-cluster OpenAI-compatible endpoints, addressable by the same instance
+  # keys as llama-cpp. Kept as explicit settings rather than derived from the
+  # ninfer-endpoints quirk: that quirk is host-scoped, so reaching it would need
+  # a cluster-scoped collect policy crossing the dev/prod boundary for a single
+  # address — more machinery than the fact is worth, and it would hide the
+  # cross-environment dependency rather than state it.
+  #
+  # Each entry also carries the CIDR its egress policy needs: in-cluster traffic
+  # rides the clusterwide allow-internal-egress policy, but anything off-cluster
+  # must be named explicitly or Cilium's default-deny drops it.
+  den.aspects.kubernetes.services.ai.hindsight.settings.externalLlms = lib.mkOption {
+    type = lib.types.attrsOf (
+      lib.types.submodule {
+        options = {
+          url = lib.mkOption {
+            type = lib.types.str;
+            description = "OpenAI-compatible base URL, including /v1.";
+          };
+          model = lib.mkOption {
+            type = lib.types.str;
+            description = ''
+              Model id the endpoint answers to. ninfer REJECTS a request whose
+              `model` field is not exactly its --model-id, so this is not
+              cosmetic.
+            '';
+          };
+          cidr = lib.mkOption {
+            type = lib.types.str;
+            description = "Host CIDR for the egress CiliumNetworkPolicy.";
+          };
+          port = lib.mkOption {
+            type = lib.types.port;
+            description = "Port for the egress CiliumNetworkPolicy.";
+          };
+        };
+      }
+    );
+    default = {
+      # cortex-cuda, RTX 3090 Ti. Measured ~68 tok/s against the APUs' 28.9, and
+      # it honours reasoning_effort cleanly. Reachable from the cluster only
+      # since the UniFi prod->dev rule plus the 10.9.2.0/24 static route.
+      #
+      # NOTE this is a DEV-environment workstation host (roles.gaming,
+      # roles.dev-gui) running maxConcurrency=1 with hermes as primary tenant.
+      # Prod retain pointed here queues behind interactive work and stops when
+      # the machine reboots. Suitable for batch corpus work, not the live path.
+      ninfer = {
+        url = "http://10.9.2.2:8081/v1";
+        model = "qwen3.8-27b";
+        cidr = "10.9.2.2/32";
+        port = 8081;
+      };
+    };
+    description = ''
+      Off-cluster LLM endpoints selectable by defaultLlmInstance /
+      retainLlmInstance, in the same key space as llama-cpp.instances.
+    '';
+  };
 }

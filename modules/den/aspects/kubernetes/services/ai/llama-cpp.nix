@@ -16,9 +16,21 @@
 # advantage is CAPACITY: 62 GB of addressable RAM holds models a 24 GB discrete
 # card cannot, at full context.
 #
-# One instance per settings entry, each pinned to its own node by the exclusive
-# amd.com/gpu allocation — no anti-affinity needed, and no more instances than
-# there are schedulable GPU nodes.
+# Every pod is pinned to its own node by the exclusive amd.com/gpu allocation —
+# no anti-affinity needed — so the fleet-wide budget is
+# `sum over instances of replicas <= schedulable GPU nodes`. Nothing enforces
+# that: an over-budget pod sits Pending rather than failing at eval.
+#
+# Scaling is horizontal, and deliberately so. On these APUs decode is
+# bandwidth-bound, so raising concurrency ON one server buys progressively less
+# (measured 780M aggregate: 23.5 tok/s at 1 request, 32.4 at 2, 40.5 at 4 —
+# 1.72x for 4x the load, per-stream falling 23.5 -> 10.1). A replica on another
+# node brings a whole second memory bus and scales at full per-stream rate.
+#
+# NOT the answer here: llama.cpp's RPC backend, which tensor-splits one model
+# across hosts. That buys CAPACITY for a model too large for one device, at the
+# cost of a network hop per layer boundary — it makes a single request slower.
+# These models already fit.
 #
 # Cluster-internal only. Consumers reach an instance at
 # http://llama-cpp-<name>.ai.svc:8080/v1.
@@ -46,15 +58,40 @@
           chart = charts.bjw-s-labs.app-template;
           values = {
             controllers.main = {
-              type = "deployment";
+              # StatefulSet rather than Deployment purely for the weights
+              # volume: replicas land on DIFFERENT nodes (each takes that
+              # node's single amd.com/gpu exclusively), and a ReadWriteOnce
+              # Longhorn volume attaches to one node at a time — so a shared
+              # `persistence` claim caps this at one replica by construction.
+              # A volumeClaimTemplate gives each replica its own model cache.
+              type = "statefulset";
 
-              # One replica, and one is the ceiling: the node's single
-              # amd.com/gpu is allocated exclusively, so a second pod could
-              # never schedule beside this one. Recreate for the same reason —
-              # a RollingUpdate's replacement would wait forever for a GPU the
-              # outgoing pod still holds.
-              replicas = 1;
-              strategy = "Recreate";
+              inherit (inst) replicas;
+
+              # RollingUpdate is safe here in a way a Deployment's is not: a
+              # StatefulSet terminates the outgoing pod and waits for it to go
+              # away before scheduling its replacement, so the GPU is free by
+              # the time the new pod needs it. A Deployment's RollingUpdate
+              # would deadlock waiting for a GPU the outgoing pod still holds.
+              strategy = "RollingUpdate";
+
+              # No ordering relationship between replicas — they are
+              # independent servers behind one Service, not a quorum. Parallel
+              # so first boot loads them at once instead of serially waiting
+              # out each one's multi-minute weight load.
+              statefulset.podManagementPolicy = "Parallel";
+
+              # Re-downloadable weights: single-replica storage on purpose,
+              # replicating a HuggingFace cache three ways buys nothing.
+              statefulset.volumeClaimTemplates = [
+                {
+                  name = "models";
+                  accessMode = "ReadWriteOnce";
+                  size = "30Gi";
+                  storageClass = "longhorn-single";
+                  globalMounts = [ { path = "/models"; } ];
+                }
+              ];
 
               pod.labels.${engineLabel} = engineValue;
 
@@ -77,7 +114,15 @@
                   # instances whose repo ships no projector.
                   LLAMA_ARG_MMPROJ_AUTO = "0";
                   LLAMA_ARG_PORT = toString port;
-                  LLAMA_ARG_CTX_SIZE = toString inst.contextSize;
+                  # KV is UNIFIED — one pool of LLAMA_ARG_CTX_SIZE cells shared
+                  # by every slot, each of which is nonetheless told it has the
+                  # whole thing. Sizing the pool for one request and letting
+                  # llama-server pick its own slot count (it picks 4) is a
+                  # silent 4:1 oversubscription; see parallelSlots in the
+                  # settings for the measurement. Both are pinned here so the
+                  # pool always covers the slots drawing on it.
+                  LLAMA_ARG_N_PARALLEL = toString inst.parallelSlots;
+                  LLAMA_ARG_CTX_SIZE = toString (inst.contextSize * inst.parallelSlots);
                   LLAMA_ARG_N_GPU_LAYERS = toString inst.gpuLayers;
                   # Weights land on the PVC below instead of the container
                   # filesystem, so a restart does not re-download tens of GB.
@@ -177,17 +222,6 @@
               ports.http.port = port;
             };
 
-            persistence = {
-              # Re-downloadable weights: single-replica storage on purpose,
-              # replicating a HuggingFace cache three ways buys nothing.
-              models = {
-                type = "persistentVolumeClaim";
-                accessMode = "ReadWriteOnce";
-                size = "30Gi";
-                storageClass = "longhorn-single";
-                globalMounts = [ { path = "/models"; } ];
-              };
-            };
           };
         };
       in

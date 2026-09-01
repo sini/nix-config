@@ -40,10 +40,65 @@
               type = lib.types.ints.positive;
               default = 16384;
               description = ''
-                Prompt context in tokens (LLAMA_ARG_CTX_SIZE). Both models here
-                are natively 262K, far more than an APU sharing 64 GB with the
-                rest of the cluster should reserve; KV cache grows linearly with
-                this and comes out of the same pool as the weights.
+                Prompt context in tokens available to ONE request. Both models
+                here are natively 262K, far more than an APU sharing 64 GB with
+                the rest of the cluster should reserve; KV cache grows linearly
+                with this and comes out of the same pool as the weights.
+
+                This is NOT LLAMA_ARG_CTX_SIZE directly — see parallelSlots.
+              '';
+            };
+
+            # The defect this option exists to prevent, measured 2026-08-31:
+            # llama-server was started with LLAMA_ARG_CTX_SIZE=16384 and no
+            # -np, and chose `n_slots = 4, n_ctx_slot = 16384,
+            # kv_unified = 'true'` on its own. Under a unified KV cache the
+            # 16384 cells are ONE pool shared by all four slots, while each
+            # slot is told it has the full 16384 — a 4:1 oversubscription that
+            # cannot be seen from the setting that caused it.
+            #
+            # It does not fail cleanly. The server logs "decode: failed to find
+            # free space in the KV cache, retrying with smaller batch size" and
+            # walks prefill down 1024 -> 512 -> ... -> 8, silently. During the
+            # den-law corpus ingest that fired 305 times in 30 minutes on the
+            # serving instance against 0 on the idle one.
+            #
+            # So contextSize is per-request and the aspect multiplies. The
+            # coupling is arithmetic in one place instead of an implicit
+            # relationship between one setting and a default chosen elsewhere.
+            parallelSlots = lib.mkOption {
+              type = lib.types.ints.positive;
+              default = 4;
+              description = ''
+                Concurrent request slots (LLAMA_ARG_N_PARALLEL). Total KV pool
+                is contextSize * parallelSlots, so each slot gets a real
+                contextSize rather than competing for a shared one.
+
+                Raising this past ~4 buys little on an APU: measured aggregate
+                throughput on a 780M was 23.5 tok/s at 1 concurrent request,
+                32.4 at 2 and 40.5 at 4 — 1.72x for 4x the load, while
+                per-stream rate fell 23.5 -> 10.1. Decode is bandwidth-bound
+                and these are fine-grained MoE, so batching amortizes weight
+                reads poorly (different sequences activate different experts).
+                Add REPLICAS on other nodes instead: each brings its own memory
+                bus and scales ~linearly at full per-stream speed.
+              '';
+            };
+
+            replicas = lib.mkOption {
+              type = lib.types.ints.positive;
+              default = 1;
+              description = ''
+                llama-server pods for this instance, load-balanced by the
+                ClusterIP service. Each replica takes a whole node's
+                amd.com/gpu exclusively, so this is capped by the number of
+                schedulable GPU nodes MINUS whatever other instances hold —
+                and a replica over that cap sits Pending forever rather than
+                failing at eval.
+
+                Each replica gets its own weights volume (the StatefulSet's
+                volumeClaimTemplate), so N replicas cost N copies of the model
+                on disk.
               '';
             };
 
@@ -65,6 +120,8 @@
                 Container memory ceiling. The iGPU has no memory of its own —
                 weights live in GTT, which is this container's RAM — so this must
                 cover the model file plus its KV cache plus compute buffers.
+
+                The KV term is contextSize * parallelSlots, not contextSize.
               '';
             };
           };
@@ -90,13 +147,15 @@
       qwen = {
         model = "unsloth/Qwen3.6-35B-A3B-GGUF:UD-Q4_K_M";
         modelAlias = "qwen3.6-35b-a3b";
-        # 22.1 GB of weights + ~1.3 GB KV at 16K + compute buffers.
-        memoryLimit = "32Gi";
+        # 22.1 GB of weights + ~5.2 GB KV (16K x 4 slots) + compute buffers.
+        memoryLimit = "40Gi";
       };
 
       "gpt-oss" = {
         model = "ggml-org/gpt-oss-20b-GGUF:MXFP4";
         modelAlias = "gpt-oss-20b";
+        # 12 GB of weights + KV for the full 4-slot pool + compute buffers.
+        memoryLimit = "32Gi";
       };
     };
 

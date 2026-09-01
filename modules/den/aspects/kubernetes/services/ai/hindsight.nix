@@ -34,20 +34,41 @@
       let
         settings = cluster.settings.kubernetes.services.ai.hindsight;
 
-        # Inference is in-cluster: both LLMs are llama-cpp instances on the node
-        # APUs, addressed by instance key so the model identity stays defined in
-        # exactly one place (the llama-cpp aspect's `instances`).
+        # An LLM key resolves in one of two spaces: an in-cluster llama-cpp
+        # instance, or an off-cluster endpoint declared in externalLlms. Model
+        # identity stays defined once, at the endpoint that serves it.
         llamaInstances = cluster.settings.kubernetes.services.ai.llama-cpp.instances;
-
-        instanceOr =
-          key:
-          llamaInstances.${key}
-            or (throw "hindsight: no llama-cpp instance '${key}' — known instances: ${toString (builtins.attrNames llamaInstances)}");
+        externals = settings.externalLlms;
 
         # Fully qualified for the same reason the postgres DSN is; see the note
         # in hindsight-pg.nix on the short form failing to resolve here.
-        llamaUrl = key: "http://llama-cpp-${key}.ai.svc.cluster.local:8080/v1";
-        llamaModel = key: (instanceOr key).modelAlias;
+        resolve =
+          key:
+          if llamaInstances ? ${key} then
+            {
+              url = "http://llama-cpp-${key}.ai.svc.cluster.local:8080/v1";
+              inherit (llamaInstances.${key}) modelAlias;
+              external = null;
+            }
+          else if externals ? ${key} then
+            {
+              inherit (externals.${key}) url;
+              modelAlias = externals.${key}.model;
+              external = externals.${key};
+            }
+          else
+            throw "hindsight: unknown LLM key '${key}' — llama-cpp instances: ${toString (builtins.attrNames llamaInstances)}; externalLlms: ${toString (builtins.attrNames externals)}";
+
+        defaultLlm = resolve settings.defaultLlmInstance;
+        retainLlm = resolve settings.retainLlmInstance;
+
+        # Egress rules only for the external endpoints actually in use. An
+        # unreferenced externalLlms entry is a declaration, not a hole in the
+        # policy.
+        usedExternals = lib.filter (e: e != null) [
+          defaultLlm.external
+          retainLlm.external
+        ];
 
         port = 8888;
         cpPort = 3000;
@@ -149,8 +170,8 @@
                     # the supported shape, and upstream's own local-llm compose
                     # example does exactly this.
                     HINDSIGHT_API_LLM_PROVIDER = "openai";
-                    HINDSIGHT_API_LLM_BASE_URL = llamaUrl settings.defaultLlmInstance;
-                    HINDSIGHT_API_LLM_MODEL = llamaModel settings.defaultLlmInstance;
+                    HINDSIGHT_API_LLM_BASE_URL = defaultLlm.url;
+                    HINDSIGHT_API_LLM_MODEL = defaultLlm.modelAlias;
                     # The openai provider requires this populated even when the
                     # backend ignores it; llama-server runs with no API key set.
                     # Upstream's own example uses the literal "not-needed".
@@ -178,8 +199,8 @@
                   # infer a split that isn't there.
                   // lib.optionalAttrs (settings.retainLlmInstance != settings.defaultLlmInstance) {
                     HINDSIGHT_API_RETAIN_LLM_PROVIDER = "openai";
-                    HINDSIGHT_API_RETAIN_LLM_BASE_URL = llamaUrl settings.retainLlmInstance;
-                    HINDSIGHT_API_RETAIN_LLM_MODEL = llamaModel settings.retainLlmInstance;
+                    HINDSIGHT_API_RETAIN_LLM_BASE_URL = retainLlm.url;
+                    HINDSIGHT_API_RETAIN_LLM_MODEL = retainLlm.modelAlias;
                     HINDSIGHT_API_RETAIN_LLM_API_KEY = "not-needed";
                   };
 
@@ -511,11 +532,32 @@
               ];
             };
 
-            # No egress rule for the LLM: both instances are in-cluster now, and
-            # the clusterwide allow-internal-egress policy already covers
-            # endpoint-to-endpoint traffic. llama-cpp's own ingress policy names
-            # this app as a permitted source.
-
+            # In-cluster LLM traffic rides the clusterwide allow-internal-egress
+            # policy. OFF-cluster endpoints do not: declaring any egress rule
+            # puts this pod in egress default-deny, so each external endpoint in
+            # use needs naming or Cilium silently drops it. Generated only for
+            # endpoints actually referenced by the settings above.
+          }
+          // lib.optionalAttrs (usedExternals != [ ]) {
+            allow-external-llm-egress-hindsight.spec = {
+              description = "Allow hindsight to reach off-cluster LLM endpoints (e.g. ninfer on cortex-cuda).";
+              endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
+              egress = map (e: {
+                toCIDR = [ e.cidr ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = toString e.port;
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
+              }) usedExternals;
+            };
+          }
+          // {
             # World egress purely to populate the model cache on first boot.
             # Once the PVC is warm this is dead weight — a candidate to drop, or
             # to replace with an image that bakes the two models in.
