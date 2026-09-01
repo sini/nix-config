@@ -520,12 +520,21 @@
             # of light single-agent work, or under an hour at 4x parallel Opus. Wording it as
             # an emergency buys a rushed handoff in the one case where recovery is expensive
             # and handoff QUALITY is the whole point.
+            # ★★★ THE 70 GATE BLOCKS FRESH SUBJECTS, NOT DELIVERY (owner-ruled 2026-09-01). It
+            # printed "NO NEW DISPATCH - in-flight only", which was read as a STOP-WORK signal
+            # with 30% of the window left: the fleet went idle and the session reported that
+            # nothing could be done rather than finishing what was open. 30% is ample to finish
+            # delivery AND write a clean handoff. The line is the SUBJECT, not the tool call —
+            # fix rounds, gate contacts, landings, banking and filing an already-measured
+            # finding all CONTINUE and are expected; only opening an untouched subject stops.
+            # Wording it as "no new dispatch" also made an idle fleet look like an empty queue,
+            # when a stream with an unlanded revision or an unbanked report is still open.
             gate=""
             if [ "$ctx" != "?" ]; then
               gate=$(awk -v c="$ctx" 'BEGIN{
                 if (c+0 >= 90)      print "CLOSE OUT (ctx>=90) - compaction is the deadline";
                 else if (c+0 >= 85) print "PREPARE CLOSEOUT (ctx>=85)";
-                else if (c+0 >= 70) print "NO NEW DISPATCH (ctx>=70) - in-flight only";
+                else if (c+0 >= 70) print "NO FRESH SUBJECTS (ctx>=70) - finish open streams, start nothing new";
               }')
             fi
             if [ "$seven" != "?" ] && awk -v w="$seven" 'BEGIN{exit !(w+0>=95)}'; then
