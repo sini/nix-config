@@ -10,18 +10,28 @@
 # would bank seeded defects and self-assessment prose as law. New law enters by
 # the owner editing a memory file.
 #
-# That posture has two halves, and until 2026-08-31 only one was built.
+# That posture has two halves. Both are now held; only one is held HERE.
 #
-#   BUILT — the upstream claude-code plugin ships a Stop hook that retains the
-#   transcript; it is deliberately NOT installed and no retain path is wired.
-#   Measured against the active generation: settings.json carries six other hook
-#   types and no Stop, so that absence is a real absence and not a bad query.
+#   HELD HERE — the upstream claude-code plugin ships a Stop hook that retains
+#   the transcript; it is deliberately NOT installed and no retain path is
+#   wired. Measured against the active generation: settings.json carries six
+#   other hook types and no Stop, so that absence is a real absence and not a
+#   bad query.
 #
-#   NOT BUILT — the MCP endpoint still hands the agent `retain`, `update_bank`,
-#   `clear_memories` and `delete_bank`, because the bank's `mcp_enabled_tools`
-#   allowlist is null and null means ALL. Read-only is a posture observed, not a
-#   property held. Setting that allowlist is what would make the claim true, and
-#   it is BANK state — see the note on bank configuration below.
+#   HELD ON THE BANK, NOT HERE — `mcp_enabled_tools` was null, and null means
+#   ALL, so `retain`, `update_bank`, `clear_memories` and `delete_bank` were
+#   every bit as reachable as `recall`. Narrowed to the 15 read tools by hand on
+#   2026-08-31, verified through a FRESH MCP session rather than the PATCH's
+#   status code: 36 tools exposed before, 15 after. Read-only is now a property
+#   rather than a posture — but nothing in this tree asserts it, and no rebuild
+#   would restore it if someone set it back. See the note below on why it is not
+#   declared here.
+#
+#   Prose could never have held that line: the `retain` tool's own description
+#   opens "Use this tool PROACTIVELY whenever the user shares:", which the agent
+#   reads at the moment of decision, while the skill's do-not-retain rule sits a
+#   document away. The bank's audit log is also off, so a write that does happen
+#   leaves no trace to find afterwards.
 #
 # Retaining the memory files is NOT mechanised. No unit in this tree does it —
 # an earlier revision of this comment credited an "uplink sync unit" that does
