@@ -82,8 +82,15 @@ writeShellApplication {
     # queue in 10 seconds, and the fact-count check then read 0 for each because
     # extraction had not started — so the tool reported "empty 90" while actually
     # having launched the whole backfill uncontrolled. It looked like a total
-    # failure and was the opposite. A version check is the difference between one
-    # session at a time and flooding the fleet's only inference instance.
+    # failure and was the opposite.
+    #
+    # The reason to hold the line is NOT scarce inference — llama-cpp runs
+    # `replicas = 3`, one per GPU node, so retains spread across three workers.
+    # It is that an async submit gives up all CONTROL: no progress, nothing to
+    # interrupt, and a fact count read before extraction starts that reports every
+    # session empty. The measured ceiling sits elsewhere anyway — a backfill on
+    # 2026-08-31 pushed recall past 20s and the DATAPLANE then refused connections
+    # for 135s, which three GPUs did not prevent.
     grep -q 'HINDSIGHT_ARCHIVE_SYNC' "$archiver" || {
       echo "archiver at $archiver has no sync mode — it would submit every session" >&2
       echo "asynchronously at once. Deploy the current hindsight aspect first." >&2
