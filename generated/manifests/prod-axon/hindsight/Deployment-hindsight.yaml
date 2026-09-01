@@ -40,12 +40,16 @@ spec:
               value: not-needed
             - name: HINDSIGHT_API_LLM_BASE_URL
               value: http://llama-cpp-gpt-oss.ai.svc.cluster.local:8080/v1
+            - name: HINDSIGHT_API_LLM_MAX_CONCURRENT
+              value: "6"
             - name: HINDSIGHT_API_LLM_MODEL
               value: gpt-oss-20b
             - name: HINDSIGHT_API_LLM_PROVIDER
               value: openai
             - name: HINDSIGHT_API_LLM_REASONING_EFFORT
               value: low
+            - name: HINDSIGHT_API_LLM_TIMEOUT
+              value: "900"
             - name: HINDSIGHT_API_LOG_LEVEL
               value: info
             - name: HINDSIGHT_API_PORT
@@ -54,6 +58,8 @@ spec:
               value: pgvector
             - name: HINDSIGHT_API_WORKER_ID
               value: hindsight
+            - name: HINDSIGHT_API_WORKER_MAX_SLOTS
+              value: "6"
           image: ghcr.io/vectorize-io/hindsight-api@sha256:7b14a1f4062252992d0176758753615e0a2071d9a269995be007be223ab01812
           livenessProbe:
             failureThreshold: 3

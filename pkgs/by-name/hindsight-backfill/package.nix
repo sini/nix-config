@@ -40,6 +40,8 @@ writeShellApplication {
     bank="''${HINDSIGHT_BANK:-${bank}}"
     archiver="''${HINDSIGHT_ARCHIVER:-$HOME/.claude/hindsight-archive.sh}"
     projects="$HOME/.claude/projects"
+    strategy="''${HINDSIGHT_STRATEGY:-episode}"
+    renderer="''${HINDSIGHT_RENDERER:-$HOME/.claude/hindsight-episode.jq}"
     dry=0
     force=0
     limit=0
@@ -73,6 +75,9 @@ writeShellApplication {
       esac
     done
 
+    doclist=$(mktemp); doctsv=$(mktemp); rendered=$(mktemp)
+    trap 'rm -f "$doclist" "$doctsv" "$rendered"' EXIT
+
     [ -d "$projects" ] || { echo "no such projects dir: $projects" >&2; exit 1; }
     [ -x "$archiver" ] || [ -r "$archiver" ] || {
       echo "archiver not found: $archiver" >&2; exit 1; }
@@ -102,11 +107,32 @@ writeShellApplication {
     curl -sS -m 5 -o /dev/null "$base/health" || {
       echo "hindsight unreachable at $base" >&2; exit 1; }
 
-    # Resumability, in one call: the ids the bank already holds.
-    done_ids=$(curl -sS -m 60 "$base/v1/default/banks/$bank/documents?limit=100000" \
-      | jq -r '(.items // [])[].id // empty' | sort -u) || {
-      echo "could not list documents from $base/$bank" >&2; exit 1; }
-    echo "bank holds $(printf '%s' "$done_ids" | grep -c . || true) document(s)"
+    # Resumability, in one call: the ids the bank already holds, WITH their chunk
+    # counts. The id alone is not enough — see the completeness check below.
+    curl -sS -m 60 "$base/v1/default/banks/$bank/documents?limit=100000" \
+      -o "$doclist" || { echo "could not list documents from $base/$bank" >&2; exit 1; }
+    jq -r '(.items // [])[] | "\(.id)\t\(.memory_unit_count // 0)"' "$doclist" \
+      | sort -u > "$doctsv"
+    echo "bank holds $(wc -l < "$doctsv") document(s)"
+
+    # ★★ A DOCUMENT EXISTING IS NOT THE SESSION BEING COMPLETE, and treating it as
+    # such is a resume that skips broken work FOREVER. A retain that is cancelled,
+    # times out, or dies mid-ingest leaves a REAL document holding a fraction of the
+    # transcript's chunks — it is present, it is tagged, it answers recall, and it is
+    # a tenth of the session. Nothing about it looks wrong from the outside.
+    #
+    # The check: a session renders to N bytes and the strategy chunks at C, so a
+    # finished ingest holds about N/C chunks. Materially fewer means the ingest did
+    # not finish, and the session is republished (update_mode=replace, so this
+    # repairs rather than duplicates). The floor is deliberately loose — the last
+    # chunk is short and a chunk can legitimately yield no facts — because the cost
+    # of a false "incomplete" is one wasted extraction, while the cost of a false
+    # "complete" is a permanent hole in the corpus that nothing will ever look at
+    # again.
+    chunk_size=$(jq -r '.config.retain_strategies."'"$strategy"'".retain_chunk_size
+                        // .config.retain_chunk_size // 12000' <(
+      curl -sS -m 30 "$base/v1/default/banks/$bank/config") 2>/dev/null || echo 12000)
+    echo "strategy $strategy chunks at $chunk_size bytes"
 
     # Depth 2 only: <projects>/<munged-cwd>/<session>.jsonl. Subagent transcripts sit
     # a level deeper under <session>/subagents/ and are a DIFFERENT shape — every line
@@ -119,9 +145,27 @@ writeShellApplication {
     for f in "''${files[@]}"; do
       session=$(basename "$f" .jsonl)
 
-      if [ "$force" -eq 0 ] && printf '%s\n' "$done_ids" | grep -qxF "$session"; then
-        skipped=$((skipped + 1))
-        continue
+      if [ "$force" -eq 0 ] && cut -f1 "$doctsv" | grep -qxF "$session"; then
+        # Present. Complete? Render locally (cheap, no server involved) to learn how
+        # many chunks a finished ingest would hold, and compare with what the bank
+        # actually has. A short document is republished rather than skipped.
+        want=0
+        if [ -r "$renderer" ]; then
+          jq -c -f "$renderer" "$f" > "$rendered" 2>/dev/null || true
+          bytes=$(wc -c < "$rendered")
+          want=$(( (bytes + chunk_size - 1) / chunk_size ))
+        fi
+        have=$(curl -sS -m 30 "$base/v1/default/banks/$bank/documents/$session/chunks?limit=1" \
+          | jq -r '.total // 0' 2>/dev/null || echo 0)
+        # 80% floor: the final chunk is short and chunking is not exact, so demanding
+        # equality would republish complete sessions forever.
+        floor=$(( want * 8 / 10 ))
+        if [ "$want" -eq 0 ] || [ "''${have:-0}" -ge "$floor" ]; then
+          skipped=$((skipped + 1))
+          continue
+        fi
+        printf 'INCOMPLETE     %-40s %s of ~%s chunks — republishing\n' \
+          "$session" "''${have:-0}" "$want"
       fi
       # Bound ATTEMPTS, not successes. Counting only successes means a run of
       # empty or failed sessions never trips the limit and walks the whole corpus.
