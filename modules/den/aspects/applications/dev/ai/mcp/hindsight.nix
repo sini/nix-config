@@ -10,13 +10,19 @@
 # would bank seeded defects and self-assessment prose as law. New law enters by
 # the owner editing a memory file.
 #
-# That posture has two halves. Both are now held; only one is held HERE.
+# ★ THAT RULING WAS AMENDED (owner, 2026-09-01): session capture is ADMITTED, to
+# ONE bank, segmented by a `tier:` tag rather than by a second bank. The ground
+# it rested on is unchanged and is now carried by the tier and the strategy
+# instead of by exclusion — an episode is EVIDENCE and says so, law is the
+# owner's to write, and the two are separable at recall (`tag_groups` takes
+# AND/OR/NOT, verified against this bank by result identity, not by count).
+# A second bank was considered and rejected in the same sitting: the mission
+# attaches to the WRITE PATH, which a named retain strategy already gives, and
+# splitting the store would prevent cross-tier consolidation.
 #
-#   HELD HERE — the upstream claude-code plugin ships a Stop hook that retains
-#   the transcript; it is deliberately NOT installed and no retain path is
-#   wired. Measured against the active generation: settings.json carries six
-#   other hook types and no Stop, so that absence is a real absence and not a
-#   bad query.
+#   HELD HERE — upstream's plugin hooks Stop and carries a retain cursor; this
+#   deployment installs neither. `archiveHook` below is the equivalent path,
+#   default OFF, on SessionEnd, and reasoned out at that option.
 #
 #   HELD ON THE BANK, NOT HERE — `mcp_enabled_tools` was null, and null means
 #   ALL, so `retain`, `update_bank`, `clear_memories` and `delete_bank` were
@@ -69,10 +75,15 @@
         default = "den-law";
         description = ''
           Bank to expose. hindsight serves one MCP endpoint per bank at
-          `/mcp/<bank>/`, so this selects what the agent can see. Transcript- or
-          session-derived memory belongs in a DIFFERENT bank; pointing this at
-          one would put retired records and unreviewed self-assessment in front
-          of the agent as law.
+          `/mcp/<bank>/`, so this selects what the agent can see.
+
+          ONE bank holds every tier, owner-ruled 2026-09-01. What keeps retired
+          records and session evidence from reading as law is the `tier:` tag,
+          not a separate store: every document carries one, derived from its
+          ORIGIN rather than judged — `specs/adr/` layout for the ADR corpus,
+          each memory file's own frontmatter `type:` for the rest. Backfilled
+          across 253 documents on that basis, which put `tier:law` on 39 of
+          them, not on the 224 a tag-reading heuristic had proposed.
         '';
       };
 
@@ -95,6 +106,50 @@
           of that is not a broken session — it is up to 17s of dead time per
           prompt (2 health + 5 stats + 10 recall) followed by silence, which is
           indistinguishable from a bank that had nothing to say.
+        '';
+      };
+
+      archiveHook = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = ''
+          Install a SessionEnd hook that renders the session transcript and
+          retains it as `tier:episode`.
+
+          Default false, and this one is a WRITE path — it is opt-in until the
+          bank's `episode` retain strategy is settled, because a mission that
+          extracts the wrong thing writes sediment into the same bank recall
+          serves law from.
+
+          SessionEnd, not Stop. Upstream's plugin hooks Stop and carries a
+          retain cursor to go with it, because Stop fires every time the agent
+          finishes responding — without a cursor that re-extracts the whole
+          transcript on every turn, at LLM cost, against a growing session.
+          Archival wants one firing per session, so it hooks the event that
+          gives exactly that.
+
+          The cost of SessionEnd is a session that dies without firing it, which
+          is never captured. That is covered by construction rather than by
+          hoping: `document_id` is the session id, so the disk sweep over
+          `~/.claude/projects/**` and this hook are the same write, and either
+          one may run twice or in either order.
+        '';
+      };
+
+      episodeStrategy = lib.mkOption {
+        type = lib.types.str;
+        default = "episode";
+        description = ''
+          Name of the bank's retain strategy for session transcripts.
+
+          Named once, here, because an unknown strategy name FAILS SILENTLY:
+          upstream's `apply_strategy` logs a warning and returns the resolved
+          config unchanged (`config_resolver.py`, "Unknown retain strategy
+          '<name>', using resolved config as-is"). A typo therefore does not
+          error — it retains the transcript under the bank's DEFAULT mission,
+          which is the law mission, whose closing instruction is to ignore
+          session narration. The result is a retain that reports success and
+          banks almost nothing.
         '';
       };
     };
@@ -127,8 +182,175 @@
         jq = lib.getExe pkgs.jq;
         curl = lib.getExe pkgs.curl;
         recall = "${config.home.homeDirectory}/.claude/hindsight-recall.sh";
+        archive = "${config.home.homeDirectory}/.claude/hindsight-archive.sh";
+        renderer = "${config.home.homeDirectory}/.claude/hindsight-episode.jq";
       in
       {
+        # Transcript renderer, shared by the SessionEnd hook and the disk sweep so
+        # both produce the SAME shape — a corpus assembled by two renderers is two
+        # corpora. Derived from upstream's `transcript.ts`, which this deployment
+        # does not install; the rules it encodes are theirs, the two divergences
+        # below are ours and are measured.
+        #
+        # Keeps the ENGINEERING SUBSTANCE: requests, narration, and one compact
+        # `action` turn per tool call naming the tool and its target. Drops
+        # tool_result (outputs are mechanical noise), thinking, isMeta/isSidechain
+        # lines, and Claude Code's own compaction summary — that last one arrives
+        # as a plain type:"user" record with no flag but isCompactSummary, and it
+        # recaps turns already retained, so keeping it extracts them twice.
+        #
+        # Measured on one 5.8 MB session: 2223 lines -> 643 turns, 386 KB (15x).
+        # Across 90 sessions: 810 MB -> 11.6 MB (70x). Control in the same run:
+        # 372 tool_use blocks in, 372 action turns out, on a FROZEN copy — the
+        # live file is appended to while it is read, and two counts of the same
+        # predicate minutes apart differ for that reason alone.
+        #
+        # DIVERGENCE 1 — <system-reminder> is load-bearing here, not insurance.
+        # Upstream strips it against the day it moves; on this fleet it CARRIES
+        # CLAUDE.md and the memory index, so leaving it in feeds the bank its own
+        # injected context. Measured: 6 occurrences in, 0 out, with real content
+        # surviving in the same run.
+        #
+        # DIVERGENCE 2 — a peer session's message arrives as type:"user".
+        # Measured on one session: 30 of 72 user turns (42%) are other sessions
+        # writing through <teammate-message>, so the extractor reads them as the
+        # OWNER speaking. Their content is substantive, so they are re-labelled
+        # rather than dropped. Left as "user" they become owner testimony, and
+        # that false attribution then lives INSIDE the fact's own text, where no
+        # tag filter and no tier can reach it.
+        home.file.".claude/hindsight-episode.jq".text = ''
+          def strip_injected:
+            gsub("<(hook_prompt|task-notification|system-reminder|local-command-stdout|command-name|command-message|command-args|hindsight_memories|hindsight_bank|relevant_memories)\\b[\\s\\S]*?</(hook_prompt|task-notification|system-reminder|local-command-stdout|command-name|command-message|command-args|hindsight_memories|hindsight_bank|relevant_memories)>"; "");
+
+          def action_line:
+            . as $b
+            | ($b.input // {}) as $i
+            | ( [ $i.file_path?, $i.path?, $i.notebook_path?, $i.command?, $i.pattern?, $i.query?, $i.url?, $i.name?, $i.id? ]
+                | map(select(type == "string" and (. | gsub("^\\s+|\\s+$"; "")) != ""))
+                | first ) as $t
+            | if $t == null then $b.name
+              else ($t | split("\n")[0] | .[0:100]) as $s | "\($b.name) \($s)"
+              end;
+
+          select(.type == "user" or .type == "assistant")
+          | select(.isMeta != true and .isSidechain != true and .isCompactSummary != true)
+          | select(.message | type == "object")
+          | . as $line
+          | ($line.message.content) as $c
+          | ( if ($c | type) == "string" then
+                [ { role: $line.type, content: ($c | strip_injected) } ]
+              elif ($c | type) == "array" then
+                ( [ $c[] | select(type == "object" and .type == "text" and (.text | type) == "string")
+                    | .text | strip_injected ]
+                  | map(select(gsub("^\\s+|\\s+$"; "") != ""))
+                  | join("\n") ) as $prose
+                | ( if ($prose | gsub("^\\s+|\\s+$"; "")) != "" then [ { role: $line.type, content: $prose } ] else [] end )
+                  + [ $c[] | select(type == "object" and .type == "tool_use" and (.name | type) == "string")
+                      | { role: "action", content: action_line } ]
+              else [] end ) as $turns
+          | $turns[]
+          | select((.content | gsub("^\\s+|\\s+$"; "")) != "")
+          | .content |= gsub("^\\s+|\\s+$"; "")
+          | if .role == "user" and (.content | test("<teammate-message")) then .role = "peer" else . end
+          | if ($line.timestamp | type) == "string" then . + { timestamp: $line.timestamp } else . end
+        '';
+
+        # Session archiver. Written unconditionally so the disk sweep can call it
+        # by hand; only WIRED as a hook when archiveHook is enabled.
+        home.file.".claude/hindsight-archive.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            # Render this session's transcript and retain it as tier:episode.
+            #
+            # Fails OPEN at every step, like the recall path: a memory service that
+            # is down must never delay or break a session close.
+            #
+            # Usage: as a SessionEnd hook (payload on stdin), or by hand for the
+            # disk sweep:
+            #   hindsight-archive.sh <transcript.jsonl> [session_id] [project]
+            #
+            # The sweep passes `project` rather than letting it be derived, because
+            # a transcript on disk sits under Claude Code's MUNGED directory name
+            # (`-home-sini-Documents-repos-sini-den-ag-design`) and un-munging it is
+            # not decidable: `-` is both the path separator and a character inside
+            # `den-ag-design`. The hook path has no such problem — `cwd` arrives in
+            # the payload as a real path.
+            set -uo pipefail
+            base="${cfg.endpoint}"
+            bank="${cfg.bank}"
+            strategy="${cfg.episodeStrategy}"
+
+            # ★ FAIL OPEN, BUT LEAVE A TRACE. Exiting 0 on every error is required —
+            # a memory service that is down must not delay a session close — and it
+            # is also what makes "never fired" and "fired and banked nothing" look
+            # identical from outside. They are different defects with different
+            # fixes, so each bail names its stage. This is the only reason the ARG_MAX
+            # bug below would have been findable had it shipped.
+            log="$HOME/.claude/hindsight-archive.log"
+            fail() { printf '%s\t%s\t%s\n' "$(date -Is)" "''${session:-?}" "$1" >> "$log"; exit 0; }
+
+            if [ $# -ge 1 ]; then
+              transcript="$1"
+              session="''${2:-$(basename "$transcript" .jsonl)}"
+              cwd="$(dirname "$transcript")"
+            else
+              payload=$(cat 2>/dev/null || true)
+              transcript=$(printf '%s' "$payload" | ${jq} -r '.transcript_path // empty' 2>/dev/null || true)
+              session=$(printf '%s' "$payload" | ${jq} -r '.session_id // empty' 2>/dev/null || true)
+              cwd=$(printf '%s' "$payload" | ${jq} -r '.cwd // empty' 2>/dev/null || true)
+            fi
+            [ -r "''${transcript:-}" ] || exit 0
+            [ -n "''${session:-}" ] || exit 0
+
+            # `project:` records where the work HAPPENED, never what it was about.
+            # It localises the wrong-working-directory class: a measurement taken in
+            # the wrong tree reads as authoritative unless something says where it
+            # was taken.
+            project="''${3:-$(basename "''${cwd:-unknown}")}"
+            case "$project" in ""|.|/|-*) project="unknown" ;; esac
+
+            ${curl} -sS -m 2 -o /dev/null "$base/health" 2>/dev/null || fail "health"
+
+            # ★★ EVERYTHING GOES THROUGH FILES, NEVER THROUGH ARGV OR A SHELL VAR.
+            # A rendered session is ~386 KB and one line of a 5.8 MB transcript can
+            # be 16 KB; `--arg c "$turns"` and `curl -d "$body"` BOTH exceed ARG_MAX
+            # and die with "argument list too long". Measured 2026-09-01 against the
+            # real transcript before this path ever ran live. It is the worst shape
+            # of failure available here: the script still exits 0, the hook reports
+            # success, and NOTHING is ever banked — on every session, because every
+            # real session clears the limit. `--rawfile` and `-d @file` are why the
+            # size stops mattering.
+            turns=$(mktemp) || exit 0
+            req=$(mktemp) || { rm -f "$turns"; exit 0; }
+            trap 'rm -f "$turns" "$req"' EXIT
+
+            ${jq} -c -f "${renderer}" "$transcript" > "$turns" 2>/dev/null || fail "render"
+            # A session that rendered to almost nothing has nothing to extract, and
+            # a retain against it still costs a full LLM pass per chunk.
+            [ "$(wc -c < "$turns")" -lt 400 ] && exit 0
+
+            # document_id is the SESSION id and update_mode is replace, so this is
+            # idempotent: the SessionEnd hook and the disk sweep are the same write,
+            # and running either twice replaces rather than duplicates.
+            ${jq} -nc --rawfile c "$turns" \
+              --arg s "$session" --arg p "$project" --arg st "$strategy" \
+              '{async: true, items: [{
+                  content: $c,
+                  context: "One agent working session, rendered transcript.",
+                  document_id: $s,
+                  update_mode: "replace",
+                  strategy: $st,
+                  tags: ["tier:episode", ("project:" + $p), ("session:" + $s)]
+                }]}' > "$req" 2>/dev/null || fail "build"
+
+            ${curl} -sS -m 30 -X POST "$base/v1/default/banks/$bank/memories" \
+              -H 'Content-Type: application/json' --data-binary @"$req" \
+              >/dev/null 2>&1 || fail "post"
+            exit 0
+          '';
+        };
+
         # Recall helper. Written unconditionally so it can be run by hand for a
         # replay check; only WIRED as a hook when recallHook is enabled.
         home.file.".claude/hindsight-recall.sh" = {
@@ -206,18 +428,35 @@
           '';
         };
 
-        programs.claude-code.settings = lib.mkIf cfg.recallHook {
-          hooks.UserPromptSubmit = [
-            {
-              hooks = [
-                {
-                  type = "command";
-                  command = "bash ${recall} || true";
-                }
-              ];
-            }
-          ];
-        };
+        programs.claude-code.settings = lib.mkMerge [
+          (lib.mkIf cfg.recallHook {
+            hooks.UserPromptSubmit = [
+              {
+                hooks = [
+                  {
+                    type = "command";
+                    command = "bash ${recall} || true";
+                  }
+                ];
+              }
+            ];
+          })
+          (lib.mkIf cfg.archiveHook {
+            hooks.SessionEnd = [
+              {
+                hooks = [
+                  {
+                    type = "command";
+                    # Rendering is local and cheap; the retain is `async: true`, so
+                    # the request returns once accepted rather than once extracted.
+                    command = "bash ${archive} || true";
+                    timeout = 60;
+                  }
+                ];
+              }
+            ];
+          })
+        ];
       };
   };
 }
