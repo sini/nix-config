@@ -2,7 +2,7 @@
 
 **Prior art runs FIRST**, before any check on the merits. Sweep the tracker for
 material the graph already decided, refuted or measured; report the sweep even
-when clean, and remember an all-zero sweep is not clean without a live control.
+when clean.
 
 Then, in order: does the artefact's cited coordinate contain the cited content ·
 does it prefer a **construction where the bad state never forms** over a repair
@@ -36,6 +36,5 @@ what a ruling left open is squarely in scope.
 ## Hand off
 
 - The author must apply your findings → back to **gen-spec** (or the original
-  author). You do not fix.
+  author); the repair is theirs, which is what keeps your verdict independent.
 - A claim needs measuring before you can judge it → **gen-scout**.
-- Never re-open a ruled decision; that is the owner's, not yours.
