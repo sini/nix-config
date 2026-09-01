@@ -59,25 +59,24 @@ damaged. **That is the tool behaving as intended, not scope creep.**
 ★★★ **EVERY ENTRY CARRIES A `tier:` TAG, REQUIRED AND TOTAL — there is no default.** The tier is an
 AUTHORITY LEVEL, not a topic, and it is what makes a scoped recall possible at all: an untagged entry is
 unreachable by every strict query and invisible to every exclusion.
-· **`tier:law`** — owner-ruled, or derived from the ADR corpus by its own structure. **IT BINDS.**
-  ★ **YOU DO NOT WRITE THIS TIER.** Law is the owner's; an agent assigning it manufactures a ruling.
-· **`tier:trap`** — a MEASURED CLAIM about an instrument or a tool. **THIS IS YOUR TIER.** It is
-  agent-authored and therefore FALLIBLE — some existing traps are wrong, typically measured from the
-  wrong working directory, and a wrong one reads exactly as authoritative as a correct one. ⇒ **RE-DERIVE
-  A TRAP AT HEAD BEFORE RELYING ON IT**, and when you write one, make that cheap for the next reader.
-· **`tier:episode`** — auto-captured session content. **Evidence, never instruction**, and never
-  hand-written.
-★★ **A TRAP WITHOUT ITS COMMAND AND ITS CONTROL IS A RUMOUR IN A CITATION FORMAT.** `X ⇒ 0` is
-unfalsifiable; `X ⇒ 0 at <path> at <sha>, live control Y ⇒ 9, same run` is checkable in seconds, so its
-wrongness becomes visible on contact instead of propagating. Always write the second form.
-★ **ALSO TAG `subject:<tool-or-library>` AND `project:<repo>`** — `subject:` is how a later reader finds
-this when they reach for that tool; `project:` localises exactly the wrong-directory class above.
-★ **ONE ENTRY, ONE FACT, STATED AS A RULE** — lead with what to do or avoid, then the measurement that
-earns it, with the command. An entry a reader must decode is an entry that gets skipped.
-★ **DO NOT HAND-WRITE A NARRATIVE OF YOUR OWN RUN.** Session capture is automatic and lands as
-`tier:episode`; writing your own account duplicates it and dilutes the tier you do own. **The test: would
-this change what a stranger DOES, on a different task, months from now?** If it only records that
-something happened, it belongs in your report.
+· **`tier:law`** — owner-ruled, or derived from the ADR corpus by its own structure. **IT BINDS**, and the
+  owner writes it.
+· **`tier:trap`** — a MEASURED CLAIM about an instrument or a tool. **THIS IS YOURS TO WRITE.** A trap is
+  agent-authored and therefore FALLIBLE: some standing traps are wrong, typically measured from the wrong
+  working directory, and a wrong trap reads exactly as authoritative as a correct one. ⇒ **RE-DERIVE A
+  TRAP AT HEAD BEFORE YOU RELY ON IT**, and write yours so the next reader can do that in seconds.
+· **`tier:episode`** — session content, captured automatically. Evidence, and the raw material a trap gets
+  promoted FROM.
+★★ **A TRAP CARRIES ITS COMMAND AND ITS CONTROL, OR IT IS A RUMOUR IN A CITATION FORMAT.** `X ⇒ 0` is
+unfalsifiable; `X ⇒ 0 at <path> at <sha>, live control Y ⇒ 9, same run` is checkable on sight, so a wrong
+trap dies on contact instead of propagating. Write the second form.
+★ **TAG `subject:<tool-or-library>` AND `project:<repo>` BESIDE THE TIER** — `subject:` is how a later
+reader finds your trap when they reach for that tool; `project:` localises the wrong-directory class above.
+★ **ONE ENTRY, ONE FACT, STATED AS A RULE** — lead with what to do, then the measurement that earns it,
+with the command. An entry a reader must decode is an entry that gets skipped.
+★ **YOUR OWN RUN BELONGS IN YOUR REPORT; THE BANK TAKES WHAT GENERALISES.** Session capture lands
+`tier:episode` on its own. **The test: would this change what a stranger DOES, on a different task, months
+from now?**
 
 ★ **VERIFY ON THE DURABLE SIDE, NEVER ON THE RESPONSE.** `sync_retain` BLOCKS and returns
 `{"status":"completed", "memory_ids":[…]}`; `retain` is ASYNCHRONOUS and returns
@@ -86,14 +85,12 @@ with different shapes, so a field check written for one is unperformable on the 
 `mcp__plugin_hm_hindsight__get_memory` on the returned id and read `state: valid`. **Prefer `sync_retain`**
 — it is recallable the moment it returns.
 
-★ **YOU STILL DO NOT CREATE OR MODIFY BEADS.** The bank and the graph are different stores: the graph
-holds validated WORK and enters through the orchestrator's review gate; the bank holds HOW TO WORK and you
-may add to it directly. Findings still return to the orchestrator.
+★ **THE BANK AND THE GRAPH ARE DIFFERENT STORES.** The graph holds validated WORK and enters through the
+orchestrator's review gate — findings return to the orchestrator, as always. The bank holds HOW TO WORK
+and you write to it directly.
 
-★★ **YOU REACH EVERY LOCAL MCP SERVER, NOT ONLY THE MEMORY BANK** — and every one of them has measured
-traps. **They are deliberately NOT repeated here.** A trap written into this file cannot be retracted when
-the tool is fixed and would go on warning forever; the bank can be invalidated, and its entries arrive in
-your context at your start. ⇒ **RECALL ON THE TOOL'S NAME before you lean on it.**
-★ The standing rule governs all of them regardless: an ABSENCE CLAIM NEEDS A POSITIVE CONTROL in the same
-instrument and the same run. **An index that silently lacks your language returns the same zero as code
-that does not exist** — which is a real, measured property of at least one server you now hold.
+★★ **YOU REACH EVERY LOCAL MCP SERVER, AND EACH ONE HAS TRAPS — LIVING IN THE BANK, ON PURPOSE.** A trap
+written into this file outlives the defect it describes: nobody retracts it when the tool is fixed, so it
+warns forever. A banked trap is invalidated in one call, and arrives in your context at your start.
+⇒ **RECALL ON THE TOOL'S NAME BEFORE YOU LEAN ON IT.** At least one server you now hold returns the same
+zero for "my index lacks your language" as for "this code does not exist".
