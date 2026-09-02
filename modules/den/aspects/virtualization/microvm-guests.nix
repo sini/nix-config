@@ -115,39 +115,10 @@ in
         ) guests
       );
 
-      # Host-side network routing: dynamically derive host routes for guest TAP interfaces
-      # from each guest entity's declared `vm.networking.interfaces`.
-      systemd.network.networks = lib.mkMerge (
-        lib.concatMap (
-          vm:
-          lib.mapAttrsToList (
-            ifName: ifCfg:
-            let
-              ipv4Addrs = ifCfg.ipv4 or [ ];
-              guestIps = map (cidr: lib.head (lib.splitString "/" cidr)) ipv4Addrs;
-              hostAddrs = map (
-                cidr:
-                let
-                  ipParts = lib.splitString "." (lib.head (lib.splitString "/" cidr));
-                  prefix = lib.concatStringsSep "." (lib.take 3 ipParts);
-                  mask = lib.last (lib.splitString "/" cidr);
-                in
-                "${prefix}.1/${mask}"
-              ) ipv4Addrs;
-            in
-            lib.optionalAttrs (guestIps != [ ]) {
-              "30-microvm-${vm.name}-${ifName}" = {
-                matchConfig.Name = ifName;
-                address = hostAddrs;
-                networkConfig = {
-                  IPv4Forwarding = "yes";
-                  IPMasquerade = "both";
-                };
-                routes = map (ip: { Destination = "${ip}/32"; }) guestIps;
-              };
-            }
-          ) (vm.networking.interfaces or { })
-        ) children
-      );
+      # No host-side guest networking here: guest taps match `vm-*` into br0 in
+      # core.network.networking, so a guest is an ordinary LAN citizen with the
+      # LAN's own gateway. Deriving a host tap address from the guest CIDR is
+      # what previously put a second connected route for the whole LAN prefix on
+      # a point-to-point tap and took the host offline.
     };
 }

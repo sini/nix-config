@@ -159,12 +159,14 @@
               (netCfg.interfaces.${builtins.head effectiveBridges.${brName}} or {
                 ipv4 = [ ];
                 ipv6 = [ ];
+                mac = null;
               }
               )
             else
               {
                 ipv4 = [ ];
                 ipv6 = [ ];
+                mac = null;
               };
         }) (attrNames effectiveBridges);
 
@@ -200,10 +202,23 @@
           map (
             br:
             mkNameValue br.name {
+              # A bridge does NOT inherit a port's MAC -- measured: a bridge
+              # keeps the address it was created with across port add/remove.
+              # `MACAddress = "none"` therefore means a KERNEL-RANDOM address,
+              # fresh on every boot (systemd.netdev(5)), and paired with the
+              # MACAddressPolicy=none link below it is the one combination that
+              # makes that randomness stick. That flips the host's L2 identity
+              # every reboot: the router sees a new device for the same address
+              # and every peer holds a stale ARP entry until it ages out.
+              # Pin it to the enslaved NIC's MAC so bridging is transparent;
+              # with no MAC declared, fall through to networkd's
+              # machine-id-derived address, which is at least stable.
               netdevConfig = {
                 Name = br.name;
                 Kind = "bridge";
-                MACAddress = "none";
+              }
+              // optionalAttrs (br.ifCfg.mac or null != null) {
+                MACAddress = br.ifCfg.mac;
               };
             }
           ) bridgeConfig

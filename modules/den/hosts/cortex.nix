@@ -9,7 +9,16 @@
     networking.interfaces.enp8s0 = {
       ipv4 = [ "10.9.2.1/16" ];
       ipv6 = [ "fd64:0:1::5/64" ];
+      # br0 adopts this, so the address the router has always known for cortex
+      # is unchanged by bridging -- and identical at netboot, where the NIC
+      # answers for itself.
+      mac = "10:ff:e0:b6:6b:2b";
     };
+
+    # enp8s0 moves into br0 and the addressing above rides on the bridge. The
+    # name matters: the networking aspect matches `vm-*` into br0, so every
+    # microvm tap enslaves itself and guests land directly on the LAN.
+    networking.bridges.br0 = [ "enp8s0" ];
 
     # cortex-cuda is delivered as a CHILD host: resolved under cortex inheriting
     # the curated host.includes (agenix retargeted, core.users, collect pipes,

@@ -49,6 +49,19 @@ let
         default = null;
         description = "MTU for this interface";
       };
+      mac = mkOption {
+        type = types.nullOr types.str;
+        default = null;
+        description = ''
+          Hardware MAC address of this interface. Only consumed when the
+          interface is enslaved to a bridge: the bridge adopts it so the host's
+          L2 identity is unchanged by bridging (netboot and the running system
+          present the same address to the router). A bridge NEVER inherits a
+          port's MAC on its own, so leaving this null makes the bridge fall back
+          to networkd's machine-id-derived address -- stable across boots, but
+          not the one the NIC uses at netboot.
+        '';
+      };
       linkLocal = mkOption {
         type = types.nullOr (
           types.enum [

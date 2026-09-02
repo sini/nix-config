@@ -193,16 +193,13 @@
                 "10.9.2.2/16"
                 "fe80::ff:fe01:101/64"
               ];
-              Gateway = "10.9.2.1";
+              Gateway = "10.9.0.1";
               DNS = [
                 "1.1.1.1"
                 "8.8.8.8"
               ];
               IPv6AcceptRA = true;
               DHCP = "no";
-            };
-            linkConfig = {
-              MTUBytes = "9000";
             };
           };
         };
