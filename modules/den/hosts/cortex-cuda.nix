@@ -30,9 +30,44 @@
     # Settings on the ENTITY (cascade reads hosts.<name>.settings) → ollama-cuda.
     settings.services.ai.ollama.acceleration = "cuda";
 
-    # NInfer is the resident engine: measured 96.2 tok/s decode against
-    # llama-cpp's 45.5 on identical prompts (2.1x), for a 1.26x prefill cost.
-    settings.services.ai.ninfer.autoStart = true;
+    # llama-cpp is the resident engine: this host serves gpt-oss-20b under the
+    # cluster's own model alias, so it augments the in-cluster llama-cpp pool
+    # instead of being a second, separately-addressed engine. Pool membership is
+    # worth more here than single-stream speed.
+    #
+    # It does cost speed. NInfer measured 96.2 tok/s decode at the default int8
+    # KV against llama-cpp's 45.5 on identical prompts (2.1x), for a 1.26x
+    # prefill cost, and it keeps the shared 145,408-token pool described below.
+    # Swapping back is `systemctl start ninfer` on the guest — the Conflicts=
+    # evicts llama-cpp — made permanent by flipping autoStart here.
+    settings.services.ai.ninfer = {
+      autoStart = false;
+      # Subagent fan-out: the KV pool is SHARED, not divided, so four admitted
+      # requests draw from the same 145,408 tokens elastically. What N
+      # multiplies is the per-sequence LinearAttentionStatePool slot (recurrent
+      # state for the 48 linear-attention layers) plus draft/graph buffers —
+      # paid out of the ~1 GiB the int8 profile freed.
+      #
+      # What 4 actually buys, measured here: DECODE batches (four 200-token
+      # replies finish together in 9.7s against 2.9s for one, so ~83 tok/s
+      # aggregate against ~68 single-stream, at ~21 tok/s per agent), while
+      # PREFILL stays serialized — four 30K-token prompts finished 72s apart
+      # even at 83% pool occupancy. So N agents with large prompts pay N x
+      # prefill (~1050 tok/s) before the last one decodes. The engine never
+      # over-admits and never truncates: prompt_tokens came back exact at 40K,
+      # 100K and 137K, including a pair summing to 135% of the pool.
+      maxConcurrency = 4;
+
+      # Measured on this guest, not inherited: each admitted slot costs 390 MiB
+      # of Engine runtime reservation, and the pool costs 35,904 bytes/token. At
+      # the aspect default of 150912 a fourth slot is REJECTED by 142 MiB
+      # (needs 7246216448, has 7096712192). 145408 is the largest 64-token page
+      # boundary that fits all four: it starts and serves with 356 MiB free
+      # after startup — better tolerance than the single-agent profile this
+      # replaced — for 3.6% less context.
+      maxContext = 145408; # 2272 pages x 64 tokens
+      kvCapacity = "145408";
+    };
   };
 
   den.aspects.cortex-cuda = {
@@ -86,7 +121,10 @@
           guest.enable = true;
           optimize.enable = true;
           vcpu = 32;
-          mem = 65536; # 64 GB RAM allocated to support 800k KV cache spillover (--cache-ram 49152)
+          # 64 GB: headroom for llama-cpp's host PROMPT cache (--cache-ram 49152,
+          # saved slot state for prompt reuse). Not KV spillover — stock
+          # llama.cpp keeps active KV on the card.
+          mem = 65536;
 
           interfaces = [
             {
@@ -139,10 +177,10 @@
 
         # One 24 GB card holds one engine, and ninfer.service already declares
         # Conflicts= against llama-cpp. Both being wantedBy multi-user.target
-        # would race at boot and let systemd pick the winner, so the standby
-        # engine is started on demand only. The llama-cpp ASPECT is untouched —
+        # would race at boot and let systemd pick the winner, so exactly one may
+        # autostart: llama-cpp keeps the aspect default and ninfer is held back
+        # by autoStart = false above. The llama-cpp ASPECT stays untouched —
         # which engine is resident is a property of this host, not of llama-cpp.
-        systemd.services.llama-cpp.wantedBy = lib.mkForce [ ];
 
         networking.firewall.allowedTCPPorts = [ 22 ];
 
