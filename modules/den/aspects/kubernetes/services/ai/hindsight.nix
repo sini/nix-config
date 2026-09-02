@@ -260,7 +260,7 @@
                     # So concurrency above 1 inflates each request's wall time without
                     # adding throughput, and every extra second is spent inside the
                     # timeout.
-                    HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT = "1";
+                    HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT = "2";
 
                     # ★★★ ninfer CANNOT SERVE RETAIN. Trialled and REVERTED 2026-09-02:
                     #     HTTP 400 response_format_not_supported —
@@ -275,7 +275,17 @@
                     # A probe must issue the REQUEST SHAPE THE CALLER USES, not the prompt.
                     # ⇒ Re-test with a response_format request before proposing this again.
                     #
-                    # Retain would run OFF-CLUSTER on a workstation GPU, which is the
+                    # ⇒ RESOLVED by cortex-cuda running llama-cpp with the SAME MODEL on
+                    # :8080 beside ninfer on :8081. llama-cpp constrains decoding to a
+                    # schema, so json_schema and json_object both return 200 (measured
+                    # 2026-09-02, 1.8s for 4563 prompt tokens). retainLlmInstance points
+                    # there; the model is unchanged, so this moves WHERE extraction runs
+                    # and not what the corpus was extracted by.
+                    #
+                    # Concurrency 2, not 1: this is llama-cpp at its default
+                    # parallelSlots, not ninfer's stated maxConcurrency=1.
+                    #
+                    # Retain runs OFF-CLUSTER on a workstation GPU, which is the
                     # point: the write path stops sharing a queue with recall. Measured
                     # 2026-09-01 on identical work — one real 12000-char chunk under the
                     # live episode mission:

@@ -38,7 +38,7 @@
   # Set this to "qwen" to restore the split; the instance stays deployed.
   den.aspects.kubernetes.services.ai.hindsight.settings.retainLlmInstance = lib.mkOption {
     type = lib.types.str;
-    default = "gpt-oss";
+    default = "cortex-cuda";
     description = ''
       Key into `kubernetes.services.ai.llama-cpp.instances` serving the retain
       (fact-extraction) path, via HINDSIGHT_API_RETAIN_LLM_*. When equal to
@@ -84,19 +84,58 @@
       }
     );
     default = {
-      # cortex-cuda, RTX 3090 Ti. Measured ~68 tok/s against the APUs' 28.9, and
-      # it honours reasoning_effort cleanly. Reachable from the cluster only
-      # since the UniFi prod->dev rule plus the 10.9.2.0/24 static route.
+      # Both entries are the ONE RTX 3090 Ti on cortex-cuda, which holds a single
+      # engine at a time (they declare Conflicts= over the card). Reachable from
+      # the cluster only since the UniFi prod->dev rule plus the 10.9.2.0/24
+      # static route.
       #
-      # NOTE this is a DEV-environment workstation host (roles.gaming,
-      # roles.dev-gui) running maxConcurrency=1 with hermes as primary tenant.
-      # Prod retain pointed here queues behind interactive work and stops when
-      # the machine reboots. Suitable for batch corpus work, not the live path.
+      # STANDING CAVEAT on both: this is a guest on a DEV-environment workstation
+      # (roles.gaming, roles.dev-gui). Prod work pointed here queues behind
+      # interactive use and stops when the machine reboots.
+
+      # The resident engine, and the reason this host is worth pointing at: the
+      # SAME gpt-oss-20b the in-cluster instances serve, under the SAME alias, so
+      # selecting it changes which GPU answers rather than which model does.
+      # reasoning_effort is pinned low server-side in services.ai.llama-cpp,
+      # which is the retain-shaped setting — retain is prefill-bound extraction,
+      # so thinking is latency that buys nothing.
+      gpt-oss-cortex = {
+        url = "http://10.9.2.2:8080/v1";
+        model = "gpt-oss-20b";
+        cidr = "10.9.2.2/32";
+        port = 8080;
+      };
+
+      # Same card, other engine, other model. Faster per stream — 96.2 tok/s
+      # decode against llama-cpp's 45.5 on identical prompts — but no longer
+      # resident: since llama-cpp took autostart this needs an explicit
+      # `systemctl start ninfer` on the guest, which evicts llama-cpp.
       ninfer = {
         url = "http://10.9.2.2:8081/v1";
         model = "qwen3.8-27b";
         cidr = "10.9.2.2/32";
         port = 8081;
+      };
+
+      # Same host, same GPU, DIFFERENT SERVER. cortex-cuda now also runs
+      # llama-cpp with gpt-oss-20b on 8080 beside ninfer on 8081.
+      #
+      # ★ THIS ONE CAN SERVE RETAIN AND ninfer CANNOT, for one reason: fact
+      # extraction requests STRUCTURED OUTPUT. ninfer's request validator
+      # rejects any non-text response_format by design — src/serve/
+      # openai_schema.cpp:439 with tests/test_openai_schema.cpp asserting
+      # "json response_format rejected" — so it is a code-level gap, not a
+      # flag. llama-cpp constrains decoding to a schema, and both
+      # json_schema and json_object return 200 here (measured 2026-09-02,
+      # 1.8s for 4563 prompt tokens).
+      #
+      # Same MODEL as the in-cluster pool, so pointing retain here changes
+      # WHERE extraction runs, never what the corpus was extracted by.
+      cortex-cuda = {
+        url = "http://10.9.2.2:8080/v1";
+        model = "gpt-oss-20b";
+        cidr = "10.9.2.2/32";
+        port = 8080;
       };
     };
     description = ''
