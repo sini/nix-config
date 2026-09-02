@@ -34,7 +34,9 @@
           pkgs.psmisc
           pkgs.traceroute
         ]
-        ++ lib.optional config.hardware.nvidia.modesetting.enable pkgs.btop-cuda;
+        ++ lib.optionals config.hardware.nvidia.modesetting.enable [
+          pkgs.btop-cuda
+        ];
 
         # Log diff when system update is applied
         system.activationScripts.diff = {
