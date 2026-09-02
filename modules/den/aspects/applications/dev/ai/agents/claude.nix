@@ -545,12 +545,28 @@
             # finding all CONTINUE and are expected; only opening an untouched subject stops.
             # Wording it as "no new dispatch" also made an idle fleet look like an empty queue,
             # when a stream with an unlanded revision or an unbanked report is still open.
+            # ★★★ THRESHOLDS RAISED AND THE PURPOSE RESTATED — OWNER, 2026-09-02, verbatim:
+            # "we're good to go until >= 90% and start new work all the way up to 75%. The reason
+            # we monitor context is to ensure that we're able to provide a comprehensive and clean
+            # handoff." Three changes, and the third is the one that matters:
+            #   · 70 -> 75 for the fresh-subject line.
+            #   · The separate 85% PREPARE CLOSEOUT step RETIRES. Work continues to 90 and closeout
+            #     begins there; a middle rung that only says "get ready" spent a reading on nothing.
+            #   · THE GROUND OF THE 90 ROW CHANGES while its number does not. It is no longer
+            #     "compaction is the deadline" — it is that the remaining window IS the handoff.
+            #     The gates are HANDOFF PROTECTION, not an anti-compaction reflex: a session that
+            #     spends its last window writing a THIN handoff has failed the purpose even if it
+            #     never compacted, and one that compacts having already banked everything has lost
+            #     little. Judge a reading against the handoff you could still write, not the cliff.
+            # The same ruling: DO NOT REPORT THIS LINE TO THE OWNER. It is instrumentation for the
+            # orchestrator's own scheduling; narrating it upward spends his attention on a number he
+            # did not ask for. Law side: STATUS/RESUME-PROMPT-ARCH.md's budget section, amended in
+            # the same act with the old thresholds struck rather than deleted.
             gate=""
             if [ "$ctx" != "?" ]; then
               gate=$(awk -v c="$ctx" 'BEGIN{
-                if (c+0 >= 90)      print "CLOSE OUT (ctx>=90) - compaction is the deadline";
-                else if (c+0 >= 85) print "PREPARE CLOSEOUT (ctx>=85)";
-                else if (c+0 >= 70) print "NO FRESH SUBJECTS (ctx>=70) - finish open streams, start nothing new";
+                if (c+0 >= 90)      print "CLOSE OUT (ctx>=90) - the rest of the window is the handoff";
+                else if (c+0 >= 75) print "NO FRESH SUBJECTS (ctx>=75) - finish open streams, start nothing new";
               }')
             fi
             if [ "$seven" != "?" ] && awk -v w="$seven" 'BEGIN{exit !(w+0>=95)}'; then
