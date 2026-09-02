@@ -4,7 +4,14 @@
       { pkgs, ... }:
       {
         environment.systemPackages = [
+          # Absent, and its absence is SILENT: `x | bc` on a host without bc emits
+          # nothing, so an arithmetic pipeline reads 0 rather than failing. Measured
+          # 2026-09-02 — a latency probe reported 0.00s for every sample.
+          pkgs.bc
           pkgs.btop
+          # Absent, and the workaround was re-deriving its /nix/store path by hand
+          # each time it was wanted.
+          pkgs.cmark-gfm
           pkgs.coreutils
           pkgs.curl
           pkgs.fd
