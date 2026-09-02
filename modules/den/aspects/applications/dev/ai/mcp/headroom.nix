@@ -33,9 +33,22 @@
         ];
 
         programs.claude-code = {
-          marketplaces.headroom-marketplace = inputs.headroom;
+          # ★ THE PLUGIN IS NOT INSTALLED — it was a reference, and installing it was a
+          # mistake (owner, 2026-09-02). Its hooks are `headroom init hook ensure` on
+          # SessionStart and PreToolUse, and what that ENSURES is a self-heal hook written
+          # into ~/.claude/settings.local.json with an ABSOLUTE STORE PATH baked in.
+          #
+          # That cannot work here. Measured 2026-09-02: the entry pinned
+          # l9zgs4zw…-headroom-ai-0.36.5 while the live binary was
+          # 8sf78ady…-headroom-ai-0.36.5 — SAME VERSION, different hash, because the
+          # closure was rebuilt underneath it. So it breaks on ANY rebuild touching ANY
+          # dependency, not on upgrades, and deleting the stale entry does not help: the
+          # plugin rewrites it with the path of the day and it goes stale again.
+          #
+          # Nothing is lost. Compression runs through the proxy (ANTHROPIC_BASE_URL below)
+          # and the MCP server above, both from pkgs.local.headroom-ai. The plugin's only
+          # contribution was the hook that installs the broken hook.
           settings = {
-            enabledPlugins."headroom@headroom-marketplace" = true;
             env = {
               ANTHROPIC_BASE_URL = "http://127.0.0.1:8787";
               HEADROOM_1M = "1";
