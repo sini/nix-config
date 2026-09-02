@@ -275,6 +275,13 @@
                     # A probe must issue the REQUEST SHAPE THE CALLER USES, not the prompt.
                     # ⇒ Re-test with a response_format request before proposing this again.
                     #
+                    # ★ THE BACKFILL ERA IS OVER (2026-09-02) — retain is back in-cluster and
+                    # this whole block is DORMANT: it emits only while retainLlmInstance differs
+                    # from defaultLlmInstance. Kept because the era will recur, and because what
+                    # it records is the reason the split was worth making. The corpus it built:
+                    # 101 sessions across two hosts, 239 law/ADR documents re-extracted, 88
+                    # handoff revisions, ~6100 episode facts at 98.4% labelled, zero failures.
+                    #
                     # ⇒ RESOLVED by cortex-cuda running llama-cpp with the SAME MODEL on
                     # :8080 beside ninfer on :8081. llama-cpp constrains decoding to a
                     # schema, so json_schema and json_object both return 200 (measured

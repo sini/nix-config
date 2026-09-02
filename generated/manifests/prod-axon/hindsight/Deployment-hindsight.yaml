@@ -54,16 +54,6 @@ spec:
               value: info
             - name: HINDSIGHT_API_PORT
               value: "8888"
-            - name: HINDSIGHT_API_RETAIN_LLM_API_KEY
-              value: not-needed
-            - name: HINDSIGHT_API_RETAIN_LLM_BASE_URL
-              value: http://10.9.2.2:8080/v1
-            - name: HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT
-              value: "2"
-            - name: HINDSIGHT_API_RETAIN_LLM_MODEL
-              value: gpt-oss-20b
-            - name: HINDSIGHT_API_RETAIN_LLM_PROVIDER
-              value: openai
             - name: HINDSIGHT_API_VECTOR_EXTENSION
               value: pgvector
             - name: HINDSIGHT_API_WORKER_ID
