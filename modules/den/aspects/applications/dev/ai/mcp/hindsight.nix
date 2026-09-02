@@ -326,6 +326,19 @@
             log="$HOME/.claude/hindsight-archive.log"
             fail() { printf '%s\t%s\t%s\n' "$(date -Is)" "''${session:-?}" "$1" >> "$log"; exit 0; }
 
+            # ★★★ UNCONDITIONAL FIRING LINE, BEFORE ANY BAIL. Without it "the hook NEVER
+            # FIRED" and "the hook FIRED AND DID NOTHING" are indistinguishable, and this
+            # script had THREE silent exits — unreadable transcript, empty session id, and a
+            # render under 400 bytes — none of which touched the log. Measured 2026-09-02:
+            # the owner exited and resumed, and afterwards the bail log held only a stale
+            # entry, the session's document was unchanged, and no operation had been queued.
+            # That is consistent with the hook never running AND with it running against a
+            # payload lacking transcript_path or session_id, which are different defects.
+            # SessionEnd's payload fields are UNMEASURED — claude.nix documents SessionStart,
+            # SubagentStart and SubagentStop, deliberately not this one — so the guess is not
+            # idle. This line is what turns the next session close into evidence.
+            printf '%s\tFIRED\targv=%s\n' "$(date -Is)" "$#" >> "$log"
+
             if [ $# -ge 1 ]; then
               transcript="$1"
               session="''${2:-$(basename "$transcript" .jsonl)}"
@@ -336,8 +349,11 @@
               session=$(printf '%s' "$payload" | ${jq} -r '.session_id // empty' 2>/dev/null || true)
               cwd=$(printf '%s' "$payload" | ${jq} -r '.cwd // empty' 2>/dev/null || true)
             fi
-            [ -r "''${transcript:-}" ] || exit 0
-            [ -n "''${session:-}" ] || exit 0
+            # These two exits were SILENT and are the most likely place a real SessionEnd
+            # firing disappears — a payload without transcript_path or session_id looks
+            # exactly like a hook that never ran.
+            [ -r "''${transcript:-}" ] || fail "no-transcript:''${transcript:-EMPTY}"
+            [ -n "''${session:-}" ] || fail "no-session-id"
 
             # `project:` records where the work HAPPENED, never what it was about.
             # It localises the wrong-working-directory class: a measurement taken in
