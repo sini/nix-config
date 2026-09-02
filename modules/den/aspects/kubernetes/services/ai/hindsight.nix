@@ -262,7 +262,20 @@
                     # timeout.
                     HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT = "1";
 
-                    # Retain now runs OFF-CLUSTER on a workstation GPU, which is the
+                    # ★★★ ninfer CANNOT SERVE RETAIN. Trialled and REVERTED 2026-09-02:
+                    #     HTTP 400 response_format_not_supported —
+                    #     "only response_format {type:text} is supported"
+                    # Fact extraction requests STRUCTURED OUTPUT; ninfer accepts text only,
+                    # so every retain failed 4/4 attempts. This is a capability gap, not a
+                    # tuning one — no timeout, concurrency or token budget reaches it.
+                    # ★ THE TRIAL THAT SAID OTHERWISE MEASURED THE WRONG PREDICATE. A hand-
+                    # built chat completion with the same mission and a real 12000-char chunk
+                    # returned in 13.6s at 445 tok/s against llama-cpp's 422.9s — true, and
+                    # irrelevant, because it omitted the response_format hindsight sends.
+                    # A probe must issue the REQUEST SHAPE THE CALLER USES, not the prompt.
+                    # ⇒ Re-test with a response_format request before proposing this again.
+                    #
+                    # Retain would run OFF-CLUSTER on a workstation GPU, which is the
                     # point: the write path stops sharing a queue with recall. Measured
                     # 2026-09-01 on identical work — one real 12000-char chunk under the
                     # live episode mission:
