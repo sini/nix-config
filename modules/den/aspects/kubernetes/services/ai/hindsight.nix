@@ -250,6 +250,31 @@
                     HINDSIGHT_API_RETAIN_LLM_BASE_URL = retainLlm.url;
                     HINDSIGHT_API_RETAIN_LLM_MODEL = retainLlm.modelAlias;
                     HINDSIGHT_API_RETAIN_LLM_API_KEY = "not-needed";
+
+                    # ONE. Not derived like the read path's cap, because an external
+                    # endpoint's capacity is not ours to compute — it is stated at the
+                    # externalLlms entry, and ninfer's says maxConcurrency=1 with hermes
+                    # as primary tenant. Measured besides: ninfer batches DECODE well but
+                    # SERIALIZES PREFILL (four 30K-token prompts finishing 72s apart),
+                    # and retain is prefill-bound — 5252 prompt tokens against 1520 out.
+                    # So concurrency above 1 inflates each request's wall time without
+                    # adding throughput, and every extra second is spent inside the
+                    # timeout.
+                    HINDSIGHT_API_RETAIN_LLM_MAX_CONCURRENT = "1";
+
+                    # Retain now runs OFF-CLUSTER on a workstation GPU, which is the
+                    # point: the write path stops sharing a queue with recall. Measured
+                    # 2026-09-01 on identical work — one real 12000-char chunk under the
+                    # live episode mission:
+                    #     llama-cpp gpt-oss-20b   422.859s   (7642 in / 67 out)
+                    #     ninfer    qwen3.8-27b    13.6s     (5252 in / 800 out, 445 tok/s)
+                    # ★ THE STANDING CAVEAT AT THE externalLlms ENTRY STILL APPLIES: this
+                    # is a dev workstation that queues behind interactive work and stops
+                    # when it reboots — "suitable for batch corpus work, not the live
+                    # path". archiveHook makes SessionEnd a live path, so that risk is
+                    # accepted rather than absent. It is bounded: the archiver fails OPEN
+                    # and hindsight-backfill's completeness check republishes anything
+                    # left short. Revisit when the backfill era ends.
                   };
 
                   probes = {

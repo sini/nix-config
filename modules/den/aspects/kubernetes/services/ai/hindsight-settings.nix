@@ -38,7 +38,7 @@
   # Set this to "qwen" to restore the split; the instance stays deployed.
   den.aspects.kubernetes.services.ai.hindsight.settings.retainLlmInstance = lib.mkOption {
     type = lib.types.str;
-    default = "gpt-oss";
+    default = "ninfer";
     description = ''
       Key into `kubernetes.services.ai.llama-cpp.instances` serving the retain
       (fact-extraction) path, via HINDSIGHT_API_RETAIN_LLM_*. When equal to
