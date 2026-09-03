@@ -128,10 +128,14 @@
             extensionToLanguage.".nix" = "nix";
           };
 
-          marketplaces = {
-            claude-plugins-official = inputs.claude-plugins-official;
-          }
-          // claudeMarketplaces;
+          # NOT claude-plugins-official: that name is reserved by CC to GitHub
+          # sources in the `anthropics` org, and this option is typed
+          # `attrsOf (either package path)` -- every entry it can express is a
+          # `directory` source, so the official marketplace is rejected on
+          # registration and takes its plugins down with it. CC auto-installs it
+          # from GitHub itself; the `@claude-plugins-official` ids below resolve
+          # against that.
+          marketplaces = claudeMarketplaces;
 
           settings = {
             theme = "auto";
@@ -247,9 +251,9 @@
             };
 
             enabledPlugins = {
-              # All marketplaces (including claude-plugins-official) are store-pinned
-              # via the marketplaces attr above, so plugins resolve from nix-store
-              # paths and CC never network-fetches or rewrites known_marketplaces.json.
+              # These four come from the official marketplace, which CC installs
+              # and owns itself (see marketplaces above). Everything else is
+              # store-pinned and resolves from nix-store paths.
               "commit-commands@claude-plugins-official" = true;
               "skill-creator@claude-plugins-official" = true;
               "code-simplifier@claude-plugins-official" = true;
