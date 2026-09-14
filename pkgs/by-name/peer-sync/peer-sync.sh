@@ -237,7 +237,18 @@ for i in "${!PEERS[@]}"; do
             if ssh -n "${SSH_OPTS[@]}" "$addr" "mkdir -p '$DIR' && git init -q '$DIR/$r' && git -C '$DIR/$r' config receive.denyCurrentBranch updateInstead && { [ -z '$ou' ] || git -C '$DIR/$r' remote add origin '$ou'; }" 2>/dev/null \
               && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/heads/*" 2>/dev/null \
               && git -C "$d" push -q "$addr:$DIR/$r" "+refs/heads/*:refs/remotes/$SELF/*" 2>/dev/null \
-              && ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch' && git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
+              && ssh -n "${SSH_OPTS[@]}" "$addr" "git -C '$DIR/$r' symbolic-ref HEAD 'refs/heads/$head_branch'
+                 # ★ SET THE UPSTREAM, which \`git init\` + push does not and \`git clone\` does.
+                 # Adding the remote is not enough: with no branch.<name>.remote/.merge
+                 # the first thing a handoff session does — \`git pull\` — dies with
+                 # 'There is no tracking information for the current branch', on a repo
+                 # whose \`git remote -v\` looks perfectly correct. Written directly rather
+                 # than via --set-upstream-to, which needs refs/remotes/origin/* to already
+                 # exist and so would require a fetch the peer may have no route (or no
+                 # credentials) to make.
+                 [ -z '$ou' ] || { git -C '$DIR/$r' config 'branch.$head_branch.remote' origin
+                                   git -C '$DIR/$r' config 'branch.$head_branch.merge' 'refs/heads/$head_branch'; }
+                 git -C '$DIR/$r' checkout -q -- . 2>/dev/null || true" 2>/dev/null; then
               ok+=("$r(created-on-peer)")
             else
               failed+=("$r(create)")
