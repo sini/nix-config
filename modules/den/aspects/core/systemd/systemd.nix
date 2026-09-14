@@ -5,10 +5,10 @@
         "d /var/lib/systemd/coredump 0755 root root 7d"
       ];
 
-      services.journald.extraConfig = ''
-        MaxRetentionSec=3month
-        SystemMaxUse=2G
-      '';
+      services.journald.settings.Journal = {
+        MaxRetentionSec = "3month";
+        SystemMaxUse = "2G";
+      };
     };
 
     cache = {
