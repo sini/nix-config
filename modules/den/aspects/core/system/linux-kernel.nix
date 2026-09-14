@@ -6,7 +6,29 @@
   den.aspects.core.system.linux-kernel = {
     nixpkgs-overlays =
       { inputs', ... }:
-      [ inputs'.nix-cachyos-kernel.overlays.default ];
+      [
+        inputs'.nix-cachyos-kernel.overlays.default
+
+        # 7.2.5 added a memchr() bounds check to gud_connector_add_tv_mode();
+        # Clang LTO can't prove num_modes <= GUD_CONNECTOR_TV_MODE_MAX_NUM, so
+        # FORTIFY_SOURCE emits __read_overflow and every -lto variant fails to
+        # link. Still unfixed in 7.2.6. Nothing in the fleet is a USB display.
+        (_final: prev: {
+          cachyosKernels = lib.mapAttrs (
+            _: v:
+            if v ? kernel then
+              v.extend (
+                _: prevPkgs: {
+                  kernel = prevPkgs.kernel.override {
+                    structuredExtraConfig.DRM_GUD = lib.kernel.no;
+                  };
+                }
+              )
+            else
+              v
+          ) prev.cachyosKernels;
+        })
+      ];
 
     settings = {
       channel = lib.mkOption {
@@ -43,28 +65,12 @@
         nix.settings.trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
 
         boot.kernelPackages =
-          (
-            if pkgs ? cachyosKernels && pkgs.cachyosKernels ? ${kernelName} then
-              pkgs.cachyosKernels.${kernelName}
-            else if pkgs ? ${kernelName} then
-              pkgs.${kernelName}
-            else
-              pkgs.linuxPackages_latest
-          ).extend # TODO: ddcutil is broken on linux 7.2 https://github.com/nixos/nixpkgs/issues/554041
-            (
-              _final: prev: {
-                ddcci-driver = prev.ddcci-driver.overrideAttrs (oldAttrs: {
-                  patches = [
-                    (pkgs.fetchpatch {
-                      name = "Use-sysfs_emit-and-field-width-specifier.patch";
-                      url = "https://gitlab.com/liquidnya/ddcci-driver-linux/-/commit/9510aa4aebf32678884f55ae251e54012a354ed1.patch";
-                      hash = "sha256-s12ers7nPFaHOB+8/S8t3dtdoR6slukkfNPdghgftNs=";
-                    })
-                  ]
-                  ++ (oldAttrs.patches or [ ]);
-                });
-              }
-            );
+          if pkgs ? cachyosKernels && pkgs.cachyosKernels ? ${kernelName} then
+            pkgs.cachyosKernels.${kernelName}
+          else if pkgs ? ${kernelName} then
+            pkgs.${kernelName}
+          else
+            pkgs.linuxPackages_latest;
       };
   };
 }

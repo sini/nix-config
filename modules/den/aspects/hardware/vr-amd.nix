@@ -13,33 +13,38 @@
         hardware.graphics.extraPackages = [ pkgs.monado-vulkan-layers ];
 
         # https://wiki.nixos.org/wiki/VR#Applying_as_a_NixOS_kernel_patch
+        #
+        # The patch rewrites amdgpu_ctx_priority_permit()'s final `return
+        # -EACCES` to `return 0`, so any process on the system can take a
+        # high-priority GPU context. Async reprojection needs one.
+        #
+        # Disabled because our OpenXR path is Monado (active_runtime.json below)
+        # reached via xrizer, and services.monado.highPriority already puts a
+        # cap_sys_nice+eip wrapper on monado-service, which satisfies the
+        # unpatched check. This is NOT a general substitute: Steam runs under
+        # bubblewrap in a user namespace that strips capabilities outright, so
+        # no security.wrappers entry can help SteamVR's own runtime or the
+        # flatpak WiVRn. If SteamVR async reprojection regresses, the cheapest
+        # remedy is a manual setcap on Steam's own binary, which lives outside
+        # the store and can therefore hold file capabilities:
+        #   sudo setcap CAP_SYS_NICE=eip \
+        #     ~/.local/share/Steam/steamapps/common/SteamVR/bin/linux64/vrcompositor-launcher
+        # https://vronlinux.org/docs/distros/nixos/
+        #
+        # boot.kernelPatches = [
+        #   {
+        #     name = "amdgpu-ignore-ctx-privileges";
+        #     patch = pkgs.fetchpatch {
+        #       name = "cap_sys_nice_begone.patch";
+        #       url = "https://github.com/Frogging-Family/community-patches/raw/master/linux61-tkg/cap_sys_nice_begone.mypatch";
+        #       hash = "sha256-Y3a0+x2xvHsfLax/uwycdJf3xLxvVfkfDVqjkxNaYEo=";
+        #     };
+        #   }
+        # ];
 
-        boot.kernelPatches = [
-          {
-            name = "amdgpu-ignore-ctx-privileges";
-            patch = pkgs.fetchpatch {
-              name = "cap_sys_nice_begone.patch";
-              url = "https://github.com/Frogging-Family/community-patches/raw/master/linux61-tkg/cap_sys_nice_begone.mypatch";
-              hash = "sha256-Y3a0+x2xvHsfLax/uwycdJf3xLxvVfkfDVqjkxNaYEo=";
-            };
-          }
-        ];
-
-        services.udev = {
-          packages = [ pkgs.openvr ];
-
-          extraRules = ''
-            # Bigscreen Beyond
-            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0101", MODE="0666", TAG+="uaccess"
-            # Bigscreen Bigeye
-            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0666", TAG+="uaccess", GROUP="video"
-            SUBSYSTEM=="usb", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0202", MODE="0660", TAG+="uaccess", GROUP="video"
-            # Bigscreen Beyond Audio Strap
-            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="0105", MODE="0666", TAG+="uaccess"
-            # Bigscreen Beyond Firmware Mode
-            KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="35bd", ATTRS{idProduct}=="4004", MODE="0666", TAG+="uaccess"
-          '';
-        };
+        # Headset-specific udev rules live in their own aspect, e.g.
+        # hardware.bigscreen-beyond.
+        services.udev.packages = [ pkgs.openvr ];
 
         programs.steam.extraCompatPackages = [ pkgs.proton-ge-rtsp-bin ];
 
@@ -65,6 +70,23 @@
           #package = pkgs.custom-monado;
         };
 
+        # WayVR registers an OpenVR autostart manifest holding its own store
+        # path, which goes stale after a GC. `--replace` rewrites it each login.
+        # https://wiki.nixos.org/wiki/VR#SteamVR_autostart
+        # Correct for our Monado/xrizer path. Under SteamVR as the compositor
+        # WayVR must be launched as `steam-run wayvr` instead, because Steam's
+        # FHS blocks it -- https://vronlinux.org/docs/distros/nixos/
+        systemd.user.services.wayvr = {
+          description = "WayVR desktop overlay for OpenXR/OpenVR";
+          partOf = [ "graphical-session.target" ];
+          after = [ "graphical-session.target" ];
+          wantedBy = [ "graphical-session.target" ];
+          serviceConfig = {
+            ExecStart = "${pkgs.wayvr}/bin/wayvr --replace";
+            Restart = "on-failure";
+          };
+        };
+
         systemd.user.services.monado = {
           serviceConfig.LimitNOFILE = 8192;
           environment = {
@@ -76,7 +98,6 @@
             XRT_COMPOSITOR_FORCE_WAYLAND_DIRECT = "1";
             XRT_COMPOSITOR_SCALE_PERCENTAGE = "150";
             OXR_VIEWPORT_SCALE_PERCENTAGE = "125";
-            XRT_COMPOSITOR_DESIRED_MODE = "0";
             U_PACING_COMP_PRESENT_TO_DISPLAY_OFFSET = "5";
             U_PACING_APP_USE_MIN_FRAME_PERIOD = "1";
             XRT_COMPOSITOR_FORCE_GPU_INDEX = "0";
@@ -117,11 +138,7 @@
 
               log = [ "${steam}/logs" ];
 
-              runtime = [
-                "${pkgs.xrizer}/lib/xrizer"
-                # OR
-                #"${pkgs.opencomposite}/lib/opencomposite"
-              ];
+              runtime = [ "${pkgs.xrizer}/lib/xrizer" ];
             };
 
         };

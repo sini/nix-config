@@ -41,6 +41,17 @@
             protontricks.enable = true;
 
             package = pkgs.steam.override {
+              # Raw shell appended to the FHS profile. extraEnv is not usable
+              # here: it goes through lib.toShellVars, which single-quotes.
+              # https://vronlinux.org/docs/distros/nixos/
+              extraProfile = ''
+                # Without this, an XR title launched from Steam cannot see the
+                # host OpenXR runtime and fails to reach Monado/WiVRn.
+                export PRESSURE_VESSEL_IMPORT_OPENXR_1_RUNTIMES=1
+                # VRChat and friends otherwise misreport the timezone.
+                unset TZ
+              '';
+
               extraEnv = {
                 MANGOHUD = true;
                 OBS_VKCAPTURE = true;

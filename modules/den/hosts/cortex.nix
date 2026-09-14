@@ -55,6 +55,7 @@
       hardware.gpu.nvidia-vfio
       hardware.performance
       hardware.vr-amd
+      hardware.bigscreen-beyond
 
       # desktop.hyprland
       desktop.uwsm

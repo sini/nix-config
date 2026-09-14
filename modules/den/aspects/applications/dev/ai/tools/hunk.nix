@@ -7,7 +7,9 @@
       {
         type = "skill";
         skills = {
-          hunk-review = "${inputs'.llm-agents.packages.hunk.src}/skills/hunk-review";
+          # Upstream moved the skill under the hunk package in the monorepo;
+          # the top-level skills/ dir now holds only release/video skills.
+          hunk-review = "${inputs'.llm-agents.packages.hunk.src}/packages/hunk/skills/hunk-review";
         };
       };
 
