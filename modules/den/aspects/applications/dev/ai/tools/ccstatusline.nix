@@ -123,7 +123,13 @@
         };
 
         settings = {
-          version = 3;
+          # Must equal the binary's CURRENT_VERSION. On a lower number ccstatusline
+          # migrates the config and WRITES THE RESULT BACK — into the store symlink's
+          # target, which is read-only, so the write throws, the whole load is
+          # abandoned and the bar renders "⚠ invalid config" off the defaults. A
+          # generated config has to arrive pre-migrated; bump this and the shape
+          # below together whenever the ccstatusline input moves.
+          version = 4;
 
           lines = withIds [
             # Line 1 — WHERE YOU ARE and WHAT IS UNLANDED. Every widget here is one
@@ -143,17 +149,17 @@
               {
                 type = "git-branch";
                 color = "magenta";
-                metadata.hideNoGit = "true";
+                metadata.hide = "no-git";
               }
               {
                 type = "git-changes";
                 color = "yellow";
-                metadata.hideNoGit = "true";
+                metadata.hide = "no-git";
               }
               {
                 # ↑n↓m against upstream: the "unpushed commits" half of the close
                 # protocol, and the one a clean `git status` hides completely.
-                # `hideNoGit` is deliberately NOT set here, unlike its neighbours:
+                # `hide` is deliberately NOT set here, unlike its neighbours:
                 # in sync the widget returns null on its own, so the flag only ever
                 # gates "(no git)" and "(no upstream)" — and a branch with no
                 # upstream is the exact shape a fresh .worktrees/<task> takes, which
