@@ -1,11 +1,20 @@
+{ den, ... }:
 {
   den.aspects.hardware.coolercontrol = {
     nixos =
-      { pkgs, ... }:
       {
-        environment.systemPackages = [ pkgs.liquidctl ];
+        pkgs,
+        lib,
+        host,
+        ...
+      }:
+      let
+        isLaptop = host.hasAspect den.aspects.hardware.laptop;
+      in
+      {
+        environment.systemPackages = lib.optionals (!isLaptop) [ pkgs.liquidctl ];
 
-        programs.coolercontrol.enable = true;
+        programs.coolercontrol.enable = !isLaptop;
       };
   };
 }

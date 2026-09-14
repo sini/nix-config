@@ -1,10 +1,12 @@
 {
   den.aspects.hardware.power-mgmt = {
-    nixos = {
-      powerManagement = {
-        enable = true;
-        cpuFreqGovernor = "ondemand";
+    nixos =
+      { lib, ... }:
+      {
+        powerManagement = {
+          enable = true;
+          cpuFreqGovernor = lib.mkDefault "powersave";
+        };
       };
-    };
   };
 }

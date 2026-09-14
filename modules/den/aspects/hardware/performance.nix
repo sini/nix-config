@@ -15,7 +15,7 @@
         systemd.packages = [ pkgs.lact ];
         systemd.services.lactd.wantedBy = [ "multi-user.target" ];
 
-        powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
+        powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 
         services = {
           irqbalance.enable = true;

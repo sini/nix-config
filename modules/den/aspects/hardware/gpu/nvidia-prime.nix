@@ -35,6 +35,7 @@
       {
         hardware.nvidia = {
           powerManagement.finegrained = true;
+          nvidiaPersistenced = false;
           prime = {
             offload = {
               enable = true;

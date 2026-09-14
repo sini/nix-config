@@ -46,12 +46,12 @@
         };
 
         hardware.nvidia = {
-          forceFullCompositionPipeline = true;
+          forceFullCompositionPipeline = false;
           modesetting.enable = true;
           powerManagement.enable = true;
           open = true;
           nvidiaSettings = false;
-          nvidiaPersistenced = true;
+          nvidiaPersistenced = lib.mkDefault false;
           package = config.boot.kernelPackages.nvidiaPackages.latest;
           # TODO: Remove this once nixpkgs updates the nvidia package to 610.57.04 (or later)
           # let

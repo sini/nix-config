@@ -24,9 +24,28 @@
           macAddress = "preserve";
         };
 
-        powerManagement.cpuFreqGovernor = lib.mkDefault "schedutil";
+        boot.kernelParams = [
+          "pcie_aspm=force"
+          "pcie_aspm.policy=powersupersave"
+        ];
+
+        powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 
         services = {
+          udev.extraRules = ''
+            # Dynamic Energy Performance Preference (EPP) for Intel Speed Shift / AMD P-State HWP
+            ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{online}=="0", RUN+="${pkgs.writeShellScript "battery-epp" ''
+              for f in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do
+                echo balance_power > "$f" 2>/dev/null || true
+              done
+            ''}"
+            ACTION=="add|change", SUBSYSTEM=="power_supply", ATTR{online}=="1", RUN+="${pkgs.writeShellScript "ac-epp" ''
+              for f in /sys/devices/system/cpu/cpu*/cpufreq/energy_performance_preference; do
+                echo balance_performance > "$f" 2>/dev/null || true
+              done
+            ''}"
+          '';
+
           logind.settings.Login = {
             HandleLidSwitch = "suspend";
             HandleLidSwitchExternalPower = "ignore";
@@ -48,20 +67,6 @@
             extraArgs = [
               "--autopower"
             ];
-          };
-
-          auto-cpufreq = {
-            enable = true;
-            settings = {
-              battery = {
-                energy_performance_preference = lib.mkDefault "balance_power";
-                turbo = "never";
-              };
-              charger = {
-                energy_performance_preference = lib.mkDefault "balance_performance";
-                turbo = "auto";
-              };
-            };
           };
 
           thermald.enable = true;
