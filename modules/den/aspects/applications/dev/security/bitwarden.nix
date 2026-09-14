@@ -37,9 +37,40 @@
         config,
         pkgs,
         host,
+        user,
         ...
       }:
+      let
+        # A headless host has no login keyring to hold the master password and no
+        # display to prompt on, so the vault would stay locked forever and the
+        # mux would serve nothing from rbw. Self-gated on the encrypted file's
+        # existence (the `pathExists` idiom used by syncthing/tailscale): the
+        # secret is wired only for users who have actually created one, and
+        # hosts that unlock interactively are untouched.
+        #
+        # There is no generator — the master password is known to the human, not
+        # mintable. Create it with:
+        #   agenix edit .secrets/users/<user>/bitwarden-master-password.age
+        masterPasswordFile = user.secretPath + "/bitwarden-master-password.age";
+        hasMasterPassword = builtins.pathExists masterPasswordFile;
+        masterPasswordPath = config.age.secrets.bitwarden-master-password.path or "";
+
+        # Where a graphical session exists, pinentry-gnome3 can draw a prompt and
+        # the unlock has to wait for the display. Where one does not, the unlock
+        # is unattended and belongs on default.target alongside the agent — on a
+        # headless host graphical-session.target never activates, which is what
+        # left the vault locked.
+        isGraphical = host.hasAspect den.aspects.roles.workstation;
+        unlockTarget = if isGraphical then "graphical-session.target" else "default.target";
+      in
       {
+        age.secrets = lib.mkIf hasMasterPassword {
+          bitwarden-master-password = {
+            rekeyFile = masterPasswordFile;
+            mode = "600";
+          };
+        };
+
         home.packages = [
           pkgs.libsecret
 
@@ -101,15 +132,31 @@
         # the login password — the same trust model as the SSH keys gcr already
         # holds there, but it does mean vault-at-rest security is now login
         # password strength.
+        #
+        # The agenix file is the headless source, tried after the keyring and
+        # before the interactive fallback. Keyring first so a graphical host
+        # behaves exactly as it did; the file is the only one of the three that
+        # can answer on a machine with neither a keyring daemon nor a terminal.
+        # At rest it is encrypted to the yubikey master identity and decrypted
+        # to tmpfs mode 600 — the same handling as this user's ssh signing key,
+        # which is a stronger resting place than the login-password keyring.
         programs.rbw.settings.pinentry = pkgs.writeShellScriptBin "pinentry-rbw" ''
           # glib's bus fallback covers this, but only when XDG_RUNTIME_DIR is
           # set; pin the address so keyring lookups also work from odd contexts.
           export DBUS_SESSION_BUS_ADDRESS="''${DBUS_SESSION_BUS_ADDRESS:-unix:path=/run/user/$(${pkgs.coreutils}/bin/id -u)/bus}"
 
-          if password=$(${pkgs.libsecret}/bin/secret-tool lookup service rbw) \
-            && [ -n "$password" ]; then
-            # Assuan wants %, CR and LF percent-escaped. secret-tool store reads
-            # one line, so % is the only one that can survive the round-trip.
+          password=$(${pkgs.libsecret}/bin/secret-tool lookup service rbw 2>/dev/null || true)
+          ${lib.optionalString hasMasterPassword ''
+            # `read` returns non-zero on a final line with no newline, so the
+            # exit status cannot gate this — the value does.
+            if [ -z "$password" ] && [ -r ${lib.escapeShellArg masterPasswordPath} ]; then
+              IFS= read -r password < ${lib.escapeShellArg masterPasswordPath} || true
+            fi
+          ''}
+
+          if [ -n "$password" ]; then
+            # Assuan wants %, CR and LF percent-escaped. Both sources are read a
+            # line at a time, so % is the only one that can survive the round-trip.
             escaped=''${password//%/%25}
             printf 'OK pinentry-rbw ready\n'
             while IFS=' ' read -r command _; do
@@ -196,12 +243,19 @@
             Install.WantedBy = [ "default.target" ];
           };
 
-        # The unlock is graphical: pinentry-gnome3 needs the session's display
-        # and bus, and those only reach the user manager once the graphical
-        # session imports them — after default.target, which is why this cannot
-        # ride along with the agent. On a headless host the target never
-        # activates and this is simply inert (pinentry-tty there has no terminal
-        # to prompt on at login anyway).
+        # On a graphical host the unlock is graphical: pinentry-gnome3 needs the
+        # session's display and bus, and those only reach the user manager once
+        # the graphical session imports them — after default.target, which is why
+        # it cannot ride along with the agent there.
+        #
+        # A headless host has no such target, so the unit used to be permanently
+        # inert and the vault permanently locked: rbw's ssh-agent socket exists
+        # and serves nothing, and the mux silently offers the standard agent's
+        # keys only. That is not a degraded mode, it is a broken one — a handoff
+        # host cannot authenticate to any remote whose key lives in the vault.
+        # So the install target follows the host: graphical-session.target where
+        # there is a session to wait for, default.target where the unlock is
+        # unattended off the agenix master password above.
         #
         # Kept separate from the agent rather than folded in as ExecStartPost so
         # that a dismissed or mistyped prompt fails only this unit. The vault
@@ -216,10 +270,24 @@
             # the unlock just quietly does nothing.
             unlockAtLogin = pkgs.writeShellScript "rbw-unlock-at-login" ''
               # The agent lives on default.target and so can restart before the
-              # session has a display. With a keyring entry that does not matter,
-              # since the lookup only needs the bus; without one there is nothing
-              # to prompt on, and leaving the vault locked beats a failed unit.
+              # session has a display. With a password source that does not
+              # matter — the keyring lookup only needs the bus, and the agenix
+              # file needs nothing at all; with neither there is nothing to
+              # prompt on, and leaving the vault locked beats a failed unit.
+              ${lib.optionalString hasMasterPassword ''
+                # agenix decrypts into tmpfs during home-manager activation, which
+                # is a system service and so is not ordered against this user
+                # manager. Wait for the file rather than assume it (same poll the
+                # ssh signing-key loader uses) — a miss here would fall through to
+                # a pinentry that cannot prompt and fail the unit on a cold boot.
+                for _ in $(${pkgs.coreutils}/bin/seq 100); do
+                  [ -r ${lib.escapeShellArg masterPasswordPath} ] && break
+                  ${pkgs.coreutils}/bin/sleep 0.1
+                done
+              ''}
+
               if [ -z "''${WAYLAND_DISPLAY:-}''${DISPLAY:-}" ] \
+                && [ ! -r "${if hasMasterPassword then masterPasswordPath else "/nonexistent"}" ] \
                 && ! ${pkgs.libsecret}/bin/secret-tool lookup service rbw >/dev/null 2>&1; then
                 exit 0
               fi
@@ -234,17 +302,17 @@
           in
           {
             Unit = {
-              Description = "Unlock the rbw vault at graphical login";
+              Description = "Unlock the rbw vault at login";
               After = [
-                "graphical-session.target"
+                unlockTarget
                 "rbw-agent.service"
               ];
               Wants = [ "rbw-agent.service" ];
-              # PartOf the agent as well as the session: RemainAfterExit keeps
+              # PartOf the agent as well as the target: RemainAfterExit keeps
               # this unit active for the life of one agent, and it has to be
               # stopped when that agent goes away before it can run for the next.
               PartOf = [
-                "graphical-session.target"
+                unlockTarget
                 "rbw-agent.service"
               ];
             };
@@ -256,7 +324,7 @@
               # timeout would kill the prompt out from under you.
               TimeoutStartSec = "infinity";
             };
-            Install.WantedBy = [ "graphical-session.target" ];
+            Install.WantedBy = [ unlockTarget ];
           };
       };
 
