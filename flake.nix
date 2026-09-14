@@ -1,4 +1,4 @@
-# DO-NOT-EDIT. This file was auto-generated using github:vic/flake-file.
+# DO-NOT-EDIT. This file was auto-generated using github:denful/flake-file.
 # Use `nix run .#write-flake` to regenerate it.
 {
   description = "A NixOS flake describing homelab kubernetes nodes, kubernetes service deployments,\nmac laptop, desktop workstation, virtualized VFIO, and all manner of things compute.\n";
@@ -207,7 +207,7 @@
       url = "github:microvm-nix/microvm.nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    ninfer-3090.url = "github:Don-Chad/ninfer-3090/release/v0.6.0-rtx3090";
+    ninfer-3090.url = "github:Don-Chad/ninfer-3090/release/v0.6.2-rtx3090";
     niri.url = "github:sodiboo/niri-flake";
     nix-cachyos-kernel = {
       url = "github:xddxdd/nix-cachyos-kernel";
@@ -266,10 +266,7 @@
     };
     nixcord = {
       url = "github:kaylorben/nixcord";
-      inputs = {
-        flake-parts.follows = "flake-parts";
-        nixpkgs.follows = "nixpkgs-unstable";
-      };
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     nixhelm.url = "github:nix-community/nixhelm";
     nixidy = {

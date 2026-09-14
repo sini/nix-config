@@ -254,7 +254,6 @@
       nixcord = {
         url = "github:kaylorben/nixcord";
         inputs = {
-          flake-parts.follows = "flake-parts";
           nixpkgs.follows = "nixpkgs-unstable";
         };
       };
