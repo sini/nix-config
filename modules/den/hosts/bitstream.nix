@@ -34,6 +34,7 @@
     includes = with den.aspects; [
       roles.default
       roles.server
+      roles.dev
       roles.nix-builder
 
       disk.zfs-disk-single

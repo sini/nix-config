@@ -15,8 +15,34 @@
         ...
       }:
       let
-        # TODO: abstract away stylix dep
-        inherit (config.lib.stylix) colors;
+        # roles.dev is included by headless hosts (servers, nix-on-droid), which
+        # carry no desktop.style.stylix — so the theme source has to be optional
+        # or a terminal multiplexer stops evaluating on a machine that has no
+        # desktop at all. Fallback is the same scheme stylix is configured with
+        # (tokyo-night-moon), so zellij looks identical either way. Bare hex: the
+        # config below writes its own `#` prefix. Same shape as pi.nix.
+        colors =
+          if config ? lib.stylix && config.lib.stylix ? colors then
+            config.lib.stylix.colors
+          else
+            {
+              base00 = "222436";
+              base01 = "1e2030";
+              base02 = "2d3f76";
+              base03 = "3b4261";
+              base04 = "636da6";
+              base05 = "828bb8";
+              base06 = "aeb4d1";
+              base07 = "c8d3f5";
+              base08 = "ff757f";
+              base09 = "ffc777";
+              base0A = "ffdf77";
+              base0B = "c3e88d";
+              base0C = "86e1fc";
+              base0D = "82aaff";
+              base0E = "fca7ea";
+              base0F = "c53b53";
+            };
 
         zsesh = pkgs.writeScriptBin "zsesh" ''
           #! /usr/bin/env bash

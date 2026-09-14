@@ -45,12 +45,19 @@
           map (
             entry:
             lib.nameValuePair entry.hostname {
+              # The tsName is pinned unconditionally, not just for address-less
+              # hosts. It is the same key under another name, and it is the only
+              # name that works off-LAN — the `.<env>.<domain>` form resolves to
+              # the public edge from outside, which accepts the TCP connect and
+              # then never speaks SSH. peer-sync runs BatchMode, so an unpinned
+              # `.ts.` name is a hard "Host key verification failed" on exactly
+              # the path a handoff depends on.
               hostNames = [
                 entry.hostname
                 "${entry.hostname}.${entry.domain}"
+                entry.tsName
               ]
-              ++ entry.ipv4
-              ++ (if entry.ipv4 == [ ] then [ entry.tsName ] else [ ]);
+              ++ entry.ipv4;
               inherit (entry) publicKeyFile;
             }
           ) peers
