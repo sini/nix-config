@@ -337,6 +337,10 @@
       url = "github:nextlevelbuilder/ui-ux-pro-max-skill";
       flake = false;
     };
+    umu = {
+      url = "github:Open-Wine-Components/umu-launcher?dir=packaging/nix";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     zen-browser = {
       url = "github:0xc000022070/zen-browser-flake";
       inputs = {

@@ -3877,6 +3877,7 @@
         "treefmt-nix": "treefmt-nix_8",
         "ucodenix": "ucodenix",
         "ui-ux-pro-max-skill": "ui-ux-pro-max-skill",
+        "umu": "umu",
         "zen-browser": "zen-browser",
         "zjstatus": "zjstatus"
       }
@@ -4659,6 +4660,28 @@
       "original": {
         "owner": "nextlevelbuilder",
         "repo": "ui-ux-pro-max-skill",
+        "type": "github"
+      }
+    },
+    "umu": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "dir": "packaging/nix",
+        "lastModified": 1785962636,
+        "narHash": "sha256-QwgKUCCDiZC7DCwW+Ir5UED0LG3dv/Q+4ACZa89Uw9w=",
+        "owner": "Open-Wine-Components",
+        "repo": "umu-launcher",
+        "rev": "e2b203a1fdd2af9f35166f5713cb3f85d72587e2",
+        "type": "github"
+      },
+      "original": {
+        "dir": "packaging/nix",
+        "owner": "Open-Wine-Components",
+        "repo": "umu-launcher",
         "type": "github"
       }
     },

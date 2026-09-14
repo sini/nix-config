@@ -8,6 +8,7 @@
       applications.gaming.sunshine
       applications.gaming.mangohud
       applications.gaming.emulation
+      applications.gaming.umu-launcher
     ];
   };
 }
