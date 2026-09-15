@@ -19,11 +19,9 @@
   # nix-store paths instead of fetching from GitHub at runtime (consistent with the
   # read-only settings.json below). Plugin *enablement* lives in settings.enabledPlugins.
   flake-file.inputs = {
-    # The built-in official marketplace, store-pinned. CC otherwise bootstraps it
-    # from github on launch and network-refreshes its timestamp, rewriting
-    # known_marketplaces.json every session (the source of the .hm-backup clobber
-    # loop). Registering it as a directory source pre-empts the bootstrap: local
-    # sources are never refreshed, so the file stops diverging.
+    # The built-in official marketplace, store-pinned: it backs the `installLocation` of
+    # the `claude-plugins-official` entry in the generated registry below, so the four
+    # official plugins resolve from the store instead of a network clone.
     claude-plugins-official = {
       url = "github:anthropics/claude-plugins-official";
       flake = false;
@@ -128,14 +126,12 @@
             extensionToLanguage.".nix" = "nix";
           };
 
-          # NOT claude-plugins-official: that name is reserved by CC to GitHub
-          # sources in the `anthropics` org, and this option is typed
-          # `attrsOf (either package path)` -- every entry it can express is a
-          # `directory` source, so the official marketplace is rejected on
-          # registration and takes its plugins down with it. CC auto-installs it
-          # from GitHub itself; the `@claude-plugins-official` ids below resolve
-          # against that.
-          marketplaces = claudeMarketplaces;
+          # Empty on purpose: the registry is written below instead. This option is typed
+          # `attrsOf (either package path)`, so every entry it can express is a `directory`
+          # source — and CC reserves the name `claude-plugins-official` to GitHub sources in
+          # the `anthropics` org, so the one entry that must be in that file is the one entry
+          # this option cannot produce.
+          marketplaces = { };
 
           settings = {
             theme = "auto";
@@ -405,6 +401,51 @@
             };
           };
         };
+
+        # ★ CC'S MARKETPLACE REGISTRY, WRITTEN WHOLE SO HOME-MANAGER IS ITS ONLY WRITER.
+        # The module's `marketplaces` option produced the same six store-pinned entries but
+        # could not produce the seventh, and that seventh was the entire conflict: CC appended
+        # `claude-plugins-official` itself and its write replaced HM's symlink with a plain
+        # file, which HM then moved to `<name>..hm-backup` on the next activation and refused
+        # to move again on the one after — `home-manager-<user>.service` exits 1 and the
+        # colmena deploy dies with it. Measured against both CC-written copies on cortex: the
+        # six HM entries come through byte-identical, the appended official entry is the only
+        # difference, and the file's mtime equals that entry's `lastUpdated` — CC's sole write
+        # here is registering that one marketplace.
+        #
+        # `autoUpdate = false` on every entry is what holds it. CC resolves the flag as: an
+        # explicit entry value wins, else a built-in name set decides — and
+        # `claude-plugins-official` is in that set, so this name alone defaults to `true` and
+        # gets a startup refresh that rewrites the file. The six directory entries have never
+        # been rewritten precisely because they carry the flag; the official one now does too.
+        #
+        # The official entry must declare the GitHub source it really is (CC validates the
+        # reserved name against its source), while `installLocation` reads the pinned input —
+        # declared source, store-resolved content, no clone and no network on a fresh host.
+        home.file.".claude/plugins/known_marketplaces.json".source =
+          (pkgs.formats.json { }).generate "claude-code-known-marketplaces.json"
+            (
+              lib.mapAttrs (_: src: {
+                source = {
+                  source = "directory";
+                  path = "${src}";
+                };
+                installLocation = "${src}";
+                lastUpdated = "1970-01-01T00:00:00Z";
+                autoUpdate = false;
+              }) claudeMarketplaces
+              // {
+                claude-plugins-official = {
+                  source = {
+                    source = "github";
+                    repo = "anthropics/claude-plugins-official";
+                  };
+                  installLocation = "${inputs.claude-plugins-official}";
+                  lastUpdated = "1970-01-01T00:00:00Z";
+                  autoUpdate = false;
+                };
+              }
+            );
 
         # RETIRED: `.claude/env.sh` used to live here, on the belief that Claude Code sources it.
         # It does not. Measured against claude-code 2.1.229: `env.sh` occurs ZERO times in the
