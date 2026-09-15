@@ -42,6 +42,7 @@
             inputs'.llm-agents.packages.beads-rust
             pkgs.jq
             pkgs.coreutils
+            pkgs.util-linux # flock — the single-flight guard below
           ];
           text = ''
             # ccstatusline re-runs every custom-command widget on EVERY render and
@@ -52,8 +53,33 @@
             cache="''${XDG_RUNTIME_DIR:-/tmp}/ccstatusline-beads.$(id -u)"
             ttl=15
 
+            # NEVER EXIT SILENT. ccstatusline hides an empty segment, so every path
+            # out of here prints — the stale cache if we have one, the broken marker
+            # if we do not. An absent `bd` must always mean the instrument broke.
+            stale() {
+              if [ -f "$cache" ]; then cat "$cache"; else printf '%s' "$(printf '\033[31m')bd ?$(printf '\033[0m')"; fi
+            }
+
             if [ -f "$cache" ] && [ $(( $(date +%s) - $(stat -c %Y "$cache") )) -lt "$ttl" ]; then
               cat "$cache"
+              exit 0
+            fi
+
+            # ★★★ SINGLE FLIGHT — ONE REFRESHER AT A TIME, ACROSS EVERY SESSION.
+            # Measured 2026-09-15: without this the widget is a fork bomb against a
+            # contended tracker. `br` serializes on the SQLite lock; ccstatusline
+            # enforces its 1000ms budget on the WIDGET and never on the child, so a
+            # slow `br` is orphaned to ppid 1 and keeps waiting. The cache is only
+            # written on the success path, so nothing refreshes it, and every
+            # sub-second render fires another `br` — 24 live, oldest 156s, split
+            # 12/12 across two sessions, rebuilding within ~5min of every `pkill`.
+            # Two sessions collide here because BEADS_DIR is set globally and a
+            # session in ANY repo queries this one's tracker, which is deliberate.
+            # flock and not a mkdir lock: these processes get killed, and flock
+            # releases on death where a lock directory strands.
+            exec 9>"$cache.lock"
+            if ! flock -n 9; then
+              stale
               exit 0
             fi
 
@@ -68,11 +94,21 @@
             # against `{"issues":[]}` returns 1, its KEY COUNT, so a `ready` that
             # ever stopped being a bare array would read as one ready bead rather
             # than as a fault. `x` is unreachable as a count, so it lands in `broken`.
-            ready=$(br ready --limit 0 --json 2>/dev/null \
+            #
+            # ★★ EVERY CALL IS BOUNDED. `timeout` is what makes a HANG reachable by
+            # the `broken` check below: without it a blocked `br` never returns, so
+            # the cache is never written and the segment never degrades — it just
+            # spawns. 3s against a measured ~0.21s worst call is 14x headroom, and a
+            # timeout lands as an empty string, which is already a FAILURE here.
+            # `-k 1` escalates to SIGKILL: plain `timeout` does reap an ordinary
+            # child (measured), but `br` closing a DB cleanly on SIGTERM is exactly
+            # the shape that would strand one, and this whole guard exists because
+            # stranded `br` processes accumulate.
+            ready=$(timeout -k 1 3 br ready --limit 0 --json 2>/dev/null \
               | jq -r 'if type == "array" then length else "x" end' 2>/dev/null || true)
-            prog=$(br list --status in_progress --limit 0 --json 2>/dev/null \
+            prog=$(timeout -k 1 3 br list --status in_progress --limit 0 --json 2>/dev/null \
               | jq -r 'if (.total | type) == "number" then .total else "x" end' 2>/dev/null || true)
-            dirty=$(br sync --status --json 2>/dev/null \
+            dirty=$(timeout -k 1 3 br sync --status --json 2>/dev/null \
               | jq -r 'if (.dirty_count | type) == "number" then .dirty_count else "x" end' 2>/dev/null || true)
 
             # A missing or broken `br` reaches here as an empty string, so the
