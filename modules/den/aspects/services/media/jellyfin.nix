@@ -20,6 +20,8 @@
       let
         domain = environment.getDomainFor "jellyfin";
         mediaRoot = "/mnt/data/media";
+        # declarative-jellyfin supports 10.11.x at most; nixpkgs-master ships 12.0.
+        stable = inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system};
       in
       {
         imports = [
@@ -38,7 +40,9 @@
             enable = true;
             serverId = builtins.hashString "md5" domain;
 
-            package = pkgs.jellyfin;
+            package = stable.jellyfin;
+            jellyfin-web = stable.jellyfin-web;
+            jellyfin-ffmpeg = stable.jellyfin-ffmpeg;
 
             network = {
               enableIPv6 = true;
@@ -49,6 +53,7 @@
             };
 
             encoding = {
+              encoderAppPathDisplay = "${stable.jellyfin-ffmpeg}";
               enableVppTonemapping = true;
               enableTonemapping = true;
               tonemappingAlgorithm = "bt2390";
