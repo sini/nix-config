@@ -10,10 +10,10 @@
 { den, lib }:
 let
   inherit (lib) mkOption types;
-  inherit (den.lib.aspects.fx.keyClassification) structuralKeysSet;
+  inherit (den.lib.aspects.fx.keyClassification) isStructuralKey;
   classKeys = den.classes or { };
   quirkKeys = den.quirks or { };
-  skipKey = k: structuralKeysSet ? ${k} || classKeys ? ${k} || quirkKeys ? ${k};
+  skipKey = k: isStructuralKey k || classKeys ? ${k} || quirkKeys ? ${k};
 
   # Settings declarations may be plain option attrsets
   # (`{ foo = mkOption {...}; }`) or module-shaped with explicit
