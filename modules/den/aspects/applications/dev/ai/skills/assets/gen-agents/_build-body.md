@@ -1,9 +1,13 @@
 ## How to land
 
+★ **You land §3a only** — the gating oracle. List any §3b item (cell suites,
+planted violations, censuses, enforcers, byte-parity) in your report under
+*guarantee deferred*; never build it here.
+
 1. **Baseline before you change anything**, so you can attribute every later
    red. Record what you got. **Measure it yourself** — a figure
    from the spec was true of a different tree.
-2. Implement the spec's mechanism.
+2. Implement the spec's mechanism and §3a.
 3. Re-run the suites and **attribute every delta**.
 4. **Verify the artefact changed before you read any suite.** A scripted edit
    that throws part-way can roll back every replacement and leave the tree
@@ -21,8 +25,9 @@
    against the tree as it stood before your edit — inheriting it is relaying, not
    measuring.
 
-★ **An unexpected red is a FINDING, not a fixture to update.** If a cell flips
-that the spec did not enumerate, **stop and report it**.
+★ **A red on first sight is a FINDING, reported verbatim — never a fixture
+edit.** If a cell flips that the spec did not enumerate, **stop and report
+it**.
 
 ★★ **YOU ARE DONE WHEN THE SUITE IS GREEN ON THE CLEAN TREE AND YOU HAVE SHOWN IT
 RED IN THE SAME RUN, THE SEED IS REMOVED, AND THE TREE'S DIGEST IS BACK WHERE IT
@@ -31,6 +36,7 @@ A green you have never seen fail is a claim about a suite you have not tested.
 
 ## Landing discipline
 
+- **One report per landing.**
 - **Format first**; a first-pass non-zero exit means it changed files, so re-run
   until clean.
 - **Commit path-scoped**: `git -C <repo> commit -m "…" -- <explicit paths>`.

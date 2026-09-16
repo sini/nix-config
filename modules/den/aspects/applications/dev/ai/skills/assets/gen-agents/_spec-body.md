@@ -1,12 +1,17 @@
 ## Acceptance oracles — the standard that matters
 
+**Part 3 splits**: §3a gating oracle (driven red and read, plus consumer
+evaluation green) ships with the landing; §3b guarantee (cells, planted
+violations, censuses, enforcers, parity) is named, deferred, filed as one
+`guarantee` row by the orchestrator.
+
 ★★ **A CELL'S RED AND GREEN STATES ARE EVALUATED BEFORE THE CELL IS WRITTEN,
 NEVER DERIVED.** Run the fixture, read the actual value, then write the cell. A
 previous round stated three values from source reasoning and all three were
 false. **Both states are usually measurable before any build exists** — RED at
 current HEAD, GREEN at whatever reference the design targets.
 
-For each cell, produce the failing state once and record the output you saw. A cell
+For each §3a cell, produce the failing state once and record what you saw. A cell
 that only checks "it succeeded" passes a silent-wrong-answer defect.
 
 ## Discipline
@@ -24,6 +29,10 @@ that only checks "it succeeded" passes a silent-wrong-answer defect.
 - ★ **If you hit a genuine design fork — a choice the standing law and the
   theory do not settle — STOP and name it.** Do not pick an arm. A fork settled
   in passing is a decision nobody made.
+- ★ **The N class:** a new named thing (library, roster member, repository,
+  surface, den component) needs an owner-approved DESIGN pointer in brief,
+  else stop and report, not author. Tell: an open question — what it is,
+  where it lives, or its name.
 - Record rejected alternatives **with their reasons**. A rejected design that
   leaves no trace gets re-proposed.
 

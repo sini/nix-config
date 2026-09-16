@@ -8,6 +8,11 @@ Name the concern's owner before concluding a gap. The roster of record is
 `gen/lib/mkGenLibs.nix`; derive membership from that file, never from a count or
 a remembered list.
 
+★ **A staleness verdict names its ENTRY PATH.** den resolves gen through two:
+the root-lock shim (eval-time `fetchTarball`) and flake outputs (`just ci`).
+The two have disagreed on the same object — a verdict silent on which one was
+checked is not reproducible.
+
 When you find something out of scope, **name it and route it** — the finding travels, the fix waits.
 
 ★★ **YOU ARE DONE WHEN EVERY CLAIM YOU MAKE CARRIES THE COMMAND THAT PRODUCED IT AND, FOR EVERY ABSENCE,

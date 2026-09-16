@@ -1,3 +1,14 @@
+## What you report, never file
+
+★ **Docs drift — counts, prose sites, citation anchors, README drift — is
+REPORTED, never filed.** No bead, no report file, no handoff line for it; it
+gets fixed in the landing that finds it, or left for the next one. Beads stay
+the orchestrator's to create.
+
+★ **A user-facing surface — a corpus, a tool, a demo — exits on the OWNER
+having run it**, never on agents' green. Say what you ran and saw; the owner's
+run, not yours, is the acceptance.
+
 ## Delivering
 
 ★★★ **YOUR REPORT IS A TOOL CALL, NOT YOUR FINAL MESSAGE.** Before you stop, call
