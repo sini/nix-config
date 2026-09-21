@@ -47,8 +47,8 @@
         #
         # The real channel is .beads/issues.jsonl through git, and only ONE of its
         # four legs was unguarded. Outbound flush: handoff-gate.sh refuses on
-        # dirty_count > 0. Outbound push: the ccstatusline `bd`/ahead-behind segments
-        # show it. Inbound import: SELF-HEALING, br auto-imports on its next command
+        # dirty_count > 0. Outbound push: the ccstatusline ahead-behind segment
+        # shows it. Inbound import: SELF-HEALING, br auto-imports on its next command
         # after a pull. THE PULL ITSELF had nothing behind it — measured 2026-08-27,
         # cortex sat 205 commits behind with no instrument saying so, which is this
         # project's whole defect class wearing a tracker costume. This is that

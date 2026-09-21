@@ -1,151 +1,23 @@
 # ccstatusline (github:sirmalloc/ccstatusline): the Claude Code status line, taken
 # from the numtide collection we already ship as an input rather than from npx at
-# runtime. Its own aspect in the beads.nix/rtk.nix mold — the binary, the config,
-# the Claude Code wiring and the one workflow-specific segment all live here.
+# runtime. Its own aspect in the beads.nix/rtk.nix mold — the binary, the config and
+# the Claude Code wiring all live here.
 #
 # ★ THE CONFIG IS A READ-ONLY STORE SYMLINK, like ~/.claude/settings.json. Its own
 # TUI (`ccstatusline` with no args) is still the right way to BROWSE widgets and
 # preview colours, but its save will fail — change the layout HERE, not in the TUI.
 # That is deliberate for a second reason: on save the TUI ALSO rewrites
 # ~/.claude/settings.json to sync widget hooks, and that file is generated too.
-#
-# The custom `bd` segment is the reason this aspect exists rather than a two-line
-# default. It surfaces, continuously, the exact state STATUS/handoff-gate.sh
-# refuses a commit over — in-progress rows nobody closed, and a beads export that
-# has gone stale behind a DB write — instead of discovering it at close.
 {
   den.aspects.applications.dev.ai.tools.ccstatusline = {
     homeManager =
       {
-        config,
         lib,
         pkgs,
         inputs',
         ...
       }:
       let
-        # Single source of truth: the workspace pin lives in tools/beads.nix and is
-        # read back here rather than restated. Empty when the beads aspect is not
-        # opted in, in which case the segment falls through to whatever `br`
-        # resolves from the cwd — and says so loudly if that resolves to nothing.
-        beadsDir = lib.attrByPath [
-          "programs"
-          "claude-code"
-          "settings"
-          "env"
-          "BEADS_DIR"
-        ] "" config;
-
-        beadsStatus = pkgs.writeShellApplication {
-          name = "ccstatusline-beads";
-          runtimeInputs = [
-            inputs'.llm-agents.packages.beads-rust
-            pkgs.jq
-            pkgs.coreutils
-            pkgs.util-linux # flock — the single-flight guard below
-          ];
-          text = ''
-            # ccstatusline re-runs every custom-command widget on EVERY render and
-            # Claude Code renders sub-second, so these queries are CACHED, not
-            # re-run: measured together they cost ~0.40s (ready 0.21, list 0.11,
-            # sync 0.08) against a 1000ms per-widget timeout. Uncached this is a
-            # permanent background process storm for a number that moves rarely.
-            cache="''${XDG_RUNTIME_DIR:-/tmp}/ccstatusline-beads.$(id -u)"
-            ttl=15
-
-            # NEVER EXIT SILENT. ccstatusline hides an empty segment, so every path
-            # out of here prints — the stale cache if we have one, the broken marker
-            # if we do not. An absent `bd` must always mean the instrument broke.
-            stale() {
-              if [ -f "$cache" ]; then cat "$cache"; else printf '%s' "$(printf '\033[31m')bd ?$(printf '\033[0m')"; fi
-            }
-
-            if [ -f "$cache" ] && [ $(( $(date +%s) - $(stat -c %Y "$cache") )) -lt "$ttl" ]; then
-              cat "$cache"
-              exit 0
-            fi
-
-            # ★★★ SINGLE FLIGHT — ONE REFRESHER AT A TIME, ACROSS EVERY SESSION.
-            # Measured 2026-09-15: without this the widget is a fork bomb against a
-            # contended tracker. `br` serializes on the SQLite lock; ccstatusline
-            # enforces its 1000ms budget on the WIDGET and never on the child, so a
-            # slow `br` is orphaned to ppid 1 and keeps waiting. The cache is only
-            # written on the success path, so nothing refreshes it, and every
-            # sub-second render fires another `br` — 24 live, oldest 156s, split
-            # 12/12 across two sessions, rebuilding within ~5min of every `pkill`.
-            # Two sessions collide here because BEADS_DIR is set globally and a
-            # session in ANY repo queries this one's tracker, which is deliberate.
-            # flock and not a mkdir lock: these processes get killed, and flock
-            # releases on death where a lock directory strands.
-            exec 9>"$cache.lock"
-            if ! flock -n 9; then
-              stale
-              exit 0
-            fi
-
-            export BEADS_DIR="''${BEADS_DIR:-${beadsDir}}"
-
-            # br's three JSON commands return three DIFFERENT envelopes: `ready` is a
-            # BARE ARRAY, `list` wraps as {issues,total,...}, `sync` is an object.
-
-            # ★ EACH ACCESSOR ASSERTS ITS ENVELOPE and emits a non-number when the
-            # shape is wrong, because a bare `.total` or `length` does not fail on a
-            # wrong envelope — it ANSWERS. Measured while building this: `length`
-            # against `{"issues":[]}` returns 1, its KEY COUNT, so a `ready` that
-            # ever stopped being a bare array would read as one ready bead rather
-            # than as a fault. `x` is unreachable as a count, so it lands in `broken`.
-            #
-            # ★★ EVERY CALL IS BOUNDED. `timeout` is what makes a HANG reachable by
-            # the `broken` check below: without it a blocked `br` never returns, so
-            # the cache is never written and the segment never degrades — it just
-            # spawns. 3s against a measured ~0.21s worst call is 14x headroom, and a
-            # timeout lands as an empty string, which is already a FAILURE here.
-            # `-k 1` escalates to SIGKILL: plain `timeout` does reap an ordinary
-            # child (measured), but `br` closing a DB cleanly on SIGTERM is exactly
-            # the shape that would strand one, and this whole guard exists because
-            # stranded `br` processes accumulate.
-            ready=$(timeout -k 1 3 br ready --limit 0 --json 2>/dev/null \
-              | jq -r 'if type == "array" then length else "x" end' 2>/dev/null || true)
-            prog=$(timeout -k 1 3 br list --status in_progress --limit 0 --json 2>/dev/null \
-              | jq -r 'if (.total | type) == "number" then .total else "x" end' 2>/dev/null || true)
-            dirty=$(timeout -k 1 3 br sync --status --json 2>/dev/null \
-              | jq -r 'if (.dirty_count | type) == "number" then .dirty_count else "x" end' 2>/dev/null || true)
-
-            # A missing or broken `br` reaches here as an empty string, so the
-            # `2>/dev/null` above cannot turn a dead instrument into a clean zero.
-            # Anything that is not a plain number is a FAILURE.
-            broken=0
-            for v in "$ready" "$prog" "$dirty"; do
-              case "$v" in
-                "" | *[!0-9]*) broken=1 ;;
-              esac
-            done
-
-            red=$'\033[31m'
-            reset=$'\033[0m'
-
-            if [ "$broken" -eq 1 ]; then
-              out="''${red}bd ?''${reset}"
-            else
-              # The ready count prints EVEN AT ZERO. ccstatusline hides a segment
-              # whose output is empty, so a segment that went quiet on success would
-              # be indistinguishable from a segment whose tool died — and an absent
-              # `bd` must always mean the instrument broke, never that the queue is
-              # clean. `br ready` empty is itself a reportable state, not silence.
-              out="bd $ready"
-              if [ "$prog" -gt 0 ]; then out="$out +$prog"; fi
-              if [ "$dirty" -gt 0 ]; then out="$out ''${red}!$dirty''${reset}"; fi
-            fi
-
-            # Sessions run concurrently and share this cache; write through a temp
-            # so a reader never sees a half-written line.
-            tmp=$(mktemp "$cache.XXXXXX")
-            printf '%s' "$out" > "$tmp"
-            mv -f "$tmp" "$cache"
-            printf '%s' "$out"
-          '';
-        };
-
         # `id` is required on every widget by ccstatusline's schema and carries no
         # meaning for a generated config, so it is derived from position rather than
         # hand-maintained. The TUI mints UUIDs; nothing reads them across saves that
@@ -170,7 +42,7 @@
           lines = withIds [
             # Line 1 — WHERE YOU ARE and WHAT IS UNLANDED. Every widget here is one
             # the close protocol asks about: which worktree holds the writer, what
-            # is uncommitted, what is committed but unpushed, what the tracker says.
+            # is uncommitted, what is committed but unpushed.
             [
               {
                 type = "current-working-dir";
@@ -208,15 +80,6 @@
                 # visible ⇒ you are in .worktrees/<task> and are its single writer.
                 type = "worktree-name";
                 color = "yellow";
-              }
-              { type = "flex-separator"; }
-              {
-                type = "custom-command";
-                commandPath = lib.getExe beadsStatus;
-                # The segment emits its own ANSI for the stale-export alarm, so it
-                # must be exempt from colour stripping. maxWidth is deliberately
-                # unset: truncation counts escape bytes as characters.
-                preserveColors = true;
               }
             ]
 
