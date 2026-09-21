@@ -6,7 +6,7 @@
       applications.messaging.element
       applications.messaging.kdeconnect
       applications.messaging.messenger
-      applications.messaging.telegram
+      # applications.messaging.telegram
       applications.messaging.zoom
     ];
   };
