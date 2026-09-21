@@ -60,6 +60,19 @@
         # running (20W..120W), 0W with it stopped. The oscillation is what
         # produces the frametime and audio-deadline misses under game load.
         services.thermald.enable = lib.mkForce false;
+
+        # Thermally limited rather than power limited, so shedding voltage at
+        # constant frequency is the only tuning that raises sustained clocks
+        # instead of just relocating heat. Measured at -75mV core+cache under
+        # identical all-core load: +233MHz (+10%) at the same package
+        # temperature. coreOffset drives both --core and --cache; the CPU
+        # applies the smaller of the two regardless. useTimer because a lost
+        # offset is silent -- the machine just runs slower.
+        services.undervolt = {
+          enable = true;
+          coreOffset = -75;
+          useTimer = true;
+        };
       };
 
     sini = {
