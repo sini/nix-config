@@ -33,6 +33,15 @@ that only checks "it succeeded" passes a silent-wrong-answer defect.
   surface, den component) needs an owner-approved DESIGN pointer in brief,
   else stop and report, not author. Tell: an open question — what it is,
   where it lives, or its name.
+- ★★ **A RULING IS LANDED WHEN THE LAW FILE SAYS IT.** A ruling recorded in a
+  bead body, a report or a handoff is a record OF the ruling, never its home.
+  Measured 2026-09-21: an owner ruling re-affirming an ADR sat on a bead with its
+  owed amendment marked HELD, while the ADR itself still read `Status.
+  CONDITIONAL` — 0 occurrences in the law file AND 0 in the ledger, against a
+  live control of 4 in the same run. A reader of the file the amendment policy
+  names as authoritative got the opposite of the owner's position. ⇒ when your
+  spec carries a ruling, name **both** records it must appear in, and treat it as
+  unlanded until both are checked.
 - Record rejected alternatives **with their reasons**. A rejected design that
   leaves no trace gets re-proposed.
 

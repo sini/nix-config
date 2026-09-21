@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/gotson/komga";
   imageTag = "latest";
-  imageDigest = "sha256:6c2a967bbe9acefd05933b2eb498f34afe96a83c6f7f8ab0acb512a1bb3ab50f";
-  imageHash = "sha256-sre0KoJ1tt8ZKXVdyofGaDhJLvr0Ftc9mIpSHtFOtB0=";
+  imageDigest = "sha256:341f1e7dbd48a42f4df7d0af40f7a6644d7db0b2ed6ea8cbc8c0ccaa71e48b66";
+  imageHash = "sha256-SpMlPLT6++OkpdLtpAiZUO+syGsLCCIqCiRsO+FjQ7s=";
   arch = "amd64";
   os = "linux";
   pinned = false;

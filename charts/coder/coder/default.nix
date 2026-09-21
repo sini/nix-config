@@ -1,6 +1,6 @@
 {
   repo = "https://helm.coder.com/v2";
   chart = "coder";
-  version = "2.36.3";
-  chartHash = "sha256-5h5a8iDg/63B9cJ/U17hJl5U4T5YO4CiFV+0KHZvn+w=";
+  version = "2.37.2";
+  chartHash = "sha256-cXqgDnwoQLzDt9zltwITD5lrxMnjUV83y7xhrFmenwM=";
 }

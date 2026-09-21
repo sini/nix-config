@@ -34,6 +34,21 @@ RED IN THE SAME RUN, THE SEED IS REMOVED, AND THE TREE'S DIGEST IS BACK WHERE IT
 STARTED.** Report both states with their exact commands and their unpiped exits.
 A green you have never seen fail is a claim about a suite you have not tested.
 
+★★ **A SCRIPT YOU LAND MUST DISTINGUISH "NO RESULTS" FROM "COULD NOT MEASURE."**
+The rule above governs the CELL you test; this one governs the INSTRUMENT you
+ship, and it is the half that goes unchecked. Measured 2026-09-21, four
+instruments in one audit: a driver printed `ALL HOSTS COMPLETE` and exited 0
+while all seven recorded host exits were `1`; a frontier query did
+`.get('issues', [])` on its tracker's error payload and printed a clean empty
+frontier; an agenda script printed `0 open rows` from a dead predicate,
+byte-identical to a real empty agenda; a tracker wrapper reported
+`has_more: false` over a 76%-truncated corpus. Each had been hiding a defect for
+weeks. **The shared mechanism is an error consumed as an empty value** — a
+`.get(k, [])` default, a `|| true`, a swallowed `2>/dev/null`, an unchecked exit
+on a subprocess that writes its error object to stdout. ⇒ check the exit of every
+command you shell out to, and **before you report it green, run it once with its
+data source unavailable and confirm it SAYS SO rather than reporting zero.**
+
 ## Landing discipline
 
 - **One report per landing.**

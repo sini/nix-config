@@ -1,8 +1,8 @@
 {
   imageName = "golift/unpackerr";
   imageTag = "latest";
-  imageDigest = "sha256:4ec141eeb0cb2f971d7c92f21cc40b0d2d50d7920eb7a0557443cca52270c0b0";
-  imageHash = "sha256-XIDHaKdpx61Jxnykik4pCYbholdt9vP8I0RgA99YI2Q=";
+  imageDigest = "sha256:244fc45cb207308f60e8f52dd703c2b3463385752de0f9517c58ff9d331ed15e";
+  imageHash = "sha256-vzfP7ZOnrAQSwbLLIG+5umVJEIYaov/LmYdSjFVSJEo=";
   arch = "amd64";
   os = "linux";
   pinned = false;
