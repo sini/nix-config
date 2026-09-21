@@ -126,12 +126,11 @@
       url = "github:numtide/flake-utils";
       inputs.systems.follows = "systems";
     };
-    gen-algebra.url = "github:sini/gen-algebra";
+    gen.url = "github:sini/gen";
     gen-lsp = {
       url = "github:sini/gen-lsp";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-    gen-schema.url = "github:sini/gen-schema";
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     graphify = {
       url = "github:Graphify-Labs/graphify";

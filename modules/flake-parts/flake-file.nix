@@ -66,7 +66,11 @@
 
       den.url = "github:denful/den";
 
-      gen-algebra.url = "github:sini/gen-algebra";
+      # The gen HUB, never a member repo directly: den resolves gen-schema from
+      # `inputs.gen` when it is declared, so hub-fronting is what keeps den and this
+      # flake on ONE gen-schema. Pinning `gen-schema` here let an update move it
+      # independently of den and the two copies disagreed over a kind value.
+      gen.url = "github:sini/gen";
 
       declarative-jellyfin = {
         url = "github:Sveske-Juice/declarative-jellyfin";
@@ -89,8 +93,6 @@
         url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
-
-      gen-schema.url = "github:sini/gen-schema";
 
       fenix = {
         url = "github:nix-community/fenix";

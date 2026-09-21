@@ -7,7 +7,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  schemaLib = inputs.gen-schema.lib;
+  schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
   environments = config.den.environments;
 
   # Per-aspect settings namespace, mirroring host.settings — the same shared

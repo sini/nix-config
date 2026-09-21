@@ -7,7 +7,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  schemaLib = inputs.gen-schema.lib;
+  schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
 
   networkType = types.submodule {
     options = {

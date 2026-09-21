@@ -1,7 +1,7 @@
 { lib, inputs, ... }:
 let
   inherit (lib) mkOption types;
-  schemaLib = inputs.gen-schema.lib;
+  schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
 in
 {
   den.schema.group.validators = [

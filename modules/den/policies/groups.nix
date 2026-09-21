@@ -9,7 +9,7 @@
   ...
 }:
 let
-  schemaLib = inputs.gen-schema.lib;
+  schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
 in
 {
   options.den.groups = schemaLib.mkInstanceRegistry den.schema.group {

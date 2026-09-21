@@ -13,7 +13,7 @@
 }:
 let
   inherit (lib) mkOption types;
-  schemaLib = inputs.gen-schema.lib;
+  schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
 
   interfaceType = types.submodule {
     options = {
