@@ -3,33 +3,64 @@
 **Author:** Sini Nix Architecture Team  
 **Status:** ACCEPTED  
 **Target Path:** `docs/agent-extensions-architecture.md`  
-**Date:** 2026-08-26  
+**Date:** 2026-08-26
 
 ---
 
 ## 1. Executive Summary
 
-As our AI toolchain expands across multiple agent harnesses (**Claude Code**, **Antigravity IDE**, **Gemini CLI**, **Pi Coding Agent**, **Hermes**, and **OpenSkills**), we require a unified, conflict-free architecture for declaring AI capabilities in Den aspects.
+As our AI toolchain expands across multiple agent harnesses (**Claude Code**,
+**Antigravity IDE**, **Gemini CLI**, **Pi Coding Agent**, **Hermes**, and
+**OpenSkills**), we require a unified, conflict-free architecture for declaring
+AI capabilities in Den aspects.
 
-Historically, aspects declared agent-specific options (e.g. `programs.claude-code.mcpServers`, `programs.claude-code.marketplaces`, or hardcoded `home.file.".gemini/config/skills/..."` paths). This created tight coupling, duplicated configurations, and threatened runtime conflicts (such as duplicate stdio MCP process spawning or prompt-cache thrashing).
+Historically, aspects declared agent-specific options (e.g.
+`programs.claude-code.mcpServers`, `programs.claude-code.marketplaces`, or
+hardcoded `home.file.".gemini/config/skills/..."` paths). This created tight
+coupling, duplicated configurations, and threatened runtime conflicts (such as
+duplicate stdio MCP process spawning or prompt-cache thrashing).
 
-This document specifies the **Unified AI Agent Extension Architecture** based on a single Den quirk: `agent-extensions`. Every skill, MCP tool, or plugin aspect declares its capabilities **once** under a structured payload, and individual agent harness aspects (`claude.nix`, `gemini.nix`, `pi.nix`, `hermes.nix`) consume and translate these declarations into harness-native runtime configurations.
+This document specifies the **Unified AI Agent Extension Architecture** based on
+a single Den quirk: `agent-extensions`. Every skill, MCP tool, or plugin aspect
+declares its capabilities **once** under a structured payload, and individual
+agent harness aspects (`claude.nix`, `gemini.nix`, `pi.nix`, `hermes.nix`)
+consume and translate these declarations into harness-native runtime
+configurations.
 
 ---
 
 ## 2. Problem Statement & Runtime Hazards
 
 ### 2.1 The Extension Spectrum
+
 AI capabilities across our fleet fall into three distinct functional shapes:
 
-1. **Universal Markdown Skills (`type = "skill"`)**: Repositories or directories whose primary artifact is one or more `SKILL.md` files (e.g., `gstack`, `hunk-review`, `codebase-memory`, `task-observer`, `diagram-design`).
-2. **Stdio MCP Servers (`type = "mcp"`)**: Executable binaries or packages that spawn Model Context Protocol (MCP) stdio servers (e.g., `codebase-memory-mcp`, `codegraph`, `serena-agent`, `headroom-ai`, `graphify-mcp`).
-3. **Plugin Marketplace Packages (`type = "plugin"`)**: Full plugin packages containing `.claude-plugin/marketplace.json` or plugin manifests, which bundle event hooks (`SessionStart`, `PreToolUse`, `CwdChanged`), subagents, settings, and embedded skills (e.g., `caveman`, `superpowers`, `mattpocock-skills`, `ponytail`, `ui-ux-pro-max`, `beads-rust`).
+1. **Universal Markdown Skills (`type = "skill"`)**: Repositories or directories
+   whose primary artifact is one or more `SKILL.md` files (e.g., `gstack`,
+   `hunk-review`, `codebase-memory`, `task-observer`, `diagram-design`).
+2. **Stdio MCP Servers (`type = "mcp"`)**: Executable binaries or packages that
+   spawn Model Context Protocol (MCP) stdio servers (e.g.,
+   `codebase-memory-mcp`, `codegraph`, `serena-agent`, `headroom-ai`,
+   `graphify-mcp`).
+3. **Plugin Marketplace Packages (`type = "plugin"`)**: Full plugin packages
+   containing `.claude-plugin/marketplace.json` or plugin manifests, which
+   bundle event hooks (`SessionStart`, `PreToolUse`, `CwdChanged`), subagents,
+   settings, and embedded skills (e.g., `caveman`, `superpowers`,
+   `mattpocock-skills`, `ponytail`, `ui-ux-pro-max`, `beads-rust`).
 
 ### 2.2 Runtime Hazards of Naive Coupling
-* **Duplicate Process Spawning**: If an aspect registers a Claude Code plugin marketplace *and* manually declares a standalone `programs.claude-code.mcpServers` entry for the same tool, Claude Code will launch two independent server processes, causing state desynchronization and resource leaks.
-* **Conflicting Hooks & Cache Busting**: Double-registering event hooks or tool definitions causes redundant prompt-cache invalidations and execution loops.
-* **Non-Claude Incompatibility**: Headless or lightweight agents (Gemini CLI, Antigravity IDE, Pi, Hermes) cannot execute Claude-specific JavaScript/Bash plugin hooks, but **can** consume stdio MCP commands and markdown skills (`SKILL.md`).
+
+- **Duplicate Process Spawning**: If an aspect registers a Claude Code plugin
+  marketplace _and_ manually declares a standalone
+  `programs.claude-code.mcpServers` entry for the same tool, Claude Code will
+  launch two independent server processes, causing state desynchronization and
+  resource leaks.
+- **Conflicting Hooks & Cache Busting**: Double-registering event hooks or tool
+  definitions causes redundant prompt-cache invalidations and execution loops.
+- **Non-Claude Incompatibility**: Headless or lightweight agents (Gemini CLI,
+  Antigravity IDE, Pi, Hermes) cannot execute Claude-specific JavaScript/Bash
+  plugin hooks, but **can** consume stdio MCP commands and markdown skills
+  (`SKILL.md`).
 
 ---
 
@@ -64,6 +95,7 @@ AI capabilities across our fleet fall into three distinct functional shapes:
 ```
 
 ### 3.1 Den Quirk Registration
+
 The quirk file is registered at `modules/den/quirks/agent-extensions.nix`:
 
 ```nix
@@ -76,21 +108,27 @@ The quirk file is registered at `modules/den/quirks/agent-extensions.nix`:
 
 ## 4. Extension Schema Specification
 
-An aspect emits the `agent-extensions` quirk attribute as a function returning an attrset (or direct attrset) keyed by extension identifier.
+An aspect emits the `agent-extensions` quirk attribute as a function returning
+an attrset (or direct attrset) keyed by extension identifier.
 
 ### 4.1 Supported Schema Fields
 
-* **`type`** (Required): `"skill"` | `"mcp"` | `"plugin"`.
-* **`skills`** (Optional): Attrset of `name -> path/storeSource` containing `SKILL.md`.
-* **`mcpServers`** (Optional): Attrset of `name -> { command, args, env }`.
-* **`marketplace`** (Optional for `type = "plugin"`): `{ name, src, pluginId, enabled }`.
-* **`agents`** (Optional): Attrset of `name -> path` (subagent markdown prompts).
-* **`commands`** (Optional): Attrset of `name -> path` (slash command markdown prompts).
-* **`context`** (Optional): List or single path/string of shared system rules.
+- **`type`** (Required): `"skill"` | `"mcp"` | `"plugin"`.
+- **`skills`** (Optional): Attrset of `name -> path/storeSource` containing
+  `SKILL.md`.
+- **`mcpServers`** (Optional): Attrset of `name -> { command, args, env }`.
+- **`marketplace`** (Optional for `type = "plugin"`):
+  `{ name, src, pluginId, enabled }`.
+- **`agents`** (Optional): Attrset of `name -> path` (subagent markdown
+  prompts).
+- **`commands`** (Optional): Attrset of `name -> path` (slash command markdown
+  prompts).
+- **`context`** (Optional): List or single path/string of shared system rules.
 
 ---
 
 ### 4.2 Type 1: Universal Skill (`type = "skill"`)
+
 Used for aspects whose primary capability is a directory containing `SKILL.md`.
 
 ```nix
@@ -109,7 +147,9 @@ den.aspects.applications.dev.ai.skills.diagram-design = {
 ---
 
 ### 4.3 Type 2: Stdio MCP Server (`type = "mcp"`)
-Used for aspects exposing a Model Context Protocol stdio server binary, along with optional companion skills.
+
+Used for aspects exposing a Model Context Protocol stdio server binary, along
+with optional companion skills.
 
 ```nix
 den.aspects.applications.dev.ai.mcp.codegraph = {
@@ -137,7 +177,9 @@ den.aspects.applications.dev.ai.mcp.codegraph = {
 ---
 
 ### 4.4 Type 3: Plugin Package (`type = "plugin"`)
-Used for composite Claude Code plugin marketplace repositories containing `.claude-plugin/marketplace.json` or full plugin manifests.
+
+Used for composite Claude Code plugin marketplace repositories containing
+`.claude-plugin/marketplace.json` or full plugin manifests.
 
 ```nix
 den.aspects.applications.dev.ai.skills.caveman = {
@@ -162,16 +204,18 @@ den.aspects.applications.dev.ai.skills.caveman = {
 
 ## 5. Harness Translation Matrix
 
-Each agent harness aspect receives `agent-extensions` directly as a function argument in `homeManager` or `nixos` and executes clean, non-overlapping translations:
+Each agent harness aspect receives `agent-extensions` directly as a function
+argument in `homeManager` or `nixos` and executes clean, non-overlapping
+translations:
 
-| Extension Field | Claude Code (`agents/claude.nix`) | Antigravity / Gemini CLI (`agents/gemini.nix`) | Pi / Hermes / OpenSkills |
-| :--- | :--- | :--- | :--- |
-| **`skills`** | Registered in `programs.claude-code.skills.<name>` | Symlinked to `~/.gemini/config/skills/<name>` | Registered in skill search paths |
-| **`mcpServers`** | Registered in `programs.claude-code.mcpServers.<name>` (type = "stdio") | Written to `~/.gemini/config/mcp_config.json` & `settings.json` | Emitted into provider config (`models.json`) |
-| **`marketplace`** | Registered in `marketplaces.<name>` & `settings.enabledPlugins` | Uses `skills` fallback to link `~/.gemini/config/skills/<name>` | Uses `skills` fallback |
-| **`agents`** | Registered in `programs.claude-code.agents` | Symlinked to `~/.gemini/config/agents/<name>.md` | Exposed to agent provider |
-| **`commands`** | Registered in `programs.claude-code.commands` | Symlinked to `~/.gemini/config/commands/<name>.md` | Exposed to prompt palette |
-| **`context`** | Rendered to `CLAUDE.md` via `programs.claude-code.context` | Written to `~/.gemini/config/rules/GEMINI.md` | Rendered to system prompt |
+| Extension Field   | Claude Code (`agents/claude.nix`)                                       | Antigravity / Gemini CLI (`agents/gemini.nix`)                  | Pi / Hermes / OpenSkills                     |
+| :---------------- | :---------------------------------------------------------------------- | :-------------------------------------------------------------- | :------------------------------------------- |
+| **`skills`**      | Registered in `programs.claude-code.skills.<name>`                      | Symlinked to `~/.gemini/config/skills/<name>`                   | Registered in skill search paths             |
+| **`mcpServers`**  | Registered in `programs.claude-code.mcpServers.<name>` (type = "stdio") | Written to `~/.gemini/config/mcp_config.json` & `settings.json` | Emitted into provider config (`models.json`) |
+| **`marketplace`** | Registered in `marketplaces.<name>` & `settings.enabledPlugins`         | Uses `skills` fallback to link `~/.gemini/config/skills/<name>` | Uses `skills` fallback                       |
+| **`agents`**      | Registered in `programs.claude-code.agents`                             | Symlinked to `~/.gemini/config/agents/<name>.md`                | Exposed to agent provider                    |
+| **`commands`**    | Registered in `programs.claude-code.commands`                           | Symlinked to `~/.gemini/config/commands/<name>.md`              | Exposed to prompt palette                    |
+| **`context`**     | Rendered to `CLAUDE.md` via `programs.claude-code.context`              | Written to `~/.gemini/config/rules/GEMINI.md`                   | Rendered to system prompt                    |
 
 ---
 

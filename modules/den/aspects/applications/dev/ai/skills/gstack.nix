@@ -26,7 +26,8 @@
         type = "skill";
         skills = {
           gstack = inputs.gstack;
-        } // gstackSubSkills;
+        }
+        // gstackSubSkills;
       };
 
     homeManager =

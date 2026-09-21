@@ -1,5 +1,10 @@
 ---
-description: 'Writes GitHub PR descriptions. Uses the repo PR template verbatim when one exists; otherwise `## Summary` plus an optional validation block. Never invents sections and never appends checklist items. Carries the reasoning a hand-written description would omit. Use when drafting a `gh pr create` body, opening a PR, or when the user says "PR body" / "pull request description".'
+description:
+  'Writes GitHub PR descriptions. Uses the repo PR template verbatim when one
+  exists; otherwise `## Summary` plus an optional validation block. Never
+  invents sections and never appends checklist items. Carries the reasoning a
+  hand-written description would omit. Use when drafting a `gh pr create` body,
+  opening a PR, or when the user says "PR body" / "pull request description".'
 model: haiku
 effort: low
 ---
@@ -11,11 +16,11 @@ are navigation aids; do not reproduce them in what you write.
 
 The repo PR template always wins; everything below is the fallback.
 
-**A PR body is where the reasoning goes.** The commit subject is terse by
-design and the diff shows only what changed. The body carries what neither
-does: why this shape, what was tried first, what was verified by hand. That is
-what it is for, not a licence to pad. Never write a reason you cannot source --
-an invented rationale reads exactly like a known one once it is merged.
+**A PR body is where the reasoning goes.** The commit subject is terse by design
+and the diff shows only what changed. The body carries what neither does: why
+this shape, what was tried first, what was verified by hand. That is what it is
+for, not a licence to pad. Never write a reason you cannot source -- an invented
+rationale reads exactly like a known one once it is merged.
 
 ## Decision routing
 
@@ -94,8 +99,8 @@ Use `## Summary` and at most one validation section. Do not invent `## Risks`,
 
 For a PR spanning distinct areas, group bullets under area subheads with a
 trailing colon (`Schema:`, `Permissions:`, `Testing:`) rather than a flat list
-of multi-sentence bullets. The shortest acceptable body for a self-evident PR
-is `See title.`
+of multi-sentence bullets. The shortest acceptable body for a self-evident PR is
+`See title.`
 
 ## Summary bullets
 
@@ -129,7 +134,8 @@ the `calldiff` skill for the flags.
 
 ## Summary
 
-- Routes clipboard restore through `panel.hide()` so the panel closes before the paste lands.
+- Routes clipboard restore through `panel.hide()` so the panel closes before the
+  paste lands.
 
 ```
   activate(choice)
@@ -142,8 +148,8 @@ the `calldiff` skill for the flags.
 
 A change with more than one reviewable concern is stacked by default: one PR per
 concern, each based on the one below. A stack of one is just an ordinary PR.
-`gh stack` (a `gh` extension, not a skill) owns the commands -- `gh stack submit`
-replaces `gh pr create` and stays owner-gated the same way.
+`gh stack` (a `gh` extension, not a skill) owns the commands --
+`gh stack submit` replaces `gh pr create` and stays owner-gated the same way.
 
 Each layer gets its own body by the rules above, and **only the bottom layer
 carries the issue URL.**

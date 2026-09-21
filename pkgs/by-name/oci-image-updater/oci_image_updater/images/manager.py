@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import List
 
 from ..models import UpdateOperation
 from ..utils import GitUtils, NixUtils
@@ -34,7 +33,7 @@ class ImageManager:
         self.dry_run = dry_run
         self.commit = commit
 
-    def update_all(self) -> List[UpdateOperation]:
+    def update_all(self) -> list[UpdateOperation]:
         """Update all images.
 
         Returns:
@@ -70,7 +69,7 @@ class ImageManager:
 
         return operations
 
-    def _commit_changes(self, operations: List[UpdateOperation]) -> None:
+    def _commit_changes(self, operations: list[UpdateOperation]) -> None:
         """Commit updated image metadata files.
 
         Args:

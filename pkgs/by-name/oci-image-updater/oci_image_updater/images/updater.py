@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Optional
 
 from ..models import ImageMetadata, UpdateOperation
 from ..utils import NixUtils, ProcessUtils
@@ -17,7 +16,7 @@ class ImageUpdater:
         image_tag: str,
         arch: str,
         os: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         """Check remote image digest using skopeo.
 
         Args:

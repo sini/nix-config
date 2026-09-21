@@ -50,6 +50,18 @@
       applications.dev.mux.herdr-pair
     ];
 
+    nixos =
+      { lib, ... }:
+      {
+        # thermald stacks a software RAPL clamp on top of the hardware's own
+        # TJmax throttling and drives PL1 to ~0W, so the package oscillates
+        # between a stall and full power instead of throttling smoothly.
+        # Measured under identical all-core load: PL1 spread 100W with it
+        # running (20W..120W), 0W with it stopped. The oscillation is what
+        # produces the frametime and audio-deadline misses under game load.
+        services.thermald.enable = lib.mkForce false;
+      };
+
     sini = {
       includes = with den.aspects; [
         # applications.wayland.waybar

@@ -5,10 +5,9 @@ import argparse
 import re
 import subprocess
 import sys
-from typing import List, Set
 
 
-def get_persist_files(prefix: str) -> Set[str]:
+def get_persist_files(prefix: str) -> set[str]:
     """Get list of files under a prefix, removing the prefix from paths."""
     try:
         result = subprocess.run(
@@ -26,7 +25,7 @@ def get_persist_files(prefix: str) -> Set[str]:
         return set()
 
 
-def get_ignore_patterns(ignore_file: str) -> List[re.Pattern]:
+def get_ignore_patterns(ignore_file: str) -> list[re.Pattern]:
     """Load ignore patterns from file."""
     try:
         with open(ignore_file, "r") as f:
@@ -43,9 +42,9 @@ def get_ignore_patterns(ignore_file: str) -> List[re.Pattern]:
 
 def should_filter(
     path: str,
-    persist_files: Set[str],
-    cache_files: Set[str],
-    ignore_patterns: List[re.Pattern],
+    persist_files: set[str],
+    cache_files: set[str],
+    ignore_patterns: list[re.Pattern],
 ) -> bool:
     """Check if a path should be filtered out."""
     # Remove leading ./ if present

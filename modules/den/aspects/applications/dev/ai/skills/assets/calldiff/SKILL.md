@@ -1,5 +1,10 @@
 ---
-description: Reads and diffs call graphs with `calldiff`, so a change is described by the call paths it moved rather than by prose over a line diff. Use before proposing an approach, when reviewing a diff that reroutes control flow, and when writing the PR body for one. Do not use for Nix, which calldiff cannot parse.
+description:
+  Reads and diffs call graphs with `calldiff`, so a change is described by the
+  call paths it moved rather than by prose over a line diff. Use before
+  proposing an approach, when reviewing a diff that reroutes control flow, and
+  when writing the PR body for one. Do not use for Nix, which calldiff cannot
+  parse.
 allowed-tools: Bash(calldiff:*) Read Glob
 ---
 
@@ -16,13 +21,13 @@ the cache.
 
 ## Language support: it does not read Nix
 
-22 languages, including TypeScript, JavaScript, Python, Go, Rust, Java, Ruby,
-C, C++, C#, Swift, Kotlin, Lua, Elixir, Bash, and Zig.
+22 languages, including TypeScript, JavaScript, Python, Go, Rust, Java, Ruby, C,
+C++, C#, Swift, Kotlin, Lua, Elixir, Bash, and Zig.
 
-Nix is not one of them. In `sysinit`, that rules out most of the tree.
-calldiff answers `Entrypoint file not found` for a `.nix` path, which reads
-exactly like a typo. It is not one: the file is unindexed. Do not conclude that
-the file is empty, and do not retry with a different path.
+Nix is not one of them. In `sysinit`, that rules out most of the tree. calldiff
+answers `Entrypoint file not found` for a `.nix` path, which reads exactly like
+a typo. It is not one: the file is unindexed. Do not conclude that the file is
+empty, and do not retry with a different path.
 
 What calldiff does reach in this repo: the Lua under
 `modules/darwin/home/hammerspoon/` and `sysinit.nvim`. It also reaches the Go
@@ -50,8 +55,8 @@ calldiff reach -e M.setup --to compose modules/darwin/home/hammerspoon
 ```
 
 `--to` takes a symbol the repository defines. A call into a library, such as
-`hs.execute` or `fmt.Println`, is a leaf in the tree and not a reachable
-target. `reach --to` on one answers `Target not found`.
+`hs.execute` or `fmt.Println`, is a leaf in the tree and not a reachable target.
+`reach --to` on one answers `Target not found`.
 
 Argument order matches `git diff`. No ref means HEAD against the working tree.
 One ref means that ref against the working tree. Two refs compare those two
@@ -90,17 +95,19 @@ calldiff diff main
 
 The default tree is colored on a terminal and plain when piped, so it pastes
 into a fenced block as-is. `--format md` puts the multi-line tree inside one
-markdown table cell and prints `[object Object]` for the tree column. It
-renders as neither a table nor a tree. `--format json` and `--format yaml` are
-sound; use one of those when a script reads the output.
+markdown table cell and prints `[object Object]` for the tree column. It renders
+as neither a table nor a tree. `--format json` and `--format yaml` are sound;
+use one of those when a script reads the output.
 
 ````markdown
 <!-- good — the plain tree inside a fence -->
+
 ```
 $ calldiff diff main --max-depth 3
 ```
 
 <!-- bad — a table cell holding a 20-line tree, and [object Object] beside it -->
+
 $ calldiff diff main --format md
 ````
 
@@ -128,8 +135,8 @@ The MCP server hides `diff`, `reach` and `tree` behind `search_tools` and
 Upstream calldiff runs `npm install` into `~/.cache/calldiff/grammars` the first
 time it meets a language. The build here bundles bash, go, lua, python, rust and
 typescript into the package itself, and calldiff prefers its own `node_modules`
-over that cache. A run over those languages needs no network and takes about
-0.3 seconds.
+over that cache. A run over those languages needs no network and takes about 0.3
+seconds.
 
 A language outside that list still falls back to the cache and still installs.
 `overlays/calldiff.nix` names the bundled set; add to it rather than letting the
@@ -137,9 +144,9 @@ fallback fire on a language this machine parses often.
 
 ## Where this fits the other skills
 
-- Planning a change: run `calldiff tree` and `calldiff reach` before you
-  propose an approach. The design then rests on the call graph the code has,
-  not the one you assume.
+- Planning a change: run `calldiff tree` and `calldiff reach` before you propose
+  an approach. The design then rests on the call graph the code has, not the one
+  you assume.
 - Reviewing a diff: `calldiff diff` alongside the line diff. A call path that
   appeared and is not mentioned in the description is the finding.
 - Writing the PR body: `calldiff diff` in a fenced block when the change moved

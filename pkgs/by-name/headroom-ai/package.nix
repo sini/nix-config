@@ -70,9 +70,10 @@ python3Packages.buildPythonPackage {
     inherit (wheel) hash;
   };
 
-  nativeBuildInputs =
-    [ makeWrapper ]
-    ++ lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ];
+  nativeBuildInputs = [
+    makeWrapper
+  ]
+  ++ lib.optionals stdenv.hostPlatform.isLinux [ autoPatchelfHook ];
 
   buildInputs = lib.optionals stdenv.hostPlatform.isLinux [ stdenv.cc.cc.lib ];
 

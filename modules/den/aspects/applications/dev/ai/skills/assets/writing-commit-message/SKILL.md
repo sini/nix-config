@@ -1,5 +1,11 @@
 ---
-description: 'Writes git commit messages: lowercase imperative subject that names what changed, optional conventional-commit type prefix, no trailing period, a body where there is something to record, kept to just enough, and never a why you cannot source. Repo conventions always win. Use when drafting a commit message or when the user says "commit this" / "propose a commit message" / "write commit".'
+description:
+  'Writes git commit messages: lowercase imperative subject that names what
+  changed, optional conventional-commit type prefix, no trailing period, a body
+  where there is something to record, kept to just enough, and never a why you
+  cannot source. Repo conventions always win. Use when drafting a commit message
+  or when the user says "commit this" / "propose a commit message" / "write
+  commit".'
 model: haiku
 effort: low
 ---
@@ -9,8 +15,8 @@ effort: low
 This file is a specification, not a specimen. Its bolding and worked examples
 are navigation aids; do not reproduce them in what you write.
 
-Terse is the voice. Uninformative is not the target -- a subject a reader
-cannot act on has failed, however short and in-voice it is.
+Terse is the voice. Uninformative is not the target -- a subject a reader cannot
+act on has failed, however short and in-voice it is.
 
 ## The shape
 
@@ -87,8 +93,8 @@ reader a year later has nothing else. Write one when there is something to say.
 
 **Just enough.** Describe the what in full. Add the why only where it is needed
 to understand why the what was needed. A short paragraph, not several, and never
-a log of what you did -- the diff already has that. A new feature and an ordinary
-bug fix usually explain themselves and need no why at all.
+a log of what you did -- the diff already has that. A new feature and an
+ordinary bug fix usually explain themselves and need no why at all.
 
 **Never invent a why.** This is the rule that matters most, because it is the
 easy failure. A diff shows what changed and never why, so a plausible rationale
@@ -157,9 +163,9 @@ voice, prefer the convention. They are better tested than any single corpus:
 
 - **Em-dashes**, in subject or body. Use `so`, `as`, `because`, or a second
   sentence.
-- **`Co-authored-by:` / `Claude-Session:` / `Generated with`** trailers. Standing
-  law, including when a tool offers to add one. The single exception is a repo
-  that mandates the trailer -- see the last section.
+- **`Co-authored-by:` / `Claude-Session:` / `Generated with`** trailers.
+  Standing law, including when a tool offers to add one. The single exception is
+  a repo that mandates the trailer -- see the last section.
 - **Inventing a ticket id.** Uppercase `PROJ-123` ids are not this project's
   convention. Reference a beads id (`den-hoag-xxxx`) only when it genuinely
   anchors the work.

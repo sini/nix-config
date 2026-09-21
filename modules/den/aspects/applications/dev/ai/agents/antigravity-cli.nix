@@ -17,11 +17,7 @@
 
         # 1. Skills collection
         allSkillSources = lib.foldl' (
-          acc: e:
-          if (e ? skills) then
-            acc // (lib.mapAttrs (_: src: src.outPath or src) e.skills)
-          else
-            acc
+          acc: e: if (e ? skills) then acc // (lib.mapAttrs (_: src: src.outPath or src) e.skills) else acc
         ) { } extensionsList;
 
         skillFiles = lib.mapAttrs' (

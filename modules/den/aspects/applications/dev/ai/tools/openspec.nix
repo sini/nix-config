@@ -4,42 +4,50 @@
 {
   den.aspects.applications.dev.ai.tools.openspec = {
     agent-extensions =
-      { inputs', pkgs, lib, ... }:
+      {
+        inputs',
+        pkgs,
+        lib,
+        ...
+      }:
       let
         openspecPkg = inputs'.llm-agents.packages.openspec;
 
         # Sandboxed execution of `openspec init` to produce the full 12 skills
-        openspecBundle = pkgs.runCommand "openspec-bundle" {
-          nativeBuildInputs = [
-            openspecPkg
-            pkgs.nodejs
-            pkgs.coreutils
-          ];
-        } ''
-          work=$(mktemp -d)
-          proj="$work/proj"
-          home="$work/home"
-          xdg="$work/xdg"
-          mkdir -p "$proj" "$home" "$xdg/openspec" "$out"
+        openspecBundle =
+          pkgs.runCommand "openspec-bundle"
+            {
+              nativeBuildInputs = [
+                openspecPkg
+                pkgs.nodejs
+                pkgs.coreutils
+              ];
+            }
+            ''
+              work=$(mktemp -d)
+              proj="$work/proj"
+              home="$work/home"
+              xdg="$work/xdg"
+              mkdir -p "$proj" "$home" "$xdg/openspec" "$out"
 
-          cat > "$xdg/openspec/config.json" << 'JSON'
-          {
-            "featureFlags": {},
-            "profile": "custom",
-            "delivery": "skills",
-            "workflows": ["propose","explore","new","continue","apply","update","ff","sync","archive","bulk-archive","verify","onboard"]
-          }
-          JSON
+              cat > "$xdg/openspec/config.json" << 'JSON'
+              {
+                "featureFlags": {},
+                "profile": "custom",
+                "delivery": "skills",
+                "workflows": ["propose","explore","new","continue","apply","update","ff","sync","archive","bulk-archive","verify","onboard"]
+              }
+              JSON
 
-          (
-            cd "$proj"
-            HOME="$home" XDG_CONFIG_HOME="$xdg" CI=true OPENSPEC_TELEMETRY=0 \
-            OPENSPEC_NO_COMPLETIONS=1 DO_NOT_TRACK=1 \
-            openspec init --tools claude --force --profile custom </dev/null
-          )
+              (
+                cd "$proj"
+                HOME="$home" XDG_CONFIG_HOME="$xdg" CI=true OPENSPEC_TELEMETRY=0 \
+                OPENSPEC_NO_COMPLETIONS=1 DO_NOT_TRACK=1 \
+                openspec init --tools claude --force --profile custom </dev/null
+              )
 
-          cp -r "$proj/.claude/skills"/* "$out/"
-        '';
+              cp -r "$proj/.claude/skills"/* "$out/"
+            '';
 
         discoverDirectorySkills =
           skillsDir:

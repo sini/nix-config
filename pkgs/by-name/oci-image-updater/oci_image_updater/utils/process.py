@@ -2,7 +2,6 @@
 
 import subprocess
 from pathlib import Path
-from typing import List, Optional
 
 
 class ProcessUtils:
@@ -10,10 +9,10 @@ class ProcessUtils:
 
     @staticmethod
     def run(
-        cmd: List[str],
+        cmd: list[str],
         *,
-        cwd: Optional[Path] = None,
-        input_text: Optional[str] = None,
+        cwd: Path | None = None,
+        input_text: str | None = None,
     ) -> str:
         """Run a command, return stdout, raise on failure.
 

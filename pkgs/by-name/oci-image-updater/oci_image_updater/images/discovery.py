@@ -2,7 +2,7 @@
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 from ..models import ImageMetadata
 
@@ -12,9 +12,9 @@ class ImageDiscovery:
 
     @staticmethod
     def discover_images(
-        metadata: Dict[str, Any],
+        metadata: dict[str, Any],
         images_dir: Path,
-    ) -> List[ImageMetadata]:
+    ) -> list[ImageMetadata]:
         """Discover all images from flake metadata.
 
         Args:
@@ -37,8 +37,8 @@ class ImageDiscovery:
     def _discover_recursive(
         node: Any,
         base_path: Path,
-        path_components: List[str],
-        images: List[ImageMetadata],
+        path_components: list[str],
+        images: list[ImageMetadata],
     ) -> None:
         """Recursively discover images from nested metadata.
 

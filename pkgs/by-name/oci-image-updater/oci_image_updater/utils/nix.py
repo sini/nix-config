@@ -4,7 +4,7 @@ import json
 import logging
 import platform
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .process import ProcessUtils
 
@@ -67,7 +67,7 @@ class NixUtils:
         return f"{arch}-{os_name}"
 
     @staticmethod
-    def get_images_metadata(flake_ref: str) -> Dict[str, Dict[str, Any]]:
+    def get_images_metadata(flake_ref: str) -> dict[str, dict[str, Any]]:
         """Get all images metadata from the flake.
 
         Args:
@@ -89,7 +89,7 @@ class NixUtils:
         image_tag: str,
         arch: str,
         os: str,
-    ) -> Dict[str, str]:
+    ) -> dict[str, str]:
         """Prefetch a docker image and get its hash information.
 
         Args:
@@ -155,7 +155,7 @@ class NixUtils:
     def get_image_store_path(
         flake_ref: str,
         image_path: list[str],
-        system: Optional[str] = None,
+        system: str | None = None,
     ) -> Path:
         """Get the expected store path for an image without building it.
 
@@ -189,7 +189,7 @@ class NixUtils:
     def build_image(
         flake_ref: str,
         image_path: list[str],
-        system: Optional[str] = None,
+        system: str | None = None,
     ) -> Path:
         """Build an image derivation and return its store path.
 

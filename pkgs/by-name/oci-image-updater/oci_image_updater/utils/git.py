@@ -2,7 +2,6 @@
 
 import os
 from pathlib import Path
-from typing import List, Optional
 
 from .process import ProcessUtils
 
@@ -11,7 +10,7 @@ class GitUtils:
     """Utility class for git operations."""
 
     @staticmethod
-    def get_root() -> Optional[Path]:
+    def get_root() -> Path | None:
         """Get the root directory of the current git repository.
 
         Returns:
@@ -27,7 +26,7 @@ class GitUtils:
             return None
 
     @staticmethod
-    def add(paths: List[Path], git_root: Path) -> None:
+    def add(paths: list[Path], git_root: Path) -> None:
         """Add files to git staging area.
 
         Args:
