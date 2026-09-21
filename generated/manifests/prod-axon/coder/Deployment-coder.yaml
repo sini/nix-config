@@ -85,7 +85,7 @@ spec:
               value: "3"
             - name: CODER_DISABLE_PASSWORD_AUTH
               value: "true"
-          image: ghcr.io/coder/coder:v2.36.3
+          image: ghcr.io/coder/coder:v2.37.2
           imagePullPolicy: IfNotPresent
           lifecycle: {}
           name: coder

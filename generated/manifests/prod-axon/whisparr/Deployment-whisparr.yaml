@@ -89,7 +89,7 @@ spec:
                 secretKeyRef:
                   key: username
                   name: media-pg-whisparr-password
-          image: ghcr.io/hotio/whisparr@sha256:428045708fb4680b4ff8e4f81063733e78d53aa5c819bb1ead3389504456d298
+          image: ghcr.io/hotio/whisparr@sha256:b37cd46e629cbf09bf91ec50b07217467dddb60137123bcc382225862aae51a5
           livenessProbe:
             failureThreshold: 3
             httpGet:

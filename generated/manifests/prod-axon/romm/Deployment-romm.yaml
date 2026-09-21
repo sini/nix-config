@@ -118,7 +118,7 @@ spec:
                   name: media-romm-metadata
             - name: TZ
               value: America/Los_Angeles
-          image: rommapp/romm@sha256:3512f2ca455782f90247271bed23116e6bc675bc74e379be2c41696e607ab11e
+          image: rommapp/romm@sha256:dc586cb3a2c7316fcffb3dc273171b1964523f0f409e989295d26d2199df1d4e
           name: main
           volumeMounts:
             - mountPath: /romm/library/roms

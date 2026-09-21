@@ -18,8 +18,8 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: 47d8f343a0d67a97cfae551bcfebef8274a1f3c85af1b09d6ac60463a2cce110
-        checksum/cmd-params: 9869a38a313f6566e667ee66648a10f9a5bcc3234a3920e92f25a2e06cde7c2a
+        checksum/cm: d68f5afe557fd4b7c03b7d058a13d7d1a9fdd7d4efb557c9fcc1124941750ab9
+        checksum/cmd-params: 6c9cb851053d64535cbf9958b67194aecbad6753d94613a10c6762a67ada7c4c
       labels:
         app.kubernetes.io/component: repo-server
         app.kubernetes.io/instance: argocd
@@ -42,6 +42,12 @@ spec:
             - --port=8081
             - --metrics-port=8084
           env:
+            - name: GRPC_ENABLE_TXT_SERVICE_CONFIG
+              valueFrom:
+                configMapKeyRef:
+                  key: reposerver.grpc.enable.txt.service.config
+                  name: argocd-cmd-params-cm
+                  optional: true
             - name: ARGOCD_REPO_SERVER_NAME
               value: argocd-repo-server
             - name: ARGOCD_RECONCILIATION_TIMEOUT
@@ -302,7 +308,7 @@ spec:
               value: /helm-working-dir
             - name: HELM_DATA_HOME
               value: /helm-working-dir
-          image: quay.io/argoproj/argocd:v3.5.1
+          image: quay.io/argoproj/argocd:v3.5.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -368,7 +374,7 @@ spec:
           command:
             - sh
             - -c
-          image: quay.io/argoproj/argocd:v3.5.1
+          image: quay.io/argoproj/argocd:v3.5.3
           imagePullPolicy: IfNotPresent
           name: copyutil
           resources: {}
@@ -402,6 +408,7 @@ spec:
           name: ssh-known-hosts
         - configMap:
             name: argocd-tls-certs-cm
+            optional: true
           name: tls-certs
         - configMap:
             name: argocd-gpg-keys-cm

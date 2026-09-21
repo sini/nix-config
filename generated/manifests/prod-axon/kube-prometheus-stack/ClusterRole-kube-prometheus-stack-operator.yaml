@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-88.5.4
+    chart: kube-prometheus-stack-91.4.1
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-operator
@@ -17,42 +17,72 @@ rules:
     resources:
       - alertmanagers
       - alertmanagers/finalizers
-      - alertmanagers/status
-      - alertmanagerconfigs
-      - prometheuses
-      - prometheuses/finalizers
-      - prometheuses/status
       - prometheusagents
       - prometheusagents/finalizers
-      - prometheusagents/status
+      - prometheuses
+      - prometheuses/finalizers
       - thanosrulers
       - thanosrulers/finalizers
-      - thanosrulers/status
-      - scrapeconfigs
-      - scrapeconfigs/status
-      - servicemonitors
-      - servicemonitors/status
-      - podmonitors
-      - podmonitors/status
-      - probes
-      - probes/status
-      - prometheusrules
-      - prometheusrules/status
     verbs:
-      - '*'
+      - patch
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - alertmanagers/status
+      - podmonitors/status
+      - probes/status
+      - prometheuses/status
+      - prometheusagents/status
+      - prometheusrules/status
+      - scrapeconfigs/status
+      - servicemonitors/status
+      - thanosrulers/status
+    verbs:
+      - create
+      - update
+      - patch
+      - delete
+  - apiGroups:
+      - monitoring.coreos.com
+    resources:
+      - alertmanagers
+      - alertmanagerconfigs
+      - podmonitors
+      - probes
+      - prometheusagents
+      - prometheuses
+      - prometheusrules
+      - servicemonitors
+      - scrapeconfigs
+      - thanosrulers
+    verbs:
+      - get
+      - list
+      - watch
   - apiGroups:
       - apps
     resources:
       - statefulsets
     verbs:
-      - '*'
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - ""
     resources:
       - configmaps
       - secrets
     verbs:
-      - '*'
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
   - apiGroups:
       - ""
     resources:

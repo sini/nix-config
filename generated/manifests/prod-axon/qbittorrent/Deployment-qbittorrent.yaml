@@ -82,7 +82,7 @@ spec:
               value: "022"
             - name: WEBUI_PORT
               value: "8080"
-          image: linuxserver/qbittorrent@sha256:b63369ec3dbbd43d15e77e58fb776b5c193d618efbe43c91bea297d32fb14f83
+          image: linuxserver/qbittorrent@sha256:dbbc6dec44030913baddb88b950eb2270741902c4777d531b50bd709b6ab8ffc
           name: main
           volumeMounts:
             - mountPath: /config
@@ -197,7 +197,7 @@ spec:
                 ensure_app_key 'FileLogger\\DeleteOld' 'FileLogger\DeleteOld=true'
                 ensure_app_key 'FileLogger\\MaxSizeBytes' 'FileLogger\MaxSizeBytes=1048576'
               fi
-          image: linuxserver/qbittorrent@sha256:b63369ec3dbbd43d15e77e58fb776b5c193d618efbe43c91bea297d32fb14f83
+          image: linuxserver/qbittorrent@sha256:dbbc6dec44030913baddb88b950eb2270741902c4777d531b50bd709b6ab8ffc
           name: config-seed
           volumeMounts:
             - mountPath: /config
@@ -244,7 +244,7 @@ spec:
                 secretKeyRef:
                   key: peer-public-key
                   name: media-vpn
-          image: qmcgaw/gluetun@sha256:8e92dcb57ed64b0e4469c933f00ef1e09ee00867fee150e783a95fa6b53effa4
+          image: qmcgaw/gluetun@sha256:12df8b20528d4cd5e9b6e827d40f2886cf78e53e7e9afc750050648c31183793
           name: gluetun
           readinessProbe:
             failureThreshold: 30

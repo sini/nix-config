@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: da2dce6a53f4ac72bde6cc125d2763300bb7e87c91c43adde611b931d68fa83a
+        checksum/config: 49e7a016365d4f37e3c76b9096e1de8925c56cacc295fcb4aa8356f6d23276a2
       labels:
         app.kubernetes.io/instance: garage-ui
         app.kubernetes.io/name: garage-ui
@@ -32,7 +32,7 @@ spec:
                 secretKeyRef:
                   key: jwt-key.pem
                   name: garage-ui-jwt-key
-          image: noooste/garage-ui:v0.12.1
+          image: noooste/garage-ui:v0.13.0
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3

@@ -73,7 +73,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/bazarr@sha256:3a820372f19fcb2981ea19fe4b5382934d67414afaba974bce831ddda0a64a02
+          image: linuxserver/bazarr@sha256:d24bd0048c759a468970989e9df11a6b96a7628d556d00f923e60a35ba59237b
           name: main
           volumeMounts:
             - mountPath: /config

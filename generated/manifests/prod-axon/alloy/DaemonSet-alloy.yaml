@@ -44,7 +44,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          image: docker.io/grafana/alloy:v1.19.0
+          image: docker.io/grafana/alloy:v1.19.2
           imagePullPolicy: IfNotPresent
           name: alloy
           ports:

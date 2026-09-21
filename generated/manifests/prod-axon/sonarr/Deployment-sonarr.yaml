@@ -118,7 +118,7 @@ spec:
                   name: media-pg-sonarr-password
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/sonarr@sha256:c19aa4ecdf03d73e1d5c901da33744cb7eb4d921f89bafed1ca264601d7fa224
+          image: linuxserver/sonarr@sha256:a5c1a5fecbef946927ab90ad68df319ac5fe644057e5fc18cd993f01ac07b2b2
           livenessProbe:
             failureThreshold: 3
             httpGet:

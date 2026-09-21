@@ -4,6 +4,7 @@ metadata:
   name: kube-prometheus-stack-admission
   namespace: monitoring
 spec:
+  commonName: kube-prometheus-stack-operator
   dnsNames:
     - kube-prometheus-stack-operator
     - kube-prometheus-stack-operator.monitoring.svc

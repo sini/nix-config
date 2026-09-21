@@ -5,7 +5,7 @@ metadata:
     app: kube-prometheus-stack-kubelet
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-88.5.4
+    chart: kube-prometheus-stack-91.4.1
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-kubelet
@@ -14,7 +14,11 @@ spec:
   attachMetadata:
     node: false
   endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    - authorization:
+        credentials:
+          key: token
+          name: kube-prometheus-stack-prometheus-token
+        type: Bearer
       honorLabels: true
       honorTimestamps: true
       metricRelabelings:
@@ -31,9 +35,16 @@ spec:
           targetLabel: metrics_path
       scheme: https
       tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        ca:
+          configMap:
+            key: ca.crt
+            name: kube-root-ca.crt
         insecureSkipVerify: true
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    - authorization:
+        credentials:
+          key: token
+          name: kube-prometheus-stack-prometheus-token
+        type: Bearer
       honorLabels: true
       honorTimestamps: true
       interval: 10s
@@ -82,10 +93,17 @@ spec:
           targetLabel: metrics_path
       scheme: https
       tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        ca:
+          configMap:
+            key: ca.crt
+            name: kube-root-ca.crt
         insecureSkipVerify: true
       trackTimestampsStaleness: true
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    - authorization:
+        credentials:
+          key: token
+          name: kube-prometheus-stack-prometheus-token
+        type: Bearer
       honorLabels: true
       honorTimestamps: true
       path: /metrics/probes
@@ -97,7 +115,10 @@ spec:
           targetLabel: metrics_path
       scheme: https
       tlsConfig:
-        caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        ca:
+          configMap:
+            key: ca.crt
+            name: kube-root-ca.crt
         insecureSkipVerify: true
   jobLabel: k8s-app
   namespaceSelector:

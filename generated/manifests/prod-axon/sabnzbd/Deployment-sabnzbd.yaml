@@ -79,7 +79,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/sabnzbd@sha256:d22bc8b3185f0e0c1050f6427df6b9ad072f70586b3b1edf916131b0c3101542
+          image: linuxserver/sabnzbd@sha256:948ea3dc45d68943ec14b33ba37ffa1488da3e9837bf3ca0f75621e971614d85
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -182,7 +182,7 @@ spec:
                 secretKeyRef:
                   key: sabnzbd
                   name: media-arr-api-keys
-          image: linuxserver/sabnzbd@sha256:d22bc8b3185f0e0c1050f6427df6b9ad072f70586b3b1edf916131b0c3101542
+          image: linuxserver/sabnzbd@sha256:948ea3dc45d68943ec14b33ba37ffa1488da3e9837bf3ca0f75621e971614d85
           name: config-seed
           volumeMounts:
             - mountPath: /config

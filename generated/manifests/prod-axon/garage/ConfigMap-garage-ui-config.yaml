@@ -24,6 +24,7 @@ data:
           name: ""
         issuer_url: https://keycloak.example.com/realms/master
         name_attribute: name
+        post_logout_redirect_url: ""
         provider_name: Keycloak
         role_attribute_path: resource_access.garage-ui.roles
         scopes:
@@ -64,6 +65,7 @@ data:
       format: json
       level: info
     server:
+      base_path: ""
       domain: garage.json64.dev
       environment: production
       host: '::'

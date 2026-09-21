@@ -5,14 +5,18 @@ metadata:
     app: kube-prometheus-stack-coredns
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-88.5.4
+    chart: kube-prometheus-stack-91.4.1
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-coredns
   namespace: monitoring
 spec:
   endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    - authorization:
+        credentials:
+          key: token
+          name: kube-prometheus-stack-prometheus-token
+        type: Bearer
       port: http-metrics
   jobLabel: jobLabel
   namespaceSelector:
