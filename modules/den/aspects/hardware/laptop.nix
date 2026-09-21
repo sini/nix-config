@@ -24,10 +24,10 @@
           macAddress = "preserve";
         };
 
-        boot.kernelParams = [
-          "pcie_aspm=force"
-          "pcie_aspm.policy=powersupersave"
-        ];
+        #boot.kernelParams = [
+        #  "pcie_aspm=force"
+        #  "pcie_aspm.policy=powersupersave"
+        #];
 
         powerManagement.cpuFreqGovernor = lib.mkDefault "powersave";
 
