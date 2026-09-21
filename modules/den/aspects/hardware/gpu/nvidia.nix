@@ -52,29 +52,20 @@
           open = true;
           nvidiaSettings = false;
           nvidiaPersistenced = lib.mkDefault false;
-          package = config.boot.kernelPackages.nvidiaPackages.latest;
-          # TODO: Remove this once nixpkgs updates the nvidia package to 610.57.04 (or later)
-          # let
-          #   base = config.boot.kernelPackages.nvidiaPackages.latest;
-          # in
-          # base.overrideAttrs (_: {
-          #   passthru = base.passthru // {
-          #     # nvidia-open 610.57.04's __to_hwgpio() passes a
-          #     # `const struct gpio_device *` to gpio_device_get_chip(), which
-          #     # takes a non-const pointer on the CachyOS 7.1.x kernel. clang's
-          #     # -Werror=incompatible-pointer-types-discards-qualifiers aborts
-          #     # the open-module build. Cast away const at the call site; the
-          #     # callee only reads gdev. Drop once upstream de-consts it.
-          #     open = base.open.overrideAttrs (o: {
-          #       postPatch = (o.postPatch or "") + ''
-          #         substituteInPlace kernel-open/common/inc/nv-linux.h \
-          #           --replace-fail \
-          #             'gpio_device_get_chip(gdev)' \
-          #             'gpio_device_get_chip((struct gpio_device *) gdev)'
-          #       '';
-          #     });
-          #   };
-          # });
+          # nix-cachyos-kernel de-consts __to_hwgpio() with --replace-fail;
+          # nvidia-open >=615 already ships it de-consted, so that substitution
+          # aborts the build. Downgrade it to a warning.
+          package =
+            let
+              base = config.boot.kernelPackages.nvidiaPackages.latest;
+            in
+            base.overrideAttrs (_: {
+              passthru = base.passthru // {
+                open = base.open.overrideAttrs (o: {
+                  postPatch = builtins.replaceStrings [ "--replace-fail" ] [ "--replace-warn" ] (o.postPatch or "");
+                });
+              };
+            });
         };
 
         nixpkgs.config = {
