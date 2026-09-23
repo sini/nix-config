@@ -2,6 +2,7 @@
   den.aspects.core.nix = {
     os = {
       nix = {
+        nixPath = [ "nixpkgs=flake:nixpkgs" ];
         settings = {
           experimental-features = [
             "auto-allocate-uids"
