@@ -6,7 +6,7 @@ description: >
   execution, and the unit is sized to land in one dispatch. Do NOT use it to
   design, to widen scope, or to resolve anything left open — a unit that
   cannot land in one dispatch stops and reports instead.
-tools: [Read, Edit, Write, Grep, Glob, Bash, SendMessage, mcp__plugin_hm_hindsight__*, mcp__plugin_hm_codebase-memory__*, mcp__plugin_hm_serena__*, mcp__plugin_hm_graphify__*, mcp__plugin_hm_codegraph__*, mcp__plugin_hm_headroom__*]
+tools: @TOOLS@
 ---
 
 # gen-build

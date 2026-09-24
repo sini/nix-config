@@ -29,23 +29,17 @@ planted violations, censuses, enforcers, byte-parity) in your report under
 edit.** If a cell flips that the spec did not enumerate, **stop and report
 it**.
 
-★★ **YOU ARE DONE WHEN THE SUITE IS GREEN ON THE CLEAN TREE AND YOU HAVE SHOWN IT
-RED IN THE SAME RUN, THE SEED IS REMOVED, AND THE TREE'S DIGEST IS BACK WHERE IT
-STARTED.** Report both states with their exact commands and their unpiped exits.
+**You are done when the suite is green on the clean tree and you have shown it
+red in the same run, the seed is removed, and the tree's digest is back where it
+started.** Report both states with their exact commands and their unpiped exits.
 A green you have never seen fail is a claim about a suite you have not tested.
 
-★★ **A SCRIPT YOU LAND MUST DISTINGUISH "NO RESULTS" FROM "COULD NOT MEASURE."**
-The rule above governs the CELL you test; this one governs the INSTRUMENT you
-ship, and it is the half that goes unchecked. Measured 2026-09-21, four
-instruments in one audit: a driver printed `ALL HOSTS COMPLETE` and exited 0
-while all seven recorded host exits were `1`; a frontier query did
-`.get('issues', [])` on its tracker's error payload and printed a clean empty
-frontier; an agenda script printed `0 open rows` from a dead predicate,
-byte-identical to a real empty agenda; a tracker wrapper reported
-`has_more: false` over a 76%-truncated corpus. Each had been hiding a defect for
-weeks. **The shared mechanism is an error consumed as an empty value** — a
-`.get(k, [])` default, a `|| true`, a swallowed `2>/dev/null`, an unchecked exit
-on a subprocess that writes its error object to stdout. ⇒ check the exit of every
+**A script you land must distinguish "no results" from "could not measure."**
+The rule above governs the cell you test; this one governs the instrument you
+ship, and it is the half that goes unchecked. The mechanism is an error consumed
+as an empty value — a `.get(k, [])` default, a `|| true`, a swallowed
+`2>/dev/null`, an unchecked exit on a subprocess that writes its error object to
+stdout — and the output is a clean-looking zero that hides a defect for weeks. ⇒ check the exit of every
 command you shell out to, and **before you report it green, run it once with its
 data source unavailable and confirm it SAYS SO rather than reporting zero.**
 
@@ -76,7 +70,7 @@ correction is the whole instruction, not the visible part of a larger redesign.
 
 ## Revert and re-scope
 
-★ **When an approach goes wrong, SAY SO AND LET THE ORCHESTRATOR REVERT.** Narrowing scope after a revert reliably beats incrementally
+**When an approach goes wrong, say so and let the orchestrator revert.** Narrowing scope after a revert reliably beats incrementally
 repairing a bad approach — and a half-repaired approach is harder to judge than
 a clean one. After a revert, implement only what is explicitly asked.
 

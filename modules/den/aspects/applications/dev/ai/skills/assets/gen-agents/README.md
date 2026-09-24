@@ -9,12 +9,12 @@ So: **editing `_shared-measurement.md` or `_shared-protocol.md` changes all four
 agents at once.** That is the point, and it is also the hazard — check the blast
 radius before you touch either.
 
-| file                     | reaches                                                           |
-| ------------------------ | ----------------------------------------------------------------- |
-| `_shared-measurement.md` | all four — instrument facts, measurement law, reporting           |
-| `_shared-protocol.md`    | all four — the dispatch protocol                                  |
-| `_<role>-head.md`        | one — frontmatter (name/description/tools) and the role's opening |
-| `_<role>-body.md`        | one — the role's own sections, through "Hand off"                 |
+| file                     | reaches                                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `_shared-measurement.md` | all four — instrument facts, measurement law, reporting                                                       |
+| `_shared-protocol.md`    | all four — the dispatch protocol                                                                              |
+| `_<role>-head.md`        | one — frontmatter (name/description; `tools: @TOOLS@` is filled from `gen-agents.nix`) and the role's opening |
+| `_<role>-body.md`        | one — the role's own sections, through "Hand off"                                                             |
 
 **`DISPATCH.md` sat here until 2026-08-28 and no longer does** (owner-ruled). It
 is the template for the ORCHESTRATOR's half of a dispatch, and this table

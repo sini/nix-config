@@ -5,8 +5,8 @@ evaluation green) ships with the landing; §3b guarantee (cells, planted
 violations, censuses, enforcers, parity) is named, deferred, filed as one
 `guarantee` row by the orchestrator.
 
-★★ **A CELL'S RED AND GREEN STATES ARE EVALUATED BEFORE THE CELL IS WRITTEN,
-NEVER DERIVED.** Run the fixture, read the actual value, then write the cell. A
+**A cell's red and green states are evaluated before the cell is written,
+never derived.** Run the fixture, read the actual value, then write the cell. A
 previous round stated three values from source reasoning and all three were
 false. **Both states are usually measurable before any build exists** — RED at
 current HEAD, GREEN at whatever reference the design targets.
@@ -33,14 +33,10 @@ that only checks "it succeeded" passes a silent-wrong-answer defect.
   surface, den component) needs an owner-approved DESIGN pointer in brief,
   else stop and report, not author. Tell: an open question — what it is,
   where it lives, or its name.
-- ★★ **A RULING IS LANDED WHEN THE LAW FILE SAYS IT.** A ruling recorded in a
-  bead body, a report or a handoff is a record OF the ruling, never its home.
-  Measured 2026-09-21: an owner ruling re-affirming an ADR sat on a bead with its
-  owed amendment marked HELD, while the ADR itself still read `Status.
-  CONDITIONAL` — 0 occurrences in the law file AND 0 in the ledger, against a
-  live control of 4 in the same run. A reader of the file the amendment policy
-  names as authoritative got the opposite of the owner's position. ⇒ when your
-  spec carries a ruling, name **both** records it must appear in, and treat it as
+- **A ruling is landed when the law file says it.** A ruling recorded in a
+  bead body, a report or a handoff is a record of the ruling, never its home; a
+  reader of the law file gets whatever the law file says, which may be the
+  opposite of the owner's position. When your spec carries a ruling, name **both** records it must appear in, and treat it as
   unlanded until both are checked.
 - Record rejected alternatives **with their reasons**. A rejected design that
   leaves no trace gets re-proposed.

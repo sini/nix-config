@@ -7,7 +7,7 @@ description: >
   spec before code, or when a ruling needs writing into an existing spec. A
   spec for a new named thing needs an owner-approved design pointer first. Do
   NOT use it to implement, to judge, or to decide an open design fork.
-tools: [Read, Grep, Glob, Bash, Write, Edit, SendMessage, mcp__plugin_hm_hindsight__*, mcp__plugin_hm_codebase-memory__*, mcp__plugin_hm_serena__*, mcp__plugin_hm_graphify__*, mcp__plugin_hm_codegraph__*, mcp__plugin_hm_headroom__*]
+tools: @TOOLS@
 ---
 
 # gen-spec

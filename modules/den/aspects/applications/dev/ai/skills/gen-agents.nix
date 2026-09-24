@@ -10,14 +10,15 @@
 # it cannot be forgotten; a dispatch prompt then carries only what is task-specific.
 #
 # ★ TOOL RESTRICTION IS THE POINT WHERE IT ACTUALLY BINDS, and it does not bind
-# everywhere. `gen-gate` has no Edit: a reviewer that cannot Edit cannot quietly repair
-# the artefact it is judging, and that is a construction rather than a discipline.
-# `gen-scout` DOES have Write, changed 2026-08-27 on measured grounds: withholding it
-# never prevented writing, because Bash heredocs write just as well. In 10 of 29 sampled
-# subagent transcripts they did, invisibly, so the trace read "read-only" for runs that
-# had written files. Unobservable writing is worse than declared writing. What binds
-# gen-scout is no Edit — it may create probes and reports, never revise the artefact
-# under measurement.
+# everywhere. `gen-gate` and `gen-scout` get no Edit and no serena editing tool: a
+# reviewer without the revising tools cannot quietly repair the artefact it is judging.
+# Both keep Write and Bash, so this withholds revision, not writing: withholding Write
+# never prevented writing, because Bash heredocs write just as well, and in 10 of 29
+# sampled transcripts they did, invisibly. Declared writing beats unobservable writing.
+#
+# MCP tools are listed by name, never as `mcp__<server>__*`: a wildcard would hand the
+# reviewers serena's editors and every agent the bank- and index-deleting tools. A tool
+# a server adds later is absent until listed here — add it deliberately.
 #
 # Frontmatter is Claude Code's own schema — name / description / tools / model. Note that
 # opencode-style keys (`mode`, `temperature`, nested tools+permission maps) are silently
@@ -32,19 +33,113 @@
 {
   den.aspects.applications.dev.ai.skills.gen-agents = {
     agent-extensions =
-      { pkgs, ... }:
+      { lib, pkgs, ... }:
       let
         d = ./assets/gen-agents;
         shared = builtins.readFile "${d}/_shared-measurement.md";
         protocol = builtins.readFile "${d}/_shared-protocol.md";
-        # Order matters and is verified: head, then the shared measurement block,
-        # then the role body, then the shared protocol. Concatenating head+body
-        # first puts the shared half in the wrong place — caught by the
-        # byte-identity check against the hand-maintained files.
+
+        mcp = server: map (t: "mcp__plugin_hm_${server}__${t}");
+        # Read, recall and bank-append only: no bank delete/clear/update, no directive
+        # writes (law is the owner's to write), no index deletion.
+        mcpCommon =
+          mcp "hindsight" [
+            "recall"
+            "reflect"
+            "sync_retain"
+            "retain"
+            "get_memory"
+            "list_memories"
+            "invalidate_memory"
+            "get_operation"
+            "list_tags"
+            "list_documents"
+            "get_document"
+            "list_directives"
+            "list_mental_models"
+            "get_mental_model"
+            "search_knowledge_base"
+            "get_knowledge_base_tree"
+            "get_knowledge_page"
+          ]
+          ++ mcp "codebase-memory" [
+            "list_projects"
+            "index_status"
+            "index_repository"
+            "check_index_coverage"
+            "get_architecture"
+            "get_graph_schema"
+            "get_file_outline"
+            "get_code_snippet"
+            "search_graph"
+            "search_code"
+            "query_graph"
+            "trace_path"
+            "detect_changes"
+            "compare_graphs"
+          ]
+          ++ mcp "serena" [
+            "initial_instructions"
+            "find_symbol"
+            "find_declaration"
+            "find_implementations"
+            "find_referencing_symbols"
+            "get_symbols_overview"
+            "get_diagnostics_for_file"
+            "list_memories"
+            "read_memory"
+          ]
+          ++ mcp "graphify" [
+            "graph_stats"
+            "god_nodes"
+            "get_node"
+            "get_neighbors"
+            "get_community"
+            "shortest_path"
+            "query_graph"
+            "list_prs"
+            "get_pr_impact"
+            "triage_prs"
+          ]
+          ++ mcp "codegraph" [ "codegraph_explore" ]
+          ++ mcp "headroom" [
+            "headroom_compress"
+            "headroom_retrieve"
+            "headroom_stats"
+          ];
+        serenaEdit = mcp "serena" [
+          "replace_content"
+          "replace_in_files"
+          "replace_symbol_body"
+          "rename_symbol"
+          "insert_before_symbol"
+          "insert_after_symbol"
+          "safe_delete_symbol"
+        ];
+        base = [
+          "Read"
+          "Grep"
+          "Glob"
+          "Bash"
+          "Write"
+          "SendMessage"
+        ];
+        tools = {
+          scout = base ++ mcpCommon;
+          gate = base ++ mcpCommon;
+          spec = base ++ [ "Edit" ] ++ mcpCommon ++ serenaEdit;
+          build = base ++ [ "Edit" ] ++ mcpCommon ++ serenaEdit;
+        };
+
+        # Order matters: head, then the shared measurement block, then the role body,
+        # then the shared protocol. Diff the rendered agents before and after any change
+        # here (assets/gen-agents/README.md, "Checking a change").
         mkAgent =
           role:
           pkgs.writeText "gen-${role}.md" (
-            builtins.readFile "${d}/_${role}-head.md"
+            builtins.replaceStrings [ "@TOOLS@" ] [ "[${lib.concatStringsSep ", " tools.${role}}]" ] (
+              builtins.readFile "${d}/_${role}-head.md"
+            )
             + "\n"
             + shared
             + "\n"

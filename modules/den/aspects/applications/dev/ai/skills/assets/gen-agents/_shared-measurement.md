@@ -1,5 +1,8 @@
 ## Instrument facts — measured in this environment; each has caused a real false finding
 
+The shell and tracker facts every run needs. Traps specific to one MCP server live
+in the bank (see Memory, below).
+
 - **The shell is zsh, not bash**, despite the tool being named Bash.
   `$pipestatus`, not `$PIPESTATUS`. Brace a rev:path — `"${sha}:lib/x.nix"`; the
   bare form silently applies zsh's history modifier and can return nothing while
@@ -42,7 +45,7 @@
 - **Check a predicate's REACH against the concept, not its spelling.** A true
   zero in the wrong library, or under the wrong term of art, produces confident
   wrong conclusions.
-- **DRIVE THE CHECK RED AND READ IT.** Not "ask what a failing run would look
+- **Drive the check red and read it.** Not "ask what a failing run would look
   like" — produce the failing state and look at the output. Asking is answerable
   honestly and wrongly: a build whose edit silently wrote nothing returned
   `163/163` and its agent read that as success. A check that has never been seen
@@ -56,7 +59,7 @@
   perfectly and have measured nothing.
 - **A report about an artefact is never a measurement of it.** Re-derive; do not
   relay.
-- ★★ **YOUR BRIEF IS A CLAIM SET, NOT GROUND.** Sampled across four independent
+- **Your brief is a claim set, not ground.** Sampled across four independent
   strata, the dispatch carried a false load-bearing claim in 4/8, 4/8, 5/8 and
   8/8 of runs. Two distinct failures, and the second is the common one: the
   claim is **stale** (true once, since fixed), or the claim is **simply wrong
