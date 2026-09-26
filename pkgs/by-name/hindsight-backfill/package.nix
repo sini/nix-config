@@ -4,6 +4,9 @@
   curl,
   coreutils,
   findutils,
+  gnugrep,
+  gawk,
+  bash,
   endpoint ? "http://10.11.0.20:8888",
   bank ? "den-law",
 }:
@@ -32,6 +35,9 @@ writeShellApplication {
     curl
     coreutils
     findutils
+    gnugrep
+    gawk
+    bash
   ];
   text = ''
     set -uo pipefail
@@ -46,6 +52,7 @@ writeShellApplication {
     force=0
     limit=0
     sleep_between=0
+    min_age=0
 
     usage() {
       cat <<'USAGE'
@@ -54,6 +61,7 @@ writeShellApplication {
       --projects-dir DIR   where session transcripts live (default ~/.claude/projects)
       --limit N            publish at most N sessions this run
       --sleep S            seconds to wait between sessions
+      --min-age M          skip transcripts modified in the last M minutes
       --force              republish sessions the bank already holds
       --dry-run            list what would be published, write nothing
       -h, --help           this
@@ -68,6 +76,7 @@ writeShellApplication {
         --projects-dir) projects="$2"; shift 2 ;;
         --limit) limit="$2"; shift 2 ;;
         --sleep) sleep_between="$2"; shift 2 ;;
+        --min-age) min_age="$2"; shift 2 ;;
         --force) force=1; shift ;;
         --dry-run) dry=1; shift ;;
         -h|--help) usage; exit 0 ;;
@@ -138,7 +147,12 @@ writeShellApplication {
     # a level deeper under <session>/subagents/ and are a DIFFERENT shape — every line
     # is isSidechain, which the renderer drops, so they would render to zero turns and
     # be silently skipped. They are out of scope here rather than accidentally empty.
-    mapfile -t files < <(find "$projects" -mindepth 2 -maxdepth 2 -name '*.jsonl' | sort)
+    #
+    # --min-age leaves LIVE sessions alone. The periodic run would otherwise publish a
+    # transcript that is still being written, and its own SessionEnd then re-extracts
+    # it; a session that died is settled by the time the timer next fires.
+    age=(); [ "$min_age" -gt 0 ] && age=(-mmin +"$min_age")
+    mapfile -t files < <(find "$projects" -mindepth 2 -maxdepth 2 -name '*.jsonl' "''${age[@]}" | sort)
     echo "found ''${#files[@]} session transcript(s) under $projects"
 
     published=0 skipped=0 failed=0 empty=0 attempted=0
