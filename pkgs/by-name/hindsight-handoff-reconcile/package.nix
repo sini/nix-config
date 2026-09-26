@@ -84,7 +84,8 @@ writeShellApplication {
     [ "''${#repo_list[@]}" -gt 0 ] || { echo "no repository given and none configured" >&2; exit 2; }
 
     doclist=$(mktemp); held=$(mktemp); body=$(mktemp); req=$(mktemp)
-    trap 'rm -f "$doclist" "$held" "$body" "$req"' EXIT
+    resp=$(mktemp); delresp=$(mktemp)
+    trap 'rm -f "$doclist" "$held" "$body" "$req" "$resp" "$delresp"' EXIT
 
     # Fail LOUD on anything that would make "nothing to do" and "could not look"
     # the same answer. Unlike the archiver this is not on a session's close path —
@@ -116,18 +117,40 @@ writeShellApplication {
     }
 
     publish() { # id sha date project
-      git -C "$top" show "$2:$file" > "$body" || return 1
+      pub_detail=""
+      git -C "$top" show "$2:$file" > "$body" || {
+        pub_detail="could not read $2:$file"; return 1; }
       jq -nc --rawfile c "$body" --arg id "$1" --arg ts "$3" --arg p "$4" \
         --arg st "$strategy" --arg cx "$context" \
         '{async: false, items: [{
             content: $c, context: $cx, document_id: $id, timestamp: $ts,
             update_mode: "replace", strategy: $st,
             tags: ["subject:handoff", "tier:episode", ("project:" + $p)]
-          }]}' > "$req" || return 1
+          }]}' > "$req" || { pub_detail="could not build request"; return 1; }
       # SYNC and serial: one revision at a time keeps 135 of them off the queue at
       # once — the 2026-09-01 flood was every retain submitted async together.
-      curl -sS -f -m 3600 -X POST "$base/v1/default/banks/$bank/memories" \
-        -H 'Content-Type: application/json' --data-binary @"$req" -o /dev/null
+      # The response is captured, not sent to /dev/null: a 2xx carrying an
+      # unparseable body or an explicit success:false would otherwise pass as
+      # ok. operation_id is documented null on this path (every call here is
+      # async:false; the API only populates it for async: true), so it is
+      # still extracted and printed for the day that changes, but the one
+      # per-call detail synchronous retain actually returns is `usage`
+      # (LLM token counts) — extracted here because that response body is
+      # the only place it exists at all.
+      code=$(curl -sS -m 3600 -o "$resp" -w '%{http_code}' -X POST \
+        "$base/v1/default/banks/$bank/memories" \
+        -H 'Content-Type: application/json' --data-binary @"$req") || {
+        pub_detail="transport error"; return 1; }
+      case "$code" in
+        2??) ;;
+        *) pub_detail="HTTP $code $(tr -s '[:space:]' ' ' < "$resp" | head -c 200)"
+           return 1 ;;
+      esac
+      jq -e '.success == true' "$resp" >/dev/null 2>&1 || {
+        pub_detail="unparseable or success:false response: $(tr -s '[:space:]' ' ' < "$resp" | head -c 200)"
+        return 1; }
+      pub_op=$(jq -r '.operation_id // "-"' "$resp")
+      pub_tok=$(jq -r '.usage.total_tokens // "-"' "$resp")
     }
 
     published=0 empty=0 present=0 held_empty=0 incomplete=0 repaired=0 failed=0 attempted=0
@@ -187,21 +210,34 @@ writeShellApplication {
         fi
 
         printf '%-14s %s  %s ... ' "$mode" "$id" "$date"
+        # del_units stays "-" for a plain publish (nothing was deleted); a repair
+        # captures the delete response too, since memory_units_deleted is the
+        # diagnostic that says whether the doc repair thought it was fixing
+        # actually held anything.
+        del_units="-"
         if [ "$mode" = repair ]; then
-          curl -sS -f -m 60 -X DELETE "$base/v1/default/banks/$bank/documents/$id" -o /dev/null || {
-            printf 'FAILED (delete)\n'; failed=$((failed + 1)); continue; }
+          delcode=$(curl -sS -m 60 -o "$delresp" -w '%{http_code}' -X DELETE \
+            "$base/v1/default/banks/$bank/documents/$id") || {
+            printf 'FAILED (delete: transport error)\n'; failed=$((failed + 1)); continue; }
+          case "$delcode" in
+            2??) del_units=$(jq -r '.memory_units_deleted // "-"' "$delresp" 2>/dev/null) || del_units="-" ;;
+            *) printf 'FAILED (delete: HTTP %s %s)\n' "$delcode" \
+                 "$(tr -s '[:space:]' ' ' < "$delresp" | head -c 200)"
+               failed=$((failed + 1)); continue ;;
+          esac
         fi
         if ! publish "$id" "$sha" "$date" "$project"; then
-          printf 'FAILED\n'; failed=$((failed + 1)); continue
+          printf 'FAILED (%s)\n' "$pub_detail"; failed=$((failed + 1)); continue
         fi
         n=$(fact_count "$id") || n=""
         if [ -z "$n" ]; then
           printf 'FAILED (fact count unreadable)\n'; failed=$((failed + 1))
         elif [ "$n" -gt 0 ]; then
-          printf 'ok  %s fact(s)\n' "$n"
+          printf 'ok  %s fact(s)  [op=%s tok=%s del=%s]\n' "$n" "$pub_op" "$pub_tok" "$del_units"
           if [ "$mode" = repair ]; then repaired=$((repaired + 1)); else published=$((published + 1)); fi
         else
-          printf 'empty\n'; empty=$((empty + 1))
+          printf 'empty  [op=%s tok=%s del=%s]\n' "$pub_op" "$pub_tok" "$del_units"
+          empty=$((empty + 1))
         fi
       done <<< "$revs"
     done
