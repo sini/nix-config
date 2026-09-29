@@ -5,7 +5,7 @@ metadata:
     app: kube-prometheus-stack
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-91.4.1
+    chart: kube-prometheus-stack-91.8.0
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-kubernetes-apps
@@ -215,6 +215,8 @@ spec:
             time() - max by (namespace, job_name, cluster) (kube_job_status_start_time{job="kube-state-metrics", namespace=~".*"}
               and
             kube_job_status_active{job="kube-state-metrics", namespace=~".*"} > 0) > 43200
+              unless on (namespace, job_name, cluster)
+            max by (namespace, job_name, cluster) (kube_job_labels{job="kube-state-metrics", namespace=~".*",label_excluded_from_alerts="true"} == 1)
           labels:
             severity: warning
         - alert: KubeJobFailed
@@ -278,6 +280,9 @@ spec:
               -
               kube_poddisruptionbudget_status_current_healthy{job="kube-state-metrics", namespace=~".*"}
             )
+            > 0
+            and
+            kube_poddisruptionbudget_status_expected_pods{job="kube-state-metrics", namespace=~".*"}
             > 0
           for: 15m
           labels:

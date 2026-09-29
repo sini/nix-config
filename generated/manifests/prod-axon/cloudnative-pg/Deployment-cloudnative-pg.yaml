@@ -15,9 +15,9 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 2c9f42891f0445418c78c744c535f1e278516a05b4038ec50bf2a4cfaf52e7eb
-        checksum/monitoring-config: fc70a751f9fea0968896aca696f7c43bfb9555b755bda93867f8c6f6dd1d0862
-        checksum/rbac: 30218571d44d1ab53d8fbd96f20c46cac2a12b5ac8a8206f59f54807f1cda6ee
+        checksum/config: 35f4c273fdeb8c727d86e88b1a4afc2b73a8fd4f876c9d88a5e5e58a256c284e
+        checksum/monitoring-config: 592ae4aaf7e60a50529c252dcd1647659db8e7be8e71d1ba72a74ee2b42daf25
+        checksum/rbac: 9e607615e33cb589183d0d342106e5394f1af1e7d309e76ae54085b382bdc7a9
       labels:
         app.kubernetes.io/instance: cloudnative-pg
         app.kubernetes.io/name: cloudnative-pg
@@ -33,14 +33,14 @@ spec:
             - /manager
           env:
             - name: OPERATOR_IMAGE_NAME
-              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.0
+              value: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1
             - name: OPERATOR_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
             - name: MONITORING_QUERIES_CONFIGMAP
               value: cnpg-default-monitoring
-          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.0
+          image: ghcr.io/cloudnative-pg/cloudnative-pg:1.30.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
