@@ -64,6 +64,10 @@
       url = "github:yokoffing/Betterfox";
       flake = false;
     };
+    brag = {
+      url = "github:latent-spaces/brag";
+      flake = false;
+    };
     caveman = {
       url = "github:JuliusBrussee/caveman";
       flake = false;
@@ -184,6 +188,10 @@
     };
     homebrew-core = {
       url = "github:homebrew/homebrew-core";
+      flake = false;
+    };
+    hyperframes = {
+      url = "github:heygen-com/hyperframes";
       flake = false;
     };
     hyprland.url = "github:hyprwm/Hyprland";

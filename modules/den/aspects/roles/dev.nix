@@ -24,6 +24,8 @@
       applications.dev.ai.skills.diagram-design
       applications.dev.ai.skills.ui-ux-pro-max
       applications.dev.ai.skills.one-skill-to-rule-them-all
+      applications.dev.ai.skills.hyperframes
+      applications.dev.ai.skills.brag
       applications.dev.ai.mcp.graphify
       applications.dev.ai.mcp.headroom
       applications.dev.ai.mcp.codegraph
@@ -74,6 +76,7 @@
       applications.dev.lang.rust
       applications.dev.lang.python
       applications.dev.lang.nix
+      applications.dev.lang.javascript
 
       applications.dev.mux.herdr
       applications.dev.mux.sesh

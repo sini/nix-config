@@ -226,6 +226,22 @@
         "type": "github"
       }
     },
+    "brag": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790269152,
+        "narHash": "sha256-LjjOUvrs2GsgkwsO3d3jVaTlhghfwZMXdDt1A5uRBtE=",
+        "owner": "latent-spaces",
+        "repo": "brag",
+        "rev": "c893c5ed52aed84e3e2ee56787de869fccdae6b0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "latent-spaces",
+        "repo": "brag",
+        "type": "github"
+      }
+    },
     "brew-src": {
       "flake": false,
       "locked": {
@@ -2314,6 +2330,22 @@
         "type": "github"
       }
     },
+    "hyperframes": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1790716730,
+        "narHash": "sha256-4vOZT7OsxP9+RtZZ7IMedT6ns0TzukfI5wdDZkaaPnc=",
+        "owner": "heygen-com",
+        "repo": "hyperframes",
+        "rev": "bd873ec35c58140e66c811c6e9ba3a55a954d985",
+        "type": "github"
+      },
+      "original": {
+        "owner": "heygen-com",
+        "repo": "hyperframes",
+        "type": "github"
+      }
+    },
     "hyprcursor": {
       "inputs": {
         "hyprlang": [
@@ -4296,6 +4328,7 @@
         "ayugram-desktop": "ayugram-desktop",
         "base16-schemes": "base16-schemes",
         "betterfox": "betterfox",
+        "brag": "brag",
         "caveman": "caveman",
         "claude-plugins-official": "claude-plugins-official",
         "codebase-memory-mcp": "codebase-memory-mcp",
@@ -4332,6 +4365,7 @@
         "home-manager-unstable": "home-manager-unstable",
         "homebrew-cask": "homebrew-cask",
         "homebrew-core": "homebrew-core",
+        "hyperframes": "hyperframes",
         "hyprland": "hyprland",
         "hyprland-plugins": "hyprland-plugins",
         "impermanence": "impermanence",
