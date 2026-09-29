@@ -60,6 +60,20 @@ than here, so a fixed tool's trap is invalidated in one call instead of warning
 forever. At least one server returns the same zero for "my index lacks your
 language" as for "this code does not exist".
 
+★ **On a claim ABOUT AN INSTRUMENT (a tool, a predicate, an anchor, a count),
+recall with `types: ["world", "experience"]`.** A derived `observation` can
+invert the source fact it was synthesized from while inheriting that source's
+`tier:trap` tag, so an unfiltered recall can hand back the inversion carrying
+the tag that means *measured*. Measured `den-hoag-mgnv3`, same query, one run,
+both arms: unfiltered, the inverted observation `805e6c59` (asserting a
+correct md5 anchor is wrong) appears in the top results at 1.0851, above the
+world fact it inverted; with `types=["world","experience"]` it is absent
+outright — the filter excludes the `observation` category by construction, not
+by out-ranking it. `invalidate_memory` refuses to retract an observation ("only
+world/experience facts can be curated; observations are derived and regenerate
+from their sources"), so the type filter at recall time is the durable defense,
+not a one-time cleanup.
+
 **Retain what will outlive your dispatch** — you hold measured facts the
 orchestrator only sees relayed. When you learn something that would have saved
 you an hour and will recur (a tool that lies about its own state, a predicate that
