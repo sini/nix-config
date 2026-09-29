@@ -7,6 +7,25 @@
         inputs'.nixcord.homeModules.nixcord
       ];
 
+    # nixcord still passes `source` to pkgs.discord.override; nixpkgs 7a1e0f89
+    # (discord: move to pkgs/by-name) dropped that formal. Strip it only where
+    # it is gone, keeping functionArgs so nixcord's useFHSEnv probe still works.
+    nixpkgs-overlays = _: [
+      (_final: prev: {
+        discord =
+          let
+            args = prev.lib.functionArgs prev.discord.override;
+          in
+          if args ? source then
+            prev.discord
+          else
+            prev.discord
+            // {
+              override = prev.lib.setFunctionArgs (a: prev.discord.override (removeAttrs a [ "source" ])) args;
+            };
+      })
+    ];
+
     homeManager =
       {
         pkgs,
