@@ -1,7 +1,7 @@
 { den, inputs, ... }:
 {
   den.hosts.x86_64-linux.cortex-cuda = {
-    channel = "nixpkgs-master";
+    channel = "nixos-unstable";
     environment = "dev";
     intoAttr = [ ]; # do not emit a standalone nixosConfiguration output (delivered as a child)
 
@@ -77,7 +77,7 @@
     ];
 
     # M2: CUDA-enable the guest's package set at the microvm submodule level.
-    microvm.pkgs = import inputs.nixpkgs-master {
+    microvm.pkgs = import inputs.nixpkgs-unstable {
       system = "x86_64-linux";
       config = {
         allowUnfree = true;

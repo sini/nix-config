@@ -1,7 +1,7 @@
 { den, ... }:
 {
   den.hosts.x86_64-linux.cortex = {
-    channel = "nixpkgs-master";
+    channel = "nixos-unstable";
     environment = "dev";
     system-owner = "sini";
     system-access-groups = [ "workstation-access" ];
