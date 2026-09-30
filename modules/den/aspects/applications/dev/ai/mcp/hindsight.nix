@@ -221,6 +221,82 @@
         recall = "${config.home.homeDirectory}/.claude/hindsight-recall.sh";
         archive = "${config.home.homeDirectory}/.claude/hindsight-archive.sh";
         renderer = "${config.home.homeDirectory}/.claude/hindsight-episode.jq";
+
+        # Per-role recall inputs for the SubagentStart arm, keyed by agent role. Why the
+        # role is read here rather than matched: the comment on that arm, below.
+        subagentRecallInputs =
+          lib.mapAttrs
+            (role: q: {
+              query = q;
+              tags = [
+                "tier:law"
+                "tier:trap"
+                "role:${role}"
+              ];
+              tags_match = "any_strict";
+              types = [
+                "world"
+                "experience"
+              ];
+            })
+            {
+              scout = "measurement law, absence claims and live controls, grep and predicate traps, tool behaviours that lie, burned control tokens, shell idioms that fail silently";
+              gate = "adversarial gate rubric, prior art sweeps, refutation discipline, second independent pass, coordinate and citation checking";
+              spec = "spec form and acceptance oracles, ADR law and amendment policy, owner rulings, forks that must not be settled by an agent";
+              build = "landing and commit discipline, formatting before commit, nix-unit and oracle arming, seeded defects, push gates";
+            };
+
+        subagentRecall = pkgs.writeShellScript "hindsight-subagent-recall" ''
+          set -uo pipefail
+          base="${cfg.endpoint}"
+          bank="${cfg.bank}"
+          inputs=${lib.escapeShellArg (builtins.toJSON subagentRecallInputs)}
+          log="$HOME/.claude/hindsight-subagent.log"
+          # Fails OPEN — exit 0, nothing on stdout — but every firing leaves one line.
+          note() { printf '%s\t%s\t%s\t%s\n' "$(date -Is)" "''${agent:-?}" "''${role:-?}" "$1" >> "$log"; exit 0; }
+
+          payload=$(cat 2>/dev/null || true)
+          agent=$(printf '%s' "$payload" | ${jq} -r '.agent_type // empty' 2>/dev/null)
+          id=$(printf '%s' "$payload" | ${jq} -r '.agent_id // empty' 2>/dev/null)
+          tp=$(printf '%s' "$payload" | ${jq} -r '.transcript_path // empty' 2>/dev/null)
+
+          # The sidecar may land a beat after the event, so poll briefly for it.
+          # ponytail: `customAgentType` is claude-code's undocumented sidecar field; if it
+          # moves, role falls back to agent_type and the log records `from=payload`.
+          role="" from=payload meta=""
+          if [ -n "$id" ] && [ -d "''${tp%.jsonl}/subagents" ]; then
+            for _ in 1 2 3 4 5 6 7 8 9 10; do
+              meta=$(find "''${tp%.jsonl}/subagents" -name "agent-$id.meta.json" -print -quit 2>/dev/null)
+              [ -n "$meta" ] && break
+              sleep 0.5
+            done
+          fi
+          [ -n "$meta" ] && role=$(${jq} -r '.customAgentType // empty' "$meta" 2>/dev/null)
+          if [ -n "$role" ]; then from=sidecar; else role="$agent"; fi
+
+          input=$(printf '%s' "$inputs" | ${jq} -c --arg r "''${role#gen-}" '.[$r] // empty')
+          [ "''${role#gen-}" != "$role" ] && [ -n "$input" ] || note "skip:not-a-gen-role from=$from"
+
+          ${curl} -sS -m 5 -o /dev/null "$base/health" 2>/dev/null || note "fail:health"
+          resp=$(${curl} -sS -f -m 80 -X POST "$base/v1/default/banks/$bank/memories/recall" \
+            -H 'Content-Type: application/json' -d "$input" 2>/dev/null) || note "fail:recall"
+
+          # `types` already excludes observations; `obs` counts any that got through anyway.
+          obs=$(printf '%s' "$resp" | ${jq} '[.results[]? | select(.type == "observation")] | length' 2>/dev/null)
+          # Whole results, in rank order, while they fit 9000 chars: claude-code swaps a
+          # larger hook context for a preview and a file path, which the agent may never
+          # open. The four role queries returned 14.6-15.7k chars unbounded.
+          out=$(printf '%s' "$resp" | ${jq} -r --arg bank "$bank" --arg role "$role" '
+            reduce (.results[]? | "- " + (.text // "")) as $l ([];
+              if (map(length + 1) | add // 0) + ($l | length) < 9000 then . + [$l] else . end) as $law
+            | if ($law | length) == 0 then empty
+              else (["## Standing law for \($role) (recalled from \($bank), world and experience facts only)", ""] + $law) | join("\n")
+              end' 2>/dev/null)
+          [ -n "$out" ] || note "fail:empty from=$from"
+
+          ${jq} -nc --arg c "$out" '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: $c}}'
+          note "ok from=$from results=$(printf '%s' "$resp" | ${jq} '.results | length') observations=$obs chars=''${#out}"
+        '';
       in
       {
         # Backfill tool for sessions that predate the hook, or that ended without
@@ -552,17 +628,32 @@
             # dispatches in one session, with the instruction sitting in context the whole time.
             # A rule that depends on remembering has now failed twice, measured. This makes it
             # mechanical.
-            # ★ THE MATCHER IS THE AGENT TYPE, which is what lets each role recall on its OWN
-            # subject with no payload interpolation — the payload carries only `agent_id` and
+            # ★ EACH ROLE RECALLS ON ITS OWN SUBJECT — the payload carries `agent_id` and
             # `agent_type`, never the task prompt, so a per-role query is the available
             # granularity. The agent refines from there with its own `recall`.
-            # ★ `mcp_tool` is permitted here and carries none of SessionStart's "MCP not yet
-            # connected" caveat, which makes this a better host for an MCP-backed recall.
+            # ★★★ THE ROLE IS NOT IN THE PAYLOAD FOR A NAMED TEAMMATE, so no MATCHER can select
+            # on it. Claude Code 2.1.285 matches SubagentStart against `agent_type`, and a
+            # teammate's `agent_type` is its NAME (`mgnv3-q-build`); its role lives only in the
+            # sidecar `subagents/agent-<agent_id>.meta.json` as `customAgentType`. Measured
+            # across 2322 sidecars: 1908 of 1911 gen-role teammates carry a non-role name in
+            # `agentType`, so per-role matchers never fired for them. One unmatched arm
+            # reads the role from the sidecar and falls back to `agent_type`, which IS the role
+            # for an unnamed `subagent_type` dispatch.
+            # ★★★ AND THE FORMER `mcp_tool` ARMS NEVER CONNECTED: 296 of 296 recorded "MCP
+            # server 'plugin_hm_hindsight' not connected". The hook looks the server up by its
+            # CLIENT name, and a plugin's client is named `plugin:hm:hindsight` (claude-code
+            # keys plugin servers `plugin:<plugin>:<server>`); `plugin_hm_hindsight` is the
+            # tool-NAMESPACE spelling, which names no client. This arm needs no MCP client at
+            # all: it recalls over the dataplane REST API, like hindsight-recall.sh.
+            # ★★ `types` IS ON EVERY INPUT. An observation can invert its source and inherit
+            # its `tier:` tag (den-hoag-mgnv3); replayed with these inputs the role queries
+            # injected 1-2 observations each without the filter, 0 with it.
             # ★★ VERIFY BEFORE TRUSTING IT — this event fails silently in two ways (see the
             # PreToolUse block). Read a SUBAGENT's transcript, never the parent's, and confirm
-            # the recalled text is present before its first tool call. If the mcp_tool handler
-            # does not fire, the command arm below still delivers the instruction, so the floor
-            # is the pre-existing behaviour rather than nothing.
+            # the recalled text is present before its first tool call. Every firing also
+            # appends one line to ~/.claude/hindsight-subagent.log naming the role, where it
+            # came from, and the outcome, so "never fired" and "fired, delivered nothing" are
+            # distinguishable.
             # ★★ THE 90s TIMEOUT IS MEASURED, NOT PADDING. From hindsight's OWN server trace
             # on 2026-09-01, not from a client stopwatch:
             #     [2] parallel retrieval          0.029s  -> 289 candidates
@@ -580,81 +671,10 @@
             # time from queue wait, and under a backfill it is nearly all queue wait.
             hooks.SubagentStart = [
               {
-                matcher = "gen-scout";
                 hooks = [
                   {
-                    type = "mcp_tool";
-                    server = "plugin_hm_hindsight";
-                    tool = "recall";
-                    input = {
-                      query = "measurement law, absence claims and live controls, grep and predicate traps, tool behaviours that lie, burned control tokens, shell idioms that fail silently";
-                      tags = [
-                        "tier:law"
-                        "tier:trap"
-                        "role:scout"
-                      ];
-                      tags_match = "any_strict";
-                    };
-                    timeout = 90;
-                  }
-                ];
-              }
-              {
-                matcher = "gen-gate";
-                hooks = [
-                  {
-                    type = "mcp_tool";
-                    server = "plugin_hm_hindsight";
-                    tool = "recall";
-                    input = {
-                      query = "adversarial gate rubric, prior art sweeps, refutation discipline, second independent pass, coordinate and citation checking";
-                      tags = [
-                        "tier:law"
-                        "tier:trap"
-                        "role:gate"
-                      ];
-                      tags_match = "any_strict";
-                    };
-                    timeout = 90;
-                  }
-                ];
-              }
-              {
-                matcher = "gen-spec";
-                hooks = [
-                  {
-                    type = "mcp_tool";
-                    server = "plugin_hm_hindsight";
-                    tool = "recall";
-                    input = {
-                      query = "spec form and acceptance oracles, ADR law and amendment policy, owner rulings, forks that must not be settled by an agent";
-                      tags = [
-                        "tier:law"
-                        "tier:trap"
-                        "role:spec"
-                      ];
-                      tags_match = "any_strict";
-                    };
-                    timeout = 90;
-                  }
-                ];
-              }
-              {
-                matcher = "gen-build";
-                hooks = [
-                  {
-                    type = "mcp_tool";
-                    server = "plugin_hm_hindsight";
-                    tool = "recall";
-                    input = {
-                      query = "landing and commit discipline, formatting before commit, nix-unit and oracle arming, seeded defects, push gates";
-                      tags = [
-                        "tier:law"
-                        "tier:trap"
-                        "role:build"
-                      ];
-                      tags_match = "any_strict";
-                    };
+                    type = "command";
+                    command = "${subagentRecall}";
                     timeout = 90;
                   }
                 ];

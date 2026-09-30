@@ -34,7 +34,12 @@ quoted as a ruling.
 
 The recall hook prints the two under separate headers. The MCP `recall` tool does
 NOT — there you get raw results, and `type` is the only thing distinguishing
-owner law from machine paraphrase. Pass `types: ["world"]` if you want law only.
+owner law from machine paraphrase.
+
+**Every recall passes `types: ["world", "experience"]`.** An observation can
+invert the fact it was synthesised from while inheriting that fact's `tier:`
+tag, and it can outrank the fact it inverted (measured, `den-hoag-mgnv3`). The
+filter drops the category before ranking, so it holds whatever the score.
 
 Three fields carry meaning beyond the text:
 

@@ -41,11 +41,12 @@
 
         mcp = server: map (t: "mcp__plugin_hm_${server}__${t}");
         # Read, recall and bank-append only: no bank delete/clear/update, no directive
-        # writes (law is the owner's to write), no index deletion.
+        # writes (law is the owner's to write), no index deletion. No `reflect` either:
+        # it answers by LLM synthesis, measured to invert a fact from world facts alone,
+        # and its MCP schema takes no `types`, so no filter closes it (den-hoag-mgnv3).
         mcpCommon =
           mcp "hindsight" [
             "recall"
-            "reflect"
             "sync_retain"
             "retain"
             "get_memory"
