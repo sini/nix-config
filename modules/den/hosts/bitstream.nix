@@ -27,6 +27,8 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
+
+      applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
     };
   };
