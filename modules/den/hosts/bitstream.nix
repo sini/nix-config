@@ -27,6 +27,7 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
+      applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
     };
   };
 
@@ -41,6 +42,8 @@
       core.boot.network-initrd
       hardware.cpu.amd
       hardware.gpu.amd
+
+      applications.dev.mux.herdr-pair
     ];
   };
 }
