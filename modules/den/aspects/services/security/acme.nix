@@ -1,6 +1,14 @@
 { lib, ... }:
 {
   den.aspects.services.security.acme = {
+    settings = {
+      fqdnCert = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Order a certificate for the host's FQDN and its wildcard";
+      };
+    };
+
     nixos =
       {
         config,
@@ -31,8 +39,8 @@
               };
           };
 
-          certs.${config.networking.fqdn} = {
-            extraDomainNames = [ "*.${config.networking.fqdn}" ];
+          certs = lib.mkIf host.settings.services.security.acme.fqdnCert {
+            ${config.networking.fqdn}.extraDomainNames = [ "*.${config.networking.fqdn}" ];
           };
         };
       };
