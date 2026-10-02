@@ -253,20 +253,26 @@
           inputs=${lib.escapeShellArg (builtins.toJSON subagentRecallInputs)}
           log="$HOME/.claude/hindsight-subagent.log"
           # Fails OPEN — exit 0, nothing on stdout — but every firing leaves one line.
-          note() { printf '%s\t%s\t%s\t%s\n' "$(date -Is)" "''${agent:-?}" "''${role:-?}" "$1" >> "$log"; exit 0; }
+          note() { printf '%s\t%s\t%s\t%s\t%s\n' "$(date -Is)" "''${agent:-?}" "''${role:-?}" "$1" "id=''${id:-?}" >> "$log"; exit 0; }
 
           payload=$(cat 2>/dev/null || true)
           agent=$(printf '%s' "$payload" | ${jq} -r '.agent_type // empty' 2>/dev/null)
           id=$(printf '%s' "$payload" | ${jq} -r '.agent_id // empty' 2>/dev/null)
           tp=$(printf '%s' "$payload" | ${jq} -r '.transcript_path // empty' 2>/dev/null)
 
-          # The sidecar may land a beat after the event, so poll briefly for it.
+          # The sidecar is matched by the agent's NAME, not the payload's `agent_id`: the two
+          # spellings differ (see the comment on this arm). The filename only prefilters; the
+          # newest sidecar whose `agentType` equals the name wins. It may land a beat after
+          # the event, so poll briefly for it.
           # ponytail: `customAgentType` is claude-code's undocumented sidecar field; if it
           # moves, role falls back to agent_type and the log records `from=payload`.
           role="" from=payload meta=""
-          if [ -n "$id" ] && [ -d "''${tp%.jsonl}/subagents" ]; then
+          if [ -n "$agent" ] && [ -d "''${tp%.jsonl}/subagents" ]; then
             for _ in 1 2 3 4 5 6 7 8 9 10; do
-              meta=$(find "''${tp%.jsonl}/subagents" -name "agent-$id.meta.json" -print -quit 2>/dev/null)
+              meta=$(find "''${tp%.jsonl}/subagents" -name "agent-*$agent*.meta.json" -printf '%T@ %p\n' 2>/dev/null \
+                | sort -rn | cut -d' ' -f2- | while IFS= read -r f; do
+                  [ "$(${jq} -r '.agentType // .name // empty' "$f" 2>/dev/null)" = "$agent" ] && { printf '%s' "$f"; break; }
+                done)
               [ -n "$meta" ] && break
               sleep 0.5
             done
@@ -634,7 +640,10 @@
             # ★★★ THE ROLE IS NOT IN THE PAYLOAD FOR A NAMED TEAMMATE, so no MATCHER can select
             # on it. Claude Code 2.1.285 matches SubagentStart against `agent_type`, and a
             # teammate's `agent_type` is its NAME (`mgnv3-q-build`); its role lives only in the
-            # sidecar `subagents/agent-<agent_id>.meta.json` as `customAgentType`. Measured
+            # sidecar `subagents/agent-a<name>-<16 hex>.meta.json` as `customAgentType`, beside
+            # `"agentType": "<name>"`. The payload's `agent_id` does not reliably name that file
+            # (a teammate's reads `<name>@session-<id>`), so the arm finds the sidecar by
+            # name and checks `agentType`; the log line carries the raw `id=`. Measured
             # across 2322 sidecars: 1908 of 1911 gen-role teammates carry a non-role name in
             # `agentType`, so per-role matchers never fired for them. One unmatched arm
             # reads the role from the sidecar and falls back to `agent_type`, which IS the role
