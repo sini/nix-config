@@ -260,25 +260,38 @@
           id=$(printf '%s' "$payload" | ${jq} -r '.agent_id // empty' 2>/dev/null)
           tp=$(printf '%s' "$payload" | ${jq} -r '.transcript_path // empty' 2>/dev/null)
 
-          # The sidecar is matched by the agent's NAME, not the payload's `agent_id`: the two
-          # spellings differ (see the comment on this arm). The filename only prefilters; the
-          # newest sidecar whose `agentType` equals the name wins. It may land a beat after
-          # the event, so poll briefly for it.
-          # ponytail: `customAgentType` is claude-code's undocumented sidecar field; if it
-          # moves, role falls back to agent_type and the log records `from=payload`.
+          # The role of a named teammate is read from the team registry, which Claude Code
+          # writes (`members[].agentType`) BEFORE the teammate spawns, so it cannot race the
+          # hook. The sidecar `agent-a<name>-<hex>.meta.json` (`customAgentType`) is written
+          # ~0.1-6.7s after the teammate joins (median 5.1s, n=39) — about the length of the
+          # poll below, so the poll alone lost the race for most first firings. The sidecar
+          # stays as a bounded fallback (matched by NAME; the payload's `agent_id` does not
+          # reliably name the file) for dispatches the registry does not list, and a miss is
+          # logged `from=timeout`, never blocked on.
+          # ponytail: the registry and `customAgentType` are claude-code's undocumented
+          # files; if both move, role falls back to agent_type and the log records
+          # `from=timeout` or `from=payload`.
           role="" from=payload meta=""
-          if [ -n "$agent" ] && [ -d "''${tp%.jsonl}/subagents" ]; then
+          if [ -n "$agent" ]; then
+            role=$(${jq} -rs --arg n "$agent" '[.[].members[]? | select(.name == $n)] | max_by(.joinedAt) | .agentType // empty' \
+              "$HOME"/.claude/teams/*/config.json 2>/dev/null)
+            [ -n "$role" ] && from=config
+          fi
+          # An unnamed `subagent_type` dispatch already carries its role in agent_type.
+          if [ -z "$role" ] && [ -n "$agent" ] && [ "''${agent#gen-}" = "$agent" ]; then
+            from=timeout
             for _ in 1 2 3 4 5 6 7 8 9 10; do
-              meta=$(find "''${tp%.jsonl}/subagents" -name "agent-*$agent*.meta.json" -printf '%T@ %p\n' 2>/dev/null \
+              meta=$([ -d "''${tp%.jsonl}/subagents" ] && find "''${tp%.jsonl}/subagents" -name "agent-*$agent*.meta.json" -printf '%T@ %p\n' 2>/dev/null \
                 | sort -rn | cut -d' ' -f2- | while IFS= read -r f; do
                   [ "$(${jq} -r '.agentType // .name // empty' "$f" 2>/dev/null)" = "$agent" ] && { printf '%s' "$f"; break; }
                 done)
-              [ -n "$meta" ] && break
+              [ -n "$meta" ] && { from=payload; break; }
               sleep 0.5
             done
+            [ -n "$meta" ] && role=$(${jq} -r '.customAgentType // empty' "$meta" 2>/dev/null)
+            [ -n "$role" ] && from=sidecar
           fi
-          [ -n "$meta" ] && role=$(${jq} -r '.customAgentType // empty' "$meta" 2>/dev/null)
-          if [ -n "$role" ]; then from=sidecar; else role="$agent"; fi
+          [ -n "$role" ] || role="$agent"
 
           input=$(printf '%s' "$inputs" | ${jq} -c --arg r "''${role#gen-}" '.[$r] // empty')
           [ "''${role#gen-}" != "$role" ] && [ -n "$input" ] || note "skip:not-a-gen-role from=$from"
@@ -639,11 +652,14 @@
             # granularity. The agent refines from there with its own `recall`.
             # ★★★ THE ROLE IS NOT IN THE PAYLOAD FOR A NAMED TEAMMATE, so no MATCHER can select
             # on it. Claude Code 2.1.285 matches SubagentStart against `agent_type`, and a
-            # teammate's `agent_type` is its NAME (`mgnv3-q-build`); its role lives only in the
-            # sidecar `subagents/agent-a<name>-<16 hex>.meta.json` as `customAgentType`, beside
-            # `"agentType": "<name>"`. The payload's `agent_id` does not reliably name that file
-            # (a teammate's reads `<name>@session-<id>`), so the arm finds the sidecar by
-            # name and checks `agentType`; the log line carries the raw `id=`. Measured
+            # teammate's `agent_type` is its NAME (`mgnv3-q-build`); its role lives in the team
+            # registry `teams/*/config.json` (`members[].agentType`, written before the spawn)
+            # and in the sidecar `subagents/agent-a<name>-<16 hex>.meta.json` as
+            # `customAgentType` beside `"agentType": "<name>"`, which lands up to ~7s AFTER the
+            # hook fires — so the registry is read first (`from=config`) and the sidecar is a
+            # bounded fallback (`from=sidecar`, or `from=timeout` when it never appears). The payload's `agent_id` does not reliably
+            # name that file (a teammate's reads `<name>@session-<id>`), so the arm finds the
+            # sidecar by name and checks `agentType`; the log line carries the raw `id=`. Measured
             # across 2322 sidecars: 1908 of 1911 gen-role teammates carry a non-role name in
             # `agentType`, so per-role matchers never fired for them. One unmatched arm
             # reads the role from the sidecar and falls back to `agent_type`, which IS the role
