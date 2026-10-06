@@ -218,6 +218,7 @@
         cfg = host.settings.applications.dev.ai.mcp.hindsight;
         jq = lib.getExe pkgs.jq;
         curl = lib.getExe pkgs.curl;
+        flock = lib.getExe' pkgs.util-linux "flock";
         recall = "${config.home.homeDirectory}/.claude/hindsight-recall.sh";
         archive = "${config.home.homeDirectory}/.claude/hindsight-archive.sh";
         renderer = "${config.home.homeDirectory}/.claude/hindsight-episode.jq";
@@ -296,9 +297,38 @@
           input=$(printf '%s' "$inputs" | ${jq} -c --arg r "''${role#gen-}" '.[$r] // empty')
           [ "''${role#gen-}" != "$role" ] && [ -n "$input" ] || note "skip:not-a-gen-role from=$from"
 
-          ${curl} -sS -m 5 -o /dev/null "$base/health" 2>/dev/null || note "fail:health"
-          resp=$(${curl} -sS -f -m 80 -X POST "$base/v1/default/banks/$bank/memories/recall" \
-            -H 'Content-Type: application/json' -d "$input" 2>/dev/null) || note "fail:recall"
+          # A failed health check or recall leaves the agent with no standing law; say so to the agent, not only the log.
+          failwarn() {
+            ${jq} -nc '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: "WARNING: the standing-law recall FAILED for this agent. Before your first measurement, run the recall yourself (tool search for \"hindsight\", then recall the den-law bank for your role)."}}'
+            note "$1"
+          }
+          ${curl} -sS -m 5 -o /dev/null "$base/health" 2>/dev/null || failwarn "fail:health"
+
+          # Recall serializes server-side (~20-27s each, measured), so a parallel batch used to
+          # time out together: 4 at once gave 4/4 `fail:recall`. Queue on a lock instead, and cache
+          # the fixed per-role result so same-role teammates pay for one recall. Worst case
+          # 5 health + 150 lock wait + 80 recall = 235s, under the 240s hook timeout below; 150s
+          # of queue is ~6 distinct-role recalls. Only successful results are cached; TTL 10 min.
+          # ponytail: one global lock; per-role locks if recall ever parallelizes server-side.
+          cdir="$HOME/.claude/hindsight-recall-cache"
+          mkdir -p "$cdir"
+          cache="$cdir/$(printf '%s' "$input" | sha256sum | cut -c1-16)"
+          fresh() { [ -s "$cache" ] && [ -n "$(find "$cache" -mmin -10 2>/dev/null)" ]; }
+          if fresh; then
+            resp=$(cat "$cache"); src=cache
+          else
+            exec 9>"$HOME/.claude/hindsight-recall.lock"
+            ${flock} -w 150 9 || failwarn "fail:recall"
+            if fresh; then
+              resp=$(cat "$cache"); src=cache
+            else
+              resp=$(${curl} -sS -f -m 80 -X POST "$base/v1/default/banks/$bank/memories/recall" \
+                -H 'Content-Type: application/json' -d "$input" 2>/dev/null) || failwarn "fail:recall"
+              [ "$(printf '%s' "$resp" | ${jq} '.results | length' 2>/dev/null)" -gt 0 ] 2>/dev/null \
+                && printf '%s' "$resp" > "$cache.$$" && mv "$cache.$$" "$cache"
+              src=ok
+            fi
+          fi
 
           # `types` already excludes observations; `obs` counts any that got through anyway.
           obs=$(printf '%s' "$resp" | ${jq} '[.results[]? | select(.type == "observation")] | length' 2>/dev/null)
@@ -314,7 +344,7 @@
           [ -n "$out" ] || note "fail:empty from=$from"
 
           ${jq} -nc --arg c "$out" '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: $c}}'
-          note "ok from=$from results=$(printf '%s' "$resp" | ${jq} '.results | length') observations=$obs chars=''${#out}"
+          note "$src from=$from results=$(printf '%s' "$resp" | ${jq} '.results | length') observations=$obs chars=''${#out}"
         '';
       in
       {
@@ -700,7 +730,7 @@
                   {
                     type = "command";
                     command = "${subagentRecall}";
-                    timeout = 90;
+                    timeout = 240;
                   }
                 ];
               }

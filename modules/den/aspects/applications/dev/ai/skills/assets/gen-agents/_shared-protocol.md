@@ -49,6 +49,13 @@ Where you cannot tell which failure would be visible, that is a
 
 ## Memory — the bank is yours to read and to add to
 
+★ **Call `mcp__plugin_hm_hindsight__recall` directly first.** Whether MCP tools are
+listed or deferred varies by agent. If it is not in your tool list, load it with
+`tool_search_tool_regex` (regex `hindsight`). `ToolSearch` is not a subagent tool,
+and its failure proves nothing about hindsight. Never report hindsight absent until
+a direct call AND a `tool_search_tool_regex` search have both failed, and quote both
+errors if you do.
+
 **Recall before your first measurement.** `mcp__plugin_hm_hindsight__recall`
 holds the standing operating law and the measured traps of prior sessions —
 rulings, tool behaviours, predicates that turned out dead. Query the subject of
