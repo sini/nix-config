@@ -51,10 +51,13 @@ Where you cannot tell which failure would be visible, that is a
 
 ★ **Call `mcp__plugin_hm_hindsight__recall` directly first.** Whether MCP tools are
 listed or deferred varies by agent. If it is not in your tool list, load it with
-`tool_search_tool_regex` (regex `hindsight`). `ToolSearch` is not a subagent tool,
-and its failure proves nothing about hindsight. Never report hindsight absent until
-a direct call AND a `tool_search_tool_regex` search have both failed, and quote both
-errors if you do.
+`tool_search_tool_regex`, searching by EXACT NAME: `pattern` `hindsight__recall`
+(and `hindsight__sync_retain` for retain), or a higher `limit` (default 5). A search
+that returns other hindsight tools but not recall means "search again by the exact
+name", NOT that recall is absent. `ToolSearch` is not a subagent tool, and its
+failure proves nothing about hindsight. Never report hindsight absent until a direct
+call AND an exact-name `tool_search_tool_regex` search have both failed, and quote
+both errors if you do.
 
 **Recall before your first measurement.** `mcp__plugin_hm_hindsight__recall`
 holds the standing operating law and the measured traps of prior sessions —
