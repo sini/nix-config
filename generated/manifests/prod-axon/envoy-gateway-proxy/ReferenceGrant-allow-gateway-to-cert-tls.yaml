@@ -32,6 +32,9 @@ spec:
       name: quiver-labs-com-wildcard-tls
     - group: ""
       kind: Secret
+      name: qvr-framework-com-wildcard-tls
+    - group: ""
+      kind: Secret
       name: qvr-run-wildcard-tls
     - group: ""
       kind: Secret

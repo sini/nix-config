@@ -28,6 +28,9 @@
         "gen-framework.com" = {
           issuer = "global";
         };
+        "qvr-framework.com" = {
+          issuer = "global";
+        };
         # quiver: candidate project domains (Cloudflare zones, `global` DNS-01).
         "getqvr.com" = {
           issuer = "global";

@@ -175,6 +175,27 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: '*.qvr-framework.com'
+      name: qvr-framework-com-http
+      port: 80
+      protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: '*.qvr-framework.com'
+      name: qvr-framework-com-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: qvr-framework-com-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.qvr.run'
       name: qvr-run-http
       port: 80

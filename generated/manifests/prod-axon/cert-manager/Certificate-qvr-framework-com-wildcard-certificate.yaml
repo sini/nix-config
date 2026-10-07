@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  annotations:
+    cert-manager.io/issue-temporary-certificate: "true"
+  name: qvr-framework-com-wildcard-certificate
+  namespace: certs
+spec:
+  dnsNames:
+    - qvr-framework.com
+    - '*.qvr-framework.com'
+  issuerRef:
+    kind: ClusterIssuer
+    name: global-issuer
+  secretName: qvr-framework-com-wildcard-tls
