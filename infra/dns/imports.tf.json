@@ -1,0 +1,196 @@
+{
+  "import": [
+    {
+      "to": "cloudflare_dns_record.attic_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/668f33b43866a3510064f531f5fd99a6"
+    },
+    {
+      "to": "cloudflare_dns_record.bazarr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/74725622eed448e721e357f8adcfa1ae"
+    },
+    {
+      "to": "cloudflare_dns_record.dash_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/5f84767a4586323f0ade7ec34de3a33a"
+    },
+    {
+      "to": "cloudflare_dns_record.den_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/d103e73ced69a08779653ef6b98b3b61"
+    },
+    {
+      "to": "cloudflare_dns_record.garage_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/154d00d4d618bf45c9fa26d37b296b64"
+    },
+    {
+      "to": "cloudflare_dns_record.gen-framework_com",
+      "id": "8140d9f290b977138408bc19c148c174/352450f6c32b2c181ee3aa70da48ed0e"
+    },
+    {
+      "to": "cloudflare_dns_record.getqvr_com",
+      "id": "a10a58a1b87d9d5449262068b12a7059/8f71bca53cb15b3237fa7c89f8bdfe9b"
+    },
+    {
+      "to": "cloudflare_dns_record.glance_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/c42c0088178a79248c59b30ce99c6943"
+    },
+    {
+      "to": "cloudflare_dns_record.grafana_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/28b0beb2200f7e32f7efc5ef2d83b076"
+    },
+    {
+      "to": "cloudflare_dns_record.homepage_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/e44bf95d3fe18a6006b7ccec40df131f"
+    },
+    {
+      "to": "cloudflare_dns_record.hs_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/4fd554fb83238153fcae2aa71000ee69"
+    },
+    {
+      "to": "cloudflare_dns_record.idm_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/89b5c387b3cd1cc4592fab0b53a14784"
+    },
+    {
+      "to": "cloudflare_dns_record.jellyfin_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/dcf127724e267a5abc385bb68e152490"
+    },
+    {
+      "to": "cloudflare_dns_record.json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/a68a4cb6cf2a807516ccb33fd983feda"
+    },
+    {
+      "to": "cloudflare_dns_record.komga_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/ba2b5be906be296630191d89ddd10bcb"
+    },
+    {
+      "to": "cloudflare_dns_record.lidarr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/42cc59ac93b704f69cf846c36b0dda20"
+    },
+    {
+      "to": "cloudflare_dns_record.loki_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/20dfc91e0156b8c2e00e940a838cc622"
+    },
+    {
+      "to": "cloudflare_dns_record.matrix-admin_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/c08c4f6fef60e3e40dd5428d5a9bb2e2"
+    },
+    {
+      "to": "cloudflare_dns_record.matrix_gen_wtf",
+      "id": "0d0ae64629b6a90fec14fb9570b79a24/aeced41283d6da65e05e93c30d4745b2"
+    },
+    {
+      "to": "cloudflare_dns_record.matrix_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/9c6433c44a75e4d08bc019a8c0008643"
+    },
+    {
+      "to": "cloudflare_dns_record.nzb_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/f102130d1b65b9f5bb2ef85fbf458f2c"
+    },
+    {
+      "to": "cloudflare_dns_record.oauth2-proxy_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/b231d9fc246139db0c64009bbc18c988"
+    },
+    {
+      "to": "cloudflare_dns_record.open-webui_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/0ff09f3ee53f910d5a1cbbebf6ed3279"
+    },
+    {
+      "to": "cloudflare_dns_record.profilarr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/1368ad68ddd1860f545d79b49d471b52"
+    },
+    {
+      "to": "cloudflare_dns_record.prometheus_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/3a8a91a7ba712f441bd037809bac932e"
+    },
+    {
+      "to": "cloudflare_dns_record.prowlarr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/3a7e601b89b6a971ec5d187e85f643eb"
+    },
+    {
+      "to": "cloudflare_dns_record.quiver-labs_com",
+      "id": "71e6fe4b863cef13b991e77e4b05e7a4/1582e7a614e0c566eafe6656e24cde8f"
+    },
+    {
+      "to": "cloudflare_dns_record.qvr-framework_com",
+      "id": "5343854f3f5891b39a8585d3b14262e0/d1ba02f97a7bdfe42965bf3af78ad054"
+    },
+    {
+      "to": "cloudflare_dns_record.qvr_run",
+      "id": "e060a63bab659dcd598251dda869550f/51e63f3fd2a2414e4fa83dcdbe85bb90"
+    },
+    {
+      "to": "cloudflare_dns_record.qvr_sh",
+      "id": "dc13dd4933edfe9e0bcc3b11ec5caf71/806aa648b67d0858030183f96de498f2"
+    },
+    {
+      "to": "cloudflare_dns_record.qvrlab_com",
+      "id": "ffe4018dd79c3cc827b64f81669e8dde/3417fb53db9bd0dc896e4064b4b2a3d6"
+    },
+    {
+      "to": "cloudflare_dns_record.radarr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/32c5b552fad5a3d160936e05f169c441"
+    },
+    {
+      "to": "cloudflare_dns_record.registry_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/8c5fff867f49bf96ea0a3917f16900e5"
+    },
+    {
+      "to": "cloudflare_dns_record.romm_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/5066d2df570e83430bea4b8eedebcb4c"
+    },
+    {
+      "to": "cloudflare_dns_record.s3_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/9c704cd11f0b717ac4fadb6ed2a2741c"
+    },
+    {
+      "to": "cloudflare_dns_record.shoko_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/19e357320e2937576df854a534bb2167"
+    },
+    {
+      "to": "cloudflare_dns_record.sonarr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/81f0c446d96509c3eb780767eacd1ba9"
+    },
+    {
+      "to": "cloudflare_dns_record.torrent_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/fa37a3a46f6e0a6a250f963ecfc1e62b"
+    },
+    {
+      "to": "cloudflare_dns_record.whisparr_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/fd0fe60bc0cadc1793ed8c3326440af5"
+    },
+    {
+      "to": "cloudflare_dns_record.wildcard_s3_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/d63d19f939146e3be8d03fe36c35072b"
+    },
+    {
+      "to": "cloudflare_dns_record.www_gen-framework_com",
+      "id": "8140d9f290b977138408bc19c148c174/bacfed0806e2be3253af4ad757bcd44a"
+    },
+    {
+      "to": "cloudflare_dns_record.www_getqvr_com",
+      "id": "a10a58a1b87d9d5449262068b12a7059/2367497f9b4f6e9ba8812221f8c9bc12"
+    },
+    {
+      "to": "cloudflare_dns_record.www_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/f5bfcd0d0a09fd8e475a73a71b213701"
+    },
+    {
+      "to": "cloudflare_dns_record.www_quiver-labs_com",
+      "id": "71e6fe4b863cef13b991e77e4b05e7a4/e3311d53cfd6690199165f0d6c470a6a"
+    },
+    {
+      "to": "cloudflare_dns_record.www_qvr-framework_com",
+      "id": "5343854f3f5891b39a8585d3b14262e0/9dcbfce73c415bb86d77e721b184cfc1"
+    },
+    {
+      "to": "cloudflare_dns_record.www_qvr_run",
+      "id": "e060a63bab659dcd598251dda869550f/aa3d911cfd2a7a6a58660432b8d65d9b"
+    },
+    {
+      "to": "cloudflare_dns_record.www_qvr_sh",
+      "id": "dc13dd4933edfe9e0bcc3b11ec5caf71/c9d5290fbe100a5649974302ab873c67"
+    },
+    {
+      "to": "cloudflare_dns_record.www_qvrlab_com",
+      "id": "ffe4018dd79c3cc827b64f81669e8dde/35fd902e2c4ffbbd0ee56dc755699d7b"
+    }
+  ]
+}
