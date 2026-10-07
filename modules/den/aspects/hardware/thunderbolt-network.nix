@@ -77,6 +77,13 @@
             "thunderbolt"
             "thunderbolt-net"
           ];
+          # End-to-end flow control off: with it on, the receiving NHI flags
+          # every IP packet of 227-230 bytes (a 253-256 byte ring frame) as a
+          # CRC error and drops it, on every link and in both directions
+          # (AMD Pink Sardine 1022:1668). Lost DNS replies of that size stalled
+          # Go resolvers for 5 s. Measured with e2e=0 on one end: no loss and
+          # no CRC errors at those sizes; the e2e=1 control link kept 70% loss.
+          extraModprobeConfig = "options thunderbolt_net e2e=0";
         };
 
         systemd.network.links = lib.listToAttrs linkRules;
