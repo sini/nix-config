@@ -1,0 +1,16 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: HTTPRouteFilter
+metadata:
+  name: matrix-well-known-server
+  namespace: matrix
+spec:
+  directResponse:
+    body:
+      inline: '{"m.server":"matrix.json64.dev:443"}'
+      type: Inline
+    contentType: application/json
+    header:
+      set:
+        - name: Access-Control-Allow-Origin
+          value: '*'
+    statusCode: 200

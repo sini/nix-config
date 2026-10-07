@@ -10,6 +10,9 @@
       domains = {
         "json64.dev" = {
           issuer = "json64-dev";
+          # Apex listener: serves json64.dev/.well-known/matrix/* (Matrix
+          # delegation for server_name json64.dev; see communication/matrix/synapse.nix).
+          apex = true;
         };
         "s3.json64.dev" = {
           issuer = "json64-dev";

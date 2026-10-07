@@ -56,6 +56,20 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: json64.dev
+      name: json64-dev-apex-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: json64-dev-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.json64.net'
       name: json64-net-http
       port: 80

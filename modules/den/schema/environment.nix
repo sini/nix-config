@@ -111,6 +111,17 @@ let
                   with its parent registrable domain. null = derive from the domain (back-compat).
                 '';
               };
+
+              apex = mkOption {
+                type = types.bool;
+                default = false;
+                description = ''
+                  Also add an HTTPS gateway listener for the bare domain itself
+                  (`<resourceName>-apex-https`, hostname = the domain), terminated with the
+                  same wildcard certificate. The `*.<domain>` listener does not match the
+                  apex. Requires the certificate to include the bare domain.
+                '';
+              };
             };
           }
         );

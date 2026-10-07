@@ -175,6 +175,40 @@ in
       {
         applications.synapse = {
           inherit namespace;
+
+          # Matrix delegation for server_name json64.dev, answered by Envoy itself on
+          # the apex listener (json64-dev-apex-https; prod.nix `apex = true`): no pod,
+          # and the json64.dev apex is not otherwise served by the cluster.
+          objects =
+            lib.mapAttrsToList
+              (name: body: {
+                apiVersion = "gateway.envoyproxy.io/v1alpha1";
+                kind = "HTTPRouteFilter";
+                metadata = {
+                  name = "matrix-well-known-${name}";
+                  inherit namespace;
+                };
+                spec.directResponse = {
+                  statusCode = 200;
+                  contentType = "application/json";
+                  body = {
+                    type = "Inline";
+                    inline = builtins.toJSON body;
+                  };
+                  # Required by the client spec; harmless on the server document.
+                  header.set = [
+                    {
+                      name = "Access-Control-Allow-Origin";
+                      value = "*";
+                    }
+                  ];
+                };
+              })
+              {
+                server."m.server" = "${cluster.domainFor "matrix"}:443";
+                client."m.homeserver".base_url = "https://${cluster.domainFor "matrix"}";
+              };
+
           helm.releases.synapse = {
             chart = charts.bjw-s-labs.app-template;
             values = {
@@ -317,6 +351,45 @@ in
                   ];
                 }
               ];
+            };
+
+            httpRoutes.matrix-well-known.spec = {
+              hostnames = [ "json64.dev" ];
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "gateways";
+                  sectionName = "${cluster.domainForResource "matrix"}-apex-https";
+                }
+              ];
+              rules =
+                map
+                  (doc: {
+                    # Named: nixidy merges unnamed rules into one (rules is keyed by name).
+                    name = doc;
+                    matches = [
+                      {
+                        path = {
+                          type = "Exact";
+                          value = "/.well-known/matrix/${doc}";
+                        };
+                      }
+                    ];
+                    filters = [
+                      {
+                        type = "ExtensionRef";
+                        extensionRef = {
+                          group = "gateway.envoyproxy.io";
+                          kind = "HTTPRouteFilter";
+                          name = "matrix-well-known-${doc}";
+                        };
+                      }
+                    ];
+                  })
+                  [
+                    "server"
+                    "client"
+                  ];
             };
 
             ciliumNetworkPolicies = {

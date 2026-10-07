@@ -1,0 +1,35 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: matrix-well-known
+  namespace: matrix
+spec:
+  hostnames:
+    - json64.dev
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: json64-dev-apex-https
+  rules:
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: matrix-well-known-server
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/matrix/server
+      name: server
+    - filters:
+        - extensionRef:
+            group: gateway.envoyproxy.io
+            kind: HTTPRouteFilter
+            name: matrix-well-known-client
+          type: ExtensionRef
+      matches:
+        - path:
+            type: Exact
+            value: /.well-known/matrix/client
+      name: client

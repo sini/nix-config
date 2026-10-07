@@ -35,6 +35,7 @@
         inherit (lib)
           flatten
           mapAttrsToList
+          optional
           optionalAttrs
           ;
 
@@ -226,6 +227,24 @@
                       };
                     }
                   ]
+                  ++ optional (args.apex or false) {
+                    name = "${domainResourceName}-apex-https";
+                    protocol = "HTTPS";
+                    port = 443;
+                    hostname = domain;
+                    allowedRoutes.namespaces.from = "All";
+                    tls = {
+                      mode = "Terminate";
+                      certificateRefs = [
+                        {
+                          group = "";
+                          kind = "Secret";
+                          name = "${domainResourceName}-wildcard-tls";
+                          namespace = "certs";
+                        }
+                      ];
+                    };
+                  }
                 )
                 |> flatten;
             };
