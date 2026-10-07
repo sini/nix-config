@@ -1,0 +1,21 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: matrix-admin-oidc
+  namespace: matrix
+spec:
+  oidc:
+    clientID: synapse-admin
+    clientSecret:
+      name: synapse-admin-oidc-client-secret
+    forwardAccessToken: false
+    provider:
+      issuer: https://idm.json64.dev/oauth2/openid/synapse-admin
+    scopes:
+      - email
+      - openid
+      - profile
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: matrix-admin

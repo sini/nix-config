@@ -292,6 +292,20 @@ let
         ];
       };
 
+      # Gateway OIDC (Envoy SecurityPolicy) in front of matrix-admin.json64.dev:
+      # Ketesa plus the Synapse admin API. Admins only, like longhorn.
+      synapse-admin = {
+        displayName = "Matrix admin";
+        originUrl = [ "https://${domain "matrix-admin"}/oauth2/callback" ];
+        originLanding = "https://${domain "matrix-admin"}/";
+        basicSecretFile = secretPaths.synapse-admin-oidc-client-secret;
+        scopeMaps."admins" = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
       garage-ui = {
         displayName = "Garage UI";
         originUrl = [ "https://${domain "garage-ui"}/oauth2/callback" ];

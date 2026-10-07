@@ -1,0 +1,35 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: matrix-admin
+  namespace: matrix
+spec:
+  hostnames:
+    - matrix-admin.json64.dev
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: json64-dev-https
+  rules:
+    - backendRefs:
+        - name: synapse
+          port: 8008
+      matches:
+        - path:
+            type: PathPrefix
+            value: /_synapse/admin
+        - path:
+            type: PathPrefix
+            value: /_synapse/client
+        - path:
+            type: PathPrefix
+            value: /_matrix
+      name: synapse
+    - backendRefs:
+        - name: matrix-admin
+          port: 80
+      matches:
+        - path:
+            type: PathPrefix
+            value: /
+      name: ui

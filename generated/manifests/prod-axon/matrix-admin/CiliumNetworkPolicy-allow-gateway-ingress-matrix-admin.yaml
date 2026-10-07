@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-matrix-admin
+  namespace: matrix
+spec:
+  description: Allow Envoy Gateway proxies to reach the Ketesa UI.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: matrix-admin
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "80"
+              protocol: TCP

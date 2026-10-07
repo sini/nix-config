@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: matrix-admin
+    app.kubernetes.io/name: matrix-admin
+  name: matrix-admin
+  namespace: matrix
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: matrix-admin
+      app.kubernetes.io/name: matrix-admin
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: matrix-admin
+        app.kubernetes.io/name: matrix-admin
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: ghcr.io/etkecc/ketesa@sha256:9c4f1d1a5c7829049daca87edc7e94d2f73ca5be55d3d11bf0d7e9c841f7bfb2
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+          name: main
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+          volumeMounts:
+            - mountPath: /var/public/config.json
+              name: config
+              readOnly: true
+              subPath: config.json
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: matrix-admin
+      volumes:
+        - configMap:
+            name: matrix-admin-config
+          name: config

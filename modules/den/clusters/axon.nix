@@ -166,6 +166,7 @@
       # matrix.json64.dev; kanidm native OIDC). See communication/matrix/synapse.nix.
       services.communication.matrix.matrix-pg
       services.communication.matrix.synapse
+      services.communication.matrix.matrix-admin
 
       # ai — Hindsight agent memory bank. Cluster-internal in this wave: no
       # route, no service domain (see hindsight.nix on why exposure is separate).

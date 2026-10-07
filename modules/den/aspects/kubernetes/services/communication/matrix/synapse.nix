@@ -150,6 +150,9 @@ in
           max_upload_size = "50M";
           enable_registration = false;
           password_config.enabled = false;
+          # Ketesa (matrix-admin.nix) logs in through this SSO and must receive
+          # the login token back on its own origin.
+          sso.client_whitelist = [ "https://${cluster.domainFor "matrix-admin"}/" ];
           oidc_providers = [
             {
               idp_id = "kanidm";

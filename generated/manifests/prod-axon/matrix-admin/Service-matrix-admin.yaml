@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: matrix-admin
+    app.kubernetes.io/name: matrix-admin
+    app.kubernetes.io/service: matrix-admin
+  name: matrix-admin
+  namespace: matrix
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: matrix-admin
+    app.kubernetes.io/name: matrix-admin
+  type: ClusterIP

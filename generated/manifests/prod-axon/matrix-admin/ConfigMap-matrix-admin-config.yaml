@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  config.json: '{"externalAuthProvider":true,"restrictBaseUrl":["https://matrix-admin.json64.dev"]}'
+kind: ConfigMap
+metadata:
+  name: matrix-admin-config
+  namespace: matrix
