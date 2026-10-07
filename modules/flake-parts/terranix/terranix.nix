@@ -158,12 +158,14 @@ in
             '';
       };
 
+      # Each devshell command re-evaluates the working tree on every call (like
+      # nixidy-sync), so an edit is planned without reloading the devshell.
       devshells.default.commands =
         map
           (name: {
-            package = config.packages.${name};
             inherit name;
             help = config.packages.${name}.meta.description;
+            command = ''exec nix run "$(git rev-parse --show-toplevel)#${name}" -- "$@"'';
           })
           [
             "dns-adopt"
