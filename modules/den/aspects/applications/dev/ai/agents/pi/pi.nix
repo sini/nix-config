@@ -139,6 +139,24 @@
         home.file.".pi/agent/extensions/xmsg-pi.ts".source =
           "${pkgs.local.xmsg.src}/extensions/pi/index.ts";
 
+        # pi runs a small local model with no memory: what it needs to know about this
+        # environment is deployed as a skill (loaded on demand) plus a short global
+        # context file (always loaded), never left for it to discover by probing.
+        home.file.".pi/agent/skills/xmsg/SKILL.md".source = ./skills/xmsg/SKILL.md;
+        home.file.".pi/agent/AGENTS.md".text = ''
+          # Environment
+
+          - This machine runs NixOS. The system is declared in ~/Documents/repos/sini/nix-config. The owner reviews and deploys every change to it;
+            never apply, deploy or push it yourself.
+          - Other agent sessions (Claude Code, Antigravity, pi) may be running on this host.
+            Messages from them arrive with an "[xmsg]" header line. The `xmsg` skill explains how
+            to reply, list sessions and send.
+          - nix-config devshell: run `nix develop` in the repo, then `menu` to list its commands
+            (for example list-infra, nix-flake-build, fmt).
+          - Other hosts: use the `<host>.ts.json64.dev` names over ssh. The short aliases do not
+            reach the machines.
+        '';
+
         # Configure default settings to use stylix theme and local endpoints
         home.file.".pi/agent/settings.json".text = builtins.toJSON {
           # ninfer is the resident engine on the inference guest; llama-cpp
