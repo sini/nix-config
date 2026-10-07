@@ -12,7 +12,7 @@ let
   schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
 in
 {
-  options.den.groups = schemaLib.mkInstanceRegistry den.schema.group {
+  options.den.groups = schemaLib.mkInstanceRegistry {
     description = "Group definitions for access policy resolution";
-  };
+  } den.schema.group;
 }

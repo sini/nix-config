@@ -165,9 +165,11 @@ in
   den.schema.host.isEntity = true;
 
   den.schema.host.validators = [
-    (schemaLib.mkValidator "valid-channel" (
-      { channel, ... }: lib.elem channel channelNames
-    ) "channel must be one of: ${lib.concatStringsSep ", " channelNames}")
+    (schemaLib.mkValidator {
+      name = "valid-channel";
+      pred = { channel, ... }: lib.elem channel channelNames;
+      message = "channel must be one of: ${lib.concatStringsSep ", " channelNames}";
+    })
   ];
 
   den.schema.host.imports = [

@@ -10,7 +10,12 @@
     nixos =
       { pkgs, ... }:
       {
-        environment.enableAllTerminfo = true;
+        # enableAllTerminfo builds contour, which fails on GCC 16 (nixpkgs#569719)
+        environment.systemPackages = map (p: p.terminfo) [
+          pkgs.alacritty
+          pkgs.ghostty
+          pkgs.kitty
+        ];
         users.users.root.shell = pkgs.bashInteractive;
         users.defaultUserShell = pkgs.zsh;
       };

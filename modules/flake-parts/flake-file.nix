@@ -64,7 +64,7 @@
         flake = false;
       };
 
-      den.url = "github:denful/den";
+      den.url = "github:denful/den/chore/gen-schema-options-first";
 
       # The gen HUB, never a member repo directly: den resolves gen-schema from
       # `inputs.gen` when it is declared, so hub-fronting is what keeps den and this

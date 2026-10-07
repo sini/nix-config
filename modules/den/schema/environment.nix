@@ -148,40 +148,40 @@ let
   };
 in
 {
-  options.den.environments = schemaLib.mkInstanceRegistry den.schema.environment {
+  options.den.environments = schemaLib.mkInstanceRegistry {
     description = "Environment definitions for fleet topology and service resolution";
-  };
+  } den.schema.environment;
 
   config = {
     den.schema.environment.isEntity = true;
 
     # Method: resolve the domain for a service, following delegation
-    den.schema.environment.methods.getDomainFor =
-      schemaLib.schemaFn "Get the domain for a service, following delegation"
-        (lib.types.functionTo lib.types.str)
-        (
-          {
-            services,
-            domain,
-            ...
-          }:
-          serviceName:
-          let
-            svc = services.${serviceName} or { };
-            # svc may be {} for an unknown service, so this must default rather
-            # than `inherit (svc) delegateTo` (inherit has no fallback and would
-            # crash with "attribute missing"). Bound as `delegate` (≠ the attr
-            # name) so statix's W04 manual-inherit autofix can't rewrite it and
-            # silently drop the `or null`.
-            delegate = svc.delegateTo or null;
-          in
-          if svc ? domain && svc.domain != null then
-            svc.domain
-          else if delegate != null then
-            "${serviceName}.${delegate}.${domain}"
-          else
-            "${serviceName}.${domain}"
-        );
+    den.schema.environment.methods.getDomainFor = schemaLib.schemaFn {
+      description = "Get the domain for a service, following delegation";
+      type = lib.types.functionTo lib.types.str;
+      fn =
+        {
+          services,
+          domain,
+          ...
+        }:
+        serviceName:
+        let
+          svc = services.${serviceName} or { };
+          # svc may be {} for an unknown service, so this must default rather
+          # than `inherit (svc) delegateTo` (inherit has no fallback and would
+          # crash with "attribute missing"). Bound as `delegate` (≠ the attr
+          # name) so statix's W04 manual-inherit autofix can't rewrite it and
+          # silently drop the `or null`.
+          delegate = svc.delegateTo or null;
+        in
+        if svc ? domain && svc.domain != null then
+          svc.domain
+        else if delegate != null then
+          "${serviceName}.${delegate}.${domain}"
+        else
+          "${serviceName}.${domain}";
+    };
 
     den.schema.environment.imports = [
       (

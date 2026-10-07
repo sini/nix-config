@@ -545,7 +545,7 @@ in
             # (proven from source). Only .rs files change, so vendored cargoDeps
             # stay valid; --replace would silently no-op on a bump, so a context
             # diff (fails loudly if the lines move) is used instead.
-            package = pkgs.kanidm_1_10.withSecretProvisioning.overrideAttrs (old: {
+            package = pkgs.kanidm_1_11.withSecretProvisioning.overrideAttrs (old: {
               patches = (old.patches or [ ]) ++ [ ./kanidm-oauth2-token-tuning.patch ];
             });
 

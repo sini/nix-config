@@ -94,7 +94,7 @@ let
   };
 in
 {
-  options.den.clusters = schemaLib.mkInstanceRegistry den.schema.cluster {
+  options.den.clusters = schemaLib.mkInstanceRegistry {
     description = "Cluster definitions for fleet topology and K8s service resolution";
     derive =
       clusters:
@@ -121,70 +121,72 @@ in
         };
       })
     ];
-  };
+  } den.schema.cluster;
 
   config = {
     den.schema.cluster.isEntity = true;
 
-    den.schema.cluster.methods.getAssignment =
-      schemaLib.schemaFn "Look up an IP assignment across cluster networks"
-        (lib.types.functionTo lib.types.str)
-        (
-          { networks, ... }:
-          assignmentName:
-          let
-            networkNames = builtins.attrNames networks;
-            found = lib.findFirst (nname: networks.${nname}.assignments ? ${assignmentName}) null networkNames;
-          in
-          if found != null then
-            networks.${found}.assignments.${assignmentName}
-          else
-            throw "den: cluster assignment '${assignmentName}' not found"
-        );
+    den.schema.cluster.methods.getAssignment = schemaLib.schemaFn {
+      description = "Look up an IP assignment across cluster networks";
+      type = lib.types.functionTo lib.types.str;
+      fn =
+        { networks, ... }:
+        assignmentName:
+        let
+          networkNames = builtins.attrNames networks;
+          found = lib.findFirst (nname: networks.${nname}.assignments ? ${assignmentName}) null networkNames;
+        in
+        if found != null then
+          networks.${found}.assignments.${assignmentName}
+        else
+          throw "den: cluster assignment '${assignmentName}' not found";
+    };
 
-    den.schema.cluster.methods.secrets =
-      schemaLib.schemaFn "OIDC secret helpers for cluster services" (lib.types.attrsOf lib.types.anything)
-        (
-          { environment, ... }:
-          let
-            env = environments.${environment};
-            kanidmDomain = env.getDomainFor "kanidm";
-          in
-          {
-            oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
-          }
-        );
+    den.schema.cluster.methods.secrets = schemaLib.schemaFn {
+      description = "OIDC secret helpers for cluster services";
+      type = lib.types.attrsOf lib.types.anything;
+      fn =
+        { environment, ... }:
+        let
+          env = environments.${environment};
+          kanidmDomain = env.getDomainFor "kanidm";
+        in
+        {
+          oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
+        };
+    };
 
     # Resolve the public domain for a service in this cluster's environment
     # (delegates to the environment's getDomainFor, following service overrides
     # and delegation). Lets cluster-scoped aspects state `cluster.domainFor "x"`
     # without re-deriving the environment.
-    den.schema.cluster.methods.domainFor =
-      schemaLib.schemaFn "Resolve the public domain for a service in this cluster's environment"
-        (lib.types.functionTo lib.types.str)
-        ({ environment, ... }: environments.${environment}.getDomainFor);
+    den.schema.cluster.methods.domainFor = schemaLib.schemaFn {
+      description = "Resolve the public domain for a service in this cluster's environment";
+      type = lib.types.functionTo lib.types.str;
+      fn = { environment, ... }: environments.${environment}.getDomainFor;
+    };
 
     # Gateway listener resource name for a service's domain: the last two domain
     # labels, hyphenated (glance.json64.dev -> json64-dev). Used to build the
     # HTTPRoute parentRef sectionName ("${cluster.domainForResource "x"}-https").
     # Replaces the per-aspect `domainToResourceName` let that was duplicated across
     # glance / grafana / hubble-ui.
-    den.schema.cluster.methods.domainForResource =
-      schemaLib.schemaFn
-        "Gateway listener resource name (last two domain labels, hyphenated) for a service"
-        (lib.types.functionTo lib.types.str)
-        (
-          { environment, ... }:
-          serviceName: resourceNameOf (environments.${environment}.getDomainFor serviceName)
-        );
+    den.schema.cluster.methods.domainForResource = schemaLib.schemaFn {
+      description = "Gateway listener resource name (last two domain labels, hyphenated) for a service";
+      type = lib.types.functionTo lib.types.str;
+      fn =
+        { environment, ... }:
+        serviceName: resourceNameOf (environments.${environment}.getDomainFor serviceName);
+    };
 
     # Same transform keyed by a raw domain rather than a service — for aspects that
     # enumerate domains directly (the gateway listeners in envoy-gateway, the
     # wildcard certs in cert-manager) rather than resolving a single service.
-    den.schema.cluster.methods.resourceForDomain =
-      schemaLib.schemaFn "k8s-safe resource name (last two domain labels, hyphenated) for a domain"
-        (lib.types.functionTo lib.types.str)
-        (_: resourceNameOf);
+    den.schema.cluster.methods.resourceForDomain = schemaLib.schemaFn {
+      description = "k8s-safe resource name (last two domain labels, hyphenated) for a domain";
+      type = lib.types.functionTo lib.types.str;
+      fn = _: resourceNameOf;
+    };
 
     den.schema.cluster.imports = [
       (_: {

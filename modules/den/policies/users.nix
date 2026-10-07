@@ -38,42 +38,45 @@ let
   # Registry entry type — mirrors the standard user entity shape so that
   # pipeline self-provide, define-user, and other batteries find the
   # expected attributes (userName, aspect, classes).
-  registryUserType = types.submodule (
-    { name, config, ... }:
-    {
-      freeformType = types.attrsOf types.anything;
-      imports = [ den.schema.user ];
-      config._module.args.user = config;
-      options = {
-        name = mkOption {
-          type = types.str;
-          default = name;
-          description = "User name (from attrset key)";
-        };
-        userName = mkOption {
-          type = types.str;
-          default = name;
-          description = "User account name";
-        };
-        classes = mkOption {
-          type = types.listOf types.str;
-          default = [ "user" ];
-          description = "Home management nix classes";
-        };
-        aspect = mkOption {
-          type = types.raw;
-          default = den.aspects.${name} or { };
-          defaultText = "den.aspects.<name>";
-          description = "Aspect that configures this user";
-        };
-        groups = mkOption {
-          type = types.listOf types.str;
-          default = [ ];
-          description = "Group memberships for access policy selection";
-        };
-      };
-    }
-  );
+  registryUserType = den.lib.schema.mkInstanceType {
+    strict = false;
+    extraModules = [
+      (
+        { name, config, ... }:
+        {
+          config._module.args.user = config;
+          options = {
+            name = mkOption {
+              type = types.str;
+              default = name;
+              description = "User name (from attrset key)";
+            };
+            userName = mkOption {
+              type = types.str;
+              default = name;
+              description = "User account name";
+            };
+            classes = mkOption {
+              type = types.listOf types.str;
+              default = [ "user" ];
+              description = "Home management nix classes";
+            };
+            aspect = mkOption {
+              type = types.raw;
+              default = den.aspects.${name} or { };
+              defaultText = "den.aspects.<name>";
+              description = "Aspect that configures this user";
+            };
+            groups = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              description = "Group memberships for access policy selection";
+            };
+          };
+        }
+      )
+    ];
+  } den.schema.user;
 in
 {
   # User registry option.

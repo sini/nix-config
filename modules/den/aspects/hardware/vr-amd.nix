@@ -60,7 +60,7 @@
           pkgs.lighthouse-steamvr
           pkgs.monado
           pkgs.xrizer
-          pkgs.sidequest
+          #pkgs.sidequest # TODO: insecure
         ];
 
         services.monado = {

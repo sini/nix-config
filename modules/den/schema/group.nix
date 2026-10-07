@@ -5,9 +5,11 @@ let
 in
 {
   den.schema.group.validators = [
-    (schemaLib.mkValidator "posix-needs-gid" (
-      { labels, gid, ... }: !(lib.elem "posix" labels) || gid != null
-    ) "groups with the 'posix' label must have a gid set")
+    (schemaLib.mkValidator {
+      name = "posix-needs-gid";
+      pred = { labels, gid, ... }: !(lib.elem "posix" labels) || gid != null;
+      message = "groups with the 'posix' label must have a gid set";
+    })
   ];
   den.schema.group.imports = [
     (_: {

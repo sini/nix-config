@@ -7,7 +7,15 @@
     nixpkgs-overlays =
       { inputs', ... }:
       [
-        inputs'.nix-cachyos-kernel.overlays.default
+        # lld 21 built by GCC 16 corrupts `ld -r` output, so objtool rejects
+        # every multi-object LTO module (nixpkgs#571232). lld 22 carries the
+        # upstream fix (llvm/llvm-project@905a88b); build the kernels with it.
+        (
+          final: prev:
+          inputs'.nix-cachyos-kernel.overlays.default final (
+            prev.extend (_: p: { llvmPackages = p.llvmPackages_22; })
+          )
+        )
 
         # 7.2.5 added a memchr() bounds check to gud_connector_add_tv_mode();
         # Clang LTO can't prove num_modes <= GUD_CONNECTOR_TV_MODE_MAX_NUM, so
