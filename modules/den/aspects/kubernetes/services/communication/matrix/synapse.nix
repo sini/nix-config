@@ -19,6 +19,7 @@
 # /_synapse/admin is deliberately NOT routed: use `kubectl port-forward`.
 { lib, ... }:
 let
+  serviceDomains = [ "matrix" ];
   namespace = "matrix";
   port = 8008;
   uid = 991; # the matrixdotorg/synapse image's synapse user
@@ -55,7 +56,8 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.synapse = {
-    service-domains = [ "matrix" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, config, ... }:

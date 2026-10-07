@@ -100,9 +100,13 @@
 # builder). The two shell scripts are kept as verbatim data bindings; everything
 # else — the WireGuard secrets, gluetun env, network policies, route + OIDC — is
 # stated explicitly.
+let
+  serviceDomains = [ "qbittorrent" ];
+in
 {
   den.aspects.kubernetes.services.media.qbittorrent = {
-    service-domains = [ "qbittorrent" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

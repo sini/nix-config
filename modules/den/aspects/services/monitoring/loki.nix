@@ -2,6 +2,9 @@
 # 30d retention, compactor with 2h delete delay, nginx proxy.
 #
 # Ported from main:modules/services/monitoring/loki.nix
+let
+  serviceDomains = [ "loki" ];
+in
 {
   den.aspects.services.monitoring.loki = {
     nixos =
@@ -112,8 +115,8 @@
         ];
       };
 
-    service-domains = [ "loki" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "loki" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     firewall = {
       networking.firewall.allowedTCPPorts = [

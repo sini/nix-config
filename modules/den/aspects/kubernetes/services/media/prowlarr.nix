@@ -14,9 +14,13 @@
 # digest-pinned in images/linuxserver/prowlarr; `oci-image-updater update-all`
 # bumps the digest. (The pre-migration deployment in the media-user backup logs
 # ran 2.3.0.)
+let
+  serviceDomains = [ "prowlarr" ];
+in
 {
   den.aspects.kubernetes.services.media.prowlarr = {
-    service-domains = [ "prowlarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

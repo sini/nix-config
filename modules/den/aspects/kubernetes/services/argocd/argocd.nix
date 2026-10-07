@@ -6,9 +6,13 @@
   ...
 }:
 
+let
+  serviceDomains = [ "argocd" ];
+in
 {
   den.aspects.kubernetes.services.argocd = {
-    service-domains = [ "argocd" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

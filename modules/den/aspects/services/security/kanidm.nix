@@ -6,6 +6,7 @@
   ...
 }:
 let
+  serviceDomains = [ "kanidm" ];
   inherit (lib)
     filterAttrs
     mapAttrs
@@ -704,8 +705,8 @@ in
       networking.firewall.allowedTCPPorts = [ 3636 ];
     };
 
-    service-domains = [ "kanidm" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "kanidm" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [

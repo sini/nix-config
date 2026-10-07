@@ -1,4 +1,7 @@
 { den, ... }:
+let
+  serviceDomains = [ "headscale" ];
+in
 {
   den.aspects.services.networking.headscale = {
     includes = [ den.aspects.services.networking.nginx ];
@@ -130,8 +133,8 @@
       ];
     };
 
-    service-domains = [ "headscale" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "headscale" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [

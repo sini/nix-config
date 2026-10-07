@@ -13,9 +13,13 @@
 #   - Service         -> name "garage-ui" (release/fullname), port 80
 #   - pod label       -> app.kubernetes.io/name = garage-ui (matches the T7 CNP
 #                        selector — no reconciliation needed)
+let
+  serviceDomains = [ "garage-ui" ];
+in
 {
   den.aspects.kubernetes.services.storage.garage.garage-ui = {
-    service-domains = [ "garage-ui" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { cluster, environment, ... }:

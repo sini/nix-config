@@ -10,9 +10,13 @@
 # Image tracked via the oci-image-updater at the rolling `nightly` LSIO tag,
 # digest-pinned in images/linuxserver/radarr; `oci-image-updater update-all`
 # bumps the digest. (The release in the media-user backup logs was 6.0.4.10291.)
+let
+  serviceDomains = [ "radarr" ];
+in
 {
   den.aspects.kubernetes.services.media.radarr = {
-    service-domains = [ "radarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

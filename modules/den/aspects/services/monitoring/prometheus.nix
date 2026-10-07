@@ -4,6 +4,9 @@
 # Emits prometheus-targets quirk; consumes collected targets from all
 # peers to build scrape configs.
 { lib, ... }:
+let
+  serviceDomains = [ "prometheus" ];
+in
 {
   den.aspects.services.monitoring.prometheus = {
     # Emit scrape targets for this host
@@ -175,8 +178,8 @@
         };
       };
 
-    service-domains = [ "prometheus" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "prometheus" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     firewall = {
       networking.firewall.allowedTCPPorts = [ 9090 ];

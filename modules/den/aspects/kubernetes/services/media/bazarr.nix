@@ -24,9 +24,13 @@
 # Image tracked via the oci-image-updater at the rolling `latest` LSIO tag,
 # digest-pinned in images/linuxserver/bazarr; `oci-image-updater update-all`
 # bumps the digest. (The backup releases.txt latest non-prerelease was v1.5.6.)
+let
+  serviceDomains = [ "bazarr" ];
+in
 {
   den.aspects.kubernetes.services.media.bazarr = {
-    service-domains = [ "bazarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

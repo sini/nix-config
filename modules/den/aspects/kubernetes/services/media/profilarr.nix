@@ -26,9 +26,13 @@
 # only v2 channel — no stable v2 image is published). oci-image-updater bumps the
 # pinned digest as develop moves. NOT an inline tag (a non-existent tag is exactly
 # what slipped through before).
+let
+  serviceDomains = [ "profilarr" ];
+in
 {
   den.aspects.kubernetes.services.media.profilarr = {
-    service-domains = [ "profilarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

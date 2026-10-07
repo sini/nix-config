@@ -1,6 +1,9 @@
 # Vault — HashiCorp Vault with raft storage, TLS, and auto-unseal.
 #
 # Emits vault-peers quirk; consumes collected peers for raft join config.
+let
+  serviceDomains = [ "vault" ];
+in
 {
   den.aspects.services.security.vault = {
     # Emit peer info for raft cluster formation
@@ -198,7 +201,8 @@
         };
       };
 
-    service-domains = [ "vault" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     firewall = {
       networking.firewall.allowedTCPPorts = [

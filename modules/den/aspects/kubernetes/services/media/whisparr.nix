@@ -13,9 +13,13 @@
 # Image tracked via the oci-image-updater at the rolling hotio `v2` tag,
 # digest-pinned in images/hotio/whisparr; `oci-image-updater update-all` bumps
 # the digest. (Archive ran v2.0.0.1750; hotio prunes old point releases.)
+let
+  serviceDomains = [ "whisparr" ];
+in
 {
   den.aspects.kubernetes.services.media.whisparr = {
-    service-domains = [ "whisparr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

@@ -1,4 +1,7 @@
 { den, ... }:
+let
+  serviceDomains = [ "open-webui" ];
+in
 {
   den.aspects.services.ai.open-webui = {
     includes = [ den.aspects.services.networking.nginx ];
@@ -139,8 +142,8 @@
         };
       };
 
-    service-domains = [ "open-webui" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "open-webui" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [

@@ -1,4 +1,7 @@
 { den, ... }:
+let
+  serviceDomains = [ "homepage" ];
+in
 {
   den.aspects.services.web.homepage = {
     includes = [
@@ -97,7 +100,7 @@
         };
       };
 
-    service-domains = [ "homepage" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "homepage" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
   };
 }

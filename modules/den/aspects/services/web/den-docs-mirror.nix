@@ -1,4 +1,7 @@
 { den, ... }:
+let
+  serviceDomains = [ "den-docs-mirror" ];
+in
 {
   den.aspects.services.web.den-docs-mirror = {
     includes = [ den.aspects.services.networking.nginx ];
@@ -28,8 +31,8 @@
         };
       };
 
-    service-domains = [ "den-docs-mirror" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "den-docs-mirror" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [

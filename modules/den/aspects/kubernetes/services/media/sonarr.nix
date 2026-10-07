@@ -11,9 +11,13 @@
 # digest-pinned in images/linuxserver/sonarr; `oci-image-updater update-all`
 # bumps the digest. (The v4-era release in the media-user backup logs was
 # 4.0.16.2944.)
+let
+  serviceDomains = [ "sonarr" ];
+in
 {
   den.aspects.kubernetes.services.media.sonarr = {
-    service-domains = [ "sonarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

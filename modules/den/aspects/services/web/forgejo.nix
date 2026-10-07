@@ -1,4 +1,7 @@
 { den, lib, ... }:
+let
+  serviceDomains = [ "forgejo" ];
+in
 {
   den.aspects.services.web.forgejo = {
     includes = [ den.aspects.services.networking.nginx ];
@@ -43,8 +46,8 @@
       networking.firewall.allowedTCPPorts = [ 7654 ];
     };
 
-    service-domains = [ "forgejo" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "forgejo" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [

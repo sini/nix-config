@@ -28,9 +28,13 @@
 # Image tracked via the oci-image-updater at the rolling `latest` LSIO tag,
 # digest-pinned in images/linuxserver/sabnzbd; `oci-image-updater update-all`
 # bumps the digest. (The media-user backup carries no SABnzbd version marker.)
+let
+  serviceDomains = [ "sabnzbd" ];
+in
 {
   den.aspects.kubernetes.services.media.sabnzbd = {
-    service-domains = [ "sabnzbd" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

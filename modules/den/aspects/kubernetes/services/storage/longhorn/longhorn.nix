@@ -1,9 +1,13 @@
 # Longhorn — distributed block storage via longhorn/longhorn Helm chart,
 # 2-replica default, Retain policy, OIDC dashboard via Kanidm, HTTPRoute,
 # CiliumNetworkPolicy.
+let
+  serviceDomains = [ "longhorn" ];
+in
 {
   den.aspects.kubernetes.services.storage.longhorn = {
-    service-domains = [ "longhorn" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     crds =
       { inputs, system, ... }:

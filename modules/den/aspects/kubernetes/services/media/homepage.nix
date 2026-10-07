@@ -52,9 +52,13 @@
 # Image tracked via the oci-image-updater at the rolling `latest` tag,
 # digest-pinned in images/gethomepage/homepage; `oci-image-updater update-all`
 # bumps the digest.
+let
+  serviceDomains = [ "dash" ];
+in
 {
   den.aspects.kubernetes.services.media.dash = {
-    service-domains = [ "dash" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

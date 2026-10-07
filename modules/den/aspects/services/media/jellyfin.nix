@@ -3,6 +3,9 @@
   inputs,
   ...
 }:
+let
+  serviceDomains = [ "jellyfin" ];
+in
 {
   den.aspects.services.media.jellyfin = {
     includes = [
@@ -238,8 +241,8 @@
       ];
     };
 
-    service-domains = [ "jellyfin" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "jellyfin" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [

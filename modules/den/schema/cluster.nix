@@ -166,6 +166,26 @@ in
       fn = { environment, ... }: environments.${environment}.getDomainFor;
     };
 
+    # A served-domains quirk record for services this cluster serves through its
+    # gateway, addressed at the gateway load-balancer VIP.
+    den.schema.cluster.methods.servedDomains = schemaLib.schemaFn {
+      description = "Build a served-domains record for services served by this cluster's gateway";
+      type = lib.types.functionTo lib.types.attrs;
+      fn =
+        {
+          name,
+          environment,
+          networks,
+          ...
+        }:
+        serviceNames: {
+          inherit environment;
+          cluster = name;
+          address = networks.kubernetes-loadbalancers.assignments.default-gateway;
+          domains = map environments.${environment}.getDomainFor serviceNames;
+        };
+    };
+
     # Gateway listener resource name for a service's domain: the last two domain
     # labels, hyphenated (glance.json64.dev -> json64-dev). Used to build the
     # HTTPRoute parentRef sectionName ("${cluster.domainForResource "x"}-https").

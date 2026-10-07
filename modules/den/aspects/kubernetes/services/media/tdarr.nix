@@ -27,9 +27,13 @@
 #
 # Metrics: the homeylab/tdarr-exporter v3 sidecar scrapes the server over pod
 # loopback and re-exports on :9090 for kube-prometheus-stack (PodMonitor below).
+let
+  serviceDomains = [ "tdarr" ];
+in
 {
   den.aspects.kubernetes.services.media.tdarr = {
-    service-domains = [ "tdarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

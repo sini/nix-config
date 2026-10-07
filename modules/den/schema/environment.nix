@@ -1,6 +1,5 @@
 {
   lib,
-  config,
   inputs,
   self,
   den,
@@ -9,6 +8,45 @@
 let
   inherit (lib) mkOption types;
   schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
+
+  domainFor =
+    {
+      services,
+      domain,
+      ...
+    }:
+    serviceName:
+    let
+      svc = services.${serviceName} or { };
+      # svc may be {} for an unknown service, so this must default rather
+      # than `inherit (svc) delegateTo` (inherit has no fallback and would
+      # crash with "attribute missing"). Bound as `delegate` (≠ the attr
+      # name) so statix's W04 manual-inherit autofix can't rewrite it and
+      # silently drop the `or null`.
+      delegate = svc.delegateTo or null;
+    in
+    if svc ? domain && svc.domain != null then
+      svc.domain
+    else if delegate != null then
+      "${serviceName}.${delegate}.${domain}"
+    else
+      "${serviceName}.${domain}";
+
+  addressOn =
+    { name, networks, ... }:
+    net: host:
+    let
+      ipToInt = ip: lib.foldl' (acc: o: acc * 256 + lib.toInt o) 0 (lib.splitString "." ip);
+      cidr = lib.splitString "/" networks.${net}.cidr;
+      blockSize = lib.foldl' (acc: _: acc * 2) 1 (lib.range 1 (32 - lib.toInt (lib.last cidr)));
+      inNet = ip: ipToInt ip / blockSize == ipToInt (lib.head cidr) / blockSize;
+      addrs = lib.concatMap (i: map (a: lib.head (lib.splitString "/" a)) i.ipv4) (
+        lib.attrValues host.networking.interfaces
+      );
+    in
+    lib.findFirst inNet
+      (throw "den: host '${host.name}' has no IPv4 in ${name}.networks.${net} (${networks.${net}.cidr})")
+      addrs;
 
   networkType = types.submodule {
     options = {
@@ -160,65 +198,35 @@ in
     den.schema.environment.methods.getDomainFor = schemaLib.schemaFn {
       description = "Get the domain for a service, following delegation";
       type = lib.types.functionTo lib.types.str;
-      fn =
-        {
-          services,
-          domain,
-          ...
-        }:
-        serviceName:
-        let
-          svc = services.${serviceName} or { };
-          # svc may be {} for an unknown service, so this must default rather
-          # than `inherit (svc) delegateTo` (inherit has no fallback and would
-          # crash with "attribute missing"). Bound as `delegate` (≠ the attr
-          # name) so statix's W04 manual-inherit autofix can't rewrite it and
-          # silently drop the `or null`.
-          delegate = svc.delegateTo or null;
-        in
-        if svc ? domain && svc.domain != null then
-          svc.domain
-        else if delegate != null then
-          "${serviceName}.${delegate}.${domain}"
-        else
-          "${serviceName}.${domain}";
+      fn = domainFor;
     };
 
     # Method: the host's IPv4 (prefix stripped) inside networks.<net>.cidr.
     den.schema.environment.methods.addressOn = schemaLib.schemaFn {
       description = "Get a host's IPv4 address on one of this environment's networks";
       type = lib.types.functionTo (lib.types.functionTo lib.types.str);
-      fn =
-        { name, networks, ... }:
-        net: host:
-        let
-          ipToInt = ip: lib.foldl' (acc: o: acc * 256 + lib.toInt o) 0 (lib.splitString "." ip);
-          cidr = lib.splitString "/" networks.${net}.cidr;
-          blockSize = lib.foldl' (acc: _: acc * 2) 1 (lib.range 1 (32 - lib.toInt (lib.last cidr)));
-          inNet = ip: ipToInt ip / blockSize == ipToInt (lib.head cidr) / blockSize;
-          addrs = lib.concatMap (i: map (a: lib.head (lib.splitString "/" a)) i.ipv4) (
-            lib.attrValues host.networking.interfaces
-          );
-        in
-        lib.findFirst inNet
-          (throw "den: host '${host.name}' has no IPv4 in ${name}.networks.${net} (${networks.${net}.cidr})")
-          addrs;
+      fn = addressOn;
     };
 
-    # Method: an internal-vhosts quirk record for a host serving these services.
-    den.schema.environment.methods.vhostRecord = schemaLib.schemaFn {
-      description = "Build an internal-vhosts record: the host, its default-network address, and its service domains";
+    # Method: a served-domains quirk record for a host serving these services
+    # (its nginx vhosts), addressed on the environment's default network.
+    den.schema.environment.methods.servedDomains = schemaLib.schemaFn {
+      description = "Build a served-domains record for services a host serves";
       type = lib.types.functionTo (lib.types.functionTo lib.types.attrs);
       fn =
-        { name, ... }:
-        host: serviceNames:
-        let
-          env = config.den.environments.${name};
-        in
-        {
+        # Named args: a method receives only the config keys its pattern names.
+        env@{
+          name,
+          services,
+          domain,
+          networks,
+          ...
+        }:
+        host: serviceNames: {
+          environment = env.name;
           host = host.name;
-          address = env.addressOn "default" host;
-          domains = map env.getDomainFor serviceNames;
+          address = addressOn env "default" host;
+          domains = map (domainFor env) serviceNames;
         };
     };
 

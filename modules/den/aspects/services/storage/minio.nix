@@ -1,3 +1,9 @@
+let
+  serviceDomains = [
+    "minio"
+    "minio-console"
+  ];
+in
 {
   den.aspects.services.storage.minio = {
     nixos =
@@ -75,16 +81,8 @@
         };
       };
 
-    service-domains = [
-      "minio"
-      "minio-console"
-    ];
-    internal-vhosts =
-      { environment, host, ... }:
-      environment.vhostRecord host [
-        "minio"
-        "minio-console"
-      ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     firewall = {
       networking.firewall.allowedTCPPorts = [

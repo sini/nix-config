@@ -11,6 +11,7 @@
 # Authorization header, which carries the Synapse token.
 { lib, ... }:
 let
+  serviceDomains = [ "matrix-admin" ];
   namespace = "matrix";
   # The image EXPOSEs 80 but sets SERVER_PORT=8080 (and SERVER_HEALTH=true).
   port = 8080;
@@ -22,7 +23,8 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.matrix-admin = {
-    service-domains = [ "matrix-admin" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

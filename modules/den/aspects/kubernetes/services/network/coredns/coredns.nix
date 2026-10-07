@@ -7,7 +7,7 @@
       default = { };
       description = ''
         Extra fqdn -> IPv4 answers for the CoreDNS `hosts` plugin, merged over
-        (and overriding) the collected internal-vhosts records.
+        (and overriding) the collected served-domains records.
       '';
     };
 
@@ -16,16 +16,19 @@
         cluster,
         charts,
         environment,
-        internal-vhosts,
+        served-domains,
         lib,
         ...
       }:
       let
-        # Host-served vhosts answer with the host's LAN address, so in-cluster
-        # clients reach them directly instead of hairpinning through Cloudflare.
+        # Every served name answers with its internal address (a host's LAN IP
+        # or the gateway VIP), so in-cluster clients reach it directly instead of
+        # hairpinning through Cloudflare and the router.
         staticHosts =
           lib.listToAttrs (
-            lib.concatMap (r: map (d: lib.nameValuePair d r.address) r.domains) internal-vhosts
+            lib.concatMap (r: map (d: lib.nameValuePair d r.address) r.domains) (
+              lib.filter (r: r.environment == cluster.environment) served-domains
+            )
           )
           // cluster.settings.kubernetes.services.network.coredns.staticHosts;
         defaultNetwork =

@@ -1,4 +1,7 @@
 { den, ... }:
+let
+  serviceDomains = [ "attic" ];
+in
 {
   den.aspects.services.nix.attic = {
     includes = [ den.aspects.services.networking.nginx ];
@@ -91,8 +94,8 @@
         };
       };
 
-    service-domains = [ "attic" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "attic" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     cache = {
       directories = [

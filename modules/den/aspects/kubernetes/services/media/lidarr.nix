@@ -10,9 +10,13 @@
 # Image tracked via the oci-image-updater at the rolling `nightly` LSIO tag,
 # digest-pinned in images/linuxserver/lidarr; `oci-image-updater update-all`
 # bumps the digest. (The release in the media-user backup logs was 2.14.5.4836.)
+let
+  serviceDomains = [ "lidarr" ];
+in
 {
   den.aspects.kubernetes.services.media.lidarr = {
-    service-domains = [ "lidarr" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

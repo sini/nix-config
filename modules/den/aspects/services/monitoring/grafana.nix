@@ -1,5 +1,8 @@
 # Grafana — dashboards + OIDC via Kanidm, Prometheus + Loki datasources,
 # SQLite backend, role-based access through group mapping.
+let
+  serviceDomains = [ "grafana" ];
+in
 {
   den.aspects.services.monitoring.grafana = {
     nixos =
@@ -174,8 +177,8 @@
         };
       };
 
-    service-domains = [ "grafana" ];
-    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "grafana" ];
+    service-domains = serviceDomains;
+    served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     persist = {
       directories = [
