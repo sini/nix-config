@@ -94,6 +94,7 @@
         domain = environment.getDomainFor "registry";
         username = "builder";
       };
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "registry" ];
 
     persist = {
       directories = [

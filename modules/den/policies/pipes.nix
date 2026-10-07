@@ -108,6 +108,16 @@ in
       ])
     ];
 
+  # Same-environment only: a vhost record's address is on its own environment's
+  # network, so the cluster consumer takes the records as-is.
+  den.policies.cluster-collect-internal-vhosts =
+    { cluster, ... }:
+    [
+      (pipe.from "internal-vhosts" [
+        (pipe.collectAll ({ host, ... }: host.environment == cluster.environment))
+      ])
+    ];
+
   den.policies.cluster-collect-container-registries =
     { cluster, ... }:
     [
@@ -210,5 +220,6 @@ in
     den.policies.cluster-collect-k3s-nodes
     den.policies.cluster-collect-media-scratch-exports
     den.policies.cluster-collect-container-registries
+    den.policies.cluster-collect-internal-vhosts
   ];
 }

@@ -175,6 +175,7 @@
       };
 
     service-domains = [ "grafana" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "grafana" ];
 
     persist = {
       directories = [

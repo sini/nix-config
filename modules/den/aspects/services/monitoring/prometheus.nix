@@ -176,6 +176,7 @@
       };
 
     service-domains = [ "prometheus" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "prometheus" ];
 
     firewall = {
       networking.firewall.allowedTCPPorts = [ 9090 ];

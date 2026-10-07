@@ -1,15 +1,33 @@
 # CoreDNS — dual-stack, forward to env DNS, prometheus metrics 9153, cache 30s.
+{ lib, ... }:
 {
   den.aspects.kubernetes.services.network.coredns = {
+    settings.staticHosts = lib.mkOption {
+      type = lib.types.attrsOf lib.types.str;
+      default = { };
+      description = ''
+        Extra fqdn -> IPv4 answers for the CoreDNS `hosts` plugin, merged over
+        (and overriding) the collected internal-vhosts records.
+      '';
+    };
+
     k8s-manifests =
       {
         cluster,
         charts,
         environment,
+        internal-vhosts,
         lib,
         ...
       }:
       let
+        # Host-served vhosts answer with the host's LAN address, so in-cluster
+        # clients reach them directly instead of hairpinning through Cloudflare.
+        staticHosts =
+          lib.listToAttrs (
+            lib.concatMap (r: map (d: lib.nameValuePair d r.address) r.domains) internal-vhosts
+          )
+          // cluster.settings.kubernetes.services.network.coredns.staticHosts;
         defaultNetwork =
           environment.networks.default or {
             dnsServers = [
@@ -77,6 +95,16 @@
                     {
                       name = "prometheus";
                       parameters = "0.0.0.0:9153";
+                    }
+                    # The chart renders a plugin's inner block from `configBlock` (a
+                    # `config` attrset is ignored). No trailing newline: it would end
+                    # the Corefile in an indented blank line, which turns its YAML
+                    # block scalar into a quoted string.
+                    {
+                      name = "hosts";
+                      configBlock = lib.concatStringsSep "\n" (
+                        lib.mapAttrsToList (domain: address: "${address} ${domain}") staticHosts ++ [ "fallthrough" ]
+                      );
                     }
                     {
                       name = "forward";

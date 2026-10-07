@@ -98,5 +98,6 @@
       };
 
     service-domains = [ "homepage" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "homepage" ];
   };
 }

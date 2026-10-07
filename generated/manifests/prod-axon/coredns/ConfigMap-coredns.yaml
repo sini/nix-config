@@ -7,6 +7,21 @@ data:
         ready
         kubernetes cluster.local cluster.local in-addr.arpa ip6.arpa
         prometheus 0.0.0.0:9153
+        hosts {
+            10.10.10.1 attic.json64.dev
+            10.10.10.1 den.json64.dev
+            10.10.10.1 grafana.json64.dev
+            10.10.10.1 homepage.json64.dev
+            10.10.10.1 hs.json64.dev
+            10.10.10.1 idm.json64.dev
+            10.10.10.1 jellyfin.json64.dev
+            10.10.10.1 loki.json64.dev
+            10.10.10.1 oauth2-proxy.json64.dev
+            10.10.10.1 open-webui.json64.dev
+            10.10.10.1 prometheus.json64.dev
+            10.10.10.1 registry.json64.dev
+            fallthrough
+        }
         forward . 1.1.1.1 2606:4700:4700::1111 1.0.0.1
         cache 30
         loop

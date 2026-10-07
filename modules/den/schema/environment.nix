@@ -1,5 +1,6 @@
 {
   lib,
+  config,
   inputs,
   self,
   den,
@@ -181,6 +182,44 @@ in
           "${serviceName}.${delegate}.${domain}"
         else
           "${serviceName}.${domain}";
+    };
+
+    # Method: the host's IPv4 (prefix stripped) inside networks.<net>.cidr.
+    den.schema.environment.methods.addressOn = schemaLib.schemaFn {
+      description = "Get a host's IPv4 address on one of this environment's networks";
+      type = lib.types.functionTo (lib.types.functionTo lib.types.str);
+      fn =
+        { name, networks, ... }:
+        net: host:
+        let
+          ipToInt = ip: lib.foldl' (acc: o: acc * 256 + lib.toInt o) 0 (lib.splitString "." ip);
+          cidr = lib.splitString "/" networks.${net}.cidr;
+          blockSize = lib.foldl' (acc: _: acc * 2) 1 (lib.range 1 (32 - lib.toInt (lib.last cidr)));
+          inNet = ip: ipToInt ip / blockSize == ipToInt (lib.head cidr) / blockSize;
+          addrs = lib.concatMap (i: map (a: lib.head (lib.splitString "/" a)) i.ipv4) (
+            lib.attrValues host.networking.interfaces
+          );
+        in
+        lib.findFirst inNet
+          (throw "den: host '${host.name}' has no IPv4 in ${name}.networks.${net} (${networks.${net}.cidr})")
+          addrs;
+    };
+
+    # Method: an internal-vhosts quirk record for a host serving these services.
+    den.schema.environment.methods.vhostRecord = schemaLib.schemaFn {
+      description = "Build an internal-vhosts record: the host, its default-network address, and its service domains";
+      type = lib.types.functionTo (lib.types.functionTo lib.types.attrs);
+      fn =
+        { name, ... }:
+        host: serviceNames:
+        let
+          env = config.den.environments.${name};
+        in
+        {
+          host = host.name;
+          address = env.addressOn "default" host;
+          domains = map env.getDomainFor serviceNames;
+        };
     };
 
     den.schema.environment.imports = [

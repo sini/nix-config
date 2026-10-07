@@ -131,6 +131,7 @@
     };
 
     service-domains = [ "headscale" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "headscale" ];
 
     persist = {
       directories = [

@@ -79,6 +79,12 @@
       "minio"
       "minio-console"
     ];
+    internal-vhosts =
+      { environment, host, ... }:
+      environment.vhostRecord host [
+        "minio"
+        "minio-console"
+      ];
 
     firewall = {
       networking.firewall.allowedTCPPorts = [

@@ -141,5 +141,6 @@
       };
 
     service-domains = [ "oauth2-proxy" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "oauth2-proxy" ];
   };
 }

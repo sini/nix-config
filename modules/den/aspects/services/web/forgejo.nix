@@ -44,6 +44,7 @@
     };
 
     service-domains = [ "forgejo" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "forgejo" ];
 
     persist = {
       directories = [

@@ -29,6 +29,7 @@
       };
 
     service-domains = [ "den-docs-mirror" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "den-docs-mirror" ];
 
     persist = {
       directories = [

@@ -92,6 +92,7 @@
       };
 
     service-domains = [ "attic" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "attic" ];
 
     cache = {
       directories = [

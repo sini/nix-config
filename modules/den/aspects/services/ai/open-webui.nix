@@ -140,6 +140,7 @@
       };
 
     service-domains = [ "open-webui" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "open-webui" ];
 
     persist = {
       directories = [

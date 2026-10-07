@@ -113,6 +113,7 @@
       };
 
     service-domains = [ "loki" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "loki" ];
 
     firewall = {
       networking.firewall.allowedTCPPorts = [

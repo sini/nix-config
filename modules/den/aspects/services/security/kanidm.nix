@@ -705,6 +705,7 @@ in
     };
 
     service-domains = [ "kanidm" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "kanidm" ];
 
     persist = {
       directories = [

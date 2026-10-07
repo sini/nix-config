@@ -239,6 +239,7 @@
     };
 
     service-domains = [ "jellyfin" ];
+    internal-vhosts = { environment, host, ... }: environment.vhostRecord host [ "jellyfin" ];
 
     persist = {
       directories = [
