@@ -13,9 +13,12 @@ its hostname is listed in `dns.unproxied`. The derived records are:
 
 - the apex and `www.` of every `certificates.domains` entry with `apex = true`
   (the `www.` names 301 to the apex, `garage/sites.nix`);
-- the host of every `service-domains` entry that an aspect declares on a prod
-  host or cluster, resolved through the environment's `getDomainFor` (so a
-  `services.<name>.domain` override applies).
+- every name in a prod `served-domains` record. Host aspects (nginx vhosts) and
+  cluster aspects (gateway routes) emit these records through
+  `environment.servedDomains` / `cluster.servedDomains`, which resolve names via
+  `getDomainFor`, so a `services.<name>.domain` override applies. The
+  environment collects them from both kinds of scope. The record's internal
+  `address` is not used here.
 
 `dns.records.<hostname> = { type; content; proxied; }` is laid over that set. It
 overrides a derived name, or adds one the derivation cannot produce. Prod uses
@@ -58,7 +61,7 @@ DNS is wider than the declared set. To close that gap:
    block existed only through the wildcard. `dns-apply` creates those names as
    explicit records.
 2. Any other name served through the wildcard that should stay public gets
-   declared, as a `service-domains` entry or a `dns.records` entry.
+   declared, as a `served-domains` emission or a `dns.records` entry.
 3. Delete the wildcard record in Cloudflare. DNS then equals the declared set.
 
 ## State

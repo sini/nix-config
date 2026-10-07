@@ -25,6 +25,7 @@ data:
             10.10.10.1 loki.json64.dev
             10.11.0.1 longhorn.zeroday.run
             10.11.0.1 matrix-admin.json64.dev
+            10.11.0.1 matrix.gen.wtf
             10.11.0.1 matrix.json64.dev
             10.11.0.1 nzb.json64.dev
             10.10.10.1 oauth2-proxy.json64.dev
@@ -35,6 +36,7 @@ data:
             10.11.0.1 radarr.json64.dev
             10.10.10.1 registry.json64.dev
             10.11.0.1 romm.json64.dev
+            10.11.0.1 s3.json64.dev
             10.11.0.1 shoko.json64.dev
             10.11.0.1 sonarr.json64.dev
             10.11.0.1 torrent.json64.dev

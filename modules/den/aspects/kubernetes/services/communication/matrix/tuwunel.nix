@@ -11,6 +11,7 @@
 # does not resolve; clients can still use https://matrix.gen.wtf directly.
 { lib, ... }:
 let
+  serviceDomains = [ "tuwunel" ];
   namespace = "matrix";
   port = 8008;
 
@@ -58,7 +59,8 @@ in
 {
   den.aspects.kubernetes.services.communication.matrix.tuwunel = {
     # matrix.gen.wtf, via prod services.tuwunel.domain.
-    service-domains = [ "tuwunel" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =
       { environment, ... }:

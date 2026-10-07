@@ -5,9 +5,13 @@
 # DNS: s3.json64.dev (this service-domain) and *.s3.json64.dev (prod dns.records)
 # are DNS-only (grey-cloud) records in infra/dns, because proxied mode's 100 MB
 # upload cap breaks S3 multipart.
+let
+  serviceDomains = [ "garage-s3" ];
+in
 {
   den.aspects.kubernetes.services.storage.garage.routes = {
-    service-domains = [ "garage-s3" ];
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     k8s-manifests =
       { cluster, ... }:

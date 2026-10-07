@@ -2,8 +2,8 @@
 #
 # Environment-scoped, not per-host: every environment with dns.publicIPv4 set
 # instantiates its `terranix` class (the records module in ./dns.nix) into
-# flake.terranixModules.<env>. Hosts and clusters expose their `service-domains`
-# emissions up to the environment so the records module sees all of them.
+# flake.terranixModules.<env>. The environment collects every host's and
+# cluster's `served-domains` record, which the records module takes as an argument.
 #
 #   nix build .#dns.config   — config.tf.json
 #   dns-adopt / dns-plan / dns-apply (devshell)
@@ -37,7 +37,15 @@ in
 
   den.classes.terranix.description = "Terranix (OpenTofu) modules collected per environment";
 
-  den.policies.expose-service-domains = _: [ (pipe.from "service-domains" [ pipe.expose ]) ];
+  # A collectAll predicate matches only scopes of the entity kind it names, so the
+  # host emitters (nginx vhosts) and the cluster emitters (gateway routes) each
+  # need their own collect.
+  den.policies.env-collect-served-domains =
+    { environment, ... }:
+    [
+      (pipe.from "served-domains" [ (pipe.collectAll ({ host, ... }: true)) ])
+      (pipe.from "served-domains" [ (pipe.collectAll ({ cluster, ... }: true)) ])
+    ];
 
   den.policies.env-to-terranix =
     { environment, ... }:
@@ -53,9 +61,8 @@ in
       })
     ];
 
-  den.schema.host.includes = [ den.policies.expose-service-domains ];
-  den.schema.cluster.includes = [ den.policies.expose-service-domains ];
   den.schema.environment.includes = [
+    den.policies.env-collect-served-domains
     den.aspects.dns-records
     den.policies.env-to-terranix
   ];

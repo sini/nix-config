@@ -1,7 +1,7 @@
 # The environment's public DNS records, as a terranix module (infra/dns/README.md).
 #
 # One proxied A record to dns.publicIPv4 per apex domain (plus www) and per
-# service-domains host, with dns.records laid over that set, kept to the
+# served-domains name, with dns.records laid over that set, kept to the
 # environment's dns.managedZones. Hostnames in dns.unproxied are grey-cloud.
 # Records already in a zone are adopted through infra/dns/imports.tf.json
 # (dns-adopt), never duplicated.
@@ -9,7 +9,7 @@
   den.aspects.dns-records.terranix =
     {
       environment,
-      service-domains ? [ ],
+      served-domains ? [ ],
       lib,
       ...
     }:
@@ -20,7 +20,10 @@
         d
         "www.${d}"
       ]) (builtins.attrNames (lib.filterAttrs (_: d: d.apex) environment.certificates.domains));
-      serviceHosts = map environment.getDomainFor (lib.unique (lib.flatten service-domains));
+      # Public records use only the names; a served-domains address is internal.
+      servedHosts = lib.concatMap (r: r.domains) (
+        builtins.filter (r: r.environment == environment.name) served-domains
+      );
 
       # Longest managed zone that is the host or a parent of it.
       zones = lib.sort (a: b: lib.stringLength a > lib.stringLength b) dns.managedZones;
@@ -28,7 +31,7 @@
 
       key = lib.replaceStrings [ "." "*" ] [ "_" "wildcard" ];
 
-      derived = lib.genAttrs (apexHosts ++ serviceHosts) (_: { });
+      derived = lib.genAttrs (apexHosts ++ servedHosts) (_: { });
       records = lib.mapAttrs' (
         host: r:
         lib.nameValuePair (key host) {

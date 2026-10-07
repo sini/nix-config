@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 448745cfd4d544ca181323cfacaed6c82e328465e3ff08402c80037cc48f31ac
+        checksum/config: 2e55f980db6cda509d99cfb70db1f40114395c7590629156bcd1b3e72c5099e1
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
       labels:
         app.kubernetes.io/instance: coredns
