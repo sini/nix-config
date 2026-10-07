@@ -14,14 +14,35 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.json64.com'
+      hostname: "*.gen.wtf"
+      name: gen-wtf-http
+      port: 80
+      protocol: HTTP
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: "*.gen.wtf"
+      name: gen-wtf-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: gen-wtf-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: "*.json64.com"
       name: json64-com-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.json64.com'
+      hostname: "*.json64.com"
       name: json64-com-https
       port: 443
       protocol: HTTPS
@@ -35,14 +56,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.json64.dev'
+      hostname: "*.json64.dev"
       name: json64-dev-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.json64.dev'
+      hostname: "*.json64.dev"
       name: json64-dev-https
       port: 443
       protocol: HTTPS
@@ -70,14 +91,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.json64.net'
+      hostname: "*.json64.net"
       name: json64-net-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.json64.net'
+      hostname: "*.json64.net"
       name: json64-net-https
       port: 443
       protocol: HTTPS
@@ -91,14 +112,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.s3.json64.dev'
+      hostname: "*.s3.json64.dev"
       name: s3-json64-dev-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.s3.json64.dev'
+      hostname: "*.s3.json64.dev"
       name: s3-json64-dev-https
       port: 443
       protocol: HTTPS
@@ -112,14 +133,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.sinistar.io'
+      hostname: "*.sinistar.io"
       name: sinistar-io-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.sinistar.io'
+      hostname: "*.sinistar.io"
       name: sinistar-io-https
       port: 443
       protocol: HTTPS
@@ -133,14 +154,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.sinistar.org'
+      hostname: "*.sinistar.org"
       name: sinistar-org-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.sinistar.org'
+      hostname: "*.sinistar.org"
       name: sinistar-org-https
       port: 443
       protocol: HTTPS
@@ -154,14 +175,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.zeroday.pub'
+      hostname: "*.zeroday.pub"
       name: zeroday-pub-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.zeroday.pub'
+      hostname: "*.zeroday.pub"
       name: zeroday-pub-https
       port: 443
       protocol: HTTPS
@@ -175,14 +196,14 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.zeroday.run'
+      hostname: "*.zeroday.run"
       name: zeroday-run-http
       port: 80
       protocol: HTTP
     - allowedRoutes:
         namespaces:
           from: All
-      hostname: '*.zeroday.run'
+      hostname: "*.zeroday.run"
       name: zeroday-run-https
       port: 443
       protocol: HTTPS

@@ -1,0 +1,33 @@
+apiVersion: v1
+data:
+  tuwunel.toml: |
+    [global]
+    server_name = "gen.wtf"
+    address = ["0.0.0.0"]
+    port = 8008
+    database_path = "/data/db"
+    allow_registration = false
+    allow_federation = true
+    trusted_servers = ["matrix.org"]
+    max_request_size = 52428800
+
+    [global.well_known]
+    client = "https://matrix.gen.wtf"
+    server = "matrix.gen.wtf:443"
+
+    [[global.identity_provider]]
+    brand = "kanidm"
+    name = "json64 (kanidm)"
+    client_id = "tuwunel"
+    client_secret_file = "/secrets/oidc-client-secret"
+    issuer_url = "https://idm.json64.dev/oauth2/openid/tuwunel"
+    callback_url = "https://matrix.gen.wtf/_matrix/client/unstable/login/sso/callback/tuwunel"
+    scope = ["openid", "profile", "email"]
+    userid_claims = ["preferred_username"]
+    unique_id_fallbacks = false
+    registration = true
+    default = true
+kind: ConfigMap
+metadata:
+  name: tuwunel-config
+  namespace: matrix

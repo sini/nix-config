@@ -21,6 +21,10 @@
           # listener + s3-json64-dev-wildcard-tls cert (T1 resourceName extension).
           resourceName = "s3-json64-dev";
         };
+        # tuwunel companion homeserver (matrix.gen.wtf); the apex stays GitHub Pages.
+        "gen.wtf" = {
+          issuer = "global";
+        };
         "json64.com" = {
           issuer = "global";
         };

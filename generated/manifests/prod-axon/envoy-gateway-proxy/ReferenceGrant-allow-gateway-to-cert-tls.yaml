@@ -11,6 +11,9 @@ spec:
   to:
     - group: ""
       kind: Secret
+      name: gen-wtf-wildcard-tls
+    - group: ""
+      kind: Secret
       name: json64-com-wildcard-tls
     - group: ""
       kind: Secret

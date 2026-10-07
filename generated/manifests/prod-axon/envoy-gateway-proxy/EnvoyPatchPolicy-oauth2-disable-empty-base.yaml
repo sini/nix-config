@@ -5,7 +5,7 @@ metadata:
   namespace: gateways
 spec:
   jsonPatches:
-    - name: gateways/default-gateway/json64-com-https
+    - name: gateways/default-gateway/gen-wtf-https
       operation:
         jsonPath: .filter_chains[*].filters[*].typed_config.http_filters[?(@.name=="envoy.filters.http.oauth2")]
         op: add

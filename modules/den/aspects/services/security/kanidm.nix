@@ -306,6 +306,21 @@ let
         ];
       };
 
+      # tuwunel (communication/matrix/tuwunel.nix), the gen.wtf companion homeserver.
+      # Native OIDC; the callback path is tuwunel's fixed per-client form.
+      tuwunel = {
+        displayName = "Matrix (gen.wtf)";
+        originUrl = "https://matrix.gen.wtf/_matrix/client/unstable/login/sso/callback/tuwunel";
+        originLanding = "https://matrix.gen.wtf";
+        basicSecretFile = secretPaths.tuwunel-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps."matrix.access" = [
+          "openid"
+          "profile"
+          "email"
+        ];
+      };
+
       garage-ui = {
         displayName = "Garage UI";
         originUrl = [ "https://${domain "garage-ui"}/oauth2/callback" ];

@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: tuwunel
+    app.kubernetes.io/name: tuwunel
+  name: tuwunel
+  namespace: matrix
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: tuwunel
+      app.kubernetes.io/name: tuwunel
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: tuwunel
+        app.kubernetes.io/name: tuwunel
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - -c
+            - /config/tuwunel.toml
+          image: ghcr.io/matrix-construct/tuwunel@sha256:678b7f5350e06a41614444497c587da9dddf66767e4068a27480402f3c1367d0
+          livenessProbe:
+            httpGet:
+              path: /_matrix/client/versions
+              port: 8008
+          name: main
+          readinessProbe:
+            httpGet:
+              path: /_matrix/client/versions
+              port: 8008
+          startupProbe:
+            failureThreshold: 180
+            httpGet:
+              path: /_matrix/client/versions
+              port: 8008
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /secrets/oidc-client-secret
+              name: oidc
+              readOnly: true
+              subPath: client-secret
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: tuwunel
+      terminationGracePeriodSeconds: 600
+      volumes:
+        - configMap:
+            name: tuwunel-config
+          name: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: tuwunel-data
+        - name: oidc
+          secret:
+            secretName: tuwunel-oidc-client-secret
