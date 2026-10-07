@@ -25,7 +25,7 @@
         pkgs.vscode-marketplace.foxundermoon.shell-format
         pkgs.vscode-marketplace.mads-hartmann.bash-ide-vscode
         pkgs.vscode-marketplace.rogalmic.bash-debug
-        pkgs.vscode-marketplace.timonwong.shellcheck
+        # pkgs.vscode-marketplace.timonwong.shellcheck # TODO: Restore
       ];
   };
 }
