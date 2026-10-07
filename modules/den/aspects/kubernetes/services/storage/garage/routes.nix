@@ -2,11 +2,13 @@
 # on the dedicated s3-json64-dev listener (T1 + the prod.nix resourceName entry).
 # No OIDC SecurityPolicy — SigV4 key-auth is the gate.
 #
-# DNS (manual, doc-only): s3.json64.dev and *.s3.json64.dev must be created in
-# Cloudflare as DNS-only (grey-cloud) records — proxied mode's 100 MB upload cap
-# breaks S3 multipart. SP2.4's Cloudflare stack adopts these records later.
+# DNS: s3.json64.dev (this service-domain) and *.s3.json64.dev (prod dns.records)
+# are DNS-only (grey-cloud) records in infra/dns, because proxied mode's 100 MB
+# upload cap breaks S3 multipart.
 {
   den.aspects.kubernetes.services.storage.garage.routes = {
+    service-domains = [ "garage-s3" ];
+
     k8s-manifests =
       { cluster, ... }:
       {

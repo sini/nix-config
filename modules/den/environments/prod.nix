@@ -96,6 +96,20 @@ in
         "s3.json64.dev"
         "*.s3.json64.dev"
       ];
+      # As live: hs and jellyfin are grey CNAMEs to the apex; *.s3 is S3 vhost style.
+      records = {
+        "hs.json64.dev" = {
+          type = "CNAME";
+          content = "json64.dev";
+          proxied = false;
+        };
+        "jellyfin.json64.dev" = {
+          type = "CNAME";
+          content = "json64.dev";
+          proxied = false;
+        };
+        "*.s3.json64.dev" = { };
+      };
       # The apex (landing) zones, json64.dev among them, plus gen.wtf: its apex
       # stays GitHub Pages, but matrix.gen.wtf is ours.
       managedZones = builtins.attrNames (lib.filterAttrs (_: d: d.apex or false) certificateDomains) ++ [

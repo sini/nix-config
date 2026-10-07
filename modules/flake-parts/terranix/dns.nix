@@ -1,9 +1,10 @@
 # The environment's public DNS records, as a terranix module (infra/dns/README.md).
 #
 # One proxied A record to dns.publicIPv4 per apex domain (plus www) and per
-# service-domains host, kept to the environment's dns.managedZones. Hostnames in
-# dns.unproxied are grey-cloud. Records already in a zone are adopted through
-# infra/dns/imports.tf.json (dns-adopt), never duplicated.
+# service-domains host, with dns.records laid over that set, kept to the
+# environment's dns.managedZones. Hostnames in dns.unproxied are grey-cloud.
+# Records already in a zone are adopted through infra/dns/imports.tf.json
+# (dns-adopt), never duplicated.
 {
   den.aspects.dns-records.terranix =
     {
@@ -27,11 +28,17 @@
 
       key = lib.replaceStrings [ "." "*" ] [ "_" "wildcard" ];
 
-      records = lib.listToAttrs (
-        map (host: lib.nameValuePair (key host) host) (
-          builtins.filter (h: zoneOf h != null) (lib.unique (apexHosts ++ serviceHosts))
-        )
-      );
+      derived = lib.genAttrs (apexHosts ++ serviceHosts) (_: { });
+      records = lib.mapAttrs' (
+        host: r:
+        lib.nameValuePair (key host) {
+          name = host;
+          type = r.type or "A";
+          content = if r.content or null != null then r.content else dns.publicIPv4;
+          proxied = if r.proxied or null != null then r.proxied else !(builtins.elem host dns.unproxied);
+          zone = zoneOf host;
+        }
+      ) (lib.filterAttrs (host: _: zoneOf host != null) (derived // dns.records));
     in
     {
       terraform = {
@@ -67,21 +74,21 @@
         map (z: lib.nameValuePair (key z) { filter.name = z; }) dns.managedZones
       );
 
-      resource.cloudflare_dns_record = lib.mapAttrs (_: host: {
-        zone_id = "\${data.cloudflare_zone.${key (zoneOf host)}.id}";
-        name = host;
-        type = "A";
-        content = dns.publicIPv4;
-        proxied = !(builtins.elem host dns.unproxied);
+      resource.cloudflare_dns_record = lib.mapAttrs (_: r: {
+        zone_id = "\${data.cloudflare_zone.${key r.zone}.id}";
+        inherit (r)
+          name
+          type
+          content
+          proxied
+          ;
         ttl = 1;
       }) records;
 
       # Read by dns-adopt to match live records to resource addresses.
-      _meta.records = lib.mapAttrsToList (k: host: {
+      _meta.records = lib.mapAttrsToList (k: r: {
         address = "cloudflare_dns_record.${k}";
-        name = host;
-        type = "A";
-        zone = zoneOf host;
+        inherit (r) name type zone;
       }) records;
     };
 

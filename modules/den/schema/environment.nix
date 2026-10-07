@@ -348,6 +348,38 @@ in
                       Matrix federation and S3, which do not survive the Cloudflare proxy.
                     '';
                   };
+                  records = mkOption {
+                    type = types.attrsOf (
+                      types.submodule {
+                        options = {
+                          type = mkOption {
+                            type = types.enum [
+                              "A"
+                              "CNAME"
+                            ];
+                            default = "A";
+                            description = "Record type";
+                          };
+                          content = mkOption {
+                            type = types.nullOr types.str;
+                            default = null;
+                            description = "Record content (CNAME target); null = dns.publicIPv4";
+                          };
+                          proxied = mkOption {
+                            type = types.nullOr types.bool;
+                            default = null;
+                            description = "Cloudflare proxy; null = proxied unless the name is in dns.unproxied";
+                          };
+                        };
+                      }
+                    );
+                    default = { };
+                    description = ''
+                      Records by hostname, laid over the derived set (apex domains, their www,
+                      and service-domains hosts): a derived name is overridden, a new name is
+                      added. Still kept to dns.managedZones.
+                    '';
+                  };
                   managedZones = mkOption {
                     type = types.listOf types.str;
                     default = builtins.attrNames (lib.filterAttrs (_: d: d.apex) config.certificates.domains);

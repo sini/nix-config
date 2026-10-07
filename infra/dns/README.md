@@ -1,20 +1,28 @@
 # Public DNS (Cloudflare, OpenTofu)
 
-The prod environment's public A records, declared in Nix with
+The prod environment's public DNS records, declared in Nix with
 [terranix](https://terranix.org) and applied with OpenTofu. The code lives in
 `modules/flake-parts/terranix/`: `terranix.nix` wires it in, and `dns.nix` holds
 the records module.
 
 ## What is managed
 
-Every record is an `A` record pointing at `dns.publicIPv4` (prod:
-`157.131.140.225`), with `ttl = 1` (auto). A record is proxied (orange cloud)
-unless its hostname is listed in `dns.unproxied`. The records are:
+A derived record is an `A` record pointing at `dns.publicIPv4` (prod:
+`157.131.140.225`), with `ttl = 1` (auto). It is proxied (orange cloud) unless
+its hostname is listed in `dns.unproxied`. The derived records are:
 
-- the apex and `www.` of every `certificates.domains` entry with `apex = true`;
+- the apex and `www.` of every `certificates.domains` entry with `apex = true`
+  (the `www.` names 301 to the apex, `garage/sites.nix`);
 - the host of every `service-domains` entry that an aspect declares on a prod
   host or cluster, resolved through the environment's `getDomainFor` (so a
   `services.<name>.domain` override applies).
+
+`dns.records.<hostname> = { type; content; proxied; }` is laid over that set. It
+overrides a derived name, or adds one the derivation cannot produce. Prod uses
+it for `hs.json64.dev` and `jellyfin.json64.dev`, which are grey `CNAME`s to
+`json64.dev` as they are live, and for `*.s3.json64.dev` (S3 vhost-style
+buckets). `type` is `A` or `CNAME`, a null `content` means `dns.publicIPv4`, and
+a null `proxied` means the `dns.unproxied` rule.
 
 A record is kept only if its zone is in `dns.managedZones`. The prod list is the
 apex zones plus `gen.wtf`. So `argocd.zeroday.run` is not managed, because
@@ -30,12 +38,28 @@ nix build .#dns.config && jq '.resource.cloudflare_dns_record' result
 
 **Grey cloud** (`dns.unproxied` in `modules/den/environments/prod.nix`):
 `matrix.json64.dev`, `matrix.gen.wtf`, `s3.json64.dev` and `*.s3.json64.dev`.
-Matrix federation and S3 clients do not work through the Cloudflare proxy.
+Matrix federation does not work through the Cloudflare proxy, and its 100 MB
+upload cap breaks S3 multipart. `hs` and `jellyfin` are grey too, through their
+`dns.records` entries.
 
 **Not managed.** OpenTofu touches only the records it declares. Every other
 record in these zones is left alone and never read into state, including MX,
-TXT, CAA, the ACME `_acme-challenge` records, wildcards and the `gen.wtf` apex
-(GitHub Pages). This also holds for every zone outside `dns.managedZones`.
+TXT, CAA, the ACME `_acme-challenge` records, the `*.json64.dev` wildcard and
+the `gen.wtf` apex (GitHub Pages). This also holds for every zone outside
+`dns.managedZones`.
+
+## The `*.json64.dev` wildcard
+
+A proxied `*.json64.dev` record is live and is deliberately **not** managed yet.
+Until it goes, any `json64.dev` name resolves whether or not it is declared, so
+DNS is wider than the declared set. To close that gap:
+
+1. After the first `dns-adopt`, every declared `json64.dev` name with no import
+   block existed only through the wildcard. `dns-apply` creates those names as
+   explicit records.
+2. Any other name served through the wildcard that should stay public gets
+   declared, as a `service-domains` entry or a `dns.records` entry.
+3. Delete the wildcard record in Cloudflare. DNS then equals the declared set.
 
 ## State
 

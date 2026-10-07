@@ -12,10 +12,9 @@
 { lib, ... }:
 let
   namespace = "matrix";
-  host = "matrix.gen.wtf";
   port = 8008;
 
-  tomlConfig = ''
+  tomlConfig = host: ''
     [global]
     server_name = "gen.wtf"
     address = ["0.0.0.0"]
@@ -58,7 +57,7 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.tuwunel = {
-    # Resolves to `host` via prod services.tuwunel.domain (public DNS record).
+    # matrix.gen.wtf, via prod services.tuwunel.domain.
     service-domains = [ "tuwunel" ];
 
     age-secrets =
@@ -80,10 +79,14 @@ in
     k8s-manifests =
       {
         config,
+        cluster,
         images,
         charts,
         ...
       }:
+      let
+        host = cluster.domainFor "tuwunel";
+      in
       {
         applications.tuwunel = {
           inherit namespace;
@@ -164,7 +167,7 @@ in
           };
 
           resources = {
-            configMaps.tuwunel-config.data."tuwunel.toml" = tomlConfig;
+            configMaps.tuwunel-config.data."tuwunel.toml" = tomlConfig host;
 
             persistentVolumeClaims.tuwunel-data.spec = {
               accessModes = [ "ReadWriteOnce" ];
