@@ -3,13 +3,13 @@ kind: Certificate
 metadata:
   annotations:
     cert-manager.io/issue-temporary-certificate: "true"
-  name: gen-wtf-wildcard-certificate
+  name: gen-framework-com-wildcard-certificate
   namespace: certs
 spec:
   dnsNames:
-    - gen.wtf
-    - '*.gen.wtf'
+    - gen-framework.com
+    - '*.gen-framework.com'
   issuerRef:
     kind: ClusterIssuer
     name: global-issuer
-  secretName: gen-wtf-wildcard-tls
+  secretName: gen-framework-com-wildcard-tls

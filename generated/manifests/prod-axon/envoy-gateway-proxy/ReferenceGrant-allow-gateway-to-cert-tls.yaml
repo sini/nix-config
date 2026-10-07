@@ -11,7 +11,13 @@ spec:
   to:
     - group: ""
       kind: Secret
+      name: gen-framework-com-wildcard-tls
+    - group: ""
+      kind: Secret
       name: gen-wtf-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: getqvr-com-wildcard-tls
     - group: ""
       kind: Secret
       name: json64-com-wildcard-tls
@@ -21,6 +27,18 @@ spec:
     - group: ""
       kind: Secret
       name: json64-net-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: quiver-labs-com-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: qvr-run-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: qvr-sh-wildcard-tls
+    - group: ""
+      kind: Secret
+      name: qvrlab-com-wildcard-tls
     - group: ""
       kind: Secret
       name: s3-json64-dev-wildcard-tls

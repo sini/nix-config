@@ -3,13 +3,13 @@ kind: Certificate
 metadata:
   annotations:
     cert-manager.io/issue-temporary-certificate: "true"
-  name: gen-wtf-wildcard-certificate
+  name: qvr-sh-wildcard-certificate
   namespace: certs
 spec:
   dnsNames:
-    - gen.wtf
-    - '*.gen.wtf'
+    - qvr.sh
+    - '*.qvr.sh'
   issuerRef:
     kind: ClusterIssuer
     name: global-issuer
-  secretName: gen-wtf-wildcard-tls
+  secretName: qvr-sh-wildcard-tls
