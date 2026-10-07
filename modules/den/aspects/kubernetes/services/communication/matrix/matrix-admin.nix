@@ -12,7 +12,8 @@
 { lib, ... }:
 let
   namespace = "matrix";
-  port = 80;
+  # The image EXPOSEs 80 but sets SERVER_PORT=8080 (and SERVER_HEALTH=true).
+  port = 8080;
 
   tcp = p: {
     port = toString p;
@@ -72,7 +73,7 @@ in
                     enabled = true;
                     custom = true;
                     spec.httpGet = {
-                      path = "/";
+                      path = "/health";
                       inherit port;
                     };
                   });

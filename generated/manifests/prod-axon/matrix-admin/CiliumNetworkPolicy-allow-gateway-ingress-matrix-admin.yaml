@@ -14,5 +14,5 @@ spec:
             k8s:io.kubernetes.pod.namespace: gateways
       toPorts:
         - ports:
-            - port: "80"
+            - port: "8080"
               protocol: TCP

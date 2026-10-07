@@ -10,9 +10,9 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 80
+      port: 8080
       protocol: TCP
-      targetPort: 80
+      targetPort: 8080
   selector:
     app.kubernetes.io/controller: main
     app.kubernetes.io/instance: matrix-admin

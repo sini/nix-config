@@ -29,13 +29,13 @@ spec:
         - image: ghcr.io/etkecc/ketesa@sha256:9c4f1d1a5c7829049daca87edc7e94d2f73ca5be55d3d11bf0d7e9c841f7bfb2
           livenessProbe:
             httpGet:
-              path: /
-              port: 80
+              path: /health
+              port: 8080
           name: main
           readinessProbe:
             httpGet:
-              path: /
-              port: 80
+              path: /health
+              port: 8080
           volumeMounts:
             - mountPath: /var/public/config.json
               name: config
