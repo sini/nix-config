@@ -26,9 +26,33 @@
       };
 
     homeManager =
-      { lib, pkgs, ... }:
+      {
+        config,
+        lib,
+        pkgs,
+        ...
+      }:
       let
         xmsg = lib.getExe pkgs.local.xmsg;
+
+        # Identity anchors, pinned to the exact store paths of what this home runs:
+        # xmsg compares the kernel-reported executable (and, for pi, node + its
+        # script) against these, so a profile symlink or another version would
+        # fail closed. bin/agy is the real ELF binary (no wrapper); pi's launcher
+        # execs <its nodejs>/bin/node on lib/node_modules/pi-monorepo/dist/bundle/cli.js.
+        agyExe = "${config.programs.antigravity-cli.package}/bin/agy";
+        pi = pkgs.pi-coding-agent;
+        piNode = lib.findFirst (
+          d: (d.pname or "") == "nodejs"
+        ) (throw "xmsg: pi-coding-agent has no nodejs build input") pi.buildInputs;
+        identityArgs = lib.escapeShellArgs [
+          "--agy-exe"
+          agyExe
+          "--pi-entrypoint"
+          "${pi}/lib/node_modules/pi-monorepo/dist/bundle/cli.js"
+          "--pi-node-bin"
+          "${piNode}/bin/node"
+        ];
       in
       lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         home.packages = [ pkgs.local.xmsg ];
@@ -39,7 +63,7 @@
         systemd.user.services.xmsg = {
           Unit.Description = "xmsg: bridge into running agent sessions";
           Service = {
-            ExecStart = "${xmsg} serve --listen 127.0.0.1:7787";
+            ExecStart = "${xmsg} serve --listen 127.0.0.1:7787 ${identityArgs}";
             Restart = "on-failure";
           };
           Install.WantedBy = [ "default.target" ];
