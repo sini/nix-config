@@ -485,7 +485,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "sonarr";
+                provider = cluster.secrets.oidcProviderFor "sonarr";
                 clientID = "sonarr";
                 clientSecret.name = "sonarr-oidc-client-secret";
                 scopes = [

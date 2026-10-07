@@ -10,7 +10,9 @@ spec:
       name: synapse-admin-oidc-client-secret
     forwardAccessToken: false
     provider:
+      authorizationEndpoint: https://idm.json64.dev/ui/oauth2
       issuer: https://idm.json64.dev/oauth2/openid/synapse-admin
+      tokenEndpoint: https://idm.json64.dev/oauth2/token
     scopes:
       - email
       - openid

@@ -388,7 +388,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "dash";
+                provider = cluster.secrets.oidcProviderFor "dash";
                 clientID = "dash";
                 clientSecret.name = "dash-oidc-client-secret";
                 scopes = [

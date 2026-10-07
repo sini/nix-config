@@ -307,7 +307,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "komga";
+                provider = cluster.secrets.oidcProviderFor "komga";
                 clientID = "komga";
                 clientSecret.name = "komga-oidc-client-secret";
                 scopes = [

@@ -259,7 +259,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "profilarr";
+                provider = cluster.secrets.oidcProviderFor "profilarr";
                 clientID = "profilarr";
                 clientSecret.name = "profilarr-oidc-client-secret";
                 scopes = [

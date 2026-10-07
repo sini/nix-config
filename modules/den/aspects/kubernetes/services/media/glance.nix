@@ -360,7 +360,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "glance";
+                provider = cluster.secrets.oidcProviderFor "glance";
                 clientID = "glance";
                 clientSecret.name = "glance-oidc-client-secret";
                 scopes = [

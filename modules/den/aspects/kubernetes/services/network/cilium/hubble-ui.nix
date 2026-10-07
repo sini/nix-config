@@ -55,7 +55,7 @@
               ];
 
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "hubble-ui";
+                provider = cluster.secrets.oidcProviderFor "hubble-ui";
                 clientID = "hubble-ui";
                 clientSecret.name = "hubble-ui-oidc-client-secret";
                 scopes = [

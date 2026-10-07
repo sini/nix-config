@@ -480,7 +480,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "lidarr";
+                provider = cluster.secrets.oidcProviderFor "lidarr";
                 clientID = "lidarr";
                 clientSecret.name = "lidarr-oidc-client-secret";
                 scopes = [

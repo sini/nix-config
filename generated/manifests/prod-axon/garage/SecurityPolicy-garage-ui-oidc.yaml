@@ -10,7 +10,9 @@ spec:
       name: garage-ui-oidc-client-secret
     forwardAccessToken: true
     provider:
+      authorizationEndpoint: https://idm.json64.dev/ui/oauth2
       issuer: https://idm.json64.dev/oauth2/openid/garage-ui
+      tokenEndpoint: https://idm.json64.dev/oauth2/token
     scopes:
       - email
       - openid

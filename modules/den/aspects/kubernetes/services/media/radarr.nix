@@ -480,7 +480,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "radarr";
+                provider = cluster.secrets.oidcProviderFor "radarr";
                 clientID = "radarr";
                 clientSecret.name = "radarr-oidc-client-secret";
                 scopes = [

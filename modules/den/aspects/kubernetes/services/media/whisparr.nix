@@ -397,7 +397,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "whisparr";
+                provider = cluster.secrets.oidcProviderFor "whisparr";
                 clientID = "whisparr";
                 clientSecret.name = "whisparr-oidc-client-secret";
                 scopes = [

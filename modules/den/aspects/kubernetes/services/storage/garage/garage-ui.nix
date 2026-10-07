@@ -141,7 +141,7 @@ in
               ];
 
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "garage-ui";
+                provider = cluster.secrets.oidcProviderFor "garage-ui";
                 clientID = "garage-ui";
                 clientSecret.name = "garage-ui-oidc-client-secret";
                 scopes = [

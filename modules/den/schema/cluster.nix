@@ -151,8 +151,16 @@ in
           env = environments.${environment};
           kanidmDomain = env.getDomainFor "kanidm";
         in
-        {
+        rec {
           oidcIssuerFor = clientID: "https://${kanidmDomain}/oauth2/openid/${clientID}";
+          # Envoy Gateway SecurityPolicy provider with kanidm's fixed endpoints:
+          # stating both skips the controller's discovery fetch, whose failure
+          # marks the policy Invalid (500 on its routes) until the next translation.
+          oidcProviderFor = clientID: {
+            issuer = oidcIssuerFor clientID;
+            authorizationEndpoint = "https://${kanidmDomain}/ui/oauth2";
+            tokenEndpoint = "https://${kanidmDomain}/oauth2/token";
+          };
         };
     };
 

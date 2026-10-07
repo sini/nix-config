@@ -166,7 +166,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "synapse-admin";
+                provider = cluster.secrets.oidcProviderFor "synapse-admin";
                 clientID = "synapse-admin";
                 clientSecret.name = "synapse-admin-oidc-client-secret";
                 scopes = [

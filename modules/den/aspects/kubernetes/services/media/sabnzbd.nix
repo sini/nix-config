@@ -534,7 +534,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "sabnzbd";
+                provider = cluster.secrets.oidcProviderFor "sabnzbd";
                 clientID = "sabnzbd";
                 clientSecret.name = "sabnzbd-oidc-client-secret";
                 scopes = [

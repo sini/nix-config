@@ -227,7 +227,7 @@ in
               ];
 
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "longhorn";
+                provider = cluster.secrets.oidcProviderFor "longhorn";
                 clientID = "longhorn";
                 clientSecret.name = "longhorn-oidc-client-secret";
                 scopes = [

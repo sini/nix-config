@@ -800,7 +800,7 @@ in
                 }
               ];
               oidc = {
-                provider.issuer = cluster.secrets.oidcIssuerFor "qbittorrent";
+                provider = cluster.secrets.oidcProviderFor "qbittorrent";
                 clientID = "qbittorrent";
                 clientSecret.name = "qbittorrent-oidc-client-secret";
                 scopes = [
