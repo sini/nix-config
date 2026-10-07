@@ -43,6 +43,27 @@
             ];
           };
 
+          # Website endpoint (3902) for static sites, from the gateways only.
+          allow-garage-web-ingress.spec = {
+            description = "Garage web (3902) ingress from gateways (static sites).";
+            endpointSelector.matchLabels."app.kubernetes.io/name" = "garage";
+            ingress = [
+              {
+                fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; } ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = "3902";
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
+              }
+            ];
+          };
+
           # S3 ingress on 3900 from the gateways namespace (public route backend)
           # and in-cluster consumer namespaces (burrito).
           allow-garage-s3-ingress.spec = {

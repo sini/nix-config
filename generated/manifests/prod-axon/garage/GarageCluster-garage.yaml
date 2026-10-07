@@ -39,4 +39,8 @@ spec:
       size: 5Gi
       storageClassName: longhorn-single
     replicas: 3
+  webApi:
+    bindPort: 3902
+    enabled: true
+    rootDomain: .web.json64.dev
   zone: axon

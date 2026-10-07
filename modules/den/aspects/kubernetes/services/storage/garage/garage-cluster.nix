@@ -70,6 +70,14 @@
               # Leading dot enables vhost-style (bucket.<rootDomain>) Host matching.
               rootDomain = ".s3.json64.dev";
             };
+            # Website endpoint (:3902) for static-site buckets (sites.nix). Garage
+            # picks the bucket from the Host header; full-domain bucket aliases
+            # never end in rootDomain, so it only matters for <bucket>.web.json64.dev.
+            webApi = {
+              enabled = true;
+              bindPort = 3902;
+              rootDomain = ".web.json64.dev";
+            };
           };
 
           # NB: the operator creates and OWNS the cluster Services from the

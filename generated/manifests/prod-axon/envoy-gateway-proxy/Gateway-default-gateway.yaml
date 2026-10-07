@@ -35,6 +35,20 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: gen-framework.com
+      name: gen-framework-com-apex-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: gen-framework-com-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.gen.wtf'
       name: gen-wtf-http
       port: 80
@@ -65,6 +79,20 @@ spec:
           from: All
       hostname: '*.getqvr.com'
       name: getqvr-com-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: getqvr-com-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: getqvr.com
+      name: getqvr-com-apex-https
       port: 443
       protocol: HTTPS
       tls:
@@ -175,6 +203,20 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: quiver-labs.com
+      name: quiver-labs-com-apex-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: quiver-labs-com-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.qvr-framework.com'
       name: qvr-framework-com-http
       port: 80
@@ -184,6 +226,20 @@ spec:
           from: All
       hostname: '*.qvr-framework.com'
       name: qvr-framework-com-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: qvr-framework-com-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: qvr-framework.com
+      name: qvr-framework-com-apex-https
       port: 443
       protocol: HTTPS
       tls:
@@ -217,6 +273,20 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: qvr.run
+      name: qvr-run-apex-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: qvr-run-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.qvr.sh'
       name: qvr-sh-http
       port: 80
@@ -238,6 +308,20 @@ spec:
     - allowedRoutes:
         namespaces:
           from: All
+      hostname: qvr.sh
+      name: qvr-sh-apex-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: qvr-sh-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
       hostname: '*.qvrlab.com'
       name: qvrlab-com-http
       port: 80
@@ -247,6 +331,20 @@ spec:
           from: All
       hostname: '*.qvrlab.com'
       name: qvrlab-com-https
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: qvrlab-com-wildcard-tls
+            namespace: certs
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: qvrlab.com
+      name: qvrlab-com-apex-https
       port: 443
       protocol: HTTPS
       tls:

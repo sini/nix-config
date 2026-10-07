@@ -46,6 +46,11 @@
             help = "Update custom package sources via nix-update";
           }
           {
+            package = config.packages.publish-sites;
+            name = "publish-sites";
+            help = "Sync sites/<domain>/ to its Garage website bucket ([--dry-run] [domain...])";
+          }
+          {
             package = pkgs.nh;
             help = "Nix helper for nixpkgs development";
           }

@@ -1,0 +1,33 @@
+apiVersion: garage.rajsingh.info/v1beta1
+kind: GarageKey
+metadata:
+  name: sites-publisher
+  namespace: garage
+spec:
+  bucketPermissions:
+    - bucketRef: site-gen-framework-com
+      read: true
+      write: true
+    - bucketRef: site-getqvr-com
+      read: true
+      write: true
+    - bucketRef: site-quiver-labs-com
+      read: true
+      write: true
+    - bucketRef: site-qvr-framework-com
+      read: true
+      write: true
+    - bucketRef: site-qvrlab-com
+      read: true
+      write: true
+    - bucketRef: site-qvr-run
+      read: true
+      write: true
+    - bucketRef: site-qvr-sh
+      read: true
+      write: true
+  clusterRef:
+    name: garage
+  neverExpires: true
+  secretTemplate:
+    name: sites-publisher-credentials

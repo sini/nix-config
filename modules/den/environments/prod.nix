@@ -27,25 +27,32 @@
         };
         "gen-framework.com" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         "qvr-framework.com" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         # quiver: candidate project domains (Cloudflare zones, `global` DNS-01).
         "getqvr.com" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         "quiver-labs.com" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         "qvrlab.com" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         "qvr.run" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         "qvr.sh" = {
           issuer = "global";
+          apex = true; # landing page (garage/sites.nix)
         };
         "json64.com" = {
           issuer = "global";

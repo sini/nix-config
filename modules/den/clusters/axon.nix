@@ -190,6 +190,7 @@
       services.storage.garage.network-policy
       services.storage.garage.routes
       services.storage.garage.garage-ui
+      services.storage.garage.sites
     ];
   };
 }

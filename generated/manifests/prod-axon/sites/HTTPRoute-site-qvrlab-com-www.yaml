@@ -1,0 +1,20 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: site-qvrlab-com-www
+  namespace: garage
+spec:
+  hostnames:
+    - www.qvrlab.com
+  parentRefs:
+    - name: default-gateway
+      namespace: gateways
+      sectionName: qvrlab-com-https
+  rules:
+    - filters:
+        - requestRedirect:
+            hostname: qvrlab.com
+            scheme: https
+            statusCode: 301
+          type: RequestRedirect
+      name: to-apex
