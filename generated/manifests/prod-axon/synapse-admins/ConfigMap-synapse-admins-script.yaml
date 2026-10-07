@@ -1,0 +1,13 @@
+apiVersion: v1
+data:
+  reconcile.sh: |
+    set -eu
+    psql -v ON_ERROR_STOP=1 <<'SQL'
+    UPDATE users SET admin = 1 WHERE name IN ('@json:json64.dev', '@sini:json64.dev') AND admin IS DISTINCT FROM 1;
+    UPDATE users SET admin = 0 WHERE name NOT IN ('@json:json64.dev', '@sini:json64.dev') AND admin IS DISTINCT FROM 0;
+    SELECT name FROM users WHERE admin = 1 ORDER BY name;
+    SQL
+kind: ConfigMap
+metadata:
+  name: synapse-admins-script
+  namespace: matrix

@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: synapse-admins
+  namespace: matrix
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: synapse-admins
+        spec:
+          containers:
+            - command:
+                - sh
+                - /script/reconcile.sh
+              env:
+                - name: PGHOST
+                  value: matrix-pg-rw.matrix.svc.cluster.local
+                - name: PGDATABASE
+                  value: synapse
+                - name: PGSSLMODE
+                  value: require
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      key: username
+                      name: matrix-pg-synapse-password
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      key: password
+                      name: matrix-pg-synapse-password
+              image: library/postgres@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+              name: synapse-admins
+              volumeMounts:
+                - mountPath: /script
+                  name: script
+                  readOnly: true
+          restartPolicy: OnFailure
+          securityContext:
+            runAsGroup: 70
+            runAsNonRoot: true
+            runAsUser: 70
+          volumes:
+            - configMap:
+                name: synapse-admins-script
+              name: script
+  schedule: "*/10 * * * *"
+  successfulJobsHistoryLimit: 1

@@ -167,6 +167,7 @@
       services.communication.matrix.matrix-pg
       services.communication.matrix.synapse
       services.communication.matrix.matrix-admin
+      services.communication.matrix.synapse-admins
       services.communication.matrix.tuwunel
 
       # ai — Hindsight agent memory bank. Cluster-internal in this wave: no

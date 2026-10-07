@@ -119,6 +119,17 @@ in
       ])
     ];
 
+  # IdP identities (kanidm persons and their groups) from the IdP host to clusters,
+  # so cluster workloads can derive authorization (e.g. Synapse admins) from the
+  # same provisioning kanidm applies. Consumers filter by environment.
+  den.policies.cluster-collect-idm-users =
+    { cluster, ... }:
+    [
+      (pipe.from "idm-users" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   den.policies.cluster-collect-container-registries =
     { cluster, ... }:
     [
@@ -222,5 +233,6 @@ in
     den.policies.cluster-collect-media-scratch-exports
     den.policies.cluster-collect-container-registries
     den.policies.cluster-collect-served-domains
+    den.policies.cluster-collect-idm-users
   ];
 }

@@ -708,6 +708,17 @@ in
     service-domains = serviceDomains;
     served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
+    # The identities this IdP provisions, with their kanidm groups, computed here
+    # where provisioning is decided. Routed to clusters (cluster-collect-idm-users)
+    # so workloads can derive authorization from the same source.
+    idm-users =
+      { environment, ... }:
+      lib.mapAttrsToList (name: user: {
+        environment = environment.name;
+        inherit name;
+        groups = getUserGroups user;
+      }) kanidmUsers;
+
     persist = {
       directories = [
         {
