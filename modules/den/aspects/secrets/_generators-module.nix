@@ -173,6 +173,16 @@ in
       { pkgs, ... }:
       "${pkgs.openssl}/bin/openssl genpkey -algorithm ed25519";
 
+    # Synapse signing key: one line `ed25519 <key-id> <unpadded base64 32-byte seed>`,
+    # the format `generate_signing_key` writes. The key id is `a_` + 4 hex chars.
+    synapse-signing-key =
+      { pkgs, ... }:
+      ''
+        printf 'ed25519 a_%s %s\n' \
+          "$(${pkgs.openssl}/bin/openssl rand -hex 2)" \
+          "$(${pkgs.openssl}/bin/openssl rand 32 | ${pkgs.coreutils}/bin/base64 -w0 | tr -d '=')"
+      '';
+
     environment-file =
       {
         decrypt,

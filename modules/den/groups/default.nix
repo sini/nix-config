@@ -65,6 +65,11 @@
       description = "Grafana server admin role";
       members = [ "admins" ];
     };
+    "matrix.access" = {
+      labels = [ "oauth-grant" ];
+      description = "Matrix (Synapse) login";
+      members = [ "users" ];
+    };
     "media.access" = {
       labels = [ "oauth-grant" ];
       description = "Jellyfin access";

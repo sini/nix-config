@@ -365,6 +365,23 @@ let
         };
       };
 
+      # Synapse NATIVE OIDC (the romm pattern; see communication/matrix/synapse.nix).
+      # preferShortUsername makes `preferred_username` the short kanidm name, which
+      # becomes the PERMANENT Matrix localpart (@<short>:json64.dev). Synapse sends
+      # PKCE (pkce_method: always), so the insecure PKCE opt-out is not set.
+      synapse = {
+        displayName = "Matrix";
+        originUrl = "https://${domain "matrix"}/_synapse/client/oidc/callback";
+        originLanding = "https://${domain "matrix"}";
+        basicSecretFile = secretPaths.synapse-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps."matrix.access" = [
+          "openid"
+          "profile"
+          "email"
+        ];
+      };
+
       open-webui = {
         displayName = "open-webui";
         imageFile = builtins.path { path = self + /assets/open-webui.svg; };
