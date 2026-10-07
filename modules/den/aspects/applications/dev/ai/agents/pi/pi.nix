@@ -134,6 +134,10 @@
         home.file.".pi/agent/extensions/plan-mode.ts".source = ./extensions/plan-mode.ts;
         home.file.".pi/agent/extensions/plan-tracker.ts".source = ./extensions/plan-tracker.ts;
         home.file.".pi/agent/extensions/security-guard.ts".source = ./extensions/security-guard.ts;
+        # xmsg-pi: registers this session with xmsg and injects its messages as plain
+        # text (expandPromptTemplates false). Ships in the xmsg source, not here.
+        home.file.".pi/agent/extensions/xmsg-pi.ts".source =
+          "${pkgs.local.xmsg.src}/extensions/pi/index.ts";
 
         # Configure default settings to use stylix theme and local endpoints
         home.file.".pi/agent/settings.json".text = builtins.toJSON {
@@ -148,6 +152,7 @@
             "~/.pi/agent/extensions/plan-mode.ts"
             "~/.pi/agent/extensions/plan-tracker.ts"
             "~/.pi/agent/extensions/security-guard.ts"
+            "~/.pi/agent/extensions/xmsg-pi.ts"
           ];
         };
 

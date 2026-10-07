@@ -4419,6 +4419,7 @@
         "ucodenix": "ucodenix",
         "ui-ux-pro-max-skill": "ui-ux-pro-max-skill",
         "umu": "umu",
+        "xmsg": "xmsg",
         "zen-browser": "zen-browser",
         "zjstatus": "zjstatus"
       }
@@ -5299,6 +5300,26 @@
       "original": {
         "owner": "hyprwm",
         "repo": "xdg-desktop-portal-hyprland",
+        "type": "github"
+      }
+    },
+    "xmsg": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791334953,
+        "narHash": "sha256-4p3pZVZm6/viCCrbmZab57Xz5MCvab8eEsstx7/5ANE=",
+        "owner": "sini",
+        "repo": "xmsg",
+        "rev": "8cfdee69e0b07dd9c60c9f8191a2f4f250b5a363",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "xmsg",
         "type": "github"
       }
     },

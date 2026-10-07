@@ -31,6 +31,11 @@
     gen-lsp-src = inputs.gen-lsp;
   };
 
+  # Thread the xmsg flake source to pkgs-by-name for pkgs/by-name/xmsg.
+  xmsg-src = _final: _prev: {
+    xmsg-src = inputs.xmsg;
+  };
+
   # When applied, the unstable nixpkgs set (declared in the flake inputs) will
   # be accessible through 'pkgs.unstable'
   unstable-packages = final: _prev: {

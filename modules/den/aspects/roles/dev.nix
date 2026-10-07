@@ -28,6 +28,7 @@
       applications.dev.ai.skills.brag
       applications.dev.ai.mcp.graphify
       applications.dev.ai.mcp.headroom
+      applications.dev.ai.mcp.xmsg
       applications.dev.ai.mcp.codegraph
       applications.dev.ai.mcp.codebase-memory
       applications.dev.ai.mcp.serena
