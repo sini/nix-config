@@ -30,18 +30,17 @@
     # Settings on the ENTITY (cascade reads hosts.<name>.settings) → ollama-cuda.
     settings.services.ai.ollama.acceleration = "cuda";
 
-    # llama-cpp is the resident engine: this host serves gpt-oss-20b under the
-    # cluster's own model alias, so it augments the in-cluster llama-cpp pool
-    # instead of being a second, separately-addressed engine. Pool membership is
-    # worth more here than single-stream speed.
+    # ninfer is the resident engine, serving pi/hermes. NInfer measured 96.2
+    # tok/s decode at the default int8 KV against llama-cpp's 45.5 on identical
+    # prompts (2.1x), for a 1.26x prefill cost, and it keeps the shared
+    # 145,408-token pool described below.
     #
-    # It does cost speed. NInfer measured 96.2 tok/s decode at the default int8
-    # KV against llama-cpp's 45.5 on identical prompts (2.1x), for a 1.26x
-    # prefill cost, and it keeps the shared 145,408-token pool described below.
-    # Swapping back is `systemctl start ninfer` on the guest — the Conflicts=
-    # evicts llama-cpp — made permanent by flipping autoStart here.
+    # llama-cpp (gpt-oss-20b under the cluster's model alias) stays installed as
+    # the standby for when cluster retain needs this GPU: `systemctl start
+    # llama-cpp` on the guest — the Conflicts= evicts ninfer — made permanent by
+    # flipping autoStart here and the llama-cpp wantedBy below.
     settings.services.ai.ninfer = {
-      autoStart = false;
+      autoStart = true;
       # Subagent fan-out: the KV pool is SHARED, not divided, so four admitted
       # requests draw from the same 145,408 tokens elastically. What N
       # multiplies is the per-sequence LinearAttentionStatePool slot (recurrent
@@ -172,15 +171,18 @@
           serviceConfig.Type = "oneshot";
         };
         systemd.services.ollama.after = [ "nvidia-gpu-config.service" ];
-        systemd.services.llama-cpp.after = [ "nvidia-gpu-config.service" ];
+        systemd.services.llama-cpp = {
+          after = [ "nvidia-gpu-config.service" ];
+          wantedBy = lib.mkForce [ ];
+        };
         systemd.services.ninfer.after = [ "nvidia-gpu-config.service" ];
 
         # One 24 GB card holds one engine, and ninfer.service already declares
         # Conflicts= against llama-cpp. Both being wantedBy multi-user.target
         # would race at boot and let systemd pick the winner, so exactly one may
-        # autostart: llama-cpp keeps the aspect default and ninfer is held back
-        # by autoStart = false above. The llama-cpp ASPECT stays untouched —
-        # which engine is resident is a property of this host, not of llama-cpp.
+        # autostart: ninfer via autoStart = true above, llama-cpp held back by
+        # the wantedBy override. The llama-cpp ASPECT stays untouched — which
+        # engine is resident is a property of this host, not of llama-cpp.
 
         networking.firewall.allowedTCPPorts = [ 22 ];
 

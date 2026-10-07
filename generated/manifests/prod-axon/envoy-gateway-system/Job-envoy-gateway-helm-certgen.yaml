@@ -30,7 +30,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: KUBERNETES_CLUSTER_DOMAIN
               value: cluster.local
-          image: docker.io/envoyproxy/gateway:v1.9.1
+          image: docker.io/envoyproxy/gateway:v1.9.2
           imagePullPolicy: IfNotPresent
           name: envoy-gateway-certgen
           securityContext:

@@ -67,9 +67,8 @@
           model = lib.mkOption {
             type = lib.types.str;
             description = ''
-              Model id the endpoint answers to. ninfer REJECTS a request whose
-              `model` field is not exactly its --model-id, so this is not
-              cosmetic.
+              Model id the endpoint answers to — llama-cpp's --alias, not a
+              cosmetic label.
             '';
           };
           cidr = lib.mkOption {
@@ -84,16 +83,19 @@
       }
     );
     default = {
-      # Both entries are the ONE RTX 3090 Ti on cortex-cuda, which holds a single
-      # engine at a time (they declare Conflicts= over the card). Reachable from
-      # the cluster only since the UniFi prod->dev rule plus the 10.9.2.0/24
-      # static route.
+      # Both entries are llama-cpp on cortex-cuda's ONE RTX 3090 Ti, which holds
+      # a single engine at a time (ninfer is resident there and declares
+      # Conflicts= over the card). ninfer itself is deliberately absent: it does
+      # not implement the structured-output request shape hindsight sends (see
+      # cortex-cuda below). Reachable from the cluster only since the UniFi
+      # prod->dev rule plus the 10.9.2.0/24 static route.
       #
       # STANDING CAVEAT on both: this is a guest on a DEV-environment workstation
       # (roles.gaming, roles.dev-gui). Prod work pointed here queues behind
       # interactive use and stops when the machine reboots.
 
-      # The resident engine, and the reason this host is worth pointing at: the
+      # The standby engine (ninfer is resident; `systemctl start llama-cpp` on
+      # the guest swaps it in), and the reason this host is worth pointing at: the
       # SAME gpt-oss-20b the in-cluster instances serve, under the SAME alias, so
       # selecting it changes which GPU answers rather than which model does.
       # reasoning_effort is pinned low server-side in services.ai.llama-cpp,
@@ -104,17 +106,6 @@
         model = "gpt-oss-20b";
         cidr = "10.9.2.2/32";
         port = 8080;
-      };
-
-      # Same card, other engine, other model. Faster per stream — 96.2 tok/s
-      # decode against llama-cpp's 45.5 on identical prompts — but no longer
-      # resident: since llama-cpp took autostart this needs an explicit
-      # `systemctl start ninfer` on the guest, which evicts llama-cpp.
-      ninfer = {
-        url = "http://10.9.2.2:8081/v1";
-        model = "qwen3.8-27b";
-        cidr = "10.9.2.2/32";
-        port = 8081;
       };
 
       # Same host, same GPU, DIFFERENT SERVER. cortex-cuda now also runs

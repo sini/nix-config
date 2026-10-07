@@ -643,7 +643,7 @@
           }
           // lib.optionalAttrs (usedExternals != [ ]) {
             allow-external-llm-egress-hindsight.spec = {
-              description = "Allow hindsight to reach off-cluster LLM endpoints (e.g. ninfer on cortex-cuda).";
+              description = "Allow hindsight to reach off-cluster LLM endpoints (e.g. llama-cpp on cortex-cuda).";
               endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
               egress = map (e: {
                 toCIDR = [ e.cidr ];

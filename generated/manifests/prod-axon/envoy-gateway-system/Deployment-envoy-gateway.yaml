@@ -35,9 +35,16 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.namespace
+            - name: ENVOY_GATEWAY_SERVICE_ACCOUNT
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: spec.serviceAccountName
+            - name: ENVOY_GATEWAY_FULLNAME
+              value: envoy-gateway-helm
             - name: KUBERNETES_CLUSTER_DOMAIN
               value: cluster.local
-          image: docker.io/envoyproxy/gateway:v1.9.1
+          image: docker.io/envoyproxy/gateway:v1.9.2
           imagePullPolicy: IfNotPresent
           livenessProbe:
             httpGet:
