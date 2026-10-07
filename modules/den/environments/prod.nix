@@ -109,6 +109,14 @@ in
           proxied = false;
         };
         "*.s3.json64.dev" = { };
+        # Shared public IP for ssh and some tailscale users (grey-cloud: not HTTP).
+        "vpn.json64.dev".proxied = false;
+        # GitHub Pages verified domain for gen.wtf (account sini).
+        "_github-pages-challenge-sini.gen.wtf" = {
+          type = "TXT";
+          content = "976e8aa7ced3167338668254c4f312";
+          proxied = false;
+        };
       };
       # The apex (landing) zones, json64.dev among them, plus gen.wtf: its apex
       # stays GitHub Pages, but matrix.gen.wtf is ours.

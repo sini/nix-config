@@ -153,6 +153,10 @@
       "id": "5562a553d7fe936b2c6ebfb342b1767b/fa37a3a46f6e0a6a250f963ecfc1e62b"
     },
     {
+      "to": "cloudflare_dns_record.vpn_json64_dev",
+      "id": "5562a553d7fe936b2c6ebfb342b1767b/34164ea49d1f2410309f52ada305731f"
+    },
+    {
       "to": "cloudflare_dns_record.whisparr_json64_dev",
       "id": "5562a553d7fe936b2c6ebfb342b1767b/fd0fe60bc0cadc1793ed8c3326440af5"
     },

@@ -356,6 +356,7 @@ in
                             type = types.enum [
                               "A"
                               "CNAME"
+                              "TXT"
                             ];
                             default = "A";
                             description = "Record type";
