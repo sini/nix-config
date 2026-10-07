@@ -58,6 +58,9 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.tuwunel = {
+    # Resolves to `host` via prod services.tuwunel.domain (public DNS record).
+    service-domains = [ "tuwunel" ];
+
     age-secrets =
       { environment, ... }:
       {

@@ -4501,6 +4501,7 @@
         "stylix": "stylix",
         "superpowers-extended-cc": "superpowers-extended-cc",
         "systems": "systems_14",
+        "terranix": "terranix",
         "treefmt-nix": "treefmt-nix_8",
         "ucodenix": "ucodenix",
         "ui-ux-pro-max-skill": "ui-ux-pro-max-skill",
@@ -4965,6 +4966,35 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default-linux",
+        "type": "github"
+      }
+    },
+    "terranix": {
+      "inputs": {
+        "flake-parts": [
+          "flake-parts"
+        ],
+        "import-tree": [
+          "import-tree"
+        ],
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ],
+        "systems": [
+          "systems"
+        ]
+      },
+      "locked": {
+        "lastModified": 1790023441,
+        "narHash": "sha256-9vmOUIearXFJbafvJjEd8yaQQV/dKN2J5t3rC92Hi+Y=",
+        "owner": "terranix",
+        "repo": "terranix",
+        "rev": "cb9dd00fe24f3f1323baaa19b5ee5fb514d37d77",
+        "type": "github"
+      },
+      "original": {
+        "owner": "terranix",
+        "repo": "terranix",
         "type": "github"
       }
     },

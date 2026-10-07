@@ -335,6 +335,15 @@
       flake = false;
     };
     systems.url = "github:nix-systems/default/future-26.11";
+    terranix = {
+      url = "github:terranix/terranix";
+      inputs = {
+        flake-parts.follows = "flake-parts";
+        import-tree.follows = "import-tree";
+        nixpkgs.follows = "nixpkgs-unstable";
+        systems.follows = "systems";
+      };
+    };
     treefmt-nix = {
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs-unstable";

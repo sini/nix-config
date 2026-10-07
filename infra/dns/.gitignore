@@ -1,0 +1,3 @@
+# Generated: the terranix symlink and the provider cache.
+config.tf.json
+.terraform/

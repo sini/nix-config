@@ -1,5 +1,73 @@
 # Prod environment entity definition.
-{ self, ... }:
+{ self, lib, ... }:
+let
+  certificateDomains = {
+    "json64.dev" = {
+      issuer = "json64-dev";
+      # Apex listener: serves json64.dev/.well-known/matrix/* (Matrix
+      # delegation for server_name json64.dev; see communication/matrix/synapse.nix).
+      apex = true;
+    };
+    "s3.json64.dev" = {
+      issuer = "json64-dev";
+      # Distinct stem: without it resourceForDomain "s3.json64.dev" = json64-dev,
+      # colliding with the json64.dev wildcard. Enables the *.s3.json64.dev
+      # listener + s3-json64-dev-wildcard-tls cert (T1 resourceName extension).
+      resourceName = "s3-json64-dev";
+    };
+    # tuwunel companion homeserver (matrix.gen.wtf); the apex stays GitHub Pages.
+    "gen.wtf" = {
+      issuer = "global";
+    };
+    "gen-framework.com" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    "qvr-framework.com" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    # quiver: candidate project domains (Cloudflare zones, `global` DNS-01).
+    "getqvr.com" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    "quiver-labs.com" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    "qvrlab.com" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    "qvr.run" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    "qvr.sh" = {
+      issuer = "global";
+      apex = true; # landing page (garage/sites.nix)
+    };
+    "json64.com" = {
+      issuer = "global";
+    };
+    "json64.net" = {
+      issuer = "global";
+    };
+    "sinistar.io" = {
+      issuer = "global";
+    };
+    "sinistar.org" = {
+      issuer = "global";
+    };
+    "zeroday.pub" = {
+      issuer = "global";
+    };
+    "zeroday.run" = {
+      issuer = "global";
+    };
+  };
+in
 {
   den.environments.prod = {
     id = 1;
@@ -7,72 +75,7 @@
     system-access-groups = [ "system-access" ];
 
     certificates = {
-      domains = {
-        "json64.dev" = {
-          issuer = "json64-dev";
-          # Apex listener: serves json64.dev/.well-known/matrix/* (Matrix
-          # delegation for server_name json64.dev; see communication/matrix/synapse.nix).
-          apex = true;
-        };
-        "s3.json64.dev" = {
-          issuer = "json64-dev";
-          # Distinct stem: without it resourceForDomain "s3.json64.dev" = json64-dev,
-          # colliding with the json64.dev wildcard. Enables the *.s3.json64.dev
-          # listener + s3-json64-dev-wildcard-tls cert (T1 resourceName extension).
-          resourceName = "s3-json64-dev";
-        };
-        # tuwunel companion homeserver (matrix.gen.wtf); the apex stays GitHub Pages.
-        "gen.wtf" = {
-          issuer = "global";
-        };
-        "gen-framework.com" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        "qvr-framework.com" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        # quiver: candidate project domains (Cloudflare zones, `global` DNS-01).
-        "getqvr.com" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        "quiver-labs.com" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        "qvrlab.com" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        "qvr.run" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        "qvr.sh" = {
-          issuer = "global";
-          apex = true; # landing page (garage/sites.nix)
-        };
-        "json64.com" = {
-          issuer = "global";
-        };
-        "json64.net" = {
-          issuer = "global";
-        };
-        "sinistar.io" = {
-          issuer = "global";
-        };
-        "sinistar.org" = {
-          issuer = "global";
-        };
-        "zeroday.pub" = {
-          issuer = "global";
-        };
-        "zeroday.run" = {
-          issuer = "global";
-        };
-      };
+      domains = certificateDomains;
       issuers = {
         "json64-dev" = {
           ageKeyFile = "${self}/.secrets/env/prod/cloudflare-api-key.age";
@@ -81,6 +84,23 @@
           ageKeyFile = "${self}/.secrets/env/prod/cloudflare-api-key.age";
         };
       };
+    };
+
+    # Public DNS: modules/flake-parts/terranix, infra/dns/README.md.
+    dns = {
+      publicIPv4 = "157.131.140.225";
+      # Matrix federation and S3 clients do not survive the Cloudflare proxy.
+      unproxied = [
+        "matrix.json64.dev"
+        "matrix.gen.wtf"
+        "s3.json64.dev"
+        "*.s3.json64.dev"
+      ];
+      # The apex (landing) zones, json64.dev among them, plus gen.wtf: its apex
+      # stays GitHub Pages, but matrix.gen.wtf is ours.
+      managedZones = builtins.attrNames (lib.filterAttrs (_: d: d.apex or false) certificateDomains) ++ [
+        "gen.wtf"
+      ];
     };
 
     services = {
@@ -114,6 +134,8 @@
       sabnzbd.domain = "nzb.json64.dev";
       vault.domain = "vault.json64.dev";
       den-docs-mirror.domain = "den.json64.dev";
+      # Companion homeserver (kubernetes/.../matrix/tuwunel.nix).
+      tuwunel.domain = "matrix.gen.wtf";
     };
 
     networks = {

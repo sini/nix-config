@@ -329,6 +329,41 @@ in
               description = "ACME certificate authority configuration";
             };
 
+            dns = mkOption {
+              type = types.submodule {
+                options = {
+                  publicIPv4 = mkOption {
+                    type = types.nullOr types.str;
+                    default = null;
+                    description = ''
+                      Public IPv4 address the environment's DNS A records point at.
+                      null = this environment publishes no DNS records (no terranix dns config).
+                    '';
+                  };
+                  unproxied = mkOption {
+                    type = types.listOf types.str;
+                    default = [ ];
+                    description = ''
+                      Hostnames whose records must be DNS-only (Cloudflare grey cloud), e.g.
+                      Matrix federation and S3, which do not survive the Cloudflare proxy.
+                    '';
+                  };
+                  managedZones = mkOption {
+                    type = types.listOf types.str;
+                    default = builtins.attrNames (lib.filterAttrs (_: d: d.apex) config.certificates.domains);
+                    defaultText = lib.literalExpression "the certificates.domains with apex = true";
+                    description = ''
+                      Cloudflare zones whose declared records OpenTofu manages. No record is
+                      generated outside these zones, and records in them that are not
+                      declared are left untouched.
+                    '';
+                  };
+                };
+              };
+              default = { };
+              description = "Public DNS records published to Cloudflare by the terranix dns config";
+            };
+
             timezone = mkOption {
               type = types.str;
               default = "UTC";

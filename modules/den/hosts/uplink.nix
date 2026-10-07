@@ -39,6 +39,7 @@
       services.bgp.hub
       services.networking.headscale
       services.security.acme
+      dns-state-passphrase
       services.networking.nginx
       services.security.kanidm
       services.networking.haproxy
