@@ -7,8 +7,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.12.1
-    helm.sh/chart: longhorn-1.12.1
+    app.kubernetes.io/version: v1.13.0
+    helm.sh/chart: longhorn-1.13.0
     longhorn-manager: ""
   name: enginefrontends.longhorn.io
 spec:
@@ -95,6 +95,13 @@ spec:
                   type: boolean
                 nodeID:
                   type: string
+                nvmeTcpNrIoQueues:
+                  description: |-
+                    nvmeTcpNrIoQueues limits the number of I/O queues the kernel initiator
+                    creates when connecting the blockdev frontend over NVMe-TCP.
+                    0 means inheriting the global setting default-nvme-tcp-nr-io-queues.
+                    Takes effect on (re)attach.
+                  type: integer
                 salvageRequested:
                   type: boolean
                 size:

@@ -18,6 +18,9 @@ spec:
         - podSelector:
             matchLabels:
               longhorn.io/component: backing-image-data-source
+    - ports:
+        - port: 3260
+          protocol: TCP
   podSelector:
     matchLabels:
       longhorn.io/component: instance-manager

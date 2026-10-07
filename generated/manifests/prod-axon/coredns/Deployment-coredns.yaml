@@ -24,7 +24,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 8de3ffce4110df7bb8fe7fb7c003afce75da90f25620df66d6316426b9033cb4
+        checksum/config: b2284e62bca5d90982682b015d1209f340600acbb8963cea6cd32b3751e55c03
         scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
       labels:
         app.kubernetes.io/instance: coredns
@@ -35,7 +35,7 @@ spec:
         - args:
             - -conf
             - /etc/coredns/Corefile
-          image: coredns/coredns:1.14.6
+          image: coredns/coredns:1.14.7
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5
@@ -83,6 +83,11 @@ spec:
               drop:
                 - ALL
             readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
             - mountPath: /etc/coredns
               name: config-volume

@@ -109,6 +109,15 @@ rules:
     verbs:
       - '*'
   - apiGroups:
+      - groupsnapshot.storage.k8s.io
+    resources:
+      - volumegroupsnapshotclasses
+      - volumegroupsnapshots
+      - volumegroupsnapshotcontents
+      - volumegroupsnapshotcontents/status
+    verbs:
+      - '*'
+  - apiGroups:
       - longhorn.io
     resources:
       - volumes
@@ -161,6 +170,12 @@ rules:
       - shards/status
       - shardgroups
       - shardgroups/status
+      - snapshotgroups
+      - snapshotgroups/status
+      - instancemanagerupgrades
+      - instancemanagerupgrades/status
+      - instancemanagerupgradecontrols
+      - instancemanagerupgradecontrols/status
     verbs:
       - '*'
   - apiGroups:

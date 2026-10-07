@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: longhorn-global-manager
+    app.kubernetes.io/instance: longhorn
+    app.kubernetes.io/name: longhorn
+  name: longhorn-global-manager
+  namespace: longhorn-system
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: longhorn-global-manager
+  template:
+    metadata:
+      labels:
+        app: longhorn-global-manager
+        app.kubernetes.io/instance: longhorn
+        app.kubernetes.io/name: longhorn
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - longhorn-global-manager
+                topologyKey: kubernetes.io/hostname
+              weight: 1
+      containers:
+        - command:
+            - longhorn-manager
+            - -d
+            - global
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: LONGHORN_DISTRO
+              value: longhorn
+          image: docker.io/longhornio/longhorn-manager:v1.13.0
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            httpGet:
+              path: /v1/healthz
+              port: 9505
+          name: longhorn-global-manager
+          ports:
+            - containerPort: 9505
+              name: healthz
+          readinessProbe:
+            httpGet:
+              path: /v1/healthz
+              port: 9505
+      priorityClassName: longhorn-critical
+      serviceAccountName: longhorn-service-account

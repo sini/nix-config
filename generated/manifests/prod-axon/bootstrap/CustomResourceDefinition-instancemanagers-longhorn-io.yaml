@@ -7,8 +7,8 @@ metadata:
     app.kubernetes.io/instance: longhorn
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: longhorn
-    app.kubernetes.io/version: v1.12.1
-    helm.sh/chart: longhorn-1.12.1
+    app.kubernetes.io/version: v1.13.0
+    helm.sh/chart: longhorn-1.13.0
     longhorn-manager: ""
   name: instancemanagers.longhorn.io
 spec:
@@ -82,6 +82,8 @@ spec:
                                        workqueues away from the SPDK reactor CPUs).
                             "false" -> do not pass the flags.
                             ""      -> inherit the global setting value.
+                            This field is ignored when interrupt mode is enabled, since the SPDK
+                            reactors no longer busy-poll and CPU isolation is always disabled.
                           enum:
                             - ""
                             - "true"
