@@ -65,7 +65,7 @@ in
                   inherit clusterRef;
                   neverExpires = true;
                   bucketPermissions = map (domain: {
-                    bucketRef = "site-${slug domain}";
+                    bucketRef.name = "site-${slug domain}";
                     read = true;
                     write = true;
                   }) domains;
