@@ -1,12 +1,129 @@
 apiVersion: v1
 data:
-  reconcile.sh: |
-    set -eu
-    psql -v ON_ERROR_STOP=1 <<'SQL'
-    UPDATE users SET admin = 1 WHERE name IN ('@json:json64.dev', '@sini:json64.dev') AND admin IS DISTINCT FROM 1;
-    UPDATE users SET admin = 0 WHERE name NOT IN ('@json:json64.dev', '@sini:json64.dev') AND admin IS DISTINCT FROM 0;
-    SELECT name FROM users WHERE admin = 1 ORDER BY name;
-    SQL
+  reconcile.py: |
+    # Reconciles Synapse server-admin status to ADMINS through the admin API, so
+    # Synapse's own caches see the change (a SQL write is invisible until restart).
+    # Run by synapse-admins.nix; test: synapse-admins-test.py beside this file.
+    import base64
+    import hashlib
+    import hmac
+    import json
+    import os
+    import secrets
+    import sys
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    BASE = os.environ["SYNAPSE_URL"].rstrip("/")
+    LOCALPART = os.environ["SERVICE_LOCALPART"]
+    SELF = f"@{LOCALPART}:{os.environ['SERVER_NAME']}"
+    WANT = set(json.loads(os.environ["ADMINS"]))
+    if not WANT:
+        sys.exit("refusing to run with an empty admin set")
+
+
+    def call(method, path, body=None, token=None, ok=()):
+        req = urllib.request.Request(BASE + path, method=method)
+        if body is not None:
+            req.data = json.dumps(body).encode()
+            req.add_header("Content-Type", "application/json")
+        if token:
+            req.add_header("Authorization", "Bearer " + token)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return r.status, json.load(r)
+        except urllib.error.HTTPError as e:
+            try:
+                err = json.load(e)
+            except ValueError:
+                err = {}
+            if e.code in ok:
+                return e.code, err
+            sys.exit(
+                f"{method} {path.split('?')[0]}: HTTP {e.code} {err.get('errcode')}: {err.get('error')}"
+            )
+
+
+    def user(u):
+        return "/_synapse/admin/v2/users/" + urllib.parse.quote(u, safe="")
+
+
+    def b64(b):
+        return base64.urlsafe_b64encode(b).rstrip(b"=")
+
+
+    def register():
+        """Create the service account as an admin; None if it already exists."""
+        _, n = call("GET", "/_synapse/admin/v1/register")
+        pw = secrets.token_urlsafe(32)  # discarded: password login is disabled
+        msg = b"\0".join(x.encode() for x in (n["nonce"], LOCALPART, pw, "admin"))
+        mac = hmac.new(
+            os.environ["REGISTRATION_SHARED_SECRET"].encode(), msg, hashlib.sha1
+        ).hexdigest()
+        body = {
+            "nonce": n["nonce"],
+            "username": LOCALPART,
+            "password": pw,
+            "admin": True,
+            "mac": mac,
+        }
+        st, r = call("POST", "/_synapse/admin/v1/register", body, ok=(400,))
+        if st == 400:
+            if r.get("errcode") != "M_USER_IN_USE":
+                sys.exit(f"register: {r.get('errcode')}: {r.get('error')}")
+            return None
+        print(f"created {SELF}")
+        return r["access_token"]
+
+
+    def login():
+        now = int(time.time())
+        claims = {
+            "sub": LOCALPART,
+            "iss": os.environ["JWT_ISSUER"],
+            "iat": now,
+            "exp": now + 60,
+        }
+        signing = (
+            b64(b'{"alg":"HS256","typ":"JWT"}') + b"." + b64(json.dumps(claims).encode())
+        )
+        sig = b64(
+            hmac.new(os.environ["JWT_SECRET"].encode(), signing, hashlib.sha256).digest()
+        )
+        body = {"type": "org.matrix.login.jwt", "token": (signing + b"." + sig).decode()}
+        return call("POST", "/_matrix/client/v3/login", body)[1]["access_token"]
+
+
+    def admins(tok):
+        out, frm = set(), "0"
+        while frm is not None:
+            q = urllib.parse.urlencode(
+                {"admins": "true", "deactivated": "true", "limit": 100, "from": frm}
+            )
+            _, r = call("GET", "/_synapse/admin/v2/users?" + q, token=tok)
+            out |= {u["name"] for u in r["users"]}
+            frm = r.get("next_token")
+        return out
+
+
+    tok = register() or login()
+    try:
+        have = admins(tok)
+        for u in sorted(WANT - have):
+            # PUT creates a missing user, so check it exists first.
+            if call("GET", user(u), token=tok, ok=(404,))[0] == 404:
+                print(f"skip {u}: no account yet")
+                continue
+            call("PUT", user(u), {"admin": True}, token=tok)
+            print(f"promote {u}")
+        for u in sorted(have - WANT - {SELF}):
+            call("PUT", user(u), {"admin": False}, token=tok)
+            print(f"demote {u}")
+    finally:
+        call("POST", "/_matrix/client/v3/logout", {}, token=tok)
+    print("ok")
 kind: ConfigMap
 metadata:
   name: synapse-admins-script

@@ -1,0 +1,28 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-synapse-admins-egress
+  namespace: matrix
+spec:
+  description: Allow the synapse-admins job DNS and Synapse, nothing else.
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: synapse
+      toPorts:
+        - ports:
+            - port: "8008"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: synapse-admins

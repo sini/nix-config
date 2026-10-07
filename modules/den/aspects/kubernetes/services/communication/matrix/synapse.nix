@@ -7,8 +7,10 @@
 # Login is kanidm NATIVE OIDC (the romm pattern): Synapse runs the flow itself and
 # the gateway only routes, because Matrix clients and federating servers must
 # reach /_matrix unauthenticated. Password login and registration are disabled;
-# accounts are created on first OIDC login for members of `matrix.access`. The one
-# non-OIDC account is the @genie bot, created once with registration_shared_secret.
+# accounts are created on first OIDC login for members of `matrix.access`. The
+# non-OIDC accounts are the @genie bot, created once with
+# registration_shared_secret, and the @synapse-admins service account
+# (synapse-admins.nix), which logs in with a JWT signed by the jwt_config secret.
 #
 # Config is split in two files merged by Synapse (--config-path twice): the
 # non-secret homeserver.yaml (ConfigMap, built here) and secrets.yaml (composed by
@@ -28,6 +30,11 @@ let
     macaroon_secret_key: "%matrix-synapse-macaroon-secret-key%"
     form_secret: "%matrix-synapse-form-secret%"
     registration_shared_secret: "%matrix-synapse-registration-shared-secret%"
+    jwt_config:
+      enabled: true
+      secret: "%matrix-synapse-jwt-secret%"
+      algorithm: HS256
+      issuer: synapse-admins
     database:
       name: psycopg2
       args:
@@ -85,6 +92,21 @@ in
           matrix-synapse-registration-shared-secret = {
             rekeyFile = environment.secretPath + "/matrix-synapse/registration-shared-secret.age";
             generator.script = "rfc3986-secret";
+            # Also read by synapse-admins.nix to create its service account.
+            sopsOutput = {
+              file = "matrix-synapse";
+              key = "registration-shared-secret";
+            };
+          };
+          # Signs the JWT logins of the synapse-admins job. Admin-equivalent, like
+          # the registration secret: a holder can log in as any local user.
+          matrix-synapse-jwt-secret = {
+            rekeyFile = environment.secretPath + "/matrix-synapse/jwt-secret.age";
+            generator.script = "rfc3986-secret";
+            sopsOutput = {
+              file = "matrix-synapse";
+              key = "jwt-secret";
+            };
           };
           # The federation identity. Losing it forces key rotation; back it up.
           matrix-synapse-signing-key = {
@@ -102,6 +124,7 @@ in
               config.age.secrets.matrix-synapse-macaroon-secret-key
               config.age.secrets.matrix-synapse-form-secret
               config.age.secrets.matrix-synapse-registration-shared-secret
+              config.age.secrets.matrix-synapse-jwt-secret
               config.age.secrets.matrix-pg-synapse-password
             ];
             settings.template = secretsTemplate;

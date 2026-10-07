@@ -162,14 +162,12 @@
               # synapse (5432), peer replication (5432/8000), the cnpg-system
               # operator (8000), prometheus (9187 metrics).
               allow-matrix-pg-internal.spec = {
-                description = "matrix-pg ingress: synapse + synapse-admins (5432), peer replication (5432/8000), CNPG operator (8000), prometheus (9187).";
+                description = "matrix-pg ingress: synapse (5432), peer replication (5432/8000), CNPG operator (8000), prometheus (9187).";
                 endpointSelector.matchLabels."cnpg.io/cluster" = "matrix-pg";
                 ingress = [
                   {
                     fromEndpoints = [
                       { matchLabels."app.kubernetes.io/name" = "synapse"; }
-                      # synapse-admins.nix: reconciles users.admin from kanidm `admins`.
-                      { matchLabels."app.kubernetes.io/name" = "synapse-admins"; }
                     ];
                     toPorts = [
                       {

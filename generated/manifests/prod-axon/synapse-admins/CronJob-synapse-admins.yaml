@@ -16,26 +16,30 @@ spec:
         spec:
           containers:
             - command:
-                - sh
-                - /script/reconcile.sh
+                - python
+                - /script/reconcile.py
               env:
-                - name: PGHOST
-                  value: matrix-pg-rw.matrix.svc.cluster.local
-                - name: PGDATABASE
-                  value: synapse
-                - name: PGSSLMODE
-                  value: require
-                - name: PGUSER
+                - name: SYNAPSE_URL
+                  value: http://synapse.matrix.svc.cluster.local:8008
+                - name: SERVER_NAME
+                  value: json64.dev
+                - name: SERVICE_LOCALPART
+                  value: synapse-admins
+                - name: JWT_ISSUER
+                  value: synapse-admins
+                - name: ADMINS
+                  value: '["@json:json64.dev","@sini:json64.dev"]'
+                - name: REGISTRATION_SHARED_SECRET
                   valueFrom:
                     secretKeyRef:
-                      key: username
-                      name: matrix-pg-synapse-password
-                - name: PGPASSWORD
+                      key: registration-shared-secret
+                      name: synapse-admins
+                - name: JWT_SECRET
                   valueFrom:
                     secretKeyRef:
-                      key: password
-                      name: matrix-pg-synapse-password
-              image: library/postgres@sha256:77f585114c32fbca283dc835b0596f4e52b51b4c6662d7810b2f4084f60a1873
+                      key: jwt-secret
+                      name: synapse-admins
+              image: matrixdotorg/synapse@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
               name: synapse-admins
               volumeMounts:
                 - mountPath: /script
@@ -43,9 +47,9 @@ spec:
                   readOnly: true
           restartPolicy: OnFailure
           securityContext:
-            runAsGroup: 70
+            runAsGroup: 991
             runAsNonRoot: true
-            runAsUser: 70
+            runAsUser: 991
           volumes:
             - configMap:
                 name: synapse-admins-script

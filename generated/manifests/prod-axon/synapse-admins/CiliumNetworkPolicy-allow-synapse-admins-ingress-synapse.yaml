@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-synapse-admins-ingress-synapse
+  namespace: matrix
+spec:
+  description: Allow the synapse-admins job to reach the Synapse admin API.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: synapse
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: synapse-admins
+      toPorts:
+        - ports:
+            - port: "8008"
+              protocol: TCP
