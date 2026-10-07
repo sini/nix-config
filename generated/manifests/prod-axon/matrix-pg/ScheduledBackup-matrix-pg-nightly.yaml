@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: matrix-pg-nightly
+  namespace: matrix
+spec:
+  cluster:
+    name: matrix-pg
+  method: volumeSnapshot
+  schedule: 0 0 5 * * *

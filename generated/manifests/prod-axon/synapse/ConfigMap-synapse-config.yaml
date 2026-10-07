@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  homeserver.yaml: '{"enable_registration":false,"listeners":[{"bind_addresses":["0.0.0.0"],"port":8008,"resources":[{"compress":false,"names":["client","federation"]}],"tls":false,"type":"http","x_forwarded":true}],"max_upload_size":"50M","media_store_path":"/data/media_store","oidc_providers":[{"client_id":"synapse","client_secret_path":"/secrets/oidc-client-secret","idp_id":"kanidm","idp_name":"json64 (kanidm)","issuer":"https://idm.json64.dev/oauth2/openid/synapse","pkce_method":"always","scopes":["openid","profile","email"],"user_mapping_provider":{"config":{"display_name_template":"{{ user.name }}","email_template":"{{ user.email }}","localpart_template":"{{ user.preferred_username }}"}}}],"password_config":{"enabled":false},"pid_file":"/data/homeserver.pid","public_baseurl":"https://matrix.json64.dev/","report_stats":false,"server_name":"json64.dev","signing_key_path":"/secrets/signing.key","suppress_key_server_warning":true,"trusted_key_servers":[{"server_name":"matrix.org"}]}'
+kind: ConfigMap
+metadata:
+  name: synapse-config
+  namespace: matrix

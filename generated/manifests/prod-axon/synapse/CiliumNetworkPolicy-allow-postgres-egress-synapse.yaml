@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-postgres-egress-synapse
+  namespace: matrix
+spec:
+  description: Allow synapse to reach the matrix-pg CNPG cluster.
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: matrix-pg
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: synapse

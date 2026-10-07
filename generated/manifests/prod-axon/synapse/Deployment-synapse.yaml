@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: synapse
+    app.kubernetes.io/name: synapse
+  name: synapse
+  namespace: matrix
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: synapse
+      app.kubernetes.io/name: synapse
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: synapse
+        app.kubernetes.io/name: synapse
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - --config-path
+            - /config/homeserver.yaml
+            - --config-path
+            - /secrets/secrets.yaml
+          command:
+            - python
+            - -m
+            - synapse.app.homeserver
+          image: matrixdotorg/synapse@sha256:6b84a7bbac36f080b2d2e51e0289cf1b08b349598ea44a558df38d558f2c2311
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8008
+          name: main
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8008
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /data
+              name: data
+            - mountPath: /secrets/oidc-client-secret
+              name: oidc
+              readOnly: true
+              subPath: client-secret
+            - mountPath: /secrets/secrets.yaml
+              name: secrets
+              readOnly: true
+              subPath: secrets.yaml
+            - mountPath: /secrets/signing.key
+              name: secrets
+              readOnly: true
+              subPath: signing.key
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        fsGroup: 991
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 991
+        runAsUser: 991
+      serviceAccountName: synapse
+      volumes:
+        - configMap:
+            name: synapse-config
+          name: config
+        - name: data
+          persistentVolumeClaim:
+            claimName: synapse-data
+        - name: oidc
+          secret:
+            secretName: synapse-oidc-client-secret
+        - name: secrets
+          secret:
+            secretName: matrix-synapse
