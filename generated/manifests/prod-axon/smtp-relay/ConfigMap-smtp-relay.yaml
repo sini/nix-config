@@ -1,0 +1,12 @@
+apiVersion: v1
+data:
+  header_checks: |-
+    /^From:[[:space:]]*(.*[^[:space:]])[[:space:]]*<[^>]*>[[:space:]]*$/ REPLACE From: $1 <infra@json64.dev>
+    /^From:[[:space:]]*[^<]*$/ REPLACE From: infra@json64.dev
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: smtp-relay
+    app.kubernetes.io/name: smtp-relay
+  name: smtp-relay
+  namespace: mail

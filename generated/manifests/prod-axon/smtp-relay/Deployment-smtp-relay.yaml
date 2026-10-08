@@ -19,6 +19,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: 024bff70d496a15c63204dbf13e0365081e15ca68c1dd5eeb40639ef8ecdf6d2
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: smtp-relay
@@ -32,7 +34,7 @@ spec:
             - name: LOG_FORMAT
               value: json
             - name: POSTFIX_header_checks
-              value: 'regexp:{ {/^From:[[:space:]]*(.*[^[:space:]])[[:space:]]*<[^>]*>[[:space:]]*$$/ REPLACE From: $$1 <infra@json64.dev>}, {/^From:[[:space:]]*[^<]*$$/ REPLACE From: infra@json64.dev} }'
+              value: regexp:/etc/postfix-tables/header_checks
             - name: POSTFIX_message_size_limit
               value: "26214400"
             - name: POSTFIX_myhostname
@@ -63,10 +65,21 @@ spec:
             - name: TZ
               value: America/Los_Angeles
           image: boky/postfix@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef
+          livenessProbe:
+            initialDelaySeconds: 15
+            tcpSocket:
+              port: 587
           name: main
+          readinessProbe:
+            initialDelaySeconds: 15
+            tcpSocket:
+              port: 587
           volumeMounts:
             - mountPath: /var/spool/postfix
               name: spool
+            - mountPath: /etc/postfix-tables
+              name: tables
+              readOnly: true
             - mountPath: /tls
               name: tls
               readOnly: true
@@ -80,6 +93,9 @@ spec:
         - name: spool
           persistentVolumeClaim:
             claimName: smtp-relay
+        - configMap:
+            name: smtp-relay
+          name: tables
         - name: tls
           secret:
             secretName: smtp-relay-tls

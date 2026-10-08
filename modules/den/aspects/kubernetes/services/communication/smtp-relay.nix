@@ -110,8 +110,12 @@ in
       }:
       let
         s = cluster.settings.kubernetes.services.communication.smtp-relay;
-        # Inline regexp table; $$ escapes main.cf macro expansion.
-        fromRewrite = "regexp:{ {/^From:[[:space:]]*(.*[^[:space:]])[[:space:]]*<[^>]*>[[:space:]]*$$/ REPLACE From: $$1 <${s.upstream.username}>}, {/^From:[[:space:]]*[^<]*$$/ REPLACE From: ${s.upstream.username}} }";
+        # A mounted file rather than an inline table: main.cf would need $ as
+        # $$, which Kubernetes env expansion collapses back to $.
+        headerChecks = ''
+          /^From:[[:space:]]*(.*[^[:space:]])[[:space:]]*<[^>]*>[[:space:]]*$/ REPLACE From: $1 <${s.upstream.username}>
+          /^From:[[:space:]]*[^<]*$/ REPLACE From: ${s.upstream.username}
+        '';
       in
       {
         applications.smtp-relay = {
@@ -132,6 +136,16 @@ in
                   image = {
                     inherit (images."boky/postfix") repository digest;
                   };
+                  # supervisord outlives a postfix that failed to start; the
+                  # listener is the real liveness signal.
+                  probes = lib.genAttrs [ "liveness" "readiness" ] (_: {
+                    enabled = true;
+                    custom = true;
+                    spec = {
+                      tcpSocket.port = 587;
+                      initialDelaySeconds = 15;
+                    };
+                  });
                   env = {
                     TZ = "America/Los_Angeles";
                     LOG_FORMAT = "json";
@@ -154,7 +168,7 @@ in
 
                     POSTFIX_sender_canonical_maps = "static:${s.upstream.username}";
                     POSTFIX_sender_canonical_classes = "envelope_sender";
-                    POSTFIX_header_checks = fromRewrite;
+                    POSTFIX_header_checks = "regexp:/etc/postfix-tables/header_checks";
                   };
                 };
               };
@@ -167,7 +181,19 @@ in
                 ports.submission.port = 587;
               };
 
+              configMaps.tables.data.header_checks = headerChecks;
+
               persistence = {
+                tables = {
+                  type = "configMap";
+                  identifier = "tables";
+                  globalMounts = [
+                    {
+                      path = "/etc/postfix-tables";
+                      readOnly = true;
+                    }
+                  ];
+                };
                 tls = {
                   type = "secret";
                   name = "smtp-relay-tls";
