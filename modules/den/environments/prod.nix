@@ -210,13 +210,17 @@ in
         description = "Default network for infrastructure hosts";
         gatewayIp = "10.10.0.1";
         gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
+        # Validating DNS-over-TLS resolvers from two operators, in resolved's
+        # "address#tls-name" form (the name authenticates the TLS certificate).
+        # No DNS64 resolvers: they synthesise AAAA records that route IPv4-only
+        # destinations through a third party's NAT64 gateway.
         dnsServers = [
-          "1.1.1.1"
-          "2606:4700:4700::1111"
-          "1.0.0.1"
-          "2606:4700:4700::1001"
-          "2a01:4f8:c2c:123f::1"
-          "2a00:1098:2b::1"
+          "1.1.1.1#cloudflare-dns.com"
+          "2606:4700:4700::1111#cloudflare-dns.com"
+          "1.0.0.1#cloudflare-dns.com"
+          "2606:4700:4700::1001#cloudflare-dns.com"
+          "9.9.9.9#dns.quad9.net"
+          "2620:fe::fe#dns.quad9.net"
         ];
         wireless = {
           ssid = "The Arcade";

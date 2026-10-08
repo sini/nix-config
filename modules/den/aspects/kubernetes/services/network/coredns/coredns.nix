@@ -111,7 +111,12 @@
                     }
                     {
                       name = "forward";
-                      parameters = ". ${lib.concatStringsSep " " (lib.lists.take 3 defaultNetwork.dnsServers)}";
+                      # Plain DNS to the addresses; resolved's "#tls-name" suffix is dropped.
+                      parameters = ". ${
+                        lib.concatStringsSep " " (
+                          map (s: lib.head (lib.splitString "#" s)) (lib.lists.take 3 defaultNetwork.dnsServers)
+                        )
+                      }";
                       config = {
                         max_concurrent = 1000;
                         policy = "sequential";

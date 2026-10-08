@@ -79,7 +79,10 @@
               LinkLocalAddressing = effectiveLinkLocal ifCfg;
               DNS = (environment.networks.default or { }).dnsServers or [ ];
               DNSOverTLS = true;
-              DNSSEC = "allow-downgrade";
+              # No per-link DNSSEC: it would override services.resolved.dnssec.
+              # The upstreams validate; resolved's own validation fails CNAME
+              # chains into unsigned zones ("failed-auxiliary", e.g. the
+              # registry.k8s.io -> us-west2-docker.pkg.dev image redirect).
             };
             # Drop SLAAC address autoconf when an interface opts out (DHCPv6/
             # static-only addressing → one deterministic GUA); RA is still used
