@@ -7,6 +7,16 @@
 # storage for postgres data volumes. CNPG owns redundancy at the database layer
 # (streaming replication across instances), so longhorn replicating each PV
 # would be wasteful double-redundancy — one longhorn replica per CNPG instance.
+#
+# And the backup retention CNPG lacks for volumeSnapshot backups: a nightly
+# prune-backups CronJob keeps the newest `keep` completed backups per
+# ScheduledBackup cluster-wide (prune-backups.py).
+let
+  # Matches media-config-backup's retain, so databases and app config restore
+  # to the same window.
+  keep = 7;
+  pruner = "cnpg-prune-backups";
+in
 {
   den.aspects.kubernetes.services.storage.cloudnative-pg = {
     # CRD scope has no `charts` arg — build from inputs/system like longhorn.
@@ -22,7 +32,7 @@
       };
 
     k8s-manifests =
-      { charts, ... }:
+      { charts, images, ... }:
       {
         applications.cloudnative-pg = {
           namespace = "cnpg-system";
@@ -52,6 +62,96 @@
           };
 
           resources = {
+            serviceAccounts.${pruner} = { };
+
+            clusterRoles.${pruner}.rules = [
+              {
+                apiGroups = [ "postgresql.cnpg.io" ];
+                resources = [ "backups" ];
+                verbs = [
+                  "list"
+                  "delete"
+                ];
+              }
+              {
+                apiGroups = [ "snapshot.storage.k8s.io" ];
+                resources = [ "volumesnapshots" ];
+                verbs = [
+                  "list"
+                  "delete"
+                ];
+              }
+            ];
+
+            clusterRoleBindings.${pruner} = {
+              roleRef = {
+                apiGroup = "rbac.authorization.k8s.io";
+                kind = "ClusterRole";
+                name = pruner;
+              };
+              subjects = [
+                {
+                  kind = "ServiceAccount";
+                  name = pruner;
+                  namespace = "cnpg-system";
+                }
+              ];
+            };
+
+            configMaps."${pruner}-script".data."prune-backups.py" = builtins.readFile ./prune-backups.py;
+
+            # After the 04:00 ScheduledBackups have finished.
+            cronJobs.${pruner}.spec = {
+              schedule = "0 6 * * *";
+              concurrencyPolicy = "Forbid";
+              successfulJobsHistoryLimit = 1;
+              failedJobsHistoryLimit = 3;
+              jobTemplate.spec = {
+                backoffLimit = 2;
+                template = {
+                  metadata.labels."app.kubernetes.io/name" = pruner;
+                  spec = {
+                    serviceAccountName = pruner;
+                    restartPolicy = "OnFailure";
+                    securityContext = {
+                      runAsNonRoot = true;
+                      runAsUser = 65534;
+                      runAsGroup = 65534;
+                    };
+                    containers = [
+                      {
+                        name = pruner;
+                        image = "${images."library/python".repository}@${images."library/python".digest}";
+                        command = [
+                          "python3"
+                          "/script/prune-backups.py"
+                        ];
+                        env = [
+                          {
+                            name = "KEEP";
+                            value = toString keep;
+                          }
+                        ];
+                        volumeMounts = [
+                          {
+                            name = "script";
+                            mountPath = "/script";
+                            readOnly = true;
+                          }
+                        ];
+                      }
+                    ];
+                    volumes = [
+                      {
+                        name = "script";
+                        configMap.name = "${pruner}-script";
+                      }
+                    ];
+                  };
+                };
+              };
+            };
+
             # Single-replica longhorn class for postgres data volumes.
             storageClasses.longhorn-single = {
               provisioner = "driver.longhorn.io";

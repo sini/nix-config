@@ -1,0 +1,41 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cnpg-prune-backups
+  namespace: cnpg-system
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        metadata:
+          labels:
+            app.kubernetes.io/name: cnpg-prune-backups
+        spec:
+          containers:
+            - command:
+                - python3
+                - /script/prune-backups.py
+              env:
+                - name: KEEP
+                  value: "7"
+              image: library/python@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72
+              name: cnpg-prune-backups
+              volumeMounts:
+                - mountPath: /script
+                  name: script
+                  readOnly: true
+          restartPolicy: OnFailure
+          securityContext:
+            runAsGroup: 65534
+            runAsNonRoot: true
+            runAsUser: 65534
+          serviceAccountName: cnpg-prune-backups
+          volumes:
+            - configMap:
+                name: cnpg-prune-backups-script
+              name: script
+  schedule: 0 6 * * *
+  successfulJobsHistoryLimit: 1
