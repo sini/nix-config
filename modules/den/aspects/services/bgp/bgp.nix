@@ -369,11 +369,6 @@
         default = true;
         description = "Whether to automatically peer with the environment gateway (Unifi router)";
       };
-      gatewayAsNumber = lib.mkOption {
-        type = lib.types.int;
-        default = 65999;
-        description = "AS number of the gateway router";
-      };
       defaultOriginateToSpokes = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -400,14 +395,13 @@
           (host.settings.services.bgp or { }).hub or {
             maximumPaths = 8;
             peerWithGateway = true;
-            gatewayAsNumber = 65999;
             defaultOriginateToSpokes = true;
           };
         # Gateway neighbor (Unifi router)
-        gatewayIp = environment.networks.default.gatewayIp;
+        inherit (environment.networks.default) gatewayIp;
         gatewayNeighbor = optional hubSettings.peerWithGateway {
           ip = gatewayIp;
-          asn = hubSettings.gatewayAsNumber;
+          asn = environment.networks.default.gatewayAsn;
         };
 
         # Auto-discover spoke peers, not self (same-environment scoping

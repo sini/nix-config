@@ -161,46 +161,10 @@ in
     };
 
     # The UniFi gateway: modules/flake-parts/terranix/unifi.nix, infra/unifi/README.md.
-    # Raw FRR as live on the controller (adopted 2026-10-07); structured peers replace it.
+    # Its BGP config is rendered from the environment's bgp-peers.
     unifi.bgp = {
       description = "edge-prod";
       uploadFileName = "unifi-frr-bgp-prod.conf";
-      config = ''
-        ! -*- bgp -*-
-        !
-        ! FRR BGP Configuration for Unifi Router
-        ! Environment: prod
-        ! Management Network: 10.10.0.0/16
-        ! Generated: 26.05
-        !
-        frr defaults traditional
-        !
-        hostname edge-prod
-        password zebra
-        !
-        router bgp 65999
-         bgp router-id 10.10.0.1
-         no bgp ebgp-requires-policy
-         bgp bestpath as-path multipath-relax
-         maximum-paths 8
-         !
-         ! Peer group for BGP hub hosts
-         neighbor bgp-hubs peer-group
-         neighbor bgp-hubs remote-as 65000
-         neighbor bgp-hubs soft-reconfiguration inbound
-         !
-         ! Hub host neighbors
-         neighbor 10.10.10.1 peer-group bgp-hubs
-        neighbor 10.10.10.1 description uplink
-
-         !
-         address-family ipv4 unicast
-          neighbor bgp-hubs activate
-         exit-address-family
-        !
-        line vty
-        !
-      '';
     };
 
     networks = {
@@ -209,6 +173,7 @@ in
         ipv6_cidr = "fe80::/64";
         description = "Default network for infrastructure hosts";
         gatewayIp = "10.10.0.1";
+        gatewayAsn = 65999;
         gatewayIpV6 = "fe80::962a:6fff:fef2:cf4d";
         # Validating DNS-over-TLS resolvers from two operators, in resolved's
         # "address#tls-name" form (the name authenticates the TLS certificate).

@@ -17,14 +17,17 @@ and prod does. If dev set it too, both states would own the same objects.
 ## What is managed
 
 `unifi_bgp.prod` is the gateway's BGP configuration, a single object per site.
-`unifi.bgp.config` in `modules/den/environments/prod.nix` holds the raw FRR
-`bgpd` file, byte for byte as the controller stores it, together with the
-controller's `description` and `uploadFileName`. It replaced the hand-uploaded
-`generated/bgp/unifi-frr-bgp-{prod,dev}.conf` (deleted; their generator was
-removed in `65c53a07`).
-
-Next, the peers will be rendered from the BGP hosts' own records instead of the
-raw file (`ingress-native-design.md` §13.3). Port forwards come after that.
+Its raw FRR `bgpd` file is rendered by `modules/flake-parts/terranix/unifi.nix`
+from the environment's `bgp-peers` records (one per BGP host, routed by
+`env-collect-bgp-peers`): AS `networks.default.gatewayAsn`, router-id
+`networks.default.gatewayIp`, one peer group per remote AS, and each
+neighbor's AS from its own record. The hub (`services.bgp.hub`) and the axon
+hosts (`services.bgp.cilium-bgp`, `peerWithGateway`) peer back with the same
+two values. The provider's structured `peers` mode is not used: its template
+forces `bgp ebgp-requires-policy`, `redistribute connected`, `next-hop-self`,
+multihop and timers, and cannot set `maximum-paths`.
+`unifi.bgp` in `modules/den/environments/prod.nix` keeps the controller's
+`description` and `uploadFileName`. Port forwards come next.
 
 ## State
 

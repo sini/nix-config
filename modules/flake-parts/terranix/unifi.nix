@@ -6,6 +6,7 @@
 # site for prod and dev alike, so exactly one environment may set `unifi`.
 #
 #   nix build .#unifi.config   — config.tf.json
+#   nix build .#checks.<system>.unifi-bgp-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -15,11 +16,84 @@
 }:
 let
   inherit (lib) mkOption types;
+  inherit (den.lib.policy) pipe;
 
   # ponytail: one environment owns the gateway; key configs by env if a second controller appears.
   unifiEnv = "prod";
   workdir = "infra/unifi";
   unifiTerranixModules = config.flake.unifiTerranixModules.${unifiEnv};
+
+  # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
+  # neighbor per bgp-peers record. Raw, not the provider's structured peers:
+  # its template forces ebgp-requires-policy, redistribute connected,
+  # next-hop-self, multihop and timers, and cannot set maximum-paths.
+  renderBgpConfig =
+    {
+      name,
+      cidr,
+      asn,
+      routerId,
+      peers,
+    }:
+    assert lib.assertMsg (asn != null) "unifi: environment ${name} sets no networks.default.gatewayAsn";
+    let
+      neighbors = lib.sort (a: b: a.asn < b.asn || (a.asn == b.asn && a.ip < b.ip)) (
+        map (
+          p:
+          if p.asn == asn then
+            throw "unifi: bgp peer ${p.hostname} shares the gateway's AS ${toString asn}; the gateway runs eBGP only"
+          else
+            p
+        ) (builtins.filter (p: p.ip != routerId) peers)
+      );
+      asns = lib.unique (map (p: p.asn) neighbors);
+      group = a: "as${toString a}";
+      groupLines =
+        a:
+        [
+          " !"
+          " neighbor ${group a} peer-group"
+          " neighbor ${group a} remote-as ${toString a}"
+          " neighbor ${group a} soft-reconfiguration inbound"
+        ]
+        ++ lib.concatMap (p: [
+          " neighbor ${p.ip} peer-group ${group a}"
+          " neighbor ${p.ip} description ${p.hostname}"
+        ]) (builtins.filter (p: p.asn == a) neighbors);
+    in
+    lib.concatStringsSep "\n" (
+      [
+        "! -*- bgp -*-"
+        "!"
+        "! FRR BGP Configuration for Unifi Router"
+        "! Environment: ${name}"
+        "! Management Network: ${cidr}"
+        "!"
+        "frr defaults traditional"
+        "!"
+        "hostname edge-${name}"
+        "password zebra"
+        "!"
+        "router bgp ${toString asn}"
+        " bgp router-id ${routerId}"
+        " no bgp ebgp-requires-policy"
+        " bgp bestpath as-path multipath-relax"
+        " maximum-paths 8"
+      ]
+      ++ lib.concatMap groupLines asns
+      ++ [
+        " !"
+        " address-family ipv4 unicast"
+      ]
+      ++ map (a: "  neighbor ${group a} activate") asns
+      ++ [
+        " exit-address-family"
+        "!"
+        "line vty"
+        "!"
+        ""
+      ]
+    );
 in
 {
   den.schema.environment.imports = [
@@ -44,10 +118,6 @@ in
                   type = types.bool;
                   default = true;
                   description = "Run the gateway's BGP daemon";
-                };
-                config = mkOption {
-                  type = types.str;
-                  description = "Raw FRR bgpd configuration, byte for byte as the controller stores it";
                 };
                 description = mkOption {
                   type = types.str;
@@ -81,15 +151,30 @@ in
       })
     ];
 
+  # Every BGP host of this environment is a gateway peer. Only hosts emit bgp-peers.
+  den.policies.env-collect-bgp-peers =
+    { environment, ... }:
+    [
+      (pipe.from "bgp-peers" [
+        (pipe.collectAll ({ host, ... }: host.environment == environment.name))
+      ])
+    ];
+
   den.schema.environment.includes = [
+    den.policies.env-collect-bgp-peers
     den.aspects.unifi-gateway
     den.policies.env-to-unifi-terranix
   ];
 
   den.aspects.unifi-gateway.unifi-terranix =
-    { environment, ... }:
+    {
+      environment,
+      bgp-peers ? [ ],
+      ...
+    }:
     let
       inherit (environment) unifi;
+      net = environment.networks.default;
     in
     {
       terraform = {
@@ -126,7 +211,14 @@ in
       };
 
       resource.unifi_bgp.${environment.name} = {
-        inherit (unifi.bgp) enabled config description;
+        inherit (unifi.bgp) enabled description;
+        config = renderBgpConfig {
+          inherit (environment) name;
+          inherit (net) cidr;
+          asn = net.gatewayAsn;
+          routerId = net.gatewayIp;
+          peers = bgp-peers;
+        };
         upload_file_name = unifi.bgp.uploadFileName;
       };
 
@@ -187,6 +279,71 @@ in
         modules = unifiTerranixModules;
         terraformWrapper.package = pkgs.opentofu.withPlugins (p: [ p.ubiquiti-community_unifi ]);
       };
+
+      # Fixture: the gateway's own record is dropped, peers group by remote ASN,
+      # and a peer in the gateway's AS is refused.
+      checks.unifi-bgp-render =
+        let
+          args = {
+            name = "t";
+            cidr = "10.0.0.0/16";
+            asn = 65999;
+            routerId = "10.0.0.1";
+            peers = [
+              {
+                hostname = "s2";
+                ip = "10.0.1.3";
+                asn = 65001;
+              }
+              {
+                hostname = "hub";
+                ip = "10.0.1.1";
+                asn = 65000;
+              }
+              {
+                hostname = "self";
+                ip = "10.0.0.1";
+                asn = 65000;
+              }
+              {
+                hostname = "s1";
+                ip = "10.0.1.2";
+                asn = 65001;
+              }
+            ];
+          };
+          rendered = renderBgpConfig args;
+          lines = lib.splitString "\n" rendered;
+          has = l: builtins.elem l lines;
+          ibgp = builtins.tryEval (
+            builtins.deepSeq (renderBgpConfig (
+              args
+              // {
+                peers = [
+                  {
+                    hostname = "x";
+                    ip = "10.0.1.9";
+                    asn = 65999;
+                  }
+                ];
+              }
+            )) null
+          );
+          ok =
+            has "router bgp 65999"
+            && has " bgp router-id 10.0.0.1"
+            && has " neighbor as65000 remote-as 65000"
+            && has " neighbor as65001 remote-as 65001"
+            && has " neighbor 10.0.1.1 peer-group as65000"
+            && has " neighbor 10.0.1.2 peer-group as65001"
+            && has " neighbor 10.0.1.3 peer-group as65001"
+            && has "  neighbor as65001 activate"
+            && !(lib.hasInfix "10.0.0.1 peer-group" rendered)
+            && lib.length (lib.filter (lib.hasSuffix "peer-group") lines) == 2
+            && !ibgp.success;
+        in
+        assert lib.assertMsg ok "unifi-bgp-render:\n${rendered}";
+        pkgs.writeText "unifi-bgp-render" rendered;
 
       packages = {
         unifi-plan = mkUnifiCommand "unifi-plan" "OpenTofu plan for the UniFi gateway" [ ] ''

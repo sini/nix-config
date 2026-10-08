@@ -18,10 +18,20 @@ in
         default = 65002;
         description = "Cilium BGP AS number for this node";
       };
+      peerWithGateway = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = "Whether to also peer directly with the environment gateway (Unifi router), advertising the same loadbalancer routes as to the hub";
+      };
     };
 
     nixos =
-      { host, bgp-peers, ... }:
+      {
+        environment,
+        host,
+        bgp-peers,
+        ...
+      }:
       let
         inherit (lib)
           attrNames
@@ -43,6 +53,11 @@ in
         hubPeer = findFirst (p: p.asn != localAsn) null (lib.filter (p: p.hostname != host.name) bgp-peers);
 
         uplinkIp = if hubPeer != null then hubPeer.ip else null;
+
+        # The gateway gets the hub's northbound policy: loadbalancer routes out, default only in.
+        gateway = environment.networks.default;
+        gatewayIp =
+          if host.settings.services.bgp.cilium-bgp.peerWithGateway then gateway.gatewayIp else null;
 
         # Resolve cluster networks for this host's environment
         hostCluster =
@@ -91,20 +106,34 @@ in
             listenRange = "${head host.ipv4}/32";
           };
 
-          neighbors = optional (uplinkIp != null) {
-            ip = uplinkIp;
-            inherit (hubPeer) asn;
-            routeMapIn = "FROM-UPLINK-IN";
-            routeMapOut = "TO-UPLINK-OUT";
-          };
+          neighbors =
+            optional (uplinkIp != null) {
+              ip = uplinkIp;
+              inherit (hubPeer) asn;
+              routeMapIn = "FROM-UPLINK-IN";
+              routeMapOut = "TO-UPLINK-OUT";
+            }
+            ++ optional (gatewayIp != null) {
+              ip = gatewayIp;
+              asn = gateway.gatewayAsn;
+              routeMapIn = "FROM-UPLINK-IN";
+              routeMapOut = "TO-UPLINK-OUT";
+            };
 
           addressFamilies.ipv4-unicast = {
-            neighbors = optionalAttrs (uplinkIp != null) {
-              ${uplinkIp} = {
-                activate = true;
-                nextHopSelf = false;
+            neighbors =
+              optionalAttrs (uplinkIp != null) {
+                ${uplinkIp} = {
+                  activate = true;
+                  nextHopSelf = false;
+                };
+              }
+              // optionalAttrs (gatewayIp != null) {
+                ${gatewayIp} = {
+                  activate = true;
+                  nextHopSelf = false;
+                };
               };
-            };
             peerGroups.cilium = {
               activate = true;
             };

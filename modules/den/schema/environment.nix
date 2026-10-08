@@ -79,6 +79,12 @@ let
         description = "Gateway IPv6 address for this network";
       };
 
+      gatewayAsn = mkOption {
+        type = types.nullOr types.ints.positive;
+        default = null;
+        description = "BGP AS number of the gateway router; its BGP peers and its own config read this one value";
+      };
+
       dnsServers = mkOption {
         type = types.listOf types.str;
         default = [ ];
