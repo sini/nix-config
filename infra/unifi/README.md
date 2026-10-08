@@ -19,8 +19,9 @@ and prod does. If dev set it too, both states would own the same objects.
 `unifi_bgp.prod` is the gateway's BGP configuration, a single object per site.
 `unifi.bgp.config` in `modules/den/environments/prod.nix` holds the raw FRR
 `bgpd` file, byte for byte as the controller stores it, together with the
-controller's `description` and `uploadFileName`. It replaces the hand-uploaded
-`generated/bgp/unifi-frr-bgp-prod.conf`, whose generator no longer exists.
+controller's `description` and `uploadFileName`. It replaced the hand-uploaded
+`generated/bgp/unifi-frr-bgp-{prod,dev}.conf` (deleted; their generator was
+removed in `65c53a07`).
 
 Next, the peers will be rendered from the BGP hosts' own records instead of the
 raw file (`ingress-native-design.md` §13.3). Port forwards come after that.
