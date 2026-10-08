@@ -15,7 +15,7 @@
     ];
     identity = {
       displayName = "dvicory";
-      email = "dvicory@json64.dev";
+      email = "dvicory@gmail.com";
       sshKeys = [
         {
           tag = "mbp-2021-32gb";

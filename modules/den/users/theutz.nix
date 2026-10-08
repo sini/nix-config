@@ -17,7 +17,7 @@
     ];
     identity = {
       displayName = "Michael Utz";
-      email = "theutz@json64.dev";
+      email = "michael@theutz.com";
       sshKeys = [
         {
           tag = "a";

@@ -16,7 +16,7 @@
     ];
     identity = {
       displayName = "Victor Borja";
-      email = "vic@json64.dev";
+      email = "vborja@apache.org";
       sshKeys = [
         {
           tag = "a";

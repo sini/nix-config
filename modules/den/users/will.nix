@@ -12,7 +12,7 @@
     ];
     identity = {
       displayName = "Will Bryant";
-      email = "will@json64.dev";
+      email = "will.t.bryant@gmail.com";
       sshKeys = [
         {
           tag = "best-laptop-ever";

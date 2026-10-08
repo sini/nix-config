@@ -11,7 +11,8 @@
       "workstation-access"
     ];
     identity = {
-      email = "shuo@json64.dev";
+      displayName = "Shuo Diao";
+      email = "shuo.diao.nku@gmail.com";
     };
   };
 }
