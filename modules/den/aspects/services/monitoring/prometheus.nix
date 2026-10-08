@@ -29,6 +29,7 @@ in
       {
         prometheus-targets,
         config,
+        pkgs,
         environment,
         host,
         lib,
@@ -160,30 +161,34 @@ in
           services.prometheus = {
             alertmanagers = [ { static_configs = [ { targets = [ "127.0.0.1:9093" ]; } ]; } ];
 
-            rules = [
-              (builtins.toJSON {
-                groups = [
-                  {
-                    name = "fleet";
-                    rules = [
-                      {
-                        alert = "HostDown";
-                        expr = ''up{job="node"} == 0'';
-                        "for" = "5m";
-                        labels.severity = "critical";
-                        annotations.summary = "{{ $labels.hostname }} node exporter unreachable for 5m";
-                      }
-                      {
-                        alert = "EtcdMemberDown";
-                        expr = ''up{job="etcd"} == 0'';
-                        "for" = "5m";
-                        labels.severity = "critical";
-                        annotations.summary = "etcd on {{ $labels.hostname }} unreachable for 5m";
-                      }
-                    ];
-                  }
-                ];
-              })
+            # A file of its own: `rules` entries are concatenated into one
+            # file, and the YAML rules above would make that two documents.
+            ruleFiles = [
+              (pkgs.writeText "fleet.rules.json" (
+                builtins.toJSON {
+                  groups = [
+                    {
+                      name = "fleet";
+                      rules = [
+                        {
+                          alert = "HostDown";
+                          expr = ''up{job="node"} == 0'';
+                          "for" = "5m";
+                          labels.severity = "critical";
+                          annotations.summary = "{{ $labels.hostname }} node exporter unreachable for 5m";
+                        }
+                        {
+                          alert = "EtcdMemberDown";
+                          expr = ''up{job="etcd"} == 0'';
+                          "for" = "5m";
+                          labels.severity = "critical";
+                          annotations.summary = "etcd on {{ $labels.hostname }} unreachable for 5m";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ))
             ];
 
           };
