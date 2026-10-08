@@ -1,6 +1,10 @@
 {
   "import": [
     {
+      "to": "cloudflare_dns_record._github-pages-challenge-sini_gen_wtf",
+      "id": "0d0ae64629b6a90fec14fb9570b79a24/828f003cbb9d66d34b6c7168b09eb263"
+    },
+    {
       "to": "cloudflare_dns_record.attic_json64_dev",
       "id": "5562a553d7fe936b2c6ebfb342b1767b/668f33b43866a3510064f531f5fd99a6"
     },
