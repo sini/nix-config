@@ -12,6 +12,21 @@
       };
     };
 
+    # Publishing sshd is the exposure choice, so a public host also gets the
+    # gateway forward to it.
+    port-forwards =
+      { environment, host, ... }:
+      lib.optional (host.settings.core.security.openssh.exposure == "public") {
+        environment = environment.name;
+        name = "ssh-to-${host.name}";
+        protocol = "tcp";
+        wanPort = "22";
+        forward = {
+          ip = environment.addressOn "default" host;
+          port = "22";
+        };
+      };
+
     nixos =
       {
         host,

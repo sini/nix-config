@@ -55,7 +55,12 @@
     };
 
     # The UniFi gateway: modules/flake-parts/terranix/unifi.nix, infra/unifi/README.md.
-    # Its BGP config is rendered from the environment's bgp-peers.
+    # Its BGP config is rendered from the environment's bgp-peers, its port
+    # forwards from the environment's port-forwards.
+    unifi.wans = [
+      "wan"
+      "wan2"
+    ];
     unifi.bgp = {
       description = "edge-prod";
       uploadFileName = "unifi-frr-bgp-prod.conf";

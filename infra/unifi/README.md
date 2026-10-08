@@ -29,12 +29,29 @@ and timers, and cannot set `maximum-paths`. `unifi.bgp` in
 `modules/den/environments/prod.nix` keeps the controller's `description` and
 `uploadFileName`.
 
-`unifi_port_forward.<name>` is one per port forward on the gateway. They are
-adopted raw: `unifi-adopt` reads every forward and writes it, in the provider's
-model, to `infra/unifi/port-forwards.json` (`{ <name> = { id; config; }; }`, the
-name derived from the forward's controller name). The workspace renders one
-resource per entry. A change to a forward is an edit of that file, reviewed in
-`unifi-plan`.
+`unifi_port_forward.<name>` is one per port forward on the gateway. Each is
+declared by the aspect that owns the public port, as a `port-forwards` record
+(`{ environment; name; protocol; wanPort; forward = { ip; port; }; allWans ? false; }`),
+routed to the environment by `env-collect-port-forwards` (host and cluster
+records of that environment) and rendered by `renderPortForwards`:
+
+| resource | declared by |
+|---|---|
+| `axon_https_ingress` | `kubernetes.services.network.gateway.envoy-gateway`, per cluster: `<cluster>-https-ingress`, 443 TCP and UDP to the cluster's `default-gateway` assignment |
+| `headscale_to_uplink` | `services.networking.headscale`, per host: `headscale-to-<host>`, UDP 3478 (STUN) and 41641 to the host's default-network address |
+| `ssh_to_uplink` | `core.security.openssh`, per host with `exposure = "public"`: `ssh-to-<host>`, TCP 22 |
+
+The resource name is the forward's name, lowercased, with each run of other
+characters as `_`, the same key `unifi-adopt` derives from a live forward's
+controller name. A forward's wan side is the first of `unifi.wans` (prod:
+`wan`, `wan2`), and an `allWans` forward listens on each of them (the
+controller's `destination_ips`). Two forwards with the same resource name, or
+overlapping WAN ports on overlapping protocols, fail the evaluation
+(`checks.<system>.unifi-port-forward-render`). A change to a forward is an
+edit of its aspect, reviewed in `unifi-plan`.
+
+`moved.tf.json` records the rename of the `json64_dev` forward to
+`axon_https_ingress`. It is applied and kept as a no-op.
 
 ## State
 
@@ -53,11 +70,12 @@ You need the YubiKey. Each command decrypts the API key
 `X-Api-Key`) and the passphrase into its own environment, and prints neither.
 
 1. `unifi-adopt` reads the site's BGP configuration and its port forwards
-   (`rest/portforward`), with `GET`s only. It writes
-   `infra/unifi/port-forwards.json` and `infra/unifi/imports.tf.json`, which
-   imports `unifi_bgp.prod` by its site name and each port forward by its `_id`,
-   and stages both (the flake reads only tracked files). It prints the live
-   forward list.
+   (`rest/portforward`), with `GET`s only. It only imports: it writes
+   `infra/unifi/imports.tf.json`, which imports `unifi_bgp.prod` by its site
+   name and each live port forward by its `_id`, and stages it (the flake reads
+   only tracked files). It writes no configuration, so a live forward that no
+   aspect declares fails the plan until it is declared or deleted. It prints the
+   live forward list.
 2. `unifi-plan` builds the config and runs `tofu init` and `tofu plan`. The
    adoption plan must be `N to import, 0 to add, 0 to change, 0 to destroy`, N
    being the port forwards (`unifi_bgp.prod` is already in the state). A change

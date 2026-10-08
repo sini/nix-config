@@ -1,6 +1,12 @@
-{ den, ... }:
+{ den, lib, ... }:
 let
   serviceDomains = [ "headscale" ];
+  # DERP's STUN listener and tailscaled's WireGuard port.
+  udpPorts = [
+    3478
+    41641
+  ];
+  portList = lib.concatMapStringsSep "," toString udpPorts;
 in
 {
   den.aspects.services.networking.headscale = {
@@ -127,11 +133,22 @@ in
       };
 
     firewall = {
-      networking.firewall.allowedUDPPorts = [
-        3478
-        41641
-      ];
+      networking.firewall.allowedUDPPorts = udpPorts;
     };
+
+    port-forwards =
+      { environment, host, ... }:
+      {
+        environment = environment.name;
+        name = "headscale-to-${host.name}";
+        protocol = "udp";
+        wanPort = portList;
+        forward = {
+          ip = environment.addressOn "default" host;
+          port = portList;
+        };
+        allWans = true;
+      };
 
     service-domains = serviceDomains;
     served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;

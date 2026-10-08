@@ -7,6 +7,7 @@
 #
 #   nix build .#unifi.config   — config.tf.json
 #   nix build .#checks.<system>.unifi-bgp-render
+#   nix build .#checks.<system>.unifi-port-forward-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -21,14 +22,67 @@ let
   # ponytail: one environment owns the gateway; key configs by env if a second controller appears.
   unifiEnv = "prod";
   workdir = "infra/unifi";
-  # The gateway's port forwards as unifi-adopt read them, in the provider's
-  # model: { <resource name> = { id; config; }; }. Raw adoption first; a later
-  # change derives targets (the gateway VIP) instead of restating them.
-  portForwardsFile = ../../../infra/unifi/port-forwards.json;
-  portForwards = lib.optionalAttrs (builtins.pathExists portForwardsFile) (
-    lib.importJSON portForwardsFile
-  );
   unifiTerranixModules = config.flake.unifiTerranixModules.${unifiEnv};
+
+  # The gateway's port forwards, keyed by the resource name unifi-adopt derives
+  # from a forward's controller name (portForwardImports). Only `env`'s
+  # records are rendered. A forward listens on the first WAN, or with `allWans`
+  # on every one in `wans` (the controller's destination_ips).
+  # ponytail: overlap compares single ports and comma lists, not "a-b" ranges.
+  renderPortForwards =
+    {
+      env,
+      wans,
+      forwards,
+    }:
+    let
+      own = builtins.filter (r: r.environment == env) forwards;
+      key =
+        n:
+        let
+          k = lib.removePrefix "_" (
+            lib.removeSuffix "_" (
+              lib.concatMapStrings (x: if builtins.isList x then "_" else x) (
+                builtins.split "[^a-z0-9]+" (lib.toLower n)
+              )
+            )
+          );
+        in
+        if builtins.match "[0-9].*" k != null then "pf_" + k else k;
+      ports = r: lib.splitString "," r.wanPort;
+      overlaps =
+        a: b:
+        (a.protocol == b.protocol || a.protocol == "tcp_udp" || b.protocol == "tcp_udp")
+        && lib.intersectLists (ports a) (ports b) != [ ];
+      check =
+        i: r:
+        let
+          earlier = lib.take i own;
+          clash = lib.findFirst (o: key o.name == key r.name) null earlier;
+          portClash = lib.findFirst (o: overlaps o r) null earlier;
+        in
+        if clash != null then
+          throw "unifi: port forwards ${clash.name} and ${r.name} share the resource name ${key r.name}"
+        else if portClash != null then
+          throw "unifi: port forwards ${portClash.name} and ${r.name} both take ${r.protocol} wan:${r.wanPort}"
+        else
+          lib.nameValuePair (key r.name) (
+            {
+              inherit (r) name protocol forward;
+              wan = {
+                interface = builtins.head wans;
+                port = r.wanPort;
+              };
+            }
+            // lib.optionalAttrs (r.allWans or false) {
+              destination_ips = map (interface: {
+                destination_ip = "any";
+                inherit interface;
+              }) wans;
+            }
+          );
+    in
+    lib.listToAttrs (lib.imap0 check own);
 
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
@@ -135,6 +189,11 @@ in
                   description = "The file name the controller records for the uploaded configuration";
                 };
               };
+              wans = mkOption {
+                type = types.nonEmptyListOf types.str;
+                default = [ "wan" ];
+                description = "The gateway's WAN interfaces: a port forward's wan side is the first, and an allWans forward listens on each";
+              };
             };
           }
         );
@@ -167,8 +226,22 @@ in
       ])
     ];
 
+  # Hosts (headscale, public ssh) and clusters (the gateway's https ingress) emit
+  # port-forwards; a collectAll predicate matches one entity kind, so each takes its own.
+  den.policies.env-collect-port-forwards =
+    { environment, ... }:
+    [
+      (pipe.from "port-forwards" [
+        (pipe.collectAll ({ host, ... }: host.environment == environment.name))
+      ])
+      (pipe.from "port-forwards" [
+        (pipe.collectAll ({ cluster, ... }: cluster.environment == environment.name))
+      ])
+    ];
+
   den.schema.environment.includes = [
     den.policies.env-collect-bgp-peers
+    den.policies.env-collect-port-forwards
     den.aspects.unifi-gateway
     den.policies.env-to-unifi-terranix
   ];
@@ -177,6 +250,7 @@ in
     {
       environment,
       bgp-peers ? [ ],
+      port-forwards ? [ ],
       ...
     }:
     let
@@ -229,7 +303,11 @@ in
         upload_file_name = unifi.bgp.uploadFileName;
       };
 
-      resource.unifi_port_forward = lib.mapAttrs (_: pf: pf.config) portForwards;
+      resource.unifi_port_forward = renderPortForwards {
+        env = environment.name;
+        inherit (unifi) wans;
+        forwards = port-forwards;
+      };
 
       # Read by unifi-adopt.
       _meta = {
@@ -257,40 +335,14 @@ in
       inherit (tf.result) scripts terraformConfiguration;
       meta = pkgs.writeText "unifi-meta.json" (builtins.toJSON terraformConfiguration._meta);
 
-      # A controller portforward object (rest/portforward) to the provider's
-      # model, the inverse of its portForwardToModel: an attribute the controller
-      # leaves empty is unset, so the adoption plan shows no change.
-      portForwardModel = pkgs.writeText "unifi-port-forward.jq" ''
+      # Each live forward (rest/portforward) as an import block, its resource name
+      # derived from its controller name as renderPortForwards keys it.
+      portForwardImports = pkgs.writeText "unifi-port-forward-imports.jq" ''
         def nz: if . == null or . == "" then null else . end;
-        def compact: with_entries(select(.value != null));
         def key: ((.name | nz) // ._id) | ascii_downcase | gsub("[^a-z0-9]+"; "_") | gsub("^_|_$"; "")
           | if test("^[0-9]") then "pf_" + . else . end;
-        map({
-          key: key,
-          value: {
-            id: ._id,
-            config: ({
-              name: (.name | nz),
-              protocol: .proto,
-              enabled: (if .enabled then null else false end),
-              logging: (if .log then true else null end),
-              wan: (if (.pfwd_interface | nz) or (.destination_ip | nz) or (.dst_port | nz)
-                then { interface: (.pfwd_interface | nz), ip_address: (.destination_ip | nz), port: (.dst_port | nz) } | compact
-                else null end),
-              forward: (if (.fwd | nz) or (.fwd_port | nz)
-                then { ip: (.fwd | nz), port: (.fwd_port | nz) } | compact
-                else null end),
-              source_limiting: (if .src_limiting_enabled or (.src_firewall_group_id | nz) or ((.src | nz) and .src != "any")
-                then { ip: (.src | nz), firewall_group_id: (.src_firewall_group_id | nz), enabled: .src_limiting_enabled, type: (.src_limiting_type | nz) } | compact
-                else null end),
-              destination_ips: (if (.destination_ips // []) | length > 0
-                then [ .destination_ips[] | { destination_ip: (.destination_ip | nz), interface: (.interface | nz) } | compact ]
-                else null end)
-            } | compact)
-          }
-        })
-        | if (map(.key) | unique | length) != length then error("unifi-adopt: two port forwards share a resource name") else . end
-        | from_entries
+        map({ to: "unifi_port_forward.\(key)", id: ._id })
+        | if (map(.to) | unique | length) != length then error("unifi-adopt: two port forwards share a resource name") else . end
       '';
 
       # Decrypts the API key and the state passphrase into this process's env only.
@@ -390,6 +442,98 @@ in
         assert lib.assertMsg ok "unifi-bgp-render:\n${rendered}";
         pkgs.writeText "unifi-bgp-render" rendered;
 
+      # Fixture: host and cluster records render under their adopt-derived keys,
+      # another environment's record is dropped, and a shared resource name or
+      # an overlapping WAN port is refused.
+      checks.unifi-port-forward-render =
+        let
+          host = {
+            environment = "t";
+            name = "ssh-to-h1";
+            protocol = "tcp";
+            wanPort = "22";
+            forward = {
+              ip = "10.0.0.5";
+              port = "22";
+            };
+          };
+          cluster = {
+            environment = "t";
+            name = "c1-https-ingress";
+            protocol = "tcp_udp";
+            wanPort = "443";
+            forward = {
+              ip = "10.1.0.1";
+              port = "443";
+            };
+            allWans = true;
+          };
+          other = cluster // {
+            environment = "u";
+            name = "c2-https-ingress";
+          };
+          render =
+            forwards:
+            renderPortForwards {
+              env = "t";
+              wans = [
+                "wan"
+                "wan2"
+              ];
+              inherit forwards;
+            };
+          rendered = render [
+            host
+            cluster
+            other
+          ];
+          refused = forwards: !(builtins.tryEval (builtins.deepSeq (render forwards) null)).success;
+          ok =
+            builtins.attrNames rendered == [
+              "c1_https_ingress"
+              "ssh_to_h1"
+            ]
+            &&
+              rendered.ssh_to_h1 == {
+                name = "ssh-to-h1";
+                protocol = "tcp";
+                wan = {
+                  interface = "wan";
+                  port = "22";
+                };
+                forward = {
+                  ip = "10.0.0.5";
+                  port = "22";
+                };
+              }
+            &&
+              map (d: d.interface) rendered.c1_https_ingress.destination_ips == [
+                "wan"
+                "wan2"
+              ]
+            && rendered.c1_https_ingress.forward.ip == "10.1.0.1"
+            && refused [
+              host
+              (host // { wanPort = "2222"; })
+            ]
+            && refused [
+              cluster
+              (host // { wanPort = "8443,443"; })
+            ]
+            && !refused [
+              host
+              (
+                host
+                // {
+                  name = "dns";
+                  protocol = "udp";
+                }
+              )
+            ];
+        in
+        assert lib.assertMsg ok "unifi-port-forward-render:\n${builtins.toJSON rendered}";
+        pkgs.writeText "unifi-port-forward-render" (builtins.toJSON rendered);
+
       packages = {
         unifi-plan = mkUnifiCommand "unifi-plan" "OpenTofu plan for the UniFi gateway" [ ] ''
           ${lib.getExe scripts.plan}
@@ -417,19 +561,18 @@ in
               fi
               pfs=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
                 "$api/proxy/network/api/s/$site/rest/portforward" | jq .data)
-              jq -f ${portForwardModel} <<<"$pfs" > ${workdir}/port-forwards.json
               # unifi_bgp is a per-site singleton; its import id is the site name.
-              # A port forward imports by its controller _id.
-              jq --arg site "$site" --slurpfile pf ${workdir}/port-forwards.json \
-                '{ import: ([ { to: .bgp, id: $site } ]
-                  + ($pf[0] | to_entries | map({ to: "unifi_port_forward.\(.key)", id: .value.id }))) }' \
+              # A port forward imports by its controller _id. Its config is the
+              # declared one (port-forwards); a live forward with none fails the plan.
+              jq --arg site "$site" --argjson pf "$(jq -f ${portForwardImports} <<<"$pfs")" \
+                '{ import: ([ { to: .bgp, id: $site } ] + $pf) }' \
                 ${meta} > ${workdir}/imports.tf.json
-              # The flake reads port-forwards.json only once git tracks it.
-              git add ${workdir}/port-forwards.json ${workdir}/imports.tf.json
+              # The flake reads imports.tf.json only once git tracks it.
+              git add ${workdir}/imports.tf.json
               echo "unifi-adopt: site $site BGP config $(jq -r '.[0]._id' <<<"$bgp") ($(jq -r '.[0].description' <<<"$bgp"))"
               echo "unifi-adopt: $(jq length <<<"$pfs") port forwards:"
               jq -r '.[] | "  \(.name // "-")\t\(.proto)\twan \(.pfwd_interface // "-"):\(.dst_port // "-")\t-> \(.fwd // "-"):\(.fwd_port // "-")\tenabled=\(.enabled)"' <<<"$pfs"
-              echo "unifi-adopt: wrote ${workdir}/port-forwards.json and ${workdir}/imports.tf.json"
+              echo "unifi-adopt: wrote ${workdir}/imports.tf.json"
             '';
       };
 

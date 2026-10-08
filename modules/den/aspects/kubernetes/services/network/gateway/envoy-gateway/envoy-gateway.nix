@@ -3,6 +3,21 @@
 # per-domain HTTP/HTTPS listeners, CiliumNetworkPolicies.
 {
   den.aspects.kubernetes.services.network.gateway.envoy-gateway = {
+    # Public 443, TCP and UDP, enters at default-gateway.
+    port-forwards =
+      { cluster, ... }:
+      {
+        inherit (cluster) environment;
+        name = "${cluster.name}-https-ingress";
+        protocol = "tcp_udp";
+        wanPort = "443";
+        forward = {
+          ip = cluster.getAssignment "default-gateway";
+          port = "443";
+        };
+        allWans = true;
+      };
+
     crds =
       { inputs, system, ... }:
       {
