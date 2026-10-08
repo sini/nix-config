@@ -21,12 +21,6 @@
 - `environments.<name>.certificates`: Certificate management configuration for
   the environment
 
-- `environments.<name>.certificates.domains`: Domains to generate certificates
-  for (typically wildcard certs)
-
-- `environments.<name>.certificates.domains.<name>.issuer`: [string] The issuer
-  name to use for this domain
-
 - `environments.<name>.certificates.issuers`: Certificate issuer configurations
   (e.g., ACME DNS API credentials)
 
