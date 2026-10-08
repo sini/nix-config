@@ -5,26 +5,20 @@
   den.aspects.kubernetes.services.network.gateway.envoy-gateway = {
     # Public 443, TCP and UDP, enters at default-gateway as custom NAT, which
     # masquerades hairpin clients only, so the gateway sees internet clients'
-    # own addresses. The port forward stays alongside until the NAT rules are
-    # live, so 443 is never dark.
+    # own addresses.
     port-forwards =
       { cluster, ... }:
-      let
-        ingress = {
-          inherit (cluster) environment;
-          name = "${cluster.name}-https-ingress";
-          protocol = "tcp_udp";
-          wanPort = "443";
-          forward = {
-            ip = cluster.getAssignment "default-gateway";
-            port = "443";
-          };
+      {
+        inherit (cluster) environment;
+        name = "${cluster.name}-https-ingress";
+        mode = "nat";
+        protocol = "tcp_udp";
+        wanPort = "443";
+        forward = {
+          ip = cluster.getAssignment "default-gateway";
+          port = "443";
         };
-      in
-      [
-        (ingress // { allWans = true; })
-        (ingress // { mode = "nat"; })
-      ];
+      };
 
     crds =
       { inputs, system, ... }:

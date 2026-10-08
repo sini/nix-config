@@ -5,10 +5,6 @@
       "id": "default"
     },
     {
-      "to": "unifi_port_forward.axon_https_ingress",
-      "id": "68d49accbee8bc310512ad44"
-    },
-    {
       "to": "unifi_port_forward.ssh_to_uplink",
       "id": "69938074ba1d50eba7f49dfb"
     },

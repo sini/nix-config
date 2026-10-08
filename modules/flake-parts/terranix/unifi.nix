@@ -42,9 +42,8 @@ let
     if builtins.match "[0-9].*" k != null then "pf_" + k else k;
 
   # `env`'s port-forwards records of one mode ("forward" when unset), keyed by
-  # resource name. Two with the same key, or overlapping WAN ports on
-  # overlapping protocols, are refused. Each mode is checked on its own: the
-  # 443 cutover keeps a forward and a nat record side by side for one apply.
+  # resource name. Two of any mode with the same key, or overlapping WAN ports
+  # on overlapping protocols, are refused.
   # ponytail: overlap compares single ports and comma lists, not "a-b" ranges.
   recordsOf =
     mode: env: forwards:
@@ -63,7 +62,7 @@ let
           m
         else
           throw "unifi: port forward ${r.name} has mode ${m}, not forward or nat";
-      own = builtins.filter (r: r.environment == env && modeOf r == mode) forwards;
+      own = builtins.filter (r: r.environment == env) forwards;
       ports = r: lib.splitString "," r.wanPort;
       overlaps =
         a: b:
@@ -83,7 +82,7 @@ let
         else
           lib.nameValuePair (key r.name) r;
     in
-    lib.imap0 check own;
+    builtins.filter ({ value, ... }: modeOf value == mode) (lib.imap0 check own);
 
   # The gateway's port forwards: the records with mode "forward". A forward
   # listens on the first WAN, or with `allWans` on every one in `wans` (the
@@ -721,7 +720,14 @@ in
             host
             cluster
             other
-            (cluster // { mode = "nat"; })
+            (
+              host
+              // {
+                name = "ssh-nat";
+                mode = "nat";
+                wanPort = "2222";
+              }
+            )
           ];
           refused = forwards: !(builtins.tryEval (builtins.deepSeq (render forwards) null)).success;
           ok =
@@ -773,7 +779,8 @@ in
       # Fixture: a nat record renders as the WAN DNAT, a hairpin DNAT per LAN and
       # a masquerade per LAN out of the first, with these exact payloads; a
       # forward record and another environment's nat record render no rule; a
-      # port list, an unknown mode and a missing networks are refused.
+      # port list, an unknown mode, a forward on the same port and a missing
+      # networks are refused.
       checks.unifi-nat-render =
         let
           nat = {
@@ -800,7 +807,13 @@ in
             };
             forwards = [
               nat
-              (removeAttrs nat [ "mode" ] // { name = "ssh"; })
+              (
+                removeAttrs nat [ "mode" ]
+                // {
+                  name = "ssh";
+                  wanPort = "22";
+                }
+              )
               (
                 nat
                 // {
@@ -897,6 +910,12 @@ in
             && renderNat (args // { forwards = [ (removeAttrs nat [ "mode" ]) ]; }) == { }
             && refused { forwards = [ (nat // { wanPort = "443,8443"; }) ]; }
             && refused { forwards = [ (nat // { mode = "dnat"; }) ]; }
+            && refused {
+              forwards = [
+                nat
+                (removeAttrs nat [ "mode" ] // { name = "c1-forward"; })
+              ];
+            }
             && refused { networks = null; };
         in
         assert lib.assertMsg ok "unifi-nat-render:\n${builtins.toJSON rendered}";

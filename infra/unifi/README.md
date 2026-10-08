@@ -35,11 +35,10 @@ declared by the aspect that owns the public port, as a `port-forwards` record
 routed to the environment by `env-collect-port-forwards` (host and cluster
 records of that environment) and rendered by `renderPortForwards`:
 
-| resource              | declared by                                                                                                                                                |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `axon_https_ingress`  | `kubernetes.services.network.gateway.envoy-gateway`, per cluster: `<cluster>-https-ingress`, 443 TCP and UDP to the cluster's `default-gateway` assignment |
-| `headscale_to_uplink` | `services.networking.headscale`, per host: `headscale-to-<host>`, UDP 3478 (STUN) and 41641 to the host's default-network address                          |
-| `ssh_to_uplink`       | `core.security.openssh`, per host with `exposure = "public"`: `ssh-to-<host>`, TCP 22                                                                      |
+| resource              | declared by                                                                                                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `headscale_to_uplink` | `services.networking.headscale`, per host: `headscale-to-<host>`, UDP 3478 (STUN) and 41641 to the host's default-network address |
+| `ssh_to_uplink`       | `core.security.openssh`, per host with `exposure = "public"`: `ssh-to-<host>`, TCP 22                                             |
 
 The resource name is the forward's name, lowercased, with each run of other
 characters as `_`, the same key `unifi-adopt` derives from a live forward's
@@ -50,12 +49,14 @@ ports on overlapping protocols, fail the evaluation
 (`checks.<system>.unifi-port-forward-render`). A change to a forward is an edit
 of its aspect, reviewed in `unifi-plan`.
 
-A record with `mode = "nat"` is rendered by `renderNat` as the gateway's custom
-NAT rules (v2 `nat`, `restapi_object.<name>_*`, through the `Mastercard/restapi`
-provider, packaged in `unifi.nix`) instead of a port forward. A port forward to
-a target off the gateway's own networks (the cluster VIPs) masquerades every
-client, so the target sees the gateway's address. The nat rules masquerade
-hairpin clients only:
+A record with `mode = "nat"` (envoy-gateway's `<cluster>-https-ingress`, 443 TCP
+and UDP to the cluster's `default-gateway` assignment) is rendered by
+`renderNat` as the gateway's custom NAT rules (v2 `nat`,
+`restapi_object.<name>_*`, through the `Mastercard/restapi` provider, packaged
+in `unifi.nix`) instead of a port forward. A port forward to a target off the
+gateway's own networks (the cluster VIPs) masquerades every client, so the
+target sees the gateway's address. The nat rules masquerade hairpin clients
+only:
 
 | rule                | match                                                         | action                    |
 | ------------------- | ------------------------------------------------------------- | ------------------------- |
@@ -66,12 +67,8 @@ hairpin clients only:
 The controller requires a DNAT's inbound and a masquerade's outbound interface,
 as networkconf ids, so the rules look them up by the controller's network names
 (`unifi.networks`, `data.restapi_object.unifi_network_*`). A wrong name fails
-the plan before anything is written. `axon-https-ingress` is nat, and its port
-forward stays beside it until the rules are live;
+the plan before anything is written. `axon-https-ingress` is nat;
 `checks.<system>.unifi-nat-render` fixes the payloads.
-
-`moved.tf.json` records the rename of the `json64_dev` forward to
-`axon_https_ingress`. It is applied and kept as a no-op.
 
 ## State
 
