@@ -24,11 +24,15 @@
           else
             host.environment;
 
-        # Find the metrics-ingester host via prometheus-targets pipe:
-        # the host running prometheus in the target environment is the ingester.
-        # (Delegation may target another environment, so filter explicitly.)
+        # The metrics ingester is the host announcing job "prometheus" in the
+        # target environment. (Delegation may target another environment, so
+        # filter explicitly.)
         targetIps = lib.unique (
-          map (t: t.ip) (lib.filter (t: t.environment.name == targetEnvironment) prometheus-targets)
+          map (t: t.ip) (
+            lib.filter (
+              t: t.environment.name == targetEnvironment && lib.any (e: e.job == "prometheus") t.exporters
+            ) prometheus-targets
+          )
         );
         reportingHost = if targetIps != [ ] then lib.head targetIps else null;
 

@@ -44,6 +44,22 @@ in
       };
     };
 
+    # The embedded etcd's metrics, scraped by the ingester. (k3s itself has no
+    # unauthenticated metrics port: 10249 is kube-proxy's, which cilium replaces.)
+    prometheus-targets =
+      { environment, host, ... }:
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit environment;
+        exporters = [
+          {
+            job = "etcd";
+            port = 2381;
+          }
+        ];
+      };
+
     # Emit node info for peer discovery
     k3s-nodes =
       { environment, host, ... }:

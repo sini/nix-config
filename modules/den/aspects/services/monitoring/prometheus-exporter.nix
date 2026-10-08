@@ -3,6 +3,21 @@
 # Ported from main:modules/services/monitoring/prometheus-exporter/prometheus.nix.
 {
   den.aspects.services.monitoring.prometheus-exporter = {
+    # Scraped by the environment's ingester (services.monitoring.prometheus).
+    prometheus-targets =
+      { environment, host, ... }:
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit environment;
+        exporters = [
+          {
+            job = "node";
+            port = 9100;
+          }
+        ];
+      };
+
     nixos =
       { pkgs, lib, ... }:
       {

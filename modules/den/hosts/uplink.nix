@@ -24,6 +24,12 @@
       # Always-on Syncthing hub for replicated home dirs (the bgp pattern: the
       # aspect declares the option, the host file sets it).
       core.network.syncthing.isHub = true;
+      # Fleet alerting, mailed straight to Proton (not via the cluster relay).
+      services.monitoring.prometheus.alerting.smtp = {
+        host = "smtp.protonmail.ch";
+        username = "infra@json64.dev";
+        passwordSecret = "smtp-infra-at-json64-dev.age";
+      };
       # Credential reset / account recovery mail, through the cluster's Postfix
       # relay to Proton (kubernetes/services/communication/smtp-relay.nix).
       services.security.kanidm.mailSender = {
