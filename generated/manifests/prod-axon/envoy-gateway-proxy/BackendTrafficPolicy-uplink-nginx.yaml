@@ -1,0 +1,12 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: BackendTrafficPolicy
+metadata:
+  name: uplink-nginx
+  namespace: gateways
+spec:
+  proxyProtocol:
+    version: V2
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: TLSRoute
+      name: uplink-nginx

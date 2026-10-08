@@ -7,4 +7,4 @@ spec:
   endpoints:
     - ip:
         address: 10.10.10.1
-        port: 443
+        port: 8444

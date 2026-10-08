@@ -67,6 +67,32 @@ let
         };
       });
 
+      # allow-gateway-world-egress admits world:443 only; each upstream's own
+      # address:port (e.g. an nginx PROXY listener) is allowed explicitly.
+      ciliumNetworkPolicies = lib.mapAttrs' (n: v: lib.nameValuePair "allow-gateway-${n}-egress" v) (
+        perHost upstreams (u: {
+          metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+          spec = {
+            endpointSelector.matchLabels."gateway.networking.k8s.io/gateway-name" = "default-gateway";
+            egress = [
+              {
+                toCIDR = [ "${u.address}/32" ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = toString u.port;
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
+              }
+            ];
+          };
+        })
+      );
+
       backendTrafficPolicies = perHost (lib.filter (u: u.proxyProtocol) upstreams) (u: {
         spec = {
           targetRefs = [
@@ -112,6 +138,12 @@ in
         protocol = "tls-passthrough";
         inherit exclude;
       };
+      # A second host behind the gateway with PROXY v2 on its own port.
+      proxied = upstream "e" [ ] // {
+        host = "p";
+        port = 8444;
+        proxyProtocol = true;
+      };
       served = env: {
         environment = env;
         host = "h";
@@ -125,10 +157,18 @@ in
         gateway-upstreams = [
           (upstream "e" [ "b.x" ])
           (upstream "other" [ ])
+          proxied
         ];
         served-domains = [
           (served "e")
           (served "other")
+          (
+            (served "e")
+            // {
+              host = "p";
+              domains = [ "p.x" ];
+            }
+          )
           {
             environment = "e";
             cluster = "c";
@@ -139,15 +179,71 @@ in
       failures = lib.runTests {
         testListenersSkipExcluded = {
           expr = map (l: l.hostname) out.gateways.default-gateway.spec.listeners;
-          expected = [ "a.x" ];
+          expected = [
+            "a.x"
+            "p.x"
+          ];
         };
         testRouteSkipsExcluded = {
           expr = out.tlsRoutes.h-nginx.spec.hostnames;
           expected = [ "a.x" ];
         };
-        testOneBackend = {
+        testBackendPerHost = {
           expr = lib.attrNames out.backends;
-          expected = [ "h-nginx" ];
+          expected = [
+            "h-nginx"
+            "p-nginx"
+          ];
+        };
+        # proxyProtocol: the route and backend use the upstream's port, a V2
+        # BackendTrafficPolicy targets that route only, and egress admits it.
+        testProxyPort = {
+          expr = [
+            (builtins.head out.backends.p-nginx.spec.endpoints).ip.port
+            (builtins.head (builtins.head out.tlsRoutes.p-nginx.spec.rules).backendRefs).port
+          ];
+          expected = [
+            8444
+            8444
+          ];
+        };
+        testProxyPolicyOnlyForProxied = {
+          expr = lib.mapAttrs (_: p: {
+            inherit (p.spec) targetRefs;
+            inherit (p.spec.proxyProtocol) version;
+          }) out.backendTrafficPolicies;
+          expected.p-nginx = {
+            targetRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "TLSRoute";
+                name = "p-nginx";
+              }
+            ];
+            version = "V2";
+          };
+        };
+        testEgressPerUpstream = {
+          expr = lib.mapAttrs (
+            _: p:
+            let
+              e = builtins.head p.spec.egress;
+            in
+            [
+              e.toCIDR
+              (builtins.head (builtins.head e.toPorts).ports).port
+            ]
+          ) out.ciliumNetworkPolicies;
+          expected = {
+            allow-gateway-h-nginx-egress = [
+              [ "10.0.0.1/32" ]
+              "443"
+            ];
+            allow-gateway-p-nginx-egress = [
+              [ "10.0.0.1/32" ]
+              "8444"
+            ];
+          };
         };
       };
     in

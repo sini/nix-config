@@ -26,7 +26,11 @@
       core.network.syncthing.isHub = true;
       # nginx accepts PROXY v2 from the cluster gateway here (kanidm holds
       # 127.0.0.1:8443).
-      services.networking.gateway-upstream.proxyProtocolPort = 8444;
+      services.networking.gateway-upstream = {
+        proxyProtocolPort = 8444;
+        # The gateway sends PROXY v2 there, so nginx logs the client address.
+        proxyProtocol = true;
+      };
     };
   };
 
