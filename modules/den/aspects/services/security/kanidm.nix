@@ -52,9 +52,9 @@ let
   # ---- POSIX extra JSON (kanidm-provision fork features) ----
 
   posixGroups = groupsWithLabel "posix";
-  extraGroupsJson = mapAttrs (
-    _: g: { enableUnix = true; } // optionalAttrs (g.gid != null) { gidNumber = g.gid; }
-  ) posixGroups;
+  # gidNumber is left to kanidm: it only accepts 1000-60000 and up, and these
+  # mirror system groups (wheel, audio, ...) that no host resolves via kanidm.
+  extraGroupsJson = mapAttrs (_: _: { enableUnix = true; }) posixGroups;
 
   unixUsers = filterAttrs (_: u: u.system.enableUnixAccount or false) kanidmUsers;
   extraPersonsJson = mapAttrs (

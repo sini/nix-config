@@ -24,7 +24,6 @@
         "user-role"
         "posix"
       ];
-      gid = 951;
       description = "Login access to all hosts";
     };
     workstation-access = {
@@ -32,7 +31,6 @@
         "user-role"
         "posix"
       ];
-      gid = 950;
       description = "Login access to workstation hosts";
       members = [ "system-access" ];
     };
@@ -41,7 +39,6 @@
         "user-role"
         "posix"
       ];
-      gid = 949;
       description = "Login access to server hosts";
       members = [ "system-access" ];
     };
@@ -141,82 +138,69 @@
       ];
     };
 
-    # POSIX groups (Unix permissions with gidNumber)
+    # POSIX groups (Unix permissions)
     wheel = {
       labels = [ "posix" ];
-      gid = 10;
       description = "Sudo access";
       members = [ "admins" ];
     };
     audio = {
       labels = [ "posix" ];
-      gid = 63;
       description = "Audio device access";
       members = [ "workstation-access" ];
     };
     sound = {
       labels = [ "posix" ];
-      gid = 64;
       description = "Sound device access";
       members = [ "workstation-access" ];
     };
     video = {
       labels = [ "posix" ];
-      gid = 44;
       description = "Video device access";
       members = [ "workstation-access" ];
     };
     networkmanager = {
       labels = [ "posix" ];
-      gid = 84;
       description = "NetworkManager control";
       members = [ "workstation-access" ];
     };
     input = {
       labels = [ "posix" ];
-      gid = 40;
       description = "Input device access";
       members = [ "workstation-access" ];
     };
     tty = {
       labels = [ "posix" ];
-      gid = 5;
       description = "TTY access";
       members = [ "workstation-access" ];
     };
     podman = {
       labels = [ "posix" ];
-      gid = 993;
       description = "Container runtime access";
       members = [ "workstation-access" ];
     };
     media = {
       labels = [ "posix" ];
-      gid = 900;
       description = "Media files access";
       members = [ "workstation-access" ];
     };
     gamemode = {
       labels = [ "posix" ];
-      gid = 981;
       description = "GameMode access";
       members = [ "workstation-access" ];
     };
     render = {
       labels = [ "posix" ];
-      gid = 106;
       description = "GPU render access";
       members = [ "workstation-access" ];
     };
     libvirtd = {
       labels = [ "posix" ];
-      gid = 901;
       description = "VM management access";
       members = [ "admins" ];
     };
     kvm = {
       labels = [ "posix" ];
-      gid = 902;
       description = "KVM hypervisor access";
       members = [ "admins" ];
     };

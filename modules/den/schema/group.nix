@@ -1,16 +1,8 @@
-{ lib, inputs, ... }:
+{ lib, ... }:
 let
   inherit (lib) mkOption types;
-  schemaLib = (inputs.gen.lib.mkGenLibs { }).schema;
 in
 {
-  den.schema.group.validators = [
-    (schemaLib.mkValidator {
-      name = "posix-needs-gid";
-      pred = { labels, gid, ... }: !(lib.elem "posix" labels) || gid != null;
-      message = "groups with the 'posix' label must have a gid set";
-    })
-  ];
   den.schema.group.imports = [
     (_: {
       options = {
@@ -30,12 +22,6 @@ in
           type = types.listOf types.str;
           default = [ ];
           description = "Other groups whose members inherit membership in this group";
-        };
-
-        gid = mkOption {
-          type = types.nullOr types.int;
-          default = null;
-          description = "POSIX group ID number (required for groups with the 'posix' label)";
         };
       };
     })
