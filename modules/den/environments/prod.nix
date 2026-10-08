@@ -57,6 +57,8 @@
     # The UniFi gateway: modules/flake-parts/terranix/unifi.nix, infra/unifi/README.md.
     # Its BGP config is rendered from the environment's bgp-peers, its port
     # forwards from the environment's port-forwards.
+    # The gateway has two WAN ports; only wan is connected today. Forwards that
+    # set allWans keep accepting on wan2 if a second uplink is ever attached.
     unifi.wans = [
       "wan"
       "wan2"
