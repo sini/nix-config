@@ -20,7 +20,8 @@ spec:
       protocol: HTTP
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: prometheus.json64.dev
@@ -45,7 +46,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: loki.json64.dev
@@ -70,7 +72,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: grafana.json64.dev
@@ -88,7 +91,8 @@ spec:
       protocol: HTTP
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: hs.json64.dev
@@ -113,7 +117,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: idm.json64.dev
@@ -131,7 +136,8 @@ spec:
       protocol: HTTP
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: jellyfin.json64.dev
@@ -156,7 +162,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: homepage.json64.dev
@@ -181,7 +188,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: oauth2-proxy.json64.dev
@@ -199,7 +207,8 @@ spec:
       protocol: HTTP
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: open-webui.json64.dev
@@ -224,7 +233,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: attic.json64.dev
@@ -242,7 +252,8 @@ spec:
       protocol: HTTP
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: den.json64.dev
@@ -267,7 +278,8 @@ spec:
         mode: Terminate
     - allowedRoutes:
         kinds:
-          - kind: TLSRoute
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
         namespaces:
           from: Same
       hostname: registry.json64.dev

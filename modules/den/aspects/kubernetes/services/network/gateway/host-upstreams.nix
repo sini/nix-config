@@ -20,6 +20,10 @@ let
           lib.concatMap (r: r.domains) (lib.filter (r: r.host or null == u.host) (inEnv served-domains))
         );
       nameOf = u: "${u.host}-nginx";
+      # Fields the API server defaults are stated explicitly: Argo's predicted
+      # state for these experimental-channel kinds omits them, so leaving them
+      # out keeps the Gateway and TLSRoutes OutOfSync after every sync.
+      gatewayGroup = "gateway.networking.k8s.io";
       listenerFor = d: {
         name = "tls-${lib.replaceStrings [ "." ] [ "-" ] d}";
         protocol = "TLS";
@@ -28,7 +32,12 @@ let
         tls.mode = "Passthrough";
         allowedRoutes = {
           namespaces.from = "Same";
-          kinds = [ { kind = "TLSRoute"; } ];
+          kinds = [
+            {
+              group = gatewayGroup;
+              kind = "TLSRoute";
+            }
+          ];
         };
       };
       perHost = us: f: lib.listToAttrs (map (u: lib.nameValuePair (nameOf u) (f u)) us);
@@ -50,7 +59,13 @@ let
         spec = {
           # One unsectioned parent: the route attaches to every TLS listener whose
           # hostname it matches (the HTTPS listeners admit only HTTPRoute).
-          parentRefs = [ { name = "default-gateway"; } ];
+          parentRefs = [
+            {
+              group = gatewayGroup;
+              kind = "Gateway";
+              name = "default-gateway";
+            }
+          ];
           hostnames = domainsOf u;
           rules = [
             {
@@ -60,6 +75,7 @@ let
                   kind = "Backend";
                   name = nameOf u;
                   inherit (u) port;
+                  weight = 1;
                 }
               ];
             }

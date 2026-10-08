@@ -18,10 +18,13 @@ spec:
     - den.json64.dev
     - registry.json64.dev
   parentRefs:
-    - name: default-gateway
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: default-gateway
   rules:
     - backendRefs:
         - group: gateway.envoyproxy.io
           kind: Backend
           name: uplink-nginx
           port: 8444
+          weight: 1
