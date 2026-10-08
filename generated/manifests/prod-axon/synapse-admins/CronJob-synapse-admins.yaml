@@ -28,7 +28,7 @@ spec:
                 - name: JWT_ISSUER
                   value: synapse-admins
                 - name: ADMINS
-                  value: '["@json:json64.dev","@sini:json64.dev"]'
+                  value: '["@json:json64.dev","@pol:json64.dev","@sini:json64.dev","@theutz:json64.dev","@vic:json64.dev"]'
                 - name: REGISTRATION_SHARED_SECRET
                   valueFrom:
                     secretKeyRef:
@@ -54,5 +54,5 @@ spec:
             - configMap:
                 name: synapse-admins-script
               name: script
-  schedule: "*/10 * * * *"
+  schedule: '*/10 * * * *'
   successfulJobsHistoryLimit: 1
