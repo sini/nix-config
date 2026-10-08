@@ -64,8 +64,16 @@
 # disabled (seeded below) and all three containers share the pod loopback —
 # the canonical localhost bypass. (AuthSubnetWhitelist was tried first; qbt
 # never accepted the seeded keys and flattened them on its config save.)
-# DEPLOY-VALIDATE: confirm the forwarded port lands in qBittorrent prefs after
-# first connect (check `port-sync` logs).
+# gluetun's control server makes every route private by default (401 without
+# credentials), so a mounted auth config (gluetunAuthConfig) opens exactly
+# `GET /v1/portforward` with auth=none. That is a read-only route, and :8000 is not
+# in FIREWALL_INPUT_PORTS, so only the pod's own loopback can reach it.
+#
+# The same setPreferences call pins qBittorrent to tun0 (current_network_interface).
+# Unpinned, libtorrent binds a socket per local IP (eth0's pod IP, loopback) and
+# never binds tun0's /32. Peer/DHT/tracker packets sent from the eth0 socket match
+# gluetun's `from <pod-ip> lookup 200` rule and leave via eth0, where the kill-switch
+# drops them. The result is 0 DHT nodes, no peers, and magnets stuck in metaDL.
 #
 # == WebUI / API config ==
 # qBittorrent reads its WebUI settings from qBittorrent.conf, not env. We seed it
@@ -314,6 +322,14 @@ in
           fi
         '';
 
+        # Opens only the read-only forwarded-port route (see header).
+        gluetunAuthConfig = ''
+          [[roles]]
+          name = "port-sync"
+          routes = ["GET /v1/portforward"]
+          auth = "none"
+        '';
+
         # port-sync sidecar loop: poll gluetun's control server for the ProtonVPN
         # forwarded port and, when it changes, PATCH qBittorrent's listen port via
         # the WebUI API. All on the shared pod loopback (busybox wget). Idempotent:
@@ -336,7 +352,7 @@ in
               : # steady state: port unchanged, nothing to push — stay quiet
             else
               echo "port-sync: setting qBittorrent listen port to ''${port}"
-              if wget -qO- --post-data "json={\"listen_port\":''${port}}" \
+              if wget -qO- --post-data "json={\"listen_port\":''${port},\"current_network_interface\":\"tun0\"}" \
                   "$QBT/api/v2/app/setPreferences" >/dev/null 2>&1; then
                 last="''${port}"
               else
@@ -553,6 +569,7 @@ in
 
               # Sidecar Alloy River config delivered as a ConfigMap.
               configMaps.logtail.data."config.alloy" = logtailConfig;
+              configMaps.gluetun-auth.data."config.toml" = gluetunAuthConfig;
 
               persistence = {
                 # Mount the sidecar config into the logtail container only.
@@ -563,6 +580,17 @@ in
                     {
                       path = "/etc/alloy/config.alloy";
                       subPath = "config.alloy";
+                      readOnly = true;
+                    }
+                  ];
+                };
+                gluetun-auth = {
+                  type = "configMap";
+                  identifier = "gluetun-auth";
+                  advancedMounts.main.gluetun = [
+                    {
+                      path = "/gluetun/auth/config.toml";
+                      subPath = "config.toml";
                       readOnly = true;
                     }
                   ];

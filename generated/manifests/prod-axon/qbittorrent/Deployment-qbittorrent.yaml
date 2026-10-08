@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 4c8f95947594d4dd950c8b6421bf5f33a4e6f71f0828337e6e6e5d044fd0d484
+        checksum/configMaps: 35e015fab4b9eb85ac502ac707e1a1dd29899d88e2825579cde273d4c4f1dda9
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: qbittorrent
@@ -108,7 +108,7 @@ spec:
                   : # steady state: port unchanged, nothing to push — stay quiet
                 else
                   echo "port-sync: setting qBittorrent listen port to ${port}"
-                  if wget -qO- --post-data "json={\"listen_port\":${port}}" \
+                  if wget -qO- --post-data "json={\"listen_port\":${port},\"current_network_interface\":\"tun0\"}" \
                       "$QBT/api/v2/app/setPreferences" >/dev/null 2>&1; then
                     last="${port}"
                   else
@@ -263,6 +263,10 @@ spec:
           volumeMounts:
             - mountPath: /config
               name: config
+            - mountPath: /gluetun/auth/config.toml
+              name: gluetun-auth
+              readOnly: true
+              subPath: config.toml
             - mountPath: /scratch
               name: scratch
             - mountPath: /dev/net/tun
@@ -273,7 +277,10 @@ spec:
           persistentVolumeClaim:
             claimName: qbittorrent
         - configMap:
-            name: qbittorrent
+            name: qbittorrent-gluetun-auth
+          name: gluetun-auth
+        - configMap:
+            name: qbittorrent-logtail
           name: logtail
         - name: scratch
           persistentVolumeClaim:

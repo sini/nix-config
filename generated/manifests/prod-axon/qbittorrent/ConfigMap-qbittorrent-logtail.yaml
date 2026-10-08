@@ -55,5 +55,5 @@ metadata:
   labels:
     app.kubernetes.io/instance: qbittorrent
     app.kubernetes.io/name: qbittorrent
-  name: qbittorrent
+  name: qbittorrent-logtail
   namespace: media
