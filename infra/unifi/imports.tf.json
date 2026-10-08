@@ -3,6 +3,18 @@
     {
       "to": "unifi_bgp.prod",
       "id": "default"
+    },
+    {
+      "to": "unifi_port_forward.json64_dev",
+      "id": "68d49accbee8bc310512ad44"
+    },
+    {
+      "to": "unifi_port_forward.ssh_to_uplink",
+      "id": "69938074ba1d50eba7f49dfb"
+    },
+    {
+      "to": "unifi_port_forward.headscale_to_uplink",
+      "id": "6994d7b7ba1d50eba7f4d775"
     }
   ]
 }

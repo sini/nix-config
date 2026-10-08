@@ -1,0 +1,67 @@
+{
+  "json64_dev": {
+    "id": "68d49accbee8bc310512ad44",
+    "config": {
+      "name": "json64.dev",
+      "protocol": "tcp_udp",
+      "wan": {
+        "interface": "wan",
+        "port": "443"
+      },
+      "forward": {
+        "ip": "10.10.10.1",
+        "port": "12443"
+      },
+      "destination_ips": [
+        {
+          "destination_ip": "any",
+          "interface": "wan"
+        },
+        {
+          "destination_ip": "any",
+          "interface": "wan2"
+        }
+      ]
+    }
+  },
+  "headscale_to_uplink": {
+    "id": "6994d7b7ba1d50eba7f4d775",
+    "config": {
+      "name": "headscale-to-uplink",
+      "protocol": "udp",
+      "wan": {
+        "interface": "wan",
+        "port": "3478,41641"
+      },
+      "forward": {
+        "ip": "10.10.10.1",
+        "port": "3478,41641"
+      },
+      "destination_ips": [
+        {
+          "destination_ip": "any",
+          "interface": "wan"
+        },
+        {
+          "destination_ip": "any",
+          "interface": "wan2"
+        }
+      ]
+    }
+  },
+  "ssh_to_uplink": {
+    "id": "69938074ba1d50eba7f49dfb",
+    "config": {
+      "name": "ssh-to-uplink",
+      "protocol": "tcp",
+      "wan": {
+        "interface": "wan",
+        "port": "22"
+      },
+      "forward": {
+        "ip": "10.10.10.1",
+        "port": "22"
+      }
+    }
+  }
+}
