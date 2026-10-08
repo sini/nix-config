@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-upstream-egress-smtp-relay
+  namespace: mail
+spec:
+  description: Allow smtp-relay to submit to its upstream.
+  egress:
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "587"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: smtp-relay

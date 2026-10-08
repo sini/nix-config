@@ -38,6 +38,21 @@
     settings.kubernetes.services.media.romm.scanTimeout = 14 * 24 * 60 * 60; # 14 days
     settings.kubernetes.services.media.romm.scanWorkers = 10;
 
+    # Postfix relay to Proton: all mail leaves as infra@json64.dev, the address
+    # the SMTP submission token belongs to. smtp.json64.dev resolves to the
+    # smtp-relay-internal LB address below (domains/domains.nix). See
+    # modules/den/aspects/kubernetes/services/communication/smtp-relay.nix.
+    settings.kubernetes.services.communication.smtp-relay = {
+      domain = "json64.dev";
+      hostname = "smtp.json64.dev";
+      issuer = "json64-dev";
+      upstream = {
+        host = "smtp.protonmail.ch";
+        username = "infra@json64.dev";
+        passwordSecret = "smtp-infra-at-json64-dev.age";
+      };
+    };
+
     networks = {
       control-plane = {
         cidr = "10.10.10.0/24";
@@ -86,6 +101,10 @@
           # additive.
           llama-cpp-gpt-oss-internal = "10.11.0.22";
           hindsight-cp-internal = "10.11.0.23";
+
+          # Postfix relay to Proton (communication/smtp-relay.nix), published
+          # as smtp.json64.dev. BGP-advertised, NOT internet-routable.
+          smtp-relay-internal = "10.11.0.30";
         };
       };
     };
@@ -170,6 +189,9 @@
       services.communication.matrix.matrix-admin
       services.communication.matrix.synapse-admins
       services.communication.matrix.tuwunel
+
+      # communication — Postfix relay to Proton for LAN and in-cluster senders.
+      services.communication.smtp-relay
 
       # ai — Hindsight agent memory bank. Cluster-internal in this wave: no
       # route, no service domain (see hindsight.nix on why exposure is separate).

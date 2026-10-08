@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: smtp-relay
+    app.kubernetes.io/name: smtp-relay
+  name: smtp-relay
+  namespace: mail
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: smtp-relay
+      app.kubernetes.io/name: smtp-relay
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: smtp-relay
+        app.kubernetes.io/name: smtp-relay
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: ALLOWED_SENDER_DOMAINS
+              value: json64.dev
+            - name: LOG_FORMAT
+              value: json
+            - name: POSTFIX_header_checks
+              value: 'regexp:{ {/^From:[[:space:]]*(.*[^[:space:]])[[:space:]]*<[^>]*>[[:space:]]*$$/ REPLACE From: $$1 <infra@json64.dev>}, {/^From:[[:space:]]*[^<]*$$/ REPLACE From: infra@json64.dev} }'
+            - name: POSTFIX_message_size_limit
+              value: "26214400"
+            - name: POSTFIX_myhostname
+              value: smtp.json64.dev
+            - name: POSTFIX_mynetworks
+              value: 127.0.0.0/8,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16
+            - name: POSTFIX_sender_canonical_classes
+              value: envelope_sender
+            - name: POSTFIX_sender_canonical_maps
+              value: static:infra@json64.dev
+            - name: POSTFIX_smtp_tls_security_level
+              value: secure
+            - name: POSTFIX_smtpd_tls_cert_file
+              value: /tls/tls.crt
+            - name: POSTFIX_smtpd_tls_key_file
+              value: /tls/tls.key
+            - name: POSTFIX_smtpd_tls_security_level
+              value: encrypt
+            - name: RELAYHOST
+              value: '[smtp.protonmail.ch]:587'
+            - name: RELAYHOST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: smtp-relay-upstream
+            - name: RELAYHOST_USERNAME
+              value: infra@json64.dev
+            - name: TZ
+              value: America/Los_Angeles
+          image: boky/postfix@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef
+          name: main
+          volumeMounts:
+            - mountPath: /var/spool/postfix
+              name: spool
+            - mountPath: /tls
+              name: tls
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: smtp-relay
+      volumes:
+        - name: spool
+          persistentVolumeClaim:
+            claimName: smtp-relay
+        - name: tls
+          secret:
+            secretName: smtp-relay-tls

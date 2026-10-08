@@ -58,6 +58,13 @@ in
           name = "vpn";
           type = "A";
         }
+        # The cluster's private SMTP relay LB (communication/smtp-relay.nix):
+        # public so any LAN client can verify its certificate by name.
+        {
+          name = "smtp";
+          type = "A";
+          content = "10.11.0.30";
+        }
       ])
     ];
 

@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: smtp-relay
+  namespace: mail
+spec:
+  dnsNames:
+    - smtp.json64.dev
+  issuerRef:
+    kind: ClusterIssuer
+    name: json64-dev-issuer
+  secretName: smtp-relay-tls
