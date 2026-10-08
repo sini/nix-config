@@ -138,6 +138,44 @@ in
       ])
     ];
 
+  # Domain-entity quirks (modules/den/aspects/domain/domain.nix). A domain has no
+  # environment, so every collect takes every domain's records; consumers filter.
+  den.policies.collect-certificate-domains =
+    { host, ... }:
+    [
+      (pipe.from "certificate-domains" [
+        (pipe.collectAll ({ domain, ... }: true))
+      ])
+    ];
+
+  den.policies.cluster-collect-domain-quirks =
+    { cluster, ... }:
+    map
+      (
+        quirk:
+        pipe.from quirk [
+          (pipe.collectAll ({ domain, ... }: true))
+        ]
+      )
+      [
+        "certificate-domains"
+        "apex-domains"
+        "site-domains"
+      ];
+
+  # Public DNS (modules/flake-parts/terranix): the zones and zone records from
+  # every domain, and the served names of hosts and clusters in every
+  # environment. A collectAll predicate matches only the entity kind it names,
+  # so each kind takes its own collect.
+  den.policies.env-collect-dns =
+    { environment, ... }:
+    [
+      (pipe.from "dns-zones" [ (pipe.collectAll ({ domain, ... }: true)) ])
+      (pipe.from "dns-records" [ (pipe.collectAll ({ domain, ... }: true)) ])
+      (pipe.from "served-domains" [ (pipe.collectAll ({ host, ... }: true)) ])
+      (pipe.from "served-domains" [ (pipe.collectAll ({ cluster, ... }: true)) ])
+    ];
+
   # Bottom-up dual of the collect policies. `resolved-users` is emitted per user
   # at user scope (core/users/resolved-user-emitter.nix) and must bubble up the
   # P edge to the host so host aspects (wireshark, adb, ddcutil, razer,
@@ -219,6 +257,7 @@ in
     den.policies.collect-ninfer-endpoints
     den.policies.collect-hipfire-endpoints
     den.policies.broadcast-hub-peer
+    den.policies.collect-certificate-domains
   ];
 
   den.schema.user.includes = [
@@ -228,11 +267,14 @@ in
     den.policies.broadcast-syncthing-hub-shares
   ];
 
+  den.schema.environment.includes = [ den.policies.env-collect-dns ];
+
   den.schema.cluster.includes = [
     den.policies.cluster-collect-k3s-nodes
     den.policies.cluster-collect-media-scratch-exports
     den.policies.cluster-collect-container-registries
     den.policies.cluster-collect-served-domains
     den.policies.cluster-collect-idm-users
+    den.policies.cluster-collect-domain-quirks
   ];
 }
