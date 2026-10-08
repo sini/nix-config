@@ -8,6 +8,7 @@
     system.uid = 1005;
     groups = [
       "users"
+      "admins"
       "server-access"
       "grafana.server-admins"
       "open-webui.admins"
