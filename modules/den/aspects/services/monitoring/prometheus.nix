@@ -9,44 +9,6 @@ let
 in
 {
   den.aspects.services.monitoring.prometheus = {
-    settings = {
-      # The fleet's outside observer: an Alertmanager next to this Prometheus,
-      # mailing the environment's admin address for host and control-plane
-      # rules. It submits straight to the upstream rather than through the
-      # cluster relay, so it still works when the cluster is what failed.
-      # null leaves the rules evaluated but routed nowhere.
-      alerting = lib.mkOption {
-        type = lib.types.nullOr (
-          lib.types.submodule {
-            options.smtp = {
-              host = lib.mkOption {
-                type = lib.types.str;
-                example = "smtp.example.com";
-                description = "Upstream submission host (STARTTLS).";
-              };
-              port = lib.mkOption {
-                type = lib.types.port;
-                default = 587;
-                description = "Upstream submission port.";
-              };
-              username = lib.mkOption {
-                type = lib.types.str;
-                example = "infra@example.com";
-                description = "SASL login, also the sender address.";
-              };
-              passwordSecret = lib.mkOption {
-                type = lib.types.str;
-                example = "smtp-infra-at-example-com.age";
-                description = "Age file with the password or token, relative to the environment's secretPath.";
-              };
-            };
-          }
-        );
-        default = null;
-        description = "Alertmanager for this Prometheus; null disables it.";
-      };
-    };
-
     # The ingester announces its own Prometheus like any exporter; it is also
     # how alloy finds where to ship (the host exposing job "prometheus").
     prometheus-targets =
@@ -74,7 +36,6 @@ in
       }:
       let
         domain = environment.getDomainFor "prometheus";
-        inherit (host.settings.services.monitoring.prometheus) alerting;
 
         # Collected scrape targets (same-environment scoping guaranteed by
         # collect-prometheus-targets policy)
@@ -194,7 +155,8 @@ in
           };
         }
 
-        (lib.mkIf (alerting != null) {
+        # Fleet rules, delivered by the host's Alertmanager (services.monitoring.alertmanager).
+        (lib.mkIf config.services.prometheus.alertmanager.enable {
           services.prometheus = {
             alertmanagers = [ { static_configs = [ { targets = [ "127.0.0.1:9093" ]; } ]; } ];
 
@@ -224,70 +186,13 @@ in
               })
             ];
 
-            alertmanager = {
-              enable = true;
-              listenAddress = "127.0.0.1";
-              port = 9093;
-              configuration = {
-                global = {
-                  smtp_smarthost = "${alerting.smtp.host}:${toString alerting.smtp.port}";
-                  smtp_from = alerting.smtp.username;
-                  smtp_auth_username = alerting.smtp.username;
-                  smtp_auth_password_file = "/run/credentials/alertmanager.service/smtp-password";
-                  smtp_require_tls = true;
-                };
-                route = {
-                  receiver = "email";
-                  group_by = [
-                    "alertname"
-                    "hostname"
-                  ];
-                  group_wait = "30s";
-                  group_interval = "5m";
-                  repeat_interval = "12h";
-                };
-                # A host that is down also fails its own etcd scrape.
-                inhibit_rules = [
-                  {
-                    source_matchers = [ "alertname = HostDown" ];
-                    target_matchers = [ "alertname = EtcdMemberDown" ];
-                    equal = [ "hostname" ];
-                  }
-                ];
-                receivers = [
-                  {
-                    name = "email";
-                    email_configs = [
-                      {
-                        to = environment.email.adminEmail;
-                        send_resolved = true;
-                      }
-                    ];
-                  }
-                ];
-              };
-            };
           };
 
-          systemd.services.alertmanager.serviceConfig.LoadCredential =
-            "smtp-password:${config.age.secrets.alertmanager-smtp-password.path}";
         })
       ];
 
     service-domains = serviceDomains;
     served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
-
-    age-secrets =
-      { environment, host, ... }:
-      let
-        inherit (host.settings.services.monitoring.prometheus) alerting;
-      in
-      {
-        age.secrets = lib.optionalAttrs (alerting != null) {
-          # Read by systemd for LoadCredential, so root-owned.
-          alertmanager-smtp-password.rekeyFile = environment.secretPath + "/${alerting.smtp.passwordSecret}";
-        };
-      };
 
     firewall = {
       networking.firewall.allowedTCPPorts = [ 9090 ];

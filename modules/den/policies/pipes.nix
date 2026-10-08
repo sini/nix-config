@@ -150,6 +150,17 @@ in
       ])
     ];
 
+  # Scrape targets to clusters, so the cluster's Prometheus can find hosts that
+  # announce services it talks to (e.g. the outside Alertmanager). Consumers
+  # filter by environment.
+  den.policies.cluster-collect-prometheus-targets =
+    { cluster, ... }:
+    [
+      (pipe.from "prometheus-targets" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   den.policies.cluster-collect-container-registries =
     { cluster, ... }:
     [
@@ -297,6 +308,7 @@ in
     den.policies.cluster-collect-served-domains
     den.policies.cluster-collect-gateway-upstreams
     den.policies.cluster-collect-idm-users
+    den.policies.cluster-collect-prometheus-targets
     den.policies.cluster-collect-domain-quirks
   ];
 }

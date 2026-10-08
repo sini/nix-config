@@ -25,7 +25,7 @@
       # aspect declares the option, the host file sets it).
       core.network.syncthing.isHub = true;
       # Fleet alerting, mailed straight to Proton (not via the cluster relay).
-      services.monitoring.prometheus.alerting.smtp = {
+      services.monitoring.alertmanager.smtp = {
         host = "smtp.protonmail.ch";
         username = "infra@json64.dev";
         passwordSecret = "smtp-infra-at-json64-dev.age";
@@ -57,6 +57,7 @@
       roles.unlock
       roles.nix-builder
       roles.metrics-ingester
+      services.monitoring.alertmanager
       services.bgp.hub
       services.networking.headscale
       services.security.acme

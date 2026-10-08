@@ -10,10 +10,19 @@
     k8s-manifests =
       {
         charts,
+        cluster,
         environment,
         lib,
+        prometheus-targets,
         ...
       }:
+      let
+        # The outside Alertmanager (services.monitoring.alertmanager): it
+        # receives only the Watchdog and alerts when that stops arriving.
+        outsideAlertmanagers = lib.concatMap (
+          t: map (e: "${t.ip}:${toString e.port}") (lib.filter (e: e.job == "alertmanager") t.exporters)
+        ) (lib.filter (t: t.environment.name == cluster.environment) prometheus-targets);
+      in
       {
         applications.kube-prometheus-stack = {
           namespace = "monitoring";
@@ -53,6 +62,17 @@
             values = {
               prometheus = {
                 prometheusSpec = {
+                  additionalAlertManagerConfigs = lib.optional (outsideAlertmanagers != [ ]) {
+                    static_configs = [ { targets = outsideAlertmanagers; } ];
+                    alert_relabel_configs = [
+                      {
+                        source_labels = [ "alertname" ];
+                        regex = "Watchdog";
+                        action = "keep";
+                      }
+                    ];
+                  };
+
                   retention = "30d";
                   retentionSize = "10GB";
                   enableRemoteWriteReceiver = true;
@@ -313,7 +333,21 @@
                       }
                     ];
                   }
-                ];
+                ]
+                # The Watchdog push to the outside Alertmanager.
+                ++ map (target: {
+                  toCIDR = [ "${lib.head (lib.splitString ":" target)}/32" ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = lib.last (lib.splitString ":" target);
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }) outsideAlertmanagers;
               };
             };
 
