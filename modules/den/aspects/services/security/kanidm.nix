@@ -732,12 +732,12 @@ in
                   ];
                   name = "mail-sender";
                   displayname = "Mail Sender";
-                  entry_managed_by = "idm_admins";
+                  entry_managed_by = [ "idm_admins" ];
                 }
               ];
             };
             "51-mail-sender-group" = {
-              id = "c5690c3e-d0b5-4bf9-a05f-ba93ffd473fc";
+              id = "8b1bb6cb-ee00-417a-938f-8b3680b59a4a";
               assertions = [
                 {
                   state = "present";
