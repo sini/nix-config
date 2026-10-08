@@ -10,6 +10,15 @@
         default = "tailnet";
         description = "SSH exposure: tailnet/LAN only (default) or public (break-glass jumpbox).";
       };
+      externalPort = lib.mkOption {
+        type = lib.types.port;
+        default = 22;
+        description = ''
+          WAN port the gateway forwards to this host's sshd (port 22) when exposure
+          is public. Give each public host a distinct port; the forward renderer
+          refuses two forwards on the same WAN port.
+        '';
+      };
     };
 
     # Publishing sshd is the exposure choice, so a public host also gets the
@@ -20,7 +29,7 @@
         environment = environment.name;
         name = "ssh-to-${host.name}";
         protocol = "tcp";
-        wanPort = "22";
+        wanPort = toString host.settings.core.security.openssh.externalPort;
         forward = {
           ip = environment.addressOn "default" host;
           port = "22";
