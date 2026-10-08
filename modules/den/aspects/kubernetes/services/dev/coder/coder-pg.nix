@@ -243,8 +243,15 @@ in
                     ];
                   }
                   {
+                    # Prometheus is in monitoring; an unqualified selector would
+                    # only match pods in this namespace.
                     fromEndpoints = [
-                      { matchLabels."app.kubernetes.io/name" = "prometheus"; }
+                      {
+                        matchLabels = {
+                          "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                          "app.kubernetes.io/name" = "prometheus";
+                        };
+                      }
                     ];
                     toPorts = [
                       {

@@ -35,6 +35,7 @@ spec:
     - fromEndpoints:
         - matchLabels:
             app.kubernetes.io/name: prometheus
+            k8s:io.kubernetes.pod.namespace: monitoring
       toPorts:
         - ports:
             - port: "9187"
