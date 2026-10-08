@@ -115,6 +115,10 @@
     #   172.16.255.0/24      ipv4 fabric loopbacks (axon-0N = .N/32)
     #   fdfd:cafe:0:ff::/64  ipv6 fabric loopbacks (axon-0N = ::N/128)
 
+    # The NAS exports below must allow non-privileged ports (Synology: "Allow
+    # connections from non-privileged ports"; security sys, squash root to
+    # admin). Cilium masquerade rewrites the client's <1024 source port, so a
+    # default "secure" export refuses pod-netns mounts with EPERM.
     nfsVolumes.vault-nfs = {
       server = "10.10.10.10";
       share = "/volume2/data";
