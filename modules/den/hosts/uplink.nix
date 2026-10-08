@@ -43,7 +43,6 @@
       unifi-state-passphrase
       services.networking.nginx
       services.security.kanidm
-      services.networking.haproxy
       services.networking.gateway-upstream
       services.media.jellyfin
       services.web.homepage
