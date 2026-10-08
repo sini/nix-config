@@ -21,7 +21,7 @@ in
   den.aspects.services.matrix-xmsg = {
     settings = {
       rooms = lib.mkOption {
-        type = lib.types.listOf (lib.types.strMatching "![^:]+:.+");
+        type = lib.types.listOf (lib.types.strMatching "![^:]+(:.+)?"); # room v12 IDs have no :server
         default = [ ];
         example = [ "!abcdef:json64.dev" ];
         description = "Room IDs (not aliases) the bot serves. Empty keeps the service disabled; `matrix-bot-provision` prints the value.";
@@ -30,6 +30,12 @@ in
         type = lib.types.str;
         default = "genie-support";
         description = "xmsg session the bot relays to: a pi session registers under its cwd basename.";
+      };
+      extraTrustedMxids = lib.mkOption {
+        type = lib.types.listOf (lib.types.strMatching "@[^:]+:.+");
+        default = [ ];
+        example = [ "@alice:matrix.org" ];
+        description = "Trusted senders beyond kanidm `admins`: accounts on other homeservers, which kanidm cannot list.";
       };
     };
 
@@ -48,12 +54,15 @@ in
         # The environment whose kanidm serves this host's (dev delegates to prod).
         idpEnv = (environment.services.kanidm or { }).delegateTo or null;
         trusted = lib.sort lib.lessThan (
-          map (u: mxid u.name) (
-            lib.filter (
-              u:
-              u.environment == (if idpEnv != null then idpEnv else environment.name)
-              && lib.elem adminGroup u.groups
-            ) idm-users
+          lib.unique (
+            cfg.extraTrustedMxids
+            ++ map (u: mxid u.name) (
+              lib.filter (
+                u:
+                u.environment == (if idpEnv != null then idpEnv else environment.name)
+                && lib.elem adminGroup u.groups
+              ) idm-users
+            )
           )
         );
       in

@@ -37,9 +37,14 @@ if [[ ${1:-} == --self-test ]]; then
   exit 0
 fi
 
-alias_=${1:?usage: matrix-bot-provision '#support:json64.dev'}
-[[ $alias_ == \#*:* ]] || {
-  echo "expected a room alias like '#support:$server', got '$alias_'" >&2
+# A public alias, or a room ID plus via servers for an invite-only room:
+#   matrix-bot-provision '#support:json64.dev'
+#   matrix-bot-provision '!roomid:matrix.org' matrix.org gitter.im
+alias_=${1:?usage: matrix-bot-provision '#alias:server' | '!roomid[:server]' [via-server ...]}
+shift
+via=("$@")
+[[ $alias_ == \#*:* || $alias_ == \!* ]] || {
+  echo "expected a room alias like '#support:$server' or a room ID like '!abc:matrix.org', got '$alias_'" >&2
   exit 1
 }
 
@@ -138,16 +143,25 @@ EOF
   echo "registered @$bot:$server; token encrypted to $target (staged)"
 fi
 
-enc_alias=$(printf '%s' "$alias_" | jq -sRr @uri)
-resp=$(api GET "/_matrix/client/v3/directory/room/$enc_alias")
-[[ $(status_of "$resp") == 200 ]] || {
-  echo "could not resolve $alias_:" >&2
-  body_of "$resp" >&2
-  exit 1
-}
-room_id=$(body_of "$resp" | jq -er .room_id)
+if [[ $alias_ == \!* ]]; then
+  room_id=$alias_
+else
+  enc_alias=$(printf '%s' "$alias_" | jq -sRr @uri)
+  resp=$(api GET "/_matrix/client/v3/directory/room/$enc_alias")
+  [[ $(status_of "$resp") == 200 ]] || {
+    echo "could not resolve $alias_:" >&2
+    body_of "$resp" >&2
+    exit 1
+  }
+  room_id=$(body_of "$resp" | jq -er .room_id)
+fi
 
-resp=$(api POST "/_matrix/client/v3/join/$(printf '%s' "$room_id" | jq -sRr @uri)" --data '{}')
+# Via servers let a remote room (e.g. an invite) be joined by ID.
+query=""
+for v in "${via[@]}"; do
+  query+="${query:+&}server_name=$(printf '%s' "$v" | jq -sRr @uri)"
+done
+resp=$(api POST "/_matrix/client/v3/join/$(printf '%s' "$room_id" | jq -sRr @uri)${query:+?$query}" --data '{}')
 [[ $(status_of "$resp") == 200 ]] || {
   echo "could not join $room_id:" >&2
   body_of "$resp" >&2

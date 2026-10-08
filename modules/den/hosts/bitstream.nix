@@ -30,6 +30,22 @@
 
       applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
+
+      # @genie support bot: #support:json64.dev (testing), #denful:matrix.org and a private room.
+      services.matrix-xmsg = {
+        rooms = [
+          "!dj6ESTc_Wy5FaLnR-Sj1o_WOqnDeUZWoloV8HuijXs8"
+          "!mafjNSATIwbTXcmNzX:matrix.org"
+          "!qqfdClEfuMzZNEjvGO:matrix.org" # private room (invite)
+        ];
+        extraTrustedMxids = [
+          "@theutz:matrix.org"
+          "@drupol:matrix.org"
+          "@vborja:matrix.org"
+          "@sini:matrix.org"
+          "@fmway:gitter.im"
+        ];
+      };
     };
   };
 
