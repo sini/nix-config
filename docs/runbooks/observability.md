@@ -38,6 +38,11 @@ curl -s --retry 5 --retry-connrefused -G localhost:3100/loki/api/v1/query_range 
 `kubectl get --raw /api/v1/namespaces/monitoring/services/http:kube-prometheus-stack-prometheus:9090/proxy/api/v1/...`
 works too, without a port-forward.
 
+The Alloy DaemonSet drops the main-container stdout of pods labelled
+`den.observability/file-tailed=true`, expecting their logtail sidecar to ship
+the file logs instead. The label without a working sidecar loses that app's logs
+silently: keep the two paired.
+
 When checking that a file-tailed app has no duplicate stdout stream, query a
 window that starts after the pod settled: a few main-container lines leak at
 startup before Alloy's discovery applies the drop.

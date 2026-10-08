@@ -38,8 +38,7 @@ data:
       // duplicate main-container stdout so loki keeps only the
       // labeled file-tail stream. Init/sidecar containers
       // (config-seed, exportarr, logtail) and all other pods are
-      // untouched. The label without a working sidecar loses that
-      // app's logs silently: keep the two paired.
+      // untouched.
       rule {
         source_labels = ["__meta_kubernetes_pod_label_den_observability_file_tailed", "__meta_kubernetes_pod_container_name"]
         separator     = "/"
