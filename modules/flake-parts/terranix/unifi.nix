@@ -21,6 +21,13 @@ let
   # ponytail: one environment owns the gateway; key configs by env if a second controller appears.
   unifiEnv = "prod";
   workdir = "infra/unifi";
+  # The gateway's port forwards as unifi-adopt read them, in the provider's
+  # model: { <resource name> = { id; config; }; }. Raw adoption first; a later
+  # change derives targets (the gateway VIP) instead of restating them.
+  portForwardsFile = ../../../infra/unifi/port-forwards.json;
+  portForwards = lib.optionalAttrs (builtins.pathExists portForwardsFile) (
+    lib.importJSON portForwardsFile
+  );
   unifiTerranixModules = config.flake.unifiTerranixModules.${unifiEnv};
 
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
@@ -222,6 +229,8 @@ in
         upload_file_name = unifi.bgp.uploadFileName;
       };
 
+      resource.unifi_port_forward = lib.mapAttrs (_: pf: pf.config) portForwards;
+
       # Read by unifi-adopt.
       _meta = {
         api_url = "https://${environment.networks.default.gatewayIp}";
@@ -247,6 +256,42 @@ in
       tf = config.terranix.terranixConfigurations.unifi;
       inherit (tf.result) scripts terraformConfiguration;
       meta = pkgs.writeText "unifi-meta.json" (builtins.toJSON terraformConfiguration._meta);
+
+      # A controller portforward object (rest/portforward) to the provider's
+      # model, the inverse of its portForwardToModel: an attribute the controller
+      # leaves empty is unset, so the adoption plan shows no change.
+      portForwardModel = pkgs.writeText "unifi-port-forward.jq" ''
+        def nz: if . == null or . == "" then null else . end;
+        def compact: with_entries(select(.value != null));
+        def key: ((.name | nz) // ._id) | ascii_downcase | gsub("[^a-z0-9]+"; "_") | gsub("^_|_$"; "")
+          | if test("^[0-9]") then "pf_" + . else . end;
+        map({
+          key: key,
+          value: {
+            id: ._id,
+            config: ({
+              name: (.name | nz),
+              protocol: .proto,
+              enabled: (if .enabled then null else false end),
+              logging: (if .log then true else null end),
+              wan: (if (.pfwd_interface | nz) or (.destination_ip | nz) or (.dst_port | nz)
+                then { interface: (.pfwd_interface | nz), ip_address: (.destination_ip | nz), port: (.dst_port | nz) } | compact
+                else null end),
+              forward: (if (.fwd | nz) or (.fwd_port | nz)
+                then { ip: (.fwd | nz), port: (.fwd_port | nz) } | compact
+                else null end),
+              source_limiting: (if .src_limiting_enabled or (.src_firewall_group_id | nz) or ((.src | nz) and .src != "any")
+                then { ip: (.src | nz), firewall_group_id: (.src_firewall_group_id | nz), enabled: .src_limiting_enabled, type: (.src_limiting_type | nz) } | compact
+                else null end),
+              destination_ips: (if (.destination_ips // []) | length > 0
+                then [ .destination_ips[] | { destination_ip: (.destination_ip | nz), interface: (.interface | nz) } | compact ]
+                else null end)
+            } | compact)
+          }
+        })
+        | if (map(.key) | unique | length) != length then error("unifi-adopt: two port forwards share a resource name") else . end
+        | from_entries
+      '';
 
       # Decrypts the API key and the state passphrase into this process's env only.
       secretsPrelude = ''
@@ -370,9 +415,21 @@ in
                 echo "unifi-adopt: site $site has no BGP configuration to adopt" >&2
                 exit 1
               fi
+              pfs=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/api/s/$site/rest/portforward" | jq .data)
+              jq -f ${portForwardModel} <<<"$pfs" > ${workdir}/port-forwards.json
               # unifi_bgp is a per-site singleton; its import id is the site name.
-              jq --arg site "$site" '{ import: [ { to: .bgp, id: $site } ] }' ${meta} > ${workdir}/imports.tf.json
-              echo "unifi-adopt: site $site BGP config $(jq -r '.[0]._id' <<<"$bgp") ($(jq -r '.[0].description' <<<"$bgp")); wrote ${workdir}/imports.tf.json"
+              # A port forward imports by its controller _id.
+              jq --arg site "$site" --slurpfile pf ${workdir}/port-forwards.json \
+                '{ import: ([ { to: .bgp, id: $site } ]
+                  + ($pf[0] | to_entries | map({ to: "unifi_port_forward.\(.key)", id: .value.id }))) }' \
+                ${meta} > ${workdir}/imports.tf.json
+              # The flake reads port-forwards.json only once git tracks it.
+              git add ${workdir}/port-forwards.json ${workdir}/imports.tf.json
+              echo "unifi-adopt: site $site BGP config $(jq -r '.[0]._id' <<<"$bgp") ($(jq -r '.[0].description' <<<"$bgp"))"
+              echo "unifi-adopt: $(jq length <<<"$pfs") port forwards:"
+              jq -r '.[] | "  \(.name // "-")\t\(.proto)\twan \(.pfwd_interface // "-"):\(.dst_port // "-")\t-> \(.fwd // "-"):\(.fwd_port // "-")\tenabled=\(.enabled)"' <<<"$pfs"
+              echo "unifi-adopt: wrote ${workdir}/port-forwards.json and ${workdir}/imports.tf.json"
             '';
       };
 

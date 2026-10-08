@@ -20,14 +20,21 @@ and prod does. If dev set it too, both states would own the same objects.
 Its raw FRR `bgpd` file is rendered by `modules/flake-parts/terranix/unifi.nix`
 from the environment's `bgp-peers` records (one per BGP host, routed by
 `env-collect-bgp-peers`): AS `networks.default.gatewayAsn`, router-id
-`networks.default.gatewayIp`, one peer group per remote AS, and each
-neighbor's AS from its own record. The hub (`services.bgp.hub`) and the axon
-hosts (`services.bgp.cilium-bgp`, `peerWithGateway`) peer back with the same
-two values. The provider's structured `peers` mode is not used: its template
-forces `bgp ebgp-requires-policy`, `redistribute connected`, `next-hop-self`,
-multihop and timers, and cannot set `maximum-paths`.
-`unifi.bgp` in `modules/den/environments/prod.nix` keeps the controller's
-`description` and `uploadFileName`. Port forwards come next.
+`networks.default.gatewayIp`, one peer group per remote AS, and each neighbor's
+AS from its own record. The hub (`services.bgp.hub`) and the axon hosts
+(`services.bgp.cilium-bgp`, `peerWithGateway`) peer back with the same two
+values. The provider's structured `peers` mode is not used: its template forces
+`bgp ebgp-requires-policy`, `redistribute connected`, `next-hop-self`, multihop
+and timers, and cannot set `maximum-paths`. `unifi.bgp` in
+`modules/den/environments/prod.nix` keeps the controller's `description` and
+`uploadFileName`.
+
+`unifi_port_forward.<name>` is one per port forward on the gateway. They are
+adopted raw: `unifi-adopt` reads every forward and writes it, in the provider's
+model, to `infra/unifi/port-forwards.json` (`{ <name> = { id; config; }; }`, the
+name derived from the forward's controller name). The workspace renders one
+resource per entry. A change to a forward is an edit of that file, reviewed in
+`unifi-plan`.
 
 ## State
 
@@ -45,13 +52,16 @@ You need the YubiKey. Each command decrypts the API key
 (`.secrets/env/prod/unifi-api-key.age`, a UniFi Integrations key sent as
 `X-Api-Key`) and the passphrase into its own environment, and prints neither.
 
-1. `unifi-adopt` reads the site's BGP configuration with a single `GET`. It then
-   writes `infra/unifi/imports.tf.json`, which imports `unifi_bgp.prod` by its
-   site name.
+1. `unifi-adopt` reads the site's BGP configuration and its port forwards
+   (`rest/portforward`), with `GET`s only. It writes
+   `infra/unifi/port-forwards.json` and `infra/unifi/imports.tf.json`, which
+   imports `unifi_bgp.prod` by its site name and each port forward by its `_id`,
+   and stages both (the flake reads only tracked files). It prints the live
+   forward list.
 2. `unifi-plan` builds the config and runs `tofu init` and `tofu plan`. The
-   adoption plan must be `1 to import, 0 to add, 0 to change, 0 to destroy`. A
-   change means the live config differs from the declared one. Read it before
-   applying.
+   adoption plan must be `N to import, 0 to add, 0 to change, 0 to destroy`, N
+   being the port forwards (`unifi_bgp.prod` is already in the state). A change
+   means the live config differs from the declared one. Read it before applying.
 3. `unifi-apply` runs the same steps, then `tofu apply`, which asks for
    confirmation. Applying the import changes nothing on the gateway.
 4. Commit `infra/unifi/terraform.tfstate`, which is encrypted.
