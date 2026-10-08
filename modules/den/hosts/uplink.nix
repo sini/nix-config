@@ -24,6 +24,9 @@
       # Always-on Syncthing hub for replicated home dirs (the bgp pattern: the
       # aspect declares the option, the host file sets it).
       core.network.syncthing.isHub = true;
+      # nginx accepts PROXY v2 from the cluster gateway here (kanidm holds
+      # 127.0.0.1:8443).
+      services.networking.gateway-upstream.proxyProtocolPort = 8444;
     };
   };
 
