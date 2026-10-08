@@ -1,0 +1,14 @@
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: filesystem-trim
+  namespace: longhorn-system
+spec:
+  concurrency: 2
+  cron: 30 5 * * *
+  groups:
+    - default
+    - db-local-snap
+    - media-config
+  retain: 0
+  task: filesystem-trim

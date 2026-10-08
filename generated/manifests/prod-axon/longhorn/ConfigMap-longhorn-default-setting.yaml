@@ -8,6 +8,8 @@ data:
     default-replica-count: "2"
     priority-class: "longhorn-critical"
     disable-revision-counter: "{\"v1\":\"true\"}"
+    auto-cleanup-when-delete-backup: true
+    auto-cleanup-snapshot-after-on-demand-backup-completed: true
 kind: ConfigMap
 metadata:
   labels:

@@ -148,6 +148,30 @@ in
                 groups = [ "media-config" ];
               };
             }
+            # Return freed filesystem blocks to Longhorn. Without it a volume's
+            # on-disk size only grows: compaction (prometheus, loki) and WAL
+            # churn (postgres) leave volumes far larger than their data. Trim is
+            # safe for the ephemeral TSDBs, so this one does cover the default
+            # group (every unlabelled volume) alongside the labelled ones.
+            {
+              apiVersion = "longhorn.io/v1beta2";
+              kind = "RecurringJob";
+              metadata = {
+                name = "filesystem-trim";
+                namespace = "longhorn-system";
+              };
+              spec = {
+                task = "filesystem-trim";
+                cron = "30 5 * * *";
+                retain = 0;
+                concurrency = 2;
+                groups = [
+                  "default"
+                  "db-local-snap"
+                  "media-config"
+                ];
+              };
+            }
           ];
 
           helm.releases.longhorn = {
@@ -173,6 +197,12 @@ in
                 # default (and the dashboard) so any volume created outside that class
                 # also defaults to 2 rather than the chart default of 3.
                 defaultReplicaCount = 2;
+                # A CNPG volumeSnapshot backup (type:bak) is an on-demand backup:
+                # once uploaded to the NAS, its local snapshot is only dead weight
+                # on the volume (db-local-snap keeps the local rollback points).
+                # And when backup pruning deletes a NAS backup, drop its snapshot.
+                autoCleanupSnapshotAfterOnDemandBackupCompleted = true;
+                autoCleanupSnapshotWhenDeleteBackup = true;
               };
 
               persistence = {
