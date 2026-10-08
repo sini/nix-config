@@ -8,6 +8,7 @@
 #   nix build .#unifi.config   — config.tf.json
 #   nix build .#checks.<system>.unifi-bgp-render
 #   nix build .#checks.<system>.unifi-port-forward-render
+#   nix build .#checks.<system>.unifi-nat-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -23,32 +24,46 @@ let
   unifiEnv = "prod";
   workdir = "infra/unifi";
   unifiTerranixModules = config.flake.unifiTerranixModules.${unifiEnv};
+  restapiVersion = "3.0.0";
 
-  # The gateway's port forwards, keyed by the resource name unifi-adopt derives
-  # from a forward's controller name (portForwardImports). Only `env`'s
-  # records are rendered. A forward listens on the first WAN, or with `allWans`
-  # on every one in `wans` (the controller's destination_ips).
-  # ponytail: overlap compares single ports and comma lists, not "a-b" ranges.
-  renderPortForwards =
-    {
-      env,
-      wans,
-      forwards,
-    }:
+  # A controller name as a resource name: lowercased, each run of other
+  # characters as `_`, the key unifi-adopt derives (portForwardImports).
+  key =
+    n:
     let
-      own = builtins.filter (r: r.environment == env) forwards;
-      key =
-        n:
+      k = lib.removePrefix "_" (
+        lib.removeSuffix "_" (
+          lib.concatMapStrings (x: if builtins.isList x then "_" else x) (
+            builtins.split "[^a-z0-9]+" (lib.toLower n)
+          )
+        )
+      );
+    in
+    if builtins.match "[0-9].*" k != null then "pf_" + k else k;
+
+  # `env`'s port-forwards records of one mode ("forward" when unset), keyed by
+  # resource name. Two with the same key, or overlapping WAN ports on
+  # overlapping protocols, are refused. Each mode is checked on its own: the
+  # 443 cutover keeps a forward and a nat record side by side for one apply.
+  # ponytail: overlap compares single ports and comma lists, not "a-b" ranges.
+  recordsOf =
+    mode: env: forwards:
+    let
+      modeOf =
+        r:
         let
-          k = lib.removePrefix "_" (
-            lib.removeSuffix "_" (
-              lib.concatMapStrings (x: if builtins.isList x then "_" else x) (
-                builtins.split "[^a-z0-9]+" (lib.toLower n)
-              )
-            )
-          );
+          m = r.mode or "forward";
         in
-        if builtins.match "[0-9].*" k != null then "pf_" + k else k;
+        if
+          builtins.elem m [
+            "forward"
+            "nat"
+          ]
+        then
+          m
+        else
+          throw "unifi: port forward ${r.name} has mode ${m}, not forward or nat";
+      own = builtins.filter (r: r.environment == env && modeOf r == mode) forwards;
       ports = r: lib.splitString "," r.wanPort;
       overlaps =
         a: b:
@@ -66,23 +81,176 @@ let
         else if portClash != null then
           throw "unifi: port forwards ${portClash.name} and ${r.name} both take ${r.protocol} wan:${r.wanPort}"
         else
-          lib.nameValuePair (key r.name) (
-            {
-              inherit (r) name protocol forward;
-              wan = {
-                interface = builtins.head wans;
-                port = r.wanPort;
-              };
-            }
-            // lib.optionalAttrs (r.allWans or false) {
-              destination_ips = map (interface: {
-                destination_ip = "any";
-                inherit interface;
-              }) wans;
-            }
-          );
+          lib.nameValuePair (key r.name) r;
     in
-    lib.listToAttrs (lib.imap0 check own);
+    lib.imap0 check own;
+
+  # The gateway's port forwards: the records with mode "forward". A forward
+  # listens on the first WAN, or with `allWans` on every one in `wans` (the
+  # controller's destination_ips).
+  renderPortForwards =
+    {
+      env,
+      wans,
+      forwards,
+    }:
+    lib.listToAttrs (
+      map (
+        { name, value }:
+        lib.nameValuePair name (
+          {
+            inherit (value) name protocol forward;
+            wan = {
+              interface = builtins.head wans;
+              port = value.wanPort;
+            };
+          }
+          // lib.optionalAttrs (value.allWans or false) {
+            destination_ips = map (interface: {
+              destination_ip = "any";
+              inherit interface;
+            }) wans;
+          }
+        )
+      ) (recordsOf "forward" env forwards)
+    );
+
+  # The records with mode "nat" as custom NAT rules (v2 `nat`), one
+  # restapi_object each. A port forward to a target off the gateway's own
+  # networks masquerades every client; these rules masquerade hairpin clients
+  # only, so internet clients reach the target with their own address.
+  #   <key>_dnat_wan    public address:wanPort in on the WAN -> forward
+  #   <key>_dnat_<lan>  the same in on each LAN (hairpin)
+  #   <key>_masq_<lan>  each LAN's clients to forward, out the first LAN
+  # The controller requires a DNAT's in_interface and a MASQUERADE's
+  # out_interface, both networkconf ids, looked up by `networks` names.
+  # Ports are the controller's strings; a /32 filter address is refused, so
+  # addresses are bare.
+  renderNat =
+    {
+      env,
+      site,
+      publicIPv4,
+      networks,
+      forwards,
+    }:
+    let
+      records = recordsOf "nat" env forwards;
+      netKey = n: "unifi_network_${key n}";
+      netId = n: "\${data.restapi_object.${netKey n}.id}";
+      singlePort =
+        r: p:
+        if builtins.match "[0-9]+" p != null then
+          p
+        else
+          throw "unifi: nat port forward ${r.name} needs a single port, not ${p}";
+      filter =
+        extra:
+        {
+          filter_type = "NONE";
+          firewall_group_ids = [ ];
+          invert_address = false;
+          invert_port = false;
+        }
+        // extra;
+      rule =
+        extra:
+        {
+          enabled = true;
+          exclude = false;
+          ip_version = "IPV4";
+          is_predefined = false;
+          logging = false;
+          pppoe_use_base_interface = false;
+          setting_preference = "manual";
+        }
+        // extra;
+      rulesOf =
+        { name, value }:
+        let
+          r = value;
+          dnat = side: iface: {
+            name = "${name}_dnat_${side}";
+            value = rule {
+              type = "DNAT";
+              description = "${r.name} dnat ${side}";
+              inherit (r) protocol;
+              in_interface = netId iface;
+              ip_address = r.forward.ip;
+              port = singlePort r r.forward.port;
+              source_filter = filter { };
+              destination_filter = filter {
+                filter_type = "ADDRESS_AND_PORT";
+                address = publicIPv4;
+                port = singlePort r r.wanPort;
+              };
+            };
+          };
+          masq = lan: {
+            name = "${name}_masq_${key lan}";
+            value = rule {
+              type = "MASQUERADE";
+              description = "${r.name} masquerade ${key lan}";
+              inherit (r) protocol;
+              out_interface = netId (builtins.head networks.lans);
+              source_filter = filter {
+                filter_type = "NETWORK_CONF";
+                network_conf_id = netId lan;
+              };
+              destination_filter = filter {
+                filter_type = "ADDRESS_AND_PORT";
+                address = r.forward.ip;
+                port = singlePort r r.forward.port;
+              };
+            };
+          };
+        in
+        [ (dnat "wan" networks.wan) ]
+        ++ map (lan: dnat (key lan) lan) networks.lans
+        ++ map masq networks.lans;
+      rules = lib.concatMap rulesOf records;
+      path = "/v2/api/site/${site}/nat";
+    in
+    if records == [ ] then
+      { }
+    else
+      assert lib.assertMsg (publicIPv4 != null) "unifi: nat port forwards need dns.publicIPv4";
+      assert lib.assertMsg (networks != null) "unifi: nat port forwards need unifi.networks";
+      {
+        data.restapi_object = lib.genAttrs' (lib.unique ([ networks.wan ] ++ networks.lans)) (
+          n:
+          lib.nameValuePair (netKey n) {
+            path = "/api/s/${site}/rest/networkconf";
+            results_key = "data";
+            search_key = "name";
+            search_value = n;
+            results_contains_object = true;
+          }
+        );
+        # rule_index is unique per site and the controller assigns a clashing
+        # one when none is sent, so each rule takes its position.
+        resource.restapi_object = lib.listToAttrs (
+          lib.imap1 (i: { name, value }: {
+            inherit name;
+            value = {
+              inherit path;
+              create_path = path;
+              # No GET by id: read searches the list for the _id.
+              read_path = "${path}/{id}";
+              read_search = {
+                search_key = "_id";
+                search_value = "{id}";
+              };
+              update_path = "${path}/{id}";
+              destroy_path = "${path}/{id}";
+              # The controller adds _id, site_id and attr_* fields; drift is
+              # judged on the declared ones.
+              ignore_server_additions = true;
+              data = builtins.toJSON (value // { rule_index = i; });
+            };
+          }) rules
+        );
+      };
 
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
@@ -194,6 +362,27 @@ in
                 default = [ "wan" ];
                 description = "The gateway's WAN interfaces: a port forward's wan side is the first, and an allWans forward listens on each";
               };
+              networks = mkOption {
+                default = null;
+                description = ''
+                  The controller's names (networkconf `name`) for the networks a nat
+                  port forward's rules name. null = no nat port forwards.
+                '';
+                type = types.nullOr (
+                  types.submodule {
+                    options = {
+                      wan = mkOption {
+                        type = types.str;
+                        description = "The network of the first WAN: internet clients come in on it";
+                      };
+                      lans = mkOption {
+                        type = types.nonEmptyListOf types.str;
+                        description = "The LANs whose clients reach a nat port forward by the public address (hairpin). The first is the one its targets are routed out of";
+                      };
+                    };
+                  }
+                );
+              };
             };
           }
         );
@@ -257,65 +446,94 @@ in
       inherit (environment) unifi;
       net = environment.networks.default;
     in
-    {
-      terraform = {
-        required_providers.unifi = {
-          source = "ubiquiti-community/unifi";
-          version = "0.56.1";
-        };
-        backend.local.path = "terraform.tfstate";
-        encryption = {
-          key_provider.pbkdf2.state.passphrase = "\${var.state_passphrase}";
-          method.aes_gcm.state.keys = "\${key_provider.pbkdf2.state}";
-          state = {
-            method = "method.aes_gcm.state"; # a bare reference, not an interpolation
-            enforced = true;
-          };
-          plan = {
-            method = "method.aes_gcm.state"; # a bare reference, not an interpolation
-            enforced = true;
-          };
-        };
-      };
-
-      variable.state_passphrase = {
-        type = "string";
-        sensitive = true;
-        description = "State and plan encryption passphrase (TF_VAR_state_passphrase)";
-      };
-
-      # Key from UNIFI_API_KEY. The gateway serves a self-signed certificate.
-      provider.unifi = {
-        api_url = "https://${environment.networks.default.gatewayIp}";
-        inherit (unifi) site;
-        allow_insecure = true;
-      };
-
-      resource.unifi_bgp.${environment.name} = {
-        inherit (unifi.bgp) enabled description;
-        config = renderBgpConfig {
-          inherit (environment) name;
-          inherit (net) cidr;
-          asn = net.gatewayAsn;
-          routerId = net.gatewayIp;
-          peers = bgp-peers;
-        };
-        upload_file_name = unifi.bgp.uploadFileName;
-      };
-
-      resource.unifi_port_forward = renderPortForwards {
+    lib.recursiveUpdate
+      (renderNat {
         env = environment.name;
-        inherit (unifi) wans;
+        inherit (unifi) site networks;
+        inherit (environment.dns) publicIPv4;
         forwards = port-forwards;
-      };
+      })
+      {
+        terraform = {
+          required_providers = {
+            unifi = {
+              source = "ubiquiti-community/unifi";
+              version = "0.56.1";
+            };
+            # The gateway's custom NAT rules (v2 nat), which the unifi provider has no resource for.
+            restapi = {
+              source = "Mastercard/restapi";
+              version = restapiVersion;
+            };
+          };
+          backend.local.path = "terraform.tfstate";
+          encryption = {
+            key_provider.pbkdf2.state.passphrase = "\${var.state_passphrase}";
+            method.aes_gcm.state.keys = "\${key_provider.pbkdf2.state}";
+            state = {
+              method = "method.aes_gcm.state"; # a bare reference, not an interpolation
+              enforced = true;
+            };
+            plan = {
+              method = "method.aes_gcm.state"; # a bare reference, not an interpolation
+              enforced = true;
+            };
+          };
+        };
 
-      # Read by unifi-adopt.
-      _meta = {
-        api_url = "https://${environment.networks.default.gatewayIp}";
-        inherit (unifi) site;
-        bgp = "unifi_bgp.${environment.name}";
+        variable.unifi_api_key = {
+          type = "string";
+          sensitive = true;
+          description = "The UniFi API key for the restapi provider (TF_VAR_unifi_api_key)";
+        };
+
+        variable.state_passphrase = {
+          type = "string";
+          sensitive = true;
+          description = "State and plan encryption passphrase (TF_VAR_state_passphrase)";
+        };
+
+        # Key from UNIFI_API_KEY. The gateway serves a self-signed certificate.
+        provider.unifi = {
+          api_url = "https://${environment.networks.default.gatewayIp}";
+          inherit (unifi) site;
+          allow_insecure = true;
+        };
+
+        # The v2 API answers a write with the bare object, a list with a bare array.
+        provider.restapi = {
+          uri = "https://${environment.networks.default.gatewayIp}/proxy/network";
+          insecure = true;
+          headers."X-API-KEY" = "\${var.unifi_api_key}";
+          id_attribute = "_id";
+          create_returns_object = true;
+        };
+
+        resource.unifi_bgp.${environment.name} = {
+          inherit (unifi.bgp) enabled description;
+          config = renderBgpConfig {
+            inherit (environment) name;
+            inherit (net) cidr;
+            asn = net.gatewayAsn;
+            routerId = net.gatewayIp;
+            peers = bgp-peers;
+          };
+          upload_file_name = unifi.bgp.uploadFileName;
+        };
+
+        resource.unifi_port_forward = renderPortForwards {
+          env = environment.name;
+          inherit (unifi) wans;
+          forwards = port-forwards;
+        };
+
+        # Read by unifi-adopt.
+        _meta = {
+          api_url = "https://${environment.networks.default.gatewayIp}";
+          inherit (unifi) site;
+          bgp = "unifi_bgp.${environment.name}";
+        };
       };
-    };
 
   # The unifi workspace's state passphrase, declared like dns-state-passphrase.
   den.aspects.unifi-state-passphrase.age-secrets =
@@ -353,8 +571,22 @@ in
         age-plugin-yubikey -i > "$identity"
         UNIFI_API_KEY=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-api-key.age)
         TF_VAR_state_passphrase=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-state-passphrase.age)
-        export UNIFI_API_KEY TF_VAR_state_passphrase
+        TF_VAR_unifi_api_key=$UNIFI_API_KEY
+        export UNIFI_API_KEY TF_VAR_unifi_api_key TF_VAR_state_passphrase
       '';
+
+      # Not in nixpkgs. The registry.terraform.io address is the one opentofu's
+      # withPlugins rewrites to registry.opentofu.org.
+      restapi = pkgs.terraform-providers.mkProvider {
+        owner = "Mastercard";
+        repo = "terraform-provider-restapi";
+        rev = "v${restapiVersion}";
+        hash = "sha256-XdOyOIrE090+QzeGQg7sn5GdaH9Jv47HdcuIH1/kDVM=";
+        vendorHash = "sha256-O9j62HQEw1d+OEK/9sJpC6FPsVu8cDD0vxwVpvHHCvk=";
+        spdx = "Apache-2.0";
+        homepage = "https://registry.terraform.io/providers/Mastercard/restapi";
+        provider-source-address = "registry.terraform.io/mastercard/restapi";
+      };
 
       mkUnifiCommand =
         name: description: runtimeInputs: text:
@@ -374,7 +606,10 @@ in
       terranix.terranixConfigurations.unifi = {
         inherit workdir;
         modules = unifiTerranixModules;
-        terraformWrapper.package = pkgs.opentofu.withPlugins (p: [ p.ubiquiti-community_unifi ]);
+        terraformWrapper.package = pkgs.opentofu.withPlugins (p: [
+          p.ubiquiti-community_unifi
+          restapi
+        ]);
       };
 
       # Fixture: the gateway's own record is dropped, peers group by remote ASN,
@@ -486,6 +721,7 @@ in
             host
             cluster
             other
+            (cluster // { mode = "nat"; })
           ];
           refused = forwards: !(builtins.tryEval (builtins.deepSeq (render forwards) null)).success;
           ok =
@@ -533,6 +769,138 @@ in
         in
         assert lib.assertMsg ok "unifi-port-forward-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-port-forward-render" (builtins.toJSON rendered);
+
+      # Fixture: a nat record renders as the WAN DNAT, a hairpin DNAT per LAN and
+      # a masquerade per LAN out of the first, with these exact payloads; a
+      # forward record and another environment's nat record render no rule; a
+      # port list, an unknown mode and a missing networks are refused.
+      checks.unifi-nat-render =
+        let
+          nat = {
+            environment = "t";
+            name = "c1-https-ingress";
+            mode = "nat";
+            protocol = "tcp_udp";
+            wanPort = "443";
+            forward = {
+              ip = "10.1.0.1";
+              port = "443";
+            };
+          };
+          args = {
+            env = "t";
+            site = "s";
+            publicIPv4 = "192.0.2.1";
+            networks = {
+              wan = "Internet 1";
+              lans = [
+                "Default"
+                "dev"
+              ];
+            };
+            forwards = [
+              nat
+              (removeAttrs nat [ "mode" ] // { name = "ssh"; })
+              (
+                nat
+                // {
+                  environment = "u";
+                  name = "c2";
+                }
+              )
+            ];
+          };
+          rendered = renderNat args;
+          rules = rendered.resource.restapi_object;
+          payload = n: builtins.fromJSON rules.${n}.data;
+          refused = a: !(builtins.tryEval (builtins.deepSeq (renderNat (args // a)) null)).success;
+          filter =
+            extra:
+            {
+              filter_type = "NONE";
+              firewall_group_ids = [ ];
+              invert_address = false;
+              invert_port = false;
+            }
+            // extra;
+          common = {
+            enabled = true;
+            exclude = false;
+            ip_version = "IPV4";
+            is_predefined = false;
+            logging = false;
+            pppoe_use_base_interface = false;
+            setting_preference = "manual";
+            protocol = "tcp_udp";
+          };
+          dnat =
+            side: iface: index:
+            common
+            // {
+              type = "DNAT";
+              description = "c1-https-ingress dnat ${side}";
+              in_interface = "\${data.restapi_object.unifi_network_${iface}.id}";
+              ip_address = "10.1.0.1";
+              port = "443";
+              rule_index = index;
+              source_filter = filter { };
+              destination_filter = filter {
+                filter_type = "ADDRESS_AND_PORT";
+                address = "192.0.2.1";
+                port = "443";
+              };
+            };
+          masq =
+            lan: index:
+            common
+            // {
+              type = "MASQUERADE";
+              description = "c1-https-ingress masquerade ${lan}";
+              out_interface = "\${data.restapi_object.unifi_network_default.id}";
+              rule_index = index;
+              source_filter = filter {
+                filter_type = "NETWORK_CONF";
+                network_conf_id = "\${data.restapi_object.unifi_network_${lan}.id}";
+              };
+              destination_filter = filter {
+                filter_type = "ADDRESS_AND_PORT";
+                address = "10.1.0.1";
+                port = "443";
+              };
+            };
+          ok =
+            builtins.attrNames rules == [
+              "c1_https_ingress_dnat_default"
+              "c1_https_ingress_dnat_dev"
+              "c1_https_ingress_dnat_wan"
+              "c1_https_ingress_masq_default"
+              "c1_https_ingress_masq_dev"
+            ]
+            && payload "c1_https_ingress_dnat_wan" == dnat "wan" "internet_1" 1
+            && payload "c1_https_ingress_dnat_default" == dnat "default" "default" 2
+            && payload "c1_https_ingress_dnat_dev" == dnat "dev" "dev" 3
+            && payload "c1_https_ingress_masq_default" == masq "default" 4
+            && payload "c1_https_ingress_masq_dev" == masq "dev" 5
+            &&
+              rules.c1_https_ingress_dnat_wan.read_search == {
+                search_key = "_id";
+                search_value = "{id}";
+              }
+            && rules.c1_https_ingress_dnat_wan.destroy_path == "/v2/api/site/s/nat/{id}"
+            &&
+              builtins.attrNames rendered.data.restapi_object == [
+                "unifi_network_default"
+                "unifi_network_dev"
+                "unifi_network_internet_1"
+              ]
+            && rendered.data.restapi_object.unifi_network_dev.search_value == "dev"
+            && renderNat (args // { forwards = [ (removeAttrs nat [ "mode" ]) ]; }) == { }
+            && refused { forwards = [ (nat // { wanPort = "443,8443"; }) ]; }
+            && refused { forwards = [ (nat // { mode = "dnat"; }) ]; }
+            && refused { networks = null; };
+        in
+        assert lib.assertMsg ok "unifi-nat-render:\n${builtins.toJSON rendered}";
+        pkgs.writeText "unifi-nat-render" (builtins.toJSON rendered);
 
       packages = {
         unifi-plan = mkUnifiCommand "unifi-plan" "OpenTofu plan for the UniFi gateway" [ ] ''

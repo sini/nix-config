@@ -35,20 +35,40 @@ declared by the aspect that owns the public port, as a `port-forwards` record
 routed to the environment by `env-collect-port-forwards` (host and cluster
 records of that environment) and rendered by `renderPortForwards`:
 
-| resource | declared by |
-|---|---|
-| `axon_https_ingress` | `kubernetes.services.network.gateway.envoy-gateway`, per cluster: `<cluster>-https-ingress`, 443 TCP and UDP to the cluster's `default-gateway` assignment |
-| `headscale_to_uplink` | `services.networking.headscale`, per host: `headscale-to-<host>`, UDP 3478 (STUN) and 41641 to the host's default-network address |
-| `ssh_to_uplink` | `core.security.openssh`, per host with `exposure = "public"`: `ssh-to-<host>`, TCP 22 |
+| resource              | declared by                                                                                                                                                |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `axon_https_ingress`  | `kubernetes.services.network.gateway.envoy-gateway`, per cluster: `<cluster>-https-ingress`, 443 TCP and UDP to the cluster's `default-gateway` assignment |
+| `headscale_to_uplink` | `services.networking.headscale`, per host: `headscale-to-<host>`, UDP 3478 (STUN) and 41641 to the host's default-network address                          |
+| `ssh_to_uplink`       | `core.security.openssh`, per host with `exposure = "public"`: `ssh-to-<host>`, TCP 22                                                                      |
 
 The resource name is the forward's name, lowercased, with each run of other
 characters as `_`, the same key `unifi-adopt` derives from a live forward's
-controller name. A forward's wan side is the first of `unifi.wans` (prod:
-`wan`, `wan2`), and an `allWans` forward listens on each of them (the
-controller's `destination_ips`). Two forwards with the same resource name, or
-overlapping WAN ports on overlapping protocols, fail the evaluation
-(`checks.<system>.unifi-port-forward-render`). A change to a forward is an
-edit of its aspect, reviewed in `unifi-plan`.
+controller name. A forward's wan side is the first of `unifi.wans` (prod: `wan`,
+`wan2`), and an `allWans` forward listens on each of them (the controller's
+`destination_ips`). Two forwards with the same resource name, or overlapping WAN
+ports on overlapping protocols, fail the evaluation
+(`checks.<system>.unifi-port-forward-render`). A change to a forward is an edit
+of its aspect, reviewed in `unifi-plan`.
+
+A record with `mode = "nat"` is rendered by `renderNat` as the gateway's custom
+NAT rules (v2 `nat`, `restapi_object.<name>_*`, through the `Mastercard/restapi`
+provider, packaged in `unifi.nix`) instead of a port forward. A port forward to
+a target off the gateway's own networks (the cluster VIPs) masquerades every
+client, so the target sees the gateway's address. The nat rules masquerade
+hairpin clients only:
+
+| rule                | match                                                         | action                    |
+| ------------------- | ------------------------------------------------------------- | ------------------------- |
+| `<name>_dnat_wan`   | in on `unifi.networks.wan`, to `dns.publicIPv4`:wanPort       | DNAT to forward           |
+| `<name>_dnat_<lan>` | in on each of `unifi.networks.lans`, to the same              | DNAT to forward (hairpin) |
+| `<name>_masq_<lan>` | from each LAN (`NETWORK_CONF`), to forward, out the first LAN | MASQUERADE                |
+
+The controller requires a DNAT's inbound and a masquerade's outbound interface,
+as networkconf ids, so the rules look them up by the controller's network names
+(`unifi.networks`, `data.restapi_object.unifi_network_*`). A wrong name fails
+the plan before anything is written. `axon-https-ingress` is nat, and its port
+forward stays beside it until the rules are live;
+`checks.<system>.unifi-nat-render` fixes the payloads.
 
 `moved.tf.json` records the rename of the `json64_dev` forward to
 `axon_https_ingress`. It is applied and kept as a no-op.
@@ -67,7 +87,8 @@ master identities only and never rekeyed to a host.
 
 You need the YubiKey. Each command decrypts the API key
 (`.secrets/env/prod/unifi-api-key.age`, a UniFi Integrations key sent as
-`X-Api-Key`) and the passphrase into its own environment, and prints neither.
+`X-Api-Key` by both providers, to the restapi one as `TF_VAR_unifi_api_key`) and
+the passphrase into its own environment, and prints neither.
 
 1. `unifi-adopt` reads the site's BGP configuration and its port forwards
    (`rest/portforward`), with `GET`s only. It only imports: it writes

@@ -63,6 +63,16 @@
       "wan"
       "wan2"
     ];
+    # The controller's network names, for nat port forwards' rules: the first
+    # WAN, and the LANs whose clients reach them by the public address (prod's
+    # first, the network the cluster is routed through).
+    unifi.networks = {
+      wan = "Internet 1";
+      lans = [
+        "Default"
+        "dev"
+      ];
+    };
     unifi.bgp = {
       description = "edge-prod";
       uploadFileName = "unifi-frr-bgp-prod.conf";
