@@ -1,0 +1,10 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: Backend
+metadata:
+  name: uplink-nginx
+  namespace: gateways
+spec:
+  endpoints:
+    - ip:
+        address: 10.10.10.1
+        port: 443

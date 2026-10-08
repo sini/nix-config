@@ -119,6 +119,16 @@ in
       ])
     ];
 
+  # A host's public-ingress endpoint (its nginx) to clusters, where the gateway
+  # routes that host's served-domains names to it. Consumers filter by environment.
+  den.policies.cluster-collect-gateway-upstreams =
+    { cluster, ... }:
+    [
+      (pipe.from "gateway-upstreams" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   # IdP identities (kanidm persons and their groups) from the IdP host to clusters,
   # so cluster workloads can derive authorization (e.g. Synapse admins) from the
   # same provisioning kanidm applies. Consumers filter by environment.
@@ -274,6 +284,7 @@ in
     den.policies.cluster-collect-media-scratch-exports
     den.policies.cluster-collect-container-registries
     den.policies.cluster-collect-served-domains
+    den.policies.cluster-collect-gateway-upstreams
     den.policies.cluster-collect-idm-users
     den.policies.cluster-collect-domain-quirks
   ];

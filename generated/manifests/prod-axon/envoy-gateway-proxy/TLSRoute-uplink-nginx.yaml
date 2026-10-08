@@ -1,0 +1,27 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: TLSRoute
+metadata:
+  name: uplink-nginx
+  namespace: gateways
+spec:
+  hostnames:
+    - prometheus.json64.dev
+    - loki.json64.dev
+    - grafana.json64.dev
+    - hs.json64.dev
+    - idm.json64.dev
+    - jellyfin.json64.dev
+    - homepage.json64.dev
+    - oauth2-proxy.json64.dev
+    - open-webui.json64.dev
+    - attic.json64.dev
+    - den.json64.dev
+    - registry.json64.dev
+  parentRefs:
+    - name: default-gateway
+  rules:
+    - backendRefs:
+        - group: gateway.envoyproxy.io
+          kind: Backend
+          name: uplink-nginx
+          port: 443
