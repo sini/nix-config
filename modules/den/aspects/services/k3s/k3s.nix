@@ -272,6 +272,8 @@ in
           tmpfiles.rules = [
             "d /var/lib/longhorn 0750 root root -"
             "L+ /usr/local/bin/iscsiadm - - - - ${pkgs.openiscsi}/bin/iscsiadm"
+            # Longhorn's filesystem trim nsenters the host and runs fstrim by name.
+            "L+ /usr/local/bin/fstrim - - - - ${pkgs.util-linux}/bin/fstrim"
           ];
 
           services.multipathd.enable = mkForce false;
