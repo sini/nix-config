@@ -62,7 +62,18 @@ let
             # Mirrors converter.py's conditional emission (omit empty/absent keys) for fixture parity.
             {
               name = "secret-to-sopssecret";
-              match.kind = "Secret";
+              # An empty service-account-token Secret is a request for the token
+              # controller to mint one in-cluster: there is nothing to encrypt, and
+              # as a SopsSecret the operator wipes the minted token on every write.
+              # One that carries data is still encrypted.
+              match =
+                r:
+                r.kind == "Secret"
+                && !(
+                  (r.type or null) == "kubernetes.io/service-account-token"
+                  && (r.data or { }) == { }
+                  && (r.stringData or { }) == { }
+                );
               rewrite =
                 secret:
                 let
