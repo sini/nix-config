@@ -716,9 +716,7 @@ in
         }
 
         (lib.mkIf (mailSender != null) {
-          # The mail-sender account and its only group, asserted at kanidmd start.
-          # Accounts and group membership are separate migrations: kanidm applies
-          # them in lexical order, so the account exists before it is referenced.
+          # The mail-sender account, asserted at kanidmd start.
           services.kanidm.server.entryManagement.migrations = {
             "50-mail-sender-account" = {
               id = "f353f3cb-f779-4907-8d6d-ee6ba0fd78b9";
@@ -736,22 +734,14 @@ in
                 }
               ];
             };
-            "51-mail-sender-group" = {
-              id = "8b1bb6cb-ee00-417a-938f-8b3680b59a4a";
-              assertions = [
-                {
-                  state = "present";
-                  # Builtin idm_message_senders.
-                  id = "00000000-0000-0000-0000-000000000055";
-                  member = [ "mail-sender" ];
-                }
-              ];
-            };
           };
 
-          # What migrations may not assert: the account's API token (a credential)
-          # and the domain's account-recovery flag. Mints the token once, as
-          # idm_admin, into a root-only state file; recovery needs a domain admin.
+          # What migrations do not cover: the account's API token (a credential),
+          # the domain's account-recovery flag (recovery needs a domain admin), and
+          # membership of the builtin idm_message_senders group (a migration
+          # asserting it applied without effect on 1.11.2). Each start re-asserts
+          # the flag and membership and mints the token once, as idm_admin, into a
+          # root-only state file.
           systemd.services.kanidm-mail-sender-bootstrap = {
             description = "Mint the kanidm-mail-sender token and enable account recovery";
             after = [ "kanidm.service" ];
@@ -775,10 +765,12 @@ in
                 KANIDM_PASSWORD=$password kanidm login -D admin
                 kanidm system domain set-allow-account-recovery true -D admin
 
+                KANIDM_PASSWORD=$(< ${config.services.kanidm.provision.idmAdminPasswordFile}) \
+                  kanidm login -D idm_admin
+                kanidm group add-members idm_message_senders mail-sender -D idm_admin
+
                 token="$STATE_DIRECTORY/token"
                 if [[ ! -s $token ]]; then
-                  KANIDM_PASSWORD=$(< ${config.services.kanidm.provision.idmAdminPasswordFile}) \
-                    kanidm login -D idm_admin
                   umask 077
                   kanidm service-account api-token generate mail-sender kanidm-mail-sender \
                     --readwrite -o json -D idm_admin | jq -er .result > "$token.new"
