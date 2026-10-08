@@ -88,6 +88,16 @@ in
       ])
     ];
 
+  # IdP identities to hosts, for host services that authorize by kanidm group
+  # (services/matrix-xmsg.nix). Consumers filter by environment.
+  den.policies.collect-idm-users =
+    { host, ... }:
+    [
+      (pipe.from "idm-users" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   # Cluster-scoped: collect k3s node data from host scopes across all environments.
   # The predicate must require `host` so findMatchingAll's entity kind filter
   # includes host scopes (a bare `_: true` has no entity args and rejects
@@ -268,6 +278,7 @@ in
     den.policies.collect-hipfire-endpoints
     den.policies.broadcast-hub-peer
     den.policies.collect-certificate-domains
+    den.policies.collect-idm-users
   ];
 
   den.schema.user.includes = [

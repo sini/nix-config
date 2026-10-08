@@ -206,6 +206,10 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     llm-agents.url = "github:numtide/llm-agents.nix";
+    matrix-xmsg = {
+      url = "github:sini/matrix-xmsg";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     mattpocock-skills = {
       url = "github:mattpocock/skills";
       flake = false;

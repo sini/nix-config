@@ -46,6 +46,7 @@
       hardware.gpu.amd
 
       applications.dev.mux.herdr-pair
+      services.matrix-xmsg
     ];
   };
 }

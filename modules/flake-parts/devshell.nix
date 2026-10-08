@@ -105,6 +105,11 @@
             help = "Copy existing data to impermanence persistent storage for a host";
           }
           {
+            package = config.packages.matrix-bot-provision;
+            name = "matrix-bot-provision";
+            help = "Register @genie on Synapse, save its token for bitstream, join the support room";
+          }
+          {
             package = config.packages.update-tang-disk-keys;
             name = "update-tang-disk-keys";
             help = "Update disk encryption keys using Tang servers and TPM2";

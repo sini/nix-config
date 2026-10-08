@@ -2882,6 +2882,26 @@
         "type": "github"
       }
     },
+    "matrix-xmsg": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791441458,
+        "narHash": "sha256-6WL3NQYfEs8F1qOhCixzEkCcmYdsPV5eLKrMzLi13HE=",
+        "owner": "sini",
+        "repo": "matrix-xmsg",
+        "rev": "3b4da39d2eebb3912c82d4836ff9360cd30a31da",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "matrix-xmsg",
+        "type": "github"
+      }
+    },
     "mattpocock-skills": {
       "flake": false,
       "locked": {
@@ -4458,6 +4478,7 @@
         "import-tree": "import-tree_2",
         "kubenix": "kubenix",
         "llm-agents": "llm-agents",
+        "matrix-xmsg": "matrix-xmsg",
         "mattpocock-skills": "mattpocock-skills",
         "microvm": "microvm",
         "ninfer-3090": "ninfer-3090",
