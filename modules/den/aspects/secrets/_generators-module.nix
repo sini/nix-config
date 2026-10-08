@@ -287,6 +287,44 @@ in
           ${ssh} headscale preauthkeys create --user "$user_id" --reusable --expiration 99y
         '';
 
+    # An access token for a non-admin Synapse user, registered inside the
+    # Synapse pod (_synapse-register.py) so registration_shared_secret is read
+    # there and never leaves the cluster. Uses the caller's kubeconfig. Only
+    # the token is printed; an existing user is an error, since its token is
+    # unrecoverable.
+    synapse-bot-token =
+      {
+        pkgs,
+        secret,
+        name,
+        ...
+      }:
+      let
+        inherit (lib) escapeShellArg;
+        inherit (lib.trivial) throwIfNot;
+        inherit (lib) isAttrs isString;
+        inherit (secret) settings;
+      in
+      throwIfNot (isAttrs settings) "Secret '${name}' must have a `settings` attrset." throwIfNot
+        (isString settings.namespace)
+        "Secret '${name}' is missing a `namespace` string."
+        throwIfNot
+        (isString settings.workload)
+        "Secret '${name}' is missing a `workload` string (e.g. deploy/synapse)."
+        throwIfNot
+        (isString settings.user)
+        "Secret '${name}' is missing a `user` string."
+        throwIfNot
+        (isString settings.secretsFile)
+        "Secret '${name}' is missing a `secretsFile` string (Synapse's secrets YAML in the pod)."
+        ''
+          set -euo pipefail
+          ${pkgs.kubectl}/bin/kubectl -n ${escapeShellArg settings.namespace} \
+            exec -i ${escapeShellArg settings.workload} -- \
+            python3 - ${escapeShellArg settings.user} ${escapeShellArg settings.secretsFile} \
+            < ${./_synapse-register.py}
+        '';
+
     template-file =
       {
         decrypt,

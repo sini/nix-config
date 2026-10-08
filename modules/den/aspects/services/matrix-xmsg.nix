@@ -6,8 +6,10 @@
 # Trust follows kanidm: the IdP's `admins` group, routed here as `idm-users`
 # (kanidm.nix → collect-idm-users), mapped to MXIDs as synapse-admins.nix does.
 #
-# The token is provisioned once by `matrix-bot-provision` (no generator). The
-# service stays off until `rooms` names a room the bot has joined.
+# The token comes from `agenix generate` (the synapse-bot-token generator
+# registers @genie inside the Synapse pod); `matrix-bot-provision` then joins a
+# room with it. The service stays off until `rooms` names a room the bot has
+# joined.
 { inputs, lib, ... }:
 let
   adminGroup = "admins";
@@ -71,11 +73,19 @@ in
 
         warnings = lib.optional (cfg.rooms == [ ]) ''
           matrix-xmsg: settings.services.matrix-xmsg.rooms is empty on ${host.name}, so the @genie bot is NOT enabled.
-          Run `matrix-bot-provision '#support:${environment.domain}'` and set the room ID it prints.
+          Run `agenix generate` (once, for the token), then `matrix-bot-provision '#support:${environment.domain}'` and set the room ID it prints.
         '';
 
-        age.secrets = lib.mkIf (cfg.rooms != [ ]) {
-          matrix-genie-token.rekeyFile = host.secretPath + "/matrix-genie-token.age";
+        # Declared before any room is set: the token must exist to join one.
+        age.secrets.matrix-genie-token = {
+          rekeyFile = host.secretPath + "/matrix-genie-token.age";
+          generator.script = "synapse-bot-token";
+          settings = {
+            namespace = "matrix";
+            workload = "deploy/synapse";
+            user = "genie";
+            secretsFile = "/secrets/secrets.yaml";
+          };
         };
 
         services.matrix-xmsg = lib.mkIf (cfg.rooms != [ ]) {

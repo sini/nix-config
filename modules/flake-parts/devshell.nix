@@ -107,7 +107,7 @@
           {
             package = config.packages.matrix-bot-provision;
             name = "matrix-bot-provision";
-            help = "Register @genie on Synapse, save its token for bitstream, join the support room";
+            help = "Join @genie to a room with its agenix-generated token; prints the rooms setting";
           }
           {
             package = config.packages.update-tang-disk-keys;
