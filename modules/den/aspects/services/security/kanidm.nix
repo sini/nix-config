@@ -543,10 +543,52 @@ in
   den.aspects.services.security.kanidm = {
     includes = [ den.aspects.services.networking.nginx ];
 
+    settings = {
+      # kanidm-mail-sender drains kanidm's outbound message queue (credential
+      # reset and account recovery links), authenticating with a read-write API
+      # token of the mail-sender service account, a member of
+      # idm_message_senders and nothing else. The account and membership are an
+      # entry-management migration; the token and the domain's account-recovery
+      # flag are what migrations may not assert, so a oneshot on this host
+      # mints/sets them. The token never leaves the host. null leaves the queue
+      # undrained and recovery off.
+      mailSender = lib.mkOption {
+        type = lib.types.nullOr (
+          lib.types.submodule {
+            options = {
+              relay = lib.mkOption {
+                type = lib.types.str;
+                example = "smtp://smtp.example.com:587";
+                description = "SMTP relay URL: smtps:// or smtp:// with mandatory STARTTLS.";
+              };
+              fromAddress = lib.mkOption {
+                type = lib.types.str;
+                example = "idm@example.com";
+                description = "Sender address of outgoing messages.";
+              };
+              replyToAddress = lib.mkOption {
+                type = lib.types.str;
+                example = "admin@example.com";
+                description = "Reply-To address of outgoing messages.";
+              };
+              instanceDisplayName = lib.mkOption {
+                type = lib.types.str;
+                example = "Example IDM";
+                description = "Instance name shown in message subjects.";
+              };
+            };
+          }
+        );
+        default = null;
+        description = "kanidm-mail-sender configuration; null disables it.";
+      };
+    };
+
     nixos =
       {
         config,
         environment,
+        host,
         pkgs,
         ...
       }:
@@ -563,103 +605,231 @@ in
         ) (filterAttrs (_: sys: !(sys.public or false)) (mkOAuth2Services environment { }));
 
         oauth2Services = mkOAuth2Services environment secretPaths;
+
+        mailSender = host.settings.services.security.kanidm.mailSender;
+        mailSenderUuid = "794f8210-93f9-4ec6-b89f-24607b41f9e2";
+        # Everything but the token, which is prepended at start from the credential.
+        mailSenderConfig = (pkgs.formats.toml { }).generate "kanidm-mail-sender.toml" {
+          instance_display_name = mailSender.instanceDisplayName;
+          instance_url = "https://${domain}";
+          mail_from_address = mailSender.fromAddress;
+          mail_reply_to_address = mailSender.replyToAddress;
+          mail_relay = mailSender.relay;
+        };
       in
-      {
-        services = {
-          kanidm = {
-            # Carries two OAuth2 token-lifetime patches (see the .patch header):
-            # (B) 8h access tokens so the stateless Envoy oauth2 filter rarely
-            # refreshes, and (A) a refresh-token reuse grace so the rare concurrent
-            # refresh fanned across the gateway replicas isn't misdetected as reuse
-            # and doesn't destroy the session. Neither is configurable in kanidm
-            # (proven from source). Only .rs files change, so vendored cargoDeps
-            # stay valid; --replace would silently no-op on a bump, so a context
-            # diff (fails loudly if the lines move) is used instead.
-            package = pkgs.kanidm_1_11.withSecretProvisioning.overrideAttrs (old: {
-              patches = (old.patches or [ ]) ++ [ ./kanidm-oauth2-token-tuning.patch ];
-            });
+      lib.mkMerge [
+        {
+          services = {
+            kanidm = {
+              # Carries two OAuth2 token-lifetime patches (see the .patch header):
+              # (B) 8h access tokens so the stateless Envoy oauth2 filter rarely
+              # refreshes, and (A) a refresh-token reuse grace so the rare concurrent
+              # refresh fanned across the gateway replicas isn't misdetected as reuse
+              # and doesn't destroy the session. Neither is configurable in kanidm
+              # (proven from source). Only .rs files change, so vendored cargoDeps
+              # stay valid; --replace would silently no-op on a bump, so a context
+              # diff (fails loudly if the lines move) is used instead.
+              package = pkgs.kanidm_1_11.withSecretProvisioning.overrideAttrs (old: {
+                patches = (old.patches or [ ]) ++ [ ./kanidm-oauth2-token-tuning.patch ];
+              });
 
-            server = {
-              enable = true;
-              settings = {
-                inherit (environment) domain;
-                origin = "https://${domain}";
-                bindaddress = "127.0.0.1:8443";
-                ldapbindaddress = "127.0.0.1:3636";
+              server = {
+                enable = true;
+                settings = {
+                  inherit (environment) domain;
+                  origin = "https://${domain}";
+                  bindaddress = "127.0.0.1:8443";
+                  ldapbindaddress = "127.0.0.1:3636";
 
-                tls_chain = "${config.security.acme.certs.${topDomain}.directory}/fullchain.pem";
-                tls_key = "${config.security.acme.certs.${topDomain}.directory}/key.pem";
+                  tls_chain = "${config.security.acme.certs.${topDomain}.directory}/fullchain.pem";
+                  tls_key = "${config.security.acme.certs.${topDomain}.directory}/key.pem";
+                };
+              };
+
+              client = {
+                enable = true;
+                settings = {
+                  uri = "https://${domain}";
+                };
+              };
+
+              provision = {
+                enable = true;
+                adminPasswordFile = config.age.secrets.kanidm-admin-password.path;
+                idmAdminPasswordFile = config.age.secrets.kanidm-admin-password.path;
+
+                # All groups provisioned to kanidm
+                groups = mapAttrs (_: g: { inherit (g) members; }) groups;
+
+                # Users with oauth-grant or user-role groups provisioned as persons
+                persons = mapAttrs (username: user: {
+                  # kanidm rejects an empty displayname (InvalidAttributeSyntax),
+                  # so fall back to the username when none is set.
+                  displayName = if user.identity.displayName != "" then user.identity.displayName else username;
+                  mailAddresses =
+                    if user.identity.email != null then
+                      [ user.identity.email ]
+                    else
+                      [ "${username}@${environment.email.domain}" ];
+                  groups = getUserGroups user;
+                }) kanidmUsers;
+
+                # OAuth2 client definitions
+                systems.oauth2 = oauth2Services;
+
+                # POSIX extensions via extra JSON
+                inherit extraJsonFile;
               };
             };
 
-            client = {
-              enable = true;
-              settings = {
-                uri = "https://${domain}";
+            nginx.virtualHosts."${domain}" = {
+              forceSSL = true;
+              useACMEHost = topDomain;
+              locations."/" = {
+                proxyPass = "https://127.0.0.1:8443";
+                proxyWebsockets = true;
+                extraConfig = ''
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+
+                  proxy_ssl_server_name on;
+                  proxy_ssl_name $host;
+                  proxy_ssl_verify_depth 2;
+                  proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+                  proxy_ssl_session_reuse off;
+                '';
               };
-            };
-
-            provision = {
-              enable = true;
-              adminPasswordFile = config.age.secrets.kanidm-admin-password.path;
-              idmAdminPasswordFile = config.age.secrets.kanidm-admin-password.path;
-
-              # All groups provisioned to kanidm
-              groups = mapAttrs (_: g: { inherit (g) members; }) groups;
-
-              # Users with oauth-grant or user-role groups provisioned as persons
-              persons = mapAttrs (username: user: {
-                # kanidm rejects an empty displayname (InvalidAttributeSyntax),
-                # so fall back to the username when none is set.
-                displayName = if user.identity.displayName != "" then user.identity.displayName else username;
-                mailAddresses =
-                  if user.identity.email != null then
-                    [ user.identity.email ]
-                  else
-                    [ "${username}@${environment.email.domain}" ];
-                groups = getUserGroups user;
-              }) kanidmUsers;
-
-              # OAuth2 client definitions
-              systems.oauth2 = oauth2Services;
-
-              # POSIX extensions via extra JSON
-              inherit extraJsonFile;
             };
           };
 
-          nginx.virtualHosts."${domain}" = {
-            forceSSL = true;
-            useACMEHost = topDomain;
-            locations."/" = {
-              proxyPass = "https://127.0.0.1:8443";
-              proxyWebsockets = true;
-              extraConfig = ''
-                proxy_set_header Host $host;
-                proxy_set_header X-Real-IP $remote_addr;
-                proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                proxy_set_header X-Forwarded-Proto $scheme;
+          # Ensure kanidm user can read secret files and certificates
+          systemd.services.kanidm.serviceConfig = {
+            SupplementaryGroups = [ "keys" ];
+          };
 
-                proxy_ssl_server_name on;
-                proxy_ssl_name $host;
-                proxy_ssl_verify_depth 2;
-                proxy_ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
-                proxy_ssl_session_reuse off;
+          users.users.kanidm.extraGroups = [
+            config.security.acme.defaults.group
+            config.services.nginx.group
+          ];
+        }
+
+        (lib.mkIf (mailSender != null) {
+          # The mail-sender account and its only group, asserted at kanidmd start.
+          # Accounts and group membership are separate migrations: kanidm applies
+          # them in lexical order, so the account exists before it is referenced.
+          services.kanidm.server.entryManagement.migrations = {
+            "50-mail-sender-account" = {
+              id = "f353f3cb-f779-4907-8d6d-ee6ba0fd78b9";
+              assertions = [
+                {
+                  state = "present";
+                  id = mailSenderUuid;
+                  class = [
+                    "account"
+                    "service_account"
+                  ];
+                  name = "mail-sender";
+                  displayname = "Mail Sender";
+                  entry_managed_by = "idm_admins";
+                }
+              ];
+            };
+            "51-mail-sender-group" = {
+              id = "c5690c3e-d0b5-4bf9-a05f-ba93ffd473fc";
+              assertions = [
+                {
+                  state = "present";
+                  # Builtin idm_message_senders.
+                  id = "00000000-0000-0000-0000-000000000055";
+                  member = [ "mail-sender" ];
+                }
+              ];
+            };
+          };
+
+          # What migrations may not assert: the account's API token (a credential)
+          # and the domain's account-recovery flag. Mints the token once, as
+          # idm_admin, into a root-only state file; recovery needs a domain admin.
+          systemd.services.kanidm-mail-sender-bootstrap = {
+            description = "Mint the kanidm-mail-sender token and enable account recovery";
+            after = [ "kanidm.service" ];
+            requires = [ "kanidm.service" ];
+            path = [
+              config.services.kanidm.package
+              pkgs.jq
+            ];
+            serviceConfig = {
+              Type = "oneshot";
+              RemainAfterExit = true;
+              StateDirectory = "kanidm-mail-sender";
+              StateDirectoryMode = "0700";
+              ExecStart = pkgs.writeShellScript "kanidm-mail-sender-bootstrap" ''
+                set -euo pipefail
+                KANIDM_TOKEN_CACHE_PATH=$(mktemp)
+                export KANIDM_TOKEN_CACHE_PATH
+                trap 'rm -f "$KANIDM_TOKEN_CACHE_PATH"' EXIT
+                password=$(< ${config.services.kanidm.provision.adminPasswordFile})
+
+                KANIDM_PASSWORD=$password kanidm login -D admin
+                kanidm system domain set-allow-account-recovery true -D admin
+
+                token="$STATE_DIRECTORY/token"
+                if [[ ! -s $token ]]; then
+                  KANIDM_PASSWORD=$(< ${config.services.kanidm.provision.idmAdminPasswordFile}) \
+                    kanidm login -D idm_admin
+                  umask 077
+                  kanidm service-account api-token generate mail-sender kanidm-mail-sender \
+                    --readwrite -o json -D idm_admin | jq -er .result > "$token.new"
+                  mv "$token.new" "$token"
+                fi
               '';
             };
+            wantedBy = [ "multi-user.target" ];
           };
-        };
 
-        # Ensure kanidm user can read secret files and certificates
-        systemd.services.kanidm.serviceConfig = {
-          SupplementaryGroups = [ "keys" ];
-        };
-
-        users.users.kanidm.extraGroups = [
-          config.security.acme.defaults.group
-          config.services.nginx.group
-        ];
-      };
+          systemd.services.kanidm-mail-sender = {
+            description = "Kanidm outbound mail sender";
+            after = [
+              "kanidm-mail-sender-bootstrap.service"
+              "network-online.target"
+            ];
+            requires = [ "kanidm-mail-sender-bootstrap.service" ];
+            wants = [ "network-online.target" ];
+            # The config embeds the token and the binary reads no token file, so
+            # render it into the private runtime directory at start.
+            script = ''
+              umask 077
+              conf="$RUNTIME_DIRECTORY/mail-sender.toml"
+              printf 'token = "%s"\n' "$(< "$CREDENTIALS_DIRECTORY/token")" > "$conf"
+              cat ${mailSenderConfig} >> "$conf"
+              chmod 0400 "$conf"
+              exec ${config.services.kanidm.package}/bin/kanidm-mail-sender \
+                -c /etc/kanidm/config -m "$conf"
+            '';
+            serviceConfig = {
+              DynamicUser = true;
+              RuntimeDirectory = "kanidm-mail-sender";
+              RuntimeDirectoryMode = "0700";
+              LoadCredential = "token:/var/lib/kanidm-mail-sender/token";
+              Restart = "on-failure";
+              RestartSec = 30;
+              NoNewPrivileges = true;
+              ProtectSystem = "strict";
+              ProtectHome = true;
+              PrivateTmp = true;
+              PrivateDevices = true;
+              RestrictAddressFamilies = [
+                "AF_INET"
+                "AF_INET6"
+                "AF_UNIX"
+              ];
+            };
+            wantedBy = [ "multi-user.target" ];
+          };
+        })
+      ];
 
     age-secrets =
       { environment, ... }:
@@ -719,15 +889,24 @@ in
         groups = getUserGroups user;
       }) kanidmUsers;
 
-    persist = {
-      directories = [
-        {
-          directory = "/var/lib/kanidm";
-          user = "kanidm";
-          group = "kanidm";
+    persist =
+      { host, ... }:
+      {
+        directories = [
+          {
+            directory = "/var/lib/kanidm";
+            user = "kanidm";
+            group = "kanidm";
+            mode = "0700";
+          }
+        ]
+        # The minted mail-sender token (kanidm-mail-sender-bootstrap).
+        ++ lib.optional (host.settings.services.security.kanidm.mailSender != null) {
+          directory = "/var/lib/kanidm-mail-sender";
+          user = "root";
+          group = "root";
           mode = "0700";
-        }
-      ];
-    };
+        };
+      };
   };
 }

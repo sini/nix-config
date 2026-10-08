@@ -24,6 +24,14 @@
       # Always-on Syncthing hub for replicated home dirs (the bgp pattern: the
       # aspect declares the option, the host file sets it).
       core.network.syncthing.isHub = true;
+      # Credential reset / account recovery mail, through the cluster's Postfix
+      # relay to Proton (kubernetes/services/communication/smtp-relay.nix).
+      services.security.kanidm.mailSender = {
+        relay = "smtp://smtp.json64.dev:587";
+        fromAddress = "infra@json64.dev";
+        replyToAddress = "jason@json64.dev";
+        instanceDisplayName = "json64";
+      };
       # nginx accepts PROXY v2 from the cluster gateway here (kanidm holds
       # 127.0.0.1:8443).
       services.networking.gateway-upstream = {
