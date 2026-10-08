@@ -1,29 +1,4 @@
 {
-  "json64_dev": {
-    "id": "68d49accbee8bc310512ad44",
-    "config": {
-      "name": "json64.dev",
-      "protocol": "tcp_udp",
-      "wan": {
-        "interface": "wan",
-        "port": "443"
-      },
-      "forward": {
-        "ip": "10.10.10.1",
-        "port": "12443"
-      },
-      "destination_ips": [
-        {
-          "destination_ip": "any",
-          "interface": "wan"
-        },
-        {
-          "destination_ip": "any",
-          "interface": "wan2"
-        }
-      ]
-    }
-  },
   "headscale_to_uplink": {
     "id": "6994d7b7ba1d50eba7f4d775",
     "config": {
@@ -62,6 +37,31 @@
         "ip": "10.10.10.1",
         "port": "22"
       }
+    }
+  },
+  "axon_https_ingress": {
+    "id": "68d49accbee8bc310512ad44",
+    "config": {
+      "name": "axon-https-ingress",
+      "protocol": "tcp_udp",
+      "wan": {
+        "interface": "wan",
+        "port": "443"
+      },
+      "forward": {
+        "ip": "10.11.0.1",
+        "port": "443"
+      },
+      "destination_ips": [
+        {
+          "destination_ip": "any",
+          "interface": "wan"
+        },
+        {
+          "destination_ip": "any",
+          "interface": "wan2"
+        }
+      ]
     }
   }
 }
