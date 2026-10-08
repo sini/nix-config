@@ -568,6 +568,7 @@ in
         identity=$(mktemp)
         trap 'rm -f "$identity"' EXIT
         age-plugin-yubikey -i > "$identity"
+        [[ -s $identity ]] || { echo "no YubiKey identity found; plug in the YubiKey" >&2; exit 1; }
         UNIFI_API_KEY=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-api-key.age)
         TF_VAR_state_passphrase=$(age -d -i "$identity" .secrets/env/${unifiEnv}/unifi-state-passphrase.age)
         TF_VAR_unifi_api_key=$UNIFI_API_KEY

@@ -77,6 +77,7 @@ in
         identity=$(mktemp)
         trap 'rm -f "$identity"' EXIT
         age-plugin-yubikey -i > "$identity"
+        [[ -s $identity ]] || { echo "no YubiKey identity found; plug in the YubiKey" >&2; exit 1; }
         CLOUDFLARE_API_TOKEN=$(age -d -i "$identity" ${cloudflareTokens.${_meta.account}})
         TF_VAR_state_passphrase=$(age -d -i "$identity" .secrets/env/${_meta.environment}/tofu-state-passphrase.age)
         export CLOUDFLARE_API_TOKEN TF_VAR_state_passphrase

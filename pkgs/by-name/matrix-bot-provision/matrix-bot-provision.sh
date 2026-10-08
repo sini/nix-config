@@ -84,6 +84,7 @@ curl -sf -o /dev/null "$base/_matrix/client/versions" || {
 }
 
 age-plugin-yubikey -i >"$identity"
+[[ -s $identity ]] || { echo "matrix-bot-provision: no YubiKey identity found; plug in the YubiKey" >&2; exit 1; }
 
 if [[ -e $target ]]; then
   echo "$target exists: skipping registration, joining with the saved token"
