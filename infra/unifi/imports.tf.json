@@ -1,0 +1,8 @@
+{
+  "import": [
+    {
+      "to": "unifi_bgp.prod",
+      "id": "default"
+    }
+  ]
+}

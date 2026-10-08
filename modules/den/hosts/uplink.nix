@@ -40,6 +40,7 @@
       services.networking.headscale
       services.security.acme
       dns-state-passphrase
+      unifi-state-passphrase
       services.networking.nginx
       services.security.kanidm
       services.networking.haproxy
