@@ -84,8 +84,6 @@ in
         podNetwork = cluster.networks.kubernetes-pods;
         serviceNetwork = cluster.networks.kubernetes-services;
         vip = cluster.getAssignment "kube-apiserver-vip";
-        managementCidr = cluster.networks.control-plane.cidr;
-        managementSubnet = lib.last (lib.splitString "/" managementCidr);
 
         # Filter collected nodes to same cluster (same-environment scoping
         # guaranteed by collect-k3s-nodes policy)
@@ -226,7 +224,10 @@ in
               virtualRouterId = 51;
               priority = 100 - nodeId;
               virtualIps = [
-                { addr = "${vip}/${managementSubnet}"; }
+                # /32: a /<subnet> VIP adds a connected route with src = VIP, so
+                # whichever node holds it sources its LAN traffic (10.10.10.0/24)
+                # from the VIP instead of its own address.
+                { addr = "${vip}/32"; }
               ];
               trackScripts = [ "check_k3s" ];
             };
