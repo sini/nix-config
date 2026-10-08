@@ -175,7 +175,9 @@ in
     };
 
     # A served-domains quirk record for services this cluster serves through its
-    # gateway, addressed at the gateway load-balancer VIP.
+    # gateway, addressed at the gateway load-balancer VIP. `spec` is the service
+    # names, or { services; proxied ? true; } for names the Cloudflare proxy must
+    # not front.
     den.schema.cluster.methods.servedDomains = schemaLib.schemaFn {
       description = "Build a served-domains record for services served by this cluster's gateway";
       type = lib.types.functionTo lib.types.attrs;
@@ -186,11 +188,17 @@ in
           networks,
           ...
         }:
-        serviceNames: {
+        spec:
+        let
+          env = environments.${environment};
+          s = if builtins.isList spec then { services = spec; } else spec;
+        in
+        {
           inherit environment;
           cluster = name;
           address = networks.kubernetes-loadbalancers.assignments.default-gateway;
-          domains = map environments.${environment}.getDomainFor serviceNames;
+          domains = map env.getDomainFor s.services;
+          public = env.publicOf (s.proxied or true);
         };
     };
 

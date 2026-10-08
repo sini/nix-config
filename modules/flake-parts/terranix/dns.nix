@@ -1,48 +1,75 @@
-# The environment's public DNS records, as a terranix module (infra/dns/README.md).
+# Public DNS records for every managed zone, as a terranix module
+# (infra/dns/README.md), instantiated at the edge environment (the one with
+# dns.publicIPv4).
 #
-# One proxied A record to dns.publicIPv4 per apex domain (plus www) and per
-# served-domains name, with dns.records laid over that set, kept to the
-# environment's dns.managedZones. Hostnames in dns.unproxied are grey-cloud.
-# Records already in a zone are adopted through infra/dns/imports.tf.json
-# (dns-adopt), never duplicated.
+# The zones are the domains with dns.cloudflare (dns-zones). The records are the
+# domains' own (dns-records: web.apex, pages.github, mail.protonmail, ...), plus
+# an A record to the serving environment's public address for each served-domains
+# name, from every environment; served-domains `public.proxied` sets the cloud.
+# Each record lands in the longest zone that contains it. Records already in a
+# zone are adopted through infra/dns/imports.tf.json (dns-adopt), never duplicated.
 {
   den.aspects.dns-records.terranix =
     {
       environment,
+      dns-zones ? [ ],
+      dns-records ? [ ],
       served-domains ? [ ],
       lib,
       ...
     }:
     let
-      inherit (environment) dns;
+      inherit (import ../../den/domains/_lib.nix { inherit lib; }) longestSuffix recordKey;
 
-      apexHosts = lib.concatMap (d: [
-        d
-        "www.${d}"
-      ]) (builtins.attrNames (lib.filterAttrs (_: d: d.apex) environment.certificates.domains));
-      # Public records use only the names; a served-domains address is internal.
-      servedHosts = lib.concatMap (r: r.domains) (
-        builtins.filter (r: r.environment == environment.name) served-domains
+      # A record routes to the longest managed zone containing it, from any
+      # environment; a sub-zone without its own zone is hosted in its parent.
+      zones = map (z: z.zone) dns-zones;
+      zoneOf = longestSuffix zones;
+      edge = environment.dns.publicIPv4;
+
+      declared = map (
+        r:
+        {
+          proxied = false;
+          priority = null;
+          ttl = 1;
+          comment = null;
+        }
+        // r
+        // {
+          content = if r.content or null == null then edge else r.content;
+        }
+      ) dns-records;
+      declaredNames = map (r: r.name) declared;
+
+      # A served name gets an A record to its environment's public address,
+      # unless the zone declares that name itself (hs, jellyfin: CNAMEs).
+      served = lib.concatMap (
+        s:
+        map (name: {
+          inherit name;
+          type = "A";
+          content = s.public.address;
+          inherit (s.public) proxied;
+          priority = null;
+          ttl = 1;
+          comment = null;
+        }) (builtins.filter (n: !builtins.elem n declaredNames) s.domains)
+      ) (builtins.filter (s: s.public or null != null) served-domains);
+
+      records = lib.listToAttrs (
+        map (r: lib.nameValuePair (recordKey r) (r // { zone = zoneOf r.name; })) (
+          builtins.filter (r: zoneOf r.name != null) (declared ++ served)
+        )
       );
-
-      # Longest managed zone that is the host or a parent of it.
-      zones = lib.sort (a: b: lib.stringLength a > lib.stringLength b) dns.managedZones;
-      zoneOf = host: lib.findFirst (z: host == z || lib.hasSuffix ".${z}" host) null zones;
 
       key = lib.replaceStrings [ "." "*" ] [ "_" "wildcard" ];
 
-      derived = lib.genAttrs (apexHosts ++ servedHosts) (_: { });
-      records = lib.mapAttrs' (
-        host: r:
-        lib.nameValuePair (key host) {
-          name = host;
-          type = r.type or "A";
-          content = if r.content or null != null then r.content else dns.publicIPv4;
-          proxied = if r.proxied or null != null then r.proxied else !(builtins.elem host dns.unproxied);
-          zone = zoneOf host;
-        }
-      ) (lib.filterAttrs (host: _: zoneOf host != null) (derived // dns.records));
+      accounts = lib.unique (map (z: z.account) dns-zones);
     in
+    assert lib.assertMsg (
+      builtins.length accounts == 1
+    ) "dns: one Cloudflare account per workspace (got: ${toString accounts})";
     {
       terraform = {
         required_providers.cloudflare = {
@@ -74,25 +101,39 @@
       provider.cloudflare = { };
 
       data.cloudflare_zone = lib.listToAttrs (
-        map (z: lib.nameValuePair (key z) { filter.name = z; }) dns.managedZones
+        map (z: lib.nameValuePair (key z) { filter.name = z; }) zones
       );
 
-      resource.cloudflare_dns_record = lib.mapAttrs (_: r: {
-        zone_id = "\${data.cloudflare_zone.${key r.zone}.id}";
-        inherit (r)
-          name
-          type
-          content
-          proxied
-          ;
-        ttl = 1;
-      }) records;
+      resource.cloudflare_dns_record = lib.mapAttrs (
+        _: r:
+        {
+          zone_id = "\${data.cloudflare_zone.${key r.zone}.id}";
+          inherit (r)
+            name
+            type
+            content
+            proxied
+            ttl
+            ;
+        }
+        // lib.filterAttrs (_: v: v != null) { inherit (r) priority comment; }
+      ) records;
 
-      # Read by dns-adopt to match live records to resource addresses.
-      _meta.records = lib.mapAttrsToList (k: r: {
-        address = "cloudflare_dns_record.${k}";
-        inherit (r) name type zone;
-      }) records;
+      # Read by the devshell commands: dns-adopt matches live records to
+      # resource addresses; the account and environment select the secrets.
+      _meta = {
+        records = lib.mapAttrsToList (k: r: {
+          address = "cloudflare_dns_record.${k}";
+          inherit (r)
+            name
+            type
+            content
+            zone
+            ;
+        }) records;
+        account = builtins.head accounts;
+        environment = environment.name;
+      };
     };
 
   # The OpenTofu state passphrase (TF_VAR_state_passphrase). Generated by

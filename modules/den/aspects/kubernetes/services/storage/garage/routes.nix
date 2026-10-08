@@ -1,17 +1,23 @@
 # Public S3 exposure. Path-style on the shared *.json64.dev listener; vhost-style
-# on the dedicated s3-json64-dev listener (T1 + the prod.nix resourceName entry).
+# on the dedicated s3-json64-dev listener (the s3.json64.dev domain's resourceName).
 # No OIDC SecurityPolicy — SigV4 key-auth is the gate.
 #
-# DNS: s3.json64.dev (this service-domain) and *.s3.json64.dev (prod dns.records)
-# are DNS-only (grey-cloud) records in infra/dns, because proxied mode's 100 MB
-# upload cap breaks S3 multipart.
+# DNS: s3.json64.dev (this service-domain) and *.s3.json64.dev (the s3.json64.dev
+# domain's records, modules/den/domains) are DNS-only (grey-cloud) records in
+# infra/dns, because proxied mode's 100 MB upload cap breaks S3 multipart.
 let
   serviceDomains = [ "garage-s3" ];
 in
 {
   den.aspects.kubernetes.services.storage.garage.routes = {
     service-domains = serviceDomains;
-    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
+    # Grey: proxied mode's 100 MB upload cap breaks S3 multipart.
+    served-domains =
+      { cluster, ... }:
+      cluster.servedDomains {
+        services = serviceDomains;
+        proxied = false;
+      };
 
     k8s-manifests =
       { cluster, ... }:

@@ -32,6 +32,16 @@ let
     else
       "${serviceName}.${domain}";
 
+  publicOf =
+    dns: proxied:
+    if dns.publicIPv4 == null then
+      null
+    else
+      {
+        address = dns.publicIPv4;
+        inherit proxied;
+      };
+
   addressOn =
     { name, networks, ... }:
     net: host:
@@ -136,44 +146,6 @@ let
 
   certificatesType = types.submodule {
     options = {
-      domains = mkOption {
-        type = types.attrsOf (
-          types.submodule {
-            options = {
-              issuer = mkOption {
-                type = types.str;
-                description = "The issuer name to use for this domain";
-              };
-
-              resourceName = mkOption {
-                type = types.nullOr types.str;
-                default = null;
-                description = ''
-                  Explicit k8s resource-name stem for this domain's wildcard certificate +
-                  gateway listener, overriding the default last-two-labels derivation
-                  (resourceNameOf in schema/cluster.nix). REQUIRED for a nested wildcard
-                  (e.g. *.s3.json64.dev) whose last-two-labels (json64-dev) would collide
-                  with its parent registrable domain. null = derive from the domain (back-compat).
-                '';
-              };
-
-              apex = mkOption {
-                type = types.bool;
-                default = false;
-                description = ''
-                  Also add an HTTPS gateway listener for the bare domain itself
-                  (`<resourceName>-apex-https`, hostname = the domain), terminated with the
-                  same wildcard certificate. The `*.<domain>` listener does not match the
-                  apex. Requires the certificate to include the bare domain.
-                '';
-              };
-            };
-          }
-        );
-        default = { };
-        description = "Domains to generate certificates for";
-      };
-
       issuers = mkOption {
         type = types.attrsOf (
           types.submodule {
@@ -216,6 +188,8 @@ in
 
     # Method: a served-domains quirk record for a host serving these services
     # (its nginx vhosts), addressed on the environment's default network.
+    # `spec` is the service names, or { services; proxied ? true; } for names
+    # the Cloudflare proxy must not front.
     den.schema.environment.methods.servedDomains = schemaLib.schemaFn {
       description = "Build a served-domains record for services a host serves";
       type = lib.types.functionTo (lib.types.functionTo lib.types.attrs);
@@ -226,14 +200,28 @@ in
           services,
           domain,
           networks,
+          dns,
           ...
         }:
-        host: serviceNames: {
+        host: spec:
+        let
+          s = if builtins.isList spec then { services = spec; } else spec;
+        in
+        {
           environment = env.name;
           host = host.name;
           address = addressOn env "default" host;
-          domains = map (domainFor env) serviceNames;
+          domains = map (domainFor env) s.services;
+          public = publicOf dns (s.proxied or true);
         };
+    };
+
+    # Method: the public half of a served-domains record: the edge address and
+    # proxy mode, or null when the environment publishes no DNS.
+    den.schema.environment.methods.publicOf = schemaLib.schemaFn {
+      description = "The public DNS facts ({ address; proxied; } or null) for a name this environment serves";
+      type = lib.types.functionTo (lib.types.nullOr lib.types.attrs);
+      fn = { dns, ... }: publicOf dns;
     };
 
     den.schema.environment.imports = [
@@ -342,65 +330,15 @@ in
                     type = types.nullOr types.str;
                     default = null;
                     description = ''
-                      Public IPv4 address the environment's DNS A records point at.
-                      null = this environment publishes no DNS records (no terranix dns config).
-                    '';
-                  };
-                  unproxied = mkOption {
-                    type = types.listOf types.str;
-                    default = [ ];
-                    description = ''
-                      Hostnames whose records must be DNS-only (Cloudflare grey cloud), e.g.
-                      Matrix federation and S3, which do not survive the Cloudflare proxy.
-                    '';
-                  };
-                  records = mkOption {
-                    type = types.attrsOf (
-                      types.submodule {
-                        options = {
-                          type = mkOption {
-                            type = types.enum [
-                              "A"
-                              "CNAME"
-                              "TXT"
-                            ];
-                            default = "A";
-                            description = "Record type";
-                          };
-                          content = mkOption {
-                            type = types.nullOr types.str;
-                            default = null;
-                            description = "Record content (CNAME target); null = dns.publicIPv4";
-                          };
-                          proxied = mkOption {
-                            type = types.nullOr types.bool;
-                            default = null;
-                            description = "Cloudflare proxy; null = proxied unless the name is in dns.unproxied";
-                          };
-                        };
-                      }
-                    );
-                    default = { };
-                    description = ''
-                      Records by hostname, laid over the derived set (apex domains, their www,
-                      and service-domains hosts): a derived name is overridden, a new name is
-                      added. Still kept to dns.managedZones.
-                    '';
-                  };
-                  managedZones = mkOption {
-                    type = types.listOf types.str;
-                    default = builtins.attrNames (lib.filterAttrs (_: d: d.apex) config.certificates.domains);
-                    defaultText = lib.literalExpression "the certificates.domains with apex = true";
-                    description = ''
-                      Cloudflare zones whose declared records OpenTofu manages. No record is
-                      generated outside these zones, and records in them that are not
-                      declared are left untouched.
+                      Public IPv4 address the environment's DNS A records point at (its served
+                      names, and the domains' edge records when this is the edge environment).
+                      null = this environment publishes no DNS records.
                     '';
                   };
                 };
               };
               default = { };
-              description = "Public DNS records published to Cloudflare by the terranix dns config";
+              description = "The environment's public edge, for DNS records (modules/flake-parts/terranix)";
             };
 
             timezone = mkOption {

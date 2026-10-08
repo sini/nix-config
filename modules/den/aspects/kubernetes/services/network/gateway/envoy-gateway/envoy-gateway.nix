@@ -27,8 +27,9 @@
       {
         cluster,
         charts,
-        environment,
         lib,
+        certificate-domains,
+        apex-domains,
         ...
       }:
       let
@@ -40,13 +41,19 @@
           ;
 
         numReplicas = if cluster.hosts != null then builtins.length cluster.hosts else 3;
-        domains = environment.certificates.domains;
+        # The tls.dns01 domains, each with `apex` when web.apex serves its bare name.
+        apexes = map (a: a.domain) apex-domains;
+        domains = lib.listToAttrs (
+          map (
+            d: lib.nameValuePair d.domain (d // { apex = builtins.elem d.domain apexes; })
+          ) certificate-domains
+        );
 
         # Resolve a domain's k8s resource-name stem: an explicit per-domain
         # resourceName (for nested wildcards that would otherwise collide on
         # their last-two-labels) takes precedence over the default derivation.
-        # Note the explicit `if … != null`: resourceName defaults to null and
-        # the attr always exists, so `or` would never fall back.
+        # Note the explicit `if … != null`: resourceName is always present (null
+        # when unset), so `or` would never fall back.
         resourceNameFor =
           domain: args:
           if args.resourceName != null then args.resourceName else cluster.resourceForDomain domain;

@@ -22,15 +22,15 @@ spec:
       read: true
       write: true
     - bucketRef:
-        name: site-qvrlab-com
-      read: true
-      write: true
-    - bucketRef:
         name: site-qvr-run
       read: true
       write: true
     - bucketRef:
         name: site-qvr-sh
+      read: true
+      write: true
+    - bucketRef:
+        name: site-qvrlab-com
       read: true
       write: true
   clusterRef:

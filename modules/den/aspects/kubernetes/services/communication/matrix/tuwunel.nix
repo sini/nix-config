@@ -60,7 +60,13 @@ in
   den.aspects.kubernetes.services.communication.matrix.tuwunel = {
     # matrix.gen.wtf, via prod services.tuwunel.domain.
     service-domains = serviceDomains;
-    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
+    # Grey: Matrix federation does not work through the Cloudflare proxy.
+    served-domains =
+      { cluster, ... }:
+      cluster.servedDomains {
+        services = serviceDomains;
+        proxied = false;
+      };
 
     age-secrets =
       { environment, ... }:

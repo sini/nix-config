@@ -1,9 +1,10 @@
 # Static sites served from Garage website buckets.
 #
-# Each domain gets a GarageBucket named after it (globalAlias = domain) with
-# website mode on; Garage's web endpoint (:3902) picks the bucket from the Host
-# header. The apex is routed to Garage on the domain's apex listener
-# (`apex = true` in prod.nix); www.<domain> 301s to the apex at the gateway.
+# Each web.landing domain (the site-domains quirk, modules/den/domains) gets a
+# GarageBucket named after it (globalAlias = domain) with website mode on;
+# Garage's web endpoint (:3902) picks the bucket from the Host header. The apex
+# is routed to Garage on the domain's apex listener (web.landing includes
+# web.apex); www.<domain> 301s to the apex at the gateway.
 #
 # Content lives in nix-config/sites/<domain>/ and is published with the
 # `publish-sites` devshell command, using the `sites-publisher` key (write on
@@ -11,16 +12,6 @@
 { lib, ... }:
 let
   namespace = "garage";
-
-  domains = [
-    "gen-framework.com"
-    "getqvr.com"
-    "quiver-labs.com"
-    "qvr-framework.com"
-    "qvrlab.com"
-    "qvr.run"
-    "qvr.sh"
-  ];
 
   # k8s object names cannot contain dots.
   slug = lib.replaceStrings [ "." ] [ "-" ];
@@ -30,7 +21,10 @@ in
 {
   den.aspects.kubernetes.services.storage.garage.sites = {
     k8s-manifests =
-      { cluster, ... }:
+      { cluster, site-domains, ... }:
+      let
+        domains = map (s: s.domain) site-domains;
+      in
       {
         applications.sites = {
           inherit namespace;

@@ -14,6 +14,7 @@
         config,
         environment,
         host,
+        certificate-domains,
         ...
       }:
       let
@@ -31,7 +32,7 @@
             dnsPropagationCheck = true;
             credentialFiles =
               let
-                domainConfig = (environment.certificates.domains or { }).${topDomain} or null;
+                domainConfig = lib.findFirst (d: d.domain == topDomain) null certificate-domains;
                 issuerName = if domainConfig != null then domainConfig.issuer else null;
               in
               lib.optionalAttrs (issuerName != null) {

@@ -64,7 +64,13 @@ in
 {
   den.aspects.kubernetes.services.communication.matrix.synapse = {
     service-domains = serviceDomains;
-    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
+    # Grey: Matrix federation does not work through the Cloudflare proxy.
+    served-domains =
+      { cluster, ... }:
+      cluster.servedDomains {
+        services = serviceDomains;
+        proxied = false;
+      };
 
     age-secrets =
       { environment, config, ... }:
@@ -205,7 +211,7 @@ in
           inherit namespace;
 
           # Matrix delegation for server_name json64.dev, answered by Envoy itself on
-          # the apex listener (json64-dev-apex-https; prod.nix `apex = true`): no pod,
+          # the apex listener (json64-dev-apex-https; the json64.dev domain's web.apex): no pod,
           # and the json64.dev apex is not otherwise served by the cluster.
           objects =
             lib.mapAttrsToList

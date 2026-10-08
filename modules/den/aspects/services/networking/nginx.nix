@@ -8,6 +8,7 @@
         config,
         environment,
         host,
+        certificate-domains,
         ...
       }:
       let
@@ -28,13 +29,13 @@
           |> map extractTopDomain
           |> lib.unique;
 
-        # Look up issuer for each domain via environment certificates config
+        # Look up issuer for each domain among the domains' tls.dns01 records
         domainIssuerMap = lib.listToAttrs (
           map (domain: {
             name = domain;
             value =
               let
-                domainConfig = (environment.certificates.domains or { }).${domain} or null;
+                domainConfig = lib.findFirst (d: d.domain == domain) null certificate-domains;
               in
               if domainConfig != null then domainConfig.issuer else null;
           }) topDomains

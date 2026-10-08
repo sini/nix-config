@@ -1,5 +1,6 @@
 # Cert-Manager — DNS01 Cloudflare solver, Let's Encrypt ACME,
-# dynamic ClusterIssuers from environment.certificates, wildcard certs per domain.
+# dynamic ClusterIssuers from environment.certificates.issuers, a wildcard cert per
+# tls.dns01 domain (certificate-domains, modules/den/aspects/domain).
 #
 # Ported from main:modules/kubernetes/services/security/cert-manager/cert-manager.nix
 {
@@ -59,16 +60,18 @@ in
         cluster,
         environment,
         charts,
+        certificate-domains,
         ...
       }:
       let
-        inherit (environment.certificates) domains issuers;
+        inherit (environment.certificates) issuers;
+        domains = lib.listToAttrs (map (d: lib.nameValuePair d.domain d) certificate-domains);
 
         # Resolve a domain's k8s resource-name stem: an explicit per-domain
         # resourceName (for nested wildcards that would otherwise collide on
         # their last-two-labels) takes precedence over the default derivation.
-        # Note the explicit `if … != null`: resourceName defaults to null and
-        # the attr always exists, so `or` would never fall back.
+        # Note the explicit `if … != null`: resourceName is always present (null
+        # when unset), so `or` would never fall back.
         resourceNameFor =
           domain: args:
           if args.resourceName != null then args.resourceName else cluster.resourceForDomain domain;

@@ -6,16 +6,9 @@
     domain = "json64.dev";
     system-access-groups = [ "system-access" ];
 
-    certificates = {
-      domains = {
-        "json64.dev" = {
-          issuer = "json64-dev";
-        };
-      };
-      issuers = {
-        "json64-dev" = {
-          ageKeyFile = "${self}/.secrets/env/dev/cloudflare-api-key.age";
-        };
+    certificates.issuers = {
+      "json64-dev" = {
+        ageKeyFile = "${self}/.secrets/env/dev/cloudflare-api-key.age";
       };
     };
 

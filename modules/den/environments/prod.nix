@@ -1,129 +1,23 @@
 # Prod environment entity definition.
-{ self, lib, ... }:
-let
-  certificateDomains = {
-    "json64.dev" = {
-      issuer = "json64-dev";
-      # Apex listener: serves json64.dev/.well-known/matrix/* (Matrix
-      # delegation for server_name json64.dev; see communication/matrix/synapse.nix).
-      apex = true;
-    };
-    "s3.json64.dev" = {
-      issuer = "json64-dev";
-      # Distinct stem: without it resourceForDomain "s3.json64.dev" = json64-dev,
-      # colliding with the json64.dev wildcard. Enables the *.s3.json64.dev
-      # listener + s3-json64-dev-wildcard-tls cert (T1 resourceName extension).
-      resourceName = "s3-json64-dev";
-    };
-    # tuwunel companion homeserver (matrix.gen.wtf); the apex stays GitHub Pages.
-    "gen.wtf" = {
-      issuer = "global";
-    };
-    "gen-framework.com" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    "qvr-framework.com" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    # quiver: candidate project domains (Cloudflare zones, `global` DNS-01).
-    "getqvr.com" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    "quiver-labs.com" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    "qvrlab.com" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    "qvr.run" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    "qvr.sh" = {
-      issuer = "global";
-      apex = true; # landing page (garage/sites.nix)
-    };
-    "json64.com" = {
-      issuer = "global";
-    };
-    "json64.net" = {
-      issuer = "global";
-    };
-    "sinistar.io" = {
-      issuer = "global";
-    };
-    "sinistar.org" = {
-      issuer = "global";
-    };
-    "zeroday.pub" = {
-      issuer = "global";
-    };
-    "zeroday.run" = {
-      issuer = "global";
-    };
-  };
-in
+{ self, ... }:
 {
   den.environments.prod = {
     id = 1;
     domain = "json64.dev";
     system-access-groups = [ "system-access" ];
 
-    certificates = {
-      domains = certificateDomains;
-      issuers = {
-        "json64-dev" = {
-          ageKeyFile = "${self}/.secrets/env/prod/cloudflare-api-key.age";
-        };
-        "global" = {
-          ageKeyFile = "${self}/.secrets/env/prod/cloudflare-api-key.age";
-        };
+    # Domains (their certificates and public records): modules/den/domains.
+    certificates.issuers = {
+      "json64-dev" = {
+        ageKeyFile = "${self}/.secrets/env/prod/cloudflare-api-key.age";
+      };
+      "global" = {
+        ageKeyFile = "${self}/.secrets/env/prod/cloudflare-api-key.age";
       };
     };
 
     # Public DNS: modules/flake-parts/terranix, infra/dns/README.md.
-    dns = {
-      publicIPv4 = "157.131.140.225";
-      # Matrix federation and S3 clients do not survive the Cloudflare proxy.
-      unproxied = [
-        "matrix.json64.dev"
-        "matrix.gen.wtf"
-        "s3.json64.dev"
-        "*.s3.json64.dev"
-      ];
-      # As live: hs and jellyfin are grey CNAMEs to the apex; *.s3 is S3 vhost style.
-      records = {
-        "hs.json64.dev" = {
-          type = "CNAME";
-          content = "json64.dev";
-          proxied = false;
-        };
-        "jellyfin.json64.dev" = {
-          type = "CNAME";
-          content = "json64.dev";
-          proxied = false;
-        };
-        "*.s3.json64.dev" = { };
-        # Shared public IP for ssh and some tailscale users (grey-cloud: not HTTP).
-        "vpn.json64.dev".proxied = false;
-        # GitHub Pages verified domain for gen.wtf (account sini).
-        "_github-pages-challenge-sini.gen.wtf" = {
-          type = "TXT";
-          content = "976e8aa7ced3167338668254c4f312";
-          proxied = false;
-        };
-      };
-      # The apex (landing) zones, json64.dev among them, plus gen.wtf: its apex
-      # stays GitHub Pages, but matrix.gen.wtf is ours.
-      managedZones = builtins.attrNames (lib.filterAttrs (_: d: d.apex or false) certificateDomains) ++ [
-        "gen.wtf"
-      ];
-    };
+    dns.publicIPv4 = "157.131.140.225";
 
     services = {
       argocd.domain = "argocd.zeroday.run";
