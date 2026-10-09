@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: monitoring-ingest
+  namespace: monitoring
+spec:
+  dnsNames:
+    - ingest.json64.dev
+  issuerRef:
+    kind: ClusterIssuer
+    name: json64-dev-issuer
+  secretName: monitoring-ingest-tls

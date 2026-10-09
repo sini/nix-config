@@ -105,6 +105,10 @@
           # Postfix relay to Proton (communication/smtp-relay.nix), published
           # as smtp.json64.dev. BGP-advertised, NOT internet-routable.
           smtp-relay-internal = "10.11.0.30";
+
+          # Host metrics/log push into Prometheus + Loki
+          # (monitoring/ingest.nix), published as ingest.json64.dev.
+          monitoring-ingest = "10.11.0.31";
         };
       };
     };
@@ -162,6 +166,7 @@
       services.monitoring.alloy
       services.monitoring.monitoring-pg
       services.monitoring.grafana
+      services.monitoring.ingest
       services.network.cilium.hubble-ui
       services.media.base
       services.media.media-pg

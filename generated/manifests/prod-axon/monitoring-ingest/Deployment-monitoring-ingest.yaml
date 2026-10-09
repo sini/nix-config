@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: monitoring-ingest
+    app.kubernetes.io/name: monitoring-ingest
+  name: monitoring-ingest
+  namespace: monitoring
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: monitoring-ingest
+      app.kubernetes.io/name: monitoring-ingest
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/configMaps: 1848d666d190dd140b52fc95c2badc16e381e566d1bc79d80541b1de75db6c0d
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: monitoring-ingest
+        app.kubernetes.io/name: monitoring-ingest
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - image: library/nginx@sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94
+          livenessProbe:
+            tcpSocket:
+              port: 8443
+          name: main
+          readinessProbe:
+            tcpSocket:
+              port: 8443
+          volumeMounts:
+            - mountPath: /auth
+              name: auth
+              readOnly: true
+            - mountPath: /etc/nginx/conf.d/default.conf
+              name: config
+              readOnly: true
+              subPath: default.conf
+            - mountPath: /tls
+              name: tls
+              readOnly: true
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: monitoring-ingest
+      volumes:
+        - name: auth
+          secret:
+            secretName: monitoring-ingest-htpasswd
+        - configMap:
+            name: monitoring-ingest
+          name: config
+        - name: tls
+          secret:
+            secretName: monitoring-ingest-tls

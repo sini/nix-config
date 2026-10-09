@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.11.0.31
+  labels:
+    app.kubernetes.io/instance: monitoring-ingest
+    app.kubernetes.io/name: monitoring-ingest
+    app.kubernetes.io/service: monitoring-ingest
+  name: monitoring-ingest
+  namespace: monitoring
+spec:
+  externalTrafficPolicy: Local
+  ports:
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: monitoring-ingest
+    app.kubernetes.io/name: monitoring-ingest
+  type: LoadBalancer

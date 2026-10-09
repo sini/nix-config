@@ -65,6 +65,12 @@ in
           type = "A";
           content = "10.11.0.30";
         }
+        # The cluster's monitoring ingest LB (monitoring/ingest.nix).
+        {
+          name = "ingest";
+          type = "A";
+          content = "10.11.0.31";
+        }
       ])
     ];
 
