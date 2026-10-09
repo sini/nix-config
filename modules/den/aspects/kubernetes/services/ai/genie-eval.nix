@@ -5,9 +5,10 @@
 # only power is a Role here: create/get/list/watch/delete Jobs and read their
 # pods and logs. Nothing in `matrix` (or any other namespace) is granted.
 #
-# Every container is bounded by the LimitRange (12Gi / 2 CPU, default and
-# max) and the ResourceQuota caps the namespace at 4 live pods, so at most four
-# evals run at once.
+# Every container is bounded by the LimitRange (12Gi / 2 CPU, default limit and
+# max) but requests only 1Gi / 250m by default, so four pods do not reserve 48Gi.
+# The ResourceQuota caps the namespace at 4 live pods, so at most four evals run
+# at once.
 #
 # EGRESS: DNS, plus the fetch hosts by name (toFQDNs, 443 only). The DNS rule
 # carries an L7 `dns` section because toFQDNs only learns IPs from lookups that
@@ -41,6 +42,10 @@ let
   bounds = {
     memory = "12Gi";
     cpu = "2";
+  };
+  request = {
+    memory = "1Gi";
+    cpu = "250m";
   };
 in
 {
@@ -98,6 +103,7 @@ in
             {
               type = "Container";
               default = bounds;
+              defaultRequest = request;
               max = bounds;
             }
           ];

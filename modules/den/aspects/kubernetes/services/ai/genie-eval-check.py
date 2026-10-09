@@ -28,6 +28,7 @@ FETCH_HOSTS = {
     "tarballs.nixos.org",
 }
 BOUNDS = {"memory": "12Gi", "cpu": "2"}
+REQUEST = {"memory": "1Gi", "cpu": "250m"}
 
 
 def load(path):
@@ -119,9 +120,13 @@ def check(docs, ccnp):
     if len(containers) != 1:
         fails.append(f"LimitRange has {len(containers)} Container entries")
     for entry in containers:
-        for field in ("max", "default"):
-            if entry.get(field) != BOUNDS:
-                fails.append(f"LimitRange {field} is {entry.get(field)}, want {BOUNDS}")
+        for field, want in (
+            ("max", BOUNDS),
+            ("default", BOUNDS),
+            ("defaultRequest", REQUEST),
+        ):
+            if entry.get(field) != want:
+                fails.append(f"LimitRange {field} is {entry.get(field)}, want {want}")
 
     rq = one("ResourceQuota")
     if rq["spec"].get("hard", {}).get("pods") != "4":
