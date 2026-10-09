@@ -289,6 +289,7 @@ in
         "ollama-endpoints"
         "ninfer-endpoints"
         "prometheus-targets"
+        "gateway-policies"
       ];
     };
     stateVersion = lib.mkOption {

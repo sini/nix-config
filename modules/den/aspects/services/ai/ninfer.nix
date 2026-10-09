@@ -288,6 +288,23 @@
           ;
       };
 
+    # The cluster clients' path across the gateway (the hosts share a LAN with it).
+    gateway-policies =
+      { host, ... }:
+      let
+        cfg = host.settings.services.ai.ninfer;
+      in
+      lib.optional (cfg.clients != null && cfg.clients.clusters != [ ]) {
+        name = "ninfer-to-${host.name}";
+        protocol = "tcp";
+        port = toString cfg.port;
+        destination = {
+          inherit (host) environment;
+          ip = builtins.head host.ipv4;
+        };
+        sources.clusters = cfg.clients.clusters;
+      };
+
     nixos =
       {
         host,

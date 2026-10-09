@@ -9,6 +9,7 @@
 #   nix build .#checks.<system>.unifi-bgp-render
 #   nix build .#checks.<system>.unifi-port-forward-render
 #   nix build .#checks.<system>.unifi-nat-render
+#   nix build .#checks.<system>.unifi-gateway-policy-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -251,6 +252,74 @@ let
         );
       };
 
+  # The gateway-policies records as zone-based ALLOW policies, one per source
+  # environment: from the named clusters' node addresses (pods masquerade to
+  # them) to the destination address and port. Sources in the destination's
+  # own environment share its LAN and never cross the gateway, so they render
+  # none. Zones are looked up by the controller's name for each environment
+  # (`zones`); a cluster with no nodes, or an environment with no zone, is refused.
+  renderGatewayPolicies =
+    {
+      zones,
+      nodes,
+      policies,
+    }:
+    let
+      zoneKey = e: "zone_${key e}";
+      zoneName = e: zones.${e} or (throw "unifi: gateway policies need unifi.zones.${e}");
+      zoneId = e: builtins.seq (zoneName e) "\${data.unifi_firewall_zone.${zoneKey e}.id}";
+      sourcesOf =
+        p:
+        lib.concatMap (
+          c:
+          let
+            members = builtins.filter (n: n.clusterName == c) nodes;
+          in
+          if members == [ ] then
+            throw "unifi: gateway policy ${p.name} names cluster ${c}, which has no nodes"
+          else
+            members
+        ) p.sources.clusters;
+      rulesOf =
+        p:
+        lib.mapAttrsToList (src: members: {
+          name = key "${p.name}-from-${src}";
+          zones = [
+            src
+            p.destination.environment
+          ];
+          value = {
+            name = "${p.name} from ${src}";
+            action = "ALLOW";
+            inherit (p) protocol;
+            ip_version = "IPV4";
+            create_allow_respond = true;
+            source = {
+              zone_id = zoneId src;
+              matching_target = "IP";
+              ips = lib.sort (a: b: a < b) (lib.unique (map (n: n.ip) members));
+            };
+            destination = {
+              zone_id = zoneId p.destination.environment;
+              matching_target = "IP";
+              ips = [ p.destination.ip ];
+              inherit (p) port;
+              port_matching_type = "SPECIFIC";
+            };
+          };
+        }) (removeAttrs (lib.groupBy (n: n.environment.name) (sourcesOf p)) [ p.destination.environment ]);
+      rules = lib.concatMap rulesOf policies;
+    in
+    if rules == [ ] then
+      { }
+    else
+      {
+        data.unifi_firewall_zone = lib.genAttrs' (lib.unique (lib.concatMap (r: r.zones) rules)) (
+          e: lib.nameValuePair (zoneKey e) { name = zoneName e; }
+        );
+        resource.unifi_firewall_policy = lib.listToAttrs (map (r: { inherit (r) name value; }) rules);
+      };
+
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
   # its template forces ebgp-requires-policy, redistribute connected,
@@ -361,6 +430,11 @@ in
                 default = [ "wan" ];
                 description = "The gateway's WAN interfaces: a port forward's wan side is the first, and an allWans forward listens on each";
               };
+              zones = mkOption {
+                type = types.attrsOf types.str;
+                default = { };
+                description = "The controller's firewall zone name for each environment's network, for gateway-policies";
+              };
               networks = mkOption {
                 default = null;
                 description = ''
@@ -427,9 +501,23 @@ in
       ])
     ];
 
+  # Gateway policies cross environments, and their sources resolve against every
+  # cluster's nodes, so both come from all hosts (a guest's through its parent).
+  den.policies.env-collect-gateway-policies =
+    { environment, ... }:
+    lib.optionals (environment.unifi != null) [
+      (pipe.from "gateway-policies" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+      (pipe.from "k3s-nodes" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   den.schema.environment.includes = [
     den.policies.env-collect-bgp-peers
     den.policies.env-collect-port-forwards
+    den.policies.env-collect-gateway-policies
     den.aspects.unifi-gateway
     den.policies.env-to-unifi-terranix
   ];
@@ -439,18 +527,25 @@ in
       environment,
       bgp-peers ? [ ],
       port-forwards ? [ ],
+      gateway-policies ? [ ],
+      k3s-nodes ? [ ],
       ...
     }:
     let
       inherit (environment) unifi;
       net = environment.networks.default;
     in
-    lib.recursiveUpdate
+    lib.foldl' lib.recursiveUpdate { } [
       (renderNat {
         env = environment.name;
         inherit (unifi) site networks;
         inherit (environment.dns) publicIPv4;
         forwards = port-forwards;
+      })
+      (renderGatewayPolicies {
+        inherit (unifi) zones;
+        nodes = k3s-nodes;
+        policies = gateway-policies;
       })
       {
         terraform = {
@@ -532,7 +627,8 @@ in
           inherit (unifi) site;
           bgp = "unifi_bgp.${environment.name}";
         };
-      };
+      }
+    ];
 
   # The unifi workspace's state passphrase, declared like dns-state-passphrase.
   den.aspects.unifi-state-passphrase.age-secrets =
@@ -921,6 +1017,71 @@ in
         in
         assert lib.assertMsg ok "unifi-nat-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-nat-render" (builtins.toJSON rendered);
+
+      # Fixture: a policy renders one ALLOW per source environment from its
+      # cluster's node addresses, a same-environment source renders none, and
+      # an unknown cluster or a missing zone is refused.
+      checks.unifi-gateway-policy-render =
+        let
+          node = clusterName: env: ip: {
+            inherit clusterName ip;
+            environment.name = env;
+          };
+          args = {
+            zones = {
+              p = "Internal";
+              d = "Dev";
+            };
+            nodes = [
+              (node "c1" "p" "10.1.0.3")
+              (node "c1" "p" "10.1.0.2")
+              (node "c2" "d" "10.2.0.5")
+            ];
+            policies = [
+              {
+                name = "svc-to-h";
+                protocol = "tcp";
+                port = "8081";
+                destination = {
+                  environment = "d";
+                  ip = "10.2.0.9";
+                };
+                sources.clusters = [
+                  "c1"
+                  "c2"
+                ];
+              }
+            ];
+          };
+          rendered = renderGatewayPolicies args;
+          policy = rendered.resource.unifi_firewall_policy;
+          refused =
+            a: !(builtins.tryEval (builtins.deepSeq (renderGatewayPolicies (args // a)) null)).success;
+          ok =
+            builtins.attrNames policy == [ "svc_to_h_from_p" ]
+            &&
+              policy.svc_to_h_from_p.source == {
+                zone_id = "\${data.unifi_firewall_zone.zone_p.id}";
+                matching_target = "IP";
+                ips = [
+                  "10.1.0.2"
+                  "10.1.0.3"
+                ];
+              }
+            &&
+              policy.svc_to_h_from_p.destination == {
+                zone_id = "\${data.unifi_firewall_zone.zone_d.id}";
+                matching_target = "IP";
+                ips = [ "10.2.0.9" ];
+                port = "8081";
+                port_matching_type = "SPECIFIC";
+              }
+            && rendered.data.unifi_firewall_zone.zone_d.name == "Dev"
+            && refused { policies = map (p: p // { sources.clusters = [ "c3" ]; }) args.policies; }
+            && refused { zones.d = "Dev"; };
+        in
+        assert lib.assertMsg ok "unifi-gateway-policy-render:\n${builtins.toJSON rendered}";
+        pkgs.writeText "unifi-gateway-policy-render" (builtins.toJSON rendered);
 
       packages = {
         unifi-plan = mkUnifiCommand "unifi-plan" "OpenTofu plan for the UniFi gateway" [ ] ''

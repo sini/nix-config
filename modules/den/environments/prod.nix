@@ -73,6 +73,13 @@
         "dev"
       ];
     };
+    # The controller's firewall zone for each environment's network, for
+    # gateway-policies (Settings -> Security -> Zones). Unconfirmed against the
+    # controller: a wrong name fails unifi-plan at the zone lookup.
+    unifi.zones = {
+      prod = "Internal";
+      dev = "Dev";
+    };
     unifi.bgp = {
       description = "edge-prod";
       uploadFileName = "unifi-frr-bgp-prod.conf";

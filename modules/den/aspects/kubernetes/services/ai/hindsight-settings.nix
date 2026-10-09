@@ -87,8 +87,9 @@
       # a single engine at a time (ninfer is resident there and declares
       # Conflicts= over the card). ninfer itself is deliberately absent: it does
       # not implement the structured-output request shape hindsight sends (see
-      # cortex-cuda below). Reachable from the cluster only since the UniFi
-      # prod->dev rule plus the 10.9.2.0/24 static route.
+      # cortex-cuda below). cortex-cuda is bridged onto the dev LAN; the cluster
+      # reaches it across the gateway's prod->dev firewall, which is not yet
+      # declared for 8080 (ninfer's port is: gateway-policies).
       #
       # STANDING CAVEAT on both: this is a guest on a DEV-environment workstation
       # (roles.gaming, roles.dev-gui). Prod work pointed here queues behind
