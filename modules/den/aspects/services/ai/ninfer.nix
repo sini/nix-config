@@ -19,8 +19,26 @@
 #
 # Emits ninfer-endpoints so pi/hermes derive endpoint AND model identity
 # instead of hardcoding the guest address.
-{ inputs, lib, ... }:
 {
+  den,
+  inputs,
+  lib,
+  ...
+}:
+{
+  # A host restricting ninfer to cluster nodes needs every cluster's k3s-nodes,
+  # not only its siblings' (collect-k3s-nodes): a guest's siblings are its
+  # parent's other guests, and the clusters live in other environments.
+  den.policies.ninfer-collect-client-nodes =
+    { host, ... }:
+    lib.optionals ((host.settings.services.ai.ninfer.clients or null) != null) [
+      (den.lib.policy.pipe.from "k3s-nodes" [
+        (den.lib.policy.pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
+  den.schema.host.includes = [ den.policies.ninfer-collect-client-nodes ];
+
   flake-file.inputs.ninfer-3090 = {
     url = "github:Don-Chad/ninfer-3090/release/v0.6.2-rtx3090";
   };
@@ -225,6 +243,31 @@
           `systemctl start ninfer` swap.
         '';
       };
+      clients = lib.mkOption {
+        default = null;
+        description = ''
+          Who may reach the port: the nodes of these k3s clusters (pods
+          masquerade to their node address) and these hosts, by their
+          addresses in the collected k3s-nodes and host-addrs. A name that
+          resolves to no address fails the evaluation. null = any source.
+        '';
+        type = lib.types.nullOr (
+          lib.types.submodule {
+            options = {
+              clusters = lib.mkOption {
+                type = lib.types.listOf lib.types.str;
+                default = [ ];
+                description = "k3s cluster names whose nodes may connect.";
+              };
+              hosts = lib.mkOption {
+                type = lib.types.listOf lib.types.str;
+                default = [ ];
+                description = "Host names that may connect.";
+              };
+            };
+          }
+        );
+      };
     };
 
     # Endpoint AND model identity: consumers need the exact `--model-id` and
@@ -246,9 +289,27 @@
       };
 
     nixos =
-      { host, pkgs, ... }:
+      {
+        host,
+        k3s-nodes,
+        host-addrs,
+        pkgs,
+        ...
+      }:
       let
         cfg = host.settings.services.ai.ninfer;
+
+        addrsOf =
+          kind: name: ips:
+          if ips == [ ] then throw "ninfer: client ${kind} ${name} has no address" else ips;
+        clientIps = lib.unique (
+          lib.concatMap (
+            c: addrsOf "cluster" c (map (n: n.ip) (lib.filter (n: n.clusterName == c) k3s-nodes))
+          ) cfg.clients.clusters
+          ++ lib.concatMap (
+            h: addrsOf "host" h (lib.concatMap (e: e.ipv4) (lib.filter (e: e.hostname == h) host-addrs))
+          ) cfg.clients.hosts
+        );
         ninfer = inputs.ninfer-3090.packages.${pkgs.stdenv.hostPlatform.system}.ninfer;
 
         # Content-addressed acquisition: the guest mounts the host's /nix/store
@@ -331,7 +392,16 @@
           };
         };
 
-        networking.firewall.allowedTCPPorts = [ cfg.port ];
+        networking.firewall =
+          if cfg.clients == null then
+            { allowedTCPPorts = [ cfg.port ]; }
+          else
+            assert lib.assertMsg (clientIps != [ ]) "ninfer: clients names no cluster and no host";
+            {
+              extraInputRules = ''
+                ip saddr { ${lib.concatStringsSep ", " clientIps} } tcp dport ${toString cfg.port} accept
+              '';
+            };
       };
 
     cache = {

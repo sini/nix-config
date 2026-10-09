@@ -66,6 +66,12 @@
       # replaced — for 3.6% less context.
       maxContext = 145408; # 2272 pages x 64 tokens
       kvCapacity = "145408";
+
+      # The axon cluster's workloads (genie-agent) and the parent workstation.
+      clients = {
+        clusters = [ "axon" ];
+        hosts = [ "cortex" ];
+      };
     };
   };
 
