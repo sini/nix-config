@@ -28,6 +28,7 @@ in
         environment,
         host,
         monitoring-ingest,
+        pkgs,
         prometheus-targets,
         ...
       }:
@@ -103,6 +104,12 @@ in
         # Declared here rather than as age-secrets so microvm guests get it too.
         # Read by systemd for LoadCredential, so root-owned.
         age.secrets.alloy-ingest-password.rekeyFile = ingest.passwordFile;
+
+        # grafana-alloy dlopens systemd-minimal-libs, built without compression,
+        # which silently skips every journal file journald writes zstd-
+        # compressed (all of them on NixOS): the journal source reads nothing.
+        # The loader searches LD_LIBRARY_PATH before the binary's RUNPATH.
+        systemd.services.alloy.environment.LD_LIBRARY_PATH = "${lib.getLib pkgs.systemd}/lib";
 
         systemd.services.alloy.serviceConfig = {
           LoadCredential = "${credential}:${config.age.secrets.alloy-ingest-password.path}";
