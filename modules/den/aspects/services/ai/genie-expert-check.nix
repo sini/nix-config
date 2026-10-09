@@ -76,7 +76,7 @@ let
       ];
     loadCredential = tmpl.LoadCredential or null == "claude-token:${tokenPath}";
     # One uid per tier, never one serving both.
-    tierUids =
+    tiersSeparateUids =
       lib.all (tier: runsAs tier == user tier) tiers
       && lib.length (lib.unique (map runsAs tiers)) == lib.length tiers;
     publicNoOwnerClaude =
