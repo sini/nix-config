@@ -5,13 +5,13 @@ eval. The aspect is `services.ai.genie-eval`
 (`modules/den/aspects/kubernetes/services/ai/genie-eval.nix`), and it renders to
 the ArgoCD app `genie-eval`:
 
-| Object                                   | Namespace    | What it does                                                                 |
-| ---------------------------------------- | ------------ | ---------------------------------------------------------------------------- |
-| ServiceAccount `genie-eval-launcher`     | `matrix`     | the identity the genie-agent pod will run as                                 |
-| Role + RoleBinding `genie-eval-launcher` | `genie-eval` | create/get/list/watch/delete `batch/jobs`; get/list/watch `pods`, `pods/log` |
-| LimitRange `genie-eval`                  | `genie-eval` | per container: limit and max 12Gi / 2 CPU, default request 1Gi / 250m        |
-| ResourceQuota `genie-eval`               | `genie-eval` | at most 4 pods                                                               |
-| CiliumNetworkPolicy `genie-eval-egress`  | `genie-eval` | egress to kube-dns and, on 443, the six fetch hosts only; all ingress denied |
+| Object                                   | Namespace    | What it does                                                                    |
+| ---------------------------------------- | ------------ | ------------------------------------------------------------------------------- |
+| ServiceAccount `genie-eval-launcher`     | `matrix`     | the identity the genie-agent pod will run as                                    |
+| Role + RoleBinding `genie-eval-launcher` | `genie-eval` | create/get/list/watch/delete `batch/jobs`; get/list/watch `pods`, `pods/log`    |
+| LimitRange `genie-eval`                  | `genie-eval` | per container: limit and max 12Gi / 2 CPU, default request = limit (Guaranteed) |
+| ResourceQuota `genie-eval`               | `genie-eval` | at most 4 pods                                                                  |
+| CiliumNetworkPolicy `genie-eval-egress`  | `genie-eval` | egress to kube-dns and, on 443, the six fetch hosts only; all ingress denied    |
 
 One change lands in another app: the cluster-wide policy `allow-internal-egress`
 (app `cilium`, `network/cilium/cilium.nix`) no longer selects pods in
@@ -150,9 +150,9 @@ Server-side dry run shows what admission applies, without creating a pod:
 kubectl -n genie-eval run bounds-probe --dry-run=server --image=busybox -o jsonpath='{.spec.containers[0].resources}{"\n"}'
 ```
 
-Expected: limits `{"cpu":"2","memory":"12Gi"}`, requests
-`{"cpu":"250m","memory":"1Gi"}`. A pod that asks for more than the max is
-refused:
+Expected: limits and requests both `{"cpu":"2","memory":"12Gi"}`, so the pod is
+Guaranteed QoS and four evals reserve 48Gi. A pod that asks for more than the
+max is refused:
 
 ```bash
 kubectl -n genie-eval run too-big --dry-run=server --image=busybox --overrides='{"spec":{"containers":[{"name":"too-big","image":"busybox","resources":{"limits":{"memory":"16Gi"}}}]}}'

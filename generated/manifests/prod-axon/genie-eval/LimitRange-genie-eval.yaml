@@ -9,8 +9,8 @@ spec:
         cpu: "2"
         memory: 12Gi
       defaultRequest:
-        cpu: 250m
-        memory: 1Gi
+        cpu: "2"
+        memory: 12Gi
       max:
         cpu: "2"
         memory: 12Gi

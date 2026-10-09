@@ -28,7 +28,6 @@ FETCH_HOSTS = {
     "tarballs.nixos.org",
 }
 BOUNDS = {"memory": "12Gi", "cpu": "2"}
-REQUEST = {"memory": "1Gi", "cpu": "250m"}
 
 
 def load(path):
@@ -123,7 +122,7 @@ def check(docs, ccnp):
         for field, want in (
             ("max", BOUNDS),
             ("default", BOUNDS),
-            ("defaultRequest", REQUEST),
+            ("defaultRequest", BOUNDS),  # request = limit: Guaranteed QoS
         ):
             if entry.get(field) != want:
                 fails.append(f"LimitRange {field} is {entry.get(field)}, want {want}")

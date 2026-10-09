@@ -6,7 +6,9 @@
 # pods and logs. Nothing in `matrix` (or any other namespace) is granted.
 #
 # Every container is bounded by the LimitRange (12Gi / 2 CPU, default limit and
-# max) but requests only 1Gi / 250m by default, so four pods do not reserve 48Gi.
+# max) and requests its limit by default: Guaranteed QoS, so the scheduler
+# reserves what an eval may use and four evals cannot burst a node past what it
+# reserved. Four pods reserve 48Gi; that is the honest cost of the fence.
 # The ResourceQuota caps the namespace at 4 live pods, so at most four evals run
 # at once.
 #
@@ -42,10 +44,6 @@ let
   bounds = {
     memory = "12Gi";
     cpu = "2";
-  };
-  request = {
-    memory = "1Gi";
-    cpu = "250m";
   };
 in
 {
@@ -103,7 +101,7 @@ in
             {
               type = "Container";
               default = bounds;
-              defaultRequest = request;
+              defaultRequest = bounds;
               max = bounds;
             }
           ];
