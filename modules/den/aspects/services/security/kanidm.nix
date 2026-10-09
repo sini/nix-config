@@ -176,12 +176,12 @@ let
       };
 
       # The fleet's Grafana (in-cluster, monitoring namespace), grafana-native
-      # OIDC, served at grafana.<domain>. The client id predates the move.
-      grafana-k8s = {
+      # OIDC, served at grafana.<domain>.
+      grafana = {
         displayName = "Grafana (cluster)";
         originLanding = "https://${domain "grafana"}/login/generic_oauth";
         originUrl = "https://${domain "grafana"}";
-        basicSecretFile = secretPaths.grafana-k8s-oidc-client-secret;
+        basicSecretFile = secretPaths.grafana-oidc-client-secret;
         scopeMaps."grafana.access" = [
           "openid"
           "email"

@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 16d6f0528f9700235de54b6c4a0feb297b52f232fd6851c5c0afc11894e214cb
+        checksum/config: 5a3141bd612415024d972a547233fa9ebd5472a3cefbcd44cc349b2e9fbe3367
         checksum/sc-dashboard-provider-config: 81f722b8194d01e4a84ce12a0cbbe9b705b2d9145719c803ac264b4786c64a09
         kubectl.kubernetes.io/default-container: grafana
       labels:
@@ -62,12 +62,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: admin-user
-                  name: grafana-k8s-admin
+                  name: grafana-admin
             - name: GF_SECURITY_ADMIN_PASSWORD
               valueFrom:
                 secretKeyRef:
                   key: admin-password
-                  name: grafana-k8s-admin
+                  name: grafana-admin
             - name: GF_PATHS_DATA
               value: /var/lib/grafana/
             - name: GF_PATHS_LOGS
@@ -82,7 +82,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: client-secret
-                  name: grafana-k8s-oidc-client-secret
+                  name: grafana-oidc-client-secret
             - name: GF_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -92,7 +92,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: secret-key
-                  name: grafana-k8s-secret-key
+                  name: grafana-secret-key
           image: docker.io/grafana/grafana:12.3.1
           imagePullPolicy: IfNotPresent
           livenessProbe:

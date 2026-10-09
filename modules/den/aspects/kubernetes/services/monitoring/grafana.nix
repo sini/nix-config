@@ -1,16 +1,13 @@
 # Grafana — Helm chart for in-cluster dashboards.
 #
 # Routed through the default gateway; auth is grafana-native OIDC against
-# kanidm (clientID grafana-k8s — the host-level grafana on the
-# metrics-ingester owns the plain "grafana" client) with the same
-# group-to-role ACL mapping as the host instance. Dashboards are
+# kanidm (client grafana), mapping kanidm groups to Grafana roles. Dashboards are
 # provisioned by the sidecar from ConfigMaps labeled grafana_dashboard;
 # kube-prometheus-stack force-deploys its standard dashboard set even
 # with its bundled grafana disabled (see prometheus.nix).
 {
   den.aspects.kubernetes.services.monitoring.grafana = {
-    # The fleet's Grafana, at grafana.<domain> (DNS record + gateway
-    # listener). The kanidm client keeps its original id, grafana-k8s.
+    # The fleet's Grafana, at grafana.<domain> (DNS record + gateway listener).
     service-domains = [ "grafana" ];
     served-domains = { cluster, ... }: cluster.servedDomains [ "grafana" ];
 
@@ -390,7 +387,7 @@
               # first-boot value: local admin unusable, sidecar reload 401s,
               # and perpetual SopsSecret drift in the diffs.
               admin = {
-                existingSecret = "grafana-k8s-admin";
+                existingSecret = "grafana-admin";
                 userKey = "admin-user";
                 passwordKey = "admin-password";
               };
@@ -413,7 +410,7 @@
               # sourced from SopsSecrets / the CNPG role secret.
               envValueFrom = {
                 GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET.secretKeyRef = {
-                  name = "grafana-k8s-oidc-client-secret";
+                  name = "grafana-oidc-client-secret";
                   key = "client-secret";
                 };
                 GF_DATABASE_PASSWORD.secretKeyRef = {
@@ -421,7 +418,7 @@
                   key = "password";
                 };
                 GF_SECURITY_SECRET_KEY.secretKeyRef = {
-                  name = "grafana-k8s-secret-key";
+                  name = "grafana-secret-key";
                   key = "secret-key";
                 };
               };
@@ -537,12 +534,12 @@
                   icon = "signin";
                   allow_sign_up = true;
                   auto_login = true;
-                  client_id = "grafana-k8s";
+                  client_id = "grafana";
                   scopes = "openid email profile";
                   login_attribute_path = "preferred_username";
                   auth_url = "https://${kanidmDomain}/ui/oauth2";
                   token_url = "https://${kanidmDomain}/oauth2/token";
-                  api_url = "https://${kanidmDomain}/oauth2/openid/grafana-k8s/userinfo";
+                  api_url = "https://${kanidmDomain}/oauth2/openid/grafana/userinfo";
                   use_pkce = true;
                   use_refresh_token = true;
                   role_attribute_path = "contains(groups[*], 'server_admin') && 'GrafanaAdmin' || contains(groups[*], 'admin') && 'Admin' || contains(groups[*], 'editor') && 'Editor' || 'Viewer'";
@@ -604,22 +601,22 @@
             };
 
             secrets = {
-              grafana-k8s-oidc-client-secret = {
+              grafana-oidc-client-secret = {
                 type = "Opaque";
-                stringData.client-secret = config.age.secrets.grafana-k8s-oidc-client-secret.sopsRef;
+                stringData.client-secret = config.age.secrets.grafana-oidc-client-secret.sopsRef;
               };
 
-              grafana-k8s-admin = {
+              grafana-admin = {
                 type = "Opaque";
                 stringData = {
                   admin-user = "admin";
-                  admin-password = config.age.secrets.grafana-k8s-admin-password.sopsRef;
+                  admin-password = config.age.secrets.grafana-admin-password.sopsRef;
                 };
               };
 
-              grafana-k8s-secret-key = {
+              grafana-secret-key = {
                 type = "Opaque";
-                stringData.secret-key = config.age.secrets.grafana-k8s-secret-key.sopsRef;
+                stringData.secret-key = config.age.secrets.grafana-secret-key.sopsRef;
               };
             };
 
@@ -674,15 +671,15 @@
     age-secrets =
       { environment, ... }:
       {
-        age.secrets.grafana-k8s-oidc-client-secret = {
-          rekeyFile = environment.secretPath + "/oidc/grafana-k8s-oidc-client-secret.age";
+        age.secrets.grafana-oidc-client-secret = {
+          rekeyFile = environment.secretPath + "/oidc/grafana-oidc-client-secret.age";
           generator = {
             tags = [ "oidc" ];
             script = "rfc3986-secret";
           };
           sopsOutput = {
             file = "oidc";
-            key = "grafana-k8s";
+            key = "grafana";
           };
         };
 
@@ -690,21 +687,21 @@
         # disable_initial_admin_creation no account exists to use it, and
         # removing it would regress the chart to render-time random
         # passwords (diff churn).
-        age.secrets.grafana-k8s-admin-password = {
-          rekeyFile = environment.secretPath + "/grafana-k8s/admin-password.age";
+        age.secrets.grafana-admin-password = {
+          rekeyFile = environment.secretPath + "/grafana/admin-password.age";
           generator.script = "rfc3986-secret";
           sopsOutput = {
-            file = "grafana-k8s";
+            file = "grafana";
             key = "admin-password";
           };
         };
 
-        age.secrets.grafana-k8s-secret-key = {
-          rekeyFile = environment.secretPath + "/grafana-k8s/secret-key.age";
+        age.secrets.grafana-secret-key = {
+          rekeyFile = environment.secretPath + "/grafana/secret-key.age";
           settings.length = "32";
           generator.script = "hex";
           sopsOutput = {
-            file = "grafana-k8s";
+            file = "grafana";
             key = "secret-key";
           };
         };

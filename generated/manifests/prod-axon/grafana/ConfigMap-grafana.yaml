@@ -41,10 +41,10 @@ data:
     [auth.generic_oauth]
     allow_assign_grafana_admin = true
     allow_sign_up = true
-    api_url = https://idm.json64.dev/oauth2/openid/grafana-k8s/userinfo
+    api_url = https://idm.json64.dev/oauth2/openid/grafana/userinfo
     auth_url = https://idm.json64.dev/ui/oauth2
     auto_login = true
-    client_id = grafana-k8s
+    client_id = grafana
     enabled = true
     icon = signin
     login_attribute_path = preferred_username
