@@ -35,6 +35,10 @@ in
     # Settings on the ENTITY (cascade reads hosts.<name>.settings) → ollama-cuda.
     settings.services.ai.ollama.acceleration = "cuda";
 
+    # Evaluated alongside ninfer (models-todo.md, candidates C/D); started by hand.
+    # Admitted only from cortex, which runs the benchmarks.
+    settings.services.ai.hyperqwen.clients = [ "10.9.2.1" ];
+
     # ninfer is the resident engine, serving pi/hermes. NInfer measured 96.2
     # tok/s decode at the default int8 KV against llama-cpp's 45.5 on identical
     # prompts (2.1x), for a 1.26x prefill cost, and it keeps the shared
@@ -81,6 +85,7 @@ in
   den.aspects.cortex-cuda = {
     includes = with den.aspects; [
       roles.inference
+      services.ai.hyperqwen
       hardware.gpu.nvidia
       # Opaque to cortex (it sees only the memory reservation), so it reports
       # for itself.
@@ -170,6 +175,12 @@ in
               source = "/cache/var/lib/private/ninfer";
               mountPoint = "/cache/var/lib/private/ninfer";
               tag = "ninfer";
+              proto = "virtiofs";
+            }
+            {
+              source = "/cache/var/lib/private/hyperqwen";
+              mountPoint = "/cache/var/lib/private/hyperqwen";
+              tag = "hyperqwen";
               proto = "virtiofs";
             }
           ];
