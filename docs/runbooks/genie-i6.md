@@ -10,11 +10,14 @@ things:
   is admitted by that address. A consumer with none (blade, slab, patch) is
   admitted by its environment's network, `10.9.0.0/16`. The port leaves
   `allowedTCPPorts`.
-- **The UniFi gateway** gets a zone-based policy,
-  `unifi_firewall_policy.ninfer_to_cortex_cuda_from_prod`: ALLOW tcp from
-  `10.10.10.2`, `10.10.10.3` and `10.10.10.4` (axon-01..03) to `10.9.2.2:8081`.
-  No static route is declared. cortex-cuda has been on the dev LAN since
-  cortex's `br0` bridge, so the hand-made `10.9.2.0/24` route is stale and is
+- **The UniFi gateway** gets a legacy firewall rule (the gateway runs no
+  zone-based firewall), `unifi_firewall_rule.ninfer_to_cortex_cuda_from_prod`:
+  LAN_IN, accept tcp from the address group
+  `unifi_firewall_group.ninfer_to_cortex_cuda_from_prod` (`10.10.10.2`,
+  `10.10.10.3`, `10.10.10.4`, axon-01..03) to `10.9.2.2:8081`, rule index
+  `20501`. No static route is declared. cortex-cuda has been on the dev LAN
+  since cortex's `br0` bridge, so the hand-made route "Expose cortex-cuda"
+  (`10.9.2.0/24` via `10.9.2.1`, id `6a961c1ba90d308b97c0068b`) is stale and is
   deleted in step 3.
 
 Port **8080** (llama-cpp on cortex-cuda, which hindsight reaches from the
@@ -44,17 +47,22 @@ probe                                        # from this workstation: note the r
 ssh root@10.9.2.2 systemctl is-active ninfer # expect active
 ```
 
-In the UniFi UI, check and note:
+Check and note, read-only:
 
-1. **Settings → Security → Zones.** Note which zone holds the network `Default`
-   (prod, 10.10.0.0/16) and which holds `dev` (10.9.0.0/16). The config assumes
-   `Internal` and `Dev` (`unifi.zones` in `modules/den/environments/prod.nix`).
-   If either differs, edit `unifi.zones`, commit, and re-run the checks.
-2. **Settings → Security → Firewall Policies.** Note every existing policy from
-   the prod zone to the dev zone: name, sources, destinations, ports. Step 1
-   depends on whether one is broader than this change.
-3. **Settings → Routing → Static Routes.** Note any route to `10.9.2.0/24`: its
-   next hop, distance and name. You need these for the rollback in step 3.
+1. **Settings → Security → Traffic & Firewall Rules → LAN In** (or
+   `GET /proxy/network/api/s/default/rest/firewallrule`). The existing rule
+   "Prod to Dev access" (LAN_IN, accept, all protocols, network `Default` →
+   network `dev`) stays: hindsight reaches llama-cpp on `10.9.2.2:8080` through
+   it. Note its `rule_index`, and confirm that no rule already holds index
+   `20501`. If one does, change `ruleIndexBase` in
+   `modules/flake-parts/terranix/unifi.nix` and re-run the checks.
+2. **Settings → Profiles → IP Groups** (`rest/firewallgroup`). Confirm that no
+   group is already named `ninfer-to-cortex-cuda from prod`.
+3. **Settings → Routing → Static Routes.** "Expose cortex-cuda", `10.9.2.0/24`
+   via `10.9.2.1`. Note its distance; you need it for the rollback in step 3.
+
+Zone-based policies do not apply: the controller reports
+`zone-based-firewall-not-configured`.
 
 ## 1. Gateway: the prod→dev policy
 
@@ -64,28 +72,16 @@ You need the YubiKey.
 unifi-plan
 ```
 
-Expected: two data reads (`data.unifi_firewall_zone.zone_prod`,
-`data.unifi_firewall_zone.zone_dev`), then
-`unifi_firewall_policy.ninfer_to_cortex_cuda_from_prod will be created` and
-`Plan: 1 to add, 0 to change, 0 to destroy.`
+Expected: two creates,
+`unifi_firewall_group.ninfer_to_cortex_cuda_from_prod will be created` and
+`unifi_firewall_rule.ninfer_to_cortex_cuda_from_prod will be created`, then
+`Plan: 2 to add, 0 to change, 0 to destroy.` Nothing else changes.
 
-- **The zone lookup fails** (no zone with that name). Fix `unifi.zones` (step
-  0.1). Nothing has been written.
-- **An existing, broader prod→dev policy** (from step 0.2, for example "prod →
-  dev, any port"). The CREATE adds a narrower ALLOW beside it, and the broad
-  policy still admits everything else. Choose one:
-  - **Leave the broad policy and apply the CREATE.** This is the safe default.
-    The narrowing on the guest (step 2) still holds. Do **not** narrow the broad
-    policy yet: hindsight reaches llama-cpp on `10.9.2.2:8080` through it.
-  - **Adopt the broad policy into this resource** by adding an import block for
-    its id to `infra/unifi/imports.tf.json`:
-    `{ "to": "unifi_firewall_policy.ninfer_to_cortex_cuda_from_prod", "id": "<policy _id>" }`.
-    The plan then shows `1 to import, 1 to change`, and applying it **narrows**
-    the policy to 8081. That cuts the cluster's path to 8080, so do it only once
-    8080 has its own declaration.
-
-  Whether such a policy exists is unverified from the repository. Only the
-  controller knows.
+While "Prod to Dev access" exists, the new rule is redundant on the wire: the
+broad rule already accepts everything from prod to dev. The new rule is the
+declared path that remains once the broad rule is narrowed. Do **not** narrow,
+delete or import "Prod to Dev access" yet. That cuts the cluster's path to 8080,
+so it waits until 8080 has its own declaration.
 
 Apply, then commit the encrypted state:
 
@@ -95,14 +91,13 @@ git commit -m "unifi: state after the ninfer gateway policy" -- infra/unifi/terr
 unifi-plan       # expect: No changes.
 ```
 
-Verify: the UI lists the policy `ninfer-to-cortex-cuda from prod`, and
+Verify: LAN In lists `ninfer-to-cortex-cuda from prod` at index 20501, and the
+IP group lists the three axon addresses, and
 `ssh axon-01 "$(typeset -f probe); probe"` still gives 200.
 
 **Rollback.** Revert the landing's commits, or set
 `settings.services.ai.ninfer.clients = null` on cortex-cuda, then run
-`unifi-plan` (expect `1 to destroy`), `unifi-apply`, and commit the state. If
-you imported a broad policy, restore its old sources and ports in the UI from
-your step 0.2 notes.
+`unifi-plan` (expect `2 to destroy`), `unifi-apply`, and commit the state.
 
 ## 2. Host: cortex-cuda's nftables
 
@@ -161,8 +156,8 @@ For a durable rollback, revert the landing (or set `clients = null`), run
 
 ## 3. Delete the stale static route
 
-Only if step 0.3 found a route to `10.9.2.0/24`. Delete it in **Settings →
-Routing → Static Routes**.
+Delete "Expose cortex-cuda" (`10.9.2.0/24` via `10.9.2.1`, id
+`6a961c1ba90d308b97c0068b`) in **Settings → Routing → Static Routes**.
 
 Verify from axon-01:
 
@@ -186,4 +181,4 @@ ssh axon-01 "$(typeset -f probe); probe"         # 200
   construction, through the `ninfer-clients` quirk. Extra non-consumer hosts go
   in `settings.services.ai.ninfer.clients.hosts`.
 - **8080** (llama-cpp) is still open to all sources on the guest, and its
-  cluster path depends on whatever prod→dev policy exists today.
+  cluster path is the hand-made "Prod to Dev access" rule.

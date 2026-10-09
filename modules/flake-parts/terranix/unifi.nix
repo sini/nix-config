@@ -252,22 +252,18 @@ let
         );
       };
 
-  # The gateway-policies records as zone-based ALLOW policies, one per source
-  # environment: from the named clusters' node addresses (pods masquerade to
-  # them) to the destination address and port. Sources in the destination's
-  # own environment share its LAN and never cross the gateway, so they render
-  # none. Zones are looked up by the controller's name for each environment
-  # (`zones`); a cluster with no nodes, or an environment with no zone, is refused.
+  # The gateway-policies records as legacy LAN_IN accept rules (the gateway runs
+  # no zone-based firewall), one per source environment: from an address group
+  # of the named clusters' node addresses (pods masquerade to them) to the
+  # destination address and port. Sources in the destination's own environment
+  # share its LAN and never cross the gateway, so they render none. A cluster
+  # with no nodes is refused.
+  # ponytail: rule_index is ruleIndexBase + position; the controller refuses a
+  # clash, so a second consumer of the block reads the live indices first.
+  ruleIndexBase = 20500;
   renderGatewayPolicies =
-    {
-      zones,
-      nodes,
-      policies,
-    }:
+    { nodes, policies }:
     let
-      zoneKey = e: "zone_${key e}";
-      zoneName = e: zones.${e} or (throw "unifi: gateway policies need unifi.zones.${e}");
-      zoneId = e: builtins.seq (zoneName e) "\${data.unifi_firewall_zone.${zoneKey e}.id}";
       sourcesOf =
         p:
         lib.concatMap (
@@ -284,28 +280,19 @@ let
         p:
         lib.mapAttrsToList (src: members: {
           name = key "${p.name}-from-${src}";
-          zones = [
-            src
-            p.destination.environment
-          ];
-          value = {
+          group = {
             name = "${p.name} from ${src}";
-            action = "ALLOW";
+            type = "address-group";
+            members = lib.sort (a: b: a < b) (lib.unique (map (n: n.ip) members));
+          };
+          rule = {
+            name = "${p.name} from ${src}";
+            ruleset = "LAN_IN";
+            action = "accept";
+            enabled = true;
             inherit (p) protocol;
-            ip_version = "IPV4";
-            create_allow_respond = true;
-            source = {
-              zone_id = zoneId src;
-              matching_target = "IP";
-              ips = lib.sort (a: b: a < b) (lib.unique (map (n: n.ip) members));
-            };
-            destination = {
-              zone_id = zoneId p.destination.environment;
-              matching_target = "IP";
-              ips = [ p.destination.ip ];
-              inherit (p) port;
-              port_matching_type = "SPECIFIC";
-            };
+            dst_address = p.destination.ip;
+            dst_port = p.port;
           };
         }) (removeAttrs (lib.groupBy (n: n.environment.name) (sourcesOf p)) [ p.destination.environment ]);
       rules = lib.concatMap rulesOf policies;
@@ -314,10 +301,19 @@ let
       { }
     else
       {
-        data.unifi_firewall_zone = lib.genAttrs' (lib.unique (lib.concatMap (r: r.zones) rules)) (
-          e: lib.nameValuePair (zoneKey e) { name = zoneName e; }
+        resource.unifi_firewall_group = lib.listToAttrs (map (r: lib.nameValuePair r.name r.group) rules);
+        resource.unifi_firewall_rule = lib.listToAttrs (
+          lib.imap1 (
+            i: r:
+            lib.nameValuePair r.name (
+              r.rule
+              // {
+                rule_index = ruleIndexBase + i;
+                src_firewall_group_ids = [ "\${unifi_firewall_group.${r.name}.id}" ];
+              }
+            )
+          ) rules
         );
-        resource.unifi_firewall_policy = lib.listToAttrs (map (r: { inherit (r) name value; }) rules);
       };
 
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
@@ -430,11 +426,6 @@ in
                 default = [ "wan" ];
                 description = "The gateway's WAN interfaces: a port forward's wan side is the first, and an allWans forward listens on each";
               };
-              zones = mkOption {
-                type = types.attrsOf types.str;
-                default = { };
-                description = "The controller's firewall zone name for each environment's network, for gateway-policies";
-              };
               networks = mkOption {
                 default = null;
                 description = ''
@@ -543,7 +534,6 @@ in
         forwards = port-forwards;
       })
       (renderGatewayPolicies {
-        inherit (unifi) zones;
         nodes = k3s-nodes;
         policies = gateway-policies;
       })
@@ -1018,9 +1008,9 @@ in
         assert lib.assertMsg ok "unifi-nat-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-nat-render" (builtins.toJSON rendered);
 
-      # Fixture: a policy renders one ALLOW per source environment from its
-      # cluster's node addresses, a same-environment source renders none, and
-      # an unknown cluster or a missing zone is refused.
+      # Fixture: a policy renders one LAN_IN accept rule and one address group
+      # per source environment from its cluster's node addresses, a
+      # same-environment source renders none, and an unknown cluster is refused.
       checks.unifi-gateway-policy-render =
         let
           node = clusterName: env: ip: {
@@ -1028,10 +1018,6 @@ in
             environment.name = env;
           };
           args = {
-            zones = {
-              p = "Internal";
-              d = "Dev";
-            };
             nodes = [
               (node "c1" "p" "10.1.0.3")
               (node "c1" "p" "10.1.0.2")
@@ -1054,31 +1040,35 @@ in
             ];
           };
           rendered = renderGatewayPolicies args;
-          policy = rendered.resource.unifi_firewall_policy;
+          inherit (rendered.resource) unifi_firewall_rule unifi_firewall_group;
           refused =
             a: !(builtins.tryEval (builtins.deepSeq (renderGatewayPolicies (args // a)) null)).success;
           ok =
-            builtins.attrNames policy == [ "svc_to_h_from_p" ]
+            builtins.attrNames unifi_firewall_rule == [ "svc_to_h_from_p" ]
             &&
-              policy.svc_to_h_from_p.source == {
-                zone_id = "\${data.unifi_firewall_zone.zone_p.id}";
-                matching_target = "IP";
-                ips = [
-                  "10.1.0.2"
-                  "10.1.0.3"
-                ];
+              unifi_firewall_rule.svc_to_h_from_p == {
+                name = "svc-to-h from p";
+                ruleset = "LAN_IN";
+                action = "accept";
+                enabled = true;
+                protocol = "tcp";
+                dst_address = "10.2.0.9";
+                dst_port = "8081";
+                rule_index = 20501;
+                src_firewall_group_ids = [ "\${unifi_firewall_group.svc_to_h_from_p.id}" ];
               }
             &&
-              policy.svc_to_h_from_p.destination == {
-                zone_id = "\${data.unifi_firewall_zone.zone_d.id}";
-                matching_target = "IP";
-                ips = [ "10.2.0.9" ];
-                port = "8081";
-                port_matching_type = "SPECIFIC";
+              unifi_firewall_group == {
+                svc_to_h_from_p = {
+                  name = "svc-to-h from p";
+                  type = "address-group";
+                  members = [
+                    "10.1.0.2"
+                    "10.1.0.3"
+                  ];
+                };
               }
-            && rendered.data.unifi_firewall_zone.zone_d.name == "Dev"
-            && refused { policies = map (p: p // { sources.clusters = [ "c3" ]; }) args.policies; }
-            && refused { zones.d = "Dev"; };
+            && refused { policies = map (p: p // { sources.clusters = [ "c3" ]; }) args.policies; };
         in
         assert lib.assertMsg ok "unifi-gateway-policy-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-gateway-policy-render" (builtins.toJSON rendered);
