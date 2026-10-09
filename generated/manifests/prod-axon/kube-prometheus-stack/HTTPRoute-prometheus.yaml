@@ -7,10 +7,19 @@ spec:
   hostnames:
     - prometheus.json64.dev
   parentRefs:
-    - name: default-gateway
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: default-gateway
       namespace: gateways
       sectionName: json64-dev-https
   rules:
     - backendRefs:
-        - name: kube-prometheus-stack-prometheus
+        - group: ""
+          kind: Service
+          name: kube-prometheus-stack-prometheus
           port: 9090
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /

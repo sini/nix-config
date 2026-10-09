@@ -371,14 +371,39 @@ in
           resources.httpRoutes = lib.genAttrs uis (ui: {
             spec = {
               hostnames = [ (cluster.domainFor ui) ];
+              # API-server defaults stated explicitly: this app's diff
+              # otherwise keeps the routes OutOfSync after every sync.
               parentRefs = [
                 {
+                  group = "gateway.networking.k8s.io";
+                  kind = "Gateway";
                   name = "default-gateway";
                   namespace = "gateways";
                   sectionName = "${cluster.domainForResource ui}-https";
                 }
               ];
-              rules = [ { backendRefs = [ backends.${ui} ]; } ];
+              rules = [
+                {
+                  matches = [
+                    {
+                      path = {
+                        type = "PathPrefix";
+                        value = "/";
+                      };
+                    }
+                  ];
+                  backendRefs = [
+                    (
+                      backends.${ui}
+                      // {
+                        group = "";
+                        kind = "Service";
+                        weight = 1;
+                      }
+                    )
+                  ];
+                }
+              ];
             };
           });
 
