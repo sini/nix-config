@@ -15,6 +15,7 @@
 { lib, ... }:
 let
   credential = "ingest-password";
+  stateDir = "alloy-host";
   ingestFor =
     environment: monitoring-ingest:
     lib.findFirst (i: i.cluster == environment.monitoring.ingest) null monitoring-ingest;
@@ -103,11 +104,17 @@ in
         # Read by systemd for LoadCredential, so root-owned.
         age.secrets.alloy-ingest-password.rekeyFile = ingest.passwordFile;
 
-        systemd.services.alloy.serviceConfig.LoadCredential =
-          "${credential}:${config.age.secrets.alloy-ingest-password.path}";
+        systemd.services.alloy.serviceConfig = {
+          LoadCredential = "${credential}:${config.age.secrets.alloy-ingest-password.path}";
+          # Not the module's "alloy": on the k3s nodes /var/lib/alloy is the
+          # in-cluster log DaemonSet's hostPath, and a DynamicUser state
+          # directory needs that name free for its symlink.
+          StateDirectory = lib.mkForce stateDir;
+          WorkingDirectory = lib.mkForce "%S/${stateDir}";
+        };
       };
 
     # Positions and the remote-write WAL survive restarts and reboots.
-    persist.directories = [ "/var/lib/private/alloy" ];
+    persist.directories = [ "/var/lib/private/${stateDir}" ];
   };
 }
