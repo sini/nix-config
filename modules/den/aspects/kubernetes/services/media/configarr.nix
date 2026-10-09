@@ -34,7 +34,7 @@
 # custom-format / quality-profile templates are layered in post-deploy per user
 # preference.
 #
-# Networking: DNS egress + egress to all four arrs + world 443 (configarr
+# Networking: egress to all four arrs + world 443 (configarr
 # fetches the TRaSH guides + recyclarr config templates from GitHub on each
 # run). Emitted as plain CiliumNetworkPolicies here (raw aspect, no helper
 # baselines). The ingress default-deny lockdown lives in network-policy.nix
@@ -219,37 +219,6 @@
           };
 
           resources.ciliumNetworkPolicies = {
-            "allow-dns-egress-configarr".spec = {
-              description = "Allow configarr to resolve via kube-dns.";
-              endpointSelector = podSelector;
-              egress = [
-                {
-                  toEndpoints = [
-                    {
-                      matchLabels = {
-                        "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                        "k8s-app" = "kube-dns";
-                      };
-                    }
-                  ];
-                  toPorts = [
-                    {
-                      ports = [
-                        {
-                          port = "53";
-                          protocol = "UDP";
-                        }
-                        {
-                          port = "53";
-                          protocol = "TCP";
-                        }
-                      ];
-                    }
-                  ];
-                }
-              ];
-            };
-
             "allow-arr-egress-configarr".spec = {
               description = "Allow configarr to reach the sonarr/radarr/lidarr/whisparr APIs.";
               endpointSelector = podSelector;

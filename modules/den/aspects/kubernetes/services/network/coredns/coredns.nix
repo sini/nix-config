@@ -1,4 +1,5 @@
 # CoreDNS — dual-stack, forward to env DNS, prometheus metrics 9153, cache 30s.
+# Gating check: dns-egress-check.nix, over the rendered manifests.
 { lib, ... }:
 {
   den.aspects.kubernetes.services.network.coredns = {
@@ -38,6 +39,25 @@
               "8.8.8.8"
             ];
           };
+        # The CoreDNS pods as the chart labels them (k8s-app=coredns); only the
+        # Service carries k8s-app=kube-dns, so a pod selector on that matches
+        # nothing. Both cluster-wide DNS policies below select through this.
+        corednsPods = {
+          "k8s:io.kubernetes.pod.namespace" = "kube-system";
+          "app.kubernetes.io/name" = "coredns";
+        };
+        # TCP/53 for glibc's TCP fallback on truncated/large DNS answers;
+        # without it those retries are dropped.
+        dnsPorts = [
+          {
+            port = "53";
+            protocol = "UDP";
+          }
+          {
+            port = "53";
+            protocol = "TCP";
+          }
+        ];
       in
       {
         applications.coredns = {
@@ -204,33 +224,39 @@
               };
             };
 
+            # The egress half: every endpoint may reach CoreDNS on 53, so no app
+            # declares its own DNS egress. L4 only, so no DNS is proxied
+            # cluster-wide; a namespace that needs the proxy (toFQDNs, e.g.
+            # genie-eval) adds its own L7 rule. Default deny is left untouched:
+            # this policy only adds an allow, it never puts an endpoint into
+            # egress enforcement.
+            ciliumClusterwideNetworkPolicies.allow-kube-dns-cluster-egress = {
+              metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
+              spec = {
+                description = "Policy for egress allow to coredns from all Cilium managed endpoints in the cluster.";
+                endpointSelector = { };
+                enableDefaultDeny = {
+                  egress = false;
+                  ingress = false;
+                };
+                egress = [
+                  {
+                    toEndpoints = [ { matchLabels = corednsPods; } ];
+                    toPorts = [ { ports = dnsPorts; } ];
+                  }
+                ];
+              };
+            };
+
             ciliumClusterwideNetworkPolicies.allow-kube-dns-cluster-ingress = {
               metadata.annotations."argocd.argoproj.io/sync-wave" = "-1";
               spec = {
                 description = "Policy for ingress allow to coredns from all Cilium managed endpoints in the cluster.";
-                endpointSelector.matchLabels = {
-                  "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                  "app.kubernetes.io/name" = "coredns";
-                };
+                endpointSelector.matchLabels = corednsPods;
                 ingress = [
                   {
                     fromEndpoints = [ { } ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          # TCP/53 for glibc's TCP fallback on truncated/large DNS
-                          # answers; without it those retries are dropped.
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
+                    toPorts = [ { ports = dnsPorts; } ];
                   }
                   # prometheus -> coredns metrics (Corefile prometheus plugin)
                   {

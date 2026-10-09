@@ -21,7 +21,7 @@
 # also supports OAuth2/OIDC natively, but we do not wire it (gateway handles it).
 #
 # == Networking ==
-# Baseline only: DNS egress + gateway ingress. Base Komga makes minimal external
+# Baseline only: gateway ingress. Base Komga makes minimal external
 # calls (cover/metadata enrichment is the separate Komf companion, not deployed
 # here), so there is no internet-egress policy. Add it later if metadata fetching
 # is enabled in-app. No postgres (Komga uses its embedded DB under /config).
@@ -245,36 +245,6 @@ in
                 ];
               };
 
-              allow-dns-egress-komga.spec = {
-                description = "Allow komga to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "komga";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
             };
 
             httpRoutes.komga.spec = {

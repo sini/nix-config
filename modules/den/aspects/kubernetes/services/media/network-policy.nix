@@ -4,7 +4,6 @@
 # --------------------
 # Each media app emits only its *baseline* policies inline:
 #   - gateway-ingress  (ingress, routed apps only)  -> engages INGRESS default-deny
-#   - dns-egress       (egress, every app)
 #   - postgres-egress  (egress, postgres apps)
 #   - internet-egress  (egress, flagged apps)
 # A few cross-service edges already live with their owning app (single source of

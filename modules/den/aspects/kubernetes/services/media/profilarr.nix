@@ -165,37 +165,6 @@ in
                 ];
               };
 
-              allow-dns-egress-profilarr.spec = {
-                description = "Allow profilarr to resolve via kube-dns.";
-                endpointSelector = podSelector;
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               # sonarr/radarr only — Dictionarry does not drive lidarr/whisparr.
               allow-arr-egress-profilarr.spec = {
                 description = "Allow profilarr to reach the sonarr/radarr APIs.";

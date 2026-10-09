@@ -143,37 +143,6 @@
             };
           };
 
-          # DNS egress for service-name resolution.
-          allow-garage-dns-egress.spec = {
-            description = "garage-ns pods resolve via kube-dns.";
-            endpointSelector.matchLabels."k8s:io.kubernetes.pod.namespace" = "garage";
-            egress = [
-              {
-                toEndpoints = [
-                  {
-                    matchLabels = {
-                      "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                      "k8s-app" = "kube-dns";
-                    };
-                  }
-                ];
-                toPorts = [
-                  {
-                    ports = [
-                      {
-                        port = "53";
-                        protocol = "UDP";
-                      }
-                      {
-                        port = "53";
-                        protocol = "TCP";
-                      }
-                    ];
-                  }
-                ];
-              }
-            ];
-          };
         };
       };
   };

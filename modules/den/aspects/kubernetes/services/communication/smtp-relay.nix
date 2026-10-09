@@ -262,37 +262,6 @@ in
                 ];
               };
 
-              allow-dns-egress-smtp-relay.spec = {
-                description = "Allow smtp-relay to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "smtp-relay";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               allow-upstream-egress-smtp-relay.spec = {
                 description = "Allow smtp-relay to submit to its upstream.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "smtp-relay";

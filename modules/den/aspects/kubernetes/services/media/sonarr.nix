@@ -368,37 +368,6 @@ in
                 ];
               };
 
-              allow-dns-egress-sonarr.spec = {
-                description = "Allow sonarr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "sonarr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               allow-postgres-egress-sonarr.spec = {
                 description = "Allow sonarr to reach the media-pg CNPG cluster.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "sonarr";

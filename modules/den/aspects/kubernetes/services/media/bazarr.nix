@@ -11,8 +11,8 @@
 #
 # The service is described inline (formerly via the _media-app.nix mkMediaApp
 # helper): a bjw-s app-template release with a longhorn config PVC, the shared
-# media-data NFS mount, baseline CiliumNetworkPolicies (gateway ingress, DNS
-# egress, media-pg egress, internet egress), an HTTPRoute on the default-gateway,
+# media-data NFS mount, baseline CiliumNetworkPolicies (gateway ingress,
+# media-pg egress, internet egress), an HTTPRoute on the default-gateway,
 # and a Kanidm OIDC SecurityPolicy.
 #
 # Bazarr's API key lives in its config.ini (not an env var), so unlike the
@@ -248,37 +248,6 @@ in
                         ports = [
                           {
                             port = "6767";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              allow-dns-egress-bazarr.spec = {
-                description = "Allow bazarr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "bazarr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
                             protocol = "TCP";
                           }
                         ];

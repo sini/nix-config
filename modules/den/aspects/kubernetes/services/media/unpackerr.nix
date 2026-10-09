@@ -15,7 +15,7 @@
 # key from the shared media-arr-api-keys secret. Watch path is the completed
 # torrents dir on the local scratch volume.
 #
-# Networking: the DNS-egress baseline plus Unpackerr's own egress edges — to
+# Networking: Unpackerr's own egress edges — to
 # each *arr API port — added in-file (allow-arr-egress-unpackerr). These are
 # Unpackerr's edges from the cross-service matrix; the policy-matrix task
 # (Task 9) owns the *inbound* side on the *arrs.
@@ -189,40 +189,8 @@
                 ];
               };
 
-              allow-dns-egress-unpackerr.spec = {
-                description = "Allow unpackerr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "unpackerr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              # Unpackerr's own egress to the four *arr APIs (in addition to the
-              # DNS egress). Inbound isolation on the *arrs is owned by the policy
-              # matrix.
+              # Unpackerr's own egress to the four *arr APIs. Inbound isolation on
+              # the *arrs is owned by the policy matrix.
               allow-arr-egress-unpackerr.spec = {
                 description = "Allow unpackerr to reach the *arr APIs (sonarr/radarr/lidarr/whisparr).";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "unpackerr";

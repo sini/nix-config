@@ -220,31 +220,6 @@ in
                   }
                 ];
               };
-              allow-dns-egress-tuwunel = policy "Allow tuwunel to resolve via kube-dns." {
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          (tcp 53)
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
               # 443: kanidm and federation peers; 8448: peers without delegation.
               allow-internet-egress-tuwunel = policy "Allow tuwunel to reach kanidm and federation peers." {
                 egress = [

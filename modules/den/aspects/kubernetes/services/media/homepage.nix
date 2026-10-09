@@ -44,7 +44,7 @@
 #
 # == Networking ==
 # Egress (mirrors the pre-declared dashboard ingress edges in network-policy.nix):
-#   - DNS + gateway-ingress baseline.
+#   - gateway-ingress baseline (DNS is coredns.nix's cluster-wide egress grant).
 #   - in-namespace API edges to sonarr/radarr/lidarr/whisparr/sabnzbd.
 #   - kube-apiserver egress (k8s discovery, cluster mode).
 #   - internet egress (80/443): homepage fetches dashboard icons from a CDN.
@@ -196,37 +196,6 @@ in
                         ports = [
                           {
                             port = "3000";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              allow-dns-egress-dash.spec = {
-                description = "Allow dash to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "dash";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
                             protocol = "TCP";
                           }
                         ];

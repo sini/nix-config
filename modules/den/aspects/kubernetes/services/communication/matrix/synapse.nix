@@ -435,31 +435,6 @@ in
                   }
                 ];
               };
-              allow-dns-egress-synapse = mkNetworkPolicy "Allow synapse to resolve via kube-dns." {
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          (tcp 53)
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
               allow-postgres-egress-synapse =
                 mkNetworkPolicy "Allow synapse to reach the matrix-pg CNPG cluster."
                   {

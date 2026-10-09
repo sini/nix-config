@@ -362,37 +362,6 @@ in
                 ];
               };
 
-              allow-dns-egress-shoko.spec = {
-                description = "Allow shoko to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "shoko";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               # Artwork/banner CDNs over HTTPS.
               allow-internet-egress-shoko.spec = {
                 description = "Allow shoko to reach the public internet.";

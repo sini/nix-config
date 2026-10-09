@@ -6,8 +6,8 @@
 #
 # The service is described inline (formerly built via the mkMediaApp helper):
 # route-less and OIDC-less, so it declares an empty service-domains, no
-# age-secrets, no HTTPRoute, and no SecurityPolicy. Only the DNS-egress and
-# internet-egress baseline CiliumNetworkPolicies are emitted.
+# age-secrets, no HTTPRoute, and no SecurityPolicy. Only the
+# internet-egress baseline CiliumNetworkPolicy is emitted.
 {
   den.aspects.kubernetes.services.media.flaresolverr = {
     service-domains = [ ];
@@ -52,37 +52,6 @@
 
           resources = {
             ciliumNetworkPolicies = {
-              allow-dns-egress-flaresolverr.spec = {
-                description = "Allow flaresolverr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "flaresolverr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               allow-internet-egress-flaresolverr.spec = {
                 description = "Allow flaresolverr to reach the public internet.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "flaresolverr";

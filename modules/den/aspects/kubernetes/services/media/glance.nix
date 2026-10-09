@@ -12,7 +12,7 @@
 # widget is an HTTP liveness ping — no API keys, only network reachability.
 #
 # == Networking ==
-#   - DNS + gateway-ingress baseline.
+#   - gateway-ingress baseline (DNS is coredns.nix's cluster-wide egress grant).
 #   - in-namespace API egress to the monitored services (the egress mirror of the
 #     dashboard ingress allows in network-policy.nix).
 #   - internet egress (80/443): glance monitors Jellyfin's external URL and fetches
@@ -193,37 +193,6 @@ in
                         ports = [
                           {
                             port = "8080";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              allow-dns-egress-glance.spec = {
-                description = "Allow glance to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "glance";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
                             protocol = "TCP";
                           }
                         ];

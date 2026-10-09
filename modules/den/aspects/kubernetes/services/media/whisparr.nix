@@ -280,37 +280,6 @@ in
                 ];
               };
 
-              allow-dns-egress-whisparr.spec = {
-                description = "Allow whisparr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "whisparr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               allow-postgres-egress-whisparr.spec = {
                 description = "Allow whisparr to reach the media-pg CNPG cluster.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "whisparr";

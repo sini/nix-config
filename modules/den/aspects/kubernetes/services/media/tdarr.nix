@@ -271,37 +271,6 @@ in
                 ];
               };
 
-              allow-dns-egress-tdarr.spec = {
-                description = "Allow tdarr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "tdarr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               # World egress (80/443): the server fetches its plugin repo
               # (github) on boot to populate the plugins folder. Without it the
               # "Updating plugins" step times out (AxiosError 15000ms), leaving
@@ -466,37 +435,6 @@ in
                       ports = [
                         {
                           port = "8266";
-                          protocol = "TCP";
-                        }
-                      ];
-                    }
-                  ];
-                }
-              ];
-            };
-
-            allow-dns-egress-tdarr-node.spec = {
-              description = "Allow tdarr-node to resolve via kube-dns.";
-              endpointSelector.matchLabels."app.kubernetes.io/name" = "tdarr-node";
-              egress = [
-                {
-                  toEndpoints = [
-                    {
-                      matchLabels = {
-                        "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                        "k8s-app" = "kube-dns";
-                      };
-                    }
-                  ];
-                  toPorts = [
-                    {
-                      ports = [
-                        {
-                          port = "53";
-                          protocol = "UDP";
-                        }
-                        {
-                          port = "53";
                           protocol = "TCP";
                         }
                       ];

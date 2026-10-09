@@ -67,7 +67,7 @@
 #     k8s Secret of the same name. Hasheous is keyless (HASHEOUS_API_ENABLED bool).
 #
 # == Networking ==
-# Baseline (DNS egress + gateway ingress) + media-pg egress (postgres-egress CNP).
+# Baseline (gateway ingress) + media-pg egress (postgres-egress CNP); DNS is coredns.nix's cluster-wide egress grant.
 # RomM reaches kanidm (OIDC discovery/token at idm.json64.dev) + the metadata
 # providers (IGDB/Twitch, SteamGridDB, RetroAchievements, Hasheous) over the
 # internet, so internet egress (world 80/443) is allowed.
@@ -417,37 +417,6 @@ in
                         ports = [
                           {
                             port = "8080";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              allow-dns-egress-romm.spec = {
-                description = "Allow romm to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "romm";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
                             protocol = "TCP";
                           }
                         ];

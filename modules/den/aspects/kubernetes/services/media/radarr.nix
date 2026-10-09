@@ -363,37 +363,6 @@ in
                 ];
               };
 
-              allow-dns-egress-radarr.spec = {
-                description = "Allow radarr to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "radarr";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
               allow-postgres-egress-radarr.spec = {
                 description = "Allow radarr to reach the media-pg CNPG cluster.";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = "radarr";

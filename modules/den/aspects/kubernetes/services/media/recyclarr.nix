@@ -27,7 +27,7 @@
 # quality-definition (series/movie) for each instance. Full TRaSH custom-format /
 # quality-profile templates are layered in post-deploy per user preference.
 #
-# Networking: DNS egress + egress to sonarr/radarr + world 443 (recyclarr fetches
+# Networking: egress to sonarr/radarr + world 443 (recyclarr fetches
 # the TRaSH guides from GitHub on each run). Emitted as plain
 # CiliumNetworkPolicies here (raw aspect, no helper baselines).
 #
@@ -136,37 +136,6 @@
           };
 
           resources.ciliumNetworkPolicies = {
-            "allow-dns-egress-recyclarr".spec = {
-              description = "Allow recyclarr to resolve via kube-dns.";
-              endpointSelector = podSelector;
-              egress = [
-                {
-                  toEndpoints = [
-                    {
-                      matchLabels = {
-                        "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                        "k8s-app" = "kube-dns";
-                      };
-                    }
-                  ];
-                  toPorts = [
-                    {
-                      ports = [
-                        {
-                          port = "53";
-                          protocol = "UDP";
-                        }
-                        {
-                          port = "53";
-                          protocol = "TCP";
-                        }
-                      ];
-                    }
-                  ];
-                }
-              ];
-            };
-
             "allow-arr-egress-recyclarr".spec = {
               description = "Allow recyclarr to reach the sonarr/radarr APIs.";
               endpointSelector = podSelector;

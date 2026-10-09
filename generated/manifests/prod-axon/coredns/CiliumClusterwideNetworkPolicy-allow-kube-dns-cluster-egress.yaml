@@ -1,0 +1,23 @@
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  name: allow-kube-dns-cluster-egress
+spec:
+  description: Policy for egress allow to coredns from all Cilium managed endpoints in the cluster.
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: coredns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+  enableDefaultDeny:
+    egress: false
+    ingress: false
+  endpointSelector: {}

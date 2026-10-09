@@ -170,7 +170,7 @@ in
 
             # garage-ui drives the Garage admin API only (3903). Once any egress
             # policy selects these pods they default-deny egress; DNS is covered by
-            # the namespace-wide kube-dns egress policy in network-policy.nix (T7).
+            # coredns.nix's cluster-wide egress grant.
             ciliumNetworkPolicies.allow-garage-ui-admin-egress.spec = {
               description = "garage-ui to the Garage admin API (3903).";
               endpointSelector.matchLabels."app.kubernetes.io/name" = "garage-ui";

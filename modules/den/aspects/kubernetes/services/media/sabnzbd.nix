@@ -19,7 +19,7 @@
 # existing /config it rewrites the api_key and ensures host_whitelist. The
 # script is idempotent. See the inline script for every ini key touched.
 #
-# Networking: besides the gateway-ingress + DNS-egress baselines, SAB needs
+# Networking: besides the gateway-ingress baseline, SAB needs
 # world egress to Usenet providers (NNTP 119 / NNTPS 563) and to indexers / SSL
 # providers (443). The internet-egress policy opens 80/443 plus the NNTP ports.
 #
@@ -428,37 +428,6 @@ in
                         ports = [
                           {
                             port = "9707";
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              allow-dns-egress-sabnzbd.spec = {
-                description = "Allow sabnzbd to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "sabnzbd";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
                             protocol = "TCP";
                           }
                         ];

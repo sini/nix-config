@@ -36,7 +36,7 @@
 #        the endpoint IP/port live in a secret a CNP can't read, so we allow the
 #        standard ProtonVPN WG port to all of `world`);
 #      - intra-namespace ingress on 8080 from the *arr API callers + unpackerr.
-#    DNS + gateway-ingress are the routed-app baseline. Cilium policies are
+#    gateway-ingress is the routed-app baseline; DNS is coredns.nix's cluster-wide egress grant. Cilium policies are
 #    additive (union of allows), so these compose. No TCP world-egress policy
 #    exists, so even if gluetun's firewall were misconfigured, Cilium denies
 #    cleartext TCP to the internet.
@@ -671,38 +671,6 @@ in
                         ports = [
                           {
                             port = toString webuiPort;
-                            protocol = "TCP";
-                          }
-                        ];
-                      }
-                    ];
-                  }
-                ];
-              };
-
-              # Routed-app baseline: kube-dns.
-              allow-dns-egress-qbittorrent.spec = {
-                description = "Allow qbittorrent to resolve via kube-dns.";
-                endpointSelector.matchLabels."app.kubernetes.io/name" = "qbittorrent";
-                egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          {
-                            port = "53";
                             protocol = "TCP";
                           }
                         ];

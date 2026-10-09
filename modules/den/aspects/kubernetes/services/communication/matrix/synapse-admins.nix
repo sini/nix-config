@@ -151,30 +151,9 @@ in
                 ];
               };
               allow-synapse-admins-egress.spec = {
-                description = "Allow the synapse-admins job DNS and Synapse, nothing else.";
+                description = "Allow the synapse-admins job Synapse, nothing else (DNS is cluster-wide).";
                 endpointSelector.matchLabels."app.kubernetes.io/name" = name;
                 egress = [
-                  {
-                    toEndpoints = [
-                      {
-                        matchLabels = {
-                          "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                          "k8s-app" = "kube-dns";
-                        };
-                      }
-                    ];
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = "53";
-                            protocol = "UDP";
-                          }
-                          (tcp 53)
-                        ];
-                      }
-                    ];
-                  }
                   {
                     toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "synapse"; } ];
                     toPorts = [ { ports = [ (tcp synapsePort) ]; } ];

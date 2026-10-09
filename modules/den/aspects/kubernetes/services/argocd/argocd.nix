@@ -273,34 +273,6 @@ in
                 spec = {
                   endpointSelector.matchLabels."app.kubernetes.io/part-of" = "argocd";
                   egress = [
-                    # DNS proxying
-                    {
-                      toEndpoints = [
-                        {
-                          matchLabels = {
-                            "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                            "k8s:k8s-app" = "kube-dns";
-                          };
-                        }
-                      ];
-                      toPorts = [
-                        {
-                          ports = [
-                            {
-                              port = "53";
-                              protocol = "ANY";
-                            }
-                            {
-                              port = "853";
-                              protocol = "ANY";
-                            }
-                          ];
-                          rules.dns = [
-                            { matchPattern = "*"; }
-                          ];
-                        }
-                      ];
-                    }
                     # HTTPS to github.com and IDM
                     {
                       toEntities = [ "world" ];
