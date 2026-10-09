@@ -88,6 +88,14 @@ in
           };
         };
 
+        # The module's ProtectHome=yes also hides /run/user, so the socket client cannot reach
+        # sini's bus. Expose only the xmsg runtime directory.
+        # TODO: drop once matrix-xmsg's module does this itself for xmsgSocket.
+        systemd.services.matrix-xmsg.serviceConfig = lib.mkIf (cfg.rooms != [ ]) {
+          ProtectHome = lib.mkForce "tmpfs";
+          BindPaths = [ "/run/user/1000/xmsg" ];
+        };
+
         services.matrix-xmsg = lib.mkIf (cfg.rooms != [ ]) {
           enable = true;
           package = inputs'.matrix-xmsg.packages.default;
