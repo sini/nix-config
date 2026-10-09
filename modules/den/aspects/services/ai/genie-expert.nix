@@ -174,6 +174,12 @@ in
           wantedBy = [ "multi-user.target" ];
           after = [ "network-online.target" ];
           wants = [ "network-online.target" ];
+          # The checkouts belong to another user, so git refuses them without this.
+          environment = {
+            GIT_CONFIG_COUNT = "1";
+            GIT_CONFIG_KEY_0 = "safe.directory";
+            GIT_CONFIG_VALUE_0 = "*";
+          };
           path = with pkgs; [
             bubblewrap
             socat
