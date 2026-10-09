@@ -142,6 +142,7 @@
   den.aspects.axon = {
     includes = with den.aspects.kubernetes; [
       hardware.amd-gpu-device-plugin
+      hardware.gvisor
       bootstrap
       services.network.cilium
       services.network.cilium.cilium-bgp-resources

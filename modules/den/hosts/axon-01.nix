@@ -25,6 +25,8 @@
       services.bgp.localAsn = 65001;
       services.bgp.cilium-bgp.localAsn = 65010;
       services.k3s.clusterName = "axon";
+      # gVisor (runsc) on this node only, until the eval sandbox is proven here.
+      services.k3s.gvisor = true;
       services.networking.thunderbolt-mesh-of = {
         interfaces = [
           "enp199s0f5"

@@ -42,6 +42,11 @@ in
         default = "axon";
         description = "Name of the den.clusters entry this host belongs to";
       };
+
+      gvisor = lib.mkEnableOption ''
+        the gVisor (runsc) containerd runtime handler on this node. Labels the
+        node node.kubernetes.io/gvisor=true, which the `gvisor` RuntimeClass
+        (kubernetes.hardware.gvisor) schedules onto'';
     };
 
     # The embedded etcd's metrics, scraped by the ingester. (k3s itself has no
@@ -159,6 +164,9 @@ in
           "--node-name=${config.networking.hostName}"
           "--node-label=node.longhorn.io/create-default-disk=true"
           "--node-label=node.kubernetes.io/amd-gpu=true"
+        ]
+        ++ lib.optional host.settings.services.k3s.gvisor "--node-label=node.kubernetes.io/gvisor=true"
+        ++ [
           "--node-label \"k3s-upgrade=false\""
           "--kubelet-arg=register-with-taints=node.cilium.io/agent-not-ready:NoExecute"
         ];

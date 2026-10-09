@@ -1,0 +1,8 @@
+apiVersion: node.k8s.io/v1
+handler: runsc
+kind: RuntimeClass
+metadata:
+  name: gvisor
+scheduling:
+  nodeSelector:
+    node.kubernetes.io/gvisor: "true"

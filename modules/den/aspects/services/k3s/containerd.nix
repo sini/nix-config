@@ -29,6 +29,7 @@
 
         useZfs = host.hasAspect den.aspects.disk.zfs-disk-single;
         snapshotter = if useZfs then "zfs" else "overlayfs";
+        gvisor = host.settings.services.k3s.gvisor;
       in
       {
         systemd.services.k3s.requires = [ "containerd.service" ];
@@ -45,7 +46,10 @@
           ]
           # The zfs snapshotter execs the `zfs` CLI; without it on PATH the
           # plugin fails to init and CRI reports the snapshotter "not found".
-          ++ lib.optional useZfs pkgs.zfs;
+          ++ lib.optional useZfs pkgs.zfs
+          # containerd resolves the runsc handler's shim
+          # (containerd-shim-runsc-v1) on PATH, and the shim execs `runsc`.
+          ++ lib.optional gvisor pkgs.gvisor;
         };
 
         virtualisation.containerd = {
@@ -118,9 +122,20 @@
                 # default snapshotter (overlayfs) while images were unpacked into
                 # zfs → "failed to get sandbox image ... not found". An empty
                 # value does NOT inherit the image-service snapshotter.
-                containerd.runtimes.runc = {
-                  runtime_type = "io.containerd.runc.v2";
-                  inherit snapshotter;
+                containerd.runtimes = {
+                  runc = {
+                    runtime_type = "io.containerd.runc.v2";
+                    inherit snapshotter;
+                  };
+                }
+                # gVisor sandbox handler, selected by the `gvisor` RuntimeClass
+                # (handler = "runsc"). Same snapshotter as runc, for the same
+                # sandbox-image reason.
+                // lib.optionalAttrs gvisor {
+                  runsc = {
+                    runtime_type = "io.containerd.runsc.v1";
+                    inherit snapshotter;
+                  };
                 };
               };
 
