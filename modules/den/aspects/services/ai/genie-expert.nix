@@ -1,9 +1,12 @@
 # genie-expert: the Opus tier of the @genie support bot. Claude Code runs as the
 # OS user `genie`, which holds none of the system owner's credentials: no wheel,
 # no ssh login (so no forwarded agent), no gh/kube config, and no group that
-# reaches the owner's files. It sees the owner's memory and checkouts only
-# through read-only bind mounts in its own home; plain bind mounts keep the
-# source permissions, so a file the owner keeps private stays unreadable.
+# reaches the owner's files. It sees the owner's checkouts only through
+# read-only bind mounts in its own home; plain bind mounts keep the source
+# permissions, so a file the owner keeps private stays unreadable.
+#
+# One instance runs per sender tier, genie-expert@public and
+# genie-expert@trusted, and each mounts only its own memory view (below).
 #
 # Its token is its own (`claude setup-token` as genie, revocable alone). It
 # reaches the service as a systemd credential and is exported only into the
@@ -11,11 +14,12 @@
 # secret, the credential directory and /proc/*/environ, and unset the variable
 # for sandboxed commands.
 #
-# Attach with `sudo -u genie tmux -S /run/genie-expert/tmux.sock attach`.
+# Attach with `sudo -u genie tmux -S /run/genie-expert-<tier>/tmux.sock attach`.
 { lib, ... }:
 let
   home = "/var/lib/genie";
   secret = "genie-claude-token";
+  supportMemory = "${home}/support-memory";
 in
 {
   den.aspects.services.ai.genie-expert = {
@@ -78,12 +82,22 @@ in
       let
         cfg = host.settings.services.ai.genie-expert;
         ownerHome = "/home/${host.system-owner}";
-        credential = "/run/credentials/genie-expert.service";
         tokenFile = host.secretPath + "/${secret}.age";
         # agenix-rekey refuses a rekeyFile that is not in git, so the secret and the
         # expert stay off until the owner has created it.
         hasToken = builtins.pathExists tokenFile;
         tokenPath = "${config.age.secretsDir}/${secret}";
+
+        # The memory view each tier sees at ~genie/memory, picked by the sender's
+        # authenticated tier: the owner's own memory for trusted senders, the
+        # curated and pre-redacted support memory for the public. Each view is
+        # mounted only inside its own instance, never on the host, so no session
+        # can see both.
+        views = {
+          public = supportMemory;
+          trusted = "${ownerHome}/.claude/memory";
+        };
+        tierDir = tier: "${home}/tiers/${tier}";
 
         roBind = src: {
           device = src;
@@ -104,7 +118,7 @@ in
             filesystem.denyRead = [
               tokenPath
               "/run/agenix.d"
-              credential
+              "/run/credentials"
               "/proc/*/environ"
             ];
             credentials.envVars = [
@@ -114,19 +128,21 @@ in
               }
             ];
           };
-          # The same paths for Claude's own Read tool, which the sandbox does not wrap.
+          # Claude's own tools run outside the sandbox. All of /proc is denied to
+          # them: /proc/<pid>/root of the other tier's expert, same uid, would
+          # reach that tier's mount namespace.
           permissions.deny = [
             "Read(/${tokenPath})"
             "Read(//run/agenix.d/**)"
-            "Read(/${credential}/**)"
-            "Read(//proc/*/environ)"
+            "Read(//run/credentials/**)"
+            "Read(//proc/**)"
           ];
         };
 
         start = pkgs.writeShellScript "genie-expert-start" ''
           CLAUDE_CODE_OAUTH_TOKEN="$(< "$CREDENTIALS_DIRECTORY/claude-token")"
           export CLAUDE_CODE_OAUTH_TOKEN
-          exec tmux -S "$RUNTIME_DIRECTORY/tmux.sock" new-session -d -s expert -c ${home} \
+          exec tmux -S "$RUNTIME_DIRECTORY/tmux.sock" new-session -d -s expert \
             ${lib.getExe inputs'.llm-agents.packages.claude-code}
         '';
       in
@@ -158,60 +174,88 @@ in
           };
         };
 
-        fileSystems = {
-          "${home}/memory" = roBind "${ownerHome}/.claude/memory";
-        }
-        // lib.listToAttrs (
+        fileSystems = lib.listToAttrs (
           map (
             name: lib.nameValuePair "${home}/repos/${name}" (roBind "${ownerHome}/Documents/repos/sini/${name}")
           ) cfg.checkouts
         );
 
-        systemd.tmpfiles.rules = [ "L+ ${home}/.claude/settings.json - - - - ${settings}" ];
+        # Each tier keeps its own Claude state, so a public session cannot read a
+        # trusted session's transcripts. The support memory is root-owned: genie
+        # reads it, a later curation unit writes it.
+        systemd.tmpfiles.rules = [
+          "d ${supportMemory} 0755 root root -"
+          "d ${home}/memory 0755 root root -"
+        ]
+        ++ lib.concatMap (tier: [
+          "d ${tierDir tier} 0700 genie genie -"
+          "d ${tierDir tier}/claude 0700 genie genie -"
+          "L+ ${tierDir tier}/claude/settings.json - - - - ${settings}"
+        ]) (lib.attrNames views);
 
-        systemd.services.genie-expert = lib.mkIf hasToken {
-          description = "genie: Claude Code Opus expert for @genie";
-          wantedBy = [ "multi-user.target" ];
-          after = [ "network-online.target" ];
-          wants = [ "network-online.target" ];
-          # The checkouts belong to another user, so git refuses them without this.
-          environment = {
-            GIT_CONFIG_COUNT = "1";
-            GIT_CONFIG_KEY_0 = "safe.directory";
-            GIT_CONFIG_VALUE_0 = "*";
-          };
-          path = with pkgs; [
-            bubblewrap
-            socat
-            git
-            ripgrep
-            tmux
-          ];
-          serviceConfig = {
-            Type = "forking";
-            User = "genie";
-            Group = "genie";
-            ExecStart = start;
-            LoadCredential = "claude-token:${tokenPath}";
-            RuntimeDirectory = "genie-expert";
-            WorkingDirectory = home;
-            ProtectHome = true;
-            NoNewPrivileges = true;
-            Restart = "on-failure";
-          };
-        };
+        systemd.services = lib.mkIf hasToken (
+          {
+            "genie-expert@" = {
+              description = "genie: Claude Code Opus expert for @genie, %i tier";
+              after = [ "network-online.target" ];
+              wants = [ "network-online.target" ];
+              path = with pkgs; [
+                bubblewrap
+                socat
+                git
+                ripgrep
+                tmux
+              ];
+              # The checkouts belong to another user, so git refuses them without this.
+              environment = {
+                GIT_CONFIG_COUNT = "1";
+                GIT_CONFIG_KEY_0 = "safe.directory";
+                GIT_CONFIG_VALUE_0 = "*";
+              };
+              serviceConfig = {
+                Type = "forking";
+                User = "genie";
+                Group = "genie";
+                ExecStart = start;
+                LoadCredential = "claude-token:${tokenPath}";
+                ProtectHome = true;
+                NoNewPrivileges = true;
+                Restart = "on-failure";
+              };
+            };
+          }
+          // lib.mapAttrs' (
+            tier: view:
+            lib.nameValuePair "genie-expert@${tier}" {
+              overrideStrategy = "asDropin";
+              wantedBy = [ "multi-user.target" ];
+              environment.CLAUDE_CONFIG_DIR = "${tierDir tier}/claude";
+              serviceConfig = {
+                RuntimeDirectory = "genie-expert-${tier}";
+                WorkingDirectory = tierDir tier;
+                BindReadOnlyPaths = [ "${view}:${home}/memory" ];
+                InaccessiblePaths = map tierDir (lib.remove tier (lib.attrNames views));
+              };
+            }
+          ) views
+        );
       };
 
     persist = {
       directories = [
         {
-          directory = "${home}/.claude";
+          directory = "${home}/tiers";
           user = "genie";
           group = "genie";
           mode = "0700";
         }
+        {
+          directory = supportMemory;
+          user = "root";
+          group = "root";
+          mode = "0755";
+        }
       ];
-      files = [ "${home}/.claude.json" ];
     };
   };
 }
