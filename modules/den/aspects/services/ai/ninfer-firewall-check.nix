@@ -1,6 +1,7 @@
 # cortex-cuda's ninfer port admits exactly its consumers (the hosts using
 # ninfer-endpoints: an address, or the dev network for a host with none) and
-# the axon cluster's nodes, and is not opened to any source; the gateway
+# the axon cluster's nodes, on the nftables backend, and is not opened to any
+# source; the gateway
 # admits exactly the axon nodes across prod->dev (a LAN_IN rule on an address
 # group), and declares no route:
 #   nix build .#checks.x86_64-linux.ninfer-firewall
@@ -20,7 +21,8 @@ in
     lib.optionalAttrs (system == "x86_64-linux") {
       checks.ninfer-firewall =
         let
-          fw = nixosConfigurations.cortex.config.microvm.vms.cortex-cuda.config.config.networking.firewall;
+          net = nixosConfigurations.cortex.config.microvm.vms.cortex-cuda.config.config.networking;
+          fw = net.firewall;
           rules = builtins.filter (lib.hasInfix "dport 8081") (lib.splitString "\n" fw.extraInputRules);
           want = [
             ''ip saddr 10.10.10.2 tcp dport 8081 accept comment "ninfer: axon-01"''
@@ -30,10 +32,11 @@ in
             ''ip saddr 10.9.1.1 tcp dport 8081 accept comment "ninfer: bitstream"''
             ''ip saddr 10.9.2.1 tcp dport 8081 accept comment "ninfer: cortex"''
           ];
-          ok = rules == want && !(builtins.elem 8081 fw.allowedTCPPorts);
+          # extraInputRules are nftables syntax; the iptables backend ignores them.
+          ok = net.nftables.enable && rules == want && !(builtins.elem 8081 fw.allowedTCPPorts);
         in
         assert lib.assertMsg ok
-          "ninfer-firewall:\n${lib.concatStringsSep "\n" rules}\nallowedTCPPorts: ${builtins.toJSON fw.allowedTCPPorts}";
+          "ninfer-firewall:\nnftables.enable: ${lib.boolToString net.nftables.enable}\n${lib.concatStringsSep "\n" rules}\nallowedTCPPorts: ${builtins.toJSON fw.allowedTCPPorts}";
         pkgs.writeText "ninfer-firewall" (lib.concatStringsSep "\n" rules);
 
       checks.ninfer-gateway-policy =

@@ -454,6 +454,10 @@
           };
         };
 
+        # The client rules below are nftables syntax, which the iptables
+        # backend ignores, leaving the port closed to every source.
+        networking.nftables.enable = lib.mkIf (cfg.clients != null) true;
+
         networking.firewall =
           if cfg.clients == null then
             { allowedTCPPorts = [ cfg.port ]; }
