@@ -1,5 +1,21 @@
 {
   den.aspects.hardware.gpu.nvidia = {
+    # GPU utilisation, memory, temperature, power (nvidia-smi), shipped by the
+    # host's Alloy when it runs one.
+    prometheus-targets =
+      { environment, host, ... }:
+      {
+        hostname = host.name;
+        ip = builtins.head host.ipv4;
+        inherit environment;
+        exporters = [
+          {
+            job = "nvidia-gpu";
+            port = 9835;
+          }
+        ];
+      };
+
     nixos =
       {
         config,
@@ -8,6 +24,11 @@
         ...
       }:
       {
+        services.prometheus.exporters.nvidia-gpu = {
+          enable = true;
+          listenAddress = "127.0.0.1";
+        };
+
         boot = {
           kernelModules = [
             "nvidia"

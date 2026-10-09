@@ -53,6 +53,9 @@
       hardware.cpu.amd
       hardware.gpu.amd
       hardware.gpu.nvidia-vfio
+      # A workstation, but up around the clock: monitored like a server.
+      services.monitoring.prometheus-exporter
+      services.alloy
       hardware.performance
       hardware.vr-amd
       hardware.bigscreen-beyond

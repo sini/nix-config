@@ -24,6 +24,22 @@ spec:
             severity: critical
         - alert: HostSilent
           annotations:
+            summary: cortex has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="cortex"}[5m]) or max_over_time(up{job="node-exporter", instance="cortex"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: cortex
+            severity: critical
+        - alert: HostSilent
+          annotations:
+            summary: cortex-cuda has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="cortex-cuda"}[5m]) or max_over_time(up{job="node-exporter", instance="cortex-cuda"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: cortex-cuda
+            severity: critical
+        - alert: HostSilent
+          annotations:
             summary: axon-01 has sent no node metrics for 10m
           expr: absent_over_time(up{job="node-exporter", instance="axon-01"}[5m]) or max_over_time(up{job="node-exporter", instance="axon-01"}[5m]) < 1
           for: 5m

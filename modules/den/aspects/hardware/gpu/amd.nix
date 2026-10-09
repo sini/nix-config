@@ -3,6 +3,10 @@
     nixos =
       { pkgs, ... }:
       {
+        # amdgpu busy %, VRAM and power, in the node exporter's metrics where
+        # one runs (a no-op otherwise).
+        services.prometheus.exporters.node.enabledCollectors = [ "drm" ];
+
         boot.kernelParams = [
           "amdgpu.dc=1"
           "amdgpu.powerplay=1"

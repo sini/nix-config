@@ -73,6 +73,10 @@
     includes = with den.aspects; [
       roles.inference
       hardware.gpu.nvidia
+      # Opaque to cortex (it sees only the memory reservation), so it reports
+      # for itself.
+      services.monitoring.prometheus-exporter
+      services.alloy
     ];
 
     # M2: CUDA-enable the guest's package set at the microvm submodule level.

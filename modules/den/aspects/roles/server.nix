@@ -6,6 +6,7 @@
       services.security.tang
       services.storage.media-data-share
       services.monitoring.prometheus-exporter
+      services.alloy
       core.boot.network-initrd
     ];
 
