@@ -171,6 +171,16 @@ in
 
   # Domain-entity quirks (modules/den/aspects/domain/domain.nix). A domain has no
   # environment, so every collect takes every domain's records; consumers filter.
+  # Clusters' telemetry ingest endpoints to hosts; each host's Alloy pushes to
+  # the one its environment names (environment.monitoring.ingest).
+  den.policies.collect-monitoring-ingest =
+    { host, ... }:
+    [
+      (pipe.from "monitoring-ingest" [
+        (pipe.collectAll ({ cluster, ... }: true))
+      ])
+    ];
+
   den.policies.collect-certificate-domains =
     { host, ... }:
     [
@@ -289,6 +299,7 @@ in
     den.policies.collect-hipfire-endpoints
     den.policies.broadcast-hub-peer
     den.policies.collect-certificate-domains
+    den.policies.collect-monitoring-ingest
     den.policies.collect-idm-users
   ];
 

@@ -116,6 +116,9 @@
       dnsResolver = "1.1.1.1:53";
     };
 
+    # Hosts push metrics and logs to the axon cluster's ingest endpoint.
+    monitoring.ingest = "axon";
+
     timezone = "America/Los_Angeles";
 
     location = {
@@ -126,13 +129,6 @@
     tags = {
       environment = "prod";
       owner = "json64";
-    };
-
-    monitoring = {
-      scanEnvironments = [
-        "prod"
-        "dev"
-      ];
     };
   };
 }

@@ -400,16 +400,19 @@ in
 
             monitoring = mkOption {
               type = types.submodule {
-                options = {
-                  scanEnvironments = mkOption {
-                    type = types.listOf types.str;
-                    default = [ ];
-                    description = "Additional environments to scan for metrics";
-                  };
+                options.ingest = mkOption {
+                  type = types.nullOr types.str;
+                  default = null;
+                  example = "axon";
+                  description = ''
+                    Cluster whose telemetry ingest endpoint (the monitoring-ingest
+                    quirk) this environment's hosts push metrics and logs to.
+                    null: hosts ship nothing.
+                  '';
                 };
               };
               default = { };
-              description = "Monitoring configuration including cross-environment scanning";
+              description = "Where this environment's hosts send telemetry";
             };
 
             system-access-groups = mkOption {

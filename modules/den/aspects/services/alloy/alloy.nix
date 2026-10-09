@@ -1,122 +1,113 @@
-# Grafana Alloy — unified observability agent with log collection,
-# metrics scraping, network probing, and SNMP monitoring.
+# Grafana Alloy — every host's push of metrics and logs to the cluster.
 #
-# Ported from main:modules/services/monitoring/alloy/
+# The baseline, identical on every host: the systemd journal, plus a
+# loopback scrape of each exporter the host announces through the
+# prometheus-targets quirk (the aspect that runs an exporter announces it).
+# Both are pushed, with basic auth, to the ingest endpoint of the cluster the
+# host's environment names (environment.monitoring.ingest), as announced by
+# that cluster (monitoring-ingest quirk, kubernetes/services/monitoring/
+# ingest.nix). Hosts open no ports for monitoring; with no ingest, Alloy is off.
+#
+# Label contract (upstream mixins work unmodified):
+#   metrics  job = the announced job (node-exporter for the node mixin),
+#            instance = den host name, cluster = den environment
+#   logs     job = systemd-journal, instance, cluster, unit, level
 { lib, ... }:
+let
+  credential = "ingest-password";
+  ingestFor =
+    environment: monitoring-ingest:
+    lib.findFirst (i: i.cluster == environment.monitoring.ingest) null monitoring-ingest;
+in
 {
   den.aspects.services.alloy = {
     nixos =
       {
-        pkgs,
+        config,
         environment,
         host,
+        monitoring-ingest,
         prometheus-targets,
         ...
       }:
       let
-        # Resolve target environment following delegation (logsTo → metricsTo → self)
-        inherit (environment) delegation;
-        targetEnvironment =
-          if delegation.logsTo or null != null then
-            delegation.logsTo
-          else if delegation.metricsTo or null != null then
-            delegation.metricsTo
-          else
-            host.environment;
-
-        # The metrics ingester is the host announcing job "prometheus" in the
-        # target environment. (Delegation may target another environment, so
-        # filter explicitly.)
-        targetIps = lib.unique (
-          map (t: t.ip) (
-            lib.filter (
-              t: t.environment.name == targetEnvironment && lib.any (e: e.job == "prometheus") t.exporters
-            ) prometheus-targets
-          )
+        ingest = ingestFor environment monitoring-ingest;
+        endpoint = path: ''
+          endpoint {
+            url = "${ingest.url}${path}"
+            basic_auth {
+              username      = "${ingest.username}"
+              password_file = sys.env("CREDENTIALS_DIRECTORY") + "/${credential}"
+            }
+          }
+        '';
+        common = ''
+          instance = "${host.name}",
+          cluster  = "${environment.name}",
+        '';
+        ownExporters = lib.concatMap (t: t.exporters) (
+          lib.filter (t: t.hostname == host.name) prometheus-targets
         );
-        reportingHost = if targetIps != [ ] then lib.head targetIps else null;
-
-        alloyConfig = pkgs.writeText "config.alloy" (
-          builtins.replaceStrings
-            [
-              "\${hostname}"
-              "\${reportingHost}"
-              "\${environment}"
-              "\${gatewayIP}"
-            ]
-            [
-              host.name
-              (if reportingHost != null then reportingHost else "localhost")
-              environment.name
-              (environment.networks.default.gatewayIp or "10.10.0.1")
-            ]
-            (builtins.readFile ./configs/config.alloy.tmpl)
-        );
+        scrape = e: ''
+          prometheus.scrape "${lib.replaceStrings [ "-" ] [ "_" ] e.job}" {
+            job_name   = "${e.job}"
+            targets    = [{
+              __address__ = "127.0.0.1:${toString e.port}",
+              ${common}
+            }]
+            forward_to = [prometheus.remote_write.ingest.receiver]
+          }
+        '';
       in
-      {
-        environment.etc = {
-          "alloy/config.alloy" = {
-            source = alloyConfig;
-            mode = "0640";
-            user = "alloy";
-            group = "alloy";
-          };
-          "alloy/blackbox.yml" = {
-            source = ./configs/blackbox.yml;
-            mode = "0640";
-            user = "alloy";
-            group = "alloy";
-          };
-          "alloy/snmp.yml" = {
-            source = ./configs/snmp.yml;
-            mode = "0640";
-            user = "alloy";
-            group = "alloy";
-          };
-        };
+      lib.mkIf (ingest != null) {
+        environment.etc."alloy/config.alloy".text = ''
+          prometheus.remote_write "ingest" {
+            ${endpoint "/api/v1/write"}
+          }
 
-        services.alloy = lib.mkIf (reportingHost != null) {
+          loki.write "ingest" {
+            ${endpoint "/loki/api/v1/push"}
+          }
+
+          ${lib.concatMapStrings scrape ownExporters}
+
+          loki.relabel "journal" {
+            forward_to = []
+            rule {
+              source_labels = ["__journal__systemd_unit"]
+              target_label  = "unit"
+            }
+            rule {
+              source_labels = ["__journal_priority_keyword"]
+              target_label  = "level"
+            }
+          }
+
+          loki.source.journal "journal" {
+            relabel_rules = loki.relabel.journal.rules
+            labels        = {
+              job = "systemd-journal",
+              ${common}
+            }
+            forward_to    = [loki.write.ingest.receiver]
+          }
+        '';
+
+        services.alloy = {
           enable = true;
-          configPath = "/etc/alloy/";
-          extraFlags = [
-            "--disable-reporting"
-            "--storage.path=/var/lib/alloy/data"
-          ];
+          extraFlags = [ "--disable-reporting" ];
         };
 
-        systemd.services.alloy = {
-          serviceConfig = {
-            User = "root";
-            Group = "root";
-            DynamicUser = lib.mkForce false;
-          };
-        };
+        # Shared with the ingest proxy, which holds the derived htpasswd.
+        # Declared here rather than as age-secrets so microvm guests get it too.
+        # Read by systemd for LoadCredential, so root-owned.
+        age.secrets.alloy-ingest-password.rekeyFile = ingest.passwordFile;
 
-        impermanence.ignorePaths = [
-          "/var/lib/private/alloy/data-alloy/alloy_seed.json"
-          "/etc/alloy/"
-        ];
-
-        systemd.tmpfiles.rules = [
-          "d /etc/alloy 0755 root root -"
-          "d /var/lib/alloy 0755 root root -"
-          "d /var/lib/alloy/data 0755 root root -"
-        ];
+        systemd.services.alloy.serviceConfig.LoadCredential =
+          "${credential}:${config.age.secrets.alloy-ingest-password.path}";
       };
 
-    firewall = {
-      networking.firewall.allowedTCPPorts = [ 12345 ];
-    };
-
-    persist = {
-      directories = [
-        {
-          directory = "/var/lib/alloy";
-          user = "root";
-          group = "root";
-          mode = "0755";
-        }
-      ];
-    };
+    # Positions and the remote-write WAL survive restarts and reboots.
+    persist.directories = [ "/var/lib/private/alloy" ];
   };
 }

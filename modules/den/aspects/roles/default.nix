@@ -23,6 +23,7 @@
       core.perf.zram-swap
       core.system.linux-kernel
       core.users
+      services.alloy
 
       core.impermanence
 

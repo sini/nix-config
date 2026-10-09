@@ -81,11 +81,12 @@
 - `environments.<name>.location.region`: [string] Geographic region or
   datacenter
 
-- `environments.<name>.monitoring`: Monitoring configuration including
-  cross-environment scanning
+- `environments.<name>.monitoring`: Where this environment's hosts send
+  telemetry
 
-- `environments.<name>.monitoring.scanEnvironments`: [list of string] Additional
-  environments to scan for metrics (e.g., ['dev'] for prod scanning dev)
+- `environments.<name>.monitoring.ingest`: [null or string] Cluster whose
+  telemetry ingest endpoint (the monitoring-ingest quirk) this environment's
+  hosts push metrics and logs to. null: hosts ship nothing.
 
 - `environments.<name>.name`: [string] Human-readable environment name
 

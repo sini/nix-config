@@ -17,6 +17,19 @@ let
 in
 {
   den.aspects.kubernetes.services.monitoring.ingest = {
+    # Announced to hosts (collect-monitoring-ingest); an environment picks a
+    # cluster's endpoint with environment.monitoring.ingest. The password's
+    # rekeyFile travels with it, so hosts in another environment use this
+    # cluster's secret, not one under their own secretPath.
+    monitoring-ingest =
+      { cluster, environment, ... }:
+      {
+        cluster = cluster.name;
+        url = "https://ingest.${environment.domain}";
+        username = user;
+        passwordFile = environment.secretPath + "/monitoring/ingest-password.age";
+      };
+
     age-secrets =
       { config, environment, ... }:
       {
@@ -167,9 +180,27 @@ in
             };
 
             ciliumNetworkPolicies.allow-ingest-from-lan.spec = {
-              description = "Allow LAN and tailnet hosts to push to the monitoring ingest proxy.";
+              description = "Allow the cluster nodes and LAN hosts to push to the monitoring ingest proxy.";
               endpointSelector.matchLabels."app.kubernetes.io/name" = name;
               ingress = [
+                # The k3s nodes' own Alloy: cluster nodes are host / remote-node
+                # identities to Cilium, never CIDR matches.
+                {
+                  fromEntities = [
+                    "host"
+                    "remote-node"
+                  ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = "8443";
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
                 {
                   fromCIDR = [
                     "10.0.0.0/8"

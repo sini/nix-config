@@ -67,7 +67,7 @@ in
                 inherit (e) labels;
               }) entries;
               metrics_path = "/metrics";
-              scrape_interval = if job_name == "node" then "15s" else "30s";
+              scrape_interval = if job_name == "node-exporter" then "15s" else "30s";
             }
           ))
         ];
@@ -172,7 +172,7 @@ in
                       rules = [
                         {
                           alert = "HostDown";
-                          expr = ''up{job="node"} == 0'';
+                          expr = ''up{job="node-exporter"} == 0'';
                           "for" = "5m";
                           labels.severity = "critical";
                           annotations.summary = "{{ $labels.hostname }} node exporter unreachable for 5m";

@@ -12,7 +12,7 @@
         inherit environment;
         exporters = [
           {
-            job = "node";
+            job = "node-exporter";
             port = 9100;
           }
         ];
