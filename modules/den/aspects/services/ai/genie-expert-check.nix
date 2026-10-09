@@ -10,7 +10,16 @@ let
   nixos = config.flake.nixosConfigurations.bitstream;
   c = nixos.config;
   shared = "/var/lib/genie";
-  ownerClaude = "${c.users.users.sini.home}/.claude";
+  publicClones = "${shared}/public-repos";
+  ownerHome = c.users.users.sini.home;
+  ownerCheckouts = "/var/lib/genie-trusted/repos";
+  # Measured with `gh repo view sini/<r> --json visibility` (2026-10-08): the
+  # checkouts that must never reach the public tier.
+  knownPrivate = [
+    "den-ag-design"
+    "gen-progress-report-v1"
+  ];
+  ownerClaude = "${ownerHome}/.claude";
   tokenPath = "${c.age.secretsDir}/genie-claude-token";
   tiers = [
     "public"
@@ -32,7 +41,14 @@ let
     && x.home == "/var/lib/${user tier}"
     && x.homeMode == "700";
 
-  mounts = lib.filterAttrs (n: _: lib.hasPrefix "${shared}/" n) c.fileSystems;
+  mounts = lib.filterAttrs (n: _: lib.hasPrefix "${ownerCheckouts}/" n) c.fileSystems;
+  ownerSourced = lib.filterAttrs (_: m: lib.hasPrefix "${ownerHome}/" m.device) c.fileSystems;
+
+  # The repos genie-public-repos clones: its ExecStart arguments.
+  fetchArgs = lib.tail (
+    lib.splitString " " (c.systemd.services.genie-public-repos.serviceConfig.ExecStart or "")
+  );
+  fetched = map (a: lib.removePrefix "'" (lib.removeSuffix "'" a)) fetchArgs;
   under = prefix: lib.filter (lib.hasPrefix prefix);
 
   secret = c.services.genie-expert.tokenSecret;
@@ -45,7 +61,9 @@ let
   runsAs = tier: (svc tier).serviceConfig.User or tmpl.User or null;
   binds = tier: lib.toList ((svc tier).serviceConfig.BindReadOnlyPaths or [ ]);
   bindSrcs = tier: map (b: lib.head (lib.splitString ":" (lib.removePrefix "-" b))) (binds tier);
-  memBinds = tier: lib.filter (lib.hasSuffix ":${shared}/memory") (binds tier);
+  bindsTo = target: tier: lib.filter (lib.hasSuffix ":${target}") (binds tier);
+  memBinds = bindsTo "${shared}/memory";
+  repoBinds = bindsTo "${shared}/repos";
 
   settingsRules = map (
     tier:
@@ -81,10 +99,30 @@ let
       && lib.length (lib.unique (map runsAs tiers)) == lib.length tiers;
     publicNoOwnerClaude =
       c.systemd.services ? "genie-expert@public" && under ownerClaude (bindSrcs "public") == [ ];
-    # The curated memory is genie-agent's support-memory/, through the read-only checkout mount.
-    publicSupportMemory =
-      memBinds "public" == [ "${shared}/repos/genie-agent/support-memory:${shared}/memory" ]
-      && lib.elem "ro" (mounts."${shared}/repos/genie-agent".options or [ ]);
+    # Public sees only clean clones of public repos, never an owner working tree.
+    publicReposOnlyPublic =
+      fetched != [ ]
+      && lib.intersectLists fetched knownPrivate == [ ]
+      && repoBinds "public" == [ "${publicClones}:${shared}/repos" ]
+      && under ownerHome (bindSrcs "public") == [ ]
+      && under ownerCheckouts (bindSrcs "public") == [ ];
+    publicMemoryFromGenieAgent =
+      lib.elem "genie-agent" fetched
+      && memBinds "public" == [ "${publicClones}/genie-agent/support-memory:${shared}/memory" ];
+    trustedRepos = repoBinds "trusted" == [ "${ownerCheckouts}:${shared}/repos" ];
+    # Owner working trees are mounted only inside the 0700 trusted home.
+    ownerCheckoutsInTrustedHome =
+      ownerSourced != { } && lib.all (lib.hasPrefix "${ownerCheckouts}/") (lib.attrNames ownerSourced);
+    privateTmp =
+      tmpl.PrivateTmp or false == true
+      && lib.all (tier: (svc tier).serviceConfig.PrivateTmp or true == true) tiers;
+    protectSystemStrict =
+      tmpl.ProtectSystem or null == "strict"
+      && lib.all (
+        tier:
+        (svc tier).serviceConfig.ReadWritePaths or null == [ "/var/lib/${user tier}" ]
+        && (svc tier).environment.HOME or null == "/var/lib/${user tier}"
+      ) tiers;
     trustedMemory = memBinds "trusted" == [ "${ownerClaude}/memory:${shared}/memory" ];
     sandboxOnPath = lib.all (tier: lib.hasInfix "bubblewrap" ((svc tier).environment.PATH or "")) tiers;
     settingsLinked = lib.all (r: r != null) settingsRules;
