@@ -205,7 +205,16 @@ in
     }:
     {
       agenix-rekey = {
-        nixosConfigurations = inputs.self.outputs.nixosConfigurations;
+        # microvm guests are not nixosConfigurations outputs, but have their
+        # own host keys and secrets: rekey them as "<parent>/<guest>" nodes.
+        nixosConfigurations =
+          inputs.self.outputs.nixosConfigurations
+          // lib.concatMapAttrs (
+            parent: cfg:
+            lib.mapAttrs' (guest: vm: lib.nameValuePair "${parent}/${guest}" vm.config) (
+              cfg.config.microvm.vms or { }
+            )
+          ) inputs.self.outputs.nixosConfigurations;
         darwinConfigurations = inputs.self.outputs.darwinConfigurations;
         collectHomeManagerConfigurations = true;
         extraConfigurations = inputs.self.nixidyEnvs.${system} or { };

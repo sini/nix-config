@@ -1,4 +1,7 @@
 { den, ... }:
+let
+  cudaHostKey = import ./_cortex-cuda-host-key.nix;
+in
 {
   den.hosts.x86_64-linux.cortex = {
     channel = "nixos-unstable";
@@ -79,6 +82,14 @@
     ];
 
     nixos = {
+      # The cortex-cuda guest's own host key, copied (not symlinked: the guest
+      # cannot follow a link into /run/agenix) into the dir shared to it.
+      age.secrets.cortex-cuda-host-key = {
+        rekeyFile = ./. + "/../../../.secrets/hosts/cortex-cuda/ssh_host_ed25519_key.age";
+        path = "${cudaHostKey.hostKeyShare}/ssh_host_ed25519_key";
+        symlink = false;
+        mode = "0400";
+      };
       boot = {
         kernelParams = [
           "amd_3d_vcache.x3d_mode=cache"

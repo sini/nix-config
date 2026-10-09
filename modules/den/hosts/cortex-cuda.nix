@@ -1,4 +1,8 @@
 { den, inputs, ... }:
+let
+  # Shared with cortex.nix, which decrypts the guest's key into hostKeyShare.
+  inherit (import ./_cortex-cuda-host-key.nix) hostKeyShare hostKeyDir;
+in
 {
   den.hosts.x86_64-linux.cortex-cuda = {
     channel = "nixos-unstable";
@@ -9,11 +13,12 @@
     # The guests policy resolves this as a raw entity bypassing the host
     # submodule (gap G6), so the secretPath/public_key submodule defaults never
     # compute.
-    # Retarget agenix at the PARENT's (cortex's) real key so the agenix battery
-    # resolves the host pubkey without a readFile throw and rekeys against
-    # cortex's identity.
-    secretPath = ./. + "/../../../.secrets/hosts/cortex";
-    public_key = ./. + "/../../../.secrets/hosts/cortex/ssh_host_ed25519_key.pub";
+    # The guest's own host key (generate-host-keys), so its agenix rekeys
+    # against it rather than cortex's. cortex decrypts the private key and
+    # hands it in read-only (hostKeyShare below): the guest has no persistent
+    # disk, and must not hold cortex's identity.
+    secretPath = ./. + "/../../../.secrets/hosts/cortex-cuda";
+    public_key = ./. + "/../../../.secrets/hosts/cortex-cuda/ssh_host_ed25519_key.pub";
 
     # The guest is a raw entity (no host-submodule `facts` default), but fleet
     # users that participate now (e.g. shuo → roles.default → core.system.facter)
@@ -143,6 +148,12 @@
 
           shares = [
             {
+              source = hostKeyShare;
+              mountPoint = hostKeyDir;
+              tag = "host-key";
+              proto = "virtiofs";
+            }
+            {
               source = "/cache/var/lib/private/ollama";
               mountPoint = "/cache/var/lib/private/ollama";
               tag = "ollama";
@@ -229,6 +240,17 @@
         # it lives in roles.default, which this guest doesn't include. Enable it
         # so their shells resolve.
         programs.zsh.enable = true;
+
+        # The key share must be mounted before agenix runs in activation.
+        fileSystems.${hostKeyDir}.neededForBoot = true;
+        age.identityPaths = lib.mkForce [ "${hostKeyDir}/ssh_host_ed25519_key" ];
+
+        services.openssh.hostKeys = lib.mkForce [
+          {
+            path = "${hostKeyDir}/ssh_host_ed25519_key";
+            type = "ed25519";
+          }
+        ];
 
         services.openssh = {
           enable = true;
