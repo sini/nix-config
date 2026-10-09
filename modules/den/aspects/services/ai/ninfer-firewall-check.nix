@@ -21,7 +21,8 @@ in
     lib.optionalAttrs (system == "x86_64-linux") {
       checks.ninfer-firewall =
         let
-          net = nixosConfigurations.cortex.config.microvm.vms.cortex-cuda.config.config.networking;
+          guest = nixosConfigurations.cortex.config.microvm.vms.cortex-cuda.config.config;
+          net = guest.networking;
           fw = net.firewall;
           rules = builtins.filter (lib.hasInfix "dport 8081") (lib.splitString "\n" fw.extraInputRules);
           want = [
@@ -35,6 +36,9 @@ in
           # extraInputRules are nftables syntax; the iptables backend ignores them.
           ok = net.nftables.enable && rules == want && !(builtins.elem 8081 fw.allowedTCPPorts);
         in
+        assert lib.assertMsg (
+          !guest.services.tailscale.enable
+        ) "ninfer-firewall: cortex-cuda must run without tailscale (explicit override in cortex-cuda.nix)";
         assert lib.assertMsg ok
           "ninfer-firewall:\nnftables.enable: ${lib.boolToString net.nftables.enable}\n${lib.concatStringsSep "\n" rules}\nallowedTCPPorts: ${builtins.toJSON fw.allowedTCPPorts}";
         pkgs.writeText "ninfer-firewall" (lib.concatStringsSep "\n" rules);

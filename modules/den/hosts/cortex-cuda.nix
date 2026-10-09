@@ -120,6 +120,7 @@ in
         # authKeyFile so the absent `age.secrets.tailscale-auth-key` reference
         # is never forced, and disable the daemon. Fleet IDENTITY participation
         # (agenix host key, core.users, collect/quirks) stays intact.
+        # TODO(owner 2026-10-08): restore tailscale on cortex-cuda — needs a headscale preauth key at .secrets/hosts/cortex-cuda/tailscale-preauthkey.age (agenix edit), then remove this override.
         services.tailscale.enable = lib.mkForce false;
         services.tailscale.authKeyFile = lib.mkForce "/dev/null";
 
