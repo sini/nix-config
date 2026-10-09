@@ -88,12 +88,16 @@ in
           };
         };
 
-        # The module's ProtectHome=yes also hides /run/user, so the socket client cannot reach
-        # sini's bus. Expose only the xmsg runtime directory.
+        # Two of the module's hardening settings break the socket client on sini's bus:
+        # ProtectHome=yes also hides /run/user, and PrivateUsers=yes puts the bot in a
+        # root-owned user namespace, so sini's xmsg cannot read its /proc/<pid>/exe and the
+        # svc attestation fails. Expose only the xmsg runtime directory; keep the bot in
+        # sini's own user namespace.
         # TODO: drop once matrix-xmsg's module does this itself for xmsgSocket.
         systemd.services.matrix-xmsg.serviceConfig = lib.mkIf (cfg.rooms != [ ]) {
           ProtectHome = lib.mkForce "tmpfs";
           BindPaths = [ "/run/user/1000/xmsg" ];
+          PrivateUsers = lib.mkForce false;
         };
 
         services.matrix-xmsg = lib.mkIf (cfg.rooms != [ ]) {
