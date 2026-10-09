@@ -65,13 +65,15 @@ evaluates bitstream:
 nix build --no-link -L .#checks.x86_64-linux.genie-expert
 ```
 
-Expected: `genie-expert: 21 properties + settingsDenyRead hold`, exit 0. A
+Expected: `genie-expert: 22 properties + settingsDenyRead hold`, exit 0. A
 failure prints `genie-expert: failed: <property names>` and exits 1. Among the
 properties:
 
 - `publicReposOnlyPublic`, `publicMemoryFromGenieAgent` and
   `publicNoOwnerClaude` cover what the public tier can see;
-- `tiersSeparateUids` checks that each tier runs as its own uid;
+- `tiersSeparateUids` checks that each tier runs as its own uid, and
+  `homesPrivate` that each home is asserted 0700 and owned by its tier, on the
+  live path and on its `/persist` source;
 - `privateTmp` and `protectSystemStrict` cover the hardening;
 - `secretRootOwned` checks the secret's owner.
 
@@ -147,7 +149,11 @@ Expected:
 
 - `id`: `groups=944(genie-public)` and `groups=943(genie-trusted)`, each and
   nothing else;
-- `stat`: both homes `drwx------`, each owned by its own user;
+- `stat`: both homes `drwx------`, each owned by its own user. If either reads
+  `drwxr-xr-x root`, run `sudo systemd-tmpfiles --create` and re-check; a
+  persisting `root` owner is a defect. Stop, and do not create the token;
+- `sudo stat -c '%A %U %n' /persist/var/lib/genie-public /persist/var/lib/genie-trusted`:
+  the same, `drwx------` and the tier's own user;
 - the first `findmnt`: one row per checkout, every one with `ro`;
 - the second `findmnt`: only the persistence mount of
   `/var/lib/genie/public-repos`, and nothing at `/var/lib/genie/memory` or
@@ -194,7 +200,7 @@ nix eval --json .#nixosConfigurations.bitstream.config.age.secrets.genie-claude-
   --apply 's: { inherit (s) owner mode path; }'
 ```
 
-Expected: `21 properties + settingsDenyRead hold`, and
+Expected: `22 properties + settingsDenyRead hold`, and
 `{"mode":"0400","owner":"root","path":"/run/agenix/genie-claude-token"}`.
 
 **Rollback:** `git revert` the commit, then revoke the token in the Claude

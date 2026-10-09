@@ -125,6 +125,21 @@ let
       ) tiers;
     trustedMemory = memBinds "trusted" == [ "${ownerClaude}/memory:${shared}/memory" ];
     sandboxOnPath = lib.all (tier: lib.hasInfix "bubblewrap" ((svc tier).environment.PATH or "")) tiers;
+    # The home's mode and owner are asserted by tmpfiles on the live path and on
+    # every persistence source; impermanence alone leaves them root 0755.
+    homesPrivate = lib.all (
+      tier:
+      let
+        h = "/var/lib/${user tier}";
+        want = root: "d ${root}${h} 0700 ${user tier} ${user tier} -";
+        roots = lib.attrNames (
+          lib.filterAttrs (
+            _: p: lib.any (d: lib.hasPrefix "${h}/" d.directory) p.directories
+          ) c.environment.persistence
+        );
+      in
+      roots != [ ] && lib.all (root: lib.elem (want root) c.systemd.tmpfiles.rules) ([ "" ] ++ roots)
+    ) tiers;
     settingsLinked = lib.all (r: r != null) settingsRules;
   };
   failed = lib.attrNames (lib.filterAttrs (_: ok: !ok) checks);

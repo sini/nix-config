@@ -163,6 +163,15 @@ in
           };
         };
 
+        # The persistence roots holding something under a tier's home.
+        persistRoots =
+          tier:
+          lib.attrNames (
+            lib.filterAttrs (
+              _: p: lib.any (d: lib.hasPrefix "${homeOf tier}/" d.directory) p.directories
+            ) config.environment.persistence
+          );
+
         roBind = src: {
           device = src;
           fsType = "none";
@@ -285,12 +294,22 @@ in
           );
 
           # The shared tree is root-owned and holds only mount points and the clones.
+          # Each home is 0700 and its tier's own, on the live path and on its
+          # persistence source. Impermanence creates a persisted entry's parents
+          # root 0755 and copies the source's mode onto the live directory at
+          # every activation, and createHome skips a home that already exists, so
+          # these `d` rules (which also fix an existing directory) are what makes
+          # the mode authoritative. They run before any service (sysinit.target).
           systemd.tmpfiles.rules = [
             "d ${shared} 0755 root root -"
             "d ${shared}/repos 0755 root root -"
             "d ${shared}/memory 0755 root root -"
           ]
-          ++ map (tier: "L+ ${homeOf tier}/.claude/settings.json - - - - ${settings}") tiers;
+          ++ lib.concatMap (
+            tier:
+            map (root: "d ${root}${homeOf tier} 0700 ${user tier} ${user tier} -") ([ "" ] ++ persistRoots tier)
+            ++ [ "L+ ${homeOf tier}/.claude/settings.json - - - - ${settings}" ]
+          ) tiers;
 
           systemd.services = {
             genie-public-repos = {
