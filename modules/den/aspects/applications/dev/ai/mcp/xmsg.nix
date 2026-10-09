@@ -58,8 +58,16 @@
         home.packages = [ pkgs.local.xmsg ];
 
         # Runs as the sessions' own user: the inbox sockets live in 0700 dirs, and
-        # xmsg's own sockets require $XDG_RUNTIME_DIR. Loopback only; widening
-        # --listen exposes every session to anyone who can reach the port.
+        # xmsg's own sockets require $XDG_RUNTIME_DIR. Its HTTP API is
+        # $XDG_RUNTIME_DIR/xmsg/http.sock (peer uid checked); --listen adds TCP on
+        # loopback, reachable by every local uid. Loopback only; widening --listen
+        # exposes every session to anyone who can reach the port.
+        # TODO: drop --listen once its two TCP-only consumers speak http.sock:
+        #   - matrix-xmsg (@genie bot, bitstream): a DynamicUser HTTP client of
+        #     xmsgUrl, with no Unix-socket transport and a foreign uid;
+        #   - xmsg-pi's `list` tool (extensions/pi/index.ts), which fetches
+        #     $XMSG_URL, default http://127.0.0.1:7787.
+        # The genie tier instances (services/ai/genie-xmsg.nix) never take it.
         systemd.user.services.xmsg = {
           Unit.Description = "xmsg: bridge into running agent sessions";
           Service = {

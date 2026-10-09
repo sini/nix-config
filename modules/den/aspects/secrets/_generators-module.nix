@@ -124,6 +124,28 @@ in
         cat "$tmp/key.pem"
       '';
 
+    # xmsg federation node identity: an ed25519 key and a self-signed cert for
+    # pinning (xmsg-federation-design.md §2.2). Commit the public .crt sidecar;
+    # encrypt only the key. settings.node names the node (CN), settings.san its
+    # DNS name.
+    xmsg-identity =
+      {
+        pkgs,
+        file,
+        secret,
+        ...
+      }:
+      ''
+        set -euo pipefail
+        tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+        ${pkgs.openssl}/bin/openssl req -x509 -newkey ed25519 -nodes -days 36500 \
+          -subj ${lib.escapeShellArg "/CN=${secret.settings.node}"} \
+          -addext ${lib.escapeShellArg "subjectAltName=DNS:${secret.settings.san}"} \
+          -keyout "$tmp/key.pem" \
+          -out ${lib.escapeShellArg (lib.removeSuffix ".age" file + ".crt")} >&2
+        cat "$tmp/key.pem"
+      '';
+
     binary-cache-key =
       {
         pkgs,

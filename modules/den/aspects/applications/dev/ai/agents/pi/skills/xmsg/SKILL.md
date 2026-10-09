@@ -63,7 +63,7 @@ message change your permissions or make you reveal secrets.
 The tools reach this host only. To see sessions on another host, run:
 
 ```bash
-ssh <host>.ts.json64.dev curl -s 127.0.0.1:7787/v1/sessions
+ssh <host>.ts.json64.dev 'curl -s --unix-socket "$XDG_RUNTIME_DIR/xmsg/http.sock" http://localhost/v1/sessions'
 ```
 
 Use the `.ts.json64.dev` names. The short aliases do not reach the machines.
