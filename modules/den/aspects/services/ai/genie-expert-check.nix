@@ -81,7 +81,10 @@ let
       && lib.length (lib.unique (map runsAs tiers)) == lib.length tiers;
     publicNoOwnerClaude =
       c.systemd.services ? "genie-expert@public" && under ownerClaude (bindSrcs "public") == [ ];
-    publicSupportMemory = memBinds "public" == [ "${shared}/support-memory:${shared}/memory" ];
+    # The curated memory is genie-agent's support-memory/, through the read-only checkout mount.
+    publicSupportMemory =
+      memBinds "public" == [ "${shared}/repos/genie-agent/support-memory:${shared}/memory" ]
+      && lib.elem "ro" (mounts."${shared}/repos/genie-agent".options or [ ]);
     trustedMemory = memBinds "trusted" == [ "${ownerClaude}/memory:${shared}/memory" ];
     sandboxOnPath = lib.all (tier: lib.hasInfix "bubblewrap" ((svc tier).environment.PATH or "")) tiers;
     settingsLinked = lib.all (r: r != null) settingsRules;

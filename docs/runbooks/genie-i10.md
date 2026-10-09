@@ -14,8 +14,9 @@ The aspect `services.ai.genie-expert`
 - **Checkouts:** read-only bind mounts at `/var/lib/genie/repos/<name>`, one per
   name in `settings.services.ai.genie-expert.checkouts`, shared by both tiers.
 - **Two expert instances, one per sender tier:**
-  - `genie-expert@public` sees the curated `/var/lib/genie/support-memory` at
-    `/var/lib/genie/memory`.
+  - `genie-expert@public` sees the curated `support-memory/` of the genie-agent
+    checkout (`/var/lib/genie/repos/genie-agent/support-memory`, where a merged
+    PR is the admission) at `/var/lib/genie/memory`.
   - `genie-expert@trusted` sees `~sini/.claude/memory` at the same path.
   - The memory views are bound **inside each instance's mount namespace**, never
     on the host, so no session can see both.
@@ -78,15 +79,20 @@ the tiers can read only what is world-readable:
 ```bash
 stat -c '%A %U %n' ~/.claude/memory ~/.claude/memory/*.md | head
 ls -d ~/Documents/repos/sini/{den-ag-design,xmsg,matrix-xmsg,gen*}
+stat -c '%A %U %n' ~/Documents/repos/sini/genie-agent/support-memory
 ```
 
 Expected:
 
 - memory is `drwxr-xr-x` and its files are `-rw-r--r--`;
-- every checkout named in the `checkouts` setting exists.
+- every checkout named in the `checkouts` setting exists;
+- `genie-agent/support-memory` is `drwxr-xr-x`, on the branch you want public
+  senders served from.
 
 A missing checkout fails its own mount unit and does not block boot. Remove it
-from the setting, or clone it, before deploying.
+from the setting, or clone it, before deploying. A missing
+`genie-agent/support-memory` stops `genie-expert@public` from starting (it fails
+closed). Pull genie-agent once the directory has landed there.
 
 ## 1. Deploy the user and the mounts
 
@@ -162,7 +168,7 @@ Expected:
 - the secret:
   `{"mode":"0400","owner":"root","path":"/run/agenix/genie-claude-token"}`;
 - the binds:
-  `[["/var/lib/genie/support-memory:/var/lib/genie/memory"],["/home/sini/.claude/memory:/var/lib/genie/memory"]]`.
+  `[["/var/lib/genie/repos/genie-agent/support-memory:/var/lib/genie/memory"],["/home/sini/.claude/memory:/var/lib/genie/memory"]]`.
 
 **Rollback:** `git revert` the commit, then revoke the token in the Claude
 account's settings, where the account lists its long-lived tokens.
@@ -189,9 +195,9 @@ Expected:
 - the secret: `-r-------- 1 root root`;
 - both units `active (running)`, `@public` as `genie-public` and `@trusted` as
   `genie-trusted` (`ps -o user= -p <MainPID>`);
-- the `nsenter` loop: `public`'s SOURCE is `.../var/lib/genie/support-memory`,
-  `trusted`'s is `.../home/sini/.claude/memory`, and both have `ro`. Each
-  namespace shows exactly one memory row.
+- the `nsenter` loop: `public`'s SOURCE is the genie-agent checkout's
+  `support-memory`, `trusted`'s is `.../home/sini/.claude/memory`, and both have
+  `ro`. Each namespace shows exactly one memory row.
 
 On the first start, attach to each tier and answer Claude's onboarding and
 folder-trust prompts once. No login is needed, because the token is in the
@@ -250,12 +256,12 @@ In **trusted**:
 
 In **public**:
 
-| command                              | expected                                          |
-| ------------------------------------ | ------------------------------------------------- |
-| `ls -A /var/lib/genie/memory`        | the support-memory contents (empty until curated) |
-| `ls /var/lib/genie/memory/MEMORY.md` | no such file (it is not sini's memory)            |
-| `ls /var/lib/genie-trusted`          | `Permission denied`                               |
-| `touch /var/lib/genie/memory/x`      | `Read-only file system`                           |
+| command                              | expected                                 |
+| ------------------------------------ | ---------------------------------------- |
+| `ls -A /var/lib/genie/memory`        | genie-agent's `support-memory/` contents |
+| `ls /var/lib/genie/memory/MEMORY.md` | no such file (it is not sini's memory)   |
+| `ls /var/lib/genie-trusted`          | `Permission denied`                      |
+| `touch /var/lib/genie/memory/x`      | `Read-only file system`                  |
 
 From the public tier's Read tool,
 `/proc/<trusted MainPID>/root/var/lib/genie/memory/MEMORY.md` must be refused

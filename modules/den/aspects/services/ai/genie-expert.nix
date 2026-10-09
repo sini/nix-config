@@ -22,7 +22,6 @@
 let
   shared = "/var/lib/genie";
   secret = "genie-claude-token";
-  supportMemory = "${shared}/support-memory";
   tiers = [
     "public"
     "trusted"
@@ -98,10 +97,11 @@ in
         tokenPath = "${config.age.secretsDir}/${secret}";
 
         # The memory view each tier sees at /var/lib/genie/memory: the owner's own
-        # memory for trusted senders, the curated and pre-redacted support memory
-        # for the public. Each is bound only inside its own instance.
+        # memory for trusted senders; for the public, the curated and pre-redacted
+        # support-memory/ of the genie-agent checkout, admitted by a merged PR.
+        # Each is bound only inside its own instance.
         views = {
-          public = supportMemory;
+          public = "${shared}/repos/genie-agent/support-memory";
           trusted = "${ownerHome}/.claude/memory";
         };
 
@@ -200,11 +200,16 @@ in
             ) cfg.checkouts
           );
 
-          # The shared tree is root-owned: the tiers read it, a later curation unit
-          # writes the support memory.
+          assertions = [
+            {
+              assertion = lib.elem "genie-agent" cfg.checkouts;
+              message = "genie-expert: the public tier's memory is genie-agent's support-memory/, so `checkouts` must include genie-agent.";
+            }
+          ];
+
+          # The shared tree is root-owned: the tiers only read it.
           systemd.tmpfiles.rules = [
             "d ${shared} 0755 root root -"
-            "d ${supportMemory} 0755 root root -"
             "d ${shared}/memory 0755 root root -"
           ]
           ++ map (tier: "L+ ${homeOf tier}/.claude/settings.json - - - - ${settings}") tiers;
@@ -261,22 +266,11 @@ in
         };
       };
 
-    persist = {
-      directories =
-        map (tier: {
-          directory = homeOf tier;
-          user = user tier;
-          group = user tier;
-          mode = "0700";
-        }) tiers
-        ++ [
-          {
-            directory = supportMemory;
-            user = "root";
-            group = "root";
-            mode = "0755";
-          }
-        ];
-    };
+    persist.directories = map (tier: {
+      directory = homeOf tier;
+      user = user tier;
+      group = user tier;
+      mode = "0700";
+    }) tiers;
   };
 }
