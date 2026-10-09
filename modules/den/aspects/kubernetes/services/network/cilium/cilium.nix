@@ -227,10 +227,17 @@
             };
 
             ciliumClusterwideNetworkPolicies = {
-              # Allow all cilium endpoints egress to each other
+              # Allow all cilium endpoints egress to each other, except genie-eval's
+              # untrusted eval pods (ai/genie-eval.nix), which get no in-cluster egress.
               allow-internal-egress.spec = {
                 description = "Policy to allow all Cilium managed endpoint to talk to all other cilium managed endpoints on egress";
-                endpointSelector = { };
+                endpointSelector.matchExpressions = [
+                  {
+                    key = "k8s:io.kubernetes.pod.namespace";
+                    operator = "NotIn";
+                    values = [ "genie-eval" ];
+                  }
+                ];
                 egress = [
                   { toEndpoints = [ { } ]; }
                 ];

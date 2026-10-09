@@ -7,4 +7,9 @@ spec:
   egress:
     - toEndpoints:
         - {}
-  endpointSelector: {}
+  endpointSelector:
+    matchExpressions:
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: NotIn
+        values:
+          - genie-eval

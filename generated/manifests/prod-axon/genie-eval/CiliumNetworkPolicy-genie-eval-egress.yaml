@@ -1,0 +1,35 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: genie-eval-egress
+  namespace: genie-eval
+spec:
+  description: 'Eval pods: DNS and the Nix fetch hosts only; no ingress, nothing in-cluster.'
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            k8s-app: kube-dns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: '*'
+    - toFQDNs:
+        - matchName: github.com
+        - matchName: codeload.github.com
+        - matchName: api.github.com
+        - matchName: channels.nixos.org
+        - matchName: releases.nixos.org
+        - matchName: tarballs.nixos.org
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+  enableDefaultDeny:
+    ingress: true
+  endpointSelector: {}

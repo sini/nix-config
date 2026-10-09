@@ -208,6 +208,10 @@
       services.ai.hindsight-pg
       services.ai.hindsight
 
+      # ai — genie-eval: the namespace genie-agent's untrusted eval Jobs run in
+      # (launcher RBAC, per-container bounds, fetch-only egress).
+      services.ai.genie-eval
+
       # ai — llama.cpp on the node APUs (Radeon 780M, Vulkan). Cluster-internal;
       # requires hardware.amd-gpu-device-plugin above for the amd.com/gpu resource.
       services.ai.llama-cpp

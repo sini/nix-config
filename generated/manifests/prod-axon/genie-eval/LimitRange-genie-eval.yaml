@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: genie-eval
+  namespace: genie-eval
+spec:
+  limits:
+    - default:
+        cpu: "2"
+        memory: 12Gi
+      max:
+        cpu: "2"
+        memory: 12Gi
+      type: Container
