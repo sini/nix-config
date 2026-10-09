@@ -67,11 +67,9 @@
       maxContext = 145408; # 2272 pages x 64 tokens
       kvCapacity = "145408";
 
-      # The axon cluster's workloads (genie-agent) and the parent workstation.
-      clients = {
-        clusters = [ "axon" ];
-        hosts = [ "cortex" ];
-      };
+      # Restricted to the hosts that consume it and the axon cluster's
+      # workloads (genie-agent).
+      clients.clusters = [ "axon" ];
     };
   };
 

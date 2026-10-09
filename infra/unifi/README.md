@@ -70,6 +70,18 @@ as networkconf ids, so the rules look them up by the controller's network names
 the plan before anything is written. `axon-https-ingress` is nat;
 `checks.<system>.unifi-nat-render` fixes the payloads.
 
+`unifi_firewall_policy.<name>_from_<env>` is a zone-based ALLOW policy, one per
+`gateway-policies` record and source environment, rendered by
+`renderGatewayPolicies`. A record names a destination (address, port, protocol)
+and the k3s clusters that may reach it; the sources are those clusters' node
+addresses from `k3s-nodes` (pods masquerade to them), and a source in the
+destination's own environment renders none, since it shares the LAN. Each
+environment's zone is looked up by the controller's name in `unifi.zones`
+(`data.unifi_firewall_zone.zone_<env>`), so a wrong name fails the plan.
+`services.ai.ninfer` declares `ninfer-to-cortex-cuda` (the axon nodes to
+cortex-cuda:8081); `checks.<system>.unifi-gateway-policy-render` fixes the
+payload. No static route is managed: cortex-cuda is bridged onto the dev LAN.
+
 ## State
 
 The state is `infra/unifi/terraform.tfstate` (local backend). It is encrypted

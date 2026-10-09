@@ -26,18 +26,37 @@
   ...
 }:
 {
-  # A host restricting ninfer to cluster nodes needs every cluster's k3s-nodes,
-  # not only its siblings' (collect-k3s-nodes): a guest's siblings are its
-  # parent's other guests, and the clusters live in other environments.
+  # A host restricting ninfer to its clients needs every consumer's
+  # ninfer-clients and every cluster's k3s-nodes, not only its siblings'
+  # (collect-k3s-nodes): a guest's siblings are its parent's other guests, and
+  # the clusters live in other environments.
   den.policies.ninfer-collect-client-nodes =
     { host, ... }:
-    lib.optionals ((host.settings.services.ai.ninfer.clients or null) != null) [
-      (den.lib.policy.pipe.from "k3s-nodes" [
-        (den.lib.policy.pipe.collectAll ({ host, ... }: true))
-      ])
-    ];
+    lib.optionals ((host.settings.services.ai.ninfer.clients or null) != null) (
+      map
+        (
+          q:
+          den.lib.policy.pipe.from q [
+            (den.lib.policy.pipe.collectAll ({ host, ... }: true))
+          ]
+        )
+        [
+          "k3s-nodes"
+          "ninfer-clients"
+        ]
+    );
 
   den.schema.host.includes = [ den.policies.ninfer-collect-client-nodes ];
+
+  # Included by every aspect that consumes ninfer-endpoints, so the hosts a
+  # restricted ninfer admits are the hosts that use it.
+  den.aspects.services.ai.ninfer-client.ninfer-clients =
+    { environment, host, ... }:
+    {
+      hostname = host.name;
+      inherit (host) ipv4;
+      network = environment.networks.default.cidr;
+    };
 
   flake-file.inputs.ninfer-3090 = {
     url = "github:Don-Chad/ninfer-3090/release/v0.6.2-rtx3090";
@@ -246,10 +265,13 @@
       clients = lib.mkOption {
         default = null;
         description = ''
-          Who may reach the port: the nodes of these k3s clusters (pods
-          masquerade to their node address) and these hosts, by their
-          addresses in the collected k3s-nodes and host-addrs. A name that
-          resolves to no address fails the evaluation. null = any source.
+          Who may reach the port besides every host consuming
+          ninfer-endpoints (ninfer-clients: its addresses, or its
+          environment's network when it has none): the nodes of these k3s
+          clusters (pods masquerade to their node address) and these extra
+          hosts, by their addresses in the collected k3s-nodes and host-addrs.
+          A name that resolves to no address fails the evaluation. null = any
+          source.
         '';
         type = lib.types.nullOr (
           lib.types.submodule {
@@ -310,22 +332,45 @@
         host,
         k3s-nodes,
         host-addrs,
+        ninfer-clients,
         pkgs,
         ...
       }:
       let
         cfg = host.settings.services.ai.ninfer;
 
+        # Each admitted source with the hosts it admits.
         addrsOf =
-          kind: name: ips:
-          if ips == [ ] then throw "ninfer: client ${kind} ${name} has no address" else ips;
-        clientIps = lib.unique (
-          lib.concatMap (
-            c: addrsOf "cluster" c (map (n: n.ip) (lib.filter (n: n.clusterName == c) k3s-nodes))
-          ) cfg.clients.clusters
-          ++ lib.concatMap (
-            h: addrsOf "host" h (lib.concatMap (e: e.ipv4) (lib.filter (e: e.hostname == h) host-addrs))
-          ) cfg.clients.hosts
+          kind: name: srcs:
+          if srcs == [ ] then throw "ninfer: client ${kind} ${name} has no address" else srcs;
+        sources = lib.mapAttrs (_: map (s: s.name)) (
+          lib.groupBy (s: s.ip) (
+            lib.concatMap (
+              c:
+              addrsOf "cluster" c (
+                map (n: {
+                  inherit (n) ip;
+                  name = n.hostname;
+                }) (lib.filter (n: n.clusterName == c) k3s-nodes)
+              )
+            ) cfg.clients.clusters
+            ++ lib.concatMap (
+              h:
+              addrsOf "host" h (
+                map (ip: {
+                  inherit ip;
+                  name = h;
+                }) (lib.concatMap (e: e.ipv4) (lib.filter (e: e.hostname == h) host-addrs))
+              )
+            ) cfg.clients.hosts
+            ++ lib.concatMap (
+              c:
+              map (ip: {
+                inherit ip;
+                name = c.hostname;
+              }) (if c.ipv4 != [ ] then c.ipv4 else [ c.network ])
+            ) ninfer-clients
+          )
         );
         ninfer = inputs.ninfer-3090.packages.${pkgs.stdenv.hostPlatform.system}.ninfer;
 
@@ -413,11 +458,17 @@
           if cfg.clients == null then
             { allowedTCPPorts = [ cfg.port ]; }
           else
-            assert lib.assertMsg (clientIps != [ ]) "ninfer: clients names no cluster and no host";
+            assert lib.assertMsg (sources != { }) "ninfer: clients resolve to no address";
             {
-              extraInputRules = ''
-                ip saddr { ${lib.concatStringsSep ", " clientIps} } tcp dport ${toString cfg.port} accept
-              '';
+              # One rule per source, which a network and an address inside it
+              # would overlap in one set; the comment names the hosts it admits.
+              extraInputRules = lib.concatStrings (
+                lib.mapAttrsToList (ip: names: ''
+                  ip saddr ${ip} tcp dport ${toString cfg.port} accept comment "ninfer: ${
+                    lib.concatStringsSep " " (lib.sort (x: y: x < y) (lib.unique names))
+                  }"
+                '') sources
+              );
             };
       };
 

@@ -1,9 +1,11 @@
 # OpenCode (https://opencode.ai):
 # Terminal AI coding agent with rich Home Manager configuration, MCP server routing,
 # local inference patterning, and declarative skill/subagent deployment.
-{ ... }:
+{ den, ... }:
 {
   den.aspects.applications.dev.ai.agents.opencode = {
+    includes = [ den.aspects.services.ai.ninfer-client ];
+
     homeManager =
       {
         config,

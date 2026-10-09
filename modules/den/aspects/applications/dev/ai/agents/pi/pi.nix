@@ -1,8 +1,10 @@
 # pi-coding-agent (https://pi.dev, github:earendil-works/pi-mono):
 # Terminal AI coding agent with Stylix theme generation & Plan Mode extensions.
-{ ... }:
+{ den, ... }:
 {
   den.aspects.applications.dev.ai.agents.pi = {
+    includes = [ den.aspects.services.ai.ninfer-client ];
+
     homeManager =
       {
         config,

@@ -14,6 +14,8 @@
   flake-file.inputs.hermes-agent.url = "github:NousResearch/hermes-agent";
 
   den.aspects.applications.dev.ai.agents.hermes = {
+    includes = [ den.aspects.services.ai.ninfer-client ];
+
     homeManagerModules =
       { inputs', ... }:
       [
