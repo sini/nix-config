@@ -22,6 +22,19 @@
         outsideAlertmanagers = lib.concatMap (
           t: map (e: "${t.ip}:${toString e.port}") (lib.filter (e: e.job == "alertmanager") t.exporters)
         ) (lib.filter (t: t.environment.name == cluster.environment) prometheus-targets);
+
+        # Hosts that push here (their environment's monitoring.ingest names
+        # this cluster) and run a node exporter: the set HostSilent expects.
+        expectedHosts = lib.unique (
+          map (t: t.hostname) (
+            lib.filter (
+              t:
+              (t.environment.monitoring.ingest or null) == cluster.name
+              && lib.any (e: e.job == "node-exporter") t.exporters
+            ) prometheus-targets
+          )
+        );
+        nodeUp = instance: ''up{job="node-exporter", instance="${instance}"}'';
       in
       {
         applications.kube-prometheus-stack = {
@@ -42,6 +55,9 @@
                     "kube-prometheus-stack-alertmanager-overview" = "Monitoring";
                     "kube-prometheus-stack-prometheus" = "Monitoring";
                     "kube-prometheus-stack-grafana-overview" = "Monitoring";
+                    "kube-prometheus-stack-nodes" = "Hosts";
+                    "kube-prometheus-stack-node-rsrc-use" = "Hosts";
+                    "kube-prometheus-stack-node-cluster-rsrc-use" = "Hosts";
                   };
                   folder = folders.${cm.metadata.name} or null;
                 in
@@ -108,6 +124,43 @@
               # The bundled grafana stays off (grafana.nix owns the instance),
               # but its standard dashboard ConfigMaps still render for the
               # sidecar there to pick up.
+              # Host monitoring (hosts push through monitoring/ingest.nix).
+              # The node-exporter mixin's alerts already select job
+              # node-exporter; its Linux dashboards go to Hosts.
+              nodeExporter = {
+                forceDeployDashboards = true;
+                operatingSystems = {
+                  aix.enabled = false;
+                  darwin.enabled = false;
+                };
+              };
+
+              additionalPrometheusRulesMap.hosts.groups = [
+                {
+                  name = "hosts";
+                  rules =
+                    map (instance: {
+                      alert = "HostSilent";
+                      expr = "absent_over_time(${nodeUp instance}[5m]) or max_over_time(${nodeUp instance}[5m]) < 1";
+                      "for" = "5m";
+                      labels = {
+                        severity = "critical";
+                        inherit instance;
+                      };
+                      annotations.summary = "${instance} has sent no node metrics for 10m";
+                    }) expectedHosts
+                    ++ [
+                      {
+                        alert = "IngestDown";
+                        expr = ''absent_over_time(up{job="node-exporter"}[5m])'';
+                        "for" = "5m";
+                        labels.severity = "critical";
+                        annotations.summary = "No host has pushed node metrics for 10m: the ingest path is down";
+                      }
+                    ];
+                }
+              ];
+
               grafana = {
                 enabled = false;
                 forceDeployDashboards = true;
@@ -161,6 +214,7 @@
                       equal = [
                         "namespace"
                         "alertname"
+                        "instance"
                       ];
                     }
                     {
@@ -169,14 +223,23 @@
                       equal = [
                         "namespace"
                         "alertname"
+                        "instance"
                       ];
                     }
                     {
                       source_matchers = [ "alertname = InfoInhibitor" ];
                       target_matchers = [ "severity = info" ];
-                      equal = [ "namespace" ];
+                      equal = [
+                        "namespace"
+                        "instance"
+                      ];
                     }
                     { target_matchers = [ "alertname = InfoInhibitor" ]; }
+                    # Nothing reaches the cluster: every host looks silent.
+                    {
+                      source_matchers = [ "alertname = IngestDown" ];
+                      target_matchers = [ "alertname = HostSilent" ];
+                    }
                   ];
                   receivers = [
                     { name = "null"; }

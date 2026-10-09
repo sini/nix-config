@@ -1,0 +1,63 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-92.0.0
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-hosts
+  namespace: monitoring
+spec:
+  groups:
+    - name: hosts
+      rules:
+        - alert: HostSilent
+          annotations:
+            summary: bitstream has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="bitstream"}[5m]) or max_over_time(up{job="node-exporter", instance="bitstream"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: bitstream
+            severity: critical
+        - alert: HostSilent
+          annotations:
+            summary: axon-01 has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="axon-01"}[5m]) or max_over_time(up{job="node-exporter", instance="axon-01"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: axon-01
+            severity: critical
+        - alert: HostSilent
+          annotations:
+            summary: axon-02 has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="axon-02"}[5m]) or max_over_time(up{job="node-exporter", instance="axon-02"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: axon-02
+            severity: critical
+        - alert: HostSilent
+          annotations:
+            summary: axon-03 has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="axon-03"}[5m]) or max_over_time(up{job="node-exporter", instance="axon-03"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: axon-03
+            severity: critical
+        - alert: HostSilent
+          annotations:
+            summary: uplink has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="uplink"}[5m]) or max_over_time(up{job="node-exporter", instance="uplink"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: uplink
+            severity: critical
+        - alert: IngestDown
+          annotations:
+            summary: 'No host has pushed node metrics for 10m: the ingest path is down'
+          expr: absent_over_time(up{job="node-exporter"}[5m])
+          for: 5m
+          labels:
+            severity: critical
