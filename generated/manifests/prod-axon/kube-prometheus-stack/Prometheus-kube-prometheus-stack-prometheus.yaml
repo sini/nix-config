@@ -41,7 +41,7 @@ spec:
   enableAdminAPI: true
   enableOTLPReceiver: false
   enableRemoteWriteReceiver: true
-  externalUrl: http://kube-prometheus-stack-prometheus.monitoring:9090
+  externalUrl: https://prometheus.json64.dev
   hostNetwork: false
   image: quay.io/prometheus/prometheus:v3.15.0-distroless
   imagePullPolicy: IfNotPresent

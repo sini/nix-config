@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: prometheus-oidc
+  namespace: monitoring
+spec:
+  oidc:
+    clientID: prometheus
+    clientSecret:
+      name: prometheus-oidc-client-secret
+    provider:
+      authorizationEndpoint: https://idm.json64.dev/ui/oauth2
+      issuer: https://idm.json64.dev/oauth2/openid/prometheus
+      tokenEndpoint: https://idm.json64.dev/oauth2/token
+    scopes:
+      - email
+      - openid
+      - profile
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: prometheus

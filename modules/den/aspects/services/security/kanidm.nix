@@ -83,6 +83,34 @@ let
       domain = svc: env.getDomainFor svc;
     in
     {
+      # Gateway-OIDC fronts for the cluster's Prometheus and Alertmanager
+      # (kubernetes/services/monitoring/prometheus.nix); admins only.
+      prometheus = {
+        displayName = "Prometheus";
+        originUrl = [ "https://${domain "prometheus"}/oauth2/callback" ];
+        originLanding = "https://${domain "prometheus"}";
+        basicSecretFile = secretPaths.prometheus-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps.admins = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
+      alertmanager = {
+        displayName = "Alertmanager";
+        originUrl = [ "https://${domain "alertmanager"}/oauth2/callback" ];
+        originLanding = "https://${domain "alertmanager"}";
+        basicSecretFile = secretPaths.alertmanager-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps.admins = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
       argocd = {
         displayName = "argocd";
         originUrl = [ "https://${domain "argocd"}/auth/callback" ];

@@ -8,6 +8,7 @@ data:
         kubernetes cluster.local cluster.local in-addr.arpa ip6.arpa
         prometheus 0.0.0.0:9153
         hosts {
+            10.11.0.1 alertmanager.json64.dev
             10.11.0.1 argocd.zeroday.run
             10.10.10.1 attic.json64.dev
             10.11.0.1 bazarr.json64.dev
@@ -30,6 +31,7 @@ data:
             10.10.10.1 oauth2-proxy.json64.dev
             10.10.10.1 open-webui.json64.dev
             10.11.0.1 profilarr.json64.dev
+            10.11.0.1 prometheus.json64.dev
             10.11.0.1 prowlarr.json64.dev
             10.11.0.1 radarr.json64.dev
             10.10.10.1 registry.json64.dev

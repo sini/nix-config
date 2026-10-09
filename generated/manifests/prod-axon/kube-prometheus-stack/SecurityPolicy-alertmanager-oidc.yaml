@@ -1,0 +1,22 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: SecurityPolicy
+metadata:
+  name: alertmanager-oidc
+  namespace: monitoring
+spec:
+  oidc:
+    clientID: alertmanager
+    clientSecret:
+      name: alertmanager-oidc-client-secret
+    provider:
+      authorizationEndpoint: https://idm.json64.dev/ui/oauth2
+      issuer: https://idm.json64.dev/oauth2/openid/alertmanager
+      tokenEndpoint: https://idm.json64.dev/oauth2/token
+    scopes:
+      - email
+      - openid
+      - profile
+  targetRefs:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      name: alertmanager

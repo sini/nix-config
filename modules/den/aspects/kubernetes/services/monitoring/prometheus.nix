@@ -5,12 +5,52 @@
 # Node-level metrics stay with the host stack (every server already runs
 # prometheus-exporter on :9100 — an in-cluster node-exporter would clash
 # on the hostPort and duplicate the host stack's ownership).
+{ lib, ... }:
+let
+  uis = [
+    "prometheus"
+    "alertmanager"
+  ];
+  backends = {
+    prometheus = {
+      name = "kube-prometheus-stack-prometheus";
+      port = 9090;
+    };
+    alertmanager = {
+      name = "kube-prometheus-stack-alertmanager";
+      port = 9093;
+    };
+  };
+in
 {
   den.aspects.kubernetes.services.monitoring.prometheus = {
+    # Both UIs behind the gateway's kanidm OIDC (admins only: neither has auth
+    # of its own, and a silence can mute any alert). They are also the
+    # externalUrls, so notification links (silence, source graph) resolve.
+    service-domains = uis;
+    served-domains = { cluster, ... }: cluster.servedDomains uis;
+
+    age-secrets =
+      { environment, ... }:
+      {
+        age.secrets = lib.genAttrs (map (ui: "${ui}-oidc-client-secret") uis) (name: {
+          rekeyFile = environment.secretPath + "/oidc/${name}.age";
+          generator = {
+            tags = [ "oidc" ];
+            script = "rfc3986-secret";
+          };
+          sopsOutput = {
+            file = "oidc";
+            key = lib.removeSuffix "-oidc-client-secret" name;
+          };
+        });
+      };
+
     k8s-manifests =
       {
         charts,
         cluster,
+        config,
         environment,
         lib,
         prometheus-targets,
@@ -78,6 +118,7 @@
             values = {
               prometheus = {
                 prometheusSpec = {
+                  externalUrl = "https://${cluster.domainFor "prometheus"}";
                   additionalAlertManagerConfigs = lib.optional (outsideAlertmanagers != [ ]) {
                     static_configs = [ { targets = outsideAlertmanagers; } ];
                     alert_relabel_configs = [
@@ -168,6 +209,7 @@
               };
               alertmanager = {
                 enabled = true;
+                alertmanagerSpec.externalUrl = "https://${cluster.domainFor "alertmanager"}";
                 # Mail goes through the cluster's Postfix relay to Proton
                 # (communication/smtp-relay.nix), which accepts in-cluster
                 # senders from the environment's domain without auth.
@@ -326,6 +368,50 @@
           # The cluster default-denies egress to anything that isn't a
           # cilium-managed endpoint; the apiserver and kubelets are
           # host-network and need explicit entity rules.
+          resources.httpRoutes = lib.genAttrs uis (ui: {
+            spec = {
+              hostnames = [ (cluster.domainFor ui) ];
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "gateways";
+                  sectionName = "${cluster.domainForResource ui}-https";
+                }
+              ];
+              rules = [ { backendRefs = [ backends.${ui} ]; } ];
+            };
+          });
+
+          resources.securityPolicies = lib.mapAttrs' (
+            ui: _:
+            lib.nameValuePair "${ui}-oidc" {
+              spec = {
+                targetRefs = [
+                  {
+                    group = "gateway.networking.k8s.io";
+                    kind = "HTTPRoute";
+                    name = ui;
+                  }
+                ];
+                oidc = {
+                  provider = cluster.secrets.oidcProviderFor ui;
+                  clientID = ui;
+                  clientSecret.name = "${ui}-oidc-client-secret";
+                  scopes = [
+                    "email"
+                    "openid"
+                    "profile"
+                  ];
+                };
+              };
+            }
+          ) backends;
+
+          resources.secrets = lib.genAttrs (map (ui: "${ui}-oidc-client-secret") uis) (name: {
+            type = "Opaque";
+            stringData.client-secret = config.age.secrets.${name}.sopsRef;
+          });
+
           resources.ciliumNetworkPolicies = {
             allow-operator-kube-apiserver-egress = {
               spec = {
