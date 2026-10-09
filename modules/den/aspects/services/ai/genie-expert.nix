@@ -147,99 +147,113 @@ in
         '';
       in
       {
-        users.groups.genie = { };
-        users.users.genie = {
-          group = "genie";
-          isSystemUser = true;
-          useDefaultShell = true;
-          inherit home;
-          createHome = true;
-          description = "@genie Opus expert";
-        };
-
-        services.openssh.settings.DenyUsers = [ "genie" ];
-
-        warnings = lib.optional (!hasToken) ''
-          genie-expert: ${secret}.age is absent on ${host.name}, so the expert service is NOT enabled.
-          Mint a token with `claude setup-token`, then `agenix edit .secrets/hosts/${host.name}/${secret}.age`, `git add` it and `agenix rekey`.
-        '';
-
-        # The owner creates the value; nothing here generates it.
-        age.secrets = lib.mkIf hasToken {
-          ${secret} = {
+        # The token slot as declared, readable whether or not the token exists yet
+        # (age.secrets only carries it once it does); genie-expert-check.nix reads it.
+        options.services.genie-expert.tokenSecret = lib.mkOption {
+          internal = true;
+          readOnly = true;
+          type = lib.types.attrs;
+          default = {
             rekeyFile = tokenFile;
-            owner = "genie";
-            group = "genie";
+            # Read only by systemd for LoadCredential, so a genie shell cannot read it.
+            owner = "root";
+            group = "root";
             mode = "0400";
           };
         };
 
-        fileSystems = lib.listToAttrs (
-          map (
-            name: lib.nameValuePair "${home}/repos/${name}" (roBind "${ownerHome}/Documents/repos/sini/${name}")
-          ) cfg.checkouts
-        );
+        config = {
+          users.groups.genie = { };
+          users.users.genie = {
+            group = "genie";
+            isSystemUser = true;
+            useDefaultShell = true;
+            inherit home;
+            createHome = true;
+            description = "@genie Opus expert";
+          };
 
-        # Each tier keeps its own Claude state, so a public session cannot read a
-        # trusted session's transcripts. The support memory is root-owned: genie
-        # reads it, a later curation unit writes it.
-        systemd.tmpfiles.rules = [
-          "d ${supportMemory} 0755 root root -"
-          "d ${home}/memory 0755 root root -"
-        ]
-        ++ lib.concatMap (tier: [
-          "d ${tierDir tier} 0700 genie genie -"
-          "d ${tierDir tier}/claude 0700 genie genie -"
-          "L+ ${tierDir tier}/claude/settings.json - - - - ${settings}"
-        ]) (lib.attrNames views);
+          services.openssh.settings.DenyUsers = [ "genie" ];
 
-        systemd.services = lib.mkIf hasToken (
-          {
-            "genie-expert@" = {
-              description = "genie: Claude Code Opus expert for @genie, %i tier";
-              after = [ "network-online.target" ];
-              wants = [ "network-online.target" ];
-              # The checkouts belong to another user, so git refuses them without this.
-              environment = {
-                GIT_CONFIG_COUNT = "1";
-                GIT_CONFIG_KEY_0 = "safe.directory";
-                GIT_CONFIG_VALUE_0 = "*";
-              };
-              serviceConfig = {
-                Type = "forking";
-                User = "genie";
-                Group = "genie";
-                ExecStart = start;
-                LoadCredential = "claude-token:${tokenPath}";
-                ProtectHome = true;
-                NoNewPrivileges = true;
-                Restart = "on-failure";
-              };
-            };
-          }
-          // lib.mapAttrs' (
-            tier: view:
-            lib.nameValuePair "genie-expert@${tier}" {
-              overrideStrategy = "asDropin";
-              # Here, not on the template: a drop-in's PATH replaces the template's.
-              path = with pkgs; [
-                bubblewrap
-                socat
-                git
-                ripgrep
-                tmux
-              ];
-              wantedBy = [ "multi-user.target" ];
-              environment.CLAUDE_CONFIG_DIR = "${tierDir tier}/claude";
-              serviceConfig = {
-                RuntimeDirectory = "genie-expert-${tier}";
-                WorkingDirectory = tierDir tier;
-                BindReadOnlyPaths = [ "${view}:${home}/memory" ];
-                InaccessiblePaths = map tierDir (lib.remove tier (lib.attrNames views));
+          warnings = lib.optional (!hasToken) ''
+            genie-expert: ${secret}.age is absent on ${host.name}, so the expert service is NOT enabled.
+            Mint a token with `claude setup-token`, then `agenix edit .secrets/hosts/${host.name}/${secret}.age`, `git add` it and `agenix rekey`.
+          '';
+
+          # The owner creates the value; nothing here generates it.
+          age.secrets = lib.mkIf hasToken { ${secret} = config.services.genie-expert.tokenSecret; };
+
+          fileSystems = lib.listToAttrs (
+            map (
+              name: lib.nameValuePair "${home}/repos/${name}" (roBind "${ownerHome}/Documents/repos/sini/${name}")
+            ) cfg.checkouts
+          );
+
+          # Each tier keeps its own Claude state, so a public session cannot read a
+          # trusted session's transcripts. The support memory is root-owned: genie
+          # reads it, a later curation unit writes it.
+          systemd.tmpfiles.rules = [
+            "d ${supportMemory} 0755 root root -"
+            "d ${home}/memory 0755 root root -"
+          ]
+          ++ lib.concatMap (tier: [
+            "d ${tierDir tier} 0700 genie genie -"
+            "d ${tierDir tier}/claude 0700 genie genie -"
+            "L+ ${tierDir tier}/claude/settings.json - - - - ${settings}"
+          ]) (lib.attrNames views);
+
+          # Defined either way, enabled with the token, so the views stay checkable
+          # (genie-expert-check.nix) before the owner has created it.
+          systemd.services = (
+            {
+              "genie-expert@" = {
+                enable = hasToken;
+                description = "genie: Claude Code Opus expert for @genie, %i tier";
+                after = [ "network-online.target" ];
+                wants = [ "network-online.target" ];
+                # The checkouts belong to another user, so git refuses them without this.
+                environment = {
+                  GIT_CONFIG_COUNT = "1";
+                  GIT_CONFIG_KEY_0 = "safe.directory";
+                  GIT_CONFIG_VALUE_0 = "*";
+                };
+                serviceConfig = {
+                  Type = "forking";
+                  User = "genie";
+                  Group = "genie";
+                  ExecStart = start;
+                  LoadCredential = "claude-token:${tokenPath}";
+                  ProtectHome = true;
+                  NoNewPrivileges = true;
+                  Restart = "on-failure";
+                };
               };
             }
-          ) views
-        );
+            // lib.mapAttrs' (
+              tier: view:
+              lib.nameValuePair "genie-expert@${tier}" {
+                overrideStrategy = "asDropin";
+                enable = hasToken;
+                # Here, not on the template: a drop-in's PATH replaces the template's.
+                path = with pkgs; [
+                  bubblewrap
+                  socat
+                  git
+                  ripgrep
+                  tmux
+                ];
+                wantedBy = [ "multi-user.target" ];
+                environment.CLAUDE_CONFIG_DIR = "${tierDir tier}/claude";
+                serviceConfig = {
+                  RuntimeDirectory = "genie-expert-${tier}";
+                  WorkingDirectory = tierDir tier;
+                  BindReadOnlyPaths = [ "${view}:${home}/memory" ];
+                  InaccessiblePaths = map tierDir (lib.remove tier (lib.attrNames views));
+                };
+              }
+            ) views
+          );
+        };
       };
 
     persist = {

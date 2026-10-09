@@ -17,8 +17,10 @@ The aspect `services.ai.genie-expert`
     on the host, so no session can see both.
   - Each tier keeps its Claude state in `/var/lib/genie/tiers/<tier>/claude`,
     and the other tier's directory is inaccessible to it.
-- **Token:** the agenix secret `genie-claude-token` (genie, 0400) reaches each
-  instance by `LoadCredential` and is exported as `CLAUDE_CODE_OAUTH_TOKEN`.
+- **Token:** the agenix secret `genie-claude-token` is **root**-owned, 0400. A
+  genie shell cannot read it by construction. systemd reads it as root for each
+  instance's `LoadCredential`, and the instance exports it as
+  `CLAUDE_CODE_OAUTH_TOKEN`.
 - **Sandbox settings:** the bubblewrap sandbox is on, and commands cannot opt
   out of it.
   - Sandboxed commands may not read the token, `/run/agenix.d`,
@@ -37,7 +39,17 @@ says "on bitstream".
 
 ## 0. Pre-checks
 
-Before you start, the branch must be on `main`, and bitstream must evaluate:
+Before you start, the branch must be on `main`. The isolation properties are a
+flake check, which evaluates bitstream:
+
+```bash
+nix build --no-link -L .#checks.x86_64-linux.genie-expert
+```
+
+Expected: `genie-expert: 18 properties + settingsDenyRead hold`, exit 0. A
+failure prints `genie-expert: failed: <property names>` and exits 1.
+
+Then check that bitstream evaluates as a whole:
 
 ```bash
 nix eval --raw .#nixosConfigurations.bitstream.config.system.build.toplevel.drvPath
@@ -139,7 +151,7 @@ nix eval --json .#nixosConfigurations.bitstream.config.systemd.services \
 Expected:
 
 - the secret:
-  `{"mode":"0400","owner":"genie","path":"/run/agenix/genie-claude-token"}`;
+  `{"mode":"0400","owner":"root","path":"/run/agenix/genie-claude-token"}`;
 - the binds:
   `[["/var/lib/genie/support-memory:/var/lib/genie/memory"],["/home/sini/.claude/memory:/var/lib/genie/memory"]]`.
 
@@ -165,7 +177,7 @@ done
 
 Expected:
 
-- the secret: `-r-------- 1 genie genie`;
+- the secret: `-r-------- 1 root root`;
 - both units `active (running)`;
 - the `nsenter` loop: `public`'s SOURCE is `.../var/lib/genie/support-memory`,
   `trusted`'s is `.../home/sini/.claude/memory`, and both have `ro`. Each
@@ -191,6 +203,14 @@ sudo -u genie tmux -S /run/genie-expert-trusted/tmux.sock attach
 
 Attach to the tier, and ask Claude to run each command with its Bash tool (the
 sandboxed path).
+
+On the host, first confirm genie cannot read the token outside any sandbox:
+
+```bash
+sudo -u genie cat /run/agenix/genie-claude-token
+```
+
+Expected: `Permission denied`.
 
 In **both** tiers:
 
