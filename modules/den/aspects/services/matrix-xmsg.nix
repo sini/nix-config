@@ -95,6 +95,8 @@ in
           botMxid = mxid "genie";
           ownerMxid = mxid "json";
           accessTokenFile = config.age.secrets.matrix-genie-token.path;
+          # sini's loopback listener (design row 20); xmsgSocket replaces it once the bot runs as sini.
+          xmsgUrl = "http://127.0.0.1:7787";
           trustedMxids = trusted;
           inherit (cfg) rooms expertRef;
         };
