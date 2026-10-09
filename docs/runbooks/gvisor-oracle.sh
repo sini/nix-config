@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Pre-deploy oracle for the gVisor runtime (docs/runbooks/gvisor.md).
+# Pre-deploy oracle for the gVisor runtime (docs/runbooks/genie-i1.md).
 #   1. axon-01's containerd has the runsc handler (shim on PATH, node labelled
 #      node.kubernetes.io/gvisor=true) and axon-02's has none of the three.
 #   2. The rendered prod-axon env has RuntimeClass `gvisor`, handler `runsc`.
