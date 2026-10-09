@@ -25,6 +25,26 @@
   lib,
   ...
 }:
+let
+  # Hashes are the `lfs.oid` HuggingFace reports for each file.
+  models = {
+    # Official artifact; agrees with the SHA256SUMS published beside it.
+    "qwen3.8-27b" = {
+      url = "https://huggingface.co/neroued/Qwen3.8-27B-NInfer/resolve/main/qwen3_8_27b.ninfer";
+      hash = "sha256-7sOVZJk9bpx9Xjgzgqdg8JNGXJ0WPsmhvWuAGZUUvz4=";
+    };
+    # Swift-Qwen3.8-27B-Uncensored (abliterated); 18.2 GB, carries no DFlash payload.
+    "swift-qwen3.8-27b" = {
+      url = "https://huggingface.co/wacomctl672/Swift-Qwen3.8-27B-Uncensored-ninfer3090/resolve/main/swift_qwen3_8_27b.ninfer";
+      hash = "sha256-KyExYgLUy2CCYl4c0XnwO1fYecxyVnBj5IptXnRNyWA=";
+    };
+    # Upstream's pinned compact v1, the artifact its 3090 results were measured on.
+    "qwen3.6-35b-a3b" = {
+      url = "https://huggingface.co/neroued/Qwen3.6-35B-A3B-NInfer/resolve/c8b8c1c0df4c74df3c190c6aa3a7f24dc614721c/qwen3_6_35b_a3b.ninfer";
+      hash = "sha256-noN4OY0reJp3IktREMdZCtu8b9SszRObkYFXsrnacWM=";
+    };
+  };
+in
 {
   # A host restricting ninfer to its clients needs every consumer's
   # ninfer-clients and every cluster's k3s-nodes, not only its siblings'
@@ -64,18 +84,12 @@
 
   den.aspects.services.ai.ninfer = {
     settings = {
-      modelUrl = lib.mkOption {
-        type = lib.types.str;
-        default = "https://huggingface.co/neroued/Qwen3.8-27B-NInfer/resolve/main/qwen3_8_27b.ninfer";
-        description = "Upstream .ninfer artifact fetched into the store.";
-      };
-      modelHash = lib.mkOption {
-        type = lib.types.str;
-        default = "sha256-7sOVZJk9bpx9Xjgzgqdg8JNGXJ0WPsmhvWuAGZUUvz4=";
+      model = lib.mkOption {
+        type = lib.types.enum (lib.attrNames models);
+        default = "qwen3.8-27b";
         description = ''
-          SRI hash of the artifact. Matches the `lfs.oid` HuggingFace reports
-          for the file and the `SHA256SUMS` published beside it
-          (eec39564…14bf3e), which agree.
+          The .ninfer artifact fetched into the store, by name from the
+          catalogue at the top of this file (URL and SRI hash per entry).
         '';
       };
       modelPath = lib.mkOption {
@@ -83,7 +97,7 @@
         default = null;
         description = ''
           Escape hatch for an out-of-band artifact on the ninfer share. `null`
-          (the default) uses the store artifact fetched from `modelUrl`, so the
+          (the default) uses the store artifact of `model`, so the
           model is content-addressed and present by construction rather than
           left to a manual download that the unit would fail without.
         '';
@@ -372,16 +386,29 @@
             ) ninfer-clients
           )
         );
-        ninfer = inputs.ninfer-3090.packages.${pkgs.stdenv.hostPlatform.system}.ninfer;
+        # Qwen writes `False` for some boolean tool parameters; upstream drops the whole call
+        # to text on it. The patch maps Python literals and flips upstream's test to match,
+        # and only that test is built and run (the others need the GPU).
+        ninfer = inputs.ninfer-3090.packages.${pkgs.stdenv.hostPlatform.system}.ninfer.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ [ ./ninfer-python-literals.patch ];
+          nativeBuildInputs = old.nativeBuildInputs ++ [ pkgs.python3 ];
+          cmakeFlags = map (f: if f == "-DBUILD_TESTING=OFF" then "-DBUILD_TESTING=ON" else f) old.cmakeFlags;
+          ninjaFlags = [
+            "ninfer"
+            "ninfer-serve"
+            "ninfer_tool_call_parser_test"
+          ];
+          doCheck = true;
+          checkPhase = "tests/ninfer_tool_call_parser_test";
+        });
 
         # Content-addressed acquisition: the guest mounts the host's /nix/store
         # over virtiofs, so a store path is readable in the VM and the model is
         # present the moment the closure is. No first-boot download step, and
         # nothing for the unit to race against.
         modelArtifact = pkgs.fetchurl {
-          name = "qwen3_8_27b.ninfer";
-          url = cfg.modelUrl;
-          hash = cfg.modelHash;
+          inherit (models.${cfg.model}) url hash;
+          name = baseNameOf models.${cfg.model}.url;
         };
         model = if cfg.modelPath != null then cfg.modelPath else "${modelArtifact}";
 
