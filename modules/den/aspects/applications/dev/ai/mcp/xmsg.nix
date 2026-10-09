@@ -28,6 +28,8 @@
     homeManager =
       {
         config,
+        host,
+        inputs',
         lib,
         pkgs,
         ...
@@ -40,10 +42,19 @@
         # symlink or another version would fail closed. bin/agy is the real ELF
         # binary (no wrapper). pi is admitted on the peer uid alone (xmsg X11).
         agyExe = "${config.programs.antigravity-cli.package}/bin/agy";
-        identityArgs = lib.escapeShellArgs [
-          "--agy-exe"
-          agyExe
-        ];
+        # The @genie bot registers on this bus as svc:matrix-xmsg (matrix-xmsg M13) on a host
+        # that runs it; xmsg admits that name only from the bot's own binary.
+        botEnabled = (host.settings.services.matrix-xmsg.rooms or [ ]) != [ ];
+        identityArgs = lib.escapeShellArgs (
+          [
+            "--agy-exe"
+            agyExe
+          ]
+          ++ lib.optionals botEnabled [
+            "--svc-exe"
+            "matrix-xmsg=${lib.getExe inputs'.matrix-xmsg.packages.default}"
+          ]
+        );
       in
       lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         home.packages = [ pkgs.local.xmsg ];
