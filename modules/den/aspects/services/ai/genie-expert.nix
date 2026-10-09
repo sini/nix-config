@@ -8,7 +8,7 @@
 # One instance runs per sender tier, genie-expert@public and
 # genie-expert@trusted, and each mounts only its own memory view (below).
 #
-# Its token is its own (`claude setup-token` as genie, revocable alone). It
+# Its token is its own (a `claude setup-token` token, revocable alone). It
 # reaches the service as a systemd credential and is exported only into the
 # expert's environment; the sandbox settings deny the tools a read of the
 # secret, the credential directory and /proc/*/environ, and unset the variable
@@ -161,7 +161,7 @@ in
 
         warnings = lib.optional (!hasToken) ''
           genie-expert: ${secret}.age is absent on ${host.name}, so the expert service is NOT enabled.
-          As genie run `claude setup-token`, then `agenix edit .secrets/hosts/${host.name}/${secret}.age`, `git add` it and `agenix rekey`.
+          Mint a token with `claude setup-token`, then `agenix edit .secrets/hosts/${host.name}/${secret}.age`, `git add` it and `agenix rekey`.
         '';
 
         # The owner creates the value; nothing here generates it.
