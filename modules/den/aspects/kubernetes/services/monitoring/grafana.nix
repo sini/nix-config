@@ -468,6 +468,20 @@
                       maxLines = 1000;
                     };
                   }
+                  # The cluster Alertmanager, so its alerts and silences
+                  # (Alerting > Silences, choose this Alertmanager) are
+                  # manageable from Grafana.
+                  {
+                    name = "Alertmanager";
+                    uid = "alertmanager";
+                    type = "alertmanager";
+                    access = "proxy";
+                    url = "http://kube-prometheus-stack-alertmanager.monitoring:9093";
+                    jsonData = {
+                      implementation = "prometheus";
+                      handleGrafanaManagedAlerts = false;
+                    };
+                  }
                 ];
               };
 

@@ -19,6 +19,14 @@ data:
       type: loki
       uid: loki
       url: http://loki.monitoring:3100
+    - access: proxy
+      jsonData:
+        handleGrafanaManagedAlerts: false
+        implementation: prometheus
+      name: Alertmanager
+      type: alertmanager
+      uid: alertmanager
+      url: http://kube-prometheus-stack-alertmanager.monitoring:9093
     deleteDatasources:
     - name: Prometheus
       orgId: 1
