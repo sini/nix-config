@@ -199,13 +199,6 @@ in
               description = "genie: Claude Code Opus expert for @genie, %i tier";
               after = [ "network-online.target" ];
               wants = [ "network-online.target" ];
-              path = with pkgs; [
-                bubblewrap
-                socat
-                git
-                ripgrep
-                tmux
-              ];
               # The checkouts belong to another user, so git refuses them without this.
               environment = {
                 GIT_CONFIG_COUNT = "1";
@@ -228,6 +221,14 @@ in
             tier: view:
             lib.nameValuePair "genie-expert@${tier}" {
               overrideStrategy = "asDropin";
+              # Here, not on the template: a drop-in's PATH replaces the template's.
+              path = with pkgs; [
+                bubblewrap
+                socat
+                git
+                ripgrep
+                tmux
+              ];
               wantedBy = [ "multi-user.target" ];
               environment.CLAUDE_CONFIG_DIR = "${tierDir tier}/claude";
               serviceConfig = {
