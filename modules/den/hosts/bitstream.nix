@@ -63,6 +63,7 @@
 
       applications.dev.mux.herdr-pair
       services.matrix-xmsg
+      services.ai.genie-expert
     ];
   };
 }

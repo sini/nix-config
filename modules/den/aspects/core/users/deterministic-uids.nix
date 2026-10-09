@@ -165,6 +165,7 @@
           process-exporter = uidGid 948;
           docker-registry = uidGid 947;
           opksshuser = uidGid 946;
+          genie = uidGid 944;
 
           # uid deliberately shared with jellyfin (NFS media ownership parity
           # across hosts — NAS files owned 1027:65536 from the legacy stack;
