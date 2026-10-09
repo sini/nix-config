@@ -116,9 +116,11 @@ in
               {
                 toEndpoints = [
                   {
+                    # coredns.nix's own selector: the chart labels its pods
+                    # k8s-app=coredns; only the Service carries kube-dns.
                     matchLabels = {
                       "k8s:io.kubernetes.pod.namespace" = "kube-system";
-                      "k8s-app" = "kube-dns";
+                      "app.kubernetes.io/name" = "coredns";
                     };
                   }
                 ];

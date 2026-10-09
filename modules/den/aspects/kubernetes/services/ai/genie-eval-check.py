@@ -1,6 +1,6 @@
 """Property check over the rendered genie-eval manifests (genie-eval.nix).
 
-Usage: genie-eval-check.py <app-dir> <allow-internal-egress.yaml>
+Usage: genie-eval-check.py <app-dir> <allow-internal-egress.yaml> <Deployment-coredns.yaml>
 Exits non-zero, naming every failed property, when one does not hold; refuses
 outright when an input is missing or a required object is absent.
 """
@@ -28,6 +28,11 @@ FETCH_HOSTS = {
     "tarballs.nixos.org",
 }
 BOUNDS = {"memory": "12Gi", "cpu": "2"}
+# The selector coredns.nix itself uses for its pods.
+DNS_SELECTOR = {
+    "k8s:io.kubernetes.pod.namespace": "kube-system",
+    "app.kubernetes.io/name": "coredns",
+}
 
 
 def load(path):
@@ -47,7 +52,7 @@ def walk(node, trail=()):
         yield trail, node
 
 
-def check(docs, ccnp):
+def check(docs, ccnp, coredns):
     fails = []
     by_kind = {}
     for d in docs:
@@ -166,9 +171,16 @@ def check(docs, ccnp):
         if "toFQDNs" in rule:
             continue
         sel = rule.get("toEndpoints", [])
-        dns = {"k8s:io.kubernetes.pod.namespace": "kube-system", "k8s-app": "kube-dns"}
-        if sel != [{"matchLabels": dns}]:
-            fails.append(f"CNP egress to endpoints other than kube-dns: {sel}")
+        if sel != [{"matchLabels": DNS_SELECTOR}]:
+            fails.append(f"CNP endpoint egress is {sel}, want only {DNS_SELECTOR}")
+        # The selector must match the CoreDNS pods as rendered, not by name.
+        pod_labels = coredns["spec"]["template"]["metadata"]["labels"]
+        for s in sel:
+            for k, v in s.get("matchLabels", {}).items():
+                if k != "k8s:io.kubernetes.pod.namespace" and pod_labels.get(k) != v:
+                    fails.append(
+                        f"CNP DNS selector {k}={v} does not match CoreDNS pods {pod_labels}"
+                    )
 
     # Cilium policies only add allows: the cluster-wide in-cluster grant must
     # not select this namespace, or the CNP above denies nothing in-cluster.
@@ -190,12 +202,15 @@ def check(docs, ccnp):
 
 
 def main():
-    app_dir, ccnp_file = map(pathlib.Path, sys.argv[1:3])
+    app_dir, ccnp_file, coredns_file = map(pathlib.Path, sys.argv[1:4])
     files = sorted(app_dir.glob("*.yaml"))
     if not files:
         sys.exit(f"REFUSED: no manifests under {app_dir}")
     docs = [d for f in files for d in load(f)]
-    fails = check(docs, load(ccnp_file))
+    coredns = [d for d in load(coredns_file) if d["kind"] == "Deployment"]
+    if len(coredns) != 1:
+        sys.exit(f"REFUSED: no CoreDNS Deployment in {coredns_file}")
+    fails = check(docs, load(ccnp_file), coredns[0])
     for f in fails:
         print(f"FAIL {f}")
     if fails:

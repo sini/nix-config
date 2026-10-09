@@ -11,7 +11,7 @@ the ArgoCD app `genie-eval`:
 | Role + RoleBinding `genie-eval-launcher` | `genie-eval` | create/get/list/watch/delete `batch/jobs`; get/list/watch `pods`, `pods/log`    |
 | LimitRange `genie-eval`                  | `genie-eval` | per container: limit and max 12Gi / 2 CPU, default request = limit (Guaranteed) |
 | ResourceQuota `genie-eval`               | `genie-eval` | at most 4 pods                                                                  |
-| CiliumNetworkPolicy `genie-eval-egress`  | `genie-eval` | egress to kube-dns and, on 443, the six fetch hosts only; all ingress denied    |
+| CiliumNetworkPolicy `genie-eval-egress`  | `genie-eval` | egress to CoreDNS and, on 443, the six fetch hosts only; all ingress denied     |
 
 One change lands in another app: the cluster-wide policy `allow-internal-egress`
 (app `cilium`, `network/cilium/cilium.nix`) no longer selects pods in

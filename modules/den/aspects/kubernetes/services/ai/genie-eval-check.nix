@@ -13,7 +13,8 @@ in
           { nativeBuildInputs = [ (pkgs.python3.withPackages (p: [ p.pyyaml ])) ]; }
           ''
             python3 -I ${./genie-eval-check.py} ${rendered + "/genie-eval"} \
-              ${rendered + "/cilium/CiliumClusterwideNetworkPolicy-allow-internal-egress.yaml"}
+              ${rendered + "/cilium/CiliumClusterwideNetworkPolicy-allow-internal-egress.yaml"} \
+              ${rendered + "/coredns/Deployment-coredns.yaml"}
             touch $out
           '';
     };
