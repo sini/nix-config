@@ -1,25 +1,34 @@
-# genie-expert: the Opus tier of the @genie support bot. Claude Code runs as the
-# OS user `genie`, which holds none of the system owner's credentials: no wheel,
-# no ssh login (so no forwarded agent), no gh/kube config, and no group that
-# reaches the owner's files. It sees the owner's checkouts only through
-# read-only bind mounts in its own home; plain bind mounts keep the source
-# permissions, so a file the owner keeps private stays unreadable.
+# genie-expert: the Opus tier of the @genie support bot. Claude Code runs as one
+# OS user per sender tier, `genie-public` and `genie-trusted`, chosen by the
+# sender's authenticated tier and never by a model. Neither holds any of the
+# system owner's credentials: no wheel, no ssh login (so no forwarded agent), no
+# gh/kube config, and no group that reaches the owner's files. Separate uids
+# keep the tiers apart by construction: each has its own 0700 home and Claude
+# state, and neither can reach the other's processes through /proc.
 #
-# One instance runs per sender tier, genie-expert@public and
-# genie-expert@trusted, and each mounts only its own memory view (below).
+# Both see the owner's checkouts through read-only bind mounts under
+# /var/lib/genie/repos; plain bind mounts keep the source permissions, so a
+# file the owner keeps private stays unreadable. Each tier's instance,
+# genie-expert@<tier>, mounts only its own memory view at /var/lib/genie/memory.
 #
-# Its token is its own (a `claude setup-token` token, revocable alone). It
-# reaches the service as a systemd credential and is exported only into the
-# expert's environment; the sandbox settings deny the tools a read of the
-# secret, the credential directory and /proc/*/environ, and unset the variable
-# for sandboxed commands.
+# The token is genie's own (a `claude setup-token` token, revocable alone),
+# root-owned and read only by systemd for LoadCredential; the instance exports
+# it as CLAUDE_CODE_OAUTH_TOKEN. The sandbox settings deny the tools a read of
+# the secret, the credential directory and /proc/*/environ, and unset the
+# variable for sandboxed commands.
 #
-# Attach with `sudo -u genie tmux -S /run/genie-expert-<tier>/tmux.sock attach`.
+# Attach with `sudo -u genie-<tier> tmux -S /run/genie-expert-<tier>/tmux.sock attach`.
 { lib, ... }:
 let
-  home = "/var/lib/genie";
+  shared = "/var/lib/genie";
   secret = "genie-claude-token";
-  supportMemory = "${home}/support-memory";
+  supportMemory = "${shared}/support-memory";
+  tiers = [
+    "public"
+    "trusted"
+  ];
+  user = tier: "genie-${tier}";
+  homeOf = tier: "/var/lib/${user tier}";
 in
 {
   den.aspects.services.ai.genie-expert = {
@@ -68,7 +77,7 @@ in
         "gen-vars"
         "gen-view"
       ];
-      description = "Checkouts under ~<system-owner>/Documents/repos/sini mounted read-only at ~genie/repos/<name>. A missing one fails its mount unit without blocking boot.";
+      description = "Checkouts under ~<system-owner>/Documents/repos/sini mounted read-only at /var/lib/genie/repos/<name> for both tiers. A missing one fails its mount unit without blocking boot.";
     };
 
     nixos =
@@ -88,16 +97,13 @@ in
         hasToken = builtins.pathExists tokenFile;
         tokenPath = "${config.age.secretsDir}/${secret}";
 
-        # The memory view each tier sees at ~genie/memory, picked by the sender's
-        # authenticated tier: the owner's own memory for trusted senders, the
-        # curated and pre-redacted support memory for the public. Each view is
-        # mounted only inside its own instance, never on the host, so no session
-        # can see both.
+        # The memory view each tier sees at /var/lib/genie/memory: the owner's own
+        # memory for trusted senders, the curated and pre-redacted support memory
+        # for the public. Each is bound only inside its own instance.
         views = {
           public = supportMemory;
           trusted = "${ownerHome}/.claude/memory";
         };
-        tierDir = tier: "${home}/tiers/${tier}";
 
         roBind = src: {
           device = src;
@@ -128,14 +134,12 @@ in
               }
             ];
           };
-          # Claude's own tools run outside the sandbox. All of /proc is denied to
-          # them: /proc/<pid>/root of the other tier's expert, same uid, would
-          # reach that tier's mount namespace.
+          # The same paths for Claude's own Read tool, which the sandbox does not wrap.
           permissions.deny = [
             "Read(/${tokenPath})"
             "Read(//run/agenix.d/**)"
             "Read(//run/credentials/**)"
-            "Read(//proc/**)"
+            "Read(//proc/*/environ)"
           ];
         };
 
@@ -155,7 +159,7 @@ in
           type = lib.types.attrs;
           default = {
             rekeyFile = tokenFile;
-            # Read only by systemd for LoadCredential, so a genie shell cannot read it.
+            # Read only by systemd for LoadCredential, so no genie shell can read it.
             owner = "root";
             group = "root";
             mode = "0400";
@@ -163,17 +167,23 @@ in
         };
 
         config = {
-          users.groups.genie = { };
-          users.users.genie = {
-            group = "genie";
-            isSystemUser = true;
-            useDefaultShell = true;
-            inherit home;
-            createHome = true;
-            description = "@genie Opus expert";
-          };
+          users.groups = lib.genAttrs (map user tiers) (_: { });
+          users.users = lib.listToAttrs (
+            map (
+              tier:
+              lib.nameValuePair (user tier) {
+                group = user tier;
+                isSystemUser = true;
+                useDefaultShell = true;
+                home = homeOf tier;
+                homeMode = "700";
+                createHome = true;
+                description = "@genie Opus expert, ${tier} tier";
+              }
+            ) tiers
+          );
 
-          services.openssh.settings.DenyUsers = [ "genie" ];
+          services.openssh.settings.DenyUsers = map user tiers;
 
           warnings = lib.optional (!hasToken) ''
             genie-expert: ${secret}.age is absent on ${host.name}, so the expert service is NOT enabled.
@@ -185,55 +195,51 @@ in
 
           fileSystems = lib.listToAttrs (
             map (
-              name: lib.nameValuePair "${home}/repos/${name}" (roBind "${ownerHome}/Documents/repos/sini/${name}")
+              name:
+              lib.nameValuePair "${shared}/repos/${name}" (roBind "${ownerHome}/Documents/repos/sini/${name}")
             ) cfg.checkouts
           );
 
-          # Each tier keeps its own Claude state, so a public session cannot read a
-          # trusted session's transcripts. The support memory is root-owned: genie
-          # reads it, a later curation unit writes it.
+          # The shared tree is root-owned: the tiers read it, a later curation unit
+          # writes the support memory.
           systemd.tmpfiles.rules = [
+            "d ${shared} 0755 root root -"
             "d ${supportMemory} 0755 root root -"
-            "d ${home}/memory 0755 root root -"
+            "d ${shared}/memory 0755 root root -"
           ]
-          ++ lib.concatMap (tier: [
-            "d ${tierDir tier} 0700 genie genie -"
-            "d ${tierDir tier}/claude 0700 genie genie -"
-            "L+ ${tierDir tier}/claude/settings.json - - - - ${settings}"
-          ]) (lib.attrNames views);
+          ++ map (tier: "L+ ${homeOf tier}/.claude/settings.json - - - - ${settings}") tiers;
 
           # Defined either way, enabled with the token, so the views stay checkable
           # (genie-expert-check.nix) before the owner has created it.
-          systemd.services = (
-            {
-              "genie-expert@" = {
-                enable = hasToken;
-                description = "genie: Claude Code Opus expert for @genie, %i tier";
-                after = [ "network-online.target" ];
-                wants = [ "network-online.target" ];
-                # The checkouts belong to another user, so git refuses them without this.
-                environment = {
-                  GIT_CONFIG_COUNT = "1";
-                  GIT_CONFIG_KEY_0 = "safe.directory";
-                  GIT_CONFIG_VALUE_0 = "*";
-                };
-                serviceConfig = {
-                  Type = "forking";
-                  User = "genie";
-                  Group = "genie";
-                  ExecStart = start;
-                  LoadCredential = "claude-token:${tokenPath}";
-                  ProtectHome = true;
-                  NoNewPrivileges = true;
-                  Restart = "on-failure";
-                };
+          systemd.services = {
+            "genie-expert@" = {
+              enable = hasToken;
+              description = "genie: Claude Code Opus expert for @genie, %i tier";
+              after = [ "network-online.target" ];
+              wants = [ "network-online.target" ];
+              # The checkouts belong to another user, so git refuses them without this.
+              environment = {
+                GIT_CONFIG_COUNT = "1";
+                GIT_CONFIG_KEY_0 = "safe.directory";
+                GIT_CONFIG_VALUE_0 = "*";
               };
-            }
-            // lib.mapAttrs' (
-              tier: view:
+              serviceConfig = {
+                Type = "forking";
+                ExecStart = start;
+                LoadCredential = "claude-token:${tokenPath}";
+                ProtectHome = true;
+                NoNewPrivileges = true;
+                Restart = "on-failure";
+              };
+            };
+          }
+          // lib.listToAttrs (
+            map (
+              tier:
               lib.nameValuePair "genie-expert@${tier}" {
                 overrideStrategy = "asDropin";
                 enable = hasToken;
+                wantedBy = [ "multi-user.target" ];
                 # Here, not on the template: a drop-in's PATH replaces the template's.
                 path = with pkgs; [
                   bubblewrap
@@ -242,35 +248,35 @@ in
                   ripgrep
                   tmux
                 ];
-                wantedBy = [ "multi-user.target" ];
-                environment.CLAUDE_CONFIG_DIR = "${tierDir tier}/claude";
                 serviceConfig = {
+                  User = user tier;
+                  Group = user tier;
                   RuntimeDirectory = "genie-expert-${tier}";
-                  WorkingDirectory = tierDir tier;
-                  BindReadOnlyPaths = [ "${view}:${home}/memory" ];
-                  InaccessiblePaths = map tierDir (lib.remove tier (lib.attrNames views));
+                  WorkingDirectory = homeOf tier;
+                  BindReadOnlyPaths = [ "${views.${tier}}:${shared}/memory" ];
                 };
               }
-            ) views
+            ) tiers
           );
         };
       };
 
     persist = {
-      directories = [
-        {
-          directory = "${home}/tiers";
-          user = "genie";
-          group = "genie";
+      directories =
+        map (tier: {
+          directory = homeOf tier;
+          user = user tier;
+          group = user tier;
           mode = "0700";
-        }
-        {
-          directory = supportMemory;
-          user = "root";
-          group = "root";
-          mode = "0755";
-        }
-      ];
+        }) tiers
+        ++ [
+          {
+            directory = supportMemory;
+            user = "root";
+            group = "root";
+            mode = "0755";
+          }
+        ];
     };
   };
 }
