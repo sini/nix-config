@@ -15,14 +15,13 @@ data:
             10.10.10.1 den.json64.dev
             10.11.0.1 garage.json64.dev
             10.11.0.1 glance.json64.dev
-            10.10.10.1 grafana.json64.dev
+            10.11.0.1 grafana.json64.dev
             10.10.10.1 homepage.json64.dev
             10.10.10.1 hs.json64.dev
             10.10.10.1 idm.json64.dev
             10.10.10.1 jellyfin.json64.dev
             10.11.0.1 komga.json64.dev
             10.11.0.1 lidarr.json64.dev
-            10.10.10.1 loki.json64.dev
             10.11.0.1 longhorn.zeroday.run
             10.11.0.1 matrix-admin.json64.dev
             10.11.0.1 matrix.gen.wtf
@@ -31,7 +30,6 @@ data:
             10.10.10.1 oauth2-proxy.json64.dev
             10.10.10.1 open-webui.json64.dev
             10.11.0.1 profilarr.json64.dev
-            10.10.10.1 prometheus.json64.dev
             10.11.0.1 prowlarr.json64.dev
             10.11.0.1 radarr.json64.dev
             10.10.10.1 registry.json64.dev

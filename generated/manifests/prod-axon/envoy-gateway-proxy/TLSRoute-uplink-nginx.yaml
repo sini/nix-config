@@ -5,9 +5,6 @@ metadata:
   namespace: gateways
 spec:
   hostnames:
-    - prometheus.json64.dev
-    - loki.json64.dev
-    - grafana.json64.dev
     - hs.json64.dev
     - idm.json64.dev
     - jellyfin.json64.dev

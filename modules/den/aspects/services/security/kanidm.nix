@@ -147,28 +147,6 @@ let
         };
       };
 
-      grafana = {
-        displayName = "Grafana Dashboard";
-        originLanding = "https://${domain "grafana"}/login/generic_oauth";
-        originUrl = "https://${domain "grafana"}";
-        basicSecretFile = secretPaths.grafana-oidc-client-secret;
-        scopeMaps."grafana.access" = [
-          "openid"
-          "email"
-          "profile"
-        ];
-        claimMaps.groups = {
-          joinType = "array";
-          valuesByGroup = {
-            "grafana.editors" = [ "editor" ];
-            "grafana.admins" = [ "admin" ];
-            "grafana.server-admins" = [ "server_admin" ];
-          };
-        };
-        allowInsecureClientDisablePkce = false;
-        preferShortUsername = true;
-      };
-
       headscale = {
         displayName = "vpn";
         originUrl = [
@@ -197,12 +175,12 @@ let
         ];
       };
 
-      # In-cluster grafana (monitoring namespace), grafana-native OIDC —
-      # mirrors the host-level "grafana" client above, same ACL groups.
+      # The fleet's Grafana (in-cluster, monitoring namespace), grafana-native
+      # OIDC, served at grafana.<domain>. The client id predates the move.
       grafana-k8s = {
         displayName = "Grafana (cluster)";
-        originLanding = "https://${domain "grafana-k8s"}/login/generic_oauth";
-        originUrl = "https://${domain "grafana-k8s"}";
+        originLanding = "https://${domain "grafana"}/login/generic_oauth";
+        originUrl = "https://${domain "grafana"}";
         basicSecretFile = secretPaths.grafana-k8s-oidc-client-secret;
         scopeMaps."grafana.access" = [
           "openid"

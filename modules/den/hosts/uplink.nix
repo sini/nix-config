@@ -56,7 +56,6 @@
       roles.server
       roles.unlock
       roles.nix-builder
-      roles.metrics-ingester
       services.monitoring.alertmanager
       services.bgp.hub
       services.networking.headscale
@@ -76,7 +75,6 @@
       core.network.syncthing.hub
       services.web.den-docs-mirror
       services.web.container-registry
-      services.monitoring.grafana
       virtualization.podman
       hardware.cpu.amd
       hardware.gpu.intel

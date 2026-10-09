@@ -67,9 +67,9 @@ data:
     disable_initial_admin_creation = true
     hide_version = true
     [server]
-    domain = grafana-k8s.json64.dev
+    domain = grafana.json64.dev
     enforce_domain = false
-    root_url = https://grafana-k8s.json64.dev
+    root_url = https://grafana.json64.dev
     [unified_storage]
     index_path = /var/lib/grafana-search/bleve
     [users]

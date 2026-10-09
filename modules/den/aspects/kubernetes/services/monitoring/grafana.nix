@@ -9,6 +9,11 @@
 # with its bundled grafana disabled (see prometheus.nix).
 {
   den.aspects.kubernetes.services.monitoring.grafana = {
+    # The fleet's Grafana, at grafana.<domain> (DNS record + gateway
+    # listener). The kanidm client keeps its original id, grafana-k8s.
+    service-domains = [ "grafana" ];
+    served-domains = { cluster, ... }: cluster.servedDomains [ "grafana" ];
+
     k8s-manifests =
       {
         config,
@@ -19,7 +24,7 @@
         ...
       }:
       let
-        domain = cluster.domainFor "grafana-k8s";
+        domain = cluster.domainFor "grafana";
         kanidmDomain = cluster.domainFor "kanidm";
 
         # Canonical upstream dashboards that no deployed chart bundles,
@@ -568,10 +573,10 @@
                 {
                   name = "default-gateway";
                   namespace = "gateways";
-                  sectionName = "${cluster.domainForResource "grafana-k8s"}-https";
+                  sectionName = "${cluster.domainForResource "grafana"}-https";
                 }
               ];
-              hostnames = [ (cluster.domainFor "grafana-k8s") ];
+              hostnames = [ (cluster.domainFor "grafana") ];
               rules = [
                 {
                   backendRefs = [

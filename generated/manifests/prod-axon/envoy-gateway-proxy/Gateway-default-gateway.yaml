@@ -24,8 +24,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: prometheus.json64.dev
-      name: tls-prometheus-json64-dev
+      hostname: hs.json64.dev
+      name: tls-hs-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -50,8 +50,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: loki.json64.dev
-      name: tls-loki-json64-dev
+      hostname: idm.json64.dev
+      name: tls-idm-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -76,8 +76,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: grafana.json64.dev
-      name: tls-grafana-json64-dev
+      hostname: jellyfin.json64.dev
+      name: tls-jellyfin-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -95,8 +95,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: hs.json64.dev
-      name: tls-hs-json64-dev
+      hostname: homepage.json64.dev
+      name: tls-homepage-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -121,8 +121,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: idm.json64.dev
-      name: tls-idm-json64-dev
+      hostname: oauth2-proxy.json64.dev
+      name: tls-oauth2-proxy-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -140,8 +140,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: jellyfin.json64.dev
-      name: tls-jellyfin-json64-dev
+      hostname: open-webui.json64.dev
+      name: tls-open-webui-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -166,8 +166,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: homepage.json64.dev
-      name: tls-homepage-json64-dev
+      hostname: attic.json64.dev
+      name: tls-attic-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -192,8 +192,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: oauth2-proxy.json64.dev
-      name: tls-oauth2-proxy-json64-dev
+      hostname: den.json64.dev
+      name: tls-den-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -211,8 +211,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: open-webui.json64.dev
-      name: tls-open-webui-json64-dev
+      hostname: registry.json64.dev
+      name: tls-registry-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -232,36 +232,12 @@ spec:
             namespace: certs
         mode: Terminate
     - allowedRoutes:
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: TLSRoute
-        namespaces:
-          from: Same
-      hostname: attic.json64.dev
-      name: tls-attic-json64-dev
-      port: 443
-      protocol: TLS
-      tls:
-        mode: Passthrough
-    - allowedRoutes:
         namespaces:
           from: All
       hostname: '*.json64.dev'
       name: json64-dev-http
       port: 80
       protocol: HTTP
-    - allowedRoutes:
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: TLSRoute
-        namespaces:
-          from: Same
-      hostname: den.json64.dev
-      name: tls-den-json64-dev
-      port: 443
-      protocol: TLS
-      tls:
-        mode: Passthrough
     - allowedRoutes:
         namespaces:
           from: All
@@ -276,18 +252,6 @@ spec:
             name: json64-dev-wildcard-tls
             namespace: certs
         mode: Terminate
-    - allowedRoutes:
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: TLSRoute
-        namespaces:
-          from: Same
-      hostname: registry.json64.dev
-      name: tls-registry-json64-dev
-      port: 443
-      protocol: TLS
-      tls:
-        mode: Passthrough
     - allowedRoutes:
         namespaces:
           from: All

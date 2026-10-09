@@ -5,7 +5,7 @@ metadata:
   namespace: monitoring
 spec:
   hostnames:
-    - grafana-k8s.json64.dev
+    - grafana.json64.dev
   parentRefs:
     - name: default-gateway
       namespace: gateways
