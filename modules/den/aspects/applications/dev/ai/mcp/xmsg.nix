@@ -62,7 +62,7 @@ let
     if builtins.pathExists crt then
       builtins.path {
         path = crt;
-        name = baseNameOf crt;
+        name = builtins.unsafeDiscardStringContext (baseNameOf crt);
       }
     else
       throw ''
