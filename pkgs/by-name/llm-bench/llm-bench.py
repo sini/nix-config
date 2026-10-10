@@ -30,8 +30,9 @@ def nonce():
 
 
 class Client:
-    def __init__(self, base, key, timeout):
+    def __init__(self, base, key, timeout, omit_effort=False):
         self.base, self.key, self.timeout = base.rstrip("/"), key, timeout
+        self.omit_effort = omit_effort
 
     def _req(self, path, body=None):
         headers = {"content-type": "application/json"}
@@ -49,6 +50,9 @@ class Client:
     def chat(self, body):
         """Stream one completion; return timings, usage, text, reasoning, tool calls, finish reason."""
         body = {**body, "stream": True, "stream_options": {"include_usage": True}}
+        if self.omit_effort:
+            # Templates without an effort knob (e.g. Qwen3.6) reject the field outright.
+            body.pop("reasoning_effort", None)
         t0 = time.monotonic()
         first = None
         out = {
@@ -248,7 +252,9 @@ def tools(c, model, a, results):
 
 def reasoning(c, model, a, results):
     q = "A bat and a ball cost 1.10 in total. The bat costs 1.00 more than the ball. What does the ball cost?"
-    for effort in ("low", "medium", "high", "xhigh"):
+    for effort in (
+        ("default",) if a.effort == "omit" else ("low", "medium", "high", "xhigh")
+    ):
         try:
             r = c.chat(
                 {
@@ -335,11 +341,17 @@ def main():
     p.add_argument("--concurrency", type=ints, default=[1, 2, 4])
     p.add_argument("--niah", type=ints, default=[32768, 131072])
     p.add_argument("--reasoning-cap", type=int, default=32768)
+    p.add_argument(
+        "--effort",
+        choices=["send", "omit"],
+        default="send",
+        help="omit: never send reasoning_effort",
+    )
     p.add_argument("--replay")
     p.add_argument("--timeout", type=float, default=1800)
     p.add_argument("--out")
     a = p.parse_args()
-    c = Client(a.base, a.key, a.timeout)
+    c = Client(a.base, a.key, a.timeout, omit_effort=a.effort == "omit")
     model = a.model or c.model()
     results = [
         {

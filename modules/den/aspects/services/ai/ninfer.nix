@@ -261,6 +261,15 @@ in
         default = 32768;
         description = "Output limit applied when a request omits one (`--default-max-tokens`).";
       };
+      thinkingBudget = lib.mkOption {
+        type = lib.types.nullOr lib.types.ints.positive;
+        default = null;
+        description = ''
+          `--default-thinking-budget`: cap thinking for every thinking-enabled request, then
+          close `</think>` and continue to content or tool calls. Bounds reasoning server-side
+          for a template that rejects `reasoning_effort` (Qwen3.6). null = unbounded.
+        '';
+      };
       preserveThinking = lib.mkOption {
         type = lib.types.bool;
         default = true;
@@ -443,7 +452,11 @@ in
           (toString cfg.draftTokens)
           "--lm-head-draft"
         ]
-        ++ lib.optional cfg.preserveThinking "--preserve-thinking";
+        ++ lib.optional cfg.preserveThinking "--preserve-thinking"
+        ++ lib.optionals (cfg.thinkingBudget != null) [
+          "--default-thinking-budget"
+          (toString cfg.thinkingBudget)
+        ];
       in
       {
         # `ninfer` CLI for one-shot generation against the same artifact. The
