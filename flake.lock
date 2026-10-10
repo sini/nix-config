@@ -1929,11 +1929,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791608328,
-        "narHash": "sha256-iMMJQG7bqWMLIjg9OzPs9HRk7ImFNamPbnlZKmyoA6Q=",
+        "lastModified": 1791610019,
+        "narHash": "sha256-6PIzRM2kEKDA61cEtgMq9xk535lFIQuXCJ4pfoeTdq0=",
         "owner": "sini",
         "repo": "genie-agent",
-        "rev": "83ba35d559e8912ade9ef53737b3933d6021ca5b",
+        "rev": "3725a5e49a6fb5987fa62b349f8057a6a7880a6f",
         "type": "github"
       },
       "original": {
