@@ -55,11 +55,15 @@ let
         (it declares each node key), then run `agenix generate`, `git add` the .age and .crt
         files, and `agenix rekey`.
       '';
-  # A committed CA .crt sidecar, refused by name until generated.
+  # A committed CA .crt sidecar, refused by name until generated. Copied alone, so a
+  # path under `self` does not pull the whole flake source into the store path.
   caCrt =
     crt:
     if builtins.pathExists crt then
-      crt
+      builtins.path {
+        path = crt;
+        name = baseNameOf crt;
+      }
     else
       throw ''
         xmsg federation: ${toString crt} is absent. Set
