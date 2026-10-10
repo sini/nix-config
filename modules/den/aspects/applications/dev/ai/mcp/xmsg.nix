@@ -256,11 +256,14 @@ in
 
         fed = fedOf host;
         peer = peerOf host;
-        peerNode = "${peer.system-owner}@${peer.name}";
+        # The entry is keyed by the peer's host name: xmsg addresses a remote session as
+        # `<session>@<peer>` and splits on the last '@' (split_peer_ref, src/fed.rs), so a
+        # `sini@cortex` key could never be named.
+        peerNode = peer.name;
         # The pin is the SHA-256 of the cert's DER SubjectPublicKeyInfo, as xmsg's
         # spki_sha256_from_der computes it (src/fed.rs). No `from`: the host data
         # carries no tailnet address. No `targets`: the peer is the owner's own node.
-        # `list` follows the link's spec; xmsg has no federated list route yet.
+        # `list` follows the link's spec (xmsg X18 serves it).
         # Under ca.enable the entry trusts the root with the peer's one identity.
         peersFile =
           if fed.ca.enable then
