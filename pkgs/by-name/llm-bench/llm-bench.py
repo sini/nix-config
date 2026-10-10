@@ -325,6 +325,44 @@ def niah(c, model, a, results):
             )
 
 
+def corpus(c, model, a, results):
+    """Replay recorded agent requests in order, one output token each: does the template accept
+    each one (an exception surfaces as an HTTP error), and how long is prefill. Sequential and in
+    file order, so with prefix caching on, later turns of a session can reuse earlier ones."""
+    if not a.corpus:
+        return
+    total = errors = 0
+    ttfts = []
+    with open(a.corpus) as f:
+        lines = [json.loads(line) for line in f if line.strip()]
+    for rec in lines:
+        body = dict(rec.get("request", rec))
+        for k in ("max_completion_tokens", "max_tokens", "stream", "stream_options"):
+            body.pop(k, None)
+        total += 1
+        try:
+            r = c.chat({**body, "model": model, "max_tokens": 1, "temperature": 0})
+            ttfts.append((r["usage"] or {}).get("prompt_tokens", 0) and r["ttft"])
+        except urllib.error.HTTPError as e:
+            errors += 1
+            row(
+                results,
+                "corpus-error",
+                tag=rec.get("tag", "?"),
+                error=f"HTTP {e.code}: {e.read()[:160].decode(errors='replace')}",
+            )
+    ttfts.sort()
+    row(
+        results,
+        "corpus",
+        requests=total,
+        http_errors=errors,
+        ttft_sum_s=sum(ttfts),
+        ttft_median_s=ttfts[len(ttfts) // 2] if ttfts else 0.0,
+        ttft_max_s=ttfts[-1] if ttfts else 0.0,
+    )
+
+
 def ints(s):
     return [int(x) for x in s.split(",") if x]
 
@@ -348,6 +386,10 @@ def main():
         help="omit: never send reasoning_effort",
     )
     p.add_argument("--replay")
+    p.add_argument(
+        "--corpus",
+        help="jsonl of recorded requests ({request: ...} or bare bodies), replayed in order",
+    )
     p.add_argument("--timeout", type=float, default=1800)
     p.add_argument("--out")
     a = p.parse_args()
@@ -362,7 +404,13 @@ def main():
         }
     ]
     print(f"meta base={a.base} model={model}", flush=True)
-    sections = {"perf": perf, "tools": tools, "reasoning": reasoning, "niah": niah}
+    sections = {
+        "perf": perf,
+        "tools": tools,
+        "reasoning": reasoning,
+        "niah": niah,
+        "corpus": corpus,
+    }
     for name in a.only.split(","):
         try:
             sections[name](c, model, a, results)

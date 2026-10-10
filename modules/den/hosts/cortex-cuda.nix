@@ -40,11 +40,19 @@ in
     # streams against ninfer's 72 and 82, measured in ~/Documents/models-todo.md. It answers
     # to ninfer's model id on :18020 and is admitted to ninfer's sources (alsoAdmitPorts
     # below). Reverting is a flip: hyperqwen.autoStart = false, ninfer.autoStart = true.
+    #
+    # Serving the Swift uncensored build (owner, 2026-10-10): 101 tok/s and 346 aggregate,
+    # about 60% fewer reasoning tokens, guard 0/51 FN and 0/33 FP, but 1 of 84 guard cases loops
+    # in reasoning under concurrency (fail-closed). model = "qwen3.8-27b" restores the official.
     settings.services.ai.hyperqwen = {
+      model = "swift-qwen3.8-27b";
       autoStart = true;
       env = {
         SPEC = "mtp";
         CTX = "long";
+        # Turn 2+ of a long agent session reuses the history's KV instead of re-prefilling
+        # it (upstream: ~23 s to ~1 s at 24K); opt-in upstream for hybrid models.
+        PREFIX_CACHE = "1";
       };
     };
 
