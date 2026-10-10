@@ -179,7 +179,8 @@
         # pi runs a small local model with no memory: what it needs to know about this
         # environment is deployed as a skill (loaded on demand) plus a short global
         # context file (always loaded), never left for it to discover by probing.
-        home.file.".pi/agent/skills/xmsg/SKILL.md".source = ./skills/xmsg/SKILL.md;
+        home.file.".pi/agent/skills/xmsg/SKILL.md".source = ../../mcp/_skills/xmsg/SKILL.md;
+        home.file.".pi/agent/skills/matrix".source = inputs'.matrix-xmsg.packages.matrix-skill;
         home.file.".pi/agent/AGENTS.md".text = ''
           # Environment
 

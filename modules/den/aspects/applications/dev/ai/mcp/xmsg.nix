@@ -97,15 +97,26 @@ in
         # admits only the peer.
       };
 
-    # Folded into the MCP registry of every agent aspect that reads agent-extensions
-    # (agents/claude.nix, agents/antigravity-cli.nix).
+    # Folded into the MCP registry and skills of every agent aspect that reads
+    # agent-extensions (agents/claude.nix, agents/antigravity-cli.nix,
+    # agents/opencode.nix); pi installs the same two skills itself (agents/pi/pi.nix).
+    # The matrix skill ships with the bot, so it changes with the bot's protocol.
     agent-extensions =
-      { lib, pkgs, ... }:
+      {
+        inputs',
+        lib,
+        pkgs,
+        ...
+      }:
       {
         type = "mcp";
         mcpServers.xmsg = {
           command = lib.getExe pkgs.local.xmsg;
           args = [ "mcp" ];
+        };
+        skills = {
+          xmsg = ./_skills/xmsg;
+          matrix = inputs'.matrix-xmsg.packages.matrix-skill;
         };
       };
 

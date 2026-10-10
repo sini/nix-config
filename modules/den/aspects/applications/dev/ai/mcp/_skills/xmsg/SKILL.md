@@ -29,7 +29,7 @@ Call **`send`** with:
 - `ref`: the target session's name or id, from `list`;
 - `text`: your message.
 
-The other session sees you as `xmsg@<host> · pi:<your name>`, a verified sender.
+The other session sees you as `xmsg@<host> · <harness>:<your name>`, a verified sender.
 Its answer, if it sends one, arrives in this session automatically as a new
 message. You do not need to wait or poll.
 
