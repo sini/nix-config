@@ -87,13 +87,15 @@
           "mcp__xmsg__reply"
         ];
 
-        # agy registers its language-server credentials before every turn. The hook
-        # always prints {"injectSteps":[]} and exits 0, even with the server down.
+        # agy registers its language-server credentials before every turn. `--hook` reads them
+        # from the hook's stdin JSON: agy passes them there, not in the environment, and
+        # without the flag the registration fails silently every turn. The hook always
+        # prints {"injectSteps":[]} and exits 0, even with the server down.
         home.file.".gemini/config/hooks.json".text = builtins.toJSON {
           xmsg-register.PreInvocation = [
             {
               type = "command";
-              command = "${xmsg} register agy";
+              command = "${xmsg} register agy --hook";
             }
           ];
         };
