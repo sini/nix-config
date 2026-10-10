@@ -1,5 +1,5 @@
 # Independent aspect providing local LLM & substrate benchmarking tools
-# (sysbench, iperf3, dmidecode, llama-cpp).
+# (sysbench, iperf3, dmidecode, llama-cpp, llm-bench for any OpenAI-compatible /v1).
 #
 # Deliberately NOT included in any default role — include explicitly on target host aspects:
 #   includes = with den.aspects; [ services.ai.benchmarking ];
@@ -14,6 +14,7 @@
           pkgs.iperf3
           pkgs.dmidecode
           pkgs.llama-cpp
+          pkgs.local.llm-bench
         ];
       };
   };
