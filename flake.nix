@@ -135,6 +135,10 @@
       url = "github:sini/gen-lsp";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    genie-agent = {
+      url = "github:sini/genie-agent";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
     graphify = {
       url = "github:Graphify-Labs/graphify";

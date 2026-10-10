@@ -11,6 +11,10 @@
 # list`, federation plan §6.1). The node key is an `xmsg-identity` agenix secret
 # whose public .crt sidecar is committed beside the .age; the peer's pin is computed
 # from that .crt at build time.
+#
+# genie-guard (github:sini/genie-agent): on a host that runs the @genie bot, the
+# owner's user service registers on this bus as svc:genie-guard and answers guard-in
+# requests with a model's verdict; xmsg admits that name only from its own binary.
 { den, lib, ... }:
 let
   fedPair = [
@@ -42,7 +46,18 @@ in
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
+  flake-file.inputs.genie-agent = {
+    url = "github:sini/genie-agent";
+    inputs.nixpkgs.follows = "nixpkgs-unstable";
+  };
+
   den.aspects.applications.dev.ai.mcp.xmsg = {
+    settings.genieGuard.ninferUrl = lib.mkOption {
+      type = lib.types.strMatching "https?://.+";
+      default = "http://10.9.2.2:18020/v1";
+      description = "OpenAI-compatible endpoint genie-guard asks for its verdicts (hyperqwen on cortex-cuda).";
+    };
+
     settings.federation = {
       enable = lib.mkOption {
         type = lib.types.bool;
@@ -115,6 +130,8 @@ in
         # The @genie bot registers on this bus as svc:matrix-xmsg (matrix-xmsg M13) on a host
         # that runs it; xmsg admits that name only from the bot's own binary.
         botEnabled = (host.settings.services.matrix-xmsg.rooms or [ ]) != [ ];
+        guardEnabled = botEnabled && config.home.username == host.system-owner;
+        guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
         identityArgs = lib.escapeShellArgs (
           [
             "--agy-exe"
@@ -123,6 +140,10 @@ in
           ++ lib.optionals botEnabled [
             "--svc-exe"
             "matrix-xmsg=${lib.getExe inputs'.matrix-xmsg.packages.default}"
+          ]
+          ++ lib.optionals guardEnabled [
+            "--svc-exe"
+            "genie-guard=${guardExe}"
           ]
           ++ lib.optionals (fed.enable && config.home.username == host.system-owner) [
             "--fed-listen"
@@ -179,6 +200,27 @@ in
           Service = {
             ExecStart = "${xmsg} serve --listen 127.0.0.1:7787 ${identityArgs}";
             Restart = "on-failure";
+          };
+          Install.WantedBy = [ "default.target" ];
+        };
+
+        # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.
+        systemd.user.services.genie-guard = lib.mkIf guardEnabled {
+          Unit = {
+            Description = "genie-guard: guard-in verdicts for the @genie bot";
+            After = [ "xmsg.service" ];
+            Wants = [ "xmsg.service" ];
+          };
+          Service = {
+            ExecStart = lib.escapeShellArgs [
+              guardExe
+              "--ninfer-url"
+              host.settings.applications.dev.ai.mcp.xmsg.genieGuard.ninferUrl
+              "--api-key-file"
+              "%h/.config/hyperqwen/api-key"
+            ];
+            Restart = "on-failure";
+            RestartSec = 10;
           };
           Install.WantedBy = [ "default.target" ];
         };

@@ -1922,6 +1922,26 @@
         "type": "github"
       }
     },
+    "genie-agent": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791608328,
+        "narHash": "sha256-iMMJQG7bqWMLIjg9OzPs9HRk7ImFNamPbnlZKmyoA6Q=",
+        "owner": "sini",
+        "repo": "genie-agent",
+        "rev": "83ba35d559e8912ade9ef53737b3933d6021ca5b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "sini",
+        "repo": "genie-agent",
+        "type": "github"
+      }
+    },
     "git-hooks": {
       "inputs": {
         "flake-compat": [
@@ -4456,6 +4476,7 @@
         "flake-utils": "flake-utils",
         "gen": "gen",
         "gen-lsp": "gen-lsp",
+        "genie-agent": "genie-agent",
         "git-hooks-nix": "git-hooks-nix",
         "graphify": "graphify",
         "gsesh": "gsesh",
