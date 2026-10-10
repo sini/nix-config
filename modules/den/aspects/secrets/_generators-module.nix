@@ -29,6 +29,72 @@ let
       (validate-tls-subject name tls.subject)
       id;
 
+  # Shared body of the x509-* generators: an ECDSA P-256 key and a certificate
+  # carrying exactly the extensions in `ext`, built in a private tmpdir. With a
+  # `ca` dep it is signed by that dep's key (decrypted into the tmpdir only) and
+  # verified against `root` before anything is printed; without one it is
+  # self-signed. Writes `chain` (cert first, then the issuer chain) to the .crt
+  # sidecar and prints only the key.
+  x509-cert =
+    {
+      pkgs,
+      decrypt,
+      file,
+      name,
+      secret,
+      days,
+      ext,
+      ca ? null,
+      root ? null,
+      chain ? false,
+      ...
+    }:
+    let
+      openssl = "${pkgs.openssl}/bin/openssl";
+      crtOf = f: lib.escapeShellArg (lib.removeSuffix ".age" f + ".crt");
+      cnf = ''
+        [req]
+        distinguished_name = dn
+        prompt = no
+        [dn]
+        CN = ${secret.settings.cn or name}
+        [ext]
+        ${lib.concatStringsSep "\n" ext}
+      '';
+      days' = toString (secret.settings.days or days);
+    in
+    ''
+      set -euo pipefail
+      umask 077
+      tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+      printf '%s' ${lib.escapeShellArg cnf} > "$tmp/cnf"
+    ''
+    + (
+      if ca == null then
+        ''
+          ${openssl} req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -sha256 \
+            -days ${days'} -config "$tmp/cnf" -extensions ext \
+            -keyout "$tmp/key.pem" -out "$tmp/cert.pem" >&2
+          cp "$tmp/cert.pem" "$tmp/chain.pem"
+        ''
+      else
+        ''
+          ${decrypt} ${lib.escapeShellArg ca.file} > "$tmp/ca.key"
+          ${openssl} req -new -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -sha256 \
+            -config "$tmp/cnf" -keyout "$tmp/key.pem" -out "$tmp/csr.pem" >&2
+          ${openssl} x509 -req -sha256 -in "$tmp/csr.pem" \
+            -CA ${crtOf ca.file} -CAkey "$tmp/ca.key" -set_serial "0x$(${openssl} rand -hex 16)" \
+            -days ${days'} -extfile "$tmp/cnf" -extensions ext -out "$tmp/cert.pem" >&2
+          ${openssl} verify -x509_strict -CAfile ${crtOf root.file} \
+            ${lib.optionalString (ca != root) "-untrusted ${crtOf ca.file}"} "$tmp/cert.pem" >&2
+          cat "$tmp/cert.pem" ${lib.optionalString chain (crtOf ca.file)} > "$tmp/chain.pem"
+        ''
+    )
+    + ''
+      cp "$tmp/chain.pem" ${crtOf file}
+      cat "$tmp/key.pem"
+    '';
+
   validate-tls-subject =
     let
       inherit (lib) isAttrs isString;
@@ -145,6 +211,63 @@ in
           -out ${lib.escapeShellArg (lib.removeSuffix ".age" file + ".crt")} >&2
         cat "$tmp/key.pem"
       '';
+
+    # xmsg federation CA (federation plan §6.7). The root signs only the
+    # intermediates; settings.days sets validity, settings.cn the subject CN.
+    # Each writes its public .crt sidecar beside the .age; commit those.
+    x509-ca-root =
+      args:
+      x509-cert (
+        args
+        // {
+          days = 7300;
+          ext = [
+            "basicConstraints = critical,CA:TRUE"
+            "keyUsage = critical,keyCertSign,cRLSign"
+            "subjectKeyIdentifier = hash"
+          ];
+        }
+      );
+
+    # deps = [ root ].
+    x509-ca-intermediate =
+      args@{ deps, ... }:
+      x509-cert (
+        args
+        // {
+          days = 1825;
+          ca = builtins.elemAt deps 0;
+          root = builtins.elemAt deps 0;
+          ext = [
+            "basicConstraints = critical,CA:TRUE,pathlen:0"
+            "keyUsage = critical,keyCertSign,cRLSign"
+            "subjectKeyIdentifier = hash"
+            "authorityKeyIdentifier = keyid:always"
+          ];
+        }
+      );
+
+    # deps = [ intermediate root ]; the root is read for its .crt only. Exactly one
+    # SAN, the URI settings.uri (xmsg X16). The .crt is leaf then intermediate.
+    x509-spiffe-leaf =
+      args@{ deps, secret, ... }:
+      x509-cert (
+        args
+        // {
+          days = 365;
+          ca = builtins.elemAt deps 0;
+          root = builtins.elemAt deps 1;
+          chain = true;
+          ext = [
+            "basicConstraints = critical,CA:FALSE"
+            "keyUsage = critical,digitalSignature"
+            "extendedKeyUsage = serverAuth,clientAuth"
+            "subjectAltName = URI:${secret.settings.uri}"
+            "subjectKeyIdentifier = hash"
+            "authorityKeyIdentifier = keyid:always"
+          ];
+        }
+      );
 
     binary-cache-key =
       {

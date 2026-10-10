@@ -12,16 +12,32 @@
 # whose public .crt sidecar is committed beside the .age; the peer's pin is computed
 # from that .crt at build time.
 #
+# With federation.ca.enable on both, the pair authenticates by CA instead (xmsg X16,
+# federation plan §6.7): each node presents a leaf signed by the host intermediate,
+# whose URI SAN is its spiffe://json64.dev/host/<host>/user/<user> identity, and
+# each peer entry trusts the root .crt with that one identity. The root and both
+# intermediates are fleet-wide `intermediary` secrets under .secrets/xmsg-ca: only
+# `agenix generate` decrypts them, never a host. The cluster intermediate is
+# cert-manager's issuer (not wired here).
+#
 # genie-guard (github:sini/genie-agent): on a host that runs the @genie bot, the
 # owner's user service registers on this bus as svc:genie-guard and answers guard-in
 # requests with a model's verdict; xmsg admits that name only from its own binary.
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  self,
+  ...
+}:
 let
   fedPair = [
     "bitstream"
     "cortex"
   ];
   keyName = "xmsg-sini";
+  leafName = "${keyName}-fed-ca";
+  caDir = self + "/.secrets/xmsg-ca";
+  spiffeOf = host: "spiffe://json64.dev/host/${host.name}/user/${host.system-owner}";
   fedOf = host: host.settings.applications.dev.ai.mcp.xmsg.federation;
   peerOf = host: den.hosts.x86_64-linux.${lib.head (lib.remove host.name fedPair)};
   # The committed public half of a host's node key, refused by name until generated.
@@ -38,6 +54,17 @@ let
         Set settings.applications.dev.ai.mcp.xmsg.federation.enable on ${lib.concatStringsSep " and " fedPair}
         (it declares each node key), then run `agenix generate`, `git add` the .age and .crt
         files, and `agenix rekey`.
+      '';
+  # A committed CA .crt sidecar, refused by name until generated.
+  caCrt =
+    crt:
+    if builtins.pathExists crt then
+      crt
+    else
+      throw ''
+        xmsg federation: ${toString crt} is absent. Set
+        settings.applications.dev.ai.mcp.xmsg.federation.ca.enable on ${lib.concatStringsSep " and " fedPair},
+        then run `agenix generate`, `git add` the .age and .crt files, and `agenix rekey`.
       '';
 in
 {
@@ -69,33 +96,88 @@ in
         default = 7788;
         description = "The owner node's federation listener port (federation plan §6.4).";
       };
+      ca.enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Declare the xmsg CA (root, host and cluster intermediates under .secrets/xmsg-ca) and this host's CA-signed leaf, and federate with them instead of the pinned node key. Set it on both fedPair hosts, then run `agenix generate`, `git add` the .age and .crt files, and `agenix rekey`.";
+      };
     };
 
     nixos =
-      { environment, host, ... }:
-      lib.mkIf (fedOf host).enable {
-        assertions = [
-          {
-            assertion = lib.elem host.name fedPair;
-            message = "xmsg federation: ${host.name} is not in fedPair (${toString fedPair}).";
-          }
-        ];
-
-        age.secrets.${keyName} = {
-          rekeyFile = host.secretPath + "/${keyName}.age";
-          generator.script = "xmsg-identity";
-          settings = {
-            node = "${host.system-owner}@${host.name}";
-            san = "${host.name}.ts.${environment.domain}";
+      {
+        config,
+        environment,
+        host,
+        ...
+      }:
+      let
+        fed = fedOf host;
+        ca = name: deps: script: {
+          rekeyFile = caDir + "/${name}.age";
+          intermediary = true;
+          generator = {
+            inherit script;
+            dependencies = deps;
           };
-          owner = host.system-owner;
-          mode = "0400";
+          settings.cn = "json64.dev xmsg ${name} CA";
         };
+        root = config.age.secrets.xmsg-ca-root;
+      in
+      lib.mkMerge [
+        (lib.mkIf fed.enable {
+          assertions = [
+            {
+              assertion = lib.elem host.name fedPair;
+              message = "xmsg federation: ${host.name} is not in fedPair (${toString fedPair}).";
+            }
+            {
+              assertion = fed.ca.enable -> (fedOf (peerOf host)).ca.enable;
+              message = "xmsg federation: ca.enable is set on ${host.name} but not on its peer; set it on both.";
+            }
+          ];
 
-        # No firewall rule: the tailnet interface is trusted (core.network.tailscale),
-        # so the port is reachable over the tailnet and nowhere else, and the pin
-        # admits only the peer.
-      };
+          # No firewall rule: the tailnet interface is trusted (core.network.tailscale),
+          # so the port is reachable over the tailnet and nowhere else, and the pin
+          # or the CA identity admits only the peer.
+        })
+
+        (lib.mkIf (fed.enable && !fed.ca.enable) {
+          age.secrets.${keyName} = {
+            rekeyFile = host.secretPath + "/${keyName}.age";
+            generator.script = "xmsg-identity";
+            settings = {
+              node = "${host.system-owner}@${host.name}";
+              san = "${host.name}.ts.${environment.domain}";
+            };
+            owner = host.system-owner;
+            mode = "0400";
+          };
+        })
+
+        (lib.mkIf fed.ca.enable {
+          age.secrets = {
+            xmsg-ca-root = ca "root" [ ] "x509-ca-root";
+            xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
+            xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
+            ${leafName} = {
+              rekeyFile = host.secretPath + "/${leafName}.age";
+              generator = {
+                script = "x509-spiffe-leaf";
+                dependencies = [
+                  config.age.secrets.xmsg-ca-host-intermediate
+                  root
+                ];
+              };
+              settings = {
+                cn = "${host.system-owner}@${host.name}";
+                uri = spiffeOf host;
+              };
+              owner = host.system-owner;
+              mode = "0400";
+            };
+          };
+        })
+      ];
 
     # Folded into the MCP registry and skills of every agent aspect that reads
     # agent-extensions (agents/claude.nix, agents/antigravity-cli.nix,
@@ -160,9 +242,9 @@ in
             "--fed-listen"
             "0.0.0.0:${toString fed.port}"
             "--fed-cert"
-            "${crtOf host}"
+            (if fed.ca.enable then "${caCrt (host.secretPath + "/${leafName}.crt")}" else "${crtOf host}")
             "--fed-key"
-            osConfig.age.secrets.${keyName}.path
+            osConfig.age.secrets.${if fed.ca.enable then leafName else keyName}.path
             "--peers-file"
             "${peersFile}"
           ]
@@ -175,22 +257,39 @@ in
         # spki_sha256_from_der computes it (src/fed.rs). No `from`: the host data
         # carries no tailnet address. No `targets`: the peer is the owner's own node.
         # `list` follows the link's spec; xmsg has no federated list route yet.
+        # Under ca.enable the entry trusts the root with the peer's one identity.
         peersFile =
-          pkgs.runCommand "xmsg-peers.json"
-            {
-              nativeBuildInputs = [
-                pkgs.jq
-                pkgs.openssl
-              ];
-            }
-            ''
-              openssl x509 -in ${crtOf peer} -pubkey -noout > pub.pem
-              openssl pkey -pubin -in pub.pem -outform DER > spki.der
-              pin=$(sha256sum spki.der | cut -d' ' -f1)
-              jq -n --arg name ${peerNode} --arg pin "sha256:$pin" \
-                --arg address ${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port} \
-                '{($name): {address: $address, pin: $pin, allow: ["send", "reply", "list"]}}' > $out
-            '';
+          if fed.ca.enable then
+            pkgs.writeText "xmsg-peers.json" (
+              builtins.toJSON {
+                ${peerNode} = {
+                  address = "${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port}";
+                  ca = "${caCrt (caDir + "/root.crt")}";
+                  identities = [ (spiffeOf peer) ];
+                  allow = [
+                    "send"
+                    "reply"
+                    "list"
+                  ];
+                };
+              }
+            )
+          else
+            pkgs.runCommand "xmsg-peers.json"
+              {
+                nativeBuildInputs = [
+                  pkgs.jq
+                  pkgs.openssl
+                ];
+              }
+              ''
+                openssl x509 -in ${crtOf peer} -pubkey -noout > pub.pem
+                openssl pkey -pubin -in pub.pem -outform DER > spki.der
+                pin=$(sha256sum spki.der | cut -d' ' -f1)
+                jq -n --arg name ${peerNode} --arg pin "sha256:$pin" \
+                  --arg address ${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port} \
+                  '{($name): {address: $address, pin: $pin, allow: ["send", "reply", "list"]}}' > $out
+              '';
       in
       lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         home.packages = [ pkgs.local.xmsg ];
