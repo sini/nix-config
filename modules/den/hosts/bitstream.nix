@@ -33,7 +33,7 @@
 
       # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
       applications.dev.ai.mcp.xmsg.federation = {
-        enable = true;
+        enable = false;
         ca.enable = true;
       };
 
