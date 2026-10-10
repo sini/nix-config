@@ -5,7 +5,37 @@
 #
 # The input SOURCE builds our own `xmsg` package (pkgs/by-name/xmsg), threaded to
 # callPackage as `xmsg-src` by the overlay in pkgs/overlays.nix.
-{ ... }:
+#
+# Federation: the system owner's node on each host of `fedPair` federates with the
+# other's over pinned mTLS (xmsg-links `sini@bitstream ↔ sini@cortex : send, reply,
+# list`, federation plan §6.1). The node key is an `xmsg-identity` agenix secret
+# whose public .crt sidecar is committed beside the .age; the peer's pin is computed
+# from that .crt at build time.
+{ den, lib, ... }:
+let
+  fedPair = [
+    "bitstream"
+    "cortex"
+  ];
+  keyName = "xmsg-sini";
+  fedOf = host: host.settings.applications.dev.ai.mcp.xmsg.federation;
+  peerOf = host: den.hosts.x86_64-linux.${lib.head (lib.remove host.name fedPair)};
+  # The committed public half of a host's node key, refused by name until generated.
+  crtOf =
+    host:
+    let
+      crt = host.secretPath + "/${keyName}.crt";
+    in
+    if builtins.pathExists crt then
+      crt
+    else
+      throw ''
+        xmsg federation: ${host.name} has no node certificate ${keyName}.crt in its secretPath.
+        Set settings.applications.dev.ai.mcp.xmsg.federation.enable on ${lib.concatStringsSep " and " fedPair}
+        (it declares each node key), then run `agenix generate`, `git add` the .age and .crt
+        files, and `agenix rekey`.
+      '';
+in
 {
   flake-file.inputs.xmsg = {
     url = "github:sini/xmsg";
@@ -13,6 +43,45 @@
   };
 
   den.aspects.applications.dev.ai.mcp.xmsg = {
+    settings.federation = {
+      enable = lib.mkOption {
+        type = lib.types.bool;
+        default = false;
+        description = "Federate the system owner's xmsg with its fedPair peer. agenix-rekey refuses to evaluate a declared key whose .age is absent, and `agenix generate` creates only declared ones, so set this on both hosts, then run `agenix generate`, `git add` the .age and .crt files, and `agenix rekey`.";
+      };
+      port = lib.mkOption {
+        type = lib.types.port;
+        default = 7788;
+        description = "The owner node's federation listener port (federation plan §6.4).";
+      };
+    };
+
+    nixos =
+      { environment, host, ... }:
+      lib.mkIf (fedOf host).enable {
+        assertions = [
+          {
+            assertion = lib.elem host.name fedPair;
+            message = "xmsg federation: ${host.name} is not in fedPair (${toString fedPair}).";
+          }
+        ];
+
+        age.secrets.${keyName} = {
+          rekeyFile = host.secretPath + "/${keyName}.age";
+          generator.script = "xmsg-identity";
+          settings = {
+            node = "${host.system-owner}@${host.name}";
+            san = "${host.name}.ts.${environment.domain}";
+          };
+          owner = host.system-owner;
+          mode = "0400";
+        };
+
+        # No firewall rule: the tailnet interface is trusted (core.network.tailscale),
+        # so the port is reachable over the tailnet and nowhere else, and the pin
+        # admits only the peer.
+      };
+
     # Folded into the MCP registry of every agent aspect that reads agent-extensions
     # (agents/claude.nix, agents/antigravity-cli.nix).
     agent-extensions =
@@ -28,9 +97,10 @@
     homeManager =
       {
         config,
+        environment,
         host,
         inputs',
-        lib,
+        osConfig,
         pkgs,
         ...
       }:
@@ -54,7 +124,41 @@
             "--svc-exe"
             "matrix-xmsg=${lib.getExe inputs'.matrix-xmsg.packages.default}"
           ]
+          ++ lib.optionals (fed.enable && config.home.username == host.system-owner) [
+            "--fed-listen"
+            "0.0.0.0:${toString fed.port}"
+            "--fed-cert"
+            "${crtOf host}"
+            "--fed-key"
+            osConfig.age.secrets.${keyName}.path
+            "--peers-file"
+            "${peersFile}"
+          ]
         );
+
+        fed = fedOf host;
+        peer = peerOf host;
+        peerNode = "${peer.system-owner}@${peer.name}";
+        # The pin is the SHA-256 of the cert's DER SubjectPublicKeyInfo, as xmsg's
+        # spki_sha256_from_der computes it (src/fed.rs). No `from`: the host data
+        # carries no tailnet address. No `targets`: the peer is the owner's own node.
+        # `list` follows the link's spec; xmsg has no federated list route yet.
+        peersFile =
+          pkgs.runCommand "xmsg-peers.json"
+            {
+              nativeBuildInputs = [
+                pkgs.jq
+                pkgs.openssl
+              ];
+            }
+            ''
+              openssl x509 -in ${crtOf peer} -pubkey -noout > pub.pem
+              openssl pkey -pubin -in pub.pem -outform DER > spki.der
+              pin=$(sha256sum spki.der | cut -d' ' -f1)
+              jq -n --arg name ${peerNode} --arg pin "sha256:$pin" \
+                --arg address ${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port} \
+                '{($name): {address: $address, pin: $pin, allow: ["send", "reply", "list"]}}' > $out
+            '';
       in
       lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
         home.packages = [ pkgs.local.xmsg ];
