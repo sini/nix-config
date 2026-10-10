@@ -66,7 +66,8 @@ colmena apply --on bitstream
 
 ## 6. Start the expert session
 
-On bitstream, as `sini` (xmsg is that user's service on `127.0.0.1:7787`):
+On bitstream, as `sini` (xmsg is that user's service on
+`$XDG_RUNTIME_DIR/xmsg/http.sock`):
 
 ```bash
 mkdir -p ~/genie-support && cd ~/genie-support && pi

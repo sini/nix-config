@@ -23,15 +23,9 @@ xmsg bus, `xmsg@public` (as `genie-public`) and `xmsg@trusted` (as
 - **Empty until I10.3:** `settings.<tier>.sessionsDirs`. Without it, xmsg reads
   `~/.claude/sessions` of the tier user.
 
-**`sini`'s instance keeps `--listen 127.0.0.1:7787`.** Since xmsg X8 that TCP
-listener is opt-in, and two consumers speak only TCP:
-
-- matrix-xmsg (the @genie bot), a DynamicUser HTTP client with no Unix-socket
-  transport, which the peer-uid check would refuse anyway;
-- xmsg-pi's `list` tool, which fetches `$XMSG_URL`.
-
-The TODO in `applications/dev/ai/mcp/xmsg.nix` drops the flag once both speak
-`http.sock`. The pi skill's cross-host recipe already uses the socket.
+**No xmsg instance listens on TCP**, `sini`'s included. The bot reaches `sini`'s
+bus through `http.sock` (matrix-xmsg M13.1) and xmsg-pi's `list` tool defaults
+to it (xmsg X15).
 
 ## 1. Node keys (optional before X1)
 
@@ -87,8 +81,7 @@ sudo chmod 0700 /run/xmsg-trusted /run/xmsg-trusted/xmsg
 sudo chmod 0600 /run/xmsg-trusted/xmsg/http.sock
 sudo systemctl restart xmsg@trusted
 
-# TCP: no xmsg listener except sini's 127.0.0.1:7787 (and, after X1, the fed
-# listeners on 7788-7790).
+# TCP: no xmsg listener except, after X1, the fed listeners on 7788-7790.
 sudo ss -ltnp | grep xmsg
 ```
 
