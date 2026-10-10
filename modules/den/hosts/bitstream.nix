@@ -31,6 +31,12 @@
       applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
 
+      # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
+      applications.dev.ai.mcp.xmsg.federation = {
+        enable = true;
+        ca.enable = true;
+      };
+
       # @genie support bot: #support:json64.dev (testing), #denful:matrix.org and a private room.
       services.matrix-xmsg = {
         rooms = [
