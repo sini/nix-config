@@ -4,7 +4,10 @@
 { den, ... }:
 {
   den.aspects.applications.dev.ai.agents.opencode = {
-    includes = [ den.aspects.services.ai.ninfer-client ];
+    includes = [
+      den.aspects.services.ai.ninfer-client
+      den.aspects.services.ai.hyperqwen-client
+    ];
 
     homeManager =
       {
@@ -104,11 +107,31 @@
             };
           };
 
+          # hyperqwen is the resident engine on the inference guest (owner,
+          # 2026-10-10); the provider above stays configured as the standby. The key
+          # is an agenix secret (services.ai.hyperqwen-client), read at runtime.
+          provider.hyperqwen = {
+            npm = "@ai-sdk/openai-compatible";
+            name = "HyperQwen (cortex-cuda)";
+            options = {
+              baseURL = "http://10.9.2.2:18020/v1";
+              apiKey = "{file:${config.age.secrets.hyperqwen-api-key.path}}";
+            };
+            models."qwen3.8-27b" = {
+              name = "Qwen 3.8 27B (HyperQwen vLLM, CTX=long)";
+              reasoning = true;
+              limit = {
+                context = 150000;
+                output = 32768;
+              };
+            };
+          };
+
           # `provider-id/model-id`. Without `model` nothing is selected; without
           # `small_model` opencode routes its auxiliary calls to a hosted default
           # (gpt-5-nano on Zen), i.e. off-box — which defeats a local endpoint.
-          model = "${providerKey}/${modelKey}";
-          small_model = "${providerKey}/${modelKey}";
+          model = "hyperqwen/qwen3.8-27b";
+          small_model = "hyperqwen/qwen3.8-27b";
           permission = {
             bash = "allow";
             edit = "allow";

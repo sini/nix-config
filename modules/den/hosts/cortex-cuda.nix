@@ -35,21 +35,32 @@ in
     # Settings on the ENTITY (cascade reads hosts.<name>.settings) → ollama-cuda.
     settings.services.ai.ollama.acceleration = "cuda";
 
-    # Evaluated alongside ninfer (models-todo.md, candidates C/D); started by hand.
-    # Admitted only from cortex, which runs the benchmarks.
-    settings.services.ai.hyperqwen.clients = [ "10.9.2.1" ];
+    # HyperQwen (patched vLLM) is the resident engine, by owner decision 2026-10-10:
+    # 150,000 context (CTX=long, MTP), 96 tok/s single-stream and 320 aggregate at four
+    # streams against ninfer's 72 and 82, measured in ~/Documents/models-todo.md. It answers
+    # to ninfer's model id on :18020 and is admitted to ninfer's sources (alsoAdmitPorts
+    # below). Reverting is a flip: hyperqwen.autoStart = false, ninfer.autoStart = true.
+    settings.services.ai.hyperqwen = {
+      autoStart = true;
+      env = {
+        SPEC = "mtp";
+        CTX = "long";
+      };
+    };
 
-    # ninfer is the resident engine, serving pi/hermes. NInfer measured 96.2
-    # tok/s decode at the default int8 KV against llama-cpp's 45.5 on identical
-    # prompts (2.1x), for a 1.26x prefill cost, and it keeps the shared
+    # ninfer is the standby engine (hyperqwen is resident, above). NInfer measured
+    # 96.2 tok/s decode at the default int8 KV against llama-cpp's 45.5 on
+    # identical prompts (2.1x), for a 1.26x prefill cost, and it keeps the shared
     # 145,408-token pool described below.
     #
     # llama-cpp (gpt-oss-20b under the cluster's model alias) stays installed as
     # the standby for when cluster retain needs this GPU: `systemctl start
-    # llama-cpp` on the guest — the Conflicts= evicts ninfer — made permanent by
-    # flipping autoStart here and the llama-cpp wantedBy below.
+    # llama-cpp` on the guest — the Conflicts= evicts the resident engine — made
+    # permanent by flipping autoStart here and the llama-cpp wantedBy below.
     settings.services.ai.ninfer = {
-      autoStart = true;
+      # Standby while hyperqwen is resident (see above); its configuration is kept intact.
+      autoStart = false;
+      alsoAdmitPorts = [ 18020 ];
       # Subagent fan-out: the KV pool is SHARED, not divided, so four admitted
       # requests draw from the same 145,408 tokens elastically. What N
       # multiplies is the per-sequence LinearAttentionStatePool slot (recurrent

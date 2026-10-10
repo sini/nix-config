@@ -3,11 +3,15 @@
 { den, ... }:
 {
   den.aspects.applications.dev.ai.agents.pi = {
-    includes = [ den.aspects.services.ai.ninfer-client ];
+    includes = [
+      den.aspects.services.ai.ninfer-client
+      den.aspects.services.ai.hyperqwen-client
+    ];
 
     homeManager =
       {
         config,
+        inputs',
         pkgs,
         lib,
         ninfer-endpoints,
@@ -17,6 +21,29 @@
         # ponytail: first endpoint wins — key the provider by hostname if a
         # second inference host ever appears.
         ninfer = if ninfer-endpoints == [ ] then null else builtins.head ninfer-endpoints;
+
+        # Keyed: the key is an agenix secret (services.ai.hyperqwen-client), read
+        # at runtime so it never enters the store. pi and omp share the provider.
+        hyperqwen = {
+          name = "HyperQwen (cortex-cuda)";
+          baseUrl = "http://10.9.2.2:18020/v1";
+          api = "openai-completions";
+          apiKey = "!cat ${config.age.secrets.hyperqwen-api-key.path}";
+          compat = {
+            supportsDeveloperRole = true;
+            # Its prepare step maps high/max to xhigh, so every pi level is accepted.
+            supportsReasoningEffort = true;
+          };
+          models = [
+            {
+              id = "qwen3.8-27b";
+              name = "Qwen 3.8 27B (HyperQwen vLLM, CTX=long)";
+              reasoning = true;
+              contextWindow = 150000;
+              maxTokens = 32768;
+            }
+          ];
+        };
 
         # Check if stylix colors are available
         hasStylix = config ? lib.stylix && config.lib.stylix ? colors;
@@ -119,7 +146,15 @@
       {
         home.packages = [
           pkgs.pi-coding-agent
+          # oh-my-pi (github:can1357/oh-my-pi): a pi fork, as a tool beside pi. Its first
+          # start writes a native addon into ~/.omp, and it contacts external hosts at
+          # every start.
+          inputs'.llm-agents.packages.omp
         ];
+
+        # omp writes ~/.omp/agent/config.yml itself (/settings), so only models.yml is
+        # managed. With hyperqwen the only provider, it is omp's first available model.
+        home.file.".omp/agent/models.yml".text = builtins.toJSON { providers = { inherit hyperqwen; }; };
 
         programs.git.ignores = [
           "/.pi/"
@@ -161,10 +196,10 @@
 
         # Configure default settings to use stylix theme and local endpoints
         home.file.".pi/agent/settings.json".text = builtins.toJSON {
-          # ninfer is the resident engine on the inference guest; llama-cpp
-          # stays configured as a standby but is not started at boot.
-          defaultProvider = if ninfer != null then "ninfer" else "llama-cpp";
-          defaultModel = if ninfer != null then ninfer.modelId else "qwen3.8-27b-q4-256k";
+          # hyperqwen is the resident engine on the inference guest (owner,
+          # 2026-10-10); ninfer and llama-cpp stay configured as standbys.
+          defaultProvider = "hyperqwen";
+          defaultModel = "qwen3.8-27b";
           defaultThinkingLevel = "medium";
           defaultProjectTrust = "never";
           theme = "stylix";
@@ -234,6 +269,7 @@
             };
           }
           // {
+            inherit hyperqwen;
             ollama = {
               name = "Ollama (cortex-cuda)";
               baseUrl = "http://10.9.2.2:11434/v1";

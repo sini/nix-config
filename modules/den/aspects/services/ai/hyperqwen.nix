@@ -59,13 +59,14 @@ in
       clients = lib.mkOption {
         type = lib.types.listOf lib.types.str;
         default = [ ];
-        description = "Source addresses admitted to the port. The server runs without an API key, so nothing else is.";
+        description = "Source addresses admitted to the port. Clients also need the API key (`hyperqwen/api-key.age` in the environment's secretPath).";
       };
     };
 
     nixos =
       {
         config,
+        environment,
         host,
         pkgs,
         ...
@@ -150,6 +151,21 @@ in
         // cfg.env;
       in
       {
+        # verify.sh refuses a network bind without a key. A consumer declares the same
+        # rekeyFile and generator, so agenix-rekey gives it the same cleartext.
+        age.secrets = {
+          hyperqwen-api-key = {
+            rekeyFile = environment.secretPath + "/hyperqwen/api-key.age";
+            intermediary = true;
+            generator.script = "hex";
+          };
+          hyperqwen-env = {
+            generator.dependencies = [ config.age.secrets.hyperqwen-api-key ];
+            settings.keys = [ "VLLM_API_KEY" ];
+            generator.script = "environment-file";
+          };
+        };
+
         hardware.nvidia-container-toolkit.enable = true;
         virtualisation.podman.enable = true;
 
@@ -172,7 +188,7 @@ in
           script = ''
             exec podman run --rm --replace --name hyperqwen \
               --network host --ipc host --device nvidia.com/gpu=all \
-              --env-file ${bundle}/env \
+              --env-file ${bundle}/env --env-file ${config.age.secrets.hyperqwen-env.path} \
               ${lib.concatStrings (lib.mapAttrsToList (k: v: "-e ${lib.escapeShellArg "${k}=${v}"} ") env)}\
               -v ${dir}/models:/app/models -v ${dir}/cache:/cache \
               -v ${froggeric}:/templates/froggeric.jinja:ro \

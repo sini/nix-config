@@ -285,6 +285,14 @@ in
           `systemctl start ninfer` swap.
         '';
       };
+      alsoAdmitPorts = lib.mkOption {
+        type = lib.types.listOf lib.types.port;
+        default = [ ];
+        description = ''
+          Other ports on this host admitted to exactly ninfer's sources: another engine
+          serving the same consumers (e.g. services.ai.hyperqwen) while ninfer stands by.
+        '';
+      };
       clients = lib.mkOption {
         default = null;
         description = ''
@@ -500,18 +508,21 @@ in
 
         networking.firewall =
           if cfg.clients == null then
-            { allowedTCPPorts = [ cfg.port ]; }
+            { allowedTCPPorts = [ cfg.port ] ++ cfg.alsoAdmitPorts; }
           else
             assert lib.assertMsg (sources != { }) "ninfer: clients resolve to no address";
             {
               # One rule per source, which a network and an address inside it
               # would overlap in one set; the comment names the hosts it admits.
               extraInputRules = lib.concatStrings (
-                lib.mapAttrsToList (ip: names: ''
-                  ip saddr ${ip} tcp dport ${toString cfg.port} accept comment "ninfer: ${
-                    lib.concatStringsSep " " (lib.sort (x: y: x < y) (lib.unique names))
-                  }"
-                '') sources
+                lib.concatMap (
+                  port:
+                  lib.mapAttrsToList (ip: names: ''
+                    ip saddr ${ip} tcp dport ${toString port} accept comment "ninfer: ${
+                      lib.concatStringsSep " " (lib.sort (x: y: x < y) (lib.unique names))
+                    }"
+                  '') sources
+                ) ([ cfg.port ] ++ cfg.alsoAdmitPorts)
               );
             };
       };
