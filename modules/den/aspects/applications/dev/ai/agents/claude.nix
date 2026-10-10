@@ -150,6 +150,10 @@
 
             teammateMode = "in-process";
 
+            # CC compacts an idle session before the 1h prompt cache expires ("Compacted while
+            # idle"), losing context we would rather keep. Auto-compact at the window edge stays on.
+            idleCompaction = false;
+
             permissions = {
               allow = [
                 # Edit(**) covers Write/MultiEdit/NotebookEdit; Read(**) covers Grep/Glob
