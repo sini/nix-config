@@ -1,0 +1,25 @@
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-model-egress-genie-genie-guard
+spec:
+  description: Allow genie/genie-guard to the cortex-cuda model ports.
+  egress:
+    - toCIDR:
+        - 10.9.2.2/32
+      toPorts:
+        - ports:
+            - port: "8081"
+              protocol: TCP
+            - port: "18020"
+              protocol: TCP
+  endpointSelector:
+    matchExpressions:
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: In
+        values:
+          - genie
+      - key: k8s:io.cilium.k8s.policy.serviceaccount
+        operator: In
+        values:
+          - genie-guard

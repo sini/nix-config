@@ -217,6 +217,10 @@
       # (launcher RBAC, per-container bounds, fetch-only egress).
       services.ai.genie-eval
 
+      # ai — model-egress: only allow-listed service accounts reach the model
+      # ports on cortex-cuda (ninfer, hyperqwen).
+      services.ai.model-egress
+
       # ai — llama.cpp on the node APUs (Radeon 780M, Vulkan). Cluster-internal;
       # requires hardware.amd-gpu-device-plugin above for the amd.com/gpu resource.
       services.ai.llama-cpp
