@@ -1,7 +1,6 @@
 # genie-guard-check: the hardening, identity, egress and shared-socket properties
 # of genie-guard.nix, asserted over the aspect's manifests with the flag forced on
-# and a stand-in guard image (the committed render carries nothing while axon's
-# flag is off).
+# and the pinned images, so the check holds whatever axon's flag is.
 #   nix build .#checks.x86_64-linux.genie-guard-pod
 { config, ... }:
 let
@@ -11,12 +10,7 @@ let
       enable = true;
       hub = "bitstream";
     };
-    images = config.flake.imageRefs.x86_64-linux // {
-      "sini/genie-guard" = {
-        repository = "stand-in.invalid/genie-guard";
-        digest = "sha256:0000000000000000000000000000000000000000000000000000000000000000";
-      };
-    };
+    images = config.flake.imageRefs.x86_64-linux;
   };
 in
 {

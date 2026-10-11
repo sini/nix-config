@@ -127,6 +127,12 @@ in
           name = "run";
           mountPath = runtimeDir;
         };
+        # The root is read-only; a writable /tmp keeps the guard's runtime from
+        # failing at start.
+        tmpMount = {
+          name = "tmp";
+          mountPath = "/tmp";
+        };
       in
       lib.optionalAttrs (enabledFor cluster images) {
         applications.${name} = {
@@ -220,6 +226,7 @@ in
                       securityContext = hardened;
                       volumeMounts = [
                         runMount
+                        tmpMount
                         {
                           name = "state";
                           mountPath = stateDir;
@@ -259,6 +266,7 @@ in
                       securityContext = hardened;
                       volumeMounts = [
                         runMount
+                        tmpMount
                         {
                           name = "api-key";
                           mountPath = keyDir;
@@ -274,6 +282,10 @@ in
                     }
                     {
                       name = "state";
+                      emptyDir = { };
+                    }
+                    {
+                      name = "tmp";
                       emptyDir = { };
                     }
                     {

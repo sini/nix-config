@@ -23,9 +23,9 @@
     # xmsg cluster CA issuer for pod certificates (federation plan §6.7).
     settings.kubernetes.services.security.cert-manager.xmsg-ca.enable = true;
 
-    # genie-guard leaf pod (services/ai/genie-guard.nix). Off until
-    # ghcr.io/sini/genie-guard is published and pinned under images/sini/.
-    settings.kubernetes.services.ai.genie-guard.enable = false;
+    # genie-guard as an xmsg leaf pod of sini's xmsg on bitstream (its default
+    # hub), beside the bitstream guard; see services/ai/genie-guard.nix.
+    settings.kubernetes.services.ai.genie-guard.enable = true;
 
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
     # ingress/egress + masquerade) and the thunderbolt-fabric NICs
@@ -225,8 +225,7 @@
       # ports on cortex-cuda (ninfer, hyperqwen).
       services.ai.model-egress
 
-      # ai — genie-guard as an xmsg leaf pod of sini's xmsg on bitstream; renders
-      # nothing until its settings.enable (needs images/sini/genie-guard).
+      # ai — genie-guard as an xmsg leaf pod of sini's xmsg on bitstream.
       services.ai.genie-guard
 
       # ai — llama.cpp on the node APUs (Radeon 780M, Vulkan). Cluster-internal;

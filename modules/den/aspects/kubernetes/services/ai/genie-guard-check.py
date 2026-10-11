@@ -38,6 +38,7 @@ check(
 # 1. Pod hardening.
 pod = res["deployments"][SA]["spec"]["template"]["spec"]
 containers = {c["name"]: c for c in pod["containers"]}
+volumes = {v["name"]: v for v in pod.get("volumes", [])}
 check("two containers", set(containers) == {"xmsg", SA}, sorted(containers))
 check("pod service account", pod.get("serviceAccountName") == SA)
 check("pod token not automounted", pod.get("automountServiceAccountToken") is False)
@@ -60,6 +61,11 @@ for n, c in containers.items():
         caps,
     )
     check(f"{n} image digest-pinned", "@sha256:" in c.get("image", ""), c.get("image"))
+    tmp = {m["name"] for m in c.get("volumeMounts", []) if m["mountPath"] == "/tmp"}
+    check(
+        f"{n} writable /tmp",
+        len(tmp) == 1 and all("emptyDir" in volumes.get(v, {}) for v in tmp),
+    )
 
 # 2. Certificate.
 certs = res.get("certificates", {})
@@ -138,7 +144,6 @@ check(
 )
 check("register socket named", sock is not None)
 if sock:
-    volumes = {v["name"]: v for v in pod.get("volumes", [])}
 
     def holder(c):
         return {
