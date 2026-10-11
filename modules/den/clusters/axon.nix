@@ -20,6 +20,9 @@
     # setup. See modules/den/aspects/kubernetes/services/dev/coder/settings.nix.
     settings.kubernetes.services.dev.coder.coder.bootstrap = false;
 
+    # xmsg cluster CA issuer for pod certificates (federation plan §6.7).
+    settings.kubernetes.services.security.cert-manager.xmsg-ca.enable = true;
+
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
     # ingress/egress + masquerade) and the thunderbolt-fabric NICs
     # enp199s0f5/f6 (inter-node geneve, routed by OpenFabric). The `enp+`

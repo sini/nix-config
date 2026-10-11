@@ -1,0 +1,42 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: xmsg-cluster-ca
+spec:
+  failurePolicy: Fail
+  matchConditions:
+    - expression: |
+        object.spec.issuerRef.name == 'xmsg-cluster-ca' &&
+        has(object.spec.issuerRef.kind) && object.spec.issuerRef.kind == 'ClusterIssuer' &&
+        (!has(object.spec.issuerRef.group) || object.spec.issuerRef.group in ["", 'cert-manager.io'])
+      name: names-xmsg-cluster-ca
+  matchConstraints:
+    resourceRules:
+      - apiGroups:
+          - cert-manager.io
+        apiVersions:
+          - '*'
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - certificates
+          - certificaterequests
+  validations:
+    - expression: request.resource.resource != 'certificaterequests' || request.userInfo.username == 'system:serviceaccount:cert-manager:cert-manager'
+      message: only cert-manager's controller may request from xmsg-cluster-ca; create a Certificate
+    - expression: |
+        request.resource.resource != 'certificates' ||
+        (has(object.spec.uris) && size(object.spec.uris) == 1 &&
+         object.spec.uris[0].matches('^spiffe://json64[.]dev/ns/' + request.namespace + '/sa/[a-z0-9]([-.a-z0-9]*[a-z0-9])?$'))
+      message: a xmsg-cluster-ca certificate carries exactly one URI SAN, spiffe://json64.dev/ns/<its namespace>/sa/<sa>
+    - expression: |
+        request.resource.resource != 'certificates' ||
+        ((!has(object.spec.dnsNames) || size(object.spec.dnsNames) == 0) && (!has(object.spec.ipAddresses) || size(object.spec.ipAddresses) == 0) && (!has(object.spec.emailAddresses) || size(object.spec.emailAddresses) == 0) && (!has(object.spec.otherNames) || size(object.spec.otherNames) == 0) && (!has(object.spec.commonName) || size(object.spec.commonName) == 0) &&
+         !has(object.spec.literalSubject) && !(has(object.spec.isCA) && object.spec.isCA))
+      message: a xmsg-cluster-ca certificate has no other SAN, no common name or literal subject, and is not a CA
+    - expression: |
+        request.resource.resource != 'certificates' ||
+        (has(object.spec.usages) && 'server auth' in object.spec.usages && 'client auth' in object.spec.usages &&
+         object.spec.usages.all(u, u in ['digital signature', 'key encipherment', 'server auth', 'client auth']))
+      message: a xmsg-cluster-ca certificate's usages are server auth and client auth (plus digital signature or key encipherment)
