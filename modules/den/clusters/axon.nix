@@ -148,6 +148,8 @@
       services.network.cilium.cilium-bgp-resources
       services.network.coredns
       services.security.cert-manager
+      # xmsg cluster CA issuer; renders nothing until its settings.enable.
+      services.security.cert-manager.xmsg-ca
       services.security.sops-secrets-operator
       services.argocd
       services.network.gateway.envoy-gateway
