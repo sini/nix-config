@@ -5477,11 +5477,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1791742774,
-        "narHash": "sha256-FqGpqoYjD6ZzHv+0NsCp3k8yLtplyKFfFR9inC1Oa3c=",
+        "lastModified": 1791752547,
+        "narHash": "sha256-8Bj2Kl4pbLE21/QcPcaR8gANT/cD9cWmJ3cP1+jHOzU=",
         "owner": "sini",
         "repo": "xmsg",
-        "rev": "960cc8b687191f3c1e4ca6bf80145d766d675663",
+        "rev": "ee1b6cad323d44a88b5f2748510b7c437e9828e8",
         "type": "github"
       },
       "original": {
