@@ -35,6 +35,16 @@
       applications.dev.ai.mcp.xmsg.federation = {
         enable = true;
         ca.enable = true;
+        # genie-guard's pod on axon (kubernetes/services/ai/genie-guard.nix) collects
+        # the guard's requests here and answers them; nothing else reaches it.
+        leaves = [
+          {
+            name = "genie-guard";
+            identity = "spiffe://json64.dev/ns/genie/sa/genie-guard";
+            cluster = "axon";
+            targets = [ "svc:genie-guard" ];
+          }
+        ];
       };
 
       # @genie support bot: #support:json64.dev (testing), #denful:matrix.org and a private room.
