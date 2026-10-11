@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  peers.json: '{"bitstream":{"address":"10.9.1.1:7788","allow":[],"ca":"/etc/xmsg/tls/ca.crt","identities":["spiffe://json64.dev/host/bitstream/user/sini"]}}'
+kind: ConfigMap
+metadata:
+  name: genie-guard-xmsg-peers
+  namespace: genie

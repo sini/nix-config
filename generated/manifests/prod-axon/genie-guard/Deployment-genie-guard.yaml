@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genie-guard
+  namespace: genie
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: genie-guard
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: genie-guard
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - serve
+            - --leaf
+            - --leaf-principal
+            - svc:genie-guard
+            - --listen
+            - 127.0.0.1:7787
+            - --host-label
+            - genie-guard
+            - --leaf-register-sock
+            - /run/user/xmsg/register.sock
+            - --db-path
+            - /var/lib/xmsg/xmsg.db
+            - --peers-file
+            - /etc/xmsg/peers/peers.json
+            - --fed-cert
+            - /etc/xmsg/tls/tls.crt
+            - --fed-key
+            - /etc/xmsg/tls/tls.key
+          env:
+            - name: XDG_RUNTIME_DIR
+              value: /run/user
+          image: ghcr.io/sini/xmsg@sha256:ff185a6ed63a2f98d4ed3c4836a297b85c407bd0406295d7ce09f3b99383165e
+          name: xmsg
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /run/user
+              name: run
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/lib/xmsg
+              name: state
+            - mountPath: /etc/xmsg/tls
+              name: tls
+              readOnly: true
+            - mountPath: /etc/xmsg/peers
+              name: peers
+              readOnly: true
+        - env:
+            - name: XDG_RUNTIME_DIR
+              value: /run/user
+            - name: GENIE_GUARD_NINFER_URL
+              valueFrom:
+                secretKeyRef:
+                  key: ninfer-url
+                  name: genie-guard
+            - name: GENIE_GUARD_API_KEY_FILE
+              value: /etc/genie-guard/api-key
+          image: ghcr.io/sini/genie-guard@sha256:4903dce35d5b798f99aafb8b71465675eb6b25326709003333b68235f2a15862
+          name: genie-guard
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 65532
+            runAsNonRoot: true
+            runAsUser: 65532
+          volumeMounts:
+            - mountPath: /run/user
+              name: run
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /etc/genie-guard
+              name: api-key
+              readOnly: true
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 65532
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: genie-guard
+      volumes:
+        - emptyDir:
+            medium: Memory
+          name: run
+        - emptyDir: {}
+          name: state
+        - emptyDir: {}
+          name: tmp
+        - name: tls
+          secret:
+            defaultMode: 288
+            secretName: genie-guard-xmsg-tls
+        - configMap:
+            name: genie-guard-xmsg-peers
+          name: peers
+        - name: api-key
+          secret:
+            defaultMode: 288
+            items:
+              - key: api-key
+                path: api-key
+            secretName: genie-guard

@@ -1,0 +1,23 @@
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-xmsg-egress-genie-genie-guard
+spec:
+  description: Allow genie/genie-guard to its xmsg hub's federation port.
+  egress:
+    - toCIDR:
+        - 10.9.1.1/32
+      toPorts:
+        - ports:
+            - port: "7788"
+              protocol: TCP
+  endpointSelector:
+    matchExpressions:
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: In
+        values:
+          - genie
+      - key: k8s:io.cilium.k8s.policy.serviceaccount
+        operator: In
+        values:
+          - genie-guard
