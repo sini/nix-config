@@ -71,7 +71,7 @@ spec:
                   name: genie-guard
             - name: GENIE_GUARD_API_KEY_FILE
               value: /etc/genie-guard/api-key
-          image: ghcr.io/sini/genie-guard@sha256:4903dce35d5b798f99aafb8b71465675eb6b25326709003333b68235f2a15862
+          image: ghcr.io/sini/genie-guard@sha256:46cff250168bf29d28dc422d32db7889d2e26bc03ee98d557197191e50c02725
           name: genie-guard
           securityContext:
             allowPrivilegeEscalation: false
