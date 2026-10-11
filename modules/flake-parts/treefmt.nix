@@ -28,7 +28,9 @@
 
       treefmt = {
         # inherit (config.flake-root) projectRootFile;
-        projectRootFile = ".git/config";
+        # `.git`, not `.git/config`: in a git worktree `.git` is a file, and a root found
+        # above the worktree would shift every exclude below by `.worktrees/<name>/`.
+        projectRootFile = ".git";
 
         enableDefaultExcludes = true;
 
