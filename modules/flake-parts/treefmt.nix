@@ -28,9 +28,10 @@
 
       treefmt = {
         # inherit (config.flake-root) projectRootFile;
-        # `.git`, not `.git/config`: in a git worktree `.git` is a file, and a root found
-        # above the worktree would shift every exclude below by `.worktrees/<name>/`.
-        projectRootFile = ".git";
+        # A regular file at the root of a checkout, a git worktree (where `.git` is a file and
+        # `.git/config` is absent) and the flake check's copy (where `.git` is a directory, which
+        # treefmt's tree-root-file search does not accept).
+        projectRootFile = "flake.nix";
 
         enableDefaultExcludes = true;
 
