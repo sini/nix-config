@@ -90,12 +90,14 @@ in
   den.schema.host.includes = [ den.policies.xmsg-collect-leaf-nodes ];
 
   flake-file.inputs.xmsg = {
-    url = "github:sini/xmsg";
+    # Frozen for the xmsg addressing redesign (den-ag-design xmsg/xmsg-addressing-plan.md, NA0); unpinned at NA-D.
+    url = "github:sini/xmsg/ee1b6cad323d44a88b5f2748510b7c437e9828e8";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
   flake-file.inputs.genie-agent = {
-    url = "github:sini/genie-agent";
+    # Frozen for the xmsg addressing redesign (den-ag-design xmsg/xmsg-addressing-plan.md, NA0); unpinned at NA-D.
+    url = "github:sini/genie-agent/9809c6dd1bf63b14fd753f8416406d837c4a03a8";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 

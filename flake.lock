@@ -1939,6 +1939,7 @@
       "original": {
         "owner": "sini",
         "repo": "genie-agent",
+        "rev": "9809c6dd1bf63b14fd753f8416406d837c4a03a8",
         "type": "github"
       }
     },
@@ -2919,6 +2920,7 @@
       "original": {
         "owner": "sini",
         "repo": "matrix-xmsg",
+        "rev": "92c5666707f3e40b1a4e4094aa1007a571ae655b",
         "type": "github"
       }
     },
@@ -5487,6 +5489,7 @@
       "original": {
         "owner": "sini",
         "repo": "xmsg",
+        "rev": "ee1b6cad323d44a88b5f2748510b7c437e9828e8",
         "type": "github"
       }
     },

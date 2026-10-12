@@ -5,5 +5,5 @@
   imageHash = "sha256-t7rK/bkgTxQxxyFTf/ZDP6DaMlq6KSpKu5AN3LIso0g=";
   arch = "amd64";
   os = "linux";
-  pinned = false;
+  pinned = true;
 }

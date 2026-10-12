@@ -16,7 +16,8 @@ let
 in
 {
   flake-file.inputs.matrix-xmsg = {
-    url = "github:sini/matrix-xmsg";
+    # Frozen for the xmsg addressing redesign (den-ag-design xmsg/xmsg-addressing-plan.md, NA0); unpinned at NA-D.
+    url = "github:sini/matrix-xmsg/92c5666707f3e40b1a4e4094aa1007a571ae655b";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
