@@ -1,0 +1,97 @@
+"""Per-bank write-token gate for hindsight-api 0.9.2 (an OperationValidatorExtension).
+
+Loaded by upstream's extension loader (hindsight_api/extensions/loader.py) from
+    HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION=hindsight_write_gate:WriteGate
+    HINDSIGHT_API_OPERATION_VALIDATOR_BANKS=genie,genie-memory
+    HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR=/etc/hindsight-write-gate/tokens
+with one file per gated bank in TOKENS_DIR, named after the bank.
+
+Reads pass on every bank. A write to a gated bank passes only when the caller's
+Authorization key equals that bank's token. A bank that is not gated stays writable
+without a key. A gated bank whose token file is missing or empty raises here, and
+the loader's ExtensionLoadError stops the server from starting.
+"""
+
+import hmac
+import logging
+from pathlib import Path
+
+import hindsight_api.extensions.operation_validator as ov
+
+logger = logging.getLogger(__name__)
+
+# Pre-body prechecks that only read. Every other precheck operation is a write.
+_READ_PRECHECKS = frozenset(
+    {
+        ov.PrecheckOperation.RECALL,
+        ov.PrecheckOperation.REFLECT,
+        ov.PrecheckOperation.DRY_RUN_EXTRACT,
+    }
+)
+
+
+class WriteGate(ov.OperationValidatorExtension):
+    def __init__(self, config: dict[str, str]):
+        super().__init__(config)
+        banks = [b.strip() for b in config.get("banks", "").split(",") if b.strip()]
+        tokens_dir = config.get("tokens_dir")
+        if banks and not tokens_dir:
+            raise ValueError("write gate: BANKS is set but TOKENS_DIR is not")
+        self._tokens: dict[str, bytes] = {}
+        for bank in banks:
+            f = Path(tokens_dir) / bank
+            if not f.is_file():
+                raise ValueError(
+                    f"write gate: no token file for gated bank '{bank}' at {f}"
+                )
+            token = f.read_text().strip()
+            if not token:
+                raise ValueError(
+                    f"write gate: empty token file for gated bank '{bank}' at {f}"
+                )
+            self._tokens[bank] = token.encode()
+        logger.info(f"write gate: gating writes on banks {sorted(self._tokens)}")
+
+    def _gate(self, bank_id: str, request_context) -> ov.ValidationResult:
+        # Worker and maintenance contexts carry internal=True and never come from a
+        # transport (http.py and mcp.py build contexts from the Authorization header
+        # only); the user-facing submission they continue was gated when it was made.
+        if request_context.internal:
+            return ov.ValidationResult.accept()
+        token = self._tokens.get(bank_id)
+        if token is None:
+            return ov.ValidationResult.accept()
+        key = request_context.api_key
+        if key is not None and hmac.compare_digest(key.encode(), token):
+            return ov.ValidationResult.accept()
+        return ov.ValidationResult.reject(
+            f"bank '{bank_id}' is write-gated: a valid write token is required", 403
+        )
+
+    # Reads: always allowed.
+    async def validate_recall(self, ctx) -> ov.ValidationResult:
+        return ov.ValidationResult.accept()
+
+    async def validate_reflect(self, ctx) -> ov.ValidationResult:
+        return ov.ValidationResult.accept()
+
+    async def precheck(self, ctx) -> ov.ValidationResult:
+        if ctx.operation in _READ_PRECHECKS:
+            return ov.ValidationResult.accept()
+        return self._gate(ctx.bank_id, ctx.request_context)
+
+    # Writes: every write hook the 0.9.2 interface exposes.
+    async def validate_retain(self, ctx) -> ov.ValidationResult:
+        return self._gate(ctx.bank_id, ctx.request_context)
+
+    async def validate_bank_write(self, ctx) -> ov.ValidationResult:
+        return self._gate(ctx.bank_id, ctx.request_context)
+
+    async def validate_create_bank(self, ctx) -> ov.ValidationResult:
+        return self._gate(ctx.bank_id, ctx.request_context)
+
+    async def validate_consolidate(self, ctx) -> ov.ValidationResult:
+        return self._gate(ctx.bank_id, ctx.request_context)
+
+    async def validate_mental_model_refresh(self, ctx) -> ov.ValidationResult:
+        return self._gate(ctx.bank_id, ctx.request_context)

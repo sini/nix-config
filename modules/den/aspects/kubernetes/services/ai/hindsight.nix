@@ -5,30 +5,68 @@
 # deploys). The all-in-one `hindsight` image is not used: it bundles an embedded
 # postgres and the Next.js control plane, and state belongs in hindsight-pg.
 #
-# Deployed cluster-internal — no HTTPRoute, no service-domains. Hindsight's
-# dataplane exposes no bearer/API-key auth of its own (the only auth env var
-# upstream defines is HINDSIGHT_CP_DATAPLANE_API_KEY, which is what the *control
-# plane* sends), so external exposure has to be solved at the gateway and is
-# deliberately a separate wave. Reach it for now via the ClusterIP service or
+# Deployed cluster-internal — no HTTPRoute, no service-domains. Reach it via the
+# ClusterIP service, the internal LoadBalancer below, or
 # `kubectl -n ai port-forward svc/hindsight 8888`.
+#
+# Auth. The dataplane reads `Authorization: Bearer <key>` into every request's
+# context and runs it past two extension points: a TenantExtension (upstream ships
+# ApiKeyTenantExtension, one key for every read and write on every bank, unused
+# here) and an OperationValidatorExtension. This deployment loads one validator,
+# hindsight-write-gate.py: reads stay open, and a write to a bank in
+# `writeGatedBanks` needs that bank's own token (SopsSecret
+# hindsight-write-tokens). Banks outside the list stay writable without a key.
+# Document import is switched off because it reaches no validator hook on an
+# existing bank. Oracle: hindsight-write-gate-oracle.py, run against upstream's
+# Python at the pinned version.
 #
 # Embeddings (BAAI/bge-small-en-v1.5) and reranking
 # (cross-encoder/ms-marco-MiniLM-L-6-v2) run in-process on CPU at upstream
 # defaults; both models are fetched from HuggingFace on first boot into the
 # model-cache PVC, which is why this pod has world:443 egress.
-{ den, ... }:
+{ den, lib, ... }:
+let
+  # Banks whose writes need their own token. One generated token per bank, so a
+  # holder of one bank's token cannot write another gated bank.
+  writeGatedBanks = [
+    "genie"
+    "genie-memory"
+  ];
+  tokenSecret = bank: "hindsight-write-token-${bank}";
+in
 {
   den.aspects.kubernetes.services.ai.hindsight = {
     # Hard dependency, not a coincidence of cluster composition: both LLM
     # endpoints and their model names are read out of this aspect's `instances`.
     includes = [ den.aspects.kubernetes.services.ai.llama-cpp ];
 
+    # The .age files are created by `agenix generate` after this lands. The genie
+    # token's rekeyFile is shared with services.ai.genie-bank-review, the
+    # operator-side copy.
+    age-secrets =
+      { environment, ... }:
+      {
+        age.secrets = lib.listToAttrs (
+          map (
+            bank:
+            lib.nameValuePair (tokenSecret bank) {
+              rekeyFile = environment.secretPath + "/hindsight/write-token-${bank}.age";
+              generator.script = "hex";
+              sopsOutput = {
+                file = "hindsight";
+                key = "write-token-${bank}";
+              };
+            }
+          ) writeGatedBanks
+        );
+      };
+
     k8s-manifests =
       {
         cluster,
         charts,
         images,
-        lib,
+        config,
         ...
       }:
       let
@@ -81,6 +119,12 @@
 
         port = 8888;
         cpPort = 3000;
+
+        # The write gate is a Python module on PYTHONPATH, delivered as a
+        # ConfigMap: upstream's loader imports any `module:Class` it can find, so
+        # the pinned image runs unmodified.
+        gateDir = "/opt/hindsight-write-gate";
+        tokensDir = "/etc/hindsight-write-gate/tokens";
       in
       {
         applications.hindsight = {
@@ -239,6 +283,20 @@
                     # long chunk on a cold slot still exceeds two minutes, and failing
                     # it converts one slow extraction into four (WORKER_MAX_RETRIES=3).
                     HINDSIGHT_API_LLM_TIMEOUT = "900";
+
+                    # Per-bank write tokens (hindsight-write-gate.py). The loader
+                    # passes every HINDSIGHT_API_OPERATION_VALIDATOR_* variable to
+                    # the gate as config. A listed bank with a missing or empty
+                    # token file stops the server at startup.
+                    PYTHONPATH = gateDir;
+                    HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION = "hindsight_write_gate:WriteGate";
+                    HINDSIGHT_API_OPERATION_VALIDATOR_BANKS = lib.concatStringsSep "," writeGatedBanks;
+                    HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR = tokensDir;
+
+                    # Document import (POST …/document-transfer) calls no validator
+                    # hook when the bank already exists, so the gate cannot see it.
+                    # Upstream defaults it on.
+                    HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API = "false";
                   }
                   # Per-operation override for retain, emitted ONLY when it
                   # actually differs from the default. Pointing both at one
@@ -381,9 +439,9 @@
               # bank without a public HTTPRoute and without the OIDC gateway,
               # which headless MCP clients cannot complete anyway.
               #
-              # NOTE: hindsight's dataplane has no authentication of its own, so
-              # anything on the LAN that can route here has full read/write on
-              # the bank. The CiliumNetworkPolicy below is the only control.
+              # NOTE: anything on the LAN that can route here reads every bank and
+              # writes every bank outside writeGatedBanks; writes to a gated bank
+              # need its token. The CiliumNetworkPolicies below admit the callers.
               service.internal = {
                 controller = "main";
                 type = "LoadBalancer";
@@ -403,7 +461,35 @@
                   storageClass = "longhorn";
                   globalMounts = [ { path = "/home/hindsight/.cache"; } ];
                 };
+
+                write-gate = {
+                  type = "configMap";
+                  identifier = "write-gate";
+                  advancedMounts.main.main = [
+                    {
+                      path = "${gateDir}/hindsight_write_gate.py";
+                      subPath = "hindsight_write_gate.py";
+                      readOnly = true;
+                    }
+                  ];
+                };
+
+                # One file per gated bank. 0440 with the pod's fsGroup 1000 makes
+                # them readable by the image's uid 1000 and no one else in the pod.
+                write-tokens = {
+                  type = "secret";
+                  name = "hindsight-write-tokens";
+                  defaultMode = 288; # 0440
+                  advancedMounts.main.main = [
+                    {
+                      path = tokensDir;
+                      readOnly = true;
+                    }
+                  ];
+                };
               };
+
+              configMaps.write-gate.data."hindsight_write_gate.py" = builtins.readFile ./hindsight-write-gate.py;
             };
           };
 
@@ -434,9 +520,9 @@
                     HINDSIGHT_CP_PORT = toString cpPort;
                     # In-cluster, via the pinned service name.
                     HINDSIGHT_CP_DATAPLANE_API_URL = "http://hindsight.ai.svc.cluster.local:${toString port}";
-                    # Bearer the CP sends to the dataplane. Only required when
-                    # the API is auth-protected; ours is not, so this is left
-                    # unset deliberately rather than set to a placeholder.
+                    # HINDSIGHT_CP_DATAPLANE_API_KEY (the bearer the CP sends) is
+                    # left unset: no tenant key is configured, and the CP holds no
+                    # bank write token, so its writes to a gated bank are refused.
                   };
 
                   probes = {
@@ -529,6 +615,14 @@
             }
           ];
 
+          # The write tokens, one key per gated bank. The nixidy objectTransform
+          # rewrites Secret → SopsSecret; each value is a sops ref resolved at
+          # render time.
+          resources.secrets.hindsight-write-tokens = {
+            type = "Opaque";
+            stringData = lib.genAttrs writeGatedBanks (bank: config.age.secrets.${tokenSecret bank}.sopsRef);
+          };
+
           # In-cluster egress (hindsight-pg, kube-dns) is already covered by the
           # clusterwide allow-internal-egress policy (cilium.nix), so only the
           # off-cluster paths and the ingress are enumerated here.
@@ -580,6 +674,48 @@
                         {
                           port = toString port;
                           protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
+
+            # genie tier-1 recalls from the genie banks and may do nothing else
+            # here. Selected by namespace and service account, which Cilium sets
+            # from the pod spec and a pod cannot claim (see model-egress.nix). The
+            # HTTP rule sends this port through Envoy, which answers 403 to any
+            # other method or path from this identity, whatever token it holds.
+            allow-genie-tier1-recall-hindsight.spec = {
+              description = "Allow genie tier-1 to recall from the genie banks on 8888 (HTTP rule: recall and the read-only GETs its client makes).";
+              endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
+              ingress = [
+                {
+                  fromEndpoints = [
+                    {
+                      matchLabels = {
+                        "k8s:io.kubernetes.pod.namespace" = "genie";
+                        "k8s:io.cilium.k8s.policy.serviceaccount" = "genie-tier1";
+                      };
+                    }
+                  ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = toString port;
+                          protocol = "TCP";
+                        }
+                      ];
+                      rules.http = [
+                        {
+                          method = "POST";
+                          path = "/v1/default/banks/(genie|genie-memory)/memories/recall";
+                        }
+                        {
+                          method = "GET";
+                          path = "/v1/default/banks/(genie|genie-memory)/(profile|config|memories/list)";
                         }
                       ];
                     }
