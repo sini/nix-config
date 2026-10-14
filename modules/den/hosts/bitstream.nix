@@ -39,10 +39,9 @@
         # the guard's requests here and answers them; nothing else reaches it.
         leaves = [
           {
-            name = "genie-guard";
             identity = "spiffe://json64.dev/ns/genie/sa/genie-guard";
             cluster = "axon";
-            targets = [ "svc:genie-guard" ];
+            targets = [ "genie-guard" ];
           }
         ];
       };

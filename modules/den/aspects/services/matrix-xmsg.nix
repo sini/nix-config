@@ -16,8 +16,7 @@ let
 in
 {
   flake-file.inputs.matrix-xmsg = {
-    # Frozen for the xmsg addressing redesign (den-ag-design xmsg/xmsg-addressing-plan.md, NA0); unpinned at NA-D.
-    url = "github:sini/matrix-xmsg/92c5666707f3e40b1a4e4094aa1007a571ae655b";
+    url = "github:sini/matrix-xmsg";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
@@ -32,7 +31,7 @@ in
       expertRef = lib.mkOption {
         type = lib.types.str;
         default = "genie-support";
-        description = "xmsg session the bot relays to: a pi session registers under its cwd basename.";
+        description = "Label of the xmsg session the bot relays to, on this host's own node: the bot addresses it as `<label>@<user>.<host>`, so an unreachable peer never makes it `unavailable`.";
       };
       extraTrustedMxids = lib.mkOption {
         type = lib.types.listOf (lib.types.strMatching "@[^:]+:.+");
@@ -53,6 +52,10 @@ in
       }:
       let
         cfg = host.settings.services.matrix-xmsg;
+        user = "sini";
+        # The bus's own node name (xmsg README 7.0): both refs carry it, so a guard or an
+        # expert of the same name elsewhere in view never makes them ambiguous.
+        node = "${user}.${host.name}";
         mxid = name: "@${name}:${environment.domain}";
         # The environment whose kanidm serves this host's (dev delegates to prod).
         idpEnv = (environment.services.kanidm or { }).delegateTo or null;
@@ -96,14 +99,16 @@ in
           botMxid = mxid "genie";
           ownerMxid = mxid "json";
           accessTokenFile = config.age.secrets.matrix-genie-token.path;
-          # The bot is svc:matrix-xmsg on sini's own bus (owner, 2026-10-09): a socket client must run
+          # The bot is the service matrix-xmsg on sini's own bus (owner, 2026-10-09): a socket client must run
           # as the bus's uid. /run/user/1000 exists under sini's lingering user manager; the bot
           # restarts until it does.
           dynamicUser = false;
-          user = "sini";
+          inherit user;
           xmsgSocket = "/run/user/1000/xmsg";
           trustedMxids = trusted;
-          inherit (cfg) rooms expertRef;
+          inherit (cfg) rooms;
+          expertRef = "${cfg.expertRef}@${node}";
+          guardRef = "genie-guard@${node}";
         };
       };
   };

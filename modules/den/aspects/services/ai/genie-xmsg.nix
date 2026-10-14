@@ -86,7 +86,7 @@ in
           from = "genie";
           to = "${user tier}@bitstream";
           allow = [ "send" ];
-          principals = [ "svc:genie-expert" ];
+          principals = [ "genie-expert" ];
         }) tiers;
         description = "xmsg-links edges into the tier nodes (federation plan §6.1). Inert until X1.";
       };

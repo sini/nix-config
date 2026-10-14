@@ -136,7 +136,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     genie-agent = {
-      url = "github:sini/genie-agent/9809c6dd1bf63b14fd753f8416406d837c4a03a8";
+      url = "github:sini/genie-agent";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     git-hooks-nix.url = "github:cachix/git-hooks.nix";
@@ -211,7 +211,7 @@
     };
     llm-agents.url = "github:numtide/llm-agents.nix";
     matrix-xmsg = {
-      url = "github:sini/matrix-xmsg/92c5666707f3e40b1a4e4094aa1007a571ae655b";
+      url = "github:sini/matrix-xmsg";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     mattpocock-skills = {
@@ -366,7 +366,7 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     xmsg = {
-      url = "github:sini/xmsg/ee1b6cad323d44a88b5f2748510b7c437e9828e8";
+      url = "github:sini/xmsg";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     zen-browser = {

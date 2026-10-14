@@ -4,10 +4,13 @@
 # attested by SO_PEERCRED, so an agent can never claim another session's identity.
 #
 # The input SOURCE builds our own `xmsg` package (pkgs/by-name/xmsg), threaded to
-# callPackage as `xmsg-src` by the overlay in pkgs/overlays.nix.
+# callPackage as `xmsg-src` by the overlay in pkgs/overlays.nix. The input's own
+# home-manager module (homeManagerModules.xmsg) runs `xmsg serve` and installs each
+# harness's pieces; this aspect sets what is the owner's: which harnesses, which
+# services, and the federation peers with their allow lists.
 #
 # Federation: the system owner's node on each host of `fedPair` federates with the
-# other's over pinned mTLS (xmsg-links `sini@bitstream ↔ sini@cortex : send, reply,
+# other's over pinned mTLS (xmsg-links `sini.bitstream ↔ sini.cortex : send, reply,
 # list`, federation plan §6.1). The node key is an `xmsg-identity` agenix secret
 # whose public .crt sidecar is committed beside the .age; the peer's pin is computed
 # from that .crt at build time.
@@ -26,7 +29,7 @@
 # addresses (pods masquerade to them) are admitted to the federation port.
 #
 # genie-guard (github:sini/genie-agent): on a host that runs the @genie bot, the
-# owner's user service registers on this bus as svc:genie-guard and answers guard-in
+# owner's user service registers on this bus as the service genie-guard and answers guard-in
 # requests with a model's verdict; xmsg admits that name only from its own binary.
 {
   den,
@@ -43,6 +46,18 @@ let
   leafName = "${keyName}-fed-ca";
   caDir = self + "/.secrets/xmsg-ca";
   spiffeOf = host: "spiffe://json64.dev/host/${host.name}/user/${host.system-owner}";
+  # A node's name derives from its identity (xmsg README 7.0): `<user>.<host>` for a host,
+  # `<sa>.<ns>` for a pod. A CA peer entry must be keyed by it.
+  nodeOf = host: "${host.system-owner}.${host.name}";
+  leafNode =
+    leaf:
+    let
+      m = builtins.match "spiffe://[^/]+/ns/([^/]+)/sa/([^/]+)" leaf.identity;
+    in
+    if m == null then
+      throw "xmsg federation: leaf identity ${leaf.identity} is not spiffe://<domain>/ns/<ns>/sa/<sa>."
+    else
+      "${lib.elemAt m 1}.${lib.elemAt m 0}";
   fedOf = host: host.settings.applications.dev.ai.mcp.xmsg.federation;
   peerOf = host: den.hosts.x86_64-linux.${lib.head (lib.remove host.name fedPair)};
   # The committed public half of a host's node key, refused by name until generated.
@@ -90,14 +105,12 @@ in
   den.schema.host.includes = [ den.policies.xmsg-collect-leaf-nodes ];
 
   flake-file.inputs.xmsg = {
-    # Frozen for the xmsg addressing redesign (den-ag-design xmsg/xmsg-addressing-plan.md, NA0); unpinned at NA-D.
-    url = "github:sini/xmsg/ee1b6cad323d44a88b5f2748510b7c437e9828e8";
+    url = "github:sini/xmsg";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
   flake-file.inputs.genie-agent = {
-    # Frozen for the xmsg addressing redesign (den-ag-design xmsg/xmsg-addressing-plan.md, NA0); unpinned at NA-D.
-    url = "github:sini/genie-agent/9809c6dd1bf63b14fd753f8416406d837c4a03a8";
+    url = "github:sini/genie-agent";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
@@ -128,13 +141,9 @@ in
         type = lib.types.listOf (
           lib.types.submodule {
             options = {
-              name = lib.mkOption {
-                type = lib.types.str;
-                description = "The leaf's peer name: senders here address it as `<ref>@<name>`.";
-              };
               identity = lib.mkOption {
                 type = lib.types.str;
-                description = "The URI SAN of the leaf's certificate, signed under the xmsg CA root.";
+                description = "The URI SAN of the leaf's certificate, signed under the xmsg CA root; spiffe://<domain>/ns/<ns>/sa/<sa> names the leaf `<sa>.<ns>`, and senders here address it as `<ref>@<sa>.<ns>`.";
               };
               cluster = lib.mkOption {
                 type = lib.types.str;
@@ -153,7 +162,7 @@ in
               };
               targets = lib.mkOption {
                 type = lib.types.listOf lib.types.str;
-                description = "Local targets this node queues for the leaf (xmsg X14, checked when a send is queued).";
+                description = "Local targets this node queues for the leaf, each a service name or an instance ID (xmsg X14, checked when a send is queued).";
               };
             };
           }
@@ -218,9 +227,9 @@ in
               in
               assert lib.assertMsg (
                 nodes != [ ]
-              ) "xmsg federation: leaf ${leaf.name}'s cluster ${leaf.cluster} has no nodes";
+              ) "xmsg federation: leaf ${leafNode leaf}'s cluster ${leaf.cluster} has no nodes";
               map (n: ''
-                ip saddr ${n.ip} tcp dport ${toString fed.port} accept comment "xmsg leaf ${leaf.name}: ${n.hostname}"
+                ip saddr ${n.ip} tcp dport ${toString fed.port} accept comment "xmsg leaf ${leafNode leaf}: ${n.hostname}"
               '') (lib.sort (a: b: a.hostname < b.hostname) nodes)
             ) fed.leaves
           );
@@ -264,28 +273,18 @@ in
         })
       ];
 
-    # Folded into the MCP registry and skills of every agent aspect that reads
-    # agent-extensions (agents/claude.nix, agents/antigravity-cli.nix,
-    # agents/opencode.nix); pi installs the same two skills itself (agents/pi/pi.nix).
-    # The matrix skill ships with the bot, so it changes with the bot's protocol.
+    # The bot's matrix skill, folded into every agent aspect that reads agent-extensions;
+    # it ships with the bot, so it changes with the bot's protocol. The xmsg skill, MCP
+    # entries, tool permissions, agy hook, pi extension and opencode plugin are the
+    # xmsg module's (homeManagerModules.xmsg, harness switches below).
     agent-extensions =
+      { inputs', ... }:
       {
-        inputs',
-        lib,
-        pkgs,
-        ...
-      }:
-      {
-        type = "mcp";
-        mcpServers.xmsg = {
-          command = lib.getExe pkgs.local.xmsg;
-          args = [ "mcp" ];
-        };
-        skills = {
-          xmsg = ./_skills/xmsg;
-          matrix = inputs'.matrix-xmsg.packages.matrix-skill;
-        };
+        type = "skill";
+        skills.matrix = inputs'.matrix-xmsg.packages.matrix-skill;
       };
+
+    homeManagerModules = { inputs', ... }: [ inputs'.xmsg.homeManagerModules.xmsg ];
 
     homeManager =
       {
@@ -298,118 +297,89 @@ in
         ...
       }:
       let
-        xmsg = lib.getExe pkgs.local.xmsg;
-
-        # Identity anchor, pinned to the exact store path of what this home runs:
-        # xmsg compares the kernel-reported executable against it, so a profile
-        # symlink or another version would fail closed. bin/agy is the real ELF
-        # binary (no wrapper). pi is admitted on the peer uid alone (xmsg X11).
-        agyExe = "${config.programs.antigravity-cli.package}/bin/agy";
-        # The @genie bot registers on this bus as svc:matrix-xmsg (matrix-xmsg M13) on a host
-        # that runs it; xmsg admits that name only from the bot's own binary.
+        # The @genie bot registers on this bus as the service matrix-xmsg on a host that
+        # runs it; xmsg admits that name only from the bot's own binary.
         botEnabled = (host.settings.services.matrix-xmsg.rooms or [ ]) != [ ];
         guardEnabled = botEnabled && config.home.username == host.system-owner;
         guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
-        identityArgs = lib.escapeShellArgs (
-          [
-            "--agy-exe"
-            agyExe
-          ]
-          ++ lib.optionals botEnabled [
-            "--svc-exe"
-            "matrix-xmsg=${lib.getExe inputs'.matrix-xmsg.packages.default}"
-          ]
-          ++ lib.optionals guardEnabled [
-            "--svc-exe"
-            "genie-guard=${guardExe}"
-          ]
-          ++ lib.optionals (fed.enable && config.home.username == host.system-owner) [
-            "--fed-listen"
-            "0.0.0.0:${toString fed.port}"
-            "--fed-cert"
-            (if fed.ca.enable then "${caCrt (host.secretPath + "/${leafName}.crt")}" else "${crtOf host}")
-            "--fed-key"
-            osConfig.age.secrets.${if fed.ca.enable then leafName else keyName}.path
-            "--peers-file"
-            "${peersFile}"
-          ]
-        );
 
         fed = fedOf host;
         peer = peerOf host;
-        # The entry is keyed by the peer's host name: xmsg addresses a remote session as
-        # `<session>@<peer>` and splits on the last '@' (split_peer_ref, src/fed.rs), so a
-        # `sini@cortex` key could never be named.
-        peerNode = peer.name;
-        # The pin is the SHA-256 of the cert's DER SubjectPublicKeyInfo, as xmsg's
-        # spki_sha256_from_der computes it (src/fed.rs). No `from`: the host data
-        # carries no tailnet address. No `targets`: the peer is the owner's own node.
-        # `list` follows the link's spec (xmsg X18 serves it).
-        # Under ca.enable the entry trusts the root with the peer's one identity.
-        # A leaf entry trusts it with the leaf's; `address` is required but never
-        # dialled, since sends to a leaf are queued and replies to it not pushed, so it
-        # names a host that cannot resolve.
-        peersFile =
+        rootCa = caCrt (caDir + "/root.crt");
+        # Under ca.enable the entry trusts the root with the peer's one identity, keyed by the
+        # node name that identity derives. A pinned entry keeps the host name as its
+        # nickname. A leaf entry's `address` is required but never dialled, since sends to
+        # a leaf are queued and replies to it not pushed, so it names a host that cannot
+        # resolve. No `from`: the host data carries no tailnet address.
+        peerEntry = {
+          address = "${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port}";
+          allow = [
+            "send"
+            "reply"
+            "list"
+          ];
+        };
+        peers =
           if fed.ca.enable then
-            pkgs.writeText "xmsg-peers.json" (
-              builtins.toJSON (
-                {
-                  ${peerNode} = {
-                    address = "${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port}";
-                    ca = "${caCrt (caDir + "/root.crt")}";
-                    identities = [ (spiffeOf peer) ];
-                    allow = [
-                      "send"
-                      "reply"
-                      "list"
-                    ];
-                  };
+            {
+              ${nodeOf peer} = peerEntry // {
+                ca = rootCa;
+                identities = [ (spiffeOf peer) ];
+              };
+            }
+            // lib.listToAttrs (
+              map (
+                leaf:
+                lib.nameValuePair (leafNode leaf) {
+                  address = "${leafNode leaf}.invalid:${toString fed.port}";
+                  ca = rootCa;
+                  identities = [ leaf.identity ];
+                  leaf = true;
+                  inherit (leaf) allow targets;
                 }
-                // lib.listToAttrs (
-                  map (
-                    leaf:
-                    lib.nameValuePair leaf.name {
-                      address = "${leaf.name}.invalid:${toString fed.port}";
-                      ca = "${caCrt (caDir + "/root.crt")}";
-                      identities = [ leaf.identity ];
-                      leaf = true;
-                      inherit (leaf) allow targets;
-                    }
-                  ) fed.leaves
-                )
-              )
+              ) fed.leaves
             )
           else
-            pkgs.runCommand "xmsg-peers.json"
-              {
-                nativeBuildInputs = [
-                  pkgs.jq
-                  pkgs.openssl
-                ];
-              }
-              ''
-                openssl x509 -in ${crtOf peer} -pubkey -noout > pub.pem
-                openssl pkey -pubin -in pub.pem -outform DER > spki.der
-                pin=$(sha256sum spki.der | cut -d' ' -f1)
-                jq -n --arg name ${peerNode} --arg pin "sha256:$pin" \
-                  --arg address ${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port} \
-                  '{($name): {address: $address, pin: $pin, allow: ["send", "reply", "list"]}}' > $out
-              '';
+            {
+              ${peer.name} = peerEntry // {
+                pinFromCert = crtOf peer;
+              };
+            };
       in
-      lib.mkIf pkgs.stdenv.hostPlatform.isLinux {
-        home.packages = [ pkgs.local.xmsg ];
-
-        # Runs as the sessions' own user: the inbox sockets live in 0700 dirs, and
-        # xmsg's own sockets require $XDG_RUNTIME_DIR. Its HTTP API is
-        # $XDG_RUNTIME_DIR/xmsg/http.sock (peer uid checked), with no TCP
-        # listener: --listen would expose every session to every local uid.
-        systemd.user.services.xmsg = {
-          Unit.Description = "xmsg: bridge into running agent sessions";
-          Service = {
-            ExecStart = "${xmsg} serve ${identityArgs}";
-            Restart = "on-failure";
+      {
+        programs.xmsg = {
+          enable = true;
+          # Linux runs our own build (pkgs/by-name/xmsg, also the genie tiers' bus); it is
+          # Linux-only, so darwin takes the module's default, the input's own package.
+          package = lib.mkIf pkgs.stdenv.hostPlatform.isLinux pkgs.local.xmsg;
+          # darwin (patch) runs no `xmsg serve`; its harnesses still get their pieces.
+          server = {
+            enable = pkgs.stdenv.hostPlatform.isLinux;
+            svcExe =
+              lib.optionalAttrs botEnabled {
+                matrix-xmsg = lib.getExe inputs'.matrix-xmsg.packages.default;
+              }
+              // lib.optionalAttrs guardEnabled { genie-guard = guardExe; };
+            federation = lib.mkIf (fed.enable && config.home.username == host.system-owner) {
+              enable = true;
+              inherit (fed) port;
+              inherit peers;
+              cert = if fed.ca.enable then caCrt (host.secretPath + "/${leafName}.crt") else crtOf host;
+              key = osConfig.age.secrets.${if fed.ca.enable then leafName else keyName}.path;
+            };
           };
-          Install.WantedBy = [ "default.target" ];
+          harnesses =
+            lib.genAttrs
+              [
+                "claude"
+                "agy"
+                "pi"
+                "opencode"
+                "hermes"
+              ]
+              (_: {
+                enable = true;
+              });
         };
 
         # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.
@@ -433,32 +403,17 @@ in
           Install.WantedBy = [ "default.target" ];
         };
 
-        # The owner's explicit authorization of the three tools. Allowed calls skip
-        # the auto-mode classifier, so the tools must never be requiresUserInteraction.
-        # Both namings: home-manager ships the server in its `hm` plugin
-        # (`mcp__plugin_hm_xmsg__*`), and a server registered directly, outside a
-        # plugin, is `mcp__xmsg__*`.
+        # The owner's explicit authorization of the tools, in both namings. Allowed calls
+        # skip the auto-mode classifier, so the tools must never be requiresUserInteraction.
+        # A server registered directly, outside a plugin, is `mcp__xmsg__*`, which the
+        # module allows; home-manager ships the server in its `hm` plugin, which names
+        # the tools `mcp__plugin_hm_xmsg__*`, allowed here.
         programs.claude-code.settings.permissions.allow = [
-          "mcp__xmsg__list"
-          "mcp__xmsg__send"
-          "mcp__xmsg__reply"
           "mcp__plugin_hm_xmsg__list"
           "mcp__plugin_hm_xmsg__send"
           "mcp__plugin_hm_xmsg__reply"
+          "mcp__plugin_hm_xmsg__replies"
         ];
-
-        # agy registers its language-server credentials before every turn. `--hook` reads them
-        # from the hook's stdin JSON: agy passes them there, not in the environment, and
-        # without the flag the registration fails silently every turn. The hook always
-        # prints {"injectSteps":[]} and exits 0, even with the server down.
-        home.file.".gemini/config/hooks.json".text = builtins.toJSON {
-          xmsg-register.PreInvocation = [
-            {
-              type = "command";
-              command = "${xmsg} register agy --hook";
-            }
-          ];
-        };
       };
   };
 }
