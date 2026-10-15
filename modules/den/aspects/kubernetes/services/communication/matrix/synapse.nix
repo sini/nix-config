@@ -225,6 +225,9 @@ in
                 type = "deployment";
                 replicas = 1;
                 strategy = "Recreate";
+                # synapse-config is not the chart's, so a change to it alone would not
+                # roll the pod.
+                pod.annotations."checksum/config" = builtins.hashString "sha256" (builtins.toJSON homeserver);
                 containers.main = {
                   image = {
                     inherit (images."matrixdotorg/synapse") repository digest;

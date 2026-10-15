@@ -19,6 +19,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/config: 51a9cc3e3c6c1728273cc16b970ad9e69756f4bcecf807a98578d8cdf144e0df
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: synapse
