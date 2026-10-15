@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/recyclarr/recyclarr";
   imageTag = "8";
-  imageDigest = "sha256:6e69e009e1cd7493ff6093e8e187b5d3788c75b4a2c0c5127b6a1beda1c19728";
-  imageHash = "sha256-g6vQ9LHGR7+iP89C0hOQP7h2ooEZ8nT35iW3Pbm5ib8=";
+  imageDigest = "sha256:b1fbb929ba718fdbdac2c1fc25b32b0ae916d7a5a0892c2068c9bfae6f1a9209";
+  imageHash = "sha256-74oRBxEE/PhUjNA+elg7RsT2Lm53Tto1vKxlcZ36Bt0=";
   arch = "amd64";
   os = "linux";
   pinned = false;

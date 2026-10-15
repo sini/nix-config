@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/raydak-labs/configarr";
   imageTag = "latest";
-  imageDigest = "sha256:20bac182279ad96b377b674dbab9782bb81f01465a3c0c7ee1f48984c736a9f9";
-  imageHash = "sha256-MrNbGrtiiJewR7HEYEcOPAHv0DXpMdLrtp9Hz+A8W1M=";
+  imageDigest = "sha256:ec45316830df5b100e52fa034603b1c1cf49e93b74381376c29e96782aad9723";
+  imageHash = "sha256-qXMM/80r0clGC/ntYoWHPqRgz4aucq+T8zlHTnZwSrQ=";
   arch = "amd64";
   os = "linux";
   pinned = false;

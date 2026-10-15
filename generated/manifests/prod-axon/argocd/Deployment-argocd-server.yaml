@@ -356,7 +356,7 @@ spec:
                   key: server.sync.replace.allowed
                   name: argocd-cmd-params-cm
                   optional: true
-          image: quay.io/argoproj/argocd:v3.5.3
+          image: quay.io/argoproj/argocd:v3.5.5
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3

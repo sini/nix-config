@@ -21,7 +21,7 @@ spec:
               env:
                 - name: KEEP
                   value: "7"
-              image: library/python@sha256:f6a589d43c42b9e7f7dc67a12d37132491f362859a5d750607710cc56da3bc72
+              image: library/python@sha256:618e7b661a89d05565fb402a5e1eab8b1b4e5df1f5ea3dc494998d092ffe1213
               name: cnpg-prune-backups
               volumeMounts:
                 - mountPath: /script

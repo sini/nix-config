@@ -56,7 +56,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/config/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:b8ec653c44235fbe910879145dac3597d66b0aaecf60bcbbe82580767771a839
+          image: docker.io/grafana/alloy@sha256:2aa2099af76c0098d4af7a4d6e48f86cb66dc1a000222ad927a1c67c6542d13f
           name: logtail
           securityContext:
             runAsGroup: 65536
@@ -104,7 +104,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: linuxserver/prowlarr@sha256:54bf1a4a483385dc8e06963d6cb9810020895cb0a90033d97f363a01f5522442
+          image: linuxserver/prowlarr@sha256:5944ab837fccdcfe5a18f271d095ba24c037fa1cef085b5ee66daeae792cc9f4
           livenessProbe:
             failureThreshold: 3
             httpGet:

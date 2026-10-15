@@ -35,7 +35,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: glanceapp/glance@sha256:9dfb09470b207dcb67ac715994bdb1929374ba3f9c0d7df7462c24adf10fd073
+          image: glanceapp/glance@sha256:bc5a392672c1ec8823c50b61f3bd4b7e5acc34fcbb8477862577b3af1c633875
           name: main
           volumeMounts:
             - mountPath: /app/config/glance.yml

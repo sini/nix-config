@@ -61,7 +61,7 @@ spec:
           env:
             - name: ADDRESS
               value: /csi/csi.sock
-          image: registry.k8s.io/sig-storage/csi-resizer:v2.2.0
+          image: registry.k8s.io/sig-storage/csi-resizer:v2.2.1
           imagePullPolicy: IfNotPresent
           name: csi-resizer
           resources:
@@ -135,6 +135,9 @@ spec:
             - --default-ondelete-policy=delete
             - --use-tar-command-in-snapshot=false
             - --enable-snapshot-compression=true
+            - --max-snapshot-archive-size=0
+            - --max-snapshot-file-size=0
+            - --max-snapshot-files=0
           env:
             - name: NODE_ID
               valueFrom:
@@ -142,7 +145,7 @@ spec:
                   fieldPath: spec.nodeName
             - name: CSI_ENDPOINT
               value: unix:///csi/csi.sock
-          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.4
+          image: registry.k8s.io/sig-storage/nfsplugin:v4.13.5
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 5

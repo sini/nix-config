@@ -8,9 +8,9 @@ metadata:
     app.kubernetes.io/instance: garage-operator
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: garage-operator
-    app.kubernetes.io/version: 0.7.11
+    app.kubernetes.io/version: 0.8.2
     control-plane: controller-manager
-    helm.sh/chart: garage-operator-0.7.11
+    helm.sh/chart: garage-operator-0.8.2
   name: garagebuckets.garage.rajsingh.info
 spec:
   group: garage.rajsingh.info
@@ -403,6 +403,9 @@ spec:
         - jsonPath: .status.globalAlias
           name: Alias
           type: string
+        - jsonPath: .status.bucketId
+          name: Bucket ID
+          type: string
         - jsonPath: .status.size
           name: Size
           type: string
@@ -688,6 +691,284 @@ spec:
                       description: 'IndexDocument is the default index document (default: index.html)'
                       type: string
                   type: object
+                websiteExposure:
+                  description: |-
+                    WebsiteExposure optionally exposes a website-enabled bucket through
+                    Kubernetes HTTP routing: an Ingress or a Gateway API HTTPRoute, created
+                    in this bucket's namespace and pointing at the referenced cluster's web
+                    API Service. At most one of Ingress and Gateway may be set. Requires
+                    spec.website.enabled. See the websiteExposure documentation for the
+                    hostname semantics (Garage resolves the bucket from the Host header).
+                  properties:
+                    backendRef:
+                      description: |-
+                        BackendRef overrides the Service the exposure routes to. When unset,
+                        the operator targets the referenced cluster's web API Service
+                        (<cluster>-gateway for unified clusters, <cluster> otherwise). For an
+                        Ingress the referent must be a core/v1 Service in the bucket's
+                        namespace (Ingress backends cannot cross namespaces). For an
+                        HTTPRoute any referent valid for spec.rules[].backendRefs is
+                        accepted, including cross-namespace ones (which additionally need a
+                        gateway API ReferenceGrant).
+                      properties:
+                        group:
+                          description: Group of the referent. Defaults to "" (the core API group).
+                          maxLength: 253
+                          type: string
+                        kind:
+                          description: Kind of the referent. Defaults to Service.
+                          maxLength: 253
+                          type: string
+                        name:
+                          description: Name of the referent.
+                          maxLength: 253
+                          minLength: 1
+                          type: string
+                        namespace:
+                          description: |-
+                            Namespace of the referent. Defaults to the bucket's namespace (the
+                            exposure resource's namespace). For an Ingress it must stay the
+                            bucket's namespace: Ingress backends cannot cross namespaces.
+                          maxLength: 63
+                          minLength: 1
+                          type: string
+                      required:
+                        - name
+                      type: object
+                    gateway:
+                      description: |-
+                        Gateway configures the generated Gateway API HTTPRoute. Mutually
+                        exclusive with Ingress. Requires the Gateway API CRDs to be installed;
+                        without them the operator reports a condition and does not fail the
+                        bucket.
+                      properties:
+                        annotations:
+                          additionalProperties:
+                            type: string
+                          description: Annotations to add to the HTTPRoute.
+                          type: object
+                        labels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels to add to the HTTPRoute (for example external-dns or
+                            argo-rollouts annotations). Operator-managed labels take precedence
+                            on conflict.
+                          type: object
+                        parentRefs:
+                          description: |-
+                            ParentRefs are passed through verbatim to the HTTPRoute's
+                            spec.parentRefs (Gateway names, optional sectionName, and optional
+                            cross-namespace references). At least one is required.
+                          items:
+                            description: |-
+                              ParentReference identifies an API object (usually a Gateway) that can be considered
+                              a parent of this resource (usually a route). There are two kinds of parent resources
+                              with "Core" support:
+
+                              * Gateway (Gateway conformance profile)
+                              * Service (Mesh conformance profile, ClusterIP Services only)
+
+                              This API may be extended in the future to support additional kinds of parent
+                              resources.
+
+                              The API object must be valid in the cluster; the Group and Kind must
+                              be registered in the cluster for this reference to be valid.
+                            properties:
+                              group:
+                                default: gateway.networking.k8s.io
+                                description: |-
+                                  Group is the group of the referent.
+                                  When unspecified, "gateway.networking.k8s.io" is inferred.
+                                  To set the core API group (such as for a "Service" kind referent),
+                                  Group must be explicitly set to "" (empty string).
+
+                                  Support: Core
+                                maxLength: 253
+                                pattern: ^$|^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                type: string
+                              kind:
+                                default: Gateway
+                                description: |-
+                                  Kind is kind of the referent.
+
+                                  There are two kinds of parent resources with "Core" support:
+
+                                  * Gateway (Gateway conformance profile)
+                                  * Service (Mesh conformance profile, ClusterIP Services only)
+
+                                  Support for other resources is Implementation-Specific.
+                                maxLength: 63
+                                minLength: 1
+                                pattern: ^[a-zA-Z]([-a-zA-Z0-9]*[a-zA-Z0-9])?$
+                                type: string
+                              name:
+                                description: |-
+                                  Name is the name of the referent.
+
+                                  Support: Core
+                                maxLength: 253
+                                minLength: 1
+                                type: string
+                              namespace:
+                                description: |-
+                                  Namespace is the namespace of the referent. When unspecified, this refers
+                                  to the local namespace of the Route.
+
+                                  Note that there are specific rules for ParentRefs which cross namespace
+                                  boundaries. Cross-namespace references are only valid if they are explicitly
+                                  allowed by something in the namespace they are referring to. For example:
+                                  Gateway has the AllowedRoutes field, and ReferenceGrant provides a
+                                  generic way to enable any other kind of cross-namespace reference.
+
+                                  <gateway:experimental:description>
+                                  ParentRefs from a Route to a Service in the same namespace are "producer"
+                                  routes, which apply default routing rules to inbound connections from
+                                  any namespace to the Service.
+
+                                  ParentRefs from a Route to a Service in a different namespace are
+                                  "consumer" routes, and these routing rules are only applied to outbound
+                                  connections originating from the same namespace as the Route, for which
+                                  the intended destination of the connections are a Service targeted as a
+                                  ParentRef of the Route.
+                                  </gateway:experimental:description>
+
+                                  Support: Core
+                                maxLength: 63
+                                minLength: 1
+                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?$
+                                type: string
+                              port:
+                                description: |-
+                                  Port is the network port this Route targets. It can be interpreted
+                                  differently based on the type of parent resource.
+
+                                  When the parent resource is a Gateway, this targets all listeners
+                                  listening on the specified port that also support this kind of Route(and
+                                  select this Route). It's not recommended to set `Port` unless the
+                                  networking behaviors specified in a Route must apply to a specific port
+                                  as opposed to a listener(s) whose port(s) may be changed. When both Port
+                                  and SectionName are specified, the name and port of the selected listener
+                                  must match both specified values.
+
+                                  <gateway:experimental:description>
+                                  When the parent resource is a Service, this targets a specific port in the
+                                  Service spec. When both Port (experimental) and SectionName are specified,
+                                  the name and port of the selected port must match both specified values.
+                                  </gateway:experimental:description>
+
+                                  Implementations MAY choose to support other parent resources.
+                                  Implementations supporting other types of parent resources MUST clearly
+                                  document how/if Port is interpreted.
+
+                                  For the purpose of status, an attachment is considered successful as
+                                  long as the parent resource accepts it partially. For example, Gateway
+                                  listeners can restrict which Routes can attach to them by Route kind,
+                                  namespace, or hostname. If 1 of 2 Gateway listeners accept attachment
+                                  from the referencing Route, the Route MUST be considered successfully
+                                  attached. If no Gateway listeners accept attachment from this Route,
+                                  the Route MUST be considered detached from the Gateway.
+
+                                  Support: Extended
+                                format: int32
+                                maximum: 65535
+                                minimum: 1
+                                type: integer
+                              sectionName:
+                                description: |-
+                                  SectionName is the name of a section within the target resource. In the
+                                  following resources, SectionName is interpreted as the following:
+
+                                  * Gateway: Listener name. When both Port (experimental) and SectionName
+                                  are specified, the name and port of the selected listener must match
+                                  both specified values.
+                                  * Service: Port name. When both Port (experimental) and SectionName
+                                  are specified, the name and port of the selected listener must match
+                                  both specified values.
+
+                                  Implementations MAY choose to support attaching Routes to other resources.
+                                  If that is the case, they MUST clearly document how SectionName is
+                                  interpreted.
+
+                                  When unspecified (empty string), this will reference the entire resource.
+                                  For the purpose of status, an attachment is considered successful if at
+                                  least one section in the parent resource accepts it. For example, Gateway
+                                  listeners can restrict which Routes can attach to them by Route kind,
+                                  namespace, or hostname. If 1 of 2 Gateway listeners accept attachment from
+                                  the referencing Route, the Route MUST be considered successfully
+                                  attached. If no Gateway listeners accept attachment from this Route, the
+                                  Route MUST be considered detached from the Gateway.
+
+                                  Support: Core
+                                maxLength: 253
+                                minLength: 1
+                                pattern: ^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$
+                                type: string
+                            required:
+                              - name
+                            type: object
+                          minItems: 1
+                          type: array
+                      required:
+                        - parentRefs
+                      type: object
+                    hostnames:
+                      description: |-
+                        Hostnames are the external hostnames the exposure routes on. When
+                        empty, the operator uses the single canonical hostname
+                        <globalAlias><webApi.rootDomain>. Wildcards and duplicates are not
+                        supported (duplicates are rejected by the validating webhook; the CRD
+                        schema cannot express uniqueItems).
+
+                        For an HTTPRoute any hostname is accepted: a hostname that is neither
+                        canonical nor the global alias gets a URLRewrite filter rewriting the
+                        Host header back to the canonical host, so Garage still resolves it to
+                        this bucket. For an Ingress, only the canonical hostname and the
+                        global alias are accepted — an Ingress cannot rewrite the Host header,
+                        so any other hostname is refused on the WebsiteExposed condition.
+                      items:
+                        type: string
+                      maxItems: 16
+                      type: array
+                    ingress:
+                      description: |-
+                        Ingress configures the generated Kubernetes Ingress. Mutually
+                        exclusive with Gateway. Only valid when the bucket and the referenced
+                        cluster share a namespace.
+                      properties:
+                        annotations:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Annotations to add to the Ingress (for example the TLS or
+                            proxy-protocol annotations your ingress controller expects).
+                          type: object
+                        ingressClassName:
+                          description: |-
+                            IngressClassName is the ingress class the Ingress must match
+                            (spec.ingressClassName). When empty, the Ingress is left without a
+                            class so the cluster's default ingress controller picks it up.
+                          maxLength: 253
+                          minLength: 1
+                          type: string
+                        labels:
+                          additionalProperties:
+                            type: string
+                          description: |-
+                            Labels to add to the Ingress. Operator-managed labels take precedence
+                            on conflict.
+                          type: object
+                        tlsSecretName:
+                          description: |-
+                            TLSSecretName is the name of a TLS Secret in the bucket's namespace
+                            (where the generated Ingress lives), attached to the Ingress
+                            (spec.tls). The Secret must already exist; the operator does not
+                            provision certificates.
+                          maxLength: 253
+                          minLength: 1
+                          type: string
+                      type: object
+                  type: object
               required:
                 - clusterRef
               type: object
@@ -941,6 +1222,62 @@ spec:
                 websiteEnabled:
                   description: WebsiteEnabled indicates if website hosting is currently enabled
                   type: boolean
+                websiteExposure:
+                  description: |-
+                    WebsiteExposure reports the operator-generated HTTP routing resource
+                    (Ingress or HTTPRoute) when spec.websiteExposure is set.
+                  properties:
+                    hostnames:
+                      description: Hostnames are the hostnames the generated resource routes on.
+                      items:
+                        type: string
+                      type: array
+                    name:
+                      description: Name is the name of the generated resource, in the bucket's namespace.
+                      type: string
+                    parents:
+                      description: |-
+                        Parents mirrors the route's status.parents for an HTTPRoute: the
+                        per-parent Accepted/ResolvedRefs/Ready conditions the Gateway
+                        controllers publish. Empty for an Ingress, which has no per-parent
+                        readiness model.
+                      items:
+                        description: |-
+                          WebsiteParentStatus is the per-parent readiness of a generated HTTPRoute,
+                          mirroring gateway.networking.k8s.io/v1 RouteParentStatus conditions.
+                        properties:
+                          accepted:
+                            description: |-
+                              Accepted is true when the parent accepted the route
+                              (status.parents[].conditions[Accepted]=True).
+                            type: boolean
+                          message:
+                            description: Message carries the parent's condition message when not ready.
+                            type: string
+                          parent:
+                            description: Parent is the parent Gateway (or other parent) as namespace/name.
+                            type: string
+                          ready:
+                            description: |-
+                              Ready is true when the parent reports the route Ready
+                              (status.parents[].conditions[Ready]=True).
+                            type: boolean
+                          resolvedRefs:
+                            description: |-
+                              ResolvedRefs is true when the route's backend references resolved on
+                              that parent (status.parents[].conditions[ResolvedRefs]=True).
+                            type: boolean
+                        type: object
+                      type: array
+                    type:
+                      description: |-
+                        Type is the kind of routing resource the operator manages for this
+                        bucket: Ingress or HTTPRoute.
+                      enum:
+                        - Ingress
+                        - HTTPRoute
+                      type: string
+                  type: object
                 websiteUrl:
                   description: WebsiteURL is the computed website URL (if website hosting is enabled)
                   type: string

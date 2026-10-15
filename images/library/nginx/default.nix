@@ -1,8 +1,8 @@
 {
   imageName = "library/nginx";
   imageTag = "stable-alpine";
-  imageDigest = "sha256:0985e772fb9f729e6fa0980da05fca5d9c468e870eed43071545afa9d2e27d94";
-  imageHash = "sha256-7NQwyQYmdytwXUT0D84AJo3p0tZd+oU9K4iRa96k4OU=";
+  imageDigest = "sha256:970364228b1e4f932abc22d321932816782cca8a20b85a77552a7cfe9acfb3b5";
+  imageHash = "sha256-/rXrUlTSuC4pCrYScvNmJEHL9Oc1rEpJrcpQp06CY5g=";
   arch = "amd64";
   os = "linux";
   pinned = false;

@@ -37,7 +37,7 @@ spec:
               value: "1027"
             - name: TZ
               value: America/Los_Angeles
-          image: ghcr.io/dictionarry-hub/profilarr@sha256:7c910c49a0c255466ff94e34293afb969cedfa9d2ab1ef319b689a743d9fc7b3
+          image: ghcr.io/dictionarry-hub/profilarr@sha256:264acb249e68eb2a47423d9e0f7a28eae3660ed6ab72d5390427193b976381b6
           livenessProbe:
             failureThreshold: 3
             initialDelaySeconds: 0

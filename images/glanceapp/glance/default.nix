@@ -1,8 +1,8 @@
 {
   imageName = "glanceapp/glance";
   imageTag = "latest";
-  imageDigest = "sha256:9dfb09470b207dcb67ac715994bdb1929374ba3f9c0d7df7462c24adf10fd073";
-  imageHash = "sha256-CM3SOPXcERhPKE5PjGYQdXA8K4DT1kag+tsKyfQsFcE=";
+  imageDigest = "sha256:bc5a392672c1ec8823c50b61f3bd4b7e5acc34fcbb8477862577b3af1c633875";
+  imageHash = "sha256-19EJBgdKbz6CFsx4BwbeGkK85y1kIksnm+vI7tYYDXQ=";
   arch = "amd64";
   os = "linux";
   pinned = false;
