@@ -18,6 +18,7 @@ data:
             10.10.10.1 gen-status.json64.dev
             10.11.0.1 glance.json64.dev
             10.11.0.1 grafana.json64.dev
+            10.11.0.1 hindsight.json64.dev
             10.10.10.1 homepage.json64.dev
             10.10.10.1 hs.json64.dev
             10.10.10.1 idm.json64.dev

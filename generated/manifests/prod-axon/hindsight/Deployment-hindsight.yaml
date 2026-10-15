@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 255578deb160aff54edc07db58c5dc7dd9ee2e6010ee022f7fdc16cd91876f0e
+        checksum/configMaps: 16215704607e4e4a6f4041ef482627ae4003af449d9283f2f1ee0f69b7d013c3
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: hindsight
@@ -35,7 +35,7 @@ spec:
                   key: url
                   name: hindsight-pg-dsn
             - name: HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API
-              value: "false"
+              value: "true"
             - name: HINDSIGHT_API_FAIL_ON_EXTRACTION_ERRORS
               value: "true"
             - name: HINDSIGHT_API_HOST
@@ -56,8 +56,10 @@ spec:
               value: "900"
             - name: HINDSIGHT_API_LOG_LEVEL
               value: info
+            - name: HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE
+              value: /etc/hindsight-write-gate/admin/sha256
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_BANKS
-              value: genie,genie-memory
+              value: '{"den-law":{"gate_reads":true},"genie":{"gate_reads":false},"genie-memory":{"gate_reads":false}}'
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION
               value: hindsight_write_gate:WriteGate
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR
@@ -109,6 +111,9 @@ spec:
               port: 8888
             periodSeconds: 10
           volumeMounts:
+            - mountPath: /etc/hindsight-write-gate/admin
+              name: admin-digest
+              readOnly: true
             - mountPath: /home/hindsight/.cache
               name: model-cache
             - mountPath: /opt/hindsight-write-gate/hindsight_write_gate.py
@@ -144,6 +149,10 @@ spec:
         fsGroupChangePolicy: OnRootMismatch
       serviceAccountName: hindsight
       volumes:
+        - name: admin-digest
+          secret:
+            defaultMode: 288
+            secretName: hindsight-cp-admin-token-sha256
         - name: model-cache
           persistentVolumeClaim:
             claimName: hindsight

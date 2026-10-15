@@ -12,6 +12,7 @@ spec:
     - fromEndpoints:
         - matchLabels:
             app.kubernetes.io/name: hindsight-cp
+            k8s:io.kubernetes.pod.namespace: ai
       toPorts:
         - ports:
             - port: "8888"

@@ -28,6 +28,11 @@ spec:
       automountServiceAccountToken: false
       containers:
         - env:
+            - name: HINDSIGHT_CP_DATAPLANE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: token
+                  name: hindsight-cp-admin-token
             - name: HINDSIGHT_CP_DATAPLANE_API_URL
               value: http://hindsight.ai.svc.cluster.local:8888
             - name: HINDSIGHT_CP_HOSTNAME
