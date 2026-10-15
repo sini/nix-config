@@ -64,7 +64,9 @@
         flake = false;
       };
 
-      den.url = "github:denful/den/chore/gen-schema-options-first";
+      # TODO: back to github:denful/den once denful/den#727 (os content reaching
+      # route-delivered guests) merges; cortex-cuda's users' zsh depends on it.
+      den.url = "github:denful/den/fix/os-alias-route-collection";
 
       # The gen HUB, never a member repo directly: den resolves gen-schema from
       # `inputs.gen` when it is declared, so hub-fronting is what keeps den and this

@@ -445,16 +445,16 @@
     },
     "den": {
       "locked": {
-        "lastModified": 1791386834,
-        "narHash": "sha256-a7E9QoEt5WcYoUGQyRWHm8QVUrKxTcSyNND3LLCs/KI=",
+        "lastModified": 1792057602,
+        "narHash": "sha256-4vzxweuXpkDF8iGjGkJ/GMBqgDybzWLCunG8CzoYEqk=",
         "owner": "denful",
         "repo": "den",
-        "rev": "8157e924bec8b9740c3ffc34c312161169df7a8a",
+        "rev": "b5babd123d0a6828ec261c7a45d2298b9ec9a8f3",
         "type": "github"
       },
       "original": {
         "owner": "denful",
-        "ref": "chore/gen-schema-options-first",
+        "ref": "fix/os-alias-route-collection",
         "repo": "den",
         "type": "github"
       }
