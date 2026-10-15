@@ -161,7 +161,8 @@ in
           # 64 GB: headroom for llama-cpp's host PROMPT cache (--cache-ram 49152,
           # saved slot state for prompt reuse). Not KV spillover — stock
           # llama.cpp keeps active KV on the card.
-          mem = 65536;
+          # mem = 65536;
+          mem = 32768;
 
           interfaces = [
             {
