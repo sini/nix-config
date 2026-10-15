@@ -402,20 +402,6 @@ in
           };
           Install.WantedBy = [ "default.target" ];
         };
-
-        # The owner's explicit authorization of the three tools. Allowed calls skip
-        # the auto-mode classifier, so the tools must never be requiresUserInteraction.
-        # Both namings: a server registered directly, outside a plugin, is
-        # `mcp__xmsg__*` (xmsg's module allows those too); home-manager ships the
-        # server in its `hm` plugin, which names the tools `mcp__plugin_hm_xmsg__*`.
-        programs.claude-code.settings.permissions.allow = [
-          "mcp__xmsg__list"
-          "mcp__xmsg__send"
-          "mcp__xmsg__reply"
-          "mcp__plugin_hm_xmsg__list"
-          "mcp__plugin_hm_xmsg__send"
-          "mcp__plugin_hm_xmsg__reply"
-        ];
       };
   };
 }
