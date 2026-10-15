@@ -23,6 +23,8 @@
       core.perf.zram-swap
       core.system.linux-kernel
       core.users
+      # Root accepts every wheel user's SSH keys (generators and deploys log in as root).
+      core.users.root-user
 
       core.impermanence
 
