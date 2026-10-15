@@ -19,6 +19,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        checksum/configMaps: 255578deb160aff54edc07db58c5dc7dd9ee2e6010ee022f7fdc16cd91876f0e
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: hindsight
@@ -32,6 +34,8 @@ spec:
                 secretKeyRef:
                   key: url
                   name: hindsight-pg-dsn
+            - name: HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API
+              value: "false"
             - name: HINDSIGHT_API_FAIL_ON_EXTRACTION_ERRORS
               value: "true"
             - name: HINDSIGHT_API_HOST
@@ -52,6 +56,12 @@ spec:
               value: "900"
             - name: HINDSIGHT_API_LOG_LEVEL
               value: info
+            - name: HINDSIGHT_API_OPERATION_VALIDATOR_BANKS
+              value: genie,genie-memory
+            - name: HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION
+              value: hindsight_write_gate:WriteGate
+            - name: HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR
+              value: /etc/hindsight-write-gate/tokens
             - name: HINDSIGHT_API_PORT
               value: "8888"
             - name: HINDSIGHT_API_VECTOR_EXTENSION
@@ -60,6 +70,8 @@ spec:
               value: hindsight
             - name: HINDSIGHT_API_WORKER_MAX_SLOTS
               value: "6"
+            - name: PYTHONPATH
+              value: /opt/hindsight-write-gate
           image: ghcr.io/vectorize-io/hindsight-api@sha256:7b14a1f4062252992d0176758753615e0a2071d9a269995be007be223ab01812
           livenessProbe:
             failureThreshold: 3
@@ -99,6 +111,13 @@ spec:
           volumeMounts:
             - mountPath: /home/hindsight/.cache
               name: model-cache
+            - mountPath: /opt/hindsight-write-gate/hindsight_write_gate.py
+              name: write-gate
+              readOnly: true
+              subPath: hindsight_write_gate.py
+            - mountPath: /etc/hindsight-write-gate/tokens
+              name: write-tokens
+              readOnly: true
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
       hostIPC: false
@@ -128,3 +147,10 @@ spec:
         - name: model-cache
           persistentVolumeClaim:
             claimName: hindsight
+        - configMap:
+            name: hindsight
+          name: write-gate
+        - name: write-tokens
+          secret:
+            defaultMode: 288
+            secretName: hindsight-write-tokens

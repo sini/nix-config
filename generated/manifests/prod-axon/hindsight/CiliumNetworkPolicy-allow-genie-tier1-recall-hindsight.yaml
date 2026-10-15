@@ -1,0 +1,25 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-genie-tier1-recall-hindsight
+  namespace: ai
+spec:
+  description: 'Allow genie tier-1 to recall from the genie banks on 8888 (HTTP rule: recall and the read-only GETs its client makes).'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: hindsight
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.cilium.k8s.policy.serviceaccount: genie-tier1
+            k8s:io.kubernetes.pod.namespace: genie
+      toPorts:
+        - ports:
+            - port: "8888"
+              protocol: TCP
+          rules:
+            http:
+              - method: POST
+                path: /v1/default/banks/(genie|genie-memory)/memories/recall
+              - method: GET
+                path: /v1/default/banks/(genie|genie-memory)/(profile|config|memories/list)
