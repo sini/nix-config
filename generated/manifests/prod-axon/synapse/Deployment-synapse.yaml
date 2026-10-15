@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: 51a9cc3e3c6c1728273cc16b970ad9e69756f4bcecf807a98578d8cdf144e0df
+        checksum/config: da9f42eed0c42c4662f5f163924085079fb3d7b1a406ce7cbb873ec63809722e
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: synapse

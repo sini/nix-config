@@ -161,6 +161,11 @@ in
           report_stats = false;
           max_upload_size = "50M";
           enable_registration = false;
+          # New members join on their first login (MAS provisions through Synapse's
+          # registration, which runs this). The room is local-only and created by
+          # hand: Synapse autocreates only when the server's first user registers.
+          auto_join_rooms = [ "#general:json64.dev" ];
+          autocreate_auto_join_rooms = false;
           password_config.enabled = false;
           matrix_authentication_service = {
             enabled = true;
