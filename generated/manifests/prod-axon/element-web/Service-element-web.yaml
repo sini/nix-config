@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: element-web
+    app.kubernetes.io/name: element-web
+    app.kubernetes.io/service: element-web
+  name: element-web
+  namespace: matrix
+spec:
+  ports:
+    - name: http
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: element-web
+    app.kubernetes.io/name: element-web
+  type: ClusterIP

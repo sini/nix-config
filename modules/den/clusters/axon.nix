@@ -209,6 +209,7 @@
       services.communication.matrix.synapse
       services.communication.matrix.mas
       services.communication.matrix.matrix-admin
+      services.communication.matrix.element-web
       services.communication.matrix.tuwunel
 
       # communication — Postfix relay to Proton for LAN and in-cluster senders.
