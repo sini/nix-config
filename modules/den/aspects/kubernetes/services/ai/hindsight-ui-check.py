@@ -9,7 +9,8 @@ kanidm-oauth2.json is `nix eval --json .#nixosConfigurations.uplink.config.servi
   cp   nothing but the gateway reaches the CP: every Service selecting it is
        ClusterIP, the only (clusterwide or ai) network policy giving it ingress admits
        just the gateways namespace, and no other route points at it
-  dp   the dataplane's Services and LAN policy are byte-identical to the base render
+  dp   the dataplane's Services are byte-identical to the base render (who reaches
+       which route over them is hindsight-l7-check.py's)
 
 Exit 0 iff every check passes; every failure is printed.
 """
@@ -181,7 +182,6 @@ check("cp.no-other-route", not others, f"other routes to hindsight-cp: {others}"
 for f in (
     "hindsight/Service-hindsight.yaml",
     "hindsight/Service-hindsight-internal.yaml",
-    "hindsight/CiliumNetworkPolicy-allow-lan-ingress-hindsight.yaml",
 ):
     a, b = base / f, env / f
     check(

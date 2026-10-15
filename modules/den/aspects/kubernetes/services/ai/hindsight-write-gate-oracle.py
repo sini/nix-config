@@ -264,7 +264,7 @@ async def call(c, verb, suffix, bank, ids, tok):
         collections.defaultdict(lambda: "x0", ids)
     ).replace("{document_id:path}", ids["document_id"])
     h = hdr(tok)
-    if suffix == "/document-transfer":
+    if verb == "POST" and suffix == "/document-transfer":
         return await c.post(
             url, files={"file": ("t.zip", ARCHIVE["zip"], "application/zip")}, headers=h
         )
