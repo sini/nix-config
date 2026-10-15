@@ -25,10 +25,10 @@ in
     secretPath = ./. + "/../../../.secrets/hosts/cortex-cuda";
     public_key = ./. + "/../../../.secrets/hosts/cortex-cuda/ssh_host_ed25519_key.pub";
 
-    # The guest is a raw entity (no host-submodule `facts` default), but fleet
-    # users that participate now (e.g. shuo → roles.default → core.system.facter)
-    # read host.facts. Point it at the PARENT's facter report — the guest runs on
-    # cortex's hardware (GPU passthrough device IDs derive from it).
+    # The guest is a raw entity (no host-submodule `facts` default), but
+    # roles.default's core.system.facter reads host.facts. Point it at the
+    # PARENT's facter report — the guest runs on cortex's hardware (GPU
+    # passthrough device IDs derive from it).
     facts = ./. + "/../../../hosts/cortex/facter.json";
 
     networking.interfaces.vm-cuda.ipv4 = [ "10.9.2.2/16" ];
@@ -106,20 +106,31 @@ in
     };
   };
 
-  den.policies.cortex-cuda-unpersist-machine-id =
+  # The guest pins its own machine-id (environment.etc below) and takes its SSH
+  # host key from the host-key share, so persisting either would bind over them.
+  den.policies.cortex-cuda-unpersist-pinned =
     { host, ... }:
     [
       (den.lib.policy.pipe.from "persist" [
-        (den.lib.policy.pipe.transform (e: e // { files = lib.remove "/etc/machine-id" (e.files or [ ]); }))
+        (den.lib.policy.pipe.transform (
+          e:
+          e
+          // {
+            files = lib.filter (f: f != "/etc/machine-id" && !(lib.hasPrefix "/etc/ssh/ssh_host_" f)) (
+              e.files or [ ]
+            );
+          }
+        ))
       ])
     ];
 
   den.aspects.cortex-cuda = {
     includes = with den.aspects; [
-      # Impermanence at the guest's own scope. Without it the guest got it only
-      # from its users' roles.default leaking up (denful/den#694), so host-scope
-      # policies like cortex-cuda-unpersist-machine-id filtered a pool nothing read.
-      core.impermanence
+      # The host baseline at the guest's own scope. Without it the guest got it
+      # only from its users' roles.default leaking up (denful/den#694), so
+      # host-scope policies like cortex-cuda-unpersist-pinned filtered a pool
+      # nothing read.
+      roles.default
       roles.inference
       services.ai.hyperqwen
       hardware.gpu.nvidia
@@ -127,9 +138,7 @@ in
       # for itself.
       services.monitoring.prometheus-exporter
       services.alloy
-      # The guest pins its own machine-id (environment.etc below), so persisting
-      # it too would bind over the generated file.
-      den.policies.cortex-cuda-unpersist-machine-id
+      den.policies.cortex-cuda-unpersist-pinned
     ];
 
     # M2: CUDA-enable the guest's package set at the microvm submodule level.
@@ -155,18 +164,6 @@ in
         # The participating fleet baseline (core.nix.stateVersion) sets the
         # fleet default; this guest pins its own. mkForce to win the merge.
         system.stateVersion = lib.mkForce "25.05";
-
-        # The fleet users participating on this guest drag roles.default →
-        # core.network.tailscale in via the user scopes. This headless GPU
-        # inference VM is reached via the host on the internal bridge
-        # (10.9.2.2), not the tailnet, and the user-scope tailscale age-secret
-        # is not collected for a delivered guest. Neutralize it: mkForce the
-        # authKeyFile so the absent `age.secrets.tailscale-auth-key` reference
-        # is never forced, and disable the daemon. Fleet IDENTITY participation
-        # (agenix host key, core.users, collect/quirks) stays intact.
-        # TODO(owner 2026-10-08): restore tailscale on cortex-cuda — needs a headscale preauth key at .secrets/hosts/cortex-cuda/tailscale-preauthkey.age (agenix edit), then remove this override.
-        services.tailscale.enable = lib.mkForce false;
-        services.tailscale.authKeyFile = lib.mkForce "/dev/null";
 
         # The guest uses our externally-created CUDA pkgs (microvm.pkgs), so its
         # own nixpkgs.config must be empty (allowUnfree/acceptLicense are baked
@@ -283,10 +280,8 @@ in
           "net.ipv4.tcp_fastopen" = 3;
         };
 
-        # The fleet users participating here (shuo/sini/will) use the zsh login
-        # shell (core.users.shell) but the host-level apps.shell.zsh that backs
-        # it lives in roles.default, which this guest doesn't include. Enable it
-        # so their shells resolve.
+        # core.users.shell enables zsh in the `os` class, but the guest delivery
+        # route collects only `nixos`, so the users' zsh login shell needs it here.
         programs.zsh.enable = true;
 
         # The key share must be mounted before agenix runs in activation.
