@@ -19,7 +19,25 @@
       };
 
     nixos =
-      { pkgs, lib, ... }:
+      {
+        config,
+        pkgs,
+        lib,
+        ...
+      }:
+      let
+        # Impermanence bind-mounts each persisted path from its dataset, so
+        # node-exporter would report one dataset once per path, each alerting on
+        # its own; the dataset's own mount is the one to keep.
+        persisted = lib.concatMap (p: map (d: d.dirPath) p.directories ++ map (f: f.filePath) p.files) (
+          lib.attrValues (config.environment.persistence or { })
+        );
+        excludedMounts = [
+          "/(persist/|cache/)?(home|var/lib/private|sys|proc|dev|etc|root|run)"
+        ]
+        # `[.]`, not `\.`: the flag passes through ExecStart, which reads backslashes.
+        ++ map (lib.replaceStrings [ "." ] [ "[.]" ]) persisted;
+      in
       {
         services.prometheus = {
           exporters = {
@@ -54,8 +72,9 @@
                 "wifi"
               ];
               extraFlags = [
-                "--collector.filesystem.mount-points-exclude='^/(persist/|cache/)?(home|var/lib/private|sys|proc|dev|etc|root|run)($$|/)'"
-                "--collector.filesystem.ignored-fs-types=^(sys|proc|auto)fs$$"
+                "--collector.filesystem.mount-points-exclude='^(${lib.concatStringsSep "|" excludedMounts})($$|/)'"
+                # virtiofs is a share of the host's own filesystem, already reported there.
+                "--collector.filesystem.ignored-fs-types=^(sys|proc|auto|virtio)fs$$"
               ];
             };
 
