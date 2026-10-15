@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/config: f8e77897fd4378fa4102eb9e162482660d07c62ad5b3dfd4f285d4284d248da9
+        checksum/config: accfd537370b53915d830391c6ba64f237ae26462fb89239fb1f0ff7672f9dbb
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: element-web

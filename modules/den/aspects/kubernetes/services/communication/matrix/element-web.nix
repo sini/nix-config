@@ -42,6 +42,9 @@ in
           brand = "Element";
           default_theme = "dark";
           room_directory.servers = [ "json64.dev" ];
+          # Signed out, go straight to MAS, which forwards to kanidm (its only
+          # provider). MAS's consent screen is the one prompt left.
+          sso_redirect_options.immediate = true;
         };
       in
       {
