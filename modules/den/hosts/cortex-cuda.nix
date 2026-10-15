@@ -180,12 +180,6 @@ in
               proto = "virtiofs";
             }
             {
-              source = "/cache/var/lib/private/ollama";
-              mountPoint = "/cache/var/lib/private/ollama";
-              tag = "ollama";
-              proto = "virtiofs";
-            }
-            {
               source = "/cache/var/lib/private/llama-cpp";
               mountPoint = "/cache/var/lib/private/llama-cpp";
               tag = "llama-cpp";
@@ -221,7 +215,6 @@ in
           '';
           serviceConfig.Type = "oneshot";
         };
-        systemd.services.ollama.after = [ "nvidia-gpu-config.service" ];
         systemd.services.llama-cpp = {
           after = [ "nvidia-gpu-config.service" ];
           wantedBy = lib.mkForce [ ];
