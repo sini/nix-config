@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-postgres-egress-mas
+  namespace: matrix
+spec:
+  description: Allow MAS to reach the matrix-pg CNPG cluster.
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            cnpg.io/cluster: matrix-pg
+      toPorts:
+        - ports:
+            - port: "5432"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: matrix-authentication-service

@@ -205,6 +205,7 @@
       # matrix.json64.dev; kanidm native OIDC). See communication/matrix/synapse.nix.
       services.communication.matrix.matrix-pg
       services.communication.matrix.synapse
+      services.communication.matrix.mas
       services.communication.matrix.matrix-admin
       services.communication.matrix.synapse-admins
       services.communication.matrix.tuwunel

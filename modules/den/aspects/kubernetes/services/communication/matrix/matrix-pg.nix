@@ -6,10 +6,11 @@
 #
 # Synapse refuses to start on a database whose collation is not C, so initdb
 # creates it with encoding UTF8 and LC_COLLATE/LC_CTYPE C. The `synapse` role
-# owns the database; Synapse needs no extensions.
+# owns the database; Synapse needs no extensions. The Matrix Authentication
+# Service (mas.nix) gets its own `mas` role and database in the same cluster.
 #
-# Synapse reads its database credentials from the composed secrets.yaml built in
-# synapse.nix, so there is no DSN secret here.
+# Synapse and MAS read their database credentials from the composed secrets
+# files built in synapse.nix and mas.nix, so there is no DSN secret here.
 #
 # References the cluster-scoped `longhorn-snapshot` VolumeSnapshotClass declared
 # by media-pg.nix.
@@ -32,7 +33,14 @@
               key = "synapse";
             };
           };
-
+          matrix-pg-mas-password = {
+            rekeyFile = environment.secretPath + "/matrix-pg/mas-password.age";
+            generator.script = "rfc3986-secret";
+            sopsOutput = {
+              file = "matrix-pg";
+              key = "mas";
+            };
+          };
         };
       };
 
@@ -87,6 +95,14 @@
 
               affinity.podAntiAffinityType = "required";
 
+              managed.roles = [
+                {
+                  name = "mas";
+                  login = true;
+                  passwordSecret.name = "matrix-pg-mas-password";
+                }
+              ];
+
               # The app database and its owner role, with the C collation Synapse
               # requires (it checks LC_COLLATE/LC_CTYPE at startup).
               bootstrap.initdb = {
@@ -104,6 +120,12 @@
               backup.volumeSnapshot.className = "longhorn-backup-nfs";
 
               inheritedMetadata.labels."recurring-job-group.longhorn.io/db-local-snap" = "enabled";
+            };
+
+            databases.mas.spec = {
+              cluster.name = "matrix-pg";
+              name = "mas";
+              owner = "mas";
             };
 
             # Nightly backup at 05:00 — offset from media-pg/coder-pg (04:00) and
@@ -125,7 +147,13 @@
                   password = config.age.secrets.matrix-pg-synapse-password.sopsRef;
                 };
               };
-
+              matrix-pg-mas-password = {
+                type = "kubernetes.io/basic-auth";
+                stringData = {
+                  username = "mas";
+                  password = config.age.secrets.matrix-pg-mas-password.sopsRef;
+                };
+              };
             };
 
             ciliumNetworkPolicies = {
@@ -159,15 +187,16 @@
 
               # Creating an ingress policy flips the instance pods to ingress
               # default-deny, so every legitimate caller is enumerated here:
-              # synapse (5432), peer replication (5432/8000), the cnpg-system
-              # operator (8000), prometheus (9187 metrics).
+              # synapse and MAS (5432), peer replication (5432/8000), the
+              # cnpg-system operator (8000), prometheus (9187 metrics).
               allow-matrix-pg-internal.spec = {
-                description = "matrix-pg ingress: synapse (5432), peer replication (5432/8000), CNPG operator (8000), prometheus (9187).";
+                description = "matrix-pg ingress: synapse and MAS (5432), peer replication (5432/8000), CNPG operator (8000), prometheus (9187).";
                 endpointSelector.matchLabels."cnpg.io/cluster" = "matrix-pg";
                 ingress = [
                   {
                     fromEndpoints = [
                       { matchLabels."app.kubernetes.io/name" = "synapse"; }
+                      { matchLabels."app.kubernetes.io/name" = "matrix-authentication-service"; }
                     ];
                     toPorts = [
                       {

@@ -401,13 +401,20 @@ let
         };
       };
 
-      # Synapse NATIVE OIDC (the romm pattern; see communication/matrix/synapse.nix).
+      # Matrix login, upstream of the Matrix Authentication Service
+      # (communication/matrix/mas.nix); Synapse's own OIDC callback stays until
+      # Synapse delegates to MAS. The client keeps its `synapse` id so kanidm's
+      # issuer, and with it the subjects syn2mas links, stay the same.
       # preferShortUsername makes `preferred_username` the short kanidm name, which
-      # becomes the PERMANENT Matrix localpart (@<short>:json64.dev). Synapse sends
-      # PKCE (pkce_method: always), so the insecure PKCE opt-out is not set.
+      # becomes the PERMANENT Matrix localpart (@<short>:json64.dev). Both send PKCE,
+      # so the insecure PKCE opt-out is not set.
       synapse = {
         displayName = "Matrix";
-        originUrl = "https://${domain "matrix"}/_synapse/client/oidc/callback";
+        originUrl = [
+          "https://${domain "matrix"}/_synapse/client/oidc/callback"
+          # The id is the kanidm provider's ULID in mas.nix.
+          "https://${domain "matrix-auth"}/upstream/callback/01M4YHS31NGAA65EM4FZ07BJZ4"
+        ];
         originLanding = "https://${domain "matrix"}";
         basicSecretFile = secretPaths.synapse-oidc-client-secret;
         preferShortUsername = true;

@@ -318,6 +318,11 @@ in
       { pkgs, ... }:
       "${pkgs.openssl}/bin/openssl genpkey -algorithm ed25519";
 
+    # PKCS#8 RSA-2048, e.g. the RS256 key OIDC requires of an issuer (MAS).
+    rsa-private-key =
+      { pkgs, ... }:
+      "${pkgs.openssl}/bin/openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048";
+
     # Synapse signing key: one line `ed25519 <key-id> <unpadded base64 32-byte seed>`,
     # the format `generate_signing_key` writes. The key id is `a_` + 4 hex chars.
     synapse-signing-key =

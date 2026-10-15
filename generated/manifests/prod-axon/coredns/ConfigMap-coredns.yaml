@@ -26,6 +26,7 @@ data:
             10.11.0.1 lidarr.json64.dev
             10.11.0.1 longhorn.zeroday.run
             10.11.0.1 matrix-admin.json64.dev
+            10.11.0.1 matrix-auth.json64.dev
             10.11.0.1 matrix.gen.wtf
             10.11.0.1 matrix.json64.dev
             10.11.0.1 nzb.json64.dev

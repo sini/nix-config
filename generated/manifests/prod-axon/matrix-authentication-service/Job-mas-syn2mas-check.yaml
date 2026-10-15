@@ -1,0 +1,138 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/controller: syn2mas-check
+    app.kubernetes.io/instance: matrix-authentication-service
+    app.kubernetes.io/name: matrix-authentication-service
+  name: mas-syn2mas-check
+  namespace: matrix
+spec:
+  backoffLimit: 0
+  suspend: false
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: syn2mas-check
+        app.kubernetes.io/instance: matrix-authentication-service
+        app.kubernetes.io/name: matrix-authentication-service
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - syn2mas
+            - migrate
+            - --dry-run
+            - --config
+            - /config/config.yaml
+            - --config
+            - /secrets/secrets.yaml
+            - --synapse-config
+            - /synapse/homeserver.yaml
+            - --synapse-config
+            - /synapse/secrets.yaml
+          image: ghcr.io/element-hq/matrix-authentication-service@sha256:085e37263957b3b79be85de9cfda1980b97e9653f284fba0c902445e06c200b8
+          name: main
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /secrets/oidc-client-secret
+              name: oidc
+              readOnly: true
+              subPath: client-secret
+            - mountPath: /secrets/secrets.yaml
+              name: secrets
+              readOnly: true
+              subPath: secrets.yaml
+            - mountPath: /secrets/encryption-key
+              name: secrets
+              readOnly: true
+              subPath: encryption-key
+            - mountPath: /secrets/signing.key
+              name: secrets
+              readOnly: true
+              subPath: signing.key
+            - mountPath: /secrets/shared-secret
+              name: secrets
+              readOnly: true
+              subPath: shared-secret
+            - mountPath: /synapse/homeserver.yaml
+              name: synapse-config
+              readOnly: true
+              subPath: homeserver.yaml
+            - mountPath: /synapse/secrets.yaml
+              name: synapse-secrets
+              readOnly: true
+              subPath: secrets.yaml
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      initContainers:
+        - args:
+            - syn2mas
+            - check
+            - --config
+            - /config/config.yaml
+            - --config
+            - /secrets/secrets.yaml
+            - --synapse-config
+            - /synapse/homeserver.yaml
+            - --synapse-config
+            - /synapse/secrets.yaml
+          image: ghcr.io/element-hq/matrix-authentication-service@sha256:085e37263957b3b79be85de9cfda1980b97e9653f284fba0c902445e06c200b8
+          name: check
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /secrets/oidc-client-secret
+              name: oidc
+              readOnly: true
+              subPath: client-secret
+            - mountPath: /secrets/secrets.yaml
+              name: secrets
+              readOnly: true
+              subPath: secrets.yaml
+            - mountPath: /secrets/encryption-key
+              name: secrets
+              readOnly: true
+              subPath: encryption-key
+            - mountPath: /secrets/signing.key
+              name: secrets
+              readOnly: true
+              subPath: signing.key
+            - mountPath: /secrets/shared-secret
+              name: secrets
+              readOnly: true
+              subPath: shared-secret
+            - mountPath: /synapse/homeserver.yaml
+              name: synapse-config
+              readOnly: true
+              subPath: homeserver.yaml
+            - mountPath: /synapse/secrets.yaml
+              name: synapse-secrets
+              readOnly: true
+              subPath: secrets.yaml
+      restartPolicy: Never
+      securityContext:
+        runAsGroup: 65532
+        runAsNonRoot: true
+        runAsUser: 65532
+      serviceAccountName: matrix-authentication-service
+      volumes:
+        - configMap:
+            name: matrix-authentication-service-config
+          name: config
+        - name: oidc
+          secret:
+            secretName: synapse-oidc-client-secret
+        - name: secrets
+          secret:
+            secretName: matrix-mas
+        - configMap:
+            name: synapse-config
+          name: synapse-config
+        - name: synapse-secrets
+          secret:
+            secretName: matrix-synapse
