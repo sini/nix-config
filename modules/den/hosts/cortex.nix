@@ -218,6 +218,7 @@ in
         # applications.wayland.hypridle
         # applications.wayland.hyprland-split-monitors
         applications.media.spotify-player
+        services.ai.genie-memory-loader
       ];
     };
 

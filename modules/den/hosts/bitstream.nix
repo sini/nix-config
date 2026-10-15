@@ -82,5 +82,7 @@
       services.ai.genie-expert
       services.ai.genie-xmsg
     ];
+
+    sini.includes = with den.aspects; [ services.ai.genie-bank-review ];
   };
 }

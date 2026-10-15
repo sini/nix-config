@@ -40,9 +40,11 @@ in
     # endpoints and their model names are read out of this aspect's `instances`.
     includes = [ den.aspects.kubernetes.services.ai.llama-cpp ];
 
-    # The .age files are created by `agenix generate` after this lands. The genie
-    # token's rekeyFile is shared with services.ai.genie-bank-review, the
-    # operator-side copy.
+    # The single generator for each bank's token; the .age files are created by
+    # `agenix generate` after this lands. Rekey targets of the same rekeyFile, with
+    # no generator of their own: this pod (via sops), the genie token at
+    # services.ai.genie-bank-review (sini@bitstream), and the genie-memory token at
+    # services.ai.genie-memory-loader (sini@cortex).
     age-secrets =
       { environment, ... }:
       {
