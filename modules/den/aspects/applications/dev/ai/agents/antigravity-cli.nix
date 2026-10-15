@@ -53,9 +53,9 @@
 
         # 4. stdio MCP servers
         mcpExts = lib.filter (e: e.type or "" == "mcp") extensionsList;
-        # bearerTokenFile has no antigravity equivalent wired here; dropped so the
-        # config stays schema-valid. Servers needing it are refused there.
-        allMcpServers = lib.mapAttrs (_: s: removeAttrs s [ "bearerTokenFile" ]) (
+        # agy sends MCP headers verbatim, so a server that needs one declares a
+        # `stdio` fallback (hindsight.nix), taken in place of its url entry.
+        allMcpServers = lib.mapAttrs (_: s: s.stdio or s) (
           lib.foldl' (acc: e: acc // (e.mcpServers or { })) { } mcpExts
         );
       in
