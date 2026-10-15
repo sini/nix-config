@@ -167,6 +167,12 @@ in
             endpoint = "http://matrix-authentication-service.${namespace}.svc.cluster.local:8080/";
             secret_path = "/secrets/mas-shared-secret";
           };
+          # Sign in with a QR code. Both need MAS. msc4388 lets only a signed-in
+          # device open a rendezvous.
+          experimental_features = {
+            msc4108_enabled = true;
+            msc4388_mode = "authenticated";
+          };
         };
       in
       {
@@ -347,6 +353,9 @@ in
                       inherit port;
                     }
                   ];
+                  # Above the 30s long-poll clients ask /sync for; Envoy's 15s route
+                  # default cuts every one short.
+                  timeouts.request = "120s";
                 }
               ];
             };
