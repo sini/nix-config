@@ -214,27 +214,19 @@ in
                 runAsUser = uid;
                 runAsGroup = uid;
               };
-              # Safe beside a running Synapse: check, then a full import that is
-              # rolled back. Read its log before the migration.
-              controllers.syn2mas-check = {
+              # The import, with Synapse stopped (synapse.nix) and MAS not serving.
+              # No `syn2mas check` step: it exits non-zero on warnings, and migrate
+              # runs the same checks and stops only on errors.
+              controllers.syn2mas-migrate = {
                 type = "job";
                 # Jobs are immutable: each migration step is its own Job.
-                forceRename = "mas-syn2mas-check";
+                forceRename = "mas-syn2mas-migrate";
                 job.backoffLimit = 0;
                 pod.restartPolicy = "Never";
-                initContainers.check = container (
-                  [
-                    "syn2mas"
-                    "check"
-                  ]
-                  ++ configArgs
-                  ++ synapseConfigArgs
-                );
                 containers.main = container (
                   [
                     "syn2mas"
                     "migrate"
-                    "--dry-run"
                   ]
                   ++ configArgs
                   ++ synapseConfigArgs

@@ -254,7 +254,8 @@ in
               };
               controllers.main = {
                 type = "deployment";
-                replicas = 1;
+                # Stopped while syn2mas imports into MAS (mas.nix).
+                replicas = 0;
                 strategy = "Recreate";
                 containers.main = {
                   image = {
