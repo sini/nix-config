@@ -811,7 +811,8 @@
           inherit repos tokenFile;
         };
         backfill = pkgs.local.hindsight-backfill.override {
-          inherit (cfg) endpoint bank tokenFile;
+          inherit (cfg) endpoint bank;
+          inherit tokenFile;
         };
       in
       lib.mkIf cfg.archiveHook {
