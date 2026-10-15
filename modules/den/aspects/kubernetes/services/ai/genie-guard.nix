@@ -1,6 +1,7 @@
 # genie-guard as a pod: an xmsg leaf (xmsg X19, federation plan §2.1) whose hub is
 # the system owner's xmsg on bitstream. Senders on the hub address it as
-# `svc:genie-guard@genie-guard`; the hub queues those sends in the leaf's mailbox,
+# `genie-guard@genie-guard.genie` (its node name derives from its URI SAN,
+# `<sa>.<ns>`); the hub queues those sends in the leaf's mailbox,
 # and the leaf container long-polls it over mTLS and hands each message to the
 # guard on register.sock. Nothing connects in: no Service, no ingress.
 #
@@ -111,16 +112,17 @@ in
         hub = den.hosts.x86_64-linux.${cfg.hub};
         hubIp = lib.head hub.ipv4;
         hubPort = hub.settings.applications.dev.ai.mcp.xmsg.federation.port;
-        # The hub's peer name is its host name: the hub stamps its host label (the
-        # hostname) on each message's origin, and the leaf routes the reply to the
-        # peer of that name.
+        # A CA entry is keyed by the node name its identity derives, `<user>.<host>`
+        # (xmsg README 7.0); the leaf routes each reply to the peer of the origin's node.
         peers = {
-          ${cfg.hub} = {
+          "${hub.system-owner}.${cfg.hub}" = {
             address = "${hubIp}:${toString hubPort}";
             ca = "${tlsDir}/ca.crt";
             identities = [ "spiffe://json64.dev/host/${cfg.hub}/user/${hub.system-owner}" ];
-            # The leaf has no listener, so nothing is admitted inbound.
-            allow = [ ];
+            # The leaf has no listener; `list` lets it answer the hub's list query from
+            # its mailbox. Without it the leaf withholds list, and every bare send on
+            # the hub is `unavailable` (xmsg XA6).
+            allow = [ "list" ];
           };
         };
         runMount = {
@@ -200,12 +202,10 @@ in
                         "serve"
                         "--leaf"
                         "--leaf-principal"
-                        "svc:${name}"
+                        name
                         # Required by --leaf; loopback in the pod's own netns.
                         "--listen"
                         "127.0.0.1:7787"
-                        "--host-label"
-                        name
                         "--leaf-register-sock"
                         "${runtimeDir}/xmsg/register.sock"
                         "--db-path"

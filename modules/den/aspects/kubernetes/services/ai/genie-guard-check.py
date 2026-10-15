@@ -1,6 +1,6 @@
 """Property check over genie-guard.nix's manifests (flag forced on): pod hardening,
-the leaf certificate, the egress policy and the register socket shared by both
-containers.
+the leaf certificate, the egress policy, the register socket shared by both
+containers, and the leaf's xmsg arguments and peers file.
 
 Usage: genie-guard-check.py <manifests.json>
 Exits non-zero, naming every failed property, when one does not hold.
@@ -14,7 +14,8 @@ NS, SA = "genie", "genie-guard"
 UID = 65532
 IDENTITY = f"spiffe://json64.dev/ns/{NS}/sa/{SA}"
 ISSUER = "xmsg-cluster-ca"
-# bitstream's LAN address and its owner's federation port.
+# The hub's node name, and bitstream's LAN address and its owner's federation port.
+HUB = "sini.bitstream"
 EGRESS = {("10.9.1.1/32", "7788", "TCP")}
 NS_KEY = "k8s:io.kubernetes.pod.namespace"
 SA_KEY = "k8s:io.cilium.k8s.policy.serviceaccount"
@@ -137,11 +138,18 @@ sock = (
     if "--leaf-register-sock" in args
     else None
 )
-check(
-    "xmsg runs as a leaf of svc:genie-guard",
-    "--leaf" in args and "svc:genie-guard" in args,
-    args,
+principal = (
+    args[args.index("--leaf-principal") + 1] if "--leaf-principal" in args else None
 )
+check("xmsg runs as a leaf", "--leaf" in args, args)
+check("leaf principal is the bare service name", principal == SA, principal)
+check("no retired svc: form", not any("svc:" in a for a in args), args)
+check("no --host-label (xmsg refuses it)", "--host-label" not in args, args)
+
+# 5. The hub entry: keyed by the hub's node name, and allowed to `list` this leaf.
+hub = json.loads(res["configMaps"][f"{SA}-xmsg-peers"]["data"]["peers.json"])
+check("one peer, the hub", set(hub) == {HUB}, sorted(hub))
+check("hub may list", "list" in hub.get(HUB, {}).get("allow", []), hub.get(HUB))
 check("register socket named", sock is not None)
 if sock:
 

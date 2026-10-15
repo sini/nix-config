@@ -2,7 +2,9 @@
 #
 # xmsg-peers: every peers file loads in the xmsg it runs (`xmsg check-peers`, the
 # loader `xmsg serve` uses): bitstream's and cortex's, each checked against its own
-# node certificate.
+# node certificate, and the genie-guard pod's ConfigMap. The pod's `ca` is a path
+# inside the pod (cert-manager's ca.crt, the xmsg root), and the loader reads it, so
+# the check points it at the committed root .crt instead.
 #   nix build .#checks.x86_64-linux.xmsg-peers
 #
 # xmsg-harnesses: opencode reaches xmsg through the module's plugin and has no xmsg MCP
@@ -12,6 +14,7 @@
 {
   config,
   lib,
+  rootPath,
   ...
 }:
 let
@@ -57,6 +60,21 @@ let
       i = lib.lists.findFirstIndex (a: a == flag) null argv;
     in
     if i == null then throw "xmsg-check: ${h}'s xmsg unit has no ${flag}" else lib.elemAt argv (i + 1);
+
+  pod = config.den.aspects.kubernetes.services.ai.genie-guard.k8s-manifests {
+    config.age.secrets.genie-guard-api-key.sopsRef = "ref+sops://stand-in";
+    cluster.settings.kubernetes.services.ai.genie-guard = {
+      enable = true;
+      hub = "bitstream";
+    };
+    images = config.flake.imageRefs.x86_64-linux;
+  };
+  podPeers =
+    pod.applications.genie-guard.resources.configMaps.genie-guard-xmsg-peers.data."peers.json";
+  root = builtins.path {
+    path = rootPath + "/.secrets/xmsg-ca/root.crt";
+    name = "root.crt";
+  };
 in
 {
   perSystem =
@@ -68,12 +86,15 @@ in
             {
               nativeBuildInputs = [
                 (homeOf "bitstream").programs.xmsg.package
+                pkgs.jq
               ];
             }
             ''
               ${lib.concatMapStrings (h: ''
                 xmsg check-peers ${flagOf h "--peers-file"} --fed-cert ${flagOf h "--fed-cert"}
               '') hosts}
+              jq --arg ca ${root} 'map_values(.ca = $ca)' ${pkgs.writeText "pod-peers.json" podPeers} > pod-peers.json
+              xmsg check-peers pod-peers.json
               touch $out
             '';
 

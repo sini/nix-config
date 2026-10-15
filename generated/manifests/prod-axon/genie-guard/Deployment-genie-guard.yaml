@@ -19,11 +19,9 @@ spec:
             - serve
             - --leaf
             - --leaf-principal
-            - svc:genie-guard
+            - genie-guard
             - --listen
             - 127.0.0.1:7787
-            - --host-label
-            - genie-guard
             - --leaf-register-sock
             - /run/user/xmsg/register.sock
             - --db-path
@@ -37,7 +35,7 @@ spec:
           env:
             - name: XDG_RUNTIME_DIR
               value: /run/user
-          image: ghcr.io/sini/xmsg@sha256:74c65d6d2d77ab9167c490e39b5994030dcbbac2bc5c19151df9f1c846b7ee95
+          image: ghcr.io/sini/xmsg@sha256:464f38854e4c8fc1f10b7ec4632ccce3c2a3ae460c04b9166ad8e56c56cc064f
           name: xmsg
           securityContext:
             allowPrivilegeEscalation: false
@@ -71,7 +69,7 @@ spec:
                   name: genie-guard
             - name: GENIE_GUARD_API_KEY_FILE
               value: /etc/genie-guard/api-key
-          image: ghcr.io/sini/genie-guard@sha256:46cff250168bf29d28dc422d32db7889d2e26bc03ee98d557197191e50c02725
+          image: ghcr.io/sini/genie-guard@sha256:4dbb8f9e14176462b0d090bf7c639f039e74c087cc8c92df7b0a083b1c3a0551
           name: genie-guard
           securityContext:
             allowPrivilegeEscalation: false
