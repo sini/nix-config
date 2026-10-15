@@ -50,6 +50,7 @@
       sabnzbd.domain = "nzb.json64.dev";
       vault.domain = "vault.json64.dev";
       den-docs-mirror.domain = "den.json64.dev";
+      gen-status.domain = "gen-status.json64.dev";
       # Companion homeserver (kubernetes/.../matrix/tuwunel.nix).
       tuwunel.domain = "matrix.gen.wtf";
     };

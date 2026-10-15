@@ -74,6 +74,7 @@
       core.network.tailscale
       core.network.syncthing.hub
       services.web.den-docs-mirror
+      services.web.gen-status
       services.web.container-registry
       virtualization.podman
       hardware.cpu.amd

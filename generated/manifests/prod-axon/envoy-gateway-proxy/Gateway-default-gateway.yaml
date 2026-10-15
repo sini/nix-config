@@ -211,8 +211,8 @@ spec:
             kind: TLSRoute
         namespaces:
           from: Same
-      hostname: registry.json64.dev
-      name: tls-registry-json64-dev
+      hostname: gen-status.json64.dev
+      name: tls-gen-status-json64-dev
       port: 443
       protocol: TLS
       tls:
@@ -231,6 +231,18 @@ spec:
             name: json64-com-wildcard-tls
             namespace: certs
         mode: Terminate
+    - allowedRoutes:
+        kinds:
+          - group: gateway.networking.k8s.io
+            kind: TLSRoute
+        namespaces:
+          from: Same
+      hostname: registry.json64.dev
+      name: tls-registry-json64-dev
+      port: 443
+      protocol: TLS
+      tls:
+        mode: Passthrough
     - allowedRoutes:
         namespaces:
           from: All

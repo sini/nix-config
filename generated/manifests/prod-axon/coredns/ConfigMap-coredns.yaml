@@ -15,6 +15,7 @@ data:
             10.11.0.1 dash.json64.dev
             10.10.10.1 den.json64.dev
             10.11.0.1 garage.json64.dev
+            10.10.10.1 gen-status.json64.dev
             10.11.0.1 glance.json64.dev
             10.11.0.1 grafana.json64.dev
             10.10.10.1 homepage.json64.dev
