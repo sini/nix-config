@@ -135,18 +135,4 @@
       retainLlmInstance, in the same key space as llama-cpp.instances.
     '';
   };
-
-  # The only sources allowed to import documents (POST …/document-transfer), which
-  # the token gate cannot see. The owner's hosts, by their LAN addresses, stated
-  # here because the cluster scope cannot read host config (the model-egress.nix
-  # reasoning). Sources: modules/den/hosts/cortex.nix (enp8s0) and bitstream.nix
-  # (bond0).
-  den.aspects.kubernetes.services.ai.hindsight.settings.importSourceCidrs = lib.mkOption {
-    type = lib.types.listOf lib.types.str;
-    default = [
-      "10.9.2.1/32" # cortex
-      "10.9.1.1/32" # bitstream
-    ];
-    description = "CIDRs allowed to POST document imports to hindsight (with genie/genie-expert pods).";
-  };
 }

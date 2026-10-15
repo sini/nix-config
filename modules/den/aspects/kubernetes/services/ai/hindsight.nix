@@ -22,12 +22,13 @@
 # hindsight-write-gate-oracle.py, run against upstream's Python at the pinned
 # version.
 #
-# ★ DOCUMENT IMPORT BYPASSES THE TOKEN GATE. POST …/document-transfer calls no
-# validator hook when the bank already exists, so an import into any bank, den-law
-# included, needs no token. Its boundary is the SOURCE: the Cilium HTTP rules below
-# admit that route only from cortex, bitstream and the genie-expert pods (owner
-# ruling), and every other route from every other admitted source as before.
-# Oracle: hindsight-l7-check.py over the rendered policies.
+# Every gated route is a token check, document import included. Two routes call
+# no validator hook at the pinned version — mental-model history (a read) and
+# POST …/document-transfer into an existing bank (a write) — so the gate wraps
+# MemoryEngine.get_mental_model_history and MemoryEngine.import_documents_async at
+# runtime to call one. Those wrappers are of upstream methods: re-check both at
+# every hindsight upgrade; startup fails if either method is gone. The network
+# policies below are source rules only (L3/L4), except tier-1's recall allow-list.
 #
 # Embeddings (BAAI/bge-small-en-v1.5) and reranking
 # (cross-encoder/ms-marco-MiniLM-L-6-v2) run in-process on CPU at upstream
@@ -194,53 +195,6 @@ in
         # The write gate is a Python module on PYTHONPATH, delivered as a
         # ConfigMap: upstream's loader imports any `module:Class` it can find, so
         # the pinned image runs unmodified.
-        # ★ PORT 8888 IS AN HTTP ALLOW-LIST. The tier-1 rule's HTTP rules put the
-        # port behind Envoy, and every other rule carries allButImport: every
-        # method on every path, except POST …/document-transfer, which only
-        # allow-import-hindsight admits. Cilium allows the union of the rules a
-        # source matches, so cortex and bitstream (inside 10/8) get both.
-        #
-        # The POST paths are enumerated because Envoy's regex cannot negate one
-        # path: these are every POST route of hindsight-api 0.9.2's create_app
-        # except /document-transfer (hindsight-l7-check.py checks the list against
-        # that route table). A version bump that adds a POST route must add it
-        # here, or it is refused at Envoy with 403.
-        bankPosts = [
-          "background"
-          "consolidate"
-          "consolidation/recover"
-          "directives"
-          "document-transfer/export"
-          "documents/.+/reprocess"
-          "entities/[^/]+/regenerate"
-          "files/retain"
-          "health/llm"
-          "import"
-          "knowledge-base/folders"
-          "knowledge-base/pages"
-          "memories"
-          "memories/dry-run-extract"
-          "memories/recall"
-          "mental-models"
-          "mental-models/[^/]+/clear"
-          "mental-models/[^/]+/dry-run-refresh"
-          "mental-models/[^/]+/refresh"
-          "operations/[^/]+/retry"
-          "reflect"
-          "webhooks"
-        ];
-        allButImport = [
-          { method = "GET|HEAD|OPTIONS|PUT|PATCH|DELETE"; }
-          {
-            method = "POST";
-            path = "/v1/default/banks/[^/]+/(${lib.concatStringsSep "|" bankPosts})(\\?.*)?";
-          }
-          {
-            method = "POST";
-            path = "/mcp(/.*)?";
-          }
-        ];
-
         gateDir = "/opt/hindsight-write-gate";
         tokensDir = "/etc/hindsight-write-gate/tokens";
         adminDir = "/etc/hindsight-write-gate/admin";
@@ -415,12 +369,9 @@ in
                     HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR = tokensDir;
                     HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE = "${adminDir}/sha256";
 
-                    # Document import (POST …/document-transfer) is ON, and it
-                    # BYPASSES THE TOKEN GATE: upstream calls no validator hook for
-                    # it when the bank already exists, so a gated bank, den-law
-                    # included, takes an import from any caller the network admits.
-                    # Its boundary is the source rule allow-import-hindsight below,
-                    # by owner ruling, not the token.
+                    # Document import (POST …/document-transfer) is on. Into a gated
+                    # bank it needs that bank's token or the admin token, like any
+                    # write: the gate wraps the engine method behind it.
                     HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API = "true";
                   }
                   # Per-operation override for retain, emitted ONLY when it
@@ -850,7 +801,6 @@ in
                           protocol = "TCP";
                         }
                       ];
-                      rules.http = allButImport;
                     }
                   ];
                 }
@@ -883,7 +833,6 @@ in
                           protocol = "TCP";
                         }
                       ];
-                      rules.http = allButImport;
                     }
                   ];
                 }
@@ -957,57 +906,6 @@ in
               ];
             };
 
-            # Document import, the one route the token gate cannot see, from the
-            # owner's hosts and the expert pods only (owner ruling). The hosts are
-            # matched by their own LAN addresses: hindsight-internal is
-            # externalTrafficPolicy=Local under kube-proxy replacement, so the pod
-            # sees the client's address, not a node's (measured with hubble: flows
-            # from 10.9.2.1 and 10.9.1.1 arrive at the pod as world sources). The
-            # expert pods are selected by namespace and service account, which a
-            # pod cannot claim; genie-expert need not exist yet.
-            allow-import-hindsight.spec = {
-              description = "Allow document import (POST document-transfer) on 8888 only from cortex, bitstream and genie/genie-expert.";
-              endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
-              ingress =
-                map
-                  (from: {
-                    ${from.key} = from.value;
-                    toPorts = [
-                      {
-                        ports = [
-                          {
-                            port = toString port;
-                            protocol = "TCP";
-                          }
-                        ];
-                        rules.http = [
-                          {
-                            method = "POST";
-                            path = "/v1/default/banks/[^/]+/document-transfer(\\?.*)?";
-                          }
-                        ];
-                      }
-                    ];
-                  })
-                  [
-                    {
-                      key = "fromCIDR";
-                      value = settings.importSourceCidrs;
-                    }
-                    {
-                      key = "fromEndpoints";
-                      value = [
-                        {
-                          matchLabels = {
-                            "k8s:io.kubernetes.pod.namespace" = "genie";
-                            "k8s:io.cilium.k8s.policy.serviceaccount" = "genie-expert";
-                          };
-                        }
-                      ];
-                    }
-                  ];
-            };
-
             # Off-cluster LAN callers (workstations, uplink) reach the bank over
             # the internal LoadBalancer above, bypassing the gateway. The whole
             # private 10/8 range rather than a per-host pin: it is portable, the
@@ -1028,7 +926,6 @@ in
                           protocol = "TCP";
                         }
                       ];
-                      rules.http = allButImport;
                     }
                   ];
                 }

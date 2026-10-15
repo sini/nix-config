@@ -1,4 +1,4 @@
-"""Render check for the hindsight control-plane exposure (hindsight.nix, kanidm.nix).
+"""Render check for the hindsight exposure (hindsight.nix, kanidm.nix).
 
   python3 hindsight-ui-check.py <rendered prod-axon env> <base rendered env> <kanidm-oauth2.json>
 
@@ -9,8 +9,10 @@ kanidm-oauth2.json is `nix eval --json .#nixosConfigurations.uplink.config.servi
   cp   nothing but the gateway reaches the CP: every Service selecting it is
        ClusterIP, the only (clusterwide or ai) network policy giving it ingress admits
        just the gateways namespace, and no other route points at it
-  dp   the dataplane's Services are byte-identical to the base render (who reaches
-       which route over them is hindsight-l7-check.py's)
+  dp   the dataplane's Services and its Prometheus and LAN policies are byte-identical
+       to the base render; no policy on 8888 carries HTTP rules except tier-1's
+       recall allow-list, which is present (no Envoy proxy for anyone else); the
+       deployment has document import enabled
 
 Exit 0 iff every check passes; every failure is printed.
 """
@@ -182,6 +184,8 @@ check("cp.no-other-route", not others, f"other routes to hindsight-cp: {others}"
 for f in (
     "hindsight/Service-hindsight.yaml",
     "hindsight/Service-hindsight-internal.yaml",
+    "hindsight/CiliumNetworkPolicy-allow-metrics-ingress-hindsight.yaml",
+    "hindsight/CiliumNetworkPolicy-allow-lan-ingress-hindsight.yaml",
 ):
     a, b = base / f, env / f
     check(
@@ -189,6 +193,43 @@ for f in (
         a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes(),
         f,
     )
+
+dp = next(
+    d
+    for d in kind("Deployment")
+    if d["metadata"]["name"] == "hindsight" and d["metadata"]["namespace"] == "ai"
+)
+dp_identity = {
+    **dict(dp["spec"]["template"]["metadata"]["labels"]),
+    "io.kubernetes.pod.namespace": "ai",
+}
+l7 = []
+for p in kind("CiliumNetworkPolicy") + kind("CiliumClusterwideNetworkPolicy"):
+    if p["kind"] == "CiliumNetworkPolicy" and p["metadata"].get("namespace") != "ai":
+        continue
+    for spec in [p["spec"]] if "spec" in p else p.get("specs", []):
+        if not selects(spec.get("endpointSelector", {}), dp_identity):
+            continue
+        for rule in spec.get("ingress") or []:
+            for tp in rule.get("toPorts") or []:
+                if (tp.get("rules") or {}).get("http"):
+                    l7.append(p["metadata"]["name"])
+check(
+    "dp.l7-only-tier1",
+    l7 == ["allow-genie-tier1-recall-hindsight"],
+    f"policies with HTTP rules on the dataplane: {l7}",
+)
+envs = {
+    e["name"]: e.get("value")
+    for c in dp["spec"]["template"]["spec"]["containers"]
+    for e in c.get("env", [])
+}
+imp = envs.get("HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API")
+check(
+    "dp.import-enabled",
+    imp in (None, "true"),
+    f"HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API={imp!r}",
+)
 
 print(f"FAILED {len(fails)}" if fails else "ALL PASS")
 sys.exit(1 if fails else 0)

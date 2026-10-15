@@ -11,8 +11,9 @@ A gated bank's writes pass only with that bank's own token or the admin token. A
 bank with gate_reads also refuses every read without one of the two: recall,
 reflect, every bank read, mental-model reads and every precheck, and it is left out
 of the bank list. A bank that is not configured is open. /health and /version reach
-no hook and stay open. The one read route that calls no hook (mental-model history)
-is wrapped to call validate_mental_model_get; see _hook_unhooked_reads.
+no hook and stay open. The two routes that call no hook at 0.9.2, mental-model
+history (a read) and document import (a write), are wrapped at runtime so they do;
+see _hook_unhooked_routes.
 
 The admin token belongs to the control plane, which sits behind the gateway's
 admin-only OIDC. This pod holds only its SHA-256, so the token itself lives in one
@@ -23,6 +24,7 @@ BANKS, a gate_reads that is not a boolean, a missing or empty token file, or an
 ADMIN_SHA256_FILE that is missing or not 64 hex digits.
 """
 
+import functools
 import hashlib
 import hmac
 import json
@@ -48,49 +50,71 @@ def _fail(msg: str):
     raise ValueError(f"bank gate: {msg}")
 
 
-def _hook_unhooked_reads():
-    """Route the one 0.9.2 read that calls no validator hook through validate_mental_model_get.
+def _wrap(method: str, check):
+    """Make MemoryEngine.<method> run `check` through the configured validator first.
 
-    GET …/mental-models/{id}/history returns a mental model's past content and calls
-    only _authenticate_tenant (memory_engine.py get_mental_model_history), so without
-    this a read-gated bank's mental models would be readable with no token. Wrapped
-    once, here, so every transport reaches it; refuses to start if the method is gone.
+    A runtime wrapper of an upstream method: re-check both targets at every
+    hindsight upgrade. Startup refuses if the method is gone, rather than leaving
+    its route ungated.
     """
     from hindsight_api.engine.memory_engine import MemoryEngine
 
-    orig = getattr(MemoryEngine, "get_mental_model_history", None)
+    orig = getattr(MemoryEngine, method, None)
     if orig is None:
-        _fail(
-            "MemoryEngine.get_mental_model_history is gone; re-audit the unhooked reads"
-        )
+        _fail(f"MemoryEngine.{method} is gone; re-audit the unhooked routes")
     if getattr(orig, "_bank_gate", False):
         return
 
-    async def get_mental_model_history(
-        self, bank_id, mental_model_id, *, request_context
-    ):
+    @functools.wraps(orig)
+    async def wrapped(self, bank_id, *args, **kwargs):
         if self._operation_validator is not None:
             await self._validate_operation(
-                self._operation_validator.validate_mental_model_get(
-                    ov.MentalModelGetContext(
-                        bank_id=bank_id,
-                        mental_model_id=mental_model_id,
-                        request_context=request_context,
-                    )
-                )
+                check(self._operation_validator, bank_id, args, kwargs)
             )
-        return await orig(
-            self, bank_id, mental_model_id, request_context=request_context
-        )
+        return await orig(self, bank_id, *args, **kwargs)
 
-    get_mental_model_history._bank_gate = True
-    MemoryEngine.get_mental_model_history = get_mental_model_history
+    wrapped._bank_gate = True
+    setattr(MemoryEngine, method, wrapped)
+
+
+def _hook_unhooked_routes():
+    """The two 0.9.2 routes that reach no validator hook, routed through one.
+
+    GET …/mental-models/{id}/history (get_mental_model_history) returns a mental
+    model's past content and calls only _authenticate_tenant: it now calls
+    validate_mental_model_get, a read.
+
+    POST …/document-transfer (import_documents_async) calls validate_create_bank
+    only when the bank is missing, so an import into an existing bank was ungated:
+    it now calls validate_retain with no contents, a write. The worker's
+    _run_import_documents continues it under an internal context.
+    """
+    _wrap(
+        "get_mental_model_history",
+        lambda v, bank_id, args, kwargs: v.validate_mental_model_get(
+            ov.MentalModelGetContext(
+                bank_id=bank_id,
+                mental_model_id=args[0] if args else kwargs["mental_model_id"],
+                request_context=kwargs["request_context"],
+            )
+        ),
+    )
+    _wrap(
+        "import_documents_async",
+        lambda v, bank_id, args, kwargs: v.validate_retain(
+            ov.RetainContext(
+                bank_id=bank_id,
+                contents=[],
+                request_context=args[1] if len(args) > 1 else kwargs["request_context"],
+            )
+        ),
+    )
 
 
 class WriteGate(ov.OperationValidatorExtension):
     def __init__(self, config: dict[str, str]):
         super().__init__(config)
-        _hook_unhooked_reads()
+        _hook_unhooked_routes()
         try:
             banks = json.loads(config.get("banks") or "{}")
         except json.JSONDecodeError as e:

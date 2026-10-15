@@ -8,8 +8,8 @@ HINDSIGHT_API_OPERATION_VALIDATOR_*.
 Banks: genie and genie-memory gate writes; den-law gates reads and writes; open-bank
 is not configured. ADMIN is the control plane's token; the gate holds its SHA-256.
 
-  a  every write route on genie: no key and another bank's key are refused; genie's
-     own key and the admin key are not
+  a  every write route on genie, document import included: no key and another
+     bank's key are refused; genie's own key and the admin key are not
   r  den-law: every route (write, read, GET), a chunk read by id and the bank list
      refuse no key and another bank's key, and admit den-law's key and the admin key
   b  recall, reflect and every read route on genie pass without a key
@@ -18,7 +18,8 @@ is not configured. ADMIN is the control plane's token; the gate holds its SHA-25
      den-law's and the admin key; /mcp/genie/ recall needs no key; the multi-bank
      /mcp/ endpoint refuses den-law recall and hides den-law from list_banks
   d  startup refuses a malformed BANKS, a non-boolean gate_reads, an empty or missing
-     token file, a bad admin digest; the `hindsight-api` entrypoint refuses too
+     token file, a bad admin digest, or a wrapped engine method that is gone; the
+     `hindsight-api` entrypoint refuses too
 
 Run (no live server; DATABASE_URL is a throwaway local Postgres with pgvector):
   HINDSIGHT_API_DATABASE_URL=postgresql://... \
@@ -69,9 +70,8 @@ os.environ.update(GATE_ENV)
 os.environ.setdefault("HINDSIGHT_API_CONSOLIDATION_RECONCILE_INTERVAL_SECONDS", "0")
 os.environ.setdefault("HINDSIGHT_API_MENTAL_MODEL_REFRESH_TICK_SECONDS", "0")
 os.environ.setdefault("HINDSIGHT_API_LLM_TRACE_RETENTION_DAYS", "-1")
-# As deployed: document import is on (upstream's default). It reaches no write hook on an
-# existing bank, so the gate cannot see it; its boundary is the Cilium source rule
-# (hindsight.nix), by owner ruling. The `import` cells pin that bypass.
+# As deployed: document import is on (upstream's default). The gate wraps it so it is a
+# token-gated write like any other; it is one of the `writes` below.
 os.environ.setdefault("HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API", "true")
 
 import httpx
@@ -254,9 +254,6 @@ READ_POSTS = {
 }
 # Mutating routes closed to every caller, keyed or not: the entity route, by upstream (410).
 CLOSED = {"/entities/{entity_id}/regenerate"}
-# Document import: not token-gated (no hook on an existing bank). Covered by the
-# `import` cells, which assert the bypass, not by the token cells.
-SOURCE_GATED = {"/document-transfer"}
 
 
 async def call(c, verb, suffix, bank, ids, tok):
@@ -433,11 +430,7 @@ async def routes_cells():
     mem._operation_validator = gate
     app = create_app(mem, initialize_memory=False)
     routes = bank_routes(app)
-    writes = [
-        (v, s)
-        for v, s in routes
-        if v != "GET" and s not in READ_POSTS and s not in SOURCE_GATED
-    ]
+    writes = [(v, s) for v, s in routes if v != "GET" and s not in READ_POSTS]
     gets = [(v, s) for v, s in routes if v == "GET"]
     print(
         f"routes: bank-scoped={len(routes)} write={len(writes)} read-post={len(READ_POSTS)} get={len(gets)}"
@@ -447,18 +440,6 @@ async def routes_cells():
     ) as c:
         for b in (GATED, OTHER, LAW, OPEN):
             await c.delete(f"/v1/default/banks/{b}", headers=hdr(ADMIN))
-
-        # import: accepted with no key on a gated bank of either kind; the source
-        # rule, not the token, is its boundary
-        for bank in (GATED, LAW):
-            ids = await fixture(c, bank, TOKENS[bank])
-            r = await call(c, "POST", "/document-transfer", bank, ids, None)
-            cell(
-                "import.bypass",
-                r.status_code == 202,
-                f"{bank} POST /document-transfer key=none -> {r.status_code} {r.text[:160]}",
-            )
-            await c.delete(f"/v1/default/banks/{bank}", headers=hdr(ADMIN))
 
         # a and r(write): one fresh fixture per credential that may mutate, so a
         # destructive call cannot mask the next
@@ -653,6 +634,30 @@ def startup_cells():
     finally:
         os.environ.clear()
         os.environ.update(saved)
+
+    # Each wrapped engine method, removed: startup refuses rather than leave its route
+    # ungated. Fresh interpreters, so the wrappers this process installed do not count.
+    for method in ("get_mental_model_history", "import_documents_async"):
+        probe = (
+            "import sys; sys.path.insert(0, sys.argv[1]);"
+            "from hindsight_api.engine.memory_engine import MemoryEngine;"
+            f"delattr(MemoryEngine, '{method}');"
+            "from hindsight_api.extensions import OperationValidatorExtension as O;"
+            "from hindsight_api.extensions.loader import load_extension;"
+            "load_extension('OPERATION_VALIDATOR', O)"
+        )
+        p = subprocess.run(
+            [sys.executable, "-c", probe, str(GATE_DIR)],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+        cell(
+            "d.missing-method-refused",
+            p.returncode != 0 and f"MemoryEngine.{method} is gone" in p.stderr,
+            f"{method} removed: rc={p.returncode} tail={p.stderr[-200:]}",
+        )
 
     # The real entrypoint: `hindsight-api` must exit non-zero on the empty file.
     exe = Path(sys.executable).with_name("hindsight-api")
