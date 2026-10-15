@@ -82,6 +82,25 @@ in
         sharedNixStore = vm.microvm.sharedNixStore or true;
       };
       guests = map withOverlay children;
+
+      # A guest's root is a tmpfs, so its impermanence binds persist nothing unless
+      # /persist and /cache are real. Each guest gets its own directory under the
+      # host's matching volume, never the host's own state, so it cannot write
+      # there; its state inherits that volume's snapshots and backups.
+      stateVolumes = lib.filter (v: config.environment.persistence ? ${v}) [
+        "/persist"
+        "/cache"
+      ];
+      stateDir =
+        name: volume: "${config.environment.persistence.${volume}.persistentStoragePath}/microvms/${name}";
+      stateShares =
+        name:
+        map (volume: {
+          source = stateDir name volume;
+          mountPoint = volume;
+          tag = "state${lib.replaceStrings [ "/" ] [ "-" ] volume}";
+          proto = "virtiofs";
+        }) stateVolumes;
     in
     {
       microvm.vms = lib.mkMerge (
@@ -91,12 +110,20 @@ in
             # Layer the GPU host-side bits onto the primitive-delivered config.
             config = {
               microvm.devices = gpuLib.toMicrovmDevices g.recs;
-              microvm.shares = lib.optional g.sharedNixStore roStoreShare;
+              microvm.shares = lib.optional g.sharedNixStore roStoreShare ++ stateShares g.name;
+              # Mounted in the initrd, before impermanence binds from them.
+              fileSystems = lib.genAttrs stateVolumes (_: {
+                neededForBoot = true;
+              });
               users.users.root.openssh.authorizedKeys.keys = rootKeys;
             };
           };
         }) guests
       );
+
+      systemd.tmpfiles.rules = lib.concatMap (
+        g: map (volume: "d ${stateDir g.name volume} 0700 root root -") stateVolumes
+      ) guests;
 
       # Host-side gate: hold the VM's start units until the passed-through PCI
       # device has actually been unbound from the host onto vfio-pci.
