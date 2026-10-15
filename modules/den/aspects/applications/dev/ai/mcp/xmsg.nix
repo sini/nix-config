@@ -435,10 +435,12 @@ in
 
         # The owner's explicit authorization of the three tools. Allowed calls skip
         # the auto-mode classifier, so the tools must never be requiresUserInteraction.
+        # The server ships in the `hm` plugin, so the tools are namespaced
+        # `mcp__plugin_hm_xmsg__*`; a bare `mcp__xmsg__*` rule matches nothing.
         programs.claude-code.settings.permissions.allow = [
-          "mcp__xmsg__list"
-          "mcp__xmsg__send"
-          "mcp__xmsg__reply"
+          "mcp__plugin_hm_xmsg__list"
+          "mcp__plugin_hm_xmsg__send"
+          "mcp__plugin_hm_xmsg__reply"
         ];
 
         # agy registers its language-server credentials before every turn. `--hook` reads them
