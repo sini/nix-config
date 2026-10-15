@@ -83,30 +83,27 @@ in
           # The chart annotates ALL of its dashboards into the Kubernetes
           # folder (grafana.sidecar.dashboards.annotations is global); a few
           # belong elsewhere.
-          objectTransforms = [
-            {
-              name = "dashboard-folder-overrides";
-              match.kind = "ConfigMap";
-              rewrite =
-                cm:
-                let
-                  folders = {
-                    "kube-prometheus-stack-k8s-coredns" = "Networking";
-                    "kube-prometheus-stack-alertmanager-overview" = "Monitoring";
-                    "kube-prometheus-stack-prometheus" = "Monitoring";
-                    "kube-prometheus-stack-grafana-overview" = "Monitoring";
-                    "kube-prometheus-stack-nodes" = "Hosts";
-                    "kube-prometheus-stack-node-rsrc-use" = "Hosts";
-                    "kube-prometheus-stack-node-cluster-rsrc-use" = "Hosts";
+          objectTransforms =
+            lib.mapAttrs'
+              (
+                dashboard: folder:
+                lib.nameValuePair "dashboard-folder-${dashboard}" {
+                  match = {
+                    kind = "ConfigMap";
+                    metadata.name = "kube-prometheus-stack-${dashboard}";
                   };
-                  folder = folders.${cm.metadata.name} or null;
-                in
-                if folder == null then
-                  cm
-                else
-                  lib.recursiveUpdate cm { metadata.annotations.grafana_folder = folder; };
-            }
-          ];
+                  update.metadata.annotations.grafana_folder = folder;
+                }
+              )
+              {
+                k8s-coredns = "Networking";
+                alertmanager-overview = "Monitoring";
+                prometheus = "Monitoring";
+                grafana-overview = "Monitoring";
+                nodes = "Hosts";
+                node-rsrc-use = "Hosts";
+                node-cluster-rsrc-use = "Hosts";
+              };
 
           # The prometheus-operator CRDs blow past the 256KiB annotation
           # limit under client-side apply.

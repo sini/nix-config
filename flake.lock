@@ -3518,16 +3518,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1786660557,
-        "narHash": "sha256-l8ajvhCPfqdO1xkyN31KuVwGiJ3RkTP0juUQNd00Xv8=",
+        "lastModified": 1792041130,
+        "narHash": "sha256-uEacRc07s+nJl2ZQ1VejSl9fgdpureM+4uZQJF26uZk=",
         "owner": "sini",
         "repo": "nixidy",
-        "rev": "e8f90b04d508541120341238aded759150d3d63c",
+        "rev": "e2ff9eb66911a19293912954a109273c0dd531c1",
         "type": "github"
       },
       "original": {
         "owner": "sini",
-        "ref": "fix/crd-pattern-posix-ere",
+        "ref": "fix/replace-function",
         "repo": "nixidy",
         "type": "github"
       }

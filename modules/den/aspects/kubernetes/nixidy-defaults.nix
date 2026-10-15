@@ -17,7 +17,7 @@ let
       { cluster, environment, ... }:
       # Inner module function: lib comes from nixidy's module system, so
       # lib.kube (release-label transformer) is available. pkgs is provided by
-      # nixidy's mkEnv (used for objectTransforms postProcess runtimeInputs).
+      # nixidy's mkEnv (used for the postProcessors' runtimeInputs).
       { lib, pkgs, ... }:
       let
         envName = "${environment.name}-${cluster.name}";
@@ -57,75 +57,71 @@ let
             );
           };
 
-          objectTransforms = [
-            # Rule 1 — eval map: k8s Secret -> isindir SopsSecret (replaces converter.py).
-            # Mirrors converter.py's conditional emission (omit empty/absent keys) for fixture parity.
-            {
-              name = "secret-to-sopssecret";
-              # An empty service-account-token Secret is a request for the token
-              # controller to mint one in-cluster: there is nothing to encrypt, and
-              # as a SopsSecret the operator wipes the minted token on every write.
-              # One that carries data is still encrypted.
-              match =
-                r:
-                r.kind == "Secret"
-                && !(
-                  (r.type or null) == "kubernetes.io/service-account-token"
-                  && (r.data or { }) == { }
-                  && (r.stringData or { }) == { }
-                );
-              rewrite =
-                secret:
-                let
-                  m = secret.metadata;
-                  isArgo = n: lib.match ".*(argocd\\.argoproj\\.io|app\\.kubernetes\\.io).*" n != null;
-                  partition = attrs: {
-                    argo = lib.filterAttrs (n: _: isArgo n) attrs;
-                    rest = lib.filterAttrs (n: _: !isArgo n) attrs;
-                  };
-                  la = partition (m.labels or { });
-                  an = partition (m.annotations or { });
-                  whenSet = lib.optionalAttrs;
-                in
-                {
-                  apiVersion = "isindir.github.com/v1alpha3";
-                  kind = "SopsSecret";
-                  metadata = {
-                    inherit (m) name namespace;
-                  }
-                  // whenSet (la.argo != { }) { labels = la.argo; }
-                  // whenSet (an.argo != { }) { annotations = an.argo; };
-                  spec.secretTemplates = [
-                    (
-                      {
-                        inherit (m) name;
-                      }
-                      // whenSet (secret ? type) { inherit (secret) type; }
-                      // whenSet (la.rest != { }) { labels = la.rest; }
-                      // whenSet (an.rest != { }) { annotations = an.rest; }
-                      // whenSet (secret ? stringData) { inherit (secret) stringData; }
-                      // whenSet (secret ? data) { inherit (secret) data; }
-                    )
-                  ];
+          # k8s Secret -> isindir SopsSecret (replaces converter.py). Mirrors
+          # converter.py's conditional emission (omit empty/absent keys) for fixture
+          # parity.
+          objectTransforms.secret-to-sopssecret = {
+            # An empty service-account-token Secret is a request for the token
+            # controller to mint one in-cluster: there is nothing to encrypt, and
+            # as a SopsSecret the operator wipes the minted token on every write.
+            # One that carries data is still encrypted.
+            match =
+              r:
+              r.kind == "Secret"
+              && !(
+                (r.type or null) == "kubernetes.io/service-account-token"
+                && (r.data or { }) == { }
+                && (r.stringData or { }) == { }
+              );
+            replace =
+              secret:
+              let
+                m = secret.metadata;
+                isArgo = n: lib.match ".*(argocd\\.argoproj\\.io|app\\.kubernetes\\.io).*" n != null;
+                partition = attrs: {
+                  argo = lib.filterAttrs (n: _: isArgo n) attrs;
+                  rest = lib.filterAttrs (n: _: !isArgo n) attrs;
                 };
-            }
-            # Rule 2 — runtime post-process: resolve vals + sops-encrypt (replaces processor.py).
-            # Idempotent: skips re-encrypt when resolved-plaintext hash unchanged (avoids git churn).
-            {
-              name = "sops-encrypt";
-              match.kind = "SopsSecret";
-              postProcess = {
-                runtimeInputs = with pkgs; [
-                  vals
-                  sops
-                  age-plugin-yubikey
-                  yq-go
-                  coreutils
+                la = partition (m.labels or { });
+                an = partition (m.annotations or { });
+                whenSet = lib.optionalAttrs;
+              in
+              {
+                apiVersion = "isindir.github.com/v1alpha3";
+                kind = "SopsSecret";
+                metadata = {
+                  inherit (m) name namespace;
+                }
+                // whenSet (la.argo != { }) { labels = la.argo; }
+                // whenSet (an.argo != { }) { annotations = an.argo; };
+                spec.secretTemplates = [
+                  (
+                    {
+                      inherit (m) name;
+                    }
+                    // whenSet (secret ? type) { inherit (secret) type; }
+                    // whenSet (la.rest != { }) { labels = la.rest; }
+                    // whenSet (an.rest != { }) { annotations = an.rest; }
+                    // whenSet (secret ? stringData) { inherit (secret) stringData; }
+                    // whenSet (secret ? data) { inherit (secret) data; }
+                  )
                 ];
-                command = import ./_secret-post-process-command.nix;
               };
-            }
-          ];
+          };
+
+          # Resolve vals + sops-encrypt (replaces processor.py). Idempotent: skips
+          # re-encrypt when the resolved-plaintext hash is unchanged (avoids git churn).
+          postProcessors.sops-encrypt = {
+            match.kind = "SopsSecret";
+            runtimeInputs = with pkgs; [
+              vals
+              sops
+              age-plugin-yubikey
+              yq-go
+              coreutils
+            ];
+            command = import ./_secret-post-process-command.nix;
+          };
         };
       };
   };

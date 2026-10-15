@@ -263,8 +263,8 @@
       nixhelm.url = "github:nix-community/nixhelm";
 
       nixidy = {
-        # url = "github:arnarg/nixidy"; # TODO: https://github.com/arnarg/nixidy/pull/108
-        url = "github:sini/nixidy/fix/crd-pattern-posix-ere";
+        # url = "github:arnarg/nixidy"; # TODO: v0.23.0 wraps a function `replace`; fix in sini/nixidy fix/replace-function
+        url = "github:sini/nixidy/fix/replace-function";
         inputs.nixpkgs.follows = "nixpkgs-unstable";
       };
 
