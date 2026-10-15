@@ -1,4 +1,9 @@
-{ den, inputs, ... }:
+{
+  den,
+  inputs,
+  lib,
+  ...
+}:
 let
   # Shared with cortex.nix, which decrypts the guest's key into hostKeyShare.
   inherit (import ./_cortex-cuda-host-key.nix) hostKeyShare hostKeyDir;
@@ -101,8 +106,20 @@ in
     };
   };
 
+  den.policies.cortex-cuda-unpersist-machine-id =
+    { host, ... }:
+    [
+      (den.lib.policy.pipe.from "persist" [
+        (den.lib.policy.pipe.transform (e: e // { files = lib.remove "/etc/machine-id" (e.files or [ ]); }))
+      ])
+    ];
+
   den.aspects.cortex-cuda = {
     includes = with den.aspects; [
+      # Impermanence at the guest's own scope. Without it the guest got it only
+      # from its users' roles.default leaking up (denful/den#694), so host-scope
+      # policies like cortex-cuda-unpersist-machine-id filtered a pool nothing read.
+      core.impermanence
       roles.inference
       services.ai.hyperqwen
       hardware.gpu.nvidia
@@ -110,6 +127,9 @@ in
       # for itself.
       services.monitoring.prometheus-exporter
       services.alloy
+      # The guest pins its own machine-id (environment.etc below), so persisting
+      # it too would bind over the generated file.
+      den.policies.cortex-cuda-unpersist-machine-id
     ];
 
     # M2: CUDA-enable the guest's package set at the microvm submodule level.
@@ -199,6 +219,9 @@ in
             }
           ];
         };
+
+        # No virtual console in the VM: vconsole setup can only fail.
+        console.enable = false;
 
         environment.etc."machine-id" = {
           mode = "0644";
