@@ -54,7 +54,7 @@
 # Built, measured and rejected on 2026-08-31 for that reason. If it is worth
 # declaring, it belongs beside the service in
 # aspects/kubernetes/services/ai/hindsight.nix, under exactly one writer.
-{ lib, ... }:
+{ lib, rootPath, ... }:
 {
   den.aspects.applications.dev.ai.mcp.hindsight = {
     settings = {
@@ -202,6 +202,9 @@
           # Trailing slash matters: upstream serves the per-bank endpoint at
           # `/mcp/<bank>/` and a request without it does not route.
           url = "${cfg.endpoint}/mcp/${cfg.bank}/";
+          # Read by each agent's renderer into its own header mechanism
+          # (claude.nix headersHelper, opencode.nix {file:}); never in the store.
+          bearerTokenFile = "~/.config/hindsight/den-law-token";
         };
         skills.hindsight = ./_skills/hindsight;
       };
@@ -222,6 +225,7 @@
         recall = "${config.home.homeDirectory}/.claude/hindsight-recall.sh";
         archive = "${config.home.homeDirectory}/.claude/hindsight-archive.sh";
         renderer = "${config.home.homeDirectory}/.claude/hindsight-episode.jq";
+        tokenFile = config.age.secrets.hindsight-token-den-law.path;
 
         # Per-role recall inputs for the SubagentStart arm, keyed by agent role. Why the
         # role is read here rather than matched: the comment on that arm, below.
@@ -251,6 +255,9 @@
           set -uo pipefail
           base="${cfg.endpoint}"
           bank="${cfg.bank}"
+          # den-law gates reads and writes (kubernetes/services/ai/hindsight.nix):
+          # every bank call carries the user's token.
+          auth=(-H "Authorization: Bearer $(cat ${tokenFile} 2>/dev/null)")
           inputs=${lib.escapeShellArg (builtins.toJSON subagentRecallInputs)}
           log="$HOME/.claude/hindsight-subagent.log"
           # Fails OPEN — exit 0, nothing on stdout — but every firing leaves one line.
@@ -322,7 +329,7 @@
             if fresh; then
               resp=$(cat "$cache"); src=cache
             else
-              resp=$(${curl} -sS -f -m 80 -X POST "$base/v1/default/banks/$bank/memories/recall" \
+              resp=$(${curl} "''${auth[@]}" -sS -f -m 80 -X POST "$base/v1/default/banks/$bank/memories/recall" \
                 -H 'Content-Type: application/json' -d "$input" 2>/dev/null) || failwarn "fail:recall"
               [ "$(printf '%s' "$resp" | ${jq} '.results | length' 2>/dev/null)" -gt 0 ] 2>/dev/null \
                 && printf '%s' "$resp" > "$cache.$$" && mv "$cache.$$" "$cache"
@@ -348,6 +355,16 @@
         '';
       in
       {
+        # The den-law token: a rekey target of the one generator in
+        # kubernetes/services/ai/hindsight.nix (same rekeyFile, no generator here).
+        # Declared here, so every user with this client is a target; today that is
+        # sini on bitstream, blade, cortex and patch.
+        age.secrets.hindsight-token-den-law = {
+          rekeyFile = rootPath + "/.secrets/env/prod/hindsight/token-den-law.age";
+          mode = "400";
+          path = "${config.home.homeDirectory}/.config/hindsight/den-law-token";
+        };
+
         # Backfill tool for sessions that predate the hook, or that ended without
         # firing it. Overridden with THIS host's endpoint and bank rather than
         # carrying its own copy of them — the package's defaults exist so it runs
@@ -355,9 +372,11 @@
         home.packages = [
           (pkgs.local.hindsight-backfill.override {
             inherit (cfg) endpoint bank;
+            inherit tokenFile;
           })
           (pkgs.local.hindsight-handoff-reconcile.override {
             inherit (cfg) endpoint bank;
+            inherit tokenFile;
             repos = map (r: "${config.home.homeDirectory}/${r}") cfg.handoffRepos;
           })
         ];
@@ -455,6 +474,9 @@
             set -uo pipefail
             base="${cfg.endpoint}"
             bank="${cfg.bank}"
+            # den-law gates reads and writes (kubernetes/services/ai/hindsight.nix):
+            # every bank call carries the user's token.
+            auth=(-H "Authorization: Bearer $(cat ${tokenFile} 2>/dev/null)")
             strategy="${cfg.episodeStrategy}"
 
             # ★ FAIL OPEN, BUT LEAVE A TRACE. Exiting 0 on every error is required —
@@ -552,7 +574,7 @@
             timeout=30
             [ "$async" = "false" ] && timeout=3600
 
-            ${curl} -sS -m "$timeout" -X POST "$base/v1/default/banks/$bank/memories" \
+            ${curl} "''${auth[@]}" -sS -m "$timeout" -X POST "$base/v1/default/banks/$bank/memories" \
               -H 'Content-Type: application/json' --data-binary @"$req" \
               >/dev/null 2>&1 || fail "post"
             exit 0
@@ -574,12 +596,15 @@
             set -uo pipefail
             base="${cfg.endpoint}"
             bank="${cfg.bank}"
+            # den-law gates reads and writes (kubernetes/services/ai/hindsight.nix):
+            # every bank call carries the user's token.
+            auth=(-H "Authorization: Bearer $(cat ${tokenFile} 2>/dev/null)")
 
             # Preflight, cheapest first. Without these a cold or empty bank costs
             # a full recall round-trip on every prompt and injects a header with
             # nothing under it.
             ${curl} -sS -m 5 -o /dev/null "$base/health" 2>/dev/null || exit 0
-            nodes=$(${curl} -sS -m 10 "$base/v1/default/banks/$bank/stats" 2>/dev/null \
+            nodes=$(${curl} "''${auth[@]}" -sS -m 10 "$base/v1/default/banks/$bank/stats" 2>/dev/null \
               | ${jq} -r '.total_nodes // 0' 2>/dev/null) || exit 0
             [ "''${nodes:-0}" -gt 0 ] 2>/dev/null || exit 0
 
@@ -602,7 +627,7 @@
               '{query:$q, tags:["active"], tags_match:"any", budget:"low",
                 min_scores:{reranker:0.5}}' 2>/dev/null) || exit 0
 
-            resp=$(${curl} -sS -m 60 -X POST \
+            resp=$(${curl} "''${auth[@]}" -sS -m 60 -X POST \
               "$base/v1/default/banks/$bank/memories/recall" \
               -H 'Content-Type: application/json' -d "$body" 2>/dev/null) || exit 0
 
@@ -780,12 +805,13 @@
       let
         cfg = host.settings.applications.dev.ai.mcp.hindsight;
         repos = map (r: "${config.home.homeDirectory}/${r}") cfg.handoffRepos;
+        tokenFile = config.age.secrets.hindsight-token-den-law.path;
         reconcile = pkgs.local.hindsight-handoff-reconcile.override {
           inherit (cfg) endpoint bank;
-          inherit repos;
+          inherit repos tokenFile;
         };
         backfill = pkgs.local.hindsight-backfill.override {
-          inherit (cfg) endpoint bank;
+          inherit (cfg) endpoint bank tokenFile;
         };
       in
       lib.mkIf cfg.archiveHook {

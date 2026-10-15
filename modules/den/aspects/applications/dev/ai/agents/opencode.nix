@@ -52,6 +52,11 @@
                 type = "remote";
                 inherit (server) url;
               }
+              # opencode substitutes {file:} at load time; the token stays out of
+              # the store.
+              // lib.optionalAttrs (server ? bearerTokenFile) {
+                headers.Authorization = "Bearer {file:${server.bearerTokenFile}}";
+              }
             else
               # McpLocalConfig requires `type`, and `command` is ONE array of the
               # executable followed by its arguments — not a command string beside

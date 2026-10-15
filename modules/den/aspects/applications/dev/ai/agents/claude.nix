@@ -82,6 +82,11 @@
                 inherit (server) url;
               }
               // lib.optionalAttrs (server ? headers) { inherit (server) headers; }
+              # A bearer token from a file the server names: claude-code runs
+              # headersHelper at connect time, so the token never enters the store.
+              // lib.optionalAttrs (server ? bearerTokenFile) {
+                headersHelper = "printf '{\"Authorization\":\"Bearer %s\"}' \"$(cat \"$HOME/${lib.removePrefix "~/" server.bearerTokenFile}\")\"";
+              }
             else
               {
                 type = "stdio";

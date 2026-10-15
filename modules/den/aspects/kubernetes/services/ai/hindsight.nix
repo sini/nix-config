@@ -5,20 +5,23 @@
 # deploys). The all-in-one `hindsight` image is not used: it bundles an embedded
 # postgres and the Next.js control plane, and state belongs in hindsight-pg.
 #
-# Deployed cluster-internal — no HTTPRoute, no service-domains. Reach it via the
-# ClusterIP service, the internal LoadBalancer below, or
-# `kubectl -n ai port-forward svc/hindsight 8888`.
+# The dataplane has no HTTPRoute. Reach it via the ClusterIP service, the
+# internal LoadBalancer below, or `kubectl -n ai port-forward svc/hindsight 8888`.
+# The control-plane UI is served only at https://<domainFor "hindsight"> behind the
+# gateway's kanidm OIDC, admins only (kanidm.nix `hindsight` client); nothing else
+# reaches the CP pod.
 #
 # Auth. The dataplane reads `Authorization: Bearer <key>` into every request's
 # context and runs it past two extension points: a TenantExtension (upstream ships
 # ApiKeyTenantExtension, one key for every read and write on every bank, unused
 # here) and an OperationValidatorExtension. This deployment loads one validator,
-# hindsight-write-gate.py: reads stay open, and a write to a bank in
-# `writeGatedBanks` needs that bank's own token (SopsSecret
-# hindsight-write-tokens). Banks outside the list stay writable without a key.
-# Document import is switched off because it reaches no validator hook on an
-# existing bank. Oracle: hindsight-write-gate-oracle.py, run against upstream's
-# Python at the pinned version.
+# hindsight-write-gate.py, configured from `gatedBanks`: each listed bank has its own
+# token, which its writes need; a bank with gateReads needs it for reads too. Banks
+# outside the list are open. The control plane holds an admin token the gate accepts
+# on every listed bank; the dataplane holds only its SHA-256. Document import is
+# switched off because it reaches no validator hook on an existing bank. Oracle:
+# hindsight-write-gate-oracle.py, run against upstream's Python at the pinned
+# version.
 #
 # Embeddings (BAAI/bge-small-en-v1.5) and reranking
 # (cross-encoder/ms-marco-MiniLM-L-6-v2) run in-process on CPU at upstream
@@ -26,13 +29,20 @@
 # model-cache PVC, which is why this pod has world:443 egress.
 { den, lib, ... }:
 let
-  # Banks whose writes need their own token. One generated token per bank, so a
-  # holder of one bank's token cannot write another gated bank.
-  writeGatedBanks = [
-    "genie"
-    "genie-memory"
-  ];
-  tokenSecret = bank: "hindsight-write-token-${bank}";
+  # Banks with their own token. One generated token per bank, so a holder of one
+  # bank's token cannot use another gated bank. Writes always need it; gateReads
+  # makes reads need it too. genie and genie-memory keep reads open because the
+  # genie recall clients send no token (H2); den-law is the fleet's operating law.
+  gatedBanks = {
+    genie.gateReads = false;
+    genie-memory.gateReads = false;
+    den-law.gateReads = true;
+  };
+  gatedBankNames = builtins.attrNames gatedBanks;
+  # A write-only token is named write-token-<bank>; a read-and-write one token-<bank>.
+  tokenName = bank: if gatedBanks.${bank}.gateReads then "token-${bank}" else "write-token-${bank}";
+  tokenSecret = bank: "hindsight-${tokenName bank}";
+  serviceDomains = [ "hindsight" ];
 in
 {
   den.aspects.kubernetes.services.ai.hindsight = {
@@ -40,27 +50,78 @@ in
     # endpoints and their model names are read out of this aspect's `instances`.
     includes = [ den.aspects.kubernetes.services.ai.llama-cpp ];
 
+    service-domains = serviceDomains;
+    served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
+
     # The single generator for each bank's token; the .age files are created by
-    # `agenix generate` after this lands. Rekey targets of the same rekeyFile, with
-    # no generator of their own: this pod (via sops), the genie token at
-    # services.ai.genie-bank-review (sini@bitstream), and the genie-memory token at
-    # services.ai.genie-memory-loader (sini@cortex).
+    # `agenix generate`. Rekey targets of the same rekeyFile, with no generator of
+    # their own: this pod (via sops), the genie token at services.ai.genie-bank-review
+    # (sini@bitstream), the genie-memory token at services.ai.genie-memory-loader
+    # (sini@cortex), and the den-law token at applications.dev.ai.mcp.hindsight (sini
+    # on every host with the hindsight client).
     age-secrets =
-      { environment, ... }:
+      { environment, config, ... }:
       {
-        age.secrets = lib.listToAttrs (
-          map (
-            bank:
-            lib.nameValuePair (tokenSecret bank) {
-              rekeyFile = environment.secretPath + "/hindsight/write-token-${bank}.age";
-              generator.script = "hex";
+        age.secrets =
+          lib.listToAttrs (
+            map (
+              bank:
+              lib.nameValuePair (tokenSecret bank) {
+                rekeyFile = environment.secretPath + "/hindsight/${tokenName bank}.age";
+                generator.script = "hex";
+                sopsOutput = {
+                  file = "hindsight";
+                  key = tokenName bank;
+                };
+              }
+            ) gatedBankNames
+          )
+          // {
+            # The control plane's admin token: a sops target of the CP pod only.
+            # No trailing newline, because the CP sends the value verbatim in its
+            # Authorization header.
+            hindsight-cp-admin-token = {
+              rekeyFile = environment.secretPath + "/hindsight/cp-admin-token.age";
+              generator.script =
+                { pkgs, ... }: "${pkgs.openssl}/bin/openssl rand -hex 32 | ${pkgs.coreutils}/bin/tr -d '\\n'";
               sopsOutput = {
                 file = "hindsight";
-                key = "write-token-${bank}";
+                key = "cp-admin-token";
               };
-            }
-          ) writeGatedBanks
-        );
+            };
+            # Its SHA-256, derived from it, which is all the dataplane holds.
+            hindsight-cp-admin-token-sha256 = {
+              rekeyFile = environment.secretPath + "/hindsight/cp-admin-token-sha256.age";
+              generator = {
+                dependencies = [ config.age.secrets.hindsight-cp-admin-token ];
+                script =
+                  {
+                    decrypt,
+                    deps,
+                    pkgs,
+                    ...
+                  }:
+                  "${decrypt} ${lib.escapeShellArg (lib.head deps).file} | ${pkgs.coreutils}/bin/tr -d '\\n' | ${pkgs.coreutils}/bin/sha256sum | ${pkgs.coreutils}/bin/cut -d' ' -f1 | ${pkgs.coreutils}/bin/tr -d '\\n'";
+              };
+              sopsOutput = {
+                file = "hindsight";
+                key = "cp-admin-token-sha256";
+              };
+            };
+            # The gateway's OIDC client secret; kanidm.nix declares the same
+            # rekeyFile and generator for the `hindsight` client.
+            hindsight-oidc-client-secret = {
+              rekeyFile = environment.secretPath + "/oidc/hindsight-oidc-client-secret.age";
+              generator = {
+                tags = [ "oidc" ];
+                script = "rfc3986-secret";
+              };
+              sopsOutput = {
+                file = "oidc";
+                key = "hindsight";
+              };
+            };
+          };
       };
 
     k8s-manifests =
@@ -127,6 +188,7 @@ in
         # the pinned image runs unmodified.
         gateDir = "/opt/hindsight-write-gate";
         tokensDir = "/etc/hindsight-write-gate/tokens";
+        adminDir = "/etc/hindsight-write-gate/admin";
       in
       {
         applications.hindsight = {
@@ -286,14 +348,17 @@ in
                     # it converts one slow extraction into four (WORKER_MAX_RETRIES=3).
                     HINDSIGHT_API_LLM_TIMEOUT = "900";
 
-                    # Per-bank write tokens (hindsight-write-gate.py). The loader
+                    # Per-bank tokens (hindsight-write-gate.py). The loader
                     # passes every HINDSIGHT_API_OPERATION_VALIDATOR_* variable to
                     # the gate as config. A listed bank with a missing or empty
-                    # token file stops the server at startup.
+                    # token file, or a bad admin digest, stops the server at startup.
                     PYTHONPATH = gateDir;
                     HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION = "hindsight_write_gate:WriteGate";
-                    HINDSIGHT_API_OPERATION_VALIDATOR_BANKS = lib.concatStringsSep "," writeGatedBanks;
+                    HINDSIGHT_API_OPERATION_VALIDATOR_BANKS = builtins.toJSON (
+                      lib.mapAttrs (_: b: { gate_reads = b.gateReads; }) gatedBanks
+                    );
                     HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR = tokensDir;
+                    HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE = "${adminDir}/sha256";
 
                     # Document import (POST …/document-transfer) calls no validator
                     # hook when the bank already exists, so the gate cannot see it.
@@ -441,9 +506,10 @@ in
               # bank without a public HTTPRoute and without the OIDC gateway,
               # which headless MCP clients cannot complete anyway.
               #
-              # NOTE: anything on the LAN that can route here reads every bank and
-              # writes every bank outside writeGatedBanks; writes to a gated bank
-              # need its token. The CiliumNetworkPolicies below admit the callers.
+              # NOTE: anything on the LAN that can route here reads and writes every
+              # bank outside gatedBanks and reads the ones without gateReads; the
+              # rest needs the bank's token. The CiliumNetworkPolicies below admit
+              # the callers.
               service.internal = {
                 controller = "main";
                 type = "LoadBalancer";
@@ -489,6 +555,19 @@ in
                     }
                   ];
                 };
+
+                # The admin token's SHA-256 only; the token is the CP's.
+                admin-digest = {
+                  type = "secret";
+                  name = "hindsight-cp-admin-token-sha256";
+                  defaultMode = 288; # 0440
+                  advancedMounts.main.main = [
+                    {
+                      path = adminDir;
+                      readOnly = true;
+                    }
+                  ];
+                };
               };
 
               configMaps.write-gate.data."hindsight_write_gate.py" = builtins.readFile ./hindsight-write-gate.py;
@@ -522,9 +601,16 @@ in
                     HINDSIGHT_CP_PORT = toString cpPort;
                     # In-cluster, via the pinned service name.
                     HINDSIGHT_CP_DATAPLANE_API_URL = "http://hindsight.ai.svc.cluster.local:${toString port}";
-                    # HINDSIGHT_CP_DATAPLANE_API_KEY (the bearer the CP sends) is
-                    # left unset: no tenant key is configured, and the CP holds no
-                    # bank write token, so its writes to a gated bank are refused.
+                    # The admin token: the CP's server-side API routes send it as
+                    # `Authorization: Bearer` on every dataplane call
+                    # (src/lib/hindsight-client.ts at the pinned version), so a
+                    # user the gateway admits has full access with no token of
+                    # their own. HINDSIGHT_CP_ACCESS_KEY stays unset: the gateway's
+                    # admin-only OIDC is the authorization.
+                    HINDSIGHT_CP_DATAPLANE_API_KEY.valueFrom.secretKeyRef = {
+                      name = "hindsight-cp-admin-token";
+                      key = "token";
+                    };
                   };
 
                   probes = {
@@ -568,18 +654,12 @@ in
                 };
               };
 
+              # ClusterIP only. The CP holds the admin token, so its one way in
+              # is the gateway's admin-only route below; no LoadBalancer, no
+              # NodePort.
               service.main = {
                 controller = "main";
                 forceRename = "hindsight-cp";
-                ports.http.port = cpPort;
-              };
-
-              # Private-network reach, same rationale as the API's.
-              service.internal = {
-                controller = "main";
-                type = "LoadBalancer";
-                externalTrafficPolicy = "Local";
-                annotations."lbipam.cilium.io/ips" = cluster.getAssignment "hindsight-cp-internal";
                 ports.http.port = cpPort;
               };
             };
@@ -617,12 +697,71 @@ in
             }
           ];
 
-          # The write tokens, one key per gated bank. The nixidy objectTransform
-          # rewrites Secret → SopsSecret; each value is a sops ref resolved at
-          # render time.
-          resources.secrets.hindsight-write-tokens = {
-            type = "Opaque";
-            stringData = lib.genAttrs writeGatedBanks (bank: config.age.secrets.${tokenSecret bank}.sopsRef);
+          # The nixidy objectTransform rewrites each Secret → SopsSecret; each value
+          # is a sops ref resolved at render time. hindsight-write-tokens holds one
+          # key per gated bank (the name predates read gating and is kept so the
+          # deployed object is not replaced).
+          resources.secrets = {
+            hindsight-write-tokens = {
+              type = "Opaque";
+              stringData = lib.genAttrs gatedBankNames (bank: config.age.secrets.${tokenSecret bank}.sopsRef);
+            };
+            hindsight-cp-admin-token-sha256 = {
+              type = "Opaque";
+              stringData.sha256 = config.age.secrets.hindsight-cp-admin-token-sha256.sopsRef;
+            };
+            hindsight-cp-admin-token = {
+              type = "Opaque";
+              stringData.token = config.age.secrets.hindsight-cp-admin-token.sopsRef;
+            };
+            hindsight-oidc-client-secret = {
+              type = "Opaque";
+              stringData.client-secret = config.age.secrets.hindsight-oidc-client-secret.sopsRef;
+            };
+          };
+
+          # The control-plane UI, behind the gateway's kanidm OIDC. kanidm maps only
+          # `admins` to the `hindsight` client (kanidm.nix), so no one else can
+          # obtain a session; the gateway's admission is the authorization.
+          resources.httpRoutes.hindsight.spec = {
+            hostnames = [ (cluster.domainFor "hindsight") ];
+            parentRefs = [
+              {
+                name = "default-gateway";
+                namespace = "gateways";
+                sectionName = "${cluster.domainForResource "hindsight"}-https";
+              }
+            ];
+            rules = [
+              {
+                backendRefs = [
+                  {
+                    name = "hindsight-cp";
+                    port = cpPort;
+                  }
+                ];
+              }
+            ];
+          };
+
+          resources.securityPolicies."hindsight-oidc".spec = {
+            targetRefs = [
+              {
+                group = "gateway.networking.k8s.io";
+                kind = "HTTPRoute";
+                name = "hindsight";
+              }
+            ];
+            oidc = {
+              provider = cluster.secrets.oidcProviderFor "hindsight";
+              clientID = "hindsight";
+              clientSecret.name = "hindsight-oidc-client-secret";
+              scopes = [
+                "email"
+                "openid"
+                "profile"
+              ];
+            };
           };
 
           # In-cluster egress (hindsight-pg, kube-dns) is already covered by the
@@ -662,13 +801,20 @@ in
             # The control plane reaches the API from a POD address (172.20/16),
             # which the LAN rule below does not cover — without this the
             # ingress default-deny silently drops it.
+            # Namespace-pinned: the app label alone would admit a pod carrying it
+            # in any namespace.
             allow-cp-ingress-hindsight.spec = {
               description = "Allow the hindsight control plane to reach the dataplane API (8888).";
               endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight";
               ingress = [
                 {
                   fromEndpoints = [
-                    { matchLabels."app.kubernetes.io/name" = "hindsight-cp"; }
+                    {
+                      matchLabels = {
+                        "k8s:io.kubernetes.pod.namespace" = "ai";
+                        "app.kubernetes.io/name" = "hindsight-cp";
+                      };
+                    }
                   ];
                   toPorts = [
                     {
@@ -726,13 +872,17 @@ in
               ];
             };
 
-            # Browser access to the control plane over its own LoadBalancer.
-            allow-lan-ingress-hindsight-cp.spec = {
-              description = "Allow private-LAN clients to reach the hindsight control plane UI (3000).";
+            # The control plane's only ingress: the gateway's proxies, which admit
+            # a request only after the admin-only OIDC. Being the only rule, it
+            # puts the CP in ingress default-deny for everything else.
+            allow-gateway-ingress-hindsight-cp.spec = {
+              description = "Allow only Envoy Gateway proxies to reach the hindsight control plane UI (3000).";
               endpointSelector.matchLabels."app.kubernetes.io/name" = "hindsight-cp";
               ingress = [
                 {
-                  fromCIDR = [ "10.0.0.0/8" ];
+                  fromEndpoints = [
+                    { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
+                  ];
                   toPorts = [
                     {
                       ports = [

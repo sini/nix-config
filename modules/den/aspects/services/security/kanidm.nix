@@ -98,6 +98,22 @@ let
         ];
       };
 
+      # Gateway-OIDC front for the hindsight control plane
+      # (kubernetes/services/ai/hindsight.nix). Admins only: the CP holds the
+      # dataplane admin token, so this mapping is the authorization.
+      hindsight = {
+        displayName = "Hindsight";
+        originUrl = [ "https://${domain "hindsight"}/oauth2/callback" ];
+        originLanding = "https://${domain "hindsight"}";
+        basicSecretFile = secretPaths.hindsight-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps.admins = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
       alertmanager = {
         displayName = "Alertmanager";
         originUrl = [ "https://${domain "alertmanager"}/oauth2/callback" ];

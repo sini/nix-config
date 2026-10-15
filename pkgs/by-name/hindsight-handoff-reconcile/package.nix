@@ -7,6 +7,9 @@
   coreutils,
   git,
   endpoint ? "http://10.11.0.20:8888",
+  # A file holding the bank's token, sent as `Authorization: Bearer` on every bank
+  # call (den-law gates reads and writes). null sends none.
+  tokenFile ? null,
   bank ? "den-law",
   repos ? [ ],
 }:
@@ -46,6 +49,12 @@ writeShellApplication {
 
     base="''${HINDSIGHT_ENDPOINT:-${endpoint}}"
     bank="''${HINDSIGHT_BANK:-${bank}}"
+    tokfile="''${HINDSIGHT_TOKEN_FILE:-${if tokenFile == null then "" else tokenFile}}"
+    auth=()
+    if [ -n "$tokfile" ]; then
+      tok=$(cat "$tokfile") || { echo "hindsight-handoff-reconcile: cannot read token file $tokfile" >&2; exit 1; }
+      auth=(-H "Authorization: Bearer $tok")
+    fi
     strategy="''${HINDSIGHT_HANDOFF_STRATEGY:-handoff}"
     file="STATUS/HANDOFF.md"
     context="A session handoff: the curated record of what one working session settled."
@@ -92,7 +101,7 @@ writeShellApplication {
     # the hook only starts it — so a refusal costs nothing but a journal line.
     curl -sS -m 5 -o /dev/null "$base/health" || {
       echo "hindsight unreachable at $base" >&2; exit 1; }
-    curl -sS -f -m 60 "$base/v1/default/banks/$bank/documents?limit=100000" -o "$doclist" || {
+    curl "''${auth[@]}" -sS -f -m 60 "$base/v1/default/banks/$bank/documents?limit=100000" -o "$doclist" || {
       echo "could not list documents from $base/$bank" >&2; exit 1; }
     # The envelope key is checked, not defaulted: this API uses `items` here and
     # `operations` elsewhere, and a `.items // []` read of the wrong one is a clean 0.
@@ -106,13 +115,13 @@ writeShellApplication {
     # bank default at HTTP 200 (the law mission, which extracts nearly nothing from
     # a handoff), and a mistyped bank is auto-created empty and reads as "all 224
     # revisions missing". Both are refused here rather than published into.
-    chunk_size=$(curl -sS -f -m 30 "$base/v1/default/banks/$bank/config" \
+    chunk_size=$(curl "''${auth[@]}" -sS -f -m 30 "$base/v1/default/banks/$bank/config" \
       | jq -er --arg s "$strategy" '.config.retain_strategies[$s]
           | select(. != null) | .retain_chunk_size // 12000') || {
       echo "bank $bank has no retain strategy '$strategy'" >&2; exit 1; }
 
     fact_count() {
-      curl -sS -f -m 30 "$base/v1/default/banks/$bank/memories/list?document_id=$1&limit=500" \
+      curl "''${auth[@]}" -sS -f -m 30 "$base/v1/default/banks/$bank/memories/list?document_id=$1&limit=500" \
         | jq -er '.items | arrays | length'
     }
 
@@ -137,7 +146,7 @@ writeShellApplication {
       # per-call detail synchronous retain actually returns is `usage`
       # (LLM token counts) — extracted here because that response body is
       # the only place it exists at all.
-      code=$(curl -sS -m 3600 -o "$resp" -w '%{http_code}' -X POST \
+      code=$(curl "''${auth[@]}" -sS -m 3600 -o "$resp" -w '%{http_code}' -X POST \
         "$base/v1/default/banks/$bank/memories" \
         -H 'Content-Type: application/json' --data-binary @"$req") || {
         pub_detail="transport error"; return 1; }
@@ -179,7 +188,7 @@ writeShellApplication {
             floor=$(( want * 8 / 10 ))
             state=ok
             if [ "$floor" -gt 0 ]; then
-              chunks=$(curl -sS -f -m 30 "$base/v1/default/banks/$bank/documents/$id/chunks?limit=1" \
+              chunks=$(curl "''${auth[@]}" -sS -f -m 30 "$base/v1/default/banks/$bank/documents/$id/chunks?limit=1" \
                 | jq -er '.total | numbers') || chunks=""
               if [ -z "$chunks" ]; then
                 echo "could not read chunks for $id" >&2; failed=$((failed + 1)); continue
@@ -216,7 +225,7 @@ writeShellApplication {
         # actually held anything.
         del_units="-"
         if [ "$mode" = repair ]; then
-          delcode=$(curl -sS -m 60 -o "$delresp" -w '%{http_code}' -X DELETE \
+          delcode=$(curl "''${auth[@]}" -sS -m 60 -o "$delresp" -w '%{http_code}' -X DELETE \
             "$base/v1/default/banks/$bank/documents/$id") || {
             printf 'FAILED (delete: transport error)\n'; failed=$((failed + 1)); continue; }
           case "$delcode" in

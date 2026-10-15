@@ -107,7 +107,9 @@
           # restore). Left reserved rather than reused so bringing it back is
           # additive.
           llama-cpp-gpt-oss-internal = "10.11.0.22";
-          hindsight-cp-internal = "10.11.0.23";
+          # .23 held hindsight-cp-internal until the control plane moved behind the
+          # gateway's admin-only OIDC (it holds the admin token, so no LAN path).
+          # Left reserved rather than reused.
 
           # Postfix relay to Proton (communication/smtp-relay.nix), published
           # as smtp.json64.dev. BGP-advertised, NOT internet-routable.

@@ -53,7 +53,11 @@
 
         # 4. stdio MCP servers
         mcpExts = lib.filter (e: e.type or "" == "mcp") extensionsList;
-        allMcpServers = lib.foldl' (acc: e: acc // (e.mcpServers or { })) { } mcpExts;
+        # bearerTokenFile has no antigravity equivalent wired here; dropped so the
+        # config stays schema-valid. Servers needing it are refused there.
+        allMcpServers = lib.mapAttrs (_: s: removeAttrs s [ "bearerTokenFile" ]) (
+          lib.foldl' (acc: e: acc // (e.mcpServers or { })) { } mcpExts
+        );
       in
       {
         home.packages = [

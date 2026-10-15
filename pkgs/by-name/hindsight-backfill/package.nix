@@ -8,6 +8,9 @@
   gawk,
   bash,
   endpoint ? "http://10.11.0.20:8888",
+  # A file holding the bank's token, sent as `Authorization: Bearer` on every bank
+  # call (den-law gates reads and writes). null sends none.
+  tokenFile ? null,
   bank ? "den-law",
 }:
 # Publish past Claude Code sessions to the hindsight bank as `tier:episode`.
@@ -44,6 +47,12 @@ writeShellApplication {
 
     base="''${HINDSIGHT_ENDPOINT:-${endpoint}}"
     bank="''${HINDSIGHT_BANK:-${bank}}"
+    tokfile="''${HINDSIGHT_TOKEN_FILE:-${if tokenFile == null then "" else tokenFile}}"
+    auth=()
+    if [ -n "$tokfile" ]; then
+      tok=$(cat "$tokfile") || { echo "hindsight-backfill: cannot read token file $tokfile" >&2; exit 1; }
+      auth=(-H "Authorization: Bearer $tok")
+    fi
     archiver="''${HINDSIGHT_ARCHIVER:-$HOME/.claude/hindsight-archive.sh}"
     projects="$HOME/.claude/projects"
     strategy="''${HINDSIGHT_STRATEGY:-episode}"
@@ -118,7 +127,7 @@ writeShellApplication {
 
     # Resumability, in one call: the ids the bank already holds, WITH their chunk
     # counts. The id alone is not enough — see the completeness check below.
-    curl -sS -m 60 "$base/v1/default/banks/$bank/documents?limit=100000" \
+    curl "''${auth[@]}" -sS -m 60 "$base/v1/default/banks/$bank/documents?limit=100000" \
       -o "$doclist" || { echo "could not list documents from $base/$bank" >&2; exit 1; }
     jq -r '(.items // [])[] | "\(.id)\t\(.memory_unit_count // 0)"' "$doclist" \
       | sort -u > "$doctsv"
@@ -140,7 +149,7 @@ writeShellApplication {
     # again.
     chunk_size=$(jq -r '.config.retain_strategies."'"$strategy"'".retain_chunk_size
                         // .config.retain_chunk_size // 12000' <(
-      curl -sS -m 30 "$base/v1/default/banks/$bank/config") 2>/dev/null || echo 12000)
+      curl "''${auth[@]}" -sS -m 30 "$base/v1/default/banks/$bank/config") 2>/dev/null || echo 12000)
     echo "strategy $strategy chunks at $chunk_size bytes"
 
     # Depth 2 only: <projects>/<munged-cwd>/<session>.jsonl. Subagent transcripts sit
@@ -169,7 +178,7 @@ writeShellApplication {
           bytes=$(wc -c < "$rendered")
           want=$(( (bytes + chunk_size - 1) / chunk_size ))
         fi
-        have=$(curl -sS -m 30 "$base/v1/default/banks/$bank/documents/$session/chunks?limit=1" \
+        have=$(curl "''${auth[@]}" -sS -m 30 "$base/v1/default/banks/$bank/documents/$session/chunks?limit=1" \
           | jq -r '.total // 0' 2>/dev/null || echo 0)
         # 80% floor: the final chunk is short and chunking is not exact, so demanding
         # equality would republish complete sessions forever.
@@ -217,7 +226,7 @@ writeShellApplication {
       # session, and keeps 90 of them off the queue at once.
       if HINDSIGHT_ARCHIVE_SYNC=1 bash "$archiver" "$f" "$session" "$project"; then
         elapsed=$(( $(date +%s) - start ))
-        n=$(curl -sS -m 30 "$base/v1/default/banks/$bank/memories/list?document_id=$session&limit=500" \
+        n=$(curl "''${auth[@]}" -sS -m 30 "$base/v1/default/banks/$bank/memories/list?document_id=$session&limit=500" \
           | jq -r '(.items // []) | length' 2>/dev/null || echo 0)
         if [ "''${n:-0}" -gt 0 ]; then
           printf 'ok  %s fact(s)  %ss\n' "$n" "$elapsed"
