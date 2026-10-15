@@ -69,8 +69,10 @@ os.environ.update(GATE_ENV)
 os.environ.setdefault("HINDSIGHT_API_CONSOLIDATION_RECONCILE_INTERVAL_SECONDS", "0")
 os.environ.setdefault("HINDSIGHT_API_MENTAL_MODEL_REFRESH_TICK_SECONDS", "0")
 os.environ.setdefault("HINDSIGHT_API_LLM_TRACE_RETENTION_DAYS", "-1")
-# As deployed: document import reaches no write hook on an existing bank, so it is off.
-os.environ.setdefault("HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API", "false")
+# As deployed: document import is on (upstream's default). It reaches no write hook on an
+# existing bank, so the gate cannot see it; its boundary is the Cilium source rule
+# (hindsight.nix), by owner ruling. The `import` cells pin that bypass.
+os.environ.setdefault("HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API", "true")
 
 import httpx
 from hindsight_api import MemoryEngine, RequestContext
@@ -123,7 +125,8 @@ def refused(r):
 
 
 def hdr(tok):
-    return {"Authorization": f"Bearer {tok}"} if tok else {}
+    # "" sends `Authorization: Bearer ` (an empty key); None sends no header.
+    return {} if tok is None else {"Authorization": f"Bearer {tok}"}
 
 
 ARCHIVE: dict[str, bytes] = {}
@@ -249,9 +252,11 @@ READ_POSTS = {
     "/health/llm",
     "/document-transfer/export",
 }
-# Mutating routes closed to every caller, keyed or not: document import by the deployment's
-# HINDSIGHT_API_ENABLE_DOCUMENT_IMPORT_API=false, the entity route by upstream (410).
-CLOSED = {"/document-transfer", "/entities/{entity_id}/regenerate"}
+# Mutating routes closed to every caller, keyed or not: the entity route, by upstream (410).
+CLOSED = {"/entities/{entity_id}/regenerate"}
+# Document import: not token-gated (no hook on an existing bank). Covered by the
+# `import` cells, which assert the bypass, not by the token cells.
+SOURCE_GATED = {"/document-transfer"}
 
 
 async def call(c, verb, suffix, bank, ids, tok):
@@ -428,7 +433,11 @@ async def routes_cells():
     mem._operation_validator = gate
     app = create_app(mem, initialize_memory=False)
     routes = bank_routes(app)
-    writes = [(v, s) for v, s in routes if v != "GET" and s not in READ_POSTS]
+    writes = [
+        (v, s)
+        for v, s in routes
+        if v != "GET" and s not in READ_POSTS and s not in SOURCE_GATED
+    ]
     gets = [(v, s) for v, s in routes if v == "GET"]
     print(
         f"routes: bank-scoped={len(routes)} write={len(writes)} read-post={len(READ_POSTS)} get={len(gets)}"
@@ -438,6 +447,18 @@ async def routes_cells():
     ) as c:
         for b in (GATED, OTHER, LAW, OPEN):
             await c.delete(f"/v1/default/banks/{b}", headers=hdr(ADMIN))
+
+        # import: accepted with no key on a gated bank of either kind; the source
+        # rule, not the token, is its boundary
+        for bank in (GATED, LAW):
+            ids = await fixture(c, bank, TOKENS[bank])
+            r = await call(c, "POST", "/document-transfer", bank, ids, None)
+            cell(
+                "import.bypass",
+                r.status_code == 202,
+                f"{bank} POST /document-transfer key=none -> {r.status_code} {r.text[:160]}",
+            )
+            await c.delete(f"/v1/default/banks/{bank}", headers=hdr(ADMIN))
 
         # a and r(write): one fresh fixture per credential that may mutate, so a
         # destructive call cannot mask the next
@@ -488,6 +509,7 @@ async def routes_cells():
         cell("r.fixture", chunk_id is not None, f"no chunk id in {str(chunks)[:160]}")
         for label, tok, want_refused in (
             ("none", None, True),
+            ("empty", "", True),
             ("other", TOKENS[GATED], True),
             ("own", TOKENS[LAW], False),
             ("admin", ADMIN, False),
@@ -617,6 +639,20 @@ def startup_cells():
     ):
         err = load(env)
         cell(name, err is not None, f"{name}: loaded")
+
+    # An empty key must not match even an admin digest of the empty string.
+    empty_digest = Path(tempfile.mkdtemp(prefix="hswg-e-")) / "sha256"
+    empty_digest.write_text(hashlib.sha256(b"").hexdigest())
+    saved = dict(os.environ)
+    os.environ["HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE"] = str(
+        empty_digest
+    )
+    try:
+        g = load_extension("OPERATION_VALIDATOR", OperationValidatorExtension)
+        cell("d.empty-key-refused", not g._admits(LAW, ""), "an empty key was admitted")
+    finally:
+        os.environ.clear()
+        os.environ.update(saved)
 
     # The real entrypoint: `hindsight-api` must exit non-zero on the empty file.
     exe = Path(sys.executable).with_name("hindsight-api")

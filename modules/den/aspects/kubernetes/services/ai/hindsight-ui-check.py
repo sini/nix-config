@@ -21,10 +21,16 @@ from pathlib import Path
 
 import yaml
 
-env, base, kanidm = Path(sys.argv[1]), Path(sys.argv[2]), json.loads(Path(sys.argv[3]).read_text())
+env, base, kanidm = (
+    Path(sys.argv[1]),
+    Path(sys.argv[2]),
+    json.loads(Path(sys.argv[3]).read_text()),
+)
 fails: list[str] = []
 # Some CRD schemas carry a bare `=`, which PyYAML reads as the value tag.
-yaml.SafeLoader.add_constructor("tag:yaml.org,2002:value", lambda loader, node: loader.construct_scalar(node))
+yaml.SafeLoader.add_constructor(
+    "tag:yaml.org,2002:value", lambda loader, node: loader.construct_scalar(node)
+)
 
 
 def check(name, ok, detail):
@@ -35,7 +41,12 @@ def check(name, ok, detail):
 
 docs = []
 # The env's app directories are symlinks, which Path.rglob does not follow.
-yamls = sorted(Path(d) / n for d, _, ns in os.walk(env, followlinks=True) for n in ns if n.endswith(".yaml"))
+yamls = sorted(
+    Path(d) / n
+    for d, _, ns in os.walk(env, followlinks=True)
+    for n in ns
+    if n.endswith(".yaml")
+)
 for f in yamls:
     for d in yaml.safe_load_all(f.read_text()):
         if isinstance(d, dict):
@@ -54,7 +65,11 @@ cp = next(
     if d["metadata"]["name"] == "hindsight-cp" and d["metadata"]["namespace"] == "ai"
 )
 cp_labels = dict(cp["spec"]["template"]["metadata"]["labels"])
-cp_identity = {**cp_labels, "k8s:io.kubernetes.pod.namespace": "ai", "io.kubernetes.pod.namespace": "ai"}
+cp_identity = {
+    **cp_labels,
+    "k8s:io.kubernetes.pod.namespace": "ai",
+    "io.kubernetes.pod.namespace": "ai",
+}
 for k, v in cp_labels.items():
     cp_identity[f"k8s:{k}"] = v
 
@@ -82,43 +97,82 @@ ui = next((r for r in routes if r["metadata"]["name"] == "hindsight"), None)
 check("ui.route", ui is not None, "HTTPRoute ai/hindsight present")
 if ui:
     backends = [b for rule in ui["spec"]["rules"] for b in rule["backendRefs"]]
-    check("ui.backend", backends == [{"name": "hindsight-cp", "port": 3000}], f"backends {backends}")
+    check(
+        "ui.backend",
+        backends == [{"name": "hindsight-cp", "port": 3000}],
+        f"backends {backends}",
+    )
 pols = [
     p
     for p in kind("SecurityPolicy")
     if p["metadata"]["namespace"] == "ai"
-    and any(t.get("kind") == "HTTPRoute" and t.get("name") == "hindsight" for t in p["spec"]["targetRefs"])
+    and any(
+        t.get("kind") == "HTTPRoute" and t.get("name") == "hindsight"
+        for t in p["spec"]["targetRefs"]
+    )
 ]
 oidc = pols[0]["spec"].get("oidc", {}) if len(pols) == 1 else {}
-check("ui.oidc", oidc.get("clientID") == "hindsight", f"{len(pols)} SecurityPolicy, clientID {oidc.get('clientID')}")
+check(
+    "ui.oidc",
+    oidc.get("clientID") == "hindsight",
+    f"{len(pols)} SecurityPolicy, clientID {oidc.get('clientID')}",
+)
 groups = sorted((kanidm.get("scopeMaps") or {}).keys())
-check("ui.admins-only", groups == ["admins"], f"kanidm hindsight scopeMaps groups {groups}")
+check(
+    "ui.admins-only",
+    groups == ["admins"],
+    f"kanidm hindsight scopeMaps groups {groups}",
+)
 
 # cp
 for s in kind("Service"):
     sel = s["spec"].get("selector") or {}
-    if s["metadata"].get("namespace") == "ai" and sel and all(cp_labels.get(k) == v for k, v in sel.items()):
+    if (
+        s["metadata"].get("namespace") == "ai"
+        and sel
+        and all(cp_labels.get(k) == v for k, v in sel.items())
+    ):
         t = s["spec"].get("type", "ClusterIP")
         node_ports = [p for p in s["spec"].get("ports", []) if "nodePort" in p]
-        check("cp.service", t == "ClusterIP" and not node_ports, f"Service {s['metadata']['name']} type={t}")
+        check(
+            "cp.service",
+            t == "ClusterIP" and not node_ports,
+            f"Service {s['metadata']['name']} type={t}",
+        )
 ingress_pols = []
 for p in kind("CiliumNetworkPolicy") + kind("CiliumClusterwideNetworkPolicy"):
     clusterwide = p["kind"] == "CiliumClusterwideNetworkPolicy"
     if not clusterwide and p["metadata"].get("namespace") != "ai":
         continue
     for spec in [p["spec"]] if "spec" in p else p.get("specs", []):
-        if spec.get("ingress") and selects(spec.get("endpointSelector", {}), cp_identity):
+        if spec.get("ingress") and selects(
+            spec.get("endpointSelector", {}), cp_identity
+        ):
             ingress_pols.append((p["metadata"]["name"], spec["ingress"]))
 names = [n for n, _ in ingress_pols]
-check("cp.ingress-policies", names == ["allow-gateway-ingress-hindsight-cp"], f"policies giving the CP ingress: {names}")
+check(
+    "cp.ingress-policies",
+    names == ["allow-gateway-ingress-hindsight-cp"],
+    f"policies giving the CP ingress: {names}",
+)
 for n, rules in ingress_pols:
     peers = [{k: v for k, v in r.items() if k != "toPorts"} for r in rules]
-    want = [{"fromEndpoints": [{"matchLabels": {"k8s:io.kubernetes.pod.namespace": "gateways"}}]}]
+    want = [
+        {
+            "fromEndpoints": [
+                {"matchLabels": {"k8s:io.kubernetes.pod.namespace": "gateways"}}
+            ]
+        }
+    ]
     check("cp.ingress-peers", peers == want, f"{n} peers {peers}")
 others = [
     f"{r['kind']} {r['metadata']['namespace']}/{r['metadata']['name']}"
     for r in kind("HTTPRoute") + kind("GRPCRoute") + kind("TCPRoute") + kind("TLSRoute")
-    if any(b.get("name") == "hindsight-cp" for rule in r["spec"].get("rules", []) for b in rule.get("backendRefs", []))
+    if any(
+        b.get("name") == "hindsight-cp"
+        for rule in r["spec"].get("rules", [])
+        for b in rule.get("backendRefs", [])
+    )
     and r["metadata"]["name"] != "hindsight"
 ]
 check("cp.no-other-route", not others, f"other routes to hindsight-cp: {others}")
@@ -130,7 +184,11 @@ for f in (
     "hindsight/CiliumNetworkPolicy-allow-lan-ingress-hindsight.yaml",
 ):
     a, b = base / f, env / f
-    check("dp.unchanged", a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes(), f)
+    check(
+        "dp.unchanged",
+        a.is_file() and b.is_file() and a.read_bytes() == b.read_bytes(),
+        f,
+    )
 
 print(f"FAILED {len(fails)}" if fails else "ALL PASS")
 sys.exit(1 if fails else 0)

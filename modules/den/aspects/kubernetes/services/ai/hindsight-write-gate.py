@@ -130,7 +130,9 @@ class WriteGate(ov.OperationValidatorExtension):
         )
 
     def _admits(self, bank_id: str, key: str | None) -> bool:
-        if key is None:
+        # An empty key (`Authorization: Bearer `) is no key: it must not match the
+        # digest of an empty admin token.
+        if not key:
             return False
         if hmac.compare_digest(key.encode(), self._tokens[bank_id]):
             return True
