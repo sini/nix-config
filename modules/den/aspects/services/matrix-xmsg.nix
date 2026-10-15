@@ -4,7 +4,7 @@
 # agent.sock), so it runs on the host that runs xmsg.
 #
 # Trust follows kanidm: the IdP's `admins` group, routed here as `idm-users`
-# (kanidm.nix → collect-idm-users), mapped to MXIDs as synapse-admins.nix does.
+# (kanidm.nix → collect-idm-users), mapped to MXIDs as matrix/mas.nix maps admins.
 #
 # The token comes from `agenix generate` (the synapse-bot-token generator
 # registers @genie inside the Synapse pod); `matrix-bot-provision` then joins a

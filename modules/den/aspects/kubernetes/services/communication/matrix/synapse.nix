@@ -4,18 +4,16 @@
 # server_name is PERMANENT: it is part of every user id, room alias and the
 # federation signing identity. Do not change it without standing up a new server.
 #
-# Login is kanidm NATIVE OIDC (the romm pattern): Synapse runs the flow itself and
-# the gateway only routes, because Matrix clients and federating servers must
-# reach /_matrix unauthenticated. Password login and registration are disabled;
-# accounts are created on first OIDC login for members of `matrix.access`. The
-# non-OIDC accounts are the @genie bot, created once with
-# registration_shared_secret, and the @synapse-admins service account
-# (synapse-admins.nix), which logs in with a JWT signed by the jwt_config secret.
+# Authentication is delegated to the Matrix Authentication Service (mas.nix),
+# which logs users in through kanidm and creates accounts on first login for
+# members of `matrix.access`. Synapse only checks MAS's tokens; the gateway only
+# routes, because Matrix clients and federating servers must reach /_matrix
+# unauthenticated. Server admins are MAS's to grant (mas.nix).
 #
 # Config is split in two files merged by Synapse (--config-path twice): the
 # non-secret homeserver.yaml (ConfigMap, built here) and secrets.yaml (composed by
 # a template-file age secret: macaroon/form/registration secrets and the database
-# block, which has no *_path option for its password). The OIDC client secret and
+# block, which has no *_path option for its password). The MAS shared secret and
 # the signing key are mounted as files.
 #
 # /_synapse/admin is deliberately NOT routed: use `kubectl port-forward`.
@@ -30,11 +28,6 @@ let
     macaroon_secret_key: "%matrix-synapse-macaroon-secret-key%"
     form_secret: "%matrix-synapse-form-secret%"
     registration_shared_secret: "%matrix-synapse-registration-shared-secret%"
-    jwt_config:
-      enabled: true
-      secret: "%matrix-synapse-jwt-secret%"
-      algorithm: HS256
-      issuer: synapse-admins
     database:
       name: psycopg2
       args:
@@ -98,20 +91,9 @@ in
           matrix-synapse-registration-shared-secret = {
             rekeyFile = environment.secretPath + "/matrix-synapse/registration-shared-secret.age";
             generator.script = "rfc3986-secret";
-            # Also read by synapse-admins.nix to create its service account.
             sopsOutput = {
               file = "matrix-synapse";
               key = "registration-shared-secret";
-            };
-          };
-          # Signs the JWT logins of the synapse-admins job. Admin-equivalent, like
-          # the registration secret: a holder can log in as any local user.
-          matrix-synapse-jwt-secret = {
-            rekeyFile = environment.secretPath + "/matrix-synapse/jwt-secret.age";
-            generator.script = "rfc3986-secret";
-            sopsOutput = {
-              file = "matrix-synapse";
-              key = "jwt-secret";
             };
           };
           # The federation identity. Losing it forces key rotation; back it up.
@@ -130,7 +112,6 @@ in
               config.age.secrets.matrix-synapse-macaroon-secret-key
               config.age.secrets.matrix-synapse-form-secret
               config.age.secrets.matrix-synapse-registration-shared-secret
-              config.age.secrets.matrix-synapse-jwt-secret
               config.age.secrets.matrix-pg-synapse-password
             ];
             settings.template = secretsTemplate;
@@ -181,29 +162,11 @@ in
           max_upload_size = "50M";
           enable_registration = false;
           password_config.enabled = false;
-          # Ketesa (matrix-admin.nix) logs in through this SSO and must receive
-          # the login token back on its own origin.
-          sso.client_whitelist = [ "https://${cluster.domainFor "matrix-admin"}/" ];
-          oidc_providers = [
-            {
-              idp_id = "kanidm";
-              idp_name = "json64 (kanidm)";
-              issuer = cluster.secrets.oidcIssuerFor "synapse";
-              client_id = "synapse";
-              client_secret_path = "/secrets/oidc-client-secret";
-              scopes = [
-                "openid"
-                "profile"
-                "email"
-              ];
-              pkce_method = "always";
-              user_mapping_provider.config = {
-                localpart_template = "{{ user.preferred_username }}";
-                display_name_template = "{{ user.name }}";
-                email_template = "{{ user.email }}";
-              };
-            }
-          ];
+          matrix_authentication_service = {
+            enabled = true;
+            endpoint = "http://matrix-authentication-service.${namespace}.svc.cluster.local:8080/";
+            secret_path = "/secrets/mas-shared-secret";
+          };
         };
       in
       {
@@ -254,8 +217,7 @@ in
               };
               controllers.main = {
                 type = "deployment";
-                # Stopped while syn2mas imports into MAS (mas.nix).
-                replicas = 0;
+                replicas = 1;
                 strategy = "Recreate";
                 containers.main = {
                   image = {
@@ -308,13 +270,13 @@ in
                     }
                   ];
                 };
-                oidc = {
+                mas = {
                   type = "secret";
-                  name = "synapse-oidc-client-secret";
+                  name = "matrix-mas";
                   globalMounts = [
                     {
-                      path = "/secrets/oidc-client-secret";
-                      subPath = "client-secret";
+                      path = "/secrets/mas-shared-secret";
+                      subPath = "shared-secret";
                       readOnly = true;
                     }
                   ];
@@ -345,6 +307,7 @@ in
                   "signing.key" = config.age.secrets.matrix-synapse-signing-key.sopsRef;
                 };
               };
+              # Also mounted by MAS (mas.nix), kanidm's client now.
               synapse-oidc-client-secret = {
                 type = "Opaque";
                 stringData.client-secret = config.age.secrets.synapse-oidc-client-secret.sopsRef;
@@ -436,6 +399,26 @@ in
                   }
                 ];
               };
+              allow-mas-egress-synapse = mkNetworkPolicy "Allow synapse to introspect tokens at MAS." {
+                egress = [
+                  {
+                    toEndpoints = [
+                      { matchLabels."app.kubernetes.io/name" = "matrix-authentication-service"; }
+                    ];
+                    toPorts = [ { ports = [ (tcp 8080) ]; } ];
+                  }
+                ];
+              };
+              allow-mas-ingress-synapse = mkNetworkPolicy "Allow MAS to provision users through Synapse." {
+                ingress = [
+                  {
+                    fromEndpoints = [
+                      { matchLabels."app.kubernetes.io/name" = "matrix-authentication-service"; }
+                    ];
+                    toPorts = [ { ports = [ (tcp port) ]; } ];
+                  }
+                ];
+              };
               allow-postgres-egress-synapse =
                 mkNetworkPolicy "Allow synapse to reach the matrix-pg CNPG cluster."
                   {
@@ -446,25 +429,23 @@ in
                       }
                     ];
                   };
-              # 443: kanidm (idm.json64.dev) and federation peers; 8448: federation
-              # peers that do not delegate to 443.
-              allow-internet-egress-synapse =
-                mkNetworkPolicy "Allow synapse to reach kanidm and federation peers."
+              # 443 and 8448: federation peers (8448 for those that do not delegate
+              # to 443).
+              allow-internet-egress-synapse = mkNetworkPolicy "Allow synapse to reach federation peers." {
+                egress = [
                   {
-                    egress = [
+                    toEntities = [ "world" ];
+                    toPorts = [
                       {
-                        toEntities = [ "world" ];
-                        toPorts = [
-                          {
-                            ports = [
-                              (tcp 443)
-                              (tcp 8448)
-                            ];
-                          }
+                        ports = [
+                          (tcp 443)
+                          (tcp 8448)
                         ];
                       }
                     ];
-                  };
+                  }
+                ];
+              };
             };
           };
         };

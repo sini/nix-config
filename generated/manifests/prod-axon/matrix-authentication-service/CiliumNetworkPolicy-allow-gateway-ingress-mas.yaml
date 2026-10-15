@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-mas
+  namespace: matrix
+spec:
+  description: Allow Envoy Gateway proxies and synapse to reach MAS.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: matrix-authentication-service
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+        - matchLabels:
+            app.kubernetes.io/name: synapse
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

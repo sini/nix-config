@@ -12,15 +12,22 @@
 # here) and secrets.yaml (a template-file age secret holding the database URI,
 # which has no *_file option). The other secrets are mounted as files.
 #
-# The migration from Synapse's own login runs as Jobs (see the runbook,
-# docs/runbooks/matrix-mas-migration.md); they read Synapse's config to reach
-# its database.
-_:
+# Server admins are kanidm's `admins` group, routed here as `idm-users`
+# (kanidm.nix → cluster-collect-idm-users): MAS lets them request Synapse's admin
+# scope, which Ketesa (matrix-admin.nix) asks for.
+#
+# The import from Synapse's own login (docs/runbooks/matrix-mas-migration.md) is
+# done; its Job stays declared, disabled, and is the only consumer of Synapse's
+# config mounted here.
+{ lib, ... }:
 let
   serviceDomains = [ "matrix-auth" ];
   namespace = "matrix";
   name = "matrix-authentication-service";
   port = 8080;
+  adminGroup = "admins";
+  # The one-time import from Synapse. Done; true renders its Job again.
+  syn2mas = false;
   uid = 65532; # the image's distroless nonroot user
   # Upstream provider id, also in kanidm's redirect URL (kanidm.nix). Permanent.
   kanidmProviderId = "01M4YHS31NGAA65EM4FZ07BJZ4";
@@ -97,10 +104,16 @@ in
         config,
         cluster,
         charts,
+        idm-users,
         images,
         ...
       }:
       let
+        admins = lib.sort lib.lessThan (
+          map (u: u.name) (
+            lib.filter (u: u.environment == cluster.environment && lib.elem adminGroup u.groups) idm-users
+          )
+        );
         masConfig = {
           http = {
             public_base = "https://${cluster.domainFor "matrix-auth"}/";
@@ -144,6 +157,7 @@ in
               }
             ];
           };
+          policy.data.admin_users = admins;
           upstream_oauth2.providers = [
             {
               id = kanidmProviderId;
@@ -214,10 +228,25 @@ in
                 runAsUser = uid;
                 runAsGroup = uid;
               };
-              # The import, with Synapse stopped (synapse.nix) and MAS not serving.
-              # No `syn2mas check` step: it exits non-zero on warnings, and migrate
-              # runs the same checks and stops only on errors.
+              controllers.main = {
+                type = "deployment";
+                replicas = 1;
+                containers.main = container ([ "server" ] ++ configArgs) // {
+                  probes = lib.genAttrs [ "liveness" "readiness" ] (_: {
+                    enabled = true;
+                    custom = true;
+                    spec.httpGet = {
+                      path = "/health";
+                      inherit port;
+                    };
+                  });
+                };
+              };
+              # The import, run with Synapse stopped and MAS not serving. No
+              # `syn2mas check` step: it exits non-zero on warnings, and migrate runs
+              # the same checks and stops only on errors.
               controllers.syn2mas-migrate = {
+                enabled = syn2mas;
                 type = "job";
                 # Jobs are immutable: each migration step is its own Job.
                 forceRename = "mas-syn2mas-migrate";
@@ -231,6 +260,10 @@ in
                   ++ configArgs
                   ++ synapseConfigArgs
                 );
+              };
+              service.main = {
+                controller = "main";
+                ports.http.port = port;
               };
               persistence = {
                 config = {
@@ -253,16 +286,20 @@ in
                   name = "synapse-oidc-client-secret";
                   globalMounts = [ (secretFile "/secrets/oidc-client-secret" "client-secret") ];
                 };
-                # Synapse's config, for syn2mas only.
+                # Synapse's config, for the import only.
                 synapse-config = {
+                  enabled = syn2mas;
                   type = "configMap";
                   name = "synapse-config";
-                  globalMounts = [ (secretFile "/synapse/homeserver.yaml" "homeserver.yaml") ];
+                  advancedMounts.syn2mas-migrate.main = [
+                    (secretFile "/synapse/homeserver.yaml" "homeserver.yaml")
+                  ];
                 };
                 synapse-secrets = {
+                  enabled = syn2mas;
                   type = "secret";
                   name = "matrix-synapse";
-                  globalMounts = [ (secretFile "/synapse/secrets.yaml" "secrets.yaml") ];
+                  advancedMounts.syn2mas-migrate.main = [ (secretFile "/synapse/secrets.yaml" "secrets.yaml") ];
                 };
               };
             };
@@ -270,6 +307,74 @@ in
 
           resources = {
             configMaps."${name}-config".data."config.yaml" = builtins.toJSON masConfig;
+
+            httpRoutes.${name}.spec = {
+              hostnames = [ (cluster.domainFor "matrix-auth") ];
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "gateways";
+                  sectionName = "${cluster.domainForResource "matrix-auth"}-https";
+                }
+              ];
+              rules = [
+                {
+                  backendRefs = [
+                    {
+                      inherit name port;
+                    }
+                  ];
+                }
+              ];
+            };
+
+            # MAS's compatibility layer for legacy clients, on the homeserver's own
+            # host. The longer prefixes win over synapse.nix's /_matrix route.
+            httpRoutes."${name}-compat".spec = {
+              hostnames = [ (cluster.domainFor "matrix") ];
+              parentRefs = [
+                {
+                  name = "default-gateway";
+                  namespace = "gateways";
+                  sectionName = "${cluster.domainForResource "matrix"}-https";
+                }
+              ];
+              rules = [
+                {
+                  matches =
+                    lib.concatMap
+                      (version: [
+                        {
+                          path = {
+                            type = "PathPrefix";
+                            value = "/_matrix/client/${version}/login";
+                          };
+                        }
+                        {
+                          path = {
+                            type = "PathPrefix";
+                            value = "/_matrix/client/${version}/logout";
+                          };
+                        }
+                        {
+                          path = {
+                            type = "PathPrefix";
+                            value = "/_matrix/client/${version}/refresh";
+                          };
+                        }
+                      ])
+                      [
+                        "v3"
+                        "r0"
+                      ];
+                  backendRefs = [
+                    {
+                      inherit name port;
+                    }
+                  ];
+                }
+              ];
+            };
 
             secrets.matrix-mas = {
               type = "Opaque";
@@ -287,6 +392,27 @@ in
                   {
                     toEndpoints = [ { matchLabels."cnpg.io/cluster" = "matrix-pg"; } ];
                     toPorts = [ { ports = [ (tcp 5432) ]; } ];
+                  }
+                ];
+              };
+              allow-gateway-ingress-mas =
+                mkNetworkPolicy "Allow Envoy Gateway proxies and synapse to reach MAS."
+                  {
+                    ingress = [
+                      {
+                        fromEndpoints = [
+                          { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; }
+                          { matchLabels."app.kubernetes.io/name" = "synapse"; }
+                        ];
+                        toPorts = [ { ports = [ (tcp port) ]; } ];
+                      }
+                    ];
+                  };
+              allow-synapse-egress-mas = mkNetworkPolicy "Allow MAS to provision users through Synapse." {
+                egress = [
+                  {
+                    toEndpoints = [ { matchLabels."app.kubernetes.io/name" = "synapse"; } ];
+                    toPorts = [ { ports = [ (tcp 8008) ]; } ];
                   }
                 ];
               };

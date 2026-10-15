@@ -1,37 +1,47 @@
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   labels:
-    app.kubernetes.io/controller: syn2mas-migrate
+    app.kubernetes.io/controller: main
     app.kubernetes.io/instance: matrix-authentication-service
     app.kubernetes.io/name: matrix-authentication-service
-  name: mas-syn2mas-migrate
+  name: matrix-authentication-service
   namespace: matrix
 spec:
-  backoffLimit: 0
-  suspend: false
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: matrix-authentication-service
+      app.kubernetes.io/name: matrix-authentication-service
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
-        app.kubernetes.io/controller: syn2mas-migrate
+        app.kubernetes.io/controller: main
         app.kubernetes.io/instance: matrix-authentication-service
         app.kubernetes.io/name: matrix-authentication-service
     spec:
       automountServiceAccountToken: false
       containers:
         - args:
-            - syn2mas
-            - migrate
+            - server
             - --config
             - /config/config.yaml
             - --config
             - /secrets/secrets.yaml
-            - --synapse-config
-            - /synapse/homeserver.yaml
-            - --synapse-config
-            - /synapse/secrets.yaml
           image: ghcr.io/element-hq/matrix-authentication-service@sha256:085e37263957b3b79be85de9cfda1980b97e9653f284fba0c902445e06c200b8
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
           name: main
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
           volumeMounts:
             - mountPath: /config
               name: config
@@ -55,20 +65,11 @@ spec:
               name: secrets
               readOnly: true
               subPath: shared-secret
-            - mountPath: /synapse/homeserver.yaml
-              name: synapse-config
-              readOnly: true
-              subPath: homeserver.yaml
-            - mountPath: /synapse/secrets.yaml
-              name: synapse-secrets
-              readOnly: true
-              subPath: secrets.yaml
       dnsPolicy: ClusterFirst
       enableServiceLinks: false
       hostIPC: false
       hostNetwork: false
       hostPID: false
-      restartPolicy: Never
       securityContext:
         runAsGroup: 65532
         runAsNonRoot: true
@@ -84,9 +85,3 @@ spec:
         - name: secrets
           secret:
             secretName: matrix-mas
-        - configMap:
-            name: synapse-config
-          name: synapse-config
-        - name: synapse-secrets
-          secret:
-            secretName: matrix-synapse

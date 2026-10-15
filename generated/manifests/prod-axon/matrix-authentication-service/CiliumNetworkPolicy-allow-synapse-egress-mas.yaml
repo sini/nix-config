@@ -1,10 +1,10 @@
 apiVersion: cilium.io/v2
 kind: CiliumNetworkPolicy
 metadata:
-  name: allow-synapse-admins-egress
+  name: allow-synapse-egress-mas
   namespace: matrix
 spec:
-  description: Allow the synapse-admins job Synapse, nothing else (DNS is cluster-wide).
+  description: Allow MAS to provision users through Synapse.
   egress:
     - toEndpoints:
         - matchLabels:
@@ -15,4 +15,4 @@ spec:
               protocol: TCP
   endpointSelector:
     matchLabels:
-      app.kubernetes.io/name: synapse-admins
+      app.kubernetes.io/name: matrix-authentication-service

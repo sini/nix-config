@@ -2,10 +2,9 @@
 # matrix-admin.json64.dev, behind Envoy gateway OIDC (kanidm `admins`).
 #
 # Two locks: the gateway admits only kanidm `admins`, and Synapse still requires
-# an admin user's own access token on every /_synapse/admin call. Ketesa obtains
-# that token by logging in through Synapse's kanidm SSO on this same origin
-# (sso.client_whitelist in synapse.nix), so the admin API never appears on the
-# public matrix.json64.dev host.
+# an admin token on every /_synapse/admin call. Ketesa obtains it by logging in
+# through MAS (mas.nix), which grants the admin scope only to kanidm `admins`, so
+# the admin API never appears on the public matrix.json64.dev host.
 #
 # forwardAccessToken stays false: the gateway must not overwrite the
 # Authorization header, which carries the Synapse token.

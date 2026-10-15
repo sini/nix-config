@@ -8,7 +8,7 @@ metadata:
   name: synapse
   namespace: matrix
 spec:
-  replicas: 0
+  replicas: 1
   revisionHistoryLimit: 3
   selector:
     matchLabels:
@@ -50,10 +50,10 @@ spec:
               name: config
             - mountPath: /data
               name: data
-            - mountPath: /secrets/oidc-client-secret
-              name: oidc
+            - mountPath: /secrets/mas-shared-secret
+              name: mas
               readOnly: true
-              subPath: client-secret
+              subPath: shared-secret
             - mountPath: /secrets/secrets.yaml
               name: secrets
               readOnly: true
@@ -80,9 +80,9 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: synapse-data
-        - name: oidc
+        - name: mas
           secret:
-            secretName: synapse-oidc-client-secret
+            secretName: matrix-mas
         - name: secrets
           secret:
             secretName: matrix-synapse

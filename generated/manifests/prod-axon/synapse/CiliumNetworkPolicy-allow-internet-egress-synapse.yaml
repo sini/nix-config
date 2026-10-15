@@ -4,7 +4,7 @@ metadata:
   name: allow-internet-egress-synapse
   namespace: matrix
 spec:
-  description: Allow synapse to reach kanidm and federation peers.
+  description: Allow synapse to reach federation peers.
   egress:
     - toEntities:
         - world
