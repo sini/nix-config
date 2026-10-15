@@ -332,6 +332,35 @@ in
                 ];
               };
             };
+
+            # The chart's longhorn-manager NetworkPolicy admits only Longhorn's own
+            # pods, so its ServiceMonitor scrape needs its own allow.
+            ciliumNetworkPolicies.allow-prometheus-ingress-longhorn-manager.spec = {
+              description = "Allow prometheus to scrape longhorn-manager metrics (9500).";
+              endpointSelector.matchLabels.app = "longhorn-manager";
+              ingress = [
+                {
+                  fromEndpoints = [
+                    {
+                      matchLabels = {
+                        "k8s:io.kubernetes.pod.namespace" = "monitoring";
+                        "app.kubernetes.io/name" = "prometheus";
+                      };
+                    }
+                  ];
+                  toPorts = [
+                    {
+                      ports = [
+                        {
+                          port = "9500";
+                          protocol = "TCP";
+                        }
+                      ];
+                    }
+                  ];
+                }
+              ];
+            };
           };
         };
       };
