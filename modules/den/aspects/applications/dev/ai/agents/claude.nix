@@ -104,6 +104,10 @@
         claudeEnabledPlugins = lib.foldl' (
           acc: e: acc // { ${e.marketplace.pluginId} = e.marketplace.enabled or true; }
         ) { } pluginExts;
+
+        # Projects, relative to home, whose sessions get the orchestrator hooks (gated.sh).
+        # Matched exactly against the STARTING cwd, so a worktree below one stays ungated.
+        gatedProjects = [ "Documents/repos/sini/den-ag-design" ];
       in
       {
         home.packages = [
@@ -352,13 +356,27 @@
               # PreToolUse/Agent is strictly better than SubagentStart even setting delivery
               # aside — it fires BEFORE the dispatch rather than after it starts, which is
               # where a "no new dispatch" gate has to bite to prevent anything.
+              # Every tool, not only Agent: the full reading still lands at each dispatch, and
+              # on any other tool budget.sh speaks only on a gate crossing. That is what gets
+              # the close-out gate to an orchestrator whatever woke it.
               PreToolUse = [
                 {
-                  matcher = "Agent";
                   hooks = [
                     {
                       type = "command";
                       command = "bash ${config.home.homeDirectory}/.claude/budget.sh PreToolUse || true";
+                    }
+                  ];
+                }
+              ];
+
+              # Plain stdout reaches the model here. Gate crossings only, as for PreToolUse.
+              UserPromptSubmit = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/budget.sh UserPromptSubmit || true";
                     }
                   ];
                 }
@@ -394,15 +412,14 @@
               # agent_transcript_path, last_assistant_message and background_tasks. Same
               # moment, less data — so wiring it would only duplicate the firing.
 
-              # About to compact. Standing law here: markdown does not survive compaction, the
-              # graph does. This runs the close-protocol reads and puts their ANSWERS in context,
-              # so the checkpoint decision is made against measured state rather than recall.
+              # About to compact. Steers the summary and holds early auto compaction; see the
+              # script. NO `|| true`: exit 2 is how it holds, and the script exits 0 otherwise.
               PreCompact = [
                 {
                   hooks = [
                     {
                       type = "command";
-                      command = "bash ${config.home.homeDirectory}/.claude/pre-compact.sh || true";
+                      command = "bash ${config.home.homeDirectory}/.claude/pre-compact.sh";
                     }
                   ];
                 }
@@ -481,7 +498,9 @@
             log="$HOME/.claude/subagent-stops.log"
             mkdir -p "$(dirname "$log")"
             printf '%s\tstopped\n' "$(date -Is)" >> "$log" 2>/dev/null || true
-            cat <<'"'"'MSG'"'"'
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            gated || exit 0
+            cat <<'MSG'
             A subagent just STOPPED.
 
             If its report has NOT arrived: TREE FIRST, then prompt ONCE. Never re-dispatch — a
@@ -529,38 +548,11 @@
             printf '%s\t%s\n' "$(date -Is)" "$event" \
               >> "$HOME/.claude/budget-fires.log" 2>/dev/null || true
 
-            payload=""
-            if [ ! -t 0 ]; then payload="$(cat 2>/dev/null || true)"; fi
-            transcript=$(printf '%s' "$payload" | jq -r '.transcript_path // empty' 2>/dev/null)
-
-            # ★ DIVISOR DEFAULTS TO 1,000,000 (owner-ruled 2026-08-31): every orchestrator is
-            # Opus or Fable, and transcript_path is always the ORCHESTRATOR's window, never a
-            # subagent's. This is what makes a model cache unnecessary on the events that
-            # carry no model. It fails toward UNDER-reporting, so an orchestrator on a 200K
-            # model would read 5x low and reach compaction rather than raise a false alarm.
-            # ★ NEVER TAKE THE MODEL FROM THE TRANSCRIPT. It records `claude-opus-5` with the
-            # `[1m]` marker STRIPPED (measured: 218/218 assistant messages) while the
-            # SessionStart payload records `claude-opus-5[1m]`. Trusting it selects a 200000
-            # divisor and reports 133% where the truth is 26.6% — tripping every gate at once.
-            limit=1000000
-            model=$(printf '%s' "$payload" \
-              | jq -r 'if (.model|type)=="string" then .model else (.model.id // empty) end' 2>/dev/null)
-            case "$model" in
-              "" | *"[1m]") ;;
-              claude-haiku-* | claude-sonnet-5) limit=200000 ;;
-            esac
-
-            ctx="?"
-            if [ -n "$transcript" ] && [ -s "$transcript" ]; then
-              tok=$(jq -r 'select(.type=="assistant") | select(.isSidechain != true)
-                           | select(.message.usage != null) | .message.usage
-                           | (.input_tokens//0)+(.cache_read_input_tokens//0)+(.cache_creation_input_tokens//0)' \
-                      "$transcript" 2>/dev/null | tail -1)
-              case "''${tok:-}" in
-                "" | *[!0-9]*) ctx="?" ;;
-                *) ctx=$(awk -v t="$tok" -v l="$limit" 'BEGIN{printf "%.1f", t*100/l}') ;;
-              esac
-            fi
+            # The gates are the den-ag-design orchestrator's law, so every hook firing is
+            # gated (see gated.sh). `manual` is the on-demand read and is never gated.
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            [ "$event" = manual ] || gated || exit 0
+            ctx=$(ctx_pct)
 
             # utilization_pct ONLY: `used` and `limit` read 0 against a live percentage, so
             # any limit-minus-used arithmetic reports a full window as exhausted.
@@ -648,6 +640,17 @@
             # ten-fire probe needed its own logfile to make. Count deliveries as records of
             # type "attachment" in the session transcript, NEVER as a raw grep: the event name
             # appears in this file and in any tool call that installs a probe.
+            # ★ OUTSIDE SessionStart AND Agent DISPATCHES THE LINE CARRIES ONLY A GATE CROSSING,
+            # once per event kind. PreToolUse and UserPromptSubmit both carry it because the
+            # orchestrator mostly wakes on task notifications and peer messages, and whether
+            # those fire UserPromptSubmit is unmeasured. The record is per event so one channel
+            # delivering into nothing cannot mute the other.
+            if [ "$event" != SessionStart ] && [ "$event" != manual ] && [ "$(hook_field .tool_name)" != Agent ]; then
+              seen="$marker.gate.$event"
+              if [ -z "$gate" ]; then rm -f "$seen"; exit 0; fi
+              [ "$gate" != "$(cat "$seen" 2>/dev/null)" ] || exit 0
+              printf '%s' "$gate" > "$seen"
+            fi
             case "$event" in
               PreToolUse* | PostToolUse*)
                 printf '%s' "$line" \
@@ -659,14 +662,113 @@
           '';
         };
 
-        # PreCompact: run the close-protocol reads and put their ANSWERS in context.
-        # Every command here is a read. It changes nothing.
+        # Sourced by every den-ag-design hook: budget.sh, pre-compact.sh, subagent-stop.sh and
+        # beads.nix's SessionStart pair. A session is GATED when it STARTED at one of
+        # `gatedProjects`; every other session (xmsg responders, ad-hoc work) gets stock
+        # behaviour, and every failure here reads as ungated.
+        # ★ KEYED BY SESSION, NOT BY THE CWD AT FIRING. CwdChanged is live, so an orchestrator
+        # inside a worktree would drop out, and an ungated session reading den-ag-design would
+        # drop in. The marker is written at SessionStart by whichever gated hook runs first:
+        # hooks on one event run in parallel, so a separate marker hook would race its readers.
+        # Subagent payloads carry the parent's session_id, so subagents inherit the gate.
+        home.file.".claude/gated.sh".text = ''
+          hook_payload=""
+          [ -t 0 ] || hook_payload=$(cat 2>/dev/null || true)
+          hook_field() { printf '%s' "$hook_payload" | jq -r "($1) // empty" 2>/dev/null || true; }
+          sid=$(hook_field .session_id)
+          marker=""
+          if [ -n "$sid" ] && [ -n "''${XDG_RUNTIME_DIR:-}" ]; then
+            marker="$XDG_RUNTIME_DIR/claude-gated/$sid"
+          fi
+
+          gated() {
+            [ -n "$marker" ] || return 1
+            if [ "$(hook_field .hook_event_name)" = SessionStart ]; then
+              case "$(hook_field .cwd)" in
+                ${lib.concatMapStringsSep "|" (p: ''"${config.home.homeDirectory}/${p}"'') gatedProjects})
+                  # The model reaches SessionStart only; ctx_pct reads it back from here.
+                  mkdir -p "''${marker%/*}" 2>/dev/null \
+                    && hook_field '.model | if type == "string" then . else .id end' > "$marker" 2>/dev/null \
+                    || true
+                  ;;
+              esac
+            fi
+            [ -e "$marker" ]
+          }
+
+          # ★ DIVISOR DEFAULTS TO 1,000,000 (owner-ruled 2026-08-31): every orchestrator is
+          # Opus or Fable, and transcript_path is always the ORCHESTRATOR's window, never a
+          # subagent's. It fails toward UNDER-reporting, so an orchestrator on a 200K model
+          # would read 5x low and reach compaction rather than raise a false alarm.
+          # ★ NEVER TAKE THE MODEL FROM THE TRANSCRIPT. It records `claude-opus-5` with the
+          # `[1m]` marker STRIPPED (measured: 218/218 assistant messages) while the
+          # SessionStart payload records `claude-opus-5[1m]`. Trusting it selects a 200000
+          # divisor and reports 133% where the truth is 26.6% — tripping every gate at once.
+          ctx_pct() {
+            local t model tok limit=1000000
+            local q='fromjson? | select(.type == "assistant" and .isSidechain != true)
+                     | .message.usage? // empty
+                     | (.input_tokens // 0) + (.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0)'
+            t=$(hook_field .transcript_path)
+            model=$(hook_field '.model | if type == "string" then . else .id end')
+            if [ -z "$model" ] && [ -n "$marker" ]; then model=$(cat "$marker" 2>/dev/null || true); fi
+            case "$model" in
+              "" | *"[1m]") ;;
+              claude-haiku-* | claude-sonnet-5) limit=200000 ;;
+            esac
+            if [ -z "$t" ] || [ ! -s "$t" ]; then echo "?"; return 0; fi
+            # This runs on every tool call, so read the tail first: the last usage record is
+            # almost always there, and the whole-file scan is the fallback.
+            tok=$(tail -n 400 "$t" | jq -Rr "$q" 2>/dev/null | tail -n 1 || true)
+            [ -n "$tok" ] || tok=$(jq -Rr "$q" "$t" 2>/dev/null | tail -n 1 || true)
+            case "$tok" in
+              "" | *[!0-9]*) echo "?" ;;
+              *) awk -v t="$tok" -v l="$limit" 'BEGIN{printf "%.1f", t*100/l}' ;;
+            esac
+          }
+        '';
+
+        # ★ PreCompact's STDOUT IS THE SUMMARIZER'S INPUT, NOT THE AGENT'S (measured,
+        # claude-code 2.1.292: `lve()` joins the stdout of every passing hook into
+        # `newCustomInstructions`, which merges with any `/compact <args>`). The agent gets no
+        # turn before the boundary, so an instruction to "bank now" reaches a reader without
+        # tools. This is written TO the summarizer, and exit 2 is the only lever on the agent.
         home.file.".claude/pre-compact.sh" = {
           executable = true;
           text = ''
             #!/usr/bin/env bash
             set -uo pipefail
-            echo "COMPACTION CHECKPOINT — measured state, not recall:"
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            gated || exit 0
+
+            # ★ AUTO BELOW THE 90 GATE IS HELD. Measured: every auto boundary in the
+            # orchestrator's transcripts was IDLE compaction, firing ~50 min after an
+            # away_summary at 22–77% of the window, never the threshold. Holding it costs a
+            # cold cache; letting it through costs the context the 90 gate exists to spend on
+            # the handoff. Manual (the owner's choice), >=90 and an unreadable ctx all pass.
+            # A second auto attempt inside 10 minutes also passes: threshold and reactive
+            # retries arrive that fast, and a misread divisor must never wedge the hard limit.
+            ctx=$(ctx_pct)
+            if [ "$(hook_field .trigger)" = auto ] && [ "$ctx" != "?" ] \
+              && awk -v c="$ctx" 'BEGIN{exit !(c+0 < 90)}'; then
+              held="$marker.held"
+              if [ -z "$(find "$held" -mmin -10 2>/dev/null)" ]; then
+                touch "$held"
+                echo "auto compaction held at ctx $ctx%: below the 90% close-out gate" >&2
+                exit 2
+              fi
+            fi
+
+            cat <<'MSG'
+            SUMMARY INSTRUCTIONS — den-ag-design orchestrator. Carry these VERBATIM, never paraphrased:
+              · every live agent: name/id, its task, and the artefact it was told to write
+              · every owner ruling, fork or residue NOT yet banked in a bead body, with its bead id
+              · in-flight bead ids with their state, and the repo state measured below
+            End the summary with the resume path: read STATUS/RESUME-PROMPT-ARCH.md, then
+            STATUS/HANDOFF.md, then reconcile both against the bead graph before acting.
+
+            MSG
+            echo "Measured at the boundary (ctx $ctx%):"
             if command -v br >/dev/null 2>&1; then
               n=$(br list --status in_progress --limit 0 2>/dev/null | grep -c "" || echo "?")
               echo "  in_progress rows      : $n   (a status nobody stands behind is a claim with no writer)"
@@ -680,12 +782,6 @@
               ah=$(git -C "$r" rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
               [ "$st" -gt 0 ] || [ "$ah" -gt 0 ] && printf "  %-22s %s modified, %s unpushed\n" "$(basename "$r")" "$st" "$ah"
             done
-            cat <<'"'"'MSG'"'"'
-
-            Before context is lost: EVERY LIVE OBLIGATION GOES IN A BEAD BODY. Markdown does not
-            survive compaction; the graph does. Bank rulings, forks and residue at their carrier
-            NOW — not in the handoff alone, which is wholesale-replaced.
-            MSG
             exit 0
           '';
         };
