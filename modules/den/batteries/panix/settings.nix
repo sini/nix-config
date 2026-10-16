@@ -1,12 +1,14 @@
 # panix option module contributed by theutz (Matrix).
 #
-# Typed `panix.settings` (panix.yml) plus `panix.configFile`, the rendered
-# file. Vendored from his module; only the perSystem eval/__functor wrapper
-# is dropped (the battery in ./panix.nix evaluates this module itself), and
-# `settings` is a submoduleWith taking `settingsArgs` (specialArgs) so the
-# battery can hand fragments `panixPath` without a _module.args cycle.
-# Note: panix 0.11.0 resolves relative paths (and flake url ".") against the
-# CWD it runs in, not against panix.yml's directory.
+# The typed panix.yml settings: `den.panix.fleets.<system>` holds the merged
+# settings per deployer system (the battery, ./panix.nix, defines them) and
+# `den.panix.render` turns one into the store file. Adapted from his module:
+# the option tree and its stripNulls / checkTransfer / permissions-sentinel
+# rendering are his; it is declared here as a flake-level module instead of a
+# standalone panix.settings module, and fragments get `panixPath`
+# (den.panix.pathOf) as a specialArg; the top-level freeform type is
+# types.anything, so no pkgs is needed to declare it. panix 0.11.0 resolves relative paths
+# against its working directory, not panix.yml's.
 #
 # Nix module for Panix configuration (panix.yml), translated from
 # https://raw.githubusercontent.com/mihakrumpestar/panix/main/gen/panix-schema.yaml (v0.11.0)
@@ -20,19 +22,9 @@
 # Paths (identity_file, local_path, hardware_config_path, ...) are typed as
 # strings, not `types.path`, so they stay relative to panix.yml instead of
 # being copied into the Nix store.
-{
-  lib,
-  pkgs,
-  config,
-  settingsArgs ? { },
-  ...
-}:
-
+{ lib, config, ... }:
 let
   inherit (lib) mkOption types;
-
-  cfg = config.panix;
-  yaml = pkgs.formats.yaml { };
 
   # ---------------------------------------------------------------- helpers
 
@@ -371,58 +363,71 @@ let
     }) "Validator settings.";
   };
 
+  settingsType = types.submoduleWith {
+    shorthandOnlyDefinesConfig = true;
+    # specialArgs, not _module.args: fragments build attr names from it.
+    specialArgs.panixPath = config.den.panix.pathOf;
+    modules = [
+      {
+        # The schema allows additional top-level keys (additionalProperties: true).
+        freeformType = types.attrsOf types.anything;
+        options = {
+          flags = opt flags "Flags (also settable on the CLI).";
+          fleet = mkOption {
+            type = fleet;
+            description = "Fleet configuration.";
+          };
+          output_types = opt (types.attrsOf preset) "Custom output type presets, applied as defaults to installables of that type.";
+          # den wraps class modules that take `host` with a validator that sets
+          # `warnings`; declared so it is not freeform (that recurses), printed,
+          # and rendered as nothing.
+          warnings = mkOption {
+            type = types.listOf types.str;
+            default = [ ];
+            internal = true;
+            apply = lib.foldr lib.warn null;
+          };
+        };
+      }
+    ];
+  };
 in
 {
-  options.panix = {
-    settings = mkOption {
-      description = "Contents of panix.yml.";
+  options.den.panix = {
+    fleets = mkOption {
+      type = types.lazyAttrsOf settingsType;
       default = { };
-      type = types.submoduleWith {
-        shorthandOnlyDefinesConfig = true;
-        specialArgs = settingsArgs;
-        modules = [
-          {
-            # The schema allows additional top-level keys (additionalProperties: true).
-            freeformType = yaml.type;
-            options = {
-              flags = opt flags "Flags (also settable on the CLI).";
-              fleet = mkOption {
-                type = fleet;
-                description = "Fleet configuration.";
-              };
-              output_types = opt (types.attrsOf preset) "Custom output type presets, applied as defaults to installables of that type.";
-            };
-          }
-        ];
-      };
+      internal = true;
+      description = "Merged panix.yml settings, per deployer system.";
     };
 
-    configFile = mkOption {
-      type = types.path;
+    render = mkOption {
+      type = types.functionTo (types.functionTo types.package);
       readOnly = true;
-      description = "The generated panix.yml in the Nix store.";
+      internal = true;
+      description = "pkgs -> settings -> the panix.yml store file.";
+      # Generate the YAML, then turn every permissions sentinel (quoted or not)
+      # into an unquoted Go template:  permissions: {{ "0600" | toOctal }}
+      default =
+        pkgs: settings:
+        let
+          json = pkgs.writeText "panix.json" (builtins.toJSON (stripNulls settings));
+          sedExpr = "s/['\"]?${octalSentinel}([0-7]{4})__['\"]?/{{ \"\\1\" | toOctal }}/g";
+        in
+        pkgs.runCommand "panix.yml"
+          {
+            nativeBuildInputs = [ pkgs.yq-go ];
+            preferLocalBuild = true;
+          }
+          ''
+            yq --input-format json --output-format yaml ${json} \
+              | sed -E ${lib.escapeShellArg sedExpr} > $out
+
+            if grep -q ${lib.escapeShellArg octalSentinel} $out; then
+              echo "panix: unreplaced permissions sentinel in generated YAML" >&2
+              exit 1
+            fi
+          '';
     };
   };
-
-  # Generate the YAML, then turn every permissions sentinel (quoted or not)
-  # into an unquoted Go template:  permissions: {{ "0600" | toOctal }}
-  config.panix.configFile =
-    let
-      json = pkgs.writeText "panix.json" (builtins.toJSON (stripNulls cfg.settings));
-      sedExpr = "s/['\"]?${octalSentinel}([0-7]{4})__['\"]?/{{ \"\\1\" | toOctal }}/g";
-    in
-    pkgs.runCommand "panix.yml"
-      {
-        nativeBuildInputs = [ pkgs.yq-go ];
-        preferLocalBuild = true;
-      }
-      ''
-        yq --input-format json --output-format yaml ${json} \
-          | sed -E ${lib.escapeShellArg sedExpr} > $out
-
-        if grep -q ${lib.escapeShellArg octalSentinel} $out; then
-          echo "panix.nix: unreplaced permissions sentinel in generated YAML" >&2
-          exit 1
-        fi
-      '';
 }
