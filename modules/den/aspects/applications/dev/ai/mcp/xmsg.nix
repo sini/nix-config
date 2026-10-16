@@ -205,6 +205,25 @@ in
         };
         root = config.age.secrets.xmsg-ca-root;
         self' = user: nodeName host.name user;
+        leafRules = lib.concatStrings (
+          lib.concatLists (
+            lib.mapAttrsToList (
+              _: node:
+              lib.concatMap (
+                leaf:
+                let
+                  ks = lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes;
+                in
+                assert lib.assertMsg (
+                  ks != [ ]
+                ) "xmsg federation: leaf ${leafNode leaf}'s cluster ${leaf.cluster} has no nodes";
+                map (n: ''
+                  ip saddr ${n.ip} tcp dport ${toString node.port} accept comment "xmsg leaf ${leafNode leaf}: ${n.hostname}"
+                '') (lib.sort (a: b: a.hostname < b.hostname) ks)
+              ) node.leaves
+            ) nodes
+          )
+        );
       in
       lib.mkIf (nodes != { }) {
         assertions =
@@ -261,25 +280,7 @@ in
         # Leaves reach the port over the LAN from their cluster's nodes. The rules are
         # nftables syntax, which the iptables backend ignores, leaving the port closed.
         networking.nftables.enable = lib.mkIf (lib.any (n: n.leaves != [ ]) (lib.attrValues nodes)) true;
-        networking.firewall.extraInputRules = lib.concatStrings (
-          lib.concatLists (
-            lib.mapAttrsToList (
-              _: node:
-              lib.concatMap (
-                leaf:
-                let
-                  ks = lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes;
-                in
-                assert lib.assertMsg (
-                  ks != [ ]
-                ) "xmsg federation: leaf ${leafNode leaf}'s cluster ${leaf.cluster} has no nodes";
-                map (n: ''
-                  ip saddr ${n.ip} tcp dport ${toString node.port} accept comment "xmsg leaf ${leafNode leaf}: ${n.hostname}"
-                '') (lib.sort (a: b: a.hostname < b.hostname) ks)
-              ) node.leaves
-            ) nodes
-          )
-        );
+        networking.firewall.extraInputRules = lib.mkIf (leafRules != "") leafRules;
       };
 
     # The bot's matrix skill, folded into every agent aspect that reads agent-extensions;
