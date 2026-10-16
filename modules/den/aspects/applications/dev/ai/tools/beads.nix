@@ -57,9 +57,15 @@
           name = "beads-tracker-drift";
           runtimeInputs = [
             pkgs.git
+            pkgs.jq
             pkgs.coreutils
           ];
           text = ''
+            # den-ag-design sessions only; see claude.nix gated.sh.
+            # shellcheck source=/dev/null
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            gated || exit 0
+
             r=$(dirname "''${BEADS_DIR:-${beadsDir}}")
 
             if ! git -C "$r" rev-parse --git-dir > /dev/null 2>&1; then
@@ -172,6 +178,8 @@
                 {
                   type = "command";
                   command = pkgs.writeShellScript "beads-session-boot" ''
+                    . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+                    gated || exit 0
                     cat << 'BOOT'
                     Beads tracker — the workspace is pinned by BEADS_DIR, so it resolves from any cwd.
 
