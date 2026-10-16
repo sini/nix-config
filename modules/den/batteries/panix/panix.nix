@@ -1,8 +1,10 @@
 # Panix battery: a panix.yml fleet generated from den host entities.
 #
-# Site-neutral: it reads only den-generic host fields (name, system, intoAttr,
-# aspects); site values are den.panix.* options (this fleet sets them in
-# modules/den/defaults.nix). Pieces of the feature:
+# Site-neutral: it reads den-generic host fields (name, system, intoAttr) and
+# the host's tool-neutral deployment record (host.deployment: address, user,
+# tags; schema/deployment.nix here, shared with colmena). Site values are
+# den.panix.* options (this fleet sets them in modules/den/defaults.nix).
+# Pieces of the feature:
 #   ./settings.nix       typed settings (den.panix.fleets) and rendering
 #   ./hardened.nix       review rules, den.panix.violations, the check
 #   classes/panix.nix    the opt-in `panix` class
@@ -14,9 +16,10 @@
 #        fleet        ssh hardening, bootstrap.disable_nix_install, auto_rollback
 #        flake        url
 #        installable  nix.build_mode  (remote when host.system != deployer)
-#        machine      ssh.hostname, ssh.username, tags (hostTags ++ aspect tags)
-#      One installable per host at its flake output (host.intoAttr, e.g.
-#      nixosConfigurations.<name>); hosts without one (intoAttr = [ ]) are skipped.
+#        machine      ssh.hostname, ssh.username, tags (host.deployment)
+#      One installable per host at its own flake output (host.intoAttr, e.g.
+#      nixosConfigurations.<name>); hosts delivered inside a parent (microvm
+#      guests, intoAttr = [ ]) have none and are skipped.
 #   2. den.panix.settings, a settings module (flags, output_types, fleet/flake).
 #   3. with enableClass, each fleet host's `panix` class fragments.
 # Nothing else is set, so panix's fleet -> flake -> installable -> machine
@@ -28,7 +31,6 @@
   den,
   lib,
   config,
-  withSystem,
   ...
 }:
 let
@@ -41,16 +43,17 @@ let
   # decides "local" by comparing hostname strings.
   localSentinel = "panix-no-local-machine.invalid";
 
-  hosts = lib.filterAttrs (_: h: cfg.hosts h && lib.length (h.intoAttr or [ ]) == 2) (
+  # A host is deployable only as its own top-level flake output; den sets
+  # intoAttr = [ ] for hosts delivered inside a parent (microvm guests).
+  hasFlakeOutput = host: (host.intoAttr or [ ]) != [ ];
+
+  # ponytail: the fourth copy of this den.hosts flattening (colmena, scope-engine
+  # acl/settings, diagrams); one shared flattened host set is a follow-up.
+  hosts = lib.filterAttrs (_: h: cfg.hosts h && hasFlakeOutput h) (
     lib.foldl' (acc: system: acc // (config.den.hosts.${system} or { })) { } (
       builtins.attrNames (config.den.hosts or { })
     )
   );
-
-  # Same derivation as colmena.nix's aspectTags (duplicated, it is one line).
-  aspectTags =
-    host:
-    lib.sort (a: b: a < b) (lib.unique (map (a: a.identity) (lib.filter (a: a.isNamed) host.aspects)));
 
   # mkDefault on every leaf, not the tree: a fragment that sets one field must
   # not discard the defaults beside it.
@@ -95,10 +98,10 @@ let
         nix.build_mode = if host.system == deployerSystem then "local" else "remote";
         machines.${p.machine} = {
           ssh = {
-            hostname = cfg.hostAddress host;
-            username = cfg.hostUser host;
+            hostname = host.deployment.address;
+            username = host.deployment.user;
           };
-          tags = cfg.hostTags host ++ aspectTags host;
+          inherit (host.deployment) tags;
         };
       };
     };
@@ -148,22 +151,6 @@ in
       defaultText = lib.literalExpression ''host: builtins.elem host.class [ "nixos" "darwin" ]'';
       description = "Host entity -> whether it is in the panix fleet, e.g. `host: host.hasAspect den.aspects.panix`.";
     };
-    hostAddress = mkOption {
-      type = types.functionTo types.str;
-      default = host: host.name;
-      defaultText = lib.literalExpression "host: host.name";
-      description = "Host entity -> machine ssh.hostname.";
-    };
-    hostUser = mkOption {
-      type = types.functionTo types.str;
-      example = lib.literalExpression ''host: "deploy"'';
-      description = "Host entity -> machine ssh.username. Required: panix would otherwise default to root.";
-    };
-    hostTags = mkOption {
-      type = types.functionTo (types.listOf types.str);
-      default = _: [ ];
-      description = "Host entity -> machine tags, prepended to the aspect tags.";
-    };
     knownHostsFile = mkOption {
       type = types.nullOr (types.strMatching "/.*");
       default = null;
@@ -197,8 +184,8 @@ in
       description = "Host entity -> { flake, outputType, installable, machine }, its keys in panix.yml (fragments get it as `panixPath`).";
       default = host: {
         flake = cfg.flakeName;
-        outputType = builtins.elemAt host.intoAttr 0;
-        installable = builtins.elemAt host.intoAttr 1;
+        outputType = lib.head host.intoAttr;
+        installable = lib.concatStringsSep "." (lib.tail host.intoAttr);
         machine = host.name;
       };
     };
@@ -231,13 +218,33 @@ in
       )
     );
 
-    # Per system: the deployer is the system the package is built for.
-    flake.packages = lib.mkIf cfg.enable (
-      lib.genAttrs config.systems (
-        system:
-        withSystem system (
-          { pkgs, inputs', ... }:
-          rec {
+    # den reads these as raw values (no mkIf); the aspect is inert until included.
+    den.aspects.devshell.panix = {
+      devshell =
+        { self', ... }:
+        {
+          commands = [
+            {
+              package = self'.packages.panix;
+              help = "Deploy this nix config to nodes (panix, config rendered from den.hosts)";
+            }
+          ];
+        };
+    };
+    den.schema.flake-parts.includes = lib.optionals cfg.enable [ den.aspects.devshell.panix ];
+
+    perSystem =
+      {
+        self',
+        inputs',
+        pkgs,
+        system,
+        ...
+      }:
+      lib.optionalAttrs cfg.enable (
+        {
+          # The deployer is the system the package is built for.
+          packages = rec {
             panix-config = configFileFor system pkgs;
             # Runs panix from <repo root>/.panix (0700), so its logs, snapshots
             # and outlinks land there, on a copy of panix-config with the flake
@@ -276,33 +283,15 @@ in
                 exec ${lib.getExe inputs'.panix.packages.default} "$@"
               '';
             };
-          }
-        )
-      )
-    );
-
-    # den reads these as raw values (no mkIf); the aspect is inert until included.
-    den.aspects.devshell.panix = {
-      devshell =
-        { self', ... }:
-        {
-          commands = [
-            {
-              package = self'.packages.panix;
-              help = "Deploy this nix config to nodes (panix, config rendered from den.hosts)";
-            }
-          ];
-        };
-    };
-    den.schema.flake-parts.includes = lib.optionals cfg.enable [ den.aspects.devshell.panix ];
-
-    perSystem =
-      { self', ... }:
-      lib.optionalAttrs (cfg.enable && cfg.writeFile) {
-        files.file."panix.yml".source =
-          lib.throwIf (cfg.flakeUrl == null)
-            "den.panix.writeFile needs den.panix.flakeUrl: a committed panix.yml has no wrapper to fill the url in"
-            self'.packages.panix-config;
-      };
+          };
+          checks.panix-hardened = cfg.hardenedCheck pkgs;
+        }
+        // lib.optionalAttrs cfg.writeFile {
+          files.file."panix.yml".source =
+            lib.throwIf (cfg.flakeUrl == null)
+              "den.panix.writeFile needs den.panix.flakeUrl: a committed panix.yml has no wrapper to fill the url in"
+              self'.packages.panix-config;
+        }
+      );
   };
 }

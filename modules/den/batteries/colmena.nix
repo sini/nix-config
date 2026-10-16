@@ -1,9 +1,8 @@
 # Colmena battery: policy-driven hive from host entities.
 #
-# Deployment tags are derived from each host's resolved aspects
-# (host.aspects) — every named aspect becomes a tag by its full identity path
-# (e.g. roles/workstation, hardware/audio). host-modules-capture captures the
-# raw OS module list without forcing nixosConfigurations.
+# Address, user and tags come from the host's tool-neutral deployment record
+# (schema/deployment.nix), shared with the panix battery. host-modules-capture
+# captures the raw OS module list without forcing nixosConfigurations.
 {
   den,
   lib,
@@ -36,25 +35,14 @@ let
     let
       colmenaModules = config.flake.colmenaModules or { };
 
-      # Deployment tags = every resolved (named) aspect on the host, by full
-      # identity path (e.g. "roles/workstation", "hardware/audio"). Anonymous
-      # nodes are dropped; deduped + sorted for stable tags.
-      aspectTags =
-        host:
-        lib.sort (a: b: a < b) (lib.unique (map (a: a.identity) (lib.filter (a: a.isNamed) host.aspects)));
-
       nodes = lib.mapAttrs (name: host: {
         imports = colmenaModules.${name};
         deployment = {
-          targetHost =
-            let
-              inherit (host) ipv4;
-            in
-            if ipv4 == [ ] then "${name}.ts.json64.dev" else builtins.head ipv4;
-          tags = [ (host.environment or "prod") ] ++ aspectTags host;
+          targetHost = host.deployment.address;
+          inherit (host.deployment) tags;
           allowLocalDeployment = true;
           buildOnTarget = (host.system or localSystem) != localSystem;
-          targetUser = host.remote-deployment-user or "sini";
+          targetUser = host.deployment.user;
         }
         // lib.optionalAttrs (host.class == "darwin") { systemType = "darwin"; };
       }) allHosts;

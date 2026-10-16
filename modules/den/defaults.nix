@@ -207,22 +207,13 @@ in
     den.batteries.self'
   ];
 
-  # panix deploys (batteries/panix, docs/panix.md): the address/user/tag rules
-  # colmena.nix uses. The address fallback is the tailnet name that
-  # core/network/hostsfile pins (<host>.ts.<environment domain>). knownHostsFile
-  # stays null: that aspect pins peer host keys in the global known_hosts, and
-  # an unpinned target fails closed.
+  # panix deploys (batteries/panix, docs/panix.md). Address, user and tags come
+  # from each host's deployment record (schema/deployment.nix), shared with
+  # colmena. knownHostsFile stays null: core/network/hostsfile pins peer host
+  # keys in the global known_hosts, and an unpinned target fails closed.
   den.panix = {
     enable = true;
     flakeName = "nix-config";
-    hostAddress =
-      host:
-      if host.ipv4 == [ ] then
-        "${host.name}.ts.${config.den.environments.${host.environment}.domain}"
-      else
-        builtins.head host.ipv4;
-    hostUser = host: host.remote-deployment-user or "sini";
-    hostTags = host: [ host.environment ];
     # No bootstrap is modelled, so a host inspect misreads as non-NixOS is
     # never kexec'd + disko'd from this config.
     settings.flags.skip_phases = [ "bootstrap" ];
