@@ -378,15 +378,6 @@ let
             description = "Fleet configuration.";
           };
           output_types = opt (types.attrsOf preset) "Custom output type presets, applied as defaults to installables of that type.";
-          # den wraps class modules that take `host` with a validator that sets
-          # `warnings`; declared so it is not freeform (that recurses), printed,
-          # and rendered as nothing.
-          warnings = mkOption {
-            type = types.listOf types.str;
-            default = [ ];
-            internal = true;
-            apply = lib.foldr lib.warn null;
-          };
         };
       }
     ];
