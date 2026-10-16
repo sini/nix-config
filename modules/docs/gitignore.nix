@@ -9,6 +9,7 @@
       CLAUDE.md
       docs/superpowers/
       .pre-commit-config.yaml
+      /.panix
     '';
   };
 }
