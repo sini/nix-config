@@ -545,13 +545,13 @@
             # probe dispatches and delivered ZERO, and only its own logfile proved the
             # difference. Without a line like this a delivery count of 0 is UNDECIDABLE, and
             # an undecidable zero reads as a dead channel. One append per hook invocation.
-            printf '%s\t%s\n' "$(date -Is)" "$event" \
-              >> "$HOME/.claude/budget-fires.log" 2>/dev/null || true
-
             # The gates are the den-ag-design orchestrator's law, so every hook firing is
-            # gated (see gated.sh). `manual` is the on-demand read and is never gated.
+            # gated (see gated.sh). `manual` is the on-demand read and is never gated. The
+            # log sits BELOW the gate: this fires on every tool call in every session.
             . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
             [ "$event" = manual ] || gated || exit 0
+            printf '%s\t%s\n' "$(date -Is)" "$event" \
+              >> "$HOME/.claude/budget-fires.log" 2>/dev/null || true
             ctx=$(ctx_pct)
 
             # utilization_pct ONLY: `used` and `limit` read 0 against a live percentage, so
@@ -670,7 +670,9 @@
         # inside a worktree would drop out, and an ungated session reading den-ag-design would
         # drop in. The marker is written at SessionStart by whichever gated hook runs first:
         # hooks on one event run in parallel, so a separate marker hook would race its readers.
-        # Subagent payloads carry the parent's session_id, so subagents inherit the gate.
+        # The session_id survives compaction (measured: one id across 8 boundaries in one
+        # transcript), and subagent transcripts record the parent's, so subagents inherit it.
+        # ★ SOURCING THIS CONSUMES STDIN: a sourcing hook reads the payload via hook_field.
         home.file.".claude/gated.sh".text = ''
           hook_payload=""
           [ -t 0 ] || hook_payload=$(cat 2>/dev/null || true)
@@ -684,8 +686,12 @@
           gated() {
             [ -n "$marker" ] || return 1
             if [ "$(hook_field .hook_event_name)" = SessionStart ]; then
-              case "$(hook_field .cwd)" in
-                ${lib.concatMapStringsSep "|" (p: ''"${config.home.homeDirectory}/${p}"'') gatedProjects})
+              case "$(realpath -m "$(hook_field .cwd)" 2>/dev/null)" in
+                ${
+                  lib.concatMapStringsSep "|" (
+                    p: ''"$(realpath -m "${config.home.homeDirectory}/${p}")"''
+                  ) gatedProjects
+                })
                   # The model reaches SessionStart only; ctx_pct reads it back from here.
                   mkdir -p "''${marker%/*}" 2>/dev/null \
                     && hook_field '.model | if type == "string" then . else .id end' > "$marker" 2>/dev/null \
@@ -704,27 +710,31 @@
           # `[1m]` marker STRIPPED (measured: 218/218 assistant messages) while the
           # SessionStart payload records `claude-opus-5[1m]`. Trusting it selects a 200000
           # divisor and reports 133% where the truth is 26.6% — tripping every gate at once.
-          ctx_pct() {
-            local t model tok limit=1000000
+          # The window's last usage, or nothing. This runs on every tool call, so read the tail
+          # first: the last usage record is almost always there; the whole file is the fallback.
+          ctx_tokens() {
+            local t tok
             local q='fromjson? | select(.type == "assistant" and .isSidechain != true)
                      | .message.usage? // empty
                      | (.input_tokens // 0) + (.cache_read_input_tokens // 0) + (.cache_creation_input_tokens // 0)'
             t=$(hook_field .transcript_path)
+            if [ -z "$t" ] || [ ! -s "$t" ]; then return 0; fi
+            tok=$(tail -n 400 "$t" | jq -Rr "$q" 2>/dev/null | tail -n 1 || true)
+            [ -n "$tok" ] || tok=$(jq -Rr "$q" "$t" 2>/dev/null | tail -n 1 || true)
+            case "$tok" in "" | *[!0-9]*) ;; *) echo "$tok" ;; esac
+          }
+
+          # Percent of the window for a token count (default: ctx_tokens), or "?".
+          ctx_pct() {
+            local model tok="''${1-$(ctx_tokens)}" limit=1000000
             model=$(hook_field '.model | if type == "string" then . else .id end')
             if [ -z "$model" ] && [ -n "$marker" ]; then model=$(cat "$marker" 2>/dev/null || true); fi
             case "$model" in
               "" | *"[1m]") ;;
               claude-haiku-* | claude-sonnet-5) limit=200000 ;;
             esac
-            if [ -z "$t" ] || [ ! -s "$t" ]; then echo "?"; return 0; fi
-            # This runs on every tool call, so read the tail first: the last usage record is
-            # almost always there, and the whole-file scan is the fallback.
-            tok=$(tail -n 400 "$t" | jq -Rr "$q" 2>/dev/null | tail -n 1 || true)
-            [ -n "$tok" ] || tok=$(jq -Rr "$q" "$t" 2>/dev/null | tail -n 1 || true)
-            case "$tok" in
-              "" | *[!0-9]*) echo "?" ;;
-              *) awk -v t="$tok" -v l="$limit" 'BEGIN{printf "%.1f", t*100/l}' ;;
-            esac
+            if [ -z "$tok" ]; then echo "?"; return 0; fi
+            awk -v t="$tok" -v l="$limit" 'BEGIN{printf "%.1f", t*100/l}'
           }
         '';
 
@@ -746,17 +756,36 @@
             # away_summary at 22–77% of the window, never the threshold. Holding it costs a
             # cold cache; letting it through costs the context the 90 gate exists to spend on
             # the handoff. Manual (the owner's choice), >=90 and an unreadable ctx all pass.
-            # A second auto attempt inside 10 minutes also passes: threshold and reactive
-            # retries arrive that fast, and a misread divisor must never wedge the hard limit.
-            ctx=$(ctx_pct)
-            if [ "$(hook_field .trigger)" = auto ] && [ "$ctx" != "?" ] \
-              && awk -v c="$ctx" 'BEGIN{exit !(c+0 < 90)}'; then
-              held="$marker.held"
-              if [ -z "$(find "$held" -mmin -10 2>/dev/null)" ]; then
-                touch "$held"
-                echo "auto compaction held at ctx $ctx%: below the 90% close-out gate" >&2
-                exit 2
+            # ★ THE ESCAPE IS FOR A MISREAD DIVISOR (a mid-session switch to a 200K model, which
+            # the marker does not track), and it must never wedge the hard limit. An auto attempt
+            # after a hold passes when the window GREW within 15 minutes, which is a threshold
+            # retry turn after turn, or when it came within 60s, which is a reactive compact
+            # following its failed request. An idle retry adds no tokens, so it is held again.
+            # Every decision is logged: a hold that leaks is otherwise invisible.
+            trigger=$(hook_field .trigger)
+            tok=$(ctx_tokens)
+            ctx=$(ctx_pct "$tok")
+            decide() {
+              [ "$trigger" = auto ] || { echo "pass:$trigger"; return; }
+              [ "$ctx" != "?" ] || { echo "pass:no-ctx"; return; }
+              awk -v c="$ctx" 'BEGIN{exit !(c+0 < 90)}' || { echo "pass:gate"; return; }
+              local now prev_at prev_tok
+              now=$(date +%s)
+              read -r prev_at prev_tok 2>/dev/null < "$marker.held" || prev_at=0
+              if [ $((now - prev_at)) -lt 60 ]; then echo "pass:reactive"; return; fi
+              if [ $((now - prev_at)) -lt 900 ] && [ "$tok" -gt "''${prev_tok:-0}" ]; then
+                echo "pass:grown"
+                return
               fi
+              echo "$now $tok" > "$marker.held"
+              echo hold
+            }
+            decision=$(decide)
+            printf '%s\t%s\t%s\tctx=%s\ttok=%s\t%s\n' "$(date -Is)" "$sid" "$trigger" "$ctx" "$tok" "$decision" \
+              >> "$HOME/.claude/precompact-decisions.log" 2>/dev/null || true
+            if [ "$decision" = hold ]; then
+              echo "auto compaction held at ctx $ctx%: below the 90% close-out gate" >&2
+              exit 2
             fi
 
             cat <<'MSG'
