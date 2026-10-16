@@ -62,7 +62,7 @@
       {
         home.packages = [
           inputs'.llm-agents.packages.gemini-cli
-          inputs'.llm-agents.packages.openskills
+          inputs'.llm-agents.packages.skills
         ];
 
         programs.antigravity-cli = {

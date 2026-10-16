@@ -10,6 +10,16 @@
         ...
       }:
       {
+        # nix-serve-ng links pkgs.lix (2.95), which rejects the -Dmimalloc flag
+        # nixos-unstable passes it; drop once NixOS/nixpkgs#573942 reaches the channel.
+        nixpkgs.overlays = [
+          (_: prev: {
+            lix = prev.lix.overrideAttrs (old: {
+              mesonFlags = lib.filter (f: !lib.hasPrefix "-Dmimalloc=" f) old.mesonFlags;
+            });
+          })
+        ];
+
         services.nix-serve = {
           enable = true;
           package = pkgs.nix-serve-ng;
