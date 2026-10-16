@@ -4198,6 +4198,29 @@
         "type": "github"
       }
     },
+    "panix": {
+      "inputs": {
+        "flake-utils": [
+          "flake-utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs-unstable"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791716951,
+        "narHash": "sha256-tuoTosb0G+Fji1TWkEjRoKVs8PZ9IGx7VXJReR3M+VI=",
+        "owner": "mihakrumpestar",
+        "repo": "panix",
+        "rev": "414806c39076c6779c705bf8c5138dc2aa0a3cd1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mihakrumpestar",
+        "repo": "panix",
+        "type": "github"
+      }
+    },
     "pkgs-by-name-for-flake-parts": {
       "locked": {
         "lastModified": 1789628227,
@@ -4499,6 +4522,7 @@
         "noctalia": "noctalia",
         "nvf": "nvf",
         "one-skill-to-rule-them-all": "one-skill-to-rule-them-all",
+        "panix": "panix",
         "pkgs-by-name-for-flake-parts": "pkgs-by-name-for-flake-parts",
         "ponytail": "ponytail",
         "proton-cachyos": "proton-cachyos",

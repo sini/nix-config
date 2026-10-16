@@ -314,6 +314,13 @@
       url = "github:rebelytics/one-skill-to-rule-them-all";
       flake = false;
     };
+    panix = {
+      url = "github:mihakrumpestar/panix";
+      inputs = {
+        flake-utils.follows = "flake-utils";
+        nixpkgs.follows = "nixpkgs-unstable";
+      };
+    };
     pkgs-by-name-for-flake-parts.url = "github:drupol/pkgs-by-name-for-flake-parts";
     ponytail = {
       url = "github:dietrichgebert/ponytail";
