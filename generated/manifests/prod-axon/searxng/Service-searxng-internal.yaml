@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    lbipam.cilium.io/ips: 10.11.0.24
+  name: searxng-internal
+  namespace: search
+spec:
+  externalTrafficPolicy: Local
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: searxng
+  type: LoadBalancer

@@ -1,0 +1,38 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: searxng-egress
+  namespace: search
+spec:
+  description: 'searxng: DNS, then the engine hosts on 443.'
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: coredns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+          rules:
+            dns:
+              - matchPattern: '*'
+    - toFQDNs:
+        - matchName: duckduckgo.com
+        - matchName: html.duckduckgo.com
+        - matchName: lite.duckduckgo.com
+        - matchName: links.duckduckgo.com
+        - matchName: search.brave.com
+        - matchName: www.mojeek.com
+        - matchName: en.wikipedia.org
+        - matchName: api.github.com
+        - matchName: api.stackexchange.com
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng

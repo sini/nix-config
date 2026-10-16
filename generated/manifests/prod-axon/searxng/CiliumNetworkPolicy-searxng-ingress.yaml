@@ -1,0 +1,32 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: searxng-ingress
+  namespace: search
+spec:
+  description: 'searxng: the gateway, genie tier 1 and private-LAN clients, on 8080 only.'
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.cilium.k8s.policy.serviceaccount: genie-tier1
+            k8s:io.kubernetes.pod.namespace: genie
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+    - fromCIDR:
+        - 10.0.0.0/8
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP

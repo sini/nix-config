@@ -49,6 +49,11 @@
       description = "Grafana login";
       members = [ "users" ];
     };
+    "search.access" = {
+      labels = [ "oauth-grant" ];
+      description = "SearXNG web search UI";
+      members = [ "users" ];
+    };
     "grafana.editors" = {
       labels = [ "oauth-grant" ];
       description = "Grafana editor role";

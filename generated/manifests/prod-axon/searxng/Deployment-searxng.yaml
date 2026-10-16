@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/component: server
+    app.kubernetes.io/instance: searxng
+    app.kubernetes.io/name: searxng
+    app.kubernetes.io/part-of: searxng
+  name: searxng
+  namespace: search
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: server
+      app.kubernetes.io/instance: searxng
+      app.kubernetes.io/name: searxng
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: server
+        app.kubernetes.io/instance: searxng
+        app.kubernetes.io/name: searxng
+        app.kubernetes.io/part-of: searxng
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: FORCE_OWNERSHIP
+              value: "false"
+            - name: GRANIAN_HOST
+              value: '::'
+            - name: GRANIAN_PORT
+              value: "8080"
+            - name: SEARXNG_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: secret-key
+                  name: searxng
+          image: docker.io/searxng/searxng@sha256:3619192d55f19eaec4b01892bdf10f80c67e8592fafd14b26ca504e52229210f
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 20
+            timeoutSeconds: 5
+          name: searxng
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 5
+          resources:
+            limits:
+              memory: 768Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            privileged: false
+            readOnlyRootFilesystem: true
+            runAsGroup: 977
+            runAsNonRoot: true
+            runAsUser: 977
+            seccompProfile:
+              type: RuntimeDefault
+          startupProbe:
+            failureThreshold: 24
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+          volumeMounts:
+            - mountPath: /etc/searxng/settings.yml
+              name: settings
+              readOnly: true
+              subPath: settings.yml
+            - mountPath: /var/cache/searxng
+              name: cache
+            - mountPath: /tmp
+              name: tmp
+      enableServiceLinks: false
+      securityContext:
+        fsGroup: 977
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 977
+        runAsNonRoot: true
+        runAsUser: 977
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: searxng
+      terminationGracePeriodSeconds: 40
+      topologySpreadConstraints:
+        - labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: server
+              app.kubernetes.io/instance: searxng
+              app.kubernetes.io/name: searxng
+          maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+      volumes:
+        - name: settings
+          secret:
+            defaultMode: 288
+            items:
+              - key: settings.yml
+                path: settings.yml
+            secretName: searxng
+        - emptyDir:
+            sizeLimit: 1Gi
+          name: cache
+        - emptyDir:
+            sizeLimit: 64Mi
+          name: tmp

@@ -107,6 +107,8 @@
           # restore). Left reserved rather than reused so bringing it back is
           # additive.
           llama-cpp-gpt-oss-internal = "10.11.0.22";
+          # The fleet's SearXNG API (ai/searxng.nix), for hosts and agents.
+          searxng-internal = "10.11.0.24";
           # .23 held hindsight-cp-internal until the control plane moved behind the
           # gateway's admin-only OIDC (it holds the admin token, so no LAN path).
           # Left reserved rather than reused.
@@ -230,6 +232,9 @@
 
       # ai — genie-guard as an xmsg leaf pod of sini's xmsg on bitstream.
       services.ai.genie-guard
+
+      # ai — searxng: the metasearch backend for genie tier 1's web_search.
+      services.ai.searxng
 
       # ai — llama.cpp on the node APUs (Radeon 780M, Vulkan). Cluster-internal;
       # requires hardware.amd-gpu-device-plugin above for the amd.com/gpu resource.

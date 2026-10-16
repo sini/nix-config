@@ -41,6 +41,7 @@ data:
             10.10.10.1 registry.json64.dev
             10.11.0.1 romm.json64.dev
             10.11.0.1 s3.json64.dev
+            10.11.0.1 search.json64.dev
             10.11.0.1 shoko.json64.dev
             10.11.0.1 sonarr.json64.dev
             10.11.0.1 torrent.json64.dev

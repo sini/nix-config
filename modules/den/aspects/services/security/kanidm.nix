@@ -219,6 +219,20 @@ let
         ];
       };
 
+      # The fleet's SearXNG UI (kubernetes/services/ai/searxng.nix) behind the
+      # gateway's Envoy OIDC; same callback contract as hubble-ui.
+      searxng = {
+        displayName = "Search";
+        originUrl = [ "https://${domain "search"}/oauth2/callback" ];
+        originLanding = "https://${domain "search"}/";
+        basicSecretFile = secretPaths.searxng-oidc-client-secret;
+        scopeMaps."search.access" = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
       # The fleet's Grafana (in-cluster, monitoring namespace), grafana-native
       # OIDC, served at grafana.<domain>.
       grafana = {
