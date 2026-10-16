@@ -152,47 +152,68 @@ in
       default = violations;
       description = "Plain settings data (nulls dropped) -> rule violations.";
     };
-  };
-
-  config.perSystem =
-    { pkgs, ... }:
-    {
-      # One fixture breaking each hardened rule once; the eval fails if any
-      # rule stops firing or a clean config starts failing.
-      checks = lib.optionalAttrs config.den.panix.enable {
-        panix-hardened =
-          let
-            m = {
-              ssh.hostname = "h";
-              ssh.username = "u";
-            };
-            bad = {
-              flags.skip_phases = [ "inspect" ];
-              fleet = {
-                ssh.disable_strict_key_checking = true;
-                bootstrap.force_bootstrap = true;
-                bootstrap.ssh.hostname = "installer";
-                flakes.f.installables.nixosConfigurations.x = {
-                  nix.build_mode = "remote";
-                  machines.a = m // {
-                    hardware_config_path = "/hw.nix";
-                    activation_hooks.pre = [ "echo {{ x }}" ];
-                  };
-                  machines.Bad = m // {
-                    ssh.extra_flags = [
-                      "-o"
-                      "StrictHostKeyChecking=no"
-                    ];
-                  };
+    hardenedCheck = mkOption {
+      type = types.functionTo types.package;
+      readOnly = true;
+      internal = true;
+      description = "pkgs -> the panix-hardened check (wired by the battery's perSystem).";
+      # One fixture breaking each rule once, compared message by message, so
+      # a regression names the rule that stopped (or started) firing.
+      default =
+        pkgs:
+        let
+          m = {
+            ssh.hostname = "h";
+            ssh.username = "u";
+          };
+          bad = {
+            flags.skip_phases = [ "inspect" ];
+            fleet = {
+              ssh.disable_strict_key_checking = true;
+              bootstrap.force_bootstrap = true;
+              bootstrap.ssh.hostname = "installer";
+              flakes.f.installables.nixosConfigurations.x = {
+                nix.build_mode = "remote";
+                machines.a = m // {
+                  hardware_config_path = "/hw.nix";
+                  activation_hooks.pre = [ "echo {{ x }}" ];
+                };
+                machines.Bad = m // {
+                  ssh.extra_flags = [
+                    "-o"
+                    "StrictHostKeyChecking=no"
+                  ];
                 };
               };
             };
-            good.fleet.flakes.f.installables.nixosConfigurations.x.machines.a = m;
-            n = lib.length (violations bad);
-          in
-          assert lib.assertMsg (n == 9) "panix-hardened: expected 9 violations, got ${toString n}";
-          assert lib.assertMsg (violations good == [ ]) "panix-hardened: clean config flagged";
-          pkgs.runCommand "panix-hardened" { } "touch $out";
-      };
+          };
+          good.fleet.flakes.f.installables.nixosConfigurations.x.machines.a = m;
+          f = "fleet.flakes.f.installables.nixosConfigurations.x";
+          expected = [
+            "fleet.ssh.disable_strict_key_checking: strict host key checking must stay on"
+            "${f}.machines.Bad.ssh.extra_flags: must not loosen host key checking (StrictHostKeyChecking=no, StrictHostKeyChecking=accept-new, UserKnownHostsFile=/dev/null)"
+            "fleet.bootstrap.ssh: bootstrap ssh does not belong in the everyday config"
+            "${f}.machines.a.hardware_config_path: hardware_config_path writes target output into the flake"
+            "flags.skip_phases: skipping inspect makes live hosts look unprovisioned"
+            "fleet.bootstrap.force_bootstrap: destructive flags only at machine level"
+            "${f}: build_mode remote needs exactly one machine (it builds on the first and copies peer to peer)"
+            "${f}.machines.a.activation_hooks.pre.0: literal '{{' would be read as a panix template: echo {{ x }}"
+            "${f}.machines.Bad: name is outside [a-z0-9-]"
+          ];
+          got = violations bad;
+          missing = lib.subtractLists got expected;
+          unexpected = lib.subtractLists expected got;
+          show = xs: lib.concatMapStrings (x: "\n  - " + x) xs;
+        in
+        assert lib.assertMsg (missing == [ ] && unexpected == [ ]) (
+          "panix-hardened: rule output changed."
+          + lib.optionalString (missing != [ ]) "\nno longer reported:${show missing}"
+          + lib.optionalString (unexpected != [ ]) "\nnewly reported:${show unexpected}"
+        );
+        assert lib.assertMsg (
+          violations good == [ ]
+        ) "panix-hardened: clean config flagged:${show (violations good)}";
+        pkgs.runCommand "panix-hardened" { } "touch $out";
     };
+  };
 }

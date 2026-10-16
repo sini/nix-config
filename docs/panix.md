@@ -18,8 +18,14 @@ Files, each where the repo keeps that kind of piece:
   (`den.panix.hardened`, `den.panix.violations`) and the `panix-hardened` check.
 - `modules/den/classes/panix.nix`: the opt-in `panix` class.
 - `modules/den/policies/panix.nix`: per-host capture of `panix` class fragments.
-- `modules/den/defaults.nix` (the `den.panix` block): this fleet's values.
-  Nothing else in the feature is site-specific.
+- `modules/den/schema/deployment.nix`: the host's tool-neutral deployment
+  record, `host.deployment = { address, user, tags }`. colmena and panix both
+  read it, so the two deployers reach and tag hosts the same way.
+- `modules/den/defaults.nix` (the `den.panix` block): this fleet's panix
+  settings.
+
+The battery reads only `host.deployment`, `name`, `system` and `intoAttr`.
+Another fleet supplies its own `deployment` record with its own rules.
 
 All of these are ordinary modules that import-tree loads. They reach each other
 through `config.den.panix.*`, and none of them imports another by path.
@@ -38,28 +44,26 @@ battery in any other repo.
 
 1. Put the files above somewhere your modules are imported. This repo
    auto-imports `modules/`.
-2. Enable it and set your site rules. This example is **evaluated**: it is the
-   `den.panix` block in `modules/den/defaults.nix`.
+2. Give each host a deployment record: a read-only `deployment` option of type
+   `{ address : str; user : str; tags : listOf str; }` on the host schema. Here
+   that is `modules/den/schema/deployment.nix`. Its address is the first IPv4,
+   otherwise `<host>.ts.<environment domain>`. Its user is
+   `remote-deployment-user`, otherwise `sini`. Its tags are the environment
+   followed by every resolved named aspect.
+3. Enable the battery. This example is **evaluated**: it is the `den.panix`
+   block in `modules/den/defaults.nix`.
 
    ```nix
    den.panix = {
      enable = true;
      flakeName = "nix-config";
-     hostAddress =
-       host:
-       if host.ipv4 == [ ] then
-         "${host.name}.ts.${config.den.environments.${host.environment}.domain}"
-       else
-         builtins.head host.ipv4;
-     hostUser = host: host.remote-deployment-user or "sini";
-     hostTags = host: [ host.environment ];
      settings.flags.skip_phases = [ "bootstrap" ];
    };
    ```
 
-3. Regenerate the flake inputs: `nix run .#write-flake`, then lock.
-4. Add `/.panix` to `.gitignore`, since that is the wrapper's state directory.
-5. Run it from the devshell, or with `nix run .#panix -- …`:
+4. Regenerate the flake inputs: `nix run .#write-flake`, then lock.
+5. Add `/.panix` to `.gitignore`, since that is the wrapper's state directory.
+6. Run it from the devshell, or with `nix run .#panix -- …`:
 
    ```sh
    panix deploy -t cortex          # one host
@@ -76,9 +80,6 @@ battery in any other repo.
 | `flakeName`      | `"self"`                                              | The key under `fleet.flakes`, which panix also registers as a tag. Must match `[a-z0-9-]+`.                                                                                                                 |
 | `flakeUrl`       | `null`                                                | `fleet.flakes.<flakeName>.url`. With `null`, the wrapper fills in `git+file://<repo root>` at run time. Example: `"github:owner/repo"`.                                                                     |
 | `hosts`          | `host: builtins.elem host.class [ "nixos" "darwin" ]` | Takes a host entity and returns whether it is in the fleet. Hosts with no flake output (`intoAttr = [ ]`, such as microvm guests) are always skipped.                                                       |
-| `hostAddress`    | `host: host.name`                                     | Takes a host and returns the machine's `ssh.hostname`.                                                                                                                                                      |
-| `hostUser`       | none (required)                                       | Takes a host and returns the machine's `ssh.username`. It is required because panix would otherwise default to `root`.                                                                                      |
-| `hostTags`       | `_: [ ]`                                              | Takes a host and returns extra machine tags, which go in front of the aspect tags.                                                                                                                          |
 | `knownHostsFile` | `null`                                                | An absolute path, set as the fleet's `ssh.known_hosts_file`. Put your host CA's `@cert-authority` line in it. `null` uses ssh's own files. Example: `"/etc/ssh/ssh_known_hosts"`.                           |
 | `maxConcurrency` | `4`                                                   | `flags.runtime.max_concurrency`. panix's own default of 0 means unlimited.                                                                                                                                  |
 | `hardened`       | `true`                                                | Makes eval fail when the merged settings break the [rules](#hardened-checks).                                                                                                                               |
@@ -128,8 +129,8 @@ where panix reads it:
 | fleet       | `auto_rollback`                 | `false`                                                                                                                                                                                            |
 | flake       | `url`                           | `flakeUrl`, or a placeholder that the wrapper fills in                                                                                                                                             |
 | installable | `nix.build_mode`                | `"remote"` when `host.system` differs from the deployer system, otherwise `"local"`. Installable is the lowest level where panix accepts `build_mode`.                                             |
-| machine     | `ssh.hostname`, `ssh.username`  | `hostAddress host`, `hostUser host`                                                                                                                                                                |
-| machine     | `tags`                          | `hostTags host ++` the host's resolved named aspects by identity path (for example `roles/workstation`), sorted and deduplicated, the same as colmena                                              |
+| machine     | `ssh.hostname`, `ssh.username`  | `host.deployment.address`, `host.deployment.user`                                                                                                                                                  |
+| machine     | `tags`                          | `host.deployment.tags`, which is exactly the tag set colmena uses, so `-t roles/x` and `--on @roles/x` select the same hosts                                                                       |
 
 The battery sets nothing else, so panix's own fleet → flake → installable →
 machine inheritance applies to every other field. Inheritance in panix never
@@ -257,7 +258,10 @@ purpose.
 **Evaluated**: one config breaking all of these failed with nine messages, one
 per rule. The same config built once `hardened = false` was set.
 `checks.<system>.panix-hardened` keeps this as a fixture that breaks each rule
-once, and it fails if a rule stops firing or a clean config gets flagged.
+once. It compares the messages one by one and lists any that are "no longer
+reported" or "newly reported", so a regression names the rule involved. A clean
+config must produce no messages. **Evaluated**: a control run with one expected
+message altered failed and named that message.
 
 ## Output sinks
 
