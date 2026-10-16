@@ -81,7 +81,7 @@ in
     settings.hub = lib.mkOption {
       type = lib.types.str;
       default = "bitstream";
-      description = "The host whose owner's xmsg is the leaf's hub; it must list the leaf in applications.dev.ai.mcp.xmsg.federation.leaves.";
+      description = "The host whose owner's xmsg is the leaf's hub; it must list the leaf in applications.dev.ai.mcp.xmsg.federation.nodes.<owner>.leaves.";
     };
 
     # Declared with the flag off too, so the sops store holds the key before the pod
@@ -111,7 +111,7 @@ in
         cfg = cluster.settings.kubernetes.services.ai.genie-guard;
         hub = den.hosts.x86_64-linux.${cfg.hub};
         hubIp = lib.head hub.ipv4;
-        hubPort = hub.settings.applications.dev.ai.mcp.xmsg.federation.port;
+        hubPort = hub.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${hub.system-owner}.port;
         # A CA entry is keyed by the node name its identity derives, `<user>.<host>`
         # (xmsg README 7.0); the leaf routes each reply to the peer of the origin's node.
         peers = {

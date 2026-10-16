@@ -227,6 +227,7 @@
     homeManager =
       {
         host,
+        user,
         config,
         pkgs,
         lib,
@@ -234,6 +235,10 @@
       }:
       let
         cfg = host.settings.applications.dev.ai.mcp.hindsight;
+        # The host's owner holds the bank's read-write token; every other user holds a
+        # read-only token of their own (`readers` in kubernetes/services/ai/hindsight.nix),
+        # so nothing that retains is installed for them.
+        writer = user.name == host.system-owner;
         jq = lib.getExe pkgs.jq;
         curl = lib.getExe pkgs.curl;
         flock = lib.getExe' pkgs.util-linux "flock";
@@ -372,10 +377,15 @@
       {
         # The den-law token: a rekey target of the one generator in
         # kubernetes/services/ai/hindsight.nix (same rekeyFile, no generator here).
-        # Declared here, so every user with this client is a target; today that is
-        # sini on bitstream, blade, cortex and patch.
+        # Declared here, so every user with this client is a target: the owner of the
+        # read-write token, anyone else of their own read token. The path is the same
+        # either way, so the MCP entry's bearerTokenFile does not depend on which.
         age.secrets.hindsight-token-den-law = {
-          rekeyFile = rootPath + "/.secrets/env/prod/hindsight/token-den-law.age";
+          rekeyFile =
+            rootPath
+            + "/.secrets/env/prod/hindsight/${
+              if writer then "token-den-law.age" else "read-token-den-law-${user.name}.age"
+            }";
           mode = "400";
           path = "${config.home.homeDirectory}/.config/hindsight/den-law-token";
         };
@@ -384,7 +394,7 @@
         # firing it. Overridden with THIS host's endpoint and bank rather than
         # carrying its own copy of them — the package's defaults exist so it runs
         # standalone, not so there are two places to change the address.
-        home.packages = [
+        home.packages = lib.optionals writer [
           (pkgs.local.hindsight-backfill.override {
             inherit (cfg) endpoint bank;
             inherit tokenFile;
@@ -776,7 +786,7 @@
               }
             ];
           }
-          (lib.mkIf cfg.archiveHook {
+          (lib.mkIf (cfg.archiveHook && writer) {
             hooks.SessionEnd = [
               {
                 hooks = [
@@ -812,6 +822,7 @@
     homeLinux =
       {
         host,
+        user,
         config,
         pkgs,
         lib,
@@ -819,6 +830,10 @@
       }:
       let
         cfg = host.settings.applications.dev.ai.mcp.hindsight;
+        # The host's owner holds the bank's read-write token; every other user holds a
+        # read-only token of their own (`readers` in kubernetes/services/ai/hindsight.nix),
+        # so nothing that retains is installed for them.
+        writer = user.name == host.system-owner;
         repos = map (r: "${config.home.homeDirectory}/${r}") cfg.handoffRepos;
         tokenFile = config.age.secrets.hindsight-token-den-law.path;
         reconcile = pkgs.local.hindsight-handoff-reconcile.override {
@@ -830,7 +845,7 @@
           inherit tokenFile;
         };
       in
-      lib.mkIf cfg.archiveHook {
+      lib.mkIf (cfg.archiveHook && writer) {
         systemd.user.services.hindsight-handoff-reconcile = {
           Unit = {
             Description = "Retain unbanked STATUS/HANDOFF.md revisions into hindsight";

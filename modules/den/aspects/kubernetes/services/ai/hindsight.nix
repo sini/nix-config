@@ -40,12 +40,27 @@ let
   # bank's token cannot use another gated bank. Writes always need it; gateReads
   # makes reads need it too. genie and genie-memory keep reads open because the
   # genie recall clients send no token (H2); den-law is the fleet's operating law.
+  # `readers` get a token of their own that the gate admits on reads only, and only
+  # a bank that gates reads can have them.
   gatedBanks = {
     genie.gateReads = false;
     genie-memory.gateReads = false;
-    den-law.gateReads = true;
+    den-law = {
+      gateReads = true;
+      readers = [ "vic" ];
+    };
   };
   gatedBankNames = builtins.attrNames gatedBanks;
+  readersOf = bank: gatedBanks.${bank}.readers or [ ];
+  # Every (bank, reader) pair; its Secret key is the gate's file name `<bank>.read.<reader>`.
+  readerTokens = lib.concatMap (
+    bank:
+    map (reader: {
+      inherit bank reader;
+      name = "read-token-${bank}-${reader}";
+      key = "${bank}.read.${reader}";
+    }) (readersOf bank)
+  ) gatedBankNames;
   # A write-only token is named write-token-<bank>; a read-and-write one token-<bank>.
   tokenName = bank: if gatedBanks.${bank}.gateReads then "token-${bank}" else "write-token-${bank}";
   tokenSecret = bank: "hindsight-${tokenName bank}";
@@ -65,7 +80,8 @@ in
     # their own: this pod (via sops), the genie token at services.ai.genie-bank-review
     # (sini@bitstream), the genie-memory token at services.ai.genie-memory-loader
     # (sini@cortex), and the den-law token at applications.dev.ai.mcp.hindsight (sini
-    # on every host with the hindsight client).
+    # on every host with the hindsight client), and each reader token at that aspect
+    # for its reader.
     age-secrets =
       { environment, config, ... }:
       {
@@ -82,6 +98,20 @@ in
                 };
               }
             ) gatedBankNames
+          )
+          # Each reader's token, rekeyed to that reader by the hindsight client aspect.
+          // lib.listToAttrs (
+            map (
+              t:
+              lib.nameValuePair "hindsight-${t.name}" {
+                rekeyFile = environment.secretPath + "/hindsight/${t.name}.age";
+                generator.script = "hex";
+                sopsOutput = {
+                  file = "hindsight";
+                  key = t.name;
+                };
+              }
+            ) readerTokens
           )
           // {
             # The control plane's admin token: a sops target of the CP pod only.
@@ -364,7 +394,10 @@ in
                     PYTHONPATH = gateDir;
                     HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION = "hindsight_write_gate:WriteGate";
                     HINDSIGHT_API_OPERATION_VALIDATOR_BANKS = builtins.toJSON (
-                      lib.mapAttrs (_: b: { gate_reads = b.gateReads; }) gatedBanks
+                      lib.mapAttrs (bank: b: {
+                        gate_reads = b.gateReads;
+                        readers = readersOf bank;
+                      }) gatedBanks
                     );
                     HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR = tokensDir;
                     HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE = "${adminDir}/sha256";
@@ -551,7 +584,7 @@ in
                   ];
                 };
 
-                # One file per gated bank. 0440 with the pod's fsGroup 1000 makes
+                # One file per gated bank and per reader. 0440 with the pod's fsGroup 1000 makes
                 # them readable by the image's uid 1000 and no one else in the pod.
                 write-tokens = {
                   type = "secret";
@@ -708,12 +741,16 @@ in
 
           # The nixidy objectTransform rewrites each Secret → SopsSecret; each value
           # is a sops ref resolved at render time. hindsight-write-tokens holds one
-          # key per gated bank (the name predates read gating and is kept so the
+          # key per gated bank and one per reader (the name predates read gating and is kept so the
           # deployed object is not replaced).
           resources.secrets = {
             hindsight-write-tokens = {
               type = "Opaque";
-              stringData = lib.genAttrs gatedBankNames (bank: config.age.secrets.${tokenSecret bank}.sopsRef);
+              stringData =
+                lib.genAttrs gatedBankNames (bank: config.age.secrets.${tokenSecret bank}.sopsRef)
+                // lib.listToAttrs (
+                  map (t: lib.nameValuePair t.key config.age.secrets."hindsight-${t.name}".sopsRef) readerTokens
+                );
             };
             hindsight-cp-admin-token-sha256 = {
               type = "Opaque";

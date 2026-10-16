@@ -9,22 +9,18 @@
 # harness's pieces; this aspect sets what is the owner's: which harnesses, which
 # services, and the federation peers with their allow lists.
 #
-# Federation: the system owner's node on each host of `fedPair` federates with the
-# other's over pinned mTLS (xmsg-links `sini.bitstream ↔ sini.cortex : send, reply,
-# list`, federation plan §6.1). The node key is an `xmsg-identity` agenix secret
-# whose public .crt sidecar is committed beside the .age; the peer's pin is computed
-# from that .crt at build time.
-#
-# With federation.ca.enable on both, the pair authenticates by CA instead (xmsg X16,
-# federation plan §6.7): each node presents a leaf signed by the host intermediate,
+# Federation: each user listed in a host's `federation.nodes` runs a node named
+# `<user>.<host>` and federates with the nodes it lists as peers. A link is declared
+# on both ends, each with what it allows the other. Nodes authenticate by CA (xmsg
+# X16, federation plan §6.7): each presents a leaf signed by the host intermediate,
 # whose URI SAN is its spiffe://json64.dev/host/<host>/user/<user> identity, and
 # each peer entry trusts the root .crt with that one identity. The root and both
 # intermediates are fleet-wide `intermediary` secrets under .secrets/xmsg-ca: only
 # `agenix generate` decrypts them, never a host. The cluster intermediate is
 # cert-manager's issuer (not wired here).
 #
-# Leaves (xmsg X19, federation plan §2.1): with federation.leaves set, the owner's node
-# is also the hub of those pods. Each is a CA peer marked `leaf`, so a send to
+# Leaves (xmsg X19, federation plan §2.1): a node with `leaves` set is also the hub of
+# those pods. Each is a CA peer marked `leaf`, so a send to
 # `<ref>@<leaf>` is queued for the pod to collect and never pushed; its nodes' LAN
 # addresses (pods masquerade to them) are admitted to the federation port.
 #
@@ -38,17 +34,29 @@
   ...
 }:
 let
-  fedPair = [
-    "bitstream"
-    "cortex"
-  ];
-  keyName = "xmsg-sini";
-  leafName = "${keyName}-fed-ca";
+  leafName = user: "xmsg-${user}-fed-ca";
   caDir = self + "/.secrets/xmsg-ca";
-  spiffeOf = host: "spiffe://json64.dev/host/${host.name}/user/${host.system-owner}";
+  spiffeOf = host: user: "spiffe://json64.dev/host/${host}/user/${user}";
   # A node's name derives from its identity (xmsg README 7.0): `<user>.<host>` for a host,
   # `<sa>.<ns>` for a pod. A CA peer entry must be keyed by it.
-  nodeOf = host: "${host.system-owner}.${host.name}";
+  nodeName = host: user: "${user}.${host}";
+  # `<user>.<host>` -> the host entity, the user and that user's node settings there.
+  nodeAt =
+    name:
+    let
+      m = builtins.match "([^.]+)\\.(.+)" name;
+      host = if m == null then null else den.hosts.x86_64-linux.${lib.elemAt m 1} or null;
+      user = lib.elemAt m 0;
+    in
+    if host == null then
+      throw "xmsg federation: peer ${name} is not <user>.<host> for a declared x86_64-linux host."
+    else
+      {
+        inherit host user;
+        node =
+          (fedOf host).nodes.${user}
+            or (throw "xmsg federation: ${host.name} declares no node for ${user}, so peer ${name} does not exist.");
+      };
   leafNode =
     leaf:
     let
@@ -59,23 +67,7 @@ let
     else
       "${lib.elemAt m 1}.${lib.elemAt m 0}";
   fedOf = host: host.settings.applications.dev.ai.mcp.xmsg.federation;
-  peerOf = host: den.hosts.x86_64-linux.${lib.head (lib.remove host.name fedPair)};
-  # The committed public half of a host's node key, refused by name until generated.
-  crtOf =
-    host:
-    let
-      crt = host.secretPath + "/${keyName}.crt";
-    in
-    if builtins.pathExists crt then
-      crt
-    else
-      throw ''
-        xmsg federation: ${host.name} has no node certificate ${keyName}.crt in its secretPath.
-        Set settings.applications.dev.ai.mcp.xmsg.federation.enable on ${lib.concatStringsSep " and " fedPair}
-        (it declares each node key), then run `agenix generate`, `git add` the .age and .crt
-        files, and `agenix rekey`.
-      '';
-  # A committed CA .crt sidecar, refused by name until generated. Copied alone, so a
+  # A committed .crt sidecar, refused by name until generated. Copied alone, so a
   # path under `self` does not pull the whole flake source into the store path.
   caCrt =
     crt:
@@ -86,9 +78,9 @@ let
       }
     else
       throw ''
-        xmsg federation: ${toString crt} is absent. Set
-        settings.applications.dev.ai.mcp.xmsg.federation.ca.enable on ${lib.concatStringsSep " and " fedPair},
-        then run `agenix generate`, `git add` the .age and .crt files, and `agenix rekey`.
+        xmsg federation: ${toString crt} is absent. Declare the node in
+        settings.applications.dev.ai.mcp.xmsg.federation.nodes, then run `agenix generate`,
+        `git add` the .age and .crt files, and `agenix rekey`.
       '';
 in
 {
@@ -96,7 +88,7 @@ in
   # needs every cluster's k3s-nodes, not only its siblings' (collect-k3s-nodes).
   den.policies.xmsg-collect-leaf-nodes =
     { host, ... }:
-    lib.optionals ((host.settings.applications.dev.ai.mcp.xmsg.federation.leaves or [ ]) != [ ]) [
+    lib.optionals (lib.any (n: n.leaves != [ ]) (lib.attrValues (fedOf host).nodes)) [
       (den.lib.policy.pipe.from "k3s-nodes" [
         (den.lib.policy.pipe.collectAll ({ host, ... }: true))
       ])
@@ -121,67 +113,87 @@ in
       description = "OpenAI-compatible endpoint genie-guard asks for its verdicts (hyperqwen on cortex-cuda).";
     };
 
-    settings.federation = {
-      enable = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Federate the system owner's xmsg with its fedPair peer. agenix-rekey refuses to evaluate a declared key whose .age is absent, and `agenix generate` creates only declared ones, so set this on both hosts, then run `agenix generate`, `git add` the .age and .crt files, and `agenix rekey`.";
-      };
-      port = lib.mkOption {
-        type = lib.types.port;
-        default = 7788;
-        description = "The owner node's federation listener port (federation plan §6.4).";
-      };
-      ca.enable = lib.mkOption {
-        type = lib.types.bool;
-        default = false;
-        description = "Declare the xmsg CA (root, host and cluster intermediates under .secrets/xmsg-ca) and this host's CA-signed leaf, and federate with them instead of the pinned node key. Set it on both fedPair hosts, then run `agenix generate`, `git add` the .age and .crt files, and `agenix rekey`.";
-      };
-      leaves = lib.mkOption {
-        type = lib.types.listOf (
-          lib.types.submodule {
-            options = {
-              identity = lib.mkOption {
-                type = lib.types.str;
-                description = "The URI SAN of the leaf's certificate, signed under the xmsg CA root; spiffe://<domain>/ns/<ns>/sa/<sa> names the leaf `<sa>.<ns>`, and senders here address it as `<ref>@<sa>.<ns>`.";
-              };
-              cluster = lib.mkOption {
-                type = lib.types.str;
-                description = "The k3s cluster the leaf runs in; its nodes' addresses are admitted to the federation port.";
-              };
-              allow = lib.mkOption {
-                type = lib.types.listOf (
-                  lib.types.enum [
-                    "send"
-                    "reply"
-                    "list"
-                  ]
-                );
-                default = [ "reply" ];
-                description = "Operations the leaf may perform here. A leaf collects its mailbox under any allow; `reply` answers what it collected.";
-              };
-              targets = lib.mkOption {
-                type = lib.types.listOf lib.types.str;
-                description = "Local targets this node queues for the leaf, each a service name or an instance ID (xmsg X14, checked when a send is queued).";
-              };
+    settings.federation.nodes = lib.mkOption {
+      type = lib.types.attrsOf (
+        lib.types.submodule {
+          options = {
+            port = lib.mkOption {
+              type = lib.types.port;
+              default = 7788;
+              description = "This node's federation listener port (federation plan §6.4); each node on a host needs its own.";
             };
-          }
-        );
-        default = [ ];
-        description = "Pods this owner node is the hub of (xmsg X19). Needs ca.enable.";
-      };
+            peers = lib.mkOption {
+              type = lib.types.attrsOf (
+                lib.types.submodule {
+                  options.allow = lib.mkOption {
+                    type = lib.types.listOf (
+                      lib.types.enum [
+                        "send"
+                        "reply"
+                        "list"
+                      ]
+                    );
+                    default = [
+                      "send"
+                      "reply"
+                      "list"
+                    ];
+                    description = "Operations the peer may perform on this node.";
+                  };
+                }
+              );
+              default = { };
+              description = "Nodes this one federates with, keyed `<user>.<host>`. The peer must list this node too.";
+            };
+            leaves = lib.mkOption {
+              type = lib.types.listOf (
+                lib.types.submodule {
+                  options = {
+                    identity = lib.mkOption {
+                      type = lib.types.str;
+                      description = "The URI SAN of the leaf's certificate, signed under the xmsg CA root; spiffe://<domain>/ns/<ns>/sa/<sa> names the leaf `<sa>.<ns>`, and senders here address it as `<ref>@<sa>.<ns>`.";
+                    };
+                    cluster = lib.mkOption {
+                      type = lib.types.str;
+                      description = "The k3s cluster the leaf runs in; its nodes' addresses are admitted to the federation port.";
+                    };
+                    allow = lib.mkOption {
+                      type = lib.types.listOf (
+                        lib.types.enum [
+                          "send"
+                          "reply"
+                          "list"
+                        ]
+                      );
+                      default = [ "reply" ];
+                      description = "Operations the leaf may perform here. A leaf collects its mailbox under any allow; `reply` answers what it collected.";
+                    };
+                    targets = lib.mkOption {
+                      type = lib.types.listOf lib.types.str;
+                      description = "Local targets this node queues for the leaf, each a service name or an instance ID (xmsg X14, checked when a send is queued).";
+                    };
+                  };
+                }
+              );
+              default = [ ];
+              description = "Pods this node is the hub of (xmsg X19).";
+            };
+          };
+        }
+      );
+      default = { };
+      description = "Users on this host that run an xmsg federation node, `<user>.<host>`, each with a CA-signed leaf `xmsg-<user>-fed-ca` in the host's secretPath. Declaring one needs `agenix generate`, `git add` of the .age and .crt files, and `agenix rekey`.";
     };
 
     nixos =
       {
         config,
-        environment,
         host,
         k3s-nodes,
         ...
       }:
       let
-        fed = fedOf host;
+        nodes = (fedOf host).nodes;
         ca = name: deps: script: {
           rekeyFile = caDir + "/${name}.age";
           intermediary = true;
@@ -192,86 +204,83 @@ in
           settings.cn = "json64.dev xmsg ${name} CA";
         };
         root = config.age.secrets.xmsg-ca-root;
+        self' = user: nodeName host.name user;
       in
-      lib.mkMerge [
-        (lib.mkIf fed.enable {
-          assertions = [
+      lib.mkIf (nodes != { }) {
+        assertions =
+          lib.concatLists (
+            lib.mapAttrsToList (
+              user: node:
+              [
+                {
+                  assertion = config.users.users ? ${user};
+                  message = "xmsg federation: ${host.name} declares a node for ${user}, who has no account here.";
+                }
+              ]
+              ++ lib.mapAttrsToList (peer: _: {
+                assertion = (nodeAt peer).node.peers ? ${self' user};
+                message = "xmsg federation: ${self' user} lists ${peer}, which does not list ${self' user} back.";
+              }) node.peers
+            ) nodes
+          )
+          ++ [
             {
-              assertion = lib.elem host.name fedPair;
-              message = "xmsg federation: ${host.name} is not in fedPair (${toString fedPair}).";
-            }
-            {
-              assertion = fed.ca.enable -> (fedOf (peerOf host)).ca.enable;
-              message = "xmsg federation: ca.enable is set on ${host.name} but not on its peer; set it on both.";
-            }
-            {
-              assertion = fed.leaves != [ ] -> fed.ca.enable;
-              message = "xmsg federation: leaves on ${host.name} authenticate by the xmsg CA; set ca.enable.";
+              assertion = lib.allUnique (lib.mapAttrsToList (_: n: n.port) nodes);
+              message = "xmsg federation: two nodes on ${host.name} share a port.";
             }
           ];
 
-          # No firewall rule for the peer: the tailnet interface is trusted
-          # (core.network.tailscale), so the port is reachable over the tailnet and
-          # nowhere else, and the pin or the CA identity admits only the peer.
-        })
+        # No firewall rule for peers: the tailnet interface is trusted
+        # (core.network.tailscale), so the ports are reachable over the tailnet and
+        # nowhere else, and each CA identity admits only the peers listed.
+        age.secrets = {
+          xmsg-ca-root = ca "root" [ ] "x509-ca-root";
+          xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
+          xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
+        }
+        // lib.mapAttrs' (
+          user: _:
+          lib.nameValuePair (leafName user) {
+            rekeyFile = host.secretPath + "/${leafName user}.age";
+            generator = {
+              script = "x509-spiffe-leaf";
+              dependencies = [
+                config.age.secrets.xmsg-ca-host-intermediate
+                root
+              ];
+            };
+            settings = {
+              cn = "${user}@${host.name}";
+              uri = spiffeOf host.name user;
+            };
+            owner = user;
+            mode = "0400";
+          }
+        ) nodes;
 
         # Leaves reach the port over the LAN from their cluster's nodes. The rules are
         # nftables syntax, which the iptables backend ignores, leaving the port closed.
-        (lib.mkIf (fed.enable && fed.leaves != [ ]) {
-          networking.nftables.enable = true;
-          networking.firewall.extraInputRules = lib.concatStrings (
-            lib.concatMap (
-              leaf:
-              let
-                nodes = lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes;
-              in
-              assert lib.assertMsg (
-                nodes != [ ]
-              ) "xmsg federation: leaf ${leafNode leaf}'s cluster ${leaf.cluster} has no nodes";
-              map (n: ''
-                ip saddr ${n.ip} tcp dport ${toString fed.port} accept comment "xmsg leaf ${leafNode leaf}: ${n.hostname}"
-              '') (lib.sort (a: b: a.hostname < b.hostname) nodes)
-            ) fed.leaves
-          );
-        })
-
-        (lib.mkIf (fed.enable && !fed.ca.enable) {
-          age.secrets.${keyName} = {
-            rekeyFile = host.secretPath + "/${keyName}.age";
-            generator.script = "xmsg-identity";
-            settings = {
-              node = "${host.system-owner}@${host.name}";
-              san = "${host.name}.ts.${environment.domain}";
-            };
-            owner = host.system-owner;
-            mode = "0400";
-          };
-        })
-
-        (lib.mkIf fed.ca.enable {
-          age.secrets = {
-            xmsg-ca-root = ca "root" [ ] "x509-ca-root";
-            xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
-            xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
-            ${leafName} = {
-              rekeyFile = host.secretPath + "/${leafName}.age";
-              generator = {
-                script = "x509-spiffe-leaf";
-                dependencies = [
-                  config.age.secrets.xmsg-ca-host-intermediate
-                  root
-                ];
-              };
-              settings = {
-                cn = "${host.system-owner}@${host.name}";
-                uri = spiffeOf host;
-              };
-              owner = host.system-owner;
-              mode = "0400";
-            };
-          };
-        })
-      ];
+        networking.nftables.enable = lib.mkIf (lib.any (n: n.leaves != [ ]) (lib.attrValues nodes)) true;
+        networking.firewall.extraInputRules = lib.concatStrings (
+          lib.concatLists (
+            lib.mapAttrsToList (
+              _: node:
+              lib.concatMap (
+                leaf:
+                let
+                  ks = lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes;
+                in
+                assert lib.assertMsg (
+                  ks != [ ]
+                ) "xmsg federation: leaf ${leafNode leaf}'s cluster ${leaf.cluster} has no nodes";
+                map (n: ''
+                  ip saddr ${n.ip} tcp dport ${toString node.port} accept comment "xmsg leaf ${leafNode leaf}: ${n.hostname}"
+                '') (lib.sort (a: b: a.hostname < b.hostname) ks)
+              ) node.leaves
+            ) nodes
+          )
+        );
+      };
 
     # The bot's matrix skill, folded into every agent aspect that reads agent-extensions;
     # it ships with the bot, so it changes with the bot's protocol. The xmsg skill, MCP
@@ -303,48 +312,38 @@ in
         guardEnabled = botEnabled && config.home.username == host.system-owner;
         guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
 
-        fed = fedOf host;
-        peer = peerOf host;
+        me = config.home.username;
+        node = (fedOf host).nodes.${me} or null;
         rootCa = caCrt (caDir + "/root.crt");
-        # Under ca.enable the entry trusts the root with the peer's one identity, keyed by the
-        # node name that identity derives. A pinned entry keeps the host name as its
-        # nickname. A leaf entry's `address` is required but never dialled, since sends to
-        # a leaf are queued and replies to it not pushed, so it names a host that cannot
-        # resolve. No `from`: the host data carries no tailnet address.
-        peerEntry = {
-          address = "${peer.name}.ts.${environment.domain}:${toString (fedOf peer).port}";
-          allow = [
-            "send"
-            "reply"
-            "list"
-          ];
-        };
+        # Each entry trusts the root with the peer's one identity, keyed by the node name
+        # that identity derives. A leaf entry's `address` is required but never dialled,
+        # since sends to a leaf are queued and replies to it not pushed, so it names a host
+        # that cannot resolve. No `from`: the host data carries no tailnet address.
         peers =
-          if fed.ca.enable then
+          lib.mapAttrs (
+            name: p:
+            let
+              at = nodeAt name;
+            in
             {
-              ${nodeOf peer} = peerEntry // {
-                ca = rootCa;
-                identities = [ (spiffeOf peer) ];
-              };
+              address = "${at.host.name}.ts.${environment.domain}:${toString at.node.port}";
+              inherit (p) allow;
+              ca = rootCa;
+              identities = [ (spiffeOf at.host.name at.user) ];
             }
-            // lib.listToAttrs (
-              map (
-                leaf:
-                lib.nameValuePair (leafNode leaf) {
-                  address = "${leafNode leaf}.invalid:${toString fed.port}";
-                  ca = rootCa;
-                  identities = [ leaf.identity ];
-                  leaf = true;
-                  inherit (leaf) allow targets;
-                }
-              ) fed.leaves
-            )
-          else
-            {
-              ${peer.name} = peerEntry // {
-                pinFromCert = crtOf peer;
-              };
-            };
+          ) node.peers
+          // lib.listToAttrs (
+            map (
+              leaf:
+              lib.nameValuePair (leafNode leaf) {
+                address = "${leafNode leaf}.invalid:${toString node.port}";
+                ca = rootCa;
+                identities = [ leaf.identity ];
+                leaf = true;
+                inherit (leaf) allow targets;
+              }
+            ) node.leaves
+          );
       in
       {
         programs.xmsg = {
@@ -360,12 +359,12 @@ in
                 matrix-xmsg = lib.getExe inputs'.matrix-xmsg.packages.default;
               }
               // lib.optionalAttrs guardEnabled { genie-guard = guardExe; };
-            federation = lib.mkIf (fed.enable && config.home.username == host.system-owner) {
+            federation = lib.mkIf (node != null) {
               enable = true;
-              inherit (fed) port;
+              inherit (node) port;
               inherit peers;
-              cert = if fed.ca.enable then caCrt (host.secretPath + "/${leafName}.crt") else crtOf host;
-              key = osConfig.age.secrets.${if fed.ca.enable then leafName else keyName}.path;
+              cert = caCrt (host.secretPath + "/${leafName me}.crt");
+              key = osConfig.age.secrets.${leafName me}.path;
             };
           };
           harnesses =

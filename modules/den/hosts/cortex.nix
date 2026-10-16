@@ -41,9 +41,9 @@ in
       applications.dev.mux.herdr-pair.pairs.sini = [ "theutz" ];
 
       # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
-      applications.dev.ai.mcp.xmsg.federation = {
-        enable = true;
-        ca.enable = true;
+      applications.dev.ai.mcp.xmsg.federation.nodes.sini.peers = {
+        "sini.bitstream" = { };
+        "vic.bitstream" = { };
       };
     };
   };

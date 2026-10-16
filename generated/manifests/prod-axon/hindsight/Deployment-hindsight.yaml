@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 16215704607e4e4a6f4041ef482627ae4003af449d9283f2f1ee0f69b7d013c3
+        checksum/configMaps: 04d0961bd8f7419e710646cf418c2c3dec1cf65905160901bf281d90f1f61def
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: hindsight
@@ -59,7 +59,7 @@ spec:
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE
               value: /etc/hindsight-write-gate/admin/sha256
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_BANKS
-              value: '{"den-law":{"gate_reads":true},"genie":{"gate_reads":false},"genie-memory":{"gate_reads":false}}'
+              value: '{"den-law":{"gate_reads":true,"readers":["vic"]},"genie":{"gate_reads":false,"readers":[]},"genie-memory":{"gate_reads":false,"readers":[]}}'
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION
               value: hindsight_write_gate:WriteGate
             - name: HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR

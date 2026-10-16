@@ -5,20 +5,23 @@ real MCP server over a real MemoryEngine (mock LLM, constant embeddings, a Postg
 with pgvector), with the gate loaded by upstream's own loader from
 HINDSIGHT_API_OPERATION_VALIDATOR_*.
 
-Banks: genie and genie-memory gate writes; den-law gates reads and writes; open-bank
-is not configured. ADMIN is the control plane's token; the gate holds its SHA-256.
+Banks: genie and genie-memory gate writes; den-law gates reads and writes and has one
+reader; open-bank is not configured. ADMIN is the control plane's token; the gate
+holds its SHA-256. READER is den-law's reader token, which admits reads only.
 
   a  every write route on genie, document import included: no key and another
-     bank's key are refused; genie's own key and the admin key are not
+     bank's key are refused; genie's own key and the admin key are not; every write
+     route on den-law refuses the reader key
   r  den-law: every route (write, read, GET), a chunk read by id and the bank list
-     refuse no key and another bank's key, and admit den-law's key and the admin key
+     refuse no key and another bank's key, and admit den-law's key, the admin key and
+     the reader key
   b  recall, reflect and every read route on genie pass without a key
   c  every write route on the unconfigured bank passes without a key
   m  MCP: every tool on /mcp/den-law/ refuses no key and another bank's key and admits
-     den-law's and the admin key; /mcp/genie/ recall needs no key; the multi-bank
+     den-law's and the admin key; the reader key is admitted by read tools only; /mcp/genie/ recall needs no key; the multi-bank
      /mcp/ endpoint refuses den-law recall and hides den-law from list_banks
-  d  startup refuses a malformed BANKS, a non-boolean gate_reads, an empty or missing
-     token file, a bad admin digest, or a wrapped engine method that is gone; the
+  d  startup refuses a malformed BANKS, a non-boolean gate_reads, bad readers, readers
+     on a bank without gate_reads, an empty or missing token or reader file, a bad admin digest, or a wrapped engine method that is gone; the
      `hindsight-api` entrypoint refuses too
 
 Run (no live server; DATABASE_URL is a throwaway local Postgres with pgvector):
@@ -49,8 +52,10 @@ TOKENS = {
 BANKS = {
     "genie": {"gate_reads": False},
     "genie-memory": {"gate_reads": False},
-    "den-law": {"gate_reads": True},
+    "den-law": {"gate_reads": True, "readers": ["vic"]},
 }
+READER = "tok-den-law-reader-vic-445566778899"
+READER_FILE = "den-law.read.vic"
 ADMIN = "tok-admin-aabbccddeeff00112233"
 GATED, OTHER, LAW, OPEN = "genie", "genie-memory", "den-law", "open-bank"
 REFUSAL = "-gated: a valid bank token is required"
@@ -58,6 +63,7 @@ REFUSAL = "-gated: a valid bank token is required"
 tokdir = Path(tempfile.mkdtemp(prefix="hswg-tokens-"))
 for bank, tok in TOKENS.items():
     (tokdir / bank).write_text(tok + "\n")
+(tokdir / READER_FILE).write_text(READER + "\n")
 admin_file = Path(tempfile.mkdtemp(prefix="hswg-admin-")) / "sha256"
 admin_file.write_text(hashlib.sha256(ADMIN.encode()).hexdigest() + "\n")
 GATE_ENV = {
@@ -359,11 +365,16 @@ async def mcp_cells(mem, ids):
         tools = tools.tools
         print(f"mcp: /mcp/{LAW}/ tools={len(tools)}")
         cell("m.tools", len(tools) > 0, "no MCP tools listed")
+        # Each tool's kind, from the no-key row (which runs first): the gate names a
+        # write refusal as such. The reader row is judged against this, never against
+        # its own response, which says nothing once a reader is wrongly admitted.
+        writes_tool: dict[str, bool] = {}
         for label, tok, want_refused in (
             ("none", None, True),
             ("other", TOKENS[GATED], True),
             ("own", TOKENS[LAW], False),
             ("admin", ADMIN, False),
+            ("reader", READER, None),
         ):
             async with client(tok) as http:
                 for t in tools:
@@ -374,7 +385,10 @@ async def mcp_cells(mem, ids):
                     }
                     if t.name == "update_knowledge_node":
                         args["name"] = "renamed"
-                    if t.name in ("delete_bank", "clear_memories") and not want_refused:
+                    if (
+                        t.name in ("delete_bank", "clear_memories")
+                        and want_refused is False
+                    ):
                         continue  # would empty the fixture for the later tools
                     res = await mcp_session(
                         http,
@@ -382,9 +396,15 @@ async def mcp_cells(mem, ids):
                         lambda s, n=t.name, a=args: s.call_tool(n, a),
                     )
                     out = _text(res)
+                    if label == "none":
+                        writes_tool[t.name] = "write-gated" in out
+                    # The reader is refused exactly the tools no-key is refused as writes.
+                    expect = (
+                        writes_tool[t.name] if want_refused is None else want_refused
+                    )
                     cell(
                         f"m.law.{label}",
-                        (REFUSAL in out) == want_refused,
+                        (REFUSAL in out) == expect,
                         f"/mcp/{LAW}/ {t.name} key={label} -> {out[:160]}",
                     )
 
@@ -449,7 +469,10 @@ async def routes_cells():
         ):
             for verb, suffix in writes:
                 ids = await fixture(c, bank, TOKENS[bank])
-                for label, tok in (("none", None), ("other", other)):
+                refusals = [("none", None), ("other", other)]
+                if bank == LAW:
+                    refusals.append(("reader", READER))
+                for label, tok in refusals:
                     r = await call(c, verb, suffix, bank, ids, tok)
                     cell(
                         f"{cellp}.refused",
@@ -494,6 +517,7 @@ async def routes_cells():
             ("other", TOKENS[GATED], True),
             ("own", TOKENS[LAW], False),
             ("admin", ADMIN, False),
+            ("reader", READER, False),
         ):
             for verb, suffix in reads:
                 r = await call(c, verb, suffix, LAW, ids, tok)
@@ -595,7 +619,7 @@ def startup_cells():
 
     def tokens(**over):
         d = Path(tempfile.mkdtemp(prefix="hswg-d-"))
-        for bank, tok in {**TOKENS, **over}.items():
+        for bank, tok in {**TOKENS, READER_FILE: READER, **over}.items():
             if tok is not None:
                 (d / bank).write_text(tok)
         return str(d)
@@ -612,6 +636,32 @@ def startup_cells():
         (
             "d.bad-gate-reads-refused",
             {bk: json.dumps({**BANKS, "den-law": {"gate_reads": "yes"}})},
+        ),
+        ("d.reader-missing-refused", {td: tokens(**{READER_FILE: None})}),
+        ("d.reader-empty-refused", {td: tokens(**{READER_FILE: "\n"})}),
+        (
+            "d.bad-readers-refused",
+            {
+                bk: json.dumps(
+                    {**BANKS, "den-law": {"gate_reads": True, "readers": "vic"}}
+                )
+            },
+        ),
+        (
+            "d.reader-path-refused",
+            {
+                bk: json.dumps(
+                    {**BANKS, "den-law": {"gate_reads": True, "readers": ["../x"]}}
+                )
+            },
+        ),
+        (
+            "d.readers-open-reads-refused",
+            {
+                bk: json.dumps(
+                    {**BANKS, "genie": {"gate_reads": False, "readers": ["vic"]}}
+                )
+            },
         ),
         (
             "d.bad-admin-refused",
@@ -630,7 +680,11 @@ def startup_cells():
     )
     try:
         g = load_extension("OPERATION_VALIDATOR", OperationValidatorExtension)
-        cell("d.empty-key-refused", not g._admits(LAW, ""), "an empty key was admitted")
+        cell(
+            "d.empty-key-refused",
+            not g._admits(LAW, "", True),
+            "an empty key was admitted",
+        )
     finally:
         os.environ.clear()
         os.environ.update(saved)

@@ -1,9 +1,10 @@
-{ rootPath, ... }:
+{ lib, rootPath, ... }:
 {
   den.aspects.applications.dev.security.signing-key = {
     homeManager =
       { user, config, ... }:
-      {
+      # Only a user who signs gets a key; git signs per `git.signing.method` (default none).
+      lib.mkIf ((user.settings.git.signing.method or "none") != "none") {
         age.secrets.user-signing-key = {
           rekeyFile = rootPath + "/.secrets/users/${user.name}/id_signing.age";
           mode = "600";

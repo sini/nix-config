@@ -5,15 +5,17 @@ data:
 
     Loaded by upstream's extension loader (hindsight_api/extensions/loader.py) from
         HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION=hindsight_write_gate:WriteGate
-        HINDSIGHT_API_OPERATION_VALIDATOR_BANKS={"genie": {"gate_reads": false}, ...}
+        HINDSIGHT_API_OPERATION_VALIDATOR_BANKS={"den-law": {"gate_reads": true, "readers": ["vic"]}, ...}
         HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR=/etc/hindsight-write-gate/tokens
         HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE=/etc/hindsight-write-gate/admin/sha256
-    with one token file per gated bank in TOKENS_DIR, named after the bank.
+    with one token file per gated bank in TOKENS_DIR, named after the bank, and one per
+    reader, named `<bank>.read.<reader>`.
 
     A gated bank's writes pass only with that bank's own token or the admin token. A
     bank with gate_reads also refuses every read without one of the two: recall,
     reflect, every bank read, mental-model reads and every precheck, and it is left out
-    of the bank list. A bank that is not configured is open. /health and /version reach
+    of the bank list. A reader's token admits that bank's reads and nothing else: on a
+    write it is refused like no key. A bank that is not configured is open. /health and /version reach
     no hook and stay open. The two routes that call no hook at 0.9.2, mental-model
     history (a read) and document import (a write), are wrapped at runtime so they do;
     see _hook_unhooked_routes.
@@ -23,7 +25,8 @@ data:
     pod. Both comparisons are constant-time.
 
     Startup refuses (the loader's ExtensionLoadError stops the server) on a malformed
-    BANKS, a gate_reads that is not a boolean, a missing or empty token file, or an
+    BANKS, a gate_reads that is not a boolean, readers that are not a list of names, a
+    missing or empty token file, readers on a bank without gate_reads, or an
     ADMIN_SHA256_FILE that is missing or not 64 hex digits.
     """
 
@@ -128,19 +131,27 @@ data:
             if banks and not tokens_dir:
                 _fail("BANKS is set but TOKENS_DIR is not")
             self._tokens: dict[str, bytes] = {}
+            self._read_tokens: dict[str, list[bytes]] = {}
             self._read_gated: set[str] = set()
             for bank, spec in banks.items():
                 if not isinstance(spec, dict) or not isinstance(
                     spec.get("gate_reads"), bool
                 ):
                     _fail(f"bank '{bank}' needs a boolean gate_reads")
-                f = Path(tokens_dir) / bank
-                if not f.is_file():
-                    _fail(f"no token file for gated bank '{bank}' at {f}")
-                token = f.read_text().strip()
-                if not token:
-                    _fail(f"empty token file for gated bank '{bank}' at {f}")
-                self._tokens[bank] = token.encode()
+                readers = spec.get("readers", [])
+                if not isinstance(readers, list) or not all(
+                    isinstance(r, str) and re.fullmatch(r"[A-Za-z0-9_-]+", r)
+                    for r in readers
+                ):
+                    _fail(f"bank '{bank}' readers must be a list of names")
+                # A reader token on a bank whose reads are open would admit nothing new,
+                # and reads it as configured access that is not there.
+                if readers and not spec["gate_reads"]:
+                    _fail(f"bank '{bank}' has readers but does not gate reads")
+                self._tokens[bank] = self._token(tokens_dir, bank, bank)
+                self._read_tokens[bank] = [
+                    self._token(tokens_dir, f"{bank}.read.{r}", bank) for r in readers
+                ]
                 if spec["gate_reads"]:
                     self._read_gated.add(bank)
             self._admin_sha256: bytes | None = None
@@ -153,15 +164,32 @@ data:
                 self._admin_sha256 = digest.encode()
             logger.info(
                 f"bank gate: writes gated on {sorted(self._tokens)}, reads gated on "
-                f"{sorted(self._read_gated)}, admin token {'set' if self._admin_sha256 else 'unset'}"
+                f"{sorted(self._read_gated)}, readers "
+                f"{ {b: len(t) for b, t in self._read_tokens.items() if t} }, "
+                f"admin token {'set' if self._admin_sha256 else 'unset'}"
             )
 
-        def _admits(self, bank_id: str, key: str | None) -> bool:
+        @staticmethod
+        def _token(tokens_dir: str, name: str, bank: str) -> bytes:
+            f = Path(tokens_dir) / name
+            if not f.is_file():
+                _fail(f"no token file for gated bank '{bank}' at {f}")
+            token = f.read_text().strip()
+            if not token:
+                _fail(f"empty token file for gated bank '{bank}' at {f}")
+            return token.encode()
+
+        def _admits(self, bank_id: str, key: str | None, read: bool) -> bool:
             # An empty key (`Authorization: Bearer `) is no key: it must not match the
             # digest of an empty admin token.
             if not key:
                 return False
             if hmac.compare_digest(key.encode(), self._tokens[bank_id]):
+                return True
+            # Every reader token is compared, so the time taken does not say which matched.
+            if read and sum(
+                hmac.compare_digest(key.encode(), t) for t in self._read_tokens[bank_id]
+            ):
                 return True
             if self._admin_sha256 is None:
                 return False
@@ -179,7 +207,7 @@ data:
                 return ov.ValidationResult.accept()
             if read and bank_id not in self._read_gated:
                 return ov.ValidationResult.accept()
-            if self._admits(bank_id, request_context.api_key):
+            if self._admits(bank_id, request_context.api_key, read):
                 return ov.ValidationResult.accept()
             kind = "read" if read else "write"
             return ov.ValidationResult.reject(
@@ -211,7 +239,7 @@ data:
                 for b in ctx.banks
                 if rc.internal
                 or b.get("bank_id") not in self._read_gated
-                or self._admits(b["bank_id"], rc.api_key)
+                or self._admits(b["bank_id"], rc.api_key, read=True)
             ]
             return ov.BankListResult(banks=banks)
 

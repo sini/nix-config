@@ -46,6 +46,11 @@
       sharePeers = lib.filter (
         q: q.hostname != host.name && (q.deviceId or null) != null
       ) syncthing-peers;
+      # The daemon runs only inside a mesh: another host of this user. The hub is a
+      # backup of a mesh, not one. The identity is minted regardless, because its
+      # `.id` is what puts this host in `syncthing-peers` for the user's other hosts;
+      # gating it too would leave a user's first two hosts each waiting on the other.
+      inMesh = lib.any (q: !(q.isHub or false)) sharePeers;
     in
     lib.mkIf (dirs != [ ]) {
       age.secrets.syncthing-identity = {
@@ -53,7 +58,7 @@
         generator.script = "syncthing-identity";
       };
 
-      services.syncthing = {
+      services.syncthing = lib.mkIf inMesh {
         enable = true;
         overrideDevices = true;
         overrideFolders = true;

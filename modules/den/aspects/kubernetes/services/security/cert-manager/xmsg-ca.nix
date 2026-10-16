@@ -36,7 +36,7 @@ let
     if on && absent != [ ] then
       throw ''
         xmsg cluster CA: ${lib.concatMapStringsSep ", " toString absent} absent. Set
-        settings.applications.dev.ai.mcp.xmsg.federation.ca.enable on a fedPair host, run
+        settings.applications.dev.ai.mcp.xmsg.federation.nodes on a host, run
         `agenix generate`, `git add` the .age and .crt files, then `agenix sops-rekey`.
       ''
     else
@@ -53,7 +53,7 @@ in
     settings.enable = lib.mkOption {
       type = lib.types.bool;
       default = false;
-      description = "Render the xmsg-cluster-ca ClusterIssuer, its Secret and the admission policy restricting it. Needs the CA under .secrets/xmsg-ca (xmsg federation.ca.enable, then `agenix generate`).";
+      description = "Render the xmsg-cluster-ca ClusterIssuer, its Secret and the admission policy restricting it. Needs the CA under .secrets/xmsg-ca (an xmsg federation node, then `agenix generate`).";
     };
 
     age-secrets =

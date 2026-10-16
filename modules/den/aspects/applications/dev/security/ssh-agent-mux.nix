@@ -54,7 +54,9 @@
           set -uo pipefail
           RUNTIME="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
           SOCK="$RUNTIME/standard-ssh-agent.sock"
-          KEY="${config.age.secrets.user-signing-key.path or "$HOME/.ssh/id_signing"}"
+          KEY="${config.age.secrets.user-signing-key.path or ""}"
+          # A user without a signing key has nothing to load and nothing to wait for.
+          [ -n "$KEY" ] || exit 0
           for _ in $(seq 1 100); do
             { [ -S "$SOCK" ] && [ -f "$KEY" ]; } && break
             sleep 0.1
@@ -137,7 +139,9 @@
           DARWIN_TEMP=$(getconf DARWIN_USER_TEMP_DIR 2>/dev/null || true)
           DARWIN_TEMP="''${DARWIN_TEMP%/}"
           SOCK="$DARWIN_TEMP/standard-ssh-agent.sock"
-          KEY="${config.age.secrets.user-signing-key.path or "$HOME/.ssh/id_signing"}"
+          KEY="${config.age.secrets.user-signing-key.path or ""}"
+          # A user without a signing key has nothing to load and nothing to wait for.
+          [ -n "$KEY" ] || exit 0
           for _ in $(seq 1 100); do
             { [ -S "$SOCK" ] && [ -f "$KEY" ]; } && break
             sleep 0.1
