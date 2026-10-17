@@ -39,7 +39,8 @@ in
         environment.systemPackages = [ pkgs.attic-client ];
 
         # Creates `ci` if absent and keeps it public, idempotently, from a
-        # ten-minute token scoped to that one cache.
+        # ten-minute token scoped to that one cache. `cache configure` sends the
+        # retention setting with every change, so it needs that right too.
         systemd.services.attic-ci-cache = {
           description = "Ensure the attic `${ciCache}` cache exists and is public";
           after = [
@@ -61,7 +62,8 @@ in
             export XDG_CONFIG_HOME=$(mktemp -d)
             token=$(${atticadmFor pkgs config.services.atticd.settings} make-token \
               --sub attic-ci-cache --validity 10m \
-              --pull ${ciCache} --push ${ciCache} --create-cache ${ciCache} --configure-cache ${ciCache})
+              --pull ${ciCache} --push ${ciCache} --create-cache ${ciCache} --configure-cache ${ciCache} \
+              --configure-cache-retention ${ciCache})
             # Through nginx under the public name, which this host's hosts file pins
             # to loopback: atticd refuses any Host outside allowed-hosts.
             attic login local ${config.services.atticd.settings.api-endpoint} "$token" >/dev/null

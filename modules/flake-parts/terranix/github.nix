@@ -117,7 +117,7 @@ in
             resource.github_actions_secret = lib.genAttrs repos (repository: {
               inherit repository;
               secret_name = "ATTIC_TOKEN";
-              plaintext_value = "\${var.attic_ci_push_token}";
+              value = "\${var.attic_ci_push_token}";
             });
           }
         ];
