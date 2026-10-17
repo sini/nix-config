@@ -1,0 +1,5 @@
+# Generated: the terranix symlink, the provider cache and the lock file.
+config.tf.json
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.backup

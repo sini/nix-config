@@ -62,6 +62,7 @@
       services.security.acme
       dns-state-passphrase
       unifi-state-passphrase
+      github-state-passphrase
       services.networking.nginx
       services.security.kanidm
       services.networking.gateway-upstream
