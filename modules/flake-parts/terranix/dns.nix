@@ -72,10 +72,8 @@
     ) "dns: one Cloudflare account per workspace (got: ${toString accounts})";
     {
       terraform = {
-        required_providers.cloudflare = {
-          source = "cloudflare/cloudflare";
-          version = "5.26.0";
-        };
+        # The version is the nixpkgs provider's (terranix.nix), never stated here.
+        required_providers.cloudflare.source = "cloudflare/cloudflare";
         backend.local.path = "terraform.tfstate";
         encryption = {
           key_provider.pbkdf2.state.passphrase = "\${var.state_passphrase}";
