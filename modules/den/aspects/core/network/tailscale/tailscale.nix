@@ -34,9 +34,12 @@
           };
         };
 
-        systemd.services.tailscaled.serviceConfig.Environment = [
-          "TS_DEBUG_FIREWALL_MODE=nftables"
-        ];
+        systemd.services.tailscaled.serviceConfig = {
+          Environment = [ "TS_DEBUG_FIREWALL_MODE=nftables" ];
+          # When its TUN device closes under it (networkd flushing its ip rules on
+          # a switch), tailscaled exits 0, which on-failure does not restart.
+          Restart = "always";
+        };
       };
 
     persist = {
