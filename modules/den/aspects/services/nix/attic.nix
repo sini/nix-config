@@ -42,7 +42,10 @@ in
         # ten-minute token scoped to that one cache.
         systemd.services.attic-ci-cache = {
           description = "Ensure the attic `${ciCache}` cache exists and is public";
-          after = [ "atticd.service" ];
+          after = [
+            "atticd.service"
+            "nginx.service"
+          ];
           requires = [ "atticd.service" ];
           wantedBy = [ "multi-user.target" ];
           path = [ pkgs.attic-client ];
@@ -59,7 +62,9 @@ in
             token=$(${atticadmFor pkgs config.services.atticd.settings} make-token \
               --sub attic-ci-cache --validity 10m \
               --pull ${ciCache} --push ${ciCache} --create-cache ${ciCache} --configure-cache ${ciCache})
-            attic login local http://${config.services.atticd.settings.listen} "$token" >/dev/null
+            # Through nginx under the public name, which this host's hosts file pins
+            # to loopback: atticd refuses any Host outside allowed-hosts.
+            attic login local ${config.services.atticd.settings.api-endpoint} "$token" >/dev/null
             attic cache info local:${ciCache} >/dev/null 2>&1 || attic cache create --public local:${ciCache}
             attic cache configure --public local:${ciCache}
             attic cache info local:${ciCache}
