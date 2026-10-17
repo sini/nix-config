@@ -88,6 +88,15 @@ in
       ])
     ];
 
+  # Fleet-wide: one headscale serves every environment.
+  den.policies.collect-exit-nodes =
+    { host, ... }:
+    [
+      (pipe.from "exit-nodes" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   # IdP identities to hosts, for host services that authorize by kanidm group
   # (services/matrix-xmsg.nix). Consumers filter by environment.
   den.policies.collect-idm-users =
@@ -301,6 +310,7 @@ in
     den.policies.collect-certificate-domains
     den.policies.collect-monitoring-ingest
     den.policies.collect-idm-users
+    den.policies.collect-exit-nodes
   ];
 
   den.schema.user.includes = [

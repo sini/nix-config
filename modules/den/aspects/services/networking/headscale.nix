@@ -15,6 +15,7 @@ in
     nixos =
       {
         config,
+        exit-nodes,
         environment,
         host,
         pkgs,
@@ -92,6 +93,8 @@ in
                       dst = [ "*:*" ];
                     }
                   ];
+                  # Each host joins as its own user (tailscale/secrets.nix).
+                  autoApprovers.exitNode = map (n: "${n.hostname}@") exit-nodes;
                 }
               );
             };

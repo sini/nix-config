@@ -73,6 +73,7 @@
       services.ai.open-webui
       services.nix.attic
       core.network.tailscale
+      core.network.tailscale.exit-node
       core.network.syncthing.hub
       services.web.den-docs-mirror
       services.web.gen-status
