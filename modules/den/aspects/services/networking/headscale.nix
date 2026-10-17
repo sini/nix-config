@@ -115,6 +115,10 @@ in
           };
         };
 
+        # only_start_if_oidc_is_available: when kanidm runs here and a switch
+        # restarts both, start only once kanidm reports ready (Type=notify).
+        systemd.services.headscale.after = lib.optional config.services.kanidm.server.enable "kanidm.service";
+
         environment.systemPackages = [
           config.services.headscale.package
         ];
