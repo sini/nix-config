@@ -111,6 +111,8 @@ in
             config = {
               microvm.devices = gpuLib.toMicrovmDevices g.recs;
               microvm.shares = lib.optional g.sharedNixStore roStoreShare ++ stateShares g.name;
+              # The host's store, read-only: the host collects it, the guest cannot.
+              nix.gc.automatic = lib.mkIf g.sharedNixStore (lib.mkForce false);
               # Mounted in the initrd, before impermanence binds from them.
               fileSystems = lib.genAttrs stateVolumes (_: {
                 neededForBoot = true;
