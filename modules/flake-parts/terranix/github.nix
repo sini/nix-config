@@ -6,11 +6,10 @@
 # `attic-ci-push-token`, decrypted at apply time, so it exists only in agenix and
 # in this workspace's encrypted state, never in a message or a log.
 #
-# Credential: a fine-grained PAT, the one secret here that GitHub issues, so it is
-# placed by hand: resource owner `sini`, repository access limited to `repos`
-# below, permissions "Secrets: Read and write" (Metadata: read is implied).
-#   agenix edit .secrets/env/prod/github-terraform-token.age   # paste the token
-# Rotate it the same way when it expires.
+# Credential: the operator's own `gh` login, read with `gh auth token` at apply
+# time (its `repo` scope covers Actions secrets), so no GitHub credential is
+# minted or stored here. GitHub has no API that creates a token, so the
+# alternative, a fine-grained PAT, would be a hand-placed secret.
 #
 #   github-plan / github-apply (devshell)
 { lib, ... }:
@@ -22,7 +21,6 @@ let
     "matrix-xmsg"
     "genie-agent"
   ];
-  tokenFile = ".secrets/env/prod/github-terraform-token.age";
   atticTokenFile = ".secrets/env/prod/attic/ci-push-token.age";
 in
 {
@@ -52,8 +50,7 @@ in
         trap 'rm -f "$identity"' EXIT
         age-plugin-yubikey -i > "$identity"
         [[ -s $identity ]] || { echo "no YubiKey identity found; plug in the YubiKey" >&2; exit 1; }
-        [[ -e ${tokenFile} ]] || { echo "${tokenFile} is absent; see modules/flake-parts/terranix/github.nix" >&2; exit 1; }
-        GITHUB_TOKEN=$(age -d -i "$identity" ${tokenFile})
+        GITHUB_TOKEN=$(gh auth token) || { echo "not logged in to gh; run \`gh auth login\`" >&2; exit 1; }
         TF_VAR_attic_ci_push_token=$(age -d -i "$identity" ${atticTokenFile})
         TF_VAR_state_passphrase=$(age -d -i "$identity" .secrets/env/prod/github-state-passphrase.age)
         export GITHUB_TOKEN TF_VAR_attic_ci_push_token TF_VAR_state_passphrase
@@ -67,6 +64,7 @@ in
           runtimeInputs = [
             pkgs.age
             pkgs.age-plugin-yubikey
+            pkgs.gh
             pkgs.git
           ];
           text = secretsPrelude + text;
