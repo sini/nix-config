@@ -16,15 +16,19 @@
 # it rides as plain stringData; secret-key is a generated token.
 #
 # Engines: SearXNG's defaults narrowed with `keep_only` to keyless engines that
-# serve a datacenter address and answer what the fleet asks. Each one's endpoints,
-# from its engines/*.py, are the egress allow-list below, so adding an engine means
-# adding its hosts there.
-#   duckduckgo, brave, mojeek  general web results, three independent indexes
-#   wikipedia                  reference pages (English only: one host)
-#   github, stackoverflow      code and Q&A, moved into `general` so a plain
-#                              query reaches them; API clients send no categories
-# Not kept: google, bing, startpage, qwant (they block or captcha datacenter IPs
-# within hours, and an engine that errors costs every query its timeout).
+# answer what the fleet asks, from the cluster's egress address (the site's
+# residential IP, not a datacenter one). Each one's endpoints, from its
+# engines/*.py, are the egress allow-list below, so adding an engine means adding
+# its hosts there. Upstream ships google and bing `disabled` and mojeek
+# `inactive` (never loaded, which `keep_only` alone does not undo), so each is
+# switched on below.
+#   google, bing, duckduckgo, mojeek  general web results, four independent indexes
+#   wikipedia                         reference pages (English only: one host)
+#   github, stackoverflow             code and Q&A, moved into `general` so a plain
+#                                     query reaches them; API clients send no categories
+# Not kept: brave (search.brave.com answers this address 429 even to a plain
+# request, measured from the pod), startpage (proof-of-work captcha upstream),
+# qwant.
 #
 # Limiter off and no Valkey: every path in is private and admitted by the policies
 # below, and the API clients are the fleet's own.
@@ -40,8 +44,9 @@
       serviceDomains = [ "search" ];
 
       engines = [
+        "google"
+        "bing"
         "duckduckgo"
-        "brave"
         "mojeek"
         "wikipedia"
         "github"
@@ -53,7 +58,8 @@
         "html.duckduckgo.com"
         "lite.duckduckgo.com"
         "links.duckduckgo.com"
-        "search.brave.com"
+        "www.google.com"
+        "www.bing.com"
         "www.mojeek.com"
         "en.wikipedia.org"
         "api.github.com"
@@ -80,6 +86,19 @@
           image_proxy = false;
         };
         engines = [
+          {
+            name = "google";
+            disabled = false;
+          }
+          {
+            name = "bing";
+            disabled = false;
+          }
+          {
+            name = "mojeek";
+            inactive = false;
+            disabled = false;
+          }
           {
             name = "wikipedia";
             language = "en";
@@ -160,6 +179,12 @@
             helm.releases.${name} = {
               chart = charts.littleoffice.searxng;
               values = {
+                # The chart cannot hash a settings Secret it does not write, so
+                # editing that Secret would not roll the pod (SearXNG reads its
+                # settings once, at boot). It is written here, so hash it here.
+                commonAnnotations."checksum/settings" = builtins.hashString "sha256" (
+                  builtins.toJSON (settingsFor "https://${host}/")
+                );
                 image = {
                   registry = "docker.io";
                   inherit (images."searxng/searxng") repository digest;

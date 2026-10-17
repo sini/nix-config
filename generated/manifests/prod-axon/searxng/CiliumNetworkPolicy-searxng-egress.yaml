@@ -24,7 +24,8 @@ spec:
         - matchName: html.duckduckgo.com
         - matchName: lite.duckduckgo.com
         - matchName: links.duckduckgo.com
-        - matchName: search.brave.com
+        - matchName: www.google.com
+        - matchName: www.bing.com
         - matchName: www.mojeek.com
         - matchName: en.wikipedia.org
         - matchName: api.github.com

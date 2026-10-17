@@ -1,6 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  annotations:
+    checksum/settings: c362ae608724926090e6c1b9ebb9df09a8d2161848d1a4eccb09dae29690b303
   labels:
     app.kubernetes.io/component: server
     app.kubernetes.io/instance: searxng
@@ -23,6 +25,8 @@ spec:
     type: RollingUpdate
   template:
     metadata:
+      annotations:
+        checksum/settings: c362ae608724926090e6c1b9ebb9df09a8d2161848d1a4eccb09dae29690b303
       labels:
         app.kubernetes.io/component: server
         app.kubernetes.io/instance: searxng
