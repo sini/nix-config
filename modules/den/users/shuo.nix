@@ -8,6 +8,7 @@
     system.uid = 1001;
     groups = [
       "users"
+      "admins"
       "workstation-access"
     ];
     identity = {
