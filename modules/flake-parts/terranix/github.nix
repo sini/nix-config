@@ -1,10 +1,12 @@
 # Terranix: GitHub repository settings as code, applied with OpenTofu. A separate
 # workspace and state from DNS and UniFi (./terranix.nix, ./unifi.nix).
 #
-# First cut: the ATTIC_TOKEN Actions secret on the repos whose CI pushes to the
-# attic `ci` cache (services/nix/attic.nix). Its value is the agenix
-# `attic-ci-push-token`, decrypted at apply time, so it exists only in agenix and
-# in this workspace's encrypted state, never in a message or a log.
+# The repos whose CI pushes to the attic `ci` cache (services/nix/attic.nix) get
+# the ATTIC_TOKEN Actions secret and the ATTIC_PUBLIC_KEY Actions variable. The
+# secret's value is the agenix `attic-ci-push-token`, decrypted at apply time, so
+# it exists only in agenix and in this workspace's encrypted state, never in a
+# message or a log. The variable is the cache's public signing key, the one the
+# fleet trusts in core/nix/nix.nix.
 #
 # Credential: the operator's own `gh` login, read with `gh auth token` at apply
 # time (its `repo` scope covers Actions secrets), so no GitHub credential is
@@ -22,6 +24,7 @@ let
     "genie-agent"
   ];
   atticTokenFile = ".secrets/env/prod/attic/ci-push-token.age";
+  atticPublicKey = "ci:1i+3fr0BNdABCWGG0CGUpcvzWCLpnx7/EuEQujmowmg=";
 in
 {
   # The workspace's state passphrase, declared like unifi-state-passphrase.
@@ -118,6 +121,12 @@ in
               inherit repository;
               secret_name = "ATTIC_TOKEN";
               value = "\${var.attic_ci_push_token}";
+            });
+
+            resource.github_actions_variable = lib.genAttrs repos (repository: {
+              inherit repository;
+              variable_name = "ATTIC_PUBLIC_KEY";
+              value = atticPublicKey;
             });
           }
         ];
