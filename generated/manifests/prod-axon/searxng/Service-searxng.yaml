@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   annotations:
-    checksum/settings: c362ae608724926090e6c1b9ebb9df09a8d2161848d1a4eccb09dae29690b303
+    checksum/settings: 98765517533ef1f47c721ee43cf1be6f36cff8f1a6387fead45aad54b8ad1622
   labels:
     app.kubernetes.io/component: server
     app.kubernetes.io/instance: searxng

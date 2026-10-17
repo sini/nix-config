@@ -27,6 +27,7 @@ spec:
         - matchName: www.google.com
         - matchName: www.bing.com
         - matchName: www.mojeek.com
+        - matchName: www.startpage.com
         - matchName: en.wikipedia.org
         - matchName: api.github.com
         - matchName: api.stackexchange.com

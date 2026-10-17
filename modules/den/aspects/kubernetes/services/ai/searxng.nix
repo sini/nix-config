@@ -19,16 +19,21 @@
 # answer what the fleet asks, from the cluster's egress address (the site's
 # residential IP, not a datacenter one). Each one's endpoints, from its
 # engines/*.py, are the egress allow-list below, so adding an engine means adding
-# its hosts there. Upstream ships google and bing `disabled` and mojeek
-# `inactive` (never loaded, which `keep_only` alone does not undo), so each is
-# switched on below.
+# its hosts there. Upstream ships google and bing `disabled` and mojeek and
+# startpage `inactive` (never loaded, which `keep_only` alone does not undo), so
+# each is switched on below.
 #   google, bing, duckduckgo, mojeek  general web results, four independent indexes
+#   startpage                         Google's results through Startpage's proxy;
+#                                     solves its Anubis proof-of-work (difficulty 4,
+#                                     ~65k sha256, token cached 240s), which upstream
+#                                     leaves off as a public-instance CPU precaution
 #   wikipedia                         reference pages (English only: one host)
 #   github, stackoverflow             code and Q&A, moved into `general` so a plain
 #                                     query reaches them; API clients send no categories
 # Not kept: brave (search.brave.com answers this address 429 even to a plain
-# request, measured from the pod), startpage (proof-of-work captcha upstream),
-# qwant.
+# request, measured from the pod), qwant. google stays on while it is broken
+# upstream (searxng#6835: /wml/search answers 403); suspended, it costs one
+# request a day and returns on its own with the fix.
 #
 # Limiter off and no Valkey: every path in is private and admitted by the policies
 # below, and the API clients are the fleet's own.
@@ -48,6 +53,7 @@
         "bing"
         "duckduckgo"
         "mojeek"
+        "startpage"
         "wikipedia"
         "github"
         "stackoverflow"
@@ -61,6 +67,7 @@
         "www.google.com"
         "www.bing.com"
         "www.mojeek.com"
+        "www.startpage.com"
         "en.wikipedia.org"
         "api.github.com"
         "api.stackexchange.com"
@@ -96,6 +103,11 @@
           }
           {
             name = "mojeek";
+            inactive = false;
+            disabled = false;
+          }
+          {
+            name = "startpage";
             inactive = false;
             disabled = false;
           }
