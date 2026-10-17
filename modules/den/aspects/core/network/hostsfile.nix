@@ -9,17 +9,32 @@
 # short name to that tailnet name on darwin).
 {
   den.aspects.core.network.hostsfile = {
+    # This host and its microvm guests: a guest is resolved under its parent, so
+    # the fleet-wide collect never reaches it on its own. Guests are raw entities
+    # (no host submodule), so their ipv4 is derived as the submodule would.
     host-addrs =
-      { environment, host, ... }:
       {
-        hostname = host.name;
-        domain = "${environment.name}.${environment.domain}";
-        # Tailnet MagicDNS name — resolves on darwin (via the tailscale
-        # /etc/resolver route) and on NixOS; the LAN forms don't, off-LAN.
-        tsName = "${host.name}.ts.${environment.domain}";
-        inherit (host) ipv4;
-        publicKeyFile = host.public_key;
-      };
+        environment,
+        host,
+        lib,
+        ...
+      }:
+      let
+        stripCidr = addr: builtins.head (lib.splitString "/" addr);
+        entryFor = h: {
+          hostname = h.name;
+          domain = "${h.environment or environment.name}.${environment.domain}";
+          # Tailnet MagicDNS name — resolves on darwin (via the tailscale
+          # /etc/resolver route) and on NixOS; the LAN forms don't, off-LAN.
+          tsName = "${h.name}.ts.${environment.domain}";
+          ipv4 =
+            h.ipv4 or (map stripCidr (
+              lib.concatMap (i: i.ipv4 or [ ]) (lib.attrValues (h.networking.interfaces or { }))
+            ));
+          publicKeyFile = h.public_key;
+        };
+      in
+      map entryFor ([ host ] ++ lib.attrValues (host.guests or { }));
 
     nixos =
       {
