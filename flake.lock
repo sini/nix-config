@@ -392,6 +392,21 @@
     },
     "crane": {
       "locked": {
+        "lastModified": 1791754810,
+        "narHash": "sha256-cN0Mgk+sQtCJcGWs9H4M0CnLRAuC4I8aCwiBTcBJs6E=",
+        "owner": "ipetkov",
+        "repo": "crane",
+        "rev": "bd63bf1d0a0f6dcacd7549c714a671ee63b0db6a",
+        "type": "github"
+      },
+      "original": {
+        "owner": "ipetkov",
+        "repo": "crane",
+        "type": "github"
+      }
+    },
+    "crane_2": {
+      "locked": {
         "lastModified": 1788465171,
         "narHash": "sha256-Y1/TTVXjYXGF068IThQH9fPSZ0SIE74PABlUxnWTUH0=",
         "owner": "ipetkov",
@@ -5466,16 +5481,17 @@
     },
     "xmsg": {
       "inputs": {
+        "crane": "crane",
         "nixpkgs": [
           "nixpkgs-unstable"
         ]
       },
       "locked": {
-        "lastModified": 1792222468,
-        "narHash": "sha256-vItiUA7jN445MQDtcpDWRkMcbKJS8f2iFlmi7jIS3OU=",
+        "lastModified": 1792283338,
+        "narHash": "sha256-CG+Adq8QHifC3SaM8jc1RlE9CZUYTFExlAetrX6qzg0=",
         "owner": "sini",
         "repo": "xmsg",
-        "rev": "ccd762119c5734f07d16fdd8039ce03a34344c38",
+        "rev": "ee446e197e1b1db7760e5653ecc9a7ec80e0c615",
         "type": "github"
       },
       "original": {
@@ -5542,7 +5558,7 @@
     },
     "zjstatus": {
       "inputs": {
-        "crane": "crane",
+        "crane": "crane_2",
         "flake-utils": "flake-utils_8",
         "nixpkgs": "nixpkgs_18",
         "rust-overlay": "rust-overlay_2"
