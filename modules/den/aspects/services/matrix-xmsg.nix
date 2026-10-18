@@ -108,7 +108,10 @@ in
           trustedMxids = trusted;
           inherit (cfg) rooms;
           expertRef = "${cfg.expertRef}@${node}";
-          guardRef = "genie-guard@${node}";
+          # The pod's guard (kubernetes/services/ai/genie-guard.nix), a leaf of this
+          # node: the send queues in its mailbox (hosts/bitstream.nix `leaves`). The
+          # host guard keeps running as the standby: revert this line to return to it.
+          guardRef = "genie-guard@genie-guard.genie";
         };
       };
   };
