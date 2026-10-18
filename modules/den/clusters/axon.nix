@@ -25,7 +25,11 @@
 
     # genie-guard as an xmsg leaf pod of sini's xmsg on bitstream (its default
     # hub), beside the bitstream guard; see services/ai/genie-guard.nix.
-    settings.kubernetes.services.ai.genie-guard.enable = true;
+    settings.kubernetes.services.ai.genie-guard = {
+      enable = true;
+      # Also a leaf of sini's xmsg on cortex, for development and testing.
+      devHubs = [ "cortex" ];
+    };
 
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
     # ingress/egress + masquerade) and the thunderbolt-fabric NICs

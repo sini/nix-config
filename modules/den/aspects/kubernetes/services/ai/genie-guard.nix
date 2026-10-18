@@ -84,6 +84,13 @@ in
       description = "The host whose owner's xmsg is the leaf's hub; it must list the leaf in applications.dev.ai.mcp.xmsg.federation.nodes.<owner>.leaves.";
     };
 
+    settings.devHubs = lib.mkOption {
+      type = lib.types.listOf lib.types.str;
+      default = [ ];
+      example = [ "cortex" ];
+      description = "More hosts whose owner's xmsg the leaf also pulls from, for development and testing. Each must list the leaf in its `leaves` too. The model endpoint stays the primary hub's.";
+    };
+
     # Declared with the flag off too, so the sops store holds the key before the pod
     # needs it and turning the flag on needs only the image.
     age-secrets = _: {
@@ -110,21 +117,29 @@ in
       let
         cfg = cluster.settings.kubernetes.services.ai.genie-guard;
         hub = den.hosts.x86_64-linux.${cfg.hub};
-        hubIp = lib.head hub.ipv4;
-        hubPort = hub.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${hub.system-owner}.port;
+        # The leaf pulls from every peer in its file, each mailbox on its own.
+        hubs = map (h: rec {
+          name = h;
+          host = den.hosts.x86_64-linux.${h};
+          ip = lib.head host.ipv4;
+          port = host.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${host.system-owner}.port;
+        }) ([ cfg.hub ] ++ cfg.devHubs or [ ]);
         # A CA entry is keyed by the node name its identity derives, `<user>.<host>`
         # (xmsg README 7.0); the leaf routes each reply to the peer of the origin's node.
-        peers = {
-          "${hub.system-owner}.${cfg.hub}" = {
-            address = "${hubIp}:${toString hubPort}";
-            ca = "${tlsDir}/ca.crt";
-            identities = [ "spiffe://json64.dev/host/${cfg.hub}/user/${hub.system-owner}" ];
-            # The leaf has no listener; `list` lets it answer the hub's list query from
-            # its mailbox. Without it the leaf withholds list, and every bare send on
-            # the hub is `unavailable` (xmsg XA6).
-            allow = [ "list" ];
-          };
-        };
+        peers = lib.listToAttrs (
+          map (h: {
+            name = "${h.host.system-owner}.${h.name}";
+            value = {
+              address = "${h.ip}:${toString h.port}";
+              ca = "${tlsDir}/ca.crt";
+              identities = [ "spiffe://json64.dev/host/${h.name}/user/${h.host.system-owner}" ];
+              # The leaf has no listener; `list` lets it answer the hub's list query from
+              # its mailbox. Without it the leaf withholds list, and every bare send on
+              # the hub is `unavailable` (xmsg XA6).
+              allow = [ "list" ];
+            };
+          }) hubs
+        );
         runMount = {
           name = "run";
           mountPath = runtimeDir;
@@ -318,7 +333,7 @@ in
             };
 
             ciliumClusterwideNetworkPolicies."allow-xmsg-egress-${namespace}-${name}".spec = {
-              description = "Allow ${namespace}/${name} to its xmsg hub's federation port.";
+              description = "Allow ${namespace}/${name} to its xmsg hubs' federation ports.";
               endpointSelector.matchExpressions = [
                 {
                   key = "k8s:io.kubernetes.pod.namespace";
@@ -331,21 +346,19 @@ in
                   values = [ name ];
                 }
               ];
-              egress = [
-                {
-                  toCIDR = [ "${hubIp}/32" ];
-                  toPorts = [
-                    {
-                      ports = [
-                        {
-                          port = toString hubPort;
-                          protocol = "TCP";
-                        }
-                      ];
-                    }
-                  ];
-                }
-              ];
+              egress = map (h: {
+                toCIDR = [ "${h.ip}/32" ];
+                toPorts = [
+                  {
+                    ports = [
+                      {
+                        port = toString h.port;
+                        protocol = "TCP";
+                      }
+                    ];
+                  }
+                ];
+              }) hubs;
             };
           };
         };

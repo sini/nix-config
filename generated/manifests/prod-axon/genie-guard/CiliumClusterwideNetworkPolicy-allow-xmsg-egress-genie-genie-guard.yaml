@@ -3,10 +3,16 @@ kind: CiliumClusterwideNetworkPolicy
 metadata:
   name: allow-xmsg-egress-genie-genie-guard
 spec:
-  description: Allow genie/genie-guard to its xmsg hub's federation port.
+  description: Allow genie/genie-guard to its xmsg hubs' federation ports.
   egress:
     - toCIDR:
         - 10.9.1.1/32
+      toPorts:
+        - ports:
+            - port: "7788"
+              protocol: TCP
+    - toCIDR:
+        - 10.9.2.1/32
       toPorts:
         - ports:
             - port: "7788"
