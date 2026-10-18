@@ -33,6 +33,31 @@ in
         default = "genie-support";
         description = "Label of the xmsg session the bot relays to, on this host's own node: the bot addresses it as `<label>@<user>.<host>`, so an unreachable peer never makes it `unavailable`.";
       };
+      roomRoutes = lib.mkOption {
+        type = lib.types.attrsOf (
+          lib.types.submodule {
+            options = {
+              expertRef = lib.mkOption {
+                type = lib.types.str;
+                description = "Label of the xmsg service or session this room relays to, on this host's own node, as for `expertRef`.";
+              };
+              screenMentions = lib.mkOption {
+                type = lib.types.nullOr lib.types.bool;
+                default = null;
+                description = "Whether the bot screens this room's mentions itself; false for an expert that screens its own input. null keeps the bot's default.";
+              };
+            };
+          }
+        );
+        default = { };
+        example = {
+          "!abcdef:json64.dev" = {
+            expertRef = "genie";
+            screenMentions = false;
+          };
+        };
+        description = "Per-room routing (matrix-xmsg M34) for rooms in `rooms`. Rooms not listed relay to `expertRef`, screened.";
+      };
       extraTrustedMxids = lib.mkOption {
         type = lib.types.listOf (lib.types.strMatching "@[^:]+:.+");
         default = [ ];
@@ -108,6 +133,13 @@ in
           trustedMxids = trusted;
           inherit (cfg) rooms;
           expertRef = "${cfg.expertRef}@${node}";
+          roomRoutes = lib.mapAttrs (
+            _: r:
+            {
+              expertRef = "${r.expertRef}@${node}";
+            }
+            // lib.optionalAttrs (r.screenMentions != null) { inherit (r) screenMentions; }
+          ) cfg.roomRoutes;
           # The pod's guard (kubernetes/services/ai/genie-guard.nix), a leaf of this
           # node: the send queues in its mailbox (hosts/bitstream.nix `leaves`). The
           # host guard keeps running as the standby: revert this line to return to it.

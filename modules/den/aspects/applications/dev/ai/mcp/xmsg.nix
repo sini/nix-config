@@ -32,6 +32,7 @@
 # requests with a model's verdict; xmsg admits that name only from its own binary.
 {
   den,
+  inputs,
   lib,
   self,
   ...
@@ -254,6 +255,14 @@ in
         # runs it; xmsg admits that name only from the bot's own binary.
         botEnabled = (host.settings.services.matrix-xmsg.rooms or [ ]) != [ ];
         guardEnabled = botEnabled && config.home.username == host.system-owner;
+        # genie-agent's Tier 1 (services/ai/genie-tier1.nix) registers as `genie`. Its
+        # executable is genie-root's wrapper, which execs node, so node is what xmsg
+        # attests: the one genie-root wraps, from the genie-agent input's own nixpkgs.
+        tier1Enabled =
+          host.hasAspect den.aspects.services.ai.genie-tier1 && config.home.username == host.system-owner;
+        tier1Exe =
+          lib.getExe
+            inputs.genie-agent.inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.nodejs;
         guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
 
         me = config.home.username;
@@ -306,7 +315,8 @@ in
               lib.optionalAttrs botEnabled {
                 matrix-xmsg = lib.getExe inputs'.matrix-xmsg.packages.default;
               }
-              // lib.optionalAttrs guardEnabled { genie-guard = guardExe; };
+              // lib.optionalAttrs guardEnabled { genie-guard = guardExe; }
+              // lib.optionalAttrs tier1Enabled { genie = tier1Exe; };
             federation = lib.mkIf (node != null) {
               enable = true;
               inherit (node) port;

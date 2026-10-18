@@ -44,7 +44,14 @@
           "!dj6ESTc_Wy5FaLnR-Sj1o_WOqnDeUZWoloV8HuijXs8"
           "!mafjNSATIwbTXcmNzX:matrix.org"
           "!qqfdClEfuMzZNEjvGO:matrix.org" # private room (invite)
+          "!NbOtAeWMLV6MjYH3QtXolO8MuGXp6dBfnB0uO8nSpJI" # #genie-dev: tier 1's vetting room (invite)
         ];
+        # #genie-dev goes to genie-agent's Tier 1, whose guard-in screens every request;
+        # the other rooms stay on genie-support, screened by the bot.
+        roomRoutes."!NbOtAeWMLV6MjYH3QtXolO8MuGXp6dBfnB0uO8nSpJI" = {
+          expertRef = "genie";
+          screenMentions = false;
+        };
         extraTrustedMxids = [
           "@theutz:matrix.org"
           "@drupol:matrix.org"
@@ -72,6 +79,7 @@
       services.matrix-xmsg
       services.ai.genie-expert
       services.ai.genie-xmsg
+      services.ai.genie-tier1
     ];
 
     sini.includes = with den.aspects; [ services.ai.genie-bank-review ];
