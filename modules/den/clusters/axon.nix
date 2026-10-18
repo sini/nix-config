@@ -233,6 +233,9 @@
       # ai — genie-guard as an xmsg leaf pod of sini's xmsg on bitstream.
       services.ai.genie-guard
 
+      # ai — genie-experts: the experts' Claude token pool (sops store only, for now).
+      services.ai.genie-experts
+
       # ai — searxng: the metasearch backend for genie tier 1's web_search.
       services.ai.searxng
 
