@@ -31,28 +31,11 @@
       applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
 
-      # sini's and vic's nodes here, each linked to the other and to sini@cortex,
-      # authenticated by the xmsg CA (federation plan §6.7). vic has full rights on
-      # sini's nodes, matching herdr-pair, which already shares sini's sessions.
+      # sini's and vic's xmsg nodes here. Their links (to each other and to sini@cortex)
+      # and the genie-guard pod's leaf are derived (policies/xmsg.nix).
       applications.dev.ai.mcp.xmsg.federation.nodes = {
-        sini = {
-          peers."sini.cortex" = { };
-          peers."vic.bitstream" = { };
-          # genie-guard's pod on axon (kubernetes/services/ai/genie-guard.nix) collects
-          # the guard's requests here and answers them; nothing else reaches it.
-          leaves = [
-            {
-              identity = "spiffe://json64.dev/ns/genie/sa/genie-guard";
-              cluster = "axon";
-              targets = [ "genie-guard" ];
-            }
-          ];
-        };
-        vic = {
-          port = 7789;
-          peers."sini.bitstream" = { };
-          peers."sini.cortex" = { };
-        };
+        sini = { };
+        vic.port = 7789;
       };
 
       # @genie support bot: #support:json64.dev (testing), #denful:matrix.org and a private room.

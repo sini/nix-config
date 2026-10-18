@@ -81,15 +81,32 @@ in
     settings.hub = lib.mkOption {
       type = lib.types.str;
       default = "bitstream";
-      description = "The host whose owner's xmsg is the leaf's hub; it must list the leaf in applications.dev.ai.mcp.xmsg.federation.nodes.<owner>.leaves.";
+      description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits.";
     };
 
     settings.devHubs = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [ ];
       example = [ "cortex" ];
-      description = "More hosts whose owner's xmsg the leaf also pulls from, for development and testing. Each must list the leaf in its `leaves` too. The model endpoint stays the primary hub's.";
+      description = "More hosts whose owner's xmsg the leaf also pulls from, for development and testing. The model endpoint stays the primary hub's.";
     };
+
+    # The hubs take the leaf from this record (applications/dev/ai/mcp/xmsg.nix).
+    xmsg-leaves =
+      { cluster, ... }:
+      let
+        cfg = cluster.settings.kubernetes.services.ai.genie-guard;
+      in
+      lib.optionals cfg.enable [
+        {
+          identity = "spiffe://json64.dev/ns/${namespace}/sa/${name}";
+          cluster = cluster.name;
+          hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") ([ cfg.hub ] ++ cfg.devHubs);
+          # It answers what it collects, and is sent nothing but guard requests.
+          allow = [ "reply" ];
+          targets = [ name ];
+        }
+      ];
 
     # Declared with the flag off too, so the sops store holds the key before the pod
     # needs it and turning the flag on needs only the image.
