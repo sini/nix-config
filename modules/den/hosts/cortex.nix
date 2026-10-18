@@ -41,21 +41,7 @@ in
       applications.dev.mux.herdr-pair.pairs.sini = [ "theutz" ];
 
       # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
-      applications.dev.ai.mcp.xmsg.federation.nodes.sini = {
-        peers = {
-          "sini.bitstream" = { };
-          "vic.bitstream" = { };
-        };
-        # genie-guard's pod also pulls from here, for development and testing
-        # (axon.nix devHubs); bitstream stays its primary hub.
-        leaves = [
-          {
-            identity = "spiffe://json64.dev/ns/genie/sa/genie-guard";
-            cluster = "axon";
-            targets = [ "genie-guard" ];
-          }
-        ];
-      };
+      applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
     };
   };
 
