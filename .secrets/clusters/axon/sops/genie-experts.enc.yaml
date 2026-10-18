@@ -1,0 +1,17 @@
+trusted-owner: ENC[AES256_GCM,data:jYyv6sHwluOu3cTFGVyx3vr2fKglEbPKXM5j4OcGfJohYHSJHJ/UXs3ng7cVdpffxcJdE8AAHVLbM3oSwVxHtoKwH+fTYqR7QtOgZlz99kLwi5OuM+x55C08Gp7R97CqoQJY/UNnVXxxdcgL,iv:+bvvL6WK4LUI2wxb3VCPNjSXM+oR7KUaDFSLvoRbe0E=,tag:zqANlx+JR4C+mpA4TS1WNQ==,type:str]
+sops:
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IHBpdi1wMjU2IElYZUZuUSBBcE1vVWd2
+            WmRTSmowSmQycXlNc2pWZWx2bUdIVWxUUkplczlnYUNkM25PWAp4eDJmUStkcjdy
+            K2RERHNLazlWZExLcCtnWHlTWWZIWkRDRzE3RDYxQ3dRCi0tLSBteWlkZ0toVGQv
+            aTNraDR5S0F2dERuS01kUC9QQVlvWUJtc1VydldlekVVCgKKYbQDmAEQTYGOH4xg
+            /7hQN0Pp9Pl3bUlywdmKlFYpYgpVWY6dz/54Xcif3Dzpi7U1VAsSgLiLQrFu74MS
+            SyU=
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1yubikey1qwq4shht6jmgpdma3t0nkueqz2w2vfmtgq4jnj06rdtcjr2chlhexm4lpl0
+    lastmodified: "2026-10-18T00:14:06Z"
+    mac: ENC[AES256_GCM,data:CSeQ4HqxGcd0VAkrY2iqqGjtRg7+iMYI0D2Zq+WN0CTBDk9mLjwmV478vw4JANp9uewnb1AzOdQmXmpLcTh6ljY+ZQFAzuXQAIyqTTesXjhHSeONfDeP+Cx58Z/qRFYFW/grYjy/UTO49on8I6zKfev+paN0uv2hQz1yO+mbvLM=,iv:tpBMd3iCi81IS9aw476VMtsAcpVESxW30lfT/ZCYhlI=,tag:Nm7PMAt/rEhTvg5VLF6kLg==,type:str]
+    unencrypted_suffix: _unencrypted
+    version: 3.13.3
