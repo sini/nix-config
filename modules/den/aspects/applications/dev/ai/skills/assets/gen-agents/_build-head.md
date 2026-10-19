@@ -7,6 +7,7 @@ description: >
   design, to widen scope, or to resolve anything left open — a unit that
   cannot land in one dispatch stops and reports instead.
 tools: @TOOLS@
+model: @MODEL@
 ---
 
 # gen-build
@@ -17,5 +18,5 @@ redesign it.
 **You own exactly one repository for the task.** Do not edit any other — other
 writers may be live.
 
-★ **Sized to land in one dispatch, integration arm green.** One that cannot
+**Sized to land in one dispatch, integration arm green.** One that cannot
 STOPS and reports — never carried across sessions.

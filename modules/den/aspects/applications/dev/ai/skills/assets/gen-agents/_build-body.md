@@ -17,13 +17,9 @@ planted violations, censuses, enforcers, byte-parity) in your report under
    failure mode.** A seed that silently no-ops leaves the cell green, and the
    honest reading of that green is "this cell does not discriminate" — so you
    would file a finding against a sound cell.
-5. Run the spec's acceptance cells, then **drive each one RED and read the
-   output**. Break the thing the cell claims to catch — replace the message with
-   a sentinel, restore the removed guard, delete the arm the cell names — and
-   confirm the cell actually fails. A cell you have only ever seen green has not
-   been shown to discriminate. A red/green table you were handed was evaluated
-   against the tree as it stood before your edit — inheriting it is relaying, not
-   measuring.
+5. Run the spec's acceptance cells, then drive each one red: break the thing
+   the cell claims to catch (a sentinel message, the removed guard restored, the
+   named arm deleted). An inherited red/green table is relaying, not measuring.
 
 ★ **A red on first sight is a FINDING, reported verbatim — never a fixture
 edit.** If a cell flips that the spec did not enumerate, **stop and report
@@ -32,16 +28,16 @@ it**.
 **You are done when the suite is green on the clean tree and you have shown it
 red in the same run, the seed is removed, and the tree's digest is back where it
 started.** Report both states with their exact commands and their unpiped exits.
-A green you have never seen fail is a claim about a suite you have not tested.
 
 **A script you land must distinguish "no results" from "could not measure."**
 The rule above governs the cell you test; this one governs the instrument you
 ship, and it is the half that goes unchecked. The mechanism is an error consumed
 as an empty value — a `.get(k, [])` default, a `|| true`, a swallowed
 `2>/dev/null`, an unchecked exit on a subprocess that writes its error object to
-stdout — and the output is a clean-looking zero that hides a defect for weeks. ⇒ check the exit of every
-command you shell out to, and **before you report it green, run it once with its
-data source unavailable and confirm it SAYS SO rather than reporting zero.**
+stdout — and the output is a clean-looking zero that hides a defect for weeks.
+Check the exit of every command you shell out to, and before you report it
+green, run it once with its data source unavailable and confirm it says so
+rather than reporting zero.
 
 ## Landing discipline
 
@@ -56,9 +52,11 @@ data source unavailable and confirm it SAYS SO rather than reporting zero.**
   ever.
 - `git add` new test files **before** the collecting run — untracked test files
   are silently absent from a suite, which reads as a clean pass.
-- Push, then re-verify clean and matching origin **at the final landed
-  revision**.
-- ★ A push moves the whole branch, not your paths. If anything unexpected is
+- **Do exactly the brief's verb per repo (WRITE / COMMIT / COMMIT+PUSH); no
+  verb ⇒ COMMIT and report.** After a push, re-verify clean and matching origin
+  at the landed revision. A refused push is `BLOCKED` with the refusal text
+  verbatim — do not retry another push form.
+- A push moves the whole branch, not your paths. If anything unexpected is
   committed locally, stop.
 
 ## Working with terse feedback
@@ -70,8 +68,9 @@ correction is the whole instruction, not the visible part of a larger redesign.
 
 ## Revert and re-scope
 
-**When an approach goes wrong, say so and let the orchestrator revert.** Narrowing scope after a revert reliably beats incrementally
-repairing a bad approach — and a half-repaired approach is harder to judge than
+**When an approach goes wrong, say so and let the orchestrator revert.**
+Narrowing scope after a revert reliably beats incrementally repairing a bad
+approach — and a half-repaired approach is harder to judge than
 a clean one. After a revert, implement only what is explicitly asked.
 
 ## Reference existing code

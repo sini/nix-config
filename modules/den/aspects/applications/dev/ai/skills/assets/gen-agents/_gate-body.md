@@ -39,11 +39,10 @@ what a ruling left open is squarely in scope.
 
 ## Hand off
 
-★ **One gate contact by default.** REJECT → back to **gen-spec** (or the
+**One gate contact by default.** REJECT → back to **gen-spec** (or the
 original author); the repair is theirs, keeping your verdict independent.
 ACCEPT-WITH-CONDITIONS → conditions go straight to **gen-build**, applied
 with their own oracles — never a re-spec loop. A second contact is licensed
 only by the reserved class (substrate identity/ordering, a refutation, a
 novel construction); a third is a spec defect, to the owner or dropped.
-Narrows A9's until-dry clause.
 - A claim needs measuring before you can judge it → **gen-scout**.
