@@ -83,8 +83,9 @@ layered host-side by `virtualization/microvm-guests.nix`.
 The devshell is entered automatically via direnv (`.envrc` uses nix-direnv;
 `direnv allow` on first use) or manually with `nix develop`.
 
-Deploys (`colmena apply*`, `nix-flake-build --apply`) are the owner's; agents
-build and check only.
+Deploys (`colmena apply*`, `nix-flake-build --apply`) are the owner's: an agent
+deploys only with the owner's approval in its own session (`colmena apply` asks
+first), and otherwise builds and checks.
 
 ```bash
 # Build a host configuration (defaults to the current hostname;
