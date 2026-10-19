@@ -240,9 +240,13 @@
 
                 # git (write). Subagents cannot establish user intent from a teammate
                 # message, so these previously round-tripped through the orchestrator.
-                # Push stays the literal `origin main` form — no wildcard remote or ref,
-                # so a force-push or a push to another branch still prompts.
+                # Push to `origin main` only: no wildcard remote, ref or flag, so a
+                # force-push or a push to another branch still prompts. The `-C` and
+                # `HEAD:main` forms are the ones worktree agents use (owner 2026-10-19).
                 "Bash(git push origin main)"
+                "Bash(git push origin HEAD:main)"
+                "Bash(git -C * push origin main)"
+                "Bash(git -C * push origin HEAD:main)"
                 "Bash(git fetch *)"
                 "Bash(git add *)"
                 "Bash(git commit *)"
