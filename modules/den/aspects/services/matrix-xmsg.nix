@@ -221,6 +221,19 @@ in
           };
         };
 
+        # E2EE (matrix-xmsg M36): the crypto store's passphrase, the running bot's
+        # credential; and the recovery key, which unlocks the cross-signing keys in
+        # secret storage and the room-key backup, read only by the one-shot
+        # matrix-xmsg-e2ee-setup unit. Both are read by systemd (LoadCredential).
+        age.secrets.matrix-xmsg-store-key = lib.mkIf (cfg.rooms != [ ]) {
+          rekeyFile = host.secretPath + "/matrix-xmsg-store-key.age";
+          generator.script = "rfc3986-secret";
+        };
+        age.secrets.matrix-xmsg-recovery-key = lib.mkIf (cfg.rooms != [ ]) {
+          rekeyFile = host.secretPath + "/matrix-xmsg-recovery-key.age";
+          generator.script = "rfc3986-secret";
+        };
+
         age.secrets.${leafSecretName} = lib.mkIf (cfg.rooms != [ ]) (
           xl.leafSecret {
             inherit config host;
@@ -242,6 +255,8 @@ in
           botMxid = mxid "genie";
           ownerMxid = mxid "json";
           accessTokenFile = config.age.secrets.matrix-genie-token.path;
+          storePassphraseFile = config.age.secrets.matrix-xmsg-store-key.path;
+          recoveryKeyFile = config.age.secrets.matrix-xmsg-recovery-key.path;
           # The system user matrix-xmsg, on its own node; xmsgSocket is the module's
           # default, that node's socket dir.
           dynamicUser = false;
