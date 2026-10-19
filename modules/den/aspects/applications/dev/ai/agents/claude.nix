@@ -301,6 +301,27 @@
                     }
                   ];
                 }
+                {
+                  matcher = "compact";
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/handoff-commission.sh || true";
+                    }
+                  ];
+                }
+              ];
+
+              # Gated like budget.sh: the den-ag-design fleet's brief invariants, into each subagent.
+              SubagentStart = [
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/subagent-brief.sh || true";
+                    }
+                  ];
+                }
               ];
               CwdChanged = [
                 {
@@ -375,6 +396,16 @@
                     {
                       type = "command";
                       command = "bash ${config.home.homeDirectory}/.claude/budget.sh PreToolUse || true";
+                    }
+                  ];
+                }
+                # NO `|| true`: exit 2 is the refusal. Every session, not gated.
+                {
+                  matcher = "Bash";
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/bash-guard.sh";
                     }
                   ];
                 }
@@ -821,6 +852,82 @@
               ah=$(git -C "$r" rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
               [ "$st" -gt 0 ] || [ "$ah" -gt 0 ] && printf "  %-22s %s modified, %s unpushed\n" "$(basename "$r")" "$st" "$ah"
             done
+            exit 0
+          '';
+        };
+
+        # PreToolUse/Bash: the prose law that must hold every time — pkill -f, self-matching
+        # pgrep waits, the nix memory cap, and the zsh idioms that fail silently.
+        home.file.".claude/bash-guard.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            # PreToolUse/Bash: refuse the shapes the prose law forbids. Exit 2 blocks with stderr as feedback.
+            set -uo pipefail
+            cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null) || exit 0
+            [ -n "$cmd" ] || exit 0
+            # Command position: line start, after ; & | ( ` or $(, past env assignments and timeout/sudo.
+            at='(^|[;&|(`]|\$\()[[:space:]]*(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*|sudo|env|timeout[[:space:]]+[^[:space:]]+)[[:space:]]+)*'
+            refuse() { printf '%s\n' "$1" >&2; exit 2; }
+
+            if printf '%s\n' "$cmd" | grep -Eq "''${at}pkill[[:space:]]([^;&|]*[[:space:]])?(-[a-zA-Z]*f|--full)"; then
+              refuse "Refused: pkill -f matches its own shell and has killed the orchestrator. Kill only a PID you captured with \$! at launch."
+            fi
+            if printf '%s' "$cmd" | tr '\n' ' ' | grep -Eq '(while|until)[[:space:]].*pgrep[[:space:]]([^;&|]*[[:space:]])?(-[a-zA-Z]*f|--full)'; then
+              refuse "Refused: a pgrep -f wait loop matches its own command line and never ends. Wait on a \$! PID (while kill -0 \$pid) or a marker the producer writes, under timeout."
+            fi
+            if ! printf '%s' "$cmd" | grep -q 'MemoryMax=' \
+              && printf '%s\n' "$cmd" | grep -Eq "''${at}nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)([[:space:]]|\$)"; then
+              refuse "Refused: run nix eval/build/flake check uncapped. Re-run as:
+            systemd-run --user --scope -q -p MemoryMax=12G $cmd
+            (rc 137 under the cap is a finding; never re-run it uncapped.)"
+            fi
+            # The Bash tool runs zsh: these bash idioms fail, several silently.
+            lint=""
+            printf '%s' "$cmd" | grep -Eq '\$\{!' && lint="$lint
+              \''${!var} -> \''${(P)var}"
+            printf '%s' "$cmd" | grep -Eq '\$\{?PIPESTATUS' && lint="$lint
+              \$PIPESTATUS -> \$pipestatus"
+            printf '%s\n' "$cmd" | grep -Eq "''${at}shopt([[:space:]]|\$)" && lint="$lint
+              shopt -> setopt"
+            printf '%s' "$cmd" | grep -Eq '"\$[A-Za-z_][A-Za-z0-9_]*:[lhtres]' && lint="$lint
+              \"\$var:x\" applies a zsh history modifier -> brace it: \"\''${var}:x\""
+            printf '%s\n' "$cmd" | grep -Eq '(^|[;&|[:space:]])path=|for[[:space:]]+path[[:space:]]' && lint="$lint
+              path= rebinds PATH in zsh -> rename the variable"
+            [ -z "$lint" ] || refuse "Refused: the Bash tool runs zsh; fix these bash idioms:$lint"
+            exit 0
+          '';
+        };
+
+        home.file.".claude/subagent-brief.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            # SubagentStart: the brief invariants every den-ag-design dispatch must carry, injected into the subagent.
+            set -uo pipefail
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            gated || exit 0
+            jq -nc --arg c "Brief invariants (den-ag-design fleet): Write your report as a file, and deliver it through SubagentHandback if your tools include it, otherwise SendMessage to the orchestrator. Write scratch only under <scratchpad>/<agent-name>-private/. Never pkill -f, killall, or kill on pgrep -f output; kill only a PID captured with \$!. Wait on a \$! PID or a producer-written marker, always under timeout, never pgrep -f from the waiting shell. Take STATUS/heavy-lock.zsh once per heavy phase, never per command. Run every nix eval/build/check under systemd-run --user --scope -q -p MemoryMax=12G; rc 137 under the cap is a finding." \
+              '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: $c}}'
+          '';
+        };
+
+        # Compaction summarizes the conversation; SessionStart(compact) stdout is re-added verbatim.
+        home.file.".claude/handoff-commission.sh" = {
+          executable = true;
+          text = ''
+            #!/usr/bin/env bash
+            # SessionStart(compact): re-inject HANDOFF.md's COMMISSION field so live agent ids survive compaction.
+            set -uo pipefail
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            gated || exit 0
+            f="${config.home.homeDirectory}/${lib.head gatedProjects}/STATUS/HANDOFF.md"
+            out=$(awk '/^──.*COMMISSION FIELD/ {on=1} on && /^──/ && !/COMMISSION FIELD/ {exit} on' "$f" 2>/dev/null)
+            if [ -n "$out" ]; then
+              printf 'Re-injected after compaction from %s:\n%s\n' "$f" "$out"
+            else
+              printf 'COMMISSION field NOT FOUND in %s: read STATUS/HANDOFF.md before acting.\n' "$f"
+            fi
             exit 0
           '';
         };
