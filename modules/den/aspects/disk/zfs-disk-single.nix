@@ -47,22 +47,22 @@
             # thread parks in spl_panic and every ZFS writer then blocks for good.
             # With NOP-writes off, rewriting identical data costs a real write.
             "zfs.zfs_nopwrite_enabled=0"
+            # TODO: a deadlock mitigation, not a fix; remove with the line above.
+            # A failed ZFS assertion (that bug's VERIFY) parks its thread and
+            # wedges the pool for good; this turns it into a kernel panic, which
+            # kernel.panic below turns into a reboot, instead of the host hanging
+            # until someone power-cycles it. Narrower than hung_task_panic on
+            # purpose: the hosts hard-mount NFS, so a NAS outage would leave
+            # tasks in D state and reboot them all.
+            "spl.spl_panic_halt=1"
             "elevator=none"
             "nohibernate"
           ];
         };
 
-        # TODO: a deadlock mitigation, not a fix: remove once the ZFS hangs are
-        # root-caused (openzfs/zfs#19294 above; bitstream's failing NVMe). A ZFS
-        # writer stuck in D state for 10 min panics the kernel, and the panic
-        # reboots it after 10 s, instead of the host hanging until someone
-        # power-cycles it. The timeout is well above the normal stalls of a busy
-        # pool, so only a stuck one trips it.
-        boot.kernel.sysctl = {
-          "kernel.hung_task_timeout_secs" = 600;
-          "kernel.hung_task_panic" = 1;
-          "kernel.panic" = 10;
-        };
+        # TODO: remove with spl_panic_halt above (openzfs/zfs#19294): the panic
+        # it raises reboots the host after 10 s.
+        boot.kernel.sysctl."kernel.panic" = 10;
 
         systemd.services.systemd-udev-settle.enable = false;
 
