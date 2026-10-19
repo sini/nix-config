@@ -52,7 +52,9 @@ in
 
   # A service node is emitted at its host's scope. It reaches the owner's user scopes
   # by broadcast, and the host collects the owner's nodes back for the service's own
-  # peers file. Clusters collect service nodes too: a pod leaf takes a service node
+  # peers file. The collect also keeps the record from leaking: a host with no effect
+  # for xmsg-nodes hands its own raw emit down to every user scope on it, so without
+  # this rule every user there (vic too) would peer with the service. Clusters collect service nodes too: a pod leaf takes a service node
   # that guards through it as one more hub (kubernetes/services/ai/genie-guard.nix).
   den.policies.xmsg-service-nodes =
     { host, ... }:
