@@ -69,9 +69,6 @@
             "linuxPackages-cachyos-${cfg.channel}-lto-${cfg.optimization}";
       in
       {
-        nix.settings.substituters = [ "https://attic.xuyh0120.win/lantian" ];
-        nix.settings.trusted-public-keys = [ "lantian:EeAUQ+W+6r7EtwnmYjeVwx5kOGEBpjlBfPlzGlTNvHc=" ];
-
         boot.kernelPackages =
           if pkgs ? cachyosKernels && pkgs.cachyosKernels ? ${kernelName} then
             pkgs.cachyosKernels.${kernelName}
