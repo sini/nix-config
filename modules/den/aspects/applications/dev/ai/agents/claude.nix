@@ -292,7 +292,27 @@
                 "Bash(colmena apply*)"
               ];
 
-              deny = [ ];
+              # nix-config's generated files (its CLAUDE.md "Do Not Edit" list), in every
+              # checkout and worktree of it. The repo gitignores .claude, so the rule lives here.
+              deny =
+                lib.concatMap
+                  (
+                    repo:
+                    map (p: "Edit(~/Documents/repos/sini/${repo}/${p})") [
+                      "flake.nix"
+                      "README.md"
+                      "TOPOLOGY.md"
+                      "diagrams/**"
+                      "generated/**"
+                      ".pre-commit-config.yaml"
+                      "charts/**/default.nix"
+                      "images/*/*/**"
+                    ]
+                  )
+                  [
+                    "nix-config*"
+                    "nix-darwin"
+                  ];
             };
 
             env = {
