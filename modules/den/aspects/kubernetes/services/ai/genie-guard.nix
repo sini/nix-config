@@ -129,6 +129,7 @@ in
         config,
         cluster,
         images,
+        xmsg-nodes ? [ ],
         ...
       }:
       let
@@ -141,6 +142,9 @@ in
           ip = lib.head host.ipv4;
           port = host.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${host.system-owner}.port;
         }) ([ cfg.hub ] ++ cfg.devHubs or [ ]);
+        # Service nodes that screen through this pod (services/matrix-xmsg.nix `guards`)
+        # are hubs too: the pod collects their guard requests from them.
+        serviceHubs = lib.filter (n: lib.elem "${name}@${name}.${namespace}" (n.guards or [ ])) xmsg-nodes;
         # A CA entry is keyed by the node name its identity derives, `<user>.<host>`
         # (xmsg README 7.0); the leaf routes each reply to the peer of the origin's node.
         peers = lib.listToAttrs (
@@ -156,6 +160,15 @@ in
               allow = [ "list" ];
             };
           }) hubs
+          ++ map (n: {
+            inherit (n) name;
+            value = {
+              address = "${n.lanIp}:${toString n.port}";
+              ca = "${tlsDir}/ca.crt";
+              identities = [ n.identity ];
+              allow = [ "list" ];
+            };
+          }) serviceHubs
         );
         runMount = {
           name = "run";
@@ -375,7 +388,7 @@ in
                     ];
                   }
                 ];
-              }) hubs;
+              }) (hubs ++ map (n: { inherit (n) ip port; }) (map (n: n // { ip = n.lanIp; }) serviceHubs));
             };
           };
         };

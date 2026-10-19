@@ -37,12 +37,14 @@
   ...
 }:
 let
-  leafName = user: "xmsg-${user}-fed-ca";
-  caDir = self + "/.secrets/xmsg-ca";
-  spiffeOf = host: user: "spiffe://json64.dev/host/${host}/user/${user}";
-  # A node's name derives from its identity (xmsg README 7.0): `<user>.<host>` for a host,
-  # `<sa>.<ns>` for a pod. A CA peer entry must be keyed by it.
-  nodeName = host: user: "${user}.${host}";
+  xl = import ./_xmsg-lib.nix { inherit lib self; };
+  inherit (xl)
+    leafName
+    caDir
+    spiffeOf
+    nodeName
+    caCrt
+    ;
   leafNode =
     leaf:
     let
@@ -53,21 +55,6 @@ let
     else
       "${lib.elemAt m 1}.${lib.elemAt m 0}";
   fedOf = host: host.settings.applications.dev.ai.mcp.xmsg.federation;
-  # A committed .crt sidecar, refused by name until generated. Copied alone, so a
-  # path under `self` does not pull the whole flake source into the store path.
-  caCrt =
-    crt:
-    if builtins.pathExists crt then
-      builtins.path {
-        path = crt;
-        name = builtins.unsafeDiscardStringContext (baseNameOf crt);
-      }
-    else
-      throw ''
-        xmsg federation: ${toString crt} is absent. Declare the node in
-        settings.applications.dev.ai.mcp.xmsg.federation.nodes, then run `agenix generate`,
-        `git add` the .age and .crt files, and `agenix rekey`.
-      '';
 in
 {
   # A hub admits its leaves' cluster nodes, which live in other environments, so it
@@ -178,51 +165,51 @@ in
           )
         );
       in
-      lib.mkIf (nodes != { }) {
-        assertions =
-          lib.mapAttrsToList (user: _: {
-            assertion = config.users.users ? ${user};
-            message = "xmsg federation: ${host.name} declares a node for ${user}, who has no account here.";
-          }) nodes
-          ++ [
-            {
-              assertion = lib.allUnique (lib.mapAttrsToList (_: n: n.port) nodes);
-              message = "xmsg federation: two nodes on ${host.name} share a port.";
-            }
-          ];
+      {
+        # Every xmsg node's federation port on this host, by node name: login users'
+        # here, services' (services/matrix-xmsg.nix) and the genie tier buses'
+        # (services/ai/genie-xmsg.nix) where they declare theirs.
+        options.xmsg.federationPorts = lib.mkOption {
+          type = lib.types.attrsOf lib.types.port;
+          default = { };
+          internal = true;
+          description = "Federation port of each xmsg node on this host, by node name.";
+        };
 
-        # No firewall rule for peers: the tailnet interface is trusted
-        # (core.network.tailscale), so the ports are reachable over the tailnet and
-        # nowhere else, and each CA identity admits only the peers listed.
-        age.secrets = {
-          xmsg-ca-root = ca "root" [ ] "x509-ca-root";
-          xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
-          xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
-        }
-        // lib.mapAttrs' (
-          user: _:
-          lib.nameValuePair (leafName user) {
-            rekeyFile = host.secretPath + "/${leafName user}.age";
-            generator = {
-              script = "x509-spiffe-leaf";
-              dependencies = [
-                config.age.secrets.xmsg-ca-host-intermediate
-                root
-              ];
-            };
-            settings = {
-              cn = "${user}@${host.name}";
-              uri = spiffeOf host.name user;
-            };
-            owner = user;
-            mode = "0400";
+        config = lib.mkMerge [
+          {
+            assertions = [
+              {
+                assertion = lib.allUnique (lib.attrValues config.xmsg.federationPorts);
+                message = "xmsg federation: two nodes on ${host.name} share a port: ${builtins.toJSON config.xmsg.federationPorts}.";
+              }
+            ];
+            xmsg.federationPorts = lib.mapAttrs' (user: n: lib.nameValuePair (self' user) n.port) nodes;
           }
-        ) nodes;
+          (lib.mkIf (nodes != { }) {
+            assertions = lib.mapAttrsToList (user: _: {
+              assertion = config.users.users ? ${user};
+              message = "xmsg federation: ${host.name} declares a node for ${user}, who has no account here.";
+            }) nodes;
 
-        # Leaves reach the port over the LAN from their cluster's nodes. The rules are
-        # nftables syntax, which the iptables backend ignores, leaving the port closed.
-        networking.nftables.enable = lib.mkIf (leafRules != "") true;
-        networking.firewall.extraInputRules = lib.mkIf (leafRules != "") leafRules;
+            # No firewall rule for peers: the tailnet interface is trusted
+            # (core.network.tailscale), so the ports are reachable over the tailnet and
+            # nowhere else, and each CA identity admits only the peers listed.
+            age.secrets = {
+              xmsg-ca-root = ca "root" [ ] "x509-ca-root";
+              xmsg-ca-host-intermediate = ca "host-intermediate" [ root ] "x509-ca-intermediate";
+              xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
+            }
+            // lib.mapAttrs' (
+              user: _: lib.nameValuePair (leafName user) (xl.leafSecret { inherit config host user; })
+            ) nodes;
+
+            # Leaves reach the port over the LAN from their cluster's nodes. The rules are
+            # nftables syntax, which the iptables backend ignores, leaving the port closed.
+            networking.nftables.enable = lib.mkIf (leafRules != "") true;
+            networking.firewall.extraInputRules = lib.mkIf (leafRules != "") leafRules;
+          })
+        ];
       };
 
     # The bot's matrix skill, folded into every agent aspect that reads agent-extensions;
@@ -250,8 +237,7 @@ in
         ...
       }:
       let
-        # The @genie bot registers on this bus as the service matrix-xmsg on a host that
-        # runs it; xmsg admits that name only from the bot's own binary.
+        # The host guard serves the @genie bot's host as the standby to the pod guard.
         botEnabled = (host.settings.services.matrix-xmsg.rooms or [ ]) != [ ];
         guardEnabled = botEnabled && config.home.username == host.system-owner;
         # genie-agent's Tier 1 (services/ai/genie-tier1.nix) registers as `genie`, from
@@ -275,11 +261,13 @@ in
               p:
               lib.nameValuePair p.name {
                 inherit (p) address;
-                allow = [
-                  "send"
-                  "reply"
-                  "list"
-                ];
+                # A service node's record names what it may do here (policies/xmsg.nix).
+                allow =
+                  p.allow or [
+                    "send"
+                    "reply"
+                    "list"
+                  ];
                 ca = rootCa;
                 identities = [ p.identity ];
               }
@@ -307,11 +295,9 @@ in
           # darwin (patch) runs no `xmsg serve`; its harnesses still get their pieces.
           server = {
             enable = pkgs.stdenv.hostPlatform.isLinux;
+            # The bot itself registers on its own node (services/matrix-xmsg.nix).
             svcExe =
-              lib.optionalAttrs botEnabled {
-                matrix-xmsg = lib.getExe inputs'.matrix-xmsg.packages.default;
-              }
-              // lib.optionalAttrs guardEnabled { genie-guard = guardExe; }
+              lib.optionalAttrs guardEnabled { genie-guard = guardExe; }
               // lib.optionalAttrs tier1Enabled { genie = tier1Exe; };
             federation = lib.mkIf (node != null) {
               enable = true;

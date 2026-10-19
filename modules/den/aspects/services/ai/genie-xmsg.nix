@@ -40,8 +40,9 @@ let
     };
     fedPort = lib.mkOption {
       type = lib.types.port;
-      default = if tier == "public" then 7789 else 7790;
-      description = "This node's federation listener port. Inert until X1.";
+      # 7788/7789 are the owner's and vic's nodes on bitstream; 7791 is the bot's.
+      default = if tier == "public" then 7792 else 7793;
+      description = "This node's federation listener port. Inert until X1, but held distinct from every other node's on the host now (mcp/xmsg.nix federationPorts).";
     };
   };
 
@@ -152,6 +153,10 @@ in
         };
 
         config = {
+          xmsg.federationPorts = lib.listToAttrs (
+            map (tier: lib.nameValuePair "${user tier}.${host.name}" cfg.${tier}.fedPort) tiers
+          );
+
           assertions = map (tier: {
             assertion = !tcpFlag tier;
             message = "genie-xmsg: xmsg@${tier} must bind no TCP (no --listen, no XMSG_LISTEN): its bus is reachable only by its own uid over http.sock.";

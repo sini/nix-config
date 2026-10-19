@@ -1,6 +1,6 @@
 apiVersion: v1
 data:
-  peers.json: '{"sini.bitstream":{"address":"10.9.1.1:7788","allow":["list"],"ca":"/etc/xmsg/tls/ca.crt","identities":["spiffe://json64.dev/host/bitstream/user/sini"]},"sini.cortex":{"address":"10.9.2.1:7788","allow":["list"],"ca":"/etc/xmsg/tls/ca.crt","identities":["spiffe://json64.dev/host/cortex/user/sini"]}}'
+  peers.json: '{"matrix-xmsg.bitstream":{"address":"10.9.1.1:7791","allow":["list"],"ca":"/etc/xmsg/tls/ca.crt","identities":["spiffe://json64.dev/host/bitstream/user/matrix-xmsg"]},"sini.bitstream":{"address":"10.9.1.1:7788","allow":["list"],"ca":"/etc/xmsg/tls/ca.crt","identities":["spiffe://json64.dev/host/bitstream/user/sini"]},"sini.cortex":{"address":"10.9.2.1:7788","allow":["list"],"ca":"/etc/xmsg/tls/ca.crt","identities":["spiffe://json64.dev/host/cortex/user/sini"]}}'
 kind: ConfigMap
 metadata:
   name: genie-guard-xmsg-peers

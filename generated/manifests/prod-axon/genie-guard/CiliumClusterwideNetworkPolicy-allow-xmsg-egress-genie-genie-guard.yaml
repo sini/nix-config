@@ -17,6 +17,12 @@ spec:
         - ports:
             - port: "7788"
               protocol: TCP
+    - toCIDR:
+        - 10.9.1.1/32
+      toPorts:
+        - ports:
+            - port: "7791"
+              protocol: TCP
   endpointSelector:
     matchExpressions:
       - key: k8s:io.kubernetes.pod.namespace
