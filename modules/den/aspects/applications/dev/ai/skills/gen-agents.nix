@@ -10,8 +10,8 @@
 # it cannot be forgotten; a dispatch prompt then carries only what is task-specific.
 #
 # ★ TOOL RESTRICTION IS THE POINT WHERE IT ACTUALLY BINDS, and it does not bind
-# everywhere. `gen-gate` and `gen-scout` get no Edit and no serena editing tool: a
-# reviewer without the revising tools cannot quietly repair the artefact it is judging.
+# everywhere. `gen-gate` and `gen-scout` get no Edit tool: a reviewer without the
+# revising tools cannot quietly repair the artefact it is judging.
 # Both keep Write and Bash, so this withholds revision, not writing: withholding Write
 # never prevented writing, because Bash heredocs write just as well, and in 10 of 29
 # sampled transcripts they did, invisibly. Declared writing beats unobservable writing.
@@ -40,83 +40,28 @@
         protocol = builtins.readFile "${d}/_shared-protocol.md";
 
         mcp = server: map (t: "mcp__plugin_hm_${server}__${t}");
-        # Read, recall and bank-append only: no bank delete/clear/update, no directive
-        # writes (law is the owner's to write), no index deletion. No `reflect` either:
-        # it answers by LLM synthesis, measured to invert a fact from world facts alone,
-        # and its MCP schema takes no `types`, so no filter closes it (den-hoag-mgnv3).
+        # The set gen-* transcripts actually called (6 of 53 granted, 251 transcripts,
+        # 2026-10-19 audit), plus the codebase-memory readers. A tool comes back only
+        # with a named role use. Read, recall and bank-append only: no bank
+        # delete/clear/update, no directive writes, no index deletion, and no `reflect`
+        # (LLM synthesis measured to invert a fact; its schema takes no `types`,
+        # den-hoag-mgnv3). No serena editors: Edit carries every edit.
         mcpCommon =
           mcp "hindsight" [
             "recall"
             "sync_retain"
-            "retain"
             "get_memory"
             "list_memories"
             "invalidate_memory"
-            "get_operation"
-            "list_tags"
-            "list_documents"
-            "get_document"
-            "list_directives"
-            "list_mental_models"
-            "get_mental_model"
-            "search_knowledge_base"
-            "get_knowledge_base_tree"
-            "get_knowledge_page"
           ]
           ++ mcp "codebase-memory" [
-            "list_projects"
-            "index_status"
-            "index_repository"
-            "check_index_coverage"
-            "get_architecture"
-            "get_graph_schema"
-            "get_file_outline"
-            "get_code_snippet"
             "search_graph"
             "search_code"
-            "query_graph"
+            "get_code_snippet"
             "trace_path"
-            "detect_changes"
-            "compare_graphs"
-          ]
-          ++ mcp "serena" [
-            "initial_instructions"
-            "find_symbol"
-            "find_declaration"
-            "find_implementations"
-            "find_referencing_symbols"
-            "get_symbols_overview"
-            "get_diagnostics_for_file"
-            "list_memories"
-            "read_memory"
-          ]
-          ++ mcp "graphify" [
-            "graph_stats"
-            "god_nodes"
-            "get_node"
-            "get_neighbors"
-            "get_community"
-            "shortest_path"
             "query_graph"
-            "list_prs"
-            "get_pr_impact"
-            "triage_prs"
-          ]
-          ++ mcp "codegraph" [ "codegraph_explore" ]
-          ++ mcp "headroom" [
-            "headroom_compress"
-            "headroom_retrieve"
-            "headroom_stats"
+            "index_status"
           ];
-        serenaEdit = mcp "serena" [
-          "replace_content"
-          "replace_in_files"
-          "replace_symbol_body"
-          "rename_symbol"
-          "insert_before_symbol"
-          "insert_after_symbol"
-          "safe_delete_symbol"
-        ];
         base = [
           "Read"
           "Grep"
@@ -128,8 +73,16 @@
         tools = {
           scout = base ++ mcpCommon;
           gate = base ++ mcpCommon;
-          spec = base ++ [ "Edit" ] ++ mcpCommon ++ serenaEdit;
-          build = base ++ [ "Edit" ] ++ mcpCommon ++ serenaEdit;
+          spec = base ++ [ "Edit" ] ++ mcpCommon;
+          build = base ++ [ "Edit" ] ++ mcpCommon;
+        };
+        # Pinned so a dispatch without a model never inherits the orchestrator's; a
+        # per-dispatch `model` still overrides it.
+        models = {
+          scout = "opus";
+          gate = "opus";
+          spec = "opus";
+          build = "opus";
         };
 
         # Order matters: head, then the shared measurement block, then the role body,
@@ -138,9 +91,13 @@
         mkAgent =
           role:
           pkgs.writeText "gen-${role}.md" (
-            builtins.replaceStrings [ "@TOOLS@" ] [ "[${lib.concatStringsSep ", " tools.${role}}]" ] (
-              builtins.readFile "${d}/_${role}-head.md"
-            )
+            builtins.replaceStrings
+              [ "@TOOLS@" "@MODEL@" ]
+              [
+                "[${lib.concatStringsSep ", " tools.${role}}]"
+                models.${role}
+              ]
+              (builtins.readFile "${d}/_${role}-head.md")
             + "\n"
             + shared
             + "\n"

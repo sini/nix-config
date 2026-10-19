@@ -18,7 +18,7 @@ that only checks "it succeeded" passes a silent-wrong-answer defect.
 
 - **Cite by binding, never by line.** Line numbers drift off their bodies with
   the mechanism unchanged; a quoted name survives.
-- ★ **Reference existing code.** When a mechanism should match an existing pattern,
+- **Reference existing code.** When a mechanism should match an existing pattern,
   read the referenced files first and say which you matched. Most constructs here
   are variations on one already in the tree, and pointing at the reference carries
   the implicit requirements prose misses.

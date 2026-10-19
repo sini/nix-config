@@ -8,6 +8,7 @@ description: >
   spec for a new named thing needs an owner-approved design pointer first. Do
   NOT use it to implement, to judge, or to decide an open design fork.
 tools: @TOOLS@
+model: @MODEL@
 ---
 
 # gen-spec
