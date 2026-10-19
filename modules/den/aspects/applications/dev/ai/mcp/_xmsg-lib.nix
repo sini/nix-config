@@ -2,6 +2,17 @@
 # (xmsg.nix) and services' (services/matrix-xmsg.nix). Imported, not auto-loaded.
 { lib, self }:
 rec {
+  # User pairs whose nodes federate across the two users (policies/xmsg.nix), and the
+  # only cross-user reach a service node may have (mcp/xmsg.nix asserts it).
+  trustedPairs = [
+    # vic can already take over sini's sessions (herdr-pair); messaging is no more.
+    [
+      "sini"
+      "vic"
+    ]
+  ];
+  trusts = a: b: a == b || lib.any (pair: lib.elem a pair && lib.elem b pair) trustedPairs;
+
   caDir = self + "/.secrets/xmsg-ca";
   spiffeOf = host: user: "spiffe://json64.dev/host/${host}/user/${user}";
   # A node's name derives from its identity (xmsg README 7.0): `<user>.<host>` for a host,

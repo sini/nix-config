@@ -12,17 +12,17 @@
 # xmsg aspect: that one is often a host include (roles.dev), and a host-included
 # emitter never lands in the user's own scope, so a broadcast from it delivers
 # nothing. Any new emitter for these rules belongs in a user-scoped aspect too.
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  self,
+  ...
+}:
 let
   inherit (den.lib.policy) pipe;
-
-  trustedPairs = [
-    # vic can already take over sini's sessions (herdr-pair); messaging is no more.
-    [
-      "sini"
-      "vic"
-    ]
-  ];
+  inherit (import ../aspects/applications/dev/ai/mcp/_xmsg-lib.nix { inherit lib self; })
+    trustedPairs
+    ;
 in
 {
   den.policies.xmsg-same-user =
@@ -50,11 +50,11 @@ in
       ])
     ];
 
-  # A service node is emitted at its host's scope. It reaches the owner's user scopes
-  # by broadcast, and the host collects the owner's nodes back for the service's own
-  # peers file. The collect also keeps the record from leaking: a host with no effect
-  # for xmsg-nodes hands its own raw emit down to every user scope on it, so without
-  # this rule every user there (vic too) would peer with the service. Clusters collect service nodes too: a pod leaf takes a service node
+  # A service node is emitted at its host's scope alone (services/matrix-xmsg.nix
+  # `matrix-xmsg-node`, a host-schema include). It reaches the owner's user scopes by
+  # broadcast, and the host collects the owner's nodes back for the service's own peers
+  # file. With this rule absent the record reaches no one; mcp/xmsg.nix also asserts
+  # that no node peers another user's service outside trustedPairs. Clusters collect service nodes too: a pod leaf takes a service node
   # that guards through it as one more hub (kubernetes/services/ai/genie-guard.nix).
   den.policies.xmsg-service-nodes =
     { host, ... }:

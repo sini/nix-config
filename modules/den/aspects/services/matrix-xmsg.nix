@@ -18,6 +18,7 @@
 # as a hub (kubernetes/services/ai/genie-guard.nix): its record's `guards` names that
 # guard while screening is on, and the node adopts the pod's leaf in turn.
 {
+  den,
   inputs,
   lib,
   self,
@@ -51,6 +52,34 @@ in
     url = "github:sini/matrix-xmsg";
     inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
+
+  # The bot's node, for the service-node rule and the pod guards it screens through.
+  # Its own aspect, included by the host schema so it emits at the host's scope alone:
+  # an emit on the bot aspect, a host include, would also run in each user's scope
+  # there and reach that user's node with no rule delivering it. Only the
+  # service-node rule (policies/xmsg.nix) delivers this record.
+  den.aspects.services.matrix-xmsg-node.xmsg-nodes =
+    { environment, host, ... }:
+    let
+      cfg = host.settings.services.matrix-xmsg or { rooms = [ ]; };
+    in
+    lib.optionals (cfg.rooms != [ ]) [
+      {
+        name = xl.nodeName host.name svcUser;
+        address = "${host.name}.ts.${environment.domain}:${toString cfg.xmsgPort}";
+        lanIp = builtins.head host.ipv4;
+        port = cfg.xmsgPort;
+        identity = xl.spiffeOf host.name svcUser;
+        owner = host.system-owner;
+        allow = [
+          "send"
+          "reply"
+        ];
+        guards = guardsOf cfg;
+      }
+    ];
+
+  den.schema.host.includes = [ den.aspects.services.matrix-xmsg-node ];
 
   den.aspects.services.matrix-xmsg = {
     settings = {
@@ -117,27 +146,6 @@ in
         description = "Trusted senders beyond kanidm `admins`: accounts on other homeservers, which kanidm cannot list.";
       };
     };
-
-    # The bot's node, for the service-node rule and the pod guards it screens through.
-    xmsg-nodes =
-      { environment, host, ... }:
-      let
-        cfg = host.settings.services.matrix-xmsg;
-      in
-      lib.optionals (cfg.rooms != [ ]) [
-        {
-          name = xl.nodeName host.name svcUser;
-          address = "${host.name}.ts.${environment.domain}:${toString cfg.xmsgPort}";
-          lanIp = builtins.head host.ipv4;
-          port = cfg.xmsgPort;
-          identity = xl.spiffeOf host.name svcUser;
-          allow = [
-            "send"
-            "reply"
-          ];
-          guards = guardsOf cfg;
-        }
-      ];
 
     nixos =
       {

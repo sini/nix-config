@@ -287,6 +287,13 @@ in
           );
       in
       {
+        # A service node is another user's only through trustedPairs; a record that
+        # reached this node by any other path fails the build instead of linking.
+        assertions = map (p: {
+          assertion = xl.trusts me p.owner;
+          message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in trustedPairs with them.";
+        }) (lib.filter (p: p ? owner) xmsg-nodes);
+
         programs.xmsg = {
           enable = true;
           # Linux runs our own build (pkgs/by-name/xmsg, also the genie tiers' bus); it is
