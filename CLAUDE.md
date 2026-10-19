@@ -34,40 +34,7 @@ resolution with typed `settings` overrides) and deployed with Colmena.
 - `aspects/` — the aspect library. Each category is a namespace: files are
   leaf aspects, directories are sub-namespaces (files prefixed with `_` are
   ignored helpers). Aspect identity paths are relative to this directory
-  (e.g. `roles.workstation`, `services.k3s`, `hardware.gpu.nvidia-vfio`):
-
-  ```
-  aspects/
-  ├── applications/   # browsers, dev (ai, editor, git, k8s, lang, mux,
-  │                   #   networking, security, shell), gaming, mail, media,
-  │                   #   messaging, productivity, security, shell, terminals,
-  │                   #   wayland
-  ├── core/           # boot, impermanence, localization, network (syncthing,
-  │                   #   tailscale), nix, perf, secrets, security, system,
-  │                   #   systemd, users (home-manager)
-  ├── desktop/        # gdm, gnome, hyprland, kde, niri, regreet, sddm, style,
-  │                   #   uwsm, xdg, xdg-portal, xserver
-  ├── devshell/       # devshell routing (e.g. colmena CLI)
-  ├── disk/           # btrfs, btrfs-disko, ceph-device-allocation,
-  │                   #   xfs-disk-longhorn, zfs-diff, zfs-disk-single
-  ├── hardware/       # adb, audio, bluetooth, coolercontrol, cpu/, ddcutil,
-  │                   #   gamepad, gpu/, keyboard, laptop, performance, power-mgmt
-  ├── kubernetes/     # bootstrap/, hardware/, secrets/, services/ (argocd,
-  │                   #   coder, cloudnative-pg, csi-driver-nfs, garage,
-  │                   #   longhorn, cilium, coredns, envoy-gateway,
-  │                   #   cert-manager, reflector, sops-secrets-operator, ...)
-  ├── macos/          # applications/, defaults/, wm/
-  ├── roles/          # default, workstation, server, dev, dev-gui, gaming,
-  │                   #   gamedev, media, messaging, nix-builder, unlock, vault,
-  │                   #   headscale, inference, kexec, kube-tools, cad,
-  │                   #   darwin-workstation, bgp-hub, bgp-spoke,
-  │                   #   metrics-ingester, creative/
-  ├── secrets/
-  ├── services/       # ai, alloy, bgp, k3s, media, monitoring, networking,
-  │                   #   nix, security, storage, web
-  └── virtualization/ # containers, docker, libvirt, microvm, microvm-guests,
-                      #   podman, windows-vfio, guests
-  ```
+  (e.g. `roles.workstation`, `services.k3s`, `hardware.gpu.nvidia-vfio`).
 - `clusters/`, `environments/`, `groups/`, `users/` — topology entities
   (e.g. `clusters/axon.nix`, `environments/{dev,prod}.nix`, `users/sini.nix`)
 - `policies/` — computed scopes derived from topology
@@ -115,6 +82,9 @@ layered host-side by `virtualization/microvm-guests.nix`.
 
 The devshell is entered automatically via direnv (`.envrc` uses nix-direnv;
 `direnv allow` on first use) or manually with `nix develop`.
+
+Deploys (`colmena apply*`, `nix-flake-build --apply`) are the owner's; agents
+build and check only.
 
 ```bash
 # Build a host configuration (defaults to the current hostname;
@@ -201,28 +171,3 @@ maps to nixpkgs + home-manager + nix-darwin inputs):
 
 - `nixos-stable`, `nixos-unstable` (default), `nixpkgs-master`,
   `nixpkgs-stable-darwin`, `nix-darwin-unstable`
-
-## Repository Structure
-
-```
-.
-├── flake.nix           # AUTO-GENERATED (flake-file) — do not edit
-├── README.md           # AUTO-GENERATED (den-diagram)
-├── TOPOLOGY.md, diagrams/  # AUTO-GENERATED fleet visualizations
-├── hosts/              # Per-host hardware facts (facter.json)
-├── charts/             # nixhelm chart pins (auto-updated)
-├── images/             # OCI image metadata (auto-updated)
-├── generated/          # Rendered BGP configs + k8s manifests
-├── docs/               # Generated option references + runbooks
-├── modules/
-│   ├── den/            # The den configuration (hosts, aspects, topology)
-│   │   ├── hosts/      # One file per host (entity + aspect composition)
-│   │   ├── aspects/    # Aspect library by category
-│   │   ├── clusters/ environments/ groups/ users/
-│   │   ├── policies/ quirks/ schema/ scope-engine/
-│   │   └── batteries/  # colmena, nix-on-droid integration
-│   ├── docs/           # Generated doc/README content
-│   └── flake-parts/    # devshell, treefmt, pre-commit, flake-file infra
-├── pkgs/               # Custom packages (nix-flake-build, etc.)
-└── .secrets/           # agenix-encrypted secrets (pub/ + hosts/<name>/)
-```
