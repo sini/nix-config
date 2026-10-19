@@ -41,9 +41,27 @@
             # short range and the caller falls back to a plain copy; cloning
             # still applies to blocks that are already on disk.
             "zfs.zfs_bclone_wait_dirty=0"
+            # TODO: drop once openzfs/zfs#19294 is fixed upstream. On 2.4.4 with a
+            # cryptographic checksum (our pools use edonr), the NOP-write path can
+            # trip VERIFY(BP_EQUAL(...)) in zio_done during txg sync; the sync
+            # thread parks in spl_panic and every ZFS writer then blocks for good.
+            # With NOP-writes off, rewriting identical data costs a real write.
+            "zfs.zfs_nopwrite_enabled=0"
             "elevator=none"
             "nohibernate"
           ];
+        };
+
+        # TODO: a deadlock mitigation, not a fix: remove once the ZFS hangs are
+        # root-caused (openzfs/zfs#19294 above; bitstream's failing NVMe). A ZFS
+        # writer stuck in D state for 10 min panics the kernel, and the panic
+        # reboots it after 10 s, instead of the host hanging until someone
+        # power-cycles it. The timeout is well above the normal stalls of a busy
+        # pool, so only a stuck one trips it.
+        boot.kernel.sysctl = {
+          "kernel.hung_task_timeout_secs" = 600;
+          "kernel.hung_task_panic" = 1;
+          "kernel.panic" = 10;
         };
 
         systemd.services.systemd-udev-settle.enable = false;
