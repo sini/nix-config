@@ -14,6 +14,7 @@
         config,
         inputs',
         lib,
+        pkgs,
         ninfer-endpoints ? [ ],
         agent-extensions ? { },
         ...
@@ -159,11 +160,23 @@
           }
         ) collectedSkills;
 
-        # Convert collected subagents to Home Manager file definitions
+        # Convert collected subagents to Home Manager file definitions. They are written in
+        # Claude Code's frontmatter (`tools:` a list, `model: opus`), which opencode rejects:
+        # it wants `tools` as an object and `model` as provider/model, and one bad agent
+        # fails the whole config. Both keys are dropped from the frontmatter, so opencode
+        # gives these agents its own default tools and model.
+        opencodeAgent =
+          name: src:
+          pkgs.runCommand "opencode-agent-${name}.md" { } ''
+            awk 'NR == 1 && $0 == "---" { fm = 1; print; next }
+                 fm && $0 == "---" { fm = 0 }
+                 fm && /^(tools|model):/ { next }
+                 { print }' ${resolveSrc src} > $out
+          '';
         agentFiles = lib.mapAttrs' (
           name: src:
           lib.nameValuePair ".config/opencode/agent/${name}.md" {
-            source = resolveSrc src;
+            source = opencodeAgent name src;
           }
         ) collectedAgents;
       in
