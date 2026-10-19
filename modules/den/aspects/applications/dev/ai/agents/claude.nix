@@ -193,7 +193,6 @@
                 "Bash(git fetch *)"
                 "Bash(git add *)"
                 "Bash(git commit *)"
-                "Bash(git stash *)"
 
                 # gates
                 "Bash(treefmt *)"
@@ -227,6 +226,17 @@
                 "Bash(yq *)"
                 "Bash(sort *)"
                 "Bash(journalctl *)"
+              ];
+
+              # Prompt even under an allow rule or auto mode, nested subcommands included.
+              ask = [
+                # Pattern kills have killed the orchestrator (pkill -f matched its own shell).
+                "Bash(pkill *)"
+                "Bash(killall *)"
+                # Never stash in a shared checkout: peer sessions work in it.
+                "Bash(git stash *)"
+                # Deploys are the owner's.
+                "Bash(colmena apply*)"
               ];
 
               deny = [ ];
