@@ -32,7 +32,6 @@
 # requests with a model's verdict; xmsg admits that name only from its own binary.
 {
   den,
-  inputs,
   lib,
   self,
   ...
@@ -255,14 +254,11 @@ in
         # runs it; xmsg admits that name only from the bot's own binary.
         botEnabled = (host.settings.services.matrix-xmsg.rooms or [ ]) != [ ];
         guardEnabled = botEnabled && config.home.username == host.system-owner;
-        # genie-agent's Tier 1 (services/ai/genie-tier1.nix) registers as `genie`. Its
-        # executable is genie-root's wrapper, which execs node, so node is what xmsg
-        # attests: the one genie-root wraps, from the genie-agent input's own nixpkgs.
+        # genie-agent's Tier 1 (services/ai/genie-tier1.nix) registers as `genie`, from
+        # genie-root's own executable.
         tier1Enabled =
           host.hasAspect den.aspects.services.ai.genie-tier1 && config.home.username == host.system-owner;
-        tier1Exe =
-          lib.getExe
-            inputs.genie-agent.inputs.nixpkgs.legacyPackages.${pkgs.stdenv.hostPlatform.system}.nodejs;
+        tier1Exe = lib.getExe inputs'.genie-agent.packages.genie-root;
         guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
 
         me = config.home.username;
