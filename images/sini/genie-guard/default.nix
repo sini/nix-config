@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/sini/genie-guard";
   imageTag = "latest";
-  imageDigest = "sha256:a4144ff001fbd52f2075935752f4d5f15ec522f275efa90fc0716308a1214cfc";
-  imageHash = "sha256-WLBjKmm9cWijMxrOERwqsR+eKy7UqQZFbKOze5AWMMc=";
+  imageDigest = "sha256:0583f6787b16fa00e1a787303d5566a7da36495debb47d19a552d7602a76ea93";
+  imageHash = "sha256-WdqdS1+PVgAg8OGbEj4Q97yXa+hiL0HhwkSelocPFbU=";
   arch = "amd64";
   os = "linux";
   pinned = false;
