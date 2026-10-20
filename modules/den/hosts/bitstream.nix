@@ -22,7 +22,7 @@
     };
 
     settings = {
-      disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+      disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_970_EVO_1TB_S467NF0K501016P";
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
@@ -81,6 +81,41 @@
       services.ai.genie-xmsg
       services.ai.genie-tier1
     ];
+
+    # TODO: remove once the failing CA6-8D1024 is pulled or labelcleared (nix-config#183).
+    # Its pool is also named zroot, so the stock by-name import would be ambiguous;
+    # import zroot from the replacement disk only, renaming the zclone copy on first boot.
+    nixos =
+      { config, ... }:
+      let
+        dev = "/dev/disk/by-id/nvme-Samsung_SSD_970_EVO_1TB_S467NF0K501016P-part2";
+        devUnit = "dev-disk-by\\x2did-nvme\\x2dSamsung_SSD_970_EVO_1TB_S467NF0K501016P\\x2dpart2.device";
+        zpool = "${config.boot.zfs.package}/sbin/zpool";
+      in
+      {
+        boot.initrd.systemd.services.zfs-import-zroot-pinned = {
+          description = "Import ZFS pool zroot from the replacement disk only";
+          requires = [ devUnit ];
+          after = [
+            devUnit
+            "systemd-modules-load.service"
+          ];
+          before = [ "zfs-import-zroot.service" ];
+          requiredBy = [ "zfs-import-zroot.service" ];
+          unitConfig.DefaultDependencies = "no";
+          serviceConfig = {
+            Type = "oneshot";
+            RemainAfterExit = true;
+          };
+          script = ''
+            ${zpool} list zroot >/dev/null 2>&1 && exit 0
+            case "$(${zpool} import -d ${dev} 2>/dev/null)" in
+              *"pool: zclone"*) ${zpool} import -d ${dev} -N -f zclone zroot ;;
+              *) ${zpool} import -d ${dev} -N -f zroot ;;
+            esac
+          '';
+        };
+      };
 
     sini.includes = with den.aspects; [ services.ai.genie-bank-review ];
     vic.includes = with den.aspects; [ roles.dev ];
