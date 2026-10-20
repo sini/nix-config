@@ -22,7 +22,7 @@
     };
 
     settings = {
-      disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-NVMe_CA6-8D1024_0023065001TG";
+      disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_970_EVO_1TB_S467NF0K501016P";
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
@@ -81,36 +81,6 @@
       services.ai.genie-xmsg
       services.ai.genie-tier1
     ];
-
-    # TODO: remove once the Samsung has booted as zroot (nix-config#183).
-    # The replacement disk carries pool znew, which can only be renamed on import,
-    # and zroot is held while the CA6 runs. With no zroot present, import that pool
-    # (by GUID) as zroot; the stock script then sees it imported and runs the clevis
-    # unlock as usual. mkAfter keeps this behind network-initrd's `load-key -a`,
-    # which fails on a prompt-keyed pool imported before it. Any zroot on disk,
-    # including this one after the rename, disarms it.
-    nixos =
-      { config, lib, ... }:
-      let
-        guid = "15927363162138547936";
-        zpool = "${config.boot.zfs.package}/sbin/zpool";
-      in
-      {
-        boot.initrd.systemd.services.zfs-import-zroot.preStart = lib.mkAfter ''
-          if ! ${zpool} list zroot >/dev/null 2>&1; then
-            found=
-            for _ in $(seq 1 30); do
-              found="$(${zpool} import -d /dev/disk/by-id/ 2>/dev/null)" || true
-              case "$found" in *"pool: zroot"* | *"id: ${guid}"*) break ;; esac
-              sleep 1
-            done
-            case "$found" in
-              *"pool: zroot"*) ;;
-              *"id: ${guid}"*) ${zpool} import -d /dev/disk/by-id/ -N $ZFS_FORCE ${guid} zroot || true ;;
-            esac
-          fi
-        '';
-      };
 
     sini.includes = with den.aspects; [ services.ai.genie-bank-review ];
     vic.includes = with den.aspects; [ roles.dev ];
