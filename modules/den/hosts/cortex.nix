@@ -32,9 +32,15 @@ in
 
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
-      # 32 cores / 128 GB: the fleet's heaviest builder (an axon is 16 / 64).
+      # 32 cores / 128 GB: the fleet's heaviest builder (an axon is 16 / 64). Four builds of
+      # eight cores keep the product at the core count, so a kernel and a chromium link landing
+      # together cannot square it.
+      core.nix = {
+        maxJobs = 4;
+        cores = 8;
+      };
       roles.nix-builder = {
-        maxJobs = 12;
+        maxJobs = 4;
         speedFactor = 4;
       };
       core.system.linux-kernel.optimization = "zen4";

@@ -13,9 +13,14 @@
 
     settings = {
       services.bgp.localAsn = 65000;
-      # 32 cores / 128 GB: the fleet's heaviest builder (an axon is 16 / 64).
+      # 32 cores / 128 GB: the fleet's heaviest builder (an axon is 16 / 64). Four builds of
+      # eight cores keep the product at the core count, so two link-heavy builds cannot square it.
+      core.nix = {
+        maxJobs = 4;
+        cores = 8;
+      };
       roles.nix-builder = {
-        maxJobs = 12;
+        maxJobs = 4;
         speedFactor = 4;
       };
       # Break-glass jumpbox: sshd stays publicly reachable (all other hosts are

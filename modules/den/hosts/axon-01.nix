@@ -22,6 +22,14 @@
     };
 
     settings = {
+      # Kubernetes node (~47 of 62 GB held by pods): builds offload to the remote builders, so
+      # local builds stay small and the daemon slice fits the headroom the pods leave.
+      core.nix = {
+        maxJobs = 1;
+        cores = 4;
+        daemonMemoryHigh = "12%";
+        daemonMemoryMax = "20%";
+      };
       services.bgp.localAsn = 65001;
       services.bgp.cilium-bgp.localAsn = 65010;
       services.k3s.clusterName = "axon";
@@ -55,7 +63,7 @@
       disk.xfs-disk-longhorn
       roles.server
       roles.unlock
-      roles.nix-builder
+      # Not a remote builder: a Kubernetes node whose pods hold most of its memory.
       services.bgp.spoke
       services.bgp.cilium-bgp
       services.k3s

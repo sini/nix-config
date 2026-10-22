@@ -23,6 +23,12 @@
 
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_970_EVO_1TB_S467NF0K501016P";
+      # 12 threads / 29 GB, and it runs the agent fleet's evaluations beside its builds; heavy
+      # builds offload to the remote builders, so local builds stay small.
+      core.nix = {
+        maxJobs = 3;
+        cores = 4;
+      };
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
