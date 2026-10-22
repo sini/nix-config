@@ -13,6 +13,11 @@
 
     settings = {
       services.bgp.localAsn = 65000;
+      # 32 cores / 128 GB: the fleet's heaviest builder (an axon is 16 / 64).
+      roles.nix-builder = {
+        maxJobs = 12;
+        speedFactor = 4;
+      };
       # Break-glass jumpbox: sshd stays publicly reachable (all other hosts are
       # tailnet/LAN-only).
       core.security.openssh.exposure = "public";

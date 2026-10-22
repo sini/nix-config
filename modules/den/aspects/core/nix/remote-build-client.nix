@@ -20,8 +20,7 @@
           buildMachines = map (builder: {
             hostName = builder.hostname;
             systems = [ builder.system ];
-            maxJobs = 8;
-            speedFactor = 1;
+            inherit (builder) maxJobs speedFactor;
             supportedFeatures = [
               "benchmark"
               "big-parallel"

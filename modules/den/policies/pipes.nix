@@ -64,6 +64,15 @@ in
       ])
     ];
 
+  den.policies.collect-nix-builders =
+    { host, ... }:
+    [
+      # Fleet-wide, like host-addrs: a builder in another environment still serves this host.
+      (pipe.from "nix-builders" [
+        (pipe.collectAll ({ host, ... }: true))
+      ])
+    ];
+
   den.policies.collect-ollama-endpoints =
     { host, ... }:
     [
@@ -303,6 +312,7 @@ in
     den.policies.collect-container-registries
     den.policies.collect-thunderbolt-mesh-peers
     den.policies.collect-vault-peers
+    den.policies.collect-nix-builders
     den.policies.collect-ollama-endpoints
     den.policies.collect-ninfer-endpoints
     den.policies.collect-hipfire-endpoints

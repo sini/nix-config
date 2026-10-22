@@ -32,6 +32,11 @@ in
 
     settings = {
       disk.zfs-disk-single.device_id = "/dev/disk/by-id/nvme-Samsung_SSD_990_PRO_4TB_S7KGNU0X704630A";
+      # 32 cores / 128 GB: the fleet's heaviest builder (an axon is 16 / 64).
+      roles.nix-builder = {
+        maxJobs = 12;
+        speedFactor = 4;
+      };
       core.system.linux-kernel.optimization = "zen4";
       core.impermanence = {
         wipeRootOnBoot = true;
