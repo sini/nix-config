@@ -10,8 +10,8 @@
 #              the module's local genie-guard unit stays off, since the owner's bus
 #              already serves `genie-guard` (mcp/xmsg.nix)
 #   guard-out  on, against the same model
-#   experts    genie-support until the expert tiers come up (GI-6)
-{ inputs, ... }:
+#   experts    genie-support, unless the host includes genie-experts (GI-6)
+{ inputs, lib, ... }:
 let
   stateDir = "/var/lib/genie-agent";
 in
@@ -42,8 +42,8 @@ in
           s3 = null;
           guardRef = "genie-guard@genie-guard.genie";
           experts = {
-            public = "genie-support@${node}";
-            trusted = "genie-support@${node}";
+            public = lib.mkDefault "genie-support@${node}";
+            trusted = lib.mkDefault "genie-support@${node}";
           };
         };
 

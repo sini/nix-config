@@ -86,6 +86,7 @@
       services.ai.genie-expert
       services.ai.genie-xmsg
       services.ai.genie-tier1
+      services.ai.genie-experts
     ];
 
     sini.includes = with den.aspects; [ services.ai.genie-bank-review ];

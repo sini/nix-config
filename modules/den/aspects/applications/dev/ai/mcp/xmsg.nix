@@ -245,6 +245,15 @@ in
         tier1Enabled =
           host.hasAspect den.aspects.services.ai.genie-tier1 && config.home.username == host.system-owner;
         tier1Exe = lib.getExe inputs'.genie-agent.packages.genie-root;
+        # The expert tiers' dispatchers (services/ai/genie-experts.nix) register one
+        # service each, and their Claude sessions live in per-tier config dirs.
+        expertsEnabled =
+          host.hasAspect den.aspects.services.ai.genie-experts && config.home.username == host.system-owner;
+        genie = osConfig.services.genie-agent;
+        expertTiers = [
+          genie.experts.public
+          genie.experts.trusted
+        ];
         guardExe = lib.getExe inputs'.genie-agent.packages.genie-guard;
 
         me = config.home.username;
@@ -305,7 +314,12 @@ in
             # The bot itself registers on its own node (services/matrix-xmsg.nix).
             svcExe =
               lib.optionalAttrs guardEnabled { genie-guard = guardExe; }
-              // lib.optionalAttrs tier1Enabled { genie = tier1Exe; };
+              // lib.optionalAttrs tier1Enabled { genie = tier1Exe; }
+              // lib.optionalAttrs expertsEnabled (
+                lib.listToAttrs (
+                  map (t: lib.nameValuePair t.serviceName (lib.getExe genie.experts.dispatcherPackage)) expertTiers
+                )
+              );
             federation = lib.mkIf (node != null) {
               enable = true;
               inherit (node) port;
@@ -327,6 +341,19 @@ in
                 enable = true;
               });
         };
+
+        # The variable replaces xmsg's default, so the owner's own dir stays first.
+        systemd.user.services.xmsg.Service.Environment = lib.mkIf expertsEnabled [
+          "XMSG_SESSIONS_DIR=${
+            lib.concatStringsSep ":" (
+              [ "${config.home.homeDirectory}/.claude/sessions" ]
+              ++ map (t: "${genie.stateDir}/claude-${t}/sessions") [
+                "public"
+                "trusted"
+              ]
+            )
+          }"
+        ];
 
         # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.
         systemd.user.services.genie-guard = lib.mkIf guardEnabled {
