@@ -320,6 +320,12 @@ in
                   map (t: lib.nameValuePair t.serviceName (lib.getExe genie.experts.dispatcherPackage)) expertTiers
                 )
               );
+            extraSessionsDirs = lib.optionals expertsEnabled (
+              map (t: "${genie.stateDir}/claude-${t}/sessions") [
+                "public"
+                "trusted"
+              ]
+            );
             federation = lib.mkIf (node != null) {
               enable = true;
               inherit (node) port;
@@ -341,19 +347,6 @@ in
                 enable = true;
               });
         };
-
-        # The variable replaces xmsg's default, so the owner's own dir stays first.
-        systemd.user.services.xmsg.Service.Environment = lib.mkIf expertsEnabled [
-          "XMSG_SESSIONS_DIR=${
-            lib.concatStringsSep ":" (
-              [ "${config.home.homeDirectory}/.claude/sessions" ]
-              ++ map (t: "${genie.stateDir}/claude-${t}/sessions") [
-                "public"
-                "trusted"
-              ]
-            )
-          }"
-        ];
 
         # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.
         systemd.user.services.genie-guard = lib.mkIf guardEnabled {
