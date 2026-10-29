@@ -1,6 +1,6 @@
 # searxng MCP: the fleet's SearXNG (kubernetes/services/ai/searxng.nix) as a search
 # tool for every harness that takes MCP servers through agent-extensions — claude,
-# agy and opencode.
+# agy, opencode and pi.
 #
 # Server: nixpkgs `mcp-searxng` (github:ihor-sokoliuk/mcp-searxng), a stdio server
 # over SearXNG's JSON API. Taken from nixpkgs rather than written here: it is the
@@ -14,7 +14,8 @@
 # path. agy keeps its settings mutable (antigravity-cli.nix) and opencode admits MCP
 # tools by default, so neither needs an entry.
 #
-# pi is not covered: it takes TypeScript extensions, not MCP servers (pi.nix).
+# pi takes only the servers its own `mcpServers` setting names (pi.nix), searxng by
+# default, declared to its model directly, with web_url_read hidden.
 #
 # Gating check: searxng-check.nix, over each harness's rendered config.
 { lib, ... }:

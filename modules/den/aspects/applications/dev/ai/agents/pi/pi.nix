@@ -1,6 +1,6 @@
 # pi-coding-agent (https://pi.dev, github:earendil-works/pi-mono):
 # Terminal AI coding agent with Stylix theme generation & Plan Mode extensions.
-{ den, ... }:
+{ den, lib, ... }:
 {
   den.aspects.applications.dev.ai.agents.pi = {
     includes = [
@@ -8,16 +8,38 @@
       den.aspects.services.ai.hyperqwen-client
     ];
 
+    settings.mcpServers = lib.mkOption {
+      type = lib.types.attrsOf (lib.types.attrsOf lib.types.str);
+      # pi has no permission prompt, and web_url_read is an arbitrary fetch that
+      # claude keeps on its prompt too (mcp/searxng.nix).
+      default.searxng.web_url_read = "hidden";
+      description = ''
+        MCP servers that pi takes from the agent-extensions every other harness
+        reads, each mapped to pi `toolExposure` overrides. A selection rather than
+        all of them: pi runs a small local model, and each server's tools are
+        declared to it directly.
+      '';
+    };
+
     homeManager =
       {
         config,
+        host,
         inputs',
         pkgs,
         lib,
         ninfer-endpoints,
+        agent-extensions ? [ ],
         ...
       }:
       let
+        piMcp = host.settings.applications.dev.ai.agents.pi.mcpServers;
+        mcpServers = lib.getAttrs (lib.attrNames piMcp) (
+          lib.foldl' (acc: e: acc // (e.mcpServers or { })) { } (
+            lib.filter (e: e.type or "" == "mcp") (lib.flatten agent-extensions)
+          )
+        );
+
         # ponytail: first endpoint wins — key the provider by hostname if a
         # second inference host ever appears.
         ninfer = if ninfer-endpoints == [ ] then null else builtins.head ninfer-endpoints;
@@ -204,6 +226,16 @@
             "~/.pi/agent/extensions/plan-tracker.ts"
             "~/.pi/agent/extensions/security-guard.ts"
           ];
+        };
+
+        home.file.".pi/agent/mcp.json".text = builtins.toJSON {
+          mcpServers = lib.mapAttrs (name: s: {
+            inherit (s) command;
+            args = s.args or [ ];
+            env = s.env or { };
+            exposure = "direct";
+            toolExposure = piMcp.${name};
+          }) mcpServers;
         };
 
         # Deploy dummy auth keys for keyless local inference servers (ollama & llama-cpp)

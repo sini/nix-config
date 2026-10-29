@@ -43,6 +43,11 @@ let
       file = fileOf h ".config/opencode/opencode.json";
       jq = ''.mcp.searxng.type == "local" and .mcp.searxng.environment.SEARXNG_URL == "${endpoint}"'';
     }
+    {
+      name = "${h}: pi declares the searxng server, directly exposed, web_url_read hidden";
+      file = fileOf h ".pi/agent/mcp.json";
+      jq = ''.mcpServers.searxng.env.SEARXNG_URL == "${endpoint}" and .mcpServers.searxng.exposure == "direct" and .mcpServers.searxng.toolExposure.web_url_read == "hidden"'';
+    }
   ]) hosts;
 in
 
