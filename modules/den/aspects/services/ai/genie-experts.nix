@@ -9,20 +9,23 @@
 #            genie-agent's support-memory/ (the module defaults)
 #   trusted  the owner's checkouts and ~/.claude/memory, read-only sources
 #
-# Each tier signs in with its own `claude setup-token` token, a root-only agenix secret
-# systemd reads as an EnvironmentFile (GI-13); no tier sees the owner's ~/.claude
-# credentials. Until both secrets exist the tiers stay off and tier 1 keeps routing
-# to genie-support.
+# Both tiers sign in with the owner's `claude setup-token` token from the experts'
+# token pool (kubernetes/services/ai/genie-experts.nix), never with the owner's
+# ~/.claude credentials (GI-13). genie-expert-token renders it, root-only under /run,
+# as the EnvironmentFile systemd reads for each genie-herdr@<tier>.
 #
 # The owner's xmsg admits each dispatcher by its executable and watches each tier's
 # session dir (mcp/xmsg.nix), both read off this host's services.genie-agent.
-{ den, lib, ... }:
+{
+  den,
+  lib,
+  rootPath,
+  ...
+}:
 let
-  tiers = [
-    "public"
-    "trusted"
-  ];
-  secret = tier: "genie-expert-${tier}-token";
+  secret = "genie-expert-token";
+  tokenSource = rootPath + "/.secrets/env/prod/genie-experts/trusted/owner.age";
+  envFile = "/run/${secret}/env";
 in
 {
   den.aspects.services.ai.genie-experts = {
@@ -33,41 +36,46 @@ in
         host,
         config,
         inputs',
+        pkgs,
         ...
       }:
       let
         home = config.users.users.${host.system-owner}.home;
         node = "${host.system-owner}.${host.name}";
-        tokenFile = tier: host.secretPath + "/${secret tier}.age";
-        # agenix-rekey refuses a rekeyFile that is not in git, so both tiers wait for
-        # the owner to create both tokens.
-        missing = lib.filter (tier: !builtins.pathExists (tokenFile tier)) tiers;
-        enabled = missing == [ ];
+        # agenix-rekey refuses a rekeyFile that is not in git.
+        enabled = builtins.pathExists tokenSource;
         tier =
           name: extra:
           {
             address = "genie-expert-${name}@${node}";
-            tokenEnvironmentFile = config.age.secrets.${secret name}.path;
+            tokenEnvironmentFile = envFile;
           }
           // extra;
+
+        # The pool holds the bare `claude setup-token` output; an already
+        # env-formatted value is taken as is.
+        render = pkgs.writeShellScript "genie-expert-token" ''
+          set -eu
+          umask 077
+          t=$(tr -d '\r\n' < ${config.age.secrets.${secret}.path})
+          t=''${t#CLAUDE_CODE_OAUTH_TOKEN=}
+          printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$t" > "$RUNTIME_DIRECTORY/env.tmp"
+          mv "$RUNTIME_DIRECTORY/env.tmp" ${envFile}
+        '';
       in
       {
         warnings = lib.optional (!enabled) ''
-          genie-experts: ${
-            lib.concatMapStringsSep ", " (t: "${secret t}.age") missing
-          } absent on ${host.name}, so the expert tiers are NOT enabled and tier 1 routes to genie-support.
-          For each tier, mint a token with `claude setup-token`, then `agenix edit .secrets/hosts/${host.name}/<name>.age` with the one line `CLAUDE_CODE_OAUTH_TOKEN=<token>`, `git add` it and `agenix rekey`.
+          genie-experts: the expert token ${toString tokenSource} is absent, so the expert tiers are NOT enabled on ${host.name} and tier 1 routes to genie-support.
         '';
 
-        # The owner creates the values; nothing here generates them.
-        age.secrets = lib.mkIf enabled (
-          lib.genAttrs (map secret tiers) (name: {
-            rekeyFile = host.secretPath + "/${name}.age";
+        age.secrets = lib.mkIf enabled {
+          ${secret} = {
+            rekeyFile = tokenSource;
             owner = "root";
             group = "root";
             mode = "0400";
-          })
-        );
+          };
+        };
 
         services.genie-agent.experts = lib.mkIf enabled {
           enable = true;
@@ -80,11 +88,31 @@ in
           };
         };
 
-        # The public sources are fetched by genie-expert's unit.
-        systemd.services."genie-dispatcher@public" = lib.mkIf enabled {
-          after = [ "genie-public-repos.service" ];
-          wants = [ "genie-public-repos.service" ];
-        };
+        # agenix decrypts at activation, before any unit starts.
+        systemd.services = lib.mkIf enabled (
+          {
+            ${secret} = {
+              description = "genie: the experts' Claude token as an EnvironmentFile";
+              serviceConfig = {
+                Type = "oneshot";
+                RemainAfterExit = true;
+                RuntimeDirectory = secret;
+                RuntimeDirectoryMode = "0700";
+                ExecStart = render;
+              };
+            };
+
+            # The public sources are fetched by genie-expert's unit.
+            "genie-dispatcher@public" = {
+              after = [ "genie-public-repos.service" ];
+              wants = [ "genie-public-repos.service" ];
+            };
+          }
+          // lib.genAttrs [ "genie-herdr@public" "genie-herdr@trusted" ] (_: {
+            after = [ "${secret}.service" ];
+            requires = [ "${secret}.service" ];
+          })
+        );
       };
   };
 }
