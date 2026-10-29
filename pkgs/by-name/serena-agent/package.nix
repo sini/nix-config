@@ -119,5 +119,7 @@ python3Packages.buildPythonPackage {
     homepage = "https://github.com/oraios/serena";
     license = lib.licenses.mit;
     mainProgram = "serena";
+    # pywebview, imported at module scope, is broken on darwin in nixpkgs.
+    platforms = lib.platforms.linux;
   };
 }

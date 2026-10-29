@@ -13,6 +13,24 @@
       let
         openspecPkg = inputs'.llm-agents.packages.openspec;
 
+        # Declared, not read from the bundle: readDir on it is IFD, which forces the
+        # bundle to build for the host platform at eval time (a darwin host then needs
+        # a darwin builder just to evaluate). The bundle build checks this list.
+        skillNames = [
+          "openspec-apply-change"
+          "openspec-archive-change"
+          "openspec-bulk-archive-change"
+          "openspec-continue-change"
+          "openspec-explore"
+          "openspec-ff-change"
+          "openspec-new-change"
+          "openspec-onboard"
+          "openspec-propose"
+          "openspec-sync-specs"
+          "openspec-update-change"
+          "openspec-verify-change"
+        ];
+
         # Sandboxed execution of `openspec init` to produce the full 12 skills
         openspecBundle =
           pkgs.runCommand "openspec-bundle"
@@ -47,17 +65,17 @@
               )
 
               cp -r "$proj/.claude/skills"/* "$out/"
+
+              actual=$(cd "$out" && for d in */; do [ -f "$d/SKILL.md" ] && echo "''${d%/}"; done | sort)
+              expected=$(printf '%s\n' ${lib.escapeShellArgs skillNames} | sort)
+              if [ "$actual" != "$expected" ]; then
+                echo "openspec skill set drifted from skillNames:" >&2
+                diff <(echo "$expected") <(echo "$actual") >&2
+                exit 1
+              fi
             '';
 
-        discoverDirectorySkills =
-          skillsDir:
-          lib.mapAttrs' (name: _: lib.nameValuePair name "${skillsDir}/${name}") (
-            lib.filterAttrs (
-              name: type: type == "directory" && builtins.pathExists "${skillsDir}/${name}/SKILL.md"
-            ) (builtins.readDir skillsDir)
-          );
-
-        openspecSkills = discoverDirectorySkills openspecBundle;
+        openspecSkills = lib.genAttrs skillNames (name: "${openspecBundle}/${name}");
       in
       {
         type = "skill";

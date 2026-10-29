@@ -6,7 +6,8 @@
       { lib, pkgs, ... }:
       {
         type = "mcp";
-        mcpServers = {
+        # Linux-only: see pkgs/by-name/serena-agent meta.platforms.
+        mcpServers = lib.optionalAttrs pkgs.stdenv.hostPlatform.isLinux {
           serena = {
             command = "${lib.getExe pkgs.local.serena-agent}";
             args = [
@@ -24,7 +25,7 @@
     homeManager =
       { pkgs, lib, ... }:
       {
-        home.packages = [
+        home.packages = lib.optionals pkgs.stdenv.hostPlatform.isLinux [
           pkgs.local.serena-agent
         ];
 

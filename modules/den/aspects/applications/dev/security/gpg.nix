@@ -141,7 +141,8 @@
         # Darwin equivalent of the socket above: home-manager hangs it off the
         # launchd agent, again gated on the option we are not setting.
         launchd.agents.gpg-agent.config = lib.mkIf enableSshAgent {
-          RunAtLoad = true;
+          # home-manager sets RunAtLoad = enableSshSupport, which we leave false.
+          RunAtLoad = lib.mkForce true;
           Sockets.Ssh = {
             SockType = "stream";
             SockPathName = "${config.programs.gpg.homedir}/S.gpg-agent.ssh";
