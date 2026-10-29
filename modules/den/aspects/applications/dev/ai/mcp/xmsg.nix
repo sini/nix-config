@@ -247,9 +247,12 @@ in
         tier1Exe = lib.getExe inputs'.genie-agent.packages.genie-root;
         # The expert tiers' dispatchers (services/ai/genie-experts.nix) register one
         # service each, and their Claude sessions live in per-tier config dirs.
-        expertsEnabled =
-          host.hasAspect den.aspects.services.ai.genie-experts && config.home.username == host.system-owner;
         genie = osConfig.services.genie-agent;
+        # Off until the tiers' tokens exist (genie-experts.nix).
+        expertsEnabled =
+          host.hasAspect den.aspects.services.ai.genie-experts
+          && genie.experts.enable
+          && config.home.username == host.system-owner;
         expertTiers = [
           genie.experts.public
           genie.experts.trusted
