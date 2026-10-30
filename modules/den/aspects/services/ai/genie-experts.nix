@@ -11,8 +11,9 @@
 #
 # Both tiers sign in with the owner's `claude setup-token` token from the experts'
 # token pool (kubernetes/services/ai/genie-experts.nix), never with the owner's
-# ~/.claude credentials (GI-13). genie-expert-token renders it, root-only under /run,
-# as the EnvironmentFile systemd reads for each genie-herdr@<tier>.
+# ~/.claude credentials (GI-13). Each genie-dispatcher@<tier> loads it with
+# LoadCredential and hands it to each launch over a socketpair (GI-15); it takes the
+# raw token or the env-file form.
 #
 # The owner's xmsg admits each dispatcher by its executable and watches each tier's
 # session dir (mcp/xmsg.nix), both read off this host's services.genie-agent.
@@ -25,7 +26,6 @@
 let
   secret = "genie-expert-token";
   tokenSource = rootPath + "/.secrets/env/prod/genie-experts/trusted/owner.age";
-  envFile = "/run/${secret}/env";
 in
 {
   den.aspects.services.ai.genie-experts = {
@@ -48,20 +48,9 @@ in
           name: extra:
           {
             address = "genie-expert-${name}@${node}";
-            tokenEnvironmentFile = envFile;
+            tokenEnvironmentFile = config.age.secrets.${secret}.path;
           }
           // extra;
-
-        # The pool holds the bare `claude setup-token` output; an already
-        # env-formatted value is taken as is.
-        render = pkgs.writeShellScript "genie-expert-token" ''
-          set -eu
-          umask 077
-          t=$(tr -d '\r\n' < ${config.age.secrets.${secret}.path})
-          t=''${t#CLAUDE_CODE_OAUTH_TOKEN=}
-          printf 'CLAUDE_CODE_OAUTH_TOKEN=%s\n' "$t" > "$RUNTIME_DIRECTORY/env.tmp"
-          mv "$RUNTIME_DIRECTORY/env.tmp" ${envFile}
-        '';
       in
       {
         warnings = lib.optional (!enabled) ''
@@ -81,6 +70,8 @@ in
           enable = true;
           herdrPackage = inputs'.llm-agents.packages.herdr;
           claudePackage = inputs'.llm-agents.packages.claude-code;
+          # The same build the owner's xmsg runs (mcp/xmsg.nix).
+          xmsgPackage = pkgs.local.xmsg;
           public = tier "public" { };
           trusted = tier "trusted" {
             reposDir = "${home}/Documents/repos/sini";
@@ -88,31 +79,15 @@ in
           };
         };
 
-        # agenix decrypts at activation, before any unit starts.
-        systemd.services = lib.mkIf enabled (
-          {
-            ${secret} = {
-              description = "genie: the experts' Claude token as an EnvironmentFile";
-              serviceConfig = {
-                Type = "oneshot";
-                RemainAfterExit = true;
-                RuntimeDirectory = secret;
-                RuntimeDirectoryMode = "0700";
-                ExecStart = render;
-              };
-            };
+        # genie-agent asserts it for the experts' bwrap jail (GI-15); declared here
+        # rather than left to the module's mkDefault.
+        boot.kernel.sysctl."kernel.yama.ptrace_scope" = lib.mkIf enabled 1;
 
-            # The public sources are fetched by genie-expert's unit.
-            "genie-dispatcher@public" = {
-              after = [ "genie-public-repos.service" ];
-              wants = [ "genie-public-repos.service" ];
-            };
-          }
-          // lib.genAttrs [ "genie-herdr@public" "genie-herdr@trusted" ] (_: {
-            after = [ "${secret}.service" ];
-            requires = [ "${secret}.service" ];
-          })
-        );
+        # The public sources are fetched by genie-expert's unit.
+        systemd.services."genie-dispatcher@public" = lib.mkIf enabled {
+          after = [ "genie-public-repos.service" ];
+          wants = [ "genie-public-repos.service" ];
+        };
       };
   };
 }
