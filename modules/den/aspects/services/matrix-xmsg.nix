@@ -139,6 +139,11 @@ in
         default = 7791;
         description = "Federation port of the bot's xmsg node, distinct from every other node's on the host.";
       };
+      answerTimeoutSecs = lib.mkOption {
+        type = lib.types.nullOr lib.types.ints.positive;
+        default = null;
+        description = "Seconds the bot waits for an answer before escalating to the owner. null derives it from this host's genie-agent tier 1 (queue wait + turn deadline + 60 s grace) when it runs one, else keeps the module's default.";
+      };
       extraTrustedMxids = lib.mkOption {
         type = lib.types.listOf (lib.types.strMatching "@[^:]+:.+");
         default = [ ];
@@ -200,6 +205,21 @@ in
             (lib.sort (a: b: a.hostname < b.hostname) (lib.filter (n: n.clusterName == leaf.cluster) k3s-nodes))
         ) leaves;
         leafSecretName = xl.leafName svcUser;
+        # A tier-1 answer can take its queue wait plus its turn deadline; waiting less
+        # sends the owner a false timeout DM.
+        genie = config.services.genie-agent or { enable = false; };
+        # shortcut: 600 s restates genie-agent's QUESTION_TIMEOUT_MS default, read it from the module if it ever exposes one.
+        tier1AnswerSecs =
+          genie.tier1.maxQueueWaitSecs
+          + (if genie.tier1.questionTimeoutMs != null then genie.tier1.questionTimeoutMs / 1000 else 600)
+          + 60;
+        answerTimeoutSecs =
+          if cfg.answerTimeoutSecs != null then
+            cfg.answerTimeoutSecs
+          else if genie.enable then
+            tier1AnswerSecs
+          else
+            null;
       in
       {
         imports = [ inputs.matrix-xmsg.nixosModules.default ];
@@ -279,6 +299,7 @@ in
             // lib.optionalAttrs (r.screenMentions != null) { inherit (r) screenMentions; }
           ) cfg.roomRoutes;
           openThreadNodes = map (n: n.name) ownerNodes;
+          answerTimeoutSecs = lib.mkIf (answerTimeoutSecs != null) answerTimeoutSecs;
 
           xmsg = {
             enable = true;
