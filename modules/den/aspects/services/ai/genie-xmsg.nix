@@ -180,7 +180,41 @@ in
                 ProtectSystem = "strict";
                 ProtectHome = true;
                 PrivateTmp = true;
+                PrivateDevices = true;
                 NoNewPrivileges = true;
+                CapabilityBoundingSet = "";
+                AmbientCapabilities = "";
+                ProtectHostname = true;
+                ProtectClock = true;
+                ProtectKernelTunables = true;
+                ProtectKernelModules = true;
+                ProtectKernelLogs = true;
+                ProtectControlGroups = true;
+                # xmsg reads /proc/<peer> to attest callers, and every caller shares
+                # the bus's uid (http.sock and register.sock refuse any other), so
+                # hiding other users' processes hides no caller. No PrivatePIDs, which
+                # would hide them all.
+                ProtectProc = "invisible";
+                ProcSubset = "pid";
+                RestrictNamespaces = true;
+                RestrictRealtime = true;
+                RestrictSUIDSGID = true;
+                RemoveIPC = true;
+                LockPersonality = true;
+                MemoryDenyWriteExecute = true;
+                SystemCallArchitectures = "native";
+                SystemCallFilter = [
+                  "@system-service"
+                  "~@privileged"
+                  "~@resources"
+                ];
+                # INET for federation over mTLS once X1 turns it on.
+                RestrictAddressFamilies = [
+                  "AF_UNIX"
+                  "AF_INET"
+                  "AF_INET6"
+                ];
+                UMask = "0077";
               };
             };
           }
