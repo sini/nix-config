@@ -2907,11 +2907,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793604701,
-        "narHash": "sha256-UC8RUQFN7oXd2upJ65JS4abW3RN/cU1vMorsk41H0Fw=",
+        "lastModified": 1793615280,
+        "narHash": "sha256-7uSdxI+8kzUhPl0KT27ew2nWNz3Et6bcZIkTAjCoMGc=",
         "owner": "sini",
         "repo": "matrix-xmsg",
-        "rev": "cda4b6c83ffc11a1764b4123f371e5b887a3d6f8",
+        "rev": "eca19797143e358a4bb501fa15dc3d7d7eced88d",
         "type": "github"
       },
       "original": {
