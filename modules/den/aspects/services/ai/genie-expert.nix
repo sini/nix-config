@@ -148,10 +148,43 @@ in
             Group = user "public";
             StateDirectory = lib.removePrefix "/var/lib/" publicClones;
             ExecStart = "${fetch} ${lib.escapeShellArgs cfg.publicRepos}";
+            # git over HTTPS to github.com and nothing else: StateDirectory is its only
+            # writable path, and it needs no capability, device or kernel interface.
             ProtectSystem = "strict";
             ProtectHome = true;
             PrivateTmp = true;
+            PrivateDevices = true;
             NoNewPrivileges = true;
+            CapabilityBoundingSet = "";
+            AmbientCapabilities = "";
+            ProtectHostname = true;
+            ProtectClock = true;
+            ProtectKernelTunables = true;
+            ProtectKernelModules = true;
+            ProtectKernelLogs = true;
+            ProtectControlGroups = true;
+            ProtectProc = "invisible";
+            ProcSubset = "pid";
+            RestrictNamespaces = true;
+            RestrictRealtime = true;
+            RestrictSUIDSGID = true;
+            LockPersonality = true;
+            MemoryDenyWriteExecute = true;
+            SystemCallArchitectures = "native";
+            SystemCallFilter = [
+              "@system-service"
+              "~@privileged"
+              "~@resources"
+            ];
+            # HTTPS, plus netlink for getaddrinfo and the unix socket to nscd.
+            RestrictAddressFamilies = [
+              "AF_UNIX"
+              "AF_INET"
+              "AF_INET6"
+              "AF_NETLINK"
+            ];
+            # The public tier reads the clones as the owner, so they stay 0755.
+            UMask = "0022";
           };
         };
 
