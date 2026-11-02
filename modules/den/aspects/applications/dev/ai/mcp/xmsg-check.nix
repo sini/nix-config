@@ -9,7 +9,8 @@
 #
 # xmsg-harnesses: opencode reaches xmsg through the module's plugin and has no xmsg MCP
 # server (an `xmsg mcp` child of opencode is anonymous), and patch (darwin) runs no
-# `xmsg serve`. Each failing property is printed by name.
+# `xmsg serve`, and bitstream's user genie-guard keeps its XU2 hardening. Each failing
+# property is printed by name.
 #   nix build .#checks.x86_64-linux.xmsg-harnesses
 {
   config,
@@ -49,6 +50,28 @@ let
       {
         name = "patch: no systemd xmsg unit";
         ok = !(patch.systemd.user.services ? xmsg);
+      }
+      {
+        name = "bitstream: the user genie-guard carries the XU2 hardening";
+        ok =
+          let
+            s = (homeOf "bitstream").systemd.user.services.genie-guard.Service or { };
+          in
+          lib.all (k: s.${k} or null == true) [
+            "NoNewPrivileges"
+            "LockPersonality"
+            "RestrictRealtime"
+            "RestrictSUIDSGID"
+          ]
+          && s.SystemCallArchitectures or null == "native"
+          && s.UMask or null == "0077"
+          &&
+            lib.sort lib.lessThan (s.RestrictAddressFamilies or [ ]) == [
+              "AF_INET"
+              "AF_INET6"
+              "AF_NETLINK"
+              "AF_UNIX"
+            ];
       }
     ];
   failed = map (p: p.name) (lib.filter (p: !p.ok) properties);

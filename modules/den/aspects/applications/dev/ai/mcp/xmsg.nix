@@ -368,6 +368,22 @@ in
             ];
             Restart = "on-failure";
             RestartSec = 10;
+            # Only what an unprivileged user manager applies without a user namespace
+            # (seccomp, no_new_privs, umask). The guard spawns nothing, and it is a
+            # Node SEA, so no MemoryDenyWriteExecute (V8 JIT).
+            NoNewPrivileges = true;
+            LockPersonality = true;
+            RestrictRealtime = true;
+            RestrictSUIDSGID = true;
+            SystemCallArchitectures = "native";
+            # The model over HTTP, xmsg over unix sockets, netlink for getaddrinfo.
+            RestrictAddressFamilies = [
+              "AF_UNIX"
+              "AF_INET"
+              "AF_INET6"
+              "AF_NETLINK"
+            ];
+            UMask = "0077";
           };
           Install.WantedBy = [ "default.target" ];
         };
