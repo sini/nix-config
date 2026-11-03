@@ -69,7 +69,7 @@
         };
 
         environment.systemPackages = [
-          pkgs.libguestfs
+          # pkgs.libguestfs # TODO: nixpkgs marks libguestfs 1.56.2 broken (stuck on fuse2); re-enable once it moves to fuse3
           pkgs.spice
           pkgs.spice-gtk
           pkgs.spice-protocol

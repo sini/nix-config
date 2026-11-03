@@ -45,12 +45,8 @@ let
         { name, config, ... }:
         {
           config._module.args.user = config;
+          # `name` is gen-schema's: mkInstanceType declares it, defaulting to the key.
           options = {
-            name = mkOption {
-              type = types.str;
-              default = name;
-              description = "User name (from attrset key)";
-            };
             userName = mkOption {
               type = types.str;
               default = name;

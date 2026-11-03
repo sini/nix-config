@@ -11,6 +11,9 @@ metadata:
   namespace: kube-system
 spec:
   clusterIP: 172.21.0.10
+  ipFamilies:
+    - IPv4
+    - IPv6
   ipFamilyPolicy: RequireDualStack
   ports:
     - name: udp-53

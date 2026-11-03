@@ -1,8 +1,8 @@
 {
   imageName = "library/alpine";
   imageTag = "latest";
-  imageDigest = "sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6";
-  imageHash = "sha256-LMtzkDBbq54sUMlByUG0TB1wzcGjNJ3Nxv9ExZiVH0Y=";
+  imageDigest = "sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a";
+  imageHash = "sha256-ILhrGF6SX4wVK69mok4rNFn/Bh6ixTW91cG/ayYmziM=";
   arch = "amd64";
   os = "linux";
   pinned = false;

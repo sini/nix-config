@@ -8,7 +8,8 @@
           libraries =
             (pkgs.steam-run.args.multiPkgs pkgs)
             ++ (pkgs.heroic.args.multiPkgs pkgs)
-            ++ (pkgs.lutris.args.multiPkgs pkgs)
+            # TODO: lutris 0.5.22's runtime set pulls gtk2, which nixpkgs marks broken; restore once lutris drops it
+            # ++ (pkgs.lutris.args.multiPkgs pkgs)
             ++ (with pkgs; [
               alsa-lib
               clang.cc.lib

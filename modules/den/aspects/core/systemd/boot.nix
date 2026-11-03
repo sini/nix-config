@@ -5,7 +5,6 @@
         initrd = {
           compressor = "zstd";
           compressorArgs = [ "-12" ];
-          systemd.enable = true;
         };
 
         loader = {

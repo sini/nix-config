@@ -30,7 +30,7 @@ spec:
           echo "✓ Received expected error: $PING_RESULT"
           echo "⚠ Manual verification recommended for usersExistingSecret configuration"
           exit 0
-      image: docker.io/valkey/valkey:9.1.2
+      image: docker.io/valkey/valkey:9.1.3
       name: test-auth
       volumeMounts:
         - mountPath: /valkey-users-secret

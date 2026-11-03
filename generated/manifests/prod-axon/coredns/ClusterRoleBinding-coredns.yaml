@@ -14,5 +14,5 @@ roleRef:
   name: coredns
 subjects:
   - kind: ServiceAccount
-    name: default
+    name: coredns
     namespace: kube-system

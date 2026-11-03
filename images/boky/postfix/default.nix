@@ -1,8 +1,8 @@
 {
   imageName = "boky/postfix";
   imageTag = "latest";
-  imageDigest = "sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef";
-  imageHash = "sha256-90PUW5J5jtzLGHHa5+ZGy4mOZwSlOlGQvSWWWMbWI+Q=";
+  imageDigest = "sha256:0632783c64183446c4edeae9092a2e015fdc0c4e8a3976bdf8878a7fc2146361";
+  imageHash = "sha256-a1VeIbfPQbg8kj/bM1RVQLnNWreTwIiU3TO1IfadWl0=";
   arch = "amd64";
   os = "linux";
   pinned = false;

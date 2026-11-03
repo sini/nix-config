@@ -34,7 +34,7 @@ spec:
             - /etc/alloy/config.alloy
             - --storage.path=/home/shoko/.shoko/.alloy
             - --server.http.listen-addr=127.0.0.1:12345
-          image: docker.io/grafana/alloy@sha256:2aa2099af76c0098d4af7a4d6e48f86cb66dc1a000222ad927a1c67c6542d13f
+          image: docker.io/grafana/alloy@sha256:8ab871206bd2d8f89277f53abffee5f452a293980788d52f85fa183a87a505a4
           name: logtail
           securityContext:
             runAsGroup: 65536
@@ -106,7 +106,7 @@ spec:
               chown -R 1027:65536 "$dst/LuaRenamer"
               touch "$marker"
               echo "LuaRenamer v5.10.3-stable-5.3.1 installed."
-          image: library/alpine@sha256:294b683cb724975bec92580e1e685676bd4b50bda910ddb8c51d4cabeaec77e6
+          image: library/alpine@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a
           name: install-luarenamer
           volumeMounts:
             - mountPath: /home/shoko/.shoko

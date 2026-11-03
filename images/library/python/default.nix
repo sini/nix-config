@@ -1,8 +1,8 @@
 {
   imageName = "library/python";
   imageTag = "3-alpine";
-  imageDigest = "sha256:618e7b661a89d05565fb402a5e1eab8b1b4e5df1f5ea3dc494998d092ffe1213";
-  imageHash = "sha256-Si3KjBVpbVTVo6EK3E0VR2NVzywwJUQeWdT9N/GlbMo=";
+  imageDigest = "sha256:20a82dbc2783112ddb91d1534603f802d222a3e63e593cd002eb2ac534e70211";
+  imageHash = "sha256-y+2/Flm7/LkeDweZZrMj9G0KRAiKL6DTicvr2dUG5lI=";
   arch = "amd64";
   os = "linux";
   pinned = false;

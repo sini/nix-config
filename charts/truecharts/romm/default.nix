@@ -1,6 +1,6 @@
 {
   repo = "oci://oci.trueforge.org/truecharts";
   chart = "romm";
-  version = "21.0.0";
-  chartHash = "sha256-Xa0o5knHl2h0HyO5Hn88U8p57jBOQM6I+759OgsQskw=";
+  version = "21.0.11";
+  chartHash = "sha256-apLsgOAZMF3dAtiios/dJO6CwzXEJT9EqwgBeEbwIBI=";
 }

@@ -38,7 +38,7 @@
         home.packages = [
           pkgs.igir
           pkgs.prismlauncher
-          pkgs.lutris
+          # pkgs.lutris # TODO: lutris 0.5.22 pulls gtk2, which nixpkgs marks broken ahead of its removal; re-enable once lutris drops it, or use heroic / faugus-launcher
           pkgs.sameboy
           pkgs.mgba
           pkgs.melonds

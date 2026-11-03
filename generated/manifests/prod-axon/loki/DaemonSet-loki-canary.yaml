@@ -31,7 +31,7 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          image: docker.io/grafana/loki-canary:3.6.12
+          image: docker.io/grafana/loki-canary:3.6.16
           imagePullPolicy: IfNotPresent
           name: loki-canary
           ports:

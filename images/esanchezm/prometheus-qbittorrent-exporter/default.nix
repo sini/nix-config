@@ -1,8 +1,8 @@
 {
   imageName = "ghcr.io/esanchezm/prometheus-qbittorrent-exporter";
   imageTag = "latest";
-  imageDigest = "sha256:3e80be9b2e6bad50af7c47abf521b2db3980b2735f4621ef15f3e1867e171f86";
-  imageHash = "sha256-RX4L5akHSf7cBlufGSpTMFLKK5bBLd6wfP1yGWrabxw=";
+  imageDigest = "sha256:f27cc3b38a7383353ccdd8517f6b57187cc90ad9e6504049630c25e111f590e9";
+  imageHash = "sha256-9bnPq37VOzQVdHEKG+ncnC8Rn5Q5WovWgfRjL8Lp7EA=";
   arch = "amd64";
   os = "linux";
   pinned = false;

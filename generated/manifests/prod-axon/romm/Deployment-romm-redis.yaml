@@ -17,7 +17,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/initconfig: 5cc1c3732aa556a293a1479a8fe00c9c
+        checksum/initconfig: 87ea8944b93b1dc617be1c6266e48b95
       labels:
         app.kubernetes.io/instance: romm-redis
         app.kubernetes.io/name: valkey
@@ -31,7 +31,7 @@ spec:
           env:
             - name: VALKEY_LOG_LEVEL
               value: notice
-          image: docker.io/valkey/valkey:9.1.2
+          image: docker.io/valkey/valkey:9.1.3
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
@@ -73,7 +73,7 @@ spec:
       initContainers:
         - command:
             - /scripts/init.sh
-          image: docker.io/valkey/valkey:9.1.2
+          image: docker.io/valkey/valkey:9.1.3
           imagePullPolicy: IfNotPresent
           name: romm-redis-init
           securityContext:

@@ -1,8 +1,8 @@
 {
   imageName = "linuxserver/lidarr";
   imageTag = "latest";
-  imageDigest = "sha256:67887807b13ae025c0fe979da298347c8609969087ab064c81d8e9acc1e06bbf";
-  imageHash = "sha256-lvu6ZbBfVndxcngR/rxrGSr13w7vRIMWqitNK3T3jWU=";
+  imageDigest = "sha256:9fddcf5c613361edfce390d4e6b7c364282e71e90a40ce7793077fed788f6e63";
+  imageHash = "sha256-L3Y+0UkhbTWe/dbFE8nvG9sKEoUKb6aCA9081bnrpTE=";
   arch = "amd64";
   os = "linux";
   pinned = false;
