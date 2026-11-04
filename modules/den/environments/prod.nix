@@ -74,6 +74,14 @@
         "dev"
       ];
     };
+    # Prod's hosts reach every dev host, all protocols.
+    unifi.networkPolicies = [
+      {
+        name = "Prod to Dev access";
+        from = "Default";
+        to = "dev";
+      }
+    ];
     unifi.bgp = {
       description = "edge-prod";
       uploadFileName = "unifi-frr-bgp-prod.conf";

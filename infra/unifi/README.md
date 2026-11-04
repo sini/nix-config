@@ -92,14 +92,17 @@ the destination's own environment renders none, since it shares the LAN.
 cortex-cuda:8081). The legacy LAN_IN rules these replaced are dropped from state
 (`removed`, never destroyed). `checks.<system>.unifi-gateway-policy-render` and
 `unifi-nat-render` fix the payloads. No static route is managed: cortex-cuda is
-bridged onto the dev LAN. The hand-made "Prod to Dev access" policy (all
-protocols, `Default` -> `dev`) is not managed.
+bridged onto the dev LAN. `unifi.networkPolicies` declares network-to-network
+allows (Internal -> Internal, by controller network names), rendered by
+`renderNetworkPolicies`; prod declares "Prod to Dev access" (all protocols,
+`Default` -> `dev`). `checks.<system>.unifi-network-policy-render` fixes the
+payload.
 
 `unifi-adopt` imports each declared policy from the one live policy with its
-name and zone pair, and refuses a name with two in one pair. The migration also
-fanned "ninfer-to-cortex-cuda from prod" out to Internal -> External, Hotspot
-and Vpn; only Internal -> Internal can match (10.9.2.2 is on the dev LAN), so
-those three are inert and unmanaged.
+name and zone pair, and refuses a name with two in one pair. The firmware's
+migration also fanned "ninfer-to-cortex-cuda from prod" out to Internal ->
+External, Hotspot and Vpn; those copies were deleted, and every non-predefined
+policy on the gateway is managed here.
 
 ## State
 

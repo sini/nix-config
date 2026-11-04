@@ -13,8 +13,16 @@
       "id": "4d24d0bc-49b5-4c04-b2c5-eda159fab46e"
     },
     {
+      "to": "unifi_firewall_policy.axon_https_ingress_allow",
+      "id": "ad4bd51e-c83e-4cb8-af31-8052e0f74340"
+    },
+    {
       "to": "unifi_firewall_policy.ninfer_to_cortex_cuda_from_prod",
       "id": "6c752866-2cc2-4a96-9b76-a2f8e1e032c9"
+    },
+    {
+      "to": "unifi_firewall_policy.prod_to_dev_access",
+      "id": "cf6a8b51-9259-4a68-9df9-8da71a625a4e"
     },
     {
       "to": "restapi_object.axon_https_ingress_dnat_default",

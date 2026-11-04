@@ -10,6 +10,7 @@
 #   nix build .#checks.<system>.unifi-port-forward-render
 #   nix build .#checks.<system>.unifi-nat-render
 #   nix build .#checks.<system>.unifi-gateway-policy-render
+#   nix build .#checks.<system>.unifi-network-policy-render
 #   unifi-adopt / unifi-plan / unifi-apply (devshell)
 {
   den,
@@ -400,6 +401,65 @@ let
           ) rules
         );
 
+  # The unifi.networkPolicies records as Internal -> Internal allows from one
+  # network to another (both environments' LANs are in the Internal zone),
+  # networks looked up by their controller names.
+  renderNetworkPolicies =
+    { site, policies }:
+    let
+      netKey = n: "unifi_network_${key n}";
+      netId = n: "\${data.restapi_object.${netKey n}.id}";
+      endpoint = n: {
+        zone_id = zoneId "Internal";
+        matching_target = "NETWORK";
+        network_ids = [ (netId n) ];
+        port_matching_type = "ANY";
+      };
+      policy =
+        p:
+        let
+          resource = key p.name;
+        in
+        {
+          resource.unifi_firewall_policy.${resource} = {
+            inherit (p) name protocol;
+            action = "ALLOW";
+            enabled = true;
+            ip_version = "IPV4";
+            source = endpoint p.from;
+            destination = endpoint p.to;
+          };
+          _meta.policies.${resource} = {
+            inherit (p) name;
+            source = "Internal";
+            destination = "Internal";
+          };
+        };
+    in
+    if policies == [ ] then
+      { }
+    else
+      lib.foldl' lib.recursiveUpdate {
+        data.restapi_object =
+          lib.genAttrs'
+            (lib.unique (
+              lib.concatMap (p: [
+                p.from
+                p.to
+              ]) policies
+            ))
+            (
+              n:
+              lib.nameValuePair (netKey n) {
+                path = "/api/s/${site}/rest/networkconf";
+                results_key = "data";
+                search_key = "name";
+                search_value = n;
+                results_contains_object = true;
+              }
+            );
+      } ([ (zonesData [ "Internal" ]) ] ++ map policy policies);
+
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
   # its template forces ebgp-requires-policy, redistribute connected,
@@ -504,6 +564,42 @@ in
                   type = types.str;
                   description = "The file name the controller records for the uploaded configuration";
                 };
+              };
+              networkPolicies = mkOption {
+                default = [ ];
+                description = ''
+                  Zone policies allowing one network's clients to reach another,
+                  by the controller's network names (networkconf `name`), both in
+                  the Internal zone.
+                '';
+                type = types.listOf (
+                  types.submodule {
+                    options = {
+                      name = mkOption {
+                        type = types.str;
+                        description = "The policy's controller name; unifi-adopt matches a live policy by it";
+                      };
+                      from = mkOption {
+                        type = types.str;
+                        description = "The source network";
+                      };
+                      to = mkOption {
+                        type = types.str;
+                        description = "The destination network";
+                      };
+                      protocol = mkOption {
+                        type = types.enum [
+                          "all"
+                          "tcp"
+                          "udp"
+                          "tcp_udp"
+                        ];
+                        default = "all";
+                        description = "The protocols allowed";
+                      };
+                    };
+                  }
+                );
               };
               wans = mkOption {
                 type = types.nonEmptyListOf types.str;
@@ -620,6 +716,10 @@ in
       (renderGatewayPolicies {
         nodes = k3s-nodes;
         policies = gateway-policies;
+      })
+      (renderNetworkPolicies {
+        inherit (unifi) site;
+        policies = unifi.networkPolicies;
       })
       {
         terraform = {
@@ -1146,6 +1246,62 @@ in
         in
         assert lib.assertMsg ok "unifi-nat-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-nat-render" (builtins.toJSON rendered);
+
+      # Fixture: a network policy renders one Internal -> Internal allow between
+      # the networks' looked-up ids, its _meta entry and the network lookups, and
+      # none renders nothing.
+      checks.unifi-network-policy-render =
+        let
+          rendered = renderNetworkPolicies {
+            site = "s";
+            policies = [
+              {
+                name = "A to B";
+                from = "A";
+                to = "B";
+                protocol = "all";
+              }
+            ];
+          };
+          endpoint = n: {
+            zone_id = "\${data.unifi_firewall_zone.unifi_zone_internal.id}";
+            matching_target = "NETWORK";
+            network_ids = [ "\${data.restapi_object.unifi_network_${n}.id}" ];
+            port_matching_type = "ANY";
+          };
+          ok =
+            rendered.resource.unifi_firewall_policy == {
+              a_to_b = {
+                name = "A to B";
+                protocol = "all";
+                action = "ALLOW";
+                enabled = true;
+                ip_version = "IPV4";
+                source = endpoint "a";
+                destination = endpoint "b";
+              };
+            }
+            &&
+              rendered._meta.policies.a_to_b == {
+                name = "A to B";
+                source = "Internal";
+                destination = "Internal";
+              }
+            &&
+              builtins.attrNames rendered.data.restapi_object == [
+                "unifi_network_a"
+                "unifi_network_b"
+              ]
+            && rendered.data.restapi_object.unifi_network_a.search_value == "A"
+            && rendered.data.unifi_firewall_zone == { unifi_zone_internal.name = "Internal"; }
+            &&
+              renderNetworkPolicies {
+                site = "s";
+                policies = [ ];
+              } == { };
+        in
+        assert lib.assertMsg ok "unifi-network-policy-render:\n${builtins.toJSON rendered}";
+        pkgs.writeText "unifi-network-policy-render" (builtins.toJSON rendered);
 
       # Fixture: a policy renders one Internal -> Internal zone policy and one
       # address group per source environment from its cluster's node addresses,

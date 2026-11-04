@@ -181,4 +181,5 @@ ssh axon-01 "$(typeset -f probe); probe"         # 200
   construction, through the `ninfer-clients` quirk. Extra non-consumer hosts go
   in `settings.services.ai.ninfer.clients.hosts`.
 - **8080** (llama-cpp) is still open to all sources on the guest, and its
-  cluster path is the hand-made "Prod to Dev access" rule.
+  cluster path is the "Prod to Dev access" policy (prod.nix
+  `unifi.networkPolicies`).
