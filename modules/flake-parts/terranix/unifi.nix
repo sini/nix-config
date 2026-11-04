@@ -84,6 +84,53 @@ let
     in
     builtins.filter ({ value, ... }: modeOf value == mode) (lib.imap0 check own);
 
+  # The gateway runs the zone-based firewall: a policy names its source and
+  # destination zones by id, looked up from their controller names.
+  zoneKey = z: "unifi_zone_${key z}";
+  zoneId = z: "\${data.unifi_firewall_zone.${zoneKey z}.id}";
+  zonesData = names: {
+    data.unifi_firewall_zone = lib.genAttrs' names (z: lib.nameValuePair (zoneKey z) { name = z; });
+  };
+
+  # One unifi_firewall_policy allowing `protocol` to `ip`:`port` across a zone
+  # pair, and its _meta entry, which unifi-adopt matches a live policy against by
+  # name and zone pair.
+  zonePolicy =
+    {
+      resource,
+      name,
+      protocol,
+      from,
+      to,
+      source,
+      ip,
+      port,
+    }:
+    {
+      resource.unifi_firewall_policy.${resource} = {
+        inherit name protocol;
+        action = "ALLOW";
+        enabled = true;
+        ip_version = "IPV4";
+        source = {
+          zone_id = zoneId from;
+        }
+        // source;
+        destination = {
+          zone_id = zoneId to;
+          matching_target = "IP";
+          ips = [ ip ];
+          port_matching_type = "SPECIFIC";
+          inherit port;
+        };
+      };
+      _meta.policies.${resource} = {
+        inherit name;
+        source = from;
+        destination = to;
+      };
+    };
+
   # The gateway's port forwards: the records with mode "forward". A forward
   # listens on the first WAN, or with `allWans` on every one in `wans` (the
   # controller's destination_ips).
@@ -121,6 +168,16 @@ let
   #   <key>_dnat_wan    public address:wanPort in on the WAN -> forward
   #   <key>_dnat_<lan>  the same in on each LAN (hairpin)
   #   <key>_masq_<lan>  each LAN's clients to forward, out the first LAN
+  # A custom NAT rule, unlike a port forward, gets no policy from the
+  # controller, and the zone firewall blocks External traffic no policy admits,
+  # so each record also takes unifi_firewall_policy.<key>_allow: any External
+  # source to forward. Its destination zone is External, not Internal: a nat
+  # forward targets a BGP-announced service address, outside every LAN, and the
+  # zone firewall puts an address in no network in External (measured on the
+  # 6.0.17 firmware: the ingress's DNATed SYNs counted on External -> External
+  # Block All).
+  # shortcut: assumes every nat forward targets an address outside the LANs; key
+  #   the zone off the target if one ever forwards to a LAN host.
   # The controller requires a DNAT's in_interface and a MASQUERADE's
   # out_interface, both networkconf ids, looked up by `networks` names.
   # Ports are the controller's strings; a /32 filter address is refused, so
@@ -215,51 +272,75 @@ let
     else
       assert lib.assertMsg (publicIPv4 != null) "unifi: nat port forwards need dns.publicIPv4";
       assert lib.assertMsg (networks != null) "unifi: nat port forwards need unifi.networks";
-      {
-        data.restapi_object = lib.genAttrs' (lib.unique ([ networks.wan ] ++ networks.lans)) (
-          n:
-          lib.nameValuePair (netKey n) {
-            path = "/api/s/${site}/rest/networkconf";
-            results_key = "data";
-            search_key = "name";
-            search_value = n;
-            results_contains_object = true;
-          }
-        );
-        # rule_index is unique per site and the controller assigns a clashing
-        # one when none is sent, so each rule takes its position.
-        resource.restapi_object = lib.listToAttrs (
-          lib.imap1 (i: { name, value }: {
-            inherit name;
-            value = {
-              inherit path;
-              create_path = path;
-              # No GET by id: read searches the list for the _id.
-              read_path = "${path}/{id}";
-              read_search = {
-                search_key = "_id";
-                search_value = "{id}";
+      lib.foldl' lib.recursiveUpdate
+        {
+          data.restapi_object = lib.genAttrs' (lib.unique ([ networks.wan ] ++ networks.lans)) (
+            n:
+            lib.nameValuePair (netKey n) {
+              path = "/api/s/${site}/rest/networkconf";
+              results_key = "data";
+              search_key = "name";
+              search_value = n;
+              results_contains_object = true;
+            }
+          );
+          # rule_index is unique per site and the controller assigns a clashing
+          # one when none is sent, so each rule takes its position.
+          resource.restapi_object = lib.listToAttrs (
+            lib.imap1 (i: { name, value }: {
+              inherit name;
+              value = {
+                inherit path;
+                create_path = path;
+                # No GET by id: read searches the list for the _id.
+                read_path = "${path}/{id}";
+                read_search = {
+                  search_key = "_id";
+                  search_value = "{id}";
+                };
+                update_path = "${path}/{id}";
+                destroy_path = "${path}/{id}";
+                # The controller adds _id, site_id and attr_* fields; drift is
+                # judged on the declared ones.
+                ignore_server_additions = true;
+                data = builtins.toJSON (value // { rule_index = i; });
               };
-              update_path = "${path}/{id}";
-              destroy_path = "${path}/{id}";
-              # The controller adds _id, site_id and attr_* fields; drift is
-              # judged on the declared ones.
-              ignore_server_additions = true;
-              data = builtins.toJSON (value // { rule_index = i; });
-            };
-          }) rules
+            }) rules
+          );
+          # Read by unifi-adopt, which imports each rule by its description: the
+          # firmware's zone migration re-created every rule under a new _id.
+          _meta.nat = lib.listToAttrs (
+            map ({ name, value }: lib.nameValuePair name { inherit (value) description; }) rules
+          );
+        }
+        (
+          [ (zonesData [ "External" ]) ]
+          ++ map (
+            { name, value }:
+            zonePolicy {
+              resource = "${name}_allow";
+              name = "${value.name} allow";
+              inherit (value) protocol;
+              from = "External";
+              to = "External";
+              source = {
+                matching_target = "ANY";
+                port_matching_type = "ANY";
+              };
+              ip = value.forward.ip;
+              port = singlePort value value.forward.port;
+            }
+          ) records
         );
-      };
 
-  # The gateway-policies records as legacy LAN_IN accept rules (the gateway runs
-  # no zone-based firewall), one per source environment: from an address group
-  # of the named clusters' node addresses (pods masquerade to them) to the
-  # destination address and port. Sources in the destination's own environment
-  # share its LAN and never cross the gateway, so they render none. A cluster
-  # with no nodes is refused.
-  # ponytail: rule_index is ruleIndexBase + position; the controller refuses a
-  # clash, so a second consumer of the block reads the live indices first.
-  ruleIndexBase = 20500;
+  # The gateway-policies records as zone policies, Internal -> Internal (both
+  # environments' LANs are in the Internal zone), one per source environment:
+  # from an address group of the named clusters' node addresses (pods masquerade
+  # to them) to the destination address and port. Sources in the destination's
+  # own environment share its LAN and never cross the gateway, so they render
+  # none. A cluster with no nodes is refused. The legacy LAN_IN rules these
+  # replaced are dropped from state, never destroyed: the firmware's zone
+  # migration already removed them from the controller.
   renderGatewayPolicies =
     { nodes, policies }:
     let
@@ -284,36 +365,40 @@ let
             type = "address-group";
             members = lib.sort (a: b: a < b) (lib.unique (map (n: n.ip) members));
           };
-          rule = {
-            name = "${p.name} from ${src}";
-            ruleset = "LAN_IN";
-            action = "accept";
-            enabled = true;
-            inherit (p) protocol;
-            dst_address = p.destination.ip;
-            dst_port = p.port;
-          };
+          inherit (p) protocol port;
+          inherit (p.destination) ip;
         }) (removeAttrs (lib.groupBy (n: n.environment.name) (sourcesOf p)) [ p.destination.environment ]);
       rules = lib.concatMap rulesOf policies;
     in
     if rules == [ ] then
       { }
     else
-      {
-        resource.unifi_firewall_group = lib.listToAttrs (map (r: lib.nameValuePair r.name r.group) rules);
-        resource.unifi_firewall_rule = lib.listToAttrs (
-          lib.imap1 (
-            i: r:
-            lib.nameValuePair r.name (
-              r.rule
-              // {
-                rule_index = ruleIndexBase + i;
-                src_firewall_group_ids = [ "\${unifi_firewall_group.${r.name}.id}" ];
-              }
-            )
+      lib.foldl' lib.recursiveUpdate
+        {
+          resource.unifi_firewall_group = lib.listToAttrs (map (r: lib.nameValuePair r.name r.group) rules);
+          removed = map (r: {
+            from = "unifi_firewall_rule.${r.name}";
+            lifecycle.destroy = false;
+          }) rules;
+        }
+        (
+          [ (zonesData [ "Internal" ]) ]
+          ++ map (
+            r:
+            zonePolicy {
+              resource = r.name;
+              inherit (r.group) name;
+              inherit (r) protocol ip port;
+              from = "Internal";
+              to = "Internal";
+              source = {
+                matching_target = "IP";
+                ip_group_id = "\${unifi_firewall_group.${r.name}.id}";
+                port_matching_type = "ANY";
+              };
+            }
           ) rules
         );
-      };
 
   # The gateway's raw FRR bgpd config: one peer group per remote ASN, one
   # neighbor per bgp-peers record. Raw, not the provider's structured peers:
@@ -645,6 +730,31 @@ in
           | if test("^[0-9]") then "pf_" + . else . end;
         map({ to: "unifi_port_forward.\(key)", id: ._id })
         | if (map(.to) | unique | length) != length then error("unifi-adopt: two port forwards share a resource name") else . end
+      '';
+
+      # Each declared zone policy ($meta.policies) as an import block, by the one
+      # live policy with its name and zone pair; none is created by the plan, and
+      # two are refused (the firmware's zone migration fanned one legacy rule out
+      # to every zone pair, so a pair is part of the match).
+      policyImports = pkgs.writeText "unifi-policy-imports.jq" ''
+        . as $live
+        | (($zones | map({ (._id): .name }) | add) // {}) as $zone
+        | [ ($meta.policies // {}) | to_entries[] | .key as $res | .value as $p
+            | [ $live[] | select(.name == $p.name and $zone[.source.zone_id] == $p.source and $zone[.destination.zone_id] == $p.destination) ]
+            | if length > 1 then error("unifi-adopt: \(length) live policies named \($p.name) from \($p.source) to \($p.destination); delete all but one")
+              elif length == 1 then { to: "unifi_firewall_policy.\($res)", id: .[0]._id }
+              else empty end ]
+      '';
+
+      # Each declared custom NAT rule ($meta.nat) as an import block, by the one
+      # live rule with its description; restapi_object imports by its full path.
+      natImports = pkgs.writeText "unifi-nat-imports.jq" ''
+        . as $live
+        | [ ($meta.nat // {}) | to_entries[] | .key as $res | .value.description as $d
+            | [ $live[] | select(.description == $d) ]
+            | if length > 1 then error("unifi-adopt: \(length) live NAT rules described \($d); delete all but one")
+              elif length == 1 then { to: "restapi_object.\($res)", id: "/v2/api/site/\($site)/nat/\(.[0]._id)" }
+              else empty end ]
       '';
 
       # Decrypts the API key and the state passphrase into this process's env only.
@@ -995,6 +1105,34 @@ in
                 "unifi_network_internet_1"
               ]
             && rendered.data.restapi_object.unifi_network_dev.search_value == "dev"
+            && builtins.attrNames rendered.resource.unifi_firewall_policy == [ "c1_https_ingress_allow" ]
+            &&
+              rendered.resource.unifi_firewall_policy.c1_https_ingress_allow == {
+                name = "c1-https-ingress allow";
+                action = "ALLOW";
+                enabled = true;
+                ip_version = "IPV4";
+                protocol = "tcp_udp";
+                source = {
+                  zone_id = "\${data.unifi_firewall_zone.unifi_zone_external.id}";
+                  matching_target = "ANY";
+                  port_matching_type = "ANY";
+                };
+                destination = {
+                  zone_id = "\${data.unifi_firewall_zone.unifi_zone_external.id}";
+                  matching_target = "IP";
+                  ips = [ "10.1.0.1" ];
+                  port_matching_type = "SPECIFIC";
+                  port = "443";
+                };
+              }
+            && rendered.data.unifi_firewall_zone == { unifi_zone_external.name = "External"; }
+            &&
+              rendered._meta.policies.c1_https_ingress_allow == {
+                name = "c1-https-ingress allow";
+                source = "External";
+                destination = "External";
+              }
             && renderNat (args // { forwards = [ (removeAttrs nat [ "mode" ]) ]; }) == { }
             && refused { forwards = [ (nat // { wanPort = "443,8443"; }) ]; }
             && refused { forwards = [ (nat // { mode = "dnat"; }) ]; }
@@ -1009,9 +1147,10 @@ in
         assert lib.assertMsg ok "unifi-nat-render:\n${builtins.toJSON rendered}";
         pkgs.writeText "unifi-nat-render" (builtins.toJSON rendered);
 
-      # Fixture: a policy renders one LAN_IN accept rule and one address group
-      # per source environment from its cluster's node addresses, a
-      # same-environment source renders none, and an unknown cluster is refused.
+      # Fixture: a policy renders one Internal -> Internal zone policy and one
+      # address group per source environment from its cluster's node addresses,
+      # drops the legacy rule of that name from state, a same-environment source
+      # renders none, and an unknown cluster is refused.
       checks.unifi-gateway-policy-render =
         let
           node = clusterName: env: ip: {
@@ -1041,23 +1180,40 @@ in
             ];
           };
           rendered = renderGatewayPolicies args;
-          inherit (rendered.resource) unifi_firewall_rule unifi_firewall_group;
+          inherit (rendered.resource) unifi_firewall_policy unifi_firewall_group;
           refused =
             a: !(builtins.tryEval (builtins.deepSeq (renderGatewayPolicies (args // a)) null)).success;
           ok =
-            builtins.attrNames unifi_firewall_rule == [ "svc_to_h_from_p" ]
+            builtins.attrNames unifi_firewall_policy == [ "svc_to_h_from_p" ]
             &&
-              unifi_firewall_rule.svc_to_h_from_p == {
+              unifi_firewall_policy.svc_to_h_from_p == {
                 name = "svc-to-h from p";
-                ruleset = "LAN_IN";
-                action = "accept";
+                action = "ALLOW";
                 enabled = true;
+                ip_version = "IPV4";
                 protocol = "tcp";
-                dst_address = "10.2.0.9";
-                dst_port = "8081";
-                rule_index = 20501;
-                src_firewall_group_ids = [ "\${unifi_firewall_group.svc_to_h_from_p.id}" ];
+                source = {
+                  zone_id = "\${data.unifi_firewall_zone.unifi_zone_internal.id}";
+                  matching_target = "IP";
+                  ip_group_id = "\${unifi_firewall_group.svc_to_h_from_p.id}";
+                  port_matching_type = "ANY";
+                };
+                destination = {
+                  zone_id = "\${data.unifi_firewall_zone.unifi_zone_internal.id}";
+                  matching_target = "IP";
+                  ips = [ "10.2.0.9" ];
+                  port_matching_type = "SPECIFIC";
+                  port = "8081";
+                };
               }
+            &&
+              rendered.removed == [
+                {
+                  from = "unifi_firewall_rule.svc_to_h_from_p";
+                  lifecycle.destroy = false;
+                }
+              ]
+            && rendered.data.unifi_firewall_zone == { unifi_zone_internal.name = "Internal"; }
             &&
               unifi_firewall_group == {
                 svc_to_h_from_p = {
@@ -1101,11 +1257,21 @@ in
               fi
               pfs=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
                 "$api/proxy/network/api/s/$site/rest/portforward" | jq .data)
+              policies=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/v2/api/site/$site/firewall-policies")
+              zones=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/v2/api/site/$site/firewall/zone")
+              pol=$(jq --argjson zones "$zones" --argjson meta "$(< ${meta})" -f ${policyImports} <<<"$policies")
+              nat=$(curl -fksS -H @<(printf 'X-Api-Key: %s\n' "$UNIFI_API_KEY") \
+                "$api/proxy/network/v2/api/site/$site/nat" \
+                | jq --arg site "$site" --argjson meta "$(< ${meta})" -f ${natImports})
               # unifi_bgp is a per-site singleton; its import id is the site name.
               # A port forward imports by its controller _id. Its config is the
               # declared one (port-forwards); a live forward with none fails the plan.
+              # A zone policy imports by its _id, a custom NAT rule by its path.
               jq --arg site "$site" --argjson pf "$(jq -f ${portForwardImports} <<<"$pfs")" \
-                '{ import: ([ { to: .bgp, id: $site } ] + $pf) }' \
+                --argjson pol "$pol" --argjson nat "$nat" \
+                '{ import: ([ { to: .bgp, id: $site } ] + $pf + $pol + $nat) }' \
                 ${meta} > ${workdir}/imports.tf.json
               # The flake reads imports.tf.json only once git tracks it.
               git add ${workdir}/imports.tf.json

@@ -70,19 +70,36 @@ as networkconf ids, so the rules look them up by the controller's network names
 the plan before anything is written. `axon-https-ingress` is nat;
 `checks.<system>.unifi-nat-render` fixes the payloads.
 
-`unifi_firewall_rule.<name>_from_<env>` is a legacy LAN_IN accept rule (the
-gateway runs no zone-based firewall), one per `gateway-policies` record and
-source environment, rendered by `renderGatewayPolicies`, with its sources in the
-address group `unifi_firewall_group.<name>_from_<env>`. A record names a
-destination (address, port, protocol) and the k3s clusters that may reach it.
-The sources are those clusters' node addresses from `k3s-nodes` (pods masquerade
-to them). A source in the destination's own environment renders none, since it
-shares the LAN. Rule indices are `ruleIndexBase` (20501 on) in declaration
-order. `services.ai.ninfer` declares `ninfer-to-cortex-cuda` (the axon nodes to
-cortex-cuda:8081). `checks.<system>.unifi-gateway-policy-render` fixes the
-payload. No static route is managed: cortex-cuda is bridged onto the dev LAN.
-The hand-made "Prod to Dev access" rule (all protocols, `Default` → `dev`) is
-not managed.
+The gateway runs the zone-based firewall (since its 6.x firmware migrated the
+legacy rules). Every policy is a `unifi_firewall_policy` naming its zones
+through `data.unifi_firewall_zone`, and records its name and zone pair in
+`_meta.policies`.
+
+A `nat` record gets no policy from the controller, unlike a port forward, and
+External -> Internal blocks everything else, so `renderNat` adds
+`unifi_firewall_policy.<key>_allow`: any External source to the forward's
+address and port, as the controller's own port-forward policies are.
+`axon-https-ingress_allow` admits internet HTTPS to the axon gateway.
+
+`unifi_firewall_policy.<name>_from_<env>` is an Internal -> Internal allow, one
+per `gateway-policies` record and source environment, rendered by
+`renderGatewayPolicies`, with its sources in the address group
+`unifi_firewall_group.<name>_from_<env>`. A record names a destination (address,
+port, protocol) and the k3s clusters that may reach it. The sources are those
+clusters' node addresses from `k3s-nodes` (pods masquerade to them). A source in
+the destination's own environment renders none, since it shares the LAN.
+`services.ai.ninfer` declares `ninfer-to-cortex-cuda` (the axon nodes to
+cortex-cuda:8081). The legacy LAN_IN rules these replaced are dropped from state
+(`removed`, never destroyed). `checks.<system>.unifi-gateway-policy-render` and
+`unifi-nat-render` fix the payloads. No static route is managed: cortex-cuda is
+bridged onto the dev LAN. The hand-made "Prod to Dev access" policy (all
+protocols, `Default` -> `dev`) is not managed.
+
+`unifi-adopt` imports each declared policy from the one live policy with its
+name and zone pair, and refuses a name with two in one pair. The migration also
+fanned "ninfer-to-cortex-cuda from prod" out to Internal -> External, Hotspot
+and Vpn; only Internal -> Internal can match (10.9.2.2 is on the dev LAN), so
+those three are inert and unmanaged.
 
 ## State
 

@@ -2,8 +2,8 @@
 # ninfer-endpoints: an address, or the dev network for a host with none) and
 # the axon cluster's nodes, on the nftables backend, and is not opened to any
 # source; the gateway
-# admits exactly the axon nodes across prod->dev (a LAN_IN rule on an address
-# group), and declares no route:
+# admits exactly the axon nodes across prod->dev (an Internal -> Internal zone
+# policy from an address group), and declares no route:
 #   nix build .#checks.x86_64-linux.ninfer-firewall
 #   nix build .#checks.x86_64-linux.ninfer-gateway-policy
 { config, lib, ... }:
@@ -46,25 +46,34 @@ in
       checks.ninfer-gateway-policy =
         let
           tf = config.terranix.terranixConfigurations.unifi.result.terraformConfiguration.config;
-          rules = tf.resource.unifi_firewall_rule or { };
+          rules = tf.resource.unifi_firewall_policy or { };
           groups = tf.resource.unifi_firewall_group or { };
           name = "ninfer_to_cortex_cuda_from_prod";
+          internal = "\${data.unifi_firewall_zone.unifi_zone_internal.id}";
           ok =
             !(tf.resource ? unifi_static_route)
-            && !(tf.resource ? unifi_firewall_policy)
-            && builtins.attrNames rules == [ name ]
+            && !(tf.resource ? unifi_firewall_rule)
             && builtins.attrNames groups == [ name ]
             &&
               rules.${name} == {
                 name = "ninfer-to-cortex-cuda from prod";
-                ruleset = "LAN_IN";
-                action = "accept";
+                action = "ALLOW";
                 enabled = true;
+                ip_version = "IPV4";
                 protocol = "tcp";
-                dst_address = "10.9.2.2";
-                dst_port = "8081";
-                rule_index = 20501;
-                src_firewall_group_ids = [ "\${unifi_firewall_group.${name}.id}" ];
+                source = {
+                  zone_id = internal;
+                  matching_target = "IP";
+                  ip_group_id = "\${unifi_firewall_group.${name}.id}";
+                  port_matching_type = "ANY";
+                };
+                destination = {
+                  zone_id = internal;
+                  matching_target = "IP";
+                  ips = [ "10.9.2.2" ];
+                  port_matching_type = "SPECIFIC";
+                  port = "8081";
+                };
               }
             &&
               groups.${name} == {

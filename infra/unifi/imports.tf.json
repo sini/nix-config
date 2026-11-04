@@ -6,11 +6,35 @@
     },
     {
       "to": "unifi_port_forward.ssh_to_uplink",
-      "id": "69938074ba1d50eba7f49dfb"
+      "id": "57b7a6ba-a94f-4923-a1ac-839fbde9ea64"
     },
     {
       "to": "unifi_port_forward.headscale_to_uplink",
-      "id": "6994d7b7ba1d50eba7f4d775"
+      "id": "4d24d0bc-49b5-4c04-b2c5-eda159fab46e"
+    },
+    {
+      "to": "unifi_firewall_policy.ninfer_to_cortex_cuda_from_prod",
+      "id": "6c752866-2cc2-4a96-9b76-a2f8e1e032c9"
+    },
+    {
+      "to": "restapi_object.axon_https_ingress_dnat_default",
+      "id": "/v2/api/site/default/nat/a77f58fd-d97c-4ba1-8d3a-10cfe1963c66"
+    },
+    {
+      "to": "restapi_object.axon_https_ingress_dnat_dev",
+      "id": "/v2/api/site/default/nat/0c684cf9-29fa-4fce-b88f-4c0fec72ae97"
+    },
+    {
+      "to": "restapi_object.axon_https_ingress_dnat_wan",
+      "id": "/v2/api/site/default/nat/e1f5b34f-35c2-43a4-9256-f6573c473b12"
+    },
+    {
+      "to": "restapi_object.axon_https_ingress_masq_default",
+      "id": "/v2/api/site/default/nat/9bc58e1c-d8f8-44eb-9ccd-d2b506826d16"
+    },
+    {
+      "to": "restapi_object.axon_https_ingress_masq_dev",
+      "id": "/v2/api/site/default/nat/9af1a9e8-ea4e-4025-97ff-9214f04598ea"
     }
   ]
 }
