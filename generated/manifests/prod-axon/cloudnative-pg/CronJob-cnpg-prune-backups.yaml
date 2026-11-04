@@ -37,5 +37,6 @@ spec:
             - configMap:
                 name: cnpg-prune-backups-script
               name: script
+      ttlSecondsAfterFinished: 604800
   schedule: 0 6 * * *
   successfulJobsHistoryLimit: 1

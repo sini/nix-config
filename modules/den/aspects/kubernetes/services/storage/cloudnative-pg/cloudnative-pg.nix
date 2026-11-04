@@ -108,6 +108,10 @@ in
               failedJobsHistoryLimit = 3;
               jobTemplate.spec = {
                 backoffLimit = 2;
+                # A failed run's Job holds KubeJobFailed until it is deleted, and the
+                # history limit keeps it until three later failures; a week is time to
+                # look at it, then it clears itself.
+                ttlSecondsAfterFinished = 7 * 24 * 3600;
                 template = {
                   metadata.labels."app.kubernetes.io/name" = pruner;
                   spec = {
