@@ -62,10 +62,21 @@ spec:
               value: /scratch/torrents/complete
             - name: UN_SONARR_0_URL
               value: http://sonarr:8989
+            - name: UN_WEBSERVER_API_KEYS_0_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: api-key
+                  name: unpackerr-metrics
+            - name: UN_WEBSERVER_API_KEYS_0_NAME
+              value: prometheus
+            - name: UN_WEBSERVER_API_KEYS_0_ROLES_0
+              value: metrics
             - name: UN_WEBSERVER_LISTEN_ADDR
               value: 0.0.0.0:5656
             - name: UN_WEBSERVER_METRICS
               value: "true"
+            - name: UN_WEBSERVER_ROLES_metrics_PERMISSIONS_0
+              value: system:metrics:read
             - name: UN_WHISPARR_0_API_KEY
               valueFrom:
                 secretKeyRef:

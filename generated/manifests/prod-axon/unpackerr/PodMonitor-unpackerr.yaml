@@ -5,7 +5,12 @@ metadata:
   namespace: media
 spec:
   podMetricsEndpoints:
-    - interval: 30s
+    - authorization:
+        credentials:
+          key: api-key
+          name: unpackerr-metrics
+        type: Bearer
+      interval: 30s
       path: /metrics
       port: metrics
       relabelings:

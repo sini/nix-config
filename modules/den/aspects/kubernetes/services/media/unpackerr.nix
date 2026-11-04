@@ -25,9 +25,32 @@
 # Image tracked via the oci-image-updater at the rolling `latest` golift tag,
 # digest-pinned in images/golift/unpackerr; `oci-image-updater update-all` bumps
 # the digest. (The backup carries no version marker.)
+#
+# Metrics auth (Unpackerr v1.0): /metrics needs an API key holding
+# system:metrics:read. With no config volume, a key Unpackerr generates itself is
+# new on every start, so a fixed one is generated here, bound to a `metrics` role
+# holding only that permission, and presented by the PodMonitor as a Bearer token.
+let
+  metricsSecret = "unpackerr-metrics";
+in
 {
   den.aspects.kubernetes.services.media.unpackerr = {
     service-domains = [ ];
+
+    # 80 hex chars: Unpackerr refuses keys outside 60-150 characters.
+    age-secrets =
+      { environment, ... }:
+      {
+        age.secrets.${metricsSecret} = {
+          rekeyFile = environment.secretPath + "/${metricsSecret}/api-key.age";
+          generator.script = "hex";
+          settings.length = 40;
+          sopsOutput = {
+            file = metricsSecret;
+            key = "api-key";
+          };
+        };
+      };
 
     k8s-manifests =
       {
@@ -92,6 +115,13 @@
                     # Built-in prometheus webserver: served at /metrics on 5656.
                     UN_WEBSERVER_METRICS = "true";
                     UN_WEBSERVER_LISTEN_ADDR = "0.0.0.0:5656";
+                    UN_WEBSERVER_ROLES_metrics_PERMISSIONS_0 = "system:metrics:read";
+                    UN_WEBSERVER_API_KEYS_0_NAME = "prometheus";
+                    UN_WEBSERVER_API_KEYS_0_ROLES_0 = "metrics";
+                    UN_WEBSERVER_API_KEYS_0_KEY.valueFrom.secretKeyRef = {
+                      name = metricsSecret;
+                      key = "api-key";
+                    };
                   }
                   // arrEnv "SONARR" "sonarr" "http://sonarr:8989"
                   // arrEnv "RADARR" "radarr" "http://radarr:7878"
@@ -144,6 +174,13 @@
                     port = "metrics";
                     path = "/metrics";
                     interval = "30s";
+                    authorization = {
+                      type = "Bearer";
+                      credentials = {
+                        name = metricsSecret;
+                        key = "api-key";
+                      };
+                    };
                     # Default instance is the ephemeral pod IP:port, which
                     # churns on every restart; pin it to the stable app name.
                     relabelings = [
@@ -159,6 +196,13 @@
           ];
 
           resources = {
+            # Read by Unpackerr (the key it accepts) and by the PodMonitor (the key
+            # Prometheus sends); a sops ref resolved at render time.
+            secrets.${metricsSecret} = {
+              type = "Opaque";
+              stringData.api-key = config.age.secrets.${metricsSecret}.sopsRef;
+            };
+
             ciliumNetworkPolicies = {
               # Unpackerr is under ingress default-deny (no UI); this scrape
               # allow is its only inbound edge.
