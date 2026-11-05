@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Self-test: synthetic scans on a dark feed background, each with its expected route."""
+"""Self-test: scans shaped like the FF-680W's, each batch with its expected routes.
+
+The scanner returns its whole 8.5in-wide feed area: the item at the top on a
+grey-blue band that runs about 0.4in past it, then white fill. Back sides carry a
+white sensor-edge stripe down the left. fixtures/ holds a real scan (Epson's
+leaflet, both sides), downscaled to 75dpi.
+"""
 
 import subprocess
 import sys
@@ -8,88 +14,135 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw
 
-DPI = 100
-FEED = (40, 40, 40)
+DPI = 50
+BAND = (200, 210, 218)
+FIXTURES = Path(__file__).parent / "fixtures"
 
 
-def scan(paper):
-    """Place paper on the feed background, as the scanner returns it."""
-    canvas = Image.new("RGB", (paper.width + 60, paper.height + 60), FEED)
-    canvas.paste(paper, (30, 30))
-    return canvas
+def scan(item, back=False):
+    """Place an item as the scanner returns it."""
+    w = int(8.48 * DPI)
+    band = item.height + int(0.4 * DPI)
+    page = Image.new("RGB", (w, band + int(2 * DPI)), (255, 255, 255))
+    page.paste(BAND, (0, 0, w, band))
+    page.paste(item, ((w - item.width) // 2, 0))
+    if back:
+        # Real stripes are 5-13px at 300dpi; wider here than erosion removes.
+        page.paste((254, 255, 252), (0, 0, px(0.15), band))
+    return page
+
+
+def px(inches):
+    return int(inches * DPI)
 
 
 def colourful(w, h):
-    hues = Image.linear_gradient("L").resize((int(w * DPI), int(h * DPI)))
+    hues = Image.linear_gradient("L").resize((px(w), px(h)))
     sv = Image.new("L", hues.size, 200)
     return Image.merge("HSV", (hues, sv, sv)).convert("RGB")
 
 
-def text_page(w, h, colour=(255, 255, 255)):
-    page = Image.new("RGB", (int(w * DPI), int(h * DPI)), colour)
-    draw = ImageDraw.Draw(page)
-    for y in range(40, page.height - 40, 30):
-        draw.rectangle((40, y, page.width - 40, y + 8), fill=(20, 20, 20))
+def greyscale(w, h):
+    """A black-and-white print: no colour, mostly mid-tones."""
+    ramp = (
+        Image.linear_gradient("L")
+        .resize((px(w), px(h)))
+        .point(lambda v: 50 + v * 140 // 255)
+    )
+    return ramp.convert("RGB")
+
+
+def text(w, h, paper=(255, 255, 255), lines=True):
+    page = Image.new("RGB", (px(w), px(h)), paper)
+    if lines:
+        draw = ImageDraw.Draw(page)
+        for y in range(px(0.4), page.height - px(0.4), px(0.3)):
+            draw.rectangle((px(0.4), y, page.width - px(0.4), y + 2), fill=(20, 20, 20))
     return page
 
 
-def flat(w, h, colour):
-    return Image.new("RGB", (int(w * DPI), int(h * DPI)), colour)
-
-
-CREAM = (245, 240, 225)
+# Print backs are white paper: the band is far from it, so band left in a box reads as ink.
+CARD = (255, 255, 255)
 PAGES = {
-    "photo4x6": colourful(4, 6),
-    "photo8x10": colourful(8, 10),
-    "letter": text_page(8.5, 11),
-    "receipt": text_page(3, 10),
-    "memo8x10": text_page(8, 10),
-    "grey8x10": flat(8, 10, (128, 128, 128)),
-    "back-blank": flat(4, 6, CREAM),
-    "back-notes": text_page(4, 6, CREAM),
+    "photo": scan(colourful(6, 4)),
+    "photo-bw": scan(greyscale(5, 7)),
+    "photo-8x10": scan(colourful(8, 10)),
+    "letter": scan(text(8.5, 11)),
+    "receipt": scan(text(3, 10)),
+    "leaflet-small": scan(text(5, 6)),
+    "back-blank": scan(text(6, 4, CARD, lines=False), back=True),
+    "back-notes": scan(text(6, 4, CARD), back=True),
+    "letter-back": scan(text(8.5, 11), back=True),
 }
 
 CASES = [
     # (flags, pages, expected routes)
-    ([], ["photo4x6"], ["photo"]),
+    ([], ["photo"], ["photo"]),
+    ([], ["photo-bw"], ["photo"]),
+    ([], ["photo-8x10"], ["photo"]),
     ([], ["letter"], ["document"]),
     ([], ["receipt"], ["document"]),
-    ([], ["photo8x10"], ["photo"]),
-    ([], ["memo8x10"], ["document"]),
-    ([], ["grey8x10"], ["review"]),
-    # An undecided page takes the batch's kind.
-    ([], ["letter", "grey8x10"], ["document", "document"]),
+    # Photo-sized but text: content decides, not size.
+    ([], ["leaflet-small"], ["document"]),
+    # Duplex sheets, front and back in either order.
+    (["--duplex"], ["back-blank", "photo"], ["blank", "photo"]),
+    (["--duplex"], ["photo", "back-notes"], ["photo", "back"]),
+    (["--duplex"], ["letter", "letter-back"], ["document", "document"]),
+    (["--duplex"], ["letter", "back-blank"], ["document", "blank"]),
+    # A batch keeps each sheet's route.
     (
         ["--duplex"],
-        ["photo4x6", "back-blank", "photo4x6", "back-notes"],
-        ["photo", "blank", "photo", "back"],
+        ["back-blank", "photo", "letter", "back-blank"],
+        ["blank", "photo", "document", "blank"],
     ),
-    (["--duplex"], ["letter", "letter"], ["document", "document"]),
-    # A mixed batch keeps per-page routes.
-    ([], ["photo4x6", "letter"], ["photo", "document"]),
 ]
+
+REAL = [
+    (
+        ["--dpi", "75", "--duplex"],
+        [FIXTURES / "leaflet-side1.png", FIXTURES / "leaflet-side2.png"],
+        ["document", "document"],
+    ),
+]
+
+
+def run(tool, flags, files):
+    out = subprocess.run(
+        [tool, *flags, *map(str, files)], capture_output=True, text=True, check=True
+    ).stdout.split()
+    return out[0::2]
 
 
 def main():
     tool = sys.argv[1]
     failed = 0
     with tempfile.TemporaryDirectory() as tmp:
-        for name, paper in PAGES.items():
-            scan(paper).save(Path(tmp) / f"{name}.png", dpi=(DPI, DPI))
-        for flags, names, expected in CASES:
-            files = [str(Path(tmp) / f"{n}.png") for n in names]
-            out = subprocess.run(
-                [tool, "--dpi", str(DPI), *flags, *files],
-                capture_output=True,
-                text=True,
-                check=True,
-            ).stdout.split()
-            got = out[0::2]
+        for name, page in PAGES.items():
+            page.save(Path(tmp) / f"{name}.png")
+        cases = [
+            (
+                ["--dpi", str(DPI), *flags],
+                [Path(tmp) / f"{n}.png" for n in names],
+                expected,
+            )
+            for flags, names, expected in CASES
+        ] + REAL
+        for flags, files, expected in cases:
+            got = run(tool, flags, files)
             ok = got == expected
             failed += not ok
-            print(f"{'ok  ' if ok else 'FAIL'} {' '.join(flags + names)}: {got}")
+            label = " ".join([*flags[2:], *(f.stem for f in files)])
+            print(f"{'ok  ' if ok else 'FAIL'} {label}: {got}")
             if not ok:
                 print(f"     expected {expected}")
+        # --trim-in-place leaves the item alone: a 6x4in print at DPI.
+        run(tool, ["--dpi", str(DPI), "--trim-in-place"], [Path(tmp) / "photo.png"])
+        size = Image.open(Path(tmp) / "photo.png").size
+        ok = abs(size[0] - px(6)) <= 2 and abs(size[1] - px(4)) <= 2
+        failed += not ok
+        print(
+            f"{'ok  ' if ok else 'FAIL'} --trim-in-place photo: {size}, expected ~{(px(6), px(4))}"
+        )
     sys.exit(1 if failed else 0)
 
 
