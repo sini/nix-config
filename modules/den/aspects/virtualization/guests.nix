@@ -124,6 +124,13 @@ let
   # RE-INSTANTIATES the delivered config as the guest's own nixosSystem —
   # exactly the standard home-manager.users.<u> submodule contract. There is no
   # double-delivery: the battery-forward copy is dropped by isolation.
+  # TODO(denful/den#742): remove this bridge, and its host-aspect include, once
+  # den delivers a guest's user forwards itself. Two den gaps keep the standard
+  # battery's output out of the guest: the delivery route is a simple route, which
+  # reads the frozen pre-forward snapshot (materialize-unified.nix), and a static
+  # resolveImports drains no policy.spawn, so host-aspects cannot project here.
+  # Until then, fleet-collected pipe values (e.g. syncthing peers) are empty in a
+  # guest's home-manager: this resolve has no fleet scope tree.
   guestHmUserForward =
     { host, ... }@ctx:
     let
