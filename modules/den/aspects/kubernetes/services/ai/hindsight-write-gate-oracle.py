@@ -7,7 +7,8 @@ HINDSIGHT_API_OPERATION_VALIDATOR_*.
 
 Banks: genie and genie-memory gate writes; den-law gates reads and writes and has one
 reader; open-bank is not configured. ADMIN is the control plane's token; the gate
-holds its SHA-256. READER is den-law's reader token, which admits reads only.
+holds its SHA-256. READER is den-law's reader token, which admits reads only. WRITER is an
+independent den-law writer token, which admits reads and writes there only.
 
   a  every write route on genie, document import included: no key and another
      bank's key are refused; genie's own key and the admin key are not; every write
@@ -52,10 +53,12 @@ TOKENS = {
 BANKS = {
     "genie": {"gate_reads": False},
     "genie-memory": {"gate_reads": False},
-    "den-law": {"gate_reads": True, "readers": ["vic"]},
+    "den-law": {"gate_reads": True, "readers": ["vic"], "writers": ["artemis"]},
 }
 READER = "tok-den-law-reader-vic-445566778899"
 READER_FILE = "den-law.read.vic"
+WRITER = "test-only-den-law-writer-artemis-11223344"
+WRITER_FILE = "den-law.write.artemis"
 ADMIN = "tok-admin-aabbccddeeff00112233"
 GATED, OTHER, LAW, OPEN = "genie", "genie-memory", "den-law", "open-bank"
 REFUSAL = "-gated: a valid bank token is required"
@@ -64,6 +67,7 @@ tokdir = Path(tempfile.mkdtemp(prefix="hswg-tokens-"))
 for bank, tok in TOKENS.items():
     (tokdir / bank).write_text(tok + "\n")
 (tokdir / READER_FILE).write_text(READER + "\n")
+(tokdir / WRITER_FILE).write_text(WRITER + "\n")
 admin_file = Path(tempfile.mkdtemp(prefix="hswg-admin-")) / "sha256"
 admin_file.write_text(hashlib.sha256(ADMIN.encode()).hexdigest() + "\n")
 GATE_ENV = {
@@ -373,6 +377,7 @@ async def mcp_cells(mem, ids):
             ("none", None, True),
             ("other", TOKENS[GATED], True),
             ("own", TOKENS[LAW], False),
+            ("writer", WRITER, False),
             ("admin", ADMIN, False),
             ("reader", READER, None),
         ):
@@ -472,6 +477,8 @@ async def routes_cells():
                 refusals = [("none", None), ("other", other)]
                 if bank == LAW:
                     refusals.append(("reader", READER))
+                else:
+                    refusals.append(("other-writer", WRITER))
                 for label, tok in refusals:
                     r = await call(c, verb, suffix, bank, ids, tok)
                     cell(
@@ -479,8 +486,11 @@ async def routes_cells():
                         refused(r),
                         f"{bank} {verb} {suffix} key={label} -> {r.status_code} {r.text[:160]}",
                     )
-                for label, tok in (("own", TOKENS[bank]), ("admin", ADMIN)):
-                    if label == "admin":
+                admitted = [("own", TOKENS[bank]), ("admin", ADMIN)]
+                if bank == LAW:
+                    admitted.append(("writer", WRITER))
+                for label, tok in admitted:
+                    if label != "own":
                         await c.delete(f"/v1/default/banks/{bank}", headers=hdr(ADMIN))
                         ids = await fixture(c, bank, TOKENS[bank])
                     r = await call(c, verb, suffix, bank, ids, tok)
@@ -516,6 +526,7 @@ async def routes_cells():
             ("empty", "", True),
             ("other", TOKENS[GATED], True),
             ("own", TOKENS[LAW], False),
+            ("writer", WRITER, False),
             ("admin", ADMIN, False),
             ("reader", READER, False),
         ):
@@ -541,7 +552,8 @@ async def routes_cells():
             ]
             cell(
                 f"r.list.{label}",
-                (LAW in listed) != want_refused,
+                (LAW in listed) != want_refused
+                and (label != "writer" or listed == [LAW]),
                 f"bank list key={label} -> {listed}",
             )
         await c.delete(f"/v1/default/banks/{LAW}", headers=hdr(ADMIN))
@@ -562,6 +574,19 @@ async def routes_cells():
                 f"{verb} {suffix} -> {r.status_code} {r.text[:160]}",
             )
         await c.delete(f"/v1/default/banks/{GATED}", headers=hdr(ADMIN))
+
+        # A recognized named writer cannot reach another bank, even where an
+        # anonymous caller is still admitted. Test every route on both kinds.
+        for bank in (GATED, OPEN):
+            ids = await fixture(c, bank, TOKENS.get(bank))
+            for verb, suffix in routes:
+                r = await call(c, verb, suffix, bank, ids, WRITER)
+                cell(
+                    "writer.foreign-bank-refused",
+                    refused(r),
+                    f"{bank} {verb} {suffix} -> {r.status_code} {r.text[:160]}",
+                )
+            await c.delete(f"/v1/default/banks/{bank}", headers=hdr(ADMIN))
 
         # c: an unconfigured bank takes every write without a key
         for verb, suffix in writes:
@@ -619,7 +644,12 @@ def startup_cells():
 
     def tokens(**over):
         d = Path(tempfile.mkdtemp(prefix="hswg-d-"))
-        for bank, tok in {**TOKENS, READER_FILE: READER, **over}.items():
+        for bank, tok in {
+            **TOKENS,
+            READER_FILE: READER,
+            WRITER_FILE: WRITER,
+            **over,
+        }.items():
             if tok is not None:
                 (d / bank).write_text(tok)
         return str(d)
@@ -636,6 +666,38 @@ def startup_cells():
         (
             "d.bad-gate-reads-refused",
             {bk: json.dumps({**BANKS, "den-law": {"gate_reads": "yes"}})},
+        ),
+        ("d.writer-missing-refused", {td: tokens(**{WRITER_FILE: None})}),
+        ("d.writer-empty-refused", {td: tokens(**{WRITER_FILE: "\n"})}),
+        (
+            "d.bad-writers-refused",
+            {
+                bk: json.dumps(
+                    {**BANKS, "den-law": {"gate_reads": True, "writers": "artemis"}}
+                )
+            },
+        ),
+        (
+            "d.writer-path-refused",
+            {
+                bk: json.dumps(
+                    {**BANKS, "den-law": {"gate_reads": True, "writers": ["../x"]}}
+                )
+            },
+        ),
+        (
+            "d.writer-duplicate-refused",
+            {
+                bk: json.dumps(
+                    {
+                        **BANKS,
+                        "den-law": {
+                            "gate_reads": True,
+                            "writers": ["artemis", "artemis"],
+                        },
+                    }
+                )
+            },
         ),
         ("d.reader-missing-refused", {td: tokens(**{READER_FILE: None})}),
         ("d.reader-empty-refused", {td: tokens(**{READER_FILE: "\n"})}),

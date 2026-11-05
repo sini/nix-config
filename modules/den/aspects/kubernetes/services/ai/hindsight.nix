@@ -41,17 +41,21 @@ let
   # makes reads need it too. genie and genie-memory keep reads open because the
   # genie recall clients send no token (H2); den-law is the fleet's operating law.
   # `readers` get a token of their own that the gate admits on reads only, and only
-  # a bank that gates reads can have them.
+  # a bank that gates reads can have them. `writers` have independent full-access
+  # tokens for their bank; none receives the control plane's all-bank admin token.
   gatedBanks = {
     genie.gateReads = false;
     genie-memory.gateReads = false;
     den-law = {
       gateReads = true;
       readers = [ "vic" ];
+      # Activated only after the owner opts in and generates the credential.
+      writers = [ "artemis" ];
     };
   };
   gatedBankNames = builtins.attrNames gatedBanks;
   readersOf = bank: gatedBanks.${bank}.readers or [ ];
+  writersOf = bank: gatedBanks.${bank}.writers or [ ];
   # Every (bank, reader) pair; its Secret key is the gate's file name `<bank>.read.<reader>`.
   readerTokens = lib.concatMap (
     bank:
@@ -61,6 +65,16 @@ let
       key = "${bank}.read.${reader}";
     }) (readersOf bank)
   ) gatedBankNames;
+  # Named writers are separate credentials, not extra copies of the owner's key.
+  writerTokens = lib.concatMap (
+    bank:
+    map (writer: {
+      inherit bank writer;
+      name = "write-token-${bank}-${writer}";
+      key = "${bank}.write.${writer}";
+    }) (writersOf bank)
+  ) gatedBankNames;
+  principalTokensFor = enabled: readerTokens ++ lib.optionals enabled writerTokens;
   # A write-only token is named write-token-<bank>; a read-and-write one token-<bank>.
   tokenName = bank: if gatedBanks.${bank}.gateReads then "token-${bank}" else "write-token-${bank}";
   tokenSecret = bank: "hindsight-${tokenName bank}";
@@ -83,7 +97,16 @@ in
     # on every host with the hindsight client), and each reader token at that aspect
     # for its reader.
     age-secrets =
-      { environment, config, ... }:
+      {
+        cluster,
+        environment,
+        config,
+        ...
+      }:
+      let
+        principalTokens =
+          principalTokensFor cluster.settings.kubernetes.services.ai.hindsight.artemisWriter.enable;
+      in
       {
         age.secrets =
           lib.listToAttrs (
@@ -99,7 +122,8 @@ in
               }
             ) gatedBankNames
           )
-          # Each reader's token, rekeyed to that reader by the hindsight client aspect.
+          # Readers and writers have independent credentials. Writers are only
+          # distributed to their server-side consumer, never the hosted client.
           // lib.listToAttrs (
             map (
               t:
@@ -111,7 +135,7 @@ in
                   key = t.name;
                 };
               }
-            ) readerTokens
+            ) principalTokens
           )
           // {
             # The control plane's admin token: a sops target of the CP pod only.
@@ -173,6 +197,7 @@ in
       }:
       let
         settings = cluster.settings.kubernetes.services.ai.hindsight;
+        principalTokens = principalTokensFor settings.artemisWriter.enable;
 
         # An LLM key resolves in one of two spaces: an in-cluster llama-cpp
         # instance, or an off-cluster endpoint declared in externalLlms. Model
@@ -394,10 +419,16 @@ in
                     PYTHONPATH = gateDir;
                     HINDSIGHT_API_OPERATION_VALIDATOR_EXTENSION = "hindsight_write_gate:WriteGate";
                     HINDSIGHT_API_OPERATION_VALIDATOR_BANKS = builtins.toJSON (
-                      lib.mapAttrs (bank: b: {
-                        gate_reads = b.gateReads;
-                        readers = readersOf bank;
-                      }) gatedBanks
+                      lib.mapAttrs (
+                        bank: b:
+                        {
+                          gate_reads = b.gateReads;
+                          readers = readersOf bank;
+                        }
+                        // lib.optionalAttrs settings.artemisWriter.enable {
+                          writers = writersOf bank;
+                        }
+                      ) gatedBanks
                     );
                     HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR = tokensDir;
                     HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE = "${adminDir}/sha256";
@@ -741,15 +772,15 @@ in
 
           # The nixidy objectTransform rewrites each Secret → SopsSecret; each value
           # is a sops ref resolved at render time. hindsight-write-tokens holds one
-          # key per gated bank and one per reader (the name predates read gating and is kept so the
-          # deployed object is not replaced).
+          # key per gated bank and one per enabled reader/writer. The name
+          # predates read gating and is kept so the deployed object is not replaced.
           resources.secrets = {
             hindsight-write-tokens = {
               type = "Opaque";
               stringData =
                 lib.genAttrs gatedBankNames (bank: config.age.secrets.${tokenSecret bank}.sopsRef)
                 // lib.listToAttrs (
-                  map (t: lib.nameValuePair t.key config.age.secrets."hindsight-${t.name}".sopsRef) readerTokens
+                  map (t: lib.nameValuePair t.key config.age.secrets."hindsight-${t.name}".sopsRef) principalTokens
                 );
             };
             hindsight-cp-admin-token-sha256 = {
