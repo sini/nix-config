@@ -80,6 +80,10 @@ in
         microvmOpts = microvmSubmoduleOpts (den.lib.aspects.resolve "microvm" vm.aspect);
         recs = gpuLib.resolvePassthrough (vm.microvm.passthrough or [ ]) facter;
         sharedNixStore = vm.microvm.sharedNixStore or true;
+        scratch = lib.mapAttrsToList (mountPoint: size: {
+          inherit mountPoint size;
+          image = "${scratchRoot}/${vm.name}${lib.replaceStrings [ "/" "." ] [ "-" "" ] mountPoint}.img";
+        }) (vm.microvm.scratchVolumes or { });
       };
       guests = map withOverlay children;
 
@@ -91,6 +95,11 @@ in
         "/persist"
         "/cache"
       ];
+      # Beside each guest's /cache share, never inside it: the guest must not see
+      # its own disk images.
+      scratchRoot = "${
+        config.environment.persistence."/cache".persistentStoragePath or "/cache"
+      }/microvms";
       stateDir =
         name: volume: "${config.environment.persistence.${volume}.persistentStoragePath}/microvms/${name}";
       stateShares =
@@ -111,6 +120,7 @@ in
             config = {
               microvm.devices = gpuLib.toMicrovmDevices g.recs;
               microvm.shares = lib.optional g.sharedNixStore roStoreShare ++ stateShares g.name;
+              microvm.volumes = map (v: v // { fsType = "ext4"; }) g.scratch;
               # The host's store, read-only: the host collects it, the guest cannot.
               nix.gc.automatic = lib.mkIf g.sharedNixStore (lib.mkForce false);
               # Mounted in the initrd, before impermanence binds from them.
@@ -123,14 +133,26 @@ in
         }) guests
       );
 
-      systemd.tmpfiles.rules = lib.concatMap (
-        g: map (volume: "d ${stateDir g.name volume} 0700 root root -") stateVolumes
-      ) guests;
+      systemd.tmpfiles.rules =
+        lib.concatMap (g: map (volume: "d ${stateDir g.name volume} 0700 root root -") stateVolumes) guests
+        # microvm-run, as the microvm user, creates the scratch images here.
+        ++ lib.optional (lib.any (g: g.scratch != [ ]) guests) "d ${scratchRoot} 0775 root kvm -";
 
       # Host-side gate: hold the VM's start units until the passed-through PCI
       # device has actually been unbound from the host onto vfio-pci.
       systemd.services = lib.mkMerge (
+        # Scratch images start empty: delete them before microvm-run recreates them.
         map (
+          g:
+          lib.optionalAttrs (g.scratch != [ ]) {
+            "microvm@${g.name}".serviceConfig.ExecStartPre = lib.mkBefore [
+              "${pkgs.coreutils}/bin/rm -f ${
+                lib.concatMapStringsSep " " (v: lib.escapeShellArg v.image) g.scratch
+              }"
+            ];
+          }
+        ) guests
+        ++ map (
           g:
           lib.optionalAttrs (g.recs != [ ]) (
             let

@@ -9,7 +9,17 @@
     networking.interfaces.enp4s0 = {
       ipv4 = [ "10.10.10.1/16" ];
       ipv6 = [ "fe80::3c7a:6eff:fee5:d3a6" ];
+      # br0 adopts the NIC's own MAC, so the router, ARP caches and the SLAAC
+      # addresses see no change from bridging.
+      mac = "24:8a:07:e0:a8:b0";
     };
+
+    # enp4s0 moves into br0 with the addressing above; the networking aspect
+    # matches `vm-*` taps into br0, so guests land directly on the LAN.
+    networking.bridges.br0 = [ "enp4s0" ];
+
+    # den-ag-design sessions with uplink's memory (uplink-dev.nix).
+    guests.uplink-dev = den.hosts.x86_64-linux.uplink-dev;
 
     settings = {
       services.bgp.localAsn = 65000;
@@ -89,8 +99,18 @@
       services.web.gen-status
       services.web.container-registry
       virtualization.podman
+      virtualization.microvm-host
       hardware.cpu.amd
       hardware.gpu.intel
     ];
+
+    # uplink-dev's own host key, copied (not symlinked: the guest cannot follow
+    # a link into /run/agenix) into the dir shared to it.
+    nixos.age.secrets.uplink-dev-host-key = {
+      rekeyFile = ./. + "/../../../.secrets/hosts/uplink-dev/ssh_host_ed25519_key.age";
+      path = "/var/lib/microvms/uplink-dev/host-key/ssh_host_ed25519_key";
+      symlink = false;
+      mode = "0400";
+    };
   };
 }

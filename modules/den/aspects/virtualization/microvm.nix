@@ -51,6 +51,19 @@
           default = true;
           description = "Auto-share the host nix store into guests over virtiofs.";
         };
+        options.microvm.scratchVolumes = lib.mkOption {
+          type = lib.types.attrsOf lib.types.ints.positive;
+          default = { };
+          example = {
+            "/tmp" = 131072;
+          };
+          description = ''
+            Guest mount point -> size in MiB of a scratch disk, recreated empty at every
+            VM start: a sparse ext4 image on the host's /cache volume
+            (/cache/microvms/<guest>-<mountpoint>.img), so large scratch data lives on
+            disk, not in the guest's tmpfs root.
+          '';
+        };
       }
     )
   ];
