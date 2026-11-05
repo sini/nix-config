@@ -37,6 +37,10 @@ in
     # vm.microvm.passthrough).
     microvm.passthrough = [ "nvidia" ];
 
+    # A writable store overlay (recreated each start), which also brings up
+    # nix-daemon: home-manager needs it to register its users' generations.
+    microvm.scratchVolumes."/nix/.rw-store" = 32768;
+
     # Settings on the ENTITY (cascade reads hosts.<name>.settings) → ollama-cuda.
     settings.services.ai.ollama.acceleration = "cuda";
 
@@ -106,29 +110,11 @@ in
     };
   };
 
-  # The guest pins its own machine-id (environment.etc below) and takes its SSH
-  # host key from the host-key share, so persisting either would bind over them.
-  den.policies.cortex-cuda-unpersist-pinned =
-    { host, ... }:
-    [
-      (den.lib.policy.pipe.from "persist" [
-        (den.lib.policy.pipe.transform (
-          e:
-          e
-          // {
-            files = lib.filter (f: f != "/etc/machine-id" && !(lib.hasPrefix "/etc/ssh/ssh_host_" f)) (
-              e.files or [ ]
-            );
-          }
-        ))
-      ])
-    ];
-
   den.aspects.cortex-cuda = {
     includes = with den.aspects; [
       # The host baseline at the guest's own scope. Without it the guest got it
       # only from its users' roles.default leaking up (denful/den#694), so
-      # host-scope policies like cortex-cuda-unpersist-pinned filtered a pool
+      # host-scope policies like microvm-guest-unpersist-pinned filtered a pool
       # nothing read.
       roles.default
       roles.inference
@@ -138,7 +124,7 @@ in
       # for itself.
       services.monitoring.prometheus-exporter
       services.alloy
-      den.policies.cortex-cuda-unpersist-pinned
+      den.policies.microvm-guest-unpersist-pinned
     ];
 
     # M2: CUDA-enable the guest's package set at the microvm submodule level.

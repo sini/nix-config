@@ -2,6 +2,8 @@
 let
   gpuLib = import ./_gpu-passthrough-lib.nix { inherit lib; };
 
+  rwStore = "/nix/.rw-store";
+
   roStoreShare = {
     source = "/nix/store";
     mountPoint = "/nix/.ro-store";
@@ -37,6 +39,24 @@ let
   ) (lib.attrValues (den.users.registry or { }));
 in
 {
+  # For a guest that pins its own machine-id (environment.etc) and takes its SSH
+  # host key from a host-key share: persisting either would bind over them.
+  den.policies.microvm-guest-unpersist-pinned =
+    { host, ... }:
+    [
+      (den.lib.policy.pipe.from "persist" [
+        (den.lib.policy.pipe.transform (
+          e:
+          e
+          // {
+            files = lib.filter (f: f != "/etc/machine-id" && !(lib.hasPrefix "/etc/ssh/ssh_host_" f)) (
+              e.files or [ ]
+            );
+          }
+        ))
+      ])
+    ];
+
   # PRODUCE: a background GPU claim per guest with a non-empty
   # passthrough intent. windows-vfio's qemu hook consumes these to preempt the
   # microvm during interactive Windows sessions.
@@ -121,6 +141,17 @@ in
               microvm.devices = gpuLib.toMicrovmDevices g.recs;
               microvm.shares = lib.optional g.sharedNixStore roStoreShare ++ stateShares g.name;
               microvm.volumes = map (v: v // { fsType = "ext4"; }) g.scratch;
+              # A /nix/.rw-store scratch volume is the writable store overlay, which
+              # also turns on nix-daemon (microvm.nix gates it on the overlay), so
+              # home-manager can register its generations. Hard-linking would span
+              # the read-only store and the overlay.
+              microvm.writableStoreOverlay = lib.mkIf (lib.any (v: v.mountPoint == rwStore) g.scratch) rwStore;
+              nix.optimise.automatic = lib.mkIf (lib.any (v: v.mountPoint == rwStore) g.scratch) (
+                lib.mkForce false
+              );
+              nix.settings.auto-optimise-store = lib.mkIf (lib.any (v: v.mountPoint == rwStore) g.scratch) (
+                lib.mkForce false
+              );
               # The host's store, read-only: the host collects it, the guest cannot.
               nix.gc.automatic = lib.mkIf g.sharedNixStore (lib.mkForce false);
               # Mounted in the initrd, before impermanence binds from them.

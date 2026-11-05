@@ -55,6 +55,7 @@ in
       roles.dev
       services.monitoring.prometheus-exporter
       services.alloy
+      den.policies.microvm-guest-unpersist-pinned
     ];
 
     nixos =
@@ -63,16 +64,12 @@ in
         networking.hostName = "uplink-dev";
         # The guest gets an already-instantiated pkgs; its config is set there.
         nixpkgs.config = lib.mkForce { };
-        # Hard-linking would span the read-only store and its overlay.
-        nix.optimise.automatic = lib.mkForce false;
-        nix.settings.auto-optimise-store = lib.mkForce false;
 
         microvm = {
           guest.enable = true;
           optimize.enable = true;
           vcpu = 16;
           mem = 65536;
-          writableStoreOverlay = "/nix/.rw-store";
           interfaces = [
             {
               id = "vm-dev";
