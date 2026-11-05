@@ -58,6 +58,14 @@
         generator.script = "syncthing-identity";
       };
 
+      # Its pre-start copies the key agenix decrypts; started in the same activation
+      # it can lose the race, fail once, and take the one-shot syncthing-init (the
+      # peer/folder apply) down with it for good.
+      systemd.user.services.syncthing.Unit = lib.mkIf inMesh {
+        After = [ "agenix.service" ];
+        Wants = [ "agenix.service" ];
+      };
+
       services.syncthing = lib.mkIf inMesh {
         enable = true;
         overrideDevices = true;
