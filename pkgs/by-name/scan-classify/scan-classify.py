@@ -24,6 +24,14 @@ from pathlib import Path
 
 from PIL import Image, ImageChops, ImageFilter, ImageStat
 
+# Clockwise degrees -> PIL transpose (whose ROTATE_* turn counter-clockwise).
+ROTATIONS = {
+    0: None,
+    90: Image.Transpose.ROTATE_270,
+    180: Image.Transpose.ROTATE_180,
+    270: Image.Transpose.ROTATE_90,
+}
+
 
 def parse_args(argv):
     p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -32,6 +40,13 @@ def parse_args(argv):
     p.add_argument("--duplex", action="store_true", help="pages pair into sheets")
     p.add_argument(
         "--trim-in-place", action="store_true", help="overwrite each page with its item"
+    )
+    p.add_argument(
+        "--photo-rotate",
+        type=int,
+        choices=sorted(ROTATIONS),
+        default=0,
+        help="with --trim-in-place, turn each photo's picture side clockwise by this",
     )
     # The feed background as the scanner renders it, and how far a pixel may stray.
     p.add_argument("--background", default="200,210,218")
@@ -154,16 +169,20 @@ def sheet_routes(sides, a):
 def route(paths, a):
     bg = tuple(int(v) for v in a.background.split(","))
     pages = [trim(Image.open(p), bg, a.background_fuzz) for p in paths]
-    if a.trim_in_place:
-        for page, path in zip(pages, paths, strict=True):
-            page.save(path, dpi=(a.dpi, a.dpi))
     step = 2 if a.duplex else 1
     sheets = [sheet_routes(pages[i : i + step], a) for i in range(0, len(pages), step)]
     decided = Counter(k for _, k in sheets if k)
     if len(decided) > 1:
         print(f"scan-classify: mixed batch {dict(decided)}", file=sys.stderr)
     fill = next(iter(decided)) if len(decided) == 1 else "review"
-    return [r if r is not None else fill for routes, _ in sheets for r in routes]
+    routes = [r if r is not None else fill for routes, _ in sheets for r in routes]
+    if a.trim_in_place:
+        turn = ROTATIONS[a.photo_rotate]
+        for page, path, r in zip(pages, paths, routes, strict=True):
+            if r == "photo" and turn is not None:
+                page = page.transpose(turn)
+            page.save(path, dpi=(a.dpi, a.dpi))
+    return routes
 
 
 def main(argv=None):

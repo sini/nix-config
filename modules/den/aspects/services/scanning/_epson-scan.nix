@@ -147,7 +147,8 @@ let
         exit 0
       fi
 
-      scan-classify --dpi ${toString cfg.resolution} --duplex --trim-in-place "''${pages[@]}" > routes.tmp
+      scan-classify --dpi ${toString cfg.resolution} --duplex --trim-in-place \
+        --photo-rotate ${toString cfg.photoRotation} "''${pages[@]}" > routes.tmp
       mv routes.tmp routes
       echo "routed ''${#pages[@]} pages: $(cut -d' ' -f1 routes | sort | uniq -c | awk '{ printf "%s%s %s", sep, $1, $2; sep = " " }')"
       exec ${lib.getExe deliver} "$dir"

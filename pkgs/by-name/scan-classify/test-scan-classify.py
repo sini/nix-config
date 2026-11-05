@@ -143,6 +143,25 @@ def main():
         print(
             f"{'ok  ' if ok else 'FAIL'} --trim-in-place photo: {size}, expected ~{(px(6), px(4))}"
         )
+        # --photo-rotate turns the picture side only: a portrait print's top-left
+        # corner, marked red, ends at the bottom-right after 180 degrees.
+        marked = colourful(4, 6)
+        marked.paste((255, 0, 0), (0, 0, px(0.5), px(0.5)))
+        scan(marked).save(Path(tmp) / "marked.png")
+        page = text(8.5, 11)
+        page.paste((0, 0, 255), (0, 0, px(0.5), px(0.5)))
+        scan(page).save(Path(tmp) / "marked-letter.png")
+        files = [Path(tmp) / "marked.png", Path(tmp) / "marked-letter.png"]
+        flags = ["--dpi", str(DPI), "--trim-in-place", "--photo-rotate", "180"]
+        run(tool, flags, files)
+        turned = Image.open(files[0]).convert("RGB")
+        corner = turned.getpixel((turned.width - 5, turned.height - 5))
+        letter = Image.open(files[1]).convert("RGB").getpixel((5, 5))
+        ok = corner == (255, 0, 0) and letter == (0, 0, 255)
+        failed += not ok
+        print(
+            f"{'ok  ' if ok else 'FAIL'} --photo-rotate 180: photo corner {corner}, letter corner {letter}"
+        )
     sys.exit(1 if failed else 0)
 
 

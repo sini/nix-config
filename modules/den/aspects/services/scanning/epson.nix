@@ -57,6 +57,20 @@ in
         default = "https://immich.json64.dev";
         description = "immich base URL.";
       };
+      photoRotation = lib.mkOption {
+        type = lib.types.enum [
+          0
+          90
+          180
+          270
+        ];
+        default = 180;
+        description = ''
+          Clockwise turn applied to each photo's picture side. Prints fed the way
+          they were set up come out upside down; documents are left alone, as
+          paperless rotates its pages itself during OCR.
+        '';
+      };
       album = lib.mkOption {
         type = lib.types.str;
         default = "Scans";

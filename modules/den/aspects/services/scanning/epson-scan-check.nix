@@ -55,6 +55,7 @@
             paperlessUrl = "https://paperless.test";
             immichUrl = "https://immich.test";
             album = "Scans";
+            photoRotation = 180;
           };
           tools = {
             sane-backends = scanimage;
