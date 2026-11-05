@@ -348,7 +348,11 @@ in
               ]
               (_: {
                 enable = true;
-              });
+              })
+            # The module asserts codex support on Darwin is pending (HA9-A.codex.darwin).
+            // {
+              codex.enable = pkgs.stdenv.hostPlatform.isLinux;
+            };
         };
 
         # The api-key file is the hyperqwen home-manager secret, decrypted for the owner.

@@ -103,7 +103,7 @@
         # carries tool_input.command and honours exit 2 + stderr, as claude's does.
         guard = ".claude/bash-guard.sh";
         # Gated on claude.nix's enable, which writes the script; probing home.file here recurses.
-        hooks = lib.optionalAttrs config.programs.claude-code.enable {
+        guardHooks = lib.optionalAttrs config.programs.claude-code.enable {
           PreToolUse = [
             {
               matcher = "Bash";
@@ -116,6 +116,13 @@
             }
           ];
         };
+        # xmsg's lifecycle hooks after the guard, lists joined per event. Codex keys hook trust
+        # by position (event:group:handler), so this order must stay stable.
+        hooks = lib.zipAttrsWith (_: lib.concatLists) [
+          guardHooks
+          config.programs.xmsg.harnesses.codex.hooks
+        ];
+        hooksPath = "${config.home.homeDirectory}/.codex/hooks.json";
       in
       {
         programs.codex = {
@@ -137,7 +144,9 @@
 
         lens.files.codex = {
           target = ".codex/config.toml";
-          inherit (config.programs.codex) settings;
+          settings = lib.recursiveUpdate config.programs.codex.settings (
+            config.programs.xmsg.harnesses.codex.trustState hooksPath { inherit hooks; }
+          );
         };
 
         programs.git.ignores = [ "/.codex/" ];
