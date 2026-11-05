@@ -39,6 +39,7 @@
       applications.dev.ai.mcp.searxng
       applications.dev.ai.agents.claude
       applications.dev.ai.agents.antigravity-cli
+      applications.dev.ai.agents.codex
       applications.dev.ai.agents.hermes
       applications.dev.ai.agents.opencode
       applications.dev.ai.agents.pi
