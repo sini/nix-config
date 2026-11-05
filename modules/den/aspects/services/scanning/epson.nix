@@ -91,6 +91,7 @@ in
             pkgs.immich-cli
             pkgs.curl
             pkgs.coreutils
+            pkgs.gawk
           ];
           text = ''
             spool="$STATE_DIRECTORY/spool"
@@ -126,6 +127,10 @@ in
             mapfile -t documents < <(awk '$1 == "document" { print $2 }' routes)
             mapfile -t review < <(awk '$1 == "review" { print $2 }' routes)
             ok=1
+            # Every page not blank must be in a list, or the batch is kept.
+            if [ "$(awk '$1 != "blank"' routes | wc -l)" -ne $((''${#photos[@]} + ''${#documents[@]} + ''${#review[@]})) ]; then
+              echo "routes and pages disagree"; ok=0
+            fi
 
             paperless() { # <title> <pages...>
               title=$1; shift
