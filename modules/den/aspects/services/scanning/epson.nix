@@ -19,6 +19,9 @@
 #
 # Runs on a host on the scanner's own network: the call is link-local multicast.
 # Only the scanner's address may reach UDP 2968.
+# TODO: with a second scanner, or a generic classify-and-file endpoint, split it:
+# the listener stays here and calls the cluster, where batch/deliver run as a
+# service reaching the scanner over TCP 1865 (as prod already can, like ninfer).
 #
 # Tokens are issued by each app, not generated (encrypt to the master key, then
 # `agenix rekey`):
