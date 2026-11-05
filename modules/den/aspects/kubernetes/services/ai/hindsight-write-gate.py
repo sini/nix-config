@@ -6,10 +6,15 @@ Loaded by upstream's extension loader (hindsight_api/extensions/loader.py) from
     HINDSIGHT_API_OPERATION_VALIDATOR_TOKENS_DIR=/etc/hindsight-write-gate/tokens
     HINDSIGHT_API_OPERATION_VALIDATOR_ADMIN_SHA256_FILE=/etc/hindsight-write-gate/admin/sha256
 with one token file per gated bank in TOKENS_DIR, named after the bank, and one per
-reader, named `<bank>.read.<reader>`.
+reader, named `<bank>.read.<reader>`, and per writer, named
+`<bank>.write.<writer>`. Writers have full read/write access to their bank,
+independently revocable without rotating the bank owner or reader tokens. A
+recognized writer credential is refused on every other bank, including open
+banks, and sees only its own bank in listings. Anonymous open-bank access is
+unchanged, so this does not replace a network or adapter isolation boundary.
 
-A gated bank's writes pass only with that bank's own token or the admin token. A
-bank with gate_reads also refuses every read without one of the two: recall,
+A gated bank's writes pass only with that bank's own token, a named writer's
+token, or the admin token. A bank with gate_reads also refuses every read without one of these: recall,
 reflect, every bank read, mental-model reads and every precheck, and it is left out
 of the bank list. A reader's token admits that bank's reads and nothing else: on a
 write it is refused like no key. A bank that is not configured is open. /health and /version reach
@@ -19,11 +24,12 @@ see _hook_unhooked_routes.
 
 The admin token belongs to the control plane, which sits behind the gateway's
 admin-only OIDC. This pod holds only its SHA-256, so the token itself lives in one
-pod. Both comparisons are constant-time.
+pod. Token comparisons are constant-time.
 
 Startup refuses (the loader's ExtensionLoadError stops the server) on a malformed
-BANKS, a gate_reads that is not a boolean, readers that are not a list of names, a
-missing or empty token file, readers on a bank without gate_reads, or an
+BANKS, a gate_reads that is not a boolean, readers or writers that are not a list of names,
+duplicate writer names, a missing or
+empty token file, readers on a bank without gate_reads, or an
 ADMIN_SHA256_FILE that is missing or not 64 hex digits.
 """
 
@@ -129,18 +135,27 @@ class WriteGate(ov.OperationValidatorExtension):
             _fail("BANKS is set but TOKENS_DIR is not")
         self._tokens: dict[str, bytes] = {}
         self._read_tokens: dict[str, list[bytes]] = {}
+        self._write_tokens: dict[str, list[bytes]] = {}
         self._read_gated: set[str] = set()
         for bank, spec in banks.items():
             if not isinstance(spec, dict) or not isinstance(
                 spec.get("gate_reads"), bool
             ):
                 _fail(f"bank '{bank}' needs a boolean gate_reads")
-            readers = spec.get("readers", [])
-            if not isinstance(readers, list) or not all(
-                isinstance(r, str) and re.fullmatch(r"[A-Za-z0-9_-]+", r)
-                for r in readers
-            ):
-                _fail(f"bank '{bank}' readers must be a list of names")
+
+            def principals(role, spec=spec, bank=bank):
+                names = spec.get(role, [])
+                if not isinstance(names, list) or not all(
+                    isinstance(n, str) and re.fullmatch(r"[A-Za-z0-9_-]+", n)
+                    for n in names
+                ):
+                    _fail(f"bank '{bank}' {role} must be a list of names")
+                if role == "writers" and len(set(names)) != len(names):
+                    _fail(f"bank '{bank}' {role} contains duplicate names")
+                return names
+
+            readers = principals("readers")
+            writers = principals("writers")
             # A reader token on a bank whose reads are open would admit nothing new,
             # and reads it as configured access that is not there.
             if readers and not spec["gate_reads"]:
@@ -148,6 +163,9 @@ class WriteGate(ov.OperationValidatorExtension):
             self._tokens[bank] = self._token(tokens_dir, bank, bank)
             self._read_tokens[bank] = [
                 self._token(tokens_dir, f"{bank}.read.{r}", bank) for r in readers
+            ]
+            self._write_tokens[bank] = [
+                self._token(tokens_dir, f"{bank}.write.{w}", bank) for w in writers
             ]
             if spec["gate_reads"]:
                 self._read_gated.add(bank)
@@ -163,6 +181,7 @@ class WriteGate(ov.OperationValidatorExtension):
             f"bank gate: writes gated on {sorted(self._tokens)}, reads gated on "
             f"{sorted(self._read_gated)}, readers "
             f"{ {b: len(t) for b, t in self._read_tokens.items() if t} }, "
+            f"writers { {b: len(t) for b, t in self._write_tokens.items() if t} }, "
             f"admin token {'set' if self._admin_sha256 else 'unset'}"
         )
 
@@ -183,6 +202,12 @@ class WriteGate(ov.OperationValidatorExtension):
             return False
         if hmac.compare_digest(key.encode(), self._tokens[bank_id]):
             return True
+        # A writer token is bank-scoped like the owner's token, but has an
+        # independent rotation/revocation lifecycle. Compare every named writer.
+        if sum(
+            hmac.compare_digest(key.encode(), t) for t in self._write_tokens[bank_id]
+        ):
+            return True
         # Every reader token is compared, so the time taken does not say which matched.
         if read and sum(
             hmac.compare_digest(key.encode(), t) for t in self._read_tokens[bank_id]
@@ -194,12 +219,29 @@ class WriteGate(ov.OperationValidatorExtension):
             hashlib.sha256(key.encode()).hexdigest().encode(), self._admin_sha256
         )
 
+    def _writer_banks(self, key: str | None) -> set[str]:
+        """Recognize a writer before the open-bank fallback; scan every token."""
+        if not key:
+            return set()
+        encoded = key.encode()
+        return {
+            bank
+            for bank, tokens in self._write_tokens.items()
+            if sum(hmac.compare_digest(encoded, token) for token in tokens)
+        }
+
     def _gate(self, bank_id: str, request_context, read: bool) -> ov.ValidationResult:
         # Worker and maintenance contexts carry internal=True and never come from a
         # transport (http.py and mcp.py build contexts from the Authorization header
         # only); the user-facing submission they continue was gated when it was made.
         if request_context.internal:
             return ov.ValidationResult.accept()
+        writer_banks = self._writer_banks(request_context.api_key)
+        if writer_banks and bank_id not in writer_banks:
+            kind = "read" if read else "write"
+            return ov.ValidationResult.reject(
+                f"bank '{bank_id}' is {kind}-gated: a valid bank token is required", 403
+            )
         if bank_id not in self._tokens:
             return ov.ValidationResult.accept()
         if read and bank_id not in self._read_gated:
@@ -211,7 +253,7 @@ class WriteGate(ov.OperationValidatorExtension):
             f"bank '{bank_id}' is {kind}-gated: a valid bank token is required", 403
         )
 
-    # Reads: open unless the bank gates reads.
+    # Reads: open unless the bank gates reads or a named writer targets another bank.
     async def validate_recall(self, ctx) -> ov.ValidationResult:
         return self._gate(ctx.bank_id, ctx.request_context, read=True)
 
@@ -231,12 +273,16 @@ class WriteGate(ov.OperationValidatorExtension):
 
     async def filter_bank_list(self, ctx) -> ov.BankListResult:
         rc = ctx.request_context
+        writer_banks = set() if rc.internal else self._writer_banks(rc.api_key)
         banks = [
             b
             for b in ctx.banks
-            if rc.internal
-            or b.get("bank_id") not in self._read_gated
-            or self._admits(b["bank_id"], rc.api_key, read=True)
+            if (not writer_banks or b.get("bank_id") in writer_banks)
+            and (
+                rc.internal
+                or b.get("bank_id") not in self._read_gated
+                or self._admits(b["bank_id"], rc.api_key, read=True)
+            )
         ]
         return ov.BankListResult(banks=banks)
 

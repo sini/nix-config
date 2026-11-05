@@ -8,6 +8,19 @@
 # service address and the `model` string clients must send are both derived.
 { lib, ... }:
 {
+  # Keep the foundational writer support inert until its encrypted token exists.
+  # Set on axon before `agenix generate`, then sops-rekey and nixidy-sync before
+  # deploying. This does not expose a public route or create an OAuth client.
+  den.aspects.kubernetes.services.ai.hindsight.settings.artemisWriter.enable = lib.mkOption {
+    type = lib.types.bool;
+    default = false;
+    description = ''
+      Declare and admit a dedicated full-access Artemis writer token for den-law.
+      Generate its age source and SOPS output, then regenerate manifests before
+      deploying. False emits no writer declaration, secret key, or active grant.
+    '';
+  };
+
   # Everything except retain: reflect, consolidation, verification. gpt-oss-20b
   # is rank 2 of 21 on upstream's reflect leaderboard (86.3 against the leader's
   # 86.6, and the leader is gpt-oss-120b which will not fit here). No Qwen model
