@@ -20,13 +20,7 @@
           buildMachines = map (builder: {
             hostName = builder.hostname;
             systems = [ builder.system ];
-            inherit (builder) maxJobs speedFactor;
-            supportedFeatures = [
-              "benchmark"
-              "big-parallel"
-              "kvm"
-              "nixos-test"
-            ];
+            inherit (builder) maxJobs speedFactor supportedFeatures;
             mandatoryFeatures = [ ];
             sshUser = "nix-remote-build";
             sshKey = config.age.secrets.nix-remote-build-user-key.path;

@@ -22,6 +22,12 @@
       roles.nix-builder = {
         maxJobs = 4;
         speedFactor = 4;
+        # SVM is disabled in the firmware (kernel: "SVM disabled (by BIOS) in MSR_VM_CR"),
+        # so there is no /dev/kvm and VM tests would fall back to TCG.
+        supportedFeatures = [
+          "benchmark"
+          "big-parallel"
+        ];
       };
       # Break-glass jumpbox: sshd stays publicly reachable (all other hosts are
       # tailnet/LAN-only).
