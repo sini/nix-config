@@ -75,6 +75,13 @@ in
           )
         );
         nodeUp = instance: ''up{job="node-exporter", instance="${instance}"}'';
+
+        # The hosts expectedHosts names, with their roles.
+        roleHosts = lib.filter (
+          t: builtins.elem t.hostname expectedHosts && lib.any (e: e.job == "node-exporter") t.exporters
+        ) prometheus-targets;
+        # The roles that build on the host, so page-ins run high by design.
+        buildRoles = ''host_role{role=~"dev|nix-builder"}'';
       in
       {
         applications.kube-prometheus-stack = {
@@ -173,6 +180,31 @@ in
                 };
               };
 
+              # Replaced below: the mixin's fixed 500/s fires on every build on
+              # a ZFS dev host, where exec'ing store binaries copies their pages
+              # out of the ARC and counts each as a major fault with no disk I/O.
+              defaultRules.disabled.NodeMemoryMajorPagesFaults = true;
+
+              # One host_role{instance, role} series per host and role it resolves
+              # (prometheus-exporter's prometheus-targets): den's roles as data
+              # any alert or dashboard can join on instance.
+              additionalPrometheusRulesMap.host-roles.groups = [
+                {
+                  name = "host-roles";
+                  rules = lib.concatMap (
+                    t:
+                    map (role: {
+                      record = "host_role";
+                      expr = "vector(1)";
+                      labels = {
+                        instance = t.hostname;
+                        inherit role;
+                      };
+                    }) (t.roles or [ ])
+                  ) roleHosts;
+                }
+              ];
+
               additionalPrometheusRulesMap.hosts.groups = [
                 {
                   name = "hosts";
@@ -194,6 +226,45 @@ in
                         "for" = "5m";
                         labels.severity = "critical";
                         annotations.summary = "No host has pushed node metrics for 10m: the ingest path is down";
+                      }
+                      # The mixin's alert with the threshold by role: a dev or
+                      # nix-builder host builds on ZFS, where exec'ing store
+                      # binaries copies their pages out of the ARC and counts each
+                      # as a major fault with no disk I/O. 20000/s held for 15m
+                      # did not occur in a week of builds; other hosts keep 500/s.
+                      {
+                        alert = "NodeMemoryMajorPagesFaults";
+                        expr = ''
+                          (
+                            rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 20000
+                            and on (instance) ${buildRoles}
+                          )
+                          or
+                          (
+                            rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 500
+                            unless on (instance) ${buildRoles}
+                          )
+                        '';
+                        "for" = "15m";
+                        labels.severity = "warning";
+                        annotations = {
+                          summary = "Memory major page faults are occurring at very high rate.";
+                          description = "{{ $labels.instance }} has had a very high rate of major page faults for 15 minutes, now {{ printf \"%.0f\" $value }}/s (20000/s on dev and nix-builder hosts, 500/s elsewhere). Check NodeMemoryPressure: faults without memory stall are page-ins, not a shortage.";
+                          runbook_url = "https://runbooks.prometheus-operator.dev/runbooks/node/nodememorymajorpagesfaults";
+                        };
+                      }
+                      # The signal major faults stand in for: time every runnable
+                      # task spent stalled on memory (PSI "full"), which counts
+                      # reclaim and swap-in waits and not page-ins that cost nothing.
+                      {
+                        alert = "NodeMemoryPressure";
+                        expr = ''rate(node_pressure_memory_stalled_seconds_total{job="node-exporter"}[5m]) > 0.05'';
+                        "for" = "15m";
+                        labels.severity = "warning";
+                        annotations = {
+                          summary = "Memory pressure is stalling work.";
+                          description = "{{ $labels.instance }} has had every runnable task stalled on memory for {{ $value | humanizePercentage }} of the time for 15 minutes. Check its largest processes and swap use.";
+                        };
                       }
                     ];
                 }

@@ -1,0 +1,151 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    app: kube-prometheus-stack
+    app.kubernetes.io/instance: kube-prometheus-stack
+    app.kubernetes.io/part-of: kube-prometheus-stack
+    chart: kube-prometheus-stack-92.17.1
+    heritage: Helm
+    release: kube-prometheus-stack
+  name: kube-prometheus-stack-host-roles
+  namespace: monitoring
+spec:
+  groups:
+    - name: host-roles
+      rules:
+        - expr: vector(1)
+          labels:
+            instance: bitstream
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: bitstream
+            role: dev
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: bitstream
+            role: nix-builder
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: bitstream
+            role: server
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: dev
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: dev-gui
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: gaming
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: media
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: messaging
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: nix-builder
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex
+            role: workstation
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex-cuda
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: cortex-cuda
+            role: inference
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-01
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-01
+            role: server
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-01
+            role: unlock
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-02
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-02
+            role: server
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-02
+            role: unlock
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-03
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-03
+            role: server
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: axon-03
+            role: unlock
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: uplink
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: uplink
+            role: nix-builder
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: uplink
+            role: server
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: uplink
+            role: unlock
+          record: host_role

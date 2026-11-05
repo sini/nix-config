@@ -1,14 +1,28 @@
 # Prometheus exporters for system monitoring.
 #
 # Ported from main:modules/services/monitoring/prometheus-exporter/prometheus.nix.
+{ den, lib, ... }:
 {
   den.aspects.services.monitoring.prometheus-exporter = {
     # Scraped by the environment's ingester (services.monitoring.prometheus).
+    # `roles` is every roles.* aspect the host resolves, transitively: the
+    # cluster's Prometheus publishes them as host_role series for alerts to join.
     prometheus-targets =
       { environment, host, ... }:
       {
         hostname = host.name;
         ip = builtins.head host.ipv4;
+        roles =
+          let
+            # The namespace also carries its own attributes; an aspect ref is
+            # what hasAspect takes.
+            isAspect = a: builtins.isAttrs a && ((a ? name && a ? meta) || a ? __aspectChain);
+          in
+          lib.sort lib.lessThan (
+            builtins.filter (r: isAspect den.aspects.roles.${r} && host.hasAspect den.aspects.roles.${r}) (
+              builtins.attrNames den.aspects.roles
+            )
+          );
         inherit environment;
         exporters = [
           {

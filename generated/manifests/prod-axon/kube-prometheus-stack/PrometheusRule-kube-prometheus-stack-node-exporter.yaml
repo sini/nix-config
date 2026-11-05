@@ -264,17 +264,6 @@ spec:
           for: 15m
           labels:
             severity: warning
-        - alert: NodeMemoryMajorPagesFaults
-          annotations:
-            description: |
-              Memory major pages are occurring at very high rate at {{ $labels.instance }}, 500 major page faults per second for the last 15 minutes, is currently at {{ printf "%.2f" $value }}.
-              Please check that there is enough memory available at this instance.
-            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodememorymajorpagesfaults
-            summary: Memory major page faults are occurring at very high rate.
-          expr: rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 500
-          for: 15m
-          labels:
-            severity: warning
         - alert: NodeMemoryHighUtilization
           annotations:
             description: |

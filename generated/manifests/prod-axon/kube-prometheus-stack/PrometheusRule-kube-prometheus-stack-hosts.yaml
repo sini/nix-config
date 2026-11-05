@@ -77,3 +77,29 @@ spec:
           for: 5m
           labels:
             severity: critical
+        - alert: NodeMemoryMajorPagesFaults
+          annotations:
+            description: '{{ $labels.instance }} has had a very high rate of major page faults for 15 minutes, now {{ printf "%.0f" $value }}/s (20000/s on dev and nix-builder hosts, 500/s elsewhere). Check NodeMemoryPressure: faults without memory stall are page-ins, not a shortage.'
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodememorymajorpagesfaults
+            summary: Memory major page faults are occurring at very high rate.
+          expr: |
+            (
+              rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 20000
+              and on (instance) host_role{role=~"dev|nix-builder"}
+            )
+            or
+            (
+              rate(node_vmstat_pgmajfault{job="node-exporter"}[5m]) > 500
+              unless on (instance) host_role{role=~"dev|nix-builder"}
+            )
+          for: 15m
+          labels:
+            severity: warning
+        - alert: NodeMemoryPressure
+          annotations:
+            description: '{{ $labels.instance }} has had every runnable task stalled on memory for {{ $value | humanizePercentage }} of the time for 15 minutes. Check its largest processes and swap use.'
+            summary: Memory pressure is stalling work.
+          expr: rate(node_pressure_memory_stalled_seconds_total{job="node-exporter"}[5m]) > 0.05
+          for: 15m
+          labels:
+            severity: warning
