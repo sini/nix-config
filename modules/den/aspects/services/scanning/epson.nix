@@ -94,6 +94,8 @@ in
             pkgs.gawk
           ];
           text = ''
+            # Unset when no token exists yet: then every destination is off.
+            creds=''${CREDENTIALS_DIRECTORY:-/nonexistent}
             spool="$STATE_DIRECTORY/spool"
             dir="$spool/$(date +%Y%m%d-%H%M%S)"
             mkdir -p "$dir"
@@ -135,11 +137,11 @@ in
             paperless() { # <title> <pages...>
               title=$1; shift
               [ $# -gt 0 ] || return 0
-              if [ ! -r "$CREDENTIALS_DIRECTORY/${tokens.paperless}" ]; then
+              if [ ! -r "$creds/${tokens.paperless}" ]; then
                 echo "paperless: no token, keeping $title"; ok=0; return 0
               fi
               img2pdf "$@" -o "$title.pdf"
-              if curl -fsS -H "Authorization: Token $(cat "$CREDENTIALS_DIRECTORY/${tokens.paperless}")" \
+              if curl -fsS -H "Authorization: Token $(cat "$creds/${tokens.paperless}")" \
                   -F "document=@$title.pdf" -F "title=$title" \
                   "${cfg.paperlessUrl}/api/documents/post_document/" > /dev/null; then
                 echo "paperless: uploaded $title ($# pages)"
@@ -152,7 +154,7 @@ in
             paperless "scan-$stamp-needs-review" "''${review[@]}"
 
             if [ ''${#photos[@]} -gt 0 ]; then
-              if [ ! -r "$CREDENTIALS_DIRECTORY/${tokens.immich}" ]; then
+              if [ ! -r "$creds/${tokens.immich}" ]; then
                 echo "immich: no API key, keeping ''${#photos[@]} photos"; ok=0
               else
                 for i in "''${!photos[@]}"; do
@@ -160,7 +162,7 @@ in
                   photos[i]="$stamp-$(printf %03d "$i").png"
                 done
                 if HOME="$dir" IMMICH_INSTANCE_URL="${cfg.immichUrl}/api" \
-                    IMMICH_API_KEY="$(cat "$CREDENTIALS_DIRECTORY/${tokens.immich}")" \
+                    IMMICH_API_KEY="$(cat "$creds/${tokens.immich}")" \
                     immich upload --album-name ${lib.escapeShellArg cfg.album} "''${photos[@]}"; then
                   echo "immich: uploaded ''${#photos[@]} photos"
                 else
