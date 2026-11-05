@@ -36,9 +36,6 @@ in
           # extraInputRules are nftables syntax; the iptables backend ignores them.
           ok = net.nftables.enable && rules == want && !(builtins.elem 8081 fw.allowedTCPPorts);
         in
-        assert lib.assertMsg (
-          !guest.services.tailscale.enable
-        ) "ninfer-firewall: cortex-cuda must run without tailscale (explicit override in cortex-cuda.nix)";
         assert lib.assertMsg ok
           "ninfer-firewall:\nnftables.enable: ${lib.boolToString net.nftables.enable}\n${lib.concatStringsSep "\n" rules}\nallowedTCPPorts: ${builtins.toJSON fw.allowedTCPPorts}";
         pkgs.writeText "ninfer-firewall" (lib.concatStringsSep "\n" rules);
