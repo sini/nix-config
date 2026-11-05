@@ -125,14 +125,29 @@ let
   # exactly the standard home-manager.users.<u> submodule contract. There is no
   # double-delivery: the battery-forward copy is dropped by isolation.
   guestHmUserForward =
-    { host, ... }:
+    { host, ... }@ctx:
     let
       hmUsers = lib.filter (u: lib.elem "homeManager" (u.classes or [ ])) (
         lib.attrValues (host.users or { })
       );
+      # The user entity, plus the guest host's own aspect re-fired in the user's
+      # context: a standard host's forward resolves the user inside the host's
+      # scope tree, where host aspects contribute homeManager content (and
+      # per-user quirks such as homeManagerModules); the static resolve here has
+      # no tree, so it includes the host aspect explicitly, and takes the whole
+      # inherited context (environment, secretsConfig, ...), not just host/user.
       userHmModule =
         user:
-        den.lib.aspects.resolveImports "homeManager" (den.lib.resolveEntity "user" { inherit host user; });
+        let
+          # The registry entry, as fleet policy resolves it on a standard host: the
+          # guest's own `users.<name>` only names the user (no identity, groups).
+          ent = den.lib.resolveEntity "user" (
+            ctx // { user = (den.users.registry or { }).${user.userName} or user; }
+          );
+        in
+        den.lib.aspects.resolveImports "homeManager" (
+          ent // { includes = ent.includes ++ [ host.aspect ]; }
+        );
     in
     [
       (den.lib.policy.include {
