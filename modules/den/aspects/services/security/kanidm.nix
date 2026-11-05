@@ -433,8 +433,8 @@ let
 
       # paperless-ngx (kubernetes/services/documents/paperless.nix). Native OIDC via
       # allauth; the callback is allauth's /accounts/oidc/<provider_id>/login/callback/
-      # and the client sends PKCE. The `groups` claim is replaced by ["admins"] for
-      # paperless.admins, which paperless maps to superuser on each login.
+      # and the client sends PKCE. paperless maps the paperless.admins SPN in the
+      # built-in `groups` claim to superuser on each login.
       paperless = {
         displayName = "Paperless";
         originUrl = "https://${domain "paperless"}/accounts/oidc/kanidm/login/callback/";
@@ -447,10 +447,6 @@ let
           "email"
           "groups"
         ];
-        claimMaps.groups = {
-          joinType = "array";
-          valuesByGroup."paperless.admins" = [ "admins" ];
-        };
       };
 
       # Matrix login, upstream of the Matrix Authentication Service

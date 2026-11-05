@@ -81,7 +81,7 @@ spec:
             - name: PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS
               value: "true"
             - name: PAPERLESS_SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP
-              value: admins
+              value: paperless.admins@json64.dev
             - name: PAPERLESS_SOCIAL_AUTO_SIGNUP
               value: "true"
             - name: PAPERLESS_TIME_ZONE

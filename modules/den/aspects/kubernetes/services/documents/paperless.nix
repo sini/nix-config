@@ -5,10 +5,11 @@
 # SecurityPolicy: paperless owns the flow (/accounts/oidc/kanidm/login/ ->
 # kanidm -> /accounts/oidc/kanidm/login/callback/) and keeps its own token auth
 # for API clients (mobile apps, scripts), which can't follow a gateway redirect.
-# Login is gated kanidm-side by the paperless.access scope map; the kanidm
-# client emits a `groups` claim of ["admins"] for paperless.admins, and
-# SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP turns that into superuser on every login,
-# so no local bootstrap account exists. Lockout recovery is
+# Login is gated kanidm-side by the paperless.access scope map. kanidm's
+# built-in `groups` claim lists each group's SPN (and uuid); a claimMaps.groups
+# override does not replace it. SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP matches the
+# paperless.admins SPN, so superuser follows that group on every login and no
+# local bootstrap account exists. Lockout recovery is
 # `manage.py createsuperuser` in the pod. The regular login form is disabled.
 #
 # == Storage ==
@@ -140,6 +141,7 @@ in
       {
         config,
         cluster,
+        environment,
         charts,
         images,
         ...
@@ -191,7 +193,7 @@ in
                     PAPERLESS_SOCIALACCOUNT_PROVIDERS = secretEnv "paperless" "socialaccount-providers";
                     PAPERLESS_SOCIAL_AUTO_SIGNUP = "true";
                     PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS = "true";
-                    PAPERLESS_SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP = "admins";
+                    PAPERLESS_SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP = "paperless.admins@${environment.domain}";
                     PAPERLESS_DISABLE_REGULAR_LOGIN = "true";
                     PAPERLESS_REDIRECT_LOGIN_TO_SSO = "true";
                   };
