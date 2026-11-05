@@ -34,6 +34,9 @@
         wipeHomeOnBoot = false;
       };
 
+      # The FF-680W on the wireless network; its button triggers the scans.
+      services.scanning.epson.scanner = "10.9.10.1";
+
       applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
 
@@ -87,6 +90,7 @@
       services.ai.genie-xmsg
       services.ai.genie-tier1
       services.ai.genie-experts
+      services.scanning.epson
     ];
 
     sini.includes = with den.aspects; [ services.ai.genie-bank-review ];
