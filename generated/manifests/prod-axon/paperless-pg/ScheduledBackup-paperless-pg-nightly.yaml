@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: paperless-pg-nightly
+  namespace: paperless
+spec:
+  cluster:
+    name: paperless-pg
+  method: volumeSnapshot
+  schedule: 0 45 4 * * *

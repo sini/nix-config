@@ -1,0 +1,121 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: paperless
+    app.kubernetes.io/name: paperless
+  name: paperless
+  namespace: paperless
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: paperless
+      app.kubernetes.io/name: paperless
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: paperless
+        app.kubernetes.io/name: paperless
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: PAPERLESS_APPS
+              value: allauth.socialaccount.providers.openid_connect
+            - name: PAPERLESS_CONSUMER_POLLING_INTERVAL
+              value: "30"
+            - name: PAPERLESS_CONSUMER_RECURSIVE
+              value: "true"
+            - name: PAPERLESS_CONSUMPTION_DIR
+              value: /consume
+            - name: PAPERLESS_DATA_DIR
+              value: /data
+            - name: PAPERLESS_DBENGINE
+              value: postgresql
+            - name: PAPERLESS_DBHOST
+              value: paperless-pg-rw
+            - name: PAPERLESS_DBNAME
+              value: paperless
+            - name: PAPERLESS_DBPASS
+              valueFrom:
+                secretKeyRef:
+                  key: password
+                  name: paperless-pg-paperless-password
+            - name: PAPERLESS_DBUSER
+              valueFrom:
+                secretKeyRef:
+                  key: username
+                  name: paperless-pg-paperless-password
+            - name: PAPERLESS_DB_OPTIONS
+              value: sslmode=require
+            - name: PAPERLESS_DISABLE_REGULAR_LOGIN
+              value: "true"
+            - name: PAPERLESS_MEDIA_ROOT
+              value: /media
+            - name: PAPERLESS_OCR_LANGUAGE
+              value: eng
+            - name: PAPERLESS_REDIRECT_LOGIN_TO_SSO
+              value: "true"
+            - name: PAPERLESS_REDIS
+              valueFrom:
+                secretKeyRef:
+                  key: redis-url
+                  name: paperless
+            - name: PAPERLESS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: secret-key
+                  name: paperless
+            - name: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+              valueFrom:
+                secretKeyRef:
+                  key: socialaccount-providers
+                  name: paperless
+            - name: PAPERLESS_SOCIAL_ACCOUNT_SYNC_GROUPS
+              value: "true"
+            - name: PAPERLESS_SOCIAL_ACCOUNT_SYNC_SUPERUSER_GROUP
+              value: admins
+            - name: PAPERLESS_SOCIAL_AUTO_SIGNUP
+              value: "true"
+            - name: PAPERLESS_TIME_ZONE
+              value: America/Los_Angeles
+            - name: PAPERLESS_URL
+              value: https://paperless.json64.dev
+            - name: USERMAP_GID
+              value: "65536"
+            - name: USERMAP_UID
+              value: "1027"
+          image: ghcr.io/paperless-ngx/paperless-ngx@sha256:d704e84f88300eb6ab001ab15720a2330ff99169cf9f94d6b8fcc44b63a84c84
+          name: main
+          volumeMounts:
+            - mountPath: /data
+              name: data
+            - mountPath: /media
+              name: nas
+              subPath: paperless/media
+            - mountPath: /consume
+              name: nas
+              subPath: paperless/consume
+            - mountPath: /export
+              name: nas
+              subPath: paperless/export
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      serviceAccountName: paperless
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: paperless-data
+        - name: nas
+          persistentVolumeClaim:
+            claimName: paperless-nfs

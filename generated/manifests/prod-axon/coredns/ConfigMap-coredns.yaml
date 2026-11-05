@@ -34,6 +34,7 @@ data:
             10.11.0.1 nzb.json64.dev
             10.10.10.1 oauth2-proxy.json64.dev
             10.10.10.1 open-webui.json64.dev
+            10.11.0.1 paperless.json64.dev
             10.11.0.1 profilarr.json64.dev
             10.11.0.1 prometheus.json64.dev
             10.11.0.1 prowlarr.json64.dev

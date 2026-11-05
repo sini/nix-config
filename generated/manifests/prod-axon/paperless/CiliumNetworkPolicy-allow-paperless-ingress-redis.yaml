@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-paperless-ingress-redis
+  namespace: paperless
+spec:
+  description: Allow paperless to reach the paperless-redis valkey.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: paperless-redis
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: paperless
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP

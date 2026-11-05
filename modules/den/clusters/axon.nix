@@ -247,6 +247,10 @@
       # requires hardware.amd-gpu-device-plugin above for the amd.com/gpu resource.
       services.ai.llama-cpp
 
+      # documents — paperless-ngx on paperless.json64.dev (kanidm native OIDC).
+      services.documents.paperless-pg
+      services.documents.paperless
+
       # dev — Coder workspace platform (SP1 control plane)
       services.dev.coder.coder-pg
       services.dev.coder.coder

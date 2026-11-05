@@ -132,6 +132,16 @@
       description = "Coder admin role";
       members = [ "admins" ];
     };
+    "paperless.access" = {
+      labels = [ "oauth-grant" ];
+      description = "Paperless access";
+      members = [ "users" ];
+    };
+    "paperless.admins" = {
+      labels = [ "oauth-grant" ];
+      description = "Paperless admin role";
+      members = [ "admins" ];
+    };
     "opkssh.access" = {
       labels = [ "oauth-grant" ];
       description = "Members may obtain an opkssh OIDC SSH token from kanidm.";

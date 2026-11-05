@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: paperless-redis
+    app.kubernetes.io/name: valkey
+  name: paperless-redis
+  namespace: paperless
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: paperless-redis
+      app.kubernetes.io/name: valkey
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/initconfig: 9c7511703cbb24a46e6b9afab6b11b59
+      labels:
+        app.kubernetes.io/instance: paperless-redis
+        app.kubernetes.io/name: valkey
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - /data/conf/valkey.conf
+          command:
+            - valkey-server
+          env:
+            - name: VALKEY_LOG_LEVEL
+              value: notice
+          image: docker.io/valkey/valkey:9.1.3
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            exec:
+              command:
+                - valkey-cli
+                - ping
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          name: paperless-redis
+          ports:
+            - containerPort: 6379
+              name: tcp
+              protocol: TCP
+          resources: {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          startupProbe:
+            exec:
+              command:
+                - valkey-cli
+                - ping
+            failureThreshold: 3
+            initialDelaySeconds: 0
+            periodSeconds: 10
+            timeoutSeconds: 1
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - mountPath: /etc/valkey
+              name: valkey-acl
+      initContainers:
+        - command:
+            - /scripts/init.sh
+          image: docker.io/valkey/valkey:9.1.3
+          imagePullPolicy: IfNotPresent
+          name: paperless-redis-init
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /data
+              name: valkey-data
+            - mountPath: /scripts
+              name: scripts
+            - mountPath: /etc/valkey
+              name: valkey-acl
+            - mountPath: /valkey-users-secret
+              name: valkey-users-secret
+              readOnly: true
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: paperless-redis
+      volumes:
+        - configMap:
+            defaultMode: 365
+            name: paperless-redis-init-scripts
+          name: scripts
+        - emptyDir:
+            medium: Memory
+          name: valkey-acl
+        - name: valkey-users-secret
+          secret:
+            defaultMode: 256
+            secretName: paperless
+        - emptyDir: {}
+          name: valkey-data
