@@ -104,72 +104,12 @@ let
     nixos.system.stateVersion = cfg.stateVersion;
   };
 
-  # Per-user home-manager synthesis bridge for the guest.
-  #
-  # The STANDARD home-manager battery fires for the guest naturally (guest
-  # class = nixos, host.home-manager.enable defaulted true below), but it
-  # forwards each user's homeManager content from a NESTED user-under-guest
-  # resolve sub-scope via a per-scope forward-route. Simple routes (the delivery
-  # route) collect from the ORIGINAL pre-route per-scope state, so the battery's
-  # user-scope append is invisible to the delivery route's collection. Worse,
-  # the user-under-guest scope sits BELOW the isolated guest, so isolation drops
-  # that battery copy from the parent entirely.
-  #
-  # This policy bridges the gap at the GUEST HOST scope (which IS the delivery
-  # route's collection root): it RESOLVES each homeManager user's homeManager
-  # content (den.lib.aspects.resolveImports — the same resolver the battery
-  # forward uses) and emits it as nixos config under home-manager.users.<user>
-  # as a `{ imports = [...]; }` module. The guest's real home-manager module
-  # (host.home-manager.module) evaluates those imports when the microvm
-  # RE-INSTANTIATES the delivered config as the guest's own nixosSystem —
-  # exactly the standard home-manager.users.<u> submodule contract. There is no
-  # double-delivery: the battery-forward copy is dropped by isolation.
-  # TODO(denful/den#742): remove this bridge, and its host-aspect include, once
-  # den delivers a guest's user forwards itself. Two den gaps keep the standard
-  # battery's output out of the guest: the delivery route is a simple route, which
-  # reads the frozen pre-forward snapshot (materialize-unified.nix), and a static
-  # resolveImports drains no policy.spawn, so host-aspects cannot project here.
-  # Until then, fleet-collected pipe values (e.g. syncthing peers) are empty in a
-  # guest's home-manager: this resolve has no fleet scope tree.
-  guestHmUserForward =
-    { host, ... }@ctx:
-    let
-      hmUsers = lib.filter (u: lib.elem "homeManager" (u.classes or [ ])) (
-        lib.attrValues (host.users or { })
-      );
-      # The user entity, plus the guest host's own aspect re-fired in the user's
-      # context: a standard host's forward resolves the user inside the host's
-      # scope tree, where host aspects contribute homeManager content (and
-      # per-user quirks such as homeManagerModules); the static resolve here has
-      # no tree, so it includes the host aspect explicitly, and takes the whole
-      # inherited context (environment, secretsConfig, ...), not just host/user.
-      userHmModule =
-        user:
-        let
-          # The registry entry, as fleet policy resolves it on a standard host: the
-          # guest's own `users.<name>` only names the user (no identity, groups).
-          ent = den.lib.resolveEntity "user" (
-            ctx // { user = (den.users.registry or { }).${user.userName} or user; }
-          );
-        in
-        den.lib.aspects.resolveImports "homeManager" (
-          ent // { includes = ent.includes ++ [ host.aspect ]; }
-        );
-    in
-    [
-      (den.lib.policy.include {
-        nixos.home-manager.users = lib.listToAttrs (
-          map (user: lib.nameValuePair user.userName (userHmModule user)) hmUsers
-        );
-      })
-    ];
-
-  # The guest kind's includes: curated host participation + the per-user
-  # home-manager synthesis bridge + the expose policy + a stateVersion default.
+  # The guest kind's includes: curated host participation (with the standard
+  # home-manager battery, whose per-user forwards den delivers into the guest's
+  # subtree route, denful/den#742) + the expose policy + a stateVersion default.
   curatedIncludes =
     curatedFromHost
     ++ [
-      (mkPolicy "guest-hm-user-forward" guestHmUserForward)
       (mkPolicy "expose-guest-quirks" exposePolicy)
     ]
     ++ guestDefault;

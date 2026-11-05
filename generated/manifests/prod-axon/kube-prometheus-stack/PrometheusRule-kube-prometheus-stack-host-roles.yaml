@@ -149,3 +149,13 @@ spec:
             instance: uplink
             role: unlock
           record: host_role
+        - expr: vector(1)
+          labels:
+            instance: uplink-dev
+            role: default
+          record: host_role
+        - expr: vector(1)
+          labels:
+            instance: uplink-dev
+            role: dev
+          record: host_role

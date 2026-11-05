@@ -70,6 +70,14 @@ spec:
           labels:
             instance: uplink
             severity: critical
+        - alert: HostSilent
+          annotations:
+            summary: uplink-dev has sent no node metrics for 10m
+          expr: absent_over_time(up{job="node-exporter", instance="uplink-dev"}[5m]) or max_over_time(up{job="node-exporter", instance="uplink-dev"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: uplink-dev
+            severity: critical
         - alert: IngestDown
           annotations:
             summary: 'No host has pushed node metrics for 10m: the ingest path is down'

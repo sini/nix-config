@@ -164,6 +164,9 @@ in
         # The participating fleet baseline (core.nix.stateVersion) sets the
         # fleet default; this guest pins its own. mkForce to win the merge.
         system.stateVersion = lib.mkForce "25.05";
+        # Its users' home-manager (delivered to guests since denful/den#742) is new,
+        # so it takes the fleet's current release, not the guest's pinned system one.
+        home-manager.sharedModules = [ { home.stateVersion = lib.mkForce "26.11"; } ];
 
         # The guest uses our externally-created CUDA pkgs (microvm.pkgs), so its
         # own nixpkgs.config must be empty (allowUnfree/acceptLicense are baked
