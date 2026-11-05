@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-immich-ingress-redis
+  namespace: immich
+spec:
+  description: Allow immich-server to reach the immich-redis valkey.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/instance: immich-redis
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/controller: main
+            app.kubernetes.io/name: immich
+      toPorts:
+        - ports:
+            - port: "6379"
+              protocol: TCP

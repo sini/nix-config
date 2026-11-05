@@ -1,0 +1,31 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: immich-pg
+  namespace: immich
+spec:
+  affinity:
+    podAntiAffinityType: required
+  backup:
+    volumeSnapshot:
+      className: longhorn-backup-nfs
+  bootstrap:
+    initdb:
+      database: immich
+      owner: immich
+      postInitApplicationSQL:
+        - CREATE EXTENSION IF NOT EXISTS vchord CASCADE;
+        - CREATE EXTENSION IF NOT EXISTS earthdistance CASCADE;
+      secret:
+        name: immich-pg-immich-password
+  imageName: ghcr.io/tensorchord/cloudnative-vectorchord:18-1.1.1@sha256:bff4fcc244543b856d59f70dc139a7c30ecedde6539400492bd0a3e8e9295a08
+  inheritedMetadata:
+    labels:
+      recurring-job-group.longhorn.io/db-local-snap: enabled
+  instances: 2
+  postgresql:
+    shared_preload_libraries:
+      - vchord.so
+  storage:
+    size: 10Gi
+    storageClass: longhorn-single

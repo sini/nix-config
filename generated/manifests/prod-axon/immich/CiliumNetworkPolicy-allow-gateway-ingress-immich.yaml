@@ -1,0 +1,19 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-immich
+  namespace: immich
+spec:
+  description: Allow Envoy Gateway proxies to reach immich-server.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/name: immich
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "2283"
+              protocol: TCP

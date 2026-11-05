@@ -1,0 +1,20 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-immich-ingress-ml
+  namespace: immich
+spec:
+  description: Allow immich-server to reach immich-machine-learning.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/controller: ml
+      app.kubernetes.io/name: immich
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            app.kubernetes.io/controller: main
+            app.kubernetes.io/name: immich
+      toPorts:
+        - ports:
+            - port: "3003"
+              protocol: TCP

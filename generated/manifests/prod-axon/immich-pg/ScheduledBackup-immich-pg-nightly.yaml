@@ -1,0 +1,10 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: immich-pg-nightly
+  namespace: immich
+spec:
+  cluster:
+    name: immich-pg
+  method: volumeSnapshot
+  schedule: 0 0 5 * * *

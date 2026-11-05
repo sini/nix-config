@@ -208,6 +208,9 @@
       services.media.dash
       services.media.romm
       services.media.komga
+      # immich on immich.json64.dev (own namespace and VectorChord postgres).
+      services.media.immich-pg
+      services.media.immich
 
       # communication — Matrix homeserver (server_name json64.dev, served at
       # matrix.json64.dev; kanidm native OIDC). See communication/matrix/synapse.nix.

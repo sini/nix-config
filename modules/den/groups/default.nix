@@ -132,6 +132,16 @@
       description = "Coder admin role";
       members = [ "admins" ];
     };
+    "immich.access" = {
+      labels = [ "oauth-grant" ];
+      description = "Immich access";
+      members = [ "users" ];
+    };
+    "immich.admins" = {
+      labels = [ "oauth-grant" ];
+      description = "Immich admin role";
+      members = [ "admins" ];
+    };
     "paperless.access" = {
       labels = [ "oauth-grant" ];
       description = "Paperless access";

@@ -449,6 +449,32 @@ let
         ];
       };
 
+      # immich (kubernetes/services/media/immich.nix). Native OIDC with PKCE. The
+      # web callbacks are /auth/login and /user-settings (account linking); the
+      # mobile app's app.immich:/// callback is relayed by immich's own
+      # /api/oauth/mobile-redirect. immich_role = "admin" for immich.admins only:
+      # an absent claim leaves immich's default role, user.
+      immich = {
+        displayName = "Immich";
+        originUrl = map (path: "https://${domain "immich"}${path}") [
+          "/auth/login"
+          "/user-settings"
+          "/api/oauth/mobile-redirect"
+        ];
+        originLanding = "https://${domain "immich"}";
+        basicSecretFile = secretPaths.immich-oidc-client-secret;
+        preferShortUsername = true;
+        scopeMaps."immich.access" = [
+          "openid"
+          "profile"
+          "email"
+        ];
+        claimMaps.immich_role = {
+          joinType = "csv";
+          valuesByGroup."immich.admins" = [ "admin" ];
+        };
+      };
+
       # Matrix login, upstream of the Matrix Authentication Service
       # (communication/matrix/mas.nix); Synapse's own OIDC callback stays until
       # Synapse delegates to MAS. The client keeps its `synapse` id so kanidm's
