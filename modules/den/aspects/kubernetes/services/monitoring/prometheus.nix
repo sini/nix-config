@@ -82,6 +82,8 @@ in
         ) prometheus-targets;
         # The roles that build on the host, so page-ins run high by design.
         buildRoles = ''host_role{role=~"dev|nix-builder"}'';
+        # The node mixin's busy fraction, in percent.
+        cpuBusy = ''sum without (mode) (avg without (cpu) (rate(node_cpu_seconds_total{job="node-exporter", mode!~"idle|iowait"}[2m]))) * 100'';
       in
       {
         applications.kube-prometheus-stack = {
@@ -183,7 +185,10 @@ in
               # Replaced below: the mixin's fixed 500/s fires on every build on
               # a ZFS dev host, where exec'ing store binaries copies their pages
               # out of the ARC and counts each as a major fault with no disk I/O.
-              defaultRules.disabled.NodeMemoryMajorPagesFaults = true;
+              defaultRules.disabled = {
+                NodeMemoryMajorPagesFaults = true;
+                NodeCPUHighUsage = true;
+              };
 
               # One host_role{instance, role} series per host and role it resolves
               # (prometheus-exporter's prometheus-targets): den's roles as data
@@ -251,6 +256,32 @@ in
                           summary = "Memory major page faults are occurring at very high rate.";
                           description = "{{ $labels.instance }} has had a very high rate of major page faults for 15 minutes, now {{ printf \"%.0f\" $value }}/s (20000/s on dev and nix-builder hosts, 500/s elsewhere). Check NodeMemoryPressure: faults without memory stall are page-ins, not a shortage.";
                           runbook_url = "https://runbooks.prometheus-operator.dev/runbooks/node/nodememorymajorpagesfaults";
+                        };
+                      }
+                      # The mixin's alert, restated by role: a build saturates a
+                      # dev or nix-builder host's CPU by design, so there it must
+                      # hold 45m before the 15m `for` (an hour in all, which a
+                      # week of builds never held); other hosts keep the mixin's
+                      # 15 minutes. info: routed to no receiver.
+                      {
+                        alert = "NodeCPUHighUsage";
+                        expr = ''
+                          (
+                            min_over_time((${cpuBusy})[45m:1m]) > 90
+                            and on (instance) ${buildRoles}
+                          )
+                          or
+                          (
+                            ${cpuBusy} > 90
+                            unless on (instance) ${buildRoles}
+                          )
+                        '';
+                        "for" = "15m";
+                        labels.severity = "info";
+                        annotations = {
+                          summary = "High CPU usage.";
+                          description = "{{ $labels.instance }} has used over 90% of its CPU for 15 minutes (an hour on dev and nix-builder hosts, where builds saturate it), now {{ printf \"%.0f\" $value }}%.";
+                          runbook_url = "https://runbooks.prometheus-operator.dev/runbooks/node/nodecpuhighusage";
                         };
                       }
                       # The signal major faults stand in for: time every runnable

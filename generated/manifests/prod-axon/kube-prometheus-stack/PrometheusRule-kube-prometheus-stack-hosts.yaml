@@ -95,6 +95,24 @@ spec:
           for: 15m
           labels:
             severity: warning
+        - alert: NodeCPUHighUsage
+          annotations:
+            description: '{{ $labels.instance }} has used over 90% of its CPU for 15 minutes (an hour on dev and nix-builder hosts, where builds saturate it), now {{ printf "%.0f" $value }}%.'
+            runbook_url: https://runbooks.prometheus-operator.dev/runbooks/node/nodecpuhighusage
+            summary: High CPU usage.
+          expr: |
+            (
+              min_over_time((sum without (mode) (avg without (cpu) (rate(node_cpu_seconds_total{job="node-exporter", mode!~"idle|iowait"}[2m]))) * 100)[45m:1m]) > 90
+              and on (instance) host_role{role=~"dev|nix-builder"}
+            )
+            or
+            (
+              sum without (mode) (avg without (cpu) (rate(node_cpu_seconds_total{job="node-exporter", mode!~"idle|iowait"}[2m]))) * 100 > 90
+              unless on (instance) host_role{role=~"dev|nix-builder"}
+            )
+          for: 15m
+          labels:
+            severity: info
         - alert: NodeMemoryPressure
           annotations:
             description: '{{ $labels.instance }} has had every runnable task stalled on memory for {{ $value | humanizePercentage }} of the time for 15 minutes. Check its largest processes and swap use.'

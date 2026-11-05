@@ -4,6 +4,8 @@
 #   NodeMemoryMajorPagesFaults  axon-01 (server) at 6000/s and cortex (dev) at
 #                               30000/s fire; bitstream (dev) at 6000/s does not
 #   NodeMemoryPressure          cortex at 10% stall fires; bitstream at 1% does not
+#   NodeCPUHighUsage            at 100% CPU, axon-01 (server) fires by 30m;
+#                               bitstream (nix-builder) only after an hour
 #   nix build .#checks.x86_64-linux.host-alerts
 { config, lib, ... }:
 let
@@ -35,6 +37,28 @@ let
     exp_annotations = annotationsOf alert instance subs;
   };
   faults = n: { "{{ printf \"%.0f\" $value }}" = toString n; };
+  expectCpu =
+    instance:
+    let
+      rule = alertOf "NodeCPUHighUsage";
+    in
+    {
+      exp_labels = {
+        severity = "info";
+        job = "node-exporter";
+        inherit instance;
+      };
+      exp_annotations = rule.annotations // {
+        description =
+          lib.replaceStrings [ "{{ $labels.instance }}" "{{ printf \"%.0f\" $value }}" ] [ instance "100" ]
+            rule.annotations.description;
+      };
+    };
+  # One CPU fully busy (user) for 90 minutes.
+  busyCpu = instance: {
+    series = ''node_cpu_seconds_total{job="node-exporter", instance="${instance}", cpu="0", mode="user"}'';
+    values = "0+60x90";
+  };
   # A counter rising `perMin` per minute for 40 minutes.
   counter = metric: instance: perMin: {
     series = ''${metric}{job="node-exporter", instance="${instance}"}'';
@@ -71,6 +95,28 @@ let
           }
         ];
       }
+      {
+        interval = "1m";
+        input_series = [
+          (busyCpu "bitstream")
+          (busyCpu "axon-01")
+        ];
+        alert_rule_test = [
+          {
+            eval_time = "30m";
+            alertname = "NodeCPUHighUsage";
+            exp_alerts = [ (expectCpu "axon-01") ];
+          }
+          {
+            eval_time = "75m";
+            alertname = "NodeCPUHighUsage";
+            exp_alerts = [
+              (expectCpu "bitstream")
+              (expectCpu "axon-01")
+            ];
+          }
+        ];
+      }
     ];
   };
 in
@@ -83,7 +129,7 @@ in
           ''
             cp ${pkgs.writeText "rules.json" (builtins.toJSON rules)} rules.json
             cp ${pkgs.writeText "test.json" (builtins.toJSON test)} test.json
-            promtool check rules rules.json
+            promtool check rules --lint-fatal rules.json
             promtool test rules test.json
             touch $out
           '';
