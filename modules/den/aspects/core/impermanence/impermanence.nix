@@ -10,6 +10,7 @@
       den.aspects.core.impermanence.persist-collector
       den.aspects.core.impermanence.persist-home-collector
       den.aspects.core.impermanence.migrate
+      den.aspects.core.impermanence.orphans
       den.aspects.core.impermanence.btrfs
       den.aspects.core.impermanence.zfs
     ];

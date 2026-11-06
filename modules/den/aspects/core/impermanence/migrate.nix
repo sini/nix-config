@@ -24,23 +24,7 @@
         ...
       }:
       let
-        # The same flattening impermanence does (nixos.nix allPersistentStoragePaths).
-        roots = lib.filter (v: v.enable) (lib.attrValues config.environment.persistence);
-        hmRoots = lib.filter (v: v.enable) (
-          lib.concatMap (u: lib.attrValues (u.home.persistence or { })) (
-            lib.attrValues (config.home-manager.users or { })
-          )
-        );
-        all = roots ++ lib.concatMap (r: lib.attrValues (r.users or { })) roots ++ hmRoots;
-        entries =
-          map (d: {
-            live = d.dirPath;
-            inherit (d) persistentStoragePath;
-          }) (lib.concatMap (r: r.directories or [ ]) all)
-          ++ map (f: {
-            live = f.filePath;
-            inherit (f) persistentStoragePath;
-          }) (lib.concatMap (r: r.files or [ ]) all);
+        entries = import ./_entries.nix { inherit lib config; };
 
         migrate = pkgs.writeShellApplication {
           name = "persist-migrate";
@@ -106,10 +90,10 @@
             "${lib.getExe migrate} ${
               lib.escapeShellArgs [
                 e.live
-                e.persistentStoragePath
+                e.store
               ]
             } || echo 'persist-migrate: failed for ${e.live}' >&2\n"
-          ) (lib.unique entries);
+          ) entries;
         };
         system.activationScripts.createPersistentStorageDirs.deps = [ "persist-migrate" ];
       };

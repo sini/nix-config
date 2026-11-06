@@ -164,6 +164,14 @@ in
         }) guests
       );
 
+      # Every share a guest mounts (its state dirs, and its own, e.g. model caches) and the
+      # scratch images live on the stores directly, not through an impermanence entry.
+      impermanence.directPaths =
+        lib.concatMap (vm: map (s: s.source) vm.config.config.microvm.shares) (
+          lib.attrValues config.microvm.vms
+        )
+        ++ lib.optional (lib.any (g: g.scratch != [ ]) guests) scratchRoot;
+
       systemd.tmpfiles.rules =
         lib.concatMap (g: map (volume: "d ${stateDir g.name volume} 0700 root root -") stateVolumes) guests
         # microvm-run, as the microvm user, creates the scratch images here.
