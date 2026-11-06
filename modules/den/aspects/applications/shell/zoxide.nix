@@ -13,5 +13,8 @@
         ];
       };
     };
+
+    # Its frecency database (db.zo).
+    persistHome.directories = [ ".local/share/zoxide" ];
   };
 }
