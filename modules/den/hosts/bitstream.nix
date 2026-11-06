@@ -29,6 +29,11 @@
         maxJobs = 3;
         cores = 4;
       };
+      # 189 of 193 OOM kills in one day were kswapd's MGLRU guard firing with the zram swap
+      # full, each taking a 3-41 MiB nix-daemon worker (and its client's build) for nothing.
+      core.system.linux-kernel.mglruMinTtlMs = 0;
+      # Remote-build capacity offered to the fleet, below its own local budget.
+      roles.nix-builder.maxJobs = 2;
       core.impermanence = {
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;

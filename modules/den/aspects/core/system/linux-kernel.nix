@@ -56,6 +56,14 @@
         default = "server";
         description = "CachyOS kernel optimization target";
       };
+      # CachyOS ships MGLRU's thrashing guard on: once swap is full and kswapd cannot keep this
+      # many ms of working set resident, kswapd invokes the OOM killer, with free memory left.
+      # 0 disables the guard; real allocation failures still reach the ordinary OOM path.
+      mglruMinTtlMs = lib.mkOption {
+        type = lib.types.nullOr lib.types.ints.unsigned;
+        default = null;
+        description = "/sys/kernel/mm/lru_gen/min_ttl_ms (null keeps the kernel default)";
+      };
     };
 
     nixos =
@@ -76,6 +84,10 @@
             pkgs.${kernelName}
           else
             pkgs.linuxPackages_latest;
+
+        systemd.tmpfiles.rules = lib.optional (
+          cfg.mglruMinTtlMs != null
+        ) "w /sys/kernel/mm/lru_gen/min_ttl_ms - - - - ${toString cfg.mglruMinTtlMs}";
       };
   };
 }
