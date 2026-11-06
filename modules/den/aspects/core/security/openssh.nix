@@ -1,4 +1,4 @@
-{ lib, ... }:
+{ config, lib, ... }:
 {
   den.aspects.core.security.openssh = {
     settings = {
@@ -86,13 +86,17 @@
 
         # tailscale0 is already a trusted interface (set by the tailscale aspect),
         # so tailnet SSH works with the firewall closed. Also allow the host's LAN
-        # CIDR so uplink can ProxyJump to targets over the LAN when the tailnet
-        # control plane is down (the break-glass path).
+        # CIDR, and those of the environments it admits (sshFrom), so uplink can
+        # ProxyJump to targets over the LAN when the tailnet control plane is down
+        # (the break-glass path).
         networking.firewall.extraInputRules =
           lib.mkIf (host.settings.core.security.openssh.exposure == "tailnet")
-            ''
-              ip saddr ${environment.networks.default.cidr} tcp dport 22 accept
-            '';
+            (
+              lib.concatMapStrings (cidr: "ip saddr ${cidr} tcp dport 22 accept\n") (
+                [ environment.networks.default.cidr ]
+                ++ map (e: config.den.environments.${e}.networks.default.cidr) environment.sshFrom
+              )
+            );
       };
 
     darwin = {

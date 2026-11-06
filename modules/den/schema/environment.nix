@@ -415,6 +415,17 @@ in
               description = "Where this environment's hosts send telemetry";
             };
 
+            sshFrom = mkOption {
+              type = types.listOf types.str;
+              default = [ ];
+              example = [ "prod" ];
+              description = ''
+                Other environments whose default network may reach this environment's hosts'
+                sshd over the LAN, beside its own: the host-side mirror of a gateway policy
+                letting that network in (prod's unifi.networkPolicies).
+              '';
+            };
+
             system-access-groups = mkOption {
               type = types.listOf types.str;
               default = [ ];

@@ -5,6 +5,9 @@
     id = 2;
     domain = "json64.dev";
     system-access-groups = [ "system-access" ];
+    # prod's gateway policy "Prod to Dev access" lets the prod LAN in; uplink's break-glass
+    # ProxyJump and uplink-dev's sessions reach dev hosts that way.
+    sshFrom = [ "prod" ];
 
     certificates.issuers = {
       "json64-dev" = {
