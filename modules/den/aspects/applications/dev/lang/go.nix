@@ -15,5 +15,10 @@
       [
         pkgs.vscode-marketplace.golang.go
       ];
+
+    # GOPATH: the module cache and installed binaries.
+    cacheHome.directories = [
+      "go"
+    ];
   };
 }

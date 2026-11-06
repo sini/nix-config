@@ -75,5 +75,11 @@
           };
         };
       };
+
+    # The client's login and Equicord's settings beside nixcord's files.
+    persistHome.directories = [
+      ".config/discord"
+      ".config/Equicord"
+    ];
   };
 }

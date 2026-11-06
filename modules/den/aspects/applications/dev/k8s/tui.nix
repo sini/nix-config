@@ -11,5 +11,9 @@
           pkgs.kube-prompt
         ];
       };
+
+    persistHome.directories = [
+      ".config/Lens"
+    ];
   };
 }

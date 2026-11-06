@@ -33,5 +33,10 @@
           };
         };
       };
+
+    # Profiles.
+    persistHome.directories = [
+      ".zen"
+    ];
   };
 }

@@ -19,5 +19,9 @@
         lg = "lazygit";
       };
     };
+
+    persistHome.directories = [
+      ".local/state/lazygit"
+    ];
   };
 }

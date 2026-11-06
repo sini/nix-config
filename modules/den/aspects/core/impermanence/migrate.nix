@@ -9,6 +9,11 @@
 # link, not empty), so it is idempotent: after a home or root wipe there is nothing to move.
 # The copy reflinks (instant on a pool with block cloning) into a staging name, is renamed into
 # place, and only then is the live path removed; a failed copy leaves the live data untouched.
+#
+# On a live switch, a database a running service holds open (sqlite, an index) is copied
+# mid-write and the service keeps writing to the removed original until it restarts. Persist
+# such paths with `colmena apply boot` and a reboot: stage-2 activation migrates them with
+# /home and the stores mounted (neededForBoot) and before any user service starts.
 {
   den.aspects.core.impermanence.migrate = {
     nixos =

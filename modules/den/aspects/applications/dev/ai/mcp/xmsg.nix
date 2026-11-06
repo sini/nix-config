@@ -225,6 +225,9 @@ in
 
     homeManagerModules = { inputs', ... }: [ inputs'.xmsg.homeManagerModules.xmsg ];
 
+    # xmsg.db: registrations, attestation and revocation state.
+    persistHome.directories = [ ".local/state/xmsg" ];
+
     homeManager =
       {
         config,

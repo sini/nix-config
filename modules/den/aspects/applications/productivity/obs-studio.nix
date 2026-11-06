@@ -28,5 +28,9 @@
           ];
         };
       };
+
+    persistHome.directories = [
+      ".config/obs-studio"
+    ];
   };
 }

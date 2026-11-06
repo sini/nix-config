@@ -33,5 +33,16 @@
           };
         };
       };
+
+    # The kubeconfig KUBECONFIG points at, and k9s's own state.
+    persistHome.directories = [
+      ".config/kube"
+      ".local/share/k9s"
+      ".local/state/k9s"
+    ];
+
+    cacheHome.directories = [
+      ".kube"
+    ];
   };
 }

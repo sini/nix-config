@@ -7,5 +7,9 @@
           #pkgs.ytmdesktop # TODO: re-enable
         ];
       };
+
+    persistHome.directories = [
+      ".config/YouTube Music Desktop App"
+    ];
   };
 }

@@ -75,5 +75,10 @@
           };
         };
       };
+
+    # gh's login (settings are Home Manager's config.yml).
+    persistHome.files = [
+      ".config/gh/hosts.yml"
+    ];
   };
 }

@@ -10,5 +10,9 @@
           pkgs.blockbench
         ];
       };
+
+    persistHome.directories = [
+      ".config/aseprite"
+    ];
   };
 }

@@ -32,5 +32,10 @@
           ];
         };
       };
+
+    # Its recall and history databases.
+    persistHome.directories = [
+      ".local/share/rtk"
+    ];
   };
 }

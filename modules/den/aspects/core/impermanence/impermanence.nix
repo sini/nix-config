@@ -128,6 +128,11 @@
               directory = ".local/share/keyrings";
               mode = "0700";
             }
+            # NSS certificate databases, read by every NSS-linked program.
+            ".pki"
+            ".local/share/pki"
+            # Persistent= user timers' last-run stamps.
+            ".local/share/systemd/timers"
           ];
         };
 

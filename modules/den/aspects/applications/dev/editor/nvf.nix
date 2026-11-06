@@ -200,5 +200,10 @@
           EDITOR = "nvim";
         };
       };
+
+    # Undo history and shada.
+    persistHome.directories = [
+      ".local/state/nvf"
+    ];
   };
 }

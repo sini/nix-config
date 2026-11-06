@@ -145,6 +145,12 @@
       ".headroom/logs"
       ".headroom/clients"
     ];
+    # Its config and install/subscription state, beside the scratch above.
+    cacheHome.files = [
+      ".headroom/config"
+      ".headroom/mcp_installs.json"
+      ".headroom/subscription_state.json"
+    ];
 
     homeDarwin =
       { pkgs, lib, ... }:

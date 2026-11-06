@@ -11,5 +11,12 @@
           pkgs.supercollider
         ];
       };
+
+    persistHome.directories = [
+      ".config/REAPER"
+      ".config/audacity"
+      ".local/share/audacity"
+      ".config/DecentSampler"
+    ];
   };
 }

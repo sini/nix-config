@@ -196,5 +196,15 @@
           fetchLFS = true;
         };
       };
+
+    # Flatpak's user installation reinstalls (nix-flatpak); the apps' data does not.
+    cacheHome.directories = [
+      ".local/share/flatpak"
+    ];
+
+    persistHome.directories = [
+      ".var"
+      ".config/bs-manager"
+    ];
   };
 }

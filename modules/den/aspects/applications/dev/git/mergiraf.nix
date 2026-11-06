@@ -7,5 +7,9 @@
         enableJujutsuIntegration = true;
       };
     };
+
+    cacheHome.directories = [
+      ".local/share/mergiraf"
+    ];
   };
 }

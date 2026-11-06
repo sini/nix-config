@@ -7,5 +7,10 @@
           inputs'.ayugram-desktop.packages.ayugram-desktop
         ];
       };
+
+    # The AyuGram session and its media.
+    persistHome.directories = [
+      ".local/share/AyuGramDesktop"
+    ];
   };
 }

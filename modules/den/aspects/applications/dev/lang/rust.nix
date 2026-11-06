@@ -21,5 +21,10 @@
           pkgs.wasm-bindgen-cli
         ];
       };
+
+    # Registry index, crate sources and installed binaries.
+    cacheHome.directories = [
+      ".cargo"
+    ];
   };
 }

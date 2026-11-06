@@ -9,6 +9,9 @@
 # this collector owns no system/firewall content — that is the user-scoped `peer`
 # aspect (peers.nix).
 {
+  # The device key and cert, config.xml and the index database.
+  den.aspects.core.network.syncthing.member.persistHome.directories = [ ".local/state/syncthing" ];
+
   den.aspects.core.network.syncthing.member.homeManager =
     {
       replicateHome,

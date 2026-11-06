@@ -57,5 +57,9 @@
           };
         };
       };
+
+    persistHome.directories = [
+      ".config/obsidian"
+    ];
   };
 }

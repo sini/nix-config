@@ -51,5 +51,17 @@
           # pkgs.moonlight-qt
         ];
       };
+
+    # Saves, keys and per-emulator config.
+    persistHome.directories = [
+      ".config/Cemu"
+      ".local/share/Cemu"
+      ".config/eden"
+      ".local/share/eden"
+      ".config/citron"
+      ".local/share/citron"
+      ".local/share/dolphin-emu"
+      ".local/share/PrismLauncher"
+    ];
   };
 }

@@ -39,5 +39,10 @@
           ];
         };
       };
+
+    # Its language servers, logs and config.
+    cacheHome.directories = [
+      ".serena"
+    ];
   };
 }

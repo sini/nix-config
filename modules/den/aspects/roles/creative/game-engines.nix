@@ -10,5 +10,10 @@
           pkgs.ldtk
         ];
       };
+
+    persistHome.directories = [
+      ".config/godot"
+      ".local/share/godot"
+    ];
   };
 }

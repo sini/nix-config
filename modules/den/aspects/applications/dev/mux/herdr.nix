@@ -12,5 +12,11 @@
         # TODO: Restore at next touch
         # programs.claude-code.skills.herdr = "${inputs'.llm-agents.packages.herdr.src}/SKILL.md";
       };
+
+    # Saved sessions, snapshots and server state.
+    persistHome.directories = [
+      ".config/herdr"
+      ".local/state/herdr"
+    ];
   };
 }

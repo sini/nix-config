@@ -236,5 +236,9 @@
           };
         };
       };
+
+    persistHome.directories = [
+      ".beads"
+    ];
   };
 }

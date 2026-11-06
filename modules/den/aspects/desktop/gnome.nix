@@ -242,5 +242,20 @@
           };
         };
       };
+
+    # dconf's user database (Home Manager writes into it, the desktop does too), and the shell's state.
+    persistHome.directories = [
+      ".config/dconf"
+      ".local/share/gnome-shell"
+      ".local/share/nautilus"
+      ".local/share/gvfs-metadata"
+      ".local/share/backgrounds"
+      ".local/share/icons"
+    ];
+
+    persistHome.files = [
+      ".config/monitors.xml"
+      ".local/share/recently-used.xbel"
+    ];
   };
 }

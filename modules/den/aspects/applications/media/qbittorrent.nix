@@ -7,5 +7,10 @@
           pkgs.qbittorrent
         ];
       };
+
+    persistHome.directories = [
+      ".config/qBittorrent"
+      ".local/share/qBittorrent"
+    ];
   };
 }

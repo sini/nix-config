@@ -10,5 +10,9 @@
           pkgs.inkscape
         ];
       };
+
+    persistHome.directories = [
+      ".config/GIMP"
+    ];
   };
 }

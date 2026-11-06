@@ -16,5 +16,10 @@
 
         programs.coolercontrol.enable = !isLaptop;
       };
+
+    persistHome.directories = [
+      ".config/org.coolercontrol.CoolerControl"
+      ".local/share/org.coolercontrol.CoolerControl"
+    ];
   };
 }

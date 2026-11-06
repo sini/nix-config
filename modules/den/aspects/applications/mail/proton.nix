@@ -18,5 +18,10 @@
           ];
         };
       };
+
+    persistHome.directories = [
+      ".config/protonmail"
+      ".local/share/protonmail"
+    ];
   };
 }

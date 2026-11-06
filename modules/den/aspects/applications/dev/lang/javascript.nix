@@ -8,5 +8,12 @@
           pkgs.nodejs_22
         ];
       };
+
+    # Package caches and stores.
+    cacheHome.directories = [
+      ".npm"
+      ".local/share/pnpm"
+      ".local/state/pnpm"
+    ];
   };
 }
