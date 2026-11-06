@@ -251,6 +251,9 @@
       ".local/share/gvfs-metadata"
       ".local/share/backgrounds"
       ".local/share/icons"
+      # Evolution's accounts, calendars and contacts (evolution-data-server).
+      ".config/evolution"
+      ".local/share/evolution"
     ];
 
     persistHome.files = [
