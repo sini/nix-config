@@ -20,7 +20,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/configMaps: 04d0961bd8f7419e710646cf418c2c3dec1cf65905160901bf281d90f1f61def
+        checksum/configMaps: 9cc2f78865d754f915d36cc10baf2053393ec232eaa0588220839e2af86ece77
       labels:
         app.kubernetes.io/controller: main
         app.kubernetes.io/instance: hindsight

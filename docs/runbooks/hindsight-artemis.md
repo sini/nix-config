@@ -56,11 +56,11 @@ documented for the owner; no credential has been generated as part of this
 change.
 
 ```bash
-nix develop
-agenix generate
+systemd-run --user --scope -q -p MemoryMax=12G nix develop
+systemd-run --user --scope -q -p MemoryMax=12G agenix generate
 git add .secrets/env/prod/hindsight/write-token-den-law-artemis.age
-agenix sops-rekey
-nixidy-sync
+systemd-run --user --scope -q -p MemoryMax=12G agenix sops-rekey
+systemd-run --user --scope -q -p MemoryMax=12G nixidy-sync
 ```
 
 `agenix generate` generates missing declared secrets, not just this one. Review
@@ -80,11 +80,16 @@ and the updated Python module in its ConfigMap.
 
 ## Checks before deployment
 
+Keep every Nix evaluation/build/check, including evaluating wrappers, under the
+12-GiB memory cap on the shared host. Exit 137 is a possible memory regression:
+record the command and do not retry uncapped. Heavy phases launched from
+`den-ag-design` also take its shared `STATUS/heavy-lock.zsh` once per phase.
+
 ```bash
 python3 modules/den/aspects/kubernetes/services/ai/hindsight-write-gate-unit.py
-nix build .#checks.x86_64-linux.hindsight-write-gate
-nix-flake-build axon-01
-nix flake check
+systemd-run --user --scope -q -p MemoryMax=12G nix build .#checks.x86_64-linux.hindsight-write-gate
+systemd-run --user --scope -q -p MemoryMax=12G nix-flake-build axon-01
+systemd-run --user --scope -q -p MemoryMax=12G nix flake check
 treefmt
 ```
 
@@ -106,8 +111,10 @@ python3 modules/den/aspects/kubernetes/services/ai/hindsight-write-gate-oracle.p
 The oracle creates and deletes fixture banks. Never point it at production. Its
 admission assertions check the absence of a gate refusal, not successful
 completion of every backend operation; some fixture requests intentionally
-exercise invalid business inputs. Live positive controls must separately prove
-actual write success. It covers named-writer admission on the bank's read/write
+exercise invalid business inputs. A separate positive control creates a
+directive as the writer, reads it as the reader, and verifies a refused reader
+mutation leaves its content unchanged. Live hosted write success still needs its
+own control. The oracle covers named-writer admission on the bank's read/write
 routes and MCP tools, rejection on other banks (including open banks), filtered
 bank listings, preservation of reader-only access, and startup refusal for
 missing, empty, or malformed writer configuration.
