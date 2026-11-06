@@ -26,7 +26,9 @@ in
 {
   den.hosts.x86_64-linux.uplink-dev = {
     channel = "nixos-unstable";
-    environment = "dev";
+    # Its environment is where it sits on the network (uplink's prod VLAN), not what it is
+    # used for.
+    environment = "prod";
     system-owner = "sini";
     system-access-groups = [ "server-access" ];
     intoAttr = [ ]; # delivered as a child of uplink, not a standalone nixosConfiguration
