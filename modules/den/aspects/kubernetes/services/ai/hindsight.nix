@@ -104,8 +104,7 @@ in
         ...
       }:
       let
-        principalTokens =
-          principalTokensFor cluster.settings.kubernetes.services.ai.hindsight.artemisWriter.enable;
+        principalTokens = principalTokensFor cluster.settings.kubernetes.services.ai.hindsight.artemisWriter.enable;
       in
       {
         age.secrets =

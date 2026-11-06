@@ -343,8 +343,8 @@ def _text(result):
 
 async def mcp_session(http, url, fn):
     async with (
-        streamable_http_client(url, http_client=http) as (rd, wr, _),
-        ClientSession(rd, wr) as session,
+        streamable_http_client(url, http_client=http) as streams,
+        ClientSession(streams[0], streams[1]) as session,
     ):
         await session.initialize()
         return await fn(session)
@@ -617,6 +617,36 @@ async def routes_cells():
         # m: the MCP transport
         law_ids = await fixture(c, LAW, TOKENS[LAW])
         await fixture(c, GATED, TOKENS[GATED])
+        # Prove a writer mutation persists, beyond the route admission checks.
+        directive = {"name": "writer-positive", "content": "writer-persisted"}
+        r = await c.post(
+            f"/v1/default/banks/{LAW}/directives",
+            json=directive,
+            headers=hdr(WRITER),
+        )
+        r.raise_for_status()
+        directive_id = r.json()["id"]
+        r = await c.get(
+            f"/v1/default/banks/{LAW}/directives/{directive_id}",
+            headers=hdr(READER),
+        )
+        r.raise_for_status()
+        cell("writer.persisted", r.json()["content"] == directive["content"])
+        r = await c.patch(
+            f"/v1/default/banks/{LAW}/directives/{directive_id}",
+            json={"content": "reader-must-not-write"},
+            headers=hdr(READER),
+        )
+        cell("writer.reader-still-refused", refused(r))
+        r = await c.get(
+            f"/v1/default/banks/{LAW}/directives/{directive_id}",
+            headers=hdr(TOKENS[LAW]),
+        )
+        r.raise_for_status()
+        cell(
+            "writer.refused-write-unchanged",
+            r.json()["content"] == directive["content"],
+        )
     await mcp_cells(mem, law_ids)
     async with httpx.AsyncClient(
         transport=httpx.ASGITransport(app=app), base_url="http://t"
