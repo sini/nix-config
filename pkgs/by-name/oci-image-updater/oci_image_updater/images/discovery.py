@@ -6,6 +6,8 @@ from typing import Any
 
 from ..models import ImageMetadata
 
+logger = logging.getLogger(__name__)
+
 
 class ImageDiscovery:
     """Discovers images from flake metadata."""
@@ -68,7 +70,7 @@ class ImageDiscovery:
                 file_path=file_path,
             )
             images.append(image)
-            logging.debug(f"Discovered image: {image.path_str}")
+            logger.debug(f"Discovered image: {image.path_str}")
         else:
             # This is a directory node, recurse into children
             for key, value in node.items():

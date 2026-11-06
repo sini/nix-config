@@ -6,6 +6,8 @@ from pathlib import Path
 from ..models import ImageMetadata, UpdateOperation
 from ..utils import NixUtils, ProcessUtils
 
+logger = logging.getLogger(__name__)
+
 
 class ImageUpdater:
     """Updates image metadata files."""
@@ -42,8 +44,8 @@ class ImageUpdater:
             ]
             output = ProcessUtils.run(cmd)
             return output.strip()
-        except Exception as e:
-            logging.warning(
+        except (RuntimeError, OSError) as e:
+            logger.warning(
                 f"Failed to check remote digest for {image_name}:{image_tag}: {e}"
             )
             return None
@@ -81,11 +83,11 @@ class ImageUpdater:
         Returns:
             UpdateOperation describing what was done
         """
-        logging.info(f"Checking {image.path_str}...")
+        logger.info(f"Checking {image.path_str}...")
 
         # Check if image is pinned
         if image.pinned:
-            logging.info("  Pinned (skipping)")
+            logger.info("  Pinned (skipping)")
             return UpdateOperation(
                 path=image.path_str,
                 old_digest=image.image_digest,
@@ -103,7 +105,7 @@ class ImageUpdater:
         )
 
         if remote_digest is None:
-            logging.warning("  Skipping (failed to get remote digest)")
+            logger.warning("  Skipping (failed to get remote digest)")
             return UpdateOperation(
                 path=image.path_str,
                 old_digest=image.image_digest,
@@ -114,7 +116,7 @@ class ImageUpdater:
             )
 
         if remote_digest == image.image_digest:
-            logging.info("  Up to date")
+            logger.info("  Up to date")
             return UpdateOperation(
                 path=image.path_str,
                 old_digest=image.image_digest,
@@ -124,9 +126,9 @@ class ImageUpdater:
                 updated=False,
             )
 
-        logging.info("  Update available!")
-        logging.info(f"    Old digest: {image.image_digest}")
-        logging.info(f"    New digest: {remote_digest}")
+        logger.info("  Update available!")
+        logger.info(f"    Old digest: {image.image_digest}")
+        logger.info(f"    New digest: {remote_digest}")
 
         # Fetch new image and get hash
         prefetch_result = NixUtils.prefetch_docker(
@@ -137,8 +139,8 @@ class ImageUpdater:
         )
 
         new_hash = prefetch_result.get("hash", "")
-        logging.info(f"    Old hash: {image.image_hash}")
-        logging.info(f"    New hash: {new_hash}")
+        logger.info(f"    Old hash: {image.image_hash}")
+        logger.info(f"    New hash: {new_hash}")
 
         if not dry_run:
             ImageUpdater._write_metadata_file(
@@ -151,9 +153,9 @@ class ImageUpdater:
                 image.os,
                 image.pinned,
             )
-            logging.info(f"  Updated {image.file_path}")
+            logger.info(f"  Updated {image.file_path}")
         else:
-            logging.info(f"  Would update {image.file_path}")
+            logger.info(f"  Would update {image.file_path}")
 
         return UpdateOperation(
             path=image.path_str,

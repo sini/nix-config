@@ -8,6 +8,8 @@ from ..utils import GitUtils, NixUtils
 from .discovery import ImageDiscovery
 from .updater import ImageUpdater
 
+logger = logging.getLogger(__name__)
+
 
 class ImageManager:
     """Manages image discovery and updates."""
@@ -39,27 +41,27 @@ class ImageManager:
         Returns:
             List of update operations performed
         """
-        logging.info("Fetching images metadata from flake...")
+        logger.info("Fetching images metadata from flake...")
         metadata = NixUtils.get_images_metadata(self.flake_ref)
 
         if not metadata:
-            logging.warning("No images found in flake")
+            logger.warning("No images found in flake")
             return []
 
-        logging.info("Discovering images...")
+        logger.info("Discovering images...")
         images = ImageDiscovery.discover_images(metadata, self.images_dir)
-        logging.info(f"Found {len(images)} image(s)")
-        logging.info("")
+        logger.info(f"Found {len(images)} image(s)")
+        logger.info("")
 
         operations = []
         for image in images:
             op = ImageUpdater.update_image(image, dry_run=self.dry_run)
             operations.append(op)
-            logging.info("")
+            logger.info("")
 
         # Summarize
         updated_count = sum(1 for op in operations if op.updated)
-        logging.info(
+        logger.info(
             f"Summary: {updated_count} image(s) updated, {len(operations) - updated_count} unchanged"
         )
 
@@ -79,8 +81,8 @@ class ImageManager:
         if not updated_ops:
             return
 
-        logging.info("")
-        logging.info("Committing changes...")
+        logger.info("")
+        logger.info("Committing changes...")
 
         # Add all image files
         GitUtils.add([self.images_dir], self.git_root)
@@ -97,4 +99,4 @@ class ImageManager:
                 )
 
         GitUtils.commit(message, self.git_root)
-        logging.info("Changes committed")
+        logger.info("Changes committed")

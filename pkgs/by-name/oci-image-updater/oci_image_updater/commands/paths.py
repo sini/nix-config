@@ -9,6 +9,8 @@ from ..images import ImageDiscovery
 from ..utils import NixUtils
 from .common import configure_logging
 
+logger = logging.getLogger(__name__)
+
 
 def cmd_list_path(args: argparse.Namespace) -> int:
     """Handle list-path command.
@@ -32,8 +34,8 @@ def cmd_list_path(args: argparse.Namespace) -> int:
         )
         print(store_path)
         return 0
-    except Exception as e:
-        logging.error(f"Failed to get store path: {e}")
+    except (RuntimeError, OSError) as e:
+        logger.error(f"Failed to get store path: {e}")
         return 1
 
 
@@ -48,19 +50,19 @@ def cmd_list_paths(args: argparse.Namespace) -> int:
     """
     configure_logging()
 
-    logging.info("Fetching images metadata from flake...")
+    logger.info("Fetching images metadata from flake...")
     metadata = NixUtils.get_images_metadata(args.flake)
 
     if not metadata:
-        logging.warning("No images found in flake")
+        logger.warning("No images found in flake")
         # Output empty JSON array
         print(json.dumps([]))
         return 0
 
     # We don't need git_root for this, just use a dummy path
     images = ImageDiscovery.discover_images(metadata, Path("/dev/null"))
-    logging.info(f"Found {len(images)} image(s)")
-    logging.info("")
+    logger.info(f"Found {len(images)} image(s)")
+    logger.info("")
 
     # Build list of path objects
     paths = []
@@ -77,8 +79,8 @@ def cmd_list_paths(args: argparse.Namespace) -> int:
                     "path": str(store_path),
                 }
             )
-        except Exception as e:
-            logging.error(f"Failed to get store path for {image.path_str}: {e}")
+        except (RuntimeError, OSError) as e:
+            logger.error(f"Failed to get store path for {image.path_str}: {e}")
 
     # Output JSON
     print(json.dumps(paths, indent=2))

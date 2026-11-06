@@ -15,6 +15,8 @@ from .commands import (
     cmd_update_all,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def parse_arguments() -> argparse.Namespace:
     """Parse command line arguments.
@@ -214,7 +216,7 @@ def main() -> int:
     if handler:
         return handler(args)
     else:
-        logging.error(f"Unknown command: {args.command}")
+        logger.error(f"Unknown command: {args.command}")
         return 1
 
 

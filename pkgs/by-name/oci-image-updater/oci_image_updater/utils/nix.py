@@ -8,6 +8,8 @@ from typing import Any
 
 from .process import ProcessUtils
 
+logger = logging.getLogger(__name__)
+
 
 class NixUtils:
     """Utility class for Nix operations."""
@@ -79,8 +81,8 @@ class NixUtils:
         try:
             output = NixUtils.eval(flake_ref, "imagesMetadata", json_output=True)
             return json.loads(output)
-        except Exception as e:
-            logging.error(f"Failed to get images metadata: {e}")
+        except (RuntimeError, OSError, json.JSONDecodeError) as e:
+            logger.error(f"Failed to get images metadata: {e}")
             return {}
 
     @staticmethod

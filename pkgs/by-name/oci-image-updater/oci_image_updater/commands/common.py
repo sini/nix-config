@@ -7,6 +7,8 @@ from pathlib import Path
 
 from ..utils import GitUtils
 
+logger = logging.getLogger(__name__)
+
 
 def configure_logging(verbose: bool = False) -> None:
     """Configure logging based on options.
@@ -35,12 +37,12 @@ def validate_git_root(args: argparse.Namespace) -> Path:
     if hasattr(args, "git_root") and args.git_root:
         git_root = args.git_root.resolve()
         if not git_root.exists():
-            logging.error(f"specified git root does not exist: {git_root}")
+            logger.error(f"specified git root does not exist: {git_root}")
             sys.exit(1)
         return git_root
 
     git_root = GitUtils.get_root()
     if git_root is None:
-        logging.error("not running from within a git repository")
+        logger.error("not running from within a git repository")
         sys.exit(1)
     return git_root

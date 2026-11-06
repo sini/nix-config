@@ -118,7 +118,10 @@ def main() -> int:
     # Output to skim
     if filtered_lines:
         try:
-            subprocess.run([args.skim_bin], input="\n".join(filtered_lines), text=True)
+            # skim exits non-zero when the picker is dismissed; that is not an error here.
+            subprocess.run(
+                [args.skim_bin], input="\n".join(filtered_lines), text=True, check=False
+            )
         except KeyboardInterrupt:
             pass
 

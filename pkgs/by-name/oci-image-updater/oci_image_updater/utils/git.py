@@ -22,7 +22,7 @@ class GitUtils:
                 cwd=Path(os.getcwd()),
             )
             return Path(output.strip())
-        except Exception:
+        except (RuntimeError, OSError):
             return None
 
     @staticmethod
