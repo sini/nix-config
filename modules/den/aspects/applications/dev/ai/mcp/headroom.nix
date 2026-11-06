@@ -144,10 +144,10 @@
     cacheHome.directories = [
       ".headroom/logs"
       ".headroom/clients"
-    ];
-    # Its config and install/subscription state, beside the scratch above.
-    cacheHome.files = [
       ".headroom/config"
+    ];
+    # Its install and subscription state, beside the scratch above.
+    cacheHome.files = [
       ".headroom/mcp_installs.json"
       ".headroom/subscription_state.json"
     ];
