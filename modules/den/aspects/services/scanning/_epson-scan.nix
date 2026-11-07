@@ -18,6 +18,13 @@ let
     inherit (pkgs) sane-backends curl immich-cli;
   }
   // tools;
+  # Native tone (the patched driver): judge pages through the stock driver's curve, so
+  # the feed band and the classifier's thresholds hold; the pages keep their pixels.
+  classifyFlags = lib.concatStringsSep " " (
+    lib.optional (cfg.nativeTone or false)
+      "--classify-lut ${scan-classify}/share/scan-classify/epsonds-lut2.csv"
+    ++ lib.optional ((cfg.iccProfile or null) != null) "--icc-profile ${cfg.iccProfile}"
+  );
   tokens = {
     paperless = "paperless-token";
     immich = "immich-api-key";
@@ -148,7 +155,7 @@ let
       fi
 
       scan-classify --dpi ${toString cfg.resolution} --duplex --trim-in-place \
-        --photo-rotate ${toString cfg.photoRotation} "''${pages[@]}" > routes.tmp
+        --photo-rotate ${toString cfg.photoRotation} ${classifyFlags} "''${pages[@]}" > routes.tmp
       mv routes.tmp routes
       echo "routed ''${#pages[@]} pages: $(cut -d' ' -f1 routes | sort | uniq -c | awk '{ printf "%s%s %s", sep, $1, $2; sep = " " }')"
       exec ${lib.getExe deliver} "$dir"

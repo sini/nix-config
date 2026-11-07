@@ -8,6 +8,8 @@
 #                    is kept; retry later sends only the photos
 #   empty feeder     no pages, no batch
 #   nothing kept     retry with an empty spool succeeds
+#   native tone      the same batch in the patched driver's tone routes the same,
+#                    and the photo (only) carries the ICC profile, pixels unchanged
 #   nix build .#checks.x86_64-linux.epson-scan
 { lib, ... }:
 {
@@ -45,22 +47,36 @@
           done
           echo "scanimage: sane_start: Document feeder out of documents" >&2
         '';
+        # Small pages: content decides the routes, not resolution.
+        cfg = {
+          scanner = "192.0.2.1";
+          resolution = 50;
+          paperlessUrl = "https://paperless.test";
+          immichUrl = "https://immich.test";
+          album = "Scans";
+          photoRotation = 180;
+        };
+        tools = {
+          sane-backends = scanimage;
+          curl = recorder "curl" "FAKE_CURL_RC";
+          immich-cli = recorder "immich" "FAKE_IMMICH_RC";
+        };
         scripts = import ./_epson-scan.nix {
-          inherit lib pkgs;
+          inherit
+            lib
+            pkgs
+            cfg
+            tools
+            ;
           inherit (config.packages) scan-classify;
-          # Small pages: content decides the routes, not resolution.
-          cfg = {
-            scanner = "192.0.2.1";
-            resolution = 50;
-            paperlessUrl = "https://paperless.test";
-            immichUrl = "https://immich.test";
-            album = "Scans";
-            photoRotation = 180;
-          };
-          tools = {
-            sane-backends = scanimage;
-            curl = recorder "curl" "FAKE_CURL_RC";
-            immich-cli = recorder "immich" "FAKE_IMMICH_RC";
+        };
+        icc = ./ff-680w.icc;
+        native = import ./_epson-scan.nix {
+          inherit lib pkgs tools;
+          inherit (config.packages) scan-classify;
+          cfg = cfg // {
+            nativeTone = true;
+            iccProfile = icc;
           };
         };
         python = pkgs.python3.withPackages (p: [ p.pillow ]);
@@ -71,7 +87,7 @@
           # One duplex batch shaped like the FF-680W's: a print (blank back
           # first) and a letter page (blank back).
           mkdir -p pages empty
-          python3 - <<'EOF'
+          LUT=${config.packages.scan-classify}/share/scan-classify/epsonds-lut2.csv python3 - <<'EOF'
           from PIL import Image, ImageDraw
           DPI, BAND = 50, (200, 210, 218)
           def scan(item, back=False):
@@ -94,11 +110,23 @@
           scan(photo).save("pages/2.png")
           scan(letter).save("pages/3.png")
           scan(blank(8.5, 11), back=True).save("pages/4.png")
+          # The same pages as the patched driver returns them: the stock curve undone.
+          import os
+          rows = [list(map(int, l.split(","))) for l in open(os.environ["LUT"]).read().splitlines()[1:]]
+          inverse = []
+          for c in (1, 2, 3):
+              for v in range(256):
+                  hits = [r[0] for r in rows if r[c] == v]
+                  inverse.append((hits[0] + hits[-1]) // 2 if hits else next(r[0] for r in rows if r[c] >= v))
+          os.makedirs("native-pages")
+          for n in "1234":
+              Image.open(f"pages/{n}.png").point(inverse).save(f"native-pages/{n}.png")
           EOF
 
           # An empty PATH: the scripts must carry every tool they use, as a
           # service's PATH (coreutils, grep, sed, findutils) does not.
           batch() { PATH=/var/empty ${lib.getExe scripts.batch}; }
+          native-batch() { PATH=/var/empty ${lib.getExe native.batch}; }
           retry() { PATH=/var/empty ${lib.getExe scripts.retry}; }
           fail() { echo "FAIL $case: $*"; cat "$case/log" 2>/dev/null; exit 1; }
           setup() {
@@ -155,6 +183,29 @@
 
           setup nothing-kept
           retry > "$case/log" 2>&1 || fail "retry on an empty spool failed"
+
+          setup native-tone
+          export FAKE_PAGES=$PWD/native-pages
+          native-batch > "$case/log" 2>&1
+          grep -q "routed 4 pages: 2 blank 1 document 1 photo" "$case/log" || fail "native routes"
+          spool=$(echo "$STATE_DIRECTORY"/spool/*)
+          photo=$(awk '$1 == "photo" { print $2 }' "$spool/routes")
+          doc=$(awk '$1 == "document" { print $2 }' "$spool/routes")
+          python3 - "$spool/$photo" "$spool/$doc" ${icc} native-pages/2.png <<'EOF' || fail "ICC tagging"
+          import sys
+          from PIL import Image
+          photo, doc, icc, source = sys.argv[1:]
+          p = Image.open(photo)
+          assert p.info.get("icc_profile") == open(icc, "rb").read(), "photo not tagged"
+          assert Image.open(doc).info.get("icc_profile") is None, "document tagged"
+          # Pixels unchanged: the photo's centre is the native print's centre (the
+          # print sits top-centre, 6x4in at 50dpi; turning it 180 moves the centre by
+          # at most a pixel).
+          s = Image.open(source).convert("RGB")
+          c = p.convert("RGB").getpixel((p.width // 2, p.height // 2))
+          near = {s.getpixel((s.width // 2 + dx, 100 + dy)) for dx in (-1, 0) for dy in (-1, 0)}
+          assert c in near, f"pixel changed: {c} not in {near}"
+          EOF
 
           echo "epson-scan: all cases passed"
           touch $out

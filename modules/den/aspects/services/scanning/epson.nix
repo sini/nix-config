@@ -28,9 +28,12 @@
 #   paperless   Profile -> API Auth Token  -> <host secrets>/scanning/paperless-token.age
 #   immich      Account Settings -> API Keys (asset.upload, album.read,
 #               albumAsset.create) -> <host secrets>/scanning/immich-api-key.age
-# Until a file exists its destination is off and its batches stay spooled. Hold
-# the immich key until the scanner has a colour profile
-# (docs/runbooks/scanner-color-profile.md).
+# Until a file exists its destination is off and its batches stay spooled.
+#
+# Colour: the stock epsonds driver treats the FF-680W as a document scanner and clips
+# its tone; nativeTone scans through a patched driver, and iccProfile tags each photo
+# with a profile measured from a ColorChecker (docs/scanner-color/,
+# docs/runbooks/scanner-color-profile.md).
 { lib, ... }:
 let
   stateDir = "epson-scan";
@@ -74,6 +77,25 @@ in
           paperless rotates its pages itself during OCR.
         '';
       };
+      nativeTone = lib.mkOption {
+        type = lib.types.bool;
+        default = true;
+        description = ''
+          Scan through sane-backends patched to give the FF-680W identity tone curves
+          (_sane-ff680w-native-tone.patch) instead of the DS-530 document curves the
+          stock driver uploads, which crush the shadows and clip the highlights. Pages
+          are classified through the stock curve, so routing is unchanged.
+        '';
+      };
+      iccProfile = lib.mkOption {
+        type = lib.types.nullOr lib.types.path;
+        default = ./ff-680w.icc;
+        description = ''
+          ICC profile assigned (not converted) to each photo and back page before
+          upload. The default is measured from a ColorChecker through the native-tone
+          driver (docs/scanner-color/), so it is valid only with nativeTone.
+        '';
+      };
       album = lib.mkOption {
         type = lib.types.str;
         default = "Scans";
@@ -90,9 +112,14 @@ in
       }:
       let
         cfg = host.settings.services.scanning.epson;
+        # The FF-680W's own tone, unclipped (see nativeTone).
+        sane = pkgs.sane-backends.overrideAttrs (old: {
+          patches = (old.patches or [ ]) ++ [ ./_sane-ff680w-native-tone.patch ];
+        });
         scripts = import ./_epson-scan.nix {
           inherit lib pkgs cfg;
           inherit (pkgs.local) scan-classify;
+          tools = lib.optionalAttrs cfg.nativeTone { sane-backends = sane; };
         };
         tokenFile = name: host.secretPath + "/scanning/${name}.age";
         # agenix-rekey refuses a rekeyFile that is not in git.
