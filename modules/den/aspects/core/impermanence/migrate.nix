@@ -13,7 +13,9 @@
 # On a live switch, a database a running service holds open (sqlite, an index) is copied
 # mid-write and the service keeps writing to the removed original until it restarts. Persist
 # such paths with `colmena apply boot` and a reboot: stage-2 activation migrates them with
-# /home and the stores mounted (neededForBoot) and before any user service starts.
+# /home and the stores mounted (neededForBoot) and before any user service starts. The same goes
+# for a path holding a listening unix socket (herdr keeps its sockets in ~/.config/herdr): the
+# server keeps the old inode and is unreachable until it restarts, so the script warns, naming them.
 {
   den.aspects.core.impermanence.migrate = {
     nixos =
@@ -30,6 +32,7 @@
           name = "persist-migrate";
           runtimeInputs = [
             pkgs.coreutils
+            pkgs.gawk
             pkgs.util-linux
           ];
           text = ''
@@ -74,8 +77,15 @@
               exit 1
             }
             mv -T -- "$stage" "$src"
+            # A listening socket's inode stays on the old dataset: its server is unreachable at
+            # this path until it restarts (and clients may start a second, empty one).
+            listeners=$(awk -v p="$live/" 'index($NF, p) == 1 { print $NF }' /proc/net/unix | sort -u)
             rm -rf --one-file-system -- "$live"
             echo "persist-migrate: moved $live into $2"
+            if [[ -n $listeners ]]; then
+              echo "persist-migrate: WARNING: $live held listening sockets; restart their servers (or migrate with a boot deploy):" >&2
+              printf '  %s\n' "$listeners" >&2
+            fi
           '';
         };
       in
