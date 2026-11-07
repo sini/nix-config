@@ -12,9 +12,13 @@ jobs:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
         with:
+          # The flake's own nixConfig (pipe operators, deprecated-syntax allowances), which a
+          # fresh runner neither has nor accepts from the flake.
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
-            experimental-features = nix-command flakes
+            experimental-features = nix-command flakes pipe-operators
+            extra-deprecated-features = or-as-identifier broken-string-escape
+            accept-flake-config = true
       # The flake's formatter is the treefmt wrapper the pre-commit hook runs (same store
       # path, same config), over the whole tree rather than the staged files.
       - run: nix fmt -- --fail-on-change --no-cache
