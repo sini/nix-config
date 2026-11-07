@@ -1,0 +1,12 @@
+FF-680W: no document tone curves or DS-530 colour matrix.
+
+epsonds groups the FastFoto FF-680W with the DS-530 document scanners (LUT id 2),
+so every colour scan uploads tone curves that crush inputs 0-39 to black and clip
+210 and up to white, and applies the DS-530 colour matrix. LUT id 0 uploads the
+identity curves and skips the matrix: the scanner's own response at gamma 1.8,
+which a colour profile can then correct.
+--- a/backend/epsonds.c
++++ b/backend/epsonds.c
+@@ -1243,1 +1243,1 @@
+-  {0x016B, "FF-680W","FF-680W", 2},
++  {0x016B, "FF-680W","FF-680W", 0},
