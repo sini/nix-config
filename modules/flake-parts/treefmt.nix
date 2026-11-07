@@ -100,6 +100,12 @@
                 "2"
               ];
               # includes = [ "*.{css,html,js,json,jsx,scss,ts,yml,yaml}" ];
+              # yamlfmt owns YAML: two formatters on one file race, and fail --fail-on-change
+              # even when the content converges.
+              excludes = [
+                "*.yml"
+                "*.yaml"
+              ];
             };
           };
         };
