@@ -6,58 +6,60 @@ higher-contrast and more saturated than the original prints. The findings, data
 and tools behind this runbook are in
 [`docs/scanner-color/`](../scanner-color/README.md).
 
-## Status (2026-11-06)
+## Status (2026-11-07)
 
-- **Root cause found: the SANE driver, not the scanner.** `epsonds` files the
-  FF-680W under the DS-530 document scanners (`lut_id` 2, `backend/epsonds.c`
-  model table). Every colour scan therefore uploads that family's tone curves,
-  which crush device inputs 0–38 to black and clip 210 and up to white, plus the
-  DS-530 colour matrix. The scans are clipped at both ends before any profile
-  sees them, and no profile can recover that.
-- **The fix, built but not deployed:**
-  `modules/den/aspects/services/scanning/_sane-ff680w-native-tone.patch` changes
-  the FF-680W to `lut_id` 0. That uploads the identity curves and skips the
-  matrix, so the scanner returns its own response at gamma 1.8 (the driver's
-  `#GMMUG18`), unclipped. Built and tested from cortex: the card's black patch
-  reads 12.6/100 instead of 0, its white 92 instead of 100.
-- **Profile: committed, not yet wired.**
-  `modules/den/aspects/services/scanning/ff-680w.icc`: a shaper/matrix profile
-  from all 24 card patches of a native-tone scan, with neutral end anchors
-  (below). On the card it fits at ΔE2000 average 2.35, max 5.8 (B06
-  orange-yellow).
+- **Root cause: the SANE driver, not the scanner.** `epsonds` files the FF-680W
+  under the DS-530 document scanners (`lut_id` 2, `backend/epsonds.c` model
+  table). Every colour scan therefore uploads that family's tone curves, which
+  crush device inputs 0–38 to black and clip 210 and up to white, plus the
+  DS-530 colour matrix.
+- **Fixed in epson-scan** (`services.scanning.epson`, `nativeTone`, on by
+  default). It scans through sane-backends patched with
+  `_sane-ff680w-native-tone.patch`, which moves the FF-680W to `lut_id` 0:
+  identity curves and no matrix, so the scanner's own response at gamma 1.8,
+  unclipped.
+  - `scan-classify --classify-lut` judges each page through the stock curve
+    (`pkgs/by-name/scan-classify/epsonds-lut2.csv`), so the feed band colour and
+    every routing threshold still hold.
+  - The saved pages keep the native pixels.
+- **Profile embedded** (`iccProfile`, default
+  `modules/den/aspects/services/scanning/ff-680w.icc`).
+  - `scan-classify --icc-profile` assigns it to each photo and back page. The
+    pixels are unchanged; documents for paperless stay untagged.
+  - It's a shaper/matrix profile from the mean of three native card scans, with
+    neutral end anchors. On the card it fits at ΔE2000 average 2.36, max 5.8
+    (B06 orange-yellow).
+  - Repeatability: the three scans differ by 0.27/100 per patch on average,
+    worst 0.53 (D01).
+- **Checked:** the `epson-scan` flake check has a native-tone case: the stock
+  test batch, converted to native tone, routes the same, and only the photo is
+  tagged, with its pixels unchanged. `scan-classify`'s self-test covers
+  `--classify-lut` and `--icc-profile`. Tonight's real native scans (the card
+  three times, the reference print twice) route as the stock driver routed them.
+  The print crops to 6.08 × 8.04 in.
 - **Owner ruling: the card is the reference.** Trust the measured card over
   judging single prints by eye or phone photo. See "Metamerism" for the known
   limit of that choice.
 
-### Remaining work, in order
+### Remaining work
 
-1. **More card scans.** Scan the card 2–3 more times through the patched driver,
-   average the `.ti3` measurements, and rebuild the profile. This reduces
-   per-scan noise and measures repeatability, which the drift check (Later)
-   needs.
-2. **Cropping.** With identity curves the scanner returns a full-length page
-   (5096 × 9283 at 600 dpi) with a lighter background, and `scan-classify`
-   currently routes the reference photo's front as `document`. Retune its trim
-   and classification against the native scans in
-   `~/Documents/scanner-profile/native/scans/` on cortex (`page-00{1,2}.png` are
-   the card, `photo-00{1,2}.png` the reference print).
-3. **Wire the patch.** Give epson-scan a `sane-backends` with the patch
-   (`overrideAttrs` adding it to `patches`; `doCheck = false` was used for the
-   test build). Only that service needs it.
-4. **Embed the profile.** It is committed as
-   `modules/den/aspects/services/scanning/ff-680w.icc`; rebuild it there after
-   step 1. Add an `iccProfile` setting to `services.scanning.epson`, and have
-   the batch script _assign_ it to each cropped photo page before upload.
-   Assign, not convert: verify that pixel values are unchanged and that
-   `magick identify -verbose page.png` lists the profile.
-5. **The held spool.** The photo batches kept in
-   `/var/lib/private/epson-scan/spool/` were scanned with the stock driver; this
-   profile does not apply to them. Rescan those prints after the deploy, then
-   delete the old batches.
-6. **Deploy bitstream** (owner approval), then add the immich API key.
+1. **The held spool.** The photo batches kept in
+   `/var/lib/private/epson-scan/spool/` were scanned with the stock driver; the
+   profile does not apply to them. Rescan those prints (button press as usual),
+   check the new batches, then delete the old ones.
+2. **The immich API key** (owner, in immich: Account Settings → API Keys;
+   `asset.upload`, `album.read`, `albumAsset.create`), encrypted to
+   `<host secrets>/scanning/immich-api-key.age`, then `agenix rekey`. Photos now
+   go out tagged.
 
-Until step 6, keep the immich key unset: epson-scan holds every photo batch in
-its spool, and immich cannot have a profile assigned after upload.
+## Re-profiling
+
+After a firmware update, or to check drift: scan the card through epson-scan's
+own driver from cortex (below), read it (`tools/grid.py` locates the patch
+grid), compare with
+`profcheck -k card.ti3 modules/den/aspects/services/scanning/ff-680w.icc`, and
+rebuild if the average error has risen. Average several scans with
+`tools/repeat.py`.
 
 ## Scanning from cortex, without the button
 

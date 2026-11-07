@@ -20,7 +20,7 @@ This document records what we measured and why the fix took the shape it did.
   gives the FF-680W the identity curves and no matrix. The scanner then returns
   its own response at gamma 1.8, unclipped.
 - On that clean data, a 24-patch shaper/matrix profile fits the card at ΔE2000
-  2.35 on average (5.8 at worst), with neutral anchors at device black and
+  2.36 on average (5.8 at worst), with neutral anchors at device black and
   white.
 - Known limit: the scanner is not colorimetric. Pigment patches (the card) and
   photographic dyes (prints) can read differently.
@@ -38,7 +38,7 @@ the scanner before each scan:
 `lut_id` 2 is shared with the DS-530, DS-570W, ES-400, ES-500W and others, which
 are all document scanners. Its curves, extracted with
 [`tools/lut-extract.py`](tools/lut-extract.py) into
-[`data/epsonds-lut2.csv`](data/epsonds-lut2.csv):
+[`pkgs/by-name/scan-classify/epsonds-lut2.csv`](../../pkgs/by-name/scan-classify/epsonds-lut2.csv):
 
 ![epsonds lut_id 2 tone curves](images/epsonds-lut2.svg)
 
@@ -70,8 +70,8 @@ scan both ends sit inside the range, with room for prints that are brighter or
 darker than the card.
 
 Data: [`data/stock-driver/card.ti3`](data/stock-driver/card.ti3) and
-[`data/native/card.ti3`](data/native/card.ti3) (Argyll CTI3, as written by
-`scanin`). Images:
+[`data/native/card-scan1.ti3`](data/native/card-scan1.ti3) (Argyll CTI3, as
+written by `scanin`). Images:
 [`images/card-stock-driver.jpg`](images/card-stock-driver.jpg) and
 [`images/card-native.jpg`](images/card-native.jpg).
 
@@ -126,10 +126,29 @@ KB):
 | card white (D01) | 96.3, 0.5, 1.3                | 96.5, −0.4, 1.2    |
 | 1, 1, 1          | 100.0, 0.0, 0.0               | (anchor) D50 white |
 
-Fit on the 24 card patches: ΔE2000 average 2.35, max 5.8 (B06 orange-yellow,
-then C03 red at 5.1). A plain gamma 1.8 → sRGB conversion with no card at all
-already lands within 1–2 L\* of the reference print. The card adds 2–5 L\* of
-midtone accuracy on its own greys, plus its colour correction.
+Fit on the 24 card patches (the mean of three scans): ΔE2000 average 2.36, max
+5.8 (B06 orange-yellow, then C03 red at 5.1). A plain gamma 1.8 → sRGB
+conversion with no card at all already lands within 1–2 L\* of the reference
+print. The card adds 2–5 L\* of midtone accuracy on its own greys, plus its
+colour correction.
+
+## Repeatability
+
+Three scans of the card, read separately
+([`data/native/card-scan1.ti3`](data/native/card-scan1.ti3) to
+`card-scan3.ti3`): the device values of a patch differ across scans by 0.27/100
+on average, and by 0.53 at most (D01, the white). The profile is built from
+their mean
+([`data/native/card-3-scans-mean.ti3`](data/native/card-3-scans-mean.ti3)) and
+fits each single scan within 0.02 ΔE2000 of the mean's fit. Scan noise is
+negligible next to the 24-patch model's own error.
+
+## In production
+
+bitstream's epson-scan scans through the patched driver (`nativeTone`),
+classifies through the stock curve so routing is unchanged, and embeds the
+profile in every photo and back page (`iccProfile`). Pixels are never converted;
+colour-managed viewers apply the profile.
 
 ## Metamerism
 
@@ -162,5 +181,7 @@ with no dependencies; run them with `python3 -I`.
 | [`greycurve.py`](tools/greycurve.py)     | Per-channel curves from the six greys only, as a 256×1 CLUT image                    |
 | [`synth.py`](tools/synth.py)             | Turns a grey CLUT into a dense `.ti3`, so `colprof` can make it a profile            |
 | [`sample.py`](tools/sample.py)           | Mean L\*a\*b\* of image regions (pixels read as sRGB), for comparing renders         |
+| [`grid.py`](tools/grid.py)               | Locates the patch grid on a card scan, for `scanin`, and picks the patch side        |
+| [`repeat.py`](tools/repeat.py)           | Scan-to-scan spread of several card reads, and their mean `.ti3`                     |
 
 Photographs of people used during the comparison are not in this repository.
