@@ -2,14 +2,16 @@
 
 Scans from the Epson FastFoto FF-680W (`services.scanning.epson` on
 **bitstream**, `modules/den/aspects/services/scanning/epson.nix`) look darker,
-higher-contrast and more saturated than the original prints.
+higher-contrast and more saturated than the original prints. The findings, data
+and tools behind this runbook are in
+[`docs/scanner-color/`](../scanner-color/README.md).
 
 ## Status (2026-11-06)
 
 - **Root cause found: the SANE driver, not the scanner.** `epsonds` files the
   FF-680W under the DS-530 document scanners (`lut_id` 2, `backend/epsonds.c`
   model table). Every colour scan therefore uploads that family's tone curves,
-  which crush device inputs 0–39 to black and clip 210 and up to white, plus the
+  which crush device inputs 0–38 to black and clip 210 and up to white, plus the
   DS-530 colour matrix. The scans are clipped at both ends before any profile
   sees them, and no profile can recover that.
 - **The fix, built but not deployed:**
@@ -18,10 +20,10 @@ higher-contrast and more saturated than the original prints.
   matrix, so the scanner returns its own response at gamma 1.8 (the driver's
   `#GMMUG18`), unclipped. Built and tested from cortex: the card's black patch
   reads 12.6/100 instead of 0, its white 92 instead of 100.
-- **Profile: built, not committed.**
-  `~/Documents/scanner-profile/native/ff680w.icc` on cortex: a shaper/matrix
-  profile from all 24 card patches of a native-tone scan, with neutral end
-  anchors (below). On the card it fits at ΔE2000 average 2.35, max 5.8 (B06
+- **Profile: committed, not yet wired.**
+  `modules/den/aspects/services/scanning/ff-680w.icc`: a shaper/matrix profile
+  from all 24 card patches of a native-tone scan, with neutral end anchors
+  (below). On the card it fits at ΔE2000 average 2.35, max 5.8 (B06
   orange-yellow).
 - **Owner ruling: the card is the reference.** Trust the measured card over
   judging single prints by eye or phone photo. See "Metamerism" for the known
@@ -37,17 +39,17 @@ higher-contrast and more saturated than the original prints.
    (5096 × 9283 at 600 dpi) with a lighter background, and `scan-classify`
    currently routes the reference photo's front as `document`. Retune its trim
    and classification against the native scans in
-   `/tmp/claude-1000/…/scratchpad/profile/native/` (copy them out first:
-   `page-00{1,2}.png` are the card, `photo-00{1,2}.png` the reference print).
+   `~/Documents/scanner-profile/native/scans/` on cortex (`page-00{1,2}.png` are
+   the card, `photo-00{1,2}.png` the reference print).
 3. **Wire the patch.** Give epson-scan a `sane-backends` with the patch
    (`overrideAttrs` adding it to `patches`; `doCheck = false` was used for the
    test build). Only that service needs it.
-4. **Embed the profile.** Commit it as
-   `modules/den/aspects/services/scanning/ff-680w.icc`. Add an `iccProfile`
-   setting to `services.scanning.epson`, and have the batch script _assign_ it
-   to each cropped photo page before upload. Assign, not convert: verify that
-   pixel values are unchanged and that `magick identify -verbose page.png` lists
-   the profile.
+4. **Embed the profile.** It is committed as
+   `modules/den/aspects/services/scanning/ff-680w.icc`; rebuild it there after
+   step 1. Add an `iccProfile` setting to `services.scanning.epson`, and have
+   the batch script _assign_ it to each cropped photo page before upload.
+   Assign, not convert: verify that pixel values are unchanged and that
+   `magick identify -verbose page.png` lists the profile.
 5. **The held spool.** The photo batches kept in
    `/var/lib/private/epson-scan/spool/` were scanned with the stock driver; this
    profile does not apply to them. Rescan those prints after the deploy, then
@@ -124,14 +126,13 @@ could fix the clipped data.
 
 The scanner's LEDs and sensor do not see colour the way the eye does, so
 different materials can disagree. The card's patches are pigments; photo prints
-are dyes. On the reference print (the 2006 "Pirate's Dinner Adventure" photo) a
-grey-brown stone wall reads green to the scanner (a\* −8 to −10 on the native
-scan), and the full card profile pushes it slightly further. The owner's ruling
-(above) is to trust the card regardless. If dye prints prove systematically off
-across many photos, the cheap fix is a dye-based target: a ~300-patch chart
-image printed at a photo lab (Costco, auto-correction off), profiled against the
-file's own values. An IT8.7/2 target on photo paper does the same job properly
-but costs far more.
+are dyes. On the reference print (a family snapshot) a grey-brown stone wall
+reads green to the scanner (a\* −8 to −10 on the native scan), and the full card
+profile pushes it slightly further. The owner's ruling (above) is to trust the
+card regardless. If dye prints prove systematically off across many photos, the
+cheap fix is a dye-based target: a ~300-patch chart image printed at a photo lab
+(Costco, auto-correction off), profiled against the file's own values. An
+IT8.7/2 target on photo paper does the same job properly but costs far more.
 
 ## Files
 
