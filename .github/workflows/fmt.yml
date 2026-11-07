@@ -1,16 +1,20 @@
 name: Formatting Check
-on: [push, pull_request, workflow_dispatch]
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
 jobs:
-  checks:
-    name: Check expressions
+  treefmt:
+    name: treefmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - uses: cachix/install-nix-action@v31
         with:
-          install_url: https://nixos.org/nix/install
           extra_nix_config: |
-            auto-optimise-store = true
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
             experimental-features = nix-command flakes
-      - run: nix run nixpkgs#nixfmt -- --check .
+      # The flake's formatter is the treefmt wrapper the pre-commit hook runs (same store
+      # path, same config), over the whole tree rather than the staged files.
+      - run: nix fmt -- --fail-on-change --no-cache
