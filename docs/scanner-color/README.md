@@ -182,6 +182,7 @@ with no dependencies; run them with `python3 -I`.
 | [`synth.py`](tools/synth.py)             | Turns a grey CLUT into a dense `.ti3`, so `colprof` can make it a profile            |
 | [`sample.py`](tools/sample.py)           | Mean L\*a\*b\* of image regions (pixels read as sRGB), for comparing renders         |
 | [`grid.py`](tools/grid.py)               | Locates the patch grid on a card scan, for `scanin`, and picks the patch side        |
+| [`labref.py`](tools/labref.py)           | Reference XYZ for a lab-printed `printtarg` chart: each patch's RGB read as sRGB     |
 | [`repeat.py`](tools/repeat.py)           | Scan-to-scan spread of several card reads, and their mean `.ti3`                     |
 
 Photographs of people used during the comparison are not in this repository.

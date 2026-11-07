@@ -73,6 +73,49 @@ and tools behind this runbook are in
    delete `held/`. To send an old batch as it is, move it back to `spool/` and
    run `systemctl start epson-scan-retry`.
 
+## The lab-printed chart (dye-based target)
+
+Mid and dark neutrals in dye prints scan green (a\* −8 to −13 on the reference
+print's stone wall and keg hoops, the same on its 6×8 and two wallet copies).
+The paper base and bright whites come out neutral. The card cannot tell whether
+that is the scanner reading dyes differently from its pigments, or the
+photograph itself. A chart printed in photo dyes can.
+
+Files: [`docs/scanner-color/lab-chart/`](../scanner-color/lab-chart/), from
+Argyll's `targen -d2 -G -e6 -g24 -s8 -f210` (216 patches, with a 24-step neutral
+ramp) and `printtarg -s -L -a 0.6 -M6 -T300 -p 101.6x152.4`:
+
+- `labchart-4x6.jpg`: the file to print (1200 × 1800, 300 dpi, tagged sRGB);
+- `labchart.cht`: the layout `scanin` reads;
+- `labchart-reference.cie`: each patch's intended colour, its RGB read as sRGB
+  (`tools/labref.py`);
+- `labchart.ti1` and `labchart.ti2`: the target's device values and layout.
+
+Self-test: `scanin` on the JPEG itself recognises all 216 patches, and a profile
+from that read reproduces sRGB to ΔE2000 0.21 on average. That is the file's own
+error, before any printing.
+
+1. **Order:** one 4×6 glossy print of `labchart-4x6.jpg` from a photo lab,
+   Costco if possible (its labs are profiled). Turn off auto-correction or
+   "enhance", and order without borders or cropping changes. The 6 mm margin
+   absorbs a lab's usual crop.
+2. **Scan:** from cortex, as with the card ("Scanning from cortex"), then crop
+   to the chart and run
+   `scanin -v -dipn chart.tif labchart.cht labchart-reference.cie`. Check
+   `diag.tif`.
+3. **Read the result:** profile it like the card. The patches that matter most
+   are the neutral ramp and the darks:
+   - If they come out neutral through the card profile, the scanner reads dyes
+     correctly, and the green is in the photograph: the scans are faithful.
+   - If they come out green, the scanner misreads dyes. Build the profile from
+     the lab chart, or from the lab chart plus the card, and commit it as
+     `ff-680w.icc`.
+
+The reference assumes the lab prints the sRGB file exactly. A good lab is
+accurate to roughly ΔE 2–5, and that error carries into the profile. With 216
+patches it averages out across the chart, and the neutral ramp is where a lab is
+most accurate.
+
 ## Adding the upload keys
 
 Each app issues its own, and `services.scanning.epson` picks up whichever file
