@@ -2907,11 +2907,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1793965363,
-        "narHash": "sha256-hAgQvpVDUKYk00ysQRqf8IRaOwEZS7MwcPkFTptjLIk=",
+        "lastModified": 1794029856,
+        "narHash": "sha256-qHf8oFeC/wWWI996ZhEEXNhZhLsXwYIwC7ORAl/GWno=",
         "owner": "sini",
         "repo": "matrix-xmsg",
-        "rev": "d1f9abb4b50696ad8a8f6a1569e8af29de231964",
+        "rev": "f45f9784232a520785b575abc75af9e92670fd0b",
         "type": "github"
       },
       "original": {
@@ -5503,11 +5503,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1794009536,
-        "narHash": "sha256-pdifoRhcMsdk2dRAFd++sp3kI/ydE9/4nGpmx+gXOAQ=",
+        "lastModified": 1794033171,
+        "narHash": "sha256-7bzU7hzHSp43jjGFHO74wRqwpQPwAbsB89UnoRU8wUc=",
         "owner": "sini",
         "repo": "xmsg",
-        "rev": "2d76fd63f4ebc63946a9303c7019a50d169f7ed3",
+        "rev": "ab00b191ef7329b0be397d21a3d490111a06b301",
         "type": "github"
       },
       "original": {
