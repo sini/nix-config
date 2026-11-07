@@ -41,11 +41,26 @@ and tools behind this runbook are in
   judging single prints by eye or phone photo. See "Metamerism" for the known
   limit of that choice.
 
+- **Ingestion live (2026-11-07).** Both keys are in agenix
+  (`.secrets/hosts/bitstream/scanning/`) and loaded by epson-scan.
+  - paperless: the token authenticates (HTTP 200 on the documents API, read-only
+    check). No real document has been sent yet.
+  - immich: tested end to end with the reference print, scanned through the
+    native-tone driver and run through the deployed `scan-classify` and
+    `epson-scan-retry`. It routed blank + photo, uploaded, and immich created
+    the `Scans` album.
+  - The stored original keeps the embedded profile byte for byte.
+  - immich honours it: its preview matches the scan converted through
+    `ff-680w.icc` to sRGB within 0.2 L\* on every region measured, and differs
+    from the raw pixels by up to 11 L\*. Its EXIF view does not list the profile
+    name; that is cosmetic.
+
 ### Remaining work
 
-1. **The upload keys** (owner; see "Adding the upload keys" below). Neither
-   exists yet, so every batch is kept in the spool. Photos now go out tagged, so
-   the immich key no longer needs to wait.
+1. **Rotate the immich key** once everything has been confirmed working: it was
+   pasted into a chat session, and it has every permission. Replace it with one
+   limited to `asset.upload`, `album.read`, `album.create` and
+   `albumAsset.create` ("Adding the upload keys", step 2).
 2. **The held batches.** On 2026-11-07 every batch was moved out of the spool to
    `/var/lib/private/epson-scan/held/` on bitstream, so no key can upload them:
    - `20261104-205023`, `-205035`, `-205124`: empty (no `routes`; aborted
@@ -67,9 +82,11 @@ exists. On cortex, in the repository:
    - **paperless:** Profile → API Auth Token.
    - **immich:** Account Settings → API Keys, with the permissions
      `asset.upload`, `album.read` and `albumAsset.create`.
-2. Encrypt it to the master identity without writing it anywhere else: run
-   `agenix edit -i /dev/stdin .secrets/hosts/bitstream/scanning/paperless-token.age`
-   (or `immich-api-key.age`), paste the key, then press Ctrl-D.
+2. Encrypt it to the master identity. `agenix edit -i` needs a regular file, so
+   use a private one on the RAM-backed runtime directory and shred it after:
+   `umask 077; f=$(mktemp -p "$XDG_RUNTIME_DIR"); wl-paste > "$f";`
+   `agenix edit -i "$f" .secrets/hosts/bitstream/scanning/immich-api-key.age; shred -u "$f"`
+   (or `paperless-token.age`). Never paste a key into a chat or a shell command.
 3. Run `agenix rekey -a`, then
    `git add .secrets/hosts/bitstream/scanning .secrets/hosts/bitstream/rekeyed`
    (agenix-rekey refuses a file that is not in git).
