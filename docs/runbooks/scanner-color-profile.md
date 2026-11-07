@@ -95,10 +95,19 @@ Self-test: `scanin` on the JPEG itself recognises all 216 patches, and a profile
 from that read reproduces sRGB to ΔE2000 0.21 on average. That is the file's own
 error, before any printing.
 
-1. **Order:** one 4×6 glossy print of `labchart-4x6.jpg` from a photo lab,
-   Costco if possible (its labs are profiled). Turn off auto-correction or
-   "enhance", and order without borders or cropping changes. The 6 mm margin
-   absorbs a lab's usual crop.
+1. **Order:** one 4×6 glossy print of `labchart-4x6.jpg`, with colour correction
+   off, no borders, and no cropping changes. The 6 mm margin absorbs a lab's
+   usual crop.
+   - **Process matters:** it must be a chromogenic (silver halide, RA-4) photo
+     print on Fuji Crystal Archive or Kodak Endura paper. That is the same kind
+     of dyes as family snapshots. Toner and inkjet prints (FedEx Office, most
+     print shops, many drugstore kiosks) have their own spectral behaviour and
+     would repeat the card's problem.
+   - **Where:** an online pro lab (Bay Photo, Mpix or Nations Photo Lab: true
+     RA-4, calibrated, with an explicit colour-correction-off option), or Costco
+     (Fuji or Noritsu minilabs; ask for no auto-correction).
+   - **Status (2026-11-07):** to be ordered from Bay Photo, with colour
+     correction off.
 2. **Scan:** from cortex, as with the card ("Scanning from cortex"), then crop
    to the chart and run
    `scanin -v -dipn chart.tif labchart.cht labchart-reference.cie`. Check
