@@ -106,6 +106,28 @@ REAL = [
 ]
 
 
+def native(page, lut_csv):
+    """A page as the patched driver returns it: the stock curve's inverse, per channel.
+
+    The stock curve crushes inputs to 0 and 255 at its ends; a flat run maps back to its
+    middle, which is where a real scan's values would sit.
+    """
+    rows = [
+        list(map(int, line.split(","))) for line in lut_csv.read_text().splitlines()[1:]
+    ]
+    table = []
+    for c in (1, 2, 3):
+        inverse = []
+        for v in range(256):
+            hits = [r[0] for r in rows if r[c] == v]
+            if hits:
+                inverse.append((hits[0] + hits[-1]) // 2)
+            else:  # between two inputs: the nearest input whose output reaches v
+                inverse.append(next(r[0] for r in rows if r[c] >= v))
+        table += inverse
+    return page.point(table)
+
+
 def run(tool, flags, files):
     out = subprocess.run(
         [tool, *flags, *map(str, files)], capture_output=True, text=True, check=True
@@ -135,6 +157,90 @@ def main():
             print(f"{'ok  ' if ok else 'FAIL'} {label}: {got}")
             if not ok:
                 print(f"     expected {expected}")
+        # --classify-lut: the same pages in the patched driver's native tone route the
+        # same way, judged through the stock curve.
+        lut = Path(sys.argv[2])
+        for flags, names, expected in CASES:
+            files = []
+            for n in names:
+                f = Path(tmp) / f"native-{n}.png"
+                native(PAGES[n], lut).save(f)
+                files.append(f)
+            got = run(
+                tool, ["--dpi", str(DPI), "--classify-lut", str(lut), *flags], files
+            )
+            ok = got == expected
+            failed += not ok
+            print(
+                f"{'ok  ' if ok else 'FAIL'} --classify-lut {' '.join([*flags, *names])}: {got}"
+            )
+            if not ok:
+                print(f"     expected {expected}")
+        # --classify-lut saves the page's own pixels: a native photo trims to its item,
+        # unchanged by the curve.
+        src = native(PAGES["photo"], lut)
+        src.save(Path(tmp) / "native-keep.png")
+        run(
+            tool,
+            ["--dpi", str(DPI), "--classify-lut", str(lut), "--trim-in-place"],
+            [Path(tmp) / "native-keep.png"],
+        )
+        kept = Image.open(Path(tmp) / "native-keep.png").convert("RGB")
+        expect = src.crop(
+            ((src.width - px(6)) // 2, 0, (src.width + px(6)) // 2, px(4))
+        )
+        centre = (kept.width // 2, kept.height // 2)
+        ok = kept.getpixel(centre) == expect.getpixel(
+            (expect.width // 2, expect.height // 2)
+        )
+        failed += not ok
+        print(
+            f"{'ok  ' if ok else 'FAIL'} --classify-lut keeps native pixels: {kept.getpixel(centre)}"
+        )
+        # --icc-profile tags photo and back pages, not documents, and leaves the pixels:
+        # any bytes stand in for a profile here.
+        icc = Path(tmp) / "test.icc"
+        icc.write_bytes(b"not-really-an-icc-profile")
+        PAGES["photo"].save(Path(tmp) / "tag-photo.png")
+        PAGES["back-notes"].save(Path(tmp) / "tag-back.png")
+        PAGES["letter"].save(Path(tmp) / "tag-letter.png")
+        PAGES["back-blank"].save(Path(tmp) / "tag-letter-back.png")
+        untagged = Path(tmp) / "untagged.png"
+        PAGES["photo"].save(untagged)
+        run(tool, ["--dpi", str(DPI), "--trim-in-place"], [untagged])
+        files = [
+            Path(tmp) / f"tag-{n}.png"
+            for n in ("photo", "back", "letter", "letter-back")
+        ]
+        got = run(
+            tool,
+            [
+                "--dpi",
+                str(DPI),
+                "--duplex",
+                "--trim-in-place",
+                "--icc-profile",
+                str(icc),
+            ],
+            files,
+        )
+        tags = [Image.open(f).info.get("icc_profile") for f in files]
+        same = (
+            Image.open(files[0]).convert("RGB").tobytes()
+            == Image.open(untagged).convert("RGB").tobytes()
+        )
+        ok = (
+            got == ["photo", "back", "document", "blank"]
+            and tags[0] == icc.read_bytes()
+            and tags[1] == icc.read_bytes()
+            and tags[2] is None
+            and same
+        )
+        failed += not ok
+        print(
+            f"{'ok  ' if ok else 'FAIL'} --icc-profile: routes {got}, tagged "
+            f"{[t is not None for t in tags]}, pixels unchanged {same}"
+        )
         # --trim-in-place leaves the item alone: a 6x4in print at DPI.
         run(tool, ["--dpi", str(DPI), "--trim-in-place"], [Path(tmp) / "photo.png"])
         size = Image.open(Path(tmp) / "photo.png").size

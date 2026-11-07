@@ -8,6 +8,16 @@ content first: colour and mid-tones mark a photo, white paper with dark ink a
 document. Size only breaks ties. A batch is one button press, usually uniform, so
 undecided sheets take the batch's decided kind.
 
+With --classify-lut, the pages are judged through a tone curve (a CSV of
+input,R,G,B rows, 0-255) while the saved pages keep their own pixels. The scanner
+then delivers its native, unclipped response (epson-scan's patched driver), and the
+curve is the one the stock driver used to apply, so the band colour and every
+threshold below still hold.
+
+With --icc-profile, each photo and back page saved by --trim-in-place carries that
+ICC profile, assigned: the pixels are unchanged, and colour-managed viewers read
+them through it. Documents are left untagged.
+
 With --duplex, pages pair into sheets, front and back in either order: a blank side
 is the back. Prints one line per page, in input order: `<route> <file>`, where route is
   photo     a print's picture side          -> immich
@@ -50,6 +60,16 @@ def parse_args(argv):
     )
     # The feed background as the scanner renders it, and how far a pixel may stray.
     p.add_argument("--background", default="200,210,218")
+    p.add_argument(
+        "--classify-lut",
+        type=Path,
+        help="judge pages through this tone curve (CSV: input,R,G,B); save them unchanged",
+    )
+    p.add_argument(
+        "--icc-profile",
+        type=Path,
+        help="with --trim-in-place, embed this ICC profile in photo and back pages",
+    )
     p.add_argument("--background-fuzz", type=int, default=24)
     # Content: mean HSV saturation (0-255), mid-tone share (luminance 40-200) and
     # white share (>= 225) of the trimmed item.
@@ -71,9 +91,8 @@ def is_background(px, bg, fuzz):
     return all(abs(a - b) <= fuzz for a, b in zip(px, bg, strict=True))
 
 
-def trim(img, bg, fuzz):
-    """Cut a page to the feed band, then to the item on it."""
-    rgb = img.convert("RGB")
+def trim(rgb, bg, fuzz):
+    """The box of the item on a page: within the feed band, around what is not band."""
     w, h = rgb.size
     load = rgb.load()
     cols = range(0, w, max(1, w // 64))
@@ -84,7 +103,7 @@ def trim(img, bg, fuzz):
 
     band = next((y for y in range(h - 1, -1, -1) if bg_row(y)), None)
     if band is None:  # no feed background: nothing to trim against
-        return rgb
+        return (0, 0, w, h)
     # Back off the band's ragged last rows.
     band = max(1, band - 8)
     rgb = rgb.crop((0, 0, w, band))
@@ -100,12 +119,19 @@ def trim(img, bg, fuzz):
             mask.paste(0, (x, 0, x + 1, band))
     box = mask.getbbox()
     if not box:
-        return rgb
+        return (0, 0, w, band)
     # Grow back the 2px the erosion took from each edge.
     left, top, right, bottom = box
-    return rgb.crop(
-        (max(0, left - 2), max(0, top - 2), min(w, right + 2), min(band, bottom + 2))
-    )
+    return (max(0, left - 2), max(0, top - 2), min(w, right + 2), min(band, bottom + 2))
+
+
+def load_lut(path):
+    """A CSV tone curve (header, then 256 rows of input,R,G,B) as a PIL point() table."""
+    rows = [
+        line.split(",") for line in path.read_text().splitlines()[1:] if line.strip()
+    ]
+    assert len(rows) == 256, f"{path}: {len(rows)} rows, expected 256"
+    return [int(r[c]) for c in (1, 2, 3) for r in rows]
 
 
 def share(gray, lo, hi):
@@ -168,9 +194,16 @@ def sheet_routes(sides, a):
 
 def route(paths, a):
     bg = tuple(int(v) for v in a.background.split(","))
-    pages = [trim(Image.open(p), bg, a.background_fuzz) for p in paths]
+    lut = load_lut(a.classify_lut) if a.classify_lut else None
+    pages, views = [], []
+    for p in paths:
+        raw = Image.open(p).convert("RGB")
+        view = raw.point(lut) if lut else raw
+        box = trim(view, bg, a.background_fuzz)
+        pages.append(raw.crop(box))
+        views.append(view.crop(box))
     step = 2 if a.duplex else 1
-    sheets = [sheet_routes(pages[i : i + step], a) for i in range(0, len(pages), step)]
+    sheets = [sheet_routes(views[i : i + step], a) for i in range(0, len(views), step)]
     decided = Counter(k for _, k in sheets if k)
     if len(decided) > 1:
         print(f"scan-classify: mixed batch {dict(decided)}", file=sys.stderr)
@@ -178,10 +211,12 @@ def route(paths, a):
     routes = [r if r is not None else fill for routes, _ in sheets for r in routes]
     if a.trim_in_place:
         turn = ROTATIONS[a.photo_rotate]
+        icc = a.icc_profile.read_bytes() if a.icc_profile else None
         for page, path, r in zip(pages, paths, routes, strict=True):
             if r == "photo" and turn is not None:
                 page = page.transpose(turn)
-            page.save(path, dpi=(a.dpi, a.dpi))
+            tag = {"icc_profile": icc} if icc and r in ("photo", "back") else {}
+            page.save(path, dpi=(a.dpi, a.dpi), **tag)
     return routes
 
 
