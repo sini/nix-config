@@ -43,14 +43,39 @@ and tools behind this runbook are in
 
 ### Remaining work
 
-1. **The held spool.** The photo batches kept in
-   `/var/lib/private/epson-scan/spool/` were scanned with the stock driver; the
-   profile does not apply to them. Rescan those prints (button press as usual),
-   check the new batches, then delete the old ones.
-2. **The immich API key** (owner, in immich: Account Settings → API Keys;
-   `asset.upload`, `album.read`, `albumAsset.create`), encrypted to
-   `<host secrets>/scanning/immich-api-key.age`, then `agenix rekey`. Photos now
-   go out tagged.
+1. **The upload keys** (owner; see "Adding the upload keys" below). Neither
+   exists yet, so every batch is kept in the spool. Photos now go out tagged, so
+   the immich key no longer needs to wait.
+2. **The held batches.** On 2026-11-07 every batch was moved out of the spool to
+   `/var/lib/private/epson-scan/held/` on bitstream, so no key can upload them:
+   - `20261104-205023`, `-205035`, `-205124`: empty (no `routes`; aborted
+     scans);
+   - `20261104-211302`, `-212256`, `20261105-154831`: one photo each, scanned
+     with the stock driver, untagged;
+   - `20261106-170417`, `20261106-172929`: the colour card, not for immich.
+
+   Rescan the three photos (button press as usual), check the new batches, then
+   delete `held/`. To send an old batch as it is, move it back to `spool/` and
+   run `systemctl start epson-scan-retry`.
+
+## Adding the upload keys
+
+Each app issues its own, and `services.scanning.epson` picks up whichever file
+exists. On cortex, in the repository:
+
+1. Issue the key:
+   - **paperless:** Profile → API Auth Token.
+   - **immich:** Account Settings → API Keys, with the permissions
+     `asset.upload`, `album.read` and `albumAsset.create`.
+2. Encrypt it to the master identity without writing it anywhere else: run
+   `agenix edit -i /dev/stdin .secrets/hosts/bitstream/scanning/paperless-token.age`
+   (or `immich-api-key.age`), paste the key, then press Ctrl-D.
+3. Run `agenix rekey -a`, then
+   `git add .secrets/hosts/bitstream/scanning .secrets/hosts/bitstream/rekeyed`
+   (agenix-rekey refuses a file that is not in git).
+4. Commit, push and deploy bitstream. The hourly `epson-scan-retry` then sends
+   whatever the spool holds, or start it at once with
+   `systemctl start epson-scan-retry`.
 
 ## Re-profiling
 
