@@ -60,13 +60,8 @@
           "!qqfdClEfuMzZNEjvGO:matrix.org" # private room (invite)
           "!NbOtAeWMLV6MjYH3QtXolO8MuGXp6dBfnB0uO8nSpJI" # #genie-dev: tier 1's vetting room (invite)
         ];
-        # Mentions are not screened: the guard withheld a harmless untrusted thread root the
-        # owner asked genie to review. Users are trusted and the agents jailed, so unscreened
-        # text reaches the expert marked as possible prompt injection, to treat as data.
-        # Agent-opened threads stay screened (screenSolicited).
-        screenMentions = false;
         # #genie-dev goes to genie-agent's Tier 1, whose guard-in screens every request;
-        # the other rooms go to genie-support.
+        # the other rooms stay on genie-support, screened by the bot.
         roomRoutes."!NbOtAeWMLV6MjYH3QtXolO8MuGXp6dBfnB0uO8nSpJI" = {
           expertRef = "genie";
           screenMentions = false;
