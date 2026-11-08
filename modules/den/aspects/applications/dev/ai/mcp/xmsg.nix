@@ -187,6 +187,10 @@ in
             xmsg.federationPorts = lib.mapAttrs' (user: n: lib.nameValuePair (self' user) n.port) nodes;
           }
           (lib.mkIf (nodes != { }) {
+            # A federated node is the user's xmsg, a user service: it must outlive their logins,
+            # or peers lose it whenever the user is logged out. A user's own linger setting wins.
+            users.users = lib.mapAttrs (_: _: { linger = lib.mkOverride 900 true; }) nodes;
+
             assertions = lib.mapAttrsToList (user: _: {
               assertion = config.users.users ? ${user};
               message = "xmsg federation: ${host.name} declares a node for ${user}, who has no account here.";

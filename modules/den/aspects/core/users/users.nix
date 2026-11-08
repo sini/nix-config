@@ -49,7 +49,9 @@ let
         users.users.${userName} = {
           openssh.authorizedKeys.keys = map (k: k.key) (user.identity.sshKeys or [ ]);
           extraGroups = aclUser.systemGroups;
-          linger = user.system.linger or false;
+          # An explicit user setting wins; aspects that need a user manager running without a
+          # login (xmsg federation nodes) raise the default with mkOverride 900.
+          linger = if user.system.linger or null != null then user.system.linger else lib.mkDefault false;
           description = lib.mkDefault (user.identity.displayName or "");
         }
         // lib.optionalAttrs hasPasswordFile {

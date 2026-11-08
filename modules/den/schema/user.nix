@@ -105,9 +105,9 @@ in
                     description = "Group ID for the Unix account";
                   };
                   linger = mkOption {
-                    type = types.bool;
-                    default = false;
-                    description = "Enable lingering for the user (systemd user services start without login)";
+                    type = types.nullOr types.bool;
+                    default = null;
+                    description = "Enable lingering for the user (systemd user services start without login). null leaves it to the host's aspects (an xmsg federation node lingers), otherwise off.";
                   };
                   syncthingOffset = mkOption {
                     type = types.int;

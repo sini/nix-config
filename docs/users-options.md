@@ -41,8 +41,9 @@
   true, the user receives home modules from all of the host's active features.
   When false, only user-specific extra-features (and core) are included.
 
-- `users.<name>.system.linger`: [boolean] Enable lingering for the user (systemd
-  user services start without login)
+- `users.<name>.system.linger`: [null or boolean] Enable lingering for the user
+  (systemd user services start without login). null leaves it to the host's
+  aspects (an xmsg federation node lingers), otherwise off.
 
 - `users.<name>.system.uid`: [null or signed integer] User ID for the Unix
   account
