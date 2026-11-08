@@ -2,6 +2,11 @@
 # Ships a store-pinned plugin containing native startup and compression hooks,
 # backed by a local proxy server and CLI binary (pkgs.local.headroom-ai).
 { inputs, ... }:
+let
+  # One proxy per user, all on loopback: offset by uid so users sharing a host never collide
+  # (uid 1000 keeps 8787). Every consumer below reads this.
+  portFor = user: 8787 + (user.system.uid or 1000) - 1000;
+in
 {
   flake-file.inputs.headroom = {
     url = "github:headroomlabs-ai/headroom";
@@ -25,7 +30,12 @@
       };
 
     homeManager =
-      { pkgs, lib, ... }:
+      {
+        pkgs,
+        lib,
+        user,
+        ...
+      }:
       {
         home.packages = [
           pkgs.local.headroom-ai
@@ -50,7 +60,7 @@
           # contribution was the hook that installs the broken hook.
           settings = {
             env = {
-              ANTHROPIC_BASE_URL = "http://127.0.0.1:8787";
+              ANTHROPIC_BASE_URL = "http://127.0.0.1:${toString (portFor user)}";
               HEADROOM_1M = "1";
             };
             permissions.allow = [
@@ -61,7 +71,12 @@
       };
 
     homeLinux =
-      { pkgs, lib, ... }:
+      {
+        pkgs,
+        lib,
+        user,
+        ...
+      }:
       {
         systemd.user.services.headroom = {
           Unit = {
@@ -88,7 +103,7 @@
             # logged zero FREEZE-PIN hits (its own payoff counter, INFO level) while the bust
             # rate on matched long-context sessions went from 0.65 to 2.93 per 100 requests.
             # Re-measure with `headroom_cache_bust_tokens_lost_total` at
-            # http://127.0.0.1:8787/metrics before enabling it again.
+            # http://127.0.0.1:<port>/metrics (portFor) before enabling it again.
             # HEADROOM_LOSSLESS drops the LOSSY compressors for format-native lossless
             # compaction. Lossy compression measured NET NEGATIVE against the prompt cache:
             # over one fleet-wide window it removed 5,318,047 tokens while the proxy's own
@@ -128,7 +143,7 @@
               "HEADROOM_LOSSLESS=1"
               "HEADROOM_LOG_MESSAGES=1"
             ];
-            ExecStart = "${lib.getExe pkgs.local.headroom-ai} proxy --host 127.0.0.1 --port 8787 --no-telemetry";
+            ExecStart = "${lib.getExe pkgs.local.headroom-ai} proxy --host 127.0.0.1 --port ${toString (portFor user)} --no-telemetry";
             Restart = "on-failure";
             RestartSec = 5;
             TimeoutStartSec = "infinity";
@@ -153,7 +168,12 @@
     ];
 
     homeDarwin =
-      { pkgs, lib, ... }:
+      {
+        pkgs,
+        lib,
+        user,
+        ...
+      }:
       {
         launchd.agents.headroom = {
           enable = true;
@@ -164,7 +184,7 @@
               "--host"
               "127.0.0.1"
               "--port"
-              "8787"
+              (toString (portFor user))
               "--no-telemetry"
             ];
             # Mirrors the Linux service environment — see there for why these are set.
