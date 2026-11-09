@@ -7,7 +7,9 @@
 # uses only tempdir fixtures and stand-in sockets, so it runs in the sandbox.
 {
   lib,
+  pkg-config,
   rustPlatform,
+  sqlite,
   xmsg-src,
 }:
 rustPlatform.buildRustPackage {
@@ -16,6 +18,11 @@ rustPlatform.buildRustPackage {
 
   src = xmsg-src;
   cargoLock.lockFile = "${xmsg-src}/Cargo.lock";
+
+  # nixpkgs' cargo setup hook exports LIBSQLITE3_SYS_USE_PKG_CONFIG=1, which overrides
+  # rusqlite's `bundled` feature, so link the system sqlite.
+  nativeBuildInputs = [ pkg-config ];
+  buildInputs = [ sqlite ];
 
   meta = {
     description = "Bridge into running Claude Code, Antigravity and pi sessions";

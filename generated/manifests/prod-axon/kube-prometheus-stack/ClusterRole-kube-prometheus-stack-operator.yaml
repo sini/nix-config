@@ -7,7 +7,7 @@ metadata:
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/name: kube-prometheus-stack-prometheus-operator
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-92.17.1
+    chart: kube-prometheus-stack-93.1.0
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-operator
@@ -29,6 +29,7 @@ rules:
       - monitoring.coreos.com
     resources:
       - alertmanagers/status
+      - alertmanagerconfigs/status
       - podmonitors/status
       - probes/status
       - prometheuses/status
@@ -98,7 +99,6 @@ rules:
       - pods
     verbs:
       - list
-      - delete
   - apiGroups:
       - ""
     resources:

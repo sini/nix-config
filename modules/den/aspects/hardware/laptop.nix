@@ -60,13 +60,12 @@
 
           power-profiles-daemon.enable = false;
 
-          scx = {
+          scx-loader = {
             enable = true;
-            package = lib.mkForce pkgs.scx.full;
-            scheduler = lib.mkForce "scx_lavd";
-            extraArgs = [
-              "--autopower"
-            ];
+            config = {
+              default_sched = lib.mkForce "scx_lavd";
+              scheds.scx_lavd.auto_mode = [ "--autopower" ];
+            };
           };
 
           thermald.enable = true;

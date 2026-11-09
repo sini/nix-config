@@ -69,6 +69,8 @@ spec:
             readOnlyRootFilesystem: true
       dnsPolicy: ClusterFirst
       hostNetwork: false
+      nodeSelector:
+        kubernetes.io/os: linux
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534

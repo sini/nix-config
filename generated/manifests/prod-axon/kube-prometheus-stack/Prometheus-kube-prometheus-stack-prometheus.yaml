@@ -5,7 +5,7 @@ metadata:
     app: kube-prometheus-stack-prometheus
     app.kubernetes.io/instance: kube-prometheus-stack
     app.kubernetes.io/part-of: kube-prometheus-stack
-    chart: kube-prometheus-stack-92.17.1
+    chart: kube-prometheus-stack-93.1.0
     heritage: Helm
     release: kube-prometheus-stack
   name: kube-prometheus-stack-prometheus
@@ -43,7 +43,7 @@ spec:
   enableRemoteWriteReceiver: true
   externalUrl: https://prometheus.json64.dev
   hostNetwork: false
-  image: quay.io/prometheus/prometheus:v3.15.1-distroless
+  image: quay.io/prometheus/prometheus:v3.16.0-distroless
   imagePullPolicy: IfNotPresent
   listenLocal: false
   logFormat: logfmt
@@ -88,5 +88,5 @@ spec:
         storageClassName: longhorn
   tsdb:
     outOfOrderTimeWindow: 0s
-  version: v3.15.1-distroless
+  version: v3.16.0-distroless
   walCompression: true

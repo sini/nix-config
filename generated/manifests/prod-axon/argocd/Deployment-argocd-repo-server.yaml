@@ -18,7 +18,7 @@ spec:
   template:
     metadata:
       annotations:
-        checksum/cm: d68f5afe557fd4b7c03b7d058a13d7d1a9fdd7d4efb557c9fcc1124941750ab9
+        checksum/cm: 2824a9db90c9cf2b7eec88bacc1940ab338044f0ae8c177f09dd5279916c0c03
         checksum/cmd-params: 6c9cb851053d64535cbf9958b67194aecbad6753d94613a10c6762a67ada7c4c
       labels:
         app.kubernetes.io/component: repo-server
@@ -116,6 +116,12 @@ spec:
                   key: reposerver.tls.ciphers
                   name: argocd-cmd-params-cm
                   optional: true
+            - name: ARGOCD_TLS_CURVE_PREFERENCES
+              valueFrom:
+                configMapKeyRef:
+                  key: reposerver.tls.curvepreferences
+                  name: argocd-cmd-params-cm
+                  optional: true
             - name: ARGOCD_REPO_CACHE_EXPIRATION
               valueFrom:
                 configMapKeyRef:
@@ -128,6 +134,18 @@ spec:
                   key: redis.server
                   name: argocd-cmd-params-cm
                   optional: true
+            - name: REDIS_SENTINEL_HOSTS
+              valueFrom:
+                configMapKeyRef:
+                  key: redis.sentinel.hosts
+                  name: argocd-cmd-params-cm
+                  optional: true
+            - name: REDIS_SENTINEL_MASTER
+              valueFrom:
+                configMapKeyRef:
+                  key: redis.sentinel.master
+                  name: argocd-cmd-params-cm
+                  optional: true
             - name: REDIS_COMPRESSION
               valueFrom:
                 configMapKeyRef:
@@ -138,6 +156,12 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   key: redis.db
+                  name: argocd-cmd-params-cm
+                  optional: true
+            - name: ARGOCD_REDIS_KEY_PREFIX
+              valueFrom:
+                configMapKeyRef:
+                  key: redis.key.prefix
                   name: argocd-cmd-params-cm
                   optional: true
             - name: REDIS_USERNAME
@@ -192,6 +216,12 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   key: otlp.attrs
+                  name: argocd-cmd-params-cm
+                  optional: true
+            - name: ARGOCD_REPO_SERVER_OTLP_SAMPLE_RATIO
+              valueFrom:
+                configMapKeyRef:
+                  key: otlp.sample.ratio
                   name: argocd-cmd-params-cm
                   optional: true
             - name: ARGOCD_REPO_SERVER_MAX_COMBINED_DIRECTORY_MANIFESTS_SIZE
@@ -308,7 +338,7 @@ spec:
               value: /helm-working-dir
             - name: HELM_DATA_HOME
               value: /helm-working-dir
-          image: quay.io/argoproj/argocd:v3.5.6
+          image: quay.io/argoproj/argocd:v3.6.1
           imagePullPolicy: IfNotPresent
           livenessProbe:
             failureThreshold: 3
@@ -374,7 +404,7 @@ spec:
           command:
             - sh
             - -c
-          image: quay.io/argoproj/argocd:v3.5.6
+          image: quay.io/argoproj/argocd:v3.6.1
           imagePullPolicy: IfNotPresent
           name: copyutil
           resources: {}

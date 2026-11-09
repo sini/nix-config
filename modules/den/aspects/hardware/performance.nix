@@ -19,17 +19,19 @@
 
         services = {
           irqbalance.enable = true;
-          scx = lib.mkIf (!isLaptop) {
+          # scx_loader starts default_sched in default_mode (Auto) with that mode's flags.
+          scx-loader = lib.mkIf (!isLaptop) {
             enable = true;
-            package = lib.mkDefault pkgs.scx.full;
-            scheduler = "scx_bpfland";
-            extraArgs = [
-              "-m"
-              "performance"
-              "-f"
-              "-k"
-              "-p"
-            ];
+            config = {
+              default_sched = "scx_bpfland";
+              scheds.scx_bpfland.auto_mode = [
+                "-m"
+                "performance"
+                "-f"
+                "-k"
+                "-p"
+              ];
+            };
           };
         };
 

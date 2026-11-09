@@ -78,7 +78,7 @@
                       echo "CPU $CPU_COUNT governor: performance";
                       let CPU_COUNT+=1
                     done
-                    ${systemctl} stop scx.service
+                    ${systemctl} stop scx_loader.service
                     ${systemctl} start irqbalance.service
 
                     # Allocate hugepages
@@ -114,7 +114,7 @@
                       echo "CPU $CPU_COUNT governor: schedutil";
                       let CPU_COUNT+=1
                     done
-                    ${systemctl} start scx.service
+                    ${systemctl} start scx_loader.service
                     ${systemctl} start irqbalance.service
 
                     # Rebind USB controller
