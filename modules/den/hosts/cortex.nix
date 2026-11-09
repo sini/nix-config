@@ -227,6 +227,7 @@ in
         # applications.wayland.hyprland-split-monitors
         applications.media.spotify-player
         services.ai.genie-memory-loader
+        services.ai.openai-tunnel
       ];
     };
 
