@@ -108,6 +108,10 @@
         # Projects, relative to home, whose sessions get the orchestrator hooks (gated.sh).
         # Matched exactly against the STARTING cwd, so a worktree below one stays ungated.
         gatedProjects = [ "Documents/repos/sini/den-ag-design" ];
+        # The xmsg arc's design repo. Its sessions get their own boot and pre-compact pointers,
+        # keyed on the start directory (started_at in gated.sh); it is NOT gated, so none of
+        # den-ag-design's budget, handoff and hold law applies there.
+        xmsgDesign = "${config.home.homeDirectory}/Documents/repos/sini/xmsg-design";
       in
       {
         home.packages = [
@@ -387,6 +391,14 @@
                     }
                   ];
                 }
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/xmsg-session-boot.sh || true";
+                    }
+                  ];
+                }
               ];
 
               # Gated like budget.sh: the den-ag-design fleet's brief invariants, into each subagent.
@@ -538,6 +550,14 @@
                     {
                       type = "command";
                       command = "bash ${config.home.homeDirectory}/.claude/pre-compact.sh";
+                    }
+                  ];
+                }
+                {
+                  hooks = [
+                    {
+                      type = "command";
+                      command = "bash ${config.home.homeDirectory}/.claude/xmsg-pre-compact.sh || true";
                     }
                   ];
                 }
@@ -854,6 +874,57 @@
             if [ -z "$tok" ]; then echo "?"; return 0; fi
             awk -v t="$tok" -v l="$limit" 'BEGIN{printf "%.1f", t*100/l}'
           }
+
+          # The realpath this session STARTED at: recorded at its first SessionStart and never
+          # rewritten (mv -n), so neither a cd nor a SessionStart(compact) re-fire elsewhere moves
+          # it. PreCompact and re-fired SessionStart payloads carry the LIVE cwd, so keying on
+          # .cwd would hand a den-ag-design session that cd'd here the xmsg pointers as well.
+          # Empty when unknown.
+          start=""
+          if [ -n "$sid" ] && [ -n "''${XDG_RUNTIME_DIR:-}" ]; then
+            start="$XDG_RUNTIME_DIR/claude-start/$sid"
+          fi
+          started_at() {
+            [ -n "$start" ] || return 0
+            if [ ! -e "$start" ] && [ "$(hook_field .hook_event_name)" = SessionStart ]; then
+              mkdir -p "''${start%/*}" 2>/dev/null \
+                && realpath -m "$(hook_field .cwd)" > "$start.$$" 2>/dev/null \
+                && mv -n "$start.$$" "$start" 2>/dev/null
+              rm -f "$start.$$"
+            fi
+            cat "$start" 2>/dev/null || true
+          }
+        '';
+
+        # xmsg-design's boot pointer: the analogue of den-ag-design's beads-session-boot, for
+        # sessions that STARTED in xmsg-design (any SessionStart source; the start is sticky).
+        home.file.".claude/xmsg-session-boot.sh".text = ''
+          . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+          [ "$(started_at)" = "$(realpath -m "${xmsgDesign}")" ] || exit 0
+          cat << 'BOOT'
+          xmsg-design session. BOOT ORDER, both under the xmsg-design root:
+            1. STATUS/RESUME-PROMPT-XMSG.md
+            2. STATUS/XMSG-RESUME.md
+          The tracker is the xmsg store, selected by the repo's .envrc: `br where` there must
+          print prefix xmsg. den-hoag means you are reading the wrong store.
+          BOOT
+        '';
+
+        # xmsg-design's compaction steer, beside pre-compact.sh (which stays gated to
+        # den-ag-design). It never holds (no exit 2) and calls no br: hooks see the
+        # settings.env BEADS_DIR, not the repo's.
+        home.file.".claude/xmsg-pre-compact.sh".text = ''
+          . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+          [ "$(started_at)" = "$(realpath -m "${xmsgDesign}")" ] || exit 0
+          cat << 'MSG'
+          SUMMARY INSTRUCTIONS — xmsg-design session. Carry these VERBATIM, never paraphrased:
+            · every live agent: name/id, its task, and the artefact it was told to write
+            · every owner ruling not yet written into STATUS/XMSG-RESUME.md
+            · in-flight xmsg- bead ids with their state
+          End the summary with the resume path: read STATUS/RESUME-PROMPT-XMSG.md, then
+          STATUS/XMSG-RESUME.md, then reconcile both against the xmsg store before acting.
+          MSG
+          exit 0
         '';
 
         # ★ PreCompact's STDOUT IS THE SUMMARIZER'S INPUT, NOT THE AGENT'S (measured,
