@@ -183,7 +183,6 @@
         {
           applications.${name} = {
             inherit namespace;
-            createNamespace = true;
 
             helm.releases.${name} = {
               chart = charts.littleoffice.searxng;
