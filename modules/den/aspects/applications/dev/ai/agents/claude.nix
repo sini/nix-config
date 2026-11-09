@@ -167,6 +167,10 @@
               is a finding (a possible memory regression): report it with its command and never re-run
               it uncapped.
 
+              NixOS host builds are exempt: run `nix-flake-build --max-jobs=4 --cores=8 <host>`
+              without the cap. A full host evaluation is legitimately large (three hosts in one
+              process peak near 12 GiB), and the two flags bound the build's concurrency.
+
               In den-ag-design, heavy runs (suites, census, deps, perf-bench) also go through
               `STATUS/heavy-lock.zsh <cmd>`, taken once per phase, never per command and never as a
               private lock.
