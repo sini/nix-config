@@ -19,10 +19,10 @@
 # answer what the fleet asks, from the cluster's egress address (the site's
 # residential IP, not a datacenter one). Each one's endpoints, from its
 # engines/*.py, are the egress allow-list below, so adding an engine means adding
-# its hosts there. Upstream ships google and bing `disabled` and mojeek and
-# startpage `inactive` (never loaded, which `keep_only` alone does not undo), so
-# each is switched on below.
-#   google, bing, duckduckgo, mojeek  general web results, four independent indexes
+# its hosts there. Upstream ships google `disabled` and mojeek and startpage
+# `inactive` (never loaded, which `keep_only` alone does not undo), so each is
+# switched on below.
+#   google, duckduckgo, mojeek        general web results, three independent indexes
 #   startpage                         Google's results through Startpage's proxy;
 #                                     solves its Anubis proof-of-work (difficulty 4,
 #                                     ~65k sha256, token cached 240s), which upstream
@@ -31,7 +31,10 @@
 #   github, stackoverflow             code and Q&A, moved into `general` so a plain
 #                                     query reaches them; API clients send no categories
 # Not kept: brave (search.brave.com answers this address 429 even to a plain
-# request, measured from the pod), qwant. google stays on while it is broken
+# request, measured from the pod), qwant, and bing: it answers this address 200 with
+# results unrelated to the query (an amdgpu query returned zip-code trivia and news
+# sites, measured from the pod 2026-11-08), which SearXNG cannot tell from real ones
+# and ranks into every answer. A refusal would at least be reported. google stays on while it is broken
 # upstream (searxng#6835: /wml/search answers 403); suspended, it costs one
 # request a day and returns on its own with the fix.
 #
@@ -50,7 +53,6 @@
 
       engines = [
         "google"
-        "bing"
         "duckduckgo"
         "mojeek"
         "startpage"
@@ -65,7 +67,6 @@
         "lite.duckduckgo.com"
         "links.duckduckgo.com"
         "www.google.com"
-        "www.bing.com"
         "www.mojeek.com"
         "www.startpage.com"
         "en.wikipedia.org"
@@ -95,10 +96,6 @@
         engines = [
           {
             name = "google";
-            disabled = false;
-          }
-          {
-            name = "bing";
             disabled = false;
           }
           {

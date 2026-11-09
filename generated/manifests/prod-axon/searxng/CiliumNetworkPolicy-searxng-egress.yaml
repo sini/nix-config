@@ -25,7 +25,6 @@ spec:
         - matchName: lite.duckduckgo.com
         - matchName: links.duckduckgo.com
         - matchName: www.google.com
-        - matchName: www.bing.com
         - matchName: www.mojeek.com
         - matchName: www.startpage.com
         - matchName: en.wikipedia.org
