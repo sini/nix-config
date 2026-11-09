@@ -1,5 +1,5 @@
 # genie-xmsg: one xmsg instance per genie tier, xmsg@public and xmsg@trusted, each
-# the bus of its own OS user (xmsg/genie-agent-design.md §5.8 Topology; plan I16).
+# the bus of its own OS user (the genie-agent design §5.8 (topology); plan unit I16).
 # xmsg serves HTTP only on $XDG_RUNTIME_DIR/xmsg/http.sock (0600, peer uid ==
 # server uid) and binds no TCP without --listen/XMSG_LISTEN, so a process reaches
 # only its own user's bus: the tier fence holds by construction. Neither tier

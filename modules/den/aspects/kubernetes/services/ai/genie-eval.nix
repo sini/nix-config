@@ -1,5 +1,5 @@
 # genie-eval — the namespace genie-agent runs its untrusted Nix evals in, one
-# Job per eval (xmsg/genie-agent-design.md §5.2, layers 3-4).
+# Job per eval (the genie-agent design §5.2, layers 3–4).
 #
 # The launcher identity lives in `matrix`, beside the genie-agent pod, and its
 # only power is a Role here: create/get/list/watch/delete Jobs and read their
