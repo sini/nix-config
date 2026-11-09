@@ -57,7 +57,27 @@ writeShellApplication {
       fi
     done
 
-    nom build --keep-going --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}"
+    # Root each host's result so the nightly GC keeps it until that host's next build: with
+    # --no-link alone nothing references the closure, and nix.gc deletes every unrooted path
+    # regardless of age. One root per host, replaced on rebuild, so the store doesn't grow.
+    rc=0
+    paths=$(nom build --keep-going --no-link --print-out-paths --show-trace ''${OPTIONS[@]} "''${HOSTS[@]}") || rc=$?
+    if [[ -n "$paths" ]]; then printf '%s\n' "$paths"; fi
+    gcdir="''${XDG_STATE_HOME:-$HOME/.local/state}/nix-flake-build"
+    mkdir -p "$gcdir"
+    for i in "''${!HOST_NAMES[@]}"; do
+      h="''${HOST_NAMES[$i]}"
+      # Matched by toplevel name, so a host that failed under --keep-going is skipped.
+      # shortcut: a darwin toplevel carries no hostname, so this assumes one darwin host.
+      if [[ "''${HOST_IS_DARWIN[$i]}" == true ]]; then
+        pat='-darwin-system-'
+      else
+        pat="-nixos-system-$h-[0-9]"
+      fi
+      p=$(grep -m1 -E -- "$pat" <<< "$paths") || continue
+      nix-store --add-root "$gcdir/$h" --realise "$p" > /dev/null
+    done
+    if [[ "$rc" -ne 0 ]]; then exit "$rc"; fi
 
     if [[ "$APPLY" == true ]]; then
       h="''${HOST_NAMES[0]}"
