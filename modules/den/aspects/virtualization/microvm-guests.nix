@@ -239,7 +239,11 @@ in
         ++ lib.optional hasImages scratchRoot;
 
       systemd.tmpfiles.rules =
-        lib.concatMap (g: map (volume: "d ${stateDir g.name volume} 0700 root root -") stateVolumes) guests
+        # 0711, not 0700: the share root becomes the guest's /persist or /cache, and impermanence
+        # file entries are symlinks into it, so every guest user must traverse it (measured
+        # 2026-11-10: 0700 made /home/sini/.config/gh/hosts.yml EACCES for sini in uplink-dev).
+        # Execute-only keeps the directory unlistable to other host users.
+        lib.concatMap (g: map (volume: "d ${stateDir g.name volume} 0711 root root -") stateVolumes) guests
         # microvm-run, as the microvm user, creates the scratch images here.
         ++ lib.optional hasImages "d ${scratchRoot} 0775 root kvm -";
 
