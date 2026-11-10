@@ -42,14 +42,16 @@ in
 
     served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
-    persist = {
-      directories = [
-        {
-          directory = "/var/lib/gen-status";
-          user = "sini";
-          mode = "0755";
-        }
-      ];
-    };
+    persist =
+      { host, ... }:
+      {
+        directories = [
+          {
+            directory = "/var/lib/gen-status";
+            user = host.system-owner;
+            mode = "0755";
+          }
+        ];
+      };
   };
 }
