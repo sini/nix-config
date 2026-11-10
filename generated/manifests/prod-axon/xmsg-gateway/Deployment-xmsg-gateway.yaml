@@ -1,0 +1,329 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: xmsg-gateway
+  namespace: xmsg-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: xmsg-gateway
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: xmsg-gateway
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - args:
+            - serve
+            - --leaf
+            - --leaf-principal
+            - xmsg-gateway
+            - --listen
+            - 127.0.0.1:7787
+            - --leaf-register-sock
+            - /run/user/xmsg/register.sock
+            - --agent-sock
+            - /run/user/xmsg/agent.sock
+            - --db-path
+            - /var/lib/xmsg-mcp-gateway/xmsg/xmsg.db
+            - --peers-file
+            - /etc/xmsg/peers/peers.json
+            - --fed-cert
+            - /etc/xmsg/tls/tls.crt
+            - --fed-key
+            - /etc/xmsg/tls/tls.key
+            - --idempotency-ttl
+            - "86400"
+            - --max-body
+            - "65536"
+            - --reply-ttl
+            - "604800"
+            - --svc-queue-cap
+            - "100"
+          env:
+            - name: XDG_RUNTIME_DIR
+              value: /run/user
+          image: ghcr.io/sini/xmsg@sha256:9059226e82340e2fb31326cd1d58acc8e1c2752d277cc5d9056e086b8ae934b9
+          name: xmsg
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /run/user
+              name: run
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /etc/xmsg/tls
+              name: tls
+              readOnly: true
+            - mountPath: /etc/xmsg/peers
+              name: peers
+              readOnly: true
+        - args:
+            - serve
+            - --config
+            - /etc/xmsg-mcp-gateway/serving.json
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:f99cfedd84cca4e2efb8f6ac262681755262275e7db1c23bc2c5d84df73f9041
+          name: gateway
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /run/user
+              name: run
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+      enableServiceLinks: false
+      initContainers:
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              umask 077
+              mkdir -p /var/lib/xmsg-mcp-gateway/state /var/lib/xmsg-mcp-gateway/xmsg /run/xmsg-mcp-gateway/keys
+              chmod 0700 /var/lib/xmsg-mcp-gateway/state /var/lib/xmsg-mcp-gateway/xmsg /run/xmsg-mcp-gateway/keys
+              rm -rf /var/lib/xmsg-mcp-gateway/staging
+              mkdir /var/lib/xmsg-mcp-gateway/staging
+              rm -f /run/xmsg-mcp-gateway/keys/lookup-secret /run/xmsg-mcp-gateway/keys/events.key
+              cp /run/secrets/xmsg-gateway/lookup-secret /run/xmsg-mcp-gateway/keys/lookup-secret
+              chmod 0400 /run/xmsg-mcp-gateway/keys/lookup-secret
+              base64 -d /run/secrets/xmsg-gateway/events-key > /run/xmsg-mcp-gateway/keys/events.key
+              chmod 0600 /run/xmsg-mcp-gateway/keys/events.key
+              [ "$(wc -c < /run/xmsg-mcp-gateway/keys/events.key)" -eq 32 ] || { echo "events key is not 32 bytes" >&2; exit 1; }
+          image: library/busybox@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
+          name: prepare
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+            - mountPath: /run/secrets/xmsg-gateway
+              name: secrets
+              readOnly: true
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/staging/grants.db
+            - init
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:f99cfedd84cca4e2efb8f6ac262681755262275e7db1c23bc2c5d84df73f9041
+          name: store-init
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/staging/grants.db
+            - migrate-custody
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:f99cfedd84cca4e2efb8f6ac262681755262275e7db1c23bc2c5d84df73f9041
+          name: store-migrate-custody
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/staging/grants.db
+            - migrate-outbound
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:f99cfedd84cca4e2efb8f6ac262681755262275e7db1c23bc2c5d84df73f9041
+          name: store-migrate-outbound
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/staging/grants.db
+            - migrate-events
+            - --key-file
+            - /run/xmsg-mcp-gateway/keys/events.key
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:f99cfedd84cca4e2efb8f6ac262681755262275e7db1c23bc2c5d84df73f9041
+          name: store-migrate-events
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+        - args:
+            - --state
+            - /var/lib/xmsg-mcp-gateway/staging/grants.db
+            - enroll
+            - chatgpt
+            - /etc/xmsg-mcp-gateway/binding.json
+          image: ghcr.io/sini/xmsg-mcp-gateway@sha256:f99cfedd84cca4e2efb8f6ac262681755262275e7db1c23bc2c5d84df73f9041
+          name: store-enroll
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+            - mountPath: /run/xmsg-mcp-gateway
+              name: keys
+              readOnly: true
+            - mountPath: /etc/xmsg-mcp-gateway
+              name: config
+              readOnly: true
+        - command:
+            - /bin/sh
+            - -c
+            - |
+              set -eu
+              if [ -e /var/lib/xmsg-mcp-gateway/state/grants.db ]; then
+                echo "/var/lib/xmsg-mcp-gateway/state/grants.db present: left unchanged"
+              else
+                mv /var/lib/xmsg-mcp-gateway/staging/grants.db /var/lib/xmsg-mcp-gateway/state/grants.db
+                echo "/var/lib/xmsg-mcp-gateway/state/grants.db created: grant chatgpt enrolled, disabled at revision 1"
+              fi
+              rm -rf /var/lib/xmsg-mcp-gateway/staging
+          image: library/busybox@sha256:a46257e06c82ad85242d0d38077d0a52d9896389ca60a1a59d3463db586e5fa4
+          name: store-install
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /var/lib/xmsg-mcp-gateway
+              name: data
+      securityContext:
+        fsGroup: 10001
+        fsGroupChangePolicy: OnRootMismatch
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: xmsg-gateway
+      volumes:
+        - emptyDir:
+            medium: Memory
+          name: run
+        - emptyDir:
+            medium: Memory
+          name: keys
+        - emptyDir: {}
+          name: tmp
+        - name: data
+          persistentVolumeClaim:
+            claimName: xmsg-gateway
+        - name: tls
+          secret:
+            defaultMode: 288
+            secretName: xmsg-gateway-xmsg-tls
+        - configMap:
+            name: xmsg-gateway-xmsg-peers
+          name: peers
+        - configMap:
+            defaultMode: 292
+            name: xmsg-gateway-config
+          name: config
+        - name: secrets
+          secret:
+            defaultMode: 288
+            items:
+              - key: events-key
+                path: events-key
+              - key: lookup-secret
+                path: lookup-secret
+            secretName: xmsg-gateway

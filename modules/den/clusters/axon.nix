@@ -36,9 +36,10 @@
     settings.kubernetes.services.ai.xmsg-gateway = {
       enable = true;
       tunnel.enable = false;
-      # PLACEHOLDER, unmeasured: the owner's kanidm `sub` (person UUID), to be read from
-      # the first real token's introspection. While null the Deployment is withheld.
-      subject = null;
+      # json's kanidm person UUID, the owner's SSO login (`kanidm person get json`, read
+      # anonymously 2026-11-10), which kanidm issues as the OIDC `sub`. Acceptance step 1
+      # checks it against the first real token's introspection before the grant is enabled.
+      subject = "b01ebf55-9b81-4d78-a308-8c2b9e5b46c0";
     };
 
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
