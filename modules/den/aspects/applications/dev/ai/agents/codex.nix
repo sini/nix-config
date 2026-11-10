@@ -139,11 +139,112 @@
             }
           ];
         };
+        # Devshell per command, the codex analogue of claude.nix's load-direnv.sh. Codex has no
+        # CwdChanged event and no hook-writable env file, but a PreToolUse hook may rewrite the
+        # exec command (updatedInput needs permissionDecision:allow, which licenses the rewrite
+        # only; the command still goes through approval, and any hook's deny drops every rewrite,
+        # so bash-guard judges the original). The hook never evaluates: codex runs the ORIGINAL
+        # command when a hook fails or times out (5 s), so a slow devshell build there would run
+        # it with a stale env. Instead the rewrite prepends one line that loads the env and stops
+        # on failure, then the original bytes, run by codex's own shell.
+        #
+        # codex-direnv-env is the only direnv evaluation, under the 12G cap (a devshell build is
+        # a nix evaluation); the user's command runs uncapped (host builds are exempt). Its JSON
+        # diff is against the caller's env, so direnv's unload semantics (A to B, leaving every
+        # .envrc) come out as unsets.
+        #
+        # Limits: the hook's own failure or timeout is fail-open (a codex property); malformed or
+        # cwd-less input is warning-only; a cd inside the command is not seen; the prefix is POSIX
+        # sh, so a fish or nu shell fails loudly; and the prefix changes the entry status and adds
+        # a command before the original bytes, so it is not transparent to a command that reads
+        # its initial $? or depends on parse/prologue behaviour.
+        direnvEnv = pkgs.writeShellApplication {
+          name = "codex-direnv-env";
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.jq
+          ];
+          text = ''
+            # usage: codex-direnv-env DIR — POSIX statements applying DIR's devshell env, or exit
+            # nonzero printing nothing on stdout.
+            direnv=''${CODEX_DENV_DIRENV:-${lib.getExe pkgs.direnv}}
+            systemd_run=''${CODEX_DENV_SYSTEMD_RUN:-/run/current-system/sw/bin/systemd-run}
+            fail() {
+              printf 'codex-direnv-env: %s; command not run\n' "$1" >&2
+              exit "$2"
+            }
+            cd -- "$1" 2>/dev/null || fail "cannot enter $1" 66
+            err=$(mktemp)
+            trap 'rm -f "$err"' EXIT
+            rc=0
+            out=$("$systemd_run" --user --scope -q -p MemoryMax=12G \
+              timeout 1800 "$direnv" export json </dev/null 2>"$err") || rc=$?
+            if [ "$rc" -ne 0 ]; then
+              cat "$err" >&2
+              fail "devshell load failed (rc $rc)" "$rc"
+            fi
+            [ -n "$out" ] || exit 0
+            printf '%s' "$out" | jq -e 'type == "object" and (keys | all(test("^[A-Za-z_][A-Za-z0-9_]*$")))' \
+              >/dev/null 2>&1 || fail "direnv returned malformed JSON or a non-identifier key" 65
+            printf '%s' "$out" | jq -r 'to_entries[]
+              | if .value == null then "unset \(.key)" else "export \(.key)=\(.value | @sh)" end'
+          '';
+        };
+        direnvHook = pkgs.writeShellApplication {
+          name = "codex-direnv-hook";
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.direnv
+            pkgs.jq
+          ];
+          text = ''
+            payload=$(cat)
+            cmd=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty' 2>/dev/null) || exit 0
+            cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null) || exit 0
+            [ -n "$cmd" ] || exit 0
+            if [ -z "$cwd" ] || [ ! -d "$cwd" ]; then
+              jq -nc '{systemMessage: "codex-direnv: no usable cwd in the hook payload; devshell not applied"}'
+              exit 0
+            fi
+            status=$(cd -- "$cwd" && direnv status --json </dev/null 2>/dev/null) || exit 0
+            found=$(printf '%s' "$status" | jq -r '.state.foundRC.path // empty')
+            allowed=$(printf '%s' "$status" | jq -r '.state.foundRC.allowed // empty')
+            if [ -z "$found" ] && [ -z "''${DIRENV_DIFF:-}" ]; then
+              exit 0
+            fi
+            if [ -n "$found" ] && [ "$allowed" != 0 ]; then
+              jq -nc --arg p "$found" '{hookSpecificOutput: {hookEventName: "PreToolUse",
+                permissionDecision: "deny",
+                permissionDecisionReason: "\($p) is not allowed by direnv. Review it, then run: direnv allow \($p | @sh) (or run the command from outside that directory)."}}'
+              exit 0
+            fi
+            prefix="__codex_denv=\$(${lib.getExe direnvEnv} $(printf '%s' "$cwd" | jq -Rr @sh)) || exit \$?; eval \"\$__codex_denv\" || exit \$?; unset __codex_denv"
+            jq -nc --arg c "$prefix
+            $cmd" '{hookSpecificOutput: {hookEventName: "PreToolUse",
+              permissionDecision: "allow", updatedInput: {command: $c}}}'
+          '';
+        };
+        direnvHooks = {
+          PreToolUse = [
+            {
+              matcher = "Bash";
+              hooks = [
+                {
+                  type = "command";
+                  command = lib.getExe direnvHook;
+                }
+              ];
+            }
+          ];
+        };
+
         # xmsg's lifecycle hooks after the guard, lists joined per event. Codex keys hook trust
-        # by position (event:group:handler), so this order must stay stable.
+        # by position (event:group:handler), so this order must stay stable: the direnv rewrite
+        # is appended after the guard and xmsg.
         hooks = lib.zipAttrsWith (_: lib.concatLists) [
           guardHooks
           config.programs.xmsg.harnesses.codex.hooks
+          direnvHooks
         ];
         hooksPath = "${config.home.homeDirectory}/.codex/hooks.json";
       in
