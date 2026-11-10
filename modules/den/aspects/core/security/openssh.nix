@@ -1,4 +1,18 @@
 { config, lib, ... }:
+let
+  # GitHub's SSH host keys, so a fresh host (or a microvm guest) can git-over-ssh with
+  # StrictHostKeyChecking intact. From https://api.github.com/meta `ssh_keys` (HTTPS), whose
+  # fingerprints equal the docs' published ones and the keys cortex already trusted, 2026-11-09:
+  #   ed25519 SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
+  #   ecdsa   SHA256:p2QAMXNIC1TJYWeIOttrVc98/R1BUFWu3/LiyKgUfQM
+  #   rsa     SHA256:uNiVztksCsDhcc0u9e8BujQXVUpKZIDTMczCvj3tD2s
+  # GitHub rotates rarely and announces it; re-read the meta endpoint then.
+  githubHostKeys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl"
+    "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg="
+    "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk="
+  ];
+in
 {
   den.aspects.core.security.openssh = {
     settings = {
@@ -43,6 +57,17 @@
         ...
       }:
       {
+        # One entry per key: a knownHosts entry carries a single publicKey.
+        programs.ssh.knownHosts = lib.listToAttrs (
+          lib.imap0 (i: key: {
+            name = "github-${toString i}";
+            value = {
+              hostNames = [ "github.com" ];
+              publicKey = key;
+            };
+          }) githubHostKeys
+        );
+
         services.openssh = {
           enable = true;
           ports = [ 22 ];
