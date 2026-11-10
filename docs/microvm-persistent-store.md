@@ -1,11 +1,12 @@
 # MicroVM guests: a persistent store over the host's shared store
 
-Status: **draft v0.7.1** (2026-11-10: v0.7 plus the implementation corrections
-at the end of §8). Owner request: "the devshell loss on every reboot is really
-painful; we need a real solution for persistence." The adversarial review hit
-its cap at round 6 (K=6, the cap for a change to the live system). Objections
-per round: 17, 16, 17, 14, 12, 12. v0.7 applies round 6's 12 fixes, and **no
-critic has reviewed it**. §8 maps every objection to its resolution.
+Status: **draft v0.8** (2026-11-10). v0.7.1, which the review capped at
+round 6 and which is implemented as rollout commits 1–2 (§2.9), plus **§2.10:
+guest state on block volumes**. That section answers the owner: "it will easily
+pass 4 million if it starts working on parallel trees". §2.10 and the
+exchange-share change in §2.3/§2.4 have not been reviewed yet. Owner request:
+"the devshell loss on every reboot is really painful; we need a real solution
+for persistence." §8 maps every earlier objection to its resolution.
 
 ## 1. Problem
 
@@ -239,8 +240,12 @@ database has accumulated. A dry-run or `--print-live` GC that inflates the
 database changes nothing in E, and neither does a GC that dies partway (round 2,
 objections nix-1 and secops-1). The export takes no lock.
 
-E is written sorted to `/cache/.microvm-store/roots`, through a temp file and a
-`rename`, but only when its content changed, so an idle guest triggers no host
+E is written sorted to `/run/microvm-exchange/store-roots`, through a temp file
+and a `rename`, but only when its content changed. That directory is the
+guest's **exchange share** (§2.10), a small virtiofs share of
+`/var/lib/microvms/<guest>/exchange` on the host, which exists only to carry
+files between guest and host. It replaces the guest's `/cache` share, which a
+block-volume guest no longer has. Writes are so an idle guest triggers no host
 import. The timer has `OnBootSec=1min` and `OnUnitActiveSec=1min`, with no
 ordering on the reconcile, so a long repair never delays it (round 4). Test 13
 records how long a run takes.
@@ -257,13 +262,13 @@ Per persistent-store guest:
   (`writers.writePython3Bin`), in five steps:
 
 1. **Open without following anything the guest controls.** Take a directory fd
-   on the guest's host-owned `/cache` state directory
-   (`stateDir <guest> "/cache"`). From it, open `.microvm-store` with
-   `O_DIRECTORY|O_NOFOLLOW`, then `roots` with
+   on the guest's host-owned exchange directory
+   (`/var/lib/microvms/<guest>/exchange`, root-owned, 0700). From it, open
+   `store-roots` with
    `O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC`. `fstat` that fd and require
    `S_ISREG`. Read it once, through the fd, at most `256 × maxExportPaths`
    bytes. A symlink, FIFO or device is refused before any read can block. A
-   missing `.microvm-store` or `roots` (a guest that has not exported yet) is
+   missing `store-roots` (a guest that has not exported yet) is
    not an error: nothing is applied, the previous set stays, and the unit
    succeeds.
 2. **Parse strictly.** Every line must match
@@ -664,9 +669,126 @@ Two commits, deployed in order:
    after this one, then carries a sweep that cleans up whatever a newer
    generation left behind.
 2. **The feature,** enabled on uplink-dev.
+3. **State on zvols (§2.10),** with uplink-dev selecting `zvol`. The first
+   start after deploy migrates its state, and that start is planned at an owner
+   or agent checkpoint, since it copies 374 GiB.
 
 A rollback to before commit 1 is the only way to leave `gcroots/microvm-store/`
 and the image behind, and §4 names it (round 4).
+
+### 2.10 Guest state on block volumes
+
+**Why.** A guest's `/persist` and `/cache` are virtiofs shares of host
+directories. `--inode-file-handles=never` is required there, because ZFS
+answers `open_by_handle_at` on an open-but-unlinked file with ESTALE, which
+breaks `br` (see `microvm-guests.nix`). In that mode virtiofsd holds one O_PATH
+fd for every inode the guest kernel has cached. Measured on 2026-11-10:
+
+- The den-ag-design checkout alone is about 700k inodes, mostly
+  `reports/*.probes`, and one walk of it pins about 700k fds.
+- 1,441,676 fds were held after one morning's runs.
+- Each held fd pins about 2.9 KB of unreclaimable host kernel memory: znode
+  1008 B, dnode 904 B, dbuf 352 B, SA 248 B, file 192 B, dentry 192 B
+  (`/proc/slabinfo` on uplink). That is about 4 GiB at 1.44M.
+- The limit was raised to 4,194,304. Parallel worktrees pass it, which makes
+  ENFILE for the whole guest the failure mode. That happened twice on
+  2026-11-10, before the raise.
+
+No limit is both safe and sufficient, and dropping caches on a timer only treats
+the symptom. The fix is to stop serving the guest's state through virtiofs.
+
+**Shape.** Opt-in per guest, as a typed entity option beside `scratchVolumes`:
+
+```nix
+options.microvm.stateBackend = lib.mkOption {
+  type = lib.types.enum [ "virtiofs" "zvol" ];
+  default = "virtiofs";
+  description = "How the guest's /persist and /cache reach it: host directories over virtiofs, or a ZFS zvol per volume, mounted as ext4 in the guest.";
+};
+options.microvm.stateVolumeSizes = lib.mkOption {
+  type = lib.types.attrsOf lib.types.ints.positive;
+  default = { "/persist" = 1048576; "/cache" = 1048576; };   # MiB, sparse
+  description = "zvol size per state volume (stateBackend = zvol). Grow-only.";
+};
+```
+
+The parent dataset is a host setting in the `virtualization.microvm-host`
+aspect: `zvolParent`, for example `zroot/local/microvms`. An assertion requires
+it whenever a guest selects `zvol`. uplink sets it, and uplink-dev selects
+`zvol`. cortex-cuda keeps `virtiofs`, so it doesn't change (I7).
+
+**Host.**
+
+- **The volumes.** `microvm-state-volumes@<guest>.service` is a oneshot,
+  `Before=` and `RequiredBy=` `microvm@<guest>`. For each state volume it does
+  the following, and every step is idempotent:
+  1. If `<zvolParent>/<guest>-<name>` is absent, create it with
+     `zfs create -s -V <size>M -o volmode=dev -o volblocksize=16K -o primarycache=metadata`.
+     - `volmode=dev` stops the host from scanning partitions in the guest's
+       disk or mounting it.
+     - `primarycache=metadata` avoids caching the same data twice. The guest's
+       page cache already holds it, and ARC would hold it again.
+  2. If `blkid` finds no filesystem on `/dev/zvol/<…>`, make one:
+     `mkfs.ext4 -L <guest>-<name>`. It never formats a device that already has
+     a filesystem.
+  3. If the declared size is larger than `volsize`, `zfs set volsize` (grow
+     only). The guest grows the filesystem online (below).
+- **The disks.** The guest gets them as `microvm.volumes` entries with
+  `image = "/dev/zvol/<…>"`, `autoCreate = false`, `fsType = "ext4"` and a
+  `serial`. The qemu runner passes `format=raw,…,discard=unmap`, so the guest's
+  TRIM frees pool blocks (`lib/runners/qemu.nix`).
+- **What a zvol guest drops:**
+  - its `/persist` and `/cache` virtiofs shares (`stateShares`);
+  - its `impermanence.directPaths` entries;
+  - the tmpfiles `stateDir` rules.
+- **What it adds:** `virtualization.microvm-host` emits the exchange share (also
+  used by virtiofs guests that have the persistent store) with
+  `--inode-file-handles=never`. It holds a handful of files, so the fd cost is
+  nil.
+- **The persistent store's own image** stays an ext4 image file on the host's
+  `/cache` dataset (§2.1). That is unchanged: the image is one file to the
+  host, and the host never looks inside it.
+
+**Guest.**
+
+- `fileSystems."/persist"` and `fileSystems."/cache"` are
+  `device = "/dev/disk/by-label/<guest>-<name>"`, ext4, `neededForBoot`.
+  Impermanence binds from them exactly as before.
+- **Growth.** A boot unit runs `resize2fs` on each volume when the block device
+  is larger than its filesystem (an online ext4 grow).
+- **TRIM.** `services.fstrim.enable = true` (weekly), not the `discard` mount
+  option, so deletes don't pay a per-operation trim.
+
+**Migration, as code.** `microvm-state-migrate@<guest>.service` is a host
+oneshot, after the volumes unit and `Before=microvm@<guest>`. It runs only when
+the zvol has no `json64:migrated` property and the old `stateDir` is non-empty:
+
+1. Mount the zvol on a private host mount point.
+2. `rsync -aHAXS --numeric-ids <stateDir>/ <mnt>/`.
+3. Unmount, then `zfs set json64:migrated=<ISO time>`.
+
+The old `stateDir` is left in place, read-only to the guest from then on,
+because the guest no longer mounts it. A typed option,
+`microvm.retireVirtiofsState`, false by default, makes the sweep (§2.4) delete
+it. The owner flips it once satisfied, so retirement is a config change, not a
+runbook. Expected cost on uplink-dev: one copy of 152 GiB (`/persist`) and
+222 GiB (`/cache`), at the first start after the switch.
+
+**Rollback.** Setting `stateBackend` back to `virtiofs` brings back the old
+directories as they were at migration. Anything written since then exists only
+in the zvol. That is the cost of choosing rollback, and §4 states it. A reverse
+migration is a non-goal.
+
+**Snapshots and per-file access.** zvols snapshot like any ZFS dataset, under
+the same (still missing) snapshot service the host-file TODO names. Per-file
+restore means cloning a snapshot and mounting it read-only on the host. That
+is a manual inspection path, a non-goal for automation here.
+
+**Effect on the rest of this spec.**
+- §2.3/§2.4 export through the exchange share for every persistent-store guest.
+- `--rlimit-nofile=4194304` and `--inode-file-handles=never` remain only on
+  virtiofs-backend state shares and the exchange share.
+- ESTALE can't arise on zvol state: the guest's filesystem is native ext4.
 
 ## 3. Acceptance (measured, on uplink-dev unless noted)
 
@@ -697,7 +819,8 @@ passes means the test proves nothing.
    - a non-store line;
    - `roots` as a FIFO (it must not hang);
    - `roots` as a symlink to `/etc/shadow`;
-   - `.microvm-store` as a symlink;
+   - the exchange directory's `store-roots` as a hard link to a file outside it
+     (the guest can't make one: the share's root is the exchange directory);
    - `maxExportPaths + 1` valid lines.
 
    A path that doesn't exist on the host is skipped and counted.
@@ -798,6 +921,30 @@ passes means the test proves nothing.
     GC is recorded.
 15. **Host temp directories.** Plant `/nix/store/tmp-test` on the host and run a
     guest GC. The GC must complete (see §4).
+16. **No fd growth.** With uplink-dev on zvol state, walk the den-ag-design tree
+    (`git status`) three times, then add one worktree. The guest's virtiofsd fd
+    count must stay under 10,000: only the exchange share and the host-key share
+    hold any. Control: the same walk on today's virtiofs `/persist` adds about
+    700k.
+17. **Performance A/B.** On the same uplink-dev, time `git status`,
+    `git worktree add` and one guarded CI family run in the den-ag-design repo:
+    first on virtiofs `/persist` (before commit 3), then on the zvol. Record both.
+    The zvol must not be slower on any of them.
+18. **Migration.** Starting from today's directories, the first start after
+    commit 3 must:
+    - copy `/persist` and `/cache`, giving equal file counts and a sampled
+      `sha256sum` match;
+    - set `json64:migrated`;
+    - boot the guest with every impermanence bind present.
+
+    A second start copies nothing. A volume that already has a filesystem is
+    never reformatted (plant a marker file, restart, and the marker survives).
+19. **Grow.** Raise `stateVolumeSizes."/persist"` and deploy: `volsize` grows,
+    and the guest's `df` shows the larger filesystem after its next boot. A
+    smaller value is refused by the unit, with the volume unchanged.
+20. **ESTALE gone.** Run `br`'s anonymous-temp-file pattern on `/persist`
+    (create, unlink, then fstat and pread): it succeeds on zvol state. Control:
+    the same pattern fails on a virtiofs share with `--inode-file-handles=prefer`.
 
 ## 4. Risks and limits
 
@@ -837,6 +984,12 @@ passes means the test proves nothing.
 - **Host daemon dependency.** The guest's Nix works only while the host's daemon
   answers. A host deploy that restarts the daemon causes transient guest errors
   (test 12).
+- **zvol rollback is lossy** (§2.10): returning to `virtiofs` restores the
+  state as it was at migration.
+- **The host loses per-file visibility** of a zvol guest's state. Inspection
+  goes through a snapshot clone.
+- **Double caching** is avoided only for data (`primarycache=metadata`). The
+  host's ARC still caches zvol metadata.
 - **Images after a host stops hosting guests** (§2.4) stay on `/cache/microvms`.
   They hold rebuildable data only, and nothing pins host paths through them.
 - **Rollback before the sweep's commit** (§2.9) leaves the roots and the image
