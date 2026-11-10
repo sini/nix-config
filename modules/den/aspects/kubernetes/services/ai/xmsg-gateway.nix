@@ -328,6 +328,8 @@ in
             required_scopes = [
               "identity:read"
               "events:subscribe"
+              "xmsg:send"
+              "xmsg:reply"
             ];
             timeout_ms = timeouts.verifier;
           };

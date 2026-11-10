@@ -101,6 +101,8 @@ let
           "email"
           "identity:read"
           "events:subscribe"
+          "xmsg:send"
+          "xmsg:reply"
         ];
       };
 
