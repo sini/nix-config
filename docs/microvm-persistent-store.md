@@ -1,12 +1,13 @@
 # MicroVM guests: a persistent store over the host's shared store
 
-Status: **draft v0.9** (2026-11-10). v0.7.1, which the review capped at
+Status: **draft v0.9.1** (2026-11-10). v0.7.1, which the review capped at
 round 6 and which is implemented as rollout commits 1–2 (§2.9), plus **§2.10:
 guest state on block volumes**. That section answers the owner: "it will easily
 pass 4 million if it starts working on parallel trees". §2.10 has had three
-review rounds, with 12, 4 and 6 surviving objections. Most of round 9's came from
-round 8's own rollback and retirement machinery, so v0.9 removes that machinery:
-the migration is one-way. That revision has not been reviewed. Owner request:
+review rounds, with 12, 4, 6 and 6 surviving objections. v0.9 removed round 8's
+rollback machinery and made the migration one-way. v0.9.1 applies round 10's
+fixes, which concern the crash ordering, a guest whose first backend is zvol,
+and how a refused start is reported. That revision has not been reviewed. Owner request:
 "the devshell loss on every reboot is really painful; we need a real solution
 for persistence." §8 maps every earlier objection to its resolution.
 
@@ -769,24 +770,46 @@ root.
      `zfs set volsize`. If it is smaller, fail and change nothing.
 - **`microvm-state-migrate@<guest>`** has `After=microvm-state-volumes@<guest>`,
   `TimeoutStartSec=infinity` and `PrivateMounts=yes`, so a killed unit can't
-  leave a mount in the host namespace. **The migration is one-way, and it runs
-  once.** It acts only when a zvol has no `json64:migrated` property:
-  1. Run `udevadm settle` (udev's `watch` probe holds the device open briefly
-     after `mkfs`, round 9). Then refuse if anything still holds the zvol open
-     (`fuser -s /dev/zdN`). It runs before QEMU by ordering, and this check makes
-     that true by construction.
-  2. Mount the zvol, then run
-     `rsync -aHAXS --numeric-ids <stateDir>/ <mnt>/`. The zvol is empty, so
-     there's nothing for `--delete` to remove.
-  3. Unmount, then `zfs set json64:migrated=<ISO time>`.
-  4. **Tombstone the old directory.** Rename `stateDir` to
-     `<stateDir>.pre-zvol`, which becomes a read-only backup of the state as it
-     was at migration. Then create a regular file at `stateDir` containing
-     `migrated to <zvol> at <time>`.
+  leave a mount in the host namespace. **The migration is one-way.** It keys on
+  what it finds on disk, so a crash at any point resumes, and `stateDir` is never
+  a live directory or a missing path after migration starts (round 10):
+  - **Nothing at all** (`stateDir` and `.pre-zvol` both absent: a guest whose
+    first backend is zvol). It writes the tombstone and sets `json64:migrated`,
+    with nothing to copy (round 10).
+  - **`stateDir` is a directory.** The run then works in these steps:
+    1. Run `udevadm settle`, then refuse if anything holds the zvol open
+       (`fuser -s /dev/zdN`). Udev's `watch` probe holds it briefly after `mkfs`
+       (round 9).
+    2. Write the tombstone to a temporary file beside `stateDir` (with fsync),
+       then atomically swap the two with `renameat2(RENAME_EXCHANGE)`
+       (`mv --exchange`). At that point `stateDir` is the tombstone and the
+       temporary name holds the directory.
+    3. Rename the temporary name to `<stateDir>.pre-zvol`.
 
-  After that, the zvol is the only copy that is kept current. Nothing ever
-  syncs from the directory again, so there's no divergence check, no re-sync
-  and no `--delete` left to go wrong (round 9).
+    From step 2 on, `stateDir` is always the tombstone, never missing and never
+    empty, even across a crash.
+  - **`stateDir` is the tombstone, and `json64:migrated` is absent.** Copy:
+    1. Mount the zvol, then run
+       `rsync -aHAXS --numeric-ids --delete <stateDir>.pre-zvol/ <mnt>/`. No
+       guest has opened the zvol yet (`microvm@` requires this unit), so
+       `--delete` only clears an interrupted earlier copy.
+    2. Unmount, then `zfs set json64:migrated=<ISO time>`.
+  - **`json64:migrated` set:** nothing to do.
+
+  After that, the zvol is the only copy kept current. Nothing ever syncs from
+  the directory again (round 9).
+
+- **`microvm-state-guard@<guest>`** is emitted for every guest whose
+  `persistentStore.enable` is true, whatever its backend. It is a oneshot,
+  `requiredBy` and `before` `microvm-virtiofsd@<guest>`, and
+  `restartIfChanged = false`. On the virtiofs backend it fails, and stays
+  `failed`, when `stateDir` is not a directory. Its message is the tombstone's
+  text, `migrated to <zvol> at <time>`. The fleet's `NodeSystemdServiceFailed`
+  alert then names the refused rollback. Without the guard, the refusal shows up
+  only as virtiofsd looping in `activating`, which no failed-unit alert sees
+  (round 10, measured: tmpfiles `d` on a file logs and exits 0, and virtiofsd 1.14
+  exits 1 on `ChdirNewRoot(NotADirectory)`). Gating on `persistentStore.enable`
+  leaves cortex-cuda unchanged.
 
 **The disks.** The guest gets them as `microvm.volumes` entries with
 `image = "/dev/zvol/<…>"`, `autoCreate = false`, `mountPoint = null`,
@@ -804,9 +827,10 @@ root.
 - its `/persist` and `/cache` virtiofs shares (`stateShares`);
 - its tmpfiles `stateDir` rules.
 
-Its `impermanence.directPaths` entries stay until the guest is retired, so
-persist-orphans doesn't report the old directories as orphans and invite a
-manual delete.
+For a zvol guest, `impermanence.directPaths` lists `stateDir` (the tombstone)
+and `<stateDir>.pre-zvol` (the backup), the latter until `dropPreZvolBackup` is
+set. So persist-orphans doesn't report either as an orphan and invite a manual
+delete (round 10).
 
 **The persistent store's own image** stays an ext4 image file on the host's
 `/cache` dataset (§2.1).
@@ -835,19 +859,26 @@ for that guest, never a glob, and only when the guest's backend is `zvol` and
 both zvols have `json64:migrated`. The owner flips that option, so dropping the
 backup is a config change, not a runbook.
 
-**Leaked zvols.** A zvol whose guest is gone, or is set back to `virtiofs`, is
-never destroyed implicitly. Destroying ZFS data is irreversible, and the zvol is
+**Leaked zvols.** A zvol whose guest is gone is never destroyed implicitly. Destroying ZFS data is irreversible, and the zvol is
 the only current copy. The sweep lists zvols under `zvolParent` that belong to
 no configured zvol guest, and fails its verdict while any exist, so the fleet's
 failed-unit alert names them. The remedy is declarative: add the name to the
-host's `destroyStateZvols`. The sweep then destroys a listed zvol only if it
-belongs to no configured zvol guest and `fuser` shows it idle (round 9).
+host's `destroyStateZvols`. The sweep then destroys a listed zvol only if its
+name matches **no configured guest under any backend** and `fuser` shows it idle
+(round 9).
+
+A configured guest on `virtiofs` that owns a zvol with `json64:migrated` is a
+refused rollback, not a leak. Its guard fails (above), and its zvol is never
+counted as leaked or destroyable. A refused rollback can therefore never lead
+the owner to destroy the only current copy (round 10).
 
 **Rollback is not supported after migration.** It fails loudly instead:
-- Setting `stateBackend` back to `virtiofs` fails the guest's start, because the
-  tombstone at `stateDir` is a regular file. tmpfiles' `d` errors on it, and
-  virtiofsd refuses a `shared-dir` that isn't a directory.
-- Rolling the host back to a generation older than §2.10 fails the same way.
+- Setting `stateBackend` back to `virtiofs` fails the guest's start. The
+  guard unit fails on the tombstone and names it.
+- Rolling the host back to a generation older than §2.10 also fails to start
+  the guest. That generation has no guard, though, so the only signals are
+  virtiofsd's `ChdirNewRoot … NotADirectory` in the journal and the fleet's
+  `HostSilent` for the guest (round 10).
 
 So a guest never boots onto stale or empty state, and nothing it writes ever
 diverges between two copies. To actually return a guest to virtiofs, the state
@@ -1029,18 +1060,28 @@ passes means the test proves nothing.
     - **Interrupted format:** kill the unit after `zfs create` and again after
       `mkfs` (`formatted=pending` both times). The next start completes it and
       the guest boots.
-    - **Busy refusal:** with QEMU up, start the migrate unit by hand. It refuses.
-      Straight after a format, it doesn't refuse (`udevadm settle`).
-    - **Rollback refused:** set `virtiofs`, then separately roll the host back to
-      the commit-2 generation. In both cases the guest start fails and names the
-      tombstone. Return to `zvol` or the current generation, and the guest boots
+    - **Busy refusal:** on a throwaway guest with QEMU up, clear
+      `json64:migrated` and start the migrate unit by hand. It refuses, and the
+      zvol, the tombstone and `.pre-zvol` are all unchanged. Straight after a
+      format, it doesn't refuse (`udevadm settle`).
+    - **Crash points:** kill the migrate unit after the swap, after the rename to
+      `.pre-zvol`, and partway through the rsync. Each time, `stateDir` is the
+      tombstone, and the next start completes the copy from `.pre-zvol`.
+    - **zvol first:** a new guest on `zvol` with no `stateDir` boots, and its
+      zvol gets `json64:migrated`.
+    - **Rollback refused:**
+      - Set `virtiofs`: `microvm-state-guard@uplink-dev` is `failed`, its message
+        is the tombstone's, and the failed-unit alert fires.
+      - Separately, roll the host back to the commit-2 generation: the guest
+        doesn't start, the journal shows `NotADirectory`, and `HostSilent` fires. Return to `zvol` or the current generation, and the guest boots
       with the writes it made before the rollback.
     - **Backup drop:** set `dropPreZvolBackup`. Only that guest's two
       `.pre-zvol` paths go.
     - **Leaked zvol:** create a zvol under the parent for no guest. The sweep's
       verdict fails and names it. Add it to `destroyStateZvols`, and it's
-      destroyed. A listed zvol that is still configured, or still open, is left
-      alone.
+      destroyed. A listed zvol that is still open, or whose name matches any
+      configured guest, is left alone. That includes a guest set back to
+      `virtiofs`, whose zvol survives with `destroyStateZvols` listing it.
 19. **Grow.** Raise `stateVolumeSizes."/persist"` and deploy. The running guest
     is not restarted, so nothing changes yet. At its next start, `volsize` grows
     and the guest's `df` shows the larger filesystem. A smaller value fails the
@@ -1322,3 +1363,14 @@ of patching it.
 | the `fuser` check races udev's watch probe | `udevadm settle` before `fuser` |
 | leaked zvol remedy is a manual destroy aimed at live data | declarative `destroyStateZvols`, idle and unconfigured only |
 | sparse 2 TiB default overcommits; a full pool pauses the VM | defaults from measured use, grow-only; §4 entry; test 21 |
+
+**Round 10 (§2.10 in v0.9): 6 surviving objections.**
+
+| v0.9 objection | Resolution |
+|---|---|
+| a crash between `migrated` and the tombstone leaves the state unguarded | atomic `RENAME_EXCHANGE` tombstone first; copy from `.pre-zvol`; `migrated` set last; resume from on-disk state |
+| a guest whose first backend is zvol can never start | nothing-to-migrate case: tombstone, then `migrated`, no copy |
+| "fails loudly" is false (tmpfiles exits 0; virtiofsd loops in activating) | `microvm-state-guard@` oneshot, failing on the tombstone; commit-2 rollback: `HostSilent` stated and tested |
+| leaked-zvol remedy can destroy the only copy after a rollback attempt | destroy only names that match no configured guest under any backend; a refused rollback is never a leak |
+| test 18 busy-refusal check can't fail | cleared-`migrated` throwaway guest with QEMU up |
+| `.pre-zvol` reported as an orphan; stale "retired" text | `directPaths` lists both until `dropPreZvolBackup` |
