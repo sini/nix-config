@@ -1,0 +1,35 @@
+apiVersion: cilium.io/v2
+kind: CiliumClusterwideNetworkPolicy
+metadata:
+  name: allow-xmsg-egress-xmsg-gateway-xmsg-gateway
+spec:
+  description: Allow xmsg-gateway/xmsg-gateway to its xmsg hub's federation port, kanidm's introspection, and public HTTPS for Events callbacks.
+  egress:
+    - toCIDR:
+        - 10.9.2.1/32
+      toPorts:
+        - ports:
+            - port: "7788"
+              protocol: TCP
+    - toCIDR:
+        - 10.10.10.1/32
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+    - toEntities:
+        - world
+      toPorts:
+        - ports:
+            - port: "443"
+              protocol: TCP
+  endpointSelector:
+    matchExpressions:
+      - key: k8s:io.kubernetes.pod.namespace
+        operator: In
+        values:
+          - xmsg-gateway
+      - key: k8s:io.cilium.k8s.policy.serviceaccount
+        operator: In
+        values:
+          - xmsg-gateway

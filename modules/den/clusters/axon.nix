@@ -31,6 +31,16 @@
       devHubs = [ "cortex" ];
     };
 
+    # xmsg-mcp-gateway with its xmsg leaf (hub: sini's xmsg on cortex); see
+    # services/ai/xmsg-gateway.nix. The tunnel sidecar stays off until cutover.
+    settings.kubernetes.services.ai.xmsg-gateway = {
+      enable = true;
+      tunnel.enable = false;
+      # PLACEHOLDER, unmeasured: the owner's kanidm `sub` (person UUID), to be read from
+      # the first real token's introspection. While null the Deployment is withheld.
+      subject = null;
+    };
+
     # Pin Cilium's datapath devices to the physical NICs: enp2s0 (WAN
     # ingress/egress + masquerade) and the thunderbolt-fabric NICs
     # enp199s0f5/f6 (inter-node geneve, routed by OpenFabric). The `enp+`
@@ -239,6 +249,9 @@
 
       # ai — genie-guard as an xmsg leaf pod of sini's xmsg on bitstream.
       services.ai.genie-guard
+
+      # ai — xmsg-mcp-gateway: the owner's ChatGPT MCP endpoint, an xmsg leaf of cortex.
+      services.ai.xmsg-gateway
 
       # ai — genie-experts: the experts' Claude token pool (sops store only, for now).
       services.ai.genie-experts

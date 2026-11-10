@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  binding.json: '{"hosted_client":"xmsg-gateway","issuer":"https://idm.json64.dev/oauth2/openid/xmsg-gateway","resource":"https://xmsg-gateway.json64.dev/mcp","service":"xmsg-gateway","subject":null}'
+  serving.json: '{"allowed_hosts":["127.0.0.1","localhost","xmsg-gateway.json64.dev"],"allowed_origins":[],"bind":"127.0.0.1:8787","events":{"dispatch_timeout_ms":16000,"grant_id":"chatgpt","key_file":"/run/xmsg-mcp-gateway/keys/events.key"},"grant_store":"/var/lib/xmsg-mcp-gateway/state/grants.db","messaging":{"manifest":{"dedup_lifetime_secs":43200,"idempotency_ttl_secs":86400,"max_framed_bytes":65536,"reply_ttl_secs":604800,"svc_queue_cap":100},"max_reservations":1000,"max_retained_bytes":67108864,"submission_timeout_ms":20000,"xmsg":{"agent_socket":"/run/user/xmsg/agent.sock","daemon_uid":10001,"expected_node":"xmsg-gateway.xmsg-gateway","register_socket":"/run/user/xmsg/register.sock","service":"xmsg-gateway"}},"request_timeout_ms":60000,"verifier":{"audience":"xmsg-gateway","client_secret_file":"/run/xmsg-mcp-gateway/keys/lookup-secret","hosted_client":"xmsg-gateway","introspection_client":"xmsg-gateway-lookup","introspection_url":"https://idm.json64.dev/oauth2/token/introspect","issuer":"https://idm.json64.dev/oauth2/openid/xmsg-gateway","provider_addresses":["10.10.10.1"],"required_scopes":["identity:read","events:subscribe"],"resource":"https://xmsg-gateway.json64.dev/mcp","service":"xmsg-gateway","subject":null,"timeout_ms":5000}}'
+kind: ConfigMap
+metadata:
+  name: xmsg-gateway-config
+  namespace: xmsg-gateway
