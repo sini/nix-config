@@ -88,23 +88,22 @@
         # Order matters: head, then the shared measurement block, then the role body,
         # then the shared protocol. Diff the rendered agents before and after any change
         # here (assets/gen-agents/README.md, "Checking a change").
-        mkAgent =
+        agentText =
           role:
-          pkgs.writeText "gen-${role}.md" (
-            builtins.replaceStrings
-              [ "@TOOLS@" "@MODEL@" ]
-              [
-                "[${lib.concatStringsSep ", " tools.${role}}]"
-                models.${role}
-              ]
-              (builtins.readFile "${d}/_${role}-head.md")
-            + "\n"
-            + shared
-            + "\n"
-            + builtins.readFile "${d}/_${role}-body.md"
-            + "\n"
-            + protocol
-          );
+          builtins.replaceStrings
+            [ "@TOOLS@" "@MODEL@" ]
+            [
+              "[${lib.concatStringsSep ", " tools.${role}}]"
+              models.${role}
+            ]
+            (builtins.readFile "${d}/_${role}-head.md")
+          + "\n"
+          + shared
+          + "\n"
+          + builtins.readFile "${d}/_${role}-body.md"
+          + "\n"
+          + protocol;
+        mkAgent = role: pkgs.writeText "gen-${role}.md" (agentText role);
 
         # ★ THE CODEX VARIANT. agents/codex.nix turns these into codex role TOMLs, and three
         # passages above are untrue there: delivery (codex returns a child's final message to
@@ -179,7 +178,7 @@
         mkCodexAgent =
           role:
           pkgs.writeText "gen-${role}.codex.md" (
-            swapOnce role (builtins.readFile (mkAgent role)) (noEditFor.${role} ++ protocolForCodex)
+            swapOnce role (agentText role) (noEditFor.${role} ++ protocolForCodex)
           );
       in
       {

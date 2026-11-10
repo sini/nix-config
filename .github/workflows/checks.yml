@@ -1,0 +1,100 @@
+name: Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+concurrency:
+  group: checks-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+permissions:
+  contents: read
+jobs:
+  checks:
+    name: in-tree checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+        with:
+          # fmt.yml's settings, plus the fleet's public attic `ci` cache, read-only.
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            experimental-features = nix-command flakes pipe-operators
+            extra-deprecated-features = or-as-identifier broken-string-escape
+            accept-flake-config = true
+            extra-substituters = https://attic.json64.dev/ci
+            extra-trusted-public-keys = ci:1i+3fr0BNdABCWGG0CGUpcvzWCLpnx7/EuEQujmowmg=
+      # Every checks.x86_64-linux attribute but these (new checks join by default):
+      #   treefmt            fmt.yml already gates it (nix fmt -- --fail-on-change)
+      #   xmsg-peers         builds the genie pod's package closure from source (codex,
+      #                      xmsg, genie-guard, antigravity-cli): uncached Rust builds
+      #   searxng-harnesses  builds a host's home-manager AI tooling closure from source
+      #                      (codebase-memory-mcp, codegraph, serena, headroom, xmsg)
+      #   dns-egress         known red, built by the next step
+      #   files/README.md    known red, built by the next step
+      # One nix process for all of them peaks near 8 GiB.
+      - name: Build the unit and render checks
+        run: |
+          nix eval --json .#checks.x86_64-linux --apply 'c: builtins.attrNames (removeAttrs c [
+            "treefmt" "xmsg-peers" "searxng-harnesses" "dns-egress" "files/README.md"
+          ])' | jq -r '.[] | ".#checks.x86_64-linux.\"\(.)\""' > checks.txt
+          cat checks.txt
+          xargs -a checks.txt -d '\n' nix build --no-link -L
+      # Known defect: searxng-egress and searxng-limit-egress grant their own port-53
+      # egress to coredns, which the check reserves to coredns.nix (and genie-eval).
+      - name: dns-egress (known red)
+        continue-on-error: true
+        run: nix build --no-link -L '.#checks.x86_64-linux.dns-egress'
+      # Known conflict: two generators own README.md (write-files' front page and den-diagram's
+      # topology page, which overwrote it in 425f1d3b); which one wins is the owner's call.
+      - name: files/README.md (known red)
+        continue-on-error: true
+        run: nix build --no-link -L '.#checks.x86_64-linux."files/README.md"'
+  hosts:
+    name: host list
+    runs-on: ubuntu-latest
+    outputs:
+      hosts: ${{ steps.list.outputs.hosts }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            experimental-features = nix-command flakes pipe-operators
+            extra-deprecated-features = or-as-identifier broken-string-escape
+            accept-flake-config = true
+            extra-substituters = https://attic.json64.dev/ci
+            extra-trusted-public-keys = ci:1i+3fr0BNdABCWGG0CGUpcvzWCLpnx7/EuEQujmowmg=
+      # slab (the nix-on-droid experiment) does not build; the owner ruled it low priority.
+      - id: list
+        run: |
+          hosts=$(for attr in nixosConfigurations darwinConfigurations; do
+            nix eval --json ".#$attr" --apply 'c: builtins.filter (h: h != "slab") (builtins.attrNames c)' |
+              jq -c --arg attr "$attr" '.[] | { $attr, host: . }'
+          done | jq -cs .)
+          echo "$hosts"
+          echo "hosts=$hosts" >> "$GITHUB_OUTPUT"
+  host-eval:
+    name: eval ${{ matrix.host }}
+    needs: hosts
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.hosts.outputs.hosts) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+            experimental-features = nix-command flakes pipe-operators
+            extra-deprecated-features = or-as-identifier broken-string-escape
+            accept-flake-config = true
+            extra-substituters = https://attic.json64.dev/ci
+            extra-trusted-public-keys = ci:1i+3fr0BNdABCWGG0CGUpcvzWCLpnx7/EuEQujmowmg=
+      # Eval only, one host per runner: one host peaks near 7 GiB, three in one process
+      # near 12 GiB, on a ~16 GB runner.
+      - run: nix eval --raw '.#${{ matrix.attr }}.${{ matrix.host }}.config.system.build.toplevel.drvPath'
