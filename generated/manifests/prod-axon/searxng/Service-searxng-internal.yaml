@@ -12,5 +12,5 @@ spec:
       port: 8080
       targetPort: 8080
   selector:
-    app.kubernetes.io/name: searxng
+    app.kubernetes.io/name: searxng-limit
   type: LoadBalancer

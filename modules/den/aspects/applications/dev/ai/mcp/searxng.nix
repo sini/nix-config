@@ -43,7 +43,12 @@
         type = "mcp";
         mcpServers.searxng = {
           command = lib.getExe pkgs.mcp-searxng;
-          env.SEARXNG_URL = host.settings.applications.dev.ai.mcp.searxng.endpoint;
+          env = {
+            SEARXNG_URL = host.settings.applications.dev.ai.mcp.searxng.endpoint;
+            # The endpoint paces misses (searxng-limit: one per 2 s, 4 queued), so a request
+            # may wait its turn; 10 s, the default, would time it out while still queued.
+            SEARXNG_TIMEOUT_MS = "45000";
+          };
         };
       };
 

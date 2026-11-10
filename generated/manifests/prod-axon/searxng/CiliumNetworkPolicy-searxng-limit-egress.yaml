@@ -1,0 +1,28 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: searxng-limit-egress
+  namespace: search
+spec:
+  description: 'searxng-limit: DNS, then searxng on 8080.'
+  egress:
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: coredns
+            k8s:io.kubernetes.pod.namespace: kube-system
+      toPorts:
+        - ports:
+            - port: "53"
+              protocol: UDP
+            - port: "53"
+              protocol: TCP
+    - toEndpoints:
+        - matchLabels:
+            app.kubernetes.io/name: searxng
+      toPorts:
+        - ports:
+            - port: "8080"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: searxng-limit

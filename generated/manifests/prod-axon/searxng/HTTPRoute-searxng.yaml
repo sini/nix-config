@@ -12,5 +12,5 @@ spec:
       sectionName: json64-dev-https
   rules:
     - backendRefs:
-        - name: searxng
+        - name: searxng-limit
           port: 8080

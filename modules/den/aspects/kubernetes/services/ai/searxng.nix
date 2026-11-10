@@ -39,7 +39,21 @@
 # request a day and returns on its own with the fix.
 #
 # Limiter off and no Valkey: every path in is private and admitted by the policies
-# below, and the API clients are the fleet's own.
+# below, and the API clients are the fleet's own. SearXNG's limiter is a bot screen for
+# inbound abuse; it does not pace OUR bursts toward the engines.
+#
+# OUTBOUND PACING, searxng-limit (an nginx in front, owner-approved 2026-11-09). Every
+# query from every agent leaves through one residential address, and the engines judge
+# that address by its burst rate: a fleet of agents searching at once earns CAPTCHAs and
+# denials (measured: DuckDuckGo, Mojeek and Startpage returned CAPTCHA pages after bursts).
+# So the internal LoadBalancer and the public route both reach nginx, not SearXNG:
+#   · /search answers repeat for 10 min from a cache, and a cache hit is never paced;
+#   · a miss is paced to one request per 2 s, with up to 4 queued (worst wait 8 s, under
+#     genie tier 1's 15 s search timeout), and anything beyond is 429 at once;
+#   · every other path passes through unpaced.
+# The rate is a starting point: loosen it when the engines tolerate more.
+# An engine that answered CAPTCHA or denial is suspended 10 min (suspended_times below),
+# not upstream's day: paced traffic should not stay locked out on one bad burst.
 #
 # EGRESS: DNS through Cilium's DNS proxy (toFQDNs learns IPs only from lookups that
 # pass it, as in genie-eval.nix), then the engine hosts on 443.
@@ -93,6 +107,14 @@
           public_instance = false;
           image_proxy = false;
         };
+        search.suspended_times = {
+          SearxEngineAccessDenied = 600;
+          SearxEngineCaptcha = 600;
+          SearxEngineTooManyRequests = 600;
+          cf_SearxEngineCaptcha = 600;
+          cf_SearxEngineAccessDenied = 600;
+          recaptcha_SearxEngineCaptcha = 600;
+        };
         engines = [
           {
             name = "google";
@@ -131,6 +153,50 @@
       };
 
       pod."app.kubernetes.io/name" = name;
+      limitName = "${name}-limit";
+      limitPod."app.kubernetes.io/name" = limitName;
+      # Hits are served by the outer server from the cache and never reach the pacer; a
+      # miss goes through the inner one, which holds the one global rate.
+      limitConf = ''
+        proxy_cache_path /var/cache/nginx/search levels=1:2 keys_zone=search:10m max_size=256m inactive=30m use_temp_path=off;
+        map $host $engines { default all; }
+        limit_req_zone $engines zone=engines:1m rate=30r/m;
+        limit_req_status 429;
+        upstream searxng { server ${name}.${namespace}.svc.cluster.local:${toString port}; }
+        server {
+          listen ${toString port};
+          location = /search {
+            proxy_cache search;
+            proxy_cache_key $request_uri;
+            proxy_cache_valid 200 10m;
+            proxy_cache_lock on;
+            proxy_cache_lock_timeout 15s;
+            add_header X-Cache-Status $upstream_cache_status always;
+            proxy_pass http://127.0.0.1:8081;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 30s;
+          }
+          location / {
+            proxy_pass http://searxng;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+          }
+        }
+        server {
+          listen 127.0.0.1:8081;
+          location / {
+            limit_req zone=engines burst=4;
+            proxy_pass http://searxng;
+            proxy_set_header Host $host;
+            proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+            proxy_read_timeout 30s;
+          }
+        }
+      '';
       tcp = p: {
         port = toString p;
         protocol = "TCP";
@@ -217,6 +283,55 @@
               };
             };
 
+            helm.releases.${limitName} = {
+              chart = charts.bjw-s-labs.app-template;
+              values = {
+                controllers.main = {
+                  type = "deployment";
+                  containers.main = {
+                    image = {
+                      inherit (images."library/nginx") repository digest;
+                    };
+                    probes = {
+                      liveness = {
+                        enabled = true;
+                        custom = true;
+                        spec.tcpSocket.port = port;
+                      };
+                      readiness = {
+                        enabled = true;
+                        custom = true;
+                        spec.tcpSocket.port = port;
+                      };
+                    };
+                  };
+                };
+                service.main = {
+                  controller = "main";
+                  ports.http = { inherit port; };
+                };
+                configMaps.config.data."default.conf" = limitConf;
+                persistence = {
+                  config = {
+                    type = "configMap";
+                    identifier = "config";
+                    globalMounts = [
+                      {
+                        path = "/etc/nginx/conf.d/default.conf";
+                        subPath = "default.conf";
+                        readOnly = true;
+                      }
+                    ];
+                  };
+                  # Regenerable: the cache dies with the pod.
+                  cache = {
+                    type = "emptyDir";
+                    globalMounts = [ { path = "/var/cache/nginx"; } ];
+                  };
+                };
+              };
+            };
+
             resources = {
               secrets.${name}.stringData = {
                 "settings.yml" = builtins.toJSON (settingsFor "https://${host}/");
@@ -228,7 +343,7 @@
                 spec = {
                   type = "LoadBalancer";
                   externalTrafficPolicy = "Local";
-                  selector = pod;
+                  selector = limitPod;
                   ports = [
                     {
                       name = "http";
@@ -252,7 +367,8 @@
                   {
                     backendRefs = [
                       {
-                        inherit name port;
+                        name = limitName;
+                        inherit port;
                       }
                     ];
                   }
@@ -286,8 +402,14 @@
 
               ciliumNetworkPolicies = {
                 "${name}-ingress".spec = {
-                  description = "searxng: the gateway, genie tier 1 and private-LAN clients, on ${toString port} only.";
+                  description = "searxng: its pacer (searxng-limit) only, on ${toString port}.";
                   endpointSelector.matchLabels = pod;
+                  # Every query goes through the pacer, so no caller can burst the engines.
+                  ingress = [ (ingressOn { fromEndpoints = [ { matchLabels = limitPod; } ]; }) ];
+                };
+                "${limitName}-ingress".spec = {
+                  description = "searxng-limit: the gateway, genie tier 1 and private-LAN clients, on ${toString port} only.";
+                  endpointSelector.matchLabels = limitPod;
                   ingress = [
                     (ingressOn {
                       fromEndpoints = [ { matchLabels."k8s:io.kubernetes.pod.namespace" = "gateways"; } ];
@@ -307,6 +429,37 @@
                     # covers the caller's real IP under externalTrafficPolicy=Local
                     # and any node SNAT; the LB address is not internet-routable).
                     (ingressOn { fromCIDR = [ "10.0.0.0/8" ]; })
+                  ];
+                };
+                "${limitName}-egress".spec = {
+                  description = "searxng-limit: DNS, then searxng on ${toString port}.";
+                  endpointSelector.matchLabels = limitPod;
+                  egress = [
+                    {
+                      toEndpoints = [
+                        {
+                          matchLabels = {
+                            "k8s:io.kubernetes.pod.namespace" = "kube-system";
+                            "app.kubernetes.io/name" = "coredns";
+                          };
+                        }
+                      ];
+                      toPorts = [
+                        {
+                          ports = [
+                            {
+                              port = "53";
+                              protocol = "UDP";
+                            }
+                            (tcp 53)
+                          ];
+                        }
+                      ];
+                    }
+                    {
+                      toEndpoints = [ { matchLabels = pod; } ];
+                      toPorts = [ { ports = [ (tcp port) ]; } ];
+                    }
                   ];
                 };
 

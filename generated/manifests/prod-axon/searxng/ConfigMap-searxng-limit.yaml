@@ -1,0 +1,48 @@
+apiVersion: v1
+data:
+  default.conf: |-
+    proxy_cache_path /var/cache/nginx/search levels=1:2 keys_zone=search:10m max_size=256m inactive=30m use_temp_path=off;
+    map $host $engines { default all; }
+    limit_req_zone $engines zone=engines:1m rate=30r/m;
+    limit_req_status 429;
+    upstream searxng { server searxng.search.svc.cluster.local:8080; }
+    server {
+      listen 8080;
+      location = /search {
+        proxy_cache search;
+        proxy_cache_key $request_uri;
+        proxy_cache_valid 200 10m;
+        proxy_cache_lock on;
+        proxy_cache_lock_timeout 15s;
+        add_header X-Cache-Status $upstream_cache_status always;
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_read_timeout 30s;
+      }
+      location / {
+        proxy_pass http://searxng;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+      }
+    }
+    server {
+      listen 127.0.0.1:8081;
+      location / {
+        limit_req zone=engines burst=4;
+        proxy_pass http://searxng;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $http_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_read_timeout 30s;
+      }
+    }
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/instance: searxng-limit
+    app.kubernetes.io/name: searxng-limit
+  name: searxng-limit
+  namespace: search
