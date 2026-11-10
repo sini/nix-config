@@ -105,6 +105,82 @@
             + "\n"
             + protocol
           );
+
+        # ★ THE CODEX VARIANT. agents/codex.nix turns these into codex role TOMLs, and three
+        # passages above are untrue there: delivery (codex returns a child's final message to
+        # its parent through wait_agent, and has no SendMessage or SubagentHandback), recall
+        # (codex injects no den-law block at subagent start, and names MCP tools by server,
+        # mcp__hindsight__recall), and tool restriction (a codex role cannot withhold tools, so
+        # gate and scout DO have editing tools; the rule is behavioural there). Each swap must
+        # match exactly once, or the build fails, so a source edit cannot leave a stale passage.
+        swapOnce =
+          role: text: pairs:
+          lib.foldl' (
+            acc:
+            { from, to }:
+            let
+              n = lib.length (lib.splitString from acc) - 1;
+            in
+            if n != 1 then
+              throw "gen-agents codex variant (${role}): expected the passage once, found it ${toString n} times: ${lib.substring 0 60 from}"
+            else
+              builtins.replaceStrings [ from ] [ to ] acc
+          ) text pairs;
+        noEditFor = {
+          scout = [
+            {
+              from = "has no Edit tool\n  and does not revise the artefact under measurement";
+              to = "must not edit\n  (codex cannot withhold editing tools from a role, so this is a rule, not a\n  restriction) and does not revise the artefact under measurement";
+            }
+            {
+              from = "- **Name which one in your `SendMessage`** — a routing recommendation reaches the\n  orchestrator through that message or through nothing at all.";
+              to = "- **Name which one in your final message** — a routing recommendation reaches the\n  orchestrator through that message or through nothing at all.";
+            }
+          ];
+          gate = [
+            {
+              from = "Has no Edit or\n  editing tool, so it does not revise the artefact it judges.";
+              to = "Must not edit\n  the artefact it judges (codex cannot withhold editing tools from a role, so\n  this is a rule, not a restriction).";
+            }
+            {
+              from = "you have no Edit tool, and Bash is not a\nsubstitute for one.";
+              to = "codex gives you editing tools anyway, and\nusing them, or Bash, on the artefact is forbidden; you write only your report.";
+            }
+          ];
+          spec = [ ];
+          build = [ ];
+        };
+        protocolForCodex = [
+          {
+            from = "★ **As a teammate (the usual dispatch) your final text reaches nobody: deliver\nwith `SendMessage` to the orchestrator.** If your tools include\n`SubagentHandback`, deliver through it instead and do not also `SendMessage`.\nEither way, write the file too: the file is the artefact, the message the\nnotification.";
+            to = "★ **Your final message is the delivery.** Codex returns a subagent's final\nmessage to its parent (the parent collects it with `wait_agent`). End with the\ndeliverable, and do not also message the parent unless it asked you to. Write\nthe file too: the file is the artefact, the final message the notification.";
+          }
+          {
+            from = "Send, briefly:";
+            to = "End with, briefly:";
+          }
+          {
+            from = "If you wrote nothing, or an attempt failed, send that.";
+            to = "If you wrote nothing, or an attempt failed, say that.";
+          }
+          {
+            from = "You are already a subagent; do not dispatch your own. If you cannot finish, send\none of these and stop rather than improvising around the gap:";
+            to = "You are already a subagent; do not dispatch your own. If you cannot finish, end\nwith one of these and stop rather than improvising around the gap:";
+          }
+          {
+            from = "Your role's standing law and tool traps were injected at start (the den-law recall\nblock). If that block says the recall FAILED, run `mcp__plugin_hm_hindsight__recall`\nyourself before measuring (if it is deferred, load it with `tool_search_tool_regex`,\npattern `hindsight__recall`).";
+            to = "Codex injects no recall at start: before measuring, run the hindsight server's\n`recall` tool yourself (listed as `mcp__hindsight__recall`) on your role's subject.\nIf your tool list has no hindsight tools, or the call fails or times out, the bank\nis unreachable from this host: report `recall: unavailable` with the error, and\nnever read that as an empty bank.";
+          }
+          {
+            from = "store it with `mcp__plugin_hm_hindsight__sync_retain` and confirm it\nwith `get_memory`";
+            to = "store it with the hindsight server's `sync_retain` (`mcp__hindsight__sync_retain`)\nand confirm it with `get_memory`";
+          }
+        ];
+        mkCodexAgent =
+          role:
+          pkgs.writeText "gen-${role}.codex.md" (
+            swapOnce role (builtins.readFile (mkAgent role)) (noEditFor.${role} ++ protocolForCodex)
+          );
       in
       {
         type = "skill";
@@ -113,6 +189,12 @@
           gen-gate = mkAgent "gate";
           gen-spec = mkAgent "spec";
           gen-build = mkAgent "build";
+        };
+        codexAgents = {
+          gen-scout = mkCodexAgent "scout";
+          gen-gate = mkCodexAgent "gate";
+          gen-spec = mkCodexAgent "spec";
+          gen-build = mkCodexAgent "build";
         };
       };
   };

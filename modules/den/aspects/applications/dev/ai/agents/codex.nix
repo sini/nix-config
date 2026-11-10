@@ -94,7 +94,7 @@
           pkgs.runCommand "codex-agent-${name}.toml" { } ''
             ${toAgentToml} ${src.outPath or src} $out
           ''
-        ) (collect "agents");
+        ) (collect "agents" // collect "codexAgents");
         # Codex opens a role file with O_NOFOLLOW and refuses a symlink (exec-server
         # regular_file.rs), so a home.file store link is listed but fails at spawn ("agent type is
         # currently not available"). Copy each role in as a regular file instead; a manifest
