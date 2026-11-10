@@ -4,11 +4,15 @@ let
 
   rwStore = "/nix/.rw-store";
 
+  # File handles only for the store: it is the huge tree the `prefer` mode exists for (O_PATH
+  # fds per looked-up inode exhaust the fd limit there), and nothing in a read-only store is
+  # ever unlinked while open. The state shares pass `never` (stateShares below).
   roStoreShare = {
     source = "/nix/store";
     mountPoint = "/nix/.ro-store";
     tag = "ro-store";
     proto = "virtiofs";
+    extraArgs = [ "--inode-file-handles=prefer" ];
   };
 
   # The microvm.nix `microvm.vms.<name>` submodule does NOT accept a top-level
@@ -129,6 +133,13 @@ in
           mountPoint = volume;
           tag = "state${lib.replaceStrings [ "/" ] [ "-" ] volume}";
           proto = "virtiofs";
+          # O_PATH fds, not file handles: a file a guest opens and then unlinks cannot be
+          # reached by handle again, so fstat/pread on it fail with ESTALE, which breaks every
+          # anonymous-temp-file writer (measured 2026-11-09: br stages its JSONL in
+          # .beads/.tmpXXXX, unlinks it, and its pread fails with os error 116; natively on the
+          # same ZFS dataset the same calls succeed). virtiofsd 1.14 defaults to `prefer`, so
+          # this must be explicit.
+          extraArgs = [ "--inode-file-handles=never" ];
         }) stateVolumes;
     in
     {
@@ -140,6 +151,9 @@ in
             config = {
               microvm.devices = gpuLib.toMicrovmDevices g.recs;
               microvm.shares = lib.optional g.sharedNixStore roStoreShare ++ stateShares g.name;
+              # The file-handle mode is set per share (roStoreShare, stateShares); the global
+              # flag is dropped so each share's own one is the only one passed.
+              microvm.virtiofsd.inodeFileHandles = null;
               microvm.volumes = map (v: v // { fsType = "ext4"; }) g.scratch;
               # A /nix/.rw-store scratch volume is the writable store overlay, which
               # also turns on nix-daemon (microvm.nix gates it on the overlay), so
