@@ -399,7 +399,12 @@
           context = lib.concatMapStringsSep "\n\n" (r: if builtins.isPath r then builtins.readFile r else r) (
             lib.attrValues config.programs.claude-code.rules
           );
-          settings.mcp_servers = mcpServers;
+          settings = {
+            mcp_servers = mcpServers;
+            # gpt-6.1-sol's max_context_window; codex clamps this to each model's max and
+            # compacts at 90% of the result, so no model_auto_compact_token_limit.
+            model_context_window = 872000;
+          };
         };
 
         home.file = {
