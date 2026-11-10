@@ -1,12 +1,12 @@
 # A local filtering DNS resolver (Blocky)
 
-Status: **draft v0.1** (2026-11-10). This is a design, not implemented and not
-reviewed. It is written against `main` at `03b84230`. The owner's rulings are
-fixed: Blocky through the NixOS `services.blocky` module, a `dns-filter`
-wrapper, the uplink → Kubernetes → uplink-as-secondary phases, encrypted
-upstreams only, four client paths, and the observability path. This document
-designs within them. Where a measurement contradicts a ruling's premise, the
-section says so (§1, internal names).
+Status: **draft v0.2** (2026-11-10), revised against review round 1 (§8). This
+is a design, not implemented. It is written against `main` at `03b84230`. The
+owner's rulings are fixed: Blocky through the NixOS `services.blocky` module, a
+`dns-filter` wrapper, the uplink → Kubernetes → uplink-as-secondary phases,
+encrypted upstreams only, four client paths, and the observability path. This
+document designs within them. Where a measurement contradicts a ruling's
+premise, the section says so (§1, internal names).
 
 ## 1. Problem
 
@@ -17,12 +17,14 @@ places that disagree. Measured on 2026-11-10 over ssh, read-only:
 `tailscale0` carries `DNS Domain: ts.json64.dev ~.` with `+DefaultRoute`
 (headscale `override_local_dns = true`), and `br0` carries the environment's DoT
 list (`+DNSOverTLS`, `1.1.1.1#cloudflare-dns.com` …), also with `+DefaultRoute`.
-systemd-resolved sends a query routed to several links to all of them, and the
-first successful answer wins. `resolvectl query grafana.json64.dev` answered
-from `link: tailscale0`, with "Data was acquired via local or encrypted
-transport: no". So the resolver a fleet host actually uses is MagicDNS
-(`100.100.100.100`), which forwards to headscale's `nameservers.global`, which
-is a hard-coded Cloudflare list.
+systemd-resolved routes a name to the links with its best-matching routing
+domain, and `~.` matches every name. A `DefaultRoute` link without a routing
+domain is asked only when no link's domain matches (`systemd-resolved(8)`,
+"Protocols and Routing"). So `br0` is never asked while `tailscale0` carries
+`~.`: on cortex, 40 of 40 queries answered from `link: tailscale0`, with "Data
+was acquired via local or encrypted transport: no". The resolver a fleet host
+actually uses is MagicDNS (`100.100.100.100`), which forwards to headscale's
+`nameservers.global`, which is a hard-coded Cloudflare list.
 
 **Five resolver lists:**
 
@@ -73,7 +75,16 @@ preserve. §2.3 designs it, and §4 prices it.
 **Other facts the design depends on:**
 
 - The tailnet holds 13 nodes (`headscale nodes list`). Three are mobile or
-  roaming (`ipad`, `Open`, and `localhost` of user shuo) and leave the LAN.
+  roaming (`ipad`, `Open`, and `localhost` of user shuo) and leave the LAN. Of
+  the den hosts, `blade` (NetworkManager) and the darwin hosts roam.
+- The axons already run `tailscale set --accept-dns=false`
+  (`services/k3s/node.nix:148-158`). On axon-01, `tailscale0` has no DNS
+  servers, so `uplink.ts.json64.dev` is NXDOMAIN through resolved, while
+  `host uplink.ts.json64.dev 100.100.100.100` answers `100.72.240.66`: quad-100
+  keeps serving MagicDNS when the OS isn't pointed at it.
+- The NixOS `blocky` unit `wants` `network-online.target` but has no `after` on
+  it (nixpkgs `services/networking/blocky.nix:37-45`), and uplink has
+  `net.ipv4.ip_nonlocal_bind = 0`.
 - tailscaled races every global nameserver (`net/dns/resolver/forwarder.go`,
   `forwardWithDestChan`), and the first success wins. A private address starts
   at once. A well-known public IP is upgraded to DoH, which also starts at once,
@@ -97,16 +108,18 @@ setting through one helper.
 | ------------------------------------------- | ------------------- | --------------------------------------------------------------------------------------- |
 | `environment.dns.resolvers`                 | env option          | Ordered instance names (host or cluster). `[ ]` = today's behaviour                     |
 | `environment.dns.filter`                    | env option          | `denylists`, `allowlist` (list names and inline domains): the same for every instance   |
+| `environment.dns.internal`                  | env option          | Cluster whose `dns-internal` record is the conditional upstream (`"axon"`), or `null`   |
+| `dns-internal` quirk                        | quirk               | `{ cluster; address; }`, emitted by the CoreDNS cluster aspect (§2.3)                   |
 | `environment.networks.default.unifiNetwork` | env option          | The controller network name this environment's LAN is (`"Default"`, `"dev"`)            |
 | `environment.networks.default.dnsServers`   | existing env option | Unchanged, and now **Blocky's upstreams** (§2.2)                                        |
 | `dns-resolvers` quirk                       | quirk               | `{ name; environment; dns; api; }` per running instance                                 |
 | `services.networking.blocky`                | host aspect         | The NixOS service; emits `dns-resolvers` and `prometheus-targets`                       |
-| `services.networking.blocky.ui`             | host aspect         | Optional blocky-ui (§2.6)                                                               |
 | `kubernetes.services.network.blocky`        | cluster aspect      | Phase 2 Deployment; emits `dns-resolvers`                                               |
 | `services/networking/blocky/_settings.nix`  | helper              | The shared definition: a function from instance inputs to Blocky's settings attrset     |
 | `core/network/_resolvers.nix`               | helper              | `resolversFor environment dns-resolvers` → addresses, then `networks.default.gatewayIp` |
-| `pkgs/by-name/dn/dns-blocklists`            | package             | The pinned lists (§2.2, Blocklists)                                                     |
+| `pkgs/by-name/dns-blocklists/package.nix`   | package             | `pkgs.local.dns-blocklists`, the pinned lists (§2.2, Blocklists)                        |
 | `services.networking.blocky.cli`            | host aspect         | `dns-filter`, built in the aspect because it needs den data (§2.5)                      |
+| `core.network.tailscale`                    | existing aspect     | `--accept-dns=false` plus a `~ts.<domain>` route on `tailscale0` (§2.4b)                |
 
 This mirrors `monitoring.ingest`. The environment names an instance, and the
 instance announces its own address through a quirk. No host file names another
@@ -123,7 +136,6 @@ The aspect's typed settings are instance-local only, with neutral defaults:
 ```nix
 den.aspects.services.networking.blocky.settings = {
   httpPort = mkOption { type = types.port; default = 4000; };
-  ui.enable = mkOption { type = types.bool; default = false; };
 };
 ```
 
@@ -132,6 +144,7 @@ Phase 1 in the environment files:
 ```nix
 # prod.nix and dev.nix (dev's hosts use prod's uplink; the quirk collects fleet-wide)
 dns.resolvers = [ "uplink" ];
+dns.internal = "axon";
 dns.filter = {
   denylists = [ "hagezi-pro" ];   # file names in dns-blocklists
   allowlist = [ ];                 # inline domains, reviewed in the diff
@@ -143,21 +156,33 @@ And in `hosts/uplink.nix`: `includes = [ … services.networking.blocky ];`.
 
 **Collection.**
 
-- `dns-resolvers` is collected fleet-wide at host scope (`collectAll`, as
-  `nix-builders` is), at cluster scope (for CoreDNS's ingress policy, §2.3), and
-  at environment scope for the UniFi workspace. It holds one or two records.
+- `dns-resolvers` is emitted by a host (phase 1) and by a cluster (phase 2). A
+  `collectAll` predicate matches only the entity kind it names, so every
+  collecting scope declares two pipes, `({ host, ... }: true)` and
+  `({ cluster, ... }: true)`, as `env-collect-dns` does for `served-domains`
+  (`policies/pipes.nix:232-235`). The scopes are host (clients and
+  `dns-filter`), cluster (CoreDNS's ingress policy, §2.3) and environment (the
+  UniFi workspace). It holds one or two records.
+- `dns-internal` copies `monitoring-ingest`: the cluster emits it, a host policy
+  `collect-dns-internal` collects it with `collectAll ({ cluster, ... }: true)`
+  (as `pipes.nix:194-199` does), and the resolver host selects it with
+  `lib.findFirst (i: i.cluster == environment.dns.internal) null dns-internal`
+  (as `alloy.nix:20-21` does). The policy carries the resolver-host guard below,
+  so only a resolver host collects it.
 - The resolver host also needs the environment's `served-domains` (§2.3). Host
   scope collects none today, so a new host policy takes them, guarded the way
   `broadcast-hub-peer` is guarded. It applies only when some environment's
   `dns.resolvers` names this host, so no other host pays the collection.
-  Acceptance test 11 prices it.
+- Every host does pay for `dns-resolvers` (two pipes, one or two records),
+  `resolversFor` in `networking.nix`, and `dns-filter` from `roles.default`.
+  That is a fleet-wide eval delta, admitted and priced on axon-01 by test 11.
 
 ### 2.2 Phase 1: the service on uplink
 
 ```nix
 # services/networking/blocky/_settings.nix (sketch)
 { lib }:
-{ upstreams, internalNames, internalResolver, lists, filter, dnsListen, httpListen, statistics ? false }:
+{ upstreams, internalNames, internalResolver, lists, filter, dnsListen, httpListen }:
 {
   upstreams = {
     strategy = "parallel_best";
@@ -168,7 +193,10 @@ And in `hosts/uplink.nix`: `includes = [ … services.networking.blocky ];`.
   conditional.mapping = lib.genAttrs internalNames (_: internalResolver);
   blocking = {
     denylists.default = map (n: "${lists}/${n}.txt") filter.denylists;
+    # an empty inline list renders "" and loads as a file path; omit the key
+  } // lib.optionalAttrs (filter.allowlist != [ ]) {
     allowlists.default = [ (lib.concatLines filter.allowlist) ];
+  } // {
     clientGroupsBlock.default = [ "default" ];
     blockType = "zeroIp";
     blockTTL = "1m";
@@ -177,7 +205,6 @@ And in `hosts/uplink.nix`: `includes = [ … services.networking.blocky ];`.
   caching.prefetching = true;
   queryLog.type = "console";
   prometheus.enable = true;
-  statistics.enable = statistics;
   ports = { dns = dnsListen; http = httpListen; };
 }
 ```
@@ -188,8 +215,15 @@ inputs:
 - `dnsListen = [ "<lan>:53" ]` and
   `httpListen = [ "<lan>:4000" "127.0.0.1:4000" ]`, where `<lan>` is
   `environment.addressOn "default" host` (`10.10.10.1`).
-- `internalResolver` is the cluster's `coredns-internal` address (§2.3).
-- `lists = pkgs.dns-blocklists`.
+- `internalResolver` is the selected `dns-internal` record's `address` (§2.1,
+  §2.3).
+- `lists = pkgs.local.dns-blocklists`.
+- `systemd.services.blocky.after = [ "network-online.target" ]`. The module only
+  `wants` it (§1), so on boot Blocky can try to bind `10.10.10.1` before `br0`
+  has it and fail with `EADDRNOTAVAIL`. networkd's wait-online covers `br0`
+  (`requiredForOnline` defaults to `routable`, `networking.nix`).
+  `ip_nonlocal_bind` would also work, but it is a host-wide sysctl and lets
+  Blocky run on an address the host doesn't hold. Test 5 checks a reboot.
 
 The firewall opens TCP and UDP 53 and TCP 4000. Blocky binds only the IPv4 LAN
 address, and the router forwards neither port, so nothing past the LAN reaches
@@ -207,31 +241,35 @@ answer, and it isn't used. Upstreams given as IPs need no bootstrap. Blocky's
 `bootstrapDns` is still pinned to the first upstream, because unset it falls
 back to the OS resolver, and on uplink that is Blocky itself.
 
-**Block answer: `zeroIp`, not NXDOMAIN.** A fleet host races its links (§1):
-`br0` goes to Blocky, and `tailscale0` goes to MagicDNS, which may race a public
-DoH server (§2.4c). systemd-resolved returns the first _successful_ answer. An
-NXDOMAIN from Blocky is negative, so resolved waits for the other link's
-positive public answer, and the block is bypassed. `0.0.0.0` (or `::`) is a
-positive answer and wins. `blockTTL = 1m`, down from the 6 h default, so that
-`dns-filter off` reaches clients' caches within a minute.
+**Block answer: `zeroIp`, not NXDOMAIN.** After §2.4b, a fleet server has one
+DNS path, so no link race remains there. The race that remains is on the tailnet
+path for roaming devices: tailscaled races Blocky against a public DoH server
+(§2.4c). An NXDOMAIN is a negative answer that a racer can discard in favour of
+the other's positive public answer. `0.0.0.0` (or `::`) is a positive answer, so
+it holds whichever rule the racer applies. `blockTTL = 1m`, down from the 6 h
+default, so that `dns-filter off` reaches clients' caches within a minute.
 
 **Blocklists: pinned fixed-output fetch.** Chosen over runtime download and over
 a flake input.
 
-- `pkgs/by-name/dn/dns-blocklists` is a `fetchFromGitHub` of
-  `hagezi/dns-blocklists` at a release tag, `sparseCheckout`'d to the chosen
-  `wildcard/*-onlydomains.txt` files. The repo is large, and the pro list alone
-  is 4.4 MB. hagezi tags a release several times a day (latest
-  `37522026.314.32212`, 2026-11-10).
-- The nightly `update-flakes` workflow already runs `update-pkgs --no-build`,
-  which bumps it. Freshness is one day plus the deploy cadence.
+- `pkgs/by-name/dns-blocklists/package.nix` (`pkgs.local.dns-blocklists`) is a
+  `fetchFromGitHub` of `hagezi/dns-blocklists` at a release tag,
+  `sparseCheckout`'d to the chosen `wildcard/*-onlydomains.txt` files. The repo
+  is large, and the pro list alone is 4.4 MB. hagezi tags a release several
+  times a day (latest `37522026.314.32212`, 2026-11-10).
+- The nightly `update-flakes` workflow already runs `update-pkgs --no-build`
+  (`.github/workflows/update-flakes.yml:30`), which bumps it. Freshness is one
+  day plus the deploy cadence. That `nix-update` handles a `sparseCheckout`
+  source and hagezi's tag format is **unverified**: rollout step 1 runs
+  `update-pkgs dns-blocklists` locally first. If it fails, the package is one
+  `fetchurl` per list file at the tag, with a `passthru.updateScript`.
 - Blocky's refresh is off (`refreshPeriod = "0"`). The lists are store paths, so
   a running instance never changes them.
 
 Why:
 
 - Reproducible: the deployed list is a reviewed hash.
-- `blocky validate` checks it at build.
+- A build check opens it (test 9); `blocky validate` does not open lists.
 - Two instances on the same commit filter identically, which matters in phase 3.
 - There is no runtime dependency on GitHub, and no window where a fresh start
   serves empty lists. `failOnError` is safe, because a store path can't go
@@ -266,6 +304,13 @@ journal: a `mkLogsDashboard` entry over `{unit="blocky.service"}` with a
 threat is low on the LAN, and the wrapper's default duration re-enables
 filtering. §4 notes that the guarantee belongs to the wrapper, not to the API.
 
+**Alert.** One rule in `kubernetes/services/monitoring/prometheus.nix`, beside
+`HostSilent` in `additionalPrometheusRulesMap.hosts`:
+`alert = "BlockyFilteringOff"`, `expr = "blocky_blocking_enabled == 0"`,
+`for = "15m"`, `severity = "warning"`. A disable longer than the wrapper's
+default, or an indefinite one through the raw API, pages. Its series arrives by
+the same path as test 6's metrics.
+
 ### 2.3 Internal names: conditional forwarding from den data
 
 Blocky's `conditional.mapping` sends each **served name** to CoreDNS. The keys
@@ -289,9 +334,11 @@ consequences:
 - `den.clusters.axon.networks.kubernetes-loadbalancers.assignments` gains
   `coredns-internal`, a fleet value in the cluster file.
 - `coredns.nix` gains a `LoadBalancer` Service on it that selects the CoreDNS
-  pods on UDP and TCP 53. Cilium BGP-advertises it, and uplink, as the BGP hub,
-  takes a per-address route, as it does for `10.11.0.10` through `10.11.0.31`
-  today.
+  pods on UDP and TCP 53, and emits the `dns-internal` record
+  `{ cluster = cluster.name; address = cluster.getAssignment "coredns-internal"; }`,
+  as `ingest.nix:24-31` emits `monitoring-ingest`. Cilium BGP-advertises it, and
+  uplink, as the BGP hub, takes a per-address route, as it does for `10.11.0.10`
+  through `10.11.0.31` today.
 - `allow-kube-dns-cluster-ingress` gains a `fromCIDR` rule. Its addresses are
   the `dns-resolvers` records' addresses in the cluster's environment, as /32s:
   only the resolver instances may query CoreDNS from outside the cluster.
@@ -311,24 +358,30 @@ crosses the cluster. §7 Q6 asks about the alternative.
 **One helper.** `core/network/_resolvers.nix`:
 
 ```nix
-resolversFor = environment: dns-resolvers:
+resolversFor = { gateway ? true }: environment: dns-resolvers:
   if environment.dns.resolvers == [ ] then null   # null: the consumer keeps today's list
   else map (n: (lib.findFirst (r: r.name == n) (throw "dns.resolvers: no instance ${n}") dns-resolvers).dns)
          environment.dns.resolvers
-       ++ [ environment.networks.default.gatewayIp ];
+       ++ lib.optional gateway environment.networks.default.gatewayIp;
 ```
 
-The fallback is always the environment's own gateway (prod `10.10.0.1`, dev
-`10.9.0.1`, the same device), read from `gatewayIp`, which is already there. An
-instance name with no running instance fails evaluation. It is not silently
-dropped.
+The fallback is the environment's own gateway (prod `10.10.0.1`, dev `10.9.0.1`,
+the same device), read from `gatewayIp`, which is already there.
+`gateway = false` is for consumers that must not list it: (c) always, and (a) if
+test 13 measures a leak. An instance name with no running instance fails
+evaluation. It is not silently dropped.
 
 **(a) LAN DHCP: the terranix `unifi` workspace.** `unifi.nix` renders, for each
 environment that sets `networks.default.unifiNetwork`, a `restapi_object` on
 that `rest/networkconf/<id>`, whose fields are:
 
 - `dhcpd_dns_enabled = true`, and `dhcpd_dns_1..n` = `resolversFor` that
-  environment, at most 4;
+  environment, at most 4. DHCP clients don't fail over the way resolved does:
+  some query every listed server in parallel or rotate through them, so the
+  unfiltered gateway can win. Test 13 counts that from a DHCP phone and laptop.
+  If either leaks, (a) uses `gateway = false` until phase 2 gives it a second
+  filtering instance. The cost (§4) is no DNS for DHCP clients while uplink is
+  down;
 - the IPv6 RA and DHCPv6 DNS fields, set so that the router advertises no RDNSS
   of its own (§1). The exact field names are read from the live object first (§7
   Q4).
@@ -347,6 +400,30 @@ they are written:
 
 **(b) Static hosts and microvm guests.**
 
+- **They leave MagicDNS** (pending owner Q13, §7). Today `tailscale0` carries
+  `~.`, so resolved never asks `br0` (§1), and nothing below would take effect.
+  `core.network.tailscale` adds `--accept-dns=false` to `extraSetFlags` on every
+  NixOS host whose `resolversFor` is non-null and that does not include
+  `core.network.manager`. It uses `extraSetFlags`, not `extraUpFlags`, for the
+  reason `services/k3s/node.nix:143-147` gives: `up` runs only on first auth.
+  The axons already do this (§1).
+- **MagicDNS names keep one route.** A oneshot `tailscale-dns-route.service`
+  runs `resolvectl dns tailscale0 100.100.100.100`,
+  `resolvectl domain tailscale0 '~ts.<domain>'` and
+  `resolvectl default-route tailscale0 false`. `<domain>` comes from the same
+  `ts.${environment.domain}` expression as `headscale.nix:61`, factored into one
+  helper that both read. The unit `BindsTo` the `tailscale0` device and is
+  `PartOf` `tailscaled.service`, so it re-applies when the device returns. A
+  route-only `~` domain is not a search domain, so it doesn't reach
+  `resolv.conf`'s `search` line, which was the axons' reason for
+  `accept-dns=false` (`node.nix:148-155`). The axons get the unit too.
+- **Why not `Domains=~.` on `br0`.** With `~.` on both links, both are the best
+  match, and resolved sends every query to both in parallel
+  (`systemd-resolved(8)`). The race would stay, MagicDNS's public tail could
+  still win, and test 5 couldn't assert `link: br0`. `accept-dns=false` gives a
+  server one path, and the axons already run it. A networkd `.network` for
+  `tailscale0` is not used either: networkd doesn't manage that device today,
+  and managing it risks the flushes `tailscale.nix:39-41` already works around.
 - `networking.nix:80` reads `resolversFor`, falling back to `dnsServers` when it
   is `null`.
 - With resolvers set, `DNSOverTLS = false` on that link. Blocky serves plain DNS
@@ -366,33 +443,34 @@ they are written:
 
 That closes D10 and the two copies D10 didn't list.
 
-**resolved does not fail back.** After failing over to the router, a link keeps
-the router as its current server. A small `dns-failback.timer` (every 5 min) on
-hosts with resolvers set checks the link's current server. If the server isn't
-the first resolver and the first one answers a probe, the timer re-applies the
-link's list (`resolvectl dns <link> …`), which resets the current server to the
-first. Test 5 measures the need first. If resolved already fails back, the timer
-is dropped.
+**Failback.** resolved may keep the router as a link's current server after a
+failover. Phase 1 builds nothing for it. Test 5 records the current server after
+Blocky returns. A failback timer is a later-phase item (§2.10), built only if
+that record shows the link staying on the gateway.
 
-**(c) headscale.** `nameservers.global` = `resolversFor` without the gateway,
-followed by the environment's `dnsServers` addresses (with `#name` stripped,
-which tailscaled upgrades to DoH). The router is excluded: it is a private
-address, so tailscaled would race it at once, and it is unreachable off the LAN
-anyway. The public tail is there for the roaming nodes (§1). Without it, an
-`ipad` off the LAN, or any tailnet-only client while uplink is down, has no DNS
-at all, which is a regression from today. With it, tailscaled races Blocky
-against DoH:
+**(c) headscale, for roaming devices.** After (b), only roaming devices use
+MagicDNS: the three mobile nodes, `blade`, and the darwin hosts
+(`tailscale/darwin.nix:67` keeps `--accept-dns=true`). Off-LAN filtering is
+best-effort (pending owner Q13). `nameservers.global` =
+`resolversFor { gateway = false; }`, followed by the environment's `dnsServers`
+addresses (with `#name` stripped, which tailscaled upgrades to DoH). The router
+is excluded: it is a private address, so tailscaled would race it at once, and
+it is unreachable off the LAN anyway. The public tail is there for the roaming
+nodes (§1). Without it, an `ipad` off the LAN, or any tailnet-only client while
+uplink is down, has no DNS at all, which is a regression from today. With it,
+tailscaled races Blocky against DoH:
 
 - On the LAN, Blocky's local answers (blocked names, internal names, cache hits)
   arrive in about a millisecond, against at least one DoH round trip. Blocky
   usually wins, but nothing guarantees it.
 - Off the LAN, answers are unfiltered but encrypted, as today.
 
-Test 1 counts the leak rate on the tailnet path. §7 Q1 asks whether to drop the
-tail in phase 3, when two filtering instances exist.
+Test 1 counts the leak rate on the tailnet path, from `blade` on the LAN. §7 Q1
+asks whether to drop the tail in phase 3, when two filtering instances exist.
 
-**(d) Fallback.** This is the gateway, appended by `resolversFor` for paths (a)
-and (b). It is excluded from (c), for the reasons given there.
+**(d) Fallback.** This is the gateway, appended by `resolversFor` for (b), and
+for (a) unless test 13 removes it. It is excluded from (c), for the reasons
+given there.
 
 ### 2.5 `dns-filter`
 
@@ -413,29 +491,10 @@ list is the `dns-resolvers` records' `api` URLs, baked in at build time.
   clients filtered and some not. That is harmless, and it is reported.
 - Blocky's disable state is in memory, so a restart also re-enables blocking.
 
-### 2.6 blocky-ui (optional)
+### 2.6 blocky-ui: a later phase
 
-- **Not in nixpkgs** (checked at `600291ca`). The upstream image
-  `ghcr.io/gabeduartem/blocky-ui` is pinnable. Tags run from `2.0.0` to `2.2.0`,
-  and `2.2.0` is
-  `sha256:9cf986ea7b1e9b01d082a0eec5cb93a4322bbadff3a411633c10ed668eb01528`. It
-  is pinned as `images/gabeduartem/blocky-ui/default.nix`, which the OCI updater
-  tracks. It is MIT-licensed, listens on 3000, and is configured by
-  `BLOCKY_UI_CONFIG`. It has no built-in authentication.
-- **How it runs:** with `services.networking.blocky.settings.ui.enable`, a
-  podman `oci-containers` unit runs on uplink (which already includes
-  `virtualization.podman`), on `127.0.0.1:3000`. Its config is rendered from the
-  `dns-resolvers` records, one `servers.<name>.url` per instance. It has no
-  `logSources`, because a `console` query log isn't readable to it without
-  VictoriaLogs. It uses Blocky's rolling 24 h statistics instead
-  (`statistics.enable`, set only when the UI is on).
-- **Behind Kanidm** it follows the `homepage.nix` pattern: an
-  `environment.services.blocky-ui.domain` (prod `dns.json64.dev`), an nginx
-  vhost proxying to `127.0.0.1:3000` with `useACMEHost`, and
-  `services.oauth2-proxy.nginx.virtualHosts.<domain>` with `allowed_groups` set
-  to the Kanidm admins group, through the existing `oauth2-proxy` Kanidm client.
-  It also emits `served-domains`. The UI can disable filtering, so it is
-  admin-gated.
+Cut from phase 1 (review round 1). The design notes it carried move to §2.10
+with the gates the review added.
 
 ### 2.7 Phase 2: Kubernetes replicas behind a load-balancer address
 
@@ -452,7 +511,8 @@ The rest:
 - **Config:** `pkgs.formats.yaml` output in a ConfigMap. Its checksum is a pod
   annotation, so a list or config change rolls the pods.
 - **Image:** Nix-built (`dockerTools.streamLayeredImage` of `pkgs.blocky` plus
-  `pkgs.dns-blocklists`), so the pod runs the same binary and lists as phase
+  `pkgs.local.dns-blocklists`), so the pod runs the same binary and lists as
+  phase
   1. The lists can't go in the ConfigMap: the pro list alone is 4.4 MB, against
      a 1 MiB limit.
 - **Deployment:** 3 replicas, one per node (pod anti-affinity).
@@ -462,13 +522,17 @@ The rest:
   only nodes with an endpoint advertise.
 - **CiliumNetworkPolicies:** ingress from `world` on 53, and from the `blocky`
   LB clients on 4000; egress to `world` on TCP 853 only; and Prometheus on 4000.
+  Egress from the blocky pods to the Redis pod on TCP 6379, and on the Redis
+  side ingress on 6379 from the blocky pods only. Without that egress rule the
+  replicas start, serve, and silently keep separate blocking state.
 - **The `dns-resolvers` record:**
   `{ name = "axon"; dns = <blocky LB>; api = "http://<blocky LB>:4000"; }`.
 - **Replica state:** `dns-filter` reaches one replica through the LB, so the
   replicas share blocking state through Blocky's `redis` option. Blocky
   documents that it "can synchronize its cache and blocking state between
   multiple instances". This needs a small in-cluster Redis or Valkey (§7 Q3).
-  uplink stays a separate instance, and the wrapper fans out to both.
+  uplink stays a separate instance, and the wrapper fans out to both. Test 14
+  checks the state per pod.
 - **Metrics:** in-cluster Prometheus scrapes the pods (a ServiceMonitor), with
   the same `job="blocky"`, so the dashboard is unchanged. Pod stdout reaches
   Loki through the cluster's existing log collection.
@@ -486,16 +550,39 @@ safe. The gateway stays the last resort.
 
 ### 2.9 Rollout
 
-1. `dns-blocklists`, `_settings.nix`, and the `services.networking.blocky`
-   aspect, with uplink including it, and the `coredns-internal` LB and policy.
-   No client changes yet, since `dns.resolvers = [ ]`. Tests 1–3, 6, 8 and 9 run
-   against `@10.10.10.1` directly.
+1. `dns-blocklists` (after `update-pkgs dns-blocklists` works locally),
+   `_settings.nix`, the `services.networking.blocky` aspect with uplink
+   including it, the alert, and the `coredns-internal` LB, `dns-internal` record
+   and policy. No client changes yet, since `dns.resolvers = [ ]`. Tests 1–3, 6,
+   8 and 9 run against `@10.10.10.1` directly.
 2. `dns.resolvers = [ "uplink" ]` in both environments, plus the (b) and (c)
-   consumers and the D10 cleanup. Tests 5, 7 and 11.
+   consumers (including `accept-dns=false` and the `~ts.<domain>` route) and the
+   D10 cleanup. Tests 5, 7 and 11. Owner Q13 must be answered first.
 3. The UniFi DHCP and RA change (`unifi-plan`, reviewed, then `unifi-apply`).
-   Tests 5 (DHCP client) and 10.
-4. Optionally, blocky-ui.
-5. Phase 2 starts once tests 1–11 hold for a week, with §7 Q2 and Q3 answered.
+   Tests 5 (DHCP client), 10 and 13. Test 13 decides whether the gateway stays
+   in the DHCP list.
+4. Phase 2 starts once tests 1–13 hold for a week, with §7 Q2 and Q3 answered.
+
+### 2.10 Later phases
+
+Cut from phase 1 by review round 1. Each is built only when its gate holds.
+
+- **blocky-ui.** Not in nixpkgs (checked at `600291ca`). The image
+  `ghcr.io/gabeduartem/blocky-ui` (MIT, port 3000, configured by
+  `BLOCKY_UI_CONFIG`, no built-in auth) would run as a podman container on
+  uplink at `127.0.0.1:3000`, behind nginx and oauth2-proxy as `homepage.nix`
+  is. Two gates first:
+  - The image bump is manual. `images/DESIGN.md` lists the automation as future
+    ("Phase 2: Automation (Future)"), so nothing nightly would track it.
+  - An `allowed_groups` gate on oauth2-proxy has no precedent in the repo, and
+    Kanidm's `groups` claim may carry SPNs (`admins@idm.json64.dev`) rather than
+    bare names, which would lock admins out. Measure the claim from a real token
+    first, then land the gate with a check that the configured group string
+    matches the measured claim form.
+- **A failback timer.** Only if test 5's record shows a link staying on the
+  gateway after Blocky returns.
+- **Test 9's phase-2 render equality.** Lands with phase 2, when the second
+  renderer exists.
 
 Each step is reversible by reverting its commit. `dns.resolvers = [ ]` restores
 today's client lists exactly.
@@ -510,10 +597,10 @@ passes means the test proves nothing.
    `example.com` answers its real address.
    - Control: the same `<d>` at `@10.10.0.1` (the router) answers a routable
      address.
-   - Tailnet path: on cortex, resolve 1000 list domains through
-     `resolvectl query`, and count the answers that aren't `0.0.0.0`. Record the
-     leak rate (§2.4c). The same run with `dns.resolvers = [ ]` must leak 1000
-     of 1000.
+   - Tailnet path (roaming devices): on `blade`, on the LAN with MagicDNS,
+     resolve 1000 list domains through `resolvectl query`, and count the answers
+     that aren't `0.0.0.0`. Record the leak rate (§2.4c). The same run with
+     `dns.resolvers = [ ]` must leak 1000 of 1000.
 2. **Internal names.**
    - For every name in prod's `served-domains` (from `nix eval` of the
      collection, capped), `dig @10.10.10.1` returns that record's `address`.
@@ -539,18 +626,29 @@ passes means the test proves nothing.
      with no `on` issued.
    - Control: `dns-filter off 0` exits non-zero and leaves blocking enabled.
      During the window, `<d>` is not `0.0.0.0` (so `off` worked).
-5. **The fallback while the resolver is down.**
+5. **One path, and the fallback while the resolver is down.**
+   - With Blocky up, `resolvectl query example.com` on cortex, uplink-dev,
+     cortex-cuda and axon-01 answers `-- link: br0` (the guests' LAN link name
+     on the guests), and `resolvectl query uplink.ts.json64.dev` answers
+     `100.72.240.66` from `link: tailscale0`. Control: at `03b84230`, cortex
+     answers from `link: tailscale0` (40 of 40, §1), and axon-01 answers
+     NXDOMAIN for the tailnet name.
    - Stop `blocky.service` on uplink. Then `resolvectl query example.com`
-     succeeds on cortex, uplink-dev, cortex-cuda and axon-01, and on a LAN DHCP
-     client after step 3. Repeat with uplink powered off, which also removes
-     headscale.
+     succeeds on the same hosts, still from the LAN link, and on a LAN DHCP
+     client after step 3 if test 13 kept the gateway. Repeat with uplink powered
+     off, which also removes headscale.
    - Control: on cortex, with the link temporarily set to
-     `resolvectl dns br0 10.10.10.1` (no fallback) and tailscale down, the query
-     fails, so the earlier success came through the fallback.
-   - Failback: start blocky again. Within 10 min, `resolvectl status` on each
-     static host shows the first resolver as the current server. Control: with
-     `dns-failback.timer` masked, record whether it stays on the gateway. If it
-     fails back without the timer, the timer is dropped (§2.4b).
+     `resolvectl dns br0 10.10.10.1` (no fallback), the query fails, so the
+     earlier success came through the fallback and not through `tailscale0`.
+   - Failback: start Blocky again and record each host's current server after 10
+     min. This is a record, not a gate. It decides the later-phase failback
+     timer (§2.10).
+   - Boot: reboot uplink. `dig @10.10.10.1 example.com` from cortex answers
+     within 2 min of uplink's `multi-user.target`,
+     `systemctl show blocky -p NRestarts` is `0`, and
+     `systemd-analyze critical-chain blocky.service` lists
+     `network-online.target`. Control: the same `critical-chain` on the current
+     module (no `after`) does not list it.
 6. **Metrics and logs arrive.**
    - In Prometheus, `up{job="blocky", instance="uplink"} == 1`, and
      `blocky_blocking_enabled` is present.
@@ -559,6 +657,8 @@ passes means the test proves nothing.
    - The dashboard's panels are non-empty.
    - Controls: a second, never-queried uuid returns 0 lines. With
      `blocky.service` stopped, `up` goes to 0 within two scrape intervals.
+   - Alert: `dns-filter off 20m` makes `BlockyFilteringOff` fire in Alertmanager
+     between 15 and 17 min. Control: `dns-filter off 5m` never fires it.
 7. **D10 is gone.** `rg -n '"(8\.8\.8\.8|1\.1\.1\.1|1\.0\.0\.1)"' modules/den`
    matches nothing outside the environment files' `dnsServers` and
    `acme.dnsResolver`. Control: at `03b84230`, the same command matches the five
@@ -570,23 +670,43 @@ passes means the test proves nothing.
    - `curl http://100.72.240.66:4000/…` (uplink's tailnet address) is refused.
    - Control: the same curl against `10.10.10.1` succeeds, so the refusal is the
      bind, not a dead service.
-9. **Build-time checks.**
-   - `blocky validate` runs in `system.checks`. Control: a denylist path to a
-     missing file fails the build.
-   - Phase 2: a check renders `_settings.nix` for both aspects and asserts the
-     two YAMLs are equal outside `ports`, `conditional.mapping` values, the list
-     directory and `redis`. Control: changing one side's `blockType` fails the
-     check.
+9. **Build-time checks.** `blocky validate` runs in `system.checks`, but it does
+   not open lists, so it can't catch a bad list path. A second check,
+   `checks.<system>.blocky-lists`, is a `runCommand` over the rendered settings:
+   every `denylists` and `allowlists` entry that is not inline (has no newline)
+   must be an existing, non-empty file (`test -s`).
+   - Control: a denylist naming a file absent from `dns-blocklists` fails
+     `blocky-lists`, while `blocky validate` alone passes it.
+   - Empty allowlist: with `allowlist = [ ]`, the rendered YAML has no
+     `allowlists` key, and a NixOS VM test starts `blocky.service` and resolves
+     `example.com`. Control: forcing `allowlists.default = [ "" ]` makes the
+     same VM test's unit fail (`failOnError`).
+   - The phase-2 render-equality check moves to phase 2 (§2.10).
 10. **No RDNSS bypass.** After step 3, a LAN phone's and laptop's DNS list holds
     only `resolversFor` and the gateway, with no `2001:5a8:…::1`. Control:
     before step 3, the same device lists the router's IPv6 address.
 11. **Evaluation cost.** Measure uplink's and axon-01's evaluation time and peak
     memory before and after rollout steps 1 and 2 (capped at 12G, same machine,
-    three runs). Only uplink may move, and only by the served-domains
-    collection. Control: axon-01's cost is unchanged within run-to-run noise.
+    three runs).
+    - axon-01 moves, by design: every host collects `dns-resolvers`, calls
+      `resolversFor` and installs `dns-filter` (§2.1). Its delta is reported as
+      an explicit admission, with the numbers.
+    - Only uplink collects `served-domains` and `dns-internal`. axon-01's
+      collected `served-domains` and `dns-internal` are empty (`nix eval`,
+      capped), and uplink's are not. Control: removing the resolver-host guard
+      makes axon-01's non-empty.
 12. **Cross-environment reach.** `dig @10.10.10.1 example.com` from cortex (dev
     LAN, through the router) answers. Control: with port 53 closed in uplink's
     firewall, it times out.
+13. **DHCP clients don't race to the gateway.** After step 3, on a DHCP phone
+    and a DHCP laptop (OS resolver, browser DoH off), resolve 200 list domains
+    and count the answers that aren't `0.0.0.0`. Any leak on either device means
+    (a) drops the gateway (`gateway = false`) until phase 2. Control: with
+    `dhcpd_dns_1` set to the gateway alone, the same run leaks 200 of 200.
+14. **Phase 2: shared blocking state.** `dns-filter off 5m` through the LB, then
+    `GET /api/blocking/status` on each pod IP from a node: every pod reports
+    `enabled=false`. Control: with the Redis egress rule removed, only the pod
+    the LB picked reports `enabled=false`.
 
 ## 4. Risks
 
@@ -596,7 +716,14 @@ passes means the test proves nothing.
   queries. Accepted under the owner's necessity pass. Serving DoT on the LAN is
   a non-goal (§6).
 - **The tailnet race (§2.4c).** Filtering on the tailnet path is best-effort
-  while the public DoH tail stays. Test 1 measures it.
+  while the public DoH tail stays. After §2.4b only roaming devices take that
+  path. Test 1 measures it.
+- **Servers leave MagicDNS (pending Q13).** A server resolves tailnet names only
+  through the `~ts.<domain>` route. If `tailscale-dns-route.service` fails,
+  those names fall to `br0`, where the public `*.ts.json64.dev` wildcard answers
+  with Cloudflare (`node.nix:151`). Test 5 checks the route.
+- **DHCP without the gateway.** If test 13 drops the gateway, DHCP clients have
+  no DNS while uplink is down, until phase 2.
 - **Fallback privacy.** In fallback, clients use the router, and the router's
   own upstream is whatever its WAN DNS is, likely the ISP in plaintext (§7 Q5).
 - **Internal answers are new for LAN clients (§1).** A served name now resolves
@@ -617,7 +744,7 @@ passes means the test proves nothing.
 - **The API guarantee is the wrapper's.** Anyone on the LAN can
   `GET /api/blocking/disable` with no duration, and filtering then stays off
   until `on` or a restart. That is accepted under the necessity pass. The
-  `blocky_blocking_enabled == 0` series makes it visible on the dashboard.
+  `BlockyFilteringOff` alert (§2.2) fires after 15 min.
 - **The UniFi write.** The networks go from read-only data to managed objects. A
   partial-body `PUT` on `rest/networkconf/<id>` must merge, not replace (§7 Q4),
   and `prevent_destroy` must hold. The first `unifi-plan` is read field by
@@ -706,3 +833,30 @@ passes means the test proves nothing.
    must be settled before phase 2.
 8. **Which lists.** The default here is hagezi `pro` alone. `tif` (threat
    intelligence) is a candidate second list, and the allowlist starts empty.
+9. **Do fleet servers and guests leave MagicDNS? Pending owner Q13.** The design
+   assumes yes (§2.4b): `--accept-dns=false` on non-roaming NixOS hosts, with
+   only `ts.<domain>` routed to quad-100, and roaming devices keeping MagicDNS
+   with best-effort filtering off the LAN (§2.4c). If the owner rules no, the
+   only arm that filters fleet servers is `Domains=~.` on the LAN link, which
+   races both links and leaks at test 1's measured rate.
+
+## 8. Review history
+
+**Round 1 (v0.1): 14 objections** (6 ops, 8 den-fit), all accepted.
+
+| v0.1 objection                                              | Resolution                                                                                                                                     |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| ops 1: `tailscale0`'s `~.` means `br0` is never asked       | §1 corrected; servers and guests take `accept-dns=false` plus a `~ts.<domain>` route (§2.4b, Q9 pending owner Q13); test 5 asserts `link: br0` |
+| ops 2: empty allowlist renders `""`, loaded as a path       | `allowlists` omitted when empty (§2.2); VM test with control (test 9)                                                                          |
+| ops 3: `blocky validate` doesn't open lists                 | `blocky-lists` runCommand check, `test -s` on every list path (test 9)                                                                         |
+| ops 4: DHCP clients may race to the unfiltered gateway      | test 13 leak count from a phone and a laptop; the gateway leaves DHCP until phase 2 if it leaks (§2.4a)                                        |
+| ops 5: Blocky can bind before `br0` has its address         | `after = network-online.target` (§2.2); reboot check (test 5)                                                                                  |
+| ops 6: phase-2 CNP lacks Redis egress                       | egress and Redis-side ingress on 6379 (§2.7); per-pod state test 14                                                                            |
+| den-fit 1: `internalResolver` has no den path               | `dns-internal` quirk, cluster-emitted, host-collected, env-selected, as `monitoring-ingest` (§2.1, §2.3)                                       |
+| den-fit 2: cluster-emitted `dns-resolvers` never collected  | two pipes per scope, `{host}` and `{cluster}`, as `env-collect-dns` (§2.1)                                                                     |
+| den-fit 3: test 11's control fails by design                | axon-01's delta is an admission; "unchanged" kept only for the guarded collections (test 11)                                                   |
+| den-fit 4: package path wrong; `nix-update` unverified      | `pkgs/by-name/dns-blocklists/package.nix` → `pkgs.local`; local `update-pkgs` gate, `fetchurl` fallback (§2.2)                                 |
+| den-fit 5: OCI updater is not nightly                       | stated as a gate in §2.10 (blocky-ui moved there)                                                                                              |
+| den-fit 6: `allowed_groups` unprecedented; SPN groups claim | measure the claim, then gate with a check (§2.10)                                                                                              |
+| den-fit 7: phase-1 scope cuts                               | blocky-ui, the failback timer and test 9's phase-2 check moved to §2.10                                                                        |
+| den-fit 8: "visible on the dashboard" isn't a mitigation    | `BlockyFilteringOff` alert, 15 min (§2.2, §4); fire and no-fire controls (test 6)                                                              |
