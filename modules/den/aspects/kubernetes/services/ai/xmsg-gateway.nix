@@ -293,7 +293,15 @@ in
         kanidmHost = den.hosts.x86_64-linux.${hostSetting cfg "kanidmHost"};
         kanidmIp = lib.head kanidmHost.ipv4;
         kanidmDomain = cluster.domainFor "kanidm";
-        origin = kanidmHost.settings.services.security.kanidm.xmsgGateway.origin;
+        # kanidm.nix's own fallback: the kanidm host's environment domain for the gateway.
+        origin =
+          let
+            own = kanidmHost.settings.services.security.kanidm.xmsgGateway.origin;
+          in
+          if own != null then
+            own
+          else
+            "https://${den.environments.${kanidmHost.environment}.getDomainFor "xmsg-gateway"}";
         resource = "${origin}/mcp";
         verifierIssuer = "https://${kanidmDomain}/oauth2/openid/${hostedClient}";
 

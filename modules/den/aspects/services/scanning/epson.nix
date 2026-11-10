@@ -54,14 +54,14 @@ in
         description = "Scan resolution in dpi; 300 quarters the size at half the detail.";
       };
       paperlessUrl = lib.mkOption {
-        type = lib.types.str;
-        default = "https://paperless.json64.dev";
-        description = "paperless-ngx base URL.";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "paperless-ngx base URL. null: https:// and the environment's domain for `paperless`.";
       };
       immichUrl = lib.mkOption {
-        type = lib.types.str;
-        default = "https://immich.json64.dev";
-        description = "immich base URL.";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "immich base URL. null: https:// and the environment's domain for `immich`.";
       };
       photoRotation = lib.mkOption {
         type = lib.types.enum [
@@ -106,12 +106,18 @@ in
     nixos =
       {
         config,
+        environment,
         host,
         pkgs,
         ...
       }:
       let
-        cfg = host.settings.services.scanning.epson;
+        opts = host.settings.services.scanning.epson;
+        urlOr = url: service: if url != null then url else "https://${environment.getDomainFor service}";
+        cfg = opts // {
+          paperlessUrl = urlOr opts.paperlessUrl "paperless";
+          immichUrl = urlOr opts.immichUrl "immich";
+        };
         # The FF-680W's own tone, unclipped (see nativeTone).
         sane = pkgs.sane-backends.overrideAttrs (old: {
           patches = (old.patches or [ ]) ++ [ ./_sane-ff680w-native-tone.patch ];

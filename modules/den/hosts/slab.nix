@@ -8,6 +8,8 @@
     system-owner = "sini";
 
     users.sini = { };
+
+    settings.applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
   };
 
   # A droid host does NOT pull roles.default (the NixOS host baseline — boot,

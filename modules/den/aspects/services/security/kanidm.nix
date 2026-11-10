@@ -671,9 +671,9 @@ in
       };
 
       xmsgGateway.origin = lib.mkOption {
-        type = lib.types.strMatching "https://[^/]+";
-        default = "https://xmsg-gateway.json64.dev";
-        description = "Origin of the xmsg-gateway OAuth2 client, and so of the gateway's resource `<origin>/mcp` (kubernetes/services/ai/xmsg-gateway.nix reads it). Reached through the tunnel, so it needs no DNS record.";
+        type = lib.types.nullOr (lib.types.strMatching "https://[^/]+");
+        default = null;
+        description = "Origin of the xmsg-gateway OAuth2 client, and so of the gateway's resource `<origin>/mcp` (kubernetes/services/ai/xmsg-gateway.nix reads it). Reached through the tunnel, so it needs no DNS record. null: https:// and this host's environment domain for `xmsg-gateway`.";
       };
 
       # kanidm-mail-sender drains kanidm's outbound message queue (credential
@@ -753,7 +753,15 @@ in
               originLanding = gwSettings.origin;
             };
           };
-        gwSettings = host.settings.services.security.kanidm.xmsgGateway;
+        gwSettings =
+          let
+            own = host.settings.services.security.kanidm.xmsgGateway;
+          in
+          own
+          // {
+            origin =
+              if own.origin != null then own.origin else "https://${environment.getDomainFor "xmsg-gateway"}";
+          };
         # The gateway's audience is this client's name, so its access group may grant
         # nothing else, and no other client may share its redirect URIs.
         xmsgGatewayDedicated =

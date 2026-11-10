@@ -60,6 +60,7 @@ in
     # sini's xmsg node here, so its sessions reach sini@bitstream and sini@cortex; the
     # links are derived (policies/xmsg.nix), authenticated by the xmsg CA.
     settings.applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
+    settings.applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
   };
 
   den.aspects.uplink-dev = {

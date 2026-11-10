@@ -164,7 +164,8 @@
 
       handoffRepos = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [ "Documents/repos/sini/den-ag-design" ];
+        default = [ ];
+        example = [ "Documents/repos/den-design" ];
         description = ''
           Repositories, relative to the home directory, whose `STATUS/HANDOFF.md`
           git history is reconciled into the bank by

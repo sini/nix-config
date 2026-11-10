@@ -53,6 +53,8 @@ in
 
       # sini@bitstream <-> sini@cortex, authenticated by the xmsg CA (federation plan §6.7).
       applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
+
+      applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
     };
   };
 

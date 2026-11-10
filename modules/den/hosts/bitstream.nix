@@ -42,6 +42,8 @@
       # The FF-680W on the wireless network; its button triggers the scans.
       services.scanning.epson.scanner = "10.9.10.1";
 
+      applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
+
       applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
 

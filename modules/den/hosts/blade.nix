@@ -17,6 +17,7 @@
         wipeRootOnBoot = true;
         wipeHomeOnBoot = false;
       };
+      applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
     };
   };
 
