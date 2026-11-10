@@ -1,10 +1,11 @@
 # MicroVM guests: a persistent store over the host's shared store
 
-Status: **draft v0.8** (2026-11-10). v0.7.1, which the review capped at
+Status: **draft v0.8.1** (2026-11-10). v0.7.1, which the review capped at
 round 6 and which is implemented as rollout commits 1–2 (§2.9), plus **§2.10:
 guest state on block volumes**. That section answers the owner: "it will easily
-pass 4 million if it starts working on parallel trees". §2.10 and the
-exchange-share change in §2.3/§2.4 have not been reviewed yet. Owner request:
+pass 4 million if it starts working on parallel trees". §2.10 had one review
+round, which raised 14 objections, 12 of them distinct. v0.8.1 applies all of
+them (§8), and that revision has not been reviewed. Owner request:
 "the devshell loss on every reboot is really painful; we need a real solution
 for persistence." §8 maps every earlier objection to its resolution.
 
@@ -708,81 +709,138 @@ options.microvm.stateBackend = lib.mkOption {
 options.microvm.stateVolumeSizes = lib.mkOption {
   type = lib.types.attrsOf lib.types.ints.positive;
   default = { "/persist" = 1048576; "/cache" = 1048576; };   # MiB, sparse
-  description = "zvol size per state volume (stateBackend = zvol). Grow-only.";
+  description = "zvol size per state volume (stateBackend = zvol). Grow-only; a grow applies at the next guest start.";
 };
+options.microvm.retireVirtiofsState = lib.mkEnableOption "deleting this guest's old virtiofs state directories once both zvols are migrated";
 ```
 
-The parent dataset is a host setting in the `virtualization.microvm-host`
-aspect: `zvolParent`, for example `zroot/local/microvms`. An assertion requires
-it whenever a guest selects `zvol`. uplink sets it, and uplink-dev selects
-`zvol`. cortex-cuda keeps `virtiofs`, so it doesn't change (I7).
+**The parent dataset.** `zvolParent` is a `virtualization.microvm-host` setting.
+On a host with `disk.zfs-disk-single` it defaults to `zroot/local/microvms`, the
+same pattern `core/impermanence/zfs.nix` uses. An assertion requires it whenever
+a guest selects `zvol`. disko never adds datasets to an existing pool, so the
+volumes unit creates the parent itself:
+`zfs create -p -o canmount=off -o mountpoint=none <parent>` (round 7).
 
-**Host.**
+**Who opts in.** uplink-dev selects `zvol`. cortex-cuda keeps `virtiofs`, and
+its derivations don't change (I7, test 10). The exchange share is gated on
+`persistentStore.enable`, and cortex-cuda doesn't have that either.
 
-- **The volumes.** `microvm-state-volumes@<guest>.service` is a oneshot,
-  `Before=` and `RequiredBy=` `microvm@<guest>`. For each state volume it does
-  the following, and every step is idempotent:
-  1. If `<zvolParent>/<guest>-<name>` is absent, create it with
-     `zfs create -s -V <size>M -o volmode=dev -o volblocksize=16K -o primarycache=metadata`.
-     - `volmode=dev` stops the host from scanning partitions in the guest's
-       disk or mounting it.
-     - `primarycache=metadata` avoids caching the same data twice. The guest's
-       page cache already holds it, and ARC would hold it again.
-  2. If `blkid` finds no filesystem on `/dev/zvol/<…>`, make one:
-     `mkfs.ext4 -L <guest>-<name>`. It never formats a device that already has
-     a filesystem.
-  3. If the declared size is larger than `volsize`, `zfs set volsize` (grow
-     only). The guest grows the filesystem online (below).
-- **The disks.** The guest gets them as `microvm.volumes` entries with
-  `image = "/dev/zvol/<…>"`, `autoCreate = false`, `fsType = "ext4"` and a
-  `serial`. The qemu runner passes `format=raw,…,discard=unmap`, so the guest's
-  TRIM frees pool blocks (`lib/runners/qemu.nix`).
-- **What a zvol guest drops:**
-  - its `/persist` and `/cache` virtiofs shares (`stateShares`);
-  - its `impermanence.directPaths` entries;
-  - the tmpfiles `stateDir` rules.
-- **What it adds:** `virtualization.microvm-host` emits the exchange share (also
-  used by virtiofs guests that have the persistent store) with
-  `--inode-file-handles=never`. It holds a handful of files, so the fd cost is
-  nil.
-- **The persistent store's own image** stays an ext4 image file on the host's
-  `/cache` dataset (§2.1). That is unchanged: the image is one file to the
-  host, and the host never looks inside it.
+**Host units.** There are two oneshots per zvol guest, each with
+`requiredBy` and `before` `microvm@<guest>`, `restartIfChanged = false` and
+`RemainAfterExit = no`. So they run again at every guest start, and a switch
+never restarts them. A switch that restarted them would take the running guest
+down, which is the trap `zfs-disk-single.nix` documents (round 7). Both run as
+root.
+
+- **`microvm-state-volumes@<guest>`** has `After=zfs-import-zroot.service
+  zfs-volumes.target`. For each state volume it does the following, and every
+  step either completes or fails loudly:
+  1. Create the parent if absent (above).
+  2. **Create, and format only in the same run.** If
+     `<parent>/<guest>-<name>` is absent:
+     - `zfs create -s -V <size>M -o volmode=dev -o volblocksize=16K -o com.sun:auto-snapshot=true`.
+       - `com.sun:auto-snapshot=true`, because the zvol would otherwise inherit
+         `false` from `zroot`. Today the state lives in `local/persist` and
+         `local/cache`, which are `true`, so a snapshot service would otherwise
+         skip it (round 7).
+       - `volmode=dev` only hides partitions inside the zvol from the host. It
+         doesn't stop a host mount.
+     - Wait for `/dev/zvol/<…>` (`udevadm settle`, then a 60 s bounded wait for
+       the link).
+     - Require `blkid -p` to report no signature at all.
+     - Run `mkfs.ext4 -E nodiscard`.
+     - Then `zfs set json64:formatted=1`.
+
+     An existing zvol **without** `json64:formatted` makes the unit fail. It is
+     never formatted. A probe failure, a device that isn't ready, or a partition
+     table therefore can't lead to a format (round 7).
+  3. **Grow only.** If the declared size is larger than `volsize`,
+     `zfs set volsize`. If it is smaller, fail and change nothing.
+- **`microvm-state-migrate@<guest>`** has `After=microvm-state-volumes@<guest>`,
+  `TimeoutStartSec=infinity` and `PrivateMounts=yes`, so a killed unit can't
+  leave a mount in the host namespace. It runs only when a zvol's
+  `json64:migrated` is absent or `stale`:
+  1. Refuse if anything holds the zvol open (`fuser -s /dev/zdN`). It runs
+     before QEMU by ordering, and this check makes that true by construction.
+  2. Mount the zvol, then run
+     `rsync -aHAXS --numeric-ids --delete <stateDir>/ <mnt>/`. `--delete`
+     matters for `stale` (below).
+  3. Unmount, then `zfs set json64:migrated=<ISO time>`.
+- **A virtiofs-backend start marks an existing zvol stale.** When a guest that
+  has zvols runs with `stateBackend = virtiofs` (a rollback), its `microvm@`
+  gains a root `ExecStartPre` that sets `json64:migrated=stale`. The next switch
+  back to `zvol` then re-syncs from the directories the guest wrote to during
+  the rollback, instead of booting onto a stale zvol (round 7).
+
+**The disks.** The guest gets them as `microvm.volumes` entries with
+`image = "/dev/zvol/<…>"`, `autoCreate = false`, `mountPoint = null`,
+`fsType = "ext4"`, a `serial` of `<name>`, and `direct = true`.
+
+- `mountPoint = null`. Otherwise microvm.nix emits its own `/dev/vd<letter>`
+  fileSystems entry, which conflicts with the one below (`mounts.nix:104`).
+- `direct = true` (O_DIRECT, `cache=none`), so the host page cache doesn't hold
+  the guest's data. ARC keeps `primarycache=all`: it is reclaimable, unlike the
+  pinned fds. `primarycache=metadata` with `volblocksize=16K` would turn 4K
+  guest writes into uncached read-modify-writes (round 7).
+- The qemu runner passes `discard=unmap`, so guest TRIM frees pool blocks.
+
+**What a zvol guest drops:**
+- its `/persist` and `/cache` virtiofs shares (`stateShares`);
+- its tmpfiles `stateDir` rules.
+
+Its `impermanence.directPaths` entries stay until the guest is retired, so
+persist-orphans doesn't report the old directories as orphans and invite a
+manual delete.
+
+**The persistent store's own image** stays an ext4 image file on the host's
+`/cache` dataset (§2.1).
 
 **Guest.**
-
 - `fileSystems."/persist"` and `fileSystems."/cache"` are
-  `device = "/dev/disk/by-label/<guest>-<name>"`, ext4, `neededForBoot`.
-  Impermanence binds from them exactly as before.
-- **Growth.** A boot unit runs `resize2fs` on each volume when the block device
-  is larger than its filesystem (an online ext4 grow).
-- **TRIM.** `services.fstrim.enable = true` (weekly), not the `discard` mount
-  option, so deletes don't pay a per-operation trim.
+  `device = "/dev/disk/by-id/virtio-<serial>"`, ext4, `neededForBoot`,
+  `autoResize = true`. That's nixpkgs' `x-systemd.growfs`, an online ext4 grow
+  at mount. The by-id path replaces a label, because ext4 labels hold 16 bytes
+  and `uplink-dev-persist` is 18 (round 7). An assertion checks that each serial
+  is at most 20 bytes. Impermanence binds from them exactly as before.
+- TRIM comes from nixpkgs' default `services.fstrim` (weekly). No `discard`
+  mount option.
 
-**Migration, as code.** `microvm-state-migrate@<guest>.service` is a host
-oneshot, after the volumes unit and `Before=microvm@<guest>`. It runs only when
-the zvol has no `json64:migrated` property and the old `stateDir` is non-empty:
+**Migration size.** Measured on uplink on 2026-11-10: `/persist/microvms/uplink-dev`
+is 16 GiB on disk (32 GiB apparent), and `/cache/microvms/uplink-dev` is 372 MiB.
+That's 2,170,125 inodes in total. The scratch images sit beside the state
+directories, not inside them, so they are never copied. The copy runs in the
+start phase of the deploy that switches the backend: `restartIfChanged` makes
+that deploy restart the guest. So that deploy is planned at a checkpoint, and it
+runs for as long as the copy takes. Test 18 records the time.
 
-1. Mount the zvol on a private host mount point.
-2. `rsync -aHAXS --numeric-ids <stateDir>/ <mnt>/`.
-3. Unmount, then `zfs set json64:migrated=<ISO time>`.
+**Retirement.** An assertion requires `retireVirtiofsState ->
+stateBackend == "zvol"`. With it set, the sweep deletes exactly that guest's
+two named `stateDir`s, never a glob, and only when all of these hold:
+- both zvols have `json64:migrated` set and not `stale`;
+- `microvm@<guest>` is running on the zvol backend, or is stopped.
 
-The old `stateDir` is left in place, read-only to the guest from then on,
-because the guest no longer mounts it. A typed option,
-`microvm.retireVirtiofsState`, false by default, makes the sweep (§2.4) delete
-it. The owner flips it once satisfied, so retirement is a config change, not a
-runbook. Expected cost on uplink-dev: one copy of 152 GiB (`/persist`) and
-222 GiB (`/cache`), at the first start after the switch.
+The sweep never deletes directories under `scratchRoot` by pattern, so a
+sibling guest's state can't match (round 7).
+
+**Leaked zvols.** A zvol whose guest is gone, or is set back to `virtiofs`, is
+never destroyed automatically. ZFS destruction is irreversible and the data may
+be wanted. The sweep lists zvols under `zvolParent` that belong to no
+configured zvol guest, and fails its verdict while any exist, so the fleet's
+failed-unit alert names them. The fix is to destroy them by hand, or to set the
+guest back to `zvol`. §4 names this.
 
 **Rollback.** Setting `stateBackend` back to `virtiofs` brings back the old
-directories as they were at migration. Anything written since then exists only
-in the zvol. That is the cost of choosing rollback, and §4 states it. A reverse
-migration is a non-goal.
+directories, as they were at migration. Anything written to the zvol since then
+stays in the zvol. That is the cost of choosing rollback, and §4 states it.
+Going forward again re-syncs from the directories (`stale`, above), so nothing
+written during the rollback is lost. Recovering zvol-only writes after a
+rollback is a non-goal.
 
-**Snapshots and per-file access.** zvols snapshot like any ZFS dataset, under
-the same (still missing) snapshot service the host-file TODO names. Per-file
-restore means cloning a snapshot and mounting it read-only on the host. That
-is a manual inspection path, a non-goal for automation here.
+**Snapshots and per-file access.** The zvols carry
+`com.sun:auto-snapshot=true`, the same as the datasets they replace. They share
+the host's still-missing snapshot service. Per-file restore means cloning a
+snapshot and mounting it read-only on the host. That is a manual inspection
+path, and a non-goal for automation here.
 
 **Effect on the rest of this spec.**
 - §2.3/§2.4 export through the exchange share for every persistent-store guest.
@@ -932,16 +990,26 @@ passes means the test proves nothing.
     The zvol must not be slower on any of them.
 18. **Migration.** Starting from today's directories, the first start after
     commit 3 must:
-    - copy `/persist` and `/cache`, giving equal file counts and a sampled
-      `sha256sum` match;
+    - copy `/persist` and `/cache`, giving equal file counts, a sampled
+      `sha256sum` match and preserved xattrs;
     - set `json64:migrated`;
     - boot the guest with every impermanence bind present.
 
-    A second start copies nothing. A volume that already has a filesystem is
-    never reformatted (plant a marker file, restart, and the marker survives).
-19. **Grow.** Raise `stateVolumeSizes."/persist"` and deploy: `volsize` grows,
-    and the guest's `df` shows the larger filesystem after its next boot. A
-    smaller value is refused by the unit, with the volume unchanged.
+    Record the copy time.
+    - A second start copies nothing.
+    - **Never reformat:** clear `json64:formatted` on a volume and start. The
+      unit fails, and a planted marker file survives.
+    - **Busy refusal:** with QEMU up, start the migrate unit by hand. It refuses.
+    - **Rollback and return:** set `virtiofs`, start, and write a file. Set
+      `zvol` and start. The file is on the zvol.
+    - **Retirement:** with `retireVirtiofsState` set and one zvol `stale`,
+      nothing is deleted.
+    - **Leaked zvol:** create a zvol under the parent for no guest. The sweep's
+      verdict fails and names it.
+19. **Grow.** Raise `stateVolumeSizes."/persist"` and deploy. The running guest
+    is not restarted, so nothing changes yet. At its next start, `volsize` grows
+    and the guest's `df` shows the larger filesystem. A smaller value fails the
+    volumes unit at the next start, and the volume stays unchanged.
 20. **ESTALE gone.** Run `br`'s anonymous-temp-file pattern on `/persist`
     (create, unlink, then fstat and pread): it succeeds on zvol state. Control:
     the same pattern fails on a virtiofs share with `--inode-file-handles=prefer`.
@@ -988,8 +1056,10 @@ passes means the test proves nothing.
   state as it was at migration.
 - **The host loses per-file visibility** of a zvol guest's state. Inspection
   goes through a snapshot clone.
-- **Double caching** is avoided only for data (`primarycache=metadata`). The
-  host's ARC still caches zvol metadata.
+- **zvols are never destroyed automatically** (§2.10, "Leaked zvols"). A
+  leaked one keeps alerting until it's destroyed by hand or reused.
+- **ARC caches zvol data** (`primarycache=all`). With `direct = true`, the host
+  page cache doesn't also hold it. Under memory pressure, ARC gives memory back.
 - **Images after a host stops hosting guests** (§2.4) stay on `/cache/microvms`.
   They hold rebuildable data only, and nothing pins host paths through them.
 - **Rollback before the sweep's commit** (§2.9) leaves the roots and the image
@@ -1170,3 +1240,21 @@ changes a guarantee.
 | "entry in the upper layer" is ambiguous for a whiteout                                                                 | a whiteout is not an entry; the path stays exported (§2.3)                               |
 | M's two cases                                                                                                          | one test: no upper entry and invalid on the host (§2.6 step 2)                           |
 | counter reset unspecified                                                                                              | reset on any run that is not unsubstitutable; kept on a failed give-up (§2.6 step 4)     |
+
+**Round 7 (§2.10 in v0.8): 12 surviving objections** (14 raised, from 2 critics).
+
+| v0.8 objection | Resolution |
+|---|---|
+| ext4 label of 16 bytes truncates `uplink-dev-persist`: no boot | by-id serial mount; serial-length assertion |
+| `microvm.volumes` with a mountPoint emits a conflicting fileSystems entry | `mountPoint = null`; the aspect emits fileSystems |
+| format guard reads a probe failure as "empty" | format only in the creating run, after the link wait and `blkid -p`; `json64:formatted` |
+| `zvolParent` absent; disko doesn't create it | the unit creates it with `-p`; default derived from `disk.zfs-disk-single` |
+| zvols inherit `auto-snapshot=false` | `-o com.sun:auto-snapshot=true` |
+| migrate never pulled in; 90 s default timeout; running-guest copy | `requiredBy`, `TimeoutStartSec=infinity`, `PrivateMounts`, `fuser` refusal |
+| `RequiredBy=` plus a switch restarts the guest | `restartIfChanged = false`, `RemainAfterExit = no` |
+| retire deletes unmigrated or rolled-back state; glob risk | assertion; named dirs; migrated-not-stale; guest state check |
+| rollback, then forward, loses rollback-window writes | `stale` mark at a virtiofs start; `rsync --delete` re-sync |
+| grow vs deploy; smaller size silently skipped | grow at the next start; a smaller size fails; test 19 reworded |
+| `primarycache=metadata` doesn't stop double caching and costs I/O | `direct = true`, `primarycache=all` |
+| copy size wrong (374 GiB); first start runs inside the deploy | measured 16 GiB + 372 MiB, 2.17M inodes; deploy planned at a checkpoint |
+| (minor) the resize unit duplicates `autoResize`; fstrim already defaults on | `autoResize = true`; fstrim line dropped |
