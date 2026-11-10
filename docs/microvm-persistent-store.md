@@ -1,11 +1,11 @@
 # MicroVM guests: a persistent store over the host's shared store
 
-Status: **draft v0.7** (2026-11-09). Owner request: "the devshell loss on every
-reboot is really painful; we need a real solution for persistence." The
-adversarial review hit its cap at round 6 (K=6, the cap for a change to the live
-system). Objections per round: 17, 16, 17, 14, 12, 12. v0.7 applies round 6's 12
-fixes, and **no critic has reviewed it**. §8 maps every objection to its
-resolution.
+Status: **draft v0.7.1** (2026-11-10: v0.7 plus the implementation corrections
+at the end of §8). Owner request: "the devshell loss on every reboot is really
+painful; we need a real solution for persistence." The adversarial review hit
+its cap at round 6 (K=6, the cap for a change to the live system). Objections
+per round: 17, 16, 17, 14, 12, 12. v0.7 applies round 6's 12 fixes, and **no
+critic has reviewed it**. §8 maps every objection to its resolution.
 
 ## 1. Problem
 
@@ -218,7 +218,10 @@ where:
   `findRoots` calls `isValidPath` on each root target, which also syncs that
   root's closure rows.
 - **U** is every valid path present in the upper layer: an entry in
-  `/nix/.rw-store/store/` that `nix path-info` accepts.
+  `/nix/.rw-store/store/` that `nix path-info` accepts. A whiteout (a character
+  device) is not an entry here, neither for U nor for E's filter: a whited-out
+  host path stays exported until the reconcile scrubs the whiteout (§2.6 step
+  1).
 - **closure⁺** is `nix-store --query --requisites --include-outputs`, which
   matches the guest's inherited `keep-outputs = true` for what its roots keep.
   **closure** is plain `--requisites`. Those references are exactly what the
@@ -250,8 +253,8 @@ Per persistent-store guest:
   virtiofsd writes the file on the host, so the host's inotify sees the change.
 - `microvm-store-roots@<guest>.timer`: every 15 minutes, as a backstop.
 - `microvm-store-roots@<guest>.service`: oneshot, `RemainAfterExit=no`,
-  `TimeoutStartSec=10min`. It runs a host program (`writers.writePython3Bin`),
-  in five steps:
+  `TimeoutStartSec=infinity` (step 4). It runs a host program
+  (`writers.writePython3Bin`), in five steps:
 
 1. **Open without following anything the guest controls.** Take a directory fd
    on the guest's host-owned `/cache` state directory
@@ -259,7 +262,10 @@ Per persistent-store guest:
    `O_DIRECTORY|O_NOFOLLOW`, then `roots` with
    `O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC`. `fstat` that fd and require
    `S_ISREG`. Read it once, through the fd, at most `256 × maxExportPaths`
-   bytes. A symlink, FIFO or device is refused before any read can block.
+   bytes. A symlink, FIFO or device is refused before any read can block. A
+   missing `.microvm-store` or `roots` (a guest that has not exported yet) is
+   not an error: nothing is applied, the previous set stays, and the unit
+   succeeds.
 2. **Parse strictly.** Every line must match
    `^/nix/store/[0-9a-df-np-sv-z]{32}-[0-9A-Za-z+\-._?=]{1,211}$`. If a line
    doesn't match, or there are more than `maxExportPaths` lines, the whole file
@@ -319,7 +325,8 @@ after every change to the keep-set:
   `restartTriggers` cover only the guest toplevel
   (`nixos-modules/host/default.nix:168`), which an image path doesn't change.
 - **Live guests are never swept.** Before deleting, the sweep skips:
-  - any image that some process holds open (a scan of `/proc/*/fd`);
+  - any image that some process holds open (a scan of `/proc/*/fd`, matched by
+    device and inode, so a bind-mounted `/cache` path still matches);
   - any `gcroots/microvm-store/<name>/` whose guest is **absent from the
     configuration** and still running (`microvm@<name>` active).
 
@@ -341,10 +348,12 @@ after every change to the keep-set:
 - **A host that stops hosting guests.** If `virtualization.microvm-host` is
   dropped, the sweep goes with it. So `core.nix` emits, on every NixOS host
   where `microvm.host.enable` is false, `R /nix/var/nix/gcroots/microvm-store`
-  (tmpfiles). No guest can still be running once the host module is gone,
-  because its units vanish and switch-to-configuration stops them (round 6). The
-  images on `/cache/microvms` stay until the owner removes `/cache/microvms`,
-  and §4 names this.
+  (tmpfiles). A microvm guest (`microvm.guest.enable`) is excluded: it never
+  holds the directory, and the line would change every guest's derivations,
+  against I7 and test 10. No guest can still be running once the host module is
+  gone, because its units vanish and switch-to-configuration stops them (round
+  6). The images on `/cache/microvms` stay until the owner removes
+  `/cache/microvms`, and §4 names this.
 
 On a host without persistent guests, the cost is the sweep units, or the one
 tmpfiles line. Test 10 names them.
@@ -398,6 +407,13 @@ negative answer (round 5).
      - not in the upper layer, and **invalid on the host**. This is a batched
        `nix path-info` against the lower store URL, over the same vsock socket.
 
+     Both cases reduce to one test, which the implementation runs: a row with no
+     upper entry that the host does not hold valid. An upper path whose file is
+     lost has no upper entry, and the host never held it; an upper path whose
+     file is lost while the host now holds the same path is served by the lower
+     layer and is not missing. Validity is asked with
+     `nix-store --store <lower> --check-validity --print-invalid`.
+
      Validity, not existence, decides. An interrupted host GC can leave a
      directory half-deleted after invalidating it. A file check would count that
      as present, and the guest would read a broken path silently (round 5).
@@ -439,7 +455,10 @@ negative answer (round 5).
    repaired by a build here. The run counter for each path lives on the volume,
    in `/nix/var/nix/reconcile/<base>`. Guest restarts therefore don't reset it,
    and a deploy that restarts the guest can't keep postponing the give-up (round
-   6). If p is unsubstitutable on 3 consecutive runs, the guest gives up on it:
+   6). A run in which p is not unsubstitutable (present somewhere, or unknown)
+   removes its counter, so the 3 runs are consecutive; a give-up that fails
+   keeps it, so the next run retries the give-up. If p is unsubstitutable on 3
+   consecutive runs, the guest gives up on it:
    - Remove **every** auto root whose `closure⁺` reaches p. That includes a
      `.drv` root that `keep-outputs` ties to p through a build input.
      `nix-store --query --roots p` lists these (it flips `computeFSClosure` with
@@ -463,10 +482,11 @@ negative answer (round 5).
    `verifyPath` invalidates every missing row that has no valid referrer,
    recursing referrers first.
 
-   Before the verify, if **M \ E has a member whose directory exists**, which
-   means a host path half-deleted by an interrupted host GC, the reconcile runs
-   the guest's GC once. That member is dead in the guest, because it is outside
-   E and R includes temp and runtime roots. The GC visits its directory, and
+   Before the verify, if **M \ E has a member whose directory exists** (an
+   `lstat` of `/nix/.ro-store/<base>`, the lower directly), which means a host
+   path half-deleted by an interrupted host GC, the reconcile runs the guest's
+   GC once. That member is dead in the guest, because it is outside E and R
+   includes temp and runtime roots. The GC visits its directory, and
    `invalidatePathChecked` drops the row (`deleteStorePath` does nothing for a
    lower-only path). The verify alone would never catch it: it only checks
    existence, and the directory exists (round 6). The run fails if such a member
@@ -551,10 +571,11 @@ options.microvm.persistentStore = {
 
 **Size changes.** microvm.nix creates a volume only if its image doesn't exist
 (`lib/volumes.nix`), so raising `size` would otherwise do nothing. The host
-fragment adds an `ExecStartPre` on `microvm@<guest>`: `truncate -s '>'<size>M`
-on the image, then `e2fsck -fp` and `resize2fs`. That grows the image and never
-shrinks it. Shrinking needs an `epoch` bump, and an assertion can't see the old
-size, so the option's description says so (round 6).
+fragment adds an `ExecStartPre` on `microvm@<guest>`: when the image exists and
+is smaller than `size`, `truncate -s '>'<size>M` on the image, then `e2fsck -fp`
+and `resize2fs`; otherwise nothing, so a start pays no full fsck. That grows the
+image and never shrinks it. Shrinking needs an `epoch` bump, and an assertion
+can't see the old size, so the option's description says so (round 6).
 
 **Emission.** Everything comes from `virtualization/microvm-guests.nix`, keyed
 on `vm.microvm.persistentStore.enable` and `vm.microvm.vsockCid` from the
@@ -620,11 +641,13 @@ The guest's node-exporter runs the `systemd` collector, and alloy remote-writes
 it with `job = node-exporter` and `instance = uplink-dev`. The pass/fail state
 of each timer-driven unit (export, import, reconcile, periodic sweep) lives in a
 separate oneshot, `<unit>-verdict.service`. Each work unit's `OnFailure=` starts
-a failing verdict, and its `OnSuccess=` starts a passing one. So a retry that is
-still running (`activating`) never clears the failure, and the alert stays on
-until a run succeeds (round 6). A reboot still resets the failed state, and the
-alert then fires again within the first run plus `for: 5m`. That gap is
-accepted.
+it, and it exits 1, so it stays `failed`; its `OnSuccess=` starts
+`<unit>-verdict-clear.service`, which runs `systemctl reset-failed` on the
+verdict. An instance keeps its instance: `microvm-store-roots-verdict@<guest>`.
+So a retry that is still running (`activating`) never clears the failure, and
+the alert stays on until a run succeeds (round 6). A reboot still resets the
+failed state, and the alert then fires again within the first run plus
+`for: 5m`. That gap is accepted.
 
 `hosts/uplink-dev.nix` sets, on its entity, `microvm.vsockCid = 3` and
 `microvm.persistentStore.enable = true`. Its `/nix/.rw-store` scratch entry
@@ -980,3 +1003,17 @@ cap. v0.7 applies the fixes below, and no critic has reviewed them.
 | an offline LAN peer cache blocks the give-up forever             | unreachable peers count as absent; a public cache must answer (§2.6 step 4) |
 | test 10 can't see non-unit changes                               | `nix-diff` of the toplevel (test 10)                                        |
 | (noted) I6 ignores the guest's remote-build access               | I6 and §2.2 restated                                                        |
+
+**Implementation (v0.7.1).** Building v0.7 corrected these points in place; none
+changes a guarantee.
+
+| v0.7 text                                                                                                              | Correction                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| import `TimeoutStartSec=10min` (§2.4 list) contradicts step 4's `infinity`                                             | `infinity` in both                                                                       |
+| one `<unit>-verdict.service` must both fail and clear                                                                  | a failing verdict plus a `-verdict-clear` that resets it (§2.8)                          |
+| the `R` line on every host without `microvm.host.enable` reaches guests, so cortex-cuda's drvPath would move (test 10) | guests excluded (§2.4)                                                                   |
+| a missing export would fail the import before a guest's first export                                                   | a missing file applies nothing and succeeds; a present bad one still fails (§2.4 step 1) |
+| the grow `ExecStartPre` would run a full `e2fsck -f` on every start                                                    | only when the image is smaller than `size` (§2.8)                                        |
+| "entry in the upper layer" is ambiguous for a whiteout                                                                 | a whiteout is not an entry; the path stays exported (§2.3)                               |
+| M's two cases                                                                                                          | one test: no upper entry and invalid on the host (§2.6 step 2)                           |
+| counter reset unspecified                                                                                              | reset on any run that is not unsubstitutable; kept on a failed give-up (§2.6 step 4)     |

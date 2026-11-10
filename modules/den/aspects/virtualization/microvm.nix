@@ -64,6 +64,34 @@
             disk, not in the guest's tmpfs root.
           '';
         };
+        options.microvm.vsockCid = lib.mkOption {
+          type = lib.types.nullOr (lib.types.ints.between 3 4294967294);
+          default = null;
+          description = "AF_VSOCK CID of this guest (unique on its host); emitted as microvm.vsock.cid.";
+        };
+        # docs/microvm-persistent-store.md
+        options.microvm.persistentStore = {
+          enable = lib.mkEnableOption "a persistent local-overlay Nix store over the host's shared store";
+          size = lib.mkOption {
+            type = lib.types.ints.positive;
+            default = 262144;
+            description = ''
+              Ceiling in MiB of the store volume (sparse ext4 on the host's /cache). Raising it
+              grows the image at the next guest start; it never shrinks, so lowering it needs an
+              `epoch` bump.
+            '';
+          };
+          epoch = lib.mkOption {
+            type = lib.types.ints.unsigned;
+            default = 0;
+            description = "Bump to discard the volume and start empty (recovery from a corrupt image).";
+          };
+          maxExportPaths = lib.mkOption {
+            type = lib.types.ints.positive;
+            default = 100000;
+            description = "Most host paths the guest may pin; a larger export is refused whole.";
+          };
+        };
       }
     )
   ];

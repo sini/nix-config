@@ -3,12 +3,17 @@
 # `guests`), modelled on cortex-cuda without the GPU.
 #
 # Storage:
-#   /nix/store       uplink's store, read-only over virtiofs
-#   /nix/.rw-store   the writable overlay on it, a scratch disk recreated empty at
-#                    every start; with the nix db also fresh each boot (only the
-#                    current closure, which uplink roots, is registered), uplink's
-#                    GC can never delete a path this guest believes valid
-#   /tmp             agents' scratchpads and local build dirs, a scratch disk too
+#   /nix/.ro-store   uplink's store, read-only over virtiofs
+#   /nix/.rw-store   the persistent store volume (microvm.persistentStore): the
+#                    overlay's upper layer, and /nix/var/nix (database, gcroots,
+#                    profiles) bound from it, so devshells survive a restart. The
+#                    store is Nix's local-overlay store over uplink's daemon (over
+#                    vsock); uplink keeps what this guest depends on as GC roots,
+#                    and a reconcile repairs what uplink's GC took anyway. See
+#                    docs/microvm-persistent-store.md. Its scratch entry below is
+#                    overridden while the feature is on, and comes back with it off.
+#   /nix/store       the overlay of the two
+#   /tmp             agents' scratchpads and local build dirs, a scratch disk
 #   /persist, /cache uplink's /{persist,cache}/microvms/uplink-dev over virtiofs
 #
 # TODO: memory to 96 GB once services move off uplink onto the cluster.
@@ -49,6 +54,8 @@ in
       "/nix/.rw-store" = 262144; # 256 GiB ceiling, sparse
       "/tmp" = 131072; # 128 GiB ceiling, sparse
     };
+    microvm.vsockCid = 3;
+    microvm.persistentStore.enable = true;
 
     # sini's xmsg node here, so its sessions reach sini@bitstream and sini@cortex; the
     # links are derived (policies/xmsg.nix), authenticated by the xmsg CA.
@@ -93,8 +100,9 @@ in
           ];
         };
 
-        # The nix db is the tmpfs root's, so each boot registers only the current
-        # closure; persisting /nix/var would let it outlive uplink's GC.
+        # The store and its database persist together on their own volume
+        # (microvm.persistentStore); persisting /nix through impermanence would
+        # split them, or outlive uplink's GC.
         assertions = [
           {
             assertion =

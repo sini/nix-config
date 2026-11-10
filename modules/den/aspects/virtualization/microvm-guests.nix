@@ -100,25 +100,53 @@ in
 
       # Per-guest overlay data: resolved microvm host-side options + the
       # facter-resolved passthrough device records.
-      withOverlay = vm: {
+      withOverlay = vm: rec {
         inherit (vm) name;
         microvmOpts = microvmSubmoduleOpts (den.lib.aspects.resolve "microvm" vm.aspect);
         recs = gpuLib.resolvePassthrough (vm.microvm.passthrough or [ ]) facter;
         sharedNixStore = vm.microvm.sharedNixStore or true;
-        scratch = lib.mapAttrsToList (mountPoint: size: {
-          inherit mountPoint size;
-          image = "${scratchRoot}/${vm.name}${lib.replaceStrings [ "/" "." ] [ "-" "" ] mountPoint}.img";
-        }) (vm.microvm.scratchVolumes or { });
+        vsockCid = vm.microvm.vsockCid or null;
+        ps = vm.microvm.persistentStore or { };
+        persistent = ps.enable or false;
+        storeImage = "${scratchRoot}/${vm.name}-nix-store-e${toString ps.epoch}.img";
+        # The persistent store overrides a /nix/.rw-store scratch entry, so turning it off
+        # brings back exactly the scratch layout (§2.8).
+        scratch = lib.filter (v: !(persistent && v.mountPoint == rwStore)) (
+          lib.mapAttrsToList (mountPoint: size: {
+            inherit mountPoint size;
+            image = "${scratchRoot}/${vm.name}${lib.replaceStrings [ "/" "." ] [ "-" "" ] mountPoint}.img";
+          }) (vm.microvm.scratchVolumes or { })
+        );
+        hasRwStore = lib.any (v: v.mountPoint == rwStore) scratch || persistent;
       };
       guests = map withOverlay children;
+      persistentGuests = lib.filter (g: g.persistent) guests;
+      hasImages = lib.any (g: g.scratch != [ ] || g.persistent) guests;
 
       sweep = psLib.sweep {
         inherit pkgs scratchRoot;
         systemd = config.systemd.package;
-        keepImages = lib.concatMap (g: map (v: v.image) g.scratch) guests;
-        keepRoots = [ ];
+        keepImages =
+          lib.concatMap (g: map (v: v.image) g.scratch) guests ++ map (g: g.storeImage) persistentGuests;
+        keepRoots = map (g: g.name) persistentGuests;
         configured = map (g: g.name) guests;
       };
+
+      psListener = psLib.hostListener { systemd = config.systemd.package; };
+      psHosts = map (
+        g:
+        psLib.hostUnits {
+          inherit pkgs;
+          inherit (g) name;
+          inherit (g.ps) size maxExportPaths;
+          systemd = config.systemd.package;
+          image = g.storeImage;
+          cacheDir = stateDir g.name "/cache";
+        }
+      ) persistentGuests;
+
+      # §2.2, §2.8: computed over the guest entities, never an evaluated guest.
+      cids = lib.filter (c: c != null) (map (g: g.vsockCid) guests);
 
       # A guest's root is a tmpfs, so its impermanence binds persist nothing unless
       # /persist and /cache are real. Each guest gets its own directory under the
@@ -172,24 +200,31 @@ in
               # flag is dropped so each share's own one is the only one passed.
               microvm.virtiofsd.inodeFileHandles = null;
               microvm.volumes = map (v: v // { fsType = "ext4"; }) g.scratch;
-              # A /nix/.rw-store scratch volume is the writable store overlay, which
-              # also turns on nix-daemon (microvm.nix gates it on the overlay), so
-              # home-manager can register its generations. Hard-linking would span
-              # the read-only store and the overlay.
-              microvm.writableStoreOverlay = lib.mkIf (lib.any (v: v.mountPoint == rwStore) g.scratch) rwStore;
-              nix.optimise.automatic = lib.mkIf (lib.any (v: v.mountPoint == rwStore) g.scratch) (
-                lib.mkForce false
-              );
-              nix.settings.auto-optimise-store = lib.mkIf (lib.any (v: v.mountPoint == rwStore) g.scratch) (
-                lib.mkForce false
-              );
-              # The host's store, read-only: the host collects it, the guest cannot.
-              nix.gc.automatic = lib.mkIf g.sharedNixStore (lib.mkForce false);
+              microvm.vsock.cid = lib.mkIf (g.vsockCid != null) g.vsockCid;
+              # A /nix/.rw-store scratch volume (or the persistent store) is the writable
+              # store overlay, which also turns on nix-daemon (microvm.nix gates it on the
+              # overlay), so home-manager can register its generations. Hard-linking would
+              # span the read-only store and the overlay.
+              microvm.writableStoreOverlay = lib.mkIf g.hasRwStore rwStore;
+              nix.optimise.automatic = lib.mkIf g.hasRwStore (lib.mkForce false);
+              nix.settings.auto-optimise-store = lib.mkIf g.hasRwStore (lib.mkForce false);
+              # The host's store, read-only: the host collects it, the guest cannot. A
+              # persistent store collects its own upper layer.
+              nix.gc.automatic = lib.mkIf (g.sharedNixStore && !g.persistent) (lib.mkForce false);
               # Mounted in the initrd, before impermanence binds from them.
               fileSystems = lib.genAttrs stateVolumes (_: {
                 neededForBoot = true;
               });
               users.users.root.openssh.authorizedKeys.keys = rootKeys;
+              imports = lib.optional g.persistent (
+                psLib.guestModule {
+                  inherit (g) name;
+                  inherit rwStore;
+                  roStore = roStoreShare.mountPoint;
+                  image = g.storeImage;
+                  inherit (g.ps) size maxExportPaths;
+                }
+              );
             };
           };
         }) guests
@@ -201,17 +236,47 @@ in
         lib.concatMap (vm: map (s: s.source) vm.config.config.microvm.shares) (
           lib.attrValues config.microvm.vms
         )
-        ++ lib.optional (lib.any (g: g.scratch != [ ]) guests) scratchRoot;
+        ++ lib.optional hasImages scratchRoot;
 
       systemd.tmpfiles.rules =
         lib.concatMap (g: map (volume: "d ${stateDir g.name volume} 0700 root root -") stateVolumes) guests
         # microvm-run, as the microvm user, creates the scratch images here.
-        ++ lib.optional (lib.any (g: g.scratch != [ ]) guests) "d ${scratchRoot} 0775 root kvm -";
+        ++ lib.optional hasImages "d ${scratchRoot} 0775 root kvm -";
 
-      systemd.timers = sweep.timers;
+      assertions =
+        lib.concatMap (g: [
+          {
+            assertion = g.persistent -> g.sharedNixStore && g.vsockCid != null;
+            message = "${g.name}: microvm.persistentStore needs microvm.sharedNixStore and microvm.vsockCid";
+          }
+          {
+            assertion = g.persistent -> lib.elem "/cache" stateVolumes;
+            message = "${g.name}: microvm.persistentStore needs /cache among ${host.name}'s persisted volumes";
+          }
+        ]) guests
+        ++ [
+          {
+            assertion = lib.length cids == lib.length (lib.unique cids);
+            message = "${host.name}: microvm.vsockCid must be unique among its guests";
+          }
+          {
+            # Every guest can reach the host daemon's vsock port (§2.2).
+            assertion = persistentGuests != [ ] -> lib.all (vm: vm.system-owner == host.system-owner) children;
+            message = "${host.name}: a host with a persistent-store guest may carry only guests of its own system-owner";
+          }
+        ];
+
+      boot.kernelModules = lib.mkIf (persistentGuests != [ ]) psListener.boot.kernelModules;
+      systemd.sockets = lib.mkIf (persistentGuests != [ ]) psListener.systemd.sockets;
+
+      systemd.paths = lib.mkMerge (map (h: h.paths) psHosts);
+
+      systemd.timers = lib.mkMerge ([ sweep.timers ] ++ map (h: h.timers) psHosts);
 
       systemd.services = lib.mkMerge (
         [ sweep.services ]
+        ++ lib.optional (persistentGuests != [ ]) psListener.systemd.services
+        ++ map (h: h.services) psHosts
         # Scratch images start empty: delete them before microvm-run recreates them.
         ++ map (
           g:

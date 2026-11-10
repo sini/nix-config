@@ -7,7 +7,9 @@
     {
       checks.microvm-persistent-store = pkgs.runCommand "microvm-persistent-store" { } ''
         ${pkgs.python3}/bin/python3 -I ${./_persistent-store-test.py} \
-          sweep=${./_store-sweep.py}
+          sweep=${./_store-sweep.py} \
+          imp=${./_store-roots-import.py} \
+          guest=${./_store-guest.py}
         touch $out
       '';
     };
