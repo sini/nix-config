@@ -49,6 +49,10 @@ in
       "/nix/.rw-store" = 262144; # 256 GiB ceiling, sparse
       "/tmp" = 131072; # 128 GiB ceiling, sparse
     };
+
+    # sini's xmsg node here, so its sessions reach sini@bitstream and sini@cortex; the
+    # links are derived (policies/xmsg.nix), authenticated by the xmsg CA.
+    settings.applications.dev.ai.mcp.xmsg.federation.nodes.sini = { };
   };
 
   den.aspects.uplink-dev = {
