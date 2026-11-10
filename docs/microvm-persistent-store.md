@@ -1,11 +1,11 @@
 # MicroVM guests: a persistent store over the host's shared store
 
-Status: **draft v0.8.1** (2026-11-10). v0.7.1, which the review capped at
+Status: **draft v0.8.2** (2026-11-10). v0.7.1, which the review capped at
 round 6 and which is implemented as rollout commits 1–2 (§2.9), plus **§2.10:
 guest state on block volumes**. That section answers the owner: "it will easily
-pass 4 million if it starts working on parallel trees". §2.10 had one review
-round, which raised 14 objections, 12 of them distinct. v0.8.1 applies all of
-them (§8), and that revision has not been reviewed. Owner request:
+pass 4 million if it starts working on parallel trees". §2.10 has had two review
+rounds, with 12 and then 4 surviving objections. v0.8.2 applies round 8's fixes
+(§8), and that revision has not been reviewed. Owner request:
 "the devshell loss on every reboot is really painful; we need a real solution
 for persistence." §8 maps every earlier objection to its resolution.
 
@@ -671,8 +671,8 @@ Two commits, deployed in order:
    generation left behind.
 2. **The feature,** enabled on uplink-dev.
 3. **State on zvols (§2.10),** with uplink-dev selecting `zvol`. The first
-   start after deploy migrates its state, and that start is planned at an owner
-   or agent checkpoint, since it copies 374 GiB.
+   start after deploy migrates its state: 16 GiB plus 372 MiB, about 2.17M
+   inodes. That deploy is planned at an owner or agent checkpoint.
 
 A rollback to before commit 1 is the only way to leave `gcroots/microvm-store/`
 and the image behind, and §4 names it (round 4).
@@ -751,26 +751,32 @@ root.
      - Run `mkfs.ext4 -E nodiscard`.
      - Then `zfs set json64:formatted=1`.
 
-     An existing zvol **without** `json64:formatted` makes the unit fail. It is
-     never formatted. A probe failure, a device that isn't ready, or a partition
-     table therefore can't lead to a format (round 7).
+     The `zfs create` itself sets `-o json64:formatted=pending`, and the property
+     becomes `1` only after `mkfs` succeeds. A run that finds `pending` repeats
+     the link wait and the `blkid -p` check, then formats. Nothing has ever opened
+     such a volume, because `microvm@` requires this unit to succeed. A crash or
+     timeout between `create` and `mkfs` therefore recovers by itself (round 8).
+     An existing zvol whose `json64:formatted` is absent or holds any other value
+     makes the unit fail, and it is never formatted. A probe failure, a device
+     that isn't ready, or a partition table can't lead to a format (round 7).
   3. **Grow only.** If the declared size is larger than `volsize`,
      `zfs set volsize`. If it is smaller, fail and change nothing.
 - **`microvm-state-migrate@<guest>`** has `After=microvm-state-volumes@<guest>`,
   `TimeoutStartSec=infinity` and `PrivateMounts=yes`, so a killed unit can't
-  leave a mount in the host namespace. It runs only when a zvol's
-  `json64:migrated` is absent or `stale`:
+  leave a mount in the host namespace. It runs when a zvol's
+  `json64:migrated` is absent, **or** when the old `stateDir` has diverged since
+  then. The divergence check is
+  `find <stateDir> -newerct "<json64:migrated>" -print -quit`: any hit means the
+  guest ran on virtiofs after migration. That covers flipping the option back,
+  and also rolling back to a generation older than §2.10. The check runs on the
+  forward side at every zvol start, so it needs nothing from the older
+  generation (round 8):
   1. Refuse if anything holds the zvol open (`fuser -s /dev/zdN`). It runs
      before QEMU by ordering, and this check makes that true by construction.
   2. Mount the zvol, then run
      `rsync -aHAXS --numeric-ids --delete <stateDir>/ <mnt>/`. `--delete`
-     matters for `stale` (below).
+     makes a re-sync exact.
   3. Unmount, then `zfs set json64:migrated=<ISO time>`.
-- **A virtiofs-backend start marks an existing zvol stale.** When a guest that
-  has zvols runs with `stateBackend = virtiofs` (a rollback), its `microvm@`
-  gains a root `ExecStartPre` that sets `json64:migrated=stale`. The next switch
-  back to `zvol` then re-syncs from the directories the guest wrote to during
-  the rollback, instead of booting onto a stale zvol (round 7).
 
 **The disks.** The guest gets them as `microvm.volumes` entries with
 `image = "/dev/zvol/<…>"`, `autoCreate = false`, `mountPoint = null`,
@@ -816,11 +822,23 @@ runs for as long as the copy takes. Test 18 records the time.
 **Retirement.** An assertion requires `retireVirtiofsState ->
 stateBackend == "zvol"`. With it set, the sweep deletes exactly that guest's
 two named `stateDir`s, never a glob, and only when all of these hold:
-- both zvols have `json64:migrated` set and not `stale`;
+- both zvols have `json64:migrated` set, and the divergence check finds
+  nothing;
 - `microvm@<guest>` is running on the zvol backend, or is stopped.
 
 The sweep never deletes directories under `scratchRoot` by pattern, so a
 sibling guest's state can't match (round 7).
+
+Retirement doesn't leave an empty path behind. It replaces each `stateDir` with a
+regular file containing `retired: migrated to <zvol> at <time>`. If the guest is
+later switched back to virtiofs, by option or by generation rollback, the start
+then fails loudly:
+- tmpfiles' `d` rule errors on a path that isn't a directory;
+- virtiofsd refuses a `shared-dir` that isn't a directory.
+
+Without the file, the guest would boot silently onto a fresh empty `/persist`
+while its data sits in the zvol (round 8). Restoring from there is an explicit
+act: set the guest back to `zvol`.
 
 **Leaked zvols.** A zvol whose guest is gone, or is set back to `virtiofs`, is
 never destroyed automatically. ZFS destruction is irreversible and the data may
@@ -829,11 +847,13 @@ configured zvol guest, and fails its verdict while any exist, so the fleet's
 failed-unit alert names them. The fix is to destroy them by hand, or to set the
 guest back to `zvol`. §4 names this.
 
-**Rollback.** Setting `stateBackend` back to `virtiofs` brings back the old
-directories, as they were at migration. Anything written to the zvol since then
-stays in the zvol. That is the cost of choosing rollback, and §4 states it.
-Going forward again re-syncs from the directories (`stale`, above), so nothing
-written during the rollback is lost. Recovering zvol-only writes after a
+**Rollback.** Before retirement, setting `stateBackend` back to `virtiofs`, or
+rolling the host back to an older generation, brings back the old directories as
+they were at migration. Anything written to the zvol since then stays in the
+zvol. That is the cost of choosing rollback, and §4 states it. Going forward
+again re-syncs from the directories (the divergence check), so nothing written
+during the rollback is lost. After retirement, a rollback fails to start the
+guest (see Retirement). Recovering zvol-only writes after a
 rollback is a non-goal.
 
 **Snapshots and per-file access.** The zvols carry
@@ -1000,10 +1020,16 @@ passes means the test proves nothing.
     - **Never reformat:** clear `json64:formatted` on a volume and start. The
       unit fails, and a planted marker file survives.
     - **Busy refusal:** with QEMU up, start the migrate unit by hand. It refuses.
-    - **Rollback and return:** set `virtiofs`, start, and write a file. Set
-      `zvol` and start. The file is on the zvol.
-    - **Retirement:** with `retireVirtiofsState` set and one zvol `stale`,
-      nothing is deleted.
+    - **Rollback and return:** set `virtiofs` (and, separately, roll the host
+      back to the commit-2 generation), start, and write a file. Set `zvol`, or
+      roll forward, and start. The file is on the zvol. Record how long the
+      divergence check takes over the 2.17M inodes.
+    - **Interrupted format:** stop the unit between `zfs create` and `mkfs`
+      (`formatted=pending`). The next start formats it and the guest boots.
+    - **Retirement:** with `retireVirtiofsState` set and a file in the
+      `stateDir` newer than `json64:migrated`, nothing is deleted.
+    - **Rollback after retirement:** after retirement, set `virtiofs`. The guest
+      start fails, naming the retired path.
     - **Leaked zvol:** create a zvol under the parent for no guest. The sweep's
       verdict fails and names it.
 19. **Grow.** Raise `stateVolumeSizes."/persist"` and deploy. The running guest
@@ -1052,8 +1078,10 @@ passes means the test proves nothing.
 - **Host daemon dependency.** The guest's Nix works only while the host's daemon
   answers. A host deploy that restarts the daemon causes transient guest errors
   (test 12).
-- **zvol rollback is lossy** (§2.10): returning to `virtiofs` restores the
-  state as it was at migration.
+- **zvol rollback is lossy** (§2.10): before retirement, returning to
+  `virtiofs` restores the state as it was at migration. After retirement, a
+  rollback refuses to start the guest, a generation older than commit 3
+  included, because both fail on the retired file.
 - **The host loses per-file visibility** of a zvol guest's state. Inspection
   goes through a snapshot clone.
 - **zvols are never destroyed automatically** (§2.10, "Leaked zvols"). A
@@ -1258,3 +1286,13 @@ changes a guarantee.
 | `primarycache=metadata` doesn't stop double caching and costs I/O | `direct = true`, `primarycache=all` |
 | copy size wrong (374 GiB); first start runs inside the deploy | measured 16 GiB + 372 MiB, 2.17M inodes; deploy planned at a checkpoint |
 | (minor) the resize unit duplicates `autoResize`; fstrim already defaults on | `autoResize = true`; fstrim line dropped |
+
+**Round 8 (§2.10 in v0.8.1): 4 surviving objections, plus 1 minor.**
+
+| v0.8.1 objection | Resolution |
+|---|---|
+| generation rollback skips the `stale` mark; retirement deletes the rollback-window writes | forward-side divergence check (`find -newerct`) at every zvol start and before retirement |
+| the stale `ExecStartPre` can't be emitted without touching cortex | removed; the forward check replaces it |
+| a failed creating run blocks the guest until a manual destroy | `formatted=pending` set at create; the next run completes it |
+| rollback after retirement silently boots an empty guest | retired dirs become regular files, so the start fails loudly |
+| (minor) §2.9 still said 374 GiB | fixed |
