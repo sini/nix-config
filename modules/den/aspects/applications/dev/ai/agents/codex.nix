@@ -148,48 +148,22 @@
         # it with a stale env. Instead the rewrite prepends one line that loads the env and stops
         # on failure, then the original bytes, run by codex's own shell.
         #
-        # codex-direnv-env is the only direnv evaluation, under the 12G cap (a devshell build is
-        # a nix evaluation); the user's command runs uncapped (host builds are exempt). Its JSON
-        # diff is against the caller's env, so direnv's unload semantics (A to B, leaving every
-        # .envrc) come out as unsets.
+        # The hook's `direnv export json` is the only evaluation, under the 12G cap (a devshell
+        # build is a nix evaluation); the user's command runs uncapped (host builds are exempt).
+        # Its JSON diff is against the hook's env, which codex gives the session's env, so
+        # direnv's unload semantics (A to B, leaving every .envrc) come out as unsets.
         #
         # Limits: the hook's own failure or timeout is fail-open (a codex property); malformed or
         # cwd-less input is warning-only; a cd inside the command is not seen; the prefix is POSIX
         # sh, so a fish or nu shell fails loudly; and the prefix changes the entry status and adds
         # a command before the original bytes, so it is not transparent to a command that reads
         # its initial $? or depends on parse/prologue behaviour.
-        direnvEnv = pkgs.writeShellApplication {
-          name = "codex-direnv-env";
-          runtimeInputs = [
-            pkgs.coreutils
-            pkgs.jq
-          ];
-          text = ''
-            # usage: codex-direnv-env DIR — POSIX statements applying DIR's devshell env, or exit
-            # nonzero printing nothing on stdout.
-            direnv=''${CODEX_DENV_DIRENV:-${lib.getExe pkgs.direnv}}
-            systemd_run=''${CODEX_DENV_SYSTEMD_RUN:-/run/current-system/sw/bin/systemd-run}
-            fail() {
-              printf 'codex-direnv-env: %s; command not run\n' "$1" >&2
-              exit "$2"
-            }
-            cd -- "$1" 2>/dev/null || fail "cannot enter $1" 66
-            err=$(mktemp)
-            trap 'rm -f "$err"' EXIT
-            rc=0
-            out=$("$systemd_run" --user --scope -q -p MemoryMax=12G \
-              timeout 1800 "$direnv" export json </dev/null 2>"$err") || rc=$?
-            if [ "$rc" -ne 0 ]; then
-              cat "$err" >&2
-              fail "devshell load failed (rc $rc)" "$rc"
-            fi
-            [ -n "$out" ] || exit 0
-            printf '%s' "$out" | jq -e 'type == "object" and (keys | all(test("^[A-Za-z_][A-Za-z0-9_]*$")))' \
-              >/dev/null 2>&1 || fail "direnv returned malformed JSON or a non-identifier key" 65
-            printf '%s' "$out" | jq -r 'to_entries[]
-              | if .value == null then "unset \(.key)" else "export \(.key)=\(.value | @sh)" end'
-          '';
-        };
+        # The hook runs OUTSIDE codex's sandbox and the command INSIDE it, where the user bus is
+        # unreachable (measured 2026-11-09 on uplink-dev: systemd-run --user fails "Operation not
+        # permitted" in every sandboxed exec_command). So the capped evaluation happens here, in
+        # the hook, and the sandboxed command only sources the result. Its timeout is raised from
+        # codex's 5 s default (handler `timeout` below) because a cold devshell builds here; a
+        # failed or timed-out export is a DENY with direnv's error, never the original command.
         direnvHook = pkgs.writeShellApplication {
           name = "codex-direnv-hook";
           runtimeInputs = [
@@ -198,6 +172,9 @@
             pkgs.jq
           ];
           text = ''
+            direnv=''${CODEX_DENV_DIRENV:-${lib.getExe pkgs.direnv}}
+            systemd_run=''${CODEX_DENV_SYSTEMD_RUN:-/run/current-system/sw/bin/systemd-run}
+            out_dir=''${CODEX_DENV_DIR:-''${XDG_RUNTIME_DIR:-/tmp}/codex-direnv}
             payload=$(cat)
             cmd=$(printf '%s' "$payload" | jq -r '.tool_input.command // empty' 2>/dev/null) || exit 0
             cwd=$(printf '%s' "$payload" | jq -r '.cwd // empty' 2>/dev/null) || exit 0
@@ -206,19 +183,42 @@
               jq -nc '{systemMessage: "codex-direnv: no usable cwd in the hook payload; devshell not applied"}'
               exit 0
             fi
-            status=$(cd -- "$cwd" && direnv status --json </dev/null 2>/dev/null) || exit 0
+            deny() {
+              jq -nc --arg r "$1" '{hookSpecificOutput: {hookEventName: "PreToolUse",
+                permissionDecision: "deny", permissionDecisionReason: $r}}'
+              exit 0
+            }
+            status=$(cd -- "$cwd" && "$direnv" status --json </dev/null 2>/dev/null) || exit 0
             found=$(printf '%s' "$status" | jq -r '.state.foundRC.path // empty')
             allowed=$(printf '%s' "$status" | jq -r '.state.foundRC.allowed // empty')
             if [ -z "$found" ] && [ -z "''${DIRENV_DIFF:-}" ]; then
               exit 0
             fi
             if [ -n "$found" ] && [ "$allowed" != 0 ]; then
-              jq -nc --arg p "$found" '{hookSpecificOutput: {hookEventName: "PreToolUse",
-                permissionDecision: "deny",
-                permissionDecisionReason: "\($p) is not allowed by direnv. Review it, then run: direnv allow \($p | @sh) (or run the command from outside that directory)."}}'
+              deny "$found is not allowed by direnv. Review it, then run: direnv allow $(printf '%s' "$found" | jq -Rr @sh) (or run the command from outside that directory)."
+            fi
+            err=$(mktemp)
+            trap 'rm -f "$err"' EXIT
+            rc=0
+            json=$(cd -- "$cwd" && "$systemd_run" --user --scope -q -p MemoryMax=12G \
+              timeout 1700 "$direnv" export json </dev/null 2>"$err") || rc=$?
+            if [ "$rc" -ne 0 ]; then
+              deny "devshell load failed (rc $rc) for $cwd; command not run. direnv: $(tail -c 1500 "$err")"
+            fi
+            if [ -z "$json" ]; then
               exit 0
             fi
-            prefix="__codex_denv=\$(${lib.getExe direnvEnv} $(printf '%s' "$cwd" | jq -Rr @sh)) || exit \$?; eval \"\$__codex_denv\" || exit \$?; unset __codex_denv"
+            printf '%s' "$json" | jq -e 'type == "object" and (keys | all(test("^[A-Za-z_][A-Za-z0-9_]*$")))' \
+              >/dev/null 2>&1 || deny "devshell load failed: direnv returned malformed JSON or a non-identifier key; command not run."
+            # One statement per line, chained with &&, so any failing assignment (a readonly
+            # variable) fails the whole source and the command never runs with a partial env.
+            stmts=$(printf '%s' "$json" | jq -r '[to_entries[]
+              | if .value == null then "unset \(.key)" else "export \(.key)=\(.value | @sh)" end]
+              | join(" &&\n")')
+            mkdir -p "$out_dir" && chmod 0700 "$out_dir"
+            f="$out_dir/$(printf '%s' "$stmts" | sha256sum | cut -c1-32).sh"
+            [ -s "$f" ] || { printf '%s\n' "$stmts" > "$f.$$" && chmod 0600 "$f.$$" && mv -f "$f.$$" "$f"; }
+            prefix=". $(printf '%s' "$f" | jq -Rr @sh) || exit \$?"
             jq -nc --arg c "$prefix
             $cmd" '{hookSpecificOutput: {hookEventName: "PreToolUse",
               permissionDecision: "allow", updatedInput: {command: $c}}}'
@@ -232,6 +232,9 @@
                 {
                   type = "command";
                   command = lib.getExe direnvHook;
+                  # Above the inner timeout 1700, so a cold devshell build ends in the hook's
+                  # own deny rather than in codex's fail-open timeout.
+                  timeout = 1800;
                 }
               ];
             }
