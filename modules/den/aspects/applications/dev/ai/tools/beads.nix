@@ -34,10 +34,13 @@
         lib,
         pkgs,
         inputs',
+        user,
         ...
       }:
       let
-        beadsDir = "${config.home.homeDirectory}/Documents/repos/sini/den-ag-design/.beads";
+        # Typed in schema/user.nix; `user` carries only what the user defined.
+        workspace = user.settings.beads.workspace or null;
+        beadsDir = "${config.home.homeDirectory}/${workspace}";
 
         # THE TRACKER HAS NO AUTOMATIC HOST-TO-HOST SYNC, and two artefacts imply it
         # does: `.beads/hooks/*` (bd's, gated on a `bd` binary that is no longer
@@ -66,7 +69,12 @@
             . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
             gated || exit 0
 
-            r=$(dirname "''${BEADS_DIR:-${beadsDir}}")
+            ${
+              if workspace == null then
+                ''[ -n "''${BEADS_DIR:-}" ] || exit 0; r=$(dirname "$BEADS_DIR")''
+              else
+                ''r=$(dirname "''${BEADS_DIR:-${beadsDir}}")''
+            }
 
             if ! git -C "$r" rev-parse --git-dir > /dev/null 2>&1; then
               echo "TRACKER: $r is not a git checkout — drift NOT checked."
@@ -232,7 +240,7 @@
             # tracker for every gen-* repo by ruling, and the only .beads
             # workspace in the tree. It lives beside the ADRs and specs it cites
             # rather than in den-hoag, which ADR-0002 freezes.
-            env.BEADS_DIR = beadsDir;
+            env = lib.optionalAttrs (workspace != null) { BEADS_DIR = beadsDir; };
           };
         };
       };

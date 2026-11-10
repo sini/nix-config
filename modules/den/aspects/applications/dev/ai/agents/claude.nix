@@ -45,9 +45,13 @@
         inputs',
         lib,
         pkgs,
+        user,
         ...
       }:
       let
+        # Typed in schema/user.nix; `user` carries only what the user defined, so the
+        # defaults are restated here, as every user.settings reader does.
+        cfg = user.settings.claude or { };
         extensionsList = lib.flatten agent-extensions;
 
         skillExts = lib.filter (e: e.type or "" == "skill" || e.type or "" == "mcp") extensionsList;
@@ -107,11 +111,15 @@
 
         # Projects, relative to home, whose sessions get the orchestrator hooks (gated.sh).
         # Matched exactly against the STARTING cwd, so a worktree below one stays ungated.
-        gatedProjects = [ "Documents/repos/sini/den-ag-design" ];
+        gatedProjects = cfg.gatedProjects or [ ];
         # The xmsg arc's design repo. Its sessions get their own boot and pre-compact pointers,
         # keyed on the start directory (started_at in gated.sh); it is NOT gated, so none of
-        # den-ag-design's budget, handoff and hold law applies there.
-        xmsgDesign = "${config.home.homeDirectory}/Documents/repos/sini/xmsg-design";
+        # den-ag-design's budget, handoff and hold law applies there. Unset: both exit at once.
+        xmsgStarted =
+          if cfg.xmsgDesign or null == null then
+            "exit 0"
+          else
+            ''[ "$(started_at)" = "$(realpath -m "${config.home.homeDirectory}/${cfg.xmsgDesign}")" ] || exit 0'';
       in
       {
         home.packages = [
@@ -306,25 +314,19 @@
 
               # nix-config's generated files (its CLAUDE.md "Do Not Edit" list), in every
               # checkout and worktree of it. The repo gitignores .claude, so the rule lives here.
-              deny =
-                lib.concatMap
-                  (
-                    repo:
-                    map (p: "Edit(~/Documents/repos/sini/${repo}/${p})") [
-                      "flake.nix"
-                      "README.md"
-                      "TOPOLOGY.md"
-                      "diagrams/**"
-                      "generated/**"
-                      ".pre-commit-config.yaml"
-                      "charts/**/default.nix"
-                      "images/*/*/**"
-                    ]
-                  )
-                  [
-                    "nix-config*"
-                    "nix-darwin"
-                  ];
+              deny = lib.concatMap (
+                repo:
+                map (p: "Edit(~/${repo}/${p})") [
+                  "flake.nix"
+                  "README.md"
+                  "TOPOLOGY.md"
+                  "diagrams/**"
+                  "generated/**"
+                  ".pre-commit-config.yaml"
+                  "charts/**/default.nix"
+                  "images/*/*/**"
+                ]
+              ) (cfg.nixConfigCheckouts or [ ]);
             };
 
             env = {
@@ -826,13 +828,17 @@
           fi
 
           gated() {
-            [ -n "$marker" ] || return 1
+            ${if gatedProjects == [ ] then "return 1" else ''[ -n "$marker" ] || return 1''}
             if [ "$(hook_field .hook_event_name)" = SessionStart ]; then
               case "$(realpath -m "$(hook_field .cwd)" 2>/dev/null)" in
                 ${
-                  lib.concatMapStringsSep "|" (
-                    p: ''"$(realpath -m "${config.home.homeDirectory}/${p}")"''
-                  ) gatedProjects
+                  # No projects: unreachable past the `return 1` above, but a case arm must parse.
+                  if gatedProjects == [ ] then
+                    "/dev/null/none"
+                  else
+                    lib.concatMapStringsSep "|" (
+                      p: ''"$(realpath -m "${config.home.homeDirectory}/${p}")"''
+                    ) gatedProjects
                 })
                   # The model reaches SessionStart only; ctx_pct reads it back from here.
                   mkdir -p "''${marker%/*}" 2>/dev/null \
@@ -904,7 +910,7 @@
         # sessions that STARTED in xmsg-design (any SessionStart source; the start is sticky).
         home.file.".claude/xmsg-session-boot.sh".text = ''
           . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
-          [ "$(started_at)" = "$(realpath -m "${xmsgDesign}")" ] || exit 0
+          ${xmsgStarted}
           cat << 'BOOT'
           xmsg-design session. BOOT ORDER, both under the xmsg-design root:
             1. STATUS/RESUME-PROMPT-XMSG.md
@@ -919,7 +925,7 @@
         # settings.env BEADS_DIR, not the repo's.
         home.file.".claude/xmsg-pre-compact.sh".text = ''
           . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
-          [ "$(started_at)" = "$(realpath -m "${xmsgDesign}")" ] || exit 0
+          ${xmsgStarted}
           cat << 'MSG'
           SUMMARY INSTRUCTIONS — xmsg-design session. Carry these VERBATIM, never paraphrased:
             · every live agent: name/id, its task, and the artefact it was told to write
@@ -998,7 +1004,7 @@
             else
               echo "  tracker               : br not on PATH here"
             fi
-            for r in "$HOME"/Documents/repos/sini/den-ag-design "$HOME"/Documents/repos/sini/gen*; do
+            for r in ${lib.concatMapStringsSep " " (r: ''"$HOME"/${r}'') (cfg.compactionRepos or [ ])}; do
               [ -d "$r/.git" ] || continue
               st=$(git -C "$r" status --porcelain 2>/dev/null | wc -l)
               ah=$(git -C "$r" rev-list --count @{u}..HEAD 2>/dev/null || echo 0)
@@ -1073,7 +1079,7 @@
             set -uo pipefail
             . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
             gated || exit 0
-            f="${config.home.homeDirectory}/${lib.head gatedProjects}/STATUS/HANDOFF.md"
+            f="${config.home.homeDirectory}/${lib.concatStrings (lib.take 1 gatedProjects)}/STATUS/HANDOFF.md"
             out=$(awk '/^──.*COMMISSION FIELD/ {on=1} on && /^──/ && !/COMMISSION FIELD/ {exit} on' "$f" 2>/dev/null)
             if [ -n "$out" ]; then
               printf 'Re-injected after compaction from %s:\n%s\n' "$f" "$out"

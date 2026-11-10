@@ -135,7 +135,40 @@ in
                     description = "Whether to inherit host-level aspect features for this user";
                   };
                   settings = mkOption {
-                    type = types.attrsOf (types.attrsOf types.anything);
+                    # Freeform, with typed groups for the aspects whose settings are paths
+                    # into one user's home. Every typed default is empty, and empty is off.
+                    type = types.submodule {
+                      freeformType = types.attrsOf (types.attrsOf types.anything);
+                      # applications.dev.ai.agents.claude
+                      options.claude = {
+                        gatedProjects = mkOption {
+                          type = types.listOf types.str;
+                          default = [ ];
+                          description = "Projects, relative to home, whose sessions get the orchestrator hooks (claude.nix gated.sh). Empty: no session is ever gated.";
+                        };
+                        xmsgDesign = mkOption {
+                          type = types.nullOr types.str;
+                          default = null;
+                          description = "The xmsg arc's design repo, relative to home; sessions started there get its boot and pre-compact pointers. null: neither fires.";
+                        };
+                        nixConfigCheckouts = mkOption {
+                          type = types.listOf types.str;
+                          default = [ ];
+                          description = "Checkouts of this nix-config (globs relative to home) whose generated files are denied to Edit. Empty: no deny rules.";
+                        };
+                        compactionRepos = mkOption {
+                          type = types.listOf types.str;
+                          default = [ ];
+                          description = "Repos (globs relative to home) whose modified/unpushed counts a gated session's pre-compact summary reports. Empty: none.";
+                        };
+                      };
+                      # applications.dev.ai.tools.beads
+                      options.beads.workspace = mkOption {
+                        type = types.nullOr types.str;
+                        default = null;
+                        description = "The pinned br workspace (a .beads directory), relative to home, exported as BEADS_DIR. null: no BEADS_DIR.";
+                      };
+                    };
                     default = { };
                     description = "Per-user feature settings (freeform nested namespace)";
                   };

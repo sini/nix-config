@@ -15,6 +15,19 @@
     ];
     settings.git.signing.method = "ssh";
     settings.bitwarden.email = "jason.bowman@pm.me";
+    settings.claude = {
+      gatedProjects = [ "Documents/repos/sini/den-ag-design" ];
+      xmsgDesign = "Documents/repos/sini/xmsg-design";
+      nixConfigCheckouts = [
+        "Documents/repos/sini/nix-config*"
+        "Documents/repos/sini/nix-darwin"
+      ];
+      compactionRepos = [
+        "Documents/repos/sini/den-ag-design"
+        "Documents/repos/sini/gen*"
+      ];
+    };
+    settings.beads.workspace = "Documents/repos/sini/den-ag-design/.beads";
 
     identity = {
       displayName = "Jason Bowman";
