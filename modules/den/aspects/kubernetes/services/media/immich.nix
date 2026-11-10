@@ -48,7 +48,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.immich = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

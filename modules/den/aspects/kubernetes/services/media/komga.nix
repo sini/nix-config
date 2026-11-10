@@ -34,7 +34,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.komga = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

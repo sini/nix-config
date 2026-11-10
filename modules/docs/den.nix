@@ -61,7 +61,7 @@
 
         Cross-cutting concerns collected from aspects and aggregated at host/user scope:
 
-        `firewall` `persist` `cache` `persistHome` `cacheHome` `secrets` `resolved-users` `service-domains` `prometheus-targets` `k8s-manifests` `nix-builders` `host-addrs` `bgp-peers` `vault-peers`
+        `firewall` `persist` `cache` `persistHome` `cacheHome` `secrets` `resolved-users` `prometheus-targets` `k8s-manifests` `nix-builders` `host-addrs` `bgp-peers` `vault-peers`
 
         ### Batteries
 

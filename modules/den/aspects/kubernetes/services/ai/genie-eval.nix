@@ -48,8 +48,6 @@ let
 in
 {
   den.aspects.kubernetes.services.ai.genie-eval = {
-    service-domains = [ ];
-
     k8s-manifests = _: {
       applications.genie-eval = {
         inherit namespace;

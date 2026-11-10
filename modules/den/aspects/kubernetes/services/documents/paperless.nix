@@ -50,7 +50,6 @@ let
 in
 {
   den.aspects.kubernetes.services.documents.paperless = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

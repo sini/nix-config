@@ -19,7 +19,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.prowlarr = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

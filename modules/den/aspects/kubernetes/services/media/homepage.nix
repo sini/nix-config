@@ -3,7 +3,7 @@
 # == Naming: "dash", not "homepage" ==
 # The uplink host already runs a NixOS homepage-dashboard on homepage.json64.dev
 # (modules/den/aspects/services/web/homepage.nix, behind oauth2-proxy) and owns
-# service-domains "homepage". To avoid a hard domain collision this k8s dashboard
+# the served-domains entry "homepage". To avoid a hard domain collision this k8s dashboard
 # is named "dash" -> dash.json64.dev (prod.nix services.dash.domain). The Kanidm
 # OAuth2 client is "dash" too (kanidm.nix mediaClientDefs.dash), so clientID =
 # "dash" and the domain + OIDC contract line up.
@@ -57,7 +57,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.dash = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

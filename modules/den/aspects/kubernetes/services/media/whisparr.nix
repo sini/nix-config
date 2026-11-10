@@ -18,7 +18,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.whisparr = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

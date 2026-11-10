@@ -6,7 +6,6 @@ let
 in
 {
   den.aspects.kubernetes.services.storage.longhorn = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     crds =

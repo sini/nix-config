@@ -32,7 +32,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.tdarr = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

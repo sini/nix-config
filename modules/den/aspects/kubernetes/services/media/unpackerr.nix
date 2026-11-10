@@ -35,8 +35,6 @@ let
 in
 {
   den.aspects.kubernetes.services.media.unpackerr = {
-    service-domains = [ ];
-
     # 80 hex chars: Unpackerr refuses keys outside 60-150 characters.
     age-secrets =
       { environment, ... }:

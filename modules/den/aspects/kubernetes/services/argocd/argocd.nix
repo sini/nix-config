@@ -1,4 +1,4 @@
-# ArgoCD — OIDC via Kanidm, Gateway API HTTPRoute, service-domains quirk.
+# ArgoCD — OIDC via Kanidm, Gateway API HTTPRoute, served-domains quirk.
 #
 # Ported from main:modules/kubernetes/services/argocd/argocd.nix
 {
@@ -11,7 +11,6 @@ let
 in
 {
   den.aspects.kubernetes.services.argocd = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

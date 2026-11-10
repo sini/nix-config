@@ -204,7 +204,6 @@
       ingressOn = peer: peer // { toPorts = [ { ports = [ (tcp port) ]; } ]; };
     in
     {
-      service-domains = serviceDomains;
       served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
       age-secrets =

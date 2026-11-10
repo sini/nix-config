@@ -22,7 +22,6 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.matrix-admin = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

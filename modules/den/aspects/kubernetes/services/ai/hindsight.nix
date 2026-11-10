@@ -86,7 +86,6 @@ in
     # endpoints and their model names are read out of this aspect's `instances`.
     includes = [ den.aspects.kubernetes.services.ai.llama-cpp ];
 
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     # The single generator for each bank's token; the .age files are created by

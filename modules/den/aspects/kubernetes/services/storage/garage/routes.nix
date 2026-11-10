@@ -10,7 +10,6 @@ let
 in
 {
   den.aspects.kubernetes.services.storage.garage.routes = {
-    service-domains = serviceDomains;
     # Grey: proxied mode's 100 MB upload cap breaks S3 multipart.
     served-domains =
       { cluster, ... }:

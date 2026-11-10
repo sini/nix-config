@@ -20,7 +20,6 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.element-web = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     k8s-manifests =

@@ -56,7 +56,6 @@ let
 in
 {
   den.aspects.kubernetes.services.communication.matrix.synapse = {
-    service-domains = serviceDomains;
     # Grey: Matrix federation does not work through the Cloudflare proxy.
     served-domains =
       { cluster, ... }:

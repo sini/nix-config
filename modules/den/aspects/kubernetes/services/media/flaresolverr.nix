@@ -4,14 +4,11 @@
 # (a FlareSolverr "indexer proxy") on its API port. It must reach the public
 # internet (that is its entire job), so it gets a world-egress CNP on 80/443.
 #
-# The service is described inline (formerly built via the mkMediaApp helper):
-# route-less and OIDC-less, so it declares an empty service-domains, no
-# age-secrets, no HTTPRoute, and no SecurityPolicy. Only the
+# The service is described inline and is route-less and OIDC-less: it declares
+# no served-domains, no age-secrets, no HTTPRoute, and no SecurityPolicy. Only the
 # internet-egress baseline CiliumNetworkPolicy is emitted.
 {
   den.aspects.kubernetes.services.media.flaresolverr = {
-    service-domains = [ ];
-
     k8s-manifests =
       {
         config,

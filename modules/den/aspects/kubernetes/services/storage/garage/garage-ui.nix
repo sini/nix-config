@@ -18,7 +18,6 @@ let
 in
 {
   den.aspects.kubernetes.services.storage.garage.garage-ui = {
-    service-domains = serviceDomains;
     served-domains = { cluster, ... }: cluster.servedDomains serviceDomains;
 
     age-secrets =

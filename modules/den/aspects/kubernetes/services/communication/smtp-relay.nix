@@ -84,8 +84,6 @@ in
       };
     };
 
-    service-domains = [ ];
-
     age-secrets =
       { cluster, environment, ... }:
       {

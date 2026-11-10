@@ -8,7 +8,6 @@
 {
   den.aspects.kubernetes.services.monitoring.grafana = {
     # The fleet's Grafana, at grafana.<domain> (DNS record + gateway listener).
-    service-domains = [ "grafana" ];
     served-domains = { cluster, ... }: cluster.servedDomains [ "grafana" ];
 
     k8s-manifests =

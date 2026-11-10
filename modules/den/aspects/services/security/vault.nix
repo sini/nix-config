@@ -201,7 +201,6 @@ in
         };
       };
 
-    service-domains = serviceDomains;
     served-domains = { environment, host, ... }: environment.servedDomains host serviceDomains;
 
     firewall = {

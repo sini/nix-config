@@ -27,7 +27,6 @@ in
     # Both UIs behind the gateway's kanidm OIDC (admins only: neither has auth
     # of its own, and a silence can mute any alert). They are also the
     # externalUrls, so notification links (silence, source graph) resolve.
-    service-domains = uis;
     served-domains = { cluster, ... }: cluster.servedDomains uis;
 
     age-secrets =
