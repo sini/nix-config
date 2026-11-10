@@ -169,7 +169,7 @@
           }
           {
             from = "Your role's standing law and tool traps were injected at start (the den-law recall\nblock). If that block says the recall FAILED, run `mcp__plugin_hm_hindsight__recall`\nyourself before measuring (if it is deferred, load it with `tool_search_tool_regex`,\npattern `hindsight__recall`).";
-            to = "Codex injects no recall at start: before measuring, run the hindsight server's\n`recall` tool yourself (listed as `mcp__hindsight__recall`) on your role's subject.\nIf your tool list has no hindsight tools, or the call fails or times out, the bank\nis unreachable from this host: report `recall: unavailable` with the error, and\nnever read that as an empty bank.";
+            to = "Your role's standing law and tool traps were injected at start (the den-law recall\nblock). If that block is absent or says the recall FAILED, run the hindsight\nserver's `recall` tool yourself (listed as `mcp__hindsight__recall`) before\nmeasuring. If your tool list has no hindsight tools, or the call fails or times out,\nthe bank is unreachable from this host: report `recall: unavailable` with the\nerror, and never read that as an empty bank.";
           }
           {
             from = "store it with `mcp__plugin_hm_hindsight__sync_retain` and confirm it\nwith `get_memory`";

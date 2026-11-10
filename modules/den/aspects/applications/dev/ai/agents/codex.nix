@@ -238,6 +238,144 @@
           ];
         };
 
+        # ★ THE GEN-ORCHESTRATION HOOKS, PORTED. Codex fires the same event names with the same
+        # session_id/cwd/hook_event_name/source fields, takes plain SessionStart stdout as model
+        # context, and takes hookSpecificOutput.additionalContext on SubagentStart, PreToolUse and
+        # UserPromptSubmit, so gated.sh and the scripts below run unchanged there. Ported as-is:
+        # the xmsg-design boot, the beads boot and drift checks, the compaction commission, and
+        # the hindsight recall for gen roles (it reads agent_type, which codex fills with the role).
+        # Ported with codex wording: the subagent brief. Ported with a codex data source: the
+        # budget (codex-budget below). NOT portable, by codex design: PreCompact can stop a turn
+        # or warn but cannot steer the summary, so pre-compact.sh's summary steering and hold
+        # have no codex equivalent (recovery runs at SessionStart(compact) instead), and
+        # SubagentStop's output goes to the subagent, not the parent, so subagent-stop.sh's
+        # parent reminder has nowhere to land (the parent gets the child's final through
+        # wait_agent). Out of scope: rtk, cbm and the search augmenter.
+        claudeHook =
+          name:
+          let
+            cmds = lib.filter (c: lib.hasInfix name c) (
+              map (h: toString h.command) (
+                lib.concatMap (g: g.hooks) (
+                  lib.concatLists (lib.attrValues config.programs.claude-code.settings.hooks)
+                )
+              )
+            );
+          in
+          if cmds == [ ] then
+            throw "codex.nix: no claude hook command contains `${name}` to port"
+          else
+            lib.head cmds;
+        cmdHook = command: {
+          type = "command";
+          inherit command;
+        };
+        # Codex's own measurements, never Claude's: the session log's last token_count event
+        # (last_token_usage.total_tokens, which codex itself counts as the tokens in context,
+        # protocol.rs tokens_in_context_window, over model_context_window) and its rate_limits
+        # (primary/secondary used_percent with their window_minutes). Anything absent is `?`,
+        # never estimated. Same gates and delivery as budget.sh: SessionStart prints the line;
+        # PreToolUse and UserPromptSubmit speak only when the gate changes.
+        codexBudget = pkgs.writeShellApplication {
+          name = "codex-budget";
+          # gated.sh (claude.nix) is sourced at run time and defines hook_field and marker.
+          excludeShellChecks = [
+            "SC1091"
+            "SC2154"
+          ];
+          runtimeInputs = [
+            pkgs.coreutils
+            pkgs.gawk
+            pkgs.jq
+          ];
+          text = ''
+            event=''${1:-manual}
+            . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+            [ "$event" = manual ] || gated || exit 0
+            tp=$(hook_field .transcript_path)
+            rec=""
+            if [ -n "$tp" ] && [ -s "$tp" ]; then
+              rec=$(tail -n 2000 "$tp" | jq -c 'select(.type == "event_msg" and .payload.type == "token_count") | .payload' 2>/dev/null | tail -n 1)
+            fi
+            num() { case "$1" in "" | null | *[!0-9.]*) echo "?" ;; *) echo "$1" ;; esac; }
+            tok=$(num "$(printf '%s' "$rec" | jq -r '.info.last_token_usage.total_tokens // empty' 2>/dev/null)")
+            win=$(num "$(printf '%s' "$rec" | jq -r '.info.model_context_window // empty' 2>/dev/null)")
+            ctx="?"
+            if [ "$tok" != "?" ] && [ "$win" != "?" ] && [ "$win" != 0 ]; then
+              ctx=$(awk -v t="$tok" -v w="$win" 'BEGIN{printf "%.1f", t*100/w}')
+            fi
+            limits=""
+            weekly="?"
+            for k in primary secondary; do
+              used=$(num "$(printf '%s' "$rec" | jq -r ".rate_limits.$k.used_percent // empty" 2>/dev/null)")
+              mins=$(num "$(printf '%s' "$rec" | jq -r ".rate_limits.$k.window_minutes // empty" 2>/dev/null)")
+              [ "$used" = "?" ] && continue
+              limits="$limits · codex-$k $used% (''${mins}m window)"
+              [ "$mins" = 10080 ] && weekly=$used
+            done
+            gate=""
+            if [ "$ctx" != "?" ]; then
+              gate=$(awk -v c="$ctx" 'BEGIN{
+                if (c+0 >= 90)      print "CLOSE OUT (ctx>=90) - the rest of the window is the handoff";
+                else if (c+0 >= 75) print "NO FRESH SUBJECTS (ctx>=75) - finish open streams, start nothing new";
+              }')
+            fi
+            if [ "$weekly" != "?" ] && awk -v w="$weekly" 'BEGIN{exit !(w+0>=95)}'; then
+              gate="CLEAN CLOSEOUT (7d>=95) - unhurried; finish in-flight, no new dispatch"
+            fi
+            src="codex session log: last_token_usage.total_tokens $tok / model_context_window $win"
+            [ -n "$rec" ] || src="codex session log: no token_count record yet"
+            line="BUDGET $event · ctx $ctx% ($src)$limits''${gate:+ · GATE: $gate}"
+            if [ "$event" != SessionStart ] && [ "$event" != manual ]; then
+              seen="$marker.codex-gate.$event"
+              if [ -z "$gate" ]; then rm -f "$seen"; exit 0; fi
+              [ "$gate" != "$(cat "$seen" 2>/dev/null)" ] || exit 0
+              printf '%s' "$gate" > "$seen"
+            fi
+            case "$event" in
+              PreToolUse | UserPromptSubmit)
+                printf '%s' "$line" | jq -Rs --arg ev "$event" '{hookSpecificOutput: {hookEventName: $ev, additionalContext: .}}'
+                ;;
+              *) printf '%s\n' "$line" ;;
+            esac
+          '';
+        };
+        # subagent-brief.sh's invariants in codex terms: the final message is the delivery.
+        codexBrief = pkgs.writeShellScript "codex-subagent-brief" ''
+          . "$HOME/.claude/gated.sh" 2>/dev/null || exit 0
+          gated || exit 0
+          ${lib.getExe pkgs.jq} -nc --arg c "Brief invariants (den-ag-design fleet): Write your report as a file, and end with it as your final message, which codex returns to the orchestrator through wait_agent. Write scratch only under <scratchpad>/<agent-name>-private/. Never pkill -f, killall, or kill on pgrep -f output; kill only a PID captured with \$!. Wait on a \$! PID or a producer-written marker, always under timeout. Run every nix eval, nix build, nix flake check and nix-unit under systemd-run --user --scope -q -p MemoryMax=12G, except nix-flake-build host builds." \
+            '{hookSpecificOutput: {hookEventName: "SubagentStart", additionalContext: $c}}'
+        '';
+        orchestrationHooks = lib.optionalAttrs config.programs.claude-code.enable {
+          SessionStart = [
+            {
+              hooks = [
+                (cmdHook "bash ${config.home.homeDirectory}/.claude/xmsg-session-boot.sh || true")
+                (cmdHook "${claudeHook "beads-tracker-drift"}")
+                (cmdHook "${claudeHook "beads-session-boot"}")
+                (cmdHook "${lib.getExe codexBudget} SessionStart || true")
+              ];
+            }
+            {
+              matcher = "compact";
+              hooks = [ (cmdHook "bash ${config.home.homeDirectory}/.claude/handoff-commission.sh || true") ];
+            }
+          ];
+          SubagentStart = [
+            {
+              hooks = [
+                (cmdHook "${claudeHook "hindsight-subagent-recall"}")
+                (cmdHook "${codexBrief}")
+              ];
+            }
+          ];
+          UserPromptSubmit = [
+            { hooks = [ (cmdHook "${lib.getExe codexBudget} UserPromptSubmit || true") ]; }
+          ];
+          PreToolUse = [ { hooks = [ (cmdHook "${lib.getExe codexBudget} PreToolUse || true") ]; } ];
+        };
+
         # xmsg's lifecycle hooks after the guard, lists joined per event. Codex keys hook trust
         # by position (event:group:handler), so this order must stay stable: the direnv rewrite
         # is appended after the guard and xmsg.
@@ -245,6 +383,7 @@
           guardHooks
           config.programs.xmsg.harnesses.codex.hooks
           direnvHooks
+          orchestrationHooks
         ];
         hooksPath = "${config.home.homeDirectory}/.codex/hooks.json";
       in
