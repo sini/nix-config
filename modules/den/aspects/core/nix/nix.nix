@@ -104,8 +104,20 @@
     };
 
     nixos =
-      { lib, host, ... }:
       {
+        config,
+        lib,
+        host,
+        ...
+      }:
+      {
+        # A host that stopped hosting microvm guests loses the sweep with the host module, so
+        # the persistent-store guests' root sets go here (docs/microvm-persistent-store.md
+        # §2.4). Not in a guest: a guest never holds them.
+        systemd.tmpfiles.rules = lib.mkIf (
+          !(config.microvm.host.enable or false) && !(config.microvm.guest.enable or false)
+        ) [ "R ${(import ../../virtualization/_persistent-store.nix { inherit lib; }).rootsDir}" ];
+
         nix = {
           settings = {
             # trusted-users grants root-equivalent nix power (override settings,

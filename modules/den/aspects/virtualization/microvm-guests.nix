@@ -1,6 +1,7 @@
 { den, lib, ... }:
 let
   gpuLib = import ./_gpu-passthrough-lib.nix { inherit lib; };
+  psLib = import ./_persistent-store.nix { inherit lib; };
 
   rwStore = "/nix/.rw-store";
 
@@ -111,6 +112,14 @@ in
       };
       guests = map withOverlay children;
 
+      sweep = psLib.sweep {
+        inherit pkgs scratchRoot;
+        systemd = config.systemd.package;
+        keepImages = lib.concatMap (g: map (v: v.image) g.scratch) guests;
+        keepRoots = [ ];
+        configured = map (g: g.name) guests;
+      };
+
       # A guest's root is a tmpfs, so its impermanence binds persist nothing unless
       # /persist and /cache are real. Each guest gets its own directory under the
       # host's matching volume, never the host's own state, so it cannot write
@@ -199,11 +208,12 @@ in
         # microvm-run, as the microvm user, creates the scratch images here.
         ++ lib.optional (lib.any (g: g.scratch != [ ]) guests) "d ${scratchRoot} 0775 root kvm -";
 
-      # Host-side gate: hold the VM's start units until the passed-through PCI
-      # device has actually been unbound from the host onto vfio-pci.
+      systemd.timers = sweep.timers;
+
       systemd.services = lib.mkMerge (
+        [ sweep.services ]
         # Scratch images start empty: delete them before microvm-run recreates them.
-        map (
+        ++ map (
           g:
           lib.optionalAttrs (g.scratch != [ ]) {
             "microvm@${g.name}".serviceConfig.ExecStartPre = lib.mkBefore [
@@ -213,6 +223,8 @@ in
             ];
           }
         ) guests
+        # Host-side gate: hold the VM's start units until the passed-through PCI
+        # device has actually been unbound from the host onto vfio-pci.
         ++ map (
           g:
           lib.optionalAttrs (g.recs != [ ]) (
