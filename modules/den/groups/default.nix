@@ -49,6 +49,12 @@
       description = "Grafana login";
       members = [ "users" ];
     };
+    # The owner only: it grants tokens the xmsg MCP gateway accepts (kanidm.nix xmsg-gateway).
+    "xmsg-gateway.access" = {
+      labels = [ "oauth-grant" ];
+      description = "xmsg MCP gateway (hosted connector login)";
+      members = [ "admins" ];
+    };
     "search.access" = {
       labels = [ "oauth-grant" ];
       description = "SearXNG web search UI";

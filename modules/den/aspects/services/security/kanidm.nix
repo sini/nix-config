@@ -83,6 +83,29 @@ let
       domain = svc: env.getDomainFor svc;
     in
     {
+      # xmsg-mcp-gateway (xmsg-design xmsg-ng1.13): ChatGPT's hosted connector logs the owner
+      # in here and the gateway introspects the token. ★ DEDICATED: this client is the
+      # gateway's audience, so it is used for nothing else. Kanidm sets aud to the client
+      # name (idm/oauth2.rs `aud = o2rs.name`), and the gateway accepts a token only when
+      # introspection reports aud == client_id == this name (its `audience` option), so a
+      # second consumer of this client would hold tokens the gateway accepts. Confidential,
+      # with PKCE S256 enforced (kanidm's default). Its redirect URIs come from the host
+      # setting xmsgGateway.redirectUris (the nixos block), which overrides originUrl.
+      xmsg-gateway = {
+        displayName = "xmsg MCP gateway";
+        originUrl = [ "https://chatgpt.com/connector_platform_oauth_redirect" ];
+        originLanding = "https://chatgpt.com";
+        basicSecretFile = secretPaths.xmsg-gateway-oidc-client-secret or null;
+        preferShortUsername = true;
+        scopeMaps."xmsg-gateway.access" = [
+          "openid"
+          "profile"
+          "email"
+          "identity:read"
+          "events:subscribe"
+        ];
+      };
+
       # Gateway-OIDC fronts for the cluster's Prometheus and Alertmanager
       # (kubernetes/services/monitoring/prometheus.nix); admins only.
       prometheus = {
@@ -631,6 +654,12 @@ in
     includes = [ den.aspects.services.networking.nginx ];
 
     settings = {
+      xmsgGateway.redirectUris = lib.mkOption {
+        type = lib.types.nonEmptyListOf lib.types.str;
+        default = [ "https://chatgpt.com/connector_platform_oauth_redirect" ];
+        description = "Redirect URIs of the dedicated xmsg-gateway OAuth2 client: the exact callback the hosted connector's setup UI shows.";
+      };
+
       # kanidm-mail-sender drains kanidm's outbound message queue (credential
       # reset and account recovery links), authenticating with a read-write API
       # token of the mail-sender service account, a member of
@@ -691,7 +720,29 @@ in
           nameValuePair "${name}-oidc-client-secret" config.age.secrets."${name}-oidc-client-secret".path
         ) (filterAttrs (_: sys: !(sys.public or false)) (mkOAuth2Services environment { }));
 
-        oauth2Services = mkOAuth2Services environment secretPaths;
+        oauth2Services =
+          let
+            base = mkOAuth2Services environment secretPaths;
+          in
+          base
+          // {
+            xmsg-gateway = base.xmsg-gateway // {
+              originUrl = host.settings.services.security.kanidm.xmsgGateway.redirectUris;
+            };
+          };
+        # The gateway's audience is this client's name, so its access group may grant
+        # nothing else, and no other client may share its redirect URIs.
+        xmsgGatewayDedicated =
+          let
+            others = lib.removeAttrs oauth2Services [ "xmsg-gateway" ];
+            gw = oauth2Services.xmsg-gateway;
+          in
+          !(lib.any (sys: (sys.scopeMaps or { }) ? "xmsg-gateway.access") (lib.attrValues others))
+          && !(lib.any (sys: lib.any (u: lib.elem u (lib.toList (sys.originUrl or [ ]))) gw.originUrl) (
+            lib.attrValues others
+          ))
+          && !(gw.allowInsecureClientDisablePkce or false)
+          && !(gw.public or false);
 
         mailSender = host.settings.services.security.kanidm.mailSender;
         mailSenderUuid = "794f8210-93f9-4ec6-b89f-24607b41f9e2";
@@ -706,6 +757,12 @@ in
       in
       lib.mkMerge [
         {
+          assertions = [
+            {
+              assertion = xmsgGatewayDedicated;
+              message = "kanidm: the xmsg-gateway OAuth2 client must stay dedicated (its group grants no other client, no other client shares its redirect URIs, confidential, PKCE on): the gateway accepts every token whose aud is its name.";
+            }
+          ];
           services = {
             kanidm = {
               # Carries two OAuth2 token-lifetime patches (see the .patch header):
