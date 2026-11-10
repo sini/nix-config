@@ -101,6 +101,36 @@ spec:
             - mountPath: /etc/xmsg-mcp-gateway
               name: config
               readOnly: true
+        - env:
+            - name: CONTROL_PLANE_TUNNEL_ID
+              value: tunnel_6af201ecbe0c8191b130364319b328a2
+            - name: CONTROL_PLANE_BASE_URL
+              value: https://api.openai.com
+            - name: MCP_SERVER_URL
+              value: http://127.0.0.1:8787/mcp
+            - name: MCP_STARTUP_WAIT_TIMEOUT
+              value: 60s
+            - name: HOME
+              value: /tmp
+            - name: CONTROL_PLANE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  key: tunnel-runtime-key
+                  name: xmsg-gateway
+          image: ghcr.io/openai/tunnel-client@sha256:333005e6f5df2760f1b9f06fe873f5fc629554218f68c91d9cfbfe467d0fb42b
+          name: tunnel-client
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsNonRoot: true
+            runAsUser: 10001
+          volumeMounts:
+            - mountPath: /tmp
+              name: tmp
       enableServiceLinks: false
       initContainers:
         - command:

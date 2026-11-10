@@ -39,7 +39,12 @@
       hub = "cortex";
       # kanidm's host: the gateway's resource origin and its introspection address.
       kanidmHost = "uplink";
-      tunnel.enable = false;
+      # The OpenAI Secure MCP Tunnel the ChatGPT connector reaches the gateway through (owner
+      # approved 2026-11-10). One tunnel id serves one client: the cortex spike is stopped.
+      tunnel = {
+        enable = true;
+        id = "tunnel_6af201ecbe0c8191b130364319b328a2";
+      };
       # json's kanidm person UUID, the owner's SSO login (`kanidm person get json`, read
       # anonymously 2026-11-10), which kanidm issues as the OIDC `sub`. Acceptance step 1
       # checks it against the first real token's introspection before the grant is enabled.
