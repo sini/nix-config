@@ -10,8 +10,14 @@ rec {
   lowerPort = "5119";
   hostDaemonSocket = "/nix/var/nix/daemon-socket/socket";
 
-  # The export, relative to the guest's /cache (the host's stateDir <guest> "/cache").
-  exportRel = ".microvm-store/roots";
+  # The exchange share: a small virtiofs share of the host's /var/lib/microvms/<guest>/exchange,
+  # only to carry files between guest and host; the export is written there (§2.3).
+  exchangeMount = "/run/microvm-exchange";
+  exportName = "store-roots";
+
+  # virtio-blk carries at most 20 bytes of serial (VIRTIO_BLK_ID_BYTES); a longer one is
+  # cut, and the guest's /dev/disk/by-id/virtio-<serial> mount would never appear (§2.10).
+  serialOk = s: lib.stringLength s <= 20;
 
   # Runners that attach vhost-vsock, so a CID-2 connection reaches the host (§2.1).
   vsockHypervisors = [
@@ -66,7 +72,7 @@ rec {
         "--counters"
         "/nix/var/nix/reconcile"
         "--out"
-        "/cache/${exportRel}"
+        "${exchangeMount}/${exportName}"
         "--max-paths"
         (toString maxExportPaths)
       ];
@@ -169,7 +175,7 @@ rec {
           wants = [ "nix-daemon.socket" ];
           after = [ "nix-daemon.socket" ];
           unitConfig.RequiresMountsFor = [
-            "/cache"
+            exchangeMount
             rwStore
           ];
           serviceConfig = {
@@ -243,7 +249,7 @@ rec {
       name,
       image,
       size,
-      cacheDir,
+      exchangeDir,
       maxExportPaths,
     }:
     let
@@ -293,8 +299,8 @@ rec {
               lib.escapeShellArgs [
                 "--guest"
                 name
-                "--state-dir"
-                cacheDir
+                "--exchange-dir"
+                exchangeDir
                 "--roots-dir"
                 rootsDir
                 "--store-dir"
@@ -315,7 +321,7 @@ rec {
       // v.units;
       paths.${unit} = {
         wantedBy = [ "paths.target" ];
-        pathConfig.PathChanged = "${cacheDir}/${exportRel}";
+        pathConfig.PathChanged = "${exchangeDir}/${exportName}";
         # Rapid export rewrites must never disable the trigger (measured 2026-11-10: the
         # default start limit failed this unit with unit-start-limit-hit). The 15-minute timer
         # stays the backstop either way.
@@ -324,6 +330,130 @@ rec {
       timers.${unit} = {
         wantedBy = [ "timers.target" ];
         timerConfig.OnCalendar = "*:0/15";
+      };
+    };
+
+  # §2.10: the host program behind the state-zvol units and the sweep's zvol step.
+  zvolProg =
+    pkgs:
+    pkgs.writers.writePython3Bin "microvm-state-zvol" {
+      flakeIgnore = [
+        "E501"
+        "E203"
+      ];
+    } (
+      builtins.readFile ./_state-zvol.py
+    );
+
+  # §2.10: per zvol-backend guest, on its host. `volumes`: [{ zvol (name under parent), size
+  # (MiB), stateDir }]. Both units run at every guest start (RemainAfterExit = no) and never
+  # on a switch, which would take the running guest down.
+  stateZvolUnits =
+    {
+      pkgs,
+      zfs,
+      systemd,
+      name,
+      parent,
+      volumes,
+    }:
+    let
+      prog = "${zvolProg pkgs}/bin/microvm-state-zvol";
+      vols =
+        f:
+        lib.concatMap (v: [
+          "--vol"
+          "${v.zvol}=${f v}"
+        ]) volumes;
+      common = {
+        requiredBy = [ "microvm@${name}.service" ];
+        before = [ "microvm@${name}.service" ];
+        restartIfChanged = false;
+        path = [
+          zfs
+          systemd
+          pkgs.coreutils
+          pkgs.util-linux
+        ];
+        serviceConfig = {
+          Type = "oneshot";
+          RemainAfterExit = false;
+        };
+      };
+    in
+    {
+      "microvm-state-volumes@${name}" = lib.recursiveUpdate common {
+        description = "Create, format and grow ${name}'s state zvols";
+        after = [
+          "zfs-import-${lib.head (lib.splitString "/" parent)}.service"
+          "zfs-volumes.target"
+        ];
+        path = common.path ++ [ pkgs.e2fsprogs ];
+        # Past the default 90 s: a settle, a 60 s link wait and a mkfs per volume. A kill
+        # mid-format is recovered by the next start (formatted=pending).
+        serviceConfig.TimeoutStartSec = "10min";
+        serviceConfig.ExecStart = "${prog} volumes ${
+          lib.escapeShellArgs (
+            [
+              "--parent"
+              parent
+            ]
+            ++ vols (v: toString v.size)
+          )
+        }";
+      };
+      "microvm-state-migrate@${name}" = lib.recursiveUpdate common {
+        description = "Move ${name}'s state directories onto its zvols (one-way)";
+        requires = [ "microvm-state-volumes@${name}.service" ];
+        after = [ "microvm-state-volumes@${name}.service" ];
+        path = common.path ++ [
+          pkgs.psmisc
+          pkgs.rsync
+        ];
+        serviceConfig = {
+          # The first copy (16 GiB, 2.17M inodes) runs inside the guest's start.
+          TimeoutStartSec = "infinity";
+          # A killed copy cannot leave its mount in the host namespace.
+          PrivateMounts = true;
+          ExecStart = "${prog} migrate ${
+            lib.escapeShellArgs (
+              [
+                "--parent"
+                parent
+              ]
+              ++ vols (v: v.stateDir)
+            )
+          }";
+        };
+      };
+    };
+
+  # §2.10: refuse a virtiofs start over a tombstoned state directory, as a failed unit the
+  # fleet's alert sees (virtiofsd itself only loops in activating). `stateDirs` is empty on
+  # the zvol backend, where the unit passes.
+  guardUnit =
+    {
+      pkgs,
+      name,
+      stateDirs,
+    }:
+    {
+      "microvm-state-guard@${name}" = {
+        description = "Refuse ${name}'s virtiofs state once it moved to zvols";
+        requiredBy = [ "microvm-virtiofsd@${name}.service" ];
+        before = [ "microvm-virtiofsd@${name}.service" ];
+        restartIfChanged = false;
+        serviceConfig = {
+          Type = "oneshot";
+          ExecStart = "${zvolProg pkgs}/bin/microvm-state-zvol guard ${
+            lib.escapeShellArgs (
+              lib.concatMap (d: [
+                "--state-dir"
+                d
+              ]) stateDirs
+            )
+          }";
+        };
       };
     };
 
@@ -375,6 +505,9 @@ rec {
       keepImages,
       keepRoots,
       configured,
+      # §2.10, null on a host without a zvol parent: { parent, zfs, guests (zvol backend),
+      # destroy, drops ([{ guest, backend, zvols, paths }], one per dropPreZvolBackup) }.
+      zvol ? null,
     }:
     let
       prog = pkgs.writers.writePython3Bin "microvm-store-sweep" { flakeIgnore = [ "E501" ]; } (
@@ -384,7 +517,8 @@ rec {
         images = keepImages;
         roots = keepRoots;
         inherit configured;
-      };
+      }
+      // lib.optionalAttrs (zvol != null) { zvol = removeAttrs zvol [ "zfs" ]; };
       args = lib.escapeShellArgs (
         [
           "--scratch-root"
@@ -405,12 +539,44 @@ rec {
           c
         ]) configured
       );
+      zvolArgs = lib.escapeShellArgs (
+        [
+          "--parent"
+          zvol.parent
+        ]
+        ++ lib.concatMap (g: [
+          "--zvol-guest"
+          g
+        ]) zvol.guests
+        ++ lib.concatMap (c: [
+          "--configured"
+          c
+        ]) configured
+        ++ lib.concatMap (d: [
+          "--destroy"
+          d
+        ]) zvol.destroy
+        ++ lib.concatMap (d: [
+          "--drop-backup"
+          (builtins.toJSON d)
+        ]) zvol.drops
+      );
       unit = {
         description = "Delete microvm images and root sets the configuration no longer names";
-        path = [ systemd ];
+        path = [
+          systemd
+        ]
+        ++ lib.optionals (zvol != null) [
+          zvol.zfs
+          pkgs.psmisc
+        ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = "${prog}/bin/microvm-store-sweep ${args}";
+          # The zvol step runs last; it fails while a leaked zvol remains (§2.10).
+          ExecStart = [
+            "${prog}/bin/microvm-store-sweep ${args}"
+          ]
+          ++ lib.optional (zvol != null) "${zvolProg pkgs}/bin/microvm-state-zvol sweep ${zvolArgs}";
         };
       };
       periodic = verdicts { inherit pkgs systemd; } "microvm-store-sweep-periodic";

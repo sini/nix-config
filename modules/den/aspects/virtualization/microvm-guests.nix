@@ -118,9 +118,39 @@ in
           }) (vm.microvm.scratchVolumes or { })
         );
         hasRwStore = lib.any (v: v.mountPoint == rwStore) scratch || persistent;
+        # §2.10: /persist and /cache on zvols, not virtiofs.
+        zvol = (vm.microvm.stateBackend or "virtiofs") == "zvol";
+        dropBackup = vm.microvm.dropPreZvolBackup or false;
+        stateZvols = map (
+          volume:
+          let
+            short = lib.removePrefix "/" volume;
+          in
+          {
+            inherit volume;
+            # The zvol's name under zvolParent, and the disk's serial: by-id, not an ext4 label,
+            # which holds only 16 bytes.
+            zvol = "${vm.name}-${short}";
+            size = (vm.microvm.stateVolumeSizes or { }).${volume} or null;
+            stateDir = stateDir vm.name volume;
+          }
+        ) stateVolumes;
+        exchangeDir = "${config.microvm.stateDir}/${vm.name}/exchange";
       };
       guests = map withOverlay children;
       persistentGuests = lib.filter (g: g.persistent) guests;
+      zvolGuests = lib.filter (g: g.zvol) guests;
+
+      # §2.10: state zvols live under this dataset; the volumes unit creates it.
+      hostSettings = host.settings.virtualization.microvm-host;
+      zvolParent =
+        if hostSettings.zvolParent != null then
+          hostSettings.zvolParent
+        else if host.hasAspect den.aspects.disk.zfs-disk-single then
+          "zroot/local/microvms"
+        else
+          null;
+      zfs = config.boot.zfs.package;
       hasImages = lib.any (g: g.scratch != [ ] || g.persistent) guests;
 
       sweep = psLib.sweep {
@@ -130,6 +160,22 @@ in
           lib.concatMap (g: map (v: v.image) g.scratch) guests ++ map (g: g.storeImage) persistentGuests;
         keepRoots = map (g: g.name) persistentGuests;
         configured = map (g: g.name) guests;
+        zvol =
+          if zvolParent == null then
+            null
+          else
+            {
+              parent = zvolParent;
+              inherit zfs;
+              guests = map (g: g.name) zvolGuests;
+              destroy = hostSettings.destroyStateZvols;
+              drops = map (g: {
+                guest = g.name;
+                backend = if g.zvol then "zvol" else "virtiofs";
+                zvols = map (v: "${zvolParent}/${v.zvol}") g.stateZvols;
+                paths = map (v: "${v.stateDir}.pre-zvol") g.stateZvols;
+              }) (lib.filter (g: g.dropBackup) guests);
+            };
       };
 
       psListener = psLib.hostListener { systemd = config.systemd.package; };
@@ -141,7 +187,7 @@ in
           inherit (g.ps) size maxExportPaths;
           systemd = config.systemd.package;
           image = g.storeImage;
-          cacheDir = stateDir g.name "/cache";
+          inherit (g) exchangeDir;
         }
       ) persistentGuests;
 
@@ -170,22 +216,33 @@ in
           mountPoint = volume;
           tag = "state${lib.replaceStrings [ "/" ] [ "-" ] volume}";
           proto = "virtiofs";
-          # O_PATH fds, not file handles: a file a guest opens and then unlinks cannot be
-          # reached by handle again, so fstat/pread on it fail with ESTALE, which breaks every
-          # anonymous-temp-file writer (measured 2026-11-09: br stages its JSONL in
-          # .beads/.tmpXXXX, unlinks it, and its pread fails with os error 116; natively on the
-          # same ZFS dataset the same calls succeed). virtiofsd 1.14 defaults to `prefer`, so
-          # this must be explicit.
-          # `never` holds one O_PATH fd per inode the guest caches, so the fd limit bounds how many
-          # files the guest can have looked up at once: virtiofsd's default (min(1000000, nr_open))
-          # ran out during a 696k-file git checkout on uplink-dev (measured 2026-11-10: 732156 fds
-          # held, freed to 518 by a guest drop_caches). Each fd pins a host dentry and inode, so
-          # 4M is a ceiling of a few GiB of host kernel memory, reached only by that many files.
-          extraArgs = [
-            "--inode-file-handles=never"
-            "--rlimit-nofile=4194304"
-          ];
+          extraArgs = stateShareArgs;
         }) stateVolumes;
+      # The persistent store's exchange share (§2.3, §2.10): the guest writes its export here,
+      # the host reads it. Small, but guest-written like the state shares, so their mode.
+      exchangeShare = g: {
+        source = g.exchangeDir;
+        mountPoint = psLib.exchangeMount;
+        tag = "exchange";
+        proto = "virtiofs";
+        extraArgs = stateShareArgs;
+      };
+      stateShareArgs =
+        # O_PATH fds, not file handles: a file a guest opens and then unlinks cannot be
+        # reached by handle again, so fstat/pread on it fail with ESTALE, which breaks every
+        # anonymous-temp-file writer (measured 2026-11-09: br stages its JSONL in
+        # .beads/.tmpXXXX, unlinks it, and its pread fails with os error 116; natively on the
+        # same ZFS dataset the same calls succeed). virtiofsd 1.14 defaults to `prefer`, so
+        # this must be explicit.
+        # `never` holds one O_PATH fd per inode the guest caches, so the fd limit bounds how many
+        # files the guest can have looked up at once: virtiofsd's default (min(1000000, nr_open))
+        # ran out during a 696k-file git checkout on uplink-dev (measured 2026-11-10: 732156 fds
+        # held, freed to 518 by a guest drop_caches). Each fd pins a host dentry and inode, so
+        # 4M is a ceiling of a few GiB of host kernel memory, reached only by that many files.
+        [
+          "--inode-file-handles=never"
+          "--rlimit-nofile=4194304"
+        ];
     in
     {
       microvm.vms = lib.mkMerge (
@@ -195,11 +252,29 @@ in
             # Layer the GPU host-side bits onto the primitive-delivered config.
             config = {
               microvm.devices = gpuLib.toMicrovmDevices g.recs;
-              microvm.shares = lib.optional g.sharedNixStore roStoreShare ++ stateShares g.name;
+              microvm.shares =
+                lib.optional g.sharedNixStore roStoreShare
+                ++ lib.optionals (!g.zvol) (stateShares g.name)
+                ++ lib.optional g.persistent (exchangeShare g);
               # The file-handle mode is set per share (roStoreShare, stateShares); the global
               # flag is dropped so each share's own one is the only one passed.
               microvm.virtiofsd.inodeFileHandles = null;
-              microvm.volumes = map (v: v // { fsType = "ext4"; }) g.scratch;
+              microvm.volumes =
+                map (v: v // { fsType = "ext4"; }) g.scratch
+                # mountPoint = null: the fileSystems entries below mount them by serial, and
+                # microvm.nix would otherwise add a conflicting /dev/vd<letter> one.
+                ++ lib.optionals g.zvol (
+                  map (v: {
+                    image = "/dev/zvol/${zvolParent}/${v.zvol}";
+                    inherit (v) size;
+                    serial = v.zvol;
+                    autoCreate = false;
+                    mountPoint = null;
+                    fsType = "ext4";
+                    # O_DIRECT: the host page cache does not hold the guest's data too.
+                    direct = true;
+                  }) g.stateZvols
+                );
               microvm.vsock.cid = lib.mkIf (g.vsockCid != null) g.vsockCid;
               # A /nix/.rw-store scratch volume (or the persistent store) is the writable
               # store overlay, which also turns on nix-daemon (microvm.nix gates it on the
@@ -212,9 +287,22 @@ in
               # persistent store collects its own upper layer.
               nix.gc.automatic = lib.mkIf (g.sharedNixStore && !g.persistent) (lib.mkForce false);
               # Mounted in the initrd, before impermanence binds from them.
-              fileSystems = lib.genAttrs stateVolumes (_: {
-                neededForBoot = true;
-              });
+              fileSystems = lib.listToAttrs (
+                map (
+                  v:
+                  lib.nameValuePair v.volume (
+                    {
+                      neededForBoot = true;
+                    }
+                    // lib.optionalAttrs g.zvol {
+                      device = "/dev/disk/by-id/virtio-${v.zvol}";
+                      fsType = "ext4";
+                      # x-systemd.growfs: a grown zvol grows the filesystem at mount.
+                      autoResize = true;
+                    }
+                  )
+                ) g.stateZvols
+              );
               users.users.root.openssh.authorizedKeys.keys = rootKeys;
               imports = lib.optional g.persistent (
                 psLib.guestModule {
@@ -236,29 +324,57 @@ in
         lib.concatMap (vm: map (s: s.source) vm.config.config.microvm.shares) (
           lib.attrValues config.microvm.vms
         )
-        ++ lib.optional hasImages scratchRoot;
+        ++ lib.optional hasImages scratchRoot
+        # A zvol guest's tombstones and, until dropPreZvolBackup, its backups: not orphans.
+        ++ lib.concatMap (
+          g:
+          lib.concatMap (
+            v: [ v.stateDir ] ++ lib.optional (!g.dropBackup) "${v.stateDir}.pre-zvol"
+          ) g.stateZvols
+        ) zvolGuests;
 
       systemd.tmpfiles.rules =
         # 0711, not 0700: the share root becomes the guest's /persist or /cache, and impermanence
         # file entries are symlinks into it, so every guest user must traverse it (measured
         # 2026-11-10: 0700 made /home/sini/.config/gh/hosts.yml EACCES for sini in uplink-dev).
         # Execute-only keeps the directory unlistable to other host users.
-        lib.concatMap (g: map (volume: "d ${stateDir g.name volume} 0711 root root -") stateVolumes) guests
+        lib.concatMap (
+          g:
+          lib.optionals (!g.zvol) (map (volume: "d ${stateDir g.name volume} 0711 root root -") stateVolumes)
+        ) guests
         # microvm-run, as the microvm user, creates the scratch images here.
-        ++ lib.optional hasImages "d ${scratchRoot} 0775 root kvm -";
+        ++ lib.optional hasImages "d ${scratchRoot} 0775 root kvm -"
+        ++ map (g: "d ${g.exchangeDir} 0700 root root -") persistentGuests;
 
       assertions =
-        lib.concatMap (g: [
-          {
-            assertion = g.persistent -> g.sharedNixStore && g.vsockCid != null;
-            message = "${g.name}: microvm.persistentStore needs microvm.sharedNixStore and microvm.vsockCid";
-          }
-          {
-            assertion = g.persistent -> lib.elem "/cache" stateVolumes;
-            message = "${g.name}: microvm.persistentStore needs /cache among ${host.name}'s persisted volumes";
-          }
-        ]) guests
+        lib.concatMap (
+          g:
+          [
+            {
+              assertion = g.persistent -> g.sharedNixStore && g.vsockCid != null;
+              message = "${g.name}: microvm.persistentStore needs microvm.sharedNixStore and microvm.vsockCid";
+            }
+            {
+              assertion = g.persistent -> lib.elem "/cache" stateVolumes;
+              message = "${g.name}: microvm.persistentStore needs /cache among ${host.name}'s persisted volumes";
+            }
+            {
+              assertion = g.zvol -> zvolParent != null;
+              message = "${g.name}: microvm.stateBackend = zvol needs ${host.name}'s virtualization.microvm-host zvolParent";
+            }
+          ]
+          ++ lib.optionals g.zvol (
+            map (v: {
+              assertion = v.size != null && psLib.serialOk v.zvol;
+              message = "${g.name}: state volume ${v.volume} needs a microvm.stateVolumeSizes entry and a disk serial of at most 20 bytes (${v.zvol})";
+            }) g.stateZvols
+          )
+        ) guests
         ++ [
+          {
+            assertion = hostSettings.destroyStateZvols != [ ] -> zvolParent != null;
+            message = "${host.name}: destroyStateZvols needs a zvolParent";
+          }
           {
             assertion = lib.length cids == lib.length (lib.unique cids);
             message = "${host.name}: microvm.vsockCid must be unique among its guests";
@@ -281,6 +397,24 @@ in
         [ sweep.services ]
         ++ lib.optional (persistentGuests != [ ]) psListener.systemd.services
         ++ map (h: h.services) psHosts
+        ++ map (
+          g:
+          psLib.guardUnit {
+            inherit pkgs;
+            inherit (g) name;
+            stateDirs = lib.optionals (!g.zvol) (map (v: v.stateDir) g.stateZvols);
+          }
+        ) persistentGuests
+        ++ map (
+          g:
+          psLib.stateZvolUnits {
+            inherit pkgs zfs;
+            inherit (g) name;
+            systemd = config.systemd.package;
+            parent = zvolParent;
+            volumes = g.stateZvols;
+          }
+        ) zvolGuests
         # Scratch images start empty: delete them before microvm-run recreates them.
         ++ map (
           g:

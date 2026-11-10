@@ -6,6 +6,20 @@
 }:
 {
   den.aspects.virtualization.microvm-host = {
+    # docs/microvm-persistent-store.md §2.10
+    settings = {
+      zvolParent = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        description = "ZFS dataset under which guests' state zvols live (created if absent). null: zroot/local/microvms on a disk.zfs-disk-single host, none elsewhere.";
+      };
+      destroyStateZvols = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        description = "Full names of leaked state zvols to destroy. The sweep destroys one only if its name matches no configured guest under any backend and nothing holds it open.";
+      };
+    };
+
     nixos =
       { ... }:
       {
@@ -92,6 +106,29 @@
             description = "Most host paths the guest may pin; a larger export is refused whole.";
           };
         };
+        # docs/microvm-persistent-store.md §2.10
+        options.microvm.stateBackend = lib.mkOption {
+          type = lib.types.enum [
+            "virtiofs"
+            "zvol"
+          ];
+          default = "virtiofs";
+          description = ''
+            How the guest's /persist and /cache reach it: host directories over virtiofs, or a
+            ZFS zvol per volume, mounted as ext4 in the guest. Switching to zvol migrates the
+            state at the next guest start, one-way: setting virtiofs again afterwards refuses
+            to start the guest.
+          '';
+        };
+        options.microvm.stateVolumeSizes = lib.mkOption {
+          type = lib.types.attrsOf lib.types.ints.positive;
+          default = {
+            "/persist" = 262144;
+            "/cache" = 131072;
+          };
+          description = "zvol size in MiB per state volume (stateBackend = zvol), sparse. Grow-only; a grow applies at the next guest start, and a smaller value fails that start.";
+        };
+        options.microvm.dropPreZvolBackup = lib.mkEnableOption "deleting this guest's pre-zvol backup of its old state directories";
       }
     )
   ];

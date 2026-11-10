@@ -1,6 +1,6 @@
 """Unit tests for the persistent-store programs' pure pieces (docs/microvm-persistent-store.md).
 
-Usage: python3 -I _persistent-store-test.py sweep=<_store-sweep.py> \
+Usage: python3 -I _persistent-store-test.py sweep=<_store-sweep.py> zvol=<_state-zvol.py> \
          imp=<_store-roots-import.py> guest=<_store-guest.py>
 
 Each case runs twice: against the real function, where it must pass, and against a mutant
@@ -163,10 +163,10 @@ def t_import_link_plan(plan_links):
 
 
 def _read_follows(real):
-    def f(state_dir, max_paths):
-        p = os.path.join(state_dir, ".microvm-store", "roots")
+    def f(exchange_dir, max_paths):
+        p = os.path.join(exchange_dir, "store-roots")
         if not os.path.exists(p):
-            return real(state_dir, max_paths)
+            return real(exchange_dir, max_paths)
         with open(p, "rb") as fh:
             return fh.read()
 
@@ -178,9 +178,9 @@ def t_import_open_refuses_guest_tricks(read_export):
     import signal
     import tempfile
 
-    def rejected(state, cap=10):
+    def rejected(exchange, cap=10):
         try:
-            read_export(state, cap)
+            read_export(exchange, cap)
         except Exception as e:  # noqa: BLE001
             return type(e).__name__ == "Rejected"
         return False
@@ -192,32 +192,41 @@ def t_import_open_refuses_guest_tricks(read_export):
         with open(secret, "w") as fh:
             fh.write(GOOD + "\n")
         for name, make in [
-            ("symlink", lambda s: os.symlink(secret, os.path.join(s, ".microvm-store", "roots"))),
-            ("fifo", lambda s: os.mkfifo(os.path.join(s, ".microvm-store", "roots"))),
+            ("symlink", lambda s: os.symlink(secret, os.path.join(s, "store-roots"))),
+            ("fifo", lambda s: os.mkfifo(os.path.join(s, "store-roots"))),
             ("dir-symlink", None),
-            ("oversize", lambda s: open(os.path.join(s, ".microvm-store", "roots"), "w").write("x" * 2561)),
+            ("oversize", lambda s: open(os.path.join(s, "store-roots"), "w").write("x" * 2561)),
         ]:
-            state = os.path.join(d, name)
-            os.makedirs(state)
+            exchange = os.path.join(d, name)
             if make is None:
                 real_dir = os.path.join(d, "real-" + name)
                 os.makedirs(real_dir)
-                with open(os.path.join(real_dir, "roots"), "w") as fh:
+                with open(os.path.join(real_dir, "store-roots"), "w") as fh:
                     fh.write(GOOD + "\n")
-                os.symlink(real_dir, os.path.join(state, ".microvm-store"))
+                os.symlink(real_dir, exchange)
             else:
-                os.makedirs(os.path.join(state, ".microvm-store"))
-                make(state)
+                os.makedirs(exchange)
+                make(exchange)
             signal.alarm(2)
             try:
-                assert rejected(state), name
+                assert rejected(exchange), name
             finally:
                 signal.alarm(0)
         ok = os.path.join(d, "ok")
-        os.makedirs(os.path.join(ok, ".microvm-store"))
-        with open(os.path.join(ok, ".microvm-store", "roots"), "w") as fh:
+        os.makedirs(ok)
+        with open(os.path.join(ok, "store-roots"), "w") as fh:
             fh.write(GOOD + "\n")
         assert read_export(ok, 10) == (GOOD + "\n").encode()
+        # No export yet (no file, or no exchange directory): not a rejection.
+        for missing in (os.path.join(d, "empty"), os.path.join(d, "absent")):
+            if missing.endswith("empty"):
+                os.makedirs(missing)
+            try:
+                read_export(missing, 10)
+            except Exception as e:  # noqa: BLE001
+                assert type(e).__name__ == "NoExport", (missing, e)
+            else:
+                raise AssertionError(f"read {missing}")
 
 
 # --- guest: root lines, E, the mount check ---------------------------------------------
@@ -348,6 +357,119 @@ def t_counter_persists(bump_counter):
         getattr(bump_counter, "reset", lambda: None)()
         assert bump_counter(state, "p") == 3
         assert bump_counter(state, "q") == 1
+
+
+# --- zvol state (§2.10): format, grow, migrate, leaked zvols, backup drop ------------------
+
+
+def _format_absent_is_pending(real):
+    return lambda exists, formatted: real(exists, "pending" if formatted is None else formatted)
+
+
+@case("zvol", "format_action", _format_absent_is_pending)
+def t_format_only_in_creating_run(format_action):
+    assert format_action(False, None) == "create"
+    assert format_action(True, "pending") == "format"
+    assert format_action(True, "1") == "ok"
+    # An existing zvol without the property, or with any other value, is never formatted.
+    assert format_action(True, None) == "refuse"
+    assert format_action(True, "0") == "refuse"
+    assert format_action(True, "yes") == "refuse"
+
+
+def _grow_shrinks(real):
+    return lambda have, want: "grow" if want != have else "ok"
+
+
+@case("zvol", "grow_action", _grow_shrinks)
+def t_grow_only(grow_action):
+    assert grow_action(1 << 30, 2 << 30) == "grow"
+    assert grow_action(1 << 30, 1 << 30) == "ok"
+    assert grow_action(2 << 30, 1 << 30) == "refuse"
+
+
+def _migrate_ignores_tmp(real):
+    return lambda state, tmp, pre, migrated: real(state, "absent", pre, migrated)
+
+
+@case("zvol", "migrate_action", _migrate_ignores_tmp)
+def t_migrate_state_machine(migrate_action):
+    A, D, F, O = "absent", "dir", "file", "other"
+    table = {
+        # (stateDir, temporary tombstone, .pre-zvol, migrated) -> step
+        (A, A, A, False): "fresh",  # first backend is zvol
+        (A, F, A, False): "fresh",  # crashed before the tombstone's rename
+        (D, A, A, False): "tombstone",
+        (D, F, A, False): "tombstone",  # crashed before the exchange
+        (F, D, A, False): "rename",  # crashed after the exchange
+        (F, A, D, False): "copy",  # crashed after the rename, or during the copy
+        (F, A, A, False): "mark",  # zvol first, crashed before marking
+        (F, A, D, True): "done",
+        (F, A, A, True): "done",
+        (D, A, A, True): "error",  # a live directory beside a migrated zvol
+        (A, A, A, True): "error",
+        (A, A, D, False): "error",
+        (D, A, D, False): "error",
+        (D, D, A, False): "error",
+        (F, D, D, False): "error",
+        (F, F, A, False): "error",
+        (O, A, A, False): "error",
+        (F, A, F, False): "error",
+        (F, D, A, True): "error",
+    }
+    for k, want in table.items():
+        assert migrate_action(*k) == want, (k, migrate_action(*k), want)
+
+
+P = "zroot/local/microvms"
+
+
+def _classify_virtiofs_unprotected(real):
+    return lambda zvols, parent, zvol_guests, configured, destroy, busy: real(
+        zvols, parent, zvol_guests, set(zvol_guests), destroy, busy
+    )
+
+
+@case("zvol", "classify_zvols", _classify_virtiofs_unprotected)
+def t_zvols_refused_rollback_never_destroyed(classify_zvols):
+    zvols = {
+        f"{P}/dev-persist": True,  # zvol guest
+        f"{P}/old-persist": True,  # guest set back to virtiofs: a refused rollback
+        f"{P}/old-cache": False,  # same guest, never migrated: leaked, still not destroyable
+        f"{P}/gone-persist": True,  # guest removed
+    }
+    every = set(zvols)
+    leaked, destroy = classify_zvols(zvols, P, {"dev"}, {"dev", "old"}, every, set())
+    assert leaked == [f"{P}/gone-persist", f"{P}/old-cache"], leaked
+    assert destroy == [f"{P}/gone-persist"], destroy
+
+
+def _classify_ignores_busy(real):
+    return lambda zvols, parent, zvol_guests, configured, destroy, busy: real(
+        zvols, parent, zvol_guests, configured, destroy, set()
+    )
+
+
+@case("zvol", "classify_zvols", _classify_ignores_busy)
+def t_zvols_destroy_only_listed_and_idle(classify_zvols):
+    zvols = {f"{P}/a-persist": False, f"{P}/b-persist": False, f"{P}/c-persist": False}
+    leaked, destroy = classify_zvols(
+        zvols, P, set(), set(), {f"{P}/a-persist", f"{P}/b-persist"}, {f"{P}/b-persist"}
+    )
+    assert leaked == sorted(zvols), leaked
+    assert destroy == [f"{P}/a-persist"], destroy
+
+
+def _drop_ignores_backend(real):
+    return lambda backend, migrated: real("zvol", migrated)
+
+
+@case("zvol", "drop_backup_ok", _drop_ignores_backend)
+def t_drop_backup_needs_zvol_and_every_migrated(drop_backup_ok):
+    assert drop_backup_ok("zvol", [True, True])
+    assert not drop_backup_ok("zvol", [True, False])
+    assert not drop_backup_ok("zvol", [])
+    assert not drop_backup_ok("virtiofs", [True, True])
 
 
 def main(argv):

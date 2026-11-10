@@ -16,6 +16,7 @@ import sys
 
 LINE_RE = re.compile(r"^/nix/store/([0-9a-df-np-sv-z]{32}-[0-9A-Za-z+\-._?=]{1,211})$")
 BYTES_PER_PATH = 256
+EXPORT_NAME = "store-roots"
 # A live guest's export always holds at least its system closure, which is lower-layer, so
 # an empty export or one that drops nearly every held root is a broken export, never a real
 # one; applying it would unroot the guest's state just before a host GC. Refuse it.
@@ -66,47 +67,41 @@ def plan_links(existing, wanted, store_dir):
     return add, remove
 
 
-def read_export(state_dir, max_paths):
+def read_export(exchange_dir, max_paths):
+    """The guest's export, read from the host-owned exchange directory without following
+    anything the guest controls; NoExport when the guest has not exported yet."""
     limit = BYTES_PER_PATH * max_paths
-    dfd = os.open(state_dir, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    try:
+        dfd = os.open(exchange_dir, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC)
+    except FileNotFoundError:
+        raise NoExport() from None
+    except OSError as e:
+        raise Rejected(f"{exchange_dir}: {e.strerror}") from None
     try:
         try:
-            sub = os.open(
-                ".microvm-store",
-                os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | os.O_CLOEXEC,
+            fd = os.open(
+                EXPORT_NAME,
+                os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
                 dir_fd=dfd,
             )
         except FileNotFoundError:
             raise NoExport() from None
         except OSError as e:
-            raise Rejected(f".microvm-store: {e.strerror}") from None
+            raise Rejected(f"{EXPORT_NAME}: {e.strerror}") from None
         try:
-            try:
-                fd = os.open(
-                    "roots",
-                    os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK | os.O_CLOEXEC,
-                    dir_fd=sub,
-                )
-            except FileNotFoundError:
-                raise NoExport() from None
-            except OSError as e:
-                raise Rejected(f"roots: {e.strerror}") from None
-            try:
-                if not stat.S_ISREG(os.fstat(fd).st_mode):
-                    raise Rejected("roots is not a regular file")
-                buf = bytearray()
-                while len(buf) <= limit:
-                    b = os.read(fd, 1 << 20)
-                    if not b:
-                        break
-                    buf += b
-                if len(buf) > limit:
-                    raise Rejected(f"roots exceeds {limit} bytes")
-                return bytes(buf)
-            finally:
-                os.close(fd)
+            if not stat.S_ISREG(os.fstat(fd).st_mode):
+                raise Rejected(f"{EXPORT_NAME} is not a regular file")
+            buf = bytearray()
+            while len(buf) <= limit:
+                b = os.read(fd, 1 << 20)
+                if not b:
+                    break
+                buf += b
+            if len(buf) > limit:
+                raise Rejected(f"{EXPORT_NAME} exceeds {limit} bytes")
+            return bytes(buf)
         finally:
-            os.close(sub)
+            os.close(fd)
     finally:
         os.close(dfd)
 
@@ -154,14 +149,14 @@ def apply(roots_dir, guest, bases, store_dir, lock_path):
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("--guest", required=True)
-    ap.add_argument("--state-dir", required=True)
+    ap.add_argument("--exchange-dir", required=True)
     ap.add_argument("--roots-dir", required=True)
     ap.add_argument("--store-dir", required=True)
     ap.add_argument("--gc-lock", required=True)
     ap.add_argument("--max-paths", type=int, required=True)
     a = ap.parse_args(argv)
     try:
-        bases = parse(read_export(a.state_dir, a.max_paths), a.max_paths)
+        bases = parse(read_export(a.exchange_dir, a.max_paths), a.max_paths)
     except NoExport:
         # A guest that has not exported yet: nothing to apply, any previous set stays.
         print(f"{a.guest}: no export yet, previous root set kept")
