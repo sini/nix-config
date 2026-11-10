@@ -488,6 +488,14 @@ in
         tunnelContainer = {
           name = "tunnel-client";
           image = ref images."openai/tunnel-client";
+          # The image's entrypoint is `tunnel-client run`; these follow it. tunnel-client
+          # fetches the authorization server's metadata only from trusted origins (measured
+          # 2026-11-10: "destination origin is not trusted" for kanidm), and the issuer the
+          # gateway advertises (verifierIssuer) lives on kanidm's origin.
+          args = [
+            "--mcp.oauth-trusted-origin"
+            "https://${kanidmDomain}"
+          ];
           env = [
             {
               name = "CONTROL_PLANE_TUNNEL_ID";

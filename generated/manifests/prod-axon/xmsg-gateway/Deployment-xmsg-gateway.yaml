@@ -101,7 +101,10 @@ spec:
             - mountPath: /etc/xmsg-mcp-gateway
               name: config
               readOnly: true
-        - env:
+        - args:
+            - --mcp.oauth-trusted-origin
+            - https://idm.json64.dev
+          env:
             - name: CONTROL_PLANE_TUNNEL_ID
               value: tunnel_6af201ecbe0c8191b130364319b328a2
             - name: CONTROL_PLANE_BASE_URL
