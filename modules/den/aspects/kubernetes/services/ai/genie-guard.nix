@@ -12,7 +12,7 @@
 # requires of an existing socket dir (an emptyDir root is owned by root).
 #
 # Identity (plan §6.7): a cert-manager Certificate from xmsg-cluster-ca whose one
-# URI SAN is spiffe://json64.dev/ns/genie/sa/genie-guard. Its Secret's tls.crt is
+# URI SAN is spiffe://<environment domain>/ns/genie/sa/genie-guard. Its Secret's tls.crt is
 # leaf, cluster intermediate and root (xmsg-ca.nix), which is the chain
 # --fed-cert presents; its ca.crt is the root, the trust anchor for the hub. xmsg
 # reloads both when cert-manager rotates them (X17).
@@ -66,6 +66,9 @@ let
     else
       cfg.hub;
 
+  # spiffe trust domains: a host's and the cluster's own are their environments' domains.
+  domainOf = entity: den.environments.${entity.environment}.domain;
+
   ref = image: "${image.repository}@${image.digest}";
 
   hardened = {
@@ -107,7 +110,7 @@ in
       in
       lib.optionals cfg.enable [
         {
-          identity = "spiffe://json64.dev/ns/${namespace}/sa/${name}";
+          identity = "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}";
           cluster = cluster.name;
           hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") ([ (hubOf cfg) ] ++ cfg.devHubs);
           # It answers what it collects, and is sent nothing but guard requests.
@@ -161,7 +164,7 @@ in
             value = {
               address = "${h.ip}:${toString h.port}";
               ca = "${tlsDir}/ca.crt";
-              identities = [ "spiffe://json64.dev/host/${h.name}/user/${h.host.system-owner}" ];
+              identities = [ "spiffe://${domainOf h.host}/host/${h.name}/user/${h.host.system-owner}" ];
               # The leaf has no listener; `list` lets it answer the hub's list query from
               # its mailbox. Without it the leaf withholds list, and every bare send on
               # the hub is `unavailable` (xmsg XA6).
@@ -203,7 +206,7 @@ in
                 kind = "ClusterIssuer";
                 group = "cert-manager.io";
               };
-              uris = [ "spiffe://json64.dev/ns/${namespace}/sa/${name}" ];
+              uris = [ "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}" ];
               usages = [
                 "digital signature"
                 "key encipherment"

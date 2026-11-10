@@ -9,6 +9,9 @@
     # ProxyJump and uplink-dev's sessions reach dev hosts that way.
     sshFrom = [ "prod" ];
 
+    # The fleet's one xmsg federation CA (.secrets/xmsg-ca); prod names it the same.
+    xmsg.caName = "json64.dev xmsg";
+
     certificates.issuers = {
       "json64-dev" = {
         ageKeyFile = "${self}/.secrets/env/dev/cloudflare-api-key.age";

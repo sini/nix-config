@@ -114,6 +114,9 @@ let
     else
       cfg.enable;
 
+  # spiffe trust domains: a host's and the cluster's own are their environments' domains.
+  domainOf = entity: den.environments.${entity.environment}.domain;
+
   # A required host-name setting, refused by name while unset.
   hostSetting =
     cfg: key:
@@ -216,7 +219,7 @@ in
       in
       lib.optionals cfg.enable [
         {
-          identity = "spiffe://json64.dev/ns/${namespace}/sa/${name}";
+          identity = "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}";
           cluster = cluster.name;
           hubs = [ "${den.hosts.x86_64-linux.${hostSetting cfg "hub"}.system-owner}.${cfg.hub}" ];
           # It sends and replies to the hub's sessions; inbound sends need no right.
@@ -308,7 +311,7 @@ in
         peers.${hub.name} = {
           address = "${hub.ip}:${toString hub.port}";
           ca = "${tlsDir}/ca.crt";
-          identities = [ "spiffe://json64.dev/host/${cfg.hub}/user/${hubHost.system-owner}" ];
+          identities = [ "spiffe://${domainOf hubHost}/host/${cfg.hub}/user/${hubHost.system-owner}" ];
           # The leaf has no listener; `list` lets it answer the hub's list query from its
           # mailbox, so the hub's sessions see the gateway (xmsg XA6).
           allow = [ "list" ];
@@ -500,7 +503,7 @@ in
                 kind = "ClusterIssuer";
                 group = "cert-manager.io";
               };
-              uris = [ "spiffe://json64.dev/ns/${namespace}/sa/${name}" ];
+              uris = [ "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}" ];
               usages = [
                 "digital signature"
                 "key encipherment"

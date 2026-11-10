@@ -6,6 +6,7 @@
 let
   manifests = config.den.aspects.kubernetes.services.ai.genie-guard.k8s-manifests {
     config.age.secrets.genie-guard-api-key.sopsRef = "ref+sops://stand-in";
+    cluster.environment = "prod";
     cluster.settings.kubernetes.services.ai.genie-guard = {
       enable = true;
       hub = "bitstream";

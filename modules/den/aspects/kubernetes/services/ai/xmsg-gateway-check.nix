@@ -16,6 +16,7 @@ let
       };
       cluster = {
         name = "axon";
+        environment = "prod";
         domainFor = svc: if svc == "kanidm" then "idm.json64.dev" else "${svc}.json64.dev";
         settings.kubernetes.services.ai.xmsg-gateway = {
           enable = true;

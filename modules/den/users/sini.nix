@@ -29,6 +29,9 @@
     };
     settings.beads.workspace = "Documents/repos/sini/den-ag-design/.beads";
 
+    # vic can already take over sini's sessions (herdr-pair); messaging is no more.
+    xmsg.trusts = [ "vic" ];
+
     identity = {
       displayName = "Jason Bowman";
       email = "jason@json64.dev";

@@ -2,19 +2,22 @@
 # (xmsg.nix) and services' (services/matrix-xmsg.nix). Imported, not auto-loaded.
 { lib, self }:
 rec {
-  # User pairs whose nodes federate across the two users (policies/xmsg.nix), and the
-  # only cross-user reach a service node may have (mcp/xmsg.nix asserts it).
-  trustedPairs = [
-    # vic can already take over sini's sessions (herdr-pair); messaging is no more.
-    [
-      "sini"
-      "vic"
-    ]
-  ];
-  trusts = a: b: a == b || lib.any (pair: lib.elem a pair && lib.elem b pair) trustedPairs;
+  # The users whose nodes federate with `name`'s across the two users (policies/xmsg.nix),
+  # and the only cross-user reach a service node may have (mcp/xmsg.nix asserts it): each
+  # user's `xmsg.trusts` (den.users.registry), read both ways.
+  partnersOf =
+    users: name:
+    lib.remove name (
+      lib.unique (
+        (users.${name}.xmsg.trusts or [ ])
+        ++ lib.attrNames (lib.filterAttrs (_: u: lib.elem name (u.xmsg.trusts or [ ])) users)
+      )
+    );
+  trusts = users: a: b: a == b || lib.elem b (partnersOf users a);
 
   caDir = self + "/.secrets/xmsg-ca";
-  spiffeOf = host: user: "spiffe://json64.dev/host/${host}/user/${user}";
+  # `domain` is the trust domain: the node's environment domain.
+  spiffeOf = domain: host: user: "spiffe://${domain}/host/${host}/user/${user}";
   # A node's name derives from its identity (xmsg README 7.0): `<user>.<host>` for a host,
   # `<sa>.<ns>` for a pod. A CA peer entry must be keyed by it.
   nodeName = host: user: "${user}.${host}";
@@ -39,6 +42,7 @@ rec {
   leafSecret =
     {
       config,
+      domain,
       host,
       user,
     }:
@@ -53,7 +57,7 @@ rec {
       };
       settings = {
         cn = "${user}@${host.name}";
-        uri = spiffeOf host.name user;
+        uri = spiffeOf domain host.name user;
       };
       owner = user;
       mode = "0400";

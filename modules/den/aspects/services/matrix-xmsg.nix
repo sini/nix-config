@@ -69,7 +69,7 @@ in
         address = "${host.name}.ts.${environment.domain}:${toString cfg.xmsgPort}";
         lanIp = builtins.head host.ipv4;
         port = cfg.xmsgPort;
-        identity = xl.spiffeOf host.name svcUser;
+        identity = xl.spiffeOf environment.domain host.name svcUser;
         owner = host.system-owner;
         allow = [
           "send"
@@ -257,6 +257,7 @@ in
         age.secrets.${leafSecretName} = lib.mkIf (cfg.rooms != [ ]) (
           xl.leafSecret {
             inherit config host;
+            inherit (environment) domain;
             user = svcUser;
           }
         );

@@ -15,7 +15,7 @@
 # deliver it to the nodes that federate with it, so each link exists on both ends by
 # construction. Nodes authenticate by CA (xmsg
 # X16, federation plan §6.7): each presents a leaf signed by the host intermediate,
-# whose URI SAN is its spiffe://json64.dev/host/<host>/user/<user> identity, and
+# whose URI SAN is its spiffe://<environment domain>/host/<host>/user/<user> identity, and
 # each peer entry trusts the root .crt with that one identity. The root and both
 # intermediates are fleet-wide `intermediary` secrets under .secrets/xmsg-ca: only
 # `agenix generate` decrypts them, never a host. The cluster intermediate is
@@ -94,11 +94,37 @@ in
       {
         name = nodeName host.name user.name;
         address = "${host.name}.ts.${environment.domain}:${toString (fedOf host).nodes.${user.name}.port}";
-        identity = spiffeOf host.name user.name;
+        identity = spiffeOf environment.domain host.name user.name;
       }
     ];
 
   den.schema.user.includes = [ den.aspects.applications.dev.ai.mcp.xmsg-node ];
+
+  # Who a user federates with beyond their own nodes (policies/xmsg.nix), read both
+  # ways: naming a user in either's list makes the pair.
+  den.schema.user.imports = [
+    {
+      options.xmsg.trusts = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "alice" ];
+        description = "Users whose xmsg nodes federate with this user's, on every host; the only other users whose service nodes this user's nodes may peer.";
+      };
+    }
+  ];
+
+  # The federation CA's common names, `<caName> <ca> CA`. The CA is one per fleet
+  # (.secrets/xmsg-ca), so every environment with a node names it the same.
+  den.schema.environment.imports = [
+    {
+      options.xmsg.caName = lib.mkOption {
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "example.org xmsg";
+        description = "Prefix of the xmsg federation CA common names (`<caName> root CA`, ...). Required by an environment with an xmsg federation node.";
+      };
+    }
+  ];
 
   den.aspects.applications.dev.ai.mcp.xmsg = {
     settings.genieGuard.ninferUrl = lib.mkOption {
@@ -126,6 +152,7 @@ in
     nixos =
       {
         config,
+        environment,
         host,
         k3s-nodes,
         xmsg-leaves,
@@ -133,6 +160,11 @@ in
       }:
       let
         nodes = (fedOf host).nodes;
+        caName =
+          if environment.xmsg.caName == null then
+            throw "xmsg federation: ${host.name} declares a node, so environment ${environment.name} needs xmsg.caName."
+          else
+            environment.xmsg.caName;
         ca = name: deps: script: {
           rekeyFile = caDir + "/${name}.age";
           intermediary = true;
@@ -140,7 +172,7 @@ in
             inherit script;
             dependencies = deps;
           };
-          settings.cn = "json64.dev xmsg ${name} CA";
+          settings.cn = "${caName} ${name} CA";
         };
         root = config.age.secrets.xmsg-ca-root;
         self' = user: nodeName host.name user;
@@ -205,7 +237,13 @@ in
               xmsg-ca-cluster-intermediate = ca "cluster-intermediate" [ root ] "x509-ca-intermediate";
             }
             // lib.mapAttrs' (
-              user: _: lib.nameValuePair (leafName user) (xl.leafSecret { inherit config host user; })
+              user: _:
+              lib.nameValuePair (leafName user) (
+                xl.leafSecret {
+                  inherit config host user;
+                  inherit (environment) domain;
+                }
+              )
             ) nodes;
 
             # Leaves reach the port over the LAN from their cluster's nodes. The rules are
@@ -306,11 +344,11 @@ in
           );
       in
       {
-        # A service node is another user's only through trustedPairs; a record that
+        # A service node is another user's only through a trusted pair; a record that
         # reached this node by any other path fails the build instead of linking.
         assertions = map (p: {
-          assertion = xl.trusts me p.owner;
-          message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in trustedPairs with them.";
+          assertion = xl.trusts den.users.registry me p.owner;
+          message = "xmsg federation: ${self'} would peer ${p.name}, a service of ${p.owner}, who is neither ${me} nor in xmsg.trusts with them.";
         }) (lib.filter (p: p ? owner) xmsg-nodes);
 
         programs.xmsg = {

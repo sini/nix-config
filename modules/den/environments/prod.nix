@@ -6,6 +6,9 @@
     domain = "json64.dev";
     system-access-groups = [ "system-access" ];
 
+    # The fleet's one xmsg federation CA (.secrets/xmsg-ca); dev names it the same.
+    xmsg.caName = "json64.dev xmsg";
+
     # Domains (their certificates and public records): modules/den/domains.
     certificates.issuers = {
       "json64-dev" = {

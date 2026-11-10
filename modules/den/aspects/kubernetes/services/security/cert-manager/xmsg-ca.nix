@@ -1,7 +1,7 @@
 # xmsg cluster CA (federation plan §6.7): a CA ClusterIssuer backed by the
 # cluster intermediate that applications/dev/ai/mcp/xmsg.nix declares under
 # .secrets/xmsg-ca, issuing pod certificates whose one URI SAN is
-# spiffe://json64.dev/ns/<ns>/sa/<sa>.
+# spiffe://<the cluster's environment domain>/ns/<ns>/sa/<sa>.
 #
 # The issuer Secret's tls.crt is the intermediate then the root, so an issued
 # tls.crt is leaf, intermediate, root and verifies against the root alone (what
@@ -15,7 +15,12 @@
 # CertificateRequest naming it is admitted only from cert-manager's controller,
 # so every request comes from a Certificate the policy admitted. cert-manager's
 # built-in approver then approves as usual.
-{ lib, rootPath, ... }:
+{
+  den,
+  lib,
+  rootPath,
+  ...
+}:
 let
   issuer = "xmsg-cluster-ca";
   caDir = rootPath + "/.secrets/xmsg-ca";
@@ -73,6 +78,9 @@ in
 
     k8s-manifests =
       { config, cluster, ... }:
+      let
+        domain = den.environments.${cluster.environment}.domain;
+      in
       lib.optionalAttrs (enabledFor cluster) {
         applications.cert-manager.resources = {
           secrets.${issuer} = {
@@ -121,9 +129,11 @@ in
                 expression = ''
                   request.resource.resource != 'certificates' ||
                   (has(object.spec.uris) && size(object.spec.uris) == 1 &&
-                   object.spec.uris[0].matches('^spiffe://json64[.]dev/ns/' + request.namespace + '/sa/[a-z0-9]([-.a-z0-9]*[a-z0-9])?$'))
+                   object.spec.uris[0].matches('^spiffe://${
+                     lib.replaceStrings [ "." ] [ "[.]" ] domain
+                   }/ns/' + request.namespace + '/sa/[a-z0-9]([-.a-z0-9]*[a-z0-9])?$'))
                 '';
-                message = "a ${issuer} certificate carries exactly one URI SAN, spiffe://json64.dev/ns/<its namespace>/sa/<sa>";
+                message = "a ${issuer} certificate carries exactly one URI SAN, spiffe://${domain}/ns/<its namespace>/sa/<sa>";
               }
               {
                 expression = ''

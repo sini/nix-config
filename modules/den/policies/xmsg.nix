@@ -3,7 +3,8 @@
 # ends by construction:
 #   - same user: each of a user's nodes federates with that user's nodes on the
 #     other hosts;
-#   - trusted pairs: each pair's nodes federate across the two users, on every host;
+#   - trusted pairs: two users' nodes federate across them, on every host, when
+#     either names the other in its `xmsg.trusts` (users/<name>.nix);
 #   - service nodes: a system service's node (services/matrix-xmsg.nix) federates with
 #     its host's system owner's nodes, which its record names with the narrower
 #     allow it grants them.
@@ -21,7 +22,7 @@
 let
   inherit (den.lib.policy) pipe;
   inherit (import ../aspects/applications/dev/ai/mcp/_xmsg-lib.nix { inherit lib self; })
-    trustedPairs
+    partnersOf
     ;
 in
 {
@@ -40,9 +41,7 @@ in
     { user, ... }:
     let
       src = user.name;
-      partners = lib.unique (
-        lib.concatMap (pair: lib.optionals (lib.elem src pair) (lib.remove src pair)) trustedPairs
-      );
+      partners = partnersOf den.users.registry src;
     in
     lib.optionals (partners != [ ]) [
       (pipe.from "xmsg-nodes" [
@@ -54,7 +53,7 @@ in
   # `matrix-xmsg-node`, a host-schema include). It reaches the owner's user scopes by
   # broadcast, and the host collects the owner's nodes back for the service's own peers
   # file. With this rule absent the record reaches no one; mcp/xmsg.nix also asserts
-  # that no node peers another user's service outside trustedPairs. Clusters collect service nodes too: a pod leaf takes a service node
+  # that no node peers another user's service outside a trusted pair. Clusters collect service nodes too: a pod leaf takes a service node
   # that guards through it as one more hub (kubernetes/services/ai/genie-guard.nix).
   den.policies.xmsg-service-nodes =
     { host, ... }:
