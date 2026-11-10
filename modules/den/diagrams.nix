@@ -366,7 +366,8 @@ in
           write-diagrams = mkWriteScript pkgs {
             entries = everyEntry;
             inherit galleries;
-            readmeDrv = topologyDrv;
+            # README.md belongs to write-files (modules/docs/readme.nix); the topology page is
+            # TOPOLOGY.md, which write-topology owns. No readmeDrv, so this never overwrites it.
             destExpr = ''"$(${pkgs.git}/bin/git rev-parse --show-toplevel)"'';
           };
         };
