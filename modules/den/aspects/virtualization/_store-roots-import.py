@@ -16,6 +16,10 @@ import sys
 
 LINE_RE = re.compile(r"^/nix/store/([0-9a-df-np-sv-z]{32}-[0-9A-Za-z+\-._?=]{1,211})$")
 BYTES_PER_PATH = 256
+# A live guest's export always holds at least its system closure, which is lower-layer, so
+# an empty export or one that drops nearly every held root is a broken export, never a real
+# one; applying it would unroot the guest's state just before a host GC. Refuse it.
+MAX_DROP_FRACTION = 0.9
 
 
 class Rejected(Exception):
@@ -44,6 +48,15 @@ def parse(data, max_paths):
             raise Rejected(f"line {n} is not a store path: {line[:120]!r}")
         bases.append(m.group(1))
     return bases
+
+
+def check_shrink(held, wanted):
+    """Rejected when the export is empty or would drop more than MAX_DROP_FRACTION of `held`."""
+    if not wanted:
+        raise Rejected("empty export (a live guest always exports its system closure)")
+    dropped = len(held - wanted)
+    if held and dropped > MAX_DROP_FRACTION * len(held):
+        raise Rejected(f"export drops {dropped} of {len(held)} held roots (over {MAX_DROP_FRACTION:.0%})")
 
 
 def plan_links(existing, wanted, store_dir):
@@ -119,6 +132,7 @@ def apply(roots_dir, guest, bases, store_dir, lock_path):
         for n in os.listdir(target):
             p = os.path.join(target, n)
             existing[n] = os.readlink(p) if os.path.islink(p) else None
+        check_shrink(set(existing), wanted)
         add, remove = plan_links(existing, wanted, store_dir)
         for b in add:
             p = os.path.join(target, b)
@@ -155,7 +169,11 @@ def main(argv):
     except Rejected as e:
         print(f"{a.guest}: export rejected, previous root set kept: {e}", file=sys.stderr)
         return 1
-    apply(a.roots_dir, a.guest, bases, a.store_dir, a.gc_lock)
+    try:
+        apply(a.roots_dir, a.guest, bases, a.store_dir, a.gc_lock)
+    except Rejected as e:
+        print(f"{a.guest}: export rejected, previous root set kept: {e}", file=sys.stderr)
+        return 1
     return 0
 
 

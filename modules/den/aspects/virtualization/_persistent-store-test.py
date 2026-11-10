@@ -129,6 +129,24 @@ def t_import_cap_counts_paths(parse):
     _reject(parse, f"{GOOD}\n{GOOD2}\n".encode(), 1)
 
 
+def _shrink_unchecked(real):
+    return lambda held, wanted: None
+
+
+@case("imp", "check_shrink", _shrink_unchecked)
+def t_import_refuses_empty_or_collapsing_export(check_shrink):
+    held = {f"{i:032d}-p" for i in range(100)}
+    check_shrink(held, held)  # unchanged: fine
+    check_shrink(held, set(list(held)[:20]))  # drops 80%: allowed
+    check_shrink(set(), {"x"})  # first export: fine
+    for wanted in (set(), set(list(held)[:5])):  # empty; drops 95%
+        try:
+            check_shrink(held, wanted)
+        except Exception:  # noqa: BLE001
+            continue
+        raise AssertionError(f"accepted a collapse to {len(wanted)} of {len(held)}")
+
+
 def _links_no_remove(real):
     return lambda existing, wanted, store_dir: (real(existing, wanted, store_dir)[0], [])
 

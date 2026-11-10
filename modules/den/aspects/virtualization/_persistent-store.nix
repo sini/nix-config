@@ -281,6 +281,9 @@ rec {
         };
         ${unit} = v.work // {
           description = "Apply ${name}'s store export as host GC roots";
+          # A rejected export fails the run; the next trigger must still retry (measured
+          # 2026-11-10: rapid rewrites hit the default start limit).
+          unitConfig.StartLimitIntervalSec = 0;
           serviceConfig = {
             Type = "oneshot";
             RemainAfterExit = false;
@@ -313,6 +316,10 @@ rec {
       paths.${unit} = {
         wantedBy = [ "paths.target" ];
         pathConfig.PathChanged = "${cacheDir}/${exportRel}";
+        # Rapid export rewrites must never disable the trigger (measured 2026-11-10: the
+        # default start limit failed this unit with unit-start-limit-hit). The 15-minute timer
+        # stays the backstop either way.
+        unitConfig.StartLimitIntervalSec = 0;
       };
       timers.${unit} = {
         wantedBy = [ "timers.target" ];
