@@ -1,7 +1,13 @@
-{ ... }:
+{ lib, ... }:
 {
   den.aspects.applications.dev.security.ssh-agent-mux = {
-    # Build ssh-agent-mux from the sini fork. It bumps ssh-agent-lib 0.5.1 ->
+    settings.siniFork = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Build ssh-agent-mux from the sini/ssh-agent-mux fork (the overlay below) instead of nixpkgs' release.";
+    };
+
+    # With siniFork, build ssh-agent-mux from the sini fork. It bumps ssh-agent-lib 0.5.1 ->
     # 0.6.0 for the `PublicCredential` (Key | Cert) type, so an SSH *certificate*
     # in an upstream agent — e.g. the opkssh OIDC cert loaded into the standard
     # agent — round-trips through the mux instead of decoding to a lossy opaque
@@ -16,25 +22,27 @@
     # which ssh-key 0.6.7 parses fine. Only the old `Valid: forever` certs
     # (valid_before = u64::MAX) needed ssh-key 0.7 (RustCrypto/SSH#504).
     # Wrapped in a function so pipe assembly does not pre-apply the overlay.
-    nixpkgs-overlays = _: [
-      (final: prev: {
-        ssh-agent-mux = prev.ssh-agent-mux.overrideAttrs (_old: rec {
-          version = "0.2.0-unstable-2026-08-13";
-          src = final.fetchFromGitHub {
-            owner = "sini";
-            repo = "ssh-agent-mux";
-            rev = "8c47a16b2878de0525bbe564a30779ece40694f1";
-            hash = "sha256-YnjFMfHlIRN6vfsXiDf+cA9/0vZ132mtIuCvLB/HLHg=";
-          };
-          cargoDeps = final.rustPlatform.fetchCargoVendor {
-            inherit src;
-            name = "ssh-agent-mux-${version}-vendor";
-            hash = "sha256-UsJUGxs7tn9wGtmjjPIHIO7dy6R5HXhlQ9eg8A3gRbw=";
-          };
-          patches = [ ];
-        });
-      })
-    ];
+    nixpkgs-overlays =
+      { host, ... }:
+      lib.optionals host.settings.applications.dev.security.ssh-agent-mux.siniFork [
+        (final: prev: {
+          ssh-agent-mux = prev.ssh-agent-mux.overrideAttrs (_old: rec {
+            version = "0.2.0-unstable-2026-08-13";
+            src = final.fetchFromGitHub {
+              owner = "sini";
+              repo = "ssh-agent-mux";
+              rev = "8c47a16b2878de0525bbe564a30779ece40694f1";
+              hash = "sha256-YnjFMfHlIRN6vfsXiDf+cA9/0vZ132mtIuCvLB/HLHg=";
+            };
+            cargoDeps = final.rustPlatform.fetchCargoVendor {
+              inherit src;
+              name = "ssh-agent-mux-${version}-vendor";
+              hash = "sha256-UsJUGxs7tn9wGtmjjPIHIO7dy6R5HXhlQ9eg8A3gRbw=";
+            };
+            patches = [ ];
+          });
+        })
+      ];
 
     homeManager =
       { pkgs, ... }:

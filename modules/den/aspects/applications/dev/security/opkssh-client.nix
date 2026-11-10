@@ -4,7 +4,7 @@
 # server-side verifier lives in core/security/opkssh.nix; this is the client
 # counterpart. Attached via roles.workstation / roles.darwin-workstation only
 # (NOT roles.dev — that reaches slab/droid, which has no opkssh).
-{ ... }:
+{ lib, ... }:
 let
   # `opkssh-login` wrapper: authenticate against kanidm. Our opkssh fork (see the
   # overlay below) loads the freshly-minted cert into the ssh-agent named by
@@ -24,7 +24,13 @@ let
 in
 {
   den.aspects.applications.dev.security.opkssh-client = {
-    # Build opkssh from the sini fork: mint certificates with a real valid_before
+    settings.siniFork = lib.mkOption {
+      type = lib.types.bool;
+      default = false;
+      description = "Build opkssh from the sini/opkssh fork (the overlay below) instead of nixpkgs' release. The `opkssh-login` wrapper relies on the fork's agent-add.";
+    };
+
+    # With siniFork, build opkssh from the sini fork: mint certificates with a real valid_before
     # (the ID Token exp) instead of `Valid: forever`, and load the cert into the
     # ssh-agent (SSH_AUTH_SOCK) with a matching lifetime. The real expiry is what
     # lets ssh-agent-mux proxy the cert on the RELEASED ssh-key 0.6.7 (see
@@ -32,24 +38,26 @@ in
     # the agent drops the key when the cert expires. Client-only overlay
     # (workstations); the server verifier is unaffected by these changes.
     # Upstream: sini/opkssh feat/cert-expiry-and-agent (PRs pending).
-    nixpkgs-overlays = _: [
-      (final: prev: {
-        opkssh = prev.opkssh.overrideAttrs (_old: {
-          version = "0.16.0-unstable-2026-08-13";
-          src = final.fetchFromGitHub {
-            owner = "sini";
-            repo = "opkssh";
-            rev = "86ebb35ada989197ce83c8eb1673974866536d7a";
-            hash = "sha256-Gnr2yks/dZC+hrlGzimane4j2ZmvktfnvD3vuzEA774=";
-          };
-          vendorHash = "sha256-Qlk9zkElpCIpntMDNU5f+5YK2C2Jnc7Lp6uDUYFgQ2Q=";
-          # main carries integration tests that shell out to a real `sshd`, which
-          # isn't present in the Nix build sandbox ("exec: sshd not found"). The
-          # unit tests (incl. sshcert) are run against the fork out-of-band.
-          doCheck = false;
-        });
-      })
-    ];
+    nixpkgs-overlays =
+      { host, ... }:
+      lib.optionals host.settings.applications.dev.security.opkssh-client.siniFork [
+        (final: prev: {
+          opkssh = prev.opkssh.overrideAttrs (_old: {
+            version = "0.16.0-unstable-2026-08-13";
+            src = final.fetchFromGitHub {
+              owner = "sini";
+              repo = "opkssh";
+              rev = "86ebb35ada989197ce83c8eb1673974866536d7a";
+              hash = "sha256-Gnr2yks/dZC+hrlGzimane4j2ZmvktfnvD3vuzEA774=";
+            };
+            vendorHash = "sha256-Qlk9zkElpCIpntMDNU5f+5YK2C2Jnc7Lp6uDUYFgQ2Q=";
+            # main carries integration tests that shell out to a real `sshd`, which
+            # isn't present in the Nix build sandbox ("exec: sshd not found"). The
+            # unit tests (incl. sshcert) are run against the fork out-of-band.
+            doCheck = false;
+          });
+        })
+      ];
 
     homeManager =
       { pkgs, environment, ... }:

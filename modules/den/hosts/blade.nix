@@ -18,6 +18,8 @@
         wipeHomeOnBoot = false;
       };
       applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
+      applications.dev.security.ssh-agent-mux.siniFork = true;
+      applications.dev.security.opkssh-client.siniFork = true;
     };
   };
 

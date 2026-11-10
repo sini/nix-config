@@ -10,6 +10,7 @@
     users.sini = { };
 
     settings.applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
+    settings.applications.dev.security.ssh-agent-mux.siniFork = true;
   };
 
   # A droid host does NOT pull roles.default (the NixOS host baseline — boot,

@@ -43,6 +43,7 @@
       services.scanning.epson.scanner = "10.9.10.1";
 
       applications.dev.ai.mcp.hindsight.handoffRepos = [ "Documents/repos/sini/den-ag-design" ];
+      applications.dev.security.ssh-agent-mux.siniFork = true;
 
       applications.dev.mux.herdr-pair.session = "default";
       applications.dev.mux.herdr-pair.pairs.sini = [ "vic" ];
