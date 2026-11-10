@@ -722,9 +722,12 @@ a guest selects `zvol`. disko never adds datasets to an existing pool, so the
 volumes unit creates the parent itself:
 `zfs create -p -o canmount=off -o mountpoint=none <parent>` (round 7).
 
-A second host setting, `destroyStateZvols` (a list of zvol names, empty by
-default), is how a zvol nobody uses any more gets destroyed (Leaked zvols,
-below).
+A second host setting, `destroyStateZvols` (a list of full zvol names, as the
+sweep prints them, empty by default), is how a zvol nobody uses any more gets
+destroyed (Leaked zvols, below).
+
+Each state volume's zvol is `<parent>/<guest>-<name>` (`<name>` is `persist` or
+`cache`), and `<guest>-<name>` is also its disk serial.
 
 **Who opts in.** uplink-dev selects `zvol`. cortex-cuda keeps `virtiofs`, and
 its derivations don't change (I7, test 10). The exchange share is gated on
@@ -738,8 +741,10 @@ down, which is the trap `zfs-disk-single.nix` documents (round 7). Both run as
 root.
 
 - **`microvm-state-volumes@<guest>`** has
-  `After=zfs-import-zroot.service zfs-volumes.target`. For each state volume it
-  does the following, and every step either completes or fails loudly:
+  `After=zfs-import-zroot.service zfs-volumes.target` and
+  `TimeoutStartSec=10min` (the default 90 s is tight for a settle, a 60 s link
+  wait and two formats). For each state volume it does the following, and every
+  step either completes or fails loudly:
   1. Create the parent if absent (above).
   2. **Create, and format only in the same run.** If `<parent>/<guest>-<name>`
      is absent:
@@ -769,34 +774,50 @@ root.
 
   3. **Grow only.** If the declared size is larger than `volsize`,
      `zfs set volsize`. If it is smaller, fail and change nothing.
-- **`microvm-state-migrate@<guest>`** has `After=microvm-state-volumes@<guest>`,
-  `TimeoutStartSec=infinity` and `PrivateMounts=yes`, so a killed unit can't
-  leave a mount in the host namespace. **The migration is one-way.** It keys on
-  what it finds on disk, so a crash at any point resumes, and `stateDir` is
-  never a live directory or a missing path after migration starts (round 10):
+- **`microvm-state-migrate@<guest>`** has `Requires=` and
+  `After=microvm-state-volumes@<guest>`, `TimeoutStartSec=infinity` and
+  `PrivateMounts=yes`, so a killed unit can't leave a mount in the host
+  namespace. **The migration is one-way.** It keys on what it finds on disk, so
+  a crash at any point resumes, and `stateDir` is never a live directory or a
+  missing path after migration starts (round 10). Before its first step on a
+  volume that isn't yet migrated, whichever step that is, it requires
+  `json64:formatted=1`, runs `udevadm settle`, and refuses if anything holds the
+  zvol open (`fuser -s /dev/zdN`); so a resumed copy can't `--delete` under a
+  running guest either (test 18, busy refusal). The steps, chosen each time from
+  what is on disk:
   - **Nothing at all** (`stateDir` and `.pre-zvol` both absent: a guest whose
     first backend is zvol). It writes the tombstone and sets `json64:migrated`,
     with nothing to copy (round 10).
   - **`stateDir` is a directory.** The run then works in these steps:
-    1. Run `udevadm settle`, then refuse if anything holds the zvol open
-       (`fuser -s /dev/zdN`). Udev's `watch` probe holds it briefly after `mkfs`
-       (round 9).
-    2. Write the tombstone to a temporary file beside `stateDir` (with fsync),
-       then atomically swap the two with `renameat2(RENAME_EXCHANGE)`
-       (`mv --exchange`). At that point `stateDir` is the tombstone and the
-       temporary name holds the directory.
-    3. Rename the temporary name to `<stateDir>.pre-zvol`.
+    1. The idle check above (`udevadm settle`, then `fuser`). Udev's `watch`
+       probe holds the zvol briefly after `mkfs` (round 9).
+    2. Write the tombstone to a temporary file beside `stateDir`,
+       `<stateDir>.zvol-tombstone` (with fsync), then atomically swap the two
+       with `renameat2(RENAME_EXCHANGE)` (`mv --exchange`). At that point
+       `stateDir` is the tombstone and the temporary name holds the directory.
+    3. Rename the temporary name to `<stateDir>.pre-zvol`. A run that finds
+       `stateDir` the tombstone and the temporary name a directory (a crash
+       between steps 2 and 3) does this step first.
 
     From step 2 on, `stateDir` is always the tombstone, never missing and never
     empty, even across a crash.
 
   - **`stateDir` is the tombstone, and `json64:migrated` is absent.** Copy:
     1. Mount the zvol, then run
-       `rsync -aHAXS --numeric-ids --delete <stateDir>.pre-zvol/ <mnt>/`. No
-       guest has opened the zvol yet (`microvm@` requires this unit), so
-       `--delete` only clears an interrupted earlier copy.
+       `rsync -aHAXS --numeric-ids --delete --exclude=/lost+found <stateDir>.pre-zvol/ <mnt>/`.
+       No guest has opened the zvol yet (`microvm@` requires this unit), so
+       `--delete` only clears an interrupted earlier copy. The exclude keeps
+       ext4's own `lost+found`.
     2. Unmount, then `zfs set json64:migrated=<ISO time>`.
-  - **`json64:migrated` set:** nothing to do.
+
+    With no `.pre-zvol` (a zvol-first guest that crashed before its mark), it
+    only sets `json64:migrated`.
+
+  - **`json64:migrated` set:** nothing to do, provided `stateDir` is the
+    tombstone. A directory or a missing path beside a migrated zvol fails the
+    unit.
+  - Any other combination (both a directory and `.pre-zvol`, or a type other
+    than a directory or a regular file) fails the unit and changes nothing.
 
   After that, the zvol is the only copy kept current. Nothing ever syncs from
   the directory again (round 9).
@@ -868,9 +889,15 @@ backup is a config change, not a runbook.
 Destroying ZFS data is irreversible, and the zvol is the only current copy. The
 sweep lists zvols under `zvolParent` that belong to no configured zvol guest,
 and fails its verdict while any exist, so the fleet's failed-unit alert names
-them. The remedy is declarative: add the name to the host's `destroyStateZvols`.
-The sweep then destroys a listed zvol only if its name matches **no configured
-guest under any backend** and `fuser` shows it idle (round 9).
+them. That zvol step runs in both sweep units, after the image sweep, and the
+boot sweep fails with it, so a deploy that leaks a zvol also reports a failed
+unit. It runs on every microvm host with a `zvolParent`, guests or not, so a
+host whose last zvol guest is removed still lists the leak; on a host with no
+parent dataset it lists nothing. A zvol belongs to a guest when its name starts
+with `<guest>-`. The remedy is declarative: add the name to the host's
+`destroyStateZvols`. The sweep then destroys a listed zvol only if its name
+matches **no configured guest under any backend** and `fuser` shows it idle
+(round 9).
 
 A configured guest on `virtiofs` that owns a zvol with `json64:migrated` is a
 refused rollback, not a leak. Its guard fails (above), and its zvol is never
@@ -1016,7 +1043,10 @@ passes means the test proves nothing.
 
 10. **Defaults unchanged.** Compare before and after:
     - cortex-cuda's `system.build.toplevel.drvPath` and
-      `microvm.declaredRunner.drvPath`: equal.
+      `microvm.declaredRunner.drvPath`: equal. At commit 3, cortex (a
+      `zfs-disk-single` microvm host, so it has a `zvolParent`) changes only in
+      the two sweep units: the zvol step's `ExecStart`, `zfs` and `fuser` on
+      their `PATH`, and the boot sweep's restart trigger.
     - cortex's toplevel, with `nix-diff` (or `nix store diff-closures`) over the
       whole derivation, not the unit names. The only differences allowed are the
       sweep units and their scripts.
