@@ -1166,6 +1166,22 @@ passes means the test proves nothing.
   succeeds. Test 15 measures it. If it reproduces, it is reported upstream with
   the one-line guard (`maybeParseStorePath`), and the guest's Nix does not carry
   a local patch.
+- **A path that appears in the lower layer can stay hidden.** If the guest
+  looked a path up before the host had it, the overlay caches a negative dentry,
+  and when the host then adds the path, `/nix/store/<path>` still answers ENOENT
+  in the guest while `/nix/.ro-store` has it (measured on uplink-dev,
+  2026-11-10). The main trigger, the host acting as the guest's remote builder,
+  is removed: `core.nix.remote-build-client` drops a persistent-store guest's
+  parent host from its build machines and substituters. The remaining triggers
+  are a host build or substitution of a path the guest had already looked up.
+  The reconcile's `drop_caches` (§2.6 step 5) clears them, but it runs only in a
+  reconcile that reaches step 5 with missing rows, so the 15-minute period
+  bounds it only on those runs.
+- **The "ignoring the client-specified setting 'store'" warning is cosmetic.**
+  The guest's daemon forwards its overridden `store` setting to the host's
+  daemon, which ignores it from an untrusted user, as it should. The owner ruled
+  no change. Making the proxy trusted would silence it, and was rejected because
+  it widens the trust edge (§2.2).
 - **Guest GC cost.** Each guest GC takes about 290k daemon queries (293 s on the
   probe) and the database growth §2.5 reserves room for.
 - **Host daemon dependency.** The guest's Nix works only while the host's daemon
