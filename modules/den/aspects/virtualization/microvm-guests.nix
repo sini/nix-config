@@ -139,7 +139,15 @@ in
           # .beads/.tmpXXXX, unlinks it, and its pread fails with os error 116; natively on the
           # same ZFS dataset the same calls succeed). virtiofsd 1.14 defaults to `prefer`, so
           # this must be explicit.
-          extraArgs = [ "--inode-file-handles=never" ];
+          # `never` holds one O_PATH fd per inode the guest caches, so the fd limit bounds how many
+          # files the guest can have looked up at once: virtiofsd's default (min(1000000, nr_open))
+          # ran out during a 696k-file git checkout on uplink-dev (measured 2026-11-10: 732156 fds
+          # held, freed to 518 by a guest drop_caches). Each fd pins a host dentry and inode, so
+          # 4M is a ceiling of a few GiB of host kernel memory, reached only by that many files.
+          extraArgs = [
+            "--inode-file-handles=never"
+            "--rlimit-nofile=4194304"
+          ];
         }) stateVolumes;
     in
     {
