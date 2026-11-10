@@ -666,8 +666,18 @@ in
     settings = {
       xmsgGateway.redirectUris = lib.mkOption {
         type = lib.types.nonEmptyListOf lib.types.str;
-        default = [ "https://chatgpt.com/connector_platform_oauth_redirect" ];
-        description = "Redirect URIs of the dedicated xmsg-gateway OAuth2 client: the exact callback the hosted connector's setup UI shows.";
+        default = [
+          "https://chatgpt.com/connector_platform_oauth_redirect"
+          # ChatGPT's per-connector callback (measured 2026-11-10, kanidm "Invalid OAuth2
+          # redirect_uri ... got https://chatgpt.com/connector/oauth/QTOb4VcHdCsW").
+          "https://chatgpt.com/connector/oauth/QTOb4VcHdCsW"
+        ];
+        description = ''
+          Redirect URIs of the dedicated xmsg-gateway OAuth2 client; kanidm matches them exactly,
+          with no wildcards. ChatGPT's callback is per connector, https://chatgpt.com/connector/oauth/<id>,
+          and the id changes whenever the plugin is recreated: add the new one from kanidm's
+          "Invalid OAuth2 redirect_uri ... got <uri>" warning.
+        '';
       };
 
       xmsgGateway.origin = lib.mkOption {
