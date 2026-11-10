@@ -1029,8 +1029,8 @@
               refuse "Refused: a pgrep -f wait loop matches its own command line and never ends. Wait on a \$! PID (while kill -0 \$pid) or a marker the producer writes, under timeout."
             fi
             if ! printf '%s' "$cmd" | grep -q 'MemoryMax=' \
-              && printf '%s\n' "$cmd" | grep -Eq "''${at}nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)([[:space:]]|\$)"; then
-              refuse "Refused: run nix eval/build/flake check uncapped. Re-run as:
+              && printf '%s\n' "$cmd" | grep -Eq "''${at}(nix[[:space:]]+(eval|build|flake[[:space:]]+check|develop[[:space:]].*(-c|--command)[[:space:]]+ci)|nix-unit)([[:space:]]|\$)"; then
+              refuse "Refused: run nix eval/build/flake check/nix-unit uncapped. Re-run as:
             systemd-run --user --scope -q -p MemoryMax=12G $cmd
             (rc 137 under the cap is a finding; never re-run it uncapped.)"
             fi
