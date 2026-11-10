@@ -12,6 +12,8 @@ spec:
     type: Recreate
   template:
     metadata:
+      annotations:
+        json64.dev/config-hash: d0b33202d28294175c6353478108a68b7faf208c02b27cf081bbf59cf2df3965
       labels:
         app.kubernetes.io/name: xmsg-gateway
     spec:

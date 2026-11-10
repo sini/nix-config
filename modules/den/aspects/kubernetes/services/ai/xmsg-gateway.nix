@@ -539,6 +539,15 @@ in
                     selector.matchLabels."app.kubernetes.io/name" = name;
                     template = {
                       metadata.labels."app.kubernetes.io/name" = name;
+                      # A config change must restart the pod: the gateway reads serving.json and
+                      # the leaf reads peers.json only at start.
+                      metadata.annotations."json64.dev/config-hash" = builtins.hashString "sha256" (
+                        builtins.toJSON [
+                          serving
+                          binding
+                          peers
+                        ]
+                      );
                       spec = {
                         serviceAccountName = name;
                         automountServiceAccountToken = false;
