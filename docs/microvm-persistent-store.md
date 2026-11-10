@@ -1,11 +1,12 @@
 # MicroVM guests: a persistent store over the host's shared store
 
-Status: **draft v0.8.2** (2026-11-10). v0.7.1, which the review capped at
+Status: **draft v0.9** (2026-11-10). v0.7.1, which the review capped at
 round 6 and which is implemented as rollout commits 1–2 (§2.9), plus **§2.10:
 guest state on block volumes**. That section answers the owner: "it will easily
-pass 4 million if it starts working on parallel trees". §2.10 has had two review
-rounds, with 12 and then 4 surviving objections. v0.8.2 applies round 8's fixes
-(§8), and that revision has not been reviewed. Owner request:
+pass 4 million if it starts working on parallel trees". §2.10 has had three
+review rounds, with 12, 4 and 6 surviving objections. Most of round 9's came from
+round 8's own rollback and retirement machinery, so v0.9 removes that machinery:
+the migration is one-way. That revision has not been reviewed. Owner request:
 "the devshell loss on every reboot is really painful; we need a real solution
 for persistence." §8 maps every earlier objection to its resolution.
 
@@ -708,10 +709,10 @@ options.microvm.stateBackend = lib.mkOption {
 };
 options.microvm.stateVolumeSizes = lib.mkOption {
   type = lib.types.attrsOf lib.types.ints.positive;
-  default = { "/persist" = 1048576; "/cache" = 1048576; };   # MiB, sparse
+  default = { "/persist" = 262144; "/cache" = 131072; };   # MiB, sparse; measured use 16 GiB / 372 MiB
   description = "zvol size per state volume (stateBackend = zvol). Grow-only; a grow applies at the next guest start.";
 };
-options.microvm.retireVirtiofsState = lib.mkEnableOption "deleting this guest's old virtiofs state directories once both zvols are migrated";
+options.microvm.dropPreZvolBackup = lib.mkEnableOption "deleting this guest's pre-zvol backup of its old state directories";
 ```
 
 **The parent dataset.** `zvolParent` is a `virtualization.microvm-host` setting.
@@ -720,6 +721,10 @@ same pattern `core/impermanence/zfs.nix` uses. An assertion requires it whenever
 a guest selects `zvol`. disko never adds datasets to an existing pool, so the
 volumes unit creates the parent itself:
 `zfs create -p -o canmount=off -o mountpoint=none <parent>` (round 7).
+
+A second host setting, `destroyStateZvols` (a list of zvol names, empty by
+default), is how a zvol nobody uses any more gets destroyed (Leaked zvols,
+below).
 
 **Who opts in.** uplink-dev selects `zvol`. cortex-cuda keeps `virtiofs`, and
 its derivations don't change (I7, test 10). The exchange share is gated on
@@ -752,8 +757,9 @@ root.
      - Then `zfs set json64:formatted=1`.
 
      The `zfs create` itself sets `-o json64:formatted=pending`, and the property
-     becomes `1` only after `mkfs` succeeds. A run that finds `pending` repeats
-     the link wait and the `blkid -p` check, then formats. Nothing has ever opened
+     becomes `1` only after `mkfs` succeeds. A run that finds `pending` waits for
+     the link and runs `mkfs.ext4 -F` without probing, whatever an interrupted
+     earlier `mkfs` left behind (round 9). Nothing has ever opened
      such a volume, because `microvm@` requires this unit to succeed. A crash or
      timeout between `create` and `mkfs` therefore recovers by itself (round 8).
      An existing zvol whose `json64:formatted` is absent or holds any other value
@@ -763,20 +769,24 @@ root.
      `zfs set volsize`. If it is smaller, fail and change nothing.
 - **`microvm-state-migrate@<guest>`** has `After=microvm-state-volumes@<guest>`,
   `TimeoutStartSec=infinity` and `PrivateMounts=yes`, so a killed unit can't
-  leave a mount in the host namespace. It runs when a zvol's
-  `json64:migrated` is absent, **or** when the old `stateDir` has diverged since
-  then. The divergence check is
-  `find <stateDir> -newerct "<json64:migrated>" -print -quit`: any hit means the
-  guest ran on virtiofs after migration. That covers flipping the option back,
-  and also rolling back to a generation older than §2.10. The check runs on the
-  forward side at every zvol start, so it needs nothing from the older
-  generation (round 8):
-  1. Refuse if anything holds the zvol open (`fuser -s /dev/zdN`). It runs
-     before QEMU by ordering, and this check makes that true by construction.
+  leave a mount in the host namespace. **The migration is one-way, and it runs
+  once.** It acts only when a zvol has no `json64:migrated` property:
+  1. Run `udevadm settle` (udev's `watch` probe holds the device open briefly
+     after `mkfs`, round 9). Then refuse if anything still holds the zvol open
+     (`fuser -s /dev/zdN`). It runs before QEMU by ordering, and this check makes
+     that true by construction.
   2. Mount the zvol, then run
-     `rsync -aHAXS --numeric-ids --delete <stateDir>/ <mnt>/`. `--delete`
-     makes a re-sync exact.
+     `rsync -aHAXS --numeric-ids <stateDir>/ <mnt>/`. The zvol is empty, so
+     there's nothing for `--delete` to remove.
   3. Unmount, then `zfs set json64:migrated=<ISO time>`.
+  4. **Tombstone the old directory.** Rename `stateDir` to
+     `<stateDir>.pre-zvol`, which becomes a read-only backup of the state as it
+     was at migration. Then create a regular file at `stateDir` containing
+     `migrated to <zvol> at <time>`.
+
+  After that, the zvol is the only copy that is kept current. Nothing ever
+  syncs from the directory again, so there's no divergence check, no re-sync
+  and no `--delete` left to go wrong (round 9).
 
 **The disks.** The guest gets them as `microvm.volumes` entries with
 `image = "/dev/zvol/<…>"`, `autoCreate = false`, `mountPoint = null`,
@@ -819,42 +829,38 @@ start phase of the deploy that switches the backend: `restartIfChanged` makes
 that deploy restart the guest. So that deploy is planned at a checkpoint, and it
 runs for as long as the copy takes. Test 18 records the time.
 
-**Retirement.** An assertion requires `retireVirtiofsState ->
-stateBackend == "zvol"`. With it set, the sweep deletes exactly that guest's
-two named `stateDir`s, never a glob, and only when all of these hold:
-- both zvols have `json64:migrated` set, and the divergence check finds
-  nothing;
-- `microvm@<guest>` is running on the zvol backend, or is stopped.
-
-The sweep never deletes directories under `scratchRoot` by pattern, so a
-sibling guest's state can't match (round 7).
-
-Retirement doesn't leave an empty path behind. It replaces each `stateDir` with a
-regular file containing `retired: migrated to <zvol> at <time>`. If the guest is
-later switched back to virtiofs, by option or by generation rollback, the start
-then fails loudly:
-- tmpfiles' `d` rule errors on a path that isn't a directory;
-- virtiofsd refuses a `shared-dir` that isn't a directory.
-
-Without the file, the guest would boot silently onto a fresh empty `/persist`
-while its data sits in the zvol (round 8). Restoring from there is an explicit
-act: set the guest back to `zvol`.
+**The backup.** `<stateDir>.pre-zvol` stays until the owner sets
+`dropPreZvolBackup = true`. The sweep then deletes exactly those two named paths
+for that guest, never a glob, and only when the guest's backend is `zvol` and
+both zvols have `json64:migrated`. The owner flips that option, so dropping the
+backup is a config change, not a runbook.
 
 **Leaked zvols.** A zvol whose guest is gone, or is set back to `virtiofs`, is
-never destroyed automatically. ZFS destruction is irreversible and the data may
-be wanted. The sweep lists zvols under `zvolParent` that belong to no
-configured zvol guest, and fails its verdict while any exist, so the fleet's
-failed-unit alert names them. The fix is to destroy them by hand, or to set the
-guest back to `zvol`. §4 names this.
+never destroyed implicitly. Destroying ZFS data is irreversible, and the zvol is
+the only current copy. The sweep lists zvols under `zvolParent` that belong to
+no configured zvol guest, and fails its verdict while any exist, so the fleet's
+failed-unit alert names them. The remedy is declarative: add the name to the
+host's `destroyStateZvols`. The sweep then destroys a listed zvol only if it
+belongs to no configured zvol guest and `fuser` shows it idle (round 9).
 
-**Rollback.** Before retirement, setting `stateBackend` back to `virtiofs`, or
-rolling the host back to an older generation, brings back the old directories as
-they were at migration. Anything written to the zvol since then stays in the
-zvol. That is the cost of choosing rollback, and §4 states it. Going forward
-again re-syncs from the directories (the divergence check), so nothing written
-during the rollback is lost. After retirement, a rollback fails to start the
-guest (see Retirement). Recovering zvol-only writes after a
-rollback is a non-goal.
+**Rollback is not supported after migration.** It fails loudly instead:
+- Setting `stateBackend` back to `virtiofs` fails the guest's start, because the
+  tombstone at `stateDir` is a regular file. tmpfiles' `d` errors on it, and
+  virtiofsd refuses a `shared-dir` that isn't a directory.
+- Rolling the host back to a generation older than §2.10 fails the same way.
+
+So a guest never boots onto stale or empty state, and nothing it writes ever
+diverges between two copies. To actually return a guest to virtiofs, the state
+has to be copied back out of the zvol. That is a non-goal, and §4 states it. A
+**host rollback is fine** as long as the target generation also runs this guest
+on `zvol`: every commit-3+ generation does.
+
+**Capacity.** The zvols are sparse, so their sizes can overcommit the pool. A
+full pool reaches QEMU as a block write error, and QEMU's default `werror`
+pauses the whole VM, which only `HostSilent` would report (round 9; whether a
+zvol answers ENOSPC or EIO is UNVERIFIED). So the defaults are sized from
+measured use plus headroom (256 GiB and 128 GiB, against 16 GiB and 372 MiB
+used), grow-only. §4 names the overcommit, and test 21 measures it.
 
 **Snapshots and per-file access.** The zvols carry
 `com.sun:auto-snapshot=true`, the same as the datasets they replace. They share
@@ -1013,29 +1019,35 @@ passes means the test proves nothing.
     - copy `/persist` and `/cache`, giving equal file counts, a sampled
       `sha256sum` match and preserved xattrs;
     - set `json64:migrated`;
+    - leave `<stateDir>.pre-zvol` and a tombstone file at `stateDir`;
     - boot the guest with every impermanence bind present.
 
     Record the copy time.
-    - A second start copies nothing.
+    - A second start copies nothing and boots.
     - **Never reformat:** clear `json64:formatted` on a volume and start. The
       unit fails, and a planted marker file survives.
+    - **Interrupted format:** kill the unit after `zfs create` and again after
+      `mkfs` (`formatted=pending` both times). The next start completes it and
+      the guest boots.
     - **Busy refusal:** with QEMU up, start the migrate unit by hand. It refuses.
-    - **Rollback and return:** set `virtiofs` (and, separately, roll the host
-      back to the commit-2 generation), start, and write a file. Set `zvol`, or
-      roll forward, and start. The file is on the zvol. Record how long the
-      divergence check takes over the 2.17M inodes.
-    - **Interrupted format:** stop the unit between `zfs create` and `mkfs`
-      (`formatted=pending`). The next start formats it and the guest boots.
-    - **Retirement:** with `retireVirtiofsState` set and a file in the
-      `stateDir` newer than `json64:migrated`, nothing is deleted.
-    - **Rollback after retirement:** after retirement, set `virtiofs`. The guest
-      start fails, naming the retired path.
+      Straight after a format, it doesn't refuse (`udevadm settle`).
+    - **Rollback refused:** set `virtiofs`, then separately roll the host back to
+      the commit-2 generation. In both cases the guest start fails and names the
+      tombstone. Return to `zvol` or the current generation, and the guest boots
+      with the writes it made before the rollback.
+    - **Backup drop:** set `dropPreZvolBackup`. Only that guest's two
+      `.pre-zvol` paths go.
     - **Leaked zvol:** create a zvol under the parent for no guest. The sweep's
-      verdict fails and names it.
+      verdict fails and names it. Add it to `destroyStateZvols`, and it's
+      destroyed. A listed zvol that is still configured, or still open, is left
+      alone.
 19. **Grow.** Raise `stateVolumeSizes."/persist"` and deploy. The running guest
     is not restarted, so nothing changes yet. At its next start, `volsize` grows
     and the guest's `df` shows the larger filesystem. A smaller value fails the
     volumes unit at the next start, and the volume stays unchanged.
+21. **Overcommit.** On a throwaway pool, fill it under a running test guest with a
+    zvol volume. Record whether the guest pauses (`werror`) or sees errors, and
+    that `HostSilent` or the failed-unit alert fires.
 20. **ESTALE gone.** Run `br`'s anonymous-temp-file pattern on `/persist`
     (create, unlink, then fstat and pread): it succeeds on zvol state. Control:
     the same pattern fails on a virtiofs share with `--inode-file-handles=prefer`.
@@ -1078,14 +1090,15 @@ passes means the test proves nothing.
 - **Host daemon dependency.** The guest's Nix works only while the host's daemon
   answers. A host deploy that restarts the daemon causes transient guest errors
   (test 12).
-- **zvol rollback is lossy** (§2.10): before retirement, returning to
-  `virtiofs` restores the state as it was at migration. After retirement, a
-  rollback refuses to start the guest, a generation older than commit 3
-  included, because both fail on the retired file.
+- **No rollback after migration** (§2.10). A zvol guest set back to
+  `virtiofs`, or a host rolled back to before commit 3, refuses to start it.
+  Going back needs a copy out of the zvol, which is a non-goal. The
+  `.pre-zvol` backup holds the state as of migration.
+- **Sparse overcommit** (§2.10, Capacity). A full pool pauses the guest.
 - **The host loses per-file visibility** of a zvol guest's state. Inspection
   goes through a snapshot clone.
-- **zvols are never destroyed automatically** (§2.10, "Leaked zvols"). A
-  leaked one keeps alerting until it's destroyed by hand or reused.
+- **zvols are destroyed only when named in `destroyStateZvols`** (§2.10). Until
+  then, a leaked one keeps alerting.
 - **ARC caches zvol data** (`primarycache=all`). With `direct = true`, the host
   page cache doesn't also hold it. Under memory pressure, ARC gives memory back.
 - **Images after a host stops hosting guests** (§2.4) stay on `/cache/microvms`.
@@ -1296,3 +1309,16 @@ changes a guarantee.
 | a failed creating run blocks the guest until a manual destroy | `formatted=pending` set at create; the next run completes it |
 | rollback after retirement silently boots an empty guest | retired dirs become regular files, so the start fails loudly |
 | (minor) §2.9 still said 374 GiB | fixed |
+
+**Round 9 (§2.10 in v0.8.2): 6 surviving objections**, most of them from round
+8's own fixes, which the method reads as churn. v0.9 removes machinery instead
+of patching it.
+
+| v0.8.2 objection | Resolution |
+|---|---|
+| the divergence check fires on the retired file; every zvol start fails after retirement | removed: the one-way migration tombstones the directory at migration; no divergence check remains |
+| going forward after a rollback, `rsync --delete` erases the zvol writes | removed: no re-sync; a rollback after migration is refused loudly |
+| `pending` stuck after `mkfs` | on `pending`, `mkfs -F` without probing |
+| the `fuser` check races udev's watch probe | `udevadm settle` before `fuser` |
+| leaked zvol remedy is a manual destroy aimed at live data | declarative `destroyStateZvols`, idle and unconfigured only |
+| sparse 2 TiB default overcommits; a full pool pauses the VM | defaults from measured use, grow-only; §4 entry; test 21 |
