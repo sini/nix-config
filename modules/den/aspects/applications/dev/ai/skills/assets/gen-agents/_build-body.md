@@ -9,6 +9,18 @@ planted violations, censuses, enforcers, byte-parity) in your report under
    from the spec was true of a different tree.
 2. Implement the spec's mechanism and §3a.
 3. Re-run the suites and **attribute every delta**.
+   Run every declared guarded plane under each rooted CI evaluator: bare ci,
+   ci --tests-error and ci --tests-process where declared. Select PATH inside
+   the actual target devshell and verify its FLAKE_ROOT/ci executable. Where the
+   error plane is declared, compare both errorPlane.engine and
+   checks.tests-error.engine with the invoked evaluator; a non-declarer's plane
+   stays absent, never synthesized. The error flag owes both the host runner
+   and sandbox check. Count collected cells and both failure classes; zero cells
+   are not a green. Retain the phase root through the last producer. A
+   harness-pin move that changes observed version keys leaves each affected
+   register UNANCHORED until that register's own three-log fold writes measured
+   entries. Preserve historical keys and apply STATUS/RELOCK.md's
+   evaluator-bump procedure.
 4. **Verify the artefact changed before you read any suite.** A scripted edit
    that throws part-way can roll back every replacement and leave the tree
    untouched; the suite then returns the _old_ tree's numbers and they look like

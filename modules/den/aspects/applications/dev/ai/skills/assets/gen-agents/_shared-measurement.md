@@ -29,6 +29,20 @@ the bank (see Memory, below).
   slower, re-imports comment sediment). `br list --json` wraps rows as
   `{"issues":[…]}`; a bare `.[]` reads empty.
 
+### Pinned evaluator preparation
+
+Prepare every three-evaluator phase through the consumer's written ci lock:
+explicitly build `./ci#evaluators` (the devshell's GEN_EVALUATORS installable)
+with a registered `--out-link <persistent-phase-directory>/evaluators`. Keep the
+directory and root until all measuring processes exit. Resolve nix, determinate
+and lix `bin/nix` paths through it; independently compare canonical executable
+paths with that lock's harness evaluator packages. Invoke absolute paths with
+NIX_CONFIG holding each family's nix.conf contents and NIX_PATH unset, and
+record version, effective settings, root and closure before measuring. Counter
+runs additionally source GEN_SERIAL_EVAL. Keep the normal Determinate
+lazy-trees setting enabled. Apply the standing 12G cap and shared heavy lock.
+Never transplant literal store paths between hosts.
+
 ## Measurement law
 
 - **Every absence claim needs a positive control that fired, in the same
