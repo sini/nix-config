@@ -14,7 +14,10 @@
 #                    overridden while the feature is on, and comes back with it off.
 #   /nix/store       the overlay of the two
 #   /tmp             agents' scratchpads and local build dirs, a scratch disk
-#   /persist, /cache uplink's /{persist,cache}/microvms/uplink-dev over virtiofs
+#   /persist, /cache ext4 on zvols zroot/local/microvms/uplink-dev-{persist,cache}
+#                    (microvm.stateBackend); their old uplink directories,
+#                    /{persist,cache}/microvms/uplink-dev, are tombstones beside a
+#                    .pre-zvol backup since the migration (§2.10)
 #
 # TODO: memory to 96 GB once services move off uplink onto the cluster.
 # TODO: nothing snapshots or backs up uplink's /persist (or any zfs-disk-single
@@ -56,6 +59,8 @@ in
     };
     microvm.vsockCid = 3;
     microvm.persistentStore.enable = true;
+    # /persist and /cache on zvols, not virtiofs (docs/microvm-persistent-store.md §2.10).
+    microvm.stateBackend = "zvol";
 
     # sini's xmsg node here, so its sessions reach sini@bitstream and sini@cortex; the
     # links are derived (policies/xmsg.nix), authenticated by the xmsg CA.
