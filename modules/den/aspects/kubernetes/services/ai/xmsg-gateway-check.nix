@@ -4,7 +4,7 @@
 # whatever axon's flags are. A second render with the tunnel on (stand-in image and
 # id) shows the sidecar appears only then, pointed at the loopback listener.
 #   nix build .#checks.x86_64-linux.xmsg-gateway-pod
-{ config, ... }:
+{ config, lib, ... }:
 let
   render =
     tunnel:
@@ -44,6 +44,90 @@ let
       id = "tunnel_stand_in";
     };
   };
+
+  # Negative controls: each mutant of the tunnel-off pod's initContainers must fail the
+  # check on the named property.
+  initsPath = [
+    "applications"
+    "xmsg-gateway"
+    "resources"
+    "deployments"
+    "xmsg-gateway"
+    "spec"
+    "template"
+    "spec"
+    "initContainers"
+  ];
+  mutant =
+    f:
+    manifests
+    // {
+      off = lib.updateManyAttrsByPath [
+        {
+          path = initsPath;
+          update = f;
+        }
+      ] manifests.off;
+    };
+  isInspect = c: c.name == "store-retirement-inspect";
+  mutants = {
+    # migrate-retirement before the inspect that backs up.
+    "inspect runs before migrate-retirement" =
+      inits:
+      let
+        i = lib.findFirst isInspect null inits;
+        rest = lib.filter (c: !isInspect c) inits;
+        at = lib.lists.findFirstIndex (c: c.name == "store-migrate-retirement") null rest;
+      in
+      lib.take (at + 1) rest ++ [ i ] ++ lib.drop (at + 1) rest;
+    # A backup on every start, not only for a legacy store.
+    "inspect, migrated store: link to the staged store, no backup" = map (
+      c:
+      if isInspect c then
+        c
+        // {
+          command = map (lib.replaceStrings [ "if app == LEGACY:" ] [ "if True:" ]) c.command;
+        }
+      else
+        c
+    );
+    # The link to the real store made before the backup.
+    "inspect, legacy store, backup impossible: refuses, no link to the real store" = map (
+      c:
+      if isInspect c then
+        c
+        // {
+          command = map (lib.replaceStrings
+            [
+              "os.makedirs("
+            ]
+            [
+              "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/retirement.db\"); os.makedirs("
+            ]
+          ) c.command;
+        }
+      else
+        c
+    );
+    # The gateway's `enable` verb in the chain.
+    "never runs enable" =
+      inits:
+      inits
+      ++ [
+        {
+          name = "store-enable";
+          inherit (lib.last inits) image securityContext;
+          args = [
+            "enable"
+            "chatgpt"
+            "1"
+          ];
+        }
+      ];
+  };
+  json =
+    name: v: pkgs:
+    pkgs.writeText "${name}.json" (builtins.toJSON v);
 in
 {
   perSystem =
@@ -52,7 +136,18 @@ in
       checks.xmsg-gateway-pod =
         pkgs.runCommand "xmsg-gateway-pod" { nativeBuildInputs = [ pkgs.python3 ]; }
           ''
-            python3 -I ${./xmsg-gateway-check.py} ${pkgs.writeText "xmsg-gateway.json" (builtins.toJSON manifests)}
+            python3 -I ${./xmsg-gateway-check.py} ${json "xmsg-gateway" manifests pkgs}
+            ${lib.concatStrings (
+              lib.mapAttrsToList (property: f: ''
+                if python3 -I ${./xmsg-gateway-check.py} ${
+                  json "xmsg-gateway-mutant" (mutant f) pkgs
+                } > mutant.log; then
+                  echo "negative control passed the check: ${property}" >&2; exit 1
+                fi
+                grep -qF -- ${lib.escapeShellArg property} mutant.log || { cat mutant.log >&2; echo "negative control failed elsewhere: ${property}" >&2; exit 1; }
+                echo "negative control refused: ${property}"
+              '') mutants
+            )}
             touch $out
           '';
     };

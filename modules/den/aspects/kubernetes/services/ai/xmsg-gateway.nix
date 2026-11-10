@@ -26,11 +26,25 @@
 # no-op migrations fail, so the real store is created only when absent. The gateway
 # image has no shell, so the steps cannot be skipped by a test inside it: they always
 # build a fresh store in a staging directory on the PVC (init, migrate-custody,
-# migrate-outbound, migrate-events, enroll), and the last busybox step moves it into
+# migrate-outbound, migrate-retirement, migrate-events, enroll), and the last busybox
+# step moves it into
 # place only if state/grants.db is absent. Otherwise it discards it. A crash between
 # steps therefore never leaves a half-built real store. The grant stays disabled at
 # revision 1: `enable` is never run here. It is a deliberate one-time cutover step
 # (`xmsg-mcp-gateway --state /var/lib/xmsg-mcp-gateway/state/grants.db enable chatgpt 1`).
+#
+# Retirement migration (outbound.md): `migrate-retirement` changes the store's SQLite
+# application_id from 0x584d4757 to 0x584d4752. Older gateways then refuse the store,
+# and a second run fails. The gateway CLI has no status or backup verb, so the
+# `store-retirement-inspect` step (the pinned python image, for its sqlite3 module)
+# reads the real store's application_id. Only when it is the legacy marker does it take
+# an online backup (the sqlite3 backup API, never cp) to
+# backups/grants.db.pre-retirement-<UTC time> and point the staging link at the real
+# store. Otherwise the link points at the staged store, which needs the migration
+# anyway. `store-migrate-retirement` then runs once, on the link. SQLite resolves the
+# symlink, so the real store's journal stays beside it. A crash before the commit leaves
+# the legacy marker, so the next start backs up and migrates again. Rolling back to an
+# older image means restoring that backup.
 #
 # Backup: the Events key encrypts the store's callback URLs, delivery secrets and
 # retained tokens, so the store is useless without it. The key lives in agenix (git)
@@ -72,6 +86,9 @@ let
   secretsDir = "/run/secrets/${name}";
   grantStore = "${stateDir}/grants.db";
   stagedStore = "${stagingDir}/grants.db";
+  # What migrate-retirement runs on: a symlink to the real or the staged store.
+  retirementLink = "${stagingDir}/retirement.db";
+  backupsDir = "${dataDir}/backups";
   eventsKey = "${keysDir}/events.key";
   lookupSecret = "${keysDir}/lookup-secret";
 
@@ -390,6 +407,7 @@ in
         dataMount = mount "data" dataDir;
 
         busybox = ref images."library/busybox";
+        python = ref images."library/python";
         gatewayImage = ref images."sini/xmsg-mcp-gateway";
 
         # Each store step is the gateway CLI itself, on the staged store.
@@ -433,6 +451,38 @@ in
             echo "${grantStore} created: grant ${grantId} enrolled, disabled at revision 1"
           fi
           rm -rf ${stagingDir}
+        '';
+
+        # LEGACY and RETIREMENT are the application_ids in grants.rs.
+        retirementInspectScript = ''
+          import os, sqlite3, sys, time
+          LEGACY, RETIREMENT = 0x584d4757, 0x584d4752
+          os.umask(0o077)
+          target = "${stagedStore}"
+          if os.path.exists("${grantStore}"):
+              src = sqlite3.connect("file:${grantStore}?mode=rw", uri=True)
+              app = src.execute("PRAGMA application_id").fetchone()[0]
+              if app == LEGACY:
+                  os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
+                  out = "${backupsDir}/grants.db.pre-retirement-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+                  dst = sqlite3.connect(out + ".partial")
+                  src.backup(dst)
+                  ok = dst.execute("PRAGMA application_id").fetchone()[0] == LEGACY and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+                  dst.close()
+                  if not ok:
+                      sys.exit(out + ".partial: backup failed verification")
+                  os.replace(out + ".partial", out)
+                  fd = os.open("${backupsDir}", os.O_RDONLY)
+                  os.fsync(fd)
+                  os.close(fd)
+                  print("${grantStore}: legacy store backed up to " + out + ", migrating")
+                  target = "${grantStore}"
+              elif app == RETIREMENT:
+                  print("${grantStore}: already migrated, left unchanged")
+              else:
+                  sys.exit("${grantStore}: unrecognized application_id " + hex(app))
+              src.close()
+          os.symlink(target, "${retirementLink}")
         '';
 
         tunnelContainer = {
@@ -600,6 +650,29 @@ in
                           (storeStep "init" [ "init" ])
                           (storeStep "migrate-custody" [ "migrate-custody" ])
                           (storeStep "migrate-outbound" [ "migrate-outbound" ])
+                          {
+                            name = "store-retirement-inspect";
+                            image = python;
+                            command = [
+                              "python3"
+                              "-I"
+                              "-c"
+                              retirementInspectScript
+                            ];
+                            securityContext = hardened;
+                            volumeMounts = [ dataMount ];
+                          }
+                          # The real store only when inspect found it legacy.
+                          (
+                            storeStep "migrate-retirement" [ ]
+                            // {
+                              args = [
+                                "--state"
+                                retirementLink
+                                "migrate-retirement"
+                              ];
+                            }
+                          )
                           (storeStep "migrate-events" [
                             "migrate-events"
                             "--key-file"

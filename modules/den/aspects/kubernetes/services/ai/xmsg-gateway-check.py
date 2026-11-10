@@ -9,9 +9,13 @@ Exits non-zero, naming every failed property, when one does not hold.
 """
 
 import json
+import os
 import posixpath
 import re
+import sqlite3
+import subprocess
 import sys
+import tempfile
 
 NS = SA = "xmsg-gateway"
 UID = 10001
@@ -39,9 +43,13 @@ STORE_STEPS = [
     "init",
     "migrate-custody",
     "migrate-outbound",
+    "retirement-inspect",
+    "migrate-retirement",
     "migrate-events",
     "enroll",
 ]
+# The store application_ids (gateway grants.rs).
+LEGACY, RETIREMENT = 0x584D4757, 0x584D4752
 
 failed = []
 
@@ -102,6 +110,16 @@ check(
 )
 
 # 2. Hardening, and the same uid on every container (the leaf's is the daemon uid).
+on_pod = renders["on"]["applications"][SA]["resources"]["deployments"][SA]["spec"][
+    "template"
+]["spec"]
+for c in on_pod["containers"] + on_pod.get("initContainers", []):
+    check(
+        f"tunnel on: {c['name']} never runs enable",
+        not re.search(
+            r"\benable\b", " ".join(c.get("args", []) + c.get("command", []))
+        ),
+    )
 for c in pod["containers"] + inits:
     n = c["name"]
     sc = c.get("securityContext", {})
@@ -274,19 +292,151 @@ check(
 store = serving.get("grant_store")
 staged = None
 for c in inits:
-    if not c["name"].startswith("store-") or c["name"] == "store-install":
+    if c["name"] in ("store-install", "store-retirement-inspect") or not c[
+        "name"
+    ].startswith("store-"):
         continue
     args = c.get("args", [])
     check(f"{c['name']} uses the gateway image", c.get("image") == gw.get("image"))
     check(f"{c['name']} has no command override", "command" not in c)
-    staged = staged or arg_after(args, "--state")
-    check(f"{c['name']} runs on the staged store", arg_after(args, "--state") == staged)
+    if c["name"] != "store-migrate-retirement":
+        staged = staged or arg_after(args, "--state")
+        check(
+            f"{c['name']} runs on the staged store",
+            arg_after(args, "--state") == staged,
+        )
     check(
         f"{c['name']} runs its step",
         args[2:3] == [c["name"].removeprefix("store-")],
         args,
     )
 check("staged store is not the real one", staged and staged != store, staged)
+
+# 5a. Retirement: inspect, then the one migrate-retirement on the link inspect made.
+# The inspect script is run against fixture stores, so the backup's condition and its
+# ordering before the link to the real store are behaviour, not text.
+retire = next((c for c in inits if c["name"] == "store-migrate-retirement"), {})
+link = arg_after(retire.get("args", []), "--state")
+check(
+    "migrate-retirement runs on a link in the staging directory",
+    link
+    and staged
+    and posixpath.dirname(link) == posixpath.dirname(staged)
+    and link not in (staged, store),
+    link,
+)
+runs = [
+    c["name"]
+    for p in (pod, on_pod)
+    for c in p["containers"] + p.get("initContainers", [])
+    if "migrate-retirement" in c.get("args", []) + c.get("command", [])
+]
+check(
+    "migrate-retirement runs exactly once per pod",
+    runs == ["store-migrate-retirement"] * 2,
+    runs,
+)
+check(
+    "inspect runs before migrate-retirement",
+    "store-retirement-inspect" in names
+    and "store-migrate-retirement" in names
+    and names.index("store-retirement-inspect")
+    == names.index("store-migrate-retirement") - 1,
+    names,
+)
+inspect = next((c for c in inits if c["name"] == "store-retirement-inspect"), {})
+inspect_cmd = inspect.get("command", [])
+check(
+    "inspect is python on the data volume only",
+    inspect_cmd[:3] == ["python3", "-I", "-c"]
+    and set(mounts(inspect).values()) == {"data"},
+    inspect_cmd[:3],
+)
+
+
+def make_store(path, app):
+    db = sqlite3.connect(path)
+    db.execute(f"PRAGMA application_id = {app}")
+    db.execute("CREATE TABLE grants(id TEXT)")
+    db.execute("INSERT INTO grants VALUES ('fixture')")
+    db.commit()
+    db.close()
+
+
+def run_inspect(app, sealed=False):
+    """Run the inspect script with the data directory moved under a temp dir; sealed
+    makes the data directory itself unwritable, so a backup there cannot be made.
+    Returns (exit code, link target, [(partial, group/other mode bits, marker, rows)])."""
+    data = posixpath.dirname(posixpath.dirname(store))
+    with tempfile.TemporaryDirectory() as tmp:
+        root = tmp + data
+        for d in (posixpath.dirname(store), posixpath.dirname(staged)):
+            os.makedirs(root + d.removeprefix(data), exist_ok=True)
+        make_store(root + staged.removeprefix(data), LEGACY)
+        if app is not None:
+            make_store(root + store.removeprefix(data), app)
+        script = inspect_cmd[3].replace(data, root) if len(inspect_cmd) > 3 else ""
+        if sealed:
+            os.chmod(root, 0o555)
+        code = subprocess.run(
+            [sys.executable, "-I", "-c", script], capture_output=True, check=False
+        ).returncode
+        os.chmod(root, 0o755)
+        lk = root + link.removeprefix(data) if link else ""
+        target = (
+            data + os.readlink(lk).removeprefix(root) if os.path.islink(lk) else None
+        )
+        backups = []
+        for dirpath, _, files in os.walk(root):
+            for f in files:
+                p = posixpath.join(dirpath, f)
+                if "pre-retirement" in f:
+                    b = sqlite3.connect(p)
+                    marker = b.execute("PRAGMA application_id").fetchone()[0]
+                    rows = b.execute("SELECT id FROM grants").fetchall()
+                    b.close()
+                    backups.append(
+                        (
+                            f.endswith(".partial"),
+                            os.stat(p).st_mode & 0o077,
+                            marker,
+                            rows,
+                        )
+                    )
+        return code, target, backups
+
+
+if staged and store and link:
+    code, target, backups = run_inspect(None)
+    check(
+        "inspect, no store: link to the staged store, no backup",
+        (code, target, backups) == (0, staged, []),
+        (code, target, backups),
+    )
+    code, target, backups = run_inspect(RETIREMENT)
+    check(
+        "inspect, migrated store: link to the staged store, no backup",
+        (code, target, backups) == (0, staged, []),
+        (code, target, backups),
+    )
+    code, target, backups = run_inspect(LEGACY)
+    check(
+        "inspect, legacy store: one owner-private legacy backup, then link to the real store",
+        (code, target, backups) == (0, store, [(False, 0, LEGACY, [("fixture",)])]),
+        (code, target, backups),
+    )
+    code, target, backups = run_inspect(LEGACY, sealed=True)
+    check(
+        "inspect, legacy store, backup impossible: refuses, no link to the real store",
+        code != 0 and target is None,
+        (code, target, backups),
+    )
+    code, target, backups = run_inspect(0x1234)
+    check(
+        "inspect, unknown store: refuses, no link",
+        code != 0 and target is None,
+        (code, target, backups),
+    )
 enroll = next((c for c in inits if c["name"] == "store-enroll"), {})
 check(
     "enroll uses the events grant and the binding",
@@ -396,9 +546,6 @@ for n, p in policies.items():
     check(f"{n} egress", allowed == EGRESS, sorted(allowed))
 
 # 9. Tunnel on: the sidecar appears, on the gateway's loopback listener.
-on_pod = renders["on"]["applications"][SA]["resources"]["deployments"][SA]["spec"][
-    "template"
-]["spec"]
 on = {c["name"]: c for c in on_pod["containers"]}
 check(
     "tunnel on: sidecar present",
