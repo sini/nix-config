@@ -37,6 +37,8 @@
     settings.kubernetes.services.ai.xmsg-gateway = {
       enable = true;
       hub = "cortex";
+      # Also a leaf of sini's xmsg on bitstream, so the gateway reaches genie@sini.bitstream.
+      extraHubs = [ "bitstream" ];
       # kanidm's host: the gateway's resource origin and its introspection address.
       kanidmHost = "uplink";
       # The OpenAI Secure MCP Tunnel the ChatGPT connector reaches the gateway through (owner

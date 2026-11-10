@@ -21,11 +21,19 @@ NS = SA = "xmsg-gateway"
 UID = 10001
 IDENTITY = f"spiffe://json64.dev/ns/{NS}/sa/{SA}"
 ISSUER = "xmsg-cluster-ca"
-HUB = "sini.cortex"
-# cortex's LAN address and its owner's federation port; uplink (kanidm) on 443;
-# public HTTPS for Events callbacks.
+# The hub and the extra hub: each one's LAN address, federation port and identity.
+HUBS = {
+    "sini.cortex": ("10.9.2.1", "7788", "spiffe://json64.dev/host/cortex/user/sini"),
+    "sini.bitstream": (
+        "10.9.1.1",
+        "7788",
+        "spiffe://json64.dev/host/bitstream/user/sini",
+    ),
+}
+HUB_RIGHTS = ["list", "reply", "send"]
+# Each hub's federation port; uplink (kanidm) on 443; public HTTPS for Events callbacks.
 EGRESS = {
-    ("cidr", "10.9.2.1/32", "7788"),
+    *(("cidr", f"{ip}/32", port) for ip, port, _ in HUBS.values()),
     ("cidr", "10.10.10.1/32", "443"),
     ("entity", "world", "443"),
 }
@@ -506,9 +514,40 @@ for n, cert in certs.items():
         check(f"{n} no {fld}", not spec.get(fld), spec.get(fld))
     check(f"{n} not a CA", not spec.get("isCA"))
 
-hub = json.loads(res["configMaps"][f"{SA}-xmsg-peers"]["data"]["peers.json"])
-check("one peer, the hub", set(hub) == {HUB}, sorted(hub))
-check("hub may list", "list" in hub.get(HUB, {}).get("allow", []), hub.get(HUB))
+peers = json.loads(res["configMaps"][f"{SA}-xmsg-peers"]["data"]["peers.json"])
+check("one peer per hub", set(peers) == set(HUBS), sorted(peers))
+for key, (ip, port, ident) in HUBS.items():
+    p = peers.get(key, {})
+    check(
+        f"peer {key} CA-pinned at its address",
+        p.get("address") == f"{ip}:{port}"
+        and p.get("ca") == "/etc/xmsg/tls/ca.crt"
+        and p.get("identities") == [ident]
+        and "pin" not in p,
+        p,
+    )
+    check(
+        f"peer {key} rights", sorted(p.get("allow", [])) == HUB_RIGHTS, p.get("allow")
+    )
+
+# The xmsg-leaves record each hub turns into its peers entry for the leaf.
+leaves = renders["leaves"]
+check("one leaf record", len(leaves) == 1, leaves)
+leaf = leaves[0] if leaves else {}
+check(
+    "leaf record names every hub",
+    sorted(leaf.get("hubs", [])) == sorted(HUBS),
+    leaf.get("hubs"),
+)
+check(
+    "leaf record rights", sorted(leaf.get("allow", [])) == HUB_RIGHTS, leaf.get("allow")
+)
+check("leaf record identity", leaf.get("identity") == IDENTITY, leaf.get("identity"))
+check(
+    "leaf record targets every session",
+    leaf.get("targets", 0) is None,
+    leaf.get("targets"),
+)
 
 # 8. Egress.
 policies = {

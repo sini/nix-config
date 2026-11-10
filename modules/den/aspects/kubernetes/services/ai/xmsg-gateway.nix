@@ -1,11 +1,12 @@
 # xmsg-mcp-gateway as a pod (github:sini/xmsg-mcp-gateway, xmsg-design's gateway
 # edge-alignment amendment §2.1–2.4): an OAuth-protected MCP endpoint whose messaging
-# node is an xmsg leaf in the same pod, the genie-guard.nix pattern. The leaf's hub is
-# the system owner's xmsg on the `hub` host; senders there address the gateway as
-# `xmsg-gateway@xmsg-gateway.xmsg-gateway`, the hub queues those sends in the leaf's
-# mailbox, and the gateway commits them to custody and wakes the owner's ChatGPT
-# subscription (MCP Events). The gateway sends and replies through the leaf's
-# agent.sock.
+# node is an xmsg leaf in the same pod, the genie-guard.nix pattern. The leaf's hubs are
+# the system owner's xmsg on the `hub` host and on each `extraHubs` host; senders there
+# address the gateway as `xmsg-gateway@xmsg-gateway.xmsg-gateway`, each hub queues those
+# sends in the leaf's mailbox, and the gateway commits them to custody and wakes the
+# owner's ChatGPT subscription (MCP Events). The gateway sends and replies through the
+# leaf's agent.sock. A leaf reaches only the nodes in its peers file, and a node delivers
+# only to its own sessions, so every node whose sessions the gateway addresses is a hub.
 #
 # The one inbound path is the MCP listener on loopback, reached through the
 # tunnel-client sidecar (settings.tunnel, off until cutover). No Service, no ingress.
@@ -193,6 +194,13 @@ in
         description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits. Required with enable.";
       };
 
+      extraHubs = lib.mkOption {
+        type = lib.types.listOf lib.types.str;
+        default = [ ];
+        example = [ "bitstream" ];
+        description = "More hosts whose owner's xmsg is also the leaf's hub, so the gateway reaches and lists their sessions too. Each takes the leaf from the same xmsg-leaves record.";
+      };
+
       kanidmHost = lib.mkOption {
         type = lib.types.nullOr lib.types.str;
         default = null;
@@ -238,11 +246,15 @@ in
         {
           identity = "spiffe://${domainOf cluster}/ns/${namespace}/sa/${name}";
           cluster = cluster.name;
-          hubs = [ "${den.hosts.x86_64-linux.${hostSetting cfg "hub"}.system-owner}.${cfg.hub}" ];
-          # It sends and replies to the hub's sessions; inbound sends need no right.
+          hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") (
+            [ (hostSetting cfg "hub") ] ++ cfg.extraHubs
+          );
+          # It sends and replies to the hubs' sessions and lists them; inbound sends
+          # need no right.
           allow = [
             "send"
             "reply"
+            "list"
           ];
           # Explicitly every target. One `targets` list gates both what the hub queues
           # to the leaf and what the leaf may reach on the hub. The hub's agent sessions
@@ -304,12 +316,14 @@ in
       }:
       let
         cfg = cluster.settings.kubernetes.services.ai.xmsg-gateway;
-        hubHost = den.hosts.x86_64-linux.${hostSetting cfg "hub"};
-        hub = {
-          name = "${hubHost.system-owner}.${cfg.hub}";
-          ip = lib.head hubHost.ipv4;
-          port = hubHost.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${hubHost.system-owner}.port;
-        };
+        # The leaf pulls from every peer in its file, each mailbox on its own.
+        hubs = map (h: rec {
+          host = den.hosts.x86_64-linux.${h};
+          name = "${host.system-owner}.${h}";
+          identity = "spiffe://${domainOf host}/host/${h}/user/${host.system-owner}";
+          ip = lib.head host.ipv4;
+          port = host.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${host.system-owner}.port;
+        }) ([ (hostSetting cfg "hub") ] ++ cfg.extraHubs);
         kanidmHost = den.hosts.x86_64-linux.${hostSetting cfg "kanidmHost"};
         kanidmIp = lib.head kanidmHost.ipv4;
         kanidmDomain = cluster.domainFor "kanidm";
@@ -325,14 +339,26 @@ in
         resource = "${origin}/mcp";
         verifierIssuer = "https://${kanidmDomain}/oauth2/openid/${hostedClient}";
 
-        peers.${hub.name} = {
-          address = "${hub.ip}:${toString hub.port}";
-          ca = "${tlsDir}/ca.crt";
-          identities = [ "spiffe://${domainOf hubHost}/host/${cfg.hub}/user/${hubHost.system-owner}" ];
-          # The leaf has no listener; `list` lets it answer the hub's list query from its
-          # mailbox, so the hub's sessions see the gateway (xmsg XA6).
-          allow = [ "list" ];
-        };
+        peers = lib.listToAttrs (
+          map (h: {
+            inherit (h) name;
+            value = {
+              address = "${h.ip}:${toString h.port}";
+              ca = "${tlsDir}/ca.crt";
+              identities = [ h.identity ];
+              # What the hub may ask of the leaf. `list` lets it answer the hub's list
+              # query from its mailbox, so the hub's sessions see the gateway (xmsg XA6).
+              # `send` and `reply` gate only fed requests, which a leaf never listens for
+              # (xmsg refuses --leaf with --fed-listen); a pulled send reaches only the
+              # leaf principal.
+              allow = [
+                "send"
+                "reply"
+                "list"
+              ];
+            };
+          }) hubs
+        );
 
         # The exact enrollment document; the verifier's values below are the same.
         binding = {
@@ -829,7 +855,7 @@ in
                 };
 
             ciliumClusterwideNetworkPolicies."allow-xmsg-egress-${namespace}-${name}".spec = {
-              description = "Allow ${namespace}/${name} to its xmsg hub's federation port, kanidm's introspection, and public HTTPS for Events callbacks.";
+              description = "Allow ${namespace}/${name} to its xmsg hubs' federation ports, kanidm's introspection, and public HTTPS for Events callbacks.";
               endpointSelector.matchExpressions = [
                 {
                   key = "k8s:io.kubernetes.pod.namespace";
@@ -842,8 +868,7 @@ in
                   values = [ name ];
                 }
               ];
-              egress = [
-                (egressRule { toCIDR = [ "${hub.ip}/32" ]; } hub.port)
+              egress = map (h: egressRule { toCIDR = [ "${h.ip}/32" ]; } h.port) hubs ++ [
                 (egressRule { toCIDR = [ "${kanidmIp}/32" ]; } 443)
                 # Events callbacks go to the subscriber's public HTTPS URL, unknown in
                 # advance (amendment §2.1: "the public callback destination on 443").

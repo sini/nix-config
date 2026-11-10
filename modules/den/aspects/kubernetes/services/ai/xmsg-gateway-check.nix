@@ -1,32 +1,36 @@
 # xmsg-gateway-check: the hardening, shared uid, owner configuration, grant-store
-# initContainers, secret modes and egress of xmsg-gateway.nix, asserted over the
+# initContainers, secret modes, hub peers, xmsg-leaves record and egress of
+# xmsg-gateway.nix, asserted over the
 # aspect's manifests with the flag forced on and the pinned images, so the check holds
 # whatever axon's flags are. A second render with the tunnel on (stand-in image and
 # id) shows the sidecar appears only then, pointed at the loopback listener.
 #   nix build .#checks.x86_64-linux.xmsg-gateway-pod
 { config, lib, ... }:
 let
+  aspect = config.den.aspects.kubernetes.services.ai.xmsg-gateway;
+  cluster = tunnel: {
+    name = "axon";
+    environment = "prod";
+    domainFor = svc: if svc == "kanidm" then "idm.json64.dev" else "${svc}.json64.dev";
+    settings.kubernetes.services.ai.xmsg-gateway = {
+      enable = true;
+      hub = "cortex";
+      extraHubs = [ "bitstream" ];
+      kanidmHost = "uplink";
+      # A stand-in: the real value is measured at cutover.
+      subject = "00000000-0000-4000-8000-000000000000";
+      inherit tunnel;
+    };
+  };
   render =
     tunnel:
-    config.den.aspects.kubernetes.services.ai.xmsg-gateway.k8s-manifests {
+    aspect.k8s-manifests {
       config.age.secrets = {
         xmsg-gateway-events-key.sopsRef = "ref+sops://stand-in";
         xmsg-gateway-lookup-oidc-client-secret.sopsRef = "ref+sops://stand-in";
         xmsg-gateway-tunnel-runtime-key.sopsRef = "ref+sops://stand-in";
       };
-      cluster = {
-        name = "axon";
-        environment = "prod";
-        domainFor = svc: if svc == "kanidm" then "idm.json64.dev" else "${svc}.json64.dev";
-        settings.kubernetes.services.ai.xmsg-gateway = {
-          enable = true;
-          hub = "cortex";
-          kanidmHost = "uplink";
-          # A stand-in: the real value is measured at cutover.
-          subject = "00000000-0000-4000-8000-000000000000";
-          inherit tunnel;
-        };
-      };
+      cluster = cluster tunnel;
       images = config.flake.imageRefs.x86_64-linux // {
         "openai/tunnel-client" = {
           repository = "ghcr.io/openai/tunnel-client";
@@ -43,10 +47,59 @@ let
       enable = true;
       id = "tunnel_stand_in";
     };
+    leaves = aspect.xmsg-leaves {
+      cluster = cluster {
+        enable = false;
+        id = null;
+      };
+    };
   };
 
-  # Negative controls: each mutant of the tunnel-off pod's initContainers must fail the
-  # check on the named property.
+  # Negative controls: each mutant must fail the check on the named property. The
+  # `mutants` rewrite the tunnel-off pod's initContainers; `wholeMutants` rewrite any
+  # part of the render.
+  resPath = [
+    "applications"
+    "xmsg-gateway"
+    "resources"
+  ];
+  atOff =
+    path: update:
+    manifests
+    // {
+      off = lib.updateManyAttrsByPath [ { inherit path update; } ] manifests.off;
+    };
+  bitstreamIp = "10.9.1.1/32";
+  wholeMutants = {
+    # The leaf federates with cortex only.
+    "one peer per hub" = atOff (
+      resPath
+      ++ [
+        "configMaps"
+        "xmsg-gateway-xmsg-peers"
+        "data"
+        "peers.json"
+      ]
+    ) (s: builtins.toJSON (removeAttrs (builtins.fromJSON s) [ "sini.bitstream" ]));
+    # The peers entry kept, its egress dropped.
+    "allow-xmsg-egress-xmsg-gateway-xmsg-gateway egress" = atOff (
+      resPath
+      ++ [
+        "ciliumClusterwideNetworkPolicies"
+        "allow-xmsg-egress-xmsg-gateway-xmsg-gateway"
+        "spec"
+        "egress"
+      ]
+    ) (lib.filter (r: !(lib.elem bitstreamIp (r.toCIDR or [ ]))));
+    # bitstream's node never takes the leaf.
+    "leaf record names every hub" = manifests // {
+      leaves = map (l: l // { hubs = lib.take 1 l.hubs; }) manifests.leaves;
+    };
+    # The hubs grant the leaf no `list`, so xmsg_list comes back empty.
+    "leaf record rights" = manifests // {
+      leaves = map (l: l // { allow = lib.remove "list" l.allow; }) manifests.leaves;
+    };
+  };
   initsPath = [
     "applications"
     "xmsg-gateway"
@@ -58,17 +111,7 @@ let
     "spec"
     "initContainers"
   ];
-  mutant =
-    f:
-    manifests
-    // {
-      off = lib.updateManyAttrsByPath [
-        {
-          path = initsPath;
-          update = f;
-        }
-      ] manifests.off;
-    };
+  mutant = atOff initsPath;
   isInspect = c: c.name == "store-retirement-inspect";
   mutants = {
     # migrate-retirement before the inspect that backs up.
@@ -138,15 +181,13 @@ in
           ''
             python3 -I ${./xmsg-gateway-check.py} ${json "xmsg-gateway" manifests pkgs}
             ${lib.concatStrings (
-              lib.mapAttrsToList (property: f: ''
-                if python3 -I ${./xmsg-gateway-check.py} ${
-                  json "xmsg-gateway-mutant" (mutant f) pkgs
-                } > mutant.log; then
+              lib.mapAttrsToList (property: m: ''
+                if python3 -I ${./xmsg-gateway-check.py} ${json "xmsg-gateway-mutant" m pkgs} > mutant.log; then
                   echo "negative control passed the check: ${property}" >&2; exit 1
                 fi
                 grep -qF -- ${lib.escapeShellArg property} mutant.log || { cat mutant.log >&2; echo "negative control failed elsewhere: ${property}" >&2; exit 1; }
                 echo "negative control refused: ${property}"
-              '') mutants
+              '') (lib.mapAttrs (_: mutant) mutants // wholeMutants)
             )}
             touch $out
           '';

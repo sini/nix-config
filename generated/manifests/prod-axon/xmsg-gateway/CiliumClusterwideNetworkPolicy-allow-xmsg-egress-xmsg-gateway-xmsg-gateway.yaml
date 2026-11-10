@@ -3,10 +3,16 @@ kind: CiliumClusterwideNetworkPolicy
 metadata:
   name: allow-xmsg-egress-xmsg-gateway-xmsg-gateway
 spec:
-  description: Allow xmsg-gateway/xmsg-gateway to its xmsg hub's federation port, kanidm's introspection, and public HTTPS for Events callbacks.
+  description: Allow xmsg-gateway/xmsg-gateway to its xmsg hubs' federation ports, kanidm's introspection, and public HTTPS for Events callbacks.
   egress:
     - toCIDR:
         - 10.9.2.1/32
+      toPorts:
+        - ports:
+            - port: "7788"
+              protocol: TCP
+    - toCIDR:
+        - 10.9.1.1/32
       toPorts:
         - ports:
             - port: "7788"
