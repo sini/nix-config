@@ -129,6 +129,20 @@ in
               IPv6AcceptRA = true;
               DHCP = "no";
             };
+            # The cluster's LoadBalancer pool via uplink, the prod BGP hub, which holds a
+            # per-address route to the announcing node. Through the gateway this breaks:
+            # the guest shares 10.10.0.0/16 with the nodes, so a node's reply comes back
+            # on-link, the gateway sees only half the connection, and it drops the rest
+            # (measured 2026-11-09: SYN to 10.10.0.1, SYN-ACK from axon-03, data never
+            # acknowledged). The reply still returns on-link; uplink forwards statelessly.
+            routes = [
+              {
+                Destination = den.clusters.axon.networks.kubernetes-loadbalancers.cidr;
+                Gateway = lib.head (
+                  lib.splitString "/" (lib.head den.hosts.x86_64-linux.uplink.networking.interfaces.enp4s0.ipv4)
+                );
+              }
+            ];
           };
         };
 
