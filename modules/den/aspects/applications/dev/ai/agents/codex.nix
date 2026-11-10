@@ -89,14 +89,37 @@
               with open(out, "wb") as f:
                   tomli_w.dump(agent, f, multiline_strings=True)
             '';
-        agentFiles = lib.mapAttrs' (
+        agentTomls = lib.mapAttrs (
           name: src:
-          lib.nameValuePair ".codex/agents/${name}.toml" {
-            source = pkgs.runCommand "codex-agent-${name}.toml" { } ''
-              ${toAgentToml} ${src.outPath or src} $out
-            '';
-          }
+          pkgs.runCommand "codex-agent-${name}.toml" { } ''
+            ${toAgentToml} ${src.outPath or src} $out
+          ''
         ) (collect "agents");
+        # Codex opens a role file with O_NOFOLLOW and refuses a symlink (exec-server
+        # regular_file.rs), so a home.file store link is listed but fails at spawn ("agent type is
+        # currently not available"). Copy each role in as a regular file instead; a manifest
+        # records what this installed, so a role dropped from the declaration is removed and
+        # files codex or the user put there are left alone.
+        agentsDir = "${config.home.homeDirectory}/.codex/agents";
+        installAgents = ''
+          mkdir -p ${lib.escapeShellArg agentsDir}
+          manifest=${lib.escapeShellArg agentsDir}/.nix-managed
+          if [ -f "$manifest" ]; then
+            while IFS= read -r old; do
+              case " ${lib.concatStringsSep " " (map (n: "${n}.toml") (lib.attrNames agentTomls))} " in
+                *" $old "*) ;;
+                *) [ -n "$old" ] && rm -f ${lib.escapeShellArg agentsDir}/"$old" ;;
+              esac
+            done < "$manifest"
+          fi
+          ${lib.concatStrings (
+            lib.mapAttrsToList (name: toml: ''
+              rm -f ${lib.escapeShellArg "${agentsDir}/${name}.toml"}
+              install -m 0644 ${toml} ${lib.escapeShellArg "${agentsDir}/${name}.toml"}
+            '') agentTomls
+          )}
+          printf '%s\n' ${lib.escapeShellArgs (map (n: "${n}.toml") (lib.attrNames agentTomls))} > "$manifest"
+        '';
 
         # bash-guard.sh is claude.nix's, at a stable home path so codex's hook trust (taken on
         # the hook definition) survives edits to the script. Codex's PreToolUse/Bash payload
@@ -139,8 +162,10 @@
         home.file = {
           ".codex/config.toml".enable = lib.mkForce false;
           ".codex/hooks.json" = lib.mkIf (hooks != { }) { text = builtins.toJSON { inherit hooks; }; };
-        }
-        // agentFiles;
+        };
+
+        # After linkGeneration, which removes the previous generation's agent symlinks.
+        home.activation.codexAgents = lib.hm.dag.entryAfter [ "linkGeneration" ] installAgents;
 
         lens.files.codex = {
           target = ".codex/config.toml";
