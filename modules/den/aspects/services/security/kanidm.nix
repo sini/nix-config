@@ -89,12 +89,10 @@ let
       # name (idm/oauth2.rs `aud = o2rs.name`), and the gateway accepts a token only when
       # introspection reports aud == client_id == this name (its `audience` option), so a
       # second consumer of this client would hold tokens the gateway accepts. Confidential,
-      # with PKCE S256 enforced (kanidm's default). Its redirect URIs come from the host
-      # setting xmsgGateway.redirectUris (the nixos block), which overrides originUrl.
+      # with PKCE S256 enforced (kanidm's default). Its redirect URIs and origin come from
+      # the host settings xmsgGateway.{redirectUris,origin} (the nixos block).
       xmsg-gateway = {
         displayName = "xmsg MCP gateway";
-        originUrl = [ "https://chatgpt.com/connector_platform_oauth_redirect" ];
-        originLanding = "https://chatgpt.com";
         basicSecretFile = secretPaths.xmsg-gateway-oidc-client-secret or null;
         preferShortUsername = true;
         scopeMaps."xmsg-gateway.access" = [
@@ -104,6 +102,16 @@ let
           "identity:read"
           "events:subscribe"
         ];
+      };
+
+      # The gateway's own credential for the introspection endpoint
+      # (kubernetes/services/ai/xmsg-gateway.nix), never the hosted client's secret.
+      # Kanidm 1.11 authenticates no introspection caller, so it needs no scope map;
+      # it is still a dedicated confidential client, so no other client's secret is
+      # ever placed in the pod. Origin set in the nixos block, like xmsg-gateway's.
+      xmsg-gateway-lookup = {
+        displayName = "xmsg MCP gateway (token introspection)";
+        basicSecretFile = secretPaths.xmsg-gateway-lookup-oidc-client-secret or null;
       };
 
       # Gateway-OIDC fronts for the cluster's Prometheus and Alertmanager
@@ -660,6 +668,12 @@ in
         description = "Redirect URIs of the dedicated xmsg-gateway OAuth2 client: the exact callback the hosted connector's setup UI shows.";
       };
 
+      xmsgGateway.origin = lib.mkOption {
+        type = lib.types.strMatching "https://[^/]+";
+        default = "https://xmsg-gateway.json64.dev";
+        description = "Origin of the xmsg-gateway OAuth2 client, and so of the gateway's resource `<origin>/mcp` (kubernetes/services/ai/xmsg-gateway.nix reads it). Reached through the tunnel, so it needs no DNS record.";
+      };
+
       # kanidm-mail-sender drains kanidm's outbound message queue (credential
       # reset and account recovery links), authenticating with a read-write API
       # token of the mail-sender service account, a member of
@@ -727,9 +741,17 @@ in
           base
           // {
             xmsg-gateway = base.xmsg-gateway // {
-              originUrl = host.settings.services.security.kanidm.xmsgGateway.redirectUris;
+              originUrl = gwSettings.redirectUris;
+              originLanding = gwSettings.origin;
+            };
+            # Never used for an authorization flow (no scope map admits anyone), so its
+            # redirect URI is only the field kanidm requires; it is not the hosted one.
+            xmsg-gateway-lookup = base.xmsg-gateway-lookup // {
+              originUrl = [ "${gwSettings.origin}/introspection-only" ];
+              originLanding = gwSettings.origin;
             };
           };
+        gwSettings = host.settings.services.security.kanidm.xmsgGateway;
         # The gateway's audience is this client's name, so its access group may grant
         # nothing else, and no other client may share its redirect URIs.
         xmsgGatewayDedicated =
