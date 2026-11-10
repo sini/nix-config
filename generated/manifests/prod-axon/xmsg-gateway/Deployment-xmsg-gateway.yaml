@@ -13,7 +13,7 @@ spec:
   template:
     metadata:
       annotations:
-        json64.dev/config-hash: 648cd193f24933b46bf5c8974f2414ccb0903eaf9c02dc772924509e1f580f25
+        json64.dev/config-hash: 8eddc2ae4ff8aa47e75b517baa3b919c45a8c0416330d18ebc10f5848032fcc7
       labels:
         app.kubernetes.io/name: xmsg-gateway
     spec:

@@ -18,6 +18,12 @@ spec:
             - port: "7788"
               protocol: TCP
     - toCIDR:
+        - 10.10.11.1/32
+      toPorts:
+        - ports:
+            - port: "7788"
+              protocol: TCP
+    - toCIDR:
         - 10.10.10.1/32
       toPorts:
         - ports:
