@@ -23,10 +23,11 @@
     # xmsg cluster CA issuer for pod certificates (federation plan §6.7).
     settings.kubernetes.services.security.cert-manager.xmsg-ca.enable = true;
 
-    # genie-guard as an xmsg leaf pod of sini's xmsg on bitstream (its default
-    # hub), beside the bitstream guard; see services/ai/genie-guard.nix.
+    # genie-guard as an xmsg leaf pod of sini's xmsg on bitstream, beside the
+    # bitstream guard; see services/ai/genie-guard.nix.
     settings.kubernetes.services.ai.genie-guard = {
       enable = true;
+      hub = "bitstream";
       # Also a leaf of sini's xmsg on cortex, for development and testing.
       devHubs = [ "cortex" ];
     };
@@ -35,6 +36,9 @@
     # services/ai/xmsg-gateway.nix. The tunnel sidecar stays off until cutover.
     settings.kubernetes.services.ai.xmsg-gateway = {
       enable = true;
+      hub = "cortex";
+      # kanidm's host: the gateway's resource origin and its introspection address.
+      kanidmHost = "uplink";
       tunnel.enable = false;
       # json's kanidm person UUID, the owner's SSO login (`kanidm person get json`, read
       # anonymously 2026-11-10), which kanidm issues as the OIDC `sub`. Acceptance step 1

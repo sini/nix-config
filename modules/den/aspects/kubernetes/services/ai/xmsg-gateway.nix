@@ -1,7 +1,7 @@
 # xmsg-mcp-gateway as a pod (github:sini/xmsg-mcp-gateway, xmsg-design's gateway
 # edge-alignment amendment §2.1–2.4): an OAuth-protected MCP endpoint whose messaging
 # node is an xmsg leaf in the same pod, the genie-guard.nix pattern. The leaf's hub is
-# the system owner's xmsg on cortex; senders there address the gateway as
+# the system owner's xmsg on the `hub` host; senders there address the gateway as
 # `xmsg-gateway@xmsg-gateway.xmsg-gateway`, the hub queues those sends in the leaf's
 # mailbox, and the gateway commits them to custody and wakes the owner's ChatGPT
 # subscription (MCP Events). The gateway sends and replies through the leaf's
@@ -114,6 +114,14 @@ let
     else
       cfg.enable;
 
+  # A required host-name setting, refused by name while unset.
+  hostSetting =
+    cfg: key:
+    if cfg.${key} == null then
+      throw "xmsg-gateway: enable needs settings.kubernetes.services.ai.xmsg-gateway.${key}."
+    else
+      cfg.${key};
+
   ref = image: "${image.repository}@${image.digest}";
 
   hardened = {
@@ -159,15 +167,17 @@ in
       };
 
       hub = lib.mkOption {
-        type = lib.types.str;
-        default = "cortex";
-        description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits.";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "cortex";
+        description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits. Required with enable.";
       };
 
       kanidmHost = lib.mkOption {
-        type = lib.types.str;
-        default = "uplink";
-        description = "The host running kanidm: its xmsgGateway.origin gives the gateway's resource, and its address is the pinned introspection connection.";
+        type = lib.types.nullOr lib.types.str;
+        default = null;
+        example = "uplink";
+        description = "The host running kanidm: its xmsgGateway.origin gives the gateway's resource, and its address is the pinned introspection connection. Required with enable.";
       };
 
       subject = lib.mkOption {
@@ -208,7 +218,7 @@ in
         {
           identity = "spiffe://json64.dev/ns/${namespace}/sa/${name}";
           cluster = cluster.name;
-          hubs = [ "${den.hosts.x86_64-linux.${cfg.hub}.system-owner}.${cfg.hub}" ];
+          hubs = [ "${den.hosts.x86_64-linux.${hostSetting cfg "hub"}.system-owner}.${cfg.hub}" ];
           # It sends and replies to the hub's sessions; inbound sends need no right.
           allow = [
             "send"
@@ -274,13 +284,13 @@ in
       }:
       let
         cfg = cluster.settings.kubernetes.services.ai.xmsg-gateway;
-        hubHost = den.hosts.x86_64-linux.${cfg.hub};
+        hubHost = den.hosts.x86_64-linux.${hostSetting cfg "hub"};
         hub = {
           name = "${hubHost.system-owner}.${cfg.hub}";
           ip = lib.head hubHost.ipv4;
           port = hubHost.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${hubHost.system-owner}.port;
         };
-        kanidmHost = den.hosts.x86_64-linux.${cfg.kanidmHost};
+        kanidmHost = den.hosts.x86_64-linux.${hostSetting cfg "kanidmHost"};
         kanidmIp = lib.head kanidmHost.ipv4;
         kanidmDomain = cluster.domainFor "kanidm";
         origin = kanidmHost.settings.services.security.kanidm.xmsgGateway.origin;

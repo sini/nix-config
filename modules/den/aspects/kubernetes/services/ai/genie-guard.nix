@@ -1,5 +1,5 @@
 # genie-guard as a pod: an xmsg leaf (xmsg X19, federation plan §2.1) whose hub is
-# the system owner's xmsg on bitstream. Senders on the hub address it as
+# the system owner's xmsg on the `hub` host. Senders on the hub address it as
 # `genie-guard@genie-guard.genie` (its node name derives from its URI SAN,
 # `<sa>.<ns>`); the hub queues those sends in the leaf's mailbox,
 # and the leaf container long-polls it over mTLS and hands each message to the
@@ -59,6 +59,13 @@ let
     else
       on;
 
+  hubOf =
+    cfg:
+    if cfg.hub == null then
+      throw "genie-guard: enable needs settings.kubernetes.services.ai.genie-guard.hub, the host whose owner's xmsg is the leaf's hub."
+    else
+      cfg.hub;
+
   ref = image: "${image.repository}@${image.digest}";
 
   hardened = {
@@ -79,9 +86,10 @@ in
     };
 
     settings.hub = lib.mkOption {
-      type = lib.types.str;
-      default = "bitstream";
-      description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits.";
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      example = "bitstream";
+      description = "The host whose owner's xmsg is the leaf's hub. That node takes the leaf from the xmsg-leaves record this aspect emits. Required with enable.";
     };
 
     settings.devHubs = lib.mkOption {
@@ -101,7 +109,7 @@ in
         {
           identity = "spiffe://json64.dev/ns/${namespace}/sa/${name}";
           cluster = cluster.name;
-          hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") ([ cfg.hub ] ++ cfg.devHubs);
+          hubs = map (h: "${den.hosts.x86_64-linux.${h}.system-owner}.${h}") ([ (hubOf cfg) ] ++ cfg.devHubs);
           # It answers what it collects, and is sent nothing but guard requests.
           allow = [ "reply" ];
           targets = [ name ];
@@ -134,14 +142,14 @@ in
       }:
       let
         cfg = cluster.settings.kubernetes.services.ai.genie-guard;
-        hub = den.hosts.x86_64-linux.${cfg.hub};
+        hub = den.hosts.x86_64-linux.${hubOf cfg};
         # The leaf pulls from every peer in its file, each mailbox on its own.
         hubs = map (h: rec {
           name = h;
           host = den.hosts.x86_64-linux.${h};
           ip = lib.head host.ipv4;
           port = host.settings.applications.dev.ai.mcp.xmsg.federation.nodes.${host.system-owner}.port;
-        }) ([ cfg.hub ] ++ cfg.devHubs or [ ]);
+        }) ([ (hubOf cfg) ] ++ cfg.devHubs or [ ]);
         # Service nodes that screen through this pod (services/matrix-xmsg.nix `guards`)
         # are hubs too: the pod collects their guard requests from them.
         serviceHubs = lib.filter (n: lib.elem "${name}@${name}.${namespace}" (n.guards or [ ])) xmsg-nodes;
