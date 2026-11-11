@@ -23,48 +23,36 @@
 # directories 0700. The PVC keeps fsGroupChangePolicy OnRootMismatch, so kubelet never
 # re-adds group write to them on a later mount.
 #
-# Grant store (events.md "Configure and migrate"). Initialization never overwrites and
-# no-op migrations fail, so the real store is created only when absent. The gateway
-# image has no shell, so the steps cannot be skipped by a test inside it: they always
-# build a fresh store in a staging directory on the PVC (init, migrate-custody,
-# migrate-outbound, migrate-retirement, migrate-custody-summaries, migrate-events,
-# enroll), and the last busybox
-# step moves it into
-# place only if state/grants.db is absent. Otherwise it discards it. A crash between
-# steps therefore never leaves a half-built real store. A new grant is disabled at
-# revision 1: `enable` is never run here. It is a deliberate one-time cutover step
+# Grant store (events.md "Configure and migrate", serving.md "Repeatable migrations in a
+# shell-less init chain"). Initialization never overwrites, so the real store is
+# created only when absent. The gateway image has no shell, so the fresh path always
+# builds a store in a staging directory on the PVC (init, every migration, enroll: a
+# new grant is enrolled after migrate-events, so its never-enabled history is
+# explicit), and `store-install` (busybox) moves it into place only if state/grants.db
+# is absent. Otherwise it discards it. A crash between steps therefore never leaves a
+# half-built real store. A new grant is disabled at revision 1: `enable` is never run
+# here. It is a deliberate one-time cutover step
 # (`xmsg-mcp-gateway --state /var/lib/xmsg-mcp-gateway/state/grants.db enable chatgpt 1`).
 #
-# Outbound policy (outbound.md, `apply`): `store-apply` then applies policy.json, the
-# grant's send and reply targets (every hub's sessions), to the real store. apply
-# compares policies as typed values and an unchanged one prints `unchanged at revision
-# N`, writes nothing and exits 0, so a restart is a no-op. A change advances the
-# revision by one (and, like set-outbound-policy, pauses the Events subscription). No
-# --enabled or --disabled: apply keeps the grant's enablement. The grant always exists
-# here (store-install leaves an enrolled store), and a missing one fails the pod.
+# Migrations: every migrate-* runs with --if-needed, on the staged store and then on
+# the real one, in the gateway's order. --if-needed migrates a store that needs it and
+# otherwise prints `already migrated` and exits 0 without writing; unknown markers,
+# unsupported schemas and partial migrations still fail (serving.md). Retirement and
+# custody summaries are one-way (older images refuse their application_id), so
+# `store-backup` (the pinned python image, for its sqlite3 module) first reads the real
+# store, read-only, by the gateway's own migration_applied rules (grants.rs). Only when
+# at least one migration will run does it take an online backup (the sqlite3 backup
+# API, never cp) to backups/grants.db.pre-migrate-<UTC time>; an already-migrated
+# store, a fresh one included, is never backed up. Rolling back to an older image
+# means restoring that backup.
 #
-# Retirement migration (outbound.md): `migrate-retirement` changes the store's SQLite
-# application_id from 0x584d4757 to 0x584d4752. Older gateways then refuse the store,
-# and a second run fails. The gateway CLI has no status or backup verb, so the
-# `store-retirement-inspect` step (the pinned python image, for its sqlite3 module)
-# reads the real store's application_id. Only when it is the legacy marker does it take
-# an online backup (the sqlite3 backup API, never cp) to
-# backups/grants.db.pre-retirement-<UTC time> and point the staging link at the real
-# store. Otherwise the link points at the staged store, which needs the migration
-# anyway. `store-migrate-retirement` then runs once, on the link. SQLite resolves the
-# symlink, so the real store's journal stays beside it. A crash before the commit leaves
-# the legacy marker, so the next start backs up and migrates again. Rolling back to an
-# older image means restoring that backup.
-#
-# Custody summaries (custody.md): `migrate-custody-summaries` folds custody refusals and
-# gaps into bounded summaries and sets the application_id to 0x584d4753; older gateways
-# then refuse the store, and a second run fails. `store-custody-summaries-inspect` takes
-# the same shape after retirement: only a real store without that marker is backed up
-# (backups/grants.db.pre-custody-summaries-<UTC time>) and linked. The staged store
-# already has summaries, so otherwise the link points at a throwaway scratch copy of it
-# in the pre-summary format. `store-migrate-custody-summaries` then runs once, on the
-# link. Retirement keeps the summary marker, so a summary store counts as retired by
-# its outbound_retirement_schema table.
+# Outbound policy (outbound.md, `apply`): `store-apply`, the last step, then applies
+# policy.json, the grant's send and reply targets (every hub's sessions), to the real
+# store. apply compares policies as typed values and an unchanged one prints `unchanged
+# at revision N`, writes nothing and exits 0, so a restart is a no-op. A change advances
+# the revision by one (and, like set-outbound-policy, pauses the Events subscription).
+# No --enabled or --disabled: apply keeps the grant's enablement. The grant always
+# exists here (store-install leaves an enrolled store), and a missing one fails the pod.
 #
 # Backup: the Events key encrypts the store's callback URLs, delivery secrets and
 # retained tokens, so the store is useless without it. The key lives in agenix (git)
@@ -106,11 +94,6 @@ let
   secretsDir = "/run/secrets/${name}";
   grantStore = "${stateDir}/grants.db";
   stagedStore = "${stagingDir}/grants.db";
-  # What migrate-retirement runs on: a symlink to the real or the staged store.
-  retirementLink = "${stagingDir}/retirement.db";
-  # And migrate-custody-summaries: the real store, or a scratch store needing it.
-  summariesLink = "${stagingDir}/custody-summaries.db";
-  summariesScratch = "${stagingDir}/custody-summaries-scratch.db";
   backupsDir = "${dataDir}/backups";
   eventsKey = "${keysDir}/events.key";
   lookupSecret = "${keysDir}/lookup-secret";
@@ -465,13 +448,13 @@ in
         python = ref images."library/python";
         gatewayImage = ref images."sini/xmsg-mcp-gateway";
 
-        # Each store step is the gateway CLI itself, on the staged store.
-        storeStep = step: args: {
-          name = "store-${step}";
+        # Each store step is the gateway CLI itself: `prefix` names the store it runs on.
+        storeStep = prefix: store: args: {
+          name = "${prefix}-${lib.head args}";
           image = gatewayImage;
           args = [
             "--state"
-            stagedStore
+            store
           ]
           ++ args;
           securityContext = hardened;
@@ -481,6 +464,21 @@ in
             (roMount "config" configDir)
           ];
         };
+
+        # The gateway's migrations, in its order, each a no-op on a store that has it.
+        migrations =
+          prefix: store:
+          map (args: storeStep prefix store (args ++ [ "--if-needed" ])) [
+            [ "migrate-custody" ]
+            [ "migrate-outbound" ]
+            [ "migrate-retirement" ]
+            [ "migrate-custody-summaries" ]
+            [
+              "migrate-events"
+              "--key-file"
+              eventsKey
+            ]
+          ];
 
         prepareScript = ''
           set -eu
@@ -508,106 +506,47 @@ in
           rm -rf ${stagingDir}
         '';
 
-        # A one-way migration of the real store, behind an online backup. The script reads
-        # the real store's application_id (LEGACY, RETIREMENT and SUMMARY are grants.rs's
-        # markers). Only when `needed` holds does it back the store up (the sqlite3 backup
-        # API, never cp) to backups/grants.db.pre-<tag>-<UTC time> and point `link` at it;
-        # otherwise `fallback` sets the target, a store that needs the migration anyway.
-        inspectScript =
-          {
-            tag,
-            needed,
-            link,
-            fallback,
-          }:
-          ''
-            import os, sqlite3, sys, time
-            LEGACY, RETIREMENT, SUMMARY = 0x584d4757, 0x584d4752, 0x584d4753
-            os.umask(0o077)
-            target = None
-            if os.path.exists("${grantStore}"):
-                src = sqlite3.connect("file:${grantStore}?mode=rw", uri=True)
-                app = src.execute("PRAGMA application_id").fetchone()[0]
-                if app not in (LEGACY, RETIREMENT, SUMMARY):
-                    sys.exit("${grantStore}: unrecognized application_id " + hex(app))
-                retired = src.execute("SELECT 1 FROM sqlite_master WHERE name = 'outbound_retirement_schema'").fetchone() is not None
-                if ${needed}:
-                    os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
-                    out = "${backupsDir}/grants.db.pre-${tag}-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
-                    dst = sqlite3.connect(out + ".partial")
-                    src.backup(dst)
-                    ok = dst.execute("PRAGMA application_id").fetchone()[0] == app and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
-                    dst.close()
-                    if not ok:
-                        sys.exit(out + ".partial: backup failed verification")
-                    os.replace(out + ".partial", out)
-                    fd = os.open("${backupsDir}", os.O_RDONLY)
-                    os.fsync(fd)
-                    os.close(fd)
-                    print("${grantStore}: backed up to " + out + ", running ${tag}")
-                    target = "${grantStore}"
-                else:
-                    print("${grantStore}: ${tag} already applied, left unchanged")
-                src.close()
-            if target is None:
-            ${lib.concatMapStringsSep "\n" (l: "    " + l) (
-              lib.splitString "\n" (lib.removeSuffix "\n" fallback)
-            )}
-            os.symlink(target, "${link}")
-          '';
-
-        # A SUMMARY store is retired only if summaries ran after retirement; the table says.
-        retirementInspectScript = inspectScript {
-          tag = "retirement";
-          needed = "app == LEGACY or (app == SUMMARY and not retired)";
-          link = retirementLink;
-          fallback = ''
-            target = "${stagedStore}"
-          '';
-        };
-
-        # The staged store already has the summaries (migrate-custody creates them), and the
-        # image has no shell to skip the step, so without a real store to migrate it runs on
-        # a scratch copy of the staged store in the pre-summary format. Install discards it.
-        summariesInspectScript = inspectScript {
-          tag = "custody-summaries";
-          needed = "app != SUMMARY";
-          link = summariesLink;
-          fallback = ''
-            src = sqlite3.connect("${stagedStore}")
-            dst = sqlite3.connect("${summariesScratch}")
-            src.backup(dst)
-            src.close()
-            dst.executescript("DROP TABLE custody_refusal_summaries; DROP TABLE custody_gap_summary; PRAGMA application_id = %d;" % RETIREMENT)
-            dst.close()
-            target = "${summariesScratch}"
-          '';
-        };
-
-        inspectStep = step: script: {
-          name = "store-${step}-inspect";
-          image = python;
-          command = [
-            "python3"
-            "-I"
-            "-c"
-            script
-          ];
-          securityContext = hardened;
-          volumeMounts = [ dataMount ];
-        };
-
-        # A migration on the link its inspect made.
-        linkStep =
-          step: link:
-          storeStep step [ ]
-          // {
-            args = [
-              "--state"
-              link
-              step
-            ];
-          };
+        # Reads the real store read-only and decides each migration by the gateway's
+        # migration_applied (grants.rs: the markers, schema versions 2-4, the four
+        # retirement tables and recovery_until). Only if one will run does it back the
+        # store up (the sqlite3 backup API, never cp) and verify the copy. Validity is
+        # the gateway's to refuse; an unknown marker fails here, before any backup.
+        backupScript = ''
+          import os, sqlite3, sys, time
+          LEGACY, RETIREMENT, SUMMARY = 0x584d4757, 0x584d4752, 0x584d4753
+          CUSTODY, OUTBOUND, EVENTS = 2, 3, 4
+          os.umask(0o077)
+          src = sqlite3.connect("file:${grantStore}?mode=ro", uri=True)
+          app = src.execute("PRAGMA application_id").fetchone()[0]
+          version = src.execute("PRAGMA user_version").fetchone()[0]
+          if app not in (LEGACY, RETIREMENT, SUMMARY):
+              sys.exit("${grantStore}: unrecognized application_id " + hex(app))
+          tables = src.execute("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('outbound_retirement_schema', 'outbound_request_fences', 'outbound_retired', 'outbound_retirement_clock')").fetchone()[0]
+          recovery = src.execute("SELECT COUNT(*) FROM pragma_table_info('outbound_reservations') WHERE name = 'recovery_until'").fetchone()[0]
+          needed = [m for m, n in (
+              ("custody", version < CUSTODY),
+              ("outbound", version < OUTBOUND),
+              ("retirement", not (tables == 4 and recovery == 1)),
+              ("custody-summaries", app != SUMMARY),
+              ("events", version != EVENTS),
+          ) if n]
+          if not needed:
+              print("${grantStore}: every migration applied, no backup")
+              sys.exit(0)
+          os.makedirs("${backupsDir}", mode=0o700, exist_ok=True)
+          out = "${backupsDir}/grants.db.pre-migrate-" + time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+          dst = sqlite3.connect(out + ".partial")
+          src.backup(dst)
+          ok = dst.execute("PRAGMA application_id").fetchone()[0] == app and dst.execute("PRAGMA quick_check").fetchone()[0] == "ok"
+          dst.close()
+          if not ok:
+              sys.exit(out + ".partial: backup failed verification")
+          os.replace(out + ".partial", out)
+          fd = os.open("${backupsDir}", os.O_RDONLY)
+          os.fsync(fd)
+          os.close(fd)
+          print("${grantStore}: backed up to " + out + " before " + ", ".join(needed))
+        '';
 
         tunnelContainer = {
           name = "tunnel-client";
@@ -781,19 +720,12 @@ in
                               (roMount "secrets" secretsDir)
                             ];
                           }
-                          (storeStep "init" [ "init" ])
-                          (storeStep "migrate-custody" [ "migrate-custody" ])
-                          (storeStep "migrate-outbound" [ "migrate-outbound" ])
-                          (inspectStep "retirement" retirementInspectScript)
-                          (linkStep "migrate-retirement" retirementLink)
-                          (inspectStep "custody-summaries" summariesInspectScript)
-                          (linkStep "migrate-custody-summaries" summariesLink)
-                          (storeStep "migrate-events" [
-                            "migrate-events"
-                            "--key-file"
-                            eventsKey
-                          ])
-                          (storeStep "enroll" [
+                        ]
+                        # The fresh store, kept only if the real one is absent.
+                        ++ [ (storeStep "staged" stagedStore [ "init" ]) ]
+                        ++ migrations "staged" stagedStore
+                        ++ [
+                          (storeStep "staged" stagedStore [
                             "enroll"
                             grantId
                             "${configDir}/binding.json"
@@ -809,20 +741,28 @@ in
                             securityContext = hardened;
                             volumeMounts = [ dataMount ];
                           }
-                          (
-                            storeStep "apply" [ ]
-                            // {
-                              args = [
-                                "--state"
-                                grantStore
-                                "apply"
-                                "--id"
-                                grantId
-                                "--policy"
-                                "${configDir}/policy.json"
-                              ];
-                            }
-                          )
+                          {
+                            name = "store-backup";
+                            image = python;
+                            command = [
+                              "python3"
+                              "-I"
+                              "-c"
+                              backupScript
+                            ];
+                            securityContext = hardened;
+                            volumeMounts = [ dataMount ];
+                          }
+                        ]
+                        ++ migrations "store" grantStore
+                        ++ [
+                          (storeStep "store" grantStore [
+                            "apply"
+                            "--id"
+                            grantId
+                            "--policy"
+                            "${configDir}/policy.json"
+                          ])
                         ];
                         containers = [
                           {

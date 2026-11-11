@@ -47,27 +47,17 @@ VERIFIER = {
     "introspection_client": "xmsg-gateway-lookup",
     "resource": "https://xmsg-gateway.json64.dev/mcp",
 }
-STORE_STEPS = [
-    "init",
+# The gateway's migrations, in its order (serving.md "Repeatable migrations").
+MIGRATIONS = [
     "migrate-custody",
     "migrate-outbound",
-    "retirement-inspect",
     "migrate-retirement",
-    "custody-summaries-inspect",
     "migrate-custody-summaries",
     "migrate-events",
-    "enroll",
 ]
 # The store application_ids (gateway grants.rs).
 LEGACY, RETIREMENT, SUMMARY = 0x584D4757, 0x584D4752, 0x584D4753
-# Each one-way migration on the link its inspect makes: the inspect, the backup's tag.
-LINKED = {
-    "migrate-retirement": ("store-retirement-inspect", "retirement"),
-    "migrate-custody-summaries": (
-        "store-custody-summaries-inspect",
-        "custody-summaries",
-    ),
-}
+
 
 failed = []
 
@@ -299,256 +289,68 @@ check(
 )
 check("socket volume is an emptyDir", "emptyDir" in volumes.get(shared, {}), shared)
 
-# 5. Grant store: busybox prepare, the store steps on the staged store (the one-way
-# migrations on links), then an install that moves it into place only when the real
-# store is absent.
+# 5. Grant store: busybox prepare; the fresh store built on the staged store (init,
+# every migration, enroll); an install that moves it into place only when the real
+# store is absent; a backup only when a migration will run; every migration on the
+# real store; apply.
 names = [c["name"] for c in inits]
 check(
     "initContainer order",
     names
-    == ["prepare"]
-    + [f"store-{s}" for s in STORE_STEPS]
-    + ["store-install", "store-apply"],
+    == ["prepare", "staged-init"]
+    + [f"staged-{m}" for m in MIGRATIONS]
+    + ["staged-enroll", "store-install", "store-backup"]
+    + [f"store-{m}" for m in MIGRATIONS]
+    + ["store-apply"],
     names,
 )
 store = serving.get("grant_store")
-staged = None
+staged = arg_after(
+    next((c for c in inits if c["name"] == "staged-init"), {}).get("args", []),
+    "--state",
+)
+check("staged store is not the real one", staged and staged != store, staged)
 for c in inits:
-    if (
-        c["name"] in ("store-install", "store-apply")
-        or c["name"].endswith("-inspect")
-        or not c["name"].startswith("store-")
-    ):
+    prefix, _, step = c["name"].partition("-")
+    if prefix not in ("staged", "store") or step in ("install", "backup"):
         continue
     args = c.get("args", [])
     check(f"{c['name']} uses the gateway image", c.get("image") == gw.get("image"))
     check(f"{c['name']} has no command override", "command" not in c)
-    if c["name"].removeprefix("store-") not in LINKED:
-        staged = staged or arg_after(args, "--state")
-        check(
-            f"{c['name']} runs on the staged store",
-            arg_after(args, "--state") == staged,
-        )
     check(
-        f"{c['name']} runs its step",
-        args[2:3] == [c["name"].removeprefix("store-")],
+        f"{c['name']} runs on the {'staged' if prefix == 'staged' else 'real'} store",
+        arg_after(args, "--state") == (staged if prefix == "staged" else store),
         args,
     )
-check("staged store is not the real one", staged and staged != store, staged)
-
-# 5a. One-way migrations (retirement, custody summaries): each inspect, then its one
-# migration on the link the inspect made. The inspect scripts are run against fixture
-# stores, so each backup's condition and its ordering before the link to the real store
-# are behaviour, not text.
-links = {}
-for step, (inspect_name, _) in LINKED.items():
-    c = next((c for c in inits if c["name"] == f"store-{step}"), {})
-    lk = arg_after(c.get("args", []), "--state")
-    links[step] = lk
-    check(
-        f"{step} runs on a link in the staging directory",
-        lk
-        and staged
-        and posixpath.dirname(lk) == posixpath.dirname(staged)
-        and lk not in (staged, store),
-        lk,
-    )
-    runs = [
-        c["name"]
-        for p in (pod, on_pod)
-        for c in p["containers"] + p.get("initContainers", [])
-        if step in c.get("args", []) + c.get("command", [])
-    ]
-    check(
-        f"{step} runs exactly once per pod",
-        runs == [f"store-{step}"] * 2,
-        runs,
-    )
-    what = "inspect" if step == "migrate-retirement" else "summaries inspect"
-    check(
-        f"{what} runs before {step}",
-        inspect_name in names
-        and f"store-{step}" in names
-        and names.index(inspect_name) == names.index(f"store-{step}") - 1,
-        names,
-    )
-    ic = next((c for c in inits if c["name"] == inspect_name), {})
-    check(
-        f"{inspect_name} is python on the data volume only",
-        ic.get("command", [])[:3] == ["python3", "-I", "-c"]
-        and set(mounts(ic).values()) == {"data"},
-        ic.get("command", [])[:3],
-    )
+    check(f"{c['name']} runs its step", args[2:3] == [step], args)
+    if step.startswith("migrate-"):
+        check(f"{c['name']} has --if-needed", "--if-needed" in args, args)
+# No scratch copy: the only store paths any step names are the staged and the real.
+STORE_PATH = re.compile(r"/var/lib/xmsg-mcp-gateway/(?:state|staging)/[\w.-]+")
+used = {
+    p
+    for c in inits
+    for s in c.get("args", []) + c.get("command", [])
+    for p in STORE_PATH.findall(s)
+}
 check(
-    "summaries migrate after retirement",
-    names.index("store-migrate-retirement")
-    < names.index("store-custody-summaries-inspect"),
-    names,
+    "no scratch copy",
+    used <= {staged, store}
+    and not any("symlink" in s for c in inits for s in c.get("command", [])),
+    sorted(used - {staged, store}),
 )
-
-SUMMARY_TABLES = ("custody_refusal_summaries", "custody_gap_summary")
-
-
-def make_store(path, app, retired=False, summaries=False):
-    db = sqlite3.connect(path)
-    db.execute(f"PRAGMA application_id = {app}")
-    db.execute("CREATE TABLE grants(id TEXT)")
-    db.execute("INSERT INTO grants VALUES ('fixture')")
-    if retired:
-        db.execute("CREATE TABLE outbound_retirement_schema(version INTEGER)")
-    for t in SUMMARY_TABLES if summaries else ():
-        db.execute(f"CREATE TABLE {t}(bus TEXT)")
-    db.commit()
-    db.close()
-
-
-def describe(path):
-    """(marker, rows, summary tables) of a store."""
-    b = sqlite3.connect(path)
-    marker = b.execute("PRAGMA application_id").fetchone()[0]
-    rows = b.execute("SELECT id FROM grants").fetchall()
-    tables = sorted(
-        r[0]
-        for r in b.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-        if r[0] in SUMMARY_TABLES
-    )
-    b.close()
-    return marker, rows, tables
-
-
-def run_inspect(step, app, retired=True, sealed=False):
-    """Run step's inspect script with the data directory moved under a temp dir; sealed
-    makes the data directory itself unwritable, so a backup there cannot be made. The
-    staged store is a fresh one: summary marker and tables, retired.
-    Returns (exit code, link target, [(partial, group/other mode bits, marker, rows)],
-    {path: (marker, rows, summary tables)} of the staging directory's stores)."""
-    inspect_name, tag = LINKED[step]
-    cmd = next((c for c in inits if c["name"] == inspect_name), {}).get("command", [])
-    link = links[step]
-    data = posixpath.dirname(posixpath.dirname(store))
-    with tempfile.TemporaryDirectory() as tmp:
-        root = tmp + data
-        for d in (posixpath.dirname(store), posixpath.dirname(staged)):
-            os.makedirs(root + d.removeprefix(data), exist_ok=True)
-        make_store(root + staged.removeprefix(data), SUMMARY, True, True)
-        if app is not None:
-            make_store(root + store.removeprefix(data), app, retired)
-        script = cmd[3].replace(data, root) if len(cmd) > 3 else ""
-        if sealed:
-            os.chmod(root, 0o555)
-        code = subprocess.run(
-            [sys.executable, "-I", "-c", script], capture_output=True, check=False
-        ).returncode
-        os.chmod(root, 0o755)
-        lk = root + link.removeprefix(data) if link else ""
-        target = (
-            data + os.readlink(lk).removeprefix(root) if os.path.islink(lk) else None
-        )
-        backups = []
-        for dirpath, _, files in os.walk(root):
-            for f in files:
-                p = posixpath.join(dirpath, f)
-                if f"pre-{tag}-" in f:
-                    marker, rows, _ = describe(p)
-                    backups.append(
-                        (
-                            f.endswith(".partial"),
-                            os.stat(p).st_mode & 0o077,
-                            marker,
-                            rows,
-                        )
-                    )
-        sdir = root + posixpath.dirname(staged).removeprefix(data)
-        stores = {
-            data + posixpath.join(sdir, f).removeprefix(root): describe(
-                posixpath.join(sdir, f)
-            )
-            for f in os.listdir(sdir)
-            if f.endswith(".db") and not os.path.islink(posixpath.join(sdir, f))
-        }
-        return code, target, backups, stores
-
-
-ROWS = [("fixture",)]
-if staged and store and all(links.values()):
-    R = "migrate-retirement"
-    for label, app, retired in (
-        ("no store", None, False),
-        ("migrated store", RETIREMENT, True),
-        ("summary store, retired", SUMMARY, True),
-    ):
-        code, target, backups, _ = run_inspect(R, app, retired)
-        check(
-            f"inspect, {label}: link to the staged store, no backup",
-            (code, target, backups) == (0, staged, []),
-            (code, target, backups),
-        )
-    for label, app in (("legacy", LEGACY), ("summary, unretired", SUMMARY)):
-        code, target, backups, _ = run_inspect(R, app, retired=False)
-        check(
-            f"inspect, {label} store: one owner-private backup, then link to the real store",
-            (code, target, backups) == (0, store, [(False, 0, app, ROWS)]),
-            (code, target, backups),
-        )
-    code, target, backups, _ = run_inspect(R, LEGACY, retired=False, sealed=True)
+for prefix in ("staged", "store"):
+    mig = next((c for c in inits if c["name"] == f"{prefix}-migrate-events"), {})
     check(
-        "inspect, legacy store, backup impossible: refuses, no link to the real store",
-        code != 0 and target is None,
-        (code, target, backups),
+        f"{prefix}-migrate-events uses the events key",
+        arg_after(mig.get("args", []), "--key-file") == ev.get("key_file"),
     )
-    code, target, backups, _ = run_inspect(R, 0x1234)
-    check(
-        "inspect, unknown store: refuses, no link",
-        code != 0 and target is None,
-        (code, target, backups),
-    )
-
-    S = "migrate-custody-summaries"
-    for label, app in (("no store", None), ("summary store", SUMMARY)):
-        code, target, backups, stores = run_inspect(S, app)
-        check(
-            f"summaries inspect, {label}: link to a pre-summary scratch copy of the staged store, no backup",
-            code == 0
-            and target not in (None, staged, store)
-            and posixpath.dirname(target) == posixpath.dirname(staged)
-            and backups == []
-            and stores
-            == {
-                staged: (SUMMARY, ROWS, sorted(SUMMARY_TABLES)),
-                target: (RETIREMENT, ROWS, []),
-            },
-            (code, target, backups, stores),
-        )
-    for label, app in (("retired", RETIREMENT), ("legacy", LEGACY)):
-        code, target, backups, _ = run_inspect(S, app)
-        check(
-            f"summaries inspect, {label} store: one owner-private backup, then link to the real store",
-            (code, target, backups) == (0, store, [(False, 0, app, ROWS)]),
-            (code, target, backups),
-        )
-    code, target, backups, _ = run_inspect(S, RETIREMENT, sealed=True)
-    check(
-        "summaries inspect, backup impossible: refuses, no link to the real store",
-        code != 0 and target is None,
-        (code, target, backups),
-    )
-    code, target, backups, _ = run_inspect(S, 0x1234)
-    check(
-        "summaries inspect, unknown store: refuses, no link",
-        code != 0 and target is None,
-        (code, target, backups),
-    )
-enroll = next((c for c in inits if c["name"] == "store-enroll"), {})
+enroll = next((c for c in inits if c["name"] == "staged-enroll"), {})
 check(
     "enroll uses the events grant and the binding",
     enroll.get("args", [])[3:]
     == [ev.get("grant_id"), f"{posixpath.dirname(config_path)}/binding.json"],
     enroll.get("args"),
-)
-mig = next((c for c in inits if c["name"] == "store-migrate-events"), {})
-check(
-    "migrate-events uses the events key",
-    arg_after(mig.get("args", []), "--key-file") == ev.get("key_file"),
 )
 install = next((c for c in inits if c["name"] == "store-install"), {})
 script = " ".join(install.get("command", []))
@@ -558,6 +360,122 @@ check(
     script,
 )
 
+# 5a. The backup: python on the data volume only, after install and before every
+# migration of the real store. Its script is run against fixture stores, so its
+# condition (a backup only if a migration will run) is behaviour, not text.
+bc = next((c for c in inits if c["name"] == "store-backup"), {})
+check(
+    "backup is python on the data volume only",
+    bc.get("command", [])[:3] == ["python3", "-I", "-c"]
+    and set(mounts(bc).values()) == {"data"},
+    bc.get("command", [])[:3],
+)
+check(
+    "backup runs after install, before the real store's migrations",
+    "store-backup" in names
+    and names.index("store-install")
+    < names.index("store-backup")
+    < min(names.index(f"store-{m}") for m in MIGRATIONS if f"store-{m}" in names),
+    names,
+)
+
+RETIREMENT_TABLES = (
+    "outbound_retirement_schema",
+    "outbound_request_fences",
+    "outbound_retired",
+    "outbound_retirement_clock",
+)
+
+
+def make_store(path, app, version, retired):
+    """A fixture store with the markers migration_applied reads."""
+    db = sqlite3.connect(path)
+    db.execute(f"PRAGMA application_id = {app}")
+    db.execute(f"PRAGMA user_version = {version}")
+    db.execute("CREATE TABLE grants(id TEXT)")
+    db.execute("INSERT INTO grants VALUES ('fixture')")
+    if version >= 3:
+        cols = "owner TEXT" + (", recovery_until INTEGER" if retired else "")
+        db.execute(f"CREATE TABLE outbound_reservations({cols})")
+    for t in RETIREMENT_TABLES if retired else ():
+        db.execute(f"CREATE TABLE {t}(x)")
+    db.commit()
+    db.close()
+
+
+def run_backup(store_shape, sealed=False):
+    """Run the backup script with the data directory moved under a temp dir. sealed
+    makes the data directory unwritable, so no backup can be made there.
+    Returns (exit code, [(partial, group/other mode bits, marker, rows)])."""
+    cmd = bc.get("command", [])
+    data = posixpath.dirname(posixpath.dirname(store))
+    with tempfile.TemporaryDirectory() as tmp:
+        root = tmp + data
+        os.makedirs(root + posixpath.dirname(store).removeprefix(data))
+        if store_shape:
+            make_store(root + store.removeprefix(data), *store_shape)
+        script = cmd[3].replace(data, root) if len(cmd) > 3 else ""
+        if sealed:
+            os.chmod(root, 0o555)
+        code = subprocess.run(
+            [sys.executable, "-I", "-c", script], capture_output=True, check=False
+        ).returncode
+        os.chmod(root, 0o755)
+        backups = []
+        for dirpath, _, files in os.walk(root):
+            for f in files:
+                if "pre-migrate-" in f:
+                    p = posixpath.join(dirpath, f)
+                    b = sqlite3.connect(p)
+                    backups.append(
+                        (
+                            f.endswith(".partial"),
+                            os.stat(p).st_mode & 0o077,
+                            b.execute("PRAGMA application_id").fetchone()[0],
+                            b.execute("SELECT id FROM grants").fetchall(),
+                        )
+                    )
+                    b.close()
+        return code, backups
+
+
+ROWS = [("fixture",)]
+if store and len(bc.get("command", [])) > 3:
+    code, backups = run_backup((SUMMARY, 4, True))
+    check(
+        "backup, fully migrated store: no backup",
+        (code, backups) == (0, []),
+        (code, backups),
+    )
+    # Each store lacking exactly the named migration (and, for legacy, all of them).
+    for label, shape in (
+        ("custody", (LEGACY, 1, False)),
+        ("outbound", (SUMMARY, 2, False)),
+        ("retirement", (SUMMARY, 4, False)),
+        ("custody-summaries", (RETIREMENT, 4, True)),
+        ("events", (SUMMARY, 3, True)),
+    ):
+        code, backups = run_backup(shape)
+        check(
+            f"backup, {label} needed: one owner-private backup",
+            (code, backups) == (0, [(False, 0, shape[0], ROWS)]),
+            (code, backups),
+        )
+    code, backups = run_backup((RETIREMENT, 4, True), sealed=True)
+    check(
+        "backup, backup impossible: refuses",
+        code != 0 and all(p for p, *_ in backups),
+        (code, backups),
+    )
+    code, backups = run_backup((0x1234, 4, True))
+    check(
+        "backup, unknown store: refuses, no backup",
+        code != 0 and backups == [],
+        (code, backups),
+    )
+    code, backups = run_backup(None)
+    check("backup, no store: refuses", code != 0, (code, backups))
+
 # 5b. The outbound policy, applied to the real store after install: every hub's sessions
 # for send and reply, in the gateway's field order. No enablement flag, so apply keeps
 # the grant's enablement.
@@ -565,7 +483,7 @@ apply = next((c for c in inits if c["name"] == "store-apply"), None)
 check("apply step present", apply is not None, names)
 aargs = (apply or {}).get("args", [])
 check(
-    "apply runs after the migrations and install",
+    "apply is last",
     apply is not None and names[-1] == "store-apply",
     names,
 )

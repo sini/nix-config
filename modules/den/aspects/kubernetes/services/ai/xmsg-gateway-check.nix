@@ -122,54 +122,54 @@ let
     "initContainers"
   ];
   mutant = atOff initsPath;
-  # The inspect step `inspect` moved after its migration `step`.
-  inspectAfter =
-    inspect: step: inits:
+  # The step `name` moved after the step `after`.
+  moveAfter =
+    name: after: inits:
     let
-      is = c: c.name == inspect;
+      is = c: c.name == name;
       i = lib.findFirst is null inits;
       rest = lib.filter (c: !is c) inits;
-      at = lib.lists.findFirstIndex (c: c.name == step) null rest;
+      at = lib.lists.findFirstIndex (c: c.name == after) null rest;
     in
     lib.take (at + 1) rest ++ [ i ] ++ lib.drop (at + 1) rest;
-  # The inspect step `inspect`'s script with `from` replaced by `to`.
+  # The step `name`'s command or args, each string with `from` replaced by `to`.
   rewrite =
-    inspect: from: to:
+    name: field: from: to:
     map (
       c:
-      if c.name == inspect then
-        c // { command = map (lib.replaceStrings [ from ] [ to ]) c.command; }
+      if c.name == name then
+        c // { ${field} = map (lib.replaceStrings [ from ] [ to ]) c.${field}; }
       else
         c
     );
+  noIfNeeded =
+    name: map (c: if c.name == name then c // { args = lib.remove "--if-needed" c.args; } else c);
   mutants = {
-    # migrate-retirement before the inspect that backs up.
-    "inspect runs before migrate-retirement" =
-      inspectAfter "store-retirement-inspect" "store-migrate-retirement";
-    # A backup on every start, not only for a store not yet retired.
-    "inspect, migrated store: link to the staged store, no backup" =
-      rewrite "store-retirement-inspect" "if app == LEGACY or (app == SUMMARY and not retired):"
+    # A plain migration on the real store: fails on an already-migrated one.
+    "store-migrate-custody-summaries has --if-needed" = noIfNeeded "store-migrate-custody-summaries";
+    # And on the staged store, which migrate-custody already summarized.
+    "staged-migrate-custody-summaries has --if-needed" = noIfNeeded "staged-migrate-custody-summaries";
+    # The summaries migration on a scratch copy instead of the real store.
+    "no scratch copy" =
+      rewrite "store-migrate-custody-summaries" "args" "/state/grants.db"
+        "/staging/custody-summaries-scratch.db";
+    # A backup on every start, not only when a migration will run.
+    "backup, fully migrated store: no backup" =
+      rewrite "store-backup" "command" "if not needed:"
+        "if False:";
+    # Never a backup, so a needed migration runs unprotected.
+    "backup, retirement needed: one owner-private backup" =
+      rewrite "store-backup" "command" "if not needed:"
         "if True:";
-    # The link to the real store made before the backup.
-    "inspect, legacy store, backup impossible: refuses, no link to the real store" =
-      rewrite "store-retirement-inspect" "os.makedirs("
-        "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/retirement.db\"); os.makedirs(";
-    # A summary store taken for unretired, so it is backed up and migrated again.
-    "inspect, summary store, retired: link to the staged store, no backup" =
-      rewrite "store-retirement-inspect" " and not retired"
-        "";
-    # migrate-custody-summaries before the inspect that backs up.
-    "summaries inspect runs before migrate-custody-summaries" =
-      inspectAfter "store-custody-summaries-inspect" "store-migrate-custody-summaries";
-    # A backup on every start, not only for a store without the summary marker.
-    "summaries inspect, summary store: link to a pre-summary scratch copy of the staged store, no backup" =
-      rewrite "store-custody-summaries-inspect" "if app != SUMMARY:" "if True:";
-    # The link to the real store made before the backup.
-    "summaries inspect, backup impossible: refuses, no link to the real store" =
-      rewrite "store-custody-summaries-inspect" "os.makedirs("
-        "os.symlink(\"/var/lib/xmsg-mcp-gateway/state/grants.db\", \"/var/lib/xmsg-mcp-gateway/staging/custody-summaries.db\"); os.makedirs(";
-    # The policy applied before the store it targets is installed.
-    "apply runs after the migrations and install" =
+    # A failed backup taken for success.
+    "backup, backup impossible: refuses" =
+      rewrite "store-backup" "command" "os.makedirs("
+        "sys.exit(0); os.makedirs(";
+    # A real-store migration before the backup that protects it.
+    "backup runs after install, before the real store's migrations" =
+      moveAfter "store-backup" "store-migrate-custody";
+    # The policy applied before the last migration.
+    "apply is last" =
       inits:
       let
         n = lib.length inits;
