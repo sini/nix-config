@@ -25,9 +25,16 @@ let
   ];
   atticTokenFile = ".secrets/env/prod/attic/ci-push-token.age";
   atticPublicKey = "ci:1i+3fr0BNdABCWGG0CGUpcvzWCLpnx7/EuEQujmowmg=";
+  # gen-merge's CI signs its register stamp with this key; gen-merge verifies it
+  # offline against ci/allowed-signers, which holds the .pub committed beside it.
+  # Rotation: delete the .age and .pub, `agenix generate`, `github-apply`, then
+  # add the new public key to gen-merge's ci/allowed-signers and give the old one
+  # a valid-before, so stamps it already signed still verify.
+  stampKeyFile = ".secrets/env/prod/github/gen-merge-ci-stamp-signing-key.age";
 in
 {
-  # The workspace's state passphrase, declared like unifi-state-passphrase.
+  # The workspace's state passphrase, declared like unifi-state-passphrase, and
+  # the gen-merge stamp signing key, generated the same way.
   den.aspects.github-state-passphrase.age-secrets =
     { environment, ... }:
     {
@@ -35,6 +42,11 @@ in
         rekeyFile = environment.secretPath + "/github-state-passphrase.age";
         intermediary = true;
         generator.script = "rfc3986-secret";
+      };
+      age.secrets.gen-merge-ci-stamp-signing-key = {
+        rekeyFile = environment.secretPath + "/github/gen-merge-ci-stamp-signing-key.age";
+        intermediary = true;
+        generator.script = "shared-ssh-key";
       };
     };
 
@@ -56,7 +68,8 @@ in
         GITHUB_TOKEN=$(gh auth token) || { echo "not logged in to gh; run \`gh auth login\`" >&2; exit 1; }
         TF_VAR_attic_ci_push_token=$(age -d -i "$identity" ${atticTokenFile})
         TF_VAR_state_passphrase=$(age -d -i "$identity" .secrets/env/prod/github-state-passphrase.age)
-        export GITHUB_TOKEN TF_VAR_attic_ci_push_token TF_VAR_state_passphrase
+        TF_VAR_gen_merge_stamp_signing_key=$(age -d -i "$identity" ${stampKeyFile})
+        export GITHUB_TOKEN TF_VAR_attic_ci_push_token TF_VAR_state_passphrase TF_VAR_gen_merge_stamp_signing_key
       '';
 
       mkGithubCommand =
@@ -112,16 +125,29 @@ in
                 sensitive = true;
                 description = "The attic `ci` push token (TF_VAR_attic_ci_push_token)";
               };
+              gen_merge_stamp_signing_key = {
+                type = "string";
+                sensitive = true;
+                description = "gen-merge's CI stamp signing key, OpenSSH private key (TF_VAR_gen_merge_stamp_signing_key)";
+              };
             };
 
             # Token from GITHUB_TOKEN.
             provider.github = { inherit owner; };
 
-            resource.github_actions_secret = lib.genAttrs repos (repository: {
-              inherit repository;
-              secret_name = "ATTIC_TOKEN";
-              value = "\${var.attic_ci_push_token}";
-            });
+            resource.github_actions_secret =
+              lib.genAttrs repos (repository: {
+                inherit repository;
+                secret_name = "ATTIC_TOKEN";
+                value = "\${var.attic_ci_push_token}";
+              })
+              // {
+                gen-merge-stamp-signing-key = {
+                  repository = "gen-merge";
+                  secret_name = "STAMP_SIGNING_KEY";
+                  value = "\${var.gen_merge_stamp_signing_key}";
+                };
+              };
 
             resource.github_actions_variable = lib.genAttrs repos (repository: {
               inherit repository;
