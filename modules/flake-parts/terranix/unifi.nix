@@ -1153,11 +1153,11 @@ in
         reservations = reservationsOf config.den.environments (
           lib.concatMap lib.attrValues (lib.attrValues config.den.hosts)
         );
-        # Stale records (Microsoft OUI, unseen since 2025) holding 10.9.2.1 and
-        # 10.9.2.2, the fixed IPs of cortex and cortex-cuda; owner-cleared 2026-11-11.
+        # Stale records holding den hosts' fixed IPs; owner-cleared 2026-11-11.
         releases = [
-          "28:16:a8:59:29:8b" # "ghost"
-          "b4:ae:2b:cc:ae:40" # "shell"
+          "28:16:a8:59:29:8b" # "ghost" (Microsoft OUI, unseen since 2025-10): 10.9.2.1, cortex's
+          "b4:ae:2b:cc:ae:40" # "shell" (Microsoft OUI, unseen since 2025-11): 10.9.2.2, cortex-cuda's
+          "84:47:09:40:d5:f4" # "bitstream" via enp1s0, down and unbonded since 2026-05: 10.9.1.1
         ];
       })
       (renderNetworkDns {
