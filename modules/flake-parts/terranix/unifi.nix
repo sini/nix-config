@@ -2171,6 +2171,7 @@ in
             workspaceRes."client_${h}".depends_on or [ ] == [
               "restapi_object.client_release_28_16_a8_59_29_8b"
               "restapi_object.client_release_b4_ae_2b_cc_ae_40"
+              "restapi_object.client_release_84_47_09_40_d5_f4"
             ]
           );
           live = "jsondecode(data.restapi_object.unifi_client_h1.api_response)";
