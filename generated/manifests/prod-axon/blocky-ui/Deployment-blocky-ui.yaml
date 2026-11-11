@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/controller: main
+    app.kubernetes.io/instance: blocky-ui
+    app.kubernetes.io/name: blocky-ui
+  name: blocky-ui
+  namespace: blocky-ui
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/controller: main
+      app.kubernetes.io/instance: blocky-ui
+      app.kubernetes.io/name: blocky-ui
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        checksum/config: e89d0beb167fe6bd69c365ff4b0f38850f8adc86d0ff06cd0ecd64c66b3b37e0
+      labels:
+        app.kubernetes.io/controller: main
+        app.kubernetes.io/instance: blocky-ui
+        app.kubernetes.io/name: blocky-ui
+    spec:
+      automountServiceAccountToken: false
+      containers:
+        - env:
+            - name: BLOCKY_UI_CONFIG
+              value: /config/blocky-ui.yml
+            - name: HOSTNAME
+              value: 0.0.0.0
+            - name: PORT
+              value: "3000"
+          image: ghcr.io/gabeduartem/blocky-ui@sha256:9cf986ea7b1e9b01d082a0eec5cb93a4322bbadff3a411633c10ed668eb01528
+          livenessProbe:
+            tcpSocket:
+              port: 3000
+          name: main
+          readinessProbe:
+            tcpSocket:
+              port: 3000
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /config/blocky-ui.yml
+              name: config
+              readOnly: true
+              subPath: blocky-ui.yml
+      dnsPolicy: ClusterFirst
+      enableServiceLinks: false
+      hostIPC: false
+      hostNetwork: false
+      hostPID: false
+      securityContext:
+        runAsGroup: 65533
+        runAsNonRoot: true
+        runAsUser: 1001
+      serviceAccountName: blocky-ui
+      volumes:
+        - configMap:
+            name: blocky-ui-config
+          name: config

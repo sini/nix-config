@@ -403,6 +403,21 @@ let
         ];
       };
 
+      # Gateway OIDC (Envoy SecurityPolicy) in front of the resolver's admin panel
+      # (kubernetes/services/network/blocky-ui.nix) at dns.<domain>. Admins only:
+      # the panel drives Blocky's unauthenticated API.
+      blocky-ui = {
+        displayName = "DNS admin";
+        originUrl = [ "https://${domain "dns"}/oauth2/callback" ];
+        originLanding = "https://${domain "dns"}/";
+        basicSecretFile = secretPaths.blocky-ui-oidc-client-secret;
+        scopeMaps."admins" = [
+          "openid"
+          "email"
+          "profile"
+        ];
+      };
+
       oauth2-proxy = {
         displayName = "OAuth2-Proxy";
         originUrl = "https://${domain "oauth2-proxy"}/oauth2/callback";

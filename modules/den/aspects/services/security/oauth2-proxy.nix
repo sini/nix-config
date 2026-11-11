@@ -40,9 +40,7 @@ in
             redeemURL = "https://${kanidmDomain}/oauth2/token";
             validateURL = "https://${kanidmDomain}/oauth2/token/introspect";
 
-            # groups: the claim a vhost's allowed_groups reads (blocky-ui.nix); every
-            # scope map of the oauth2-proxy kanidm client grants it.
-            scope = "openid email profile groups";
+            scope = "openid email profile";
 
             cookie = {
               domain = ".${environment.domain}";

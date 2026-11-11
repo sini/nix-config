@@ -1,0 +1,18 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-gateway-ingress-blocky-ui
+  namespace: blocky-ui
+spec:
+  description: Allow Envoy Gateway proxies to reach blocky-ui.
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: blocky-ui
+  ingress:
+    - fromEndpoints:
+        - matchLabels:
+            k8s:io.kubernetes.pod.namespace: gateways
+      toPorts:
+        - ports:
+            - port: "3000"
+              protocol: TCP

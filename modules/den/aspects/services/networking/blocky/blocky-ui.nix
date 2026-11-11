@@ -3,6 +3,11 @@
 # oauth2-proxy (the homepage.nix pattern), gated to one Kanidm group. Blocky's
 # API has no authentication, so the panel's server side is its only client here
 # and no vhost location proxies to it.
+#
+# Not included by any host: the panel runs in the cluster
+# (kubernetes/services/network/blocky-ui.nix). Re-enabling it here also needs
+# `groups` back in oauth2-proxy's scope, which allowed_groups reads, and the
+# cluster aspect off (both serve dns.<domain>).
 { den, self, ... }:
 let
   serviceDomains = [ "dns" ];

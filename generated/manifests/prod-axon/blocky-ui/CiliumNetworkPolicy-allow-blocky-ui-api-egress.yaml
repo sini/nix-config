@@ -1,0 +1,17 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-blocky-ui-api-egress
+  namespace: blocky-ui
+spec:
+  description: blocky-ui to the resolvers' Blocky API.
+  egress:
+    - toCIDR:
+        - 10.10.10.1/32
+      toPorts:
+        - ports:
+            - port: "4000"
+              protocol: TCP
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: blocky-ui

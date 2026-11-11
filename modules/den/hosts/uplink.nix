@@ -101,7 +101,8 @@
       services.web.den-docs-mirror
       services.web.gen-status
       services.web.container-registry
-      services.networking.blocky-ui
+      # The admin panel runs in the cluster (kubernetes.services.network.blocky-ui).
+      #services.networking.blocky-ui
       virtualization.podman
       virtualization.microvm-host
       hardware.cpu.amd

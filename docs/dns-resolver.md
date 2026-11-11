@@ -705,7 +705,10 @@ list is the `dns-resolvers` records' `api` URLs, baked in at build time.
 
 ### 2.6 Admin panel
 
-`services.networking.blocky-ui` (`blocky/blocky-ui.nix`), included by uplink.
+`kubernetes.services.network.blocky-ui`
+(`kubernetes/services/network/blocky-ui.nix`), included by the axon cluster. The
+uplink aspect `services.networking.blocky-ui` (podman behind nginx and
+oauth2-proxy) is kept but included by no host.
 
 - **UI.** `ghcr.io/gabeduartem/blocky-ui` 2.2.0 (MIT, Next.js, no built-in
   auth). Its server side is Blocky's only client: it calls
@@ -713,62 +716,42 @@ list is the `dns-resolvers` records' `api` URLs, baked in at build time.
   `/api/lists/refresh`, `/api/query` and `/api/stats` (`src/server/blocky/*.ts`
   at v2.2.0). All seven routes are in Blocky 0.35.0's `api_server.gen.go`.
   `/api/stats` answers 503 unless `statistics.enable`, so `_settings.nix` sets
-  it (in memory, a rolling 24h). `blocky validate` rejects unknown keys and
-  accepts this one. Query-log history needs a database or VictoriaLogs, and
-  uplink logs to the console, so the panel shows only the 24h statistics.
-  Nothing smaller covers the controls: `dns-filter` (§2.5) is the CLI, and
-  Grafana's Blocky dashboard is read-only.
-- **Where it runs.** On uplink, as a podman `oci-containers` unit with
-  `--network=host`, `HOSTNAME=127.0.0.1` and `PORT=3010`, no published port,
-  every capability dropped and `no-new-privileges`. Its one server is
-  `http://127.0.0.1:4000`. It opens no firewall port. Blocky's `:4000` stays as
-  §2.2 and test 8 have it, on the LAN address (for `dns-filter`) and loopback.
-  The panel neither widens nor narrows that.
-- **Name and certificate.** `served-domains` gains `dns` (`dns.json64.dev`), as
-  every uplink vhost does. That gives a proxied Cloudflare `A` record (terranix,
-  `dns-apply`), a TLS-passthrough listener and route on the cluster gateway
-  (`gateway-upstream`), the CoreDNS and Blocky internal mapping, and loopback in
-  uplink's `/etc/hosts`. The certificate is the `json64.dev` wildcard
-  (`useACMEHost = environment.domain`). The name is public, like the closest
-  admin UIs: `homepage` on uplink and the gateway-OIDC fronts (`garage-ui`,
-  `longhorn`, `matrix-admin`, `hubble-ui`). To make it internal-only, add it to
-  `gateway-upstream.exclude`.
-- **Auth chain.** nginx `auth_request` goes to the shared oauth2-proxy
-  (`127.0.0.1:4180`, Kanidm client `oauth2-proxy`, cookie on `.json64.dev`),
-  through `services.oauth2-proxy.nginx.virtualHosts`, as in `homepage.nix`. An
-  anonymous request is redirected to Kanidm. A signed-in user outside the gate
-  gets 403. This adds no OAuth2 client and no secret. A dedicated client gated
-  by its scope map (the `prometheus` and `garage-ui` form) would need a second
-  oauth2-proxy instance, which the nixpkgs module cannot run, and two new
-  secrets.
-- **Group gate.** `allowed_groups = [ "admins@<kanidm domain>" ]`. `admins` is
-  the group every admin-only client maps. No oauth2-proxy vhost gated on a group
-  before this one, so the claim form was derived, not reused. In Kanidm 1.11.2
-  (`server/lib/src/idm/oauth2.rs`), the `groups` scope emits each group's uuid
-  and SPN, `<name>@<domain>`. uplink's Kanidm sets `domain` to
-  `environment.domain`, so the SPN is `admins@json64.dev`, not
-  `admins@idm.json64.dev`. `paperless.nix` matches the same SPN form
-  (`5deaf252`, fixed after a first login with the bare name failed). The claim
-  is present only when `groups` is requested. oauth2-proxy's scope gains
-  `groups`, which all three of its client's scope maps already grant. The gate
-  string is built from `services.kanidm.server.settings.domain`, not written
-  out.
+  it (in memory, a rolling 24h). Query-log history needs a database or
+  VictoriaLogs, and uplink logs to the console, so the panel shows only the 24h
+  statistics.
+- **Where it runs.** A Deployment (bjw-s `app-template`, the `matrix-admin`
+  shape) in namespace `blocky-ui`, as the image's `nextjs` user (1001:65533),
+  every capability dropped, no privilege escalation, `HOSTNAME=0.0.0.0` (the
+  kubelet sets `HOSTNAME` to the pod name) and `PORT=3000`. Its servers are the
+  environment's `dns-resolvers` records, by their `api` field: in prod, uplink's
+  `http://10.10.10.1:4000`.
+- **Network.** Ingress only from the `gateways` namespace on 3000. Egress only
+  to each resolver's API address and port (`10.10.10.1/32` TCP 4000), plus DNS
+  from `coredns.nix`'s cluster-wide grant (the panel grants no port 53 of its
+  own). Blocky's `:4000` stays as §2.2 and test 8 have it.
+- **Name and auth.** `served-domains` gains `dns` from the cluster
+  (`cluster.servedDomains`), like every gateway UI: a proxied Cloudflare `A`
+  record (unchanged from the uplink design, same address), an `HTTPRoute` on the
+  `json64-dev-https` wildcard listener, and the CoreDNS and Blocky internal
+  mapping to the gateway VIP. An Envoy OIDC `SecurityPolicy` targets the route,
+  against the Kanidm client `blocky-ui`, whose only scope map is `admins` (the
+  `garage-ui`, `longhorn` and `matrix-admin` form): Kanidm refuses anyone else a
+  token. Its secret is `<env secretPath>/oidc/blocky-ui-oidc-client-secret.age`,
+  shared by Kanidm's `basicSecretFile` and the cluster's sops `oidc` file.
 - **Image pin.** `images/gabeduartem/blocky-ui/default.nix`, from
-  `oci-image-updater init` (the index digest, plus a `pullImage` hash), with
-  `pinned = true`. The container runs `imageName@imageDigest`, so a re-pushed
-  tag changes nothing. A bump is manual: re-run `init` with the new tag, read
-  the release's API calls against Blocky's routes, and rebuild.
+  `oci-image-updater init`, `pinned = true`. The pod runs
+  `imageName@imageDigest`. A bump is manual: re-run `init` with the new tag,
+  read the release's API calls against Blocky's routes, and re-sync.
 - **Tests.** Test 15.
 - **Risks.**
-  - Sessions signed in before the scope change carry no groups, so admins get
-    403 until they visit `https://oauth2-proxy.json64.dev/oauth2/sign_out` once.
-  - Adding `groups` grows every oauth2-proxy cookie by each group's uuid and SPN
-    (oauth2-proxy splits cookies over 4 KB).
-  - The claim form is derived, not measured. The first-login step in test 15
-    measures it.
   - The panel reaches Blocky's unauthenticated API, so anyone in `admins` can
     turn filtering off. That is the same reach `dns-filter` gives anyone on the
     LAN, and `BlockyFilteringOff` alerts on it.
+  - The uplink design's 502: adding `groups` to oauth2-proxy's scope grew its
+    session cookie past 4 KB, and nginx refused the split `Set-Cookie` headers
+    on `/oauth2/callback` ("upstream sent too big header"), so every
+    oauth2-proxy login failed. The scope is reverted; the cluster design adds no
+    scope.
 
 ### 2.7 Phase 2: Kubernetes replicas behind a load-balancer address
 
@@ -1057,34 +1040,25 @@ passes means the test proves nothing.
       rule removed, the same query answers SERVFAIL.
 
 15. **Admin panel (§2.6).**
-    - `checks.x86_64-linux.blocky-ui`, pure, over uplink's evaluated config.
-      Each property has a control that must fail it:
-      - _Loopback._ The container publishes no port, shares the host network,
-        binds `127.0.0.1`, and its port is not in the firewall. oauth2-proxy
-        listens on loopback. Controls: `HOSTNAME=0.0.0.0`, and a published port
-        without the host network.
-      - _Gated._ The vhost runs `auth_request /oauth2/auth`, no location turns
-        it off, and the auth subrequest carries `allowed_groups=<escaped gate>`.
-        Controls: homepage's vhost (authenticated, ungated), the vhost without
-        `auth_request`, and `/` with `auth_request off`.
-      - _Claim form._ The gate is `<group>@<kanidm domain>`, for a provisioned
-        group whose `oauth2-proxy` scope map grants `groups`, and oauth2-proxy
-        requests `groups` and reads the `groups` claim. Controls: the bare name,
-        `admins@idm.<domain>`, and a scope without `groups`.
-      - _API._ No location on any uplink vhost proxies to Blocky's HTTP port,
-        Blocky listens on loopback, and the panel's config names exactly one
-        server, `http://127.0.0.1:4000`. Controls: an added vhost proxying to
-        `:4000`, and the config with a LAN address.
-    - At first login (owner), after `/oauth2/sign_out`:
-      `https://oauth2-proxy.json64.dev/oauth2/userinfo` lists
-      `admins@json64.dev` in `groups`, and `https://dns.json64.dev` loads.
-      Control: a user in `media.access` but not `admins` gets 403 at
-      `dns.json64.dev` and still loads `homepage.json64.dev`. If `groups`
-      carries another form, the gate is wrong. Fix the derivation in
-      `blocky-ui.nix` and the claim-form predicate, not the string alone.
-    - From cortex, `curl -sI https://dns.json64.dev` answers 302 to
-      `oauth2-proxy.json64.dev/oauth2/start`, and
-      `curl -s http://10.10.10.1:3010` is refused.
+    - `checks.x86_64-linux.blocky-ui`, pure, over axon's nixidy resources and
+      uplink's Kanidm. Each property has a control that must fail it:
+      - _OIDC._ The only route at `dns.<domain>` is the panel's, and one OIDC
+        SecurityPolicy targets it. Controls: the policy without `oidc`, the
+        policy aimed at another route, a second route on the name.
+      - _Admins._ The policy's client is `blocky-ui`, whose only scope map is
+        `admins`. Controls: a `media.access` map added, the `oauth2-proxy`
+        client.
+      - _Egress._ One egress policy selects the pod and allows exactly
+        `10.10.10.1/32` TCP 4000, and the panel's one server is
+        `http://10.10.10.1:4000`. Controls: a world rule, a port range, a `/24`.
+      - _Ingress._ Only `gateways` on 3000. Control: a world rule.
+      - _Uplink._ uplink has no `dns.<domain>` vhost and no `blocky-ui`
+        container. Control: the vhost added back.
+    - `checks.x86_64-linux.dns-egress` holds for the panel's policies.
+    - Live (owner), after deploy: anonymous `curl -sI https://dns.json64.dev`
+      answers 302 to `idm.json64.dev`; an admin loads the panel and its stats; a
+      user outside `admins` is refused by Kanidm. From a node,
+      `curl -s http://10.10.10.1:3010` is refused (the uplink unit is gone).
 
 ## 4. Risks
 
@@ -1273,7 +1247,7 @@ passes means the test proves nothing.
 | den-fit 3: test 11's control fails by design                | axon-01's delta is an admission; "unchanged" kept only for the guarded collections (test 11)                                                                        |
 | den-fit 4: package path wrong; `nix-update` unverified      | `pkgs/by-name/dns-blocklists/package.nix` → `pkgs.local`; local `update-pkgs` gate, `fetchurl` fallback (§2.2); package dropped in v0.3                             |
 | den-fit 5: OCI updater is not nightly                       | stated as a gate in §2.10 (blocky-ui moved there); built in §2.6, pinned                                                                                            |
-| den-fit 6: `allowed_groups` unprecedented; SPN groups claim | the claim form derived from Kanidm source, checked, measured at first login (§2.6, test 15)                                                                         |
+| den-fit 6: `allowed_groups` unprecedented; SPN groups claim | moot: the panel moved to the cluster, gated by the `blocky-ui` Kanidm scope map (§2.6)                                                                              |
 | den-fit 7: phase-1 scope cuts                               | blocky-ui, the failback timer and test 9's phase-2 check moved to §2.10                                                                                             |
 | den-fit 8: "visible on the dashboard" isn't a mitigation    | `BlockyFilteringOff` alert, 15 min (§2.2, §4); fire and no-fire controls (test 6)                                                                                   |
 

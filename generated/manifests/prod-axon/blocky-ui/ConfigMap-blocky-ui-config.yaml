@@ -1,0 +1,7 @@
+apiVersion: v1
+data:
+  blocky-ui.yml: '{"instanceName":"prod DNS","servers":{"uplink":{"name":"uplink","url":"http://10.10.10.1:4000"}}}'
+kind: ConfigMap
+metadata:
+  name: blocky-ui-config
+  namespace: blocky-ui

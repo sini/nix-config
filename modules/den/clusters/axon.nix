@@ -216,6 +216,8 @@
       services.monitoring.grafana
       services.monitoring.ingest
       services.network.cilium.hubble-ui
+      # The resolver's admin panel at dns.<domain> (docs/dns-resolver.md §2.6).
+      services.network.blocky-ui
       services.media.base
       services.media.media-pg
       services.media.api-keys

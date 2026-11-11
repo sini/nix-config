@@ -251,18 +251,6 @@ spec:
       port: 80
       protocol: HTTP
     - allowedRoutes:
-        kinds:
-          - group: gateway.networking.k8s.io
-            kind: TLSRoute
-        namespaces:
-          from: Same
-      hostname: dns.json64.dev
-      name: tls-dns-json64-dev
-      port: 443
-      protocol: TLS
-      tls:
-        mode: Passthrough
-    - allowedRoutes:
         namespaces:
           from: All
       hostname: '*.json64.dev'
