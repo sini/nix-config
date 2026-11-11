@@ -1022,7 +1022,9 @@
             #!/usr/bin/env bash
             # PreToolUse/Bash: refuse the shapes the prose law forbids. Exit 2 blocks with stderr as feedback.
             set -uo pipefail
-            cmd=$(jq -r '.tool_input.command // empty' 2>/dev/null) || exit 0
+            payload=$(cat)
+            cmd=$(jq -r '.tool_input.command // empty' <<<"$payload" 2>/dev/null) || exit 0
+            cwd=$(jq -r '.cwd // empty' <<<"$payload" 2>/dev/null)
             [ -n "$cmd" ] || exit 0
             # Command position: line start, after ; & | ( ` or $(, past env assignments and timeout/sudo.
             at='(^|[;&|(`]|\$\()[[:space:]]*(([A-Za-z_][A-Za-z0-9_]*=[^[:space:]]*|sudo|env|timeout[[:space:]]+[^[:space:]]+)[[:space:]]+)*'
@@ -1040,6 +1042,61 @@
             systemd-run --user --scope -q -p MemoryMax=12G $cmd
             (rc 137 under the cap is a finding; never re-run it uncapped.)"
             fi
+            # Probe-evidence guards for gen-harness repos (den-ag-design's reports/*.probes split). Shortcut:
+            # these parse the command string, so a removal inside a script, find -delete or rmtree is unseen.
+            unq() { local s=$1; s=''${s#[\"\']}; s=''${s%[\"\']}; s=''${s/#\~/$HOME}; [[ $s = /* ]] || s="$base/$s"; printf '%s' "$s"; }
+            # The command's working dir: a leading `cd <dir> &&`, else the payload cwd.
+            base=''${cwd:-$PWD}
+            lead=$(printf '%s\n' "$cmd" | sed -nE '1s/^[[:space:]]*cd[[:space:]]+([^;&|[:space:]]+)[[:space:]]*&&.*/\1/p')
+            [ -z "$lead" ] || base=$(unq "$lead")
+            # git -C <dir> overrides it for the git checks.
+            gdir=$base
+            gc=$(printf '%s\n' "$cmd" | sed -nE 's/.*git[[:space:]]+-C[[:space:]]+([^;&|[:space:]]+).*/\1/p' | head -1)
+            [ -z "$gc" ] || gdir=$(unq "$gc")
+            gitsub="''${at}git([[:space:]]+-[Cc][[:space:]]+[^[:space:]]+)*[[:space:]]+"
+
+            # (A) A gen-harness repo (ci/flake.nix calls mkCi) commits and pushes only with its hooks installed.
+            if printf '%s\n' "$cmd" | grep -Eq "''${gitsub}(commit|push)([[:space:]]|\$)"; then
+              top=$(git -C "$gdir" rev-parse --show-toplevel 2>/dev/null) || top=""
+              if [ -n "$top" ] && grep -qs mkCi "$top/ci/flake.nix"; then
+                hook=$(git -C "$top" rev-parse --path-format=absolute --git-path hooks/pre-commit)
+                grep -qsF 'gen-harness: staged-tree commit hook' "$hook" \
+                  || refuse "Refused: $top has no gen-harness git hooks, so probes would not be snapshotted and a forced probe add is not refused. Load the devshell first: \`direnv allow\` in $top, or \`nix develop ./ci\`."
+              fi
+            fi
+
+            # (B) Removing a checkout, or probe dirs in one, first runs its STATUS/probe-evidence.zsh check:
+            # 0 = snapshotted, 2 = not applicable, anything else refuses.
+            targets=()
+            if printf '%s\n' "$cmd" | grep -Eq "''${gitsub}worktree[[:space:]]+remove"; then
+              read -ra w <<<"$(printf '%s\n' "$cmd" | grep -oE 'worktree[[:space:]]+remove[^;&|]*' | head -1)"
+              for a in "''${w[@]:2}"; do [[ $a = -* ]] || targets+=("$(unq "$a")"); done
+            fi
+            if printf '%s\n' "$cmd" | grep -Eq "''${gitsub}clean([[:space:]]+[^;&|]*)?[[:space:]]-[a-zA-Z]*[xX]"; then
+              targets+=("$gdir")
+            fi
+            while IFS= read -r seg; do
+              read -ra w <<<"$seg"
+              rec=0 args=()
+              for a in "''${w[@]:1}"; do
+                case $a in --recursive) rec=1 ;; --*) ;; -*[rR]*) rec=1 ;; -*) ;; *) args+=("$(unq "$a")") ;; esac
+              done
+              # Only a checkout root, a reports/ ancestor or a probe dir is a probe loss.
+              [ "$rec" = 1 ] && for t in "''${args[@]}"; do targets+=("$t"); for c in "$t"/*/; do [ -e "$c.git" ] && targets+=("''${c%/}"); done; done
+            done < <(printf '%s\n' "$cmd" | grep -oE "''${at}rm[[:space:]][^;&|]*" | sed -E 's/^.*rm[[:space:]]/rm /')
+            for t in "''${targets[@]}"; do
+              [ -d "$t" ] || continue
+              t=$(cd "$t" && pwd -P)
+              top=$(git -C "$t" rev-parse --show-toplevel 2>/dev/null) || continue
+              [ -f "$top/STATUS/probe-evidence.zsh" ] || continue
+              case "$top/reports/" in "$t"/*) ;; *) [[ $t = *.probes* ]] || continue ;; esac
+              err=$(cd "$top" && zsh STATUS/probe-evidence.zsh check 2>&1 >/dev/null); rc=$?
+              case $rc in 0 | 2) ;; 1) refuse "Refused: $top has probe dirs not yet on the evidence ref; removing $t would lose them. Commit or push there first (the hooks snapshot them).
+            $err" ;;
+                *) refuse "Refused: probe-evidence check failed in $top (rc $rc), so $t may hold unsnapshotted probes.
+            $err" ;;
+              esac
+            done
             # The Bash tool runs zsh: these bash idioms fail, several silently.
             lint=""
             printf '%s' "$cmd" | grep -Eq '\$\{!' && lint="$lint
