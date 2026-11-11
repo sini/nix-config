@@ -75,6 +75,19 @@ in
         );
         nodeUp = instance: ''up{job="node-exporter", instance="${instance}"}'';
 
+        # Hosts that push here and run a Blocky resolver (services/networking/blocky).
+        blockyHosts = lib.unique (
+          map (t: t.hostname) (
+            lib.filter (
+              t:
+              (t.environment.monitoring.ingest or null) == cluster.name
+              && lib.any (e: e.job == "blocky") t.exporters
+            ) prometheus-targets
+          )
+        );
+        blockyUp = instance: ''up{job="blocky", instance="${instance}"}'';
+        denylistEntries = ''blocky_denylist_cache_entries{group="default"}'';
+
         # The hosts expectedHosts names, with their roles.
         roleHosts = lib.filter (
           t: builtins.elem t.hostname expectedHosts && lib.any (e: e.job == "node-exporter") t.exporters
@@ -223,6 +236,41 @@ in
                       };
                       annotations.summary = "${instance} has sent no node metrics for 10m";
                     }) expectedHosts
+                    # Blocky's own series go stale when it dies, so the rules
+                    # below can't fire then; Alloy keeps pushing up = 0.
+                    ++ map (instance: {
+                      alert = "BlockyDown";
+                      expr = "absent_over_time(${blockyUp instance}[5m]) or max_over_time(${blockyUp instance}[5m]) < 1";
+                      "for" = "5m";
+                      labels = {
+                        severity = "warning";
+                        inherit instance;
+                      };
+                      annotations.summary = "Blocky on ${instance} has been down or silent for 10m; its clients fall back to the unfiltered gateway";
+                    }) blockyHosts
+                    ++ [
+                      {
+                        alert = "BlockyFilteringOff";
+                        expr = "blocky_blocking_enabled == 0";
+                        "for" = "15m";
+                        labels.severity = "warning";
+                        annotations.summary = "Blocky on {{ $labels.instance }} has had blocking disabled for 15m (longer than dns-filter's default)";
+                      }
+                      {
+                        alert = "BlockyDenylistShrunk";
+                        expr = "${denylistEntries} < 0.5 * max_over_time(${denylistEntries}[1d])";
+                        "for" = "15m";
+                        labels.severity = "warning";
+                        annotations.summary = "Blocky on {{ $labels.instance }} holds under half its day's largest denylist: a list download was cut short";
+                      }
+                      {
+                        alert = "BlockyDenylistEmpty";
+                        expr = "${denylistEntries} == 0";
+                        "for" = "15m";
+                        labels.severity = "warning";
+                        annotations.summary = "Blocky on {{ $labels.instance }} has an empty denylist and is not filtering";
+                      }
+                    ]
                     ++ [
                       {
                         alert = "IngestDown";

@@ -6,6 +6,9 @@
 #   NodeMemoryPressure          cortex at 10% stall fires; bitstream at 1% does not
 #   NodeCPUHighUsage            at 100% CPU, axon-01 (server) fires by 30m;
 #                               bitstream (nix-builder) only after an hour
+#   BlockyDown                  uplink's blocky stopping (up 1 to 0) fires 10m later, not 9m
+#   BlockyDenylistShrunk        a denylist cut from 4000 to 1661 entries fires;
+#                               the whole list held does not
 #   nix build .#checks.x86_64-linux.host-alerts
 { config, lib, ... }:
 let
@@ -64,10 +67,55 @@ let
     series = ''${metric}{job="node-exporter", instance="${instance}"}'';
     values = "0+${toString perMin}x40";
   };
+  summaryOf = alert: (alertOf alert).annotations.summary or null;
+  blocky = alert: instance: {
+    exp_labels = {
+      severity = "warning";
+      job = "blocky";
+      inherit instance;
+    };
+    exp_annotations.summary = lib.replaceStrings [ "{{ $labels.instance }}" ] [ instance ] (
+      summaryOf alert
+    );
+  };
+  denylist = instance: values: {
+    series = ''blocky_denylist_cache_entries{job="blocky", instance="${instance}", group="default"}'';
+    inherit values;
+  };
   test = {
     rule_files = [ "rules.json" ];
     evaluation_interval = "1m";
     tests = [
+      {
+        interval = "1m";
+        input_series = [
+          {
+            series = ''up{job="blocky", instance="uplink"}'';
+            values = "1x10 0x30";
+          }
+          (denylist "uplink" "4000x10 1661x30")
+          (denylist "uplink-dev" "4000x40")
+        ];
+        alert_rule_test = [
+          {
+            eval_time = "19m";
+            alertname = "BlockyDown";
+            exp_alerts = [ ];
+          }
+          {
+            eval_time = "21m";
+            alertname = "BlockyDown";
+            exp_alerts = [ (blocky "BlockyDown" "uplink") ];
+          }
+          {
+            eval_time = "30m";
+            alertname = "BlockyDenylistShrunk";
+            exp_alerts = [
+              (lib.recursiveUpdate (blocky "BlockyDenylistShrunk" "uplink") { exp_labels.group = "default"; })
+            ];
+          }
+        ];
+      }
       {
         interval = "1m";
         input_series = [

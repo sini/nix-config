@@ -197,6 +197,19 @@
               volumeBy = "pod";
             };
           };
+          # Blocky's query log: one journal line per query (queryLog.type = console).
+          blocky-queries = {
+            folder = "Networking";
+            dashboard = mkLogsDashboard {
+              uid = "blocky-queries";
+              title = "Blocky Queries";
+              variables = [
+                (mkLabelVar "instance" "label_values({unit=\"blocky.service\"}, instance)")
+              ];
+              selector = "{unit=\"blocky.service\", instance=~\"$instance\"}";
+              volumeBy = "instance";
+            };
+          };
           kubernetes-events = {
             folder = "Logs";
             dashboard = mkLogsDashboard {
@@ -276,6 +289,14 @@
             folder = "Networking";
             url = envoyDashboardUrl "resources-monitor.gen";
             sha256 = "0h55cpc8k3294w8pjri6shkqqxscqnr8qs87k1dkhhk79xrmrzhl";
+          };
+          # Blocky's own dashboard, at the packaged release (services/networking/blocky).
+          blocky = {
+            title = "Blocky";
+            folder = "Networking";
+            url = "https://raw.githubusercontent.com/0xERR0R/blocky/v0.35.0/docs/blocky-grafana.json";
+            sha256 = "00hpb1j3km226nwcyn9a0bp3ii3fm3y3c3qy1932fnf2pmh4xvpj";
+            fixDatasource = true;
           };
 
           # Media exporters. The *arr/sabnzbd metrics come from exportarr

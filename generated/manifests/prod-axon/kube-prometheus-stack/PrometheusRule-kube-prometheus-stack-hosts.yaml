@@ -78,6 +78,35 @@ spec:
           labels:
             instance: uplink-dev
             severity: critical
+        - alert: BlockyDown
+          annotations:
+            summary: Blocky on uplink has been down or silent for 10m; its clients fall back to the unfiltered gateway
+          expr: absent_over_time(up{job="blocky", instance="uplink"}[5m]) or max_over_time(up{job="blocky", instance="uplink"}[5m]) < 1
+          for: 5m
+          labels:
+            instance: uplink
+            severity: warning
+        - alert: BlockyFilteringOff
+          annotations:
+            summary: Blocky on {{ $labels.instance }} has had blocking disabled for 15m (longer than dns-filter's default)
+          expr: blocky_blocking_enabled == 0
+          for: 15m
+          labels:
+            severity: warning
+        - alert: BlockyDenylistShrunk
+          annotations:
+            summary: 'Blocky on {{ $labels.instance }} holds under half its day''s largest denylist: a list download was cut short'
+          expr: blocky_denylist_cache_entries{group="default"} < 0.5 * max_over_time(blocky_denylist_cache_entries{group="default"}[1d])
+          for: 15m
+          labels:
+            severity: warning
+        - alert: BlockyDenylistEmpty
+          annotations:
+            summary: Blocky on {{ $labels.instance }} has an empty denylist and is not filtering
+          expr: blocky_denylist_cache_entries{group="default"} == 0
+          for: 15m
+          labels:
+            severity: warning
         - alert: IngestDown
           annotations:
             summary: 'No host has pushed node metrics for 10m: the ingest path is down'
